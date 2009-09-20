@@ -635,32 +635,7 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
         Collection<ArrayDesign> mergees = arrayDesign.getMergees();
         ArrayDesign merger = arrayDesign.getMergedInto();
 
-        String mungedShortName = ArrayDesignAnnotationService.mungeFileName( arrayDesign.getShortName() );
-        File fnp = new File( ArrayDesignAnnotationService.ANNOT_DATA_DIR + mungedShortName
-                + ArrayDesignAnnotationService.NO_PARENTS_FILE_SUFFIX
-                + ArrayDesignAnnotationService.ANNOTATION_FILE_SUFFIX );
-
-        File fap = new File( ArrayDesignAnnotationService.ANNOT_DATA_DIR + mungedShortName
-                + ArrayDesignAnnotationService.STANDARD_FILE_SUFFIX
-                + ArrayDesignAnnotationService.ANNOTATION_FILE_SUFFIX );
-
-        File fbp = new File( ArrayDesignAnnotationService.ANNOT_DATA_DIR + mungedShortName
-                + ArrayDesignAnnotationService.BIO_PROCESS_FILE_SUFFIX
-                + ArrayDesignAnnotationService.ANNOTATION_FILE_SUFFIX );
-
-        // context here is Gemma/arrays
-        if ( fnp.exists() ) {
-            mav.addObject( "noParentsAnnotationLink", "downloadAnnotationFile.html?id=" + arrayDesign.getId()
-                    + "&fileType=noParents" );
-        }
-        if ( fap.exists() ) {
-            mav.addObject( "allParentsAnnotationLink", "downloadAnnotationFile.html?id=" + arrayDesign.getId()
-                    + "&fileType=allParents" );
-        }
-        if ( fbp.exists() ) {
-            mav.addObject( "bioProcessAnnotationLink", "downloadAnnotationFile.html?id=" + arrayDesign.getId()
-                    + "&fileType=bioProcess" );
-        }
+        getAnnotationFileLinks( arrayDesign, mav );
 
         mav.addObject( "subsumer", subsumer );
         mav.addObject( "subsumees", subsumees );
@@ -676,6 +651,48 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
         mav.addObject( "technologyType", colorString );
         mav.addObject( "summary", summary );
         return mav;
+    }
+
+    /**
+     * @param arrayDesign
+     * @param mav
+     */
+    private void getAnnotationFileLinks( ArrayDesign arrayDesign, ModelAndView mav ) {
+
+        ArrayDesign merger = arrayDesign.getMergedInto();
+        ArrayDesign annotationFileDesign;
+        if ( merger != null )
+            annotationFileDesign = merger;
+        else
+            annotationFileDesign = arrayDesign;
+
+        String mungedShortName = ArrayDesignAnnotationService.mungeFileName( annotationFileDesign.getShortName() );
+        File fnp = new File( ArrayDesignAnnotationService.ANNOT_DATA_DIR + mungedShortName
+                + ArrayDesignAnnotationService.NO_PARENTS_FILE_SUFFIX
+                + ArrayDesignAnnotationService.ANNOTATION_FILE_SUFFIX );
+
+        File fap = new File( ArrayDesignAnnotationService.ANNOT_DATA_DIR + mungedShortName
+                + ArrayDesignAnnotationService.STANDARD_FILE_SUFFIX
+                + ArrayDesignAnnotationService.ANNOTATION_FILE_SUFFIX );
+
+        File fbp = new File( ArrayDesignAnnotationService.ANNOT_DATA_DIR + mungedShortName
+                + ArrayDesignAnnotationService.BIO_PROCESS_FILE_SUFFIX
+                + ArrayDesignAnnotationService.ANNOTATION_FILE_SUFFIX );
+
+        // context here is Gemma/arrays
+        if ( fnp.exists() ) {
+            mav.addObject( "noParentsAnnotationLink", "downloadAnnotationFile.html?id=" + annotationFileDesign.getId()
+                    + "&fileType=noParents" );
+        }
+        if ( fap.exists() ) {
+            mav.addObject( "allParentsAnnotationLink", "downloadAnnotationFile.html?id=" + annotationFileDesign.getId()
+                    + "&fileType=allParents" );
+        }
+        if ( fbp.exists() ) {
+            mav.addObject( "bioProcessAnnotationLink", "downloadAnnotationFile.html?id=" + annotationFileDesign.getId()
+                    + "&fileType=bioProcess" );
+        }
+
     }
 
     /**

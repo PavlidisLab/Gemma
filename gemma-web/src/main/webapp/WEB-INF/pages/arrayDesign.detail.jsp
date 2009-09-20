@@ -377,7 +377,9 @@
 						</c:otherwise>
 					</c:choose>
 				</c:otherwise>
+
 			</c:choose>
+			<c:if test="${(not empty merger)}">&nbsp;&nbsp(Note: Files are for merged design ${merger.shortName})</c:if>
 		</td>
 	</tr>
 </table>
