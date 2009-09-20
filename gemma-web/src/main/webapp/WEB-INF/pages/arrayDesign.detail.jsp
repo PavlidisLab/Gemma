@@ -247,9 +247,8 @@
 			Experiments using this array
 		</td>
 		<td>
-			<c:out value="${numExpressionExperiments}" />
-			<a title="Show details of datasets"
-				href="/Gemma/expressionExperiment/showAllExpressionExperiments.html?id=<c:out value="${expressionExperimentIds}"/> />">
+			 ${numExpressionExperiments}<a title="Show details of datasets"
+				href="/Gemma/expressionExperiment/showAllExpressionExperiments.html?id=${expressionExperimentIds}" > 
 				<img src="/Gemma/images/magnifier.png" /> </a>
 		</td>
 	</tr>
