@@ -284,7 +284,7 @@
 			</c:choose>
 		</td>
 	</tr>
-	<c:if test="${(empty subsumees)}">
+	<c:if test="${(not empty subsumees)}">
 		<tr>
 			<td class="label">
 				Subsumes
@@ -297,7 +297,7 @@
 			</td>
 		</tr>
 	</c:if>
-	<c:if test="${(empty subsumer)}">
+	<c:if test="${(not empty subsumer)}">
 		<tr>
 			<td class="label">
 				Subsumed by
@@ -309,7 +309,7 @@
 			</td>
 		</tr>
 	</c:if>
-	<c:if test="${(empty mergees)}">
+	<c:if test="${(not empty mergees)}">
 		<tr>
 			<td class="label">
 				Merger of
@@ -322,7 +322,7 @@
 			</td>
 		</tr>
 	</c:if>
-	<c:if test="${(empty merger)}">
+	<c:if test="${(not empty merger)}">
 		<tr>
 			<td class="label">
 				Merged into
