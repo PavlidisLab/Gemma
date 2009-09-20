@@ -5,6 +5,10 @@ import java.util.List;
 import ubic.gemma.loader.expression.geo.model.GeoRecord;
 import ubic.gemma.testing.BaseSpringContextTest;
 
+/**
+ * @author paul
+ * @version $Id$
+ */
 public class GeoBrowserServiceTest extends BaseSpringContextTest {
 
     public final void testGetDetails() throws Exception {
@@ -41,7 +45,7 @@ public class GeoBrowserServiceTest extends BaseSpringContextTest {
 
     public final void testGetRecentRecords() throws Exception {
         GeoBrowserService gbs = ( GeoBrowserService ) this.getBean( "geoBrowserService" );
-        List<GeoRecord> recentGeoRecords = gbs.getRecentGeoRecords( 1000, 1 );
+        List<GeoRecord> recentGeoRecords = gbs.getRecentGeoRecords( 1010, 1 );
 
         if ( recentGeoRecords.size() == 0 ) {
             log.warn( "Skipping test: no GEO records returned, check test settings" );
@@ -51,6 +55,8 @@ public class GeoBrowserServiceTest extends BaseSpringContextTest {
         GeoRecord rec = recentGeoRecords.iterator().next();
         int oldCount = rec.getPreviousClicks();
         String firstAccession = rec.getGeoAccession();
+
+        // this should cause the increment.
         gbs.getDetails( firstAccession );
 
         recentGeoRecords = gbs.getRecentGeoRecords( 1000, 1 );
@@ -61,6 +67,7 @@ public class GeoBrowserServiceTest extends BaseSpringContextTest {
         if ( recentGeoRecords.size() == 0 ) {
             return;
         }
+
         rec = recentGeoRecords.iterator().next();
 
         if ( !rec.getGeoAccession().equals( firstAccession ) ) {
@@ -69,7 +76,7 @@ public class GeoBrowserServiceTest extends BaseSpringContextTest {
 
         int newCount = rec.getPreviousClicks();
 
-        assertTrue( oldCount + 1 == newCount );
+        assertEquals( oldCount + 1, newCount );
 
     }
 
