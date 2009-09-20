@@ -1,6 +1,5 @@
 <%@ include file="/common/taglibs.jsp"%>
-<%@ page import="java.util.*"%>
-<%@ page import="ubic.gemma.model.expression.arrayDesign.ArrayDesignImpl"%>
+<%@ page import="ubic.gemma.model.expression.arrayDesign.ArrayDesignImpl;"%>
 <jsp:useBean id="arrayDesign" scope="request" class="ubic.gemma.model.expression.arrayDesign.ArrayDesignImpl" />
 
 <head>
@@ -41,7 +40,7 @@
 	Details for: "
 	<jsp:getProperty name="arrayDesign" property="name" />
 	"
-	<c:if test="${ troubleEvent != null}">
+	<c:if test="${(not empty troubleEvent)}">
 	&nbsp;
 	<img src='<c:url value="/images/icons/warning.png"/>' height='16' width='16' alt='trouble'
 			title='${ troubleEventDescription }' />
@@ -59,17 +58,18 @@
 
 
 <table class='datasummaryarea'>
-	<caption>
-		Sequence analysis details
-	</caption>
-	<c:if test="${ summary != null}">
+
+	<c:if test="${(not empty summary)}">
+		<caption>
+			Sequence analysis details
+		</caption>
 		<tr>
 			<td>
 
-				<div id="arraySummary_${arrayDesign.id}" name="arraySummary_${arrayDesign.id}">
+				<div id="arraySummary_${arrayDesign.id}">
 					<table class='datasummary'>
 						<tr>
-							<td colspan=2 align=center>
+							<td colspan="2" align="center">
 							</td>
 						</tr>
 						<tr>
@@ -137,13 +137,23 @@
 							</td>
 						</tr>
 						<tr>
-							<td colspan=2 align='center' class='small'>
+							<td colspan="2" align='center' class='small'>
 								(as of ${summary.dateCached})
 							</td>
 						</tr>
 					</table>
 				</div>
 
+			</td>
+		</tr>
+		<tr>
+			<script>
+		var text = '<Gemma:help helpFile="sequenceAnalysisHelp.html"/>';
+		function doit(event) {showWideHelpTip(event,text); }
+		</script>
+			<td colspan="2">
+				<a class="helpLink" name="?" href="" onclick="doit(event);return false;"> <img src="/Gemma/images/help.png" />
+				</a>
 			</td>
 		</tr>
 	</c:if>
@@ -154,15 +164,7 @@
 			</security:authorize>
 		</td>
 	</tr>
-	<tr>
-		<script>
-		var text = '<Gemma:help helpFile="sequenceAnalysisHelp.html"/>';
-		function doit(event) {showWideHelpTip(event,text); }
-		</script>
-		<td colspan="2">
-			<a class="helpLink" name="?" href="" onclick="doit(event);return false;"> <img src="/Gemma/images/help.png" /> </a>
-		</td>
-	</tr>
+
 </table>
 
 
@@ -196,17 +198,10 @@
 			Provider
 		</td>
 		<td>
-			<%
-			    if (arrayDesign.getDesignProvider() != null) {
-			%>
-			<%=arrayDesign.getDesignProvider().getName()%>
-			<%
-			    } else {
-			%>
-			(Not listed)
-			<%
-			    }
-			%>
+			<c:choose>
+				<c:when test="${(not empty arrayDesign.designProvider)}">${arrayDesign.designProvider.name}</c:when>
+				<c:otherwise>(Not Listed)</c:otherwise>
+			</c:choose>
 		</td>
 	</tr>
 
@@ -239,17 +234,12 @@
 					src="/Gemma/images/help.png" /> </a>
 		</td>
 		<td>
-			<%
-			    if ((arrayDesign.getExternalReferences()) != null
-								&& (arrayDesign.getExternalReferences().size() > 0)) {
-			%>
-			<c:forEach var="accession" items="${ arrayDesign.externalReferences }">
-				<Gemma:databaseEntry databaseEntry="${accession}" />
-				<br />
-			</c:forEach>
-			<%
-			    }
-			%>
+			<c:if test="{$arrayDesign.externalReferences} != null && ${fn:length($arrayDesign.externalReferences)} > 0">
+				<c:forEach var="accession" items="${ arrayDesign.externalReferences }">
+					<Gemma:databaseEntry databaseEntry="${accession}" />
+					<br />
+				</c:forEach>
+			</c:if>
 		</td>
 	</tr>
 	<tr>
@@ -259,7 +249,7 @@
 		<td>
 			<c:out value="${numExpressionExperiments}" />
 			<a title="Show details of datasets"
-				href="/Gemma/expressionExperiment/showAllExpressionExperiments.html?id=<c:out value="${expressionExperimentIds}" />">
+				href="/Gemma/expressionExperiment/showAllExpressionExperiments.html?id=<c:out value="${expressionExperimentIds}"/> />">
 				<img src="/Gemma/images/magnifier.png" /> </a>
 		</td>
 	</tr>
@@ -283,23 +273,18 @@
 					src="/Gemma/images/help.png" /> </a>
 		</td>
 		<td>
-			<%
-			    if (arrayDesign.getDescription() != null
-								&& arrayDesign.getDescription().length() > 0) {
-			%>
-			<div class="clob">
-				<jsp:getProperty name="arrayDesign" property="description" />
-			</div>
-			<%
-			    } else {
-			%>
-			(None provided)
-			<%
-			    }
-			%>
+			<c:choose>
+
+				<c:when test="${(not empty arrayDesign.description)}">
+					<div class="clob">
+						${arrayDesign.description}
+					</div>
+				</c:when>
+				<c:otherwise>(none provided)</c:otherwise>
+			</c:choose>
 		</td>
 	</tr>
-	<c:if test="$subsumees != null}">
+	<c:if test="${(empty subsumees)}">
 		<tr>
 			<td class="label">
 				Subsumes
@@ -312,7 +297,7 @@
 			</td>
 		</tr>
 	</c:if>
-	<c:if test="$subsumer != null}">
+	<c:if test="${(empty subsumer)}">
 		<tr>
 			<td class="label">
 				Subsumed by
@@ -324,7 +309,7 @@
 			</td>
 		</tr>
 	</c:if>
-	<c:if test="$mergees != null}">
+	<c:if test="${(empty mergees)}">
 		<tr>
 			<td class="label">
 				Merger of
@@ -337,7 +322,7 @@
 			</td>
 		</tr>
 	</c:if>
-	<c:if test="$merger != null}">
+	<c:if test="${(empty merger)}">
 		<tr>
 			<td class="label">
 				Merged into
@@ -419,10 +404,9 @@
 				</div>
 			</td>
 			<security:authorize ifAnyGranted="admin">
-				<td COLSPAN="2">
+				<td colspan="2">
 					<div align="left">
-						<input type="button"
-							onclick="location.href='/Gemma/arrayDesign/editArrayDesign.html?id=<%=request.getAttribute("id")%>'" value="Edit">
+						<input type="button" onclick="location.href='/Gemma/arrayDesign/editArrayDesign.html?id=${id}'" value="Edit">
 					</div>
 				</td>
 			</security:authorize>
