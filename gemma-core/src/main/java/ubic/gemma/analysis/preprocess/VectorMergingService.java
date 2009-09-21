@@ -135,6 +135,15 @@ public class VectorMergingService extends ExpressionExperimentVectorManipulating
                 allOldBioAssayDims.add( bioAssayDim );
             }
         }
+        
+        if (allOldBioAssayDims.size() == 0 ) {
+            throw new IllegalStateException("NO bioassaydimensions found to merge (previously merged ones are filtered, data may be corrupt?");
+        }
+        
+        if (allOldBioAssayDims.size() == 1 ){
+            log.warn( "Experiment already has only a single bioassaydimension, nothing seems to need merging. Bailing" );
+            return;
+        }
 
         log.info( allOldBioAssayDims.size() + " bioassaydimensions to merge" );
         List<BioAssayDimension> sortedOldDims = sortedBioAssayDimensions( allOldBioAssayDims );
