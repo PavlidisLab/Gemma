@@ -2,17 +2,16 @@
 <!DOCTYPE beans PUBLIC
 	"-//SPRING//DTD BEAN//EN"
 	"http://www.springframework.org/dtd/spring-beans.dtd">
-<!-- 
+	<!-- 
 	author: keshav   
 	$Id$ 
 -->
 
-<!-- Root application context -->
+	<!-- Root application context -->
 
 <beans>
 	<!-- Declaration of GigaSpaces factory bean -->
-	<bean id="gigaspace"
-		class="org.springmodules.javaspaces.gigaspaces.GigaSpacesFactoryBean">
+	<bean id="gigaspace" class="org.springmodules.javaspaces.gigaspaces.GigaSpacesFactoryBean">
 		<property name="urls">
 			<list>
 				<!--  <value>jini://*/*/remotingSpace</value> -->
@@ -22,21 +21,17 @@
 	</bean>
 
 	<!--  Declaration of GigaSpaces uid factory -->
-	<bean id="gigaSpacesUidFactory"
-		class="org.springmodules.javaspaces.gigaspaces.remote.support.GigaSpacesUidFactory">
+	<bean id="gigaSpacesUidFactory" class="org.springmodules.javaspaces.gigaspaces.remote.support.GigaSpacesUidFactory">
 		<property name="space" ref="gigaspace" />
 	</bean>
 
 	<!-- Declaration of GigaSpace template-->
-	<bean id="gigaspacesTemplate"
-		class="org.springmodules.javaspaces.gigaspaces.GigaSpacesTemplate">
+	<bean id="gigaspacesTemplate" class="org.springmodules.javaspaces.gigaspaces.GigaSpacesTemplate">
 		<property name="space" ref="gigaspace" />
 	</bean>
-	
+
 	<!-- Add workers here -->
-	<bean id="expressionExperimentLoadWorker"
-		class="ubic.gemma.grid.javaspaces.CustomDelegatingWorker"
-		singleton="false">
+	<bean id="expressionExperimentLoadWorker" class="ubic.gemma.grid.javaspaces.CustomDelegatingWorker" singleton="false">
 		<property name="javaSpaceTemplate" ref="gigaspacesTemplate" />
 		<property name="delegate">
 			<ref local="taskBean" />
@@ -48,9 +43,7 @@
 		</property>
 	</bean>
 
-	<bean id="indexerSpaceWorker"
-		class="ubic.gemma.grid.javaspaces.CustomDelegatingWorker"
-		singleton="false">
+	<bean id="indexerSpaceWorker" class="ubic.gemma.grid.javaspaces.CustomDelegatingWorker" singleton="false">
 		<property name="javaSpaceTemplate" ref="gigaspacesTemplate" />
 		<property name="delegate">
 			<ref local="indexTask" />
@@ -61,10 +54,9 @@
 			</value>
 		</property>
 	</bean>
-	
 
-	<bean id="expressionExperimentReportGenerationWorker"
-		class="ubic.gemma.grid.javaspaces.CustomDelegatingWorker"
+
+	<bean id="expressionExperimentReportGenerationWorker" class="ubic.gemma.grid.javaspaces.CustomDelegatingWorker"
 		singleton="false">
 		<property name="javaSpaceTemplate" ref="gigaspacesTemplate" />
 		<property name="delegate">
@@ -77,8 +69,7 @@
 		</property>
 	</bean>
 
-	<bean id="differentialExpressionAnalysisWorker"
-		class="ubic.gemma.grid.javaspaces.CustomDelegatingWorker"
+	<bean id="differentialExpressionAnalysisWorker" class="ubic.gemma.grid.javaspaces.CustomDelegatingWorker"
 		singleton="false">
 		<property name="javaSpaceTemplate" ref="gigaspacesTemplate" />
 		<property name="delegate">
@@ -90,9 +81,8 @@
 			</value>
 		</property>
 	</bean>
-	
-	<bean id="processedExpressionDataVectorCreateWorker"
-		class="ubic.gemma.grid.javaspaces.CustomDelegatingWorker"
+
+	<bean id="processedExpressionDataVectorCreateWorker" class="ubic.gemma.grid.javaspaces.CustomDelegatingWorker"
 		singleton="false">
 		<property name="javaSpaceTemplate" ref="gigaspacesTemplate" />
 		<property name="delegate">
@@ -104,10 +94,8 @@
 			</value>
 		</property>
 	</bean>
-	
-	<bean id="twoChannelMissingValueWorker"
-		class="ubic.gemma.grid.javaspaces.CustomDelegatingWorker"
-		singleton="false">
+
+	<bean id="twoChannelMissingValueWorker" class="ubic.gemma.grid.javaspaces.CustomDelegatingWorker" singleton="false">
 		<property name="javaSpaceTemplate" ref="gigaspacesTemplate" />
 		<property name="delegate">
 			<ref bean="twoChannelMissingValueTask" />
@@ -118,10 +106,8 @@
 			</value>
 		</property>
 	</bean>
-	
-	<bean id="linkAnalysisWorker"
-		class="ubic.gemma.grid.javaspaces.CustomDelegatingWorker"
-		singleton="false">
+
+	<bean id="linkAnalysisWorker" class="ubic.gemma.grid.javaspaces.CustomDelegatingWorker" singleton="false">
 		<property name="javaSpaceTemplate" ref="gigaspacesTemplate" />
 		<property name="delegate">
 			<ref bean="linkAnalysisTask" />
@@ -132,10 +118,8 @@
 			</value>
 		</property>
 	</bean>
-	
-	<bean id="arrayDesignProbeMapperWorker"
-		class="ubic.gemma.grid.javaspaces.CustomDelegatingWorker"
-		singleton="false">
+
+	<bean id="arrayDesignProbeMapperWorker" class="ubic.gemma.grid.javaspaces.CustomDelegatingWorker" singleton="false">
 		<property name="javaSpaceTemplate" ref="gigaspacesTemplate" />
 		<property name="delegate">
 			<ref bean="arrayDesignProbeMapperTask" />
@@ -146,10 +130,8 @@
 			</value>
 		</property>
 	</bean>
-	
-	<bean id="arrayDesignRepeatScanWorker"
-		class="ubic.gemma.grid.javaspaces.CustomDelegatingWorker"
-		singleton="false">
+
+	<bean id="arrayDesignRepeatScanWorker" class="ubic.gemma.grid.javaspaces.CustomDelegatingWorker" singleton="false">
 		<property name="javaSpaceTemplate" ref="gigaspacesTemplate" />
 		<property name="delegate">
 			<ref bean="arrayDesignProbeMapperTask" />
@@ -161,29 +143,25 @@
 		</property>
 	</bean>
 
-	<bean id="javaSpaceInterceptor"
-		class="org.springmodules.javaspaces.gigaspaces.GigaSpacesInterceptor">
+	<bean id="javaSpaceInterceptor" class="org.springmodules.javaspaces.gigaspaces.GigaSpacesInterceptor">
 		<property name="javaSpaceTemplate" ref="gigaspacesTemplate" />
 		<property name="uidFactory" ref="gigaSpacesUidFactory" />
 		<property name="synchronous">
 			<value>true</value>
 		</property>
 		<!--
-				The master will take the result from the space when it is available.  This
-				sets the time the master will wait for a result before timing out.
-
-				This has been set to an extremely large value to make the effects negligible.  
-				That is, the master will never time out based on this setting.  Instead, the 
-				master should terminate itself programmatically after receiving the result. 
-			-->
+			The master will take the result from the space when it is available. This sets the time the master will wait for a
+			result before timing out. This has been set to an extremely large value to make the effects negligible. That is, the
+			master will never time out based on this setting. Instead, the master should terminate itself programmatically after
+			receiving the result.
+		-->
 		<property name="timeoutMillis">
 			<value>600000000</value>
 		</property>
 
 		<!--
-				Comment out this property for "service seeking" behavior 
-				where the endpoint is assumed to host a service to invoke.
-			-->
+			Comment out this property for "service seeking" behavior where the endpoint is assumed to host a service to invoke.
+		-->
 		<!--
 				<property name="serializableTarget" ref="taskBean">
 				</property>
@@ -192,8 +170,7 @@
 	<!--
 			This is the client-side proxy to which task interfaces are added to.
 		-->
-	<bean id="proxy"
-		class="org.springframework.aop.framework.ProxyFactoryBean">
+	<bean id="proxy" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="interceptorNames">
 			<list>
 				<value>javaSpaceInterceptor</value>
@@ -236,8 +213,7 @@
 	</bean>
 
 	<!-- Add task impls here -->
-	<bean id="taskBean"
-		class="ubic.gemma.grid.javaspaces.expression.experiment.ExpressionExperimentLoadTaskImpl">
+	<bean id="taskBean" class="ubic.gemma.grid.javaspaces.expression.experiment.ExpressionExperimentLoadTaskImpl">
 		<property name="geoDatasetService">
 			<ref bean="geoDatasetService" />
 		</property>
@@ -247,13 +223,18 @@
 		<property name="gigaSpacesTemplate">
 			<ref bean="gigaspacesTemplate" />
 		</property>
-		<property name="eeService"><ref bean="expressionExperimentService"/></property>
-		<property name="twoChannelMissingValueService"><ref bean="twoChannelMissingValueService"/></property>
-		<property name="processedExpressionDataVectorCreateService"><ref bean="processedExpressionDataVectorCreateService"/></property>
+		<property name="eeService">
+			<ref bean="expressionExperimentService" />
+		</property>
+		<property name="twoChannelMissingValueService">
+			<ref bean="twoChannelMissingValues" />
+		</property>
+		<property name="processedExpressionDataVectorCreateService">
+			<ref bean="processedExpressionDataVectorCreateService" />
+		</property>
 	</bean>
-	
-	<bean id="differentialExpressionAnalysisTask"
-		class="ubic.gemma.grid.javaspaces.diff.DifferentialExpressionAnalysisTaskImpl">
+
+	<bean id="differentialExpressionAnalysisTask" class="ubic.gemma.grid.javaspaces.diff.DifferentialExpressionAnalysisTaskImpl">
 		<property name="differentialExpressionAnalyzerService">
 			<ref bean="differentialExpressionAnalyzerService" />
 		</property>
@@ -261,9 +242,8 @@
 			<ref bean="gigaspacesTemplate" />
 		</property>
 	</bean>
-	 
-	<bean id="processedExpressionDataVectorCreateTask"
-		class="ubic.gemma.grid.javaspaces.analysis.preprocess.ProcessedExpressionDataVectorCreateTaskImpl">
+
+	<bean id="processedExpressionDataVectorCreateTask" class="ubic.gemma.grid.javaspaces.analysis.preprocess.ProcessedExpressionDataVectorCreateTaskImpl">
 		<property name="processedExpressionDataVectorCreateService">
 			<ref bean="processedExpressionDataVectorCreateService" />
 		</property>
@@ -271,9 +251,8 @@
 			<ref bean="gigaspacesTemplate" />
 		</property>
 	</bean>
-	
-	<bean id="expressionExperimentReportTask"
-		class="ubic.gemma.grid.javaspaces.expression.experiment.ExpressionExperimentReportTaskImpl">
+
+	<bean id="expressionExperimentReportTask" class="ubic.gemma.grid.javaspaces.expression.experiment.ExpressionExperimentReportTaskImpl">
 		<property name="expressionExperimentReportService">
 			<ref bean="expressionExperimentReportService" />
 		</property>
@@ -281,9 +260,8 @@
 			<ref bean="gigaspacesTemplate" />
 		</property>
 	</bean>
-	
-	<bean id="twoChannelMissingValueTask"
-		class="ubic.gemma.grid.javaspaces.analysis.preprocess.TwoChannelMissingValueTaskImpl">
+
+	<bean id="twoChannelMissingValueTask" class="ubic.gemma.grid.javaspaces.analysis.preprocess.TwoChannelMissingValueTaskImpl">
 		<property name="twoChannelMissingValues">
 			<ref bean="twoChannelMissingValues" />
 		</property>
@@ -291,9 +269,8 @@
 			<ref bean="gigaspacesTemplate" />
 		</property>
 	</bean>
-	
-	<bean id="linkAnalysisTask"
-		class="ubic.gemma.grid.javaspaces.analysis.coexpression.links.LinkAnalysisTaskImpl">
+
+	<bean id="linkAnalysisTask" class="ubic.gemma.grid.javaspaces.analysis.coexpression.links.LinkAnalysisTaskImpl">
 		<property name="linkAnalysisService">
 			<ref bean="linkAnalysisService" />
 		</property>
@@ -301,9 +278,8 @@
 			<ref bean="gigaspacesTemplate" />
 		</property>
 	</bean>
-	
-	<bean id="arrayDesignProbeMapperTask"
-		class="ubic.gemma.grid.javaspaces.expression.arrayDesign.ArrayDesignProbeMapperTaskImpl">
+
+	<bean id="arrayDesignProbeMapperTask" class="ubic.gemma.grid.javaspaces.expression.arrayDesign.ArrayDesignProbeMapperTaskImpl">
 		<property name="arrayDesignProbeMapperService">
 			<ref bean="arrayDesignProbeMapperService" />
 		</property>
@@ -311,16 +287,14 @@
 			<ref bean="gigaspacesTemplate" />
 		</property>
 	</bean>
-	
-	<bean id="arrayDesignRepeatScanTask"
-		class="ubic.gemma.grid.javaspaces.analysis.sequence.ArrayDesignRepeatScanTaskImpl">
+
+	<bean id="arrayDesignRepeatScanTask" class="ubic.gemma.grid.javaspaces.analysis.sequence.ArrayDesignRepeatScanTaskImpl">
 		<property name="gigaSpacesTemplate">
 			<ref bean="gigaspacesTemplate" />
 		</property>
 	</bean>
 
-	<bean id="indexTask"
-		class="ubic.gemma.grid.javaspaces.index.IndexerTaskImpl">
+	<bean id="indexTask" class="ubic.gemma.grid.javaspaces.index.IndexerTaskImpl">
 
 		<property name="geneGps">
 			<ref bean="geneGps" />
