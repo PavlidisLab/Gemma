@@ -247,6 +247,9 @@
 		<property name="gigaSpacesTemplate">
 			<ref bean="gigaspacesTemplate" />
 		</property>
+		<property name="eeService"><ref bean="expressionExperimentService"/></property>
+		<property name="twoChannelMissingValueService"><ref bean="twoChannelMissingValueService"/></property>
+		<property name="processedExpressionDataVectorCreateService"><ref bean="processedExpressionDataVectorCreateService"/></property>
 	</bean>
 	
 	<bean id="differentialExpressionAnalysisTask"
