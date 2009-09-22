@@ -254,14 +254,30 @@ abstract public class ArrayDesignPersister extends GenomePersister {
 
         if ( !isTransient( arrayDesign ) ) return arrayDesign;
 
+        /*
+         * Note we don't do a full find here.
+         */
         ArrayDesign existing = arrayDesignService.find( arrayDesign );
 
         if ( existing == null ) {
-            log.debug( "Array Design " + arrayDesign + " is new, processing..." );
-            return persistNewArrayDesign( arrayDesign );
+
+            /*
+             * Try less stringent search.
+             */
+            existing = arrayDesignService.findByShortName( arrayDesign.getShortName() );
+
+            if ( existing == null ) {
+                log.info( arrayDesign + " is new, processing..." );
+                return persistNewArrayDesign( arrayDesign );
+            }
+
+            log.info( "Array design exactly matching " + arrayDesign + " doesn't exist, but found " + existing
+                    + "; returning" );
+
+        } else {
+            log.info( "Array Design " + arrayDesign + " already exists, returning..." );
         }
 
-        log.info( "Array Design " + arrayDesign + " already exists, returning..." );
         arrayDesignService.thawLite( existing );
         return existing;
 

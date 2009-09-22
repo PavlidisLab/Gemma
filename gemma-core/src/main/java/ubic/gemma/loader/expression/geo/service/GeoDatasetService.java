@@ -560,8 +560,8 @@ public class GeoDatasetService extends AbstractGeoService {
         // do a partial conversion. We will throw this away;
         ArrayDesign geoArrayDesign = ( ArrayDesign ) geoConverter.convert( rawGEOPlatform );
 
-        // find in our system
-        ArrayDesign existing = arrayDesignService.find( geoArrayDesign );
+        // find in our system. Note we only use the short name. The full name can change in GEO, causing trouble.
+        ArrayDesign existing = arrayDesignService.findByShortName( geoArrayDesign.getShortName() );
 
         if ( existing == null ) {
             log.info( rawGEOPlatform + " looks new to Gemma" );
@@ -637,7 +637,7 @@ public class GeoDatasetService extends AbstractGeoService {
                 ExpressionExperiment expressionExperiment = ( ExpressionExperiment ) entity;
                 this.expressionExperimentReportService.generateSummaryObject( expressionExperiment.getId() );
 
-                // no need to thaw here as we're still in a session.
+                this.expressionExperimentService.thawLite( expressionExperiment );
 
                 for ( BioAssay ba : expressionExperiment.getBioAssays() ) {
                     adsToUpdate.add( ba.getArrayDesignUsed() );
