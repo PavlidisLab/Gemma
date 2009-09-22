@@ -205,11 +205,14 @@ public class ArrayDesignAnnotationService {
                     for ( int j = 0; j < symbolsb.length; j++ ) {
 
                         String s = symbolsb[j];
-                        String n = namesb[j];
 
                         Gene g = Gene.Factory.newInstance();
                         g.setOfficialSymbol( s );
-                        g.setName( n );
+
+                        if ( namesb.length >= j + 1 ) {
+                            String n = namesb[j];
+                            g.setName( n );
+                        }
 
                         results.get( probeId ).add( g );
                     }
@@ -226,8 +229,7 @@ public class ArrayDesignAnnotationService {
 
     /**
      * @param arrayDesign
-     * @return Map of composite sequence ids to an array of delimited strings: [probe name,genes symbol, gene Name] for
-     *         a given probe id. format of string is geneSymbol then geneNames same as found in annotation file
+     * @return Map of composite sequence ids to an array of strings: [probe name,genes symbol(s), gene Name(s)].
      */
     public static Map<Long, String[]> readAnnotationFileAsString( ArrayDesign arrayDesign ) {
         Map<Long, String[]> results = new HashMap<Long, String[]>();

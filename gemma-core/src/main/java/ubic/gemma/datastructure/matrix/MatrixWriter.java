@@ -50,6 +50,76 @@ public class MatrixWriter<T> {
     }
 
     /**
+     * Alternate method that uses annotations in string form (e.g., read from another file).
+     * 
+     * @param writer
+     * @param matrix
+     * @param geneAnnotations Map of composite sequence ids to an array of delimited strings: [probe name,genes symbol,
+     *        gene Name]
+     * @param writeHeader
+     * @throws IOException
+     */
+    public void writeWithStringifiedGeneAnnotations( Writer writer, ExpressionDataMatrix<T> matrix,
+            Map<Long, String[]> geneAnnotations, boolean writeHeader ) throws IOException {
+        this.writeWithStringifiedGeneAnnotations( writer, matrix, geneAnnotations, writeHeader, true, true );
+    }
+
+    /**
+     * @param writer
+     * @param matrix
+     * @param geneAnnotations Map of composite sequence ids to an array of delimited strings: [probe name,genes symbol,
+     *        gene Name]
+     * @param writeHeader
+     * @param writeSequence
+     * @param writeGeneInfo
+     * @throws IOException
+     */
+    public void writeWithStringifiedGeneAnnotations( Writer writer, ExpressionDataMatrix<T> matrix,
+            Map<Long, String[]> geneAnnotations, boolean writeHeader, boolean writeSequence, boolean writeGeneInfo )
+            throws IOException {
+        int columns = matrix.columns();
+        int rows = matrix.rows();
+
+        List<BioMaterial> orderedBioMaterials = ExpressionDataMatrixColumnSort.orderByExperimentalDesign( matrix );
+
+        StringBuffer buf = new StringBuffer();
+        if ( writeHeader ) {
+            writeHeader( orderedBioMaterials, matrix, geneAnnotations, writeSequence, writeGeneInfo, columns, buf );
+        }
+
+        for ( int j = 0; j < rows; j++ ) {
+            CompositeSequence probeForRow = ( CompositeSequence ) matrix.getDesignElementForRow( j );
+            buf.append( probeForRow.getName() + "\t" );
+            if ( writeSequence ) {
+                BioSequence biologicalCharacteristic = probeForRow.getBiologicalCharacteristic();
+                if ( biologicalCharacteristic != null ) buf.append( biologicalCharacteristic.getName() + "\t" );
+            }
+
+            if ( writeGeneInfo ) {
+                addGeneInfoFromStrings( buf, probeForRow, geneAnnotations );
+            }
+
+            int orderedBioMLastIndex = orderedBioMaterials.size() - 1;
+
+            for ( BioMaterial bioMaterial : orderedBioMaterials ) {
+                int i = matrix.getColumnIndex( bioMaterial );
+                T val = matrix.get( j, i );
+
+                // Don't want line to contain a trailing unnecessary tab
+                if ( orderedBioMaterials.indexOf( bioMaterial ) == orderedBioMLastIndex )
+                    buf.append( val );
+                else
+                    buf.append( val + "\t" );
+
+            }
+
+            buf.append( "\n" );
+
+        }
+        writer.write( buf.toString() );
+    }
+
+    /**
      * @param writer
      * @param matrix
      * @param geneAnnotations
@@ -72,7 +142,7 @@ public class MatrixWriter<T> {
 
         for ( int j = 0; j < rows; j++ ) {
             CompositeSequence probeForRow = ( CompositeSequence ) matrix.getDesignElementForRow( j );
-            buf.append( probeForRow.getName() + "\t");
+            buf.append( probeForRow.getName() + "\t" );
             if ( writeSequence ) {
                 BioSequence biologicalCharacteristic = probeForRow.getBiologicalCharacteristic();
                 if ( biologicalCharacteristic != null ) buf.append( biologicalCharacteristic.getName() + "\t" );
@@ -83,13 +153,13 @@ public class MatrixWriter<T> {
             }
 
             int orderedBioMLastIndex = orderedBioMaterials.size() - 1;
-            
+
             for ( BioMaterial bioMaterial : orderedBioMaterials ) {
                 int i = matrix.getColumnIndex( bioMaterial );
                 T val = matrix.get( j, i );
 
-                //Don't want line to contain a trailing unnecessary tab
-                if (orderedBioMaterials.indexOf( bioMaterial ) == orderedBioMLastIndex)
+                // Don't want line to contain a trailing unnecessary tab
+                if ( orderedBioMaterials.indexOf( bioMaterial ) == orderedBioMLastIndex )
                     buf.append( val );
                 else
                     buf.append( val + "\t" );
@@ -105,14 +175,14 @@ public class MatrixWriter<T> {
     /**
      * @param orderedBiomaterials
      * @param matrix
-     * @param geneAnnotations
+     * @param geneAnnotations just passed into check it is there.
      * @param writeSequence
      * @param writeGeneInfo
      * @param columns
      * @param buf
      */
     private void writeHeader( List<BioMaterial> orderedBioMaterials, ExpressionDataMatrix<T> matrix,
-            Map<Long, Collection<Gene>> geneAnnotations, boolean writeSequence, boolean writeGeneInfo, int columns,
+            Map<Long, ? extends Object> geneAnnotations, boolean writeSequence, boolean writeGeneInfo, int columns,
             StringBuffer buf ) {
 
         ExpressionDataWriterUtils.appendBaseHeader( matrix.getExpressionExperiment(), false, buf );
@@ -135,6 +205,43 @@ public class MatrixWriter<T> {
     /**
      * @param buf
      * @param probe The probe to add genes for.
+     * @param geneAnnotations Map of composite sequence ids to an array of strings. If null, nothing will be added to
+     *        the text. If there are no genes for the probe, then blanks will be added. In each array, the first string
+     *        is expected to respresent the gene symbols, the second the names. Any other array elements are ignored.
+     */
+    private void addGeneInfoFromStrings( StringBuffer buf, CompositeSequence probe, Map<Long, String[]> geneAnnotations ) {
+        if ( geneAnnotations == null || geneAnnotations.isEmpty() ) return;
+        Long probeid = probe.getId();
+        if ( geneAnnotations.containsKey( probeid ) ) {
+
+            String[] geneStrings = geneAnnotations.get( probeid );
+
+            if ( geneStrings.length == 0 ) {
+                buf.append( "\t\t" );
+                return;
+            }
+
+            String symbols = "";
+
+            if ( geneStrings.length > 1 ) {
+                symbols = geneStrings[1];
+            }
+
+            String names = "";
+            if ( geneStrings.length > 2 ) {
+                names = geneStrings[2];
+            }
+
+            // initial tab has already been added before
+            buf.append( symbols + "\t" + names + "\t" );
+        } else {
+            buf.append( "\t\t" );
+        }
+    }
+
+    /**
+     * @param buf
+     * @param probe The probe to add genes for.
      * @param geneAnnotations Map of composite sequence ids to genes. If null, nothing will be added to the text. If
      *        there are no genes for the probe, then blanks will be added.
      */
@@ -148,7 +255,7 @@ public class MatrixWriter<T> {
                 gs.add( gene.getOfficialSymbol() );
                 gn.add( gene.getOfficialName() );
             }
-            // tab has already been added before
+            // tab has already been added before FIXME make sure this format is consistent with other files!!
             buf.append( StringUtils.join( gs.toArray(), '|' ) );
             buf.append( "\t" );
             buf.append( StringUtils.join( gn.toArray(), '|' ) );

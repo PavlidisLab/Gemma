@@ -71,7 +71,7 @@ import ubic.gemma.util.DifferentialExpressionAnalysisResultComparator;
  * cached on the filesystem and reused if possible, rather than recreating them every time.
  * <p>
  * FIXME there is a possibility of having stale data, if the data have been updated since the last file was generated.
- * This can be tested for.
+ * This can be tested for. Also the gene annotations are (generally) read in from a file, which can also be stale.
  * 
  * @spring.bean id="expressionDataFileService"
  * @spring.property name = "designElementDataVectorService" ref="designElementDataVectorService"
@@ -204,7 +204,7 @@ public class ExpressionDataFileService {
             ExpressionDataDoubleMatrix matrix = getDataMatrix( ee, filtered, f );
 
             Collection<ArrayDesign> arrayDesigns = expressionExperimentService.getArrayDesignsUsed( ee );
-            Map<Long, Collection<Gene>> geneAnnotations = this.getGeneAnnotations( arrayDesigns );
+            Map<Long, String[]> geneAnnotations = this.getGeneAnnotationsAsStrings( arrayDesigns );
             writeMatrix( f, geneAnnotations, matrix );
             return f;
         } catch ( IOException e ) {
@@ -220,7 +220,6 @@ public class ExpressionDataFileService {
      * @param forceWrite To not return the existing file, but create it anew.
      * @return location of the resulting file.
      */
-    @SuppressWarnings("unchecked")
     public File writeOrLocateDataFile( QuantitationType type, boolean forceWrite ) {
 
         try {
@@ -234,7 +233,7 @@ public class ExpressionDataFileService {
 
             Collection<? extends DesignElementDataVector> vectors = designElementDataVectorService.find( type );
             Collection<ArrayDesign> arrayDesigns = getArrayDesigns( vectors );
-            Map<Long, Collection<Gene>> geneAnnotations = this.getGeneAnnotations( arrayDesigns );
+            Map<Long, String[]> geneAnnotations = this.getGeneAnnotationsAsStrings( arrayDesigns );
 
             if ( vectors.size() == 0 ) {
                 log.warn( "No vectors for " + type );
@@ -310,7 +309,6 @@ public class ExpressionDataFileService {
      * @param type
      * @param forceWrite
      */
-    @SuppressWarnings("unchecked")
     public File writeOrLocateJSONDataFile( QuantitationType type, boolean forceWrite ) {
 
         try {
@@ -407,7 +405,7 @@ public class ExpressionDataFileService {
                 .getProbeCoExpression( ee, tax.getCommonName() );
 
         Collection<ArrayDesign> arrayDesigns = expressionExperimentService.getArrayDesignsUsed( ee );
-        Map<Long, String[]> geneAnnotations = this.getGeneAnnotationsAsString( arrayDesigns );
+        Map<Long, String[]> geneAnnotations = this.getGeneAnnotationsAsStrings( arrayDesigns );
 
         Date timestamp = new Date( System.currentTimeMillis() );
         StringBuffer buf = new StringBuffer();
@@ -460,38 +458,32 @@ public class ExpressionDataFileService {
     private void writeDiffExpressionData( File file, ExpressionExperiment ee ) throws IOException {
 
         Collection<ExpressionAnalysisResultSet> results = differentialExpressionAnalysisService.getResultSets( ee );
+
+        if ( results == null || results.isEmpty() ) {
+            log.warn( "No differential expression results found for " + ee );
+            return;
+        }
+
         Collection<ArrayDesign> arrayDesigns = expressionExperimentService.getArrayDesignsUsed( ee );
-        Map<Long, String[]> geneAnnotations = this.getGeneAnnotationsAsString( arrayDesigns );
+        Map<Long, String[]> geneAnnotations = this.getGeneAnnotationsAsStrings( arrayDesigns );
 
         // Write header
         StringBuilder buf = new StringBuilder();
-        Date timestamp = new Date( System.currentTimeMillis() );
-        buf.append( "# Differential Expression Data for:  " + ee.getShortName() + " : " + ee.getName() + " \n" );
-        buf.append( "# " + timestamp + " \n" );
-        buf.append( DISCLAIMER );
-
-        // Different Headers if Gene Annotations missing.
-        if ( geneAnnotations.isEmpty() ) {
-            log
-                    .info( "Micro Array Annotation File Missing for this Experiment, unable to include gene annotation information" );
-            buf
-                    .append( "# The micro array annotation file is missing for this Experiment, unable to include gene annotation information \n" );
-            buf.append( "Probe_Name \t" );
-        } else
-            buf.append( "Probe_Name \t  Gene_Name \t Gene_Symbol \t" );// column information
+        buf.append( makeDiffExpressionFileHeader( ee, geneAnnotations ) );
 
         Map<Long, StringBuilder> probe2String = new HashMap<Long, StringBuilder>();
 
         List<DifferentialExpressionAnalysisResult> sortedFirstColumnOfResults = null;
-        
+
         for ( ExpressionAnalysisResultSet ears : results ) {
             differentialExpressionAnalysisResultService.thaw( ears );
 
             if ( sortedFirstColumnOfResults == null ) { // Sort P values in ears (because 1st column)
-                sortedFirstColumnOfResults = new ArrayList<DifferentialExpressionAnalysisResult>(ears.getResults() );
-                Collections.sort( sortedFirstColumnOfResults, DifferentialExpressionAnalysisResultComparator.Factory.newInstance() );
+                sortedFirstColumnOfResults = new ArrayList<DifferentialExpressionAnalysisResult>( ears.getResults() );
+                Collections.sort( sortedFirstColumnOfResults, DifferentialExpressionAnalysisResultComparator.Factory
+                        .newInstance() );
             }
-            
+
             // Generate a descrition of the factors involved "(factor1, factor2, ...., factorN)"
             String factorColumnName = new String( "(" );
             for ( ExperimentalFactor ef : ears.getExperimentalFactor() ) {
@@ -512,17 +504,19 @@ public class ExpressionDataFileService {
 
                     // Make a hashmap so we can organize the data by probe with factors as colums
                     // Need to cache the information untill we have it organized in the correct format to write
-                    if ( probe2String.containsKey( cs.getId() ) ) {
-                        probeBuffer = probe2String.get( cs.getId() );
+                    Long csid = cs.getId();
+                    if ( probe2String.containsKey( csid ) ) {
+                        probeBuffer = probe2String.get( csid );
                     } else {// no entry for probe yet
                         probeBuffer.append( cs.getName() + "\t" );
-                        if ( !geneAnnotations.isEmpty() )
-                            probeBuffer.append( geneAnnotations.get( cs.getId() )[1] + "\t"
-                                    + geneAnnotations.get( cs.getId() )[2] + "\t" );
-                        probe2String.put( cs.getId(), probeBuffer );
+                        if ( geneAnnotations.containsKey( csid ) )
+                            probeBuffer.append( geneAnnotations.get( csid )[1] + "\t" + geneAnnotations.get( csid )[2]
+                                    + "\t" );
+                        probe2String.put( csid, probeBuffer );
                     }
 
-                    probeBuffer.append( String.format(DECIMAL_FORMAT,dear.getCorrectedPvalue()) + "\t" + String.format(DECIMAL_FORMAT,dear.getPvalue()) + "\t" );
+                    probeBuffer.append( String.format( DECIMAL_FORMAT, dear.getCorrectedPvalue() ) + "\t"
+                            + String.format( DECIMAL_FORMAT, dear.getPvalue() ) + "\t" );
                 } else {
                     log.warn( "probe details missing.  Unable to retrieve probe level information. Skipping  "
                             + dear.getClass() + " with id: " + dear.getId() );
@@ -534,13 +528,17 @@ public class ExpressionDataFileService {
 
         buf.append( "\n" );
 
-        //Dump the probe data in the sorted order of the 1st column that we orginally sorted 
-        for (  DifferentialExpressionAnalysisResult sortedResult :  sortedFirstColumnOfResults ) {
-            
+        if ( sortedFirstColumnOfResults == null ) {
+            throw new IllegalStateException( "No results for " + ee );
+        }
+
+        // Dump the probe data in the sorted order of the 1st column that we orginally sorted
+        for ( DifferentialExpressionAnalysisResult sortedResult : sortedFirstColumnOfResults ) {
+
             if ( sortedResult instanceof ProbeAnalysisResult ) {
-                CompositeSequence cs = ( ( ProbeAnalysisResult ) sortedResult ).getProbe();               
+                CompositeSequence cs = ( ( ProbeAnalysisResult ) sortedResult ).getProbe();
                 StringBuilder sb = probe2String.get( cs.getId() );
-                if (sb == null){
+                if ( sb == null ) {
                     log.warn( "Unable to find probe " + cs.getId() + " in map" );
                     break;
                 }
@@ -553,6 +551,33 @@ public class ExpressionDataFileService {
         writer.write( buf.toString() );
         writer.flush();
         writer.close();
+    }
+
+    /**
+     * @param ee
+     * @param geneAnnotations
+     * @param buf
+     * @return header string
+     */
+    private String makeDiffExpressionFileHeader( ExpressionExperiment ee, Map<Long, String[]> geneAnnotations ) {
+        StringBuilder buf = new StringBuilder();
+        Date timestamp = new Date( System.currentTimeMillis() );
+        buf.append( "# Differential Expression Data for:  " + ee.getShortName() + " : " + ee.getName() + " \n" );
+        buf.append( "# " + timestamp + " \n" );
+        buf.append( DISCLAIMER );
+
+        // Different Headers if Gene Annotations missing.
+        if ( geneAnnotations.isEmpty() ) {
+            log
+                    .info( "Micro Array Annotation File Missing for this Experiment, unable to include gene annotation information" );
+            buf
+                    .append( "# The micro array annotation file is missing for this Experiment, unable to include gene annotation information \n" );
+            buf.append( "Probe_Name \t" );
+        } else {
+            buf.append( "Probe_Name \t  Gene_Name \t Gene_Symbol \t" );// column information
+        }
+
+        return buf.toString();
     }
 
     /**
@@ -603,9 +628,9 @@ public class ExpressionDataFileService {
 
     /**
      * @param ads
-     * @return
+     * @return Map of composite sequence ids to an array of strings: [probe name,genes symbol(s), gene Name(s)].
      */
-    private Map<Long, String[]> getGeneAnnotationsAsString( Collection<ArrayDesign> ads ) {
+    private Map<Long, String[]> getGeneAnnotationsAsStrings( Collection<ArrayDesign> ads ) {
         Map<Long, String[]> annots = new HashMap<Long, String[]>();
         for ( ArrayDesign arrayDesign : ads ) {
             arrayDesignService.thawLite( arrayDesign );
@@ -695,8 +720,8 @@ public class ExpressionDataFileService {
      * @throws FileNotFoundException
      */
     @SuppressWarnings("unchecked")
-    private void writeMatrix( File file, Map<Long, Collection<Gene>> geneAnnotations,
-            ExpressionDataMatrix expressionDataMatrix ) throws IOException, FileNotFoundException {
+    private void writeMatrix( File file, Map<Long, String[]> geneAnnotations, ExpressionDataMatrix expressionDataMatrix )
+            throws IOException, FileNotFoundException {
 
         Writer writer = new OutputStreamWriter( new GZIPOutputStream( new FileOutputStream( file ) ) );
         MatrixWriter matrixWriter = new MatrixWriter();
@@ -714,7 +739,7 @@ public class ExpressionDataFileService {
      */
     @SuppressWarnings("unchecked")
     private void writeVectors( File file, PrimitiveType representation,
-            Collection<? extends DesignElementDataVector> vectors, Map<Long, Collection<Gene>> geneAnnotations )
+            Collection<? extends DesignElementDataVector> vectors, Map<Long, String[]> geneAnnotations )
             throws IOException {
         designElementDataVectorService.thaw( vectors );
 
