@@ -725,7 +725,7 @@ public class ExpressionDataFileService {
 
         Writer writer = new OutputStreamWriter( new GZIPOutputStream( new FileOutputStream( file ) ) );
         MatrixWriter matrixWriter = new MatrixWriter();
-        matrixWriter.write( writer, expressionDataMatrix, geneAnnotations, true );
+        matrixWriter.writeWithStringifiedGeneAnnotations( writer, expressionDataMatrix, geneAnnotations, true );
         writer.flush();
         writer.close();
     }
