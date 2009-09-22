@@ -58,6 +58,7 @@ public class ArrayDesignGroupingTag extends TagSupport {
         this.subsumees = subsumees;
     }
 
+    @Override
     public int doStartTag() throws JspException {
 
         StringBuilder buf = new StringBuilder();
@@ -74,7 +75,7 @@ public class ArrayDesignGroupingTag extends TagSupport {
                 Collection<ArrayDesign> m = subsumee.getSubsumedArrayDesigns();
                 if (m.size() > 0) {
                    for (ArrayDesign ms : m) {
-                       buf.append(" &#187; " + arrayDesignLink(ms)); // FIXME, recurse to go down even further.
+                       buf.append(" &#187; subsumes " + arrayDesignShortLink(ms)); // FIXME, recurse to go down even further.
                    }
                 }
                 buf.append( "<br />" );
@@ -87,6 +88,10 @@ public class ArrayDesignGroupingTag extends TagSupport {
             throw new JspException( "arrayDesignGroupingTag: " + ex.getMessage() );
         }
         return SKIP_BODY;
+    }
+    
+    private String arrayDesignShortLink( ArrayDesign ad ) {
+        return "<a href=\"/Gemma/arrays/showArrayDesign.html?id=" + ad.getId() + "\">" + ad.getShortName() + "</a>";
     }
 
     private String arrayDesignLink( ArrayDesign ad ) {
