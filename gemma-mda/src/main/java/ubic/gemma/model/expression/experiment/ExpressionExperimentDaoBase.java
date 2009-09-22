@@ -27,9 +27,8 @@ import java.util.Map;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
-import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.expression.biomaterial.BioMaterial; 
+import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.genome.Taxon;
 
 /**
@@ -175,8 +174,7 @@ public abstract class ExpressionExperimentDaoBase extends
         argNames.add( "expressionExperiment" );
         java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
                 argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        ExpressionExperiment result = null;
-        if ( results != null ) {
+        ExpressionExperiment result = null; 
             if ( results.size() > 1 ) {
                 throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
                         "More than one instance of 'ubic.gemma.model.expression.experiment.ExpressionExperiment"
@@ -184,7 +182,7 @@ public abstract class ExpressionExperimentDaoBase extends
             } else if ( results.size() == 1 ) {
                 result = ( ubic.gemma.model.expression.experiment.ExpressionExperiment ) results.iterator().next();
             }
-        }
+         
         result = ( ExpressionExperiment ) transformEntity( transform, result );
         return result;
     }
@@ -192,8 +190,7 @@ public abstract class ExpressionExperimentDaoBase extends
     /**
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDao#find(int,
      *      ubic.gemma.model.expression.experiment.ExpressionExperiment)
-     */
-    @SuppressWarnings( { "unchecked" })
+     */ 
     public ExpressionExperiment find( final int transform,
             final ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment ) {
         return this
@@ -206,8 +203,7 @@ public abstract class ExpressionExperimentDaoBase extends
     /**
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDao#find(java.lang.String,
      *      ubic.gemma.model.expression.experiment.ExpressionExperiment)
-     */
-    @SuppressWarnings( { "unchecked" })
+     */ 
     public ubic.gemma.model.expression.experiment.ExpressionExperiment find( final java.lang.String queryString,
             final ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment ) {
         return this.find( TRANSFORM_NONE, queryString, expressionExperiment );
@@ -235,7 +231,7 @@ public abstract class ExpressionExperimentDaoBase extends
         java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
                 argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
         ExpressionExperiment result = null;
-        if ( results != null ) {
+        
             if ( results.size() > 1 ) {
                 throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
                         "More than one instance of 'ubic.gemma.model.expression.experiment.ExpressionExperiment"
@@ -243,7 +239,7 @@ public abstract class ExpressionExperimentDaoBase extends
             } else if ( results.size() == 1 ) {
                 result = ( ubic.gemma.model.expression.experiment.ExpressionExperiment ) results.iterator().next();
             }
-        }
+         
         result = ( ExpressionExperiment ) transformEntity( transform, result );
         return result;
     }
@@ -251,8 +247,7 @@ public abstract class ExpressionExperimentDaoBase extends
     /**
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDao#findByAccession(int,
      *      ubic.gemma.model.common.description.DatabaseEntry)
-     */
-    @SuppressWarnings( { "unchecked" })
+     */ 
     public ExpressionExperiment findByAccession( final int transform,
             final ubic.gemma.model.common.description.DatabaseEntry accession ) {
         return this.findByAccession( transform, "from ExpressionExperiment where accession=:accession", accession );
@@ -261,8 +256,7 @@ public abstract class ExpressionExperimentDaoBase extends
     /**
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDao#findByAccession(java.lang.String,
      *      ubic.gemma.model.common.description.DatabaseEntry)
-     */
-    @SuppressWarnings( { "unchecked" })
+     */ 
     public ubic.gemma.model.expression.experiment.ExpressionExperiment findByAccession(
             final java.lang.String queryString, final ubic.gemma.model.common.description.DatabaseEntry accession ) {
         return this.findByAccession( TRANSFORM_NONE, queryString, accession );
@@ -273,7 +267,7 @@ public abstract class ExpressionExperimentDaoBase extends
      */
     public ubic.gemma.model.expression.experiment.ExpressionExperiment findByAccession(
             ubic.gemma.model.common.description.DatabaseEntry accession ) {
-        return ( ubic.gemma.model.expression.experiment.ExpressionExperiment ) this.findByAccession( TRANSFORM_NONE,
+        return this.findByAccession( TRANSFORM_NONE,
                 accession );
     }
 
@@ -307,7 +301,7 @@ public abstract class ExpressionExperimentDaoBase extends
     /**
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDao#findByBioMaterials(java.util.Collection)
      */
-    public java.util.Collection<ExpressionExperiment> findByBioMaterials( final java.util.Collection bioMaterials ) {
+    public java.util.Collection<ExpressionExperiment> findByBioMaterials( final java.util.Collection<BioMaterial> bioMaterials ) {
         try {
             return this.handleFindByBioMaterials( bioMaterials );
         } catch ( Throwable th ) {
@@ -349,7 +343,7 @@ public abstract class ExpressionExperimentDaoBase extends
     /**
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDao#findByFactorValues(java.util.Collection)
      */
-    public java.util.Collection<ExpressionExperiment> findByFactorValues( final java.util.Collection factorValues ) {
+    public java.util.Collection<ExpressionExperiment> findByFactorValues( final java.util.Collection<FactorValue> factorValues ) {
         try {
             return this.handleFindByFactorValues( factorValues );
         } catch ( Throwable th ) {
@@ -420,7 +414,7 @@ public abstract class ExpressionExperimentDaoBase extends
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDao#findByInvestigator(ubic.gemma.model.common.auditAndSecurity.Contact)
      */
 
-    public java.util.Collection findByInvestigator( ubic.gemma.model.common.auditAndSecurity.Contact investigator ) {
+    public java.util.Collection<ExpressionExperiment> findByInvestigator( ubic.gemma.model.common.auditAndSecurity.Contact investigator ) {
         return this.findByInvestigator( TRANSFORM_NONE, investigator );
     }
 
@@ -446,7 +440,7 @@ public abstract class ExpressionExperimentDaoBase extends
         java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
                 argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
         ExpressionExperiment result = null;
-        if ( results != null ) {
+        
             if ( results.size() > 1 ) {
                 throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
                         "More than one instance of 'ubic.gemma.model.expression.experiment.ExpressionExperiment"
@@ -454,7 +448,7 @@ public abstract class ExpressionExperimentDaoBase extends
             } else if ( results.size() == 1 ) {
                 result = ( ubic.gemma.model.expression.experiment.ExpressionExperiment ) results.iterator().next();
             }
-        }
+ 
         result = ( ExpressionExperiment ) transformEntity( transform, result );
         return result;
     }
@@ -469,8 +463,7 @@ public abstract class ExpressionExperimentDaoBase extends
     /**
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDao#findByName(java.lang.String,
      *      java.lang.String)
-     */
-    @SuppressWarnings( { "unchecked" })
+     */ 
     public ubic.gemma.model.expression.experiment.ExpressionExperiment findByName( final java.lang.String queryString,
             final java.lang.String name ) {
         return this.findByName( TRANSFORM_NONE, queryString, name );
@@ -491,8 +484,7 @@ public abstract class ExpressionExperimentDaoBase extends
 
     /**
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDao#findByShortName(int, java.lang.String)
-     */
-    @SuppressWarnings( { "unchecked" })
+     */ 
     public ExpressionExperiment findByShortName( final int transform, final java.lang.String shortName ) {
         return this.findByShortName( transform, "from ExpressionExperimentImpl a where a.shortName=:shortName",
                 shortName );
@@ -512,7 +504,7 @@ public abstract class ExpressionExperimentDaoBase extends
         java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
                 argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
         ExpressionExperiment result = null;
-        if ( results != null ) {
+        
             if ( results.size() > 1 ) {
                 throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
                         "More than one instance of 'ubic.gemma.model.expression.experiment.ExpressionExperiment"
@@ -520,7 +512,7 @@ public abstract class ExpressionExperimentDaoBase extends
             } else if ( results.size() == 1 ) {
                 result = ( ubic.gemma.model.expression.experiment.ExpressionExperiment ) results.iterator().next();
             }
-        }
+        
         result = ( ExpressionExperiment ) transformEntity( transform, result );
         return result;
     }
@@ -529,15 +521,14 @@ public abstract class ExpressionExperimentDaoBase extends
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDao#findByShortName(java.lang.String)
      */
     public ubic.gemma.model.expression.experiment.ExpressionExperiment findByShortName( java.lang.String shortName ) {
-        return ( ubic.gemma.model.expression.experiment.ExpressionExperiment ) this.findByShortName( TRANSFORM_NONE,
+        return  this.findByShortName( TRANSFORM_NONE,
                 shortName );
     }
 
     /**
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDao#findByShortName(java.lang.String,
      *      java.lang.String)
-     */
-    @SuppressWarnings( { "unchecked" })
+     */ 
     public ubic.gemma.model.expression.experiment.ExpressionExperiment findByShortName(
             final java.lang.String queryString, final java.lang.String shortName ) {
         return this.findByShortName( TRANSFORM_NONE, queryString, shortName );
@@ -1131,7 +1122,7 @@ public abstract class ExpressionExperimentDaoBase extends
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
                 for ( java.util.Iterator<ExpressionExperiment> entityIterator = entities.iterator(); entityIterator
                         .hasNext(); ) {
-                    update( ( ubic.gemma.model.expression.experiment.ExpressionExperiment ) entityIterator.next() );
+                    update( entityIterator.next() );
                 }
                 return null;
             }
@@ -1243,14 +1234,14 @@ public abstract class ExpressionExperimentDaoBase extends
      * Performs the core logic for {@link #getDesignElementDataVectors(java.util.Collection)}
      */
     protected abstract java.util.Collection<DesignElementDataVector> handleGetDesignElementDataVectors(
-            java.util.Collection quantitationTypes ) throws java.lang.Exception;
+            java.util.Collection<QuantitationType> quantitationTypes ) throws java.lang.Exception;
 
     /**
      * Performs the core logic for
      * {@link #getDesignElementDataVectors(java.util.Collection, ubic.gemma.model.common.quantitationtype.QuantitationType)}
      */
     protected abstract java.util.Collection<DesignElementDataVector> handleGetDesignElementDataVectors(
-            java.util.Collection designElements,
+            java.util.Collection<DesignElement> designElements,
             ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType ) throws java.lang.Exception;
 
     /**
