@@ -56,7 +56,7 @@ public class ExpressionExperimentLoadTaskImpl extends BaseSpacesTask implements 
      */
     @SuppressWarnings("unchecked")
     public TaskResult execute( ExpressionExperimentLoadTaskCommand command ) {
-        ExpressionExperimentLoadTaskCommand jsEeLoadCommand = ( ExpressionExperimentLoadTaskCommand ) command;
+        ExpressionExperimentLoadTaskCommand jsEeLoadCommand = command;
 
         SpacesProgressAppender spacesProgressAppender = super.initProgressAppender( this.getClass() );
 

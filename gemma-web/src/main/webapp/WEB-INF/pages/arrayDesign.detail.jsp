@@ -260,7 +260,7 @@
 					src="/Gemma/images/help.png" /> </a>
 		</td>
 		<td>
-			<c:out value="${technologyType}" />
+			${technologyType}
 		</td>
 	</tr>
 
