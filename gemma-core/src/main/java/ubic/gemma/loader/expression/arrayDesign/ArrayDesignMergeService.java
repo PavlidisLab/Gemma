@@ -84,12 +84,30 @@ public class ArrayDesignMergeService {
         // appear more than once per array design.
         Map<BioSequence, Collection<CompositeSequence>> globalBsMap = new HashMap<BioSequence, Collection<CompositeSequence>>();
         arrayDesignService.thawLite( arrayDesign );
+
+        /*
+         * TODO: gracefully handle this situation. Bug 1681 
+         */
+        
+        if ( arrayDesign.getMergedInto() != null || arrayDesign.getMergees().size() > 0 ) {
+            throw new IllegalArgumentException(
+                    "Sorry, can't merge an array design that is already merged or is itself a merged design ("
+                            + arrayDesign + ")" );
+        }
+
         makeBioSeqMap( globalBsMap, arrayDesign );
 
         log.info( globalBsMap.keySet().size() + " sequences encountered in first array design to be merged." );
 
         for ( ArrayDesign otherArrayDesign : otherArrayDesigns ) {
             log.info( "Processing " + otherArrayDesign );
+            
+
+            if ( otherArrayDesign.getMergedInto() != null || otherArrayDesign.getMergees().size() > 0 ) {
+                throw new IllegalArgumentException(
+                        "Sorry, can't merge an array design that is already merged or is itself a merged design ("
+                                + arrayDesign + ")" );
+            }
 
             if ( arrayDesign.equals( otherArrayDesign ) ) {
                 continue;
