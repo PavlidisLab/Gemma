@@ -637,7 +637,7 @@ public class GeoDatasetService extends AbstractGeoService {
                 ExpressionExperiment expressionExperiment = ( ExpressionExperiment ) entity;
                 this.expressionExperimentReportService.generateSummaryObject( expressionExperiment.getId() );
 
-                this.expressionExperimentService.thawLite( expressionExperiment );
+                // this.expressionExperimentService.thawLite( expressionExperiment );
 
                 for ( BioAssay ba : expressionExperiment.getBioAssays() ) {
                     adsToUpdate.add( ba.getArrayDesignUsed() );
