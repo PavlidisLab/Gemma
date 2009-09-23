@@ -104,9 +104,9 @@ public class CharacteristicDaoImpl extends ubic.gemma.model.common.description.C
      * @see ubic.gemma.model.common.description.CharacteristicDaoBase#handleFindByvalue(java.lang.String)
      */
     @Override
-    protected Collection handleFindByValue( String search ) throws Exception {
+    protected Collection<Characteristic> handleFindByValue( String search ) throws Exception {
         final String queryString = "select distinct char from CharacteristicImpl as char where char.value like :search";
-        return getHibernateTemplate().findByNamedParam( queryString, "search", search );
+        return getHibernateTemplate().findByNamedParam( queryString, "search", search + "%" );
     }
 
     /*
