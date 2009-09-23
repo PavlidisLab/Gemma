@@ -479,7 +479,7 @@ public class ExperimentalDesignController extends BaseMultiActionController {
     }
 
     /**
-     * @param request
+     * @param request with either 'eeid' (expression experiment id) or 'edid' (experimental design id)
      * @param response
      * @param errors
      * @return ModelAndView
@@ -487,31 +487,46 @@ public class ExperimentalDesignController extends BaseMultiActionController {
     public ModelAndView show( HttpServletRequest request, HttpServletResponse response ) {
 
         String idstr = request.getParameter( "eeid" );
-        if ( StringUtils.isBlank( idstr ) ) {
-            throw new IllegalArgumentException( "Must supply 'eeid' parameter" );
+        String edStr = request.getParameter( "edid" );
+        if ( StringUtils.isBlank( idstr ) && StringUtils.isBlank( edStr ) ) {
+            throw new IllegalArgumentException( "Must supply 'eeid' or 'edid' parameter" );
         }
 
-        Long id = null;
-        try {
-            id = Long.parseLong( idstr );
-        } catch ( NumberFormatException e ) {
-            throw new IllegalArgumentException( "eeid must be a number" );
+        Long designId;
+        ExpressionExperiment ee = null;
+        ExperimentalDesign experimentalDesign = null;
+        if ( StringUtils.isNotBlank( idstr ) ) {
+            try {
+                Long id = Long.parseLong( idstr );
+                ee = expressionExperimentService.load( id );
+
+                if ( ee == null ) {
+                    throw new EntityNotFoundException( "Expression experiment with id=" + id + " cannot be accessed" );
+                }
+
+                designId = ee.getExperimentalDesign().getId();
+                experimentalDesign = experimentalDesignService.load( designId );
+                if ( experimentalDesign == null ) {
+                    throw new EntityNotFoundException( designId + " not found" );
+                }
+            } catch ( NumberFormatException e ) {
+                throw new IllegalArgumentException( "eeid must be a number" );
+            }
+        } else {
+            try {
+                designId = Long.parseLong( edStr );
+                experimentalDesign = experimentalDesignService.load( designId );
+                if ( experimentalDesign == null ) {
+                    throw new EntityNotFoundException( designId + " not found" );
+                }
+                ee = experimentalDesignService.getExpressionExperiment( experimentalDesign );
+
+            } catch ( NumberFormatException e ) {
+                throw new IllegalArgumentException( "edid must be a number" );
+            }
         }
 
-        ExpressionExperiment ee = expressionExperimentService.load( id );
-
-        if ( ee == null ) {
-            throw new EntityNotFoundException( "Expression experiment with id=" + id + " cannot be accessed" );
-        }
-
-        Long designId = ee.getExperimentalDesign().getId();
-
-        ExperimentalDesign experimentalDesign = experimentalDesignService.load( designId );
-        if ( experimentalDesign == null ) {
-            throw new EntityNotFoundException( id + " not found" );
-        }
-
-        request.setAttribute( "id", id );
+        request.setAttribute( "id", designId );
 
         ModelAndView mnv = new ModelAndView( "experimentalDesign.detail" );
         mnv.addObject( "hasPopulatedDesign", experimentalDesign.getExperimentalFactors().size() > 0 );
