@@ -41,12 +41,23 @@ public class AnchorTagUtil {
         return getLink( getExpressionExperimentUrl( eeId ), link, hover );
     }
 
-    public static String getExperimentalDesignLink( Long edId, String link ) {
-        return getExperimentalDesignLink( edId, link, null );
+    /**
+     * @param eeId Id of the experimental design
+     * @param link
+     * @return
+     */
+    public static String getExperimentalDesignLink( Long eeId, String link ) {
+        return getExperimentalDesignLink( eeId, link, null );
     }
 
+    /**
+     * @param eeId Id of the experimental design
+     * @param link
+     * @param hover
+     * @return
+     */
     public static String getExperimentalDesignLink( Long edId, String link, String hover ) {
-        return getLink( String.format( "/Gemma/expressionExperiment/showExperimentalDesign.html?id=%d", edId ),
+        return getLink( String.format( "/Gemma/experimentalDesign/showExperimentalDesign.html?edid=%d", edId ),
                 "ExperimentalDesign " + ( StringUtils.isBlank( link ) ? "" : ": " + link ), hover );
     }
 
