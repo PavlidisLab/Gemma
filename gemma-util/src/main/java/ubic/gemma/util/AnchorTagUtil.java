@@ -58,7 +58,7 @@ public class AnchorTagUtil {
      */
     public static String getExperimentalDesignLink( Long edId, String link, String hover ) {
         return getLink( String.format( "/Gemma/experimentalDesign/showExperimentalDesign.html?edid=%d", edId ),
-                "ExperimentalDesign " + ( StringUtils.isBlank( link ) ? "" : ": " + link ), hover );
+                ( StringUtils.isBlank( link ) ? "Experimental Design" : link ), hover );
     }
 
     public static String getProbeLink( Long probeId, String link ) {

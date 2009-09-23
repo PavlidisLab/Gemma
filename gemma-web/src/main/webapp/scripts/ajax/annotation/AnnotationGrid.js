@@ -3,7 +3,8 @@ Ext.namespace('Gemma');
 /**
  * The 'Characteristic browser' grid, also used for the basic Annotation view.
  * 
- * Gemma.AnnotationGrid constructor... div is the name of the div in which to render the grid. config is a hash with the following options:
+ * Gemma.AnnotationGrid constructor... div is the name of the div in which to
+ * render the grid. config is a hash with the following options:
  * 
  * readMethod : the DWR method that returns the list of AnnotationValueObjects (
  * e.g.: ExpressionExperimentController.getAnnotation )
@@ -157,7 +158,13 @@ Gemma.AnnotationGrid = Ext.extend(Gemma.GemmaGridPanel, {
 		// value = String.format("{0}<br> from {1}", parentLink,
 		// parentOfParentLink);
 		// } else {
-		value = parentLink + "&nbsp;&nbsp;" + parentDescription;
+		value = (parentLink ? (parentLink + "&nbsp;&nbsp;") : "")
+				+ (parentDescription ? parentDescription : "");
+
+		if (parentOfParentLink) {
+			value = value + "&nbsp;&laquo;&nbsp;" + parentOfParentLink;
+		}
+
 		// }
 		return expanded ? value.concat(String.format(
 				"<div style='white-space: normal;'>{0}</div>",
@@ -198,7 +205,7 @@ Gemma.AnnotationGrid = Ext.extend(Gemma.GemmaGridPanel, {
 		Ext.apply(this, {
 			columns : [ {
 				header : "Category",
-				dataIndex : "className" 
+				dataIndex : "className"
 			}, {
 				header : "Term",
 				dataIndex : "termName",

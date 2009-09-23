@@ -98,7 +98,7 @@ public class CharacteristicBrowserController extends BaseFormController {
      */
     public Collection<AnnotationValueObject> findCharacteristics( String valuePrefix, boolean searchNos,
             boolean searchEEs, boolean searchBMs, boolean searchFVs, boolean searchFVVs ) {
-        log.info( "Characteristic search: " + valuePrefix );
+        log.info( "Characteristic search for: " + valuePrefix );
         Collection<AnnotationValueObject> results = new HashSet<AnnotationValueObject>();
         if ( StringUtils.isBlank( valuePrefix ) ) {
             return results;
@@ -109,7 +109,8 @@ public class CharacteristicBrowserController extends BaseFormController {
             Characteristic c = ( Characteristic ) o;
             Object parent = charToParent.get( c );
             if ( ( searchEEs && parent instanceof ExpressionExperiment )
-                    || ( searchBMs && parent instanceof BioMaterial ) || ( searchFVs && parent instanceof FactorValue )
+                    || ( searchBMs && parent instanceof BioMaterial )
+                    || ( searchFVs && ( parent instanceof FactorValue || parent instanceof ExperimentalFactor ) )
                     || ( searchNos && parent == null ) ) {
                 AnnotationValueObject avo = new AnnotationValueObject();
                 avo.setId( c.getId() );
@@ -126,6 +127,7 @@ public class CharacteristicBrowserController extends BaseFormController {
                 } else {
                     avo.setObjectClass( Characteristic.class.getSimpleName() );
                 }
+
                 populateParentInformation( avo, parent );
                 results.add( avo );
             }
@@ -312,9 +314,8 @@ public class CharacteristicBrowserController extends BaseFormController {
         Collection<FactorValue> result = new HashSet<FactorValue>();
         for ( AnnotationValueObject avo : avos ) {
             assert avo.getObjectClass() != null;
-            
-            if (  !avo.getObjectClass().equals( FactorValue.class.getSimpleName() ) )
-                continue;
+
+            if ( !avo.getObjectClass().equals( FactorValue.class.getSimpleName() ) ) continue;
 
             if ( avo.getId() == null ) {
                 log.warn( "No id" );
@@ -359,11 +360,10 @@ public class CharacteristicBrowserController extends BaseFormController {
     private Collection<Characteristic> convertToCharacteristic( Collection<AnnotationValueObject> avos ) {
         Collection<Characteristic> result = new HashSet<Characteristic>();
         for ( AnnotationValueObject avo : avos ) {
-            
+
             assert avo.getObjectClass() != null;
-            
-            if (   avo.getObjectClass().equals( FactorValue.class.getSimpleName() ) )
-                continue;
+
+            if ( avo.getObjectClass().equals( FactorValue.class.getSimpleName() ) ) continue;
 
             VocabCharacteristic vc = convertAvo2Characteristic( avo );
 
@@ -428,22 +428,22 @@ public class CharacteristicBrowserController extends BaseFormController {
 
     private void populateParentInformation( AnnotationValueObject avo, Object parent ) {
         if ( parent == null ) {
-            return;
+            avo.setParentLink( "[Orphan]" );
         } else if ( parent instanceof ExpressionExperiment ) {
             ExpressionExperiment ee = ( ExpressionExperiment ) parent;
-            avo.setParentName( String.format( "ExpressionExperiment: %s", ee.getName() ) );
-            avo.setParentDescription( ee.getDescription() );
+            avo.setParentName( String.format( "Experiment: %s", ee.getName() ) );
+            // avo.setParentDescription( ee.getDescription() );
             avo.setParentLink( AnchorTagUtil.getExpressionExperimentLink( ee.getId(), avo.getParentName() ) );
         } else if ( parent instanceof BioMaterial ) {
             BioMaterial bm = ( BioMaterial ) parent;
-            avo.setParentName( String.format( "BioMaterial: %s", bm.getName() ) );
-            avo.setParentDescription( bm.getDescription() );
+            avo.setParentName( String.format( "BioMat: %s", bm.getName() ) );
+            // avo.setParentDescription( bm.getDescription() );
             avo.setParentLink( AnchorTagUtil.getBioMaterialLink( bm.getId(), avo.getParentName() ) );
             ExpressionExperiment ee = expressionExperimentService.findByBioMaterial( bm );
 
             if ( ee != null ) {
-                avo.setParentOfParentName( String.format( "ExpressionExperiment: %s", ee.getName() ) );
-                avo.setParentOfParentDescription( ee.getDescription() );
+                avo.setParentOfParentName( String.format( "%s", ee.getName() ) );
+                // avo.setParentOfParentDescription( ee.getDescription() );
                 avo.setParentOfParentLink( AnchorTagUtil.getExpressionExperimentLink( ee.getId(), avo
                         .getParentOfParentName() ) );
             } else {
@@ -451,24 +451,25 @@ public class CharacteristicBrowserController extends BaseFormController {
             }
         } else if ( parent instanceof FactorValue ) {
             FactorValue fv = ( FactorValue ) parent;
-            avo.setParentDescription( String.format( "FactorValue: %s : %s", fv.getExperimentalFactor().getName(), fv
-                    .getValue() ) );
-            avo.setParentLink( AnchorTagUtil.getExperimentalDesignLink( fv.getExperimentalFactor()
-                    .getExperimentalDesign().getId(), avo.getParentName() ) );
+            avo.setParentDescription( String.format( "FactorValue: %s &laquo; Exp.Factor: %s",
+                    ( fv.getValue() == null ? "" : ": " + fv.getValue() ), fv.getExperimentalFactor().getName() ) );
+            // avo.setParentLink( AnchorTagUtil.getExperimentalDesignLink( fv.getExperimentalFactor()
+            // .getExperimentalDesign().getId(), avo.getParentName() ) );
             ExpressionExperiment ee = experimentalDesignService.getExpressionExperiment( fv.getExperimentalFactor()
                     .getExperimentalDesign() );
-            avo.setParentOfParentName( String.format( "ExpressionExperiment: %s", ee.getName() ) );
-            avo.setParentOfParentDescription( ee.getDescription() );
-            avo.setParentOfParentLink( AnchorTagUtil.getExpressionExperimentLink( ee.getId(), avo
-                    .getParentOfParentName() ) );
+            avo.setParentOfParentName( String.format( "Experimental Design for: %s", ee.getName() ) );
+            // avo.setParentOfParentDescription( ee.getDescription() );
+            avo.setParentOfParentLink( AnchorTagUtil.getExperimentalDesignLink( fv.getExperimentalFactor()
+                    .getExperimentalDesign().getId(), avo.getParentName() )
+                    + "&nbsp;&laquo;&nbsp;" + AnchorTagUtil.getExpressionExperimentLink( ee.getId(), ee.getName() ) );
         } else if ( parent instanceof ExperimentalFactor ) {
             ExperimentalFactor ef = ( ExperimentalFactor ) parent;
-            avo.setParentDescription( String.format( "ExperimentalFactor: %s  ", ef.getName() ) );
-            avo.setParentLink( AnchorTagUtil.getExperimentalDesignLink( ef.getExperimentalDesign().getId(), avo
-                    .getParentName() ) );
+            // avo.setParentDescription( String.format( "ExperimentalFactor: %s  ", ef.getName() ) );
+            avo.setParentLink( AnchorTagUtil.getExperimentalDesignLink( ef.getExperimentalDesign().getId(),
+                    "Exp. Factor: " + ef.getName() ) );
             ExpressionExperiment ee = experimentalDesignService.getExpressionExperiment( ef.getExperimentalDesign() );
-            avo.setParentOfParentName( String.format( "ExpressionExperiment: %s", ee.getName() ) );
-            avo.setParentOfParentDescription( ee.getDescription() );
+            avo.setParentOfParentName( String.format( "%s", ee.getName() ) );
+            // avo.setParentOfParentDescription( ee.getDescription() );
             avo.setParentOfParentLink( AnchorTagUtil.getExpressionExperimentLink( ee.getId(), avo
                     .getParentOfParentName() ) );
         }
