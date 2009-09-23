@@ -63,6 +63,10 @@ public class ConfigUtils {
      */
     private static final String BUILTIN_CONFIGURATION = "project.properties";
 
+    private static final String QUARTZ_ENABLED_PROPERTY = "quartzOn";
+
+    private static final String GRID_ENBALED_PROPERTY = "gemma.grid.enabled";
+
     private static CompositeConfiguration config;
 
     static {
@@ -599,6 +603,20 @@ public class ConfigUtils {
      */
     public static String getBaseUrl() {
         return getString( "gemma.base.url", "[URL to Gemma not configured]" );
+    }
+
+    /**
+     * @return true if the compute grid (e.g., JavaSpaces) is enabled by the user's configuration
+     */
+    public static boolean isGridEnabled() {
+        return getBoolean( GRID_ENBALED_PROPERTY, false );
+    }
+
+    /**
+     * @return true if the scheduler (e.g. Quartz for cron-style tasks) is enabled by the user's configuration
+     */
+    public static boolean isSchedulerEnabled() {
+        return getBoolean( QUARTZ_ENABLED_PROPERTY, false );
     }
 
     /**

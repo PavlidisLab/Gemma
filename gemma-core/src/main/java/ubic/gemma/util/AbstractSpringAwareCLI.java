@@ -72,7 +72,10 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
     }
 
     private void addSpecialServiceOptions() {
-        Option gigaspacesOnOpt = new Option( GIGASPACES_ON, false, "Use the gigaspaces compute-server for large jobs." );
+        Option gigaspacesOnOpt = new Option(
+                GIGASPACES_ON,
+                false,
+                "Use the compute grid for large jobs; by default the grid is not enabled for CLIs and ignores any relevant setting in your Gemma.properties file." );
         options.addOption( gigaspacesOnOpt );
     }
 
@@ -141,8 +144,7 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
         for ( int j = events.size() - 1; j >= 0; j-- ) {
             AuditEvent event = events.get( j );
             AuditEventType eventType = event.getEventType();
-            if ( eventType != null && eventClass != null
-                    && eventClass.isAssignableFrom( eventType.getClass() )
+            if ( eventType != null && eventClass != null && eventClass.isAssignableFrom( eventType.getClass() )
                     && !eventType.getClass().getSimpleName().startsWith( "Fail" ) ) {
                 if ( skipIfLastRunLaterThan != null ) {
                     if ( event.getDate().after( skipIfLastRunLaterThan ) ) {

@@ -75,17 +75,19 @@ import ubic.gemma.util.QuartzUtils;
 public class StartupListener extends ContextLoaderListener {
 
     /**
-     * Configuration parameter for lib directory.
+     * Configuration parameter for lib directory. FIXME: move to ConfigUtil
      */
     private static final String GEMMA_LIB_DIR = "gemma.lib.dir";
 
     /**
      * Key for the tracker ID in your configuration file. Tracker id for Google is something like 'UA-12441-1'. In your
-     * Gemma.properties file add a line like
+     * Gemma.properties file add a line like:
      * 
      * <pre>
      * ga.tracker = UA_123456_1
      * </pre>
+     * 
+     * FIXME: move to ConfigUtils
      */
     private static final String ANALYTICS_TRACKER_PROPERTY = "ga.tracker";
 
@@ -97,8 +99,6 @@ public class StartupListener extends ContextLoaderListener {
     private static final Log log = LogFactory.getLog( StartupListener.class );
 
     private static final String[] modules = new String[] { "core", "mda", "util" };
-
-    private static final String QUARTZ = "quartzOn";
 
     /**
      * This is used to get information from the system that does not change and which can be reused throughout -
@@ -164,7 +164,7 @@ public class StartupListener extends ContextLoaderListener {
 
         populateDropDowns( servletContext );
 
-        copyWorkerJars( servletContext );
+        if ( ConfigUtils.isGridEnabled() ) copyWorkerJars( servletContext );
 
         initializeOntologies( ctx );
 
@@ -180,7 +180,7 @@ public class StartupListener extends ContextLoaderListener {
      * @param ctx
      */
     private void configureScheduler( ApplicationContext ctx ) {
-        if ( !ConfigUtils.getBoolean( QUARTZ, false ) ) {
+        if ( !ConfigUtils.isSchedulerEnabled() ) {
             QuartzUtils.disableQuartzScheduler( ( StdScheduler ) ctx.getBean( "schedulerFactoryBean" ) );
             log.info( "Quartz scheduling disabled.  Set quartzOn=true in Gemma.properties to enable" );
         } else

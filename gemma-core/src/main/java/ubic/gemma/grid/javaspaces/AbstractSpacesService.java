@@ -22,12 +22,13 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.context.ApplicationContext;
 
+import ubic.gemma.util.ConfigUtils;
 import ubic.gemma.util.grid.javaspaces.SpacesEnum;
 import ubic.gemma.util.grid.javaspaces.SpacesUtil;
 import ubic.gemma.util.progress.TaskRunningService;
 
 /**
- * DOCUMENT ME
+ * Implementations of tasks enabled to run on the grid should suclass this.
  * 
  * @spring.property name="spacesUtil" ref="spacesUtil"
  * @author keshav
@@ -43,37 +44,59 @@ public abstract class AbstractSpacesService {
     /**
      * @return ApplicationContext
      */
-    public ApplicationContext addGemmaSpacesToApplicationContext() {
+    private ApplicationContext addGemmaSpacesToApplicationContext() {
         assert spacesUtil != null;
         return spacesUtil.addGemmaSpacesToApplicationContext( SpacesEnum.DEFAULT_SPACE.getSpaceUrl() );
     }
 
+    /**
+     * @param spaceUrl
+     * @param taskName
+     * @param runInLocalContext
+     */
     protected void startJob( String spaceUrl, String taskName, boolean runInLocalContext ) {
         run( spaceUrl, taskName, runInLocalContext );
     }
 
+    /**
+     * @param spaceUrl
+     * @param taskName
+     * @param runInLocalContext
+     * @return
+     */
     protected String run( String spaceUrl, String taskName, boolean runInLocalContext ) {
-
         return run( spaceUrl, taskName, runInLocalContext, null );
     }
 
+    /**
+     * @param spaceUrl
+     * @param taskName
+     * @param runInLocalContext
+     * @param command
+     * @return
+     */
     protected String run( String spaceUrl, String taskName, boolean runInLocalContext, Object command ) {
 
         String taskId = null;
 
-        updatedContext = addGemmaSpacesToApplicationContext();
+        if ( !ConfigUtils.isGridEnabled() ) {
+            log.info( "Grid is not enabled (set the corresponding property in your properties file" );
+        } else {
+            updatedContext = addGemmaSpacesToApplicationContext();
+        }
 
-        if ( updatedContext.containsBean( "gigaspacesTemplate" ) && spacesUtil.canServiceTask( taskName, spaceUrl ) ) {
-            log.info( "Running task " + taskName + " remotely." );
+        if ( updatedContext != null && updatedContext.containsBean( "gigaspacesTemplate" )
+                && spacesUtil.canServiceTask( taskName, spaceUrl ) ) {
+            log.info( "Running task " + taskName + " on grid." );
 
             taskId = SpacesHelper.getTaskIdFromTask( updatedContext, taskName );
             runRemotely( taskId, command );
         } else if ( !updatedContext.containsBean( "gigaspacesTemplate" ) && !runInLocalContext ) {
             throw new RuntimeException(
-                    "This task must be run on the compute server, but the space is not running. Please try again later" );
-        }
-
-        else {
+                    "This task ("
+                            + taskName
+                            + ") must be run on the compute server, but the space is not configured or not running. Please try again later" );
+        } else {
             log.info( "Running task " + taskName + " locally." );
             taskId = TaskRunningService.generateTaskId();
             runLocally( taskId, command );

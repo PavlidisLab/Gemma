@@ -266,11 +266,13 @@ public abstract class AbstractCLI {
             try {
                 log4jLogger = LogManager.getLogger( Class.forName( loggerName ) );
             } catch ( ClassNotFoundException e ) {
-                //
+                log.warn( "ClassNotFound: " + loggerName );
             }
 
-            log.warn( "No logger of name '" + loggerName + "'" );
-            return;
+            if ( log4jLogger == null ) {
+                log.warn( "No logger of name '" + loggerName + "'" );
+                return;
+            }
         }
 
         this.originalLoggingLevels.put( log4jLogger, log4jLogger.getLevel() );
