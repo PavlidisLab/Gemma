@@ -98,4 +98,9 @@ public class FactorValueServiceImpl extends ubic.gemma.model.expression.experime
         this.getFactorValueDao().update( factorValue );
     }
 
+    @Override
+    public Collection<FactorValue> findByValue( String valuePrefix ) {
+        return this.getFactorValueDao().findByValue( valuePrefix );
+    }
+
 }

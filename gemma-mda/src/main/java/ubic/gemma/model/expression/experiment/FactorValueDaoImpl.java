@@ -18,6 +18,7 @@
  */
 package ubic.gemma.model.expression.experiment;
 
+import java.util.Collection;
 import java.util.List;
 
 import org.apache.commons.logging.Log;
@@ -143,5 +144,10 @@ public class FactorValueDaoImpl extends ubic.gemma.model.expression.experiment.F
             sb.append( object + "\n" );
         }
         log.error( sb.toString() );
+    }
+
+    @Override
+    public Collection<FactorValue> findByValue( String valuePrefix ) {
+        return this.getHibernateTemplate().find( "from FactorValueImpl where value like ?", valuePrefix + "%" );
     }
 }

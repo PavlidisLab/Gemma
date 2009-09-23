@@ -38,6 +38,7 @@ import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.BioMaterialService;
 import ubic.gemma.model.expression.experiment.ExperimentalDesignService;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.FactorValue;
@@ -51,6 +52,7 @@ import ubic.gemma.web.controller.expression.experiment.AnnotationValueObject;
  * NOTE: Logging messages from this service are important for tracking changes to annotations.
  * 
  * @author luke
+ * @author paul
  * @spring.bean id="characteristicBrowserController"
  * @spring.property name="formView" value="characteristics"
  * @spring.property name="characteristicService" ref="characteristicService"
@@ -82,7 +84,7 @@ public class CharacteristicBrowserController extends BaseFormController {
      * @return
      */
     public Collection<AnnotationValueObject> findCharacteristics( String valuePrefix ) {
-        return findCharacteristics( valuePrefix, true, true, true, true );
+        return findCharacteristics( valuePrefix, true, true, true, true, true );
     }
 
     /**
@@ -91,10 +93,11 @@ public class CharacteristicBrowserController extends BaseFormController {
      * @param searchEEs
      * @param searchBMs
      * @param searchFVs
+     * @param searchFFVs Search factor values that lack characteristics -- that is, search the factorValue.value.
      * @return
      */
     public Collection<AnnotationValueObject> findCharacteristics( String valuePrefix, boolean searchNos,
-            boolean searchEEs, boolean searchBMs, boolean searchFVs ) {
+            boolean searchEEs, boolean searchBMs, boolean searchFVs, boolean searchFVVs ) {
         log.info( "Characteristic search: " + valuePrefix );
         Collection<AnnotationValueObject> results = new HashSet<AnnotationValueObject>();
         if ( StringUtils.isBlank( valuePrefix ) ) {
@@ -119,21 +122,52 @@ public class CharacteristicBrowserController extends BaseFormController {
                     VocabCharacteristic vc = ( VocabCharacteristic ) c;
                     avo.setClassUri( vc.getCategoryUri() );
                     avo.setTermUri( vc.getValueUri() );
+                    avo.setObjectClass( VocabCharacteristic.class.getSimpleName() );
+                } else {
+                    avo.setObjectClass( Characteristic.class.getSimpleName() );
                 }
                 populateParentInformation( avo, parent );
                 results.add( avo );
             }
         }
+
+        if ( searchFVVs ) {
+            Collection<FactorValue> factorValues = factorValueService.findByValue( valuePrefix );
+            for ( FactorValue factorValue : factorValues ) {
+                if ( factorValue.getCharacteristics().size() > 0 ) continue;
+                if ( StringUtils.isBlank( factorValue.getValue() ) ) continue;
+
+                AnnotationValueObject avo = new AnnotationValueObject();
+
+                avo.setId( factorValue.getId() );
+                avo.setTermName( factorValue.getValue() );
+
+                avo.setObjectClass( FactorValue.class.getSimpleName() );
+
+                populateParentInformation( avo, factorValue );
+
+                results.add( avo );
+            }
+        }
+
         return results;
     }
 
     /**
      * @param chars
      */
-    public void removeCharacteristics( Collection<Characteristic> chars ) {
+    public void removeCharacteristics( Collection<AnnotationValueObject> chars ) {
         specialLogger.info( "Delete " + chars.size() + " characteristics..." );
-        Map<Characteristic, Object> charToParent = characteristicService.getParents( chars );
-        for ( Characteristic cFromClient : chars ) {
+
+        Collection<Characteristic> asChars = convertToCharacteristic( chars );
+
+        if ( asChars.size() == 0 ) {
+            log.info( "No characteristic objects were received" );
+            return;
+        }
+
+        Map<Characteristic, Object> charToParent = characteristicService.getParents( asChars );
+        for ( Characteristic cFromClient : asChars ) {
             Characteristic cFromDatabase = characteristicService.load( cFromClient.getId() );
             Object parent = charToParent.get( cFromDatabase );
             removeFromParent( cFromDatabase, parent );
@@ -143,15 +177,34 @@ public class CharacteristicBrowserController extends BaseFormController {
     }
 
     /**
-     * @param chars
+     * Update characteristics associated with entities. This allows for the case of factor values that we are adding
+     * characteristics to for the first time, but the most common case is altering existing characteristics.
+     * 
+     * @param avos
      */
-    public void updateCharacteristics( Collection<Characteristic> chars ) {
-        if ( chars.size() == 0 ) return;
-        specialLogger.info( "Updating " + chars.size() + " characteristics..." );
+    public void updateCharacteristics( Collection<AnnotationValueObject> avos ) {
+        if ( avos.size() == 0 ) return;
+        specialLogger.info( "Updating " + avos.size() + " characteristics or uncharacterized factor values..." );
         StopWatch timer = new StopWatch();
         timer.start();
-        Map<Characteristic, Object> charToParent = characteristicService.getParents( chars );
-        for ( Characteristic cFromClient : chars ) {
+
+        Collection<Characteristic> asChars = convertToCharacteristic( avos );
+        Collection<FactorValue> factorValues = convertToFactorValuesWithCharacteristics( avos );
+
+        if ( asChars.size() == 0 && factorValues.size() == 0 ) {
+            log.info( "Nothing to update" );
+            return;
+        }
+
+        for ( FactorValue factorValue : factorValues ) {
+            factorValueService.update( factorValue );
+        }
+
+        if ( asChars.size() == 0 ) return;
+
+        Map<Characteristic, Object> charToParent = characteristicService.getParents( asChars );
+
+        for ( Characteristic cFromClient : asChars ) {
             Long characteristicId = cFromClient.getId();
             if ( characteristicId == null ) {
                 continue;
@@ -208,7 +261,7 @@ public class CharacteristicBrowserController extends BaseFormController {
             cFromDatabase.setCategory( cFromClient.getCategory() );
             if ( cFromDatabase instanceof VocabCharacteristic ) {
                 vcFromDatabase = ( VocabCharacteristic ) cFromDatabase;
-                // FIXME: vcFromClient can be null here based on logic above.
+
                 if ( vcFromClient != null ) {
                     if ( vcFromDatabase.getValueUri() == null || vcFromDatabase.getValueUri() == null
                             || !vcFromDatabase.getValueUri().equals( vcFromClient.getValueUri() ) ) {
@@ -244,6 +297,95 @@ public class CharacteristicBrowserController extends BaseFormController {
         if ( timer.getTime() > 1000 ) {
             log.info( "Update took: " + timer.getTime() );
         }
+    }
+
+    /**
+     * This is used to handle the special case of FactorValues that are being updated to have a characteristic.
+     * 
+     * @param avos
+     * @return for each given AnnotationValueObject, the corresponding FactorValue with an associated persistent
+     *         Characteristic.
+     * @throws IllegalStateException if the corresponding FactorValue already has at least one Characteristic. This
+     *         method is just intended for filling that in if it's empty.
+     */
+    private Collection<FactorValue> convertToFactorValuesWithCharacteristics( Collection<AnnotationValueObject> avos ) {
+        Collection<FactorValue> result = new HashSet<FactorValue>();
+        for ( AnnotationValueObject avo : avos ) {
+            assert avo.getObjectClass() != null;
+            
+            if (  !avo.getObjectClass().equals( FactorValue.class.getSimpleName() ) )
+                continue;
+
+            if ( avo.getId() == null ) {
+                log.warn( "No id" );
+                continue;
+            }
+
+            /*
+             * load the factor value, and create a characteristic
+             */
+            FactorValue fv = factorValueService.load( avo.getId() );
+            if ( fv == null ) continue;
+
+            if ( !fv.getCharacteristics().isEmpty() ) {
+                throw new IllegalStateException(
+                        "Don't use the annotator to update factor values that already have characteristics" );
+            }
+
+            VocabCharacteristic vc = convertAvo2Characteristic( avo );
+            vc.setId( null );
+
+            if ( vc.getEvidenceCode() == null ) {
+                vc.setEvidenceCode( GOEvidenceCode.IC );
+            }
+
+            vc = ( VocabCharacteristic ) characteristicService.create( vc );
+
+            fv.setValue( vc.getValue() );
+            fv.getCharacteristics().add( vc );
+
+            result.add( fv );
+
+        }
+        return result;
+    }
+
+    /**
+     * Convert incombing AVOs into Characteristics (if the AVO objectClass is not FactorValue)
+     * 
+     * @param avos
+     * @return
+     */
+    private Collection<Characteristic> convertToCharacteristic( Collection<AnnotationValueObject> avos ) {
+        Collection<Characteristic> result = new HashSet<Characteristic>();
+        for ( AnnotationValueObject avo : avos ) {
+            
+            assert avo.getObjectClass() != null;
+            
+            if (   avo.getObjectClass().equals( FactorValue.class.getSimpleName() ) )
+                continue;
+
+            VocabCharacteristic vc = convertAvo2Characteristic( avo );
+
+            result.add( vc );
+        }
+        return result;
+    }
+
+    /**
+     * @param avo
+     * @return
+     */
+    private VocabCharacteristic convertAvo2Characteristic( AnnotationValueObject avo ) {
+        VocabCharacteristic vc = VocabCharacteristic.Factory.newInstance();
+        vc.setId( avo.getId() );
+        vc.setCategory( avo.getClassName() );
+        vc.setCategoryUri( avo.getClassUri() );
+        vc.setValue( avo.getTermName() );
+        vc.setValueUri( avo.getTermUri() );
+        if ( StringUtils.isNotBlank( avo.getEvidenceCode() ) )
+            vc.setEvidenceCode( GOEvidenceCode.fromString( avo.getEvidenceCode() ) );
+        return vc;
     }
 
     /**
@@ -315,6 +457,16 @@ public class CharacteristicBrowserController extends BaseFormController {
                     .getExperimentalDesign().getId(), avo.getParentName() ) );
             ExpressionExperiment ee = experimentalDesignService.getExpressionExperiment( fv.getExperimentalFactor()
                     .getExperimentalDesign() );
+            avo.setParentOfParentName( String.format( "ExpressionExperiment: %s", ee.getName() ) );
+            avo.setParentOfParentDescription( ee.getDescription() );
+            avo.setParentOfParentLink( AnchorTagUtil.getExpressionExperimentLink( ee.getId(), avo
+                    .getParentOfParentName() ) );
+        } else if ( parent instanceof ExperimentalFactor ) {
+            ExperimentalFactor ef = ( ExperimentalFactor ) parent;
+            avo.setParentDescription( String.format( "ExperimentalFactor: %s  ", ef.getName() ) );
+            avo.setParentLink( AnchorTagUtil.getExperimentalDesignLink( ef.getExperimentalDesign().getId(), avo
+                    .getParentName() ) );
+            ExpressionExperiment ee = experimentalDesignService.getExpressionExperiment( ef.getExperimentalDesign() );
             avo.setParentOfParentName( String.format( "ExpressionExperiment: %s", ee.getName() ) );
             avo.setParentOfParentDescription( ee.getDescription() );
             avo.setParentOfParentLink( AnchorTagUtil.getExpressionExperimentLink( ee.getId(), avo

@@ -22,6 +22,8 @@
 //
 package ubic.gemma.model.expression.experiment;
 
+import java.util.Collection;
+
 /**
  * @see ubic.gemma.model.expression.experiment.FactorValue
  */
@@ -109,6 +111,14 @@ public interface FactorValueDao {
      */
     public ubic.gemma.model.expression.experiment.FactorValue find(
             ubic.gemma.model.expression.experiment.FactorValue factorValue );
+
+    /**
+     * Locate based on string value of the value.
+     * 
+     * @param valuePrefix
+     * @return
+     */
+    public Collection<FactorValue> findByValue( String valuePrefix );
 
     /**
      * <p>

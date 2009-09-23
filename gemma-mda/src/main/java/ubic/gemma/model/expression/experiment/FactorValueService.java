@@ -22,6 +22,8 @@
 //
 package ubic.gemma.model.expression.experiment;
 
+import java.util.Collection;
+
 /**
  * 
  */
@@ -43,6 +45,8 @@ public interface FactorValueService {
      */
     public ubic.gemma.model.expression.experiment.FactorValue findOrCreate(
             ubic.gemma.model.expression.experiment.FactorValue factorValue );
+
+    public Collection<FactorValue> findByValue( String valuePrefix );
 
     /**
      * 

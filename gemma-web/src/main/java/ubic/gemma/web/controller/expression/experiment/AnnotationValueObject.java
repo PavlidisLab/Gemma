@@ -18,13 +18,12 @@
  */
 package ubic.gemma.web.controller.expression.experiment;
 
-
 /**
  * @author luke
  */
-public class AnnotationValueObject  {
+public class AnnotationValueObject {
 
-    private long   id;
+    private Long id;
     private String classUri;
     private String className;
     private String termUri;
@@ -37,34 +36,47 @@ public class AnnotationValueObject  {
     private String parentOfParentLink;
     private String description;
     private String evidenceCode;
-    
+    private String objectClass;
+
+    public String getObjectClass() {
+        return objectClass;
+    }
+
+    public void setObjectClass( String objectClass ) {
+        this.objectClass = objectClass;
+    }
+
     public AnnotationValueObject() {
     }
-    
+
     public String getDescription() {
-		return description;
-	}
+        return description;
+    }
 
-	public void setDescription(String description) {
-		this.description = description;
-	}
+    public void setDescription( String description ) {
+        this.description = description;
+    }
 
-	public String getEvidenceCode() {
-		return evidenceCode;
-	}
+    public String getEvidenceCode() {
+        return evidenceCode;
+    }
 
-	public void setEvidenceCode(String evidenceCode) {
-		this.evidenceCode = evidenceCode;
-	}
-    
-    public String getClassName() { return className; }
-    
+    public void setEvidenceCode( String evidenceCode ) {
+        this.evidenceCode = evidenceCode;
+    }
+
+    public String getClassName() {
+        return className;
+    }
+
     public void setClassName( String ontologyClass ) {
         this.className = ontologyClass;
     }
-    
-    public String getTermName() { return termName; }
-    
+
+    public String getTermName() {
+        return termName;
+    }
+
     public void setTermName( String ontologyTerm ) {
         this.termName = ontologyTerm;
     }
@@ -72,14 +84,14 @@ public class AnnotationValueObject  {
     /**
      * @return the id
      */
-    public long getId() {
+    public Long getId() {
         return id;
     }
 
     /**
      * @param id the id to set
      */
-    public void setId( long id ) {
+    public void setId( Long id ) {
         this.id = id;
     }
 

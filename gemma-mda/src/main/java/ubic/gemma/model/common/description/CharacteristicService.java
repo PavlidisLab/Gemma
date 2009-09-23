@@ -46,6 +46,7 @@ public interface CharacteristicService {
      * parent objects.
      * </p>
      */
+    @SuppressWarnings("unchecked")
     public java.util.Map<Characteristic, Object> findByParentClass( java.lang.Class parentClass );
 
     /**

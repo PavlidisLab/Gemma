@@ -119,6 +119,9 @@ public class CharacteristicDaoImpl extends ubic.gemma.model.common.description.C
     protected Map handleGetParents( Class parentClass, Collection characteristics ) throws Exception {
         Collection<Characteristic> batch = new HashSet<Characteristic>();
         Map<Characteristic, Object> charToParent = new HashMap<Characteristic, Object>();
+        if ( characteristics == null || characteristics.size() == 0 ) {
+            return charToParent;
+        }
         for ( Characteristic c : ( Collection<Characteristic> ) characteristics ) {
             batch.add( c );
             if ( batch.size() == BATCH_SIZE ) {
