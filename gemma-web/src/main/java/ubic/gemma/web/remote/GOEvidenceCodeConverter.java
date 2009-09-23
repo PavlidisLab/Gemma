@@ -18,6 +18,7 @@
  */
 package ubic.gemma.web.remote;
 
+import org.apache.commons.lang.StringUtils;
 import org.directwebremoting.convert.StringConverter;
 import org.directwebremoting.extend.InboundContext;
 import org.directwebremoting.extend.InboundVariable;
@@ -33,6 +34,9 @@ public class GOEvidenceCodeConverter extends StringConverter {
     @Override
     public Object convertInbound( Class paramType, InboundVariable iv, InboundContext inctx ) throws MarshallException {
         String value = ( String ) super.convertInbound( paramType, iv, inctx );
+        if ( StringUtils.isBlank( value ) ) {
+            return null;
+        }
         return GOEvidenceCode.fromString( value );
     }
 }
