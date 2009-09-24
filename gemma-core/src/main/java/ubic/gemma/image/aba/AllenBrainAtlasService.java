@@ -230,7 +230,7 @@ public class AllenBrainAtlasService {
         this.errOut = System.err;
     }
 
-    public boolean getGene( String gene, OutputStream out ) throws MalformedURLException, IOException {
+    protected boolean getGene( String gene, OutputStream out ) throws MalformedURLException, IOException {
 
         String args[] = { gene };
         String getGeneUrl = buildUrlString( GET_GENE_URL, args );
@@ -396,7 +396,7 @@ public class AllenBrainAtlasService {
 
     }
 
-    public boolean getImageseries( Integer imageseriesId, OutputStream out ) throws MalformedURLException, IOException {
+    protected boolean getImageseries( Integer imageseriesId, OutputStream out ) throws MalformedURLException, IOException {
 
         String args[] = { imageseriesId.toString() };
         String getImageseriesUrl = buildUrlString( GET_IMAGESERIES_URL, args );
@@ -533,7 +533,7 @@ public class AllenBrainAtlasService {
 
     }
 
-    public boolean getNeuroblast( Integer imageseriesId, String structure, String plane, OutputStream out )
+    protected boolean getNeuroblast( Integer imageseriesId, String structure, String plane, OutputStream out )
             throws MalformedURLException, IOException {
 
         String getNeuroblastUrl;
@@ -608,7 +608,7 @@ public class AllenBrainAtlasService {
 
     }
 
-    public boolean getImageInfo( Integer imageId, OutputStream out ) throws MalformedURLException, IOException {
+    protected boolean getImageInfo( Integer imageId, OutputStream out ) throws MalformedURLException, IOException {
 
         String args[] = { imageId.toString() };
         String getImageInfoUrl = buildUrlString( GET_IMAGE_INFO_BYID_URL, args );
@@ -616,7 +616,7 @@ public class AllenBrainAtlasService {
         return ( doPageDownload( getImageInfoUrl, out ) );
     }
 
-    public boolean getImageInfo( String imagePath, OutputStream out ) throws MalformedURLException, IOException {
+    protected boolean getImageInfo( String imagePath, OutputStream out ) throws MalformedURLException, IOException {
 
         String args[] = { imagePath };
         String getImageInfoUrl = buildUrlString( GET_IMAGE_INFO_BYPATH_URL, args );
@@ -624,7 +624,7 @@ public class AllenBrainAtlasService {
         return ( doPageDownload( getImageInfoUrl, out ) );
     }
 
-    public boolean getImage( String imagePath, Integer zoom, Integer mimeType, OutputStream out )
+    protected boolean getImage( String imagePath, Integer zoom, Integer mimeType, OutputStream out )
             throws MalformedURLException, IOException {
         String args[] = { mimeType.toString(), zoom.toString(), imagePath };
         String getImageUrl = buildUrlString( GET_IMAGE_URL, args );

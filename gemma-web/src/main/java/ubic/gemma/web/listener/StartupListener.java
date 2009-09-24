@@ -51,6 +51,7 @@ import ubic.gemma.model.common.auditAndSecurity.UserRole;
 import ubic.gemma.model.common.auditAndSecurity.UserService;
 import ubic.gemma.ontology.AbstractOntologyService;
 import ubic.gemma.ontology.GeneOntologyService;
+import ubic.gemma.ontology.HomologeneService;
 import ubic.gemma.util.CompassUtils;
 import ubic.gemma.util.ConfigUtils;
 import ubic.gemma.util.LabelValue;
@@ -167,6 +168,8 @@ public class StartupListener extends ContextLoaderListener {
         if ( ConfigUtils.isGridEnabled() ) copyWorkerJars( servletContext );
 
         initializeOntologies( ctx );
+        
+        intilizeHomologene(ctx);
 
         configureScheduler( ctx );
 
@@ -384,6 +387,12 @@ public class StartupListener extends ContextLoaderListener {
             os.init( false );
         }
 
+    }
+    
+    private void intilizeHomologene(ApplicationContext ctx){
+        HomologeneService ho = ( HomologeneService ) ctx.getBean( "homologeneService" );
+        ho.init( false );
+        
     }
 
     /**

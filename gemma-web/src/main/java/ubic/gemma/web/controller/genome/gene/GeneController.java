@@ -40,9 +40,12 @@ import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.ontology.GeneOntologyService;
+import ubic.gemma.ontology.HomologeneService;
 import ubic.gemma.web.controller.BaseMultiActionController;
 import ubic.gemma.web.controller.expression.experiment.AnnotationValueObject;
 import ubic.gemma.web.remote.EntityDelegator;
@@ -59,7 +62,10 @@ import ubic.gemma.web.remote.EntityDelegator;
  * @spring.property name="compositeSequenceService" ref="compositeSequenceService"
  * @spring.property name="arrayDesignMapResultService" ref="arrayDesignMapResultService"
  * @spring.property name="allenBrainAtlasService" ref="allenBrainAtlasService"
+ * @spring.property name="homologeneService" ref="homologeneService"
+ * @spring.property name="taxonService" ref="taxonService"
  * @spring.property name="methodNameResolver" ref="geneActions"
+ * 
  */
 public class GeneController extends BaseMultiActionController {
     /**
@@ -72,6 +78,8 @@ public class GeneController extends BaseMultiActionController {
     private ArrayDesignMapResultService arrayDesignMapResultService = null;
     private CompositeSequenceService compositeSequenceService = null;
     private AllenBrainAtlasService allenBrainAtlasService = null;
+    private HomologeneService homologeneService = null;
+    private TaxonService taxonService = null;
 
     private GeneOntologyService geneOntologyService;
 
@@ -158,6 +166,14 @@ public class GeneController extends BaseMultiActionController {
     public void setAllenBrainAtlasService(AllenBrainAtlasService allenBrainAtlasService){
         this.allenBrainAtlasService = allenBrainAtlasService;
     }
+    
+    public void setHomologeneService(HomologeneService homologeneService){
+        this.homologeneService = homologeneService;
+    }
+    
+    public void setTaxonService(TaxonService ts){
+        this.taxonService = ts;
+    }
 
     /**
      * @param request
@@ -201,21 +217,35 @@ public class GeneController extends BaseMultiActionController {
         mav.addObject( "compositeSequenceCount", compositeSequenceCount );
         
         
+        final Taxon mouseTaxon = this.taxonService.findByCommonName( "mouse" );
+        Gene mouseGene = gene;
         //Get alan brain atalas represntative images
-        Collection<ImageSeries> imageSeries = allenBrainAtlasService.getRepresentativeSaggitalImages( gene.getOfficialSymbol() );
-        String abaGeneUrl = allenBrainAtlasService.getGeneUrl( gene.getOfficialSymbol() );
-        
-        if (imageSeries == null)
-            return mav;
-        
-        Collection<Image> representativeImages = allenBrainAtlasService.getImagesFromImageSeries( imageSeries );
-       
-        
-        if (!representativeImages.isEmpty()){
-            mav.addObject( "representativeImages", representativeImages );
-            mav.addObject( "abaGeneUrl", abaGeneUrl );
+        if (gene.getTaxon().getId() != mouseTaxon.getId()){
+            mouseGene = this.homologeneService.getHomologue( gene, mouseTaxon );            
         }
-       
+        
+        if( mouseGene != null){
+            Collection<ImageSeries> imageSeries = allenBrainAtlasService.getRepresentativeSaggitalImages( mouseGene.getOfficialSymbol() );
+            String abaGeneUrl = allenBrainAtlasService.getGeneUrl( mouseGene.getOfficialSymbol() );
+            
+            if (imageSeries == null)
+                return mav;
+            
+            Collection<Image> representativeImages = allenBrainAtlasService.getImagesFromImageSeries( imageSeries );
+           
+            
+            if (!representativeImages.isEmpty()){
+                mav.addObject( "representativeImages", representativeImages );
+                mav.addObject( "abaGeneUrl", abaGeneUrl );
+            }
+        }
+        
+        Collection<Gene> homologues = homologeneService.getHomologues( gene );
+        
+        if (homologues != null || homologues.isEmpty()){
+            mav.addObject( "homologues", homologues );
+        }
+        
         return mav;
     }
 

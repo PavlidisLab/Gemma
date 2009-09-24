@@ -7,6 +7,8 @@
 
 <jsp:useBean id="gene" scope="request" class="ubic.gemma.model.genome.GeneImpl" />
 <jsp:useBean id="representativeImages" scope="request" class="java.util.HashSet" />
+<jsp:useBean id="homologues" scope="request" class="java.util.ArrayList" />
+
 
 <jwr:script src='/scripts/ajax/ext/data/DwrProxy.js' />
 <jwr:script src='/scripts/app/gene.detail.js' />
@@ -91,6 +93,31 @@
 			
 		</td>
 	</tr>
+	<tr>
+		<td align="right" valign="top">
+			<b> Homologues </b>
+		</td>
+		<td valign="top">
+	
+		<%
+			            if ( homologues.size() > 0 ) {
+			             
+			                for ( Object obj : homologues ) {
+			                	ubic.gemma.model.genome.Gene g = (ubic.gemma.model.genome.Gene) obj;
+			                	out.print(" <a href='/Gemma/gene/showGene.html?id="+ g.getId() +"' title='"+ g.getTaxon().getCommonName() +"'>" +g.getOfficialSymbol() +" (" +  g.getTaxon().getCommonName() + ")</a> &nbsp;&nbsp; ");
+			                }
+			                
+			            } else {
+			                out.print( "No homolouges found" );
+			            }
+			%>
+			
+			
+			
+		</td>
+	</tr>
+	
+	
 	<tr>
 		<td align="right" valign="top">
 			<b>Probes</b> &nbsp; <a class="helpLink" href="?"
