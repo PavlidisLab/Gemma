@@ -98,7 +98,7 @@ public class CharacteristicBrowserController extends BaseFormController {
      */
     public Collection<AnnotationValueObject> findCharacteristics( String valuePrefix, boolean searchNos,
             boolean searchEEs, boolean searchBMs, boolean searchFVs, boolean searchFVVs ) {
-        log.info( "Characteristic search for: " + valuePrefix );
+
         Collection<AnnotationValueObject> results = new HashSet<AnnotationValueObject>();
         if ( StringUtils.isBlank( valuePrefix ) ) {
             return results;
@@ -152,6 +152,7 @@ public class CharacteristicBrowserController extends BaseFormController {
             }
         }
 
+        log.info( "Characteristic search for: '" + valuePrefix + "*': " + results.size() + " results" );
         return results;
     }
 
@@ -428,7 +429,7 @@ public class CharacteristicBrowserController extends BaseFormController {
 
     private void populateParentInformation( AnnotationValueObject avo, Object parent ) {
         if ( parent == null ) {
-            avo.setParentLink( "[Orphan]" );
+            avo.setParentLink( "[Orphan, " + avo.getObjectClass() + " ID=" + avo.getId() + "]" );
         } else if ( parent instanceof ExpressionExperiment ) {
             ExpressionExperiment ee = ( ExpressionExperiment ) parent;
             avo.setParentName( String.format( "Experiment: %s", ee.getName() ) );
