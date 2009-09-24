@@ -268,6 +268,8 @@ Gemma.AnnotationGrid = Ext.extend(Gemma.GemmaGridPanel, {
 		Gemma.AnnotationGrid.superclass.initComponent.call(this);
 
 		this.getStore().setDefaultSort('className');
+		
+	//	this.relayEvents(this.getStore(), ["loadexception"]);
 
 		this.autoExpandColumn = this.showParent ? 2 : 1;
 
@@ -360,10 +362,6 @@ Gemma.AnnotationGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				record.expanded = record.expanded ? 0 : 1;
 				grid.getView().refresh(true);
 			}
-		}, this);
-
-		this.getStore().on("load", function() {
-			this.doLayout();
 		}, this);
 
 		if (!this.noInitialLoad) {
