@@ -42,7 +42,10 @@ import org.springframework.web.servlet.view.RedirectView;
 import org.xml.sax.SAXException;
 
 import ubic.gemma.loader.entrez.pubmed.PubMedSearch;
+import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.auditAndSecurity.ContactService;
+import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
+import ubic.gemma.model.common.auditAndSecurity.eventType.CommentedEvent;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.BibliographicReferenceService;
 import ubic.gemma.model.common.description.DatabaseEntry;
@@ -93,6 +96,7 @@ import com.sdicons.json.parser.JSONParser;
  * @spring.property name = "persisterHelper" ref="persisterHelper"
  * @spring.property name = "validator" ref="expressionExperimentValidator"
  * @spring.property name = "quantitationTypeService" ref="quantitationTypeService"
+ * @spring.property name="auditTrailService" ref="auditTrailService"
  */
 public class ExpressionExperimentFormController extends BaseFormController {
 
@@ -103,6 +107,15 @@ public class ExpressionExperimentFormController extends BaseFormController {
     BibliographicReferenceService bibliographicReferenceService = null;
     PersisterHelper persisterHelper = null;
     QuantitationTypeService quantitationTypeService;
+    AuditTrailService auditTrailService;
+
+    /**
+     * @param auditTrailService the auditTrailService to set
+     */
+    public void setAuditTrailService( AuditTrailService auditTrailService ) {
+        this.auditTrailService = auditTrailService;
+    }
+
     private ExternalDatabaseService externalDatabaseService = null;
 
     public void setExternalDatabaseService( ExternalDatabaseService externalDatabaseService ) {
@@ -243,7 +256,7 @@ public class ExpressionExperimentFormController extends BaseFormController {
          */
         updateQuantTypes( request, expressionExperiment, eeCommand.getQuantitationTypes() );
 
-        updateBioMaterialMap( request );
+        updateBioMaterialMap( request, expressionExperiment );
 
         updateAccession( request, expressionExperiment );
 
@@ -253,6 +266,13 @@ public class ExpressionExperimentFormController extends BaseFormController {
         return new ModelAndView( new RedirectView( "http://" + request.getServerName() + ":" + request.getServerPort()
                 + request.getContextPath() + "/expressionExperiment/showExpressionExperiment.html?id="
                 + eeCommand.getId() ) );
+    }
+
+    /**
+     * @param arrayDesign
+     */
+    private void audit( ExpressionExperiment ee, AuditEventType eventType, String note ) {
+        auditTrailService.addUpdateEvent( ee, eventType, note );
     }
 
     /**
@@ -276,11 +296,12 @@ public class ExpressionExperimentFormController extends BaseFormController {
     }
 
     /**
+     * Change the relationship between bioassays and biomaterials.
+     * 
      * @param request
-     * @throws TokenStreamException
-     * @throws RecognitionException
+     * @param expressionExperiment
      */
-    private void updateBioMaterialMap( HttpServletRequest request ) {
+    private void updateBioMaterialMap( HttpServletRequest request, ExpressionExperiment expressionExperiment ) {
         // parse JSON-serialized map
         String jsonSerialization = request.getParameter( "assayToMaterialMap" );
         // convert back to a map
@@ -341,14 +362,7 @@ public class ExpressionExperimentFormController extends BaseFormController {
                     }
 
                     BioMaterial oldBioMaterial = bMats.iterator().next();
-                    // newMaterial = BioMaterial.Factory.newInstance();
                     newMaterial = bioMaterialService.copy( oldBioMaterial );
-                    // newMaterial.setDescription( oldBioMaterial.getDescription() + " [Created by Gemma]" );
-                    // newMaterial.setMaterialType( oldBioMaterial.getMaterialType() );
-                    // newMaterial.setCharacteristics( oldBioMaterial.getCharacteristics() );
-                    // newMaterial.setTreatments( oldBioMaterial.getTreatments() );
-                    // newMaterial.setSourceTaxon( oldBioMaterial.getSourceTaxon() );
-                    // newMaterial.setFactorValues( oldBioMaterial.getFactorValues() );
                     newMaterial.setName( "Modeled after " + oldBioMaterial.getName() );
                     newMaterial = ( BioMaterial ) persisterHelper.persist( newMaterial );
                 } else {
@@ -379,6 +393,11 @@ public class ExpressionExperimentFormController extends BaseFormController {
         for ( BioAssay assay : deleteKeys ) {
             bioAssayService.removeBioMaterialAssociation( assay, deleteAssociations.get( assay ) );
         }
+
+        /*
+         * TODO: make this a separate event class, so we can flag experiments that need to be reanalyzed after doing this.
+         */
+        audit( expressionExperiment, CommentedEvent.Factory.newInstance(), "Updated biomaterial -> bioassay map" );
     }
 
     /**
