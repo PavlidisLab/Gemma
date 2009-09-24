@@ -72,12 +72,16 @@ public class GeoRecordWrapper extends TableDecorator {
         } else if ( !usable ) {
             return "<span id=\""
                     + accession
-                    + "-rating\"  onClick=\"toggleUsability('" + accession + "')\"  ><img src=\"/Gemma/images/icons/thumbsdown.png\"  alt=\"Judged unusable, click to toggle\"  width=\"16\" height=\"16\"  /></span>"; // thumbs
+                    + "-rating\"  onClick=\"toggleUsability('"
+                    + accession
+                    + "')\"  ><img src=\"/Gemma/images/icons/thumbsdown-red.png\"  alt=\"Judged unusable, click to toggle\"  width=\"16\" height=\"16\"  /></span>"; // thumbs
             // down
         }
         return "<span id=\""
                 + accession
-                + "-rating\"  onClick=\"toggleUsability('" + accession + "')\"><img src=\"/Gemma/images/icons/thumbsup.png\"  width=\"16\" height=\"16\"   alt=\"Usable, click to toggle\" /></span>"; // thumbs
+                + "-rating\"  onClick=\"toggleUsability('"
+                + accession
+                + "')\"><img src=\"/Gemma/images/icons/thumbsup.png\"  width=\"16\" height=\"16\"   alt=\"Usable, click to toggle\" /></span>"; // thumbs
         // up
     }
 
@@ -89,6 +93,34 @@ public class GeoRecordWrapper extends TableDecorator {
         }
         return buf.toString();
 
+    }
+
+    public String getTitle() {
+        GeoRecord record = ( GeoRecord ) getCurrentRowObject();
+        if ( record.getCorrespondingExperiments().size() == 0 ) {
+            String title = record.getTitle();
+
+            String replacementColor = "#774477";
+
+            if ( title.toLowerCase().matches( ".*?array[\\s-]cgh.*?" ) ) {
+                return "<span style=\"color:" + replacementColor + ";\">" + record.getTitle() + "</span>";
+            } else if ( title.toLowerCase().matches( ".*?copy[\\s-]number.*" ) ) {
+                return "<span style=\"color:" + replacementColor + ";\">" + record.getTitle() + "</span>";
+            } else if ( title.toLowerCase().contains( "methylome" ) ) {
+                return "<span style=\"color:" + replacementColor + ";\">" + record.getTitle() + "</span>";
+            } else if ( title.toLowerCase().contains( "snp array" ) ) {
+                return "<span style=\"color:" + replacementColor + ";\">" + record.getTitle() + "</span>";
+            } else if ( title.toLowerCase().contains( "chip-on-chip" ) ) {
+                return "<span style=\"color:" + replacementColor + ";\">" + record.getTitle() + "</span>";
+            }
+
+            title = title.replaceAll( "(microrna|miRNA)", "<span style=\"color:#BB1111\">$1</span>" );
+
+            return title;
+
+        } else {
+            return "<span style=\"color:#BBBBBB;\">" + record.getTitle() + "</span>";
+        }
     }
 
     /**

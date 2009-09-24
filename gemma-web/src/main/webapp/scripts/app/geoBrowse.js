@@ -81,21 +81,60 @@ function showDetails(accession) {
 
 }
 
-function handleLoadSuccess(data) {
+function handleLoadSuccess(taskId) {
 	try {
-		taskId = data;
 		Ext.DomHelper.overwrite("messages", "");
-		
-		var p = new progressbar({taskId : taskId});
-		p.createIndeterminateProgressBar();
-		p.on('fail', handleFailure);
-		p.on('cancel', reset);
+
+		var p = new Gemma.ProgressWidget({
+					taskId : taskId
+				});
+
+		var w = new Ext.Window({
+					modal : true,
+					closable : false,
+					width : 500,
+					items : [p],
+					buttons : [{
+								id : 'cancel-button',
+								handler : function() {
+									p.cancelJob();
+								},
+								text : 'Cancel'
+							}]
+				});
+
+		p.on('done', function(payload) {
+					// this.onDoneLoading(payload);
+					w.hide('upload-button');
+					w.destroy();
+					p.destroy();
+					document.location.reload(true); // user will get a warning, but that's okay.
+					Ext.DomHelper.overwrite("messages", "Successfully loaded.");
+				}.createDelegate(this));
+
+		p.on('fail', function(payload) {
+					w.hide('upload-button');
+					w.destroy();
+					p.destroy();
+					handleFailure(payload);
+				});
+
+		p.on('cancel', function() {
+					w.hide();
+					w.destroy();
+					p.destroy();
+					reset();
+				});
+
+		w.show('upload-button');
+
 		p.startProgress();
 	} catch (e) {
 		handleFailure(data, e);
 		return;
 	}
-}
+};
+ 
 
 function load(accession) {
 
