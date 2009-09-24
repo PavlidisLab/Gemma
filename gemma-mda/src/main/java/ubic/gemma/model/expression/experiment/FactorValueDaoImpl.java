@@ -146,7 +146,6 @@ public class FactorValueDaoImpl extends ubic.gemma.model.expression.experiment.F
         log.error( sb.toString() );
     }
 
-    @Override
     public Collection<FactorValue> findByValue( String valuePrefix ) {
         return this.getHibernateTemplate().find( "from FactorValueImpl where value like ?", valuePrefix + "%" );
     }
