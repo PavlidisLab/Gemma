@@ -86,7 +86,7 @@
 	<classpathentry kind="var" path="M2_REPO/oro/oro/2.0.8/oro-2.0.8.jar"/>
 	<classpathentry kind="var" path="M2_REPO/org/tuckey/urlrewrite/2.5.2/urlrewrite-2.5.2.jar"/>
 	<classpathentry kind="var" path="M2_REPO/xml-apis/xml-apis/1.0.b2/xml-apis-1.0.b2.jar"/>
-	<classpathentry kind="var" path="M2_REPO/commons-cli/commons-cli/1.2/commons-cli-1.2.jar" sourcepath="/JAR_SOURCE/commons-cli-1.0/src/java">
+	<classpathentry kind="var" path="M2_REPO/commons-cli/commons-cli/1.0/commons-cli-1.0.jar" sourcepath="/JAR_SOURCE/commons-cli-1.0/src/java">
 		<attributes>
 			<attribute name="javadoc_location" value="http://jakarta.apache.org/commons/cli/api-release/"/>
 		</attributes>

@@ -44,7 +44,7 @@ public class HomologeneServiceTest extends TestCase {
     @Override
     protected void setUp() throws Exception {
         hgs = new HomologeneService();
-        InputStream is = this.getClass().getResourceAsStream( "/data/homologene/homologene.data" );
+        InputStream is = this.getClass().getResourceAsStream( "/data/loader/genome/gene/ncbi/homology/homologene.data" );
         assert is != null;
         hgs.parseHomologGeneFile( is );
         log.info( "Ready to test gene homology" );
