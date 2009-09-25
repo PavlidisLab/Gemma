@@ -23,9 +23,6 @@ import java.util.Collection;
 
 import junit.framework.TestCase;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 import ubic.gemma.loader.genome.gene.ncbi.homology.HomologeneService;
 
 /**
@@ -33,21 +30,17 @@ import ubic.gemma.loader.genome.gene.ncbi.homology.HomologeneService;
  * @author klc
  * @version $Id: HomologeneServiceTest.java
  */
-@SuppressWarnings("static-access")
 public class HomologeneServiceTest extends TestCase {
     
     private HomologeneService hgs;
-    
-    private static Log log = LogFactory.getLog( HomologeneServiceTest.class.getName() );
 
     // note: no spring context.
     @Override
     protected void setUp() throws Exception {
         hgs = new HomologeneService();
-        InputStream is = this.getClass().getResourceAsStream( "/data/loader/genome/gene/ncbi/homology/homologene.data" );
+        InputStream is = this.getClass().getResourceAsStream( "/data/loader/genome/homologene/homologene.testdata.txt" );
         assert is != null;
-        hgs.parseHomologGeneFile( is );
-        log.info( "Ready to test gene homology" );
+        hgs.parseHomologGeneFile( is ); 
     }
     
 
@@ -58,7 +51,7 @@ public class HomologeneServiceTest extends TestCase {
         assertEquals(11, homologenes.size() );
     }
     
-    public final void testGetHomolouges2(){
+    public final void testGetHomologues2(){
        Collection<Long> homologenes = hgs.getNCBIGeneIdsInGroup(3);
        assertNotNull( homologenes );
        assertEquals(12, homologenes.size());
