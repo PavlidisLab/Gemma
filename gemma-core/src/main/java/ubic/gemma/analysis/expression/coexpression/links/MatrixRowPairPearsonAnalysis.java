@@ -101,6 +101,12 @@ public class MatrixRowPairPearsonAnalysis extends AbstractMatrixRowPairAnalysis 
         int numrows = this.dataMatrix.rows();
         int numcols = this.dataMatrix.columns();
 
+        if ( numcols < this.minNumUsed ) {
+            throw new IllegalArgumentException( "Sorry, correlations will not be computed unless there are at least "
+                    + this.minNumUsed + " mutually present data points per vector pair, current data has only "
+                    + numcols + " columns." );
+        }
+
         boolean docalcs = this.needToCalculateMetrics();
         boolean[][] usedB = new boolean[][] {};
         double[][] data = new double[][] {};
@@ -127,7 +133,7 @@ public class MatrixRowPairPearsonAnalysis extends AbstractMatrixRowPairAnalysis 
         int numComputed = 0;
         for ( int i = 0; i < numrows; i++ ) { // first vector
             itemA = this.dataMatrix.getRowElement( i );
-            if ( !this.hasGene( itemA ) ){
+            if ( !this.hasGene( itemA ) ) {
                 skipped++;
                 continue;
             }
@@ -177,7 +183,7 @@ public class MatrixRowPairPearsonAnalysis extends AbstractMatrixRowPairAnalysis 
 
                 // avoid -1 correlations or extremely noisy values (minNumUsed should be set high enough so that degrees
                 // of freedom isn't too low.
-                if ( numused < minNumUsed )
+                if ( numused < this.minNumUsed )
                     setCorrel( i, j, Double.NaN, 0 );
                 else {
                     double denom = correlationNorm( numused, sxx, sx, syy, sy );
@@ -192,12 +198,12 @@ public class MatrixRowPairPearsonAnalysis extends AbstractMatrixRowPairAnalysis 
                 ++numComputed;
 
             }
-            if ( (i+1) % 2000 == 0 ) {
-                log.info( (i+1) + " rows done, " + numComputed + " correlations computed, last row was " + itemA + " "
-                        + ( keepers.size() > 0 ? keepers.size() + " scores retained" : "" ) );
+            if ( ( i + 1 ) % 2000 == 0 ) {
+                log.info( ( i + 1 ) + " rows done, " + numComputed + " correlations computed, last row was " + itemA
+                        + " " + ( keepers.size() > 0 ? keepers.size() + " scores retained" : "" ) );
             }
         }
-        log.info( skipped + " rows skipped, due to no BLAT association");
+        log.info( skipped + " rows skipped, due to no BLAT association" );
         finishMetrics();
     }
 
@@ -258,7 +264,7 @@ public class MatrixRowPairPearsonAnalysis extends AbstractMatrixRowPairAnalysis 
         int numComputed = 0;
         for ( int i = 0; i < numrows; i++ ) {
             itemA = this.dataMatrix.getRowElement( i );
-            if ( !this.hasGene( itemA ) ){
+            if ( !this.hasGene( itemA ) ) {
                 skipped++;
                 continue;
             }
@@ -280,12 +286,12 @@ public class MatrixRowPairPearsonAnalysis extends AbstractMatrixRowPairAnalysis 
                 setCorrel( i, j, correlFast( vectorA, vectorB, i, j ), numcols );
                 ++numComputed;
             }
-            if ((i+1) % 2000 == 0 ) {
-                log.info( (i+1) + " rows done, " + numComputed + " correlations computed, last row was " + itemA + " "
-                        + ( keepers.size() > 0 ? keepers.size() + " scores retained" : "" ) );
+            if ( ( i + 1 ) % 2000 == 0 ) {
+                log.info( ( i + 1 ) + " rows done, " + numComputed + " correlations computed, last row was " + itemA
+                        + " " + ( keepers.size() > 0 ? keepers.size() + " scores retained" : "" ) );
             }
         }
-        log.info( skipped + " rows skipped, due to no BLAT association");
+        log.info( skipped + " rows skipped, due to no BLAT association" );
         finishMetrics();
 
     }

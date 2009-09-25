@@ -61,8 +61,6 @@ public class LinkAnalysis {
     private Map<CompositeSequence, Collection<Collection<Gene>>> probeToGeneMap = null;
     private Taxon taxon = null;
 
-    private int minSamplesToKeepCorrelation = 0;
-
     private NumberFormat form;
 
     private boolean useKnownGenesOnly = false;
@@ -98,8 +96,8 @@ public class LinkAnalysis {
 
         log.info( "Current Options: \n" + this.config );
         this.calculateDistribution();
-        
-        if(expressionExperiment != null){//input is not from expression data file
+
+        if ( expressionExperiment != null ) {// input is not from expression data file
             this.writeDistribution();
         }
 
@@ -198,7 +196,6 @@ public class LinkAnalysis {
         metricMatrix.setOmitNegativeCorrelationLinks( config.isOmitNegLinks() );
         metricMatrix.setDuplicateMap( probeToGeneMap ); // populates numUniqueGenes
         metricMatrix.setUseAbsoluteValue( config.isAbsoluteValue() );
-        metricMatrix.setMinNumpresent( minSamplesToKeepCorrelation );
         this.init();
 
         metricMatrix.calculateMetrics();

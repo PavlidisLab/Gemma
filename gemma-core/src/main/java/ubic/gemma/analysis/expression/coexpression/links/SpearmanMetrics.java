@@ -45,8 +45,7 @@ public class SpearmanMetrics extends MatrixRowPairPearsonAnalysis {
     /**
      * This overrides value from AbstractMatrixRowPairAnalysis. If fewer than this number values are available, the
      * correlation is rejected. This helps keep the correlation distribution reasonable. (FIXME we might want to set
-     * this even higher!) This is primarily relevant when there are missing values in the data, but to be consistent we
-     * check it for other cases as well.
+     * this even higher!)
      */
     protected int minNumUsed = 8;
 
@@ -213,18 +212,18 @@ public class SpearmanMetrics extends MatrixRowPairPearsonAnalysis {
 
             ++numComputed;
 
-            if ( (i+1) % 2000 == 0 ) {
-                log.info( (i+1) + " rows done, " + numComputed + " correlations computed, last row was " + itemA + " "
-                        + ( keepers.size() > 0 ? keepers.size() + " scores retained" : "" ) );
+            if ( ( i + 1 ) % 2000 == 0 ) {
+                log.info( ( i + 1 ) + " rows done, " + numComputed + " correlations computed, last row was " + itemA
+                        + " " + ( keepers.size() > 0 ? keepers.size() + " scores retained" : "" ) );
             }
         }
-        log.info( skipped + " rows skipped, due to no BLAT association");
+        log.info( skipped + " rows skipped, due to no BLAT association" );
         finishMetrics();
 
     }
 
     /**
-     * @param vectorA 
+     * @param vectorA
      * @param vectorB
      * @param usedA
      * @param usedB
@@ -380,7 +379,7 @@ public class SpearmanMetrics extends MatrixRowPairPearsonAnalysis {
         int numComputed = 0;
         for ( int i = 0; i < numrows; i++ ) {
             itemA = this.dataMatrix.getRowElement( i );
-            if ( !this.hasGene( itemA ) ){
+            if ( !this.hasGene( itemA ) ) {
                 skipped++;
                 continue;
             }
@@ -402,12 +401,12 @@ public class SpearmanMetrics extends MatrixRowPairPearsonAnalysis {
                 setCorrel( i, j, correlFast( vectorA, vectorB, i, j ), numcols );
                 ++numComputed;
             }
-            if ( (i+1) % 2000 == 0 ) {
-                log.info( (i+1) + " rows done, " + numComputed + " correlations computed, last row was " + itemA + " "
-                        + ( keepers.size() > 0 ? keepers.size() + " scores retained" : "" ) );
+            if ( ( i + 1 ) % 2000 == 0 ) {
+                log.info( ( i + 1 ) + " rows done, " + numComputed + " correlations computed, last row was " + itemA
+                        + " " + ( keepers.size() > 0 ? keepers.size() + " scores retained" : "" ) );
             }
         }
-        log.info( skipped + " rows skipped, due to no BLAT association");
+        log.info( skipped + " rows skipped, due to no BLAT association" );
         finishMetrics();
     }
 

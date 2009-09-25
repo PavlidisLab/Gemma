@@ -55,6 +55,7 @@ import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrixRowElement;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis;
+import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.association.coexpression.HumanProbeCoExpression;
 import ubic.gemma.model.association.coexpression.MouseProbeCoExpression;
 import ubic.gemma.model.association.coexpression.OtherProbeCoExpression;
@@ -79,8 +80,7 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.PredictedGene;
 import ubic.gemma.model.genome.ProbeAlignedRegion;
-import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
+import ubic.gemma.model.genome.Taxon; 
 import ubic.gemma.persistence.PersisterHelper;
 import ubic.gemma.util.TaxonUtility;
 import cern.colt.list.ObjectArrayList;
@@ -397,7 +397,7 @@ public class LinkAnalysisService {
             if ( eeDoubleMatrix.getRow( cs ) != null ) probesForVectors.add( cs );
         }
 
-        Map<CompositeSequence, Map<PhysicalLocation, Collection<BlatAssociation>>> specificityData = csService
+        Map<CompositeSequence, Map<PhysicalLocation, Collection<BioSequence2GeneProduct>>> specificityData = csService
                 .getGenesWithSpecificity( probesForVectors );
 
         /*
@@ -408,10 +408,10 @@ public class LinkAnalysisService {
             if ( !probeToGeneMap.containsKey( cs ) ) {
                 probeToGeneMap.put( cs, new HashSet() );
             }
-            Map<PhysicalLocation, Collection<BlatAssociation>> plba = specificityData.get( cs );
+            Map<PhysicalLocation, Collection<BioSequence2GeneProduct>> plba = specificityData.get( cs );
             for ( PhysicalLocation pl : plba.keySet() ) {
                 Collection<Gene> cluster = new HashSet<Gene>();
-                for ( BlatAssociation bla : plba.get( pl ) ) {
+                for ( BioSequence2GeneProduct bla : plba.get( pl ) ) {
                     Gene gene = bla.getGeneProduct().getGene();
                     cluster.add( gene );
                 }

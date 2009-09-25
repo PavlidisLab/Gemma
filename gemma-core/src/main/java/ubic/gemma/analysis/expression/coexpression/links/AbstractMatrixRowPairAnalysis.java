@@ -63,11 +63,17 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
     protected double lowerTailThreshold = 0.0;
 
     /**
-     * If fewer than this number values are available, the correlation is rejected. This helps keep the correlation
-     * distribution reasonable. (FIXME we might want to set this higher! This is only relevant when there are missing
-     * values in the data, otherwise we don't check this.
+     * Absolute lower limit to minNumUsed. (This used to be 3!). It doesn't make much sense to set this higher than
+     * ExpressionExperimentFilter.MIN_NUMBER_OF_SAMPLES_PRESENT
      */
-    protected int minNumUsed = 3;
+    private static final int HARD_LIMIT_MIN_NUM_USED = 5;
+
+    /**
+     * If fewer than this number values are available, the correlation is rejected. This helps keep the correlation
+     * distribution reasonable. This is primarily relevant when there are missing values in the data, but to be
+     * consistent we check it for other cases as well.
+     */
+    protected int minNumUsed = HARD_LIMIT_MIN_NUM_USED;
 
     // store total number of missing values.
     protected int numMissing;
@@ -212,10 +218,11 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
     }
 
     /**
-     * Note that you cannot set the value less than 3 (the default)
+     * Set the number of mutually present values in a pairwise comparison that must be attained before the correlation
+     * is stored. Note that you cannot set the value less than HARD_LIMIT_MIN_NUM_USED.
      */
     public void setMinNumpresent( int minSamplesToKeepCorrelation ) {
-        if ( minSamplesToKeepCorrelation > 3 ) this.minNumUsed = minSamplesToKeepCorrelation;
+        if ( minSamplesToKeepCorrelation > HARD_LIMIT_MIN_NUM_USED ) this.minNumUsed = minSamplesToKeepCorrelation;
     }
 
     /**
@@ -356,7 +363,7 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
     }
 
     /**
-     * Decide whether to keep the correlation.
+     * Decide whether to keep the correlation. The correlation must be greater or equal to the set thresholds.
      * 
      * @param i int
      * @param j int
@@ -389,15 +396,15 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
             c = correl;
         }
 
-        if ( upperTailThreshold != 0.0 && c > upperTailThreshold
-                && ( !this.usePvalueThreshold || correctedPvalue( i, j, correl, numused ) < this.pValueThreshold ) ) {
+        if ( upperTailThreshold != 0.0 && c >= upperTailThreshold
+                && ( !this.usePvalueThreshold || correctedPvalue( i, j, correl, numused ) <= this.pValueThreshold ) ) {
 
             keepers.add( new Link( i, j, correl ) );
             return true;
         }
 
-        else if ( !useAbsoluteValue && lowerTailThreshold != 0.0 && c < lowerTailThreshold
-                && ( !this.usePvalueThreshold || correctedPvalue( i, j, correl, numused ) < this.pValueThreshold ) ) {
+        else if ( !useAbsoluteValue && lowerTailThreshold != 0.0 && c <= lowerTailThreshold
+                && ( !this.usePvalueThreshold || correctedPvalue( i, j, correl, numused ) <= this.pValueThreshold ) ) {
             keepers.add( new Link( i, j, correl ) );
             return true;
         }
