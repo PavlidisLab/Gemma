@@ -110,8 +110,8 @@ import ubic.gemma.util.EntityUtils;
 import ubic.gemma.util.ReflectionUtil;
 
 /**
- * This service is used for performing searches using free text or exact matches to items in the database.
- * <h2> Implementation notes</h2>
+ * This service is used for performing searches using free text or exact matches to items in the database. <h2>
+ * Implementation notes</h2>
  * <p>
  * Internally, there are generally two kinds of searches performed, percise database searches looking for exact matches
  * in the database and compass/lucene searches which look for matches in the stored index.
@@ -219,7 +219,6 @@ public class SearchService implements InitializingBean {
 
     /*
      * (non-Javadoc)
-     * 
      * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
      */
     public void afterPropertiesSet() throws Exception {
@@ -282,6 +281,10 @@ public class SearchService implements InitializingBean {
 
         String searchString = StringEscapeUtils.escapeJava( settings.getQuery() ); // probably not necessay to
         // escape...
+
+        if ( StringUtils.isBlank( searchString ) ) {
+            return new HashMap<Class, List<SearchResult>>();
+        }
 
         List<SearchResult> rawResults = new ArrayList<SearchResult>();
 
@@ -905,9 +908,9 @@ public class SearchService implements InitializingBean {
      */
     @SuppressWarnings("unchecked")
     private Collection<SearchResult> compassSearch( Compass bean, final SearchSettings settings ) {
-        
-        if (!settings.isUseIndices()) return new HashSet<SearchResult>();
-        
+
+        if ( !settings.isUseIndices() ) return new HashSet<SearchResult>();
+
         CompassTemplate template = new CompassTemplate( bean );
         Collection<SearchResult> searchResults = ( Collection<SearchResult> ) template.execute(
                 CompassTransaction.TransactionIsolation.READ_ONLY_READ_COMMITTED, new CompassCallback() {
@@ -1052,7 +1055,7 @@ public class SearchService implements InitializingBean {
      */
     @SuppressWarnings("unchecked")
     private Collection<SearchResult> databaseBioSequenceSearch( SearchSettings settings ) {
-        
+
         if ( !settings.isUseDatabase() ) return new HashSet<SearchResult>();
 
         StopWatch watch = startTiming();
