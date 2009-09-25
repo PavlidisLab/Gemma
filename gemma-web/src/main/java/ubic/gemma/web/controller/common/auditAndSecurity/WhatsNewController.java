@@ -53,7 +53,6 @@ public class WhatsNewController extends BaseMultiActionController {
      * @param response
      * @return
      */
-    @SuppressWarnings("unused")
     public ModelAndView weekly( HttpServletRequest request, HttpServletResponse response ) {
         ModelAndView mav = new ModelAndView( "wnWeek" );
         Calendar c = Calendar.getInstance();
@@ -70,7 +69,6 @@ public class WhatsNewController extends BaseMultiActionController {
      * @param response
      * @return
      */
-    @SuppressWarnings("unused")
     public ModelAndView daily( HttpServletRequest request, HttpServletResponse response ) {
         ModelAndView mav = new ModelAndView( "wnDay" );
         Calendar c = Calendar.getInstance();
@@ -87,7 +85,6 @@ public class WhatsNewController extends BaseMultiActionController {
      * @param response
      * @return
      */
-    @SuppressWarnings("unused")
     public ModelAndView generateCache( HttpServletRequest request, HttpServletResponse response ) {
         ModelAndView mav = new ModelAndView( new RedirectView( "/Gemma/mainMenu.html" ) );
 

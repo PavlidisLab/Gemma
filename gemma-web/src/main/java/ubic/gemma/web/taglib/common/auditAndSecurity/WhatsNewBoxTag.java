@@ -62,6 +62,7 @@ public class WhatsNewBoxTag extends TagSupport {
         return EVAL_PAGE;
     }
 
+    @Override
     public int doStartTag() throws JspException {
 
         Collection<ExpressionExperiment> newExpressionExperiments = whatsNew.getNewExpressionExperiments();
