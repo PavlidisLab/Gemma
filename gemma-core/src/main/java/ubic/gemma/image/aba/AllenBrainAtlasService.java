@@ -56,7 +56,6 @@ import ubic.gemma.util.ConfigUtils;
  * @version $Id$
  * @spring.bean id="allenBrainAtlasService"
  */
-
 public class AllenBrainAtlasService {
 
     private static final String ABA_CACHE = "/abaCache/";
@@ -203,7 +202,7 @@ public class AllenBrainAtlasService {
 
     private File getFile( String fileName ) {
 
-        File outputFile = new File(this.cacheDir + "aba_" + fileName + ".xml" );
+        File outputFile = new File( this.cacheDir + "aba_" + fileName + ".xml" );
 
         if ( outputFile.exists() ) {
             outputFile.delete();
@@ -247,19 +246,24 @@ public class AllenBrainAtlasService {
     }
 
     /**
-     *    The allen brain atals website 1st letter of gene symbol is capatilized, rest are not (webservice is case sensitive)             
+     * The allen brain atlas website 1st letter of gene symbol is capatilized, rest are not (webservice is case
+     * sensitive)
+     * 
      * @param geneName
      * @return
      */
-    private String correctCase(String geneName){
-        return StringUtils.capitalize( StringUtils.lowerCase( geneName));
+    private String correctCase( String geneName ) {
+        return StringUtils.capitalize( StringUtils.lowerCase( geneName ) );
     }
-   
-    
+
+    /**
+     * @param givenGene symbol of gene that will be used to search ABA.
+     * @return
+     */
     public AbaGene getGene( String givenGene ) {
 
-        String gene = correctCase(givenGene);
-        
+        String gene = correctCase( givenGene );
+
         File outputFile = getFile( gene );
         Document geneDoc = null;
 
@@ -274,39 +278,37 @@ public class AllenBrainAtlasService {
         } catch ( SAXException se ) {
             log.warn( se );
         } catch ( FileNotFoundException fnfe ) {
-            if (log.isDebugEnabled())
-                log.debug( gene + " gene not found in aba . Error thrown becuase cachefile not created: " + fnfe );
-            
-            log.info( gene + "not found in aba" );
+            if ( log.isDebugEnabled() )
+                log.debug( gene + " gene not found in aba . Error thrown because cachefile not created: " + fnfe );
+
+            log.info( gene + " not found in aba" );
 
             return null;
-            
+
         } catch ( IOException io ) {
-             log.warn (io);
+            log.warn( io );
         }
 
-        Collection<String> xmlData =  XMLUtils.extractTagData( geneDoc, "geneid" );       
-        Integer geneId = xmlData.isEmpty() ? null :Integer.parseInt(xmlData.iterator().next() );
-        
-        xmlData =  XMLUtils.extractTagData( geneDoc, "genename" );
+        Collection<String> xmlData = XMLUtils.extractTagData( geneDoc, "geneid" );
+        Integer geneId = xmlData.isEmpty() ? null : Integer.parseInt( xmlData.iterator().next() );
+
+        xmlData = XMLUtils.extractTagData( geneDoc, "genename" );
         String geneName = xmlData.isEmpty() ? null : xmlData.iterator().next();
-        
+
         xmlData = XMLUtils.extractTagData( geneDoc, "genesymbol" );
         String geneSymbol = xmlData.isEmpty() ? null : xmlData.iterator().next();
-        
+
         xmlData = XMLUtils.extractTagData( geneDoc, "entrezgeneid" );
         Integer entrezGeneId = xmlData.isEmpty() ? null : Integer.parseInt( xmlData.iterator().next() );
 
         xmlData = XMLUtils.extractTagData( geneDoc, "ncbiaccessionnumber" );
         String ncbiAccessionNumber = xmlData.isEmpty() ? null : xmlData.iterator().next();
-             
-        
-        String geneUrl = (geneSymbol==null) ? null : this.getGeneUrl( geneSymbol );
 
-        if (geneId == null && geneSymbol == null)
-                return null;
-        
-        AbaGene geneData = new AbaGene( geneId, geneSymbol, geneName, entrezGeneId, ncbiAccessionNumber,geneUrl, null );
+        String geneUrl = ( geneSymbol == null ) ? null : this.getGeneUrl( geneSymbol );
+
+        if ( geneId == null && geneSymbol == null ) return null;
+
+        AbaGene geneData = new AbaGene( geneId, geneSymbol, geneName, entrezGeneId, ncbiAccessionNumber, geneUrl, null );
 
         NodeList idList = geneDoc.getChildNodes().item( 0 ).getChildNodes();
 
@@ -369,14 +371,14 @@ public class AllenBrainAtlasService {
      * @return
      */
     public String getGeneUrl( String gene ) {
-       return HTML_GENE_DETAILS_URL.replaceFirst( "@", this.correctCase( gene) );       
+        return HTML_GENE_DETAILS_URL.replaceFirst( "@", this.correctCase( gene ) );
     }
 
     public Collection<ImageSeries> getRepresentativeSaggitalImages( String gene ) {
 
         AbaGene grin1 = this.getGene( gene );
-        if (grin1 == null) return null;
-        
+        if ( grin1 == null ) return null;
+
         Collection<ImageSeries> representativeSaggitalImages = new HashSet<ImageSeries>();
 
         for ( ImageSeries is : grin1.getImageSeries() ) {
@@ -412,35 +414,33 @@ public class AllenBrainAtlasService {
         return ( doPageDownload( getImageseriesUrl, out ) );
     }
 
-    
- /*  
-  * Convieniece method for striping out the images from the image series. 
-  * Also fully qaulifies URLs for link to allen brain atlas web site 
-  * @param imageSeries
-  * @return
-  */
+    /*
+     * Convieniece method for striping out the images from the image series. Also fully qaulifies URLs for link to allen
+     * brain atlas web site
+     * @param imageSeries
+     * @return
+     */
 
-    public Collection<Image> getImagesFromImageSeries(Collection<ImageSeries> imageSeries){
-       
-       Collection<Image> representativeImages = new HashSet<Image>(); 
-       
-       for ( ImageSeries is : imageSeries ) {
-           if (is.getImages() == null )
-                   continue;
-           
-           for ( Image img : is.getImages() ) {
-               //Convert the urls into fully qualified ones for ez displaying 
-               String args[] = {"2", "2", img.getDownloadExpressionPath()};    
-               img.setDownloadExpressionPath(this.buildUrlString( AllenBrainAtlasService.GET_IMAGE_URL, args ) );
-               img.setExpressionThumbnailUrl( AllenBrainAtlasService.API_BASE_URL + img.getExpressionThumbnailUrl() );
-               representativeImages.add(img);                               
-           }
-       }
-             
-       return representativeImages;
-       
-   }
-   
+    public Collection<Image> getImagesFromImageSeries( Collection<ImageSeries> imageSeries ) {
+
+        Collection<Image> representativeImages = new HashSet<Image>();
+
+        for ( ImageSeries is : imageSeries ) {
+            if ( is.getImages() == null ) continue;
+
+            for ( Image img : is.getImages() ) {
+                // Convert the urls into fully qualified ones for ez displaying
+                String args[] = { "2", "2", img.getDownloadExpressionPath() };
+                img.setDownloadExpressionPath( this.buildUrlString( AllenBrainAtlasService.GET_IMAGE_URL, args ) );
+                img.setExpressionThumbnailUrl( AllenBrainAtlasService.API_BASE_URL + img.getExpressionThumbnailUrl() );
+                representativeImages.add( img );
+            }
+        }
+
+        return representativeImages;
+
+    }
+
     public Collection<Image> getImageseries( Integer imageseriesId ) {
 
         File outputFile = getFile( "ImageseriesId_" + imageseriesId.toString() );

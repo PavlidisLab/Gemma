@@ -48,7 +48,6 @@ import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.ontology.GeneOntologyService;
 import ubic.gemma.web.controller.BaseMultiActionController;
 import ubic.gemma.web.controller.expression.experiment.AnnotationValueObject;
-import ubic.gemma.web.remote.EntityDelegator;
 
 /**
  * @author daq2101
@@ -65,7 +64,6 @@ import ubic.gemma.web.remote.EntityDelegator;
  * @spring.property name="homologeneService" ref="homologeneService"
  * @spring.property name="taxonService" ref="taxonService"
  * @spring.property name="methodNameResolver" ref="geneActions"
- * 
  */
 public class GeneController extends BaseMultiActionController {
     /**
@@ -73,15 +71,15 @@ public class GeneController extends BaseMultiActionController {
      * configure this externally, so this is temporary.
      */
     private static final boolean AJAX = true;
-    private GeneService geneService = null;
-    private Gene2GOAssociationService gene2GOAssociationService = null;
+    private AllenBrainAtlasService allenBrainAtlasService = null;
     private ArrayDesignMapResultService arrayDesignMapResultService = null;
     private CompositeSequenceService compositeSequenceService = null;
-    private AllenBrainAtlasService allenBrainAtlasService = null;
+    private Gene2GOAssociationService gene2GOAssociationService = null;
+    private GeneOntologyService geneOntologyService;
     private HomologeneService homologeneService = null;
     private TaxonService taxonService = null;
 
-    private GeneOntologyService geneOntologyService;
+    private GeneService geneService = null;
 
     /**
      * For ajax
@@ -91,11 +89,16 @@ public class GeneController extends BaseMultiActionController {
      * @spring.webremote include="true"
      */
     @SuppressWarnings("unchecked")
-    public Collection findGOTerms( EntityDelegator geneDelegator ) {
-        Gene g = Gene.Factory.newInstance();
-        g.setId( geneDelegator.getId() );
-        Collection<Gene2GOAssociation> associations = gene2GOAssociationService.findAssociationByGene( g );
+    public Collection<AnnotationValueObject> findGOTerms( Long geneId ) {
+        if ( geneId == null ) throw new IllegalArgumentException( "Null id for gene" );
         Collection<AnnotationValueObject> ontos = new HashSet<AnnotationValueObject>();
+        Gene g = geneService.load( geneId );
+
+        if ( g == null ) {
+            throw new IllegalArgumentException( "No such gene could be loaded with id=" + geneId );
+        }
+
+        Collection<Gene2GOAssociation> associations = gene2GOAssociationService.findAssociationByGene( g );
 
         for ( Gene2GOAssociation assoc : associations ) {
 
@@ -124,9 +127,12 @@ public class GeneController extends BaseMultiActionController {
      * @return
      * @spring.webremote include="true"
      */
-    public Collection<GeneProduct> getProducts( EntityDelegator geneDelegator ) {
-        Long id = geneDelegator.getId();
-        Gene gene = geneService.load( id );
+    public Collection<GeneProduct> getProducts( Long geneId ) {
+        if ( geneId == null ) throw new IllegalArgumentException( "Null id for gene" );
+        Gene gene = geneService.load( geneId );
+
+        if ( gene == null ) throw new IllegalArgumentException( "No gene with id " + geneId );
+
         return gene.getProducts();
     }
 
@@ -161,17 +167,16 @@ public class GeneController extends BaseMultiActionController {
     public void setGeneService( GeneService geneService ) {
         this.geneService = geneService;
     }
-    
-    
-    public void setAllenBrainAtlasService(AllenBrainAtlasService allenBrainAtlasService){
+
+    public void setAllenBrainAtlasService( AllenBrainAtlasService allenBrainAtlasService ) {
         this.allenBrainAtlasService = allenBrainAtlasService;
     }
-    
-    public void setHomologeneService(HomologeneService homologeneService){
+
+    public void setHomologeneService( HomologeneService homologeneService ) {
         this.homologeneService = homologeneService;
     }
-    
-    public void setTaxonService(TaxonService ts){
+
+    public void setTaxonService( TaxonService ts ) {
         this.taxonService = ts;
     }
 
@@ -215,37 +220,33 @@ public class GeneController extends BaseMultiActionController {
         // Get the composite sequences
         Long compositeSequenceCount = geneService.getCompositeSequenceCountById( id );
         mav.addObject( "compositeSequenceCount", compositeSequenceCount );
-        
-        
+
         final Taxon mouseTaxon = this.taxonService.findByCommonName( "mouse" );
         Gene mouseGene = gene;
-        //Get alan brain atalas represntative images
-        if (gene.getTaxon().getId() != mouseTaxon.getId()){
-            mouseGene = this.homologeneService.getHomologue( gene, mouseTaxon );            
+        // Get alan brain atalas represntative images
+        if ( gene.getTaxon().getId() != mouseTaxon.getId() ) {
+            mouseGene = this.homologeneService.getHomologue( gene, mouseTaxon );
         }
-        
-        if( mouseGene != null){
-            Collection<ImageSeries> imageSeries = allenBrainAtlasService.getRepresentativeSaggitalImages( mouseGene.getOfficialSymbol() );
+
+        if ( mouseGene != null ) {
+            Collection<ImageSeries> imageSeries = allenBrainAtlasService.getRepresentativeSaggitalImages( mouseGene
+                    .getOfficialSymbol() );
             String abaGeneUrl = allenBrainAtlasService.getGeneUrl( mouseGene.getOfficialSymbol() );
-            
-            if (imageSeries == null)
-                return mav;
-            
+
             Collection<Image> representativeImages = allenBrainAtlasService.getImagesFromImageSeries( imageSeries );
-           
-            
-            if (!representativeImages.isEmpty()){
+
+            if ( !representativeImages.isEmpty() ) {
                 mav.addObject( "representativeImages", representativeImages );
                 mav.addObject( "abaGeneUrl", abaGeneUrl );
             }
         }
-        
+
         Collection<Gene> homologues = homologeneService.getHomologues( gene );
-        
-        if (homologues != null || homologues.isEmpty()){
+
+        if ( homologues != null && !homologues.isEmpty() ) {
             mav.addObject( "homologues", homologues );
         }
-        
+
         return mav;
     }
 
@@ -285,7 +286,6 @@ public class GeneController extends BaseMultiActionController {
      * @param response
      * @return ModelAndView
      */
-    @SuppressWarnings("unchecked")
     public ModelAndView showCompositeSequences( HttpServletRequest request, HttpServletResponse response ) {
 
         // gene id.
@@ -328,12 +328,12 @@ public class GeneController extends BaseMultiActionController {
     /**
      * Remove root terms.
      * 
-     * @param ontos
+     * @param associations
      */
-    private void cleanupVcs( Collection<VocabCharacteristic> ontos ) {
-        for ( Iterator<VocabCharacteristic> it = ontos.iterator(); it.hasNext(); ) {
-            VocabCharacteristic v = it.next();
-            String term = v.getDescription();
+    private void cleanup( Collection<AnnotationValueObject> associations ) {
+        for ( Iterator<AnnotationValueObject> it = associations.iterator(); it.hasNext(); ) {
+            String term = it.next().getTermName();
+            if ( term == null ) continue;
             if ( term.equals( "molecular_function" ) || term.equals( "biological_process" )
                     || term.equals( "cellular_component" ) ) {
                 it.remove();
@@ -344,12 +344,12 @@ public class GeneController extends BaseMultiActionController {
     /**
      * Remove root terms.
      * 
-     * @param associations
+     * @param ontos
      */
-    private void cleanup( Collection<AnnotationValueObject> associations ) {
-        for ( Iterator<AnnotationValueObject> it = associations.iterator(); it.hasNext(); ) {
-            String term = it.next().getTermName();
-            if ( term == null ) continue;
+    private void cleanupVcs( Collection<VocabCharacteristic> ontos ) {
+        for ( Iterator<VocabCharacteristic> it = ontos.iterator(); it.hasNext(); ) {
+            VocabCharacteristic v = it.next();
+            String term = v.getDescription();
             if ( term.equals( "molecular_function" ) || term.equals( "biological_process" )
                     || term.equals( "cellular_component" ) ) {
                 it.remove();
