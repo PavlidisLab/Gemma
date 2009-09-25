@@ -59,6 +59,8 @@ import ubic.gemma.util.ConfigUtils;
 
 public class AllenBrainAtlasService {
 
+    private static final String ABA_CACHE = "/abaCache/";
+
     private static Log log = LogFactory.getLog( AllenBrainAtlasService.class.getName() );
 
     /**
@@ -225,7 +227,13 @@ public class AllenBrainAtlasService {
     private void initDefaults() {
         this.verbose = false;
         this.useFileCache = false;
-        this.cacheDir = ConfigUtils.getString( "gemma.appdata.home" ) + "/abaCache/";
+        this.cacheDir = ConfigUtils.getString( "gemma.appdata.home" ) + ABA_CACHE;
+        File abaCacheDir = new File(this.cacheDir);
+        if ( !( abaCacheDir.exists() && abaCacheDir.canRead() ) ) {
+            log.warn( "Attempting to create aba cache directory in '" + this.cacheDir + "'" );
+            abaCacheDir.mkdirs();
+        }
+        
         this.infoOut = System.out;
         this.errOut = System.err;
     }
