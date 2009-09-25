@@ -49,6 +49,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.security.SecurityService;
 import ubic.gemma.util.ConfigUtils;
 
 /**
@@ -59,6 +60,7 @@ import ubic.gemma.util.ConfigUtils;
  * @spring.property name="expressionExperimentService" ref="expressionExperimentService"
  * @spring.property name="arrayDesignService" ref="arrayDesignService"
  * @spring.property name="cacheManager" ref="cacheManager"
+ * @spring.property name="securityService" ref="securityService"
  * @author pavlidis
  * @version $Id$
  */
@@ -69,13 +71,14 @@ public class WhatsNewService implements InitializingBean {
     ArrayDesignService arrayDesignService = null;
     AuditEventService auditEventService;
     ExpressionExperimentService expressionExperimentService = null;
+    SecurityService securityService = null;
     private CacheManager cacheManager = null;
 
     private String HOME_DIR = ConfigUtils.getString( "gemma.appdata.home" );
+
     private String WHATS_NEW_CACHE = "WhatsNew";
     private String WHATS_NEW_DIR = "WhatsNew";
     private String WHATS_NEW_FILE = "WhatsNew";
-
     private Cache whatsNewCache;
 
     public void afterPropertiesSet() throws Exception {
@@ -86,7 +89,7 @@ public class WhatsNewService implements InitializingBean {
             }
 
             // last two values are timetolive and timetoidle.
-            whatsNewCache = new Cache( WHATS_NEW_CACHE, 1500, false, false, 12*3600, 12*3600 );
+            whatsNewCache = new Cache( WHATS_NEW_CACHE, 1500, false, false, 12 * 3600, 12 * 3600 );
 
             cacheManager.addCache( whatsNewCache );
             whatsNewCache = cacheManager.getCache( WHATS_NEW_CACHE );
@@ -160,7 +163,9 @@ public class WhatsNewService implements InitializingBean {
                 for ( AuditableObject object : aos ) {
                     Auditable auditable = fetch( wn, object );
 
-                    if ( auditable != null ) wn.addUpdatedObjects( auditable );
+                    if ( auditable == null ) continue;
+
+                    wn.addUpdatedObjects( auditable );
                     updateDate( wn, object );
                 }
             }
@@ -209,6 +214,13 @@ public class WhatsNewService implements InitializingBean {
     }
 
     /**
+     * @param securityService the securityService to set
+     */
+    public void setSecurityService( SecurityService securityService ) {
+        this.securityService = securityService;
+    }
+
+    /**
      * @param wn
      * @param object
      * @return
@@ -230,6 +242,13 @@ public class WhatsNewService implements InitializingBean {
             } else {
                 // this is slower than loading them all at once but the cache saves even more time.
                 auditable = expressionExperimentService.load( object.getId() );
+                boolean isPrivate = securityService.isPrivate( auditable );
+
+                /*
+                 * Don't list private experiments is being new.
+                 */
+                if ( isPrivate ) return null;
+
                 whatsNewCache.put( new Element( object, auditable ) );
             }
         }
