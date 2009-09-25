@@ -574,7 +574,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         }
 
         // get the expression experiment counts
-        Map<Long, Integer> eeCounts = this.getExpressionExperimentCountMap();
+        Map<Long, Integer> eeCounts = this.getExpressionExperimentCountMap( ids );
 
         final String queryString = "select ad.id as id, ad.name as name, "
                 + "ad.shortName as shortName, "
@@ -1006,6 +1006,37 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         }
 
         return eeCount;
+    }
+
+    /**
+     * Gets the number of expression experiments per ArrayDesign
+     * 
+     * @return Map
+     */
+    @SuppressWarnings("unchecked")
+    private Map<Long, Integer> getExpressionExperimentCountMap( Collection<Long> arrayDesignIds ) {
+
+        Map<Long, Integer> result = new HashMap<Long, Integer>();
+
+        if ( arrayDesignIds == null || arrayDesignIds.isEmpty() ) {
+            return result;
+        }
+        final String queryString = "select ad.id, count(distinct ee) from   "
+                + " ExpressionExperimentImpl ee inner join ee.bioAssays bas inner join bas.arrayDesignUsed ad  where ad.id in (:ids) group by ad ";
+
+        List<Object[]> list = getHibernateTemplate().findByNamedParam( queryString, "ids", arrayDesignIds );
+
+        // Bug 1549: for unknown reasons, this method sometimes returns only a single record (or no records)
+        log.info( list.size() + " rows from getExpressionExperimentCountMap query for " + arrayDesignIds.size()
+                + " ids" );
+
+        for ( Object[] o : list ) {
+            Long id = ( Long ) o[0];
+            Integer count = ( ( Long ) o[1] ).intValue();
+            result.put( id, count );
+        }
+
+        return result;
     }
 
     /**
