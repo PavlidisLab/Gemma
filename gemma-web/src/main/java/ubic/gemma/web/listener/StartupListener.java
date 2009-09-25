@@ -168,8 +168,8 @@ public class StartupListener extends ContextLoaderListener {
         if ( ConfigUtils.isGridEnabled() ) copyWorkerJars( servletContext );
 
         initializeOntologies( ctx );
-        
-        intilizeHomologene(ctx);
+
+        initializeHomologene( ctx );
 
         configureScheduler( ctx );
 
@@ -388,11 +388,11 @@ public class StartupListener extends ContextLoaderListener {
         }
 
     }
-    
-    private void intilizeHomologene(ApplicationContext ctx){
+
+    private void initializeHomologene( ApplicationContext ctx ) {
         HomologeneService ho = ( HomologeneService ) ctx.getBean( "homologeneService" );
         ho.init( false );
-        
+
     }
 
     /**
