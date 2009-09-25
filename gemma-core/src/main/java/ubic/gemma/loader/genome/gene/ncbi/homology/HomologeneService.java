@@ -17,7 +17,7 @@
  *
  */
 
-package ubic.gemma.ontology;
+package ubic.gemma.loader.genome.gene.ncbi.homology;
 
 import java.io.BufferedReader;
 import java.io.File;

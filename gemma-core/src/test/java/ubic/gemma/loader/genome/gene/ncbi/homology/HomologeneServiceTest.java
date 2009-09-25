@@ -16,7 +16,7 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.ontology;
+package ubic.gemma.loader.genome.gene.ncbi.homology;
 
 import java.io.InputStream;
 import java.util.Collection;
@@ -25,6 +25,8 @@ import junit.framework.TestCase;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import ubic.gemma.loader.genome.gene.ncbi.homology.HomologeneService;
 
 /**
  * Tests the homologeneService but only access methods that don't require a DB connection (using the gemma db).
