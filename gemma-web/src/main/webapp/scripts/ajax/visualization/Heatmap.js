@@ -24,11 +24,9 @@ var Heatmap = function() {
 	var COLOR_4 = [ "black", "red", "orange", "yellow", "white" ];
 
 	// black-red-orange-yellow-white
-	var COLOR_16 = [ "rgb(0, 0, 0)", "rgb(32, 0, 0)", "rgb(64, 0, 0)",
-			"rgb(96, 0, 0)", "rgb(128, 0, 0)", "rgb(159, 32, 0)",
-			"rgb(191, 64, 0)", "rgb(223, 96, 0)", "rgb(255, 128, 0)",
-			"rgb(255, 159, 32)", "rgb(255, 191, 64)", "rgb(255, 223, 96)",
-			"rgb(255, 255, 128)", "rgb(255, 255, 159)", "rgb(255, 255, 191)",
+	var COLOR_16 = [ "rgb(0, 0, 0)", "rgb(32, 0, 0)", "rgb(64, 0, 0)", "rgb(96, 0, 0)", "rgb(128, 0, 0)",
+			"rgb(159, 32, 0)", "rgb(191, 64, 0)", "rgb(223, 96, 0)", "rgb(255, 128, 0)", "rgb(255, 159, 32)",
+			"rgb(255, 191, 64)", "rgb(255, 223, 96)", "rgb(255, 255, 128)", "rgb(255, 255, 159)", "rgb(255, 255, 191)",
 			"rgb(255, 255, 223)", "rgb(255, 255, 255)" ];
 
 	function HeatMap(container, data, config) {
@@ -47,16 +45,13 @@ var Heatmap = function() {
 			var panelWidth = target.getWidth() - TRIM;
 			// if no labels are to be shown don't use it in calculations for box
 			// width
-			var usablePanelWidth = config.label ? panelWidth
-					- MAX_LABEL_LENGTH_PIXELS : panelWidth;
+			var usablePanelWidth = config.label ? panelWidth - MAX_LABEL_LENGTH_PIXELS : panelWidth;
 
-			var panelHeight = target.getHeight() - TRIM ;
+			var panelHeight = target.getHeight() - TRIM;
 
-			var numberOfRowsToComputeSizeBy = Math.min(MAX_ROWS_BEFORE_SCROLL,
-					vectorObjs.length);
-			
-			var calculatedBoxHeight = Math.floor(panelHeight
-					/ numberOfRowsToComputeSizeBy) - 2;
+			var numberOfRowsToComputeSizeBy = Math.min(MAX_ROWS_BEFORE_SCROLL, vectorObjs.length);
+
+			var calculatedBoxHeight = Math.floor(panelHeight / numberOfRowsToComputeSizeBy) - 2;
 
 			if (calculatedBoxHeight > MAX_BOX_HEIGHT) {
 				boxHeight = MAX_BOX_HEIGHT;
@@ -96,11 +91,9 @@ var Heatmap = function() {
 				return;
 			}
 
-			var calculatedBoxWidth = Math.floor(usablePanelWidth
-					/ numberOfBoxesToDraw) ;
+			var calculatedBoxWidth = Math.floor(usablePanelWidth / numberOfBoxesToDraw);
 
-			var boxWidth = calculatedBoxWidth < MIN_BOX_WIDTH ? MIN_BOX_WIDTH
-					: calculatedBoxWidth;
+			var boxWidth = calculatedBoxWidth < MIN_BOX_WIDTH ? MIN_BOX_WIDTH : calculatedBoxWidth;
 
 			boxWidth = boxWidth > MAX_BOX_WIDTH ? MAX_BOX_WIDTH : boxWidth;
 
@@ -165,9 +158,7 @@ var Heatmap = function() {
 					// ,
 							// style : "font-size:tiny"
 							}, true);
-					Ext.DomHelper.applyStyles(text,
-							"position:absolute;top:0px;left:"
-									+ usablePanelWidth + "px");
+					Ext.DomHelper.applyStyles(text, "position:absolute;top:0px;left:" + usablePanelWidth + "px");
 				}
 			}
 			// this.loadMask.hide();
@@ -206,11 +197,9 @@ var Heatmap = function() {
 				html : "-3"
 			}, true);
 
-			Ext.DomHelper.applyStyles(posRangeLabel,
-					"position:absolute;top:0px;left:" + legendWidth
-							+ "px;font-size:8px");
-			Ext.DomHelper.applyStyles(negRangeLabel,
-					"position:absolute;top:0px;left:0px;font-size:8px");
+			Ext.DomHelper.applyStyles(posRangeLabel, "position:absolute;top:0px;left:" + legendWidth
+					+ "px;font-size:8px");
+			Ext.DomHelper.applyStyles(negRangeLabel, "position:absolute;top:0px;left:0px;font-size:8px");
 
 			// ctx.fillText("-3",0,0);
 
@@ -243,8 +232,7 @@ var Heatmap = function() {
 
 			for ( var i = 0; i < COLOR_16.length; i++) {
 
-				var rowLabel = "&nbsp;" + sprintf("%.4s", rangeMin) + " to "
-						+ sprintf("%.4s", rangeMin + binsize);
+				var rowLabel = "&nbsp;" + sprintf("%.4s", rangeMin) + " to " + sprintf("%.4s", rangeMin + binsize);
 				rangeMin = rangeMin + binsize;
 
 				var legendRowId = "heatmapLegendRow" + Ext.id();
@@ -266,9 +254,7 @@ var Heatmap = function() {
 					tag : 'div',
 					html : rowLabel
 				}, true);
-				Ext.DomHelper.applyStyles(text,
-						"position:absolute;top:0px;left:" + boxsize
-								+ "px;font-size:10px");
+				Ext.DomHelper.applyStyles(text, "position:absolute;top:0px;left:" + boxsize + "px;font-size:10px");
 
 			}
 
@@ -293,8 +279,7 @@ var Heatmap = function() {
 				tag : 'div',
 				html : "&nbsp; NaN"
 			}, true);
-			Ext.DomHelper.applyStyles(text, "position:absolute;top:0px;left:"
-					+ boxsize + "px;font-size:10px");
+			Ext.DomHelper.applyStyles(text, "position:absolute;top:0px;left:" + boxsize + "px;font-size:10px");
 
 		}
 
@@ -320,8 +305,7 @@ var Heatmap = function() {
 			});
 
 			if (canvasWidth <= 0 || canvasHeight <= 0) {
-				throw 'Invalid dimensions for plot, width = ' + canvasWidth
-						+ ', height = ' + canvasHeight;
+				throw 'Invalid dimensions for plot, width = ' + canvasWidth + ', height = ' + canvasHeight;
 			}
 
 			var canvas = Ext.DomHelper.append(div, {

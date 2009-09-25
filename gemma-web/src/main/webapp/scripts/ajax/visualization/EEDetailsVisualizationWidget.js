@@ -45,15 +45,13 @@ Gemma.EEDetailsDiffExpressionVisualizationWindow = Ext
 
 						this.factorDetails = factorDetails;
 
-						Gemma.EEDetailsDiffExpressionVisualizationWindow.superclass.constructor
-								.call(this);
+						Gemma.EEDetailsDiffExpressionVisualizationWindow.superclass.constructor.call(this);
 
 					},
 
 					listeners : {
 						resize : {
-							fn : function(component, adjWidth, adjHeight,
-									rawWidth, rawHeight) {
+							fn : function(component, adjWidth, adjHeight, rawWidth, rawHeight) {
 
 								// Change the div so that it is the size of the
 								// panel surrounding it.
@@ -79,8 +77,7 @@ Gemma.EEDetailsDiffExpressionVisualizationWindow = Ext
 						if (!data || data.size() == 0) {
 							m_myDiffVizLoadMask.hide();
 							this.hide();
-							Ext.Msg.alert('Status',
-									'No visualization data available');
+							Ext.Msg.alert('Status', 'No visualization data available');
 							return;
 						}
 
@@ -101,13 +98,10 @@ Gemma.EEDetailsDiffExpressionVisualizationWindow = Ext
 								geneNames = genes[0].name;
 								for ( var k = 1; k < genes.size(); k++) {
 									// Put search gene in begining of list
-									if (Gemma.geneContained(genes[k].name,
-											m_geneSymbols)) {
-										geneNames = genes[k].name + ","
-												+ geneNames;
+									if (Gemma.geneContained(genes[k].name, m_geneSymbols)) {
+										geneNames = genes[k].name + "," + geneNames;
 									} else {
-										geneNames = geneNames + ","
-												+ genes[k].name;
+										geneNames = geneNames + "," + genes[k].name;
 									}
 								}
 							}
@@ -115,25 +109,16 @@ Gemma.EEDetailsDiffExpressionVisualizationWindow = Ext
 							// heatmap
 							var oneProfile = [];
 							for ( var j = 0; j < coordinateObject.size(); j++) {
-								var point = [ coordinateObject[j].x,
-										coordinateObject[j].y ];
+								var point = [ coordinateObject[j].x, coordinateObject[j].y ];
 								oneProfile.push(point);
 							}
 
 							var plotConfig = {
 								data : oneProfile,
 								genes : genes,
-								label : " <a  href='/Gemma/compositeSequence/show.html?id="
-										+ probeId
-										+ "' target='_blank' ext:qtip= '"
-										+ probe
-										+ " ("
-										+ geneNames
-										+ ")"
-										+ "'> "
-										+ Ext.util.Format.ellipsis(geneNames,
-												Gemma.MAX_LABEL_LENGTH_CHAR)
-										+ "</a>",
+								label : " <a  href='/Gemma/compositeSequence/show.html?id=" + probeId
+										+ "' target='_blank' ext:qtip= '" + probe + " (" + geneNames + ")" + "'> "
+										+ Ext.util.Format.ellipsis(geneNames, Gemma.MAX_LABEL_LENGTH_CHAR) + "</a>",
 								labelID : probeId,
 								lines : {
 									lineWidth : Gemma.LINE_THICKNESS
@@ -154,12 +139,10 @@ Gemma.EEDetailsDiffExpressionVisualizationWindow = Ext
 						m_diffProfiles = flotrData;
 						m_eevo = data[0].data.eevo;
 
-						this.setTitle("Top differentially expressed probes in "
-								+ m_eevo.shortName + " for "
+						this.setTitle("Top differentially expressed probes in " + m_eevo.shortName + " for "
 								+ this.factorDetails.factorDetails);
 
-						Heatmap.draw($('vizDiffDiv'), m_diffProfiles,
-								HEATMAP_CONFIG);
+						Heatmap.draw($('vizDiffDiv'), m_diffProfiles, HEATMAP_CONFIG);
 						m_myDiffVizLoadMask.hide();
 
 					},
@@ -178,12 +161,10 @@ Gemma.EEDetailsDiffExpressionVisualizationWindow = Ext
 
 						this.show();
 
-						m_myDiffVizLoadMask = new Ext.LoadMask(
-								this.getEl(),
-								{
-									id : "heatmapLoadMask",
-									msg : "Loading differentially expressed genes that met the threshold."
-								});
+						m_myDiffVizLoadMask = new Ext.LoadMask(this.getEl(), {
+							id : "heatmapLoadMask",
+							msg : "Loading differentially expressed genes that met the threshold."
+						});
 
 						Ext.apply(this, {
 							loadMask : m_myDiffVizLoadMask
@@ -195,16 +176,14 @@ Gemma.EEDetailsDiffExpressionVisualizationWindow = Ext
 
 					initComponent : function() {
 
-						this.dv = new Ext.DataView(
-								{
-									autoHeight : true,
-									emptyText : 'Unable to visualize missing data',
-									loadingText : 'Loading data ...',
-									store : new Gemma.VisualizationStore(
-											{
-												readMethod : DEDVController.getDEDVForDiffExVisualizationByThreshold
-											})
-								});
+						this.dv = new Ext.DataView( {
+							autoHeight : true,
+							emptyText : 'Unable to visualize missing data',
+							loadingText : 'Loading data ...',
+							store : new Gemma.VisualizationStore( {
+								readMethod : DEDVController.getDEDVForDiffExVisualizationByThreshold
+							})
+						});
 
 						this.vizPanel = new Ext.Panel(
 								{
@@ -221,27 +200,24 @@ Gemma.EEDetailsDiffExpressionVisualizationWindow = Ext
 									html : {
 										id : 'vizDiffDiv',
 										tag : 'div',
-										style : 'width:' + 200 + 'px;height:'
-												+ 200
-												+ 'px; margin:5px 2px 2px 5px;'
+										style : 'width:' + 200 + 'px;height:' + 200 + 'px; margin:5px 2px 2px 5px;'
 									},
 
 									refreshWindow : function(data) {
 										// Should redraw to fit current window
-										// width and hight.
-										if (data == null) {
-											if (m_diffProfiles != null)
-												data = m_diffProfiles;
-											else
-												return;
-										}
+									// width and hight.
+									if (data == null) {
+										if (m_diffProfiles != null)
+											data = m_diffProfiles;
+										else
+											return;
+									}
 
-										$('vizDiffDiv').innerHTML = '';
+									$('vizDiffDiv').innerHTML = '';
 
-										Heatmap.draw($('vizDiffDiv'), data,
-												HEATMAP_CONFIG);
+									Heatmap.draw($('vizDiffDiv'), data, HEATMAP_CONFIG);
 
-									},
+								},
 
 									displayWindow : function(eevo, data) {
 
@@ -253,10 +229,7 @@ Gemma.EEDetailsDiffExpressionVisualizationWindow = Ext
 
 										this
 												.setTitle("<a   target='_blank' href='/Gemma/expressionExperiment/showExpressionExperiment.html?id="
-														+ eevo.id
-														+ " '> "
-														+ eevo.shortName
-														+ "</a>: " + eevo.name);
+														+ eevo.id + " '> " + eevo.shortName + "</a>: " + eevo.name);
 
 										if (!this.isVisible()) {
 											this.setVisible(true);
@@ -264,8 +237,7 @@ Gemma.EEDetailsDiffExpressionVisualizationWindow = Ext
 										}
 
 										$('vizDiffDiv').innerHTML = '';
-										Heatmap.draw($('vizDiffDiv'), data,
-												HEATMAP_CONFIG);
+										Heatmap.draw($('vizDiffDiv'), data, HEATMAP_CONFIG);
 
 									}
 
@@ -275,8 +247,7 @@ Gemma.EEDetailsDiffExpressionVisualizationWindow = Ext
 							items : [ this.vizPanel ]
 						});
 
-						Gemma.EEDetailsDiffExpressionVisualizationWindow.superclass.initComponent
-								.call(this);
+						Gemma.EEDetailsDiffExpressionVisualizationWindow.superclass.initComponent.call(this);
 
 					}
 
@@ -294,8 +265,7 @@ Gemma.EEDetailsVisualizationWindow = Ext
 					width : 420,
 					listeners : {
 						resize : {
-							fn : function(component, adjWidth, adjHeight,
-									rawWidth, rawHeight) {
+							fn : function(component, adjWidth, adjHeight, rawWidth, rawHeight) {
 
 								// Change the div so that it is the size of the
 								// panel surrounding it.
@@ -323,8 +293,7 @@ Gemma.EEDetailsVisualizationWindow = Ext
 						if (!data || data.size() == 0) {
 							m_myVizLoadMask.hide();
 							this.hide();
-							Ext.Msg.alert('Status',
-									'No visualization data available');
+							Ext.Msg.alert('Status', 'No visualization data available');
 							return;
 						}
 
@@ -347,39 +316,27 @@ Gemma.EEDetailsVisualizationWindow = Ext
 								geneNames = genes[0].name;
 								for ( var k = 1; k < genes.size(); k++) {
 									// Put search gene in begining of list
-									if (Gemma.geneContained(genes[k].name,
-											m_geneSymbols)) {
-										geneNames = genes[k].name + ","
-												+ geneNames;
+									if (Gemma.geneContained(genes[k].name, m_geneSymbols)) {
+										geneNames = genes[k].name + "," + geneNames;
 									} else {
-										geneNames = geneNames + ","
-												+ genes[k].name;
+										geneNames = geneNames + "," + genes[k].name;
 									}
 								}
-							} 
+							}
 							// turn data points into a structure usuable by
 							// heatmap
 							var oneProfile = [];
 							for ( var j = 0; j < coordinateObject.size(); j++) {
-								var point = [ coordinateObject[j].x,
-										coordinateObject[j].y ];
+								var point = [ coordinateObject[j].x, coordinateObject[j].y ];
 								oneProfile.push(point);
 							}
 
 							var plotConfig = {
 								data : oneProfile,
 								genes : genes,
-								label : " <a  href='/Gemma/compositeSequence/show.html?id="
-										+ probeId
-										+ "' target='_blank' ext:qtip= '"
-										+ probe
-										+ " ("
-										+ geneNames
-										+ ")"
-										+ "'> "
-										+ Ext.util.Format.ellipsis(geneNames,
-												Gemma.MAX_LABEL_LENGTH_CHAR)
-										+ "</a>",
+								label : " <a  href='/Gemma/compositeSequence/show.html?id=" + probeId
+										+ "' target='_blank' ext:qtip= '" + probe + " (" + geneNames + ")" + "'> "
+										+ Ext.util.Format.ellipsis(geneNames, Gemma.MAX_LABEL_LENGTH_CHAR) + "</a>",
 								labelID : probeId,
 								lines : {
 									lineWidth : Gemma.LINE_THICKNESS
@@ -406,17 +363,15 @@ Gemma.EEDetailsVisualizationWindow = Ext
 										m_eevo.id, m_geneIds);
 
 						if (m_geneSymbols) {
-							this.setTitle(m_geneSymbols + " in "
-									+ m_eevo.shortName + "&nbsp;&nbsp;"
-									+ downloadDedvLink);
+							this
+									.setTitle(m_geneSymbols + " in " + m_eevo.shortName + "&nbsp;&nbsp;"
+											+ downloadDedvLink);
 						} else {
-							this.setTitle("Sampling of data from "
-									+ m_eevo.shortName + "&nbsp;&nbsp;"
+							this.setTitle("Sampling of data from " + m_eevo.shortName + "&nbsp;&nbsp;"
 									+ downloadDedvLink);
 						}
 
-						Heatmap.draw(Ext.get('vizDiv'), m_profiles,
-								HEATMAP_CONFIG);
+						Heatmap.draw(Ext.get('vizDiv'), m_profiles, HEATMAP_CONFIG);
 						m_myVizLoadMask.hide();
 
 					},
@@ -459,16 +414,14 @@ Gemma.EEDetailsVisualizationWindow = Ext
 
 					initComponent : function() {
 
-						this.dv = new Ext.DataView(
-								{
-									autoHeight : true,
-									emptyText : 'Unavailable',
-									loadingText : 'Loading data ...',
-									store : new Gemma.VisualizationStore(
-											{
-												readMethod : DEDVController.getDEDVForVisualization
-											})
-								});
+						this.dv = new Ext.DataView( {
+							autoHeight : true,
+							emptyText : 'Unavailable',
+							loadingText : 'Loading data ...',
+							store : new Gemma.VisualizationStore( {
+								readMethod : DEDVController.getDEDVForVisualization
+							})
+						});
 
 						this.vizPanel = new Ext.Panel(
 								{
@@ -485,25 +438,22 @@ Gemma.EEDetailsVisualizationWindow = Ext
 									html : {
 										id : 'vizDiv',
 										tag : 'div',
-										style : 'width:' + 420 + 'px;height:'
-												+ 300
-												+ 'px; margin:5px 2px 2px 5px;'
+										style : 'width:' + 420 + 'px;height:' + 300 + 'px; margin:5px 2px 2px 5px;'
 									},
 
 									refreshWindow : function(data) {
 										// Should redraw to fit current window
-										// width and hight.
+									// width and hight.
 
-										if (data == null) {
-											data = m_profiles;
-										}
+									if (data == null) {
+										data = m_profiles;
+									}
 
-										$('vizDiv').innerHTML = '';
+									$('vizDiv').innerHTML = '';
 
-										Heatmap.draw($('vizDiv'), data,
-												HEATMAP_CONFIG);
+									Heatmap.draw($('vizDiv'), data, HEATMAP_CONFIG);
 
-									},
+								},
 
 									displayWindow : function(eevo, data) {
 
@@ -515,10 +465,7 @@ Gemma.EEDetailsVisualizationWindow = Ext
 
 										this
 												.setTitle("<a   target='_blank' href='/Gemma/expressionExperiment/showExpressionExperiment.html?id="
-														+ eevo.id
-														+ " '> "
-														+ eevo.shortName
-														+ "</a>: " + eevo.name);
+														+ eevo.id + " '> " + eevo.shortName + "</a>: " + eevo.name);
 
 										if (!this.isVisible()) {
 											this.setVisible(true);
@@ -526,8 +473,7 @@ Gemma.EEDetailsVisualizationWindow = Ext
 										}
 
 										$('vizDiv').innerHTML = '';
-										Heatmap.draw($('vizDiv'), data,
-												HEATMAP_CONFIG);
+										Heatmap.draw($('vizDiv'), data, HEATMAP_CONFIG);
 
 									}
 
@@ -537,8 +483,7 @@ Gemma.EEDetailsVisualizationWindow = Ext
 							items : [ this.vizPanel ]
 						});
 
-						Gemma.EEDetailsVisualizationWindow.superclass.initComponent
-								.call(this);
+						Gemma.EEDetailsVisualizationWindow.superclass.initComponent.call(this);
 
 					}
 
@@ -561,93 +506,91 @@ Gemma.EEDetailsVisualizationWidget = Ext.extend(Ext.Panel, {
 
 	visualizeHandler : function() {
 		// Get expressionExperiment ID
-		// Get Gene IDs
-		// DedvController.
-		// destroy if already open
-		if (this.visWindow) {
-			this.visWindow.close();
+	// Get Gene IDs
+	// DedvController.
+	// destroy if already open
+	if (this.visWindow) {
+		this.visWindow.close();
+	}
+
+	this.visWindow = new Gemma.EEDetailsVisualizationWindow( {});
+	// this.visWindow.setHeight(100);
+	// this.visWindow.setWidth(220);
+
+	var geneList = this.geneChooserPanel.getGenes();
+
+	// if (geneList.size() < 1){
+	// Ext.Msg.alert('Status', 'Please select a gene first');
+	// return;
+	//
+	// }
+	var eeId = Ext.get("eeId").getValue();
+
+	this.visWindow.displayWindow(eeId, geneList);
+},
+
+onRender : function() {
+	Gemma.EEDetailsVisualizationWidget.superclass.onRender.apply(this, arguments);
+
+},
+
+initComponent : function() {
+
+	this.geneChooserPanel = new Gemma.GeneChooserPanel( {
+		height : 100,
+		width : 400,
+		region : 'center',
+		id : 'gene-chooser-panel',
+		extraButtons : [ new Ext.Button( {
+			id : "visualizeButton",
+			text : "Show",
+			handler : this.visualizeHandler.createDelegate(this, [], false)
+		}) ]
+	});
+
+	var allPanel = new Ext.Panel( {
+		renderTo : 'visualization',
+		layout : 'table',
+		baseCls : 'x-plain-panel',
+		autoHeight : true,
+		width : 400,
+		// layoutConfig : {
+		// columns : 2
+		// },
+		items : [ this.geneChooserPanel ],
+		// buttons : [],
+		enabled : false
+	});
+
+	Gemma.EEDetailsVisualizationWidget.superclass.initComponent.call(this);
+
+	this.geneChooserPanel.on("addgenes", function(geneids) {
+		if (this.geneChooserPanel.getGeneIds().length > 1) {
+			var cmp = Ext.getCmp("visualizeButton");
+			cmp.enable();
 		}
 
-		this.visWindow = new Gemma.EEDetailsVisualizationWindow( {});
-		// this.visWindow.setHeight(100);
-		// this.visWindow.setWidth(220);
+	}, this);
 
-		var geneList = this.geneChooserPanel.getGenes();
+	this.geneChooserPanel.on("removegenes", function() {
+		if (this.geneChooserPanel.getGeneIds().length < 1) {
+			var cmp = Ext.getCmp("visualizeButton");
+			// cmp.setValue(false);
+			cmp.disable();
+		}
+	}, this);
 
-		// if (geneList.size() < 1){
-		// Ext.Msg.alert('Status', 'Please select a gene first');
-		// return;
-		//
-		// }
-		var eeId = Ext.get("eeId").getValue();
+	/*
+	 * This horrible mess. We listen to taxon ready event and filter the presets
+	 * on the taxon.
+	 */
+	this.geneChooserPanel.toolbar.taxonCombo.on("ready", function(taxon) {
 
-		this.visWindow.displayWindow(eeId, geneList);
-	},
+		var foundTaxon = this.geneChooserPanel.toolbar.taxonCombo.setTaxonByCommonName(this.taxon.taxon);
+		this.geneChooserPanel.taxonChanged(foundTaxon, false);
 
-	onRender : function() {
-		Gemma.EEDetailsVisualizationWidget.superclass.onRender.apply(this,
-				arguments);
-
-	},
-
-	initComponent : function() {
-
-		this.geneChooserPanel = new Gemma.GeneChooserPanel( {
-			height : 100,
-			width : 400,
-			region : 'center',
-			id : 'gene-chooser-panel',
-			extraButtons : [ new Ext.Button( {
-				id : "visualizeButton",
-				text : "Show",
-				handler : this.visualizeHandler.createDelegate(this, [], false)
-			}) ]
-		});
-
-		var allPanel = new Ext.Panel( {
-			renderTo : 'visualization',
-			layout : 'table',
-			baseCls : 'x-plain-panel',
-			autoHeight : true,
-			width : 400,
-			// layoutConfig : {
-			// columns : 2
-			// },
-			items : [ this.geneChooserPanel ],
-			// buttons : [],
-			enabled : false
-		});
-
-		Gemma.EEDetailsVisualizationWidget.superclass.initComponent.call(this);
-
-		this.geneChooserPanel.on("addgenes", function(geneids) {
-			if (this.geneChooserPanel.getGeneIds().length > 1) {
-				var cmp = Ext.getCmp("visualizeButton");
-				cmp.enable();
-			}
-
-		}, this);
-
-		this.geneChooserPanel.on("removegenes", function() {
-			if (this.geneChooserPanel.getGeneIds().length < 1) {
-				var cmp = Ext.getCmp("visualizeButton");
-				// cmp.setValue(false);
-				cmp.disable();
-			}
-		}, this);
-
-		/*
-		 * This horrible mess. We listen to taxon ready event and filter the
-		 * presets on the taxon.
-		 */
-		this.geneChooserPanel.toolbar.taxonCombo.on("ready", function(taxon) {
-
-			var foundTaxon = this.geneChooserPanel.toolbar.taxonCombo
-					.setTaxonByCommonName(this.taxon.taxon);
-			this.geneChooserPanel.taxonChanged(foundTaxon, false);
-
-		}.createDelegate(this), this);
-	}
+	}.createDelegate(this), this);
+}
 
 }// initComponent
 
