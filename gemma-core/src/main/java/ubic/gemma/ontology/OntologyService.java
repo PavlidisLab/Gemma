@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
@@ -39,6 +40,11 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.BioMaterialService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.gene.GeneService;
+import ubic.gemma.search.SearchResult;
+import ubic.gemma.search.SearchService;
+import ubic.gemma.search.SearchSettings;
 
 import com.hp.hpl.jena.rdf.model.ModelMaker;
 import com.hp.hpl.jena.util.iterator.ExtendedIterator;
@@ -59,6 +65,7 @@ import com.hp.hpl.jena.util.iterator.ExtendedIterator;
  * @spring.property name="expressionExperimentService" ref="expressionExperimentService"
  * @spring.property name="characteristicService" ref="characteristicService"
  * @spring.property name="chebiOntologyService" ref="chebiOntologyService"
+ * @spring.property name="searchService" ref="searchService"
  */
 public class OntologyService {
 
@@ -119,13 +126,15 @@ public class OntologyService {
     }
 
     private BioMaterialService bioMaterialService;
+
     private BirnLexOntologyService birnLexOntologyService;
     private CharacteristicService characteristicService;
     private ChebiOntologyService chebiOntologyService;
     private HumanDiseaseOntologyService diseaseOntologyService;
     private ExpressionExperimentService eeService;
-
     private FMAOntologyService fmaOntologyService;
+
+    private SearchService searchService;
 
     private MgedOntologyService mgedOntologyService;
 
@@ -134,15 +143,16 @@ public class OntologyService {
     /**
      * Given a search string will first look through the characterisc database for any entries that have a match. If a
      * ontologyTermURI is given it will add all the individuals from that URI that match the search term criteria to the
-     * returned list also. Then will search the birnlex, obo Disease Ontology and FMA Ontology for OntologyResources
-     * (Terms and Individuals) that match the search term exactly
+     * returned list also. Then will search the loaded ontologies for OntologyResources (Terms and Individuals) that
+     * match the search term exactly
      * 
      * @param givenQueryString
-     * @param categoryUri 
+     * @param categoryUri
      * @return
      */
-    @SuppressWarnings("unchecked")
     public Collection<Characteristic> findExactTerm( String givenQueryString, String categoryUri ) {
+
+        if ( StringUtils.isBlank( givenQueryString ) ) return null;
 
         StopWatch watch = new StopWatch();
         watch.start();
@@ -152,12 +162,8 @@ public class OntologyService {
         if ( log.isDebugEnabled() )
             log.debug( "starting findExactTerm for " + queryString + ". Timing information begins from here" );
 
-        if ( queryString == null ) return null;
-
-        // TODO: this is poorly named. changed to findExactResource, add
-        // findExactIndividual Factor out common code
-
         Collection<OntologyResource> results;
+        List<Characteristic> searchResults = new ArrayList<Characteristic>();
 
         // Add the matching individuals
         List<Characteristic> individualResults = new ArrayList<Characteristic>();
@@ -169,7 +175,7 @@ public class OntologyService {
             log.debug( "found " + individualResults.size() + " individuals from ontology term " + categoryUri + " in "
                     + watch.getTime() + " ms" );
 
-        List<Characteristic> alreadyUsedResults = new ArrayList<Characteristic>();
+        List<Characteristic> previouslyUsedInSystem = new ArrayList<Characteristic>();
         Collection<Characteristic> foundChars = characteristicService.findByValue( queryString );
 
         // remove duplicates, don't want to redefine == operator for
@@ -184,24 +190,19 @@ public class OntologyService {
                     // Didn't want to make a characteristic value object just to
                     // hold a boolean flag for used....
                     characteristic.setDescription( USED + characteristic.getDescription() );
-                    alreadyUsedResults.add( characteristic );
+                    previouslyUsedInSystem.add( characteristic );
                     foundValues.add( foundValueKey( characteristic ) );
                 }
             }
         }
         if ( log.isDebugEnabled() )
-            log.debug( "found " + alreadyUsedResults.size() + " matching characteristics used in the database" + " in "
-                    + watch.getTime() + " ms" );
+            log.debug( "found " + previouslyUsedInSystem.size() + " matching characteristics used in the database"
+                    + " in " + watch.getTime() + " ms" );
 
-        List<Characteristic> searchResults = new ArrayList<Characteristic>();
+        queryString = OntologySearch.stripInvalidCharacters( givenQueryString );
 
-        queryString = OntologySearch.stripInvalidCharacters( givenQueryString ); // Strip
-        // out
-        // invalid
-        // characters
-        // so
-        // that Jena doesn't
-        // die parsing them
+        searchForGenes( queryString, categoryUri, searchResults );
+
         // FIXME hard-coding of ontologies to search
         results = mgedOntologyService.findResources( queryString );
         if ( log.isDebugEnabled() )
@@ -229,11 +230,63 @@ public class OntologyService {
         searchResults.addAll( filter( results, queryString ) );
 
         // Sort the individual results.
-        Collection<Characteristic> sortedResults = sort( individualResults, alreadyUsedResults, searchResults,
+        Collection<Characteristic> sortedResults = sort( individualResults, previouslyUsedInSystem, searchResults,
                 queryString, foundValues );
 
         return sortedResults;
 
+    }
+
+    /**
+     * @param queryString
+     * @param categoryUri
+     * @param searchResults
+     */
+    private void searchForGenes( String queryString, String categoryUri, List<Characteristic> searchResults ) {
+        log.info( queryString );
+        if ( categoryUri != null
+                && ( categoryUri.equals( "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#GeneticModification" )
+                        || categoryUri
+                                .equals( "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#IndividualGeneticCharacteristics" ) || categoryUri
+                        .equals( "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#Genotype" ) ) ) {
+
+            /*
+             * Kick into a special search for genes. The user will have to deal with choosing one from the right taxon.
+             */
+            SearchSettings ss = new SearchSettings();
+            ss.setQuery( queryString );
+            ss.noSearches();
+            ss.setSearchGenes( true );
+            Map<Class, List<SearchResult>> geneResults = this.searchService.search( ss, true );
+
+            if ( geneResults.containsKey( Gene.class ) ) {
+                for ( SearchResult sr : geneResults.get( Gene.class ) ) {
+
+                    Gene g = ( Gene ) sr.getResultObject();
+                    log.info( g );
+                    searchResults.add( gene2Characteristic( g ) );
+                }
+            }
+        }
+    }
+
+    /**
+     * Allow us to store gene information as a characteristic associated with our entities. This doesn't work so well
+     * for non-ncbi genes.
+     * 
+     * @param g
+     * @return
+     */
+    private Characteristic gene2Characteristic( Gene g ) {
+        VocabCharacteristic vc = VocabCharacteristic.Factory.newInstance();
+        vc.setCategory( "gene" );
+        vc.setCategoryUri( "http://purl.org/commons/hcls/gene" );
+        vc.setValue( g.getOfficialSymbol() + " [" + g.getTaxon().getCommonName() + "]" + " " + g.getOfficialName() );
+        vc.setDescription( g.toString() );
+        if ( g.getNcbiId() != null ) {
+            vc.setValueUri( "http://purl.org/commons/record/ncbi_gene/" + g.getNcbiId() );
+        }
+        return vc;
     }
 
     /**
@@ -454,12 +507,6 @@ public class OntologyService {
         }
     }
 
-    public void saveExpressionExperimentStatements( Collection<Characteristic> vc, Long id ) {
-        for ( Characteristic characteristic : vc ) {
-            saveExpressionExperimentStatement( characteristic, id );
-        }
-    }
-
     /**
      * Will persist the give vocab characteristic to the expression experiment.
      * 
@@ -503,6 +550,12 @@ public class OntologyService {
         ee.setCharacteristics( current );
         eeService.update( ee );
 
+    }
+
+    public void saveExpressionExperimentStatements( Collection<Characteristic> vc, Long id ) {
+        for ( Characteristic characteristic : vc ) {
+            saveExpressionExperimentStatement( characteristic, id );
+        }
     }
 
     /**
@@ -556,6 +609,13 @@ public class OntologyService {
     public void setFmaOntologyService( FMAOntologyService fmaOntologyService ) {
         this.fmaOntologyService = fmaOntologyService;
         ontologyServices.add( fmaOntologyService );
+    }
+
+    /**
+     * @param searchService the searchService to set
+     */
+    public void setSearchService( SearchService searchService ) {
+        this.searchService = searchService;
     }
 
     /**
@@ -644,12 +704,24 @@ public class OntologyService {
         return filtered;
     }
 
+    /**
+     * @param c
+     * @return
+     */
     private String foundValueKey( Characteristic c ) {
         StringBuffer buf = new StringBuffer( c.getValue() );
         if ( c instanceof VocabCharacteristic ) buf.append( ( ( VocabCharacteristic ) c ).getValueUri() );
         return buf.toString();
     }
 
+    /**
+     * @param individualResults
+     * @param alreadyUsedResults
+     * @param searchResults
+     * @param searchTerm
+     * @param foundValues
+     * @return
+     */
     private Collection<Characteristic> sort( List<Characteristic> individualResults,
             List<Characteristic> alreadyUsedResults, List<Characteristic> searchResults, String searchTerm,
             Collection<String> foundValues ) {
@@ -659,11 +731,11 @@ public class OntologyService {
         // But close matching individualResults and alreadyUsedResults should
         // get
         // priority over jena's search results.
-        // Each reasults shoulds order should be preserved.
+        // Each result's order should be preserved.
 
         List<Characteristic> sortedResultsExact = new ArrayList<Characteristic>();
         List<Characteristic> sortedResultsStartsWith = new ArrayList<Characteristic>();
-        List<Characteristic> sortedResultsBottem = new ArrayList<Characteristic>();
+        List<Characteristic> sortedResultsBottom = new ArrayList<Characteristic>();
 
         for ( Characteristic characteristic : alreadyUsedResults ) {
             if ( characteristic.getValue().equalsIgnoreCase( searchTerm ) )
@@ -671,7 +743,7 @@ public class OntologyService {
             else if ( characteristic.getValue().startsWith( searchTerm ) )
                 sortedResultsStartsWith.add( characteristic );
             else
-                sortedResultsBottem.add( characteristic );
+                sortedResultsBottom.add( characteristic );
         }
 
         for ( Characteristic characteristic : individualResults ) {
@@ -683,7 +755,7 @@ public class OntologyService {
             else if ( characteristic.getValue().startsWith( searchTerm ) )
                 sortedResultsStartsWith.add( characteristic );
             else
-                sortedResultsBottem.add( characteristic );
+                sortedResultsBottom.add( characteristic );
         }
 
         for ( Characteristic characteristic : searchResults ) {
@@ -695,7 +767,7 @@ public class OntologyService {
             else if ( characteristic.getValue().startsWith( searchTerm ) )
                 sortedResultsStartsWith.add( characteristic );
             else
-                sortedResultsBottem.add( characteristic );
+                sortedResultsBottom.add( characteristic );
         }
 
         // Collections.sort( sortedResultsExact, compare );
@@ -704,7 +776,7 @@ public class OntologyService {
         Collection<Characteristic> sortedTerms = new ArrayList<Characteristic>( foundValues.size() );
         sortedTerms.addAll( sortedResultsExact );
         sortedTerms.addAll( sortedResultsStartsWith );
-        sortedTerms.addAll( sortedResultsBottem );
+        sortedTerms.addAll( sortedResultsBottom );
 
         return sortedTerms;
     }

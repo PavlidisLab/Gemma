@@ -24,8 +24,7 @@ import ubic.gemma.util.ConfigUtils;
 import com.hp.hpl.jena.ontology.OntModel;
 
 /**
- * Loads the CHEBI Ontology at startup in its own thread. Controlled in build.properties by load.chebiOntology = false
- * (defaults to true).
+ * Loads the CHEBI Ontology at startup in its own thread. Controlled in build.properties by load.chebiOntology 
  * 
  * @author klc
  * @spring.bean id="chebiOntologyService"
