@@ -361,8 +361,11 @@ public class CharacteristicBrowserController extends BaseFormController {
     private Collection<Characteristic> convertToCharacteristic( Collection<AnnotationValueObject> avos ) {
         Collection<Characteristic> result = new HashSet<Characteristic>();
         for ( AnnotationValueObject avo : avos ) {
-
-            assert avo.getObjectClass() != null;
+            if ( avo.getObjectClass() == null ) {
+                // This should NOT happen...
+                log.warn( "Null object class for object with id=" + avo.getId() + " (probably a characteristic)" );
+                continue;
+            }
 
             if ( avo.getObjectClass().equals( FactorValue.class.getSimpleName() ) ) continue;
 
