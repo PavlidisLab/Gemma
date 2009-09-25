@@ -64,6 +64,7 @@ var goTermGrid = function() {
 		grid = new Ext.grid.GridPanel({
 			renderTo : "go-grid",
 			height : Ext.get("go-grid").getHeight(),
+			width : Ext.get("go-grid").getWidth(),
 			ds : ds,
 			cm : getColumnModel(),
 			loadMask : true
@@ -142,6 +143,7 @@ Ext.onReady(function() {
 	var grid = new Ext.grid.GridPanel({
 		renderTo : "geneproduct-grid",
 		height : Ext.get("geneproduct-grid").getHeight(),
+		width : Ext.get("geneproduct-grid").getWidth(),
 		ds : ds,
 		cm : cm,
 		loadMask : true
