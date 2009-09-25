@@ -349,6 +349,8 @@ public class HomologeneService {
 
         Collection<Gene> homologues = this.getHomologues( gene );
 
+        if (homologues == null || homologues.isEmpty()) return null;
+        
         for ( Gene g : homologues ) {
             if ( g.getTaxon().getId() == taxon.getId() ) return g;
 
