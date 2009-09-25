@@ -133,8 +133,6 @@ public class WhatsNewService implements InitializingBean {
      */
     public WhatsNew retrieveReport() {
         WhatsNew wn = new WhatsNew();
-        StopWatch timer = new StopWatch();
-        timer.start();
         try {
             File newObjects = new File( HOME_DIR + File.separatorChar + WHATS_NEW_DIR + File.separatorChar
                     + WHATS_NEW_FILE + ".new" );
@@ -172,10 +170,9 @@ public class WhatsNewService implements InitializingBean {
                 }
             }
         } catch ( Throwable e ) {
+            log.error( e, e );
             return null;
         }
-        timer.stop();
-        if ( log.isDebugEnabled() ) log.debug( "What's new processing: " + timer.getTime() + "ms" );
         return wn;
     }
 
