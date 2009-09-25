@@ -4,7 +4,8 @@ Gemma.CharacteristicCombo = Ext.extend(Ext.form.ComboBox, {
 	loadingText : "Searching...",
 	minChars : 2,
 	selectOnFocus : true,
-
+	listWidth : 350,
+	
 	initComponent : function() {
 
 		Ext.apply(this, {
@@ -47,7 +48,7 @@ Gemma.CharacteristicCombo = Ext.extend(Ext.form.ComboBox, {
 
 		Gemma.CharacteristicCombo.superclass.initComponent.call(this);
 
-		this.tpl = new Ext.XTemplate('<tpl for="."><div ext:qtip="{hover}" class="x-combo-list-item {style}">{value}</div></tpl>');
+		this.tpl = new Ext.XTemplate('<tpl for="."><div ext:qtip="{hover}"  style="font-size:11px" class="x-combo-list-item {style}">{value}</div></tpl>');
 		this.tpl.compile();
 
 		this.characteristic = {
@@ -118,7 +119,7 @@ Gemma.CharacteristicCombo = Ext.extend(Ext.form.ComboBox, {
 		}
 	},
 	getStyle : function(record) {
-		if (record.description.substring(0, 8) == " -USED- ") {
+		if (record.description && record.description.substring(0, 8) == " -USED- ") {
 			return record.valueUri ? "usedWithUri" : "usedNoUri";
 		} else {
 			return record.valueUri ? "unusedWithUri" : "unusedNoUri";
