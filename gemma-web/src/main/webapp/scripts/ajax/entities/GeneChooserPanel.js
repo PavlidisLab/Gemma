@@ -360,6 +360,13 @@ Gemma.GeneChooserToolBar = Ext.extend(Ext.Toolbar, {
 		this.add(this.removeButton);
 		this.addSpacer();
 		this.add(this.multiButton);
+		
+		if (this.extraButtons) {
+			for(var i = 0; i < this.extraButtons.length;i++) {
+				this.addSpacer();
+				this.add(this.extraButtons[i]);
+			}
+		}
 
 	}
 
@@ -386,6 +393,7 @@ Gemma.GeneChooserPanel = Ext.extend(Ext.Panel, {
 
 		this.toolbar = new Gemma.GeneChooserToolBar({
 			geneGrid : this.geneGrid,
+			extraButtons : this.extraButtons,
 			style : "border: #a3bad9 solid 1px;",
 			listeners : {
 				'taxonchanged' : {

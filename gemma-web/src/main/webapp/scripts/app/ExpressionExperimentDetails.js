@@ -8,7 +8,10 @@ Ext.BLANK_IMAGE_URL = '/Gemma/images/default/s.gif';
  * @class Gemma.EEPanel
  * @extends Ext.Component
  */
-Gemma.EEPanel = Ext.extend(Ext.Component,{
+Gemma.EEPanel = Ext
+		.extend(
+				Ext.Component,
+				{
 
 					constructor : function(id) {
 
@@ -19,7 +22,7 @@ Gemma.EEPanel = Ext.extend(Ext.Component,{
 						Gemma.EEPanel.superclass.constructor.call(this);
 
 						this.addEvents( {
-							"ready" :true
+							"ready" : true
 						});
 
 						this.isAdmin = Ext.get("hasAdmin").getValue() == 'true';
@@ -44,7 +47,7 @@ Gemma.EEPanel = Ext.extend(Ext.Component,{
 						var name = nField.getValue();
 
 						var entity = {
-							id :this.eeId
+							id : this.eeId
 						};
 
 						if (shortName != snField.originalValue) {
@@ -102,13 +105,12 @@ Gemma.EEPanel = Ext.extend(Ext.Component,{
 							pubmedUrl = pubmedUrl + '<a href="#" onClick="Ext.getCmp(\'ee-details-panel\').removePubMed()">' + '<img src="/Gemma/images/icons/cross.png"  ext:qtip="Remove publication"  /></a>&nbsp;';
 						}
 
-					
 						var pubmedRegion = {
-							id :'pubmed-region',
-							xtype :'panel',
-							baseCls :'x-plain-panel',
-							html :pubmedUrl,
-							width :380
+							id : 'pubmed-region',
+							xtype : 'panel',
+							baseCls : 'x-plain-panel',
+							html : pubmedUrl,
+							width : 380
 						};
 						return pubmedRegion;
 					},
@@ -116,32 +118,32 @@ Gemma.EEPanel = Ext.extend(Ext.Component,{
 					getPubMedForm : function(e) {
 						var pubmedRegion = new Ext.Panel(
 								{
-									baseCls :'x-plain-panel',
-									disabledClass :'disabled-plain',
-									id :'pubmed-region',
-									width :150,
-									layout :'table',
+									baseCls : 'x-plain-panel',
+									disabledClass : 'disabled-plain',
+									id : 'pubmed-region',
+									width : 150,
+									layout : 'table',
 									layoutConfig : {
-										columns :2
+										columns : 2
 									},
 									defaults : {
-										disabled :!this.editable,
-										disabledClass :'disabled-plain',
-										fieldClass :'x-bare-field'
+										disabled : !this.editable,
+										disabledClass : 'disabled-plain',
+										fieldClass : 'x-bare-field'
 									},
 									items : [
 											{
-												xtype :'numberfield',
-												allowDecimals :false,
-												minLength :7,
-												maxLength :9,
-												allowNegative :false,
-												emptyText :this.isAdmin
+												xtype : 'numberfield',
+												allowDecimals : false,
+												minLength : 7,
+												maxLength : 9,
+												allowNegative : false,
+												emptyText : this.isAdmin
 														|| this.isUser ? 'Enter pubmed id'
 														: 'Not Available',
-												width :100,
-												id :'pubmed-id-field',
-												enableKeyEvents :true,
+												width : 100,
+												id : 'pubmed-id-field',
+												enableKeyEvents : true,
 												listeners : {
 													'keyup' : {
 														fn : function(e) {
@@ -166,15 +168,15 @@ Gemma.EEPanel = Ext.extend(Ext.Component,{
 																		.hide();
 															}
 														},
-														scope :this
+														scope : this
 													}
 												}
 											},
 											{
-												baseCls :'x-plain-panel',
-												id :'update-pubmed-region',
-												html :'<a href="#" onClick="Ext.getCmp(\'ee-details-panel\').savePubMed(' + e.id + ',[\'shortname\',\'name\',\'description\'])" ><img src="/Gemma/images/icons/database_save.png" title="Click to save changes" alt="Click to save changes"/></a>',
-												hidden :true
+												baseCls : 'x-plain-panel',
+												id : 'update-pubmed-region',
+												html : '<a href="#" onClick="Ext.getCmp(\'ee-details-panel\').savePubMed(' + e.id + ',[\'shortname\',\'name\',\'description\'])" ><img src="/Gemma/images/icons/database_save.png" title="Click to save changes" alt="Click to save changes"/></a>',
+												hidden : true
 											}
 
 									]
@@ -196,67 +198,97 @@ Gemma.EEPanel = Ext.extend(Ext.Component,{
 						}
 						return result;
 					},
-					renderCoExpressionLinkCount : function(ee){
-						
-						if ( ee.coexpressionLinkCount == null )
-						 	 return "Unavailable";
-						
+					renderCoExpressionLinkCount : function(ee) {
+
+						if (ee.coexpressionLinkCount == null)
+							return "Unavailable";
+
 						if (ee.coexpressionLinkCount == 0)
 							return "None";
-						
-						var downloadCoExpressionDataLink =  String.format("<a ext:qtip='Download all coexpression  data in a tab delimited format'  href='#' onClick='fetchCoExpressionData({0})' > &nbsp; <img src='/Gemma/images/download.gif'/> &nbsp; </a>", ee.id);
+
+						var downloadCoExpressionDataLink = String
+								.format(
+										"<a ext:qtip='Download all coexpression  data in a tab delimited format'  href='#' onClick='fetchCoExpressionData({0})' > &nbsp; <img src='/Gemma/images/download.gif'/> &nbsp; </a>",
+										ee.id);
 						var count;
-				
-							
-						return ee.coexpressionLinkCount  + "&nbsp;" + downloadCoExpressionDataLink;
-						
+
+						return ee.coexpressionLinkCount + "&nbsp;"
+								+ downloadCoExpressionDataLink;
+
 					},
-					
-					renderDiffExpressionDetails : function(ee){
-												
-						if (!ee.diffExpressedProbes){					
+
+					renderDiffExpressionDetails : function(ee) {
+
+						if (!ee.diffExpressedProbes) {
 							return "Unavailable";
 						}
-						
-						if (ee.diffExpressedProbes.size() == 0){
+
+						if (ee.diffExpressedProbes.size() == 0) {
 							return "None";
 						}
-						
-	
-						var diffExpressionSummary= "";		
-						for(var i = 0; i<ee.diffExpressedProbes.size(); i++){
-							var factors;
-							if (ee.diffExpressedProbes[i].experimentalFactors == null || ee.diffExpressedProbes[i].experimentalFactors.size() == 0  ){
-								factors = "n/a";
-							}else{	
-								factors = "'" + ee.diffExpressedProbes[i].experimentalFactors[0].name + "'";
 
-								for (var j = 1; j<ee.diffExpressedProbes[i].experimentalFactors.size(); j++){
-									factors = factors + " x '" + ee.diffExpressedProbes[i].experimentalFactors[j].name + "'";
+						var diffExpressionSummary = "";
+						for ( var i = 0; i < ee.diffExpressedProbes.size(); i++) {
+							var factors;
+							if (ee.diffExpressedProbes[i].experimentalFactors == null
+									|| ee.diffExpressedProbes[i].experimentalFactors
+											.size() == 0) {
+								factors = "n/a";
+							} else {
+								factors = "'"
+										+ ee.diffExpressedProbes[i].experimentalFactors[0].name
+										+ "'";
+
+								for ( var j = 1; j < ee.diffExpressedProbes[i].experimentalFactors
+										.size(); j++) {
+									factors = factors
+											+ " x '"
+											+ ee.diffExpressedProbes[i].experimentalFactors[j].name
+											+ "'";
 								}
 							}
-							if ( ee.diffExpressedProbes[i].numberOfDiffExpressedProbes == 0){
-								diffExpressionSummary = diffExpressionSummary + "&nbsp; 0";
-							}else{
-								diffExpressionSummary = diffExpressionSummary + '&nbsp; <a href="#" onClick="Ext.getCmp(\'ee-details-panel\').visualizeDiffExpressionHandler(' + ee.id + ',' +ee.diffExpressedProbes[i].resultSetId +',' + factors +') "  ext:qtip="Click to visualize differentially expressed probes for: '+ factors + ' (FDR threshold='+ ee.diffExpressedProbes[i].threshold+')">' + ee.diffExpressedProbes[i].numberOfDiffExpressedProbes +  '</a>';
+							if (ee.diffExpressedProbes[i].numberOfDiffExpressedProbes == 0) {
+								diffExpressionSummary = diffExpressionSummary
+										+ "&nbsp; 0";
+							} else {
+								diffExpressionSummary = diffExpressionSummary
+										+ '&nbsp; <a href="#" onClick="Ext.getCmp(\'ee-details-panel\').visualizeDiffExpressionHandler('
+										+ ee.id
+										+ ','
+										+ ee.diffExpressedProbes[i].resultSetId
+										+ ','
+										+ factors
+										+ ') "  ext:qtip="Click to visualize differentially expressed probes for: '
+										+ factors
+										+ ' (FDR threshold='
+										+ ee.diffExpressedProbes[i].threshold
+										+ ')">'
+										+ ee.diffExpressedProbes[i].numberOfDiffExpressedProbes
+										+ '</a>';
 							}
 						}
-								
-						var downloadDiffDataLink =  String.format("<a ext:qtip='Download all differential expression data in a tab delimited format'  href='#' onClick='fetchDiffExpressionData({0})' > &nbsp; <img src='/Gemma/images/download.gif'/> &nbsp; </a>", ee.id);
-						
-						return diffExpressionSummary + downloadDiffDataLink; 
-						
-						
+
+						var downloadDiffDataLink = String
+								.format(
+										"<a ext:qtip='Download all differential expression data in a tab delimited format'  href='#' onClick='fetchDiffExpressionData({0})' > &nbsp; <img src='/Gemma/images/download.gif'/> &nbsp; </a>",
+										ee.id);
+
+						return diffExpressionSummary + downloadDiffDataLink;
+
 					},
-					
-					visualizeDiffExpressionHandler : function(eeid, diffResultId, factorDetails){
+
+					visualizeDiffExpressionHandler : function(eeid,
+							diffResultId, factorDetails) {
 
 						var params = {}
-						this.visDiffWindow = new Gemma.EEDetailsDiffExpressionVisualizationWindow({factorDetails: factorDetails});						
+						this.visDiffWindow = new Gemma.EEDetailsDiffExpressionVisualizationWindow(
+								{
+									factorDetails : factorDetails
+								});
 						this.visDiffWindow.displayWindow(eeid, diffResultId);
-						
+
 					},
-					
+
 					renderSourceDatabaseEntry : function(ee) {
 						var result = '';
 
@@ -359,11 +391,11 @@ Gemma.EEPanel = Ext.extend(Ext.Component,{
 						/*
 						 * Offer missing value analysis if it's possible (this
 						 * might need tweaking).
-						 */	
+						 */
 
 						if (ee.technologyType != 'ONECOLOR'
-								&& ee.hasEitherIntensity ) {
-						 
+								&& ee.hasEitherIntensity) {
+
 							if (ee.dateMissingValueAnalysis) {
 								var type = ee.missingValueAnalysisEventType;
 								var color = "#000";
@@ -403,9 +435,9 @@ Gemma.EEPanel = Ext.extend(Ext.Component,{
 							var suggestRun = true;
 							var qtip = 'ext:qtip="OK"';
 							if (type == 'FailedProcessedVectorComputationEventImpl') { // note:
-																						// no
-																						// such
-																						// thing.
+								// no
+								// such
+								// thing.
 								color = 'red';
 								qtip = 'ext:qtip="Failed"';
 							}
@@ -437,9 +469,9 @@ Gemma.EEPanel = Ext.extend(Ext.Component,{
 								var suggestRun = true;
 								var qtip = 'ext:qtip="OK"';
 								if (type == 'FailedDifferentialExpressionAnalysisEventImpl') { // note:
-																								// no
-																								// such
-																								// thing.
+									// no
+									// such
+									// thing.
 									color = 'red';
 									qtip = 'ext:qtip="Failed"';
 								}
@@ -464,8 +496,8 @@ Gemma.EEPanel = Ext.extend(Ext.Component,{
 					build : function(e) {
 
 						var manager = new Gemma.EEManager( {
-							editable :this.editable,
-							id :"eemanager"
+							editable : this.editable,
+							id : "eemanager"
 						});
 						this.manager = manager;
 
@@ -510,11 +542,13 @@ Gemma.EEPanel = Ext.extend(Ext.Component,{
 					 * Show the experimental design
 					 */
 					DesignMatrix.init( {
-						id :e.id
+						id : e.id
 					});
 
-					var vizPanel = new Gemma.EEDetailsVisualizationWidget({taxon : e.taxon});
-					
+					var vizPanel = new Gemma.EEDetailsVisualizationWidget( {
+						taxon : e.taxon
+					});
+
 					/*
 					 * This is needed to make the annotator initialize properly.
 					 */
@@ -524,8 +558,8 @@ Gemma.EEPanel = Ext.extend(Ext.Component,{
 
 					tagView = new Gemma.AnnotationDataView( {
 						readParams : [ {
-							id :e.id,
-							classDelegatingFor :"ExpressionExperimentImpl"
+							id : e.id,
+							classDelegatingFor : "ExpressionExperimentImpl"
 						} ]
 					});
 
@@ -546,7 +580,7 @@ Gemma.EEPanel = Ext.extend(Ext.Component,{
 										var k = Ext
 												.get('coexpressionLinkCount-region');
 										Ext.DomHelper.overwrite(k, {
-											html :ob.coexpressionLinkCount
+											html : ob.coexpressionLinkCount
 										});
 										k.highlight();
 										k = Ext
@@ -555,7 +589,7 @@ Gemma.EEPanel = Ext.extend(Ext.Component,{
 												.overwrite(
 														k,
 														{
-															html :ob.processedExpressionVectorCount
+															html : ob.processedExpressionVectorCount
 														});
 										k.highlight();
 									});
@@ -614,15 +648,15 @@ Gemma.EEPanel = Ext.extend(Ext.Component,{
 					// });
 
 					var descriptionArea = new Ext.form.TextArea( {
-						id :'description',
-						allowBlank :true,
-						grow :true,
-						growMax :300,
-						readOnly :!this.editable,
-						disabledClass :'disabled-plain',
-						growMin :40,
-						emptyText :'No description provided',
-						enableKeyEvents :true,
+						id : 'description',
+						allowBlank : true,
+						grow : true,
+						growMax : 300,
+						readOnly : !this.editable,
+						disabledClass : 'disabled-plain',
+						growMin : 40,
+						emptyText : 'No description provided',
+						enableKeyEvents : true,
 						listeners : {
 							'keyup' : {
 								fn : function(e) {
@@ -639,22 +673,22 @@ Gemma.EEPanel = Ext.extend(Ext.Component,{
 								}
 							}
 						},
-						width :500,
+						width : 500,
 						// height : 100,
-						value :e.description
+						value : e.description
 					});
 
 					var nameArea = new Ext.form.TextArea( {
-						id :'name',
-						fieldLabel :'Name',
-						allowBlank :false,
-						grow :true,
-						growMax :300,
-						readOnly :!this.editable,
-						disabledClass :'disabled-plain',
-						growMin :40,
-						emptyText :'No description provided',
-						enableKeyEvents :true,
+						id : 'name',
+						fieldLabel : 'Name',
+						allowBlank : false,
+						grow : true,
+						growMax : 300,
+						readOnly : !this.editable,
+						disabledClass : 'disabled-plain',
+						growMin : 40,
+						emptyText : 'No description provided',
+						enableKeyEvents : true,
 						listeners : {
 							'keyup' : {
 								fn : function(e) {
@@ -670,51 +704,51 @@ Gemma.EEPanel = Ext.extend(Ext.Component,{
 								}
 							}
 						},
-						width :500,
-						value :e.name
+						width : 500,
+						value : e.name
 					});
 
 					var basics = new Ext.Panel(
 							{
-								autoHeight :true,
-								layout :'table',
+								autoHeight : true,
+								layout : 'table',
 
 								layoutConfig : {
-									columns :2
+									columns : 2
 								},
 
-								renderTo :'basics',
-								collapsible :true,
-								bodyBorder :false,
-								frame :false,
-								baseCls :'x-plain-panel',
-								bodyStyle :'padding:10px',
+								renderTo : 'basics',
+								collapsible : true,
+								bodyBorder : false,
+								frame : false,
+								baseCls : 'x-plain-panel',
+								bodyStyle : 'padding:10px',
 								defaults : {
-									bodyStyle :'vertical-align:top;font-size:12px;color:black',
-									baseCls :'x-plain-panel',
-									fieldClass :'x-bare-field'
+									bodyStyle : 'vertical-align:top;font-size:12px;color:black',
+									baseCls : 'x-plain-panel',
+									fieldClass : 'x-bare-field'
 
 								},
 								items : [
 										{
-											html :'Short name:'
+											html : 'Short name:'
 										},
 										{
-											xtype :'panel',
-											layout :'table',
-											baseCls :'x-plain-panel',
+											xtype : 'panel',
+											layout : 'table',
+											baseCls : 'x-plain-panel',
 											layoutConfig : {
-												columns :2
+												columns : 2
 											},
 											items : [
 													{
-														xtype :'textfield',
-														id :'shortname',
-														enableKeyEvents :true,
-														allowBlank :false,
-														disabledClass :'disabled-plain',
-														fieldClass :'x-bare-field',
-														readOnly :!this.editable,
+														xtype : 'textfield',
+														id : 'shortname',
+														enableKeyEvents : true,
+														allowBlank : false,
+														disabledClass : 'disabled-plain',
+														fieldClass : 'x-bare-field',
+														readOnly : !this.editable,
 														listeners : {
 															'keyup' : {
 																fn : function(e) {
@@ -740,113 +774,117 @@ Gemma.EEPanel = Ext.extend(Ext.Component,{
 																				.hide();
 																	}
 																},
-																scope :this
+																scope : this
 															}
 														},
-														width :100,
-														value :e.shortName
+														width : 100,
+														value : e.shortName
 													},
 													{
-														baseCls :'x-plain-panel',
-														id :'update-button-region',
-														html :'<a href="#" onClick="Ext.getCmp(\'ee-details-panel\').save(' + e.id + ',[\'shortname\',\'name\',\'description\'])" ><img src="/Gemma/images/icons/database_save.png" title="Click to save changes" alt="Click to save changes"/></a>',
-														hidden :true
+														baseCls : 'x-plain-panel',
+														id : 'update-button-region',
+														html : '<a href="#" onClick="Ext.getCmp(\'ee-details-panel\').save(' + e.id + ',[\'shortname\',\'name\',\'description\'])" ><img src="/Gemma/images/icons/database_save.png" title="Click to save changes" alt="Click to save changes"/></a>',
+														hidden : true
 													} ]
 										},
 										{
-											html :'Name:'
+											html : 'Name:'
 										},
 										nameArea,
 										{
-											html :"Taxon:"
+											html : "Taxon:"
 										},
 										{
-											html :e.taxon
+											html : e.taxon
 										},
 										{
-											html :'Description:'
+											html : 'Description:'
 										},
 										descriptionArea,
 										{
-											html :'Created:'
+											html : 'Created:'
 										},
 										{
-											html :Ext.util.Format
+											html : Ext.util.Format
 													.date(e.dateCreated)
 										},
 										{
-											html :'Source:'
+											html : 'Source:'
 										},
 										{
-											html :this.renderSourceDatabaseEntry(e)
+											html : this
+													.renderSourceDatabaseEntry(e)
 										},
 										{
-											html :'Samples:'
+											html : 'Samples:'
 										},
 										{
-											html :this.renderSamples(e),
-											width :60
+											html : this.renderSamples(e),
+											width : 60
 										},
 										{
-											html :'Profiles:'
+											html : 'Profiles:'
 										},
 										{
-											id :'processedExpressionVectorCount-region',
-											html :e.processedExpressionVectorCount,
-											width :60
+											id : 'processedExpressionVectorCount-region',
+											html : e.processedExpressionVectorCount,
+											width : 60
 										},
 										{
-											html :'Array designs:'
+											html : 'Array designs:'
 										},
 										{
-											id :'arrayDesign-region',
-											html :this.renderArrayDesigns(e.arrayDesigns),
-											width :480
+											id : 'arrayDesign-region',
+											html : this
+													.renderArrayDesigns(e.arrayDesigns),
+											width : 480
 										},
 										{
-											html :'Coexpr. Links:'
+											html : 'Coexpr. Links:'
 										},
 										{
-											id :'coexpressionLinkCount-region',
-											html :this.renderCoExpressionLinkCount(e),											
-											width :80
+											id : 'coexpressionLinkCount-region',
+											html : this
+													.renderCoExpressionLinkCount(e),
+											width : 80
 										},
 										{
-											html :'Diff. expr. Probes'
+											html : 'Diff. expr. Probes'
 										},
 										{
-											id :'DiffExpressedProbes-region',
-											html:this.renderDiffExpressionDetails(e),
-											width :200
+											id : 'DiffExpressedProbes-region',
+											html : this
+													.renderDiffExpressionDetails(e),
+											width : 200
 										},
 										{
-											html :'Publication:'
+											html : 'Publication:'
 										},
 										{
-											xtype :'panel',
-											id :'pubmed-region-wrap',
-											layout :'fit',
-											bodyBorder :false,
-											baseCls :'x-plain-panel',
-											disabled :false,
+											xtype : 'panel',
+											id : 'pubmed-region-wrap',
+											layout : 'fit',
+											bodyBorder : false,
+											baseCls : 'x-plain-panel',
+											disabled : false,
 											items : [ pubmedRegion ]
 										},
 										{
-											html :'Tags&nbsp;' + taggerurl
+											html : 'Tags&nbsp;' + taggerurl
 										},
 										tagView,
 										{
-											html :'Status'
+											html : 'Status'
 										},
 										{
-											html :this.renderStatus(e)
+											html : this.renderStatus(e)
 										},
 										{
-											html :this.editable ? 'Admin' : ''
+											html : this.editable ? 'Admin' : ''
 										},
 										{
-											id :'admin-links',
-											html :this.editable ? adminLinks
+											id : 'admin-links',
+											html : this.editable ? adminLinks
 													: ''
 										}
 
@@ -861,27 +899,27 @@ Gemma.EEPanel = Ext.extend(Ext.Component,{
 								.append(
 										'admin-links',
 										{
-											tag :'ul',
-											cls :'plainlist',
+											tag : 'ul',
+											cls : 'plainlist',
 											children : [
 													{
-														tag :'li',
-														html :'Missing values: ' + this
+														tag : 'li',
+														html : 'Missing values: ' + this
 																.missingValueAnalysisRenderer(e)
 													},
 													{
-														tag :'li',
-														html :'Proc. vec:  ' + this
+														tag : 'li',
+														html : 'Proc. vec:  ' + this
 																.processedVectorCreateRenderer(e)
 													},
 													{
-														tag :'li',
-														html :'Diff ex:  ' + this
+														tag : 'li',
+														html : 'Diff ex:  ' + this
 																.differentialAnalysisRenderer(e)
 													},
 													{
-														tag :'li',
-														html :'Link an.:  ' + this
+														tag : 'li',
+														html : 'Link an.:  ' + this
 																.linkAnalysisRenderer(e)
 													} ]
 										});
@@ -890,12 +928,12 @@ Gemma.EEPanel = Ext.extend(Ext.Component,{
 					if (Ext.get('history')) {
 						var history = new Gemma.AuditTrailGrid(
 								{
-									renderTo :'history',
-									bodyBorder :false,
-									collapsible :true,
+									renderTo : 'history',
+									bodyBorder : false,
+									collapsible : true,
 									auditable : {
-										id :e.id,
-										classDelegatingFor :"ubic.gemma.model.expression.experiment.ExpressionExperimentImpl"
+										id : e.id,
+										classDelegatingFor : "ubic.gemma.model.expression.experiment.ExpressionExperimentImpl"
 									}
 								});
 					}
@@ -910,13 +948,13 @@ Ext.onReady( function() {
 
 	Ext.state.Manager.setProvider(new Ext.state.CookieProvider());
 
-			var eePanel = new Gemma.EEPanel(Ext.get("eeId").getValue());
+	var eePanel = new Gemma.EEPanel(Ext.get("eeId").getValue());
 
 	eePanel.on("ready", function(panel) {
 		setTimeout( function() {
 			Ext.get('loading').remove();
 			Ext.get('loading-mask').fadeOut( {
-				remove :true
+				remove : true
 			});
 		}, 250);
 	});
