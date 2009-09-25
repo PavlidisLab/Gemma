@@ -181,7 +181,6 @@ Ext.onReady( function() {
 				var fieldName = diffExGrid.getColumnModel().getDataIndex(
 						columnIndex);
 				var gene = record.data.gene;
-				console.log(record);
 				if (fieldName == 'visualize') {
 
 					var ee = record.data.expressionExperiment;
