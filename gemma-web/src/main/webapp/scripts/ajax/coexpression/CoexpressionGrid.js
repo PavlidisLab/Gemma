@@ -17,7 +17,7 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 			editable : false,
 			autoHeight : true,
 			style : "margin-bottom: 1em;",
-			stateful : false,
+			stateful : false, 
 
 			viewConfig : {
 				forceFit : true
@@ -66,7 +66,7 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 													toggleHandler : this.toggleMyData.createDelegate(this)
 												}, ' ', ' ', {
 													xtype : 'textfield',
-													id : 'search-in-grid',
+													id : this.id + '-search-in-grid',
 													tabIndex : 1,
 													enableKeyEvents : true,
 													emptyText : 'Find gene in results',
@@ -167,7 +167,8 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 			},
 
 			searchForText : function(button, keyev) {
-				var text = Ext.getCmp('search-in-grid').getValue();
+				var text = Ext.getCmp(this.id + '-search-in-grid').getValue();
+				console.log("Searching for " + text);
 				if (text.length < 2) {
 					this.getStore().clearFilter();
 					return;
