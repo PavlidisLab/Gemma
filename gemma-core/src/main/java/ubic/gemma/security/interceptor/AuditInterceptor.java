@@ -124,7 +124,6 @@ public class AuditInterceptor extends HibernateDaoSupport implements MethodInter
 
     /*
      * (non-Javadoc)
-     * 
      * @see org.aopalliance.intercept.MethodInterceptor#invoke(org.aopalliance.intercept.MethodInvocation)
      */
     public Object invoke( MethodInvocation invocation ) throws Throwable {
@@ -212,7 +211,13 @@ public class AuditInterceptor extends HibernateDaoSupport implements MethodInter
         assert d != null;
         // what else could we do? But need to keep this record in a good place.
         User user = getCurrentUser();
-        if ( log.isInfoEnabled() && user != null ) log.info( "Delete event on " + d + " by " + user.getUserName() );
+        if ( log.isInfoEnabled() ) {
+            String un = "";
+            if ( user != null ) {
+                un = "by " + user.getUserName();
+            }
+            log.info( "Delete event on entity " + d.getClass().getName() + ":" + d.getId() + "  [" + d + "] " + un );
+        }
     }
 
     /**
