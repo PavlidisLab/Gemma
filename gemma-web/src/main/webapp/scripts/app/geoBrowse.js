@@ -19,7 +19,7 @@ function handleUsabilitySuccess(data, accession) {
 	} else {
 	Ext.DomHelper.overwrite( accession + "-rating", {
 		tag : 'img',
-		src : '/Gemma/images/icons/thumbsdown.png'
+		src : '/Gemma/images/icons/thumbsdown-red.png'
 		});
 	}
 
