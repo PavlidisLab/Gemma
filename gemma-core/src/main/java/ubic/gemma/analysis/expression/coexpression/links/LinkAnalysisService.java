@@ -55,7 +55,6 @@ import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrixRowElement;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis;
-import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.association.coexpression.HumanProbeCoExpression;
 import ubic.gemma.model.association.coexpression.MouseProbeCoExpression;
 import ubic.gemma.model.association.coexpression.OtherProbeCoExpression;
@@ -412,7 +411,7 @@ public class LinkAnalysisService {
             Map<PhysicalLocation, Collection<BlatAssociation>> plba = specificityData.get( cs );
             for ( PhysicalLocation pl : plba.keySet() ) {
                 Collection<Gene> cluster = new HashSet<Gene>();
-                for ( BioSequence2GeneProduct bla : plba.get( pl ) ) {
+                for ( BlatAssociation bla : plba.get( pl ) ) {
                     Gene gene = bla.getGeneProduct().getGene();
                     cluster.add( gene );
                 }
