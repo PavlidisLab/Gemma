@@ -68,7 +68,7 @@ Gemma.AnnotationDataView = Ext
 
 					tpl : new Ext.XTemplate(
 							'<tpl for=".">',
-							'<span class="ann-wrap" ext:qtip="{className}" ><span  class="x-editable">' + '<a href="/Gemma/searcher.html?query={termName}&amp;scope=E" style="text-decoration:underline;">{termName}</a></span></span>&nbsp;&nbsp;',
+							'<span class="ann-wrap" ext:qtip="{className}" ><span  class="x-editable">' + '<a ext:qtip="{className} : {termUri}" href="/Gemma/searcher.html?query={termName}&amp;scope=E" style="text-decoration:underline;">{termName}</a></span></span>&nbsp;&nbsp;',
 							'</tpl>'),
 
 					itemSelector : 'ann-wrap',
