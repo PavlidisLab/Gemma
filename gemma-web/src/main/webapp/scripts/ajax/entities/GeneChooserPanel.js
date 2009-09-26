@@ -164,8 +164,11 @@ Gemma.GeneGrid = Ext.extend(Ext.grid.GridPanel, {
 					}
 					break;
 				}
-				geneData.push([genes[i].id, genes[i].taxon.scientificName, genes[i].officialSymbol,
+				
+				if (this.getStore().find("id", genes[i].id) < 0) {
+					geneData.push([genes[i].id, genes[i].taxon.scientificName, genes[i].officialSymbol,
 						genes[i].officialName]);
+				}
 
 			}
 			this.getStore().loadData(geneData, true);
