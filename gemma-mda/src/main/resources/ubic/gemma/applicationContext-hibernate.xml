@@ -447,7 +447,6 @@
 				ubic.gemma.model.common.quantitationtype.QuantitationTypeService.load=PROPAGATION_REQUIRED,readOnly
 				ubic.gemma.model.common.AuditableService.getEvents=PROPAGATION_REQUIRED,readOnly
 				ubic.gemma.model.common.AuditableService.getLastAuditEvent=PROPAGATION_REQUIRED,readOnly
-				ubic.gemma.model.common.AuditableService.getLastTypedAuditEvents=PROPAGATION_REQUIRED,readOnly
 				ubic.gemma.model.expression.experiment.ExpressionExperimentService.loadAll=PROPAGATION_REQUIRED,readOnly
 				ubic.gemma.model.expression.experiment.ExpressionExperimentService.findOrCreate=PROPAGATION_REQUIRED
 				ubic.gemma.model.expression.experiment.ExpressionExperimentService.update=PROPAGATION_REQUIRED

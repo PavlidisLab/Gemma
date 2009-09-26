@@ -22,6 +22,8 @@
 //
 package ubic.gemma.model.common;
 
+import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+
 /**
  * <p>
  * Spring Service base class for <code>ubic.gemma.model.common.AuditableService</code>, provides access to all services
@@ -74,19 +76,6 @@ public abstract class AuditableServiceBase implements ubic.gemma.model.common.Au
         } catch ( Throwable th ) {
             throw new ubic.gemma.model.common.AuditableServiceException(
                     "Error performing 'ubic.gemma.model.common.AuditableService.getLastAuditEvent(ubic.gemma.model.common.Auditable auditable, ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType type)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * @see ubic.gemma.model.common.AuditableService#getLastTypedAuditEvents(java.util.Collection)
-     */
-    public java.util.Map getLastTypedAuditEvents( final java.util.Collection auditables ) {
-        try {
-            return this.handleGetLastTypedAuditEvents( auditables );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.common.AuditableServiceException(
-                    "Error performing 'ubic.gemma.model.common.AuditableService.getLastTypedAuditEvents(java.util.Collection auditables)' --> "
                             + th, th );
         }
     }
@@ -157,14 +146,14 @@ public abstract class AuditableServiceBase implements ubic.gemma.model.common.Au
     /**
      * Performs the core logic for {@link #getEvents(ubic.gemma.model.common.Auditable)}
      */
-    protected abstract java.util.Collection handleGetEvents( ubic.gemma.model.common.Auditable auditable )
+    protected abstract java.util.Collection<AuditEvent> handleGetEvents( ubic.gemma.model.common.Auditable auditable )
             throws java.lang.Exception;
 
     /**
      * Performs the core logic for
      * {@link #getLastAuditEvent(java.util.Collection, ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType)}
      */
-    protected abstract java.util.Map handleGetLastAuditEvent( java.util.Collection auditables,
+    protected abstract java.util.Map handleGetLastAuditEvent( java.util.Collection<? extends Auditable> auditables,
             ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType type ) throws java.lang.Exception;
 
     /**
@@ -174,11 +163,5 @@ public abstract class AuditableServiceBase implements ubic.gemma.model.common.Au
     protected abstract ubic.gemma.model.common.auditAndSecurity.AuditEvent handleGetLastAuditEvent(
             ubic.gemma.model.common.Auditable auditable,
             ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType type ) throws java.lang.Exception;
-
-    /**
-     * Performs the core logic for {@link #getLastTypedAuditEvents(java.util.Collection)}
-     */
-    protected abstract java.util.Map handleGetLastTypedAuditEvents( java.util.Collection auditables )
-            throws java.lang.Exception;
 
 }

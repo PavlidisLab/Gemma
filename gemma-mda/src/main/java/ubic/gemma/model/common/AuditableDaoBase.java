@@ -35,9 +35,8 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
  * 
  * @see ubic.gemma.model.common.Auditable
  */
-public abstract class AuditableDaoBase<T extends Auditable> extends
-        org.springframework.orm.hibernate3.support.HibernateDaoSupport implements
-        ubic.gemma.model.common.AuditableDao<T> {
+public abstract class AuditableDaoBase extends org.springframework.orm.hibernate3.support.HibernateDaoSupport implements
+        ubic.gemma.model.common.AuditableDao {
 
     /**
      * @see ubic.gemma.model.common.AuditableDao#getAuditEvents(ubic.gemma.model.common.Auditable)

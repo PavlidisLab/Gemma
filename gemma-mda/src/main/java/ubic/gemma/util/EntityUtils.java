@@ -22,6 +22,10 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 
 import org.hibernate.proxy.HibernateProxy;
 
@@ -57,11 +61,34 @@ public class EntityUtils {
      * @return
      */
     public static Collection<Long> getIds( Collection<? extends Object> entities ) {
-        Collection<Long> r = new ArrayList<Long>();
+
+        Collection<Long> r;
+
+        if ( List.class.isAssignableFrom( entities.getClass() ) ) {
+            r = new ArrayList<Long>();
+        } else {
+            r = new HashSet<Long>();
+        }
+
         for ( Object object : entities ) {
             r.add( getId( object ) );
         }
         return r;
+    }
+
+    /**
+     * @param entities
+     * @return
+     */
+    public static Map<Long, Object> getIdMap( Collection<? extends Object> entities ) {
+        Map<Long, Object> result = new HashMap<Long, Object>();
+
+        for ( Object object : entities ) {
+            result.put( getId( object ), object );
+        }
+
+        return result;
+
     }
 
     /**

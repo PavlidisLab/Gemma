@@ -147,11 +147,10 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractSpring
 
     }
 
-    @SuppressWarnings("unchecked")
-    protected Gene findGeneByOfficialSymbol( String symbol, Taxon taxon ) {
+    protected Gene findGeneByOfficialSymbol( String symbol, Taxon t ) {
         Collection<Gene> genes = geneService.findByOfficialSymbolInexact( symbol );
         for ( Gene gene : genes ) {
-            if ( taxon.equals( gene.getTaxon() ) ) return gene;
+            if ( t.equals( gene.getTaxon() ) ) return gene;
         }
         return null;
     }
@@ -271,7 +270,6 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractSpring
 
     }
 
-    @SuppressWarnings("unchecked")
     private void experimentsFromEeSet( String optionValue ) {
 
         if ( StringUtils.isBlank( optionValue ) ) {
@@ -296,11 +294,11 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractSpring
      * Read in a list of genes
      * 
      * @param inFile - file name to read
-     * @param taxon
+     * @param t
      * @return collection of genes
      * @throws IOException
      */
-    protected Collection<Gene> readGeneListFile( String inFile, Taxon taxon ) throws IOException {
+    protected Collection<Gene> readGeneListFile( String inFile, Taxon t ) throws IOException {
         log.info( "Reading " + inFile );
 
         Collection<Gene> genes = new ArrayList<Gene>();
@@ -309,7 +307,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractSpring
         while ( ( line = in.readLine() ) != null ) {
             if ( line.startsWith( "#" ) ) continue;
             String s = line.trim();
-            Gene gene = findGeneByOfficialSymbol( s, taxon );
+            Gene gene = findGeneByOfficialSymbol( s, t );
             if ( gene == null ) {
                 log.error( "ERROR: Cannot find genes for " + s );
                 continue;
@@ -418,6 +416,10 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractSpring
         return eeNames;
     }
 
+    /**
+     * TODO: replace with call to AuditableUtil.removeTroubledEes.
+     * @param ees
+     */
     @SuppressWarnings("unchecked")
     private void removeTroubledEes( Collection<BioAssaySet> ees ) {
         if ( ees == null || ees.size() == 0 ) {

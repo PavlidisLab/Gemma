@@ -45,7 +45,6 @@ import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.util.monitor.Monitored;
@@ -378,7 +377,7 @@ public class ExpressionExperimentServiceImpl extends
     }
 
     /*
-     * (non-Javadoc)
+     * Note this is a little tricky since we have to reach through to check the ArrayDesigns. (non-Javadoc)
      * @see
      * ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleGetLastTroubleEvent(java.util.Collection
      * )

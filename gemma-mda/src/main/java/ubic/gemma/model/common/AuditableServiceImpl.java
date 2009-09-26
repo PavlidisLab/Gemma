@@ -93,20 +93,11 @@ public class AuditableServiceImpl extends ubic.gemma.model.common.AuditableServi
      * ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType)
      */
     @Override
-    protected Map handleGetLastAuditEvent( Collection auditables, AuditEventType type ) throws Exception {
+    protected Map handleGetLastAuditEvent( Collection<? extends Auditable> auditables, AuditEventType type ) throws Exception {
         return this.getAuditableDao().getLastAuditEvent( auditables, type );
     }
 
-    /*
-     * (non-Javadoc)
-     * @see ubic.gemma.model.common.AuditableServiceBase#handleGetLastTypedAuditEvents(java.util.Collection)
-     */
-    @SuppressWarnings("unchecked")
-    @Override
-    protected Map<Class, Map<Auditable, AuditEvent>> handleGetLastTypedAuditEvents( Collection auditables )
-            throws Exception {
-        return this.getAuditableDao().getLastTypedAuditEvents( auditables );
-    }
+  
 
     /**
      * @param events

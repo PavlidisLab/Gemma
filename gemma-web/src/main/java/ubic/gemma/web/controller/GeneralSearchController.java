@@ -24,12 +24,15 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.Predicate;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.springframework.validation.BindException;
@@ -39,6 +42,7 @@ import org.springframework.web.servlet.view.RedirectView;
 
 import ubic.gemma.loader.genome.taxon.SupportedTaxa;
 import ubic.gemma.model.association.Gene2GOAssociationService;
+import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -55,6 +59,8 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.search.SearchResult;
 import ubic.gemma.search.SearchService;
 import ubic.gemma.search.SearchSettings;
+import ubic.gemma.security.AuditableUtil;
+import ubic.gemma.security.SecurityService;
 import ubic.gemma.util.EntityUtils;
 import ubic.gemma.web.propertyeditor.TaxonPropertyEditor;
 import ubic.gemma.web.remote.ListRange;
@@ -72,6 +78,7 @@ import ubic.gemma.web.remote.ListRange;
  * @spring.property name = "arrayDesignService" ref="arrayDesignService"
  * @spring.property name = "gene2GOAssociationService" ref="gene2GOAssociationService"
  * @spring.property name = "taxonService" ref="taxonService"
+ * @spring.property name="auditableUtil" ref="auditableUtil"
  */
 public class GeneralSearchController extends BaseFormController {
     private SearchService searchService;
@@ -84,25 +91,13 @@ public class GeneralSearchController extends BaseFormController {
 
     private TaxonService taxonService;
 
-    /**
-     * @return the arrayDesignService
-     */
-    public ArrayDesignService getArrayDesignService() {
-        return arrayDesignService;
-    }
+    private AuditableUtil auditableUtil;
 
     /**
-     * @return the expressionExperimentService
+     * @param auditableUtil the auditableUtil to set
      */
-    public ExpressionExperimentService getExpressionExperimentService() {
-        return expressionExperimentService;
-    }
-
-    /**
-     * @return the gene2GOAssociationService
-     */
-    public Gene2GOAssociationService getGene2GOAssociationService() {
-        return gene2GOAssociationService;
+    public void setAuditableUtil( AuditableUtil auditableUtil ) {
+        this.auditableUtil = auditableUtil;
     }
 
     @Override
@@ -296,9 +291,8 @@ public class GeneralSearchController extends BaseFormController {
 
     /*
      * This is where "GET" requests go, e.g. from a 'bookmarkable link'.
-     * 
      * @see org.springframework.web.servlet.mvc.SimpleFormController#showForm(javax.servlet.http.HttpServletRequest,
-     *      javax.servlet.http.HttpServletResponse, org.springframework.validation.BindException)
+     * javax.servlet.http.HttpServletResponse, org.springframework.validation.BindException)
      */
     @Override
     protected ModelAndView showForm( HttpServletRequest request, HttpServletResponse response, BindException errors )
@@ -353,16 +347,19 @@ public class GeneralSearchController extends BaseFormController {
     private void fillValueObjects( Class entityClass, List<SearchResult> results, SearchSettings settings ) {
         Collection vos = null;
 
-        Map<Long, SearchResult> rMap = new HashMap<Long, SearchResult>();
-        for ( SearchResult searchResult : results ) {
-            rMap.put( searchResult.getId(), searchResult );
-        }
-
         if ( ExpressionExperiment.class.isAssignableFrom( entityClass ) ) {
-            vos = filterEEByTaxon( expressionExperimentService.loadValueObjects( EntityUtils.getIds( results ) ),
-                    settings );
+            vos = filterEE( expressionExperimentService.loadValueObjects( EntityUtils.getIds( results ) ), settings );
+
+            if ( !SecurityService.isUserAdmin() ) {
+                auditableUtil.removeTroubledEes( vos );
+            }
+
         } else if ( ArrayDesign.class.isAssignableFrom( entityClass ) ) {
-            vos = filterADByTaxon( arrayDesignService.loadValueObjects( EntityUtils.getIds( results ) ), settings );
+            vos = filterAD( arrayDesignService.loadValueObjects( EntityUtils.getIds( results ) ), settings );
+
+            if ( !SecurityService.isUserAdmin() ) {
+                auditableUtil.removeTroubledArrayDesigns( vos );
+            }
         } else if ( CompositeSequence.class.isAssignableFrom( entityClass ) ) {
             return;
         } else if ( BibliographicReference.class.isAssignableFrom( entityClass ) ) {
@@ -377,10 +374,18 @@ public class GeneralSearchController extends BaseFormController {
             throw new UnsupportedOperationException( "Don't know how to make value objects for class=" + entityClass );
         }
 
-        for ( Object o : vos ) {
-            Long id = EntityUtils.getId( o );
-            rMap.get( id ).setResultObject( o );
+        // retained objects...
+        Map<Long, Object> idMap = EntityUtils.getIdMap( vos );
+
+        for ( Iterator<SearchResult> it = results.iterator(); it.hasNext(); ) {
+            SearchResult sr = it.next();
+            if ( !idMap.containsKey( sr.getId() ) ) {
+                it.remove();
+                continue;
+            }
+            sr.setResultObject( idMap.get( sr.getId() ) );
         }
+
     }
 
     /**
@@ -388,14 +393,15 @@ public class GeneralSearchController extends BaseFormController {
      * @param tax
      * @return
      */
-    private Collection<ArrayDesignValueObject> filterADByTaxon( final Collection<ArrayDesignValueObject> toFilter,
+    private Collection<ArrayDesignValueObject> filterAD( final Collection<ArrayDesignValueObject> toFilter,
             SearchSettings settings ) {
         Taxon tax = settings.getTaxon();
         if ( tax == null ) return toFilter;
         Collection<ArrayDesignValueObject> filtered = new HashSet<ArrayDesignValueObject>();
         for ( ArrayDesignValueObject aavo : toFilter ) {
-            if ( ( aavo.getTaxon() == null ) || ( aavo.getTaxon().equalsIgnoreCase( tax.getCommonName() ) ) )
+            if ( ( aavo.getTaxon() == null ) || ( aavo.getTaxon().equalsIgnoreCase( tax.getCommonName() ) ) ) {
                 filtered.add( aavo );
+            }
         }
 
         return filtered;
@@ -406,7 +412,7 @@ public class GeneralSearchController extends BaseFormController {
      * @param settings
      * @return
      */
-    private Collection<ExpressionExperimentValueObject> filterEEByTaxon(
+    private Collection<ExpressionExperimentValueObject> filterEE(
             final Collection<ExpressionExperimentValueObject> toFilter, SearchSettings settings ) {
         Taxon tax = settings.getTaxon();
         if ( tax == null ) return toFilter;

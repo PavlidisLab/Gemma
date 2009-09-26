@@ -76,6 +76,7 @@ import ubic.gemma.persistence.PersisterHelper;
 import ubic.gemma.search.SearchResult;
 import ubic.gemma.search.SearchService;
 import ubic.gemma.search.SearchSettings;
+import ubic.gemma.security.AuditableUtil;
 import ubic.gemma.security.SecurityService;
 import ubic.gemma.security.expression.experiment.ExpressionExperimentSecureService;
 import ubic.gemma.util.progress.ProgressJob;
@@ -106,6 +107,7 @@ import ubic.gemma.web.util.EntityNotFoundException;
  * @spring.property name="bibliographicReferenceService" ref="bibliographicReferenceService"
  * @spring.property name="persisterHelper" ref="persisterHelper"
  * @spring.property name="arrayDesignService" ref="arrayDesignService"
+ * @spring.property name="auditableUtil" ref="auditableUtil"
  */
 public class ExpressionExperimentController extends BackgroundProcessingMultiActionController {
 
@@ -352,6 +354,8 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
 
     PersisterHelper persisterHelper = null;
     private ArrayDesignService arrayDesignService;
+
+    private AuditableUtil auditableUtil;
 
     private AuditEventService auditEventService;
 
@@ -756,6 +760,13 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         this.arrayDesignService = arrayDesignService;
     }
 
+    /**
+     * @param auditableUtil the auditableUtil to set
+     */
+    public void setAuditableUtil( AuditableUtil auditableUtil ) {
+        this.auditableUtil = auditableUtil;
+    }
+
     public void setAuditEventService( AuditEventService auditEventService ) {
         this.auditEventService = auditEventService;
     }
@@ -1018,7 +1029,7 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         }
 
         if ( !SecurityService.isUserAdmin() ) {
-            removeTroubledEes( expressionExperiments );
+            auditableUtil.removeTroubledEes( expressionExperiments );
         }
 
         Long numExpressionExperiments = new Long( expressionExperiments.size() );
@@ -1530,38 +1541,6 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
     private ModelAndView redirectToList( HttpServletRequest request ) {
         this.addMessage( request, "errors.objectnotfound", new Object[] { "Expression Experiment" } );
         return new ModelAndView( new RedirectView( "/Gemma/expressionExperiment/showAllExpressionExperiments.html" ) );
-    }
-
-    /**
-     * FIXME partly duplicates code from ExpressionExperimentManipulatingCLI
-     * 
-     * @param ees
-     */
-    @SuppressWarnings("unchecked")
-    private void removeTroubledEes( Collection<ExpressionExperimentValueObject> eevos ) {
-        if ( eevos == null || eevos.size() == 0 ) {
-            log.warn( "No experiments to remove troubled from" );
-            return;
-        }
-
-        Collection<Long> ees = new HashSet<Long>();
-        for ( ExpressionExperimentValueObject eevo : eevos ) {
-            ees.add( eevo.getId() );
-        }
-
-        int size = ees.size();
-        final Map<Long, AuditEvent> trouble = expressionExperimentService.getLastTroubleEvent( ees );
-        CollectionUtils.filter( eevos, new Predicate() {
-            public boolean evaluate( Object e ) {
-                boolean hasTrouble = trouble.get( ( ( ExpressionExperimentValueObject ) e ).getId() ) != null;
-                return !hasTrouble;
-            }
-        } );
-        int newSize = ees.size();
-        if ( newSize != size ) {
-            assert newSize < size;
-            log.info( "Removed " + ( size - newSize ) + " experiments with 'trouble' flags, leaving " + newSize );
-        }
     }
 
 }

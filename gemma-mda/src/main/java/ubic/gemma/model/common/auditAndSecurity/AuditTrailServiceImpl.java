@@ -19,6 +19,9 @@
 package ubic.gemma.model.common.auditAndSecurity;
 
 import java.util.Calendar;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -153,9 +156,9 @@ public class AuditTrailServiceImpl extends ubic.gemma.model.common.auditAndSecur
         AuditEvent okEvent = getAuditableService().getLastAuditEvent( auditable, OK_STATUS_FLAG_EVENT );
         if ( okEvent != null && okEvent.getDate().after( troubleEvent.getDate() ) ) {
             return null;
-        } else {
-            return troubleEvent;
         }
+        return troubleEvent;
+
     }
 
     @Override

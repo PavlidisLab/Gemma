@@ -42,7 +42,7 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
  * @version $Id$
  * @see ubic.gemma.model.common.Auditable
  */
-public final class AuditableDaoImpl extends ubic.gemma.model.common.AuditableDaoBase<Auditable> {
+public final class AuditableDaoImpl extends ubic.gemma.model.common.AuditableDaoBase {
 
     /**
      * Matches field in ehache.xml

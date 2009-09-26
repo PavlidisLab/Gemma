@@ -30,7 +30,7 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 /**
  * @see ubic.gemma.model.common.Auditable
  */
-public interface AuditableDao<T extends Auditable> {
+public interface AuditableDao {
     /**
      * 
      */
