@@ -301,7 +301,7 @@ public class SearchService implements InitializingBean {
 
         Collection<SearchResult> compositeSequences = null;
         if ( settings.isSearchProbes() && rawResults.size() < settings.getMaxResults() ) {
-            compositeSequences = compositeSequenceSearch( settings, genes );
+            compositeSequences = compositeSequenceSearch( settings );
             accreteResults( rawResults, compositeSequences );
         }
 
@@ -926,37 +926,12 @@ public class SearchService implements InitializingBean {
     }
 
     /**
-     * Search for composite sequences associated with genes.
-     * 
-     * @param settings
-     * @param geneSearchResults Optional. If non-null, the results here will be used instead of conducting a brand new
-     *        search for genes.
-     * @param arrayDesign
-     */
-    private Collection<SearchResult> compositeSequenceByGeneSearch( SearchSettings settings,
-            Collection<SearchResult> geneSearchResults ) {
-
-        // Note that the gene results are NOT returned.
-        final Collection<SearchResult> geneResults;
-        Set<SearchResult> allResults = new HashSet<SearchResult>();
-        if ( geneSearchResults == null ) {
-            geneResults = geneSearch( settings );
-            // geneSearchResults = geneResults;
-        } else {
-            geneResults = geneSearchResults;
-        }
-
-        return allResults;
-    }
-
-    /**
      * Search by name of the composite sequence as well as gene.
      * 
      * @return
      * @throws Exception
      */
-    private Collection<SearchResult> compositeSequenceSearch( SearchSettings settings,
-            Collection<SearchResult> geneSearchResults ) {
+    private Collection<SearchResult> compositeSequenceSearch( SearchSettings settings ) {
 
         StopWatch watch = startTiming();
 
