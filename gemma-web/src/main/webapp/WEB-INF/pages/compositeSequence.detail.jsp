@@ -17,28 +17,42 @@
 		<tr>
 			<td>
 				<h2>
-					<fmt:message key="compositeSequence.title" />
+					<fmt:message key="compositeSequence.title" />:
+					<c:choose>
+						<c:when test="${not empty compositeSequence.name}">
+						   ${ compositeSequence.name}
+						</c:when>
+						<c:otherwise>
+						(No name available) 
+						</c:otherwise>
+						</c:choose>
+						
+						on 
+						
+						<c:choose>
+						<c:when test="${not empty compositeSequence.arrayDesign}">
+							<a href="/Gemma/arrays/showArrayDesign.html?id=${ compositeSequence.arrayDesign.id }"  > ${compositeSequence.arrayDesign.shortName} </a>  [${ compositeSequence.arrayDesign.name}]
+						
+						</c:when>
+						<c:otherwise>
+						(No array design known)
+						</c:otherwise>
+						</c:choose>
+						
 				</h2>
 				<table width="100%">
-					<tr>
-						<td valign="top">
-							<b> <fmt:message key="compositeSequence.name" /> </b>
-							<a class="helpLink" href="?"
-								onclick="showHelpTip(event, 'Identifier for the probe, provided by the manufacturer or the data submitter.'); return false"><img
-									src="/Gemma/images/help.png" /> </a>
-						</td>
-						<td>
-							<%
-							if ( compositeSequence.getName() != null ) {
-							%>
-							<jsp:getProperty name="compositeSequence" property="name" />
-							<%
-							                } else {
-							                out.print( "No name available" );
-							            }
-							%>
-						</td>
-					</tr>
+					 
+						
+						
+						
+						<c:choose>
+						<c:when test="">
+						</c:when>
+						<c:otherwise>
+						</c:otherwise>
+						</c:choose>
+						 
+					 
 					<tr>
 						<td valign="top">
 							<b> <fmt:message key="compositeSequence.description" /> <a class="helpLink" href="?"
@@ -57,39 +71,23 @@
 							%>
 						</td>
 					</tr>
-					<tr>
-						<td valign="top">
-							<b> Array Design </b><a class="helpLink" href="?"
-								onclick="showHelpTip(event, 'The array design this probe belongs to. Hover over link to see the Array Design short name.'); return false"><img
-									src="/Gemma/images/help.png" /> </a>
-						</td>
-						<td>
-							<%
-							if ( ( compositeSequence.getArrayDesign().getName() != null ) &&  ( compositeSequence.getArrayDesign().getId() != null ) ){
-							%>
-							<a href="/Gemma/arrays/showArrayDesign.html?id=${ compositeSequence.arrayDesign.id }"  title="${compositeSequence.arrayDesign.shortName}">  ${ compositeSequence.arrayDesign.name} </a>
-							<%
-							                } else {
-							                out.print( "Array Design unavailable." );
-							            }
-							%>
-						</td>
-					</tr>
+					 
 					<tr>
 						<td valign="top">
 							<b> Taxon </b>
 						</td>
 						<td>
-							<%
-							                    if ( ( compositeSequence.getBiologicalCharacteristic() != null )
-							                    && ( compositeSequence.getBiologicalCharacteristic().getTaxon() != null ) ) {
-							%>
+						
+						<c:choose>
+						<c:when test="${not empty compositeSequence.biologicalCharacteristic && not empty compositeSequence.biologicalCharacteristic.taxon}">
 							${compositeSequence.biologicalCharacteristic.taxon.scientificName}
-							<%
-							                } else {
-							                out.print( "No taxon information available" );
-							            }
-							%>
+						</c:when>
+						<c:otherwise>
+						[Taxon missing]
+						</c:otherwise>
+						</c:choose>
+						
+							 
 						</td>
 					</tr>
 					<tr>
@@ -155,8 +153,7 @@
 							            }
 							%>
 						</td>
-					</tr>
-					<tr>
+					</tr>  
 					<tr>
 						<td valign="top">
 							<b> Sequence accession <a class="helpLink" href="?"
@@ -189,7 +186,7 @@
 							%>
 						</td>
 					</tr>
-					</tr>
+				 
 					<tr>
 						<td valign="top">
 							<b> Sequence length </b>
@@ -233,8 +230,8 @@
 		</tr>
 	</table>
 
-	<div id="probe-details"
-		style="margin: 0 0 10px 0; padding: 10px; border: 1px solid #EEEEEE; overflow: hidden; width: 610px; height: 150px;"></div>
+<h3>Alignment information</h3>
+	<div id="probe-details"  ></div>
 
 	<input type="hidden" name="cs" id="cs" value="${compositeSequence.id}" />
 
