@@ -80,7 +80,8 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.PredictedGene;
 import ubic.gemma.model.genome.ProbeAlignedRegion;
-import ubic.gemma.model.genome.Taxon; 
+import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.persistence.PersisterHelper;
 import ubic.gemma.util.TaxonUtility;
 import cern.colt.list.ObjectArrayList;
@@ -397,7 +398,7 @@ public class LinkAnalysisService {
             if ( eeDoubleMatrix.getRow( cs ) != null ) probesForVectors.add( cs );
         }
 
-        Map<CompositeSequence, Map<PhysicalLocation, Collection<BioSequence2GeneProduct>>> specificityData = csService
+        Map<CompositeSequence, Map<PhysicalLocation, Collection<BlatAssociation>>> specificityData = csService
                 .getGenesWithSpecificity( probesForVectors );
 
         /*
@@ -408,7 +409,7 @@ public class LinkAnalysisService {
             if ( !probeToGeneMap.containsKey( cs ) ) {
                 probeToGeneMap.put( cs, new HashSet() );
             }
-            Map<PhysicalLocation, Collection<BioSequence2GeneProduct>> plba = specificityData.get( cs );
+            Map<PhysicalLocation, Collection<BlatAssociation>> plba = specificityData.get( cs );
             for ( PhysicalLocation pl : plba.keySet() ) {
                 Collection<Gene> cluster = new HashSet<Gene>();
                 for ( BioSequence2GeneProduct bla : plba.get( pl ) ) {
@@ -702,14 +703,14 @@ public class LinkAnalysisService {
      * @param dataVectors
      * @param eeDoubleMatrix
      */
-    private void setUpForAnalysis( Taxon t, LinkAnalysis la,
-            Collection<ProcessedExpressionDataVector> dataVectors, ExpressionDataDoubleMatrix eeDoubleMatrix ) {
+    private void setUpForAnalysis( Taxon t, LinkAnalysis la, Collection<ProcessedExpressionDataVector> dataVectors,
+            ExpressionDataDoubleMatrix eeDoubleMatrix ) {
 
         la.setDataMatrix( eeDoubleMatrix );
         la.setTaxon( t );
         getProbe2GeneMap( la, dataVectors, eeDoubleMatrix );
-    }    
-    
+    }
+
     /**
      * Write links as text. If "known genes only", only known genes will be displayed, even if the probe in question
      * targets other "types" of genes.
@@ -817,9 +818,8 @@ public class LinkAnalysisService {
             wr.write( line );
         }
 
-        if ( la.getConfig().isSubsetUsed()) {// subset option activated
-            log.info( "Done, " + keptLinksCount + "/" + links.size()
-                    + " links kept, " + buf.size() + " links printed" );
+        if ( la.getConfig().isSubsetUsed() ) {// subset option activated
+            log.info( "Done, " + keptLinksCount + "/" + links.size() + " links kept, " + buf.size() + " links printed" );
             // wr.write("# Amount of links before subsetting/after subsetting: " + links.size() + "/" + numPrinted +
             // "\n" );
         } else {
