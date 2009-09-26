@@ -941,26 +941,11 @@ public class SearchService implements InitializingBean {
         Set<SearchResult> allResults = new HashSet<SearchResult>();
         if ( geneSearchResults == null ) {
             geneResults = geneSearch( settings );
+            // geneSearchResults = geneResults;
         } else {
             geneResults = geneSearchResults;
         }
 
-        // if there have been any genes returned, find the compositeSequences
-        // associated with the genes
-        if ( geneResults != null && geneResults.size() > 0 ) {
-            ArrayDesign arrayDesign = settings.getArrayDesign();
-            for ( SearchResult sr : geneResults ) {
-                if ( arrayDesign == null ) {
-                    Collection<CompositeSequence> geneCs = geneService.getCompositeSequencesById( sr.getId() );
-                    allResults.addAll( dbHitsToSearchResult( geneCs ) );
-                } else {
-                    Collection<CompositeSequence> geneCs = geneService.getCompositeSequences( ( Gene ) sr
-                            .getResultObject(), arrayDesign );
-                    allResults.addAll( dbHitsToSearchResult( geneCs ) );
-                }
-
-            }
-        }
         return allResults;
     }
 
@@ -983,7 +968,7 @@ public class SearchService implements InitializingBean {
         Collection<SearchResult> allResults = new HashSet<SearchResult>();
         allResults.addAll( compassCompositeSequenceSearch( settings ) );
         allResults.addAll( databaseCompositeSequenceSearch( settings ) );
-        allResults.addAll( compositeSequenceByGeneSearch( settings, geneSearchResults ) );
+        // allResults.addAll( compositeSequenceByGeneSearch( settings, geneSearchResults ) );
 
         /*
          * This last step is needed because the compassSearch for compositeSequences returns bioSequences too.
@@ -1081,7 +1066,7 @@ public class SearchService implements InitializingBean {
     }
 
     /**
-     * Search the DB for genes that are matched
+     * Search the DB for composite sequences and the genes that are matched to them.
      * 
      * @param searchString
      * @return
@@ -1117,7 +1102,11 @@ public class SearchService implements InitializingBean {
             log.info( "Gene composite sequence DB search " + searchString + " took " + watch.getTime() + " ms, "
                     + geneSet.size() + " items." );
 
-        return dbHitsToSearchResult( new ArrayList<Gene>( geneSet ) );
+        Collection<SearchResult> results = dbHitsToSearchResult( geneSet );
+
+        results.addAll( dbHitsToSearchResult( matchedCs ) );
+
+        return results;
     }
 
     /**
