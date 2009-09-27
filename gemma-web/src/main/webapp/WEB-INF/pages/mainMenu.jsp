@@ -1,9 +1,9 @@
 <%@ include file="/common/taglibs.jsp"%>
-<head>
-	<title><fmt:message key="mainMenu.title" /></title>
+<title><fmt:message key="mainMenu.title" />
+</title>
 
 
-	<script type="text/javascript">
+<script type="text/javascript">
 	Ext.BLANK_IMAGE_URL = '/Gemma/images/default/s.gif';
 	Ext.onReady( function() {
 		Ext.QuickTips.init();
@@ -21,7 +21,7 @@
 		});
 </script>
 
-</head>
+
 
 
 <div class="rightcolumn" style="width: 265px; float: right; font-size: smaller">
@@ -81,7 +81,7 @@
 	</div>
 
 
-	<div id="news-wrapper" style="margin-top: 10px;font-size:11px">
+	<div id="news-wrapper" style="margin-top: 10px; font-size: 11px">
 		<div style="padding: 0 4 2 0px; margin: 0px;" id="newsfeed">
 		</div>
 		<a style="font-size: 0.90em" href="http://www.chibi.ubc.ca/faculty/pavlidis/wiki/display/gemma/All+news">More news</a>

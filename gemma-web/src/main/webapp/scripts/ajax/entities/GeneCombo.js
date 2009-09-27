@@ -40,9 +40,7 @@ Gemma.GeneCombo = Ext.extend(Ext.form.ComboBox, {
 
 			initComponent : function() {
 
-				var template = new Ext.XTemplate('<tpl for="."><div style="font-size:11px" '
-						+ 'class="x-combo-list-item" ext:qtip="{officialName} ({[values.taxon.scientificName]})">'
-						+ '{officialSymbol} {officialName} ({[values.taxon.scientificName]})</div></tpl>');
+				var template = new Ext.XTemplate('<tpl for="."><div style="font-size:11px" class="x-combo-list-item" ext:qtip="{officialName} ({[values.taxon.scientificName]})"> {officialSymbol} {officialName} ({[values.taxon.scientificName]})</div></tpl>');
 
 				Ext.apply(this, {
 							tpl : template,

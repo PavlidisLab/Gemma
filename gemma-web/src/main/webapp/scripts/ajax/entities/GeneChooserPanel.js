@@ -456,9 +456,9 @@ Gemma.GeneChooserPanel = Ext.extend(Ext.Panel, {
 		}
 		var gene = this.toolbar.geneCombo.getGene();
 		if (gene) {
-			for (var i = 0; i < ids.length; ++i) {
+			for (var j = 0; j < ids.length; ++j) {
 				// don't add twice.
-				if (ids[i] == gene.id) {
+				if (ids[j] == gene.id) {
 					return ids;
 				}
 			}
