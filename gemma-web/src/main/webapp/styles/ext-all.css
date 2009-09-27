@@ -1574,9 +1574,28 @@ fieldset.x-panel-collapsed .x-fieldset-bwrap {
 	cursor: default;
 }
 
-.x-toolbar .x-btn-left{background:url(../images/default/toolbar/tb-btn-sprite.gif) no-repeat 0 0;}
-.x-toolbar .x-btn-right{background:url(../images/default/toolbar/tb-btn-sprite.gif) no-repeat 0 -21px;}
-.x-toolbar .x-btn-center{background:url(../images/default/toolbar/tb-btn-sprite.gif) repeat-x 0 -42px;}
+
+/*
+See http://www.extjs.com/forum/showthread.php?t=50603 - make toolbar buttons more visible. Added by PP; to revert put back the following three declarations.
+*/
+.x-toolbar .x-btn-left{background:url(resources/images/default/toolbar/tb-btn-sprite.gif) no-repeat 0 0;}
+.x-toolbar .x-btn-right{background:url(resources/images/default/toolbar/tb-btn-sprite.gif) no-repeat 0 -21px;}
+.x-toolbar .x-btn-center{background:url(resources/images/default/toolbar/tb-btn-sprite.gif) repeat-x 0 -42px;}
+
+/*
+.x-toolbar .x-btn-left {
+	background: none;
+}
+
+.x-toolbar .x-btn-right {
+	background: none;
+}
+
+.x-toolbar .x-btn-center {
+	background: none;
+	padding: 0;
+}
+*/
 
 .x-toolbar .x-btn-menu-text-wrap .x-btn-center button {
 	padding-right: 2px;
