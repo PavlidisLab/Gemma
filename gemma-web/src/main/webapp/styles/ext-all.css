@@ -1419,9 +1419,9 @@ fieldset.x-panel-collapsed .x-fieldset-bwrap {
 /*
 	PP edited. See: http://www.extjs.com/forum/showthread.php?t=57130 and http://www.extjs.com/forum/showthread.php?t=50603
 */
-.x-toolbar .x-btn-left{background:url(resources/images/default/toolbar/tb-btn-sprite.gif) no-repeat 0 0;}
-.x-toolbar .x-btn-right{background:url(resources/images/default/toolbar/tb-btn-sprite.gif) no-repeat 0 -21px;}
-.x-toolbar .x-btn-center{background:url(resources/images/default/toolbar/tb-btn-sprite.gif) repeat-x 0 -42px;}
+.x-toolbar .x-btn-left{background:url(../images/default/toolbar/tb-btn-sprite.gif) no-repeat 0 0;}
+.x-toolbar .x-btn-right{background:url(../images/default/toolbar/tb-btn-sprite.gif) no-repeat 0 -21px;}
+.x-toolbar .x-btn-center{background:url(../images/default/toolbar/tb-btn-sprite.gif) repeat-x 0 -42px;}
 
 /*
 .x-toolbar .x-btn-left{
