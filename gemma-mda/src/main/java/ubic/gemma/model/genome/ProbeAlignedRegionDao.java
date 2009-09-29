@@ -46,7 +46,7 @@ public interface ProbeAlignedRegionDao extends BaseDao<ProbeAlignedRegion> {
      * blatResult)}.
      * </p>
      */
-    public java.util.Collection find( int transform, String queryString,
+    public java.util.Collection<ProbeAlignedRegion> find( int transform, String queryString,
             ubic.gemma.model.genome.sequenceAnalysis.BlatResult blatResult );
 
     /**
@@ -58,7 +58,8 @@ public interface ProbeAlignedRegionDao extends BaseDao<ProbeAlignedRegion> {
      * entities (into value objects for example). By default, transformation does not occur.
      * </p>
      */
-    public java.util.Collection find( int transform, ubic.gemma.model.genome.sequenceAnalysis.BlatResult blatResult );
+    public java.util.Collection<ProbeAlignedRegion> find( int transform,
+            ubic.gemma.model.genome.sequenceAnalysis.BlatResult blatResult );
 
     /**
      * <p>
@@ -67,12 +68,13 @@ public interface ProbeAlignedRegionDao extends BaseDao<ProbeAlignedRegion> {
      * string defined in {@link #find(ubic.gemma.model.genome.sequenceAnalysis.BlatResult)}.
      * </p>
      */
-    public java.util.Collection find( String queryString, ubic.gemma.model.genome.sequenceAnalysis.BlatResult blatResult );
+    public java.util.Collection<ProbeAlignedRegion> find( String queryString,
+            ubic.gemma.model.genome.sequenceAnalysis.BlatResult blatResult );
 
     /**
      * 
      */
-    public java.util.Collection find( ubic.gemma.model.genome.sequenceAnalysis.BlatResult blatResult );
+    public java.util.Collection<ProbeAlignedRegion> find( ubic.gemma.model.genome.sequenceAnalysis.BlatResult blatResult );
 
     /**
      * <p>
@@ -116,6 +118,6 @@ public interface ProbeAlignedRegionDao extends BaseDao<ProbeAlignedRegion> {
      * {@link ubic.gemma.model.genome.gene.GeneValueObject}.
      */
     public void toGeneValueObjectCollection( java.util.Collection<ProbeAlignedRegion> entities );
-    
-    public void thaw(ProbeAlignedRegion par);
+
+    public void thaw( ProbeAlignedRegion par );
 }

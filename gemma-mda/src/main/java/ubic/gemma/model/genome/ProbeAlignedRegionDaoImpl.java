@@ -67,7 +67,7 @@ public class ProbeAlignedRegionDaoImpl extends ubic.gemma.model.genome.ProbeAlig
                 Hibernate.initialize( par );
                 Hibernate.initialize( par.getProducts() );
                 for ( ubic.gemma.model.genome.gene.GeneProduct gp : par.getProducts() ) {
-                    Hibernate.initialize( gp.getAccessions() );
+                    Hibernate.initialize( gp.getExons() );
                     if ( gp.getPhysicalLocation() != null ) {
                         Hibernate.initialize( gp.getPhysicalLocation().getChromosome() );
                         Hibernate.initialize( gp.getPhysicalLocation().getChromosome().getTaxon() );
