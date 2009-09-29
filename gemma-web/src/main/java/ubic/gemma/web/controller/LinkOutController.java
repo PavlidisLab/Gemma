@@ -28,9 +28,10 @@ import ubic.gemma.image.aba.Image;
 import ubic.gemma.image.aba.ImageSeries;
 
 /**
+ * A controller for getting details from other web resources (like allen brain atlas)
+ * 
  * @author kelsey
- * @version $id:
- * @id A controller for getting details from other web resources (like allen brain atlas)
+ * @version $Id$
  * @spring.bean id="linkOutController"
  * @spring.property name="allenBrainAtlasService" ref="allenBrainAtlasService"
  */
@@ -44,12 +45,12 @@ public class LinkOutController {
     }
 
     /**
-     * AJAX METHOD Given a genes official symbol will return
+     * AJAX METHOD Given a gene's official symbol will return value object with the link to use
      * 
      * @param geneOfficialSymbol
      * @return
      */
-    public LinkOutValueObject getAlanBrainAtalsLinks( String geneOfficialSymbol ) {
+    public LinkOutValueObject getAllenBrainAtlasLink( String geneOfficialSymbol ) {
 
         // Get Allen Brain Atals information and put in value object
         Collection<ImageSeries> imageSeries = allenBrainAtlasService
@@ -59,7 +60,7 @@ public class LinkOutController {
             String abaGeneUrl = allenBrainAtlasService.getGeneUrl( geneOfficialSymbol );
             Collection<Image> representativeImages = allenBrainAtlasService.getImagesFromImageSeries( imageSeries );
             Collection<String> imageUrls = new ArrayList<String>();
-                  
+
             for ( Image image : representativeImages ) {
                 imageUrls.add( image.getDownloadExpressionPath() );
             }

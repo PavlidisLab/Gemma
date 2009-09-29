@@ -719,7 +719,7 @@
 					</property>
 					<property name="includes">
 						<list>
-							<value>getAlanBrainAtalsLinks</value>
+							<value>getAllenBrainAtlasLink</value>
 						</list>
 					</property>
 				</bean>
@@ -1272,7 +1272,7 @@
 					<property name="type" value="bean" />
 				</bean>
 			</entry>
-		<entry key="ubic.gemma.image.LinkOutValueObject">
+			<entry key="ubic.gemma.image.LinkOutValueObject">
 				<bean class="org.directwebremoting.spring.ConverterConfig">
 					<property name="type" value="bean" />
 				</bean>

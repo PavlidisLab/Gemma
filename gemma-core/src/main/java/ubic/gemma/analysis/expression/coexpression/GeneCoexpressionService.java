@@ -497,6 +497,8 @@ public class GeneCoexpressionService {
             ecdvo.setQueryGene( queryGene.getOfficialSymbol() );
             ecdvo.setCoexpressionLinkCount( coexp.getLinkCountForEE( coexpEevo.getId() ) );
             ecdvo.setRawCoexpressionLinkCount( coexp.getRawLinkCountForEE( coexpEevo.getId() ) );
+            
+            // NOTE should be accurate (probe-level query) but we won't show it. See bug 1564
             ecdvo.setProbeSpecificForQueryGene( coexpEevo.getHasProbeSpecificForQueryGene() );
             ecdvo.setArrayDesignCount( eevo.getArrayDesignCount() );
             ecdvo.setBioAssayCount( eevo.getBioAssayCount() );
@@ -558,7 +560,7 @@ public class GeneCoexpressionService {
             ecdvo.setQueryGene( queryGene.getOfficialSymbol() );
             ecdvo.setCoexpressionLinkCount( supportCount.get( eevo.getId() ).longValue() );
             ecdvo.setRawCoexpressionLinkCount( null ); // not available
-            ecdvo.setProbeSpecificForQueryGene( true ); // only specific probes in these results
+            ecdvo.setProbeSpecificForQueryGene( true ); // we shouldn't display this. See bug 1564.
             ecdvo.setArrayDesignCount( eevo.getArrayDesignCount() );
             ecdvo.setBioAssayCount( eevo.getBioAssayCount() );
             result.getKnownGeneDatasets().add( ecdvo );
@@ -686,19 +688,20 @@ public class GeneCoexpressionService {
 
             for ( Gene2GeneCoexpression g2g : g2gs ) {
                 Gene foundGene = g2g.getFirstGene().equals( queryGene ) ? g2g.getSecondGene() : g2g.getFirstGene();
-              
-                //FIXME Symptom fix for duplicate found genes  
-                //Keep track of the found genes that we can correctly identify duplicates.  
-                //All keep the g2g object for debugging purposes. 
+
+                // FIXME Symptom fix for duplicate found genes
+                // Keep track of the found genes that we can correctly identify duplicates.
+                // All keep the g2g object for debugging purposes.
                 if ( foundGenes.containsKey( foundGene ) ) {
                     foundGenes.get( foundGene ).add( g2g );
-                    log.warn( "Duplicate gene found in coexpression results, skipping: " + foundGene + " From analysis: " + g2g.getSourceAnalysis().getId() );
-                    continue;   //Found a duplicate gene, don't add to results just our debugging list
+                    log.warn( "Duplicate gene found in coexpression results, skipping: " + foundGene
+                            + " From analysis: " + g2g.getSourceAnalysis().getId() );
+                    continue; // Found a duplicate gene, don't add to results just our debugging list
 
-                } else {
-                    foundGenes.put( foundGene, new ArrayList<Gene2GeneCoexpression>() );
-                    foundGenes.get( foundGene ).add( g2g );
                 }
+
+                foundGenes.put( foundGene, new ArrayList<Gene2GeneCoexpression>() );
+                foundGenes.get( foundGene ).add( g2g );
 
                 CoexpressionValueObjectExt cvo = new CoexpressionValueObjectExt();
 
@@ -793,19 +796,22 @@ public class GeneCoexpressionService {
 
             }
 
-            //FIXME This is only necessary for debugging purposes. Helps us keep track of duplicate genes found above.  
-            if (log.isDebugEnabled()){
+            // FIXME This is only necessary for debugging purposes. Helps us keep track of duplicate genes found above.
+            if ( log.isDebugEnabled() ) {
                 for ( Gene foundGene : foundGenes.keySet() ) {
                     if ( foundGenes.get( foundGene ).size() > 1 ) {
-                        log.debug( "** DUPLICATE: " + foundGene.getOfficialSymbol() + " found multiple times. Gene2Genes objects are: " );
+                        log.debug( "** DUPLICATE: " + foundGene.getOfficialSymbol()
+                                + " found multiple times. Gene2Genes objects are: " );
                         for ( Gene2GeneCoexpression g1g : foundGenes.get( foundGene ) ) {
-                            log.debug( " ============ Gene2Gene Id: " + g1g.getId() + " 1st gene: " + g1g.getFirstGene().getOfficialSymbol() + " 2nd gene: "
-                                    + g1g.getSecondGene().getOfficialSymbol() + " Source Analysis: " + g1g.getSourceAnalysis().getId()  + " # of dataSets: " + g1g.getNumDataSets());
+                            log.debug( " ============ Gene2Gene Id: " + g1g.getId() + " 1st gene: "
+                                    + g1g.getFirstGene().getOfficialSymbol() + " 2nd gene: "
+                                    + g1g.getSecondGene().getOfficialSymbol() + " Source Analysis: "
+                                    + g1g.getSourceAnalysis().getId() + " # of dataSets: " + g1g.getNumDataSets() );
                         }
                     }
                 }
             }
-            
+
             CoexpressionSummaryValueObject summary = makeSummary( eevos, allTestedDataSets,
                     allDatasetsWithSpecificProbes, linksMetPositiveStringency, linksMetNegativeStringency );
             result.getSummary().put( queryGene.getOfficialSymbol(), summary );
@@ -1061,12 +1067,13 @@ public class GeneCoexpressionService {
     }
 
     /**
-     * FIXME partly duplicates code from ExpressionExperimentManipulatingCLI
+     * FIXME partly duplicates code from ExpressionExperimentManipulatingCLI / AuditableUtil.
      * 
      * @param ees
      */
     @SuppressWarnings("unchecked")
     private void removeTroubledEes( Collection<Long> ees ) {
+
         if ( ees == null || ees.size() == 0 ) {
             log.warn( "No experiments to remove troubled from" );
             return;

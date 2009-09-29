@@ -1,14 +1,17 @@
 Ext.namespace('Gemma');
 
-/*
- * instance methods...
+/**
+ * Show the data sets that occur in a set of coexpression results. 
+ * 
+ * @author luke, paul
+ * @version $id$
  */
 Gemma.CoexpressionDatasetGrid = Ext.extend(Gemma.GemmaGridPanel, {
 
 	collapsible : true,
 	collapsed : true,
 	hidden : true,
-	title : 'wow',
+	title : 'Dataset information',
 	style : "margin-top: 1em; margin-bottom: .5em;",
 	autoScroll : true,
 	height : 250, 
@@ -83,13 +86,13 @@ Gemma.CoexpressionDatasetGrid = Ext.extend(Gemma.GemmaGridPanel, {
 						header : "Dataset",
 						dataIndex : "shortName",
 						sortable : true,
-						tooltip : "Dataset common name"
+						tooltip : "Dataset short name"
 							// renderer : this.eeStyler.createDelegate(this)
 						}, {
 						id : 'name',
 						header : "Name",
 						dataIndex : "name",
-						tooltip : "Dataset Long Name",
+						tooltip : "Dataset long name",
 						sortable : true,
 						width : 230
 
@@ -114,21 +117,24 @@ Gemma.CoexpressionDatasetGrid = Ext.extend(Gemma.GemmaGridPanel, {
 						align: 'center',
 						sortable : true
 
-					}, {
-						header : " Specific Probe ",
-						dataIndex : "probeSpecificForQueryGene",
-						type : "boolean",
-						tooltip : "Does the dataset have a probe that is specific for the query gene?",
-						renderer : this.booleanStyler.createDelegate(this),
-						align: 'center',						
-						sortable : true
-
-					},
+					}
+					// see bug 1564
+//					, {
+//						header : " Specific Probe ",
+//						dataIndex : "probeSpecificForQueryGene",
+//						type : "boolean",
+//						tooltip : "Does the dataset have a probe that is specific for the query gene?",
+//						renderer : this.booleanStyler.createDelegate(this),
+//						align: 'center',						
+//						sortable : true
+//
+//					}
+					,
 					{
 						id : 'assays',
 						header : " Assays ",
 						dataIndex : "bioAssayCount",
-						tooltip : "# of Assays",
+						tooltip : "# of samples in the study",
 						align: 'center',
 						sortable : true
 						// renderer : this.assayCountStyler.createDelegate(this)

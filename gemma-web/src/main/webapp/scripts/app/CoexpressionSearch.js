@@ -281,7 +281,7 @@ Ext.onReady(function() {
 
 		var link = panel.getBookmarkableLink();
 		knownGeneGrid.setTitle(String.format(
-				"Coexpressed genes <a href='{0}'>(bookmarkable link)</a> <a href='{0}&export'>(export as text)</a>",
+				"Coexpressed genes &nbsp;&nbsp;&nbsp;<a href='{0}' title='bookmarkable link'><img src=\"/Gemma/images/icons/link.png\" alt='bookmark'/></a>&nbsp; <a href='{0}&export' title='download'><img src=\"/Gemma/images/download.gif\" alt='download'/></a>",
 				link));
 
 		Gemma.CoexpressionDatasetGrid.updateDatasetInfo(result.knownGeneDatasets, eeMap);
