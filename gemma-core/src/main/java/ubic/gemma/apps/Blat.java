@@ -63,6 +63,11 @@ import ubic.gemma.util.concurrent.GenericStreamConsumer;
 public class Blat {
 
     /**
+     * Minimum alignment length for retention.
+     */
+    private static final int MIN_SCORE = 16;
+
+    /**
      * This value is basically a threshold fraction of aligned bases in the query. Hits below this score are simply not
      * reported. {@link BlatResult} has implementation of score computation.
      * 
@@ -153,6 +158,12 @@ public class Blat {
 
     private int ratServerPort;
 
+    private int humanSensitiveServerPort;
+
+    private int mouseSensitiveServerPort;
+
+    private int ratSensitiveServerPort;
+
     // private String humanServerHost;
     //
     // private String mouseServerHost;
@@ -197,7 +208,7 @@ public class Blat {
             throw new IllegalArgumentException( "Cannot blat sequence unless taxon is given or inferrable" );
         }
 
-        return blatQuery( b, t );
+        return blatQuery( b, t, false );
     }
 
     /**
@@ -205,10 +216,11 @@ public class Blat {
      * 
      * @param b
      * @param genome
+     * @param sensitive if true use the more sensitive gfServer, if available.
      * @return Collection of BlatResult objects.
      * @throws IOException
      */
-    public Collection<BlatResult> blatQuery( BioSequence b, Taxon taxon ) throws IOException {
+    public Collection<BlatResult> blatQuery( BioSequence b, Taxon taxon, boolean sensitive ) throws IOException {
         assert seqDir != null;
         // write the sequence to a temporary file.
         String seqName = b.getName().replaceAll( " ", "_" );
@@ -222,7 +234,7 @@ public class Blat {
 
         String outputPath = getTmpPslFilePath( seqName );
 
-        Collection<BlatResult> results = gfClient( querySequenceFile, outputPath, choosePortForQuery( taxon ) );
+        Collection<BlatResult> results = gfClient( querySequenceFile, outputPath, choosePortForQuery( taxon, sensitive ) );
 
         ExternalDatabase searchedDatabase = getSearchedGenome( taxon );
         for ( BlatResult result : results ) {
@@ -234,14 +246,19 @@ public class Blat {
 
     }
 
+    public Map<BioSequence, Collection<BlatResult>> blatQuery( Collection<BioSequence> sequences, Taxon taxon )
+            throws IOException {
+        return blatQuery( sequences, false, taxon );
+    }
+
     /**
      * @param sequences
      * @param taxon The taxon whose database will be searched.
      * @return map of the input sequences to a corresponding collection of blat result(s)
      * @throws IOException
      */
-    public Map<BioSequence, Collection<BlatResult>> blatQuery( Collection<BioSequence> sequences, Taxon taxon )
-            throws IOException {
+    public Map<BioSequence, Collection<BlatResult>> blatQuery( Collection<BioSequence> sequences, boolean sensitive,
+            Taxon taxon ) throws IOException {
         Map<BioSequence, Collection<BlatResult>> results = new HashMap<BioSequence, Collection<BlatResult>>();
 
         File querySequenceFile = File.createTempFile( "sequences-for-blat", ".fa" );
@@ -253,7 +270,14 @@ public class Blat {
 
         String outputPath = getTmpPslFilePath( "blat-output" );
 
-        Collection<BlatResult> rawresults = gfClient( querySequenceFile, outputPath, choosePortForQuery( taxon ) );
+        Integer port = choosePortForQuery( taxon, sensitive );
+
+        if ( port == null ) {
+            throw new IllegalStateException( "Could not locate port for BLAT with settings taxon=" + taxon
+                    + ", sensitive=" + sensitive + ", check your configuration." );
+        }
+
+        Collection<BlatResult> rawresults = gfClient( querySequenceFile, outputPath, port );
 
         log.info( "Got " + rawresults.size() + " raw blat results" );
 
@@ -448,22 +472,40 @@ public class Blat {
 
     }
 
+    private int choosePortForQuery( Taxon taxon ) {
+        return this.choosePortForQuery( taxon, false );
+    }
+
     /**
      * @param genome
      * @return
      */
-    private int choosePortForQuery( Taxon taxon ) {
+    private Integer choosePortForQuery( Taxon taxon, boolean sensitive ) {
         BlattableGenome genome = inferBlatDatabase( taxon );
-        switch ( genome ) {
-            case HUMAN:
-                return humanServerPort;
-            case MOUSE:
-                return mouseServerPort;
-            case RAT:
-                return ratServerPort;
-            default:
-                return humanServerPort;
+        if ( sensitive ) {
+            switch ( genome ) {
+                case HUMAN:
+                    return humanSensitiveServerPort;
+                case MOUSE:
+                    return mouseSensitiveServerPort;
+                case RAT:
+                    return ratSensitiveServerPort;
+                default:
+                    return humanSensitiveServerPort;
 
+            }
+        } else {
+            switch ( genome ) {
+                case HUMAN:
+                    return humanServerPort;
+                case MOUSE:
+                    return mouseServerPort;
+                case RAT:
+                    return ratServerPort;
+                default:
+                    return humanServerPort;
+
+            }
         }
     }
 
@@ -486,8 +528,8 @@ public class Blat {
      */
     private Collection<BlatResult> execGfClient( File querySequenceFile, String outputPath, int portToUse )
             throws IOException {
-        final String cmd = gfClientExe + " -nohead -minScore=16 " + host + " " + portToUse + " " + seqDir + " "
-                + querySequenceFile.getAbsolutePath() + " " + outputPath;
+        final String cmd = gfClientExe + " -nohead -minScore=" + MIN_SCORE + " " + host + " " + portToUse + " "
+                + seqDir + " " + querySequenceFile.getAbsolutePath() + " " + outputPath;
         log.info( cmd );
 
         final Process run = Runtime.getRuntime().exec( cmd );
@@ -585,6 +627,10 @@ public class Blat {
         this.humanServerPort = ConfigUtils.getInt( "gfClient.humanServerPort" );
         this.mouseServerPort = ConfigUtils.getInt( "gfClient.mouseServerPort" );
         this.ratServerPort = ConfigUtils.getInt( "gfClient.ratServerPort" );
+
+        this.humanSensitiveServerPort = ConfigUtils.getInt( "gfClient.sensitive.humanServerPort" );
+        this.mouseSensitiveServerPort = ConfigUtils.getInt( "gfClient.sensitive.mouseServerPort" );
+        this.ratSensitiveServerPort = ConfigUtils.getInt( "gfClient.sensitive.ratServerPort" );
         // this.humanServerHost = ConfigUtils.getString( "gfClient.humanServerHost" );
         // this.mouseServerHost = ConfigUtils.getString( "gfClient.mouseServerHost" );
         // this.ratServerHost = ConfigUtils.getString( "gfClient.ratServerHost" );

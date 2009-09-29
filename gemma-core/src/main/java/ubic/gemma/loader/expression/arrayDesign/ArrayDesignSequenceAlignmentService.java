@@ -43,6 +43,7 @@ import ubic.gemma.model.genome.biosequence.BioSequenceService;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResultService;
 import ubic.gemma.persistence.PersisterHelper;
+import ubic.gemma.util.SequenceBinUtils;
 
 /**
  * Aligns sequences from array designs to the genome, using blat, and persists the blat results.
@@ -69,20 +70,23 @@ public class ArrayDesignSequenceAlignmentService {
 
     /**
      * @param ad
+     * @param sensitive if true, blat will be run in a more sensitive mode, if available.
      */
-    public Collection<BlatResult> processArrayDesign( ArrayDesign ad ) {
-
-        log.info( "Looking for old results to remove..." );
-        arrayDesignService.deleteAlignmentData( ad );
+    public Collection<BlatResult> processArrayDesign( ArrayDesign ad, boolean sensitive ) {
 
         Taxon taxon = arrayDesignService.getTaxon( ad.getId() );
         Collection<BioSequence> sequencesToBlat = getSequences( ad );
 
         Collection<BlatResult> allResults = new HashSet<BlatResult>();
 
-        Map<BioSequence, Collection<BlatResult>> results = getAlignments( sequencesToBlat, taxon );
+        if ( sensitive ) log.info( "Running in 'sensitive' mode if possible" );
 
-        log.info( "Got BLAT results for " + results.keySet().size() + " query sequences" );
+        Map<BioSequence, Collection<BlatResult>> results = getAlignments( sequencesToBlat, sensitive, taxon );
+
+        log.info( "Got new BLAT results for " + results.keySet().size() + " query sequences" );
+
+        log.info( "Looking for old results to remove..." );
+        arrayDesignService.deleteAlignmentData( ad );
 
         Map<String, BioSequence> nameMap = new HashMap<String, BioSequence>();
         for ( BioSequence bs : results.keySet() ) {
@@ -228,12 +232,17 @@ public class ArrayDesignSequenceAlignmentService {
         }
     }
 
+    private Map<BioSequence, Collection<BlatResult>> getAlignments( Collection<BioSequence> sequencesToBlat, Taxon taxon ) {
+        return this.getAlignments( sequencesToBlat, false, taxon );
+    }
+
     /**
      * @param sequencesToBlat
      * @param taxon whose database will be queried
      * @return Map of biosequences to collections of blat results.
      */
-    private Map<BioSequence, Collection<BlatResult>> getAlignments( Collection<BioSequence> sequencesToBlat, Taxon taxon ) {
+    private Map<BioSequence, Collection<BlatResult>> getAlignments( Collection<BioSequence> sequencesToBlat,
+            boolean sensitive, Taxon taxon ) {
         Blat blat = new Blat();
         Map<BioSequence, Collection<BlatResult>> results = new HashMap<BioSequence, Collection<BlatResult>>();
         bioSequenceService.thawLite( sequencesToBlat );
@@ -243,7 +252,7 @@ public class ArrayDesignSequenceAlignmentService {
 
             if ( needBlat.size() > 0 ) {
                 log.info( "Running blat on " + needBlat.size() + " sequences" );
-                Map<BioSequence, Collection<BlatResult>> moreResults = blat.blatQuery( needBlat, taxon );
+                Map<BioSequence, Collection<BlatResult>> moreResults = blat.blatQuery( needBlat, sensitive, taxon );
                 results.putAll( moreResults );
             }
         } catch ( IOException e ) {
@@ -375,9 +384,20 @@ public class ArrayDesignSequenceAlignmentService {
                 pl.setNucleotideLength( br.getTargetEnd().intValue() - br.getTargetStart().intValue() );
                 pl.setStrand( br.getStrand() );
                 br.setTargetAlignedRegion( pl );
+
+                pl
+                        .setBin( SequenceBinUtils.binFromRange( br.getTargetStart().intValue(), br.getTargetEnd()
+                                .intValue() ) );
             }
 
         }
         return ( Collection<BlatResult> ) persisterHelper.persist( brs );
+    }
+
+    /**
+     * @param design
+     */
+    public Collection<BlatResult> processArrayDesign( ArrayDesign design ) {
+        return this.processArrayDesign( design, false );
     }
 }

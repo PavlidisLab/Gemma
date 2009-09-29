@@ -135,12 +135,12 @@ public class ArrayDesignProbeMapperService {
 
         int count = 0;
         int hits = 0;
-        log.info( "Start processing probes ..." );
+        log.info( "Start processing " + arrayDesign.getCompositeSequences().size() + " probes ..." );
         for ( CompositeSequence compositeSequence : arrayDesign.getCompositeSequences() ) {
             BioSequence bs = compositeSequence.getBiologicalCharacteristic();
-
+            
             if ( bs == null ) continue;
-
+            
             final Collection<BlatResult> blatResults = blatResultService.findByBioSequence( bs );
 
             if ( blatResults == null || blatResults.isEmpty() ) continue;
@@ -151,6 +151,21 @@ public class ArrayDesignProbeMapperService {
             if ( log.isDebugEnabled() )
                 log.debug( "Found " + results.size() + " mappings for " + compositeSequence + " (" + blatResults.size()
                         + " BLAT results)" );
+
+            if ( results.values().size() > 100 ) {
+                /*
+                 * This would be cause for alarm...worth looking at.
+                 */
+                log.warn( compositeSequence + " has " + results.values().size() + " blat associations!" );
+            }
+
+            /*
+             * Sanity check!
+             */
+            if ( results.values().size() > QUEUE_SIZE ) {
+                throw new IllegalStateException( compositeSequence + " has " + results.values().size()
+                        + " blat associations. queue is full (panic)!" );
+            }
 
             for ( Collection<BlatAssociation> col : results.values() ) {
                 for ( BlatAssociation association : col ) {
@@ -179,7 +194,7 @@ public class ArrayDesignProbeMapperService {
             try {
                 Thread.sleep( 1000 );
             } catch ( InterruptedException e ) {
-                e.printStackTrace();
+                throw new RuntimeException( e );
             }
         }
 
@@ -209,9 +224,7 @@ public class ArrayDesignProbeMapperService {
         GeneProduct geneProduct = blatAssociation.getGeneProduct();
         Gene gene = geneProduct.getGene();
         System.out.println( cs.getName() + '\t' + blatAssociation.getBioSequence().getName() + '\t'
-                + geneProduct.getName() + '\t'
-                + gene.getOfficialSymbol() + "\t"
-                + gene.getClass().getSimpleName() );
+                + geneProduct.getName() + '\t' + gene.getOfficialSymbol() + "\t" + gene.getClass().getSimpleName() );
     }
 
     /**

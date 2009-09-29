@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -327,9 +328,14 @@ public class ArrayDesignSequenceProcessingService {
         StringBuilder buf = new StringBuilder();
         buf.append( "Missing (or already present) sequences for following accessions " + "at version numbers up to "
                 + MAX_VERSION_NUMBER + " : " );
+        int i = 0;
         for ( String string : notFound ) {
             string = string.replaceFirst( "\\.\\d$", "" );
             buf.append( string + " " );
+            if ( ++i > 10 ) {
+                buf.append( "... (skipping logging of rest)" );
+                break;
+            }
         }
         log.info( buf.toString() );
     }
@@ -556,7 +562,8 @@ public class ArrayDesignSequenceProcessingService {
     }
 
     /**
-     * @param sequenceIdentifierFile with two columns: first is probe id, second is genbank accession.
+     * @param sequenceIdentifierFile with two columns: first is probe id, second is genbank accession (can be another
+     *        identifier).
      * @return
      * @throws IOException
      */
@@ -564,6 +571,9 @@ public class ArrayDesignSequenceProcessingService {
         BufferedReader br = new BufferedReader( new InputStreamReader( sequenceIdentifierFile ) );
 
         String line = null;
+
+        StopWatch timer = new StopWatch();
+        timer.start();
 
         Map<String, String> probe2acc = new HashMap<String, String>();
         int count = 0;
@@ -583,8 +593,8 @@ public class ArrayDesignSequenceProcessingService {
             }
 
             probe2acc.put( probeName, seqAcc );
-            if ( ++count % 2000 == 0 ) {
-                log.info( count + " / " + totalLines + " probes read so far have accessions" );
+            if ( ++count % 2000 == 0 && timer.getTime() > 10000 ) {
+                log.info( count + " / " + totalLines + " probes read so far have identifiers" );
             }
         }
         br.close();
@@ -623,7 +633,7 @@ public class ArrayDesignSequenceProcessingService {
      * </ol>
      * 
      * @param arrayDesign
-     * @param sequenceFile FASTA format
+     * @param sequenceFile FASTA, Affymetrix or tabbed format (depending on the type)
      * @param sequenceType - e.g., SequenceType.DNA (generic), SequenceType.AFFY_PROBE, or SequenceType.OLIGO.
      * @param taxon - if null, attempt to determine it from the array design.
      * @throws IOException
@@ -893,7 +903,8 @@ public class ArrayDesignSequenceProcessingService {
      * 
      * @param arrayDesign
      * @param sequenceIdentifierFile Sequence file has two columns: column 1 is a probe id, column 2 is a genbank
-     *        accession, delimited by tab. Sequences will be fetch from BLAST databases.
+     *        accession or sequence name, delimited by tab. Sequences will be fetched from BLAST databases if possible;
+     *        ones missing will be sought directly in Gemma.
      * @param databaseNames
      * @param blastDbHome
      * @param taxon
@@ -910,7 +921,7 @@ public class ArrayDesignSequenceProcessingService {
         Collection<BioSequence> finalResult = new HashSet<BioSequence>();
         Collection<String> notFound = new HashSet<String>();
 
-        // values that wer enot found
+        // values that were enot found
         notFound.addAll( probe2acc.values() );
 
         // the actual thing values to search for (with version numbers)
@@ -922,6 +933,9 @@ public class ArrayDesignSequenceProcessingService {
             throw new IllegalStateException( "No taxon available for " + arrayDesign );
         }
 
+        /*
+         * Fill in sequences from BLAST databases.
+         */
         int versionNumber = 1;
         int numSwitched = 0;
         while ( versionNumber < MAX_VERSION_NUMBER ) {
@@ -966,13 +980,48 @@ public class ArrayDesignSequenceProcessingService {
             ++versionNumber;
 
         }
-        arrayDesignService.update( arrayDesign );
+
+        if ( !notFound.isEmpty() && taxon != null ) {
+
+            Collection<String> stillLooking = new HashSet<String>();
+            stillLooking.addAll( notFound );
+            notFound.clear();
+
+            /*
+             * clear the version number.
+             */
+            for ( String accession : stillLooking ) {
+                notFound.remove( accession );
+                accession = accession.replaceFirst( "\\.\\d+$", "" );
+                notFound.add( accession );
+            }
+            assert notFound.size() > 0;
+            /*
+             * See if they're already in Gemma. This is good for sequences that are not in genbank but have been loaded
+             * previously.
+             */
+            Map<String, BioSequence> found = findLocalSequences( notFound, taxon );
+            finalResult.addAll( found.values() );
+
+            for ( CompositeSequence cs : arrayDesign.getCompositeSequences() ) {
+                String probeName = cs.getName();
+                String acc = probe2acc.get( probeName );
+                if ( found.containsKey( acc ) ) {
+                    numSwitched++;
+                    log.debug( "Setting seq. for " + cs + " to " + found.get( acc ) );
+                    cs.setBiologicalCharacteristic( found.get( acc ) );
+                }
+            }
+            notFound = getUnFound( notFound, found );
+        }
 
         if ( !notFound.isEmpty() ) {
             logMissingSequences( arrayDesign, notFound );
         }
 
         log.info( numSwitched + " composite sequences had their biologicalCharacteristics changed" );
+
+        arrayDesignService.update( arrayDesign );
 
         return finalResult;
 
@@ -1141,6 +1190,25 @@ public class ArrayDesignSequenceProcessingService {
             String accession = sequence.getSequenceDatabaseEntry().getAccession();
             found.put( accession, sequence );
             accessionsToFetch.remove( accession );
+        }
+        return found;
+    }
+
+    /**
+     * @param identifiersToSearch
+     * @param taxon
+     * @return
+     */
+    private Map<String, BioSequence> findLocalSequences( Collection<String> identifiersToSearch, Taxon taxon ) {
+        Map<String, BioSequence> found = new HashMap<String, BioSequence>();
+        for ( String id : identifiersToSearch ) {
+            BioSequence template = BioSequence.Factory.newInstance();
+            template.setTaxon( taxon );
+            template.setName( id );
+            BioSequence seq = bioSequenceService.find( template );
+            if ( seq != null ) {
+                found.put( id, seq );
+            }
         }
         return found;
     }

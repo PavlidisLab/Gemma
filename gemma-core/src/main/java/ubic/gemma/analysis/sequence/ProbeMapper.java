@@ -68,7 +68,7 @@ public class ProbeMapper {
 
     /**
      * Given some blat results (possibly for multiple sequences) determine which if any gene products they should be
-     * associatd with; if there are multiple results for a single sequence, these are further analyzed for specificity
+     * associated with; if there are multiple results for a single sequence, these are further analyzed for specificity
      * and redundancy, so that there is a single BlatAssociation between any sequence andy andy gene product.
      * <p>
      * This is a major entrypoint for this API.
@@ -90,6 +90,7 @@ public class ProbeMapper {
         int count = 0;
         int skipped = 0;
         int skippedDueToRepeat = 0;
+        int skippedDueToNonSpecific = 0;
 
         Map<BioSequence, Collection<BlatResult>> biosequenceToBlatResults = groupBlatResultsByBioSequence( blatResults );
 
@@ -101,6 +102,8 @@ public class ProbeMapper {
                 log.debug( blatResultsForSequence.size() + " Blat results for " + sequence );
             }
 
+            if ( blatResultsForSequence.size() == 0 ) continue;
+
             /*
              * Filter based on quality of hit.
              */
@@ -110,6 +113,19 @@ public class ProbeMapper {
                 skippedDueToRepeat++;
                 skipped++;
                 continue;
+            }
+
+            if ( blatResultsForSequence.size() >= config.getNonSpecificSiteCountThreshold() ) {
+                skippedDueToNonSpecific++;
+                skipped++;
+                continue;
+            }
+
+            /*
+             * Sanity check to make sure user is paying attention to what they are putting in.
+             */
+            if ( blatResultsForSequence.size() > 25 ) {
+                log.warn( sequence + " has " + blatResultsForSequence.size() + " raw blat associations" );
             }
 
             Collection<BlatAssociation> blatAssociationsForSequence = new HashSet<BlatAssociation>();
@@ -130,11 +146,17 @@ public class ProbeMapper {
                 if ( blatResult.getQuerySequence().getTaxon() == null )
                     blatResult.getQuerySequence().setTaxon( goldenPathDb.getTaxon() );
 
-                // here's the key line!
+                // here's the key line! Find gene products that map to the given blat result.
                 Collection<BlatAssociation> resultsForOneBlatResult = processBlatResult( goldenPathDb, blatResult,
                         config );
 
                 if ( resultsForOneBlatResult != null && resultsForOneBlatResult.size() > 0 ) {
+
+                    if ( resultsForOneBlatResult.size() > 100 ) {
+                        log.warn( blatResult + " for " + sequence + " has " + resultsForOneBlatResult.size()
+                                + " blat associations" );
+                    }
+
                     blatAssociationsForSequence.addAll( resultsForOneBlatResult );
                 } else {
                     // here we have to provide a 'provisional' mapping to a ProbeAlignedRegion.
@@ -181,7 +203,8 @@ public class ProbeMapper {
         if ( log.isDebugEnabled() && skipped > 0 ) {
             log.debug( "Skipped " + skipped + "/" + blatResults.size()
                     + " individual blat results that didn't meet criteria; " + skippedDueToRepeat
-                    + " were skipped due to repeat or low complexity content." );
+                    + " were skipped due to repeat or low complexity content; " + skippedDueToNonSpecific
+                    + " were skipped because they align to too many places in the genome (even if not a repeat)" );
         }
 
         return allRes;
@@ -371,7 +394,7 @@ public class ProbeMapper {
         b.setBlatScoreThreshold( ( new ProbeMapperConfig() ).getBlatScoreThreshold() );
         Collection<BlatResult> results;
         try {
-            results = b.blatQuery( sequence, goldenPath.getTaxon() );
+            results = b.blatQuery( sequence, goldenPath.getTaxon(), false );
         } catch ( IOException e ) {
             throw new RuntimeException( "Error running blat", e );
         }

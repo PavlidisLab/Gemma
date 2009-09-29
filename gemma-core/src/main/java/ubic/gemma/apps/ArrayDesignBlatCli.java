@@ -25,7 +25,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue; 
+import java.util.concurrent.BlockingQueue;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
@@ -63,6 +63,8 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
 
     private Taxon taxon;
 
+    private boolean sensitive = false;
+
     @Override
     public String getShortDesc() {
         return "Run BLAT on the sequences for a microarray; the results are persisted in the DB.";
@@ -84,6 +86,9 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
         Option blatScoreThresholdOption = OptionBuilder.hasArg().withArgName( "Blat score threshold" ).withDescription(
                 "Threshold (0-1.0) for acceptance of BLAT alignments [Default = " + this.blatScoreThreshold + "]" )
                 .withLongOpt( "scoreThresh" ).create( 's' );
+
+        this.addOption( OptionBuilder.withDescription( "Run on more sensitive server, if available" ).create(
+                "sensitive" ) );
 
         Option taxonOption = OptionBuilder
                 .hasArg()
@@ -148,9 +153,10 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
                     audit( arrayDesign, "BLAT results read from file: " + blatResultFile );
                 } else {
                     // Run blat from scratch.
-                    persistedResults = arrayDesignSequenceAlignmentService.processArrayDesign( arrayDesign );
+                    persistedResults = arrayDesignSequenceAlignmentService.processArrayDesign( arrayDesign,
+                            this.sensitive );
                     audit( arrayDesign, "Based on a fresh alignment analysis; BLAT score threshold was "
-                            + this.blatScoreThreshold );
+                            + this.blatScoreThreshold + "; sensitive mode was " + this.sensitive );
                 }
                 log.info( "Persisted " + persistedResults.size() + " results" );
             } catch ( FileNotFoundException e ) {
@@ -248,7 +254,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
         log.info( "============== Start processing: " + design + " ==================" );
         try {
             arrayDesignService.thawLite( design );
-            arrayDesignSequenceAlignmentService.processArrayDesign( design );
+            arrayDesignSequenceAlignmentService.processArrayDesign( design, true );
             successObjects.add( design.getName() );
             audit( design, "Part of a batch job; BLAT score threshold was " + this.blatScoreThreshold );
         } catch ( Exception e ) {
@@ -291,6 +297,10 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
     @Override
     protected void processOptions() {
         super.processOptions();
+
+        if ( hasOption( "sensitive" ) ) {
+            this.sensitive = true;
+        }
 
         if ( hasOption( 'b' ) ) {
             this.blatResultFile = this.getOptionValue( 'b' );

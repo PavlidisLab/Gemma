@@ -51,6 +51,8 @@ import ubic.gemma.model.genome.TaxonService;
  * @version $Id$
  */
 public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCli {
+    private static final String CONFIG_OPTION = "config";
+    private static final String MIRNA_ONLY_MODE_OPTION = "mirna";
     ArrayDesignProbeMapperService arrayDesignProbeMapperService;
     private TaxonService taxonService;
     private String taxonName;
@@ -116,7 +118,11 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
 
                                 + OPTION_ENSEMBL + " - search Ensembl track for predicted genes\n"
 
-                                + OPTION_NSCAN + " - search NScan track for predicted genes\n" ).create( "config" ) );
+                                + OPTION_NSCAN + " - search NScan track for predicted genes\n" ).create( CONFIG_OPTION ) );
+
+        addOption( OptionBuilder.withDescription(
+                "Only seek miRNAs; this is the same as '-config " + OPTION_MICRORNA + "; overrides -config." ).create(
+                MIRNA_ONLY_MODE_OPTION ) );
 
         Option taxonOption = OptionBuilder
                 .hasArg()
@@ -210,8 +216,17 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
 
                 arrayDesignProbeMapperService.processArrayDesign( arrayDesign, config, this.useDB );
                 if ( useDB ) {
-                    audit( arrayDesign, "Run with default parameters", AlignmentBasedGeneMappingEvent.Factory
-                            .newInstance() );
+
+                    if ( this.hasOption( MIRNA_ONLY_MODE_OPTION ) ) {
+                        audit( arrayDesign, "Run in miRNA-only mode.", AlignmentBasedGeneMappingEvent.Factory
+                                .newInstance() );
+                    } else if ( this.hasOption( CONFIG_OPTION ) ) {
+                        audit( arrayDesign, "Run with configuration=" + this.getOptionValue( CONFIG_OPTION ),
+                                AlignmentBasedGeneMappingEvent.Factory.newInstance() );
+                    } else {
+                        audit( arrayDesign, "Run with default parameters", AlignmentBasedGeneMappingEvent.Factory
+                                .newInstance() );
+                    }
                 }
             }
 
@@ -237,9 +252,13 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
     private ProbeMapperConfig configure() {
         ProbeMapperConfig config = new ProbeMapperConfig();
 
-        if ( this.hasOption( "config" ) ) {
+        if ( this.hasOption( MIRNA_ONLY_MODE_OPTION ) ) {
+            log.info( "Micro RNA only mode" );
+            config.setAllTracksOff();
+            config.setUseMiRNA( true );
+        } else if ( this.hasOption( CONFIG_OPTION ) ) {
 
-            String configString = this.getOptionValue( "config" );
+            String configString = this.getOptionValue( CONFIG_OPTION );
 
             if ( !configString.matches( "[" + OPTION_REFSEQ + OPTION_KNOWNGENE + OPTION_MICRORNA + OPTION_EST
                     + OPTION_MRNA + OPTION_ACEMBLY + OPTION_ENSEMBL + OPTION_NSCAN + "]+" ) ) {
