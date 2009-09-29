@@ -36,8 +36,7 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.FactorValue;
-import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.model.genome.TaxonService;
+import ubic.gemma.model.genome.Taxon; 
 import ubic.gemma.ontology.MgedOntologyService;
 import ubic.gemma.testing.BaseSpringContextTest;
 
@@ -80,8 +79,7 @@ public class ExperimentalDesignImportDuplicateValueTest extends BaseSpringContex
         SimpleExpressionDataLoaderService s = ( SimpleExpressionDataLoaderService ) this
                 .getBean( "simpleExpressionDataLoaderService" );
 
-        eeService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
-        TaxonService taxonService = ( TaxonService ) this.getBean( "taxonService" );
+        eeService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" ); 
 
         InputStream data = this.getClass().getResourceAsStream(
                 "/data/loader/expression/expdesign.import.testfull.data.txt" );
