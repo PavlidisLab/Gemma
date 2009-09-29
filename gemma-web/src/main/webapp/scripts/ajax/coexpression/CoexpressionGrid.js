@@ -254,8 +254,6 @@ Gemma.CoexpressionGrid = Ext
 						type : "boolean"
 					} ]),
 
-					
-
 					linkOutStyler : function(value, metadata, record, row, col, ds) {
 
 						var call = "Gemma.CoexpressionGrid.getAllenAtlasImage(\'" + value.officialSymbol + "\')";
@@ -469,7 +467,6 @@ Gemma.CoexpressionGrid.getBitImageMapTemplate = function() {
 	return Gemma.CoexpressionGrid.bitImageMapTemplate;
 };
 
-
 Gemma.CoexpressionGrid.getAllenAtlasImage = function(geneSymbol) {
 	LinkOutController.getAllenBrainAtlasLink(geneSymbol, Gemma.CoexpressionGrid.linkOutPopUp);
 
@@ -483,13 +480,24 @@ Gemma.CoexpressionGrid.getAllenAtlasImage = function(geneSymbol) {
 	});
 };
 
+/**
+ * Callback.
+ */
 Gemma.CoexpressionGrid.linkOutPopUp = function(linkOutValueObject) {
+
+	/*
+	 * Put the aba icon back for the throbber.
+	 */
+	Ext.DomHelper.overwrite("aba-" + linkOutValueObject.geneSymbol + "-button", {
+		tag : 'img',
+		src : '/Gemma/images/logo/aba-icon.png'
+	});
 
 	// TODO: Make pop up window show more than one image (have a button for
 	// scrolling to next image)
 	var popUpHtml;
 
-	if (linkOutValueObject == null) {
+	if (  linkOutValueObject.abaGeneImageUrls.length == 0) {
 		window.alert("No Allen Brain Atlas images available for this gene");
 		return;
 	} else {
@@ -503,17 +511,8 @@ Gemma.CoexpressionGrid.linkOutPopUp = function(linkOutValueObject) {
 	popUpLinkOutWin
 			.setTitle("<a href='"
 					+ linkOutValueObject.abaGeneUrl
-					+ "' target='_blank'>  <img height=15 width =15 src='/Gemma/images/logo/aba-icon.png' ext:qtip='Link to Allen Brain Atlas gene details' />  </a> &nbsp; &nbsp;<img height=15  src=/Gemma/images/abaExpressionLegend.gif>  "
+					+ "' target='_blank'>  <img src='/Gemma/images/logo/aba-icon.png' ext:qtip='Link to Allen Brain Atlas gene details' />  </a> &nbsp; &nbsp;<img height=15  src=/Gemma/images/abaExpressionLegend.gif>  "
 					+ linkOutValueObject.geneSymbol);
-
-	/*
-	 * Put the aba icon back for the throbber.
-	 */
-
-	Ext.DomHelper.overwrite("aba-" + linkOutValueObject.geneSymbol + "-button", {
-		tag : 'img',
-		src : '/Gemma/images/logo/aba-icon.png'
-	});
 
 	// An attempt at adding a button to the window so that the different image
 	// from allen brain atlas could be seen clicking on it.

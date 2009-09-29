@@ -41,10 +41,11 @@ public class LinkOutValueObject implements Serializable {
         super();
     }
 
-    public LinkOutValueObject( Collection<String> abaGeneImageUrls, String abaGeneUrl ) {
+    public LinkOutValueObject( Collection<String> abaGeneImageUrls, String abaGeneUrl, String geneSymbol ) {
         this();
         this.abaGeneImageUrls = abaGeneImageUrls;
         this.abaGeneUrl = abaGeneUrl;
+        this.geneSymbol = geneSymbol;
     }
 
     public Collection<String> getAbaGeneImageUrls() {

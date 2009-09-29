@@ -56,19 +56,18 @@ public class LinkOutController {
         Collection<ImageSeries> imageSeries = allenBrainAtlasService
                 .getRepresentativeSaggitalImages( geneOfficialSymbol );
 
+        Collection<String> imageUrls = new ArrayList<String>();
+        String abaGeneUrl = null;
         if ( imageSeries != null ) {
-            String abaGeneUrl = allenBrainAtlasService.getGeneUrl( geneOfficialSymbol );
+            abaGeneUrl = allenBrainAtlasService.getGeneUrl( geneOfficialSymbol );
             Collection<Image> representativeImages = allenBrainAtlasService.getImagesFromImageSeries( imageSeries );
-            Collection<String> imageUrls = new ArrayList<String>();
 
             for ( Image image : representativeImages ) {
                 imageUrls.add( image.getDownloadExpressionPath() );
             }
-
-            if ( !imageUrls.isEmpty() ) return new LinkOutValueObject( imageUrls, abaGeneUrl );
         }
+        return new LinkOutValueObject( imageUrls, abaGeneUrl, geneOfficialSymbol );
 
-        return null;
     }
 
 }
