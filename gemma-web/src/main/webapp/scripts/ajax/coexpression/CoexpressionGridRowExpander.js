@@ -1,6 +1,10 @@
 /**
  * 
  */
+
+Gemma.DIFF_THRESHOLD = 0.01;
+Gemma.MAX_DIFF_RESULTS = 25;
+
 Gemma.CoexpressionGridRowExpander = Ext.extend(Ext.grid.RowExpander, {
 
 	expandedElements : [],
@@ -55,7 +59,7 @@ Gemma.CoexpressionGridRowExpander = Ext.extend(Ext.grid.RowExpander, {
 							fn : function() {
 								if (!this.loaded) {
 									diffExGrid.getStore().load({
-										params : [gene.id, 0.01]
+										params : [gene.id, Gemma.DIFF_THRESHOLD1, Gemma.MAX_DIFF_RESULTS]
 									});
 								}
 								this.loaded = true;
