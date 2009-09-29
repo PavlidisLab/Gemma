@@ -65,11 +65,11 @@ import ubic.gemma.ontology.OntologyTerm;
  * </p>
  * 
  * <pre>
- *   $ Age : Category=Age Type=Continuous                
- *    $ Profile : Category=DiseaseState Type=Categorical              
- *    $ PMI (h) : Category=EnvironmentalHistory Type=Continuous              
- *    $ Lifetime Alcohol : Category=EnvironmentalHistory Type=Categorical             
- *    ID  Age     Profile     PMI (h)     Lifetime Alcohol    
+ *    #$ Age : Category=Age Type=Continuous                
+ *    #$ Profile : Category=DiseaseState Type=Categorical              
+ *    #$ PMI (h) : Category=EnvironmentalHistory Type=Continuous              
+ *    #$ Lifetime Alcohol : Category=EnvironmentalHistory Type=Categorical             
+ *    #ID  Age     Profile     PMI (h)     Lifetime Alcohol    
  *    f-aa     50  Bipolar     48  Moderate present 
  *    f-ab     50  Bipolar     60  Heavy in present 
  *    f-ac     55  Schizophrenia   26  Little or none 
@@ -92,7 +92,7 @@ public class ExperimentalDesignImporter {
         CATEGORICAL, CONTINUOUS
     }
 
-    public static final String EXPERIMENTAL_FACTOR_DESCRIPTION_LINE_INDICATOR = "$";
+    public static final String EXPERIMENTAL_FACTOR_DESCRIPTION_LINE_INDICATOR = "#$";
 
     private static Log log = LogFactory.getLog( ExperimentalDesignImporter.class.getName() );
     private BioMaterialService bioMaterialService;

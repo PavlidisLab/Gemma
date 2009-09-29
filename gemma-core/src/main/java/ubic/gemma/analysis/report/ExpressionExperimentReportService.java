@@ -238,7 +238,7 @@ public class ExpressionExperimentReportService {
             if ( sampleRemovalEvents.containsKey( id ) ) {
                 Collection<AuditEvent> removalEvents = sampleRemovalEvents.get( id );
                 // we find we are getting lazy-load exceptions from this guy.
-                eeVo.setSampleRemovedFlagsFromAuditEvent( removalEvents );
+                eeVo.auditEvents2SampleRemovedFlags( removalEvents );
 
             }
 

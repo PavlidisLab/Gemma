@@ -776,7 +776,7 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
     /**
      * @param sampleRemovedFlags
      */
-    public void setSampleRemovedFlagsFromAuditEvent( java.util.Collection<AuditEvent> sampleRemovedFlags ) {
+    public void auditEvents2SampleRemovedFlags( java.util.Collection<AuditEvent> sampleRemovedFlags ) {
         Collection<AuditEventValueObject> converted = new HashSet<AuditEventValueObject>();
 
         for ( AuditEvent ae : sampleRemovedFlags ) {
