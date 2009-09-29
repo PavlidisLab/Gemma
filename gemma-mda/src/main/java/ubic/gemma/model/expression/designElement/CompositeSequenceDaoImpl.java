@@ -680,6 +680,7 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
                 pl.setNucleotide( blatResult.getTargetStart() );
                 pl.setNucleotideLength( blatResult.getTargetEnd().intValue() - blatResult.getTargetStart().intValue() );
                 pl.setStrand( blatResult.getStrand() );
+                // Note: not bothering to fill in the bin.
             }
 
             if ( !results.containsKey( csa ) ) {
