@@ -36,5 +36,7 @@ public interface ProbeAlignedRegionService {
      * 
      */
     public java.util.Collection findAssociations( ubic.gemma.model.genome.sequenceAnalysis.BlatResult blatResult );
+    
+    public void thaw(ProbeAlignedRegion par);
 
 }

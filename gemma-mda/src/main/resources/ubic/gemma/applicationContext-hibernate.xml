@@ -333,6 +333,7 @@
 				ubic.gemma.model.genome.ChromosomeService.find=PROPAGATION_REQUIRED,readOnly
 				ubic.gemma.model.genome.ChromosomeService.findOrCreate=PROPAGATION_REQUIRED
 				ubic.gemma.model.genome.ProbeAlignedRegionService.findAssociations=PROPAGATION_REQUIRED,readOnly
+				ubic.gemma.model.genome.ProbeAlignedRegionService.thaw=PROPAGATION_REQUIRED,readOnly
 				ubic.gemma.model.genome.PhysicalLocationService.thaw=PROPAGATION_REQUIRED,readOnly
 				ubic.gemma.model.common.description.BibliographicReferenceService.findOrCreate=PROPAGATION_REQUIRED
 				ubic.gemma.model.common.description.BibliographicReferenceService.findByExternalId=PROPAGATION_REQUIRED,readOnly

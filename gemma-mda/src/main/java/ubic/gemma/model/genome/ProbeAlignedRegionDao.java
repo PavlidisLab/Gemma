@@ -116,4 +116,6 @@ public interface ProbeAlignedRegionDao extends BaseDao<ProbeAlignedRegion> {
      * {@link ubic.gemma.model.genome.gene.GeneValueObject}.
      */
     public void toGeneValueObjectCollection( java.util.Collection<ProbeAlignedRegion> entities );
+    
+    public void thaw(ProbeAlignedRegion par);
 }

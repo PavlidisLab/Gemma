@@ -46,4 +46,8 @@ public class ProbeAlignedRegionServiceImpl extends ubic.gemma.model.genome.Probe
         return this.getProbeAlignedRegionDao().findByPhysicalLocation( physicalLocation );
     }
 
+    public void thaw( ProbeAlignedRegion par ) {
+        this.getProbeAlignedRegionDao().thaw( par );
+    }
+
 }

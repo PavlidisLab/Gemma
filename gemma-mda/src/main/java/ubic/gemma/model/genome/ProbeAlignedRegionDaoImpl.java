@@ -24,6 +24,10 @@ package ubic.gemma.model.genome;
 
 import java.util.Collection;
 
+import org.hibernate.Hibernate;
+import org.hibernate.LockMode;
+import org.springframework.orm.hibernate3.HibernateTemplate;
+
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.util.SequenceBinUtils;
@@ -51,6 +55,35 @@ public class ProbeAlignedRegionDaoImpl extends ubic.gemma.model.genome.ProbeAlig
 
     }
 
+    /**
+     * 
+     */
+    public void thaw( final ProbeAlignedRegion par ) {
+        if ( par == null || par.getId() == null ) return;
+        HibernateTemplate templ = this.getHibernateTemplate();
+        templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                session.lock( par, LockMode.NONE );
+                Hibernate.initialize( par );
+                Hibernate.initialize( par.getProducts() );
+                for ( ubic.gemma.model.genome.gene.GeneProduct gp : par.getProducts() ) {
+                    Hibernate.initialize( gp.getAccessions() );
+                    if ( gp.getPhysicalLocation() != null ) {
+                        Hibernate.initialize( gp.getPhysicalLocation().getChromosome() );
+                        Hibernate.initialize( gp.getPhysicalLocation().getChromosome().getTaxon() );
+                    }
+                }
+                Taxon t = ( Taxon ) session.get( TaxonImpl.class, par.getTaxon().getId() );
+                Hibernate.initialize( t );
+                if ( t.getExternalDatabase() != null ) {
+                    Hibernate.initialize( t.getExternalDatabase() );
+                }
+                session.evict( par );
+                return null;
+            }
+        } );
+    }
+
     /*
      * (non-Javadoc)
      * @see
@@ -76,16 +109,15 @@ public class ProbeAlignedRegionDaoImpl extends ubic.gemma.model.genome.ProbeAlig
         return this.load( geneValueObject.getId() );
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings( { "unchecked" })
     private Collection<ProbeAlignedRegion> findByPosition( Chromosome chrom, final Long targetStart,
             final Long targetEnd, final String strand ) {
 
         // the 'fetch'es are so we don't get lazy loads (typical applications of this method)
-        // FIXME : this query is a bit slow. In gene mapping of probes, it takes about as much time as all the other
-        // checks combined.
+        // Note: we could avoid the thaw if we did a fetch for the exons, but then this query becomes slow.
 
         String query = "select distinct par from ProbeAlignedRegionImpl as par inner join fetch par.physicalLocation pl "
-                + "inner join fetch par.products prod inner join fetch prod.exons inner join fetch pl.chromosome "
+                + "inner join fetch par.products prod inner join fetch pl.chromosome "
                 + "where ((pl.nucleotide >= :start AND (pl.nucleotide + pl.nucleotideLength) <= :end) "
                 + "OR (pl.nucleotide <= :start AND (pl.nucleotide + pl.nucleotideLength) >= :end) OR "
                 + "(pl.nucleotide >= :start  AND pl.nucleotide <= :end) "
@@ -103,9 +135,16 @@ public class ProbeAlignedRegionDaoImpl extends ubic.gemma.model.genome.ProbeAlig
         } else {
             params = new String[] { "chromosome", "start", "end" };
             vals = new Object[] { chrom, targetStart, targetEnd };
+
         }
 
-        return getHibernateTemplate().findByNamedParam( query, params, vals );
+        Collection<ProbeAlignedRegion> results = getHibernateTemplate().findByNamedParam( query, params, vals );
+
+        for ( ProbeAlignedRegion par : results ) {
+            this.thaw( par );
+        }
+
+        return results;
 
     }
 
