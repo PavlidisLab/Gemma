@@ -39,6 +39,12 @@ public class ProbeMapperConfig {
      */
     public static final int NON_SPECIFIC_SITE_THRESHOLD = 3;
 
+    /**
+     * Sequences which hybridize to this many or more sites in the genome are candidates to be considered non-specific.
+     * This is used even if the sequence does not contain a repeat.
+     */
+    public static final int NON_REPEAT_NON_SPECIFIC_SITE_THRESHOLD = 10;
+
     /*
      * (non-Javadoc)
      * @see java.lang.Object#toString()
@@ -48,11 +54,20 @@ public class ProbeMapperConfig {
         return "# Configuration:\n# blatScoreThreshold=" + this.blatScoreThreshold + "\n# identityThreshold="
                 + this.identityThreshold + "\n# maximumRepeatFraction=" + this.maximumRepeatFraction
                 + "\n# nonSpecificSiteCountThreshold=" + this.nonSpecificSiteCountThreshold
-                + "\n# minimumExonOverlapFraction=" + this.minimumExonOverlapFraction + "\n# useRefGene=" + this.useRefGene
-                + "\n# useAcembly=" + this.useAcembly + "\n# useNscan=" + this.useNscan + "\n# useEnsembl="
-                + this.useEnsembl + "\n# useMrnas=" + this.useMrnas + "\n# useMiRNA=" + this.useMiRNA + "\n# useEsts="
-                + this.useEsts + "\n# useKnownGene=" + this.useKnownGene + "\n";
+                + "\n# nonRepeatNonSpecificSiteCountThreshold=" + this.nonRepeatNonSpecificSiteCountThreshold
+                + "\n# minimumExonOverlapFraction=" + this.minimumExonOverlapFraction + "\n# useRefGene="
+                + this.useRefGene + "\n# useAcembly=" + this.useAcembly + "\n# useNscan=" + this.useNscan
+                + "\n# useEnsembl=" + this.useEnsembl + "\n# useMrnas=" + this.useMrnas + "\n# useMiRNA="
+                + this.useMiRNA + "\n# useEsts=" + this.useEsts + "\n# useKnownGene=" + this.useKnownGene + "\n";
 
+    }
+
+    public double getNonRepeatNonSpecificSiteCountThreshold() {
+        return nonRepeatNonSpecificSiteCountThreshold;
+    }
+
+    public void setNonRepeatNonSpecificSiteCountThreshold( double nonRepeatNonSpecificSiteCountThreshold ) {
+        this.nonRepeatNonSpecificSiteCountThreshold = nonRepeatNonSpecificSiteCountThreshold;
     }
 
     /**
@@ -78,6 +93,11 @@ public class ProbeMapperConfig {
      * number of sites will be left unmapped. FIXME we might modify this behavior.
      */
     private double nonSpecificSiteCountThreshold = NON_SPECIFIC_SITE_THRESHOLD;
+
+    /**
+     * @see NON_REPEAT_NON_SPECIFIC_SITE_THRESHOLD
+     */
+    private double nonRepeatNonSpecificSiteCountThreshold = NON_REPEAT_NON_SPECIFIC_SITE_THRESHOLD;
 
     private boolean useAcembly = true;
 
