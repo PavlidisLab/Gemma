@@ -18,6 +18,7 @@
  */
 package ubic.gemma.analysis.sequence;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 
@@ -29,6 +30,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.Reporter;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.PhysicalLocation;
+import ubic.gemma.model.genome.ProbeAlignedRegion;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneProduct;
 
@@ -187,7 +189,8 @@ public class SequenceManipulation {
     }
 
     /**
-     * Compute the overlap of a physical location with a transcript (gene product).
+     * Compute the overlap of a physical location with a transcript (gene product). This assumes that the chromosome is
+     * already matched.
      * 
      * @param starts of the locations we are testing (in the target, so on the same coordinates as the geneProduct
      *        location is scored)
@@ -203,20 +206,30 @@ public class SequenceManipulation {
             throw new IllegalArgumentException( "Null data" );
 
         // If strand is null we don't bother looking at it; if the strands don't match we return 0
-        if ( strand != null && geneProduct.getPhysicalLocation() != null
-                && geneProduct.getPhysicalLocation().getStrand() != null
-                && geneProduct.getPhysicalLocation().getStrand() != strand ) {
+        PhysicalLocation gpPhysicalLocation = geneProduct.getPhysicalLocation();
+        if ( strand != null && gpPhysicalLocation != null && gpPhysicalLocation.getStrand() != null
+                && gpPhysicalLocation.getStrand() != strand ) {
             return 0;
         }
 
         Collection<PhysicalLocation> exons = geneProduct.getExons();
 
-        if ( exons == null ) {
-            throw new IllegalArgumentException( "No exon information for " + geneProduct.toString() );
-        }
-
         int[] startArray = blatLocationsToIntArray( starts );
         int[] sizesArray = blatLocationsToIntArray( sizes );
+
+        if ( exons.size() == 0 ) {
+            /*
+             * simply use the gene product location itself. This is the case if we have ProbeAlignedRegion...otherwise
+             * it's not expected
+             */
+            if ( ProbeAlignedRegion.class.isAssignableFrom( geneProduct.getGene().getClass() ) ) {
+                if ( exons == null ) exons = new ArrayList<PhysicalLocation>();
+                exons.add( gpPhysicalLocation );
+            } else {
+                log.warn( "No exons for " + geneProduct );
+                return 0;
+            }
+        }
 
         // this was happening when data was truncated by the database!
         assert startArray.length == sizesArray.length : startArray.length + " starts and " + sizesArray.length
