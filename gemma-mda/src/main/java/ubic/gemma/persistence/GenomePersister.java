@@ -45,6 +45,7 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationService;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResultService;
 import ubic.gemma.model.genome.sequenceAnalysis.SequenceSimilaritySearchResult;
+import ubic.gemma.util.SequenceBinUtils;
 
 /**
  * @spring.property name="geneService" ref="geneService"
@@ -589,6 +590,13 @@ abstract public class GenomePersister extends CommonPersister {
 
     private PhysicalLocation fillPhysicalLocationAssociations( PhysicalLocation physicalLocation ) {
         physicalLocation.setChromosome( persistChromosome( physicalLocation.getChromosome() ) );
+
+        if ( physicalLocation.getBin() == null && physicalLocation.getNucleotide() != null
+                && physicalLocation.getNucleotideLength() != null ) {
+            physicalLocation.setBin( SequenceBinUtils.binFromRange( physicalLocation.getNucleotide().intValue(),
+                    physicalLocation.getNucleotide().intValue() + physicalLocation.getNucleotideLength().intValue() ) );
+        }
+
         return physicalLocation;
     }
 
