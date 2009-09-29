@@ -148,8 +148,8 @@ Gemma.DiffExpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 			},
 
 			linkOutStyler : function(value, metadata, record, row, col, ds){
-					var popUpWin = "LinkOutController.getAlanBrainAtalsLinks('" + value.officialSymbol + "',Gemma.DiffExpressionGrid.linkOutPopUp)";
-					return String.format('<a title="Alan Brian Atlas Image"  onClick="{0}"> <img height=15 width =15 src="/Gemma/images/logo/abaLogo.jpg" ext:qtip="Link to Allen Brain Atlas details" /> </a>', popUpWin);
+					var popUpWin = "LinkOutController.getAllenBrainAtlasLink('" + value.officialSymbol + "',Gemma.DiffExpressionGrid.linkOutPopUp)";
+					return String.format('<a title="Allen Brain Atlas Image"  onClick="{0}"> <img src="/Gemma/images/logo/aba-icon.png" ext:qtip="Link to Allen Brain Atlas details" /> </a>', popUpWin);
 			},
 		
 			metThresholdStyler : function(value, metadata, record, row, col, ds) {
