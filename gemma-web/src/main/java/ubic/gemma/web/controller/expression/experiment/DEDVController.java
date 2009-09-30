@@ -38,6 +38,7 @@ import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.gemma.analysis.expression.diff.DiffExpressionSelectedFactorCommand;
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionValueObject;
 import ubic.gemma.analysis.expression.diff.GeneDifferentialExpressionService;
+import ubic.gemma.analysis.service.ExpressionDataFileService;
 import ubic.gemma.model.analysis.AnalysisResultSet;
 import ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.ProbeAnalysisResult;
@@ -46,6 +47,7 @@ import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisS
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoImpl.ProbeLink;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssayData.BioAssayDimensionService;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
@@ -79,6 +81,7 @@ import cern.colt.list.DoubleArrayList;
  * @spring.property name="compositeSequenceService" ref="compositeSequenceService"
  * @spring.property name="differentialExpressionAnalysisService" ref="differentialExpressionAnalysisService"
  * @spring.property name="differentialExpressionAnalysisResultService" ref="differentialExpressionAnalysisResultService"
+ * @spring.property name="bioAssayDimensionService" ref="bioAssayDimensionService"
  * @author kelsey
  * @version $Id$
  */
@@ -98,6 +101,7 @@ public class DEDVController extends BaseFormController {
     private CompositeSequenceService compositeSequenceService;
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
     private DifferentialExpressionAnalysisResultService differentialExpressionAnalysisResultService;
+    private BioAssayDimensionService bioAssayDimensionService;
 
     /**
      * Given a collection of expression experiment Ids and a geneId returns a map of DEDV value objects to a collection
@@ -257,7 +261,7 @@ public class DEDVController extends BaseFormController {
         Collection<DoubleVectorValueObject> dedvs = processedExpressionDataVectorService.getProcessedDataArraysByProbe(
                 ees, probes, false );
 
-       //Map<ExpressionExperiment, LinkedHashMap<BioAssay, Map<ExperimentalFactor, Double>>> layouts = null;
+        // Map<ExpressionExperiment, LinkedHashMap<BioAssay, Map<ExperimentalFactor, Double>>> layouts = null;
         // FIXME: Commented out for performance and factor info not displayed on front end yet anyway.
         // layouts = experimentalDesignVisualizationService.sortVectorDataByDesign( dedvs );
 
@@ -554,7 +558,7 @@ public class DEDVController extends BaseFormController {
     /*
      * Handle case of text export of the results.
      * @seeorg.springframework.web.servlet.mvc.AbstractFormController#handleRequestInternal(javax.servlet.http.
-     * HttpServletRequest, javax.servlet.http.HttpServletResponse)
+     * HttpServletRequest, javax.servlet.http.HttpServletResponse) Called by /Gemma/dedv/downloadDEDV.html
      */
     @Override
     protected ModelAndView handleRequestInternal( HttpServletRequest request, HttpServletResponse response )
@@ -600,9 +604,11 @@ public class DEDVController extends BaseFormController {
      */
     private String format4File( Map<ExpressionExperiment, Map<Gene, Collection<DoubleVectorValueObject>>> result ) {
         StringBuffer converted = new StringBuffer();
-        converted.append( "Experiment\tGene\tProbe\tData\n" );
-        Map<Long, String> genes = new HashMap<Long, String>();
+        Map<Long, String> genes = new HashMap<Long, String>(); // Saves us from loading genes unneccsarily
+        converted.append( ExpressionDataFileService.DISCLAIMER + "\n" );
         for ( ExpressionExperiment ee : result.keySet() ) {
+
+            boolean didHeaderForEe = false;
 
             for ( Gene g : result.get( ee ).keySet() ) {
                 Long geneId = g.getId();
@@ -615,23 +621,47 @@ public class DEDVController extends BaseFormController {
                 }
 
                 for ( DoubleVectorValueObject dedv : result.get( ee ).get( g ) ) {
-                    ee = dedv.getExpressionExperiment();
 
-                    converted.append( ee.getShortName() + " \t " );
-                    converted.append( ee.getName() + " \t " );
-                    converted.append( geneName + " \t " + g.getOfficialName() + "\t" );
+                    if ( !didHeaderForEe ) {
+                        converted.append( makeHeader( dedv ) );
+                        didHeaderForEe = true;
+                    }
+
+                    converted.append( geneName + "\t" + g.getOfficialName() + "\t" );
                     converted.append( dedv.getDesignElement().getName() + "\t" );
 
-                    for ( double data : dedv.getData() ) {
-                        converted.append( String.format( "%.3f", data ) + "|" );
+                    if ( dedv.getData() != null || dedv.getData().length != 0 ) {
+                        for ( double data : dedv.getData() ) {
+                            converted.append( String.format( "%.3f", data ) + "|" );
+                        }
+                        converted.deleteCharAt( converted.length() - 1 ); // remove the pipe.
                     }
-                    converted.deleteCharAt( converted.length() - 1 ); // remove the pipe.
                     converted.append( "\n" );
                 }
             }
+            converted.append( "\n" );
+
         }
         converted.append( "\r\n" );
         return converted.toString();
+    }
+
+    private String makeHeader( DoubleVectorValueObject dedv ) {
+        StringBuilder buf = new StringBuilder();
+        ExpressionExperiment ee = dedv.getExpressionExperiment();
+        buf.append( ee.getShortName() + " : " + ee.getName() + "\n" );
+
+        buf.append( "Gene Symbol\tGene Name\tProbe\t" );
+
+        bioAssayDimensionService.thaw(dedv.getBioAssayDimension());
+        for ( BioAssay ba : dedv.getBioAssayDimension().getBioAssays() ) {
+            buf.append( ba.getName() + "|" );
+        }
+        buf.deleteCharAt( buf.length() - 1 );
+
+        buf.append( "\n" );
+
+        return buf.toString();
     }
 
     /**
@@ -964,6 +994,11 @@ public class DEDVController extends BaseFormController {
     public void setDifferentialExpressionAnalysisResultService(
             DifferentialExpressionAnalysisResultService differentialExpressionAnalysisResultService ) {
         this.differentialExpressionAnalysisResultService = differentialExpressionAnalysisResultService;
+    }
+    
+    public void setBioAssayDimensionService(BioAssayDimensionService bioAssayDimensionService){
+        
+        this.bioAssayDimensionService = bioAssayDimensionService;
     }
 
 }
