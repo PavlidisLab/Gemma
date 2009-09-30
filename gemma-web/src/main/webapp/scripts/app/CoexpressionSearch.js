@@ -104,7 +104,7 @@ Ext.onReady(function() {
 								fn : function() {
 									if (!this.loaded) {
 										diffExGrid.getStore().load({
-											params : [foundGene.id, 0.01]
+											params : [foundGene.id, Gemma.DIFF_THRESHOLD, Gemma.MAX_DIFF_RESULTS]
 										});
 									}
 									this.loaded = true;
