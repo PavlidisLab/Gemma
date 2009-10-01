@@ -227,12 +227,12 @@ public class AllenBrainAtlasService {
         this.verbose = false;
         this.useFileCache = false;
         this.cacheDir = ConfigUtils.getString( "gemma.appdata.home" ) + ABA_CACHE;
-        File abaCacheDir = new File(this.cacheDir);
+        File abaCacheDir = new File( this.cacheDir );
         if ( !( abaCacheDir.exists() && abaCacheDir.canRead() ) ) {
             log.warn( "Attempting to create aba cache directory in '" + this.cacheDir + "'" );
             abaCacheDir.mkdirs();
         }
-        
+
         this.infoOut = System.out;
         this.errOut = System.err;
     }
@@ -406,7 +406,8 @@ public class AllenBrainAtlasService {
 
     }
 
-    protected boolean getImageseries( Integer imageseriesId, OutputStream out ) throws MalformedURLException, IOException {
+    protected boolean getImageseries( Integer imageseriesId, OutputStream out ) throws MalformedURLException,
+            IOException {
 
         String args[] = { imageseriesId.toString() };
         String getImageseriesUrl = buildUrlString( GET_IMAGESERIES_URL, args );
@@ -416,24 +417,25 @@ public class AllenBrainAtlasService {
 
     /*
      * Convieniece method for striping out the images from the image series. Also fully qaulifies URLs for link to allen
-     * brain atlas web site
-     * @param imageSeries
-     * @return
+     * brain atlas web site @param imageSeries @return
      */
 
     public Collection<Image> getImagesFromImageSeries( Collection<ImageSeries> imageSeries ) {
 
         Collection<Image> representativeImages = new HashSet<Image>();
 
-        for ( ImageSeries is : imageSeries ) {
-            if ( is.getImages() == null ) continue;
+        if ( imageSeries != null ) {
+            for ( ImageSeries is : imageSeries ) {
+                if ( is.getImages() == null ) continue;
 
-            for ( Image img : is.getImages() ) {
-                // Convert the urls into fully qualified ones for ez displaying
-                String args[] = { "2", "2", img.getDownloadExpressionPath() };
-                img.setDownloadExpressionPath( this.buildUrlString( AllenBrainAtlasService.GET_IMAGE_URL, args ) );
-                img.setExpressionThumbnailUrl( AllenBrainAtlasService.API_BASE_URL + img.getExpressionThumbnailUrl() );
-                representativeImages.add( img );
+                for ( Image img : is.getImages() ) {
+                    // Convert the urls into fully qualified ones for ez displaying
+                    String args[] = { "2", "2", img.getDownloadExpressionPath() };
+                    img.setDownloadExpressionPath( this.buildUrlString( AllenBrainAtlasService.GET_IMAGE_URL, args ) );
+                    img.setExpressionThumbnailUrl( AllenBrainAtlasService.API_BASE_URL
+                            + img.getExpressionThumbnailUrl() );
+                    representativeImages.add( img );
+                }
             }
         }
 
