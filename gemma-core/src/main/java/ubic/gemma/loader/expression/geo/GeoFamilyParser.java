@@ -1491,7 +1491,7 @@ public class GeoFamilyParser implements Parser {
                 seriesSet( currentSeriesAccession, "isSuperSeries", true );
             } else if ( value.toLowerCase().startsWith( "gse" )
                     && results.getSeriesMap().get( currentSeriesAccession ).isSuperSeries() ) {
-                String[] fields = value.split( ":", 1 );
+                String[] fields = value.split( ":", 2 );
                 if ( fields.length != 2 ) {
                     throw new IllegalStateException( "Expected a colon in " + value );
                 }
