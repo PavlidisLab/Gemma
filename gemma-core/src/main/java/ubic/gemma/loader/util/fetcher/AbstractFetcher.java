@@ -260,7 +260,14 @@ public abstract class AbstractFetcher implements Fetcher {
                     log.info( "Download stopped successfully." );
                     return false;
                 }
+
+                // double check...
+                if ( future.isCancelled() ) {
+                    return false;
+                }
+
                 log.error( "Cancellation failed..." );
+
                 throw new RuntimeException( "Cancellation failed." );
 
             }
