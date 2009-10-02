@@ -70,9 +70,11 @@ public class ArrayDesignWrapper extends TableDecorator {
     public String getDelete() {
         ArrayDesignValueObject object = ( ArrayDesignValueObject ) getCurrentRowObject();
 
-        if ( object == null || object.getExpressionExperimentCount() == null
-                || object.getExpressionExperimentCount() == 0 ) {
-            // FIXME wire to AJAX call.
+        /*
+         * Allow deletion if 1) the AD has no experiments that use it and 2) it isn't part of a merging group.
+         */
+        if ( !object.getIsMerged() && !object.getIsMergee()
+                && ( object.getExpressionExperimentCount() == null || object.getExpressionExperimentCount() == 0 ) ) {
             return "<form action=\"deleteArrayDesign.html?id=" + object.getId()
                     + "\" onSubmit=\"return confirmDelete('Array Design " + object.getName()
                     + "')\" method=\"post\"><input type=\"submit\"  value=\"Delete\" /></form>";
@@ -88,7 +90,6 @@ public class ArrayDesignWrapper extends TableDecorator {
         ArrayDesignValueObject object = ( ArrayDesignValueObject ) getCurrentRowObject();
         if ( object != null && object.getExpressionExperimentCount() != null
                 && object.getExpressionExperimentCount() > 0 ) {
-            Long id = object.getId();
 
             return object.getExpressionExperimentCount().toString();
             // This string doesn't work. Sorting by expression experiments used bombs (mosly likely because of the
@@ -104,36 +105,36 @@ public class ArrayDesignWrapper extends TableDecorator {
         ArrayDesignValueObject object = ( ArrayDesignValueObject ) getCurrentRowObject();
         if ( ( object.getIsMerged() != null ) && ( object.getIsMerged() ) ) {
             return "[";
-        } else {
-            return "";
         }
+        return "";
+
     }
 
     public String getIsMergee() {
         ArrayDesignValueObject object = ( ArrayDesignValueObject ) getCurrentRowObject();
         if ( ( object.getIsMergee() != null ) && ( object.getIsMergee() ) ) {
             return "]";
-        } else {
-            return "";
         }
+        return "";
+
     }
 
     public String getIsSubsumed() {
         ArrayDesignValueObject object = ( ArrayDesignValueObject ) getCurrentRowObject();
         if ( ( object.getIsSubsumed() != null ) && ( object.getIsSubsumed() ) ) {
             return "<<";
-        } else {
-            return "";
         }
+        return "";
+
     }
 
     public String getIsSubsumer() {
         ArrayDesignValueObject object = ( ArrayDesignValueObject ) getCurrentRowObject();
         if ( ( object.getIsSubsumer() != null ) && ( object.getIsSubsumer() ) ) {
             return ">>";
-        } else {
-            return "";
         }
+        return "";
+
     }
 
     public String getLastGeneMappingDate() {
@@ -149,9 +150,9 @@ public class ArrayDesignWrapper extends TableDecorator {
             String shortDate = StringUtils.left( fullDate, 10 );
             shortDate = formatIfRecent( mostRecent, shortDate );
             return "<span title='" + fullDate + "'>" + shortDate + "</span>";
-        } else {
-            return "[None]";
         }
+        return "[None]";
+
     }
 
     public String getLastRepeatMaskDate() {
@@ -169,9 +170,9 @@ public class ArrayDesignWrapper extends TableDecorator {
             String shortDate = StringUtils.left( fullDate, 10 );
             shortDate = formatIfRecent( mostRecent, shortDate );
             return "<span title='" + fullDate + "'>" + shortDate + "</span>";
-        } else {
-            return "[None]";
         }
+        return "[None]";
+
     }
 
     public String getLastSequenceAnalysisDate() {
@@ -187,9 +188,9 @@ public class ArrayDesignWrapper extends TableDecorator {
             String shortDate = StringUtils.left( fullDate, 10 );
             shortDate = formatIfRecent( mostRecent, shortDate );
             return "<span title='" + fullDate + "'>" + shortDate + "</span>";
-        } else {
-            return "[None]";
         }
+        return "[None]";
+
     }
 
     public String getLastSequenceUpdateDate() {
@@ -208,9 +209,9 @@ public class ArrayDesignWrapper extends TableDecorator {
             String shortDate = StringUtils.left( fullDate, 10 );
             shortDate = formatIfRecent( mostRecent, shortDate );
             return "<span title='" + fullDate + "'>" + shortDate + "</span>";
-        } else {
-            return "[None]";
         }
+        return "[None]";
+
     }
 
     public String getRefreshReport() {
