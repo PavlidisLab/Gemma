@@ -99,6 +99,13 @@ public class ExpressionExperimentLoadController extends AbstractSpacesController
      * @return
      */
     public String run( ExpressionExperimentLoadTaskCommand command ) {
+        // remove stray whitespace.
+        command.setAccession( StringUtils.strip( command.getAccession() ) );
+
+        if ( StringUtils.isBlank( command.getAccession() ) ) {
+            throw new IllegalArgumentException( "Must provide an accession" );
+        }
+
         return run( command, SpacesEnum.DEFAULT_SPACE.getSpaceUrl(), ExpressionExperimentLoadTask.class.getName(), true );
     }
 
