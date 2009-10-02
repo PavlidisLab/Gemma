@@ -118,15 +118,20 @@ public abstract class FtpFetcher extends AbstractFetcher {
             Collection<LocalFile> fallback = getExistingFile( existingFile, seekFile );
             return fallback;
         } catch ( IOException e ) {
-            
-            if ( force || !allowUseExisting || existingFile == null ) throw new RuntimeException( "Couldn't fetch " + seekFile
-                    + ", make sure the file exists on the remote server.", e );
 
-            log.warn("Couldn't fetch " + seekFile + ", make sure the file exists on the remote server.," + e
-                    + ", using existing file" );
+            /*
+             * Note: this block can trigger if you cancel.
+             */
+
+            if ( force || !allowUseExisting || existingFile == null )
+                throw new RuntimeException( "Cancelled, or couldn't fetch " + seekFile
+                        + ", make sure the file exists on the remote server.", e );
+
+            log.warn( "Cancelled, or couldn't fetch " + seekFile + ", make sure the file exists on the remote server.,"
+                    + e + ", using existing file" );
             Collection<LocalFile> fallback = getExistingFile( existingFile, seekFile );
             return fallback;
-            
+
         }
     }
 
