@@ -342,6 +342,10 @@ public class ExpressionExperimentLoadController extends AbstractSpacesController
             Collection<ExpressionExperiment> result = geoDatasetService.fetchAndLoad( accession, false,
                     doSampleMatching, aggressiveQtRemoval, splitIncompatiblePlatforms, allowSuperSeriesLoad );
 
+            if ( result == null ) {
+                return processGeoLoadResult( result );
+            }
+
             postProcess( result );
 
             return processGeoLoadResult( result );
@@ -353,6 +357,9 @@ public class ExpressionExperimentLoadController extends AbstractSpacesController
          * @param ees
          */
         private void postProcess( Collection<ExpressionExperiment> ees ) {
+
+            if ( ees == null ) return;
+
             log.info( "Postprocessing ..." );
             for ( ExpressionExperiment ee : ees ) {
 
