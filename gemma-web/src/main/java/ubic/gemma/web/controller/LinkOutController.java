@@ -19,6 +19,7 @@
 
 package ubic.gemma.web.controller;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 
@@ -52,19 +53,24 @@ public class LinkOutController {
      */
     public LinkOutValueObject getAllenBrainAtlasLink( String geneOfficialSymbol ) {
 
-        // Get Allen Brain Atals information and put in value object
-        Collection<ImageSeries> imageSeries = allenBrainAtlasService
-                .getRepresentativeSaggitalImages( geneOfficialSymbol );
-
-        Collection<String> imageUrls = new ArrayList<String>();
+        Collection<ImageSeries> imageSeries = null;
         String abaGeneUrl = null;
-        if ( imageSeries != null ) {
-            abaGeneUrl = allenBrainAtlasService.getGeneUrl( geneOfficialSymbol );
-            Collection<Image> representativeImages = allenBrainAtlasService.getImagesFromImageSeries( imageSeries );
+        Collection<String> imageUrls = new ArrayList<String>();
 
-            for ( Image image : representativeImages ) {
-                imageUrls.add( image.getDownloadExpressionPath() );
+        // Get Allen Brain Atals information and put in value object
+        try {
+            imageSeries = allenBrainAtlasService.getRepresentativeSaggitalImages( geneOfficialSymbol );
+
+            if ( imageSeries != null ) {
+                abaGeneUrl = allenBrainAtlasService.getGeneUrl( geneOfficialSymbol );
+                Collection<Image> representativeImages = allenBrainAtlasService.getImagesFromImageSeries( imageSeries );
+
+                for ( Image image : representativeImages ) {
+                    imageUrls.add( image.getDownloadExpressionPath() );
+                }
             }
+        } catch ( IOException e ) {
+
         }
         return new LinkOutValueObject( imageUrls, abaGeneUrl, geneOfficialSymbol );
 

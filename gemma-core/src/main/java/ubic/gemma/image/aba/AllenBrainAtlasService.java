@@ -65,7 +65,7 @@ public class AllenBrainAtlasService {
     /**
      * http://brain-map.org
      */
-    public static final String API_BASE_URL = "http://brain-map.org";
+    public static final String API_BASE_URL = "http://www.brain-map.org";
 
     /**
      * /aba/api/gene/[geneSymbol].xml";
@@ -260,7 +260,7 @@ public class AllenBrainAtlasService {
      * @param givenGene symbol of gene that will be used to search ABA.
      * @return
      */
-    public AbaGene getGene( String givenGene ) {
+    public AbaGene getGene( String givenGene ) throws IOException {
 
         String gene = correctCase( givenGene );
 
@@ -285,8 +285,6 @@ public class AllenBrainAtlasService {
 
             return null;
 
-        } catch ( IOException io ) {
-            log.warn( io );
         }
 
         Collection<String> xmlData = XMLUtils.extractTagData( geneDoc, "geneid" );
@@ -374,7 +372,12 @@ public class AllenBrainAtlasService {
         return HTML_GENE_DETAILS_URL.replaceFirst( "@", this.correctCase( gene ) );
     }
 
-    public Collection<ImageSeries> getRepresentativeSaggitalImages( String gene ) {
+    /**
+     * @param gene
+     * @return
+     * @throws IOException
+     */
+    public Collection<ImageSeries> getRepresentativeSaggitalImages( String gene ) throws IOException {
 
         AbaGene grin1 = this.getGene( gene );
         if ( grin1 == null ) return null;

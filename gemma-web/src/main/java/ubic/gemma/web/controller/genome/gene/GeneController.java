@@ -18,6 +18,7 @@
  */
 package ubic.gemma.web.controller.genome.gene;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -221,25 +222,7 @@ public class GeneController extends BaseMultiActionController {
         Long compositeSequenceCount = geneService.getCompositeSequenceCountById( id );
         mav.addObject( "compositeSequenceCount", compositeSequenceCount );
 
-        final Taxon mouseTaxon = this.taxonService.findByCommonName( "mouse" );
-        Gene mouseGene = gene;
-        // Get alan brain atalas represntative images
-        if ( gene.getTaxon().getId() != mouseTaxon.getId() ) {
-            mouseGene = this.homologeneService.getHomologue( gene, mouseTaxon );
-        }
-
-        if ( mouseGene != null ) {
-            Collection<ImageSeries> imageSeries = allenBrainAtlasService.getRepresentativeSaggitalImages( mouseGene
-                    .getOfficialSymbol() );
-            String abaGeneUrl = allenBrainAtlasService.getGeneUrl( mouseGene.getOfficialSymbol() );
-
-            Collection<Image> representativeImages = allenBrainAtlasService.getImagesFromImageSeries( imageSeries );
-
-            if ( !representativeImages.isEmpty() ) {
-                mav.addObject( "representativeImages", representativeImages );
-                mav.addObject( "abaGeneUrl", abaGeneUrl );
-            }
-        }
+        getAllenBrainImages( gene, mav );
 
         Collection<Gene> homologues = homologeneService.getHomologues( gene );
 
@@ -248,6 +231,38 @@ public class GeneController extends BaseMultiActionController {
         }
 
         return mav;
+    }
+
+    /**
+     * @param gene
+     * @param mav
+     */
+    private void getAllenBrainImages( Gene gene, ModelAndView mav ) {
+        final Taxon mouseTaxon = this.taxonService.findByCommonName( "mouse" );
+        Gene mouseGene = gene;
+        // Get alan brain atalas represntative images
+        if ( gene.getTaxon().getId() != mouseTaxon.getId() ) {
+            mouseGene = this.homologeneService.getHomologue( gene, mouseTaxon );
+        }
+
+        if ( mouseGene != null ) {
+            Collection<ImageSeries> imageSeries = null;
+
+            try {
+                imageSeries = allenBrainAtlasService.getRepresentativeSaggitalImages( mouseGene.getOfficialSymbol() );
+                String abaGeneUrl = allenBrainAtlasService.getGeneUrl( mouseGene.getOfficialSymbol() );
+
+                Collection<Image> representativeImages = allenBrainAtlasService.getImagesFromImageSeries( imageSeries );
+
+                if ( !representativeImages.isEmpty() ) {
+                    mav.addObject( "representativeImages", representativeImages );
+                    mav.addObject( "abaGeneUrl", abaGeneUrl );
+                }
+            } catch ( IOException e ) {
+                log.warn( "Could not get ABA data: " + e );
+            }
+
+        }
     }
 
     /**
