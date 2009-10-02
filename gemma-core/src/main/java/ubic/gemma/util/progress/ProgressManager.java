@@ -83,7 +83,7 @@ public class ProgressManager {
      * @return Use this static method for creating ProgressJobs. if the currently running thread already has a progress
      *         job assciated with it that progress job will be returned.
      */
-    public static synchronized ProgressJob createProgressJob( String taskId, String userId, String description ) {
+    public static ProgressJob createProgressJob( String taskId, String userId, String description ) {
 
         Collection<ProgressJob> usersJobs;
         ProgressJob newJob = null;
@@ -167,7 +167,7 @@ public class ProgressManager {
 
     // As the progress manager is a singleton leaks and strange behavior are likely.
     // i made this to get a peek at what was going on under the hood at runtime.
-    public static synchronized void dump() {
+    public static void dump() {
 
         if ( !log.isDebugEnabled() ) return;
 
@@ -196,7 +196,7 @@ public class ProgressManager {
      * @param pData a progress data instance.
      * @return true if the thread had a progress job already and it was successful in updating it, false otherwise.
      */
-    public static synchronized boolean updateCurrentThreadsProgressJob( ProgressData pData ) {
+    public static boolean updateCurrentThreadsProgressJob( ProgressData pData ) {
 
         ProgressJob threadsJob = null;
 
@@ -222,7 +222,7 @@ public class ProgressManager {
      * @param message
      * @return
      */
-    public static synchronized boolean updateCurrentThreadsProgressJob( String message ) {
+    public static boolean updateCurrentThreadsProgressJob( String message ) {
 
         ProgressJob threadsJob = null;
 
@@ -243,7 +243,7 @@ public class ProgressManager {
      * 
      * @return true if there is a progress job.
      */
-    public static synchronized boolean nudgeCurrentThreadsProgressJob() {
+    public static boolean nudgeCurrentThreadsProgressJob() {
         ProgressJob threadsJob = null;
 
         if ( currentJob.get() == null ) return false;
@@ -260,7 +260,7 @@ public class ProgressManager {
      * @param message The new description for the job.
      * @return true if there is a progress job.
      */
-    public static synchronized boolean nudgeCurrentThreadsProgressJob( String message ) {
+    public static boolean nudgeCurrentThreadsProgressJob( String message ) {
         ProgressJob threadsJob = null;
 
         if ( currentJob.get() == null ) return false;
@@ -276,7 +276,7 @@ public class ProgressManager {
      * @param progressJob
      * @return
      */
-    public static synchronized boolean destroyProgressJob( ProgressJob progressJob ) {
+    public static boolean destroyProgressJob( ProgressJob progressJob ) {
         return destroyProgressJob( progressJob, false );
     }
 
@@ -286,8 +286,7 @@ public class ProgressManager {
      * @param cause
      * @return
      */
-    public static synchronized boolean destroyFailedProgressJob( ProgressJob progressJob, boolean doForward,
-            Throwable cause ) {
+    public static boolean destroyFailedProgressJob( ProgressJob progressJob, boolean doForward, Throwable cause ) {
         if ( progressJob == null ) {
             log
                     .debug( "ProgressManager.destroyProgressJob received a null reference for a progressJob, hence can't destroy." );
@@ -338,7 +337,7 @@ public class ProgressManager {
      * 
      * @param ajob
      */
-    public static synchronized boolean destroyProgressJob( ProgressJob progressJob, boolean doForward ) {
+    public static boolean destroyProgressJob( ProgressJob progressJob, boolean doForward ) {
 
         if ( progressJob == null ) {
             log
@@ -386,7 +385,7 @@ public class ProgressManager {
     /**
      * @param key
      */
-    public static synchronized void signalDone( Object key ) {
+    public static void signalDone( Object key ) {
         log.debug( key + " Done!" );
         ProgressJob job = progressJobsByTaskId.get( key );
         assert job != null : "No job of id " + key;
@@ -396,7 +395,7 @@ public class ProgressManager {
     /**
      * @param key
      */
-    public static synchronized void signalCancelled( Object key ) {
+    public static void signalCancelled( Object key ) {
         log.debug( key + " Cancelled" );
         ProgressJob job = progressJobsByTaskId.get( key );
         if ( job != null ) job.getJobInfo().setFailedMessage( "Cancellation was signalled by user" );
@@ -407,7 +406,7 @@ public class ProgressManager {
      * @param key
      * @param cause
      */
-    public static synchronized void signalFailed( Object key, Throwable cause ) {
+    public static void signalFailed( Object key, Throwable cause ) {
         log.error( key + " Failed: " + cause.getMessage() );
         ProgressJob job = progressJobsByTaskId.get( key );
         if ( job != null ) {
