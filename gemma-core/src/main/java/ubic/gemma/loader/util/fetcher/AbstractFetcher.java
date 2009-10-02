@@ -40,28 +40,22 @@ import ubic.gemma.model.common.description.LocalFile;
  */
 public abstract class AbstractFetcher implements Fetcher {
 
+    protected static final int INFO_UPDATE_INTERVAL = 5000;
     protected static Log log = LogFactory.getLog( ArrayDesignSequenceProcessingService.class.getName() );
-    protected String localBasePath = null;
-    protected String remoteBaseDir = null;
+    /**
+     * Whether we are allowed to use an existing file rather than downloading again, in the case where we can't connect
+     * to the remote host to check the size of the file. Setting force=true overrides this. Default is FALSE.
+     */
+    protected boolean allowUseExisting = false;
 
     /**
      * Whether download is required even if the sizes match.
      */
     protected boolean force = false;
 
-    /**
-     * Whether we are allowed to use an existing file rather than downloading again, in the case where we can't connect
-     * to the remote host to check the size of the file. Setting force=true overrides this.
-     */
-    protected boolean allowUseExisting = true;
+    protected String localBasePath = null;
 
-    protected static final int INFO_UPDATE_INTERVAL = 5000;
-
-    protected abstract void initConfig();
-
-    protected abstract String formRemoteFilePath( String identifier );
-
-    protected abstract String formLocalFilePath( String identifier, File newDir );
+    protected String remoteBaseDir = null;
 
     /**
      * 
@@ -72,60 +66,24 @@ public abstract class AbstractFetcher implements Fetcher {
     }
 
     /**
-     * @param future
-     * @param expectedSize
-     * @param outputFileName
-     * @return true if it finished normally, false if it was cancelled.
+     * @return Returns the localBasePath.
      */
-    protected boolean waitForDownload( FutureTask<Boolean> future, long expectedSize, File outputFile ) {
-        while ( !future.isDone() && !future.isCancelled() ) {
-            try {
-                Thread.sleep( INFO_UPDATE_INTERVAL );
-            } catch ( InterruptedException ie ) {
-                log.info( "Cancelling download" );
-                boolean cancelled = future.cancel( true );
-                if ( cancelled ) {
-                    log.info( "Download stopped successfully." );
-                    return false;
-                }
-                throw new RuntimeException( "Cancellation failed." );
-
-            }
-
-            if ( log.isInfoEnabled() ) {
-                log.info( ( outputFile.length() + ( expectedSize > 0 ? "/" + expectedSize : "" ) + " bytes read" ) );
-            }
-        }
-        return true;
+    public String getLocalBasePath() {
+        return this.localBasePath;
     }
 
     /**
-     * @param future
-     * @return true if it finished normally, false if it was cancelled.
+     * @return the force
      */
-    protected boolean waitForDownload( FutureTask<Boolean> future ) {
-        StopWatch timer = new StopWatch();
-        timer.start();
-        long lastTime = timer.getTime();
-        while ( !future.isDone() && !future.isCancelled() ) {
-            try {
-                Thread.sleep( INFO_UPDATE_INTERVAL );
-            } catch ( InterruptedException ie ) {
-                log.info( "Cancelling download" );
-                boolean cancelled = future.cancel( true );
-                if ( cancelled ) {
-                    log.info( "Download stopped successfully." );
-                    return false;
-                }
-                throw new RuntimeException( "Cancellation failed." );
+    public boolean isForce() {
+        return this.force;
+    }
 
-            }
-
-            if ( log.isInfoEnabled() && timer.getTime() > ( lastTime + 2000L ) ) {
-                log.info( "Waiting ... " + timer.getTime() + "ms elapsed...." );
-            }
-        }
-        return true;
+    /**
+     * @param allowUseExisting the allowUseExisting to set
+     */
+    public void setAllowUseExisting( boolean allowUseExisting ) {
+        this.allowUseExisting = allowUseExisting;
     }
 
     /**
@@ -136,6 +94,58 @@ public abstract class AbstractFetcher implements Fetcher {
     public void setForce( boolean force ) {
         this.force = force;
     }
+
+    /**
+     * @param seekFile
+     * @return
+     */
+    protected LocalFile fetchedFile( String seekFile ) {
+        return this.fetchedFile( seekFile, seekFile );
+    }
+
+    /**
+     * @param seekFilePath Absolute path to the file for download
+     * @param outputFilePath Absolute path to the download location.
+     * @return
+     */
+    protected LocalFile fetchedFile( String seekFilePath, String outputFilePath ) {
+        LocalFile file = LocalFile.Factory.newInstance();
+        file.setVersion( new SimpleDateFormat().format( new Date() ) );
+        try {
+            file.setRemoteURL( ( new File( seekFilePath ) ).toURI().toURL() );
+            file.setLocalURL( ( new File( outputFilePath ).toURI().toURL() ) );
+        } catch ( MalformedURLException e ) {
+            throw new RuntimeException( e );
+        }
+        return file;
+    }
+
+    protected abstract String formLocalFilePath( String identifier, File newDir );
+
+    protected abstract String formRemoteFilePath( String identifier );
+
+    /**
+     * Wrap the existing file in the required Collection&lt;LocalFile&gt;
+     * 
+     * @param existingFile
+     * @param seekFile
+     * @return
+     */
+    protected Collection<LocalFile> getExistingFile( File existingFile, String seekFile ) {
+        Collection<LocalFile> fallback = new HashSet<LocalFile>();
+        LocalFile lf = LocalFile.Factory.newInstance();
+        try {
+            lf.setLocalURL( existingFile.toURI().toURL() );
+            lf.setRemoteURL( ( new File( seekFile ) ).toURI().toURL() );
+        } catch ( MalformedURLException e ) {
+            throw new RuntimeException( e );
+        }
+        lf.setSize( existingFile.length() );
+        fallback.add( lf );
+        return fallback;
+    }
+
+    protected abstract void initConfig();
 
     /**
      * Like mkdir(accession) but for cases where there is no accession.
@@ -205,63 +215,62 @@ public abstract class AbstractFetcher implements Fetcher {
     }
 
     /**
-     * @param seekFile
-     * @return
+     * @param future
+     * @return true if it finished normally, false if it was cancelled.
      */
-    protected LocalFile fetchedFile( String seekFile ) {
-        return this.fetchedFile( seekFile, seekFile );
-    }
+    protected boolean waitForDownload( FutureTask<Boolean> future ) {
+        StopWatch timer = new StopWatch();
+        timer.start();
+        long lastTime = timer.getTime();
+        while ( !future.isDone() && !future.isCancelled() ) {
+            try {
+                Thread.sleep( INFO_UPDATE_INTERVAL );
+            } catch ( InterruptedException ie ) {
+                log.info( "Cancelling download" );
+                boolean cancelled = future.cancel( true );
+                if ( cancelled ) {
+                    log.info( "Download stopped successfully." );
+                    return false;
+                }
+                throw new RuntimeException( "Cancellation failed." );
 
-    /**
-     * @param seekFilePath Absolute path to the file for download
-     * @param outputFilePath Absolute path to the download location.
-     * @return
-     */
-    protected LocalFile fetchedFile( String seekFilePath, String outputFilePath ) {
-        LocalFile file = LocalFile.Factory.newInstance();
-        file.setVersion( new SimpleDateFormat().format( new Date() ) );
-        try {
-            file.setRemoteURL( ( new File( seekFilePath ) ).toURI().toURL() );
-            file.setLocalURL( ( new File( outputFilePath ).toURI().toURL() ) );
-        } catch ( MalformedURLException e ) {
-            throw new RuntimeException( e );
+            }
+
+            if ( log.isInfoEnabled() && timer.getTime() > ( lastTime + 2000L ) ) {
+                log.info( "Waiting ... " + timer.getTime() + "ms elapsed...." );
+            }
         }
-        return file;
+        return true;
     }
 
     /**
-     * Wrap the existing file in the required Collection&lt;LocalFile&gt;
-     * 
-     * @param existingFile
-     * @param seekFile
-     * @return
+     * @param future
+     * @param expectedSize
+     * @param outputFileName
+     * @return true if it finished normally, false if it was cancelled.
      */
-    protected Collection<LocalFile> getExistingFile( File existingFile, String seekFile ) {
-        Collection<LocalFile> fallback = new HashSet<LocalFile>();
-        LocalFile lf = LocalFile.Factory.newInstance();
-        try {
-            lf.setLocalURL( existingFile.toURI().toURL() );
-            lf.setRemoteURL( ( new File( seekFile ) ).toURI().toURL() );
-        } catch ( MalformedURLException e ) {
-            throw new RuntimeException( e );
+    protected boolean waitForDownload( FutureTask<Boolean> future, long expectedSize, File outputFile ) {
+        while ( !future.isDone() && !future.isCancelled() ) {
+            try {
+                Thread.sleep( INFO_UPDATE_INTERVAL );
+            } catch ( InterruptedException ie ) {
+                log.info( "Cancelling download" );
+                boolean cancelled = future.cancel( true );
+                if ( cancelled ) {
+                    log.info( "Download stopped successfully." );
+                    return false;
+                }
+                log.error( "Cancellation failed..." );
+                throw new RuntimeException( "Cancellation failed." );
+
+            }
+
+            if ( log.isInfoEnabled() ) {
+                log.info( ( outputFile.length() + ( expectedSize > 0 ? "/" + expectedSize : "" ) + " bytes read" ) );
+            }
         }
-        lf.setSize( existingFile.length() );
-        fallback.add( lf );
-        return fallback;
-    }
-
-    /**
-     * @return Returns the localBasePath.
-     */
-    public String getLocalBasePath() {
-        return this.localBasePath;
-    }
-
-    /**
-     * @return the force
-     */
-    public boolean isForce() {
-        return this.force;
+        log.info( "Done with download, " + outputFile.length() + " bytes read" );
+        return true;
     }
 
 }
