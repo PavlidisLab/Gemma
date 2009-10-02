@@ -521,7 +521,10 @@ public class GeoFamilyParser implements Parser {
             }
 
         } catch ( Exception e ) {
-            log.error( e, e );
+            log.error( "Parsing failed (Cancelled?) :" + e.getMessage() );
+            /*
+             * This happens if there was a cancellation.
+             */
             throw new RuntimeException( e );
         }
 
