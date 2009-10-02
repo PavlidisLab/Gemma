@@ -76,12 +76,12 @@ public class CustomDelegatingWorker implements Runnable {
      */
     private Entry methodCallEntryTemplate;
 
-    private Class businessInterface;
-
     public CustomDelegatingWorker() {
     }
+    
+    private Class<? extends Object> businessInterface;
 
-    public void setBusinessInterface( Class intf ) {
+    public void setBusinessInterface( Class<? extends Object> intf ) {
         if ( !intf.isInterface() ) {
             throw new IllegalArgumentException( intf + " must be an interface" );
         }
@@ -91,7 +91,7 @@ public class CustomDelegatingWorker implements Runnable {
     /**
      * @return
      */
-    public Class getBusinessInterface() {
+    public Class<? extends Object> getBusinessInterface() {
         return businessInterface;
     }
 
@@ -168,7 +168,9 @@ public class CustomDelegatingWorker implements Runnable {
                         }
 
                     } catch ( Exception e ) {
-                        throw new RuntimeException( "Cannot get field taskId. Exception is " + e );
+                        log.error( "Cannot get field taskId. Exception is " + e );
+                        return null;
+
                     }
                     // end custom
 
@@ -181,9 +183,9 @@ public class CustomDelegatingWorker implements Runnable {
                         // write the registration entry to the space
                         js.write( spacesRegistrationEntry, null, SpacesUtil.VERY_BIG_NUMBER_FOR_SOME_REASON );
                     } catch ( Exception ex ) {
-                        // TODO fix me, should translate to JavaSpaceException
-                        // hierarchy
-                        throw new IllegalStateException( ex.getMessage() );
+                        // Cancelled...Don't throw an exception. See bug 1387.
+                        log.error( ex, ex );
+                        return null;
                     }
 
                     return null;
