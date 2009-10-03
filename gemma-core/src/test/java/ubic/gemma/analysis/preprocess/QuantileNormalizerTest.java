@@ -51,8 +51,8 @@ import ubic.basecode.io.reader.DoubleMatrixReader;
 public class QuantileNormalizerTest extends TestCase {
     private static Log log = LogFactory.getLog( QuantileNormalizerTest.class.getName() );
 
-    DoubleMatrix tester;
-    QuantileNormalizer qn;
+    DoubleMatrix<String, String> tester;
+    QuantileNormalizer<String, String> qn;
 
     private boolean connected = false;
 
@@ -63,9 +63,10 @@ public class QuantileNormalizerTest extends TestCase {
         assert tester != null;
 
         try {
-            qn = new QuantileNormalizer();
+            qn = new QuantileNormalizer<String, String>();
             connected = true;
         } catch ( Exception e ) {
+            log.error( e );
             connected = false;
         }
 
@@ -84,11 +85,17 @@ public class QuantileNormalizerTest extends TestCase {
      */
     public void testNormalize() {
         if ( !connected ) {
-            log.warn( "Could not connect to RServe, skipping test." );
+            log.warn( "Could not access R, skipping test." );
             return;
         }
-        DoubleMatrix result = qn.normalize( tester );
+        DoubleMatrix<String, String> result = qn.normalize( tester );
         assertEquals( -0.525, result.get( 0, 9 ), 0.001 );
-    }
 
+        for ( int i = 0; i < tester.columns(); i++ ) {
+            assertEquals( tester.getColName( i ), result.getColName( i ) );
+        }
+        for ( int i = 0; i < tester.rows(); i++ ) {
+            assertEquals( tester.getRowName( i ), result.getRowName( i ) );
+        }
+    }
 }

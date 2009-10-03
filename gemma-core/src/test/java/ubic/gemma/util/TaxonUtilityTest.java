@@ -32,14 +32,12 @@ public class TaxonUtilityTest extends BaseSpringContextTest {
 
     GeneService geneService;
     TaxonService taxonService;
-
-    @SuppressWarnings("unchecked")
+ 
     public void testIsHuman() throws Exception {
         Taxon humanTax = taxonService.findByCommonName( "human" );
         assertTrue( TaxonUtility.isHuman( humanTax ) );
     }
-
-    @SuppressWarnings("unchecked")
+ 
     public void testIsMouse() throws Exception {
 
         Taxon mouseTax = taxonService.findByCommonName( "mouse" );
@@ -54,8 +52,7 @@ public class TaxonUtilityTest extends BaseSpringContextTest {
 
     }
 
-    @Override
-    @SuppressWarnings("unchecked")
+    @Override 
     protected void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();
 
