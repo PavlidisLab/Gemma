@@ -24,7 +24,7 @@ import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
  * @author pavlidis
  * @version $Id$
  */
-public interface Filter<T extends ExpressionDataMatrix> {
+public interface Filter<T extends ExpressionDataMatrix<Double>> {
 
     /**
      * Remove some rows from the input matrix, return the revised matrix.

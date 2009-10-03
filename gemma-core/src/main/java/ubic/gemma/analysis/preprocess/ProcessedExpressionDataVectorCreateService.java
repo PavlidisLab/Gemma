@@ -226,9 +226,8 @@ public class ProcessedExpressionDataVectorCreateService {
             if ( missingValues == null || intensities == null ) {
                 log.warn( "Could not locate intensity matrix for " + ee + ", rank computation skipped" );
                 return processedVectors;
-            } else {
-                this.maskMissingValues( intensities, missingValues );
             }
+            this.maskMissingValues( intensities, missingValues );
 
         } else {
             intensities = new ExpressionDataDoubleMatrix( processedVectors );

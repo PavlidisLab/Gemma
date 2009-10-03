@@ -26,6 +26,11 @@ package ubic.gemma.analysis.preprocess.filter;
  */
 public class InsufficientDataException extends RuntimeException {
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 1L;
+
     public InsufficientDataException( String message ) {
         super( message );
     }

@@ -20,6 +20,8 @@ package ubic.gemma.analysis.preprocess;
 
 import java.io.IOException;
 
+import org.apache.commons.lang.ArrayUtils;
+
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.expression.designElement.DesignElement;
@@ -30,17 +32,25 @@ import ubic.gemma.model.expression.designElement.DesignElement;
  */
 public class ExpressionDataQuantileNormalizer {
 
-//    public static ExpressionDataDoubleMatrix normalize( ExpressionDataDoubleMatrix matrix ) {
-//
-//        DoubleMatrixNamed<DesignElement, Integer> rawMatrix = matrix.getNamedMatrix();
-//
-//        try {
-//            QuantileNormalizer normalizer = new QuantileNormalizer();
-//            DoubleMatrixNamed normalized = normalizer.normalize( rawMatrix );
-//        } catch ( IOException e ) {
-//            throw new RuntimeException( e );
-//        }
-//
-//    }
+    /**
+     * Quantile normalize the matrix (in place)
+     * 
+     * @param matrix
+     */
+    public static void normalize( ExpressionDataDoubleMatrix matrix ) {
 
+        DoubleMatrix<DesignElement, Integer> rawMatrix = matrix.getMatrix();
+
+        try {
+            QuantileNormalizer normalizer = new QuantileNormalizer();
+            DoubleMatrix normalized = normalizer.normalize( rawMatrix );
+
+            for ( int i = 0; i < normalized.rows(); i++ ) {
+                matrix.setRow( i, ArrayUtils.toObject( normalized.getRow( i ) ) );
+            }
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
+        }
+
+    }
 }

@@ -65,9 +65,9 @@ public class TwoWayAnovaWithoutInteractionsAnalyzer extends AbstractTwoWayAnovaA
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.analysis.expression.diff.AbstractDifferentialExpressionAnalyzer#generateHistograms(java.lang.String,
-     *      java.util.ArrayList, int, int, int, double[])
+     * @see
+     * ubic.gemma.analysis.expression.diff.AbstractDifferentialExpressionAnalyzer#generateHistograms(java.lang.String,
+     * java.util.ArrayList, int, int, int, double[])
      */
     @Override
     protected Collection<Histogram> generateHistograms( String histFileName, ArrayList<ExperimentalFactor> effects,
@@ -153,7 +153,10 @@ public class TwoWayAnovaWithoutInteractionsAnalyzer extends AbstractTwoWayAnovaA
 
         command.append( "apply(" );
         command.append( matrixName );
-        command.append( ", 1, function(x) {anova(aov(x ~ " + factorA + "+" + factorB + "))}" );
+        
+        String modelDeclaration = "x ~ " + factorA + "+" + factorB;
+        
+        command.append( ", 1, function(x) {anova(aov(" + modelDeclaration + "))}" );
         command.append( ")" );
 
         log.info( "Starting R analysis ... please wait!" );
@@ -177,8 +180,8 @@ public class TwoWayAnovaWithoutInteractionsAnalyzer extends AbstractTwoWayAnovaA
                 mainEffectBPvalues[k] = p;
                 k++;
             } else {
-                throw new RuntimeException( "Too many pvalues for a given proble.  Should have " + NUM_RESULTS_FROM_R
-                        + " pvalues per proble." );
+                throw new RuntimeException( "Too many pvalues for a given probe.  Should have " + NUM_RESULTS_FROM_R
+                        + " pvalues per probe." );
             }
         }
 

@@ -29,7 +29,7 @@ import ubic.gemma.analysis.util.RCommander;
  * @author pavlidis
  * @version $Id$
  */
-public class PairwiseLoessNormalizer extends RCommander implements Normalizer {
+public class PairwiseLoessNormalizer extends RCommander implements Normalizer<String, String> {
 
     public PairwiseLoessNormalizer() throws IOException {
         super();
@@ -41,7 +41,7 @@ public class PairwiseLoessNormalizer extends RCommander implements Normalizer {
      * 
      * @see ubic.gemma.model.analysis.preprocess.Normalizer#normalize(baseCode.dataStructure.matrix.DoubleMatrix)
      */
-    public DoubleMatrix normalize( DoubleMatrix dataMatrix ) {
+    public DoubleMatrix<String, String> normalize( DoubleMatrix<String, String> dataMatrix ) {
         log.debug( "Normalizing..." );
         String matrixvar = rc.assignMatrix( dataMatrix );
         rc.voidEval( "result<-normalize.loess(" + matrixvar + ")" );

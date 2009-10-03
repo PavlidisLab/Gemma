@@ -20,6 +20,7 @@ package ubic.gemma.analysis.preprocess;
 
 import java.io.IOException;
 
+import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.gemma.analysis.util.RCommander;
 
@@ -37,7 +38,7 @@ import ubic.gemma.analysis.util.RCommander;
  * @author pavlidis
  * @version $Id$
  */
-public class QuantileNormalizer extends RCommander implements Normalizer {
+public class QuantileNormalizer<R, C> extends RCommander implements Normalizer<R, C> {
 
     public QuantileNormalizer() throws IOException {
         super();
@@ -46,13 +47,24 @@ public class QuantileNormalizer extends RCommander implements Normalizer {
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.analysis.preprocess.Normalizer#normalize(baseCode.dataStructure.matrix.DenseDoubleMatrix2DNamed)
+     * @see
+     * ubic.gemma.model.analysis.preprocess.Normalizer#normalize(baseCode.dataStructure.matrix.DenseDoubleMatrix2DNamed)
      */
-    public DoubleMatrix normalize( DoubleMatrix dataMatrix ) {
+    public DoubleMatrix<R, C> normalize( DoubleMatrix<R, C> dataMatrix ) {
         log.debug( "Normalizing..." );
         String matrixvar = this.rc.assignMatrix( dataMatrix );
         this.rc.voidEval( "result<-normalize.quantiles(" + matrixvar + ")" );
-        return rc.retrieveMatrix( "result" );
+        DoubleMatrix<String, String> plainResult = rc.retrieveMatrix( "result" );
+
+        /*
+         * IMPORTANT this assumes that normalize.quantiles gives us the matrix back with the same row/col ordering as
+         * the original!
+         */
+        DoubleMatrix<R, C> finalResult = new DenseDoubleMatrix<R, C>( plainResult.getRawMatrix() );
+        finalResult.setColumnNames( dataMatrix.getColNames() );
+        finalResult.setRowNames( dataMatrix.getRowNames() );
+
+        return finalResult;
+
     }
 }

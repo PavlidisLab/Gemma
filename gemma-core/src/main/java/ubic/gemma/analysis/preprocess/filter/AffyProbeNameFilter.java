@@ -59,18 +59,23 @@ public class AffyProbeNameFilter implements Filter<ExpressionDataDoubleMatrix> {
             switch ( criteria[i] ) {
                 case ST: {
                     skip_ST = true;
+                    break;
                 }
                 case AFFX: {
                     skip_AFFX = true;
+                    break;
                 }
                 case F: {
                     skip_F = true;
+                    break;
                 }
                 case X: {
                     skip_X = true;
+                    break;
                 }
                 case G: {
                     skip_G = true;
+                    break;
                 }
                 default: {
                     break;
@@ -81,7 +86,6 @@ public class AffyProbeNameFilter implements Filter<ExpressionDataDoubleMatrix> {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.datastructure.filter.Filter#filter(ubic.gemma.datastructure.matrix.ExpressionDataMatrix)
      */
     public ExpressionDataDoubleMatrix filter( ExpressionDataDoubleMatrix data ) {

@@ -26,6 +26,11 @@ import ubic.gemma.analysis.preprocess.filter.InsufficientDataException;
  */
 public class InsufficientProbesException extends InsufficientDataException {
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 1L;
+
     public InsufficientProbesException() {
         super();
     }

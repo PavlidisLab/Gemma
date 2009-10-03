@@ -18,8 +18,8 @@
  */
 package ubic.gemma.analysis.preprocess;
 
-import ubic.basecode.dataStructure.matrix.DoubleMatrixFactory;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
+import ubic.basecode.dataStructure.matrix.FastRowAccessDoubleMatrix;
 
 /**
  * Implements simplest background subtraction, with the option to set small values to a preset value.
@@ -27,7 +27,7 @@ import ubic.basecode.dataStructure.matrix.DoubleMatrix;
  * @author pavlidis
  * @version $Id$
  */
-public class SimpleBackgroundSubtraction implements BackgroundAdjuster {
+public class SimpleBackgroundSubtraction<R, C> implements BackgroundAdjuster<R, C> {
 
     private double lowerLimit = Double.MIN_VALUE;
 
@@ -49,18 +49,17 @@ public class SimpleBackgroundSubtraction implements BackgroundAdjuster {
      *      baseCode.dataStructure.matrix.DoubleMatrix)
      * @see #setLowerLimit(double)
      */
-    public DoubleMatrix adjust( DoubleMatrix signal, DoubleMatrix background ) {
+    public DoubleMatrix<R, C> adjust( DoubleMatrix<R, C> signal, DoubleMatrix<R, C> background ) {
         int rows = signal.rows();
         int cols = signal.columns();
         if ( rows != background.rows() ) throw new IllegalArgumentException();
         if ( cols != background.columns() ) throw new IllegalArgumentException();
 
-        DoubleMatrix result = DoubleMatrixFactory.fastrow( rows, cols );
+        DoubleMatrix<R, C> result = new FastRowAccessDoubleMatrix<R, C>( rows, cols );
 
         for ( int i = 0; i < rows; i++ ) {
-            for ( int j = 0; j < rows; j++ ) {
-                result.setByKeys( i, j, Math
-                        .max( this.lowerLimit, signal.get( i, j ) - background.get( i, j ) ) );
+            for ( int j = 0; j < cols; j++ ) {
+                result.set( i, j, Math.max( this.lowerLimit, signal.get( i, j ) - background.get( i, j ) ) );
             }
         }
         return result;

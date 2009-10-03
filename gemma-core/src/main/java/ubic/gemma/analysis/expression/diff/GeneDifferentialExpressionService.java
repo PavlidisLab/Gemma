@@ -268,8 +268,7 @@ public class GeneDifferentialExpressionService {
      * @param threshold : the cutoff to determine if diff expressed
      * @param limit : the maximum number of results to return (null for all)
      * @return
-     */
-    @SuppressWarnings("unchecked")
+     */ 
     public Collection<DifferentialExpressionValueObject> getDifferentialExpression( Gene gene, Collection<ExpressionExperiment> ees, double threshold, Integer limit) {
 
         Collection<DifferentialExpressionValueObject> devos = new ArrayList<DifferentialExpressionValueObject>();

@@ -2,7 +2,6 @@ package ubic.gemma.analysis.expression.diff;
 
 import java.util.Collection;
 
-import ubic.gemma.image.LinkOutValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 

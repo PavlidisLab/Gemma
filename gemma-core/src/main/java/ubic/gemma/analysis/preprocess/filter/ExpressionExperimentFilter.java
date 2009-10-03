@@ -29,8 +29,7 @@ import ubic.gemma.analysis.preprocess.InsufficientProbesException;
 import ubic.gemma.analysis.preprocess.filter.AffyProbeNameFilter.Pattern;
 import ubic.gemma.analysis.preprocess.filter.RowLevelFilter.Method;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.expression.arrayDesign.TechnologyType;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign; 
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.DesignElement;
@@ -308,39 +307,39 @@ public class ExpressionExperimentFilter {
         return eeDoubleMatrix;
     }
 
-    /**
-     * Determine if the expression experiment uses two-color arrays.
-     * 
-     * @param ee
-     * @return
-     * @throws UnsupportedOperationException if the ee uses both two color and one-color technologies.
-     */
-    private boolean isTwoColor() {
-        Boolean answer = null;
-        for ( ArrayDesign arrayDesign : arrayDesignsUsed ) {
-            TechnologyType techType = arrayDesign.getTechnologyType();
-            boolean isTwoC = techType.equals( TechnologyType.TWOCOLOR ) || techType.equals( TechnologyType.DUALMODE );
-            if ( answer != null && !answer.equals( isTwoC ) ) {
-                throw new UnsupportedOperationException(
-                        "Gemma cannot handle experiments that mix one- and two-color arrays" );
-            }
-            answer = isTwoC;
-        }
-        return answer;
-    }
-
-    /**
-     * @param matrix
-     * @return filtered matrix
-     */
-    private ExpressionDataDoubleMatrix lowCVFilter( ExpressionDataDoubleMatrix matrix ) {
-        RowLevelFilter rowLevelFilter = new RowLevelFilter();
-        rowLevelFilter.setMethod( Method.CV );
-        rowLevelFilter.setLowCut( config.getLowVarianceCut() );
-        rowLevelFilter.setRemoveAllNegative( false );
-        rowLevelFilter.setUseAsFraction( true );
-        return rowLevelFilter.filter( matrix );
-    }
+//    /**
+//     * Determine if the expression experiment uses two-color arrays.
+//     * 
+//     * @param ee
+//     * @return
+//     * @throws UnsupportedOperationException if the ee uses both two color and one-color technologies.
+//     */
+//    private boolean isTwoColor() {
+//        Boolean answer = null;
+//        for ( ArrayDesign arrayDesign : arrayDesignsUsed ) {
+//            TechnologyType techType = arrayDesign.getTechnologyType();
+//            boolean isTwoC = techType.equals( TechnologyType.TWOCOLOR ) || techType.equals( TechnologyType.DUALMODE );
+//            if ( answer != null && !answer.equals( isTwoC ) ) {
+//                throw new UnsupportedOperationException(
+//                        "Gemma cannot handle experiments that mix one- and two-color arrays" );
+//            }
+//            answer = isTwoC;
+//        }
+//        return answer;
+//    }
+//
+//    /**
+//     * @param matrix
+//     * @return filtered matrix
+//     */
+//    private ExpressionDataDoubleMatrix lowCVFilter( ExpressionDataDoubleMatrix matrix ) {
+//        RowLevelFilter rowLevelFilter = new RowLevelFilter();
+//        rowLevelFilter.setMethod( Method.CV );
+//        rowLevelFilter.setLowCut( config.getLowVarianceCut() );
+//        rowLevelFilter.setRemoveAllNegative( false );
+//        rowLevelFilter.setUseAsFraction( true );
+//        return rowLevelFilter.filter( matrix );
+//    }
 
     /**
      * @param matrix

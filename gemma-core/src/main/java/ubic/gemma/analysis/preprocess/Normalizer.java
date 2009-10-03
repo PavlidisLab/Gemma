@@ -26,11 +26,11 @@ import ubic.basecode.dataStructure.matrix.DoubleMatrix;
  * @author pavlidis
  * @version $Id$
  */
-public interface Normalizer {
+public interface Normalizer<R, C> {
 
     /**
      * @param dataMatrix
      * @return
      */
-    public DoubleMatrix normalize( DoubleMatrix dataMatrix );
+    public DoubleMatrix<R, C> normalize( DoubleMatrix<R, C> dataMatrix );
 }
