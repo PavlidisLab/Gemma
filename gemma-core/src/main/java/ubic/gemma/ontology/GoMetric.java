@@ -34,26 +34,23 @@ import ubic.basecode.dataStructure.matrix.SparseDoubleMatrix;
 import ubic.gemma.model.association.Gene2GOAssociationService;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.model.genome.gene.GeneService;
 
 /**
  * @author meeta
  * @spring.bean id="goMetric"
  * @spring.property name="gene2GOAssociationService" ref="gene2GOAssociationService"
- * @spring.property name="geneService" ref="geneService"
  * @spring.property name="geneOntologyService" ref="geneOntologyService"
  */
 public class GoMetric {
 
     private Gene2GOAssociationService gene2GOAssociationService;
-    private GeneService geneService;
     private GeneOntologyService geneOntologyService;
     private boolean partOf = true;
-    
+
     private String process = "http://purl.org/obo/owl/GO#GO_0008150";
     private String function = "http://purl.org/obo/owl/GO#GO_0003674";
     private String component = "http://purl.org/obo/owl/GO#GO_0005575";
-    
+
     public static final String BASE_GO_URI = "http://purl.org/obo/owl/GO#";
 
     private static org.apache.commons.logging.Log log = LogFactory.getLog( GoMetric.class.getName() );
@@ -67,13 +64,6 @@ public class GoMetric {
      */
     public void setGene2GOAssociationService( Gene2GOAssociationService gene2GOAssociationService ) {
         this.gene2GOAssociationService = gene2GOAssociationService;
-    }
-
-    /**
-     * @param geneService the geneService to set
-     */
-    public void setGeneService( GeneService geneService ) {
-        this.geneService = geneService;
     }
 
     /**
@@ -96,7 +86,7 @@ public class GoMetric {
 
                 if ( ( uri.equalsIgnoreCase( BASE_GO_URI + "GO_0008150" ) )
                         || ( uri.equalsIgnoreCase( BASE_GO_URI + "GO_0003674" ) )
-                        || ( uri.equalsIgnoreCase( BASE_GO_URI + "GO_0005575" ) ) )continue;
+                        || ( uri.equalsIgnoreCase( BASE_GO_URI + "GO_0005575" ) ) ) continue;
 
                 if ( countMap.containsKey( uri ) ) {
                     int value = countMap.get( uri );
@@ -146,10 +136,10 @@ public class GoMetric {
      */
     public Double computeMaxSimilarity( Gene queryGene, Gene targetGene, Map<String, Double> GOProbMap, Metric metric ) {
 
-        HashSet<OntologyTerm> masterGO = getOntologyTerms( queryGene );
+        Collection<OntologyTerm> masterGO = getOntologyTerms( queryGene );
         if ( ( masterGO == null ) || masterGO.isEmpty() ) return 0.0;
 
-        HashSet<OntologyTerm> coExpGO = getOntologyTerms( targetGene );
+        Collection<OntologyTerm> coExpGO = getOntologyTerms( targetGene );
         if ( ( coExpGO == null ) || coExpGO.isEmpty() ) return 0.0;
 
         double checkScore = 0.0;
@@ -202,10 +192,10 @@ public class GoMetric {
             return score;
         }
 
-        HashSet<OntologyTerm> masterGO = getOntologyTerms( queryGene );
+        Collection<OntologyTerm> masterGO = getOntologyTerms( queryGene );
         if ( ( masterGO == null ) || masterGO.isEmpty() ) return 0.0;
 
-        HashSet<OntologyTerm> coExpGO = getOntologyTerms( targetGene );
+        Collection<OntologyTerm> coExpGO = getOntologyTerms( targetGene );
         if ( ( coExpGO == null ) || coExpGO.isEmpty() ) return 0.0;
 
         double total = 0;
@@ -239,10 +229,10 @@ public class GoMetric {
             double avgScore = total / count;
             log.info( "score for " + queryGene + " and " + targetGene + " is " + avgScore );
             return avgScore;
-        } else {
-            log.info( "NO score for " + queryGene + " and " + targetGene );
-            return 0.0;
         }
+        log.info( "NO score for " + queryGene + " and " + targetGene );
+        return 0.0;
+
     }
 
     /**
@@ -309,7 +299,7 @@ public class GoMetric {
             if ( coExpGO.contains( o ) && !isRoot( o ) ) overlappingTerms.add( o );
         }
 
-        double avgScore = ( double ) overlappingTerms.size();
+        double avgScore = overlappingTerms.size();
         return avgScore;
     }
 
@@ -319,14 +309,14 @@ public class GoMetric {
      * @param geneGoMap
      * @return number of overlapping terms
      */
-    
+
     public Double computeSimpleOverlap( Gene g, Gene coexpG, Map<Long, Collection<String>> geneGoMap ) {
 
         Collection<String> masterGO = geneGoMap.get( g.getId() );
         Collection<String> coExpGO = geneGoMap.get( coexpG.getId() );
-        
+
         double score = 0.0;
-        
+
         if ( ( coExpGO == null ) || coExpGO.isEmpty() ) return 0.0;
 
         if ( ( masterGO == null ) || masterGO.isEmpty() ) return 0.0;
@@ -339,43 +329,43 @@ public class GoMetric {
                 if ( ontologyEntry.equalsIgnoreCase( process ) || ontologyEntry.equalsIgnoreCase( function )
                         || ontologyEntry.equalsIgnoreCase( component ) ) continue;
 
-                if ( ontologyEntry.equalsIgnoreCase( ontologyEntryC ) )
-                    score++;
+                if ( ontologyEntry.equalsIgnoreCase( ontologyEntryC ) ) score++;
             }
         }
-        
-        return score;    
+
+        return score;
     }
-    
+
     /**
-     * Tailored to handle computing overlap between two gene lists which may
-     * contain duplicate genes of the same name but different IDs.  If gene
-     * lists do not contain duplicates (size = 1) the result will be the same as that of
+     * Tailored to handle computing overlap between two gene lists which may contain duplicate genes of the same name
+     * but different IDs. If gene lists do not contain duplicates (size = 1) the result will be the same as that of
      * computing simple overlap.
+     * 
      * @param sameGenes1
      * @param sameGenes2
      * @param geneGoMap
      * @return number of overlapping terms between merged sets of GO terms for duplicate gene lists
-     */    
-    public Double computeMergedOverlap(List<Gene> sameGenes1, List<Gene> sameGenes2, Map<Long, Collection<String>> geneGoMap ){
+     */
+    public Double computeMergedOverlap( List<Gene> sameGenes1, List<Gene> sameGenes2,
+            Map<Long, Collection<String>> geneGoMap ) {
         HashSet<String> mergedGoTerms1 = new HashSet<String>();
         HashSet<String> mergedGoTerms2 = new HashSet<String>();
-        
-        for(Gene gene1 : sameGenes1){
-            if ( geneGoMap.containsKey( gene1.getId() ) ){
-                mergedGoTerms1.addAll( geneGoMap.get( gene1.getId()) );
+
+        for ( Gene gene1 : sameGenes1 ) {
+            if ( geneGoMap.containsKey( gene1.getId() ) ) {
+                mergedGoTerms1.addAll( geneGoMap.get( gene1.getId() ) );
             }
         }
-        for(Gene gene2 : sameGenes2){
-            if ( geneGoMap.containsKey( gene2.getId() ) ){
-                mergedGoTerms2.addAll( geneGoMap.get( gene2.getId()) );
+        for ( Gene gene2 : sameGenes2 ) {
+            if ( geneGoMap.containsKey( gene2.getId() ) ) {
+                mergedGoTerms2.addAll( geneGoMap.get( gene2.getId() ) );
             }
         }
-        
-        if ( mergedGoTerms1.isEmpty() || mergedGoTerms2.isEmpty()) return 0.0;
-        
+
+        if ( mergedGoTerms1.isEmpty() || mergedGoTerms2.isEmpty() ) return 0.0;
+
         double score = 0.0;
-        
+
         for ( String goTerm1 : mergedGoTerms1 ) {
             if ( goTerm1.equalsIgnoreCase( process ) || goTerm1.equalsIgnoreCase( function )
                     || goTerm1.equalsIgnoreCase( component ) ) continue;
@@ -384,14 +374,13 @@ public class GoMetric {
                 if ( goTerm2.equalsIgnoreCase( process ) || goTerm2.equalsIgnoreCase( function )
                         || goTerm2.equalsIgnoreCase( component ) ) continue;
 
-                if ( goTerm1.equalsIgnoreCase( goTerm2 ) )
-                    score++;
+                if ( goTerm1.equalsIgnoreCase( goTerm2 ) ) score++;
             }
-        }        
-        
+        }
+
         return score;
     }
-    
+
     /**
      * @param gene2go Map
      * @param boolean weight
@@ -400,9 +389,9 @@ public class GoMetric {
     public DoubleMatrix<Long, String> createVectorMatrix( Map<Long, Collection<String>> gene2go, boolean weight ) {
 
         Map<String, Double> GOTermFrequency = new HashMap<String, Double>();
-        List<String> goTerms =  new ArrayList<String> (geneOntologyService.getAllGOTermIds());
-        List<Long> geneSet = new ArrayList<Long> (gene2go.keySet());
-        DoubleMatrix<Long, String> gene2term = new SparseDoubleMatrix<Long, String>(geneSet.size(), goTerms.size());
+        List<String> goTerms = new ArrayList<String>( geneOntologyService.getAllGOTermIds() );
+        List<Long> geneSet = new ArrayList<Long>( gene2go.keySet() );
+        DoubleMatrix<Long, String> gene2term = new SparseDoubleMatrix<Long, String>( geneSet.size(), goTerms.size() );
 
         if ( weight ) {
             GOTermFrequency = createWeightMap( getTermOccurrence( gene2go ), gene2go.keySet().size() );
@@ -437,7 +426,7 @@ public class GoMetric {
 
         Map<String, Double> weightMap = new HashMap<String, Double>();
         for ( String id : GOFreq.keySet() ) {
-            Double weightedGO = Math.log10( ( double ) N  / GOFreq.get( id ));
+            Double weightedGO = Math.log10( ( double ) N / GOFreq.get( id ) );
             weightMap.put( id, weightedGO );
         }
         return weightMap;
@@ -558,6 +547,8 @@ public class GoMetric {
     }
 
     /**
+     * FIXME add unsupported methods.
+     * 
      * @param metric
      * @param pmin
      * @param probM
@@ -577,6 +568,14 @@ public class GoMetric {
             case resnik:
                 score = calcResnik( pmin );
                 break;
+            case cosine:
+                throw new UnsupportedOperationException( "cosine not supported yet" );
+            case kappa:
+                throw new UnsupportedOperationException( "kappa not supported yet" );
+            case percent:
+                throw new UnsupportedOperationException( "percent not supported yet" );
+            case simple:
+                break;
         }
 
         return score;
@@ -586,7 +585,7 @@ public class GoMetric {
      * @param gene
      * @returndirect GO annotation terms
      */
-    private HashSet<OntologyTerm> getOntologyTerms( Gene gene ) {
+    private Collection<OntologyTerm> getOntologyTerms( Gene gene ) {
 
         Collection<VocabCharacteristic> termsVoc = gene2GOAssociationService.findByGene( gene );
         HashSet<OntologyTerm> termsGO = new HashSet<OntologyTerm>();
