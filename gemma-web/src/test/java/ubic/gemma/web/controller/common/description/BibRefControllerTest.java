@@ -107,7 +107,7 @@ public class BibRefControllerTest extends BaseSpringContextTest {
         req.addParameter( "acc", br.getPubAccession().getAccession() );
 
         ModelAndView mav = brc.handleRequest( req, new MockHttpServletResponse() );
-        assertTrue( mav != null );
+        assertNotNull( mav );
         assertEquals( "bibRefView", mav.getViewName() );
     }
 
@@ -127,7 +127,7 @@ public class BibRefControllerTest extends BaseSpringContextTest {
 
         try {
             ModelAndView mav = brc.handleRequest( req, new MockHttpServletResponse() );
-            assertTrue( mav != null );
+            assertNotNull( mav );
             assertEquals( "bibRefView", mav.getViewName() );
         } catch ( RuntimeException e ) {
             if ( e.getCause() instanceof IOException && e.getMessage().contains( "503" ) ) {
@@ -143,7 +143,6 @@ public class BibRefControllerTest extends BaseSpringContextTest {
      * 
      * @throws Exception
      */
-    @SuppressWarnings("unchecked")
     public void testDeleteOfNonExistingEntry() throws Exception {
         if ( !ready ) {
             log.error( "Test skipped due to failure to connect to NIH" );
@@ -182,7 +181,7 @@ public class BibRefControllerTest extends BaseSpringContextTest {
         req = new MockHttpServletRequest( "GET", "/bibRef/showAllEeBibRefs.html" );
 
         ModelAndView mav = brc.handleRequest( req, new MockHttpServletResponse() );
-        assertTrue( mav != null );
+        assertNotNull( mav );
         Map m = mav.getModel();
 
         assertNotNull( m.get( "bibliographicReferences" ) );
