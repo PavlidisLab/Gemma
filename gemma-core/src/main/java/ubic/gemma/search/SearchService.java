@@ -279,7 +279,8 @@ public class SearchService implements InitializingBean {
     @SuppressWarnings("unchecked")
     public Map<Class, List<SearchResult>> search( SearchSettings settings, boolean fillObjects ) {
 
-        String searchString = StringEscapeUtils.escapeJava( settings.getQuery() ); // probably not necessay to
+        String searchString = StringEscapeUtils.escapeJava( StringUtils.strip( settings.getQuery() ) ); // probably not
+        // necessay to
         // escape...
 
         if ( StringUtils.isBlank( searchString ) ) {
@@ -316,8 +317,8 @@ public class SearchService implements InitializingBean {
         }
 
         if ( settings.isSearchGenesByGO() && rawResults.size() < settings.getMaxResults() ) {
-            Collection<SearchResult> ontologyGenes = gene2GOAssociationService.findByGOTerm( searchString, settings
-                    .getTaxon() );
+            Collection<SearchResult> ontologyGenes = dbHitsToSearchResult( gene2GOAssociationService.findByGOTerm(
+                    searchString, settings.getTaxon() ) );
             accreteResults( rawResults, ontologyGenes );
         }
 
@@ -1013,7 +1014,6 @@ public class SearchService implements InitializingBean {
      * @param searchString
      * @return
      */
-    @SuppressWarnings("unchecked")
     private Collection<SearchResult> databaseBioSequenceSearch( SearchSettings settings ) {
 
         if ( !settings.isUseDatabase() ) return new HashSet<SearchResult>();
@@ -1815,7 +1815,7 @@ public class SearchService implements InitializingBean {
      * @param session
      * @return
      */
-    private Collection<SearchResult> performSearch( SearchSettings settings, CompassSession session ) {
+    Collection<SearchResult> performSearch( SearchSettings settings, CompassSession session ) {
         StopWatch watch = startTiming();
 
         String query = settings.getQuery().trim();
