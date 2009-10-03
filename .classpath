@@ -8,7 +8,7 @@
 	<classpathentry excluding="log4j.properties" including="ubic/gemma/localTestDataSource.xml" kind="src" output="build/Gemma/WEB-INF/classes" path="gemma-testing/src/main/resources"/>
 	<classpathentry excluding="mail.properties" kind="src" output="build/Gemma/WEB-INF/classes" path="gemma-core/src/main/resources"/>
 	<classpathentry kind="src" output="test-build" path="gemma-core/src/test/java"/>
-	<classpathentry kind="src" output="test-build" path="gemma-core/src/test/resources"/>
+	<classpathentry excluding="Gemma.properties|data/pubmed-test.xml" kind="src" output="test-build" path="gemma-core/src/test/resources"/>
 	<classpathentry kind="src" output="build/Gemma/WEB-INF/classes" path="gemma-core/target/generated-sources/resources"/>
 	<classpathentry kind="src" output="build/Gemma/WEB-INF/classes" path="gemma-mda/src/main/java"/>
 	<classpathentry kind="src" output="test-build" path="gemma-mda/src/test/java"/>
