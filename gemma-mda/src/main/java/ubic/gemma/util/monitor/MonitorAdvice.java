@@ -32,6 +32,11 @@ import org.springframework.util.StopWatch;
  */
 public class MonitorAdvice extends PerformanceMonitorInterceptor {
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 1L;
+
     private static final int DEFAULT_THRESHOLD = 1000;
 
     private int threshold = DEFAULT_THRESHOLD;
@@ -68,6 +73,7 @@ public class MonitorAdvice extends PerformanceMonitorInterceptor {
         }
     }
 
+    @Override
     protected boolean isLogEnabled( Log logger ) {
         return logger.isInfoEnabled();
     }

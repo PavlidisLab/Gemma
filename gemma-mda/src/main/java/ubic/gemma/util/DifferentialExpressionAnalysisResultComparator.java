@@ -50,15 +50,13 @@ public class DifferentialExpressionAnalysisResultComparator implements Comparato
     public int compare( DifferentialExpressionAnalysisResult ear1, DifferentialExpressionAnalysisResult ear2 ) {
 
         if ( ear1 != null ) {
-            if ( ear2 != null )
-                return ear1.getPvalue().compareTo( ear2.getPvalue() );
-            else
-                return 1;
-        } else {
-            if ( ear2 != null )
-                return -1;
-            else
-                return 0;
+            if ( ear2 != null ) return ear1.getPvalue().compareTo( ear2.getPvalue() );
+
+            return 1;
         }
+        if ( ear2 != null ) return -1;
+
+        return 0;
+
     }
 }
