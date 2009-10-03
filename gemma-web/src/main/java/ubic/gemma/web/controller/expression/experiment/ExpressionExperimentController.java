@@ -955,8 +955,8 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         boolean isPrivate = securityService.isPrivate( expressionExperiment );
         mav.addObject( "isPrivate", isPrivate );
 
-        if ( timer.getTime() > 100 ) {
-            log.info( "Get Experiment: " + timer.getTime() + "ms" );
+        if ( timer.getTime() > 200 ) {
+            log.info( "Get Experiment was slow: id=" + id + " " + timer.getTime() + "ms" );
         }
 
         return mav;
