@@ -55,8 +55,8 @@ public class VisualizationValueObject {
     private ExpressionExperimentValueObject eevo = null;
 
     private Collection<FactorProfile> factorProfiles;
-    
-    private static long DEFAULT_P_VALUE = 1;    //FIXME is this correct?
+
+    private static long DEFAULT_P_VALUE = 1; // FIXME is this correct?
 
     /**
      * Initialize the factor profiles.
@@ -86,7 +86,6 @@ public class VisualizationValueObject {
         this.profiles = new HashSet<GeneExpressionProfile>();
     }
 
-
     /**
      * @param Vectors to be plotted (should come from a single expression experiment)
      * @param genes Is list so that order is guaranteed. Need this so that colors are consistent.
@@ -110,8 +109,7 @@ public class VisualizationValueObject {
             Collection<Long> validatedProbeIdList, Double minPvalue ) {
         this();
 
-        if (genes != null && !genes.isEmpty())
-            populateColorMap( genes );
+        if ( genes != null && !genes.isEmpty() ) populateColorMap( genes );
 
         for ( DoubleVectorValueObject vector : vectors ) {
             if ( this.eevo == null ) {
@@ -122,7 +120,7 @@ public class VisualizationValueObject {
             }
 
             String color = null;
-            if (genes != null){
+            if ( genes != null ) {
                 for ( Gene g : genes ) {
                     if ( !vector.getGenes().contains( g ) ) {
                         continue;
@@ -143,13 +141,15 @@ public class VisualizationValueObject {
 
         }
     }
+
     /**
      * @param vectors
      * @param genes
      * @param validatedProbeList
      * @param minPvalue
      */
-    public VisualizationValueObject( Collection<DoubleVectorValueObject> vectors, List<Gene> genes, Double minPvalue, Collection<DifferentialExpressionValueObject> validatedProbes ) {
+    public VisualizationValueObject( Collection<DoubleVectorValueObject> vectors, List<Gene> genes, Double minPvalue,
+            Collection<DifferentialExpressionValueObject> validatedProbes ) {
         this();
 
         populateColorMap( genes );
@@ -160,7 +160,7 @@ public class VisualizationValueObject {
                 validatedProbeIdList.add( devo.getProbeId() );
             }
         }
-        
+
         for ( DoubleVectorValueObject vector : vectors ) {
             if ( this.eevo == null ) {
                 setEEwithPvalue( vector.getExpressionExperiment(), minPvalue );
@@ -177,19 +177,19 @@ public class VisualizationValueObject {
                 color = colorMap.get( g.getId() );
             }
 
-                int valid = 1;
-                double pValue=DEFAULT_P_VALUE;
-                
-                if (validatedProbes != null){                    
-                    for(DifferentialExpressionValueObject devo : validatedProbes){
-                        if (devo.getProbeId().equals( vector.getDesignElement().getId())){                         
-                                pValue = devo.getP();
-                                valid = 2;
-                                break;
-                        }
+            int valid = 1;
+            double pValue = DEFAULT_P_VALUE;
+
+            if ( validatedProbes != null ) {
+                for ( DifferentialExpressionValueObject devo : validatedProbes ) {
+                    if ( devo.getProbeId().equals( vector.getDesignElement().getId() ) ) {
+                        pValue = devo.getP();
+                        valid = 2;
+                        break;
                     }
                 }
-            GeneExpressionProfile profile = new GeneExpressionProfile( vector, color, valid, pValue);
+            }
+            GeneExpressionProfile profile = new GeneExpressionProfile( vector, color, valid, pValue );
 
             // If points is empty dont add
             if ( profile.getPoints() != null ) profiles.add( profile );
@@ -203,7 +203,7 @@ public class VisualizationValueObject {
     public VisualizationValueObject( DoubleVectorValueObject dvvo ) {
         this();
         setEE( dvvo.getExpressionExperiment() );
-        GeneExpressionProfile profile = new GeneExpressionProfile( dvvo, null, 0,0 );
+        GeneExpressionProfile profile = new GeneExpressionProfile( dvvo, null, 0, 0 );
         profiles.add( profile );
     }
 
@@ -257,10 +257,10 @@ public class VisualizationValueObject {
     private void populateColorMap( List<Gene> genes ) {
         int i = 0;
         if ( genes.size() > colors.length ) {
-            // / FIXME
+            // / FIXME -- we just cycle through for now.
         }
         for ( Gene g : genes ) {
-            colorMap.put( g.getId(), colors[i] );
+            colorMap.put( g.getId(), colors[i % colors.length] );
             i++;
         }
     }
