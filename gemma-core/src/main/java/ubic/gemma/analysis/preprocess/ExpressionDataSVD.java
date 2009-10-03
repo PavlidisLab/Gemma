@@ -21,9 +21,6 @@ package ubic.gemma.analysis.preprocess;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 import cern.colt.list.DoubleArrayList;
 import cern.colt.matrix.DoubleMatrix1D;
 import cern.colt.matrix.DoubleMatrix2D;
@@ -40,8 +37,8 @@ import ubic.gemma.model.expression.designElement.DesignElement;
 
 /**
  * Perform SVD on an expression data matrix, E = U S V'. The rows of the input matrix are probes (genes), following the
- * convention of Alter et al. 2000 (PNAS). Thus the U matrix columns are the <em>eigensamples</em> (eigenarrays) and
- * the V matrix columns are the <em>eigengenes</em>. See also http://genome-www.stanford.edu/SVD/.
+ * convention of Alter et al. 2000 (PNAS). Thus the U matrix columns are the <em>eigensamples</em> (eigenarrays) and the
+ * V matrix columns are the <em>eigengenes</em>. See also http://genome-www.stanford.edu/SVD/.
  * <p>
  * Because SVD can't be done on a matrix with missing values, values are imputed.
  * <p>
@@ -51,8 +48,6 @@ import ubic.gemma.model.expression.designElement.DesignElement;
  * @version $Id$
  */
 public class ExpressionDataSVD {
-
-    private static Log log = LogFactory.getLog( ExpressionDataSVD.class.getName() );
 
     SingularValueDecomposition<DesignElement, Integer> svd;
     private ExpressionDataDoubleMatrix expressionData;
@@ -184,7 +179,7 @@ public class ExpressionDataSVD {
             throw new IllegalArgumentException( "Threshold quantile should be a value between 0 and 1 exclusive" );
         }
 
-        class O implements Comparable {
+        class NormCmp implements Comparable<NormCmp> {
             int rowIndex;
             Double norm;
 
@@ -192,26 +187,26 @@ public class ExpressionDataSVD {
                 return rowIndex;
             }
 
-            public O( int rowIndex, Double norm ) {
+            public NormCmp( int rowIndex, Double norm ) {
                 super();
                 this.rowIndex = rowIndex;
                 this.norm = norm;
             }
 
-            public int compareTo( Object o ) {
-                return this.norm.compareTo( ( ( O ) o ).norm );
+            public int compareTo( NormCmp o ) {
+                return this.norm.compareTo( o.norm );
             }
 
         }
 
         // order rows by distance from the origin. This is proportional to the 1-norm.
         Algebra a = new Algebra();
-        List<O> os = new ArrayList<O>();
+        List<NormCmp> os = new ArrayList<NormCmp>();
         for ( int i = 0; i < this.expressionData.rows(); i++ ) {
             double[] row = this.getU().getRow( i );
             DoubleMatrix1D rom = new DenseDoubleMatrix1D( row );
             norm1 = a.norm1( rom );
-            os.add( new O( i, norm1 ) );
+            os.add( new NormCmp( i, norm1 ) );
         }
 
         Collections.sort( os );
@@ -221,7 +216,7 @@ public class ExpressionDataSVD {
 
         List<DesignElement> keepers = new ArrayList<DesignElement>();
         for ( int i = 0; i < quantileLimit; i++ ) {
-            O x = os.get( i );
+            NormCmp x = os.get( i );
             DesignElement d = this.expressionData.getDesignElementForRow( x.getRowIndex() );
             keepers.add( d );
         }
@@ -245,6 +240,46 @@ public class ExpressionDataSVD {
 
         for ( int i = 0; i < numComponentsToRemove; i++ ) {
             copy.set( i, i, 0.0 );
+        }
+
+        double[][] rawU = svd.getU().getRawMatrix();
+        double[][] rawS = copy.getRawMatrix();
+        double[][] rawV = svd.getV().getRawMatrix();
+
+        DoubleMatrix2D u = new DenseDoubleMatrix2D( rawU );
+        DoubleMatrix2D s = new DenseDoubleMatrix2D( rawS );
+        DoubleMatrix2D v = new DenseDoubleMatrix2D( rawV );
+
+        Algebra a = new Algebra();
+        DoubleMatrix<DesignElement, Integer> reconstructed = new DenseDoubleMatrix<DesignElement, Integer>( a.mult(
+                a.mult( u, s ), a.transpose( v ) ).toArray() );
+
+        reconstructed.setRowNames( this.expressionData.getMatrix().getRowNames() );
+        reconstructed.setColumnNames( this.expressionData.getMatrix().getColNames() );
+
+        // remask the missing values.
+        for ( int i = 0; i < reconstructed.rows(); i++ ) {
+            for ( int j = 0; j < reconstructed.columns(); j++ ) {
+                if ( Double.isNaN( this.missingValueInfo.get( i, j ) ) ) {
+                    reconstructed.set( i, j, Double.NaN );
+                }
+            }
+        }
+
+        return new ExpressionDataDoubleMatrix( this.expressionData, reconstructed );
+    }
+
+    /**
+     * Implements the method described in the SPELL paper, alternative interpretation as related by Q. Morris. Set all
+     * components to have equal weight (set all singular values to 1)
+     * 
+     * @return the reconstructed matrix; values that were missing before are re-masked.
+     */
+    public ExpressionDataDoubleMatrix equalize() {
+        DoubleMatrix<Integer, Integer> copy = svd.getS().copy();
+
+        for ( int i = 0; i < copy.columns(); i++ ) {
+            copy.set( i, i, 1.0 );
         }
 
         double[][] rawU = svd.getU().getRawMatrix();
