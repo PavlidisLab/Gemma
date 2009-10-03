@@ -191,10 +191,6 @@ public abstract class AbstractCLI {
         return commandLine.getOptionObject( opt );
     }
 
-    public Object getOptionObject( String opt ) {
-        return commandLine.getOptionObject( opt );
-    }
-
     /**
      * @return
      * @see org.apache.commons.cli.Options#getOptions()
