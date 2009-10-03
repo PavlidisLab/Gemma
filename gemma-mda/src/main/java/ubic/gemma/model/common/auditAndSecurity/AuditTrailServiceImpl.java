@@ -19,9 +19,6 @@
 package ubic.gemma.model.common.auditAndSecurity;
 
 import java.util.Calendar;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;

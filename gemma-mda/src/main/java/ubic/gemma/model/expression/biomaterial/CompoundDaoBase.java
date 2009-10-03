@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- */ 
+ */
 package ubic.gemma.model.expression.biomaterial;
 
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
@@ -34,18 +34,21 @@ public abstract class CompoundDaoBase extends HibernateDaoSupport implements
     /**
      * @see ubic.gemma.model.expression.biomaterial.CompoundDao#create(int, java.util.Collection)
      */
-    public java.util.Collection create( final int transform, final java.util.Collection entities ) {
+    public java.util.Collection<Compound> create( final int transform, final java.util.Collection<Compound> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "Compound.create - 'entities' can not be null" );
         }
-        this.getHibernateTemplate().executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                    create( transform, ( ubic.gemma.model.expression.biomaterial.Compound ) entityIterator.next() );
-                }
-                return null;
-            }
-        }  );
+        this.getHibernateTemplate().executeWithNativeSession(
+                new org.springframework.orm.hibernate3.HibernateCallback() {
+                    public Object doInHibernate( org.hibernate.Session session )
+                            throws org.hibernate.HibernateException {
+                        for ( java.util.Iterator<Compound> entityIterator = entities.iterator(); entityIterator
+                                .hasNext(); ) {
+                            create( transform, entityIterator.next() );
+                        }
+                        return null;
+                    }
+                } );
         return entities;
     }
 
@@ -81,7 +84,7 @@ public abstract class CompoundDaoBase extends HibernateDaoSupport implements
      *      ubic.gemma.model.expression.biomaterial.Compound)
      */
     @SuppressWarnings( { "unchecked" })
-    public Object find( final int transform, final java.lang.String queryString,
+    public Compound find( final int transform, final java.lang.String queryString,
             final ubic.gemma.model.expression.biomaterial.Compound compound ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
         java.util.List<Object> args = new java.util.ArrayList<Object>();
@@ -90,25 +93,22 @@ public abstract class CompoundDaoBase extends HibernateDaoSupport implements
         java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
                 argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
         Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'ubic.gemma.model.expression.biomaterial.Compound"
-                                + "' was found when executing query --> '" + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
+        if ( results.size() > 1 ) {
+            throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                    "More than one instance of 'ubic.gemma.model.expression.biomaterial.Compound"
+                            + "' was found when executing query --> '" + queryString + "'" );
+        } else if ( results.size() == 1 ) {
+            result = results.iterator().next();
         }
         result = transformEntity( transform, ( ubic.gemma.model.expression.biomaterial.Compound ) result );
-        return result;
+        return ( Compound ) result;
     }
 
     /**
      * @see ubic.gemma.model.expression.biomaterial.CompoundDao#find(int,
      *      ubic.gemma.model.expression.biomaterial.Compound)
      */
-    @SuppressWarnings( { "unchecked" })
-    public Object find( final int transform, final ubic.gemma.model.expression.biomaterial.Compound compound ) {
+    public Compound find( final int transform, final ubic.gemma.model.expression.biomaterial.Compound compound ) {
         return this
                 .find(
                         transform,
@@ -120,10 +120,9 @@ public abstract class CompoundDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.expression.biomaterial.CompoundDao#find(java.lang.String,
      *      ubic.gemma.model.expression.biomaterial.Compound)
      */
-    @SuppressWarnings( { "unchecked" })
     public ubic.gemma.model.expression.biomaterial.Compound find( final java.lang.String queryString,
             final ubic.gemma.model.expression.biomaterial.Compound compound ) {
-        return ( ubic.gemma.model.expression.biomaterial.Compound ) this.find( TRANSFORM_NONE, queryString, compound );
+        return this.find( TRANSFORM_NONE, queryString, compound );
     }
 
     /**
@@ -131,7 +130,7 @@ public abstract class CompoundDaoBase extends HibernateDaoSupport implements
      */
     public ubic.gemma.model.expression.biomaterial.Compound find(
             ubic.gemma.model.expression.biomaterial.Compound compound ) {
-        return ( ubic.gemma.model.expression.biomaterial.Compound ) this.find( TRANSFORM_NONE, compound );
+        return this.find( TRANSFORM_NONE, compound );
     }
 
     /**
@@ -139,7 +138,7 @@ public abstract class CompoundDaoBase extends HibernateDaoSupport implements
      *      ubic.gemma.model.expression.biomaterial.Compound)
      */
     @SuppressWarnings( { "unchecked" })
-    public Object findOrCreate( final int transform, final java.lang.String queryString,
+    public Compound findOrCreate( final int transform, final java.lang.String queryString,
             final ubic.gemma.model.expression.biomaterial.Compound compound ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
         java.util.List<Object> args = new java.util.ArrayList<Object>();
@@ -148,25 +147,23 @@ public abstract class CompoundDaoBase extends HibernateDaoSupport implements
         java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
                 argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
         Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'ubic.gemma.model.expression.biomaterial.Compound"
-                                + "' was found when executing query --> '" + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
+        if ( results.size() > 1 ) {
+            throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                    "More than one instance of 'ubic.gemma.model.expression.biomaterial.Compound"
+                            + "' was found when executing query --> '" + queryString + "'" );
+        } else if ( results.size() == 1 ) {
+            result = results.iterator().next();
         }
+
         result = transformEntity( transform, ( ubic.gemma.model.expression.biomaterial.Compound ) result );
-        return result;
+        return ( Compound ) result;
     }
 
     /**
      * @see ubic.gemma.model.expression.biomaterial.CompoundDao#findOrCreate(int,
      *      ubic.gemma.model.expression.biomaterial.Compound)
      */
-    @SuppressWarnings( { "unchecked" })
-    public Object findOrCreate( final int transform, final ubic.gemma.model.expression.biomaterial.Compound compound ) {
+    public Compound findOrCreate( final int transform, final ubic.gemma.model.expression.biomaterial.Compound compound ) {
         return this
                 .findOrCreate(
                         transform,
@@ -178,11 +175,9 @@ public abstract class CompoundDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.expression.biomaterial.CompoundDao#findOrCreate(java.lang.String,
      *      ubic.gemma.model.expression.biomaterial.Compound)
      */
-    @SuppressWarnings( { "unchecked" })
     public ubic.gemma.model.expression.biomaterial.Compound findOrCreate( final java.lang.String queryString,
             final ubic.gemma.model.expression.biomaterial.Compound compound ) {
-        return ( ubic.gemma.model.expression.biomaterial.Compound ) this.findOrCreate( TRANSFORM_NONE, queryString,
-                compound );
+        return this.findOrCreate( TRANSFORM_NONE, queryString, compound );
     }
 
     /**
@@ -190,251 +185,20 @@ public abstract class CompoundDaoBase extends HibernateDaoSupport implements
      */
     public ubic.gemma.model.expression.biomaterial.Compound findOrCreate(
             ubic.gemma.model.expression.biomaterial.Compound compound ) {
-        return ( ubic.gemma.model.expression.biomaterial.Compound ) this.findOrCreate( TRANSFORM_NONE, compound );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.biomaterial.CompoundDao#getAclObjectIdentityId(int, java.lang.String,
-     *      ubic.gemma.model.common.Securable)
-     */
-
-    @SuppressWarnings( { "unchecked" })
-    public Object getAclObjectIdentityId( final int transform, final java.lang.String queryString,
-            final ubic.gemma.model.common.Securable securable ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( securable );
-        argNames.add( "securable" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'java.lang.Long" + "' was found when executing query --> '"
-                                + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
-        }
-        result = transformEntity( transform, ( ubic.gemma.model.expression.biomaterial.Compound ) result );
-        return result;
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.biomaterial.CompoundDao#getAclObjectIdentityId(int,
-     *      ubic.gemma.model.common.Securable)
-     */
-
-    @SuppressWarnings( { "unchecked" })
-    public Object getAclObjectIdentityId( final int transform, final ubic.gemma.model.common.Securable securable ) {
-        return this
-                .getAclObjectIdentityId(
-                        transform,
-                        "from ubic.gemma.model.expression.biomaterial.Compound as compound where compound.securable = :securable",
-                        securable );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.biomaterial.CompoundDao#getAclObjectIdentityId(java.lang.String,
-     *      ubic.gemma.model.common.Securable)
-     */
-
-    @SuppressWarnings( { "unchecked" })
-    public java.lang.Long getAclObjectIdentityId( final java.lang.String queryString,
-            final ubic.gemma.model.common.Securable securable ) {
-        return ( java.lang.Long ) this.getAclObjectIdentityId( TRANSFORM_NONE, queryString, securable );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.biomaterial.CompoundDao#getAclObjectIdentityId(ubic.gemma.model.common.Securable)
-     */
-
-    public java.lang.Long getAclObjectIdentityId( ubic.gemma.model.common.Securable securable ) {
-        return ( java.lang.Long ) this.getAclObjectIdentityId( TRANSFORM_NONE, securable );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.biomaterial.CompoundDao#getMask(int, java.lang.String,
-     *      ubic.gemma.model.common.Securable)
-     */
-
-    @SuppressWarnings( { "unchecked" })
-    public Object getMask( final int transform, final java.lang.String queryString,
-            final ubic.gemma.model.common.Securable securable ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( securable );
-        argNames.add( "securable" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'java.lang.Integer" + "' was found when executing query --> '"
-                                + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
-        }
-        result = transformEntity( transform, ( ubic.gemma.model.expression.biomaterial.Compound ) result );
-        return result;
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.biomaterial.CompoundDao#getMask(int, ubic.gemma.model.common.Securable)
-     */
-
-    @SuppressWarnings( { "unchecked" })
-    public Object getMask( final int transform, final ubic.gemma.model.common.Securable securable ) {
-        return this
-                .getMask(
-                        transform,
-                        "from ubic.gemma.model.expression.biomaterial.Compound as compound where compound.securable = :securable",
-                        securable );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.biomaterial.CompoundDao#getMask(java.lang.String,
-     *      ubic.gemma.model.common.Securable)
-     */
-
-    @SuppressWarnings( { "unchecked" })
-    public java.lang.Integer getMask( final java.lang.String queryString,
-            final ubic.gemma.model.common.Securable securable ) {
-        return ( java.lang.Integer ) this.getMask( TRANSFORM_NONE, queryString, securable );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.biomaterial.CompoundDao#getMask(ubic.gemma.model.common.Securable)
-     */
-
-    public java.lang.Integer getMask( ubic.gemma.model.common.Securable securable ) {
-        return ( java.lang.Integer ) this.getMask( TRANSFORM_NONE, securable );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.biomaterial.CompoundDao#getMasks(int, java.lang.String, java.util.Collection)
-     */
-
-    @SuppressWarnings( { "unchecked" })
-    public Object getMasks( final int transform, final java.lang.String queryString,
-            final java.util.Collection securables ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( securables );
-        argNames.add( "securables" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'java.util.Map" + "' was found when executing query --> '"
-                                + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
-        }
-        result = transformEntity( transform, ( ubic.gemma.model.expression.biomaterial.Compound ) result );
-        return result;
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.biomaterial.CompoundDao#getMasks(int, java.util.Collection)
-     */
-
-    @SuppressWarnings( { "unchecked" })
-    public Object getMasks( final int transform, final java.util.Collection securables ) {
-        return this
-                .getMasks(
-                        transform,
-                        "from ubic.gemma.model.expression.biomaterial.Compound as compound where compound.securables = :securables",
-                        securables );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.biomaterial.CompoundDao#getMasks(java.lang.String, java.util.Collection)
-     */
-
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Map getMasks( final java.lang.String queryString, final java.util.Collection securables ) {
-        return ( java.util.Map ) this.getMasks( TRANSFORM_NONE, queryString, securables );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.biomaterial.CompoundDao#getMasks(java.util.Collection)
-     */
-
-    public java.util.Map getMasks( java.util.Collection securables ) {
-        return ( java.util.Map ) this.getMasks( TRANSFORM_NONE, securables );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.biomaterial.CompoundDao#getRecipient(int, java.lang.Long)
-     */
-
-    @SuppressWarnings( { "unchecked" })
-    public Object getRecipient( final int transform, final java.lang.Long id ) {
-        return this.getRecipient( transform,
-                "from ubic.gemma.model.expression.biomaterial.Compound as compound where compound.id = :id", id );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.biomaterial.CompoundDao#getRecipient(int, java.lang.String, java.lang.Long)
-     */
-
-    @SuppressWarnings( { "unchecked" })
-    public Object getRecipient( final int transform, final java.lang.String queryString, final java.lang.Long id ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( id );
-        argNames.add( "id" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'java.lang.String" + "' was found when executing query --> '"
-                                + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
-        }
-        result = transformEntity( transform, ( ubic.gemma.model.expression.biomaterial.Compound ) result );
-        return result;
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.biomaterial.CompoundDao#getRecipient(java.lang.Long)
-     */
-
-    public java.lang.String getRecipient( java.lang.Long id ) {
-        return ( java.lang.String ) this.getRecipient( TRANSFORM_NONE, id );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.biomaterial.CompoundDao#getRecipient(java.lang.String, java.lang.Long)
-     */
-
-    @SuppressWarnings( { "unchecked" })
-    public java.lang.String getRecipient( final java.lang.String queryString, final java.lang.Long id ) {
-        return ( java.lang.String ) this.getRecipient( TRANSFORM_NONE, queryString, id );
+        return this.findOrCreate( TRANSFORM_NONE, compound );
     }
 
     /**
      * @see ubic.gemma.model.expression.biomaterial.CompoundDao#load(int, java.lang.Long)
      */
 
-    public Object load( final int transform, final java.lang.Long id ) {
+    public Compound load( final int transform, final java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "Compound.load - 'id' can not be null" );
         }
         final Object entity = this.getHibernateTemplate().get(
                 ubic.gemma.model.expression.biomaterial.CompoundImpl.class, id );
-        return transformEntity( transform, ( ubic.gemma.model.expression.biomaterial.Compound ) entity );
+        return ( Compound ) transformEntity( transform, ( ubic.gemma.model.expression.biomaterial.Compound ) entity );
     }
 
     /**
@@ -442,15 +206,14 @@ public abstract class CompoundDaoBase extends HibernateDaoSupport implements
      */
 
     public Compound load( java.lang.Long id ) {
-        return ( ubic.gemma.model.expression.biomaterial.Compound ) this.load( TRANSFORM_NONE, id );
+        return this.load( TRANSFORM_NONE, id );
     }
 
     /**
      * @see ubic.gemma.model.expression.biomaterial.CompoundDao#loadAll()
      */
 
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Collection loadAll() {
+    public java.util.Collection<Compound> loadAll() {
         return this.loadAll( TRANSFORM_NONE );
     }
 
@@ -458,7 +221,8 @@ public abstract class CompoundDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.expression.biomaterial.CompoundDao#loadAll(int)
      */
 
-    public java.util.Collection loadAll( final int transform ) {
+    @SuppressWarnings("unchecked")
+    public java.util.Collection<Compound> loadAll( final int transform ) {
         final java.util.Collection results = this.getHibernateTemplate().loadAll(
                 ubic.gemma.model.expression.biomaterial.CompoundImpl.class );
         this.transformEntities( transform, results );
@@ -473,8 +237,7 @@ public abstract class CompoundDaoBase extends HibernateDaoSupport implements
         if ( id == null ) {
             throw new IllegalArgumentException( "Compound.remove - 'id' can not be null" );
         }
-        ubic.gemma.model.expression.biomaterial.Compound entity = ( ubic.gemma.model.expression.biomaterial.Compound ) this
-                .load( id );
+        ubic.gemma.model.expression.biomaterial.Compound entity = this.load( id );
         if ( entity != null ) {
             this.remove( entity );
         }
@@ -484,7 +247,7 @@ public abstract class CompoundDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.common.SecurableDao#remove(java.util.Collection)
      */
 
-    public void remove( java.util.Collection entities ) {
+    public void remove( java.util.Collection<Compound> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "Compound.remove - 'entities' can not be null" );
         }
@@ -505,18 +268,21 @@ public abstract class CompoundDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.common.SecurableDao#update(java.util.Collection)
      */
 
-    public void update( final java.util.Collection entities ) {
+    public void update( final java.util.Collection<Compound> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "Compound.update - 'entities' can not be null" );
         }
-        this.getHibernateTemplate().executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                    update( ( ubic.gemma.model.expression.biomaterial.Compound ) entityIterator.next() );
-                }
-                return null;
-            }
-        }  );
+        this.getHibernateTemplate().executeWithNativeSession(
+                new org.springframework.orm.hibernate3.HibernateCallback() {
+                    public Object doInHibernate( org.hibernate.Session session )
+                            throws org.hibernate.HibernateException {
+                        for ( java.util.Iterator<Compound> entityIterator = entities.iterator(); entityIterator
+                                .hasNext(); ) {
+                            update( entityIterator.next() );
+                        }
+                        return null;
+                    }
+                } );
     }
 
     /**
@@ -543,7 +309,7 @@ public abstract class CompoundDaoBase extends HibernateDaoSupport implements
      * @see #transformEntity(int,ubic.gemma.model.expression.biomaterial.Compound)
      */
 
-    protected void transformEntities( final int transform, final java.util.Collection entities ) {
+    protected void transformEntities( final int transform, final java.util.Collection<Compound> entities ) {
         switch ( transform ) {
             case TRANSFORM_NONE: // fall-through
             default:

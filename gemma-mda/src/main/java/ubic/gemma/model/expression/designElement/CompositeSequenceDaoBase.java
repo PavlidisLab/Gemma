@@ -366,7 +366,7 @@ public abstract class CompositeSequenceDaoBase extends
      * @see ubic.gemma.model.expression.designElement.CompositeSequenceDao#findByName(java.lang.String,
      *      java.lang.String)
      */
-    @SuppressWarnings( { "unchecked" })
+
     public java.util.Collection<CompositeSequence> findByName( final java.lang.String queryString,
             final java.lang.String name ) {
         return this.findByName( TRANSFORM_NONE, queryString, name );

@@ -55,13 +55,13 @@ public abstract class BioAssayDataVectorDaoBase extends org.springframework.orm.
      * @see ubic.gemma.model.expression.bioAssayData.BioAssayDataVectorDao#create(int transform,
      *      ubic.gemma.model.expression.bioAssayData.BioAssayDataVector)
      */
-    public Object create( final int transform,
+    public BioAssayDataVector create( final int transform,
             final ubic.gemma.model.expression.bioAssayData.BioAssayDataVector bioAssayDataVector ) {
         if ( bioAssayDataVector == null ) {
             throw new IllegalArgumentException( "BioAssayDataVector.create - 'bioAssayDataVector' can not be null" );
         }
         this.getHibernateTemplate().save( bioAssayDataVector );
-        return this.transformEntity( transform, bioAssayDataVector );
+        return ( BioAssayDataVector ) this.transformEntity( transform, bioAssayDataVector );
     }
 
     /**
@@ -77,8 +77,7 @@ public abstract class BioAssayDataVectorDaoBase extends org.springframework.orm.
      */
     public ubic.gemma.model.expression.bioAssayData.DataVector create(
             ubic.gemma.model.expression.bioAssayData.BioAssayDataVector bioAssayDataVector ) {
-        return ( ubic.gemma.model.expression.bioAssayData.BioAssayDataVector ) this.create( TRANSFORM_NONE,
-                bioAssayDataVector );
+        return this.create( TRANSFORM_NONE, bioAssayDataVector );
     }
 
     /**
@@ -86,7 +85,7 @@ public abstract class BioAssayDataVectorDaoBase extends org.springframework.orm.
      *      ubic.gemma.model.expression.bioAssayData.BioAssayDataVector)
      */
     @SuppressWarnings( { "unchecked" })
-    public Object find( final int transform, final java.lang.String queryString,
+    public BioAssayDataVector find( final int transform, final java.lang.String queryString,
             final ubic.gemma.model.expression.bioAssayData.BioAssayDataVector bioAssayDataVector ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
         java.util.List<Object> args = new java.util.ArrayList<Object>();
@@ -105,7 +104,7 @@ public abstract class BioAssayDataVectorDaoBase extends org.springframework.orm.
             }
         }
         result = transformEntity( transform, ( ubic.gemma.model.expression.bioAssayData.BioAssayDataVector ) result );
-        return result;
+        return ( BioAssayDataVector ) result;
     }
 
     /**
@@ -113,7 +112,7 @@ public abstract class BioAssayDataVectorDaoBase extends org.springframework.orm.
      *      ubic.gemma.model.expression.bioAssayData.BioAssayDataVector)
      */
     @SuppressWarnings( { "unchecked" })
-    public Object find( final int transform,
+    public BioAssayDataVector find( final int transform,
             final ubic.gemma.model.expression.bioAssayData.BioAssayDataVector bioAssayDataVector ) {
         return this
                 .find(
@@ -129,8 +128,7 @@ public abstract class BioAssayDataVectorDaoBase extends org.springframework.orm.
     @SuppressWarnings( { "unchecked" })
     public ubic.gemma.model.expression.bioAssayData.BioAssayDataVector find( final java.lang.String queryString,
             final ubic.gemma.model.expression.bioAssayData.BioAssayDataVector bioAssayDataVector ) {
-        return ( ubic.gemma.model.expression.bioAssayData.BioAssayDataVector ) this.find( TRANSFORM_NONE, queryString,
-                bioAssayDataVector );
+        return this.find( TRANSFORM_NONE, queryString, bioAssayDataVector );
     }
 
     /**
@@ -138,8 +136,7 @@ public abstract class BioAssayDataVectorDaoBase extends org.springframework.orm.
      */
     public ubic.gemma.model.expression.bioAssayData.BioAssayDataVector find(
             ubic.gemma.model.expression.bioAssayData.BioAssayDataVector bioAssayDataVector ) {
-        return ( ubic.gemma.model.expression.bioAssayData.BioAssayDataVector ) this.find( TRANSFORM_NONE,
-                bioAssayDataVector );
+        return this.find( TRANSFORM_NONE, bioAssayDataVector );
     }
 
     /**
