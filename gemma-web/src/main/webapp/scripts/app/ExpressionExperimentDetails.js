@@ -1,6 +1,8 @@
 Ext.namespace('Gemma');
 Ext.BLANK_IMAGE_URL = '/Gemma/images/default/s.gif';
 
+Gemma.DIFFEXVIS_QVALUE_THRESHOLD = 0.05;
+
 /**
  * This is not a visual component but we want to use it with the
  * componentmanager.
@@ -32,9 +34,8 @@ Gemma.EEPanel = Ext
 						/*
 						 * Load the EE information via an ajax call.
 						 */
-						ExpressionExperimentController
-								.loadExpressionExperimentDetails(id, this.build
-										.createDelegate(this));
+						ExpressionExperimentController.loadExpressionExperimentDetails(id, this.build
+								.createDelegate(this));
 
 					},
 
@@ -62,35 +63,30 @@ Gemma.EEPanel = Ext
 							entity.name = name;
 						}
 
-						ExpressionExperimentController.updateBasics(entity,
-								function(data) {
-									var k = new Gemma.WaitHandler();
-									k.handleWait(data, 'updated', false);
-								}.createDelegate(this));
+						ExpressionExperimentController.updateBasics(entity, function(data) {
+							var k = new Gemma.WaitHandler();
+							k.handleWait(data, 'updated', false);
+						}.createDelegate(this));
 					},
 
 					savePubMed : function() {
 						var pubmedId = Ext.getCmp('pubmed-id-field').getValue();
-						ExpressionExperimentController.updatePubMed(this.eeId,
-								pubmedId, {
-									callback : function(data) {
-										var k = new Gemma.WaitHandler();
-										k.handleWait(data, 'pubmedUpdated',
-												false);
-									}.createDelegate(this)
-								});
+						ExpressionExperimentController.updatePubMed(this.eeId, pubmedId, {
+							callback : function(data) {
+								var k = new Gemma.WaitHandler();
+								k.handleWait(data, 'pubmedUpdated', false);
+							}.createDelegate(this)
+						});
 
 					},
 
 					removePubMed : function() {
-						ExpressionExperimentController
-								.removePrimaryPublication(this.eeId, {
-									callback : function(data) {
-										var k = new Gemma.WaitHandler();
-										k.handleWait(data, 'pubmedRemove',
-												false);
-									}.createDelegate(this)
-								});
+						ExpressionExperimentController.removePrimaryPublication(this.eeId, {
+							callback : function(data) {
+								var k = new Gemma.WaitHandler();
+								k.handleWait(data, 'pubmedRemove', false);
+							}.createDelegate(this)
+						});
 					},
 
 					getPubMedHtml : function(e) {
@@ -138,8 +134,7 @@ Gemma.EEPanel = Ext
 												minLength : 7,
 												maxLength : 9,
 												allowNegative : false,
-												emptyText : this.isAdmin
-														|| this.isUser ? 'Enter pubmed id'
+												emptyText : this.isAdmin || this.isUser ? 'Enter pubmed id'
 														: 'Not Available',
 												width : 100,
 												id : 'pubmed-id-field',
@@ -147,25 +142,13 @@ Gemma.EEPanel = Ext
 												listeners : {
 													'keyup' : {
 														fn : function(e) {
-															if (Ext
-																	.getCmp(
-																			'pubmed-id-field')
-																	.isDirty()
-																	&& Ext
-																			.getCmp(
-																					'pubmed-id-field')
-																			.isValid()) {
+															if (Ext.getCmp('pubmed-id-field').isDirty()
+																	&& Ext.getCmp('pubmed-id-field').isValid()) {
 																// show save
 																// button
-																Ext
-																		.getCmp(
-																				'update-pubmed-region')
-																		.show();
+																Ext.getCmp('update-pubmed-region').show();
 															} else {
-																Ext
-																		.getCmp(
-																				'update-pubmed-region')
-																		.hide();
+																Ext.getCmp('update-pubmed-region').hide();
 															}
 														},
 														scope : this
@@ -188,10 +171,8 @@ Gemma.EEPanel = Ext
 						var result = '';
 						for ( var i = 0; i < arrayDesigns.length; i++) {
 							var ad = arrayDesigns[i];
-							result = result
-									+ '<a href="/Gemma/arrays/showArrayDesign.html?id='
-									+ ad.id + '">' + ad.shortName + '</a> - '
-									+ ad.name;
+							result = result + '<a href="/Gemma/arrays/showArrayDesign.html?id=' + ad.id + '">'
+									+ ad.shortName + '</a> - ' + ad.name;
 							if (i < arrayDesigns.length - 1) {
 								result = result + "<br/>";
 							}
@@ -212,8 +193,7 @@ Gemma.EEPanel = Ext
 										ee.id);
 						var count;
 
-						return ee.coexpressionLinkCount + "&nbsp;"
-								+ downloadCoExpressionDataLink;
+						return ee.coexpressionLinkCount + "&nbsp;" + downloadCoExpressionDataLink;
 
 					},
 
@@ -231,40 +211,25 @@ Gemma.EEPanel = Ext
 						for ( var i = 0; i < ee.diffExpressedProbes.size(); i++) {
 							var factors;
 							if (ee.diffExpressedProbes[i].experimentalFactors == null
-									|| ee.diffExpressedProbes[i].experimentalFactors
-											.size() == 0) {
+									|| ee.diffExpressedProbes[i].experimentalFactors.size() == 0) {
 								factors = "n/a";
 							} else {
-								factors = "'"
-										+ ee.diffExpressedProbes[i].experimentalFactors[0].name
-										+ "'";
+								factors = "" + ee.diffExpressedProbes[i].experimentalFactors[0].name + "";
 
-								for ( var j = 1; j < ee.diffExpressedProbes[i].experimentalFactors
-										.size(); j++) {
-									factors = factors
-											+ " x '"
-											+ ee.diffExpressedProbes[i].experimentalFactors[j].name
-											+ "'";
+								for ( var j = 1; j < ee.diffExpressedProbes[i].experimentalFactors.size(); j++) {
+									factors = factors + " x " + ee.diffExpressedProbes[i].experimentalFactors[j].name
+											+ " ";
 								}
 							}
 							if (ee.diffExpressedProbes[i].numberOfDiffExpressedProbes == 0) {
-								diffExpressionSummary = diffExpressionSummary
-										+ "&nbsp; 0";
+								diffExpressionSummary = diffExpressionSummary + "&nbsp; 0";
 							} else {
 								diffExpressionSummary = diffExpressionSummary
-										+ '&nbsp; <a href="#" onClick="Ext.getCmp(\'ee-details-panel\').visualizeDiffExpressionHandler('
-										+ ee.id
-										+ ','
-										+ ee.diffExpressedProbes[i].resultSetId
-										+ ','
-										+ factors
-										+ ') "  ext:qtip="Click to visualize differentially expressed probes for: '
-										+ factors
-										+ ' (FDR threshold='
-										+ ee.diffExpressedProbes[i].threshold
-										+ ')">'
-										+ ee.diffExpressedProbes[i].numberOfDiffExpressedProbes
-										+ '</a>';
+										+ '&nbsp; <a href="#" onClick="Ext.getCmp(\'ee-details-panel\').visualizeDiffExpressionHandler(\''
+										+ ee.id + '\',\'' + ee.diffExpressedProbes[i].resultSetId + '\',\'' + factors
+										+ '\')"  ext:qtip="Click to visualize differentially expressed probes for: '
+										+ factors + ' (FDR threshold=' + ee.diffExpressedProbes[i].threshold + ')">'
+										+ ee.diffExpressedProbes[i].numberOfDiffExpressedProbes + '</a>';
 							}
 						}
 
@@ -277,18 +242,25 @@ Gemma.EEPanel = Ext
 
 					},
 
-					visualizeDiffExpressionHandler : function(eeid,
-							diffResultId, factorDetails) {
+					/**
+					 * 
+					 */
+					visualizeDiffExpressionHandler : function(eeid, diffResultId, factorDetails) {
 
 						var params = {}
-						this.visDiffWindow = new Gemma.EEDetailsDiffExpressionVisualizationWindow(
-								{
-									factorDetails : factorDetails
-								});
-						this.visDiffWindow.displayWindow(eeid, diffResultId);
+						this.visDiffWindow = new Gemma.VectorDisplay( {
+							readMethod : DEDVController.getDEDVForDiffExVisualizationByThreshold,
+							title : "Top diff. ex. probes for " + factorDetails
+						});
+						this.visDiffWindow.show( {
+							params : [ eeid, diffResultId, Gemma.DIFFEXVIS_QVALUE_THRESHOLD ]
+						});
 
 					},
 
+					/**
+					 * 
+					 */
 					renderSourceDatabaseEntry : function(ee) {
 						var result = '';
 
@@ -296,18 +268,12 @@ Gemma.EEPanel = Ext
 						if (ee.externalDatabase == 'GEO') {
 							logo = '/Gemma/images/logo/geoTiny.png';
 							result = '<a target="_blank" href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc='
-									+ ee.accession
-									+ '"><img src="'
-									+ logo
-									+ '"/></a>';
+									+ ee.accession + '"><img src="' + logo + '"/></a>';
 
 						} else if (ee.externalDatabase == 'ArrayExpress') {
 							logo = '/Gemma/images/logo/arrayExpressTiny.png';
 							result = '<a target="_blank" href="http://www.ebi.ac.uk/microarray-as/aer/result?queryFor=Experiment&eAccession='
-									+ ee.accession
-									+ '"><img src="'
-									+ logo
-									+ '"/></a>';
+									+ ee.accession + '"><img src="' + logo + '"/></a>';
 						}
 
 						return result;
@@ -326,8 +292,7 @@ Gemma.EEPanel = Ext
 						if (this.editable) {
 							result = result
 									+ '&nbsp;&nbsp<a href="/Gemma/expressionExperiment/showBioAssaysFromExpressionExperiment.html?id='
-									+ ee.id
-									+ '"><img src="/Gemma/images/icons/magnifier.png"/></a>';
+									+ ee.id + '"><img src="/Gemma/images/icons/magnifier.png"/></a>';
 						}
 
 						return result;
@@ -370,13 +335,8 @@ Gemma.EEPanel = Ext
 								suggestRun = false;
 							}
 
-							return '<span style="color:'
-									+ color
-									+ ';" '
-									+ qtip
-									+ '>'
-									+ Ext.util.Format.date(ee.dateLinkAnalysis,
-											'y/M/d') + '&nbsp;'
+							return '<span style="color:' + color + ';" ' + qtip + '>'
+									+ Ext.util.Format.date(ee.dateLinkAnalysis, 'y/M/d') + '&nbsp;'
 									+ (suggestRun ? runurl : '');
 						} else {
 							return '<span style="color:#3A3;">Needed</span>&nbsp;' + runurl;
@@ -393,8 +353,7 @@ Gemma.EEPanel = Ext
 						 * might need tweaking).
 						 */
 
-						if (ee.technologyType != 'ONECOLOR'
-								&& ee.hasEitherIntensity) {
+						if (ee.technologyType != 'ONECOLOR' && ee.hasEitherIntensity) {
 
 							if (ee.dateMissingValueAnalysis) {
 								var type = ee.missingValueAnalysisEventType;
@@ -406,14 +365,8 @@ Gemma.EEPanel = Ext
 									qtip = 'ext:qtip="Failed"';
 								}
 
-								return '<span style="color:'
-										+ color
-										+ ';" '
-										+ qtip
-										+ '>'
-										+ Ext.util.Format.date(
-												ee.dateMissingValueAnalysis,
-												'y/M/d') + '&nbsp;'
+								return '<span style="color:' + color + ';" ' + qtip + '>'
+										+ Ext.util.Format.date(ee.dateMissingValueAnalysis, 'y/M/d') + '&nbsp;'
 										+ (suggestRun ? runurl : '');
 							} else {
 								return '<span style="color:#3A3;">Needed</span>&nbsp;' + runurl;
@@ -442,15 +395,8 @@ Gemma.EEPanel = Ext
 								qtip = 'ext:qtip="Failed"';
 							}
 
-							return '<span style="color:'
-									+ color
-									+ ';" '
-									+ qtip
-									+ '>'
-									+ Ext.util.Format
-											.date(
-													ee.dateProcessedDataVectorComputation,
-													'y/M/d') + '&nbsp;'
+							return '<span style="color:' + color + ';" ' + qtip + '>'
+									+ Ext.util.Format.date(ee.dateProcessedDataVectorComputation, 'y/M/d') + '&nbsp;'
 									+ (suggestRun ? runurl : '');
 						} else {
 							return '<span style="color:#3A3;">Needed</span>&nbsp;' + runurl;
@@ -476,14 +422,8 @@ Gemma.EEPanel = Ext
 									qtip = 'ext:qtip="Failed"';
 								}
 
-								return '<span style="color:'
-										+ color
-										+ ';" '
-										+ qtip
-										+ '>'
-										+ Ext.util.Format.date(
-												ee.dateDifferentialAnalysis,
-												'y/M/d') + '&nbsp;'
+								return '<span style="color:' + color + ';" ' + qtip + '>'
+										+ Ext.util.Format.date(ee.dateDifferentialAnalysis, 'y/M/d') + '&nbsp;'
 										+ (suggestRun ? runurl : '');
 							} else {
 								return '<span style="color:#3A3;">Needed</span>&nbsp;' + runurl;
@@ -571,33 +511,24 @@ Gemma.EEPanel = Ext
 						window.location.reload();
 					});
 
-					manager
-							.on(
-									'reportUpdated',
-									function(data) {
-										ob = data[0];
-										// console.log(ob);
-										var k = Ext
-												.get('coexpressionLinkCount-region');
-										Ext.DomHelper.overwrite(k, {
-											html : ob.coexpressionLinkCount
-										});
-										k.highlight();
-										k = Ext
-												.get('processedExpressionVectorCount-region');
-										Ext.DomHelper
-												.overwrite(
-														k,
-														{
-															html : ob.processedExpressionVectorCount
-														});
-										k.highlight();
-									});
+					manager.on('reportUpdated', function(data) {
+						ob = data[0];
+						// console.log(ob);
+							var k = Ext.get('coexpressionLinkCount-region');
+							Ext.DomHelper.overwrite(k, {
+								html : ob.coexpressionLinkCount
+							});
+							k.highlight();
+							k = Ext.get('processedExpressionVectorCount-region');
+							Ext.DomHelper.overwrite(k, {
+								html : ob.processedExpressionVectorCount
+							});
+							k.highlight();
+						});
 
 					manager.on('pubmedUpdated', function(e) {
 						var html = this.getPubMedHtml(e);
-						Ext.getCmp('pubmed-region-wrap').remove(
-								Ext.getCmp('pubmed-region'));
+						Ext.getCmp('pubmed-region-wrap').remove(Ext.getCmp('pubmed-region'));
 						Ext.DomHelper.append('pubmed-region-wrap', html);
 					}.createDelegate(this));
 
@@ -660,21 +591,17 @@ Gemma.EEPanel = Ext
 						listeners : {
 							'keyup' : {
 								fn : function(e) {
-									if (Ext.getCmp('description').isDirty()
-											&& Ext.getCmp('description')
-													.isValid()) {
+									if (Ext.getCmp('description').isDirty() && Ext.getCmp('description').isValid()) {
 										// show save button
-										Ext.getCmp('update-button-region')
-												.show();
-									} else {
-										Ext.getCmp('update-button-region')
-												.hide();
-									}
-								}
-							}
-						},
-						width : 500,
-						// height : 100,
+						Ext.getCmp('update-button-region').show();
+					} else {
+						Ext.getCmp('update-button-region').hide();
+					}
+				}
+			}
+		},
+		width : 500,
+		// height : 100,
 						value : e.description
 					});
 
@@ -692,20 +619,17 @@ Gemma.EEPanel = Ext
 						listeners : {
 							'keyup' : {
 								fn : function(e) {
-									if (Ext.getCmp('name').isDirty()
-											&& Ext.getCmp('name').isValid()) {
+									if (Ext.getCmp('name').isDirty() && Ext.getCmp('name').isValid()) {
 										// show save button
-										Ext.getCmp('update-button-region')
-												.show();
-									} else {
-										Ext.getCmp('update-button-region')
-												.hide();
-									}
-								}
-							}
-						},
-						width : 500,
-						value : e.name
+						Ext.getCmp('update-button-region').show();
+					} else {
+						Ext.getCmp('update-button-region').hide();
+					}
+				}
+			}
+		},
+		width : 500,
+		value : e.name
 					});
 
 					var basics = new Ext.Panel(
@@ -752,32 +676,20 @@ Gemma.EEPanel = Ext
 														listeners : {
 															'keyup' : {
 																fn : function(e) {
-																	if (Ext
-																			.getCmp(
-																					'shortname')
-																			.isDirty()
-																			&& Ext
-																					.getCmp(
-																							'shortname')
-																					.isValid()) {
+																	if (Ext.getCmp('shortname').isDirty()
+																			&& Ext.getCmp('shortname').isValid()) {
 																		// show
 																		// save
 																		// button
-																		Ext
-																				.getCmp(
-																						'update-button-region')
-																				.show();
+																		Ext.getCmp('update-button-region').show();
 																	} else {
-																		Ext
-																				.getCmp(
-																						'update-button-region')
-																				.hide();
+																		Ext.getCmp('update-button-region').hide();
 																	}
 																},
 																scope : this
 															}
 														},
-														width : 100,
+														width : 250,
 														value : e.shortName
 													},
 													{
@@ -786,81 +698,54 @@ Gemma.EEPanel = Ext
 														html : '<a href="#" onClick="Ext.getCmp(\'ee-details-panel\').save(' + e.id + ',[\'shortname\',\'name\',\'description\'])" ><img src="/Gemma/images/icons/database_save.png" title="Click to save changes" alt="Click to save changes"/></a>',
 														hidden : true
 													} ]
-										},
-										{
+										}, {
 											html : 'Name:'
-										},
-										nameArea,
-										{
+										}, nameArea, {
 											html : "Taxon:"
-										},
-										{
+										}, {
 											html : e.taxon
-										},
-										{
+										}, {
 											html : 'Description:'
-										},
-										descriptionArea,
-										{
+										}, descriptionArea, {
 											html : 'Created:'
-										},
-										{
-											html : Ext.util.Format
-													.date(e.dateCreated)
-										},
-										{
+										}, {
+											html : Ext.util.Format.date(e.dateCreated)
+										}, {
 											html : 'Source:'
-										},
-										{
-											html : this
-													.renderSourceDatabaseEntry(e)
-										},
-										{
+										}, {
+											html : this.renderSourceDatabaseEntry(e)
+										}, {
 											html : 'Samples:'
-										},
-										{
+										}, {
 											html : this.renderSamples(e),
 											width : 60
-										},
-										{
+										}, {
 											html : 'Profiles:'
-										},
-										{
+										}, {
 											id : 'processedExpressionVectorCount-region',
 											html : e.processedExpressionVectorCount,
 											width : 60
-										},
-										{
+										}, {
 											html : 'Array designs:'
-										},
-										{
+										}, {
 											id : 'arrayDesign-region',
-											html : this
-													.renderArrayDesigns(e.arrayDesigns),
+											html : this.renderArrayDesigns(e.arrayDesigns),
 											width : 480
-										},
-										{
+										}, {
 											html : 'Coexpr. Links:'
-										},
-										{
+										}, {
 											id : 'coexpressionLinkCount-region',
-											html : this
-													.renderCoExpressionLinkCount(e),
+											html : this.renderCoExpressionLinkCount(e),
 											width : 80
-										},
-										{
+										}, {
 											html : 'Diff. expr. Probes'
-										},
-										{
+										}, {
 											id : 'DiffExpressedProbes-region',
-											html : this
-													.renderDiffExpressionDetails(e),
+											html : this.renderDiffExpressionDetails(e),
 											width : 200
-										},
-										{
+										}, {
 											html : 'Publication:'
-										},
-										{
+										}, {
 											xtype : 'panel',
 											id : 'pubmed-region-wrap',
 											layout : 'fit',
@@ -868,24 +753,17 @@ Gemma.EEPanel = Ext
 											baseCls : 'x-plain-panel',
 											disabled : false,
 											items : [ pubmedRegion ]
-										},
-										{
+										}, {
 											html : 'Tags&nbsp;' + taggerurl
-										},
-										tagView,
-										{
+										}, tagView, {
 											html : 'Status'
-										},
-										{
+										}, {
 											html : this.renderStatus(e)
-										},
-										{
+										}, {
 											html : this.editable ? 'Admin' : ''
-										},
-										{
+										}, {
 											id : 'admin-links',
-											html : this.editable ? adminLinks
-													: ''
+											html : this.editable ? adminLinks : ''
 										}
 
 								/*
@@ -895,47 +773,35 @@ Gemma.EEPanel = Ext
 							});
 
 					if (this.editable) {
-						Ext.DomHelper
-								.append(
-										'admin-links',
-										{
-											tag : 'ul',
-											cls : 'plainlist',
-											children : [
-													{
-														tag : 'li',
-														html : 'Missing values: ' + this
-																.missingValueAnalysisRenderer(e)
-													},
-													{
-														tag : 'li',
-														html : 'Proc. vec:  ' + this
-																.processedVectorCreateRenderer(e)
-													},
-													{
-														tag : 'li',
-														html : 'Diff ex:  ' + this
-																.differentialAnalysisRenderer(e)
-													},
-													{
-														tag : 'li',
-														html : 'Link an.:  ' + this
-																.linkAnalysisRenderer(e)
-													} ]
-										});
+						Ext.DomHelper.append('admin-links', {
+							tag : 'ul',
+							cls : 'plainlist',
+							children : [ {
+								tag : 'li',
+								html : 'Missing values: ' + this.missingValueAnalysisRenderer(e)
+							}, {
+								tag : 'li',
+								html : 'Proc. vec:  ' + this.processedVectorCreateRenderer(e)
+							}, {
+								tag : 'li',
+								html : 'Diff ex:  ' + this.differentialAnalysisRenderer(e)
+							}, {
+								tag : 'li',
+								html : 'Link an.:  ' + this.linkAnalysisRenderer(e)
+							} ]
+						});
 					}
 
 					if (Ext.get('history')) {
-						var history = new Gemma.AuditTrailGrid(
-								{
-									renderTo : 'history',
-									bodyBorder : false,
-									collapsible : true,
-									auditable : {
-										id : e.id,
-										classDelegatingFor : "ubic.gemma.model.expression.experiment.ExpressionExperimentImpl"
-									}
-								});
+						var history = new Gemma.AuditTrailGrid( {
+							renderTo : 'history',
+							bodyBorder : false,
+							collapsible : true,
+							auditable : {
+								id : e.id,
+								classDelegatingFor : "ubic.gemma.model.expression.experiment.ExpressionExperimentImpl"
+							}
+						});
 					}
 
 					this.fireEvent("ready");

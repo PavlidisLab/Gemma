@@ -467,12 +467,17 @@ public class DEDVController extends BaseFormController {
         if ( ees == null || ees.isEmpty() ) return null;
 
         Collection<DoubleVectorValueObject> dedvs;
-
-        Collection<Gene> genes = geneService.loadMultiple( geneIds );
-        if ( genes == null || genes.isEmpty() ) {
+        Collection<Gene> genes = null;
+        if ( geneIds == null || geneIds.isEmpty() ) {
             dedvs = processedExpressionDataVectorService.getProcessedDataArrays( ees.iterator().next(), SAMPLE_SIZE,
                     false );
         } else {
+            genes = geneService.loadMultiple( geneIds );
+
+            if ( genes.size() == 0 ) {
+                throw new IllegalArgumentException( "No genes found matching the given ids" );
+            }
+
             dedvs = processedExpressionDataVectorService.getProcessedDataArrays( ees, genes, false );
         }
 
@@ -480,11 +485,12 @@ public class DEDVController extends BaseFormController {
         Long time = watch.getTime();
 
         if ( time > 100 ) {
-            log.info( "Retrieved " + dedvs.size() + " DEDVs for " + eeIds.size() + " EEs and " + geneIds.size()
-                    + " genes in " + time + " ms (times <100ms not reported)." );
+            log.info( "Retrieved " + dedvs.size() + " DEDVs for " + eeIds.size() + " EEs"
+                    + ( geneIds == null ? " sample" : " for " + geneIds.size() + " genes " ) + " in " + time
+                    + " ms (times <100ms not reported)." );
         }
 
-        return makeVisCollection( dedvs, new ArrayList<Gene>( genes ), null, null );
+        return makeVisCollection( dedvs, genes, null, null );
 
     }
 
@@ -653,7 +659,7 @@ public class DEDVController extends BaseFormController {
 
         buf.append( "Gene Symbol\tGene Name\tProbe\t" );
 
-        bioAssayDimensionService.thaw(dedv.getBioAssayDimension());
+        bioAssayDimensionService.thaw( dedv.getBioAssayDimension() );
         for ( BioAssay ba : dedv.getBioAssayDimension().getBioAssays() ) {
             buf.append( ba.getName() + "|" );
         }
@@ -944,8 +950,8 @@ public class DEDVController extends BaseFormController {
      * @param layouts
      * @return
      */
-    private VisualizationValueObject[] makeVisCollection( Collection<DoubleVectorValueObject> dedvs, List<Gene> genes,
-            Map<Long, Collection<Long>> validatedProbes,
+    private VisualizationValueObject[] makeVisCollection( Collection<DoubleVectorValueObject> dedvs,
+            Collection<Gene> genes, Map<Long, Collection<Long>> validatedProbes,
             Map<ExpressionExperiment, LinkedHashMap<BioAssay, Map<ExperimentalFactor, Double>>> layouts ) {
 
         Map<ExpressionExperiment, Collection<DoubleVectorValueObject>> vvoMap = new HashMap<ExpressionExperiment, Collection<DoubleVectorValueObject>>();
@@ -967,7 +973,14 @@ public class DEDVController extends BaseFormController {
                 validatedProbeList = validatedProbes.get( ee.getId() );
             }
             Collection<DoubleVectorValueObject> vectors = vvoMap.get( ee );
-            VisualizationValueObject vvo = new VisualizationValueObject( vectors, genes, validatedProbeList );
+
+            List<Gene> geneList = null;
+
+            if ( genes != null ) {
+                geneList = new ArrayList<Gene>( genes );
+            }
+
+            VisualizationValueObject vvo = new VisualizationValueObject( vectors, geneList, validatedProbeList );
 
             /*
              * Set up the experimental designinfo so we can show it above the graph.
@@ -995,9 +1008,9 @@ public class DEDVController extends BaseFormController {
             DifferentialExpressionAnalysisResultService differentialExpressionAnalysisResultService ) {
         this.differentialExpressionAnalysisResultService = differentialExpressionAnalysisResultService;
     }
-    
-    public void setBioAssayDimensionService(BioAssayDimensionService bioAssayDimensionService){
-        
+
+    public void setBioAssayDimensionService( BioAssayDimensionService bioAssayDimensionService ) {
+
         this.bioAssayDimensionService = bioAssayDimensionService;
     }
 

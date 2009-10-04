@@ -1,13 +1,18 @@
+/**
+ * @version $Id$
+ * @author Kelsey
+ */
+
 var Heatmap = function() {
 
-	var MAX_LABEL_LENGTH_PIXELS = 90;
+	var MAX_LABEL_LENGTH_PIXELS = 190;
 	var MIN_BOX_WIDTH = 2;
 	var MAX_BOX_WIDTH = 20;
 	var CLIP = 3;
 	var NAN_COLOR = "grey";
 	var SHOW_LABEL_MIN_SIZE = 8;
-	var MIN_BOX_HEIGHT = 8; // so we can see the labels
-	var MAX_BOX_HEIGHT = 20;
+	var MIN_BOX_HEIGHT = 10; // so we can see the labels
+	var MAX_BOX_HEIGHT = 18;
 	var MAX_ROWS_BEFORE_SCROLL = 30;
 	var TRIM = 5;
 	var DEFAULT_ROW_LABEL = "&nbsp;";
@@ -69,7 +74,7 @@ var Heatmap = function() {
 				// update height
 				panelHeight = boxHeight * vectorObjs.length + TRIM;
 
-				panelId = "heatmapScrollPanel" + Ext.id();
+				panelId = "heatmapScrollPanel-" + Ext.id();
 				// Create a scroll panel to put in
 				var scrollPanel = new Ext.Panel( {
 					autoScroll : true,
@@ -104,7 +109,7 @@ var Heatmap = function() {
 
 				var d = vectorObjs[i].data; // points.
 
-				var vid = "heatmapCanvas" + Ext.id();
+				var vid = "heatmapCanvas-" + Ext.id();
 				Ext.DomHelper.append(target, {
 					id : vid,
 					tag : 'div',
@@ -152,13 +157,12 @@ var Heatmap = function() {
 						rowLabel = vectorObjs[i].label;
 					}
 					var text = Ext.DomHelper.append(canvasDiv, {
-						id : "heatmaplabel" + Ext.id(),
-						tag : 'div',
-						html : "&nbsp;" + rowLabel
-					// ,
-							// style : "font-size:tiny"
-							}, true);
-					Ext.DomHelper.applyStyles(text, "position:absolute;top:0px;left:" + usablePanelWidth + "px");
+						id : "heatmaplabel-" + Ext.id(),
+						tag : 'div',	
+						html : "&nbsp;" + rowLabel,
+						style : "white-space: nowrap"
+					}, true);
+					Ext.DomHelper.applyStyles(text, "position:absolute;top:0px;left:" + (offset + 5) + "px");
 				}
 			}
 			// this.loadMask.hide();
@@ -186,13 +190,13 @@ var Heatmap = function() {
 
 			var extlegendDiv = Ext.get("zoomLegend");
 			var posRangeLabel = Ext.DomHelper.append(extlegendDiv, {
-				id : "legendLabel" + Ext.id(),
+				id : "legendLabel-" + Ext.id(),
 				tag : 'div',
 				html : "3"
 			}, true);
 
 			var negRangeLabel = Ext.DomHelper.append(extlegendDiv, {
-				id : "legendlabel" + Ext.id(),
+				id : "legendlabel-" + Ext.id(),
 				tag : 'div',
 				html : "-3"
 			}, true);
@@ -235,7 +239,7 @@ var Heatmap = function() {
 				var rowLabel = "&nbsp;" + sprintf("%.4s", rangeMin) + " to " + sprintf("%.4s", rangeMin + binsize);
 				rangeMin = rangeMin + binsize;
 
-				var legendRowId = "heatmapLegendRow" + Ext.id();
+				var legendRowId = "heatmapLegendRow-" + Ext.id();
 				Ext.DomHelper.append(legendDiv, {
 					id : legendRowId,
 					tag : 'div',
@@ -250,7 +254,7 @@ var Heatmap = function() {
 
 				var legendRowDiv = Ext.get(legendRowId);
 				var text = Ext.DomHelper.append(legendRowDiv, {
-					id : "legendRowlabel" + Ext.id(),
+					id : "legendRowlabel-" + Ext.id(),
 					tag : 'div',
 					html : rowLabel
 				}, true);
@@ -260,7 +264,7 @@ var Heatmap = function() {
 
 			// Add The NAN color to legend.
 
-			legendRowId = "heatmapLegendRow" + Ext.id();
+			legendRowId = "heatmapLegendRow-" + Ext.id();
 			Ext.DomHelper.append(legendDiv, {
 				id : legendRowId,
 				tag : 'div',
@@ -275,7 +279,7 @@ var Heatmap = function() {
 
 			var legendRowDiv = Ext.get(legendRowId);
 			var text = Ext.DomHelper.append(legendRowDiv, {
-				id : "legendRowlabel" + Ext.id(),
+				id : "legendRowlabel-" + Ext.id(),
 				tag : 'div',
 				html : "&nbsp; NaN"
 			}, true);
