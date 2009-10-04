@@ -131,7 +131,7 @@ public class AffyProbeNameFilter implements Filter<ExpressionDataDoubleMatrix> {
             kept.add( d );
         }
 
-        log.info( "There are " + kept.size() + " rows left after filtering." );
+        log.info( "There are " + kept.size() + " rows left after Affy probe name filtering." );
 
         return new ExpressionDataDoubleMatrix( data, kept );
     }
