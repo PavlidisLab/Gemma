@@ -3,7 +3,10 @@ Gemma.MAX_LABEL_LENGTH_CHAR = 25;
 Gemma.MAX_GENEINFO_LENGTH_CHAR = 125;
 
 /**
- * Configure : readMethod,
+ * Configure : title, readMethod; then call 'show' passing in the parameters for the read method. 
+ * 
+ * @version $Id$
+ * @author Paul based on klcs classes.
  */
 
 Gemma.VectorDisplay = Ext
