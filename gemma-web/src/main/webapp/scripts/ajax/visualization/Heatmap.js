@@ -14,6 +14,9 @@ var Heatmap = function() {
 	var MIN_BOX_HEIGHT = 10; // so we can see the labels
 	var MAX_BOX_HEIGHT = 18;
 	var MAX_ROWS_BEFORE_SCROLL = 30;
+
+	var MAX_SAMPLE_LABEL_HEIGHT_PIXELS = 120;
+
 	var TRIM = 5;
 	var DEFAULT_ROW_LABEL = "&nbsp;";
 
@@ -34,16 +37,24 @@ var Heatmap = function() {
 			"rgb(255, 191, 64)", "rgb(255, 223, 96)", "rgb(255, 255, 128)", "rgb(255, 255, 159)", "rgb(255, 255, 191)",
 			"rgb(255, 255, 223)", "rgb(255, 255, 255)" ];
 
-	function HeatMap(container, data, config) {
+	/**
+	 * @param container
+	 * @param data
+	 * @param config
+	 *            optional
+	 * @param sampleLabels
+	 *            optional.
+	 */
+	function HeatMap(container, data, config, sampleLabels) {
 
 		if (!config) {
 			config = DEFAULT_CONFIG;
 		}
 
-		drawMap(data, container, COLOR_16, config);
+		drawMap(data, container, COLOR_16, config, sampleLabels);
 
 		// Creates 1 canvas per row of the heat map
-		function drawMap(vectorObjs, target, colors, config) {
+		function drawMap(vectorObjs, target, colors, config, sampleLabels) {
 
 			// Get dimensions of target to determine box size in heat map
 			var binSize = (2 * CLIP) / colors.length;
@@ -53,6 +64,13 @@ var Heatmap = function() {
 			var usablePanelWidth = config.label ? panelWidth - MAX_LABEL_LENGTH_PIXELS : panelWidth;
 
 			var panelHeight = target.getHeight() - TRIM;
+
+			if (sampleLabels) {
+				panelHeight = panelHeight - MAX_SAMPLE_LABEL_HEIGHT_PIXELS; // might
+				// be a
+				// bad
+				// guess.
+			}
 
 			var numberOfRowsToComputeSizeBy = Math.min(MAX_ROWS_BEFORE_SCROLL, vectorObjs.length);
 
@@ -70,7 +88,6 @@ var Heatmap = function() {
 			// elements below
 			if (vectorObjs.length > numberOfRowsToComputeSizeBy) {
 
-				// console.log("wow");
 				// update height
 				panelHeight = boxHeight * vectorObjs.length + TRIM;
 
@@ -104,6 +121,38 @@ var Heatmap = function() {
 
 			if (config.legend && config.legend.show && config.legend.container)
 				insertVerticalLegend(config.legend.container);
+
+			if (sampleLabels && boxWidth >= SHOW_LABEL_MIN_SIZE) {
+
+				var id = 'sampleLabels-' + Ext.id();
+				Ext.DomHelper.append(target, {
+					id : id,
+					tag : 'div',
+					width : usablePanelWidth,
+					height : MAX_SAMPLE_LABEL_HEIGHT_PIXELS
+				});
+
+				var labelDiv = Ext.get(id);
+
+				var ctx = constructCanvas($(labelDiv), usablePanelWidth, MAX_SAMPLE_LABEL_HEIGHT_PIXELS);
+
+				ctx.fillStyle = "#000000";
+				ctx.font = (boxWidth - 1) + "px, sans-serif";
+				ctx.textAlign = "left";
+				ctx.translate(0, MAX_SAMPLE_LABEL_HEIGHT_PIXELS - 2);
+				ctx.save();
+
+				for ( var j = 0; j < sampleLabels.length; j++) {
+					var lab = Ext.util.Format.ellipsis(sampleLabels[j], 25); // faster to draw small
+					if (window.console) window.console.log(lab);
+					ctx.translate(boxWidth, 0);
+					ctx.save();
+					ctx.rotate(-Math.PI / 2);
+					ctx.fillText(lab, 0, 0)
+					ctx.rotate(Math.PI / 2); // reset?
+				}
+
+			}
 
 			for ( var i = 0; i < vectorObjs.length; i++) {
 
@@ -158,7 +207,7 @@ var Heatmap = function() {
 					}
 					var text = Ext.DomHelper.append(canvasDiv, {
 						id : "heatmaplabel-" + Ext.id(),
-						tag : 'div',	
+						tag : 'div',
 						html : "&nbsp;" + rowLabel,
 						style : "white-space: nowrap"
 					}, true);
@@ -331,8 +380,8 @@ var Heatmap = function() {
 			element.innerHTML = '';
 		},
 
-		draw : function(target, data, options) {
-			var map = new HeatMap(target, data, options);
+		draw : function(target, data, options, sampleLabels) {
+			var map = new HeatMap(target, data, options, sampleLabels);
 			return map;
 		}
 	};

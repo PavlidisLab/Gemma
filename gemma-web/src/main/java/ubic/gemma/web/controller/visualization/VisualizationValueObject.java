@@ -48,6 +48,8 @@ public class VisualizationValueObject {
 
     private static String[] colors = new String[] { "red", "black", "blue", "green", "orange" };
 
+    private static long DEFAULT_P_VALUE = 1; // FIXME is this correct?
+
     private static Log log = LogFactory.getLog( VisualizationValueObject.class );
 
     private Map<Long, String> colorMap = new HashMap<Long, String>();
@@ -56,30 +58,9 @@ public class VisualizationValueObject {
 
     private Collection<FactorProfile> factorProfiles;
 
-    private static long DEFAULT_P_VALUE = 1; // FIXME is this correct?
-
-    /**
-     * Initialize the factor profiles.
-     * 
-     * @param layout
-     */
-    public void setUpFactorProfiles( LinkedHashMap<BioAssay, Map<ExperimentalFactor, Double>> layout ) {
-        if ( layout == null ) {
-            log.warn( "Null layout, ignoring" );
-            return;
-        }
-        Collection<ExperimentalFactor> efs = new HashSet<ExperimentalFactor>();
-        for ( Map<ExperimentalFactor, Double> maps : layout.values() ) {
-            efs.addAll( maps.keySet() );
-        }
-
-        this.factorProfiles = new ArrayList<FactorProfile>();
-        for ( ExperimentalFactor experimentalFactor : efs ) {
-            this.factorProfiles.add( new FactorProfile( experimentalFactor, layout ) );
-        }
-    }
-
     private Collection<GeneExpressionProfile> profiles;
+
+    private List<String> sampleNames;
 
     public VisualizationValueObject() {
         super();
@@ -222,9 +203,12 @@ public class VisualizationValueObject {
         return profiles;
     }
 
-    // ---------------------------------
-    // Getters and Setters
-    // ---------------------------------
+    /**
+     * @return the sampleNames
+     */
+    public List<String> getSampleNames() {
+        return sampleNames;
+    }
 
     public void setEE( ExpressionExperiment ee ) {
         this.eevo = new ExpressionExperimentValueObject();
@@ -237,6 +221,10 @@ public class VisualizationValueObject {
     public void setEevo( ExpressionExperimentValueObject eevo ) {
         this.eevo = eevo;
     }
+
+    // ---------------------------------
+    // Getters and Setters
+    // ---------------------------------
 
     public void setEEwithPvalue( ExpressionExperiment ee, Double minP ) {
         setEE( ee );
@@ -252,6 +240,34 @@ public class VisualizationValueObject {
 
     public void setProfiles( Collection<GeneExpressionProfile> profiles ) {
         this.profiles = profiles;
+    }
+
+    /**
+     * @param sampleNames the sampleNames to set
+     */
+    public void setSampleNames( List<String> sampleNames ) {
+        this.sampleNames = sampleNames;
+    }
+
+    /**
+     * Initialize the factor profiles.
+     * 
+     * @param layout
+     */
+    public void setUpFactorProfiles( LinkedHashMap<BioAssay, Map<ExperimentalFactor, Double>> layout ) {
+        if ( layout == null ) {
+            log.warn( "Null layout, ignoring" );
+            return;
+        }
+        Collection<ExperimentalFactor> efs = new HashSet<ExperimentalFactor>();
+        for ( Map<ExperimentalFactor, Double> maps : layout.values() ) {
+            efs.addAll( maps.keySet() );
+        }
+
+        this.factorProfiles = new ArrayList<FactorProfile>();
+        for ( ExperimentalFactor experimentalFactor : efs ) {
+            this.factorProfiles.add( new FactorProfile( experimentalFactor, layout ) );
+        }
     }
 
     private void populateColorMap( List<Gene> genes ) {

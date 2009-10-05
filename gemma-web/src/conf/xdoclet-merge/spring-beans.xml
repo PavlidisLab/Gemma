@@ -1499,6 +1499,7 @@
 							<value>profiles</value>
 							<value>factorProfiles</value>
 							<value>eevo</value>
+							<value>sampleNames</value>
 						</list>
 					</property>
 				</bean>

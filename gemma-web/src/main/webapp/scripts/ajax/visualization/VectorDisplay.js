@@ -3,7 +3,8 @@ Gemma.MAX_LABEL_LENGTH_CHAR = 25;
 Gemma.MAX_GENEINFO_LENGTH_CHAR = 125;
 
 /**
- * Configure : title, readMethod; then call 'show' passing in the parameters for the read method. 
+ * Configure : title, readMethod; then call 'show' passing in the parameters for
+ * the read method.
  * 
  * @version $Id$
  * @author Paul based on klcs classes.
@@ -59,14 +60,21 @@ Gemma.VectorDisplay = Ext
 					dedvCallback : function(data) {
 
 						if (!data || data.size() == 0) {
-							console.log("No data!");
 							this.hide();
 							Ext.Msg.alert('Status', 'Data not yet available');
 							return;
 						}
 
 						this.flotrData = [];
+
+						/*
+						 * FIXME this doesn't handle the case where we got
+						 * multiple chunks back! (for multiple ees)
+						 */
 						var coordinateProfile = data[0].data.profiles;
+
+						// can be null
+						this.sampleLabels = data[0].data.sampleNames;
 
 						var geneIds = [];
 
@@ -131,7 +139,7 @@ Gemma.VectorDisplay = Ext
 
 						var eevo = data[0].data.eevo;
 
-						Heatmap.draw($(this.body.id), this.flotrData, this.heatmapConfig);
+						Heatmap.draw($(this.body.id), this.flotrData, this.heatmapConfig, this.sampleLabels);
 
 						if (this.loadMask) {
 							this.loadMask.hide();
@@ -150,7 +158,7 @@ Gemma.VectorDisplay = Ext
 
 					refresh : function() {
 						$(this.body.id).innerHTML = '';
-						Heatmap.draw($(this.body.id), this.flotrData, this.heatmapConfig);
+						Heatmap.draw($(this.body.id), this.flotrData, this.heatmapConfig, this.sampleLabels);
 					},
 
 					initComponent : function() {

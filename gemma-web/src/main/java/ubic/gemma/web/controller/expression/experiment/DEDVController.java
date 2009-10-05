@@ -652,6 +652,17 @@ public class DEDVController extends BaseFormController {
         return converted.toString();
     }
 
+    private List<String> getSampleNames( DoubleVectorValueObject dedv ) {
+        List<String> result = new ArrayList<String>();
+        ExpressionExperiment ee = dedv.getExpressionExperiment();
+
+        bioAssayDimensionService.thaw( dedv.getBioAssayDimension() );
+        for ( BioAssay ba : dedv.getBioAssayDimension().getBioAssays() ) {
+            result.add( ba.getName() );
+        }
+        return result;
+    }
+
     private String makeHeader( DoubleVectorValueObject dedv ) {
         StringBuilder buf = new StringBuilder();
         ExpressionExperiment ee = dedv.getExpressionExperiment();
@@ -968,6 +979,7 @@ public class DEDVController extends BaseFormController {
         // Create collection of visualizationValueObject for flotr on js side
         int i = 0;
         for ( ExpressionExperiment ee : vvoMap.keySet() ) {
+
             Collection<Long> validatedProbeList = null;
             if ( validatedProbes != null ) {
                 validatedProbeList = validatedProbes.get( ee.getId() );
@@ -981,6 +993,11 @@ public class DEDVController extends BaseFormController {
             }
 
             VisualizationValueObject vvo = new VisualizationValueObject( vectors, geneList, validatedProbeList );
+
+            if ( vectors.size() > 0 ) {
+                List<String> sampleNames = getSampleNames( vectors.iterator().next() );
+                vvo.setSampleNames( sampleNames );
+            }
 
             /*
              * Set up the experimental designinfo so we can show it above the graph.
