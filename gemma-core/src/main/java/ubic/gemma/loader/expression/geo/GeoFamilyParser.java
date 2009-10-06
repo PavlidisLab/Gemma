@@ -568,7 +568,11 @@ public class GeoFamilyParser implements Parser {
      */
     private void extractColumnIdentifier( String line, GeoData dataToAddTo ) {
         if ( dataToAddTo == null ) throw new IllegalArgumentException( "Data cannot be null" );
+
         Map<String, String> res = extractKeyValue( line );
+
+        if ( res == null ) return;
+
         String columnName = res.keySet().iterator().next();
         dataToAddTo.addColumnName( columnName );
         dataToAddTo.getColumnDescriptions().add( res.get( columnName ) );
@@ -579,8 +583,7 @@ public class GeoFamilyParser implements Parser {
      * Extract a key and value pair from a line in the format #key = value.
      * 
      * @param line.
-     * @return Map containing the String key and String value.
-     * @throws Exception if the line doesn't contain a =.
+     * @return Map containing the String key and String value. Return null if it is misformatted.
      */
     private Map<String, String> extractKeyValue( String line ) {
         if ( !line.startsWith( "#" ) ) throw new IllegalArgumentException( "Wrong type of line" );
@@ -589,7 +592,8 @@ public class GeoFamilyParser implements Parser {
 
         String[] tokens = fixed.split( "=", 2 );
         if ( tokens.length != 2 ) {
-            throw new IllegalArgumentException( "Wrong type of line: " + line );
+            log.warn( "Invalid key-value line, expected an '=' somewhere, got: '" + line + "'" );
+            return null;
         }
         String key = tokens[0];
         String value = tokens[1];
