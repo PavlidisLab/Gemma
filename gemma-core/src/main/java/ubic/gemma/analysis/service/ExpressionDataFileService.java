@@ -47,7 +47,7 @@ import ubic.gemma.datastructure.matrix.MatrixWriter;
 import ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.ProbeAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultService;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoImpl.ProbeLink;
@@ -78,7 +78,7 @@ import ubic.gemma.util.DifferentialExpressionAnalysisResultComparator;
  * @spring.property name="expressionDataMatrixService" ref="expressionDataMatrixService"
  * @spring.property name = "arrayDesignService" ref="arrayDesignService"
  * @spring.property name="expressionExperimentService" ref="expressionExperimentService"
- * @spring.property name="differentialExpressionAnalysisResultService" ref="differentialExpressionAnalysisResultService"
+ * @spring.property name="differentialExpressionResultService" ref="differentialExpressionResultService"
  * @spring.property name = "differentialExpressionAnalysisService" ref="differentialExpressionAnalysisService"
  * @spring.property name = "probe2ProbeCoexpressionService" ref="probe2ProbeCoexpressionService"
  * @author paul
@@ -107,7 +107,7 @@ public class ExpressionDataFileService {
 
     private ExpressionExperimentService expressionExperimentService;
 
-    private DifferentialExpressionAnalysisResultService differentialExpressionAnalysisResultService = null;
+    private DifferentialExpressionResultService differentialExpressionResultService = null;
 
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService = null;
 
@@ -170,9 +170,12 @@ public class ExpressionDataFileService {
         this.expressionExperimentService = expressionExperimentService;
     }
 
-    public void setDifferentialExpressionAnalysisResultService(
-            DifferentialExpressionAnalysisResultService differentialExpressionAnalysisResultService ) {
-        this.differentialExpressionAnalysisResultService = differentialExpressionAnalysisResultService;
+    /**
+     * @param differentialExpressionResultService the differentialExpressionResultService to set
+     */
+    public void setDifferentialExpressionResultService(
+            DifferentialExpressionResultService differentialExpressionResultService ) {
+        this.differentialExpressionResultService = differentialExpressionResultService;
     }
 
     public void setDifferentialExpressionAnalysisService(
@@ -476,7 +479,7 @@ public class ExpressionDataFileService {
         List<DifferentialExpressionAnalysisResult> sortedFirstColumnOfResults = null;
 
         for ( ExpressionAnalysisResultSet ears : results ) {
-            differentialExpressionAnalysisResultService.thaw( ears );
+            differentialExpressionResultService.thaw( ears );
 
             if ( sortedFirstColumnOfResults == null ) { // Sort P values in ears (because 1st column)
                 sortedFirstColumnOfResults = new ArrayList<DifferentialExpressionAnalysisResult>( ears.getResults() );

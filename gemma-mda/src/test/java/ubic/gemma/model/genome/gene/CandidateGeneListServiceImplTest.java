@@ -163,6 +163,8 @@ public class CandidateGeneListServiceImplTest extends TestCase {
         t = Taxon.Factory.newInstance();
         t.setScientificName( "test testicus" );
         t.setCommonName( "common test" );
+        t.setIsSpecies( true );
+        t.setIsGenesUsable( true );
         taxonDaoMock.create( t );
 
         g = Gene.Factory.newInstance();

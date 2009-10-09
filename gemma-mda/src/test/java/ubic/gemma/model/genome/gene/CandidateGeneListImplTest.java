@@ -48,6 +48,8 @@ public class CandidateGeneListImplTest extends TestCase {
         t = Taxon.Factory.newInstance();
         t.setCommonName( "mouse" );
         t.setScientificName( "mouse" );
+        t.setIsSpecies( true );
+        t.setIsGenesUsable( true );
     }
 
     public void testUseCandidateGeneList() {

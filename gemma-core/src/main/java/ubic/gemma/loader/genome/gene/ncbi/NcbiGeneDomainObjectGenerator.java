@@ -24,6 +24,7 @@ import java.io.InputStream;
 import java.net.URL;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -36,6 +37,7 @@ import ubic.gemma.loader.genome.gene.ncbi.model.NCBIGene2Accession;
 import ubic.gemma.loader.genome.gene.ncbi.model.NCBIGeneInfo;
 import ubic.gemma.loader.genome.gene.ncbi.model.NcbiGeneHistory;
 import ubic.gemma.model.common.description.LocalFile;
+import ubic.gemma.model.genome.Taxon;
 
 /**
  * Combines information from the gene2accession and gene_info files from NCBI Gene.
@@ -51,7 +53,19 @@ public class NcbiGeneDomainObjectGenerator {
 
     static Log log = LogFactory.getLog( NcbiGeneDomainObjectGenerator.class.getName() );
     AtomicBoolean producerDone = new AtomicBoolean( false );
-    AtomicBoolean infoProducerDone = new AtomicBoolean( false );;
+    AtomicBoolean infoProducerDone = new AtomicBoolean( false );
+    private Collection<Taxon> supportedTaxa = null;
+    private Collection<Taxon> supportedTaxaWithNCBIGenes = null;
+   
+    
+    public NcbiGeneDomainObjectGenerator() {
+        super();
+    }
+
+    public NcbiGeneDomainObjectGenerator( Collection<Taxon> supportedTaxa ) {
+        this();
+        this.supportedTaxa=supportedTaxa;
+    }
 
     /**
      * @return a collection of NCBIGene2Accession
@@ -128,6 +142,9 @@ public class NcbiGeneDomainObjectGenerator {
 
         final NcbiGeneInfoParser infoParser = new NcbiGeneInfoParser();
         infoParser.setFilter( filter );
+        Map<Integer, Taxon> supportedTaxa= this.getSupportedTaxaKeyedByNcbiIds();
+        infoParser.setSupportedTaxa( supportedTaxa.keySet());
+
         final NcbiGene2AccessionParser accParser = new NcbiGene2AccessionParser();
         final File gene2accessionFileHandle = gene2AccessionFile.asFile();
 
@@ -151,25 +168,28 @@ public class NcbiGeneDomainObjectGenerator {
 
         // put into HashMap
         final Map<String, NCBIGeneInfo> geneInfoMap = new HashMap<String, NCBIGeneInfo>();
-        Map<Integer, Integer> taxCount = new HashMap<Integer, Integer>();
+        Map<Integer, Integer> taxaCount  = new HashMap<Integer, Integer>();
+        
         for ( NCBIGeneInfo geneInfo : geneInfoList ) {
 
             NcbiGeneHistory history = historyParser.get( geneInfo.getGeneId() );
             geneInfo.setHistory( history );
 
-            if ( !taxCount.containsKey( geneInfo.getTaxId() ) ) {
-                taxCount.put( new Integer( geneInfo.getTaxId() ), new Integer( 0 ) );
+            if ( !taxaCount.containsKey( geneInfo.getTaxId() ) ) {
+                taxaCount.put( new Integer( geneInfo.getTaxId() ), new Integer( 0 ) );
             }
-            taxCount.put( new Integer( geneInfo.getTaxId() ), taxCount.get( geneInfo.getTaxId() ) + 1 );
+            taxaCount.put( new Integer( geneInfo.getTaxId() ), taxaCount.get( geneInfo.getTaxId() ) + 1 );
             geneInfoMap.put( geneInfo.getGeneId(), geneInfo );
         }
-
-        for ( Integer taxId : taxCount.keySet() ) {
-            log.debug( "Taxon " + taxId + ": " + taxCount.get( taxId ) + " genes" );
+        supportedTaxaWithNCBIGenes = new HashSet<Taxon>();
+        for ( Integer taxId : taxaCount.keySet() ) {
+            log.debug( "Taxon " + taxId + ": " + taxaCount.get( taxId ) + " genes" );
+            supportedTaxaWithNCBIGenes.add(supportedTaxa.get( taxId ));
         }
-
+        
         // 1) use a producer-consumer model for Gene2Accession conversion
-        // 1a) Parse Gene2Accession until the gene id changes. This means that all accessions for the gene are done.
+        // 1a) Parse Gene2Accession until the gene id changes. This means that
+        // all accessions for the gene are done.
         // 1b) Create a Collection<Gene2Accession>, and push into BlockingQueue
 
         Thread parseThread = new Thread( new Runnable() {
@@ -180,27 +200,53 @@ public class NcbiGeneDomainObjectGenerator {
                 } catch ( IOException e ) {
                     throw new RuntimeException( e );
                 }
-                producerDone.set( true );
                 log.debug( "Domain object generator done" );
+                producerDone.set( true );
             }
         }, "gene2accession parser" );
 
         parseThread.start();
 
-        // 1c) As elements get added to BlockingQueue, NCBIGeneConverter consumes
+        // 1c) As elements get added to BlockingQueue, NCBIGeneConverter
+        // consumes
         // and creates Gene/GeneProduct/DatabaseEntry objects.
         // 1d) Push Gene to another BlockingQueue genePersistence
 
         // 2) use producer-consumer model for Gene persistence
-        // 2a) as elements get added to genePersistence, persist Gene and associated entries.
+        // 2a) as elements get added to genePersistence, persist Gene and
+        // associated entries.
 
         return null;
     }
 
     // not used at all
-    @SuppressWarnings("unused")
     public Collection<?> generate( String accession ) {
         throw new UnsupportedOperationException();
     }
-
+    
+    /**
+     * Creates a map of taxon objects that are supported by GEMMA keyed on NCBI.
+     * @return Map of taxon objects supported by the system keyed on NCBI id.
+     */
+    public Map<Integer, Taxon> getSupportedTaxaKeyedByNcbiIds() {
+        Map<Integer, Taxon> supportedTaxaKeyedByNcbiIds = new HashMap<Integer, Taxon>();
+        if ( supportedTaxa != null && !supportedTaxa.isEmpty() ) {
+            for ( Taxon taxon : supportedTaxa ) {
+                supportedTaxaKeyedByNcbiIds.put( taxon.getNcbiId(), taxon );
+            }
+        } else {
+            throw new IllegalArgumentException( "There are no supported Taxon held in Gemma for gene loading" );
+        }
+        return supportedTaxaKeyedByNcbiIds;
+    }
+    
+    /**
+     * Those taxa that are supported by GEMMA and have genes in NCBI.
+     * @return Collection of taxa that are supported by the GEMMA and have genes held by NCBI.
+     */
+    public Collection<Taxon> getSupportedTaxaWithNCBIGenes(){
+        return supportedTaxaWithNCBIGenes;
+    }
+    
+    
 }

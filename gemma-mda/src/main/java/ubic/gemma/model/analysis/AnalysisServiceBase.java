@@ -109,6 +109,19 @@ public abstract class AnalysisServiceBase<T extends Analysis> implements ubic.ge
     }
 
     /**
+     * @see ubic.gemma.model.analysis.AnalysisService#findByTaxon(ubic.gemma.model.genome.Taxon)
+     */
+    public java.util.Collection findByParentTaxon( final ubic.gemma.model.genome.Taxon taxon ) {
+        try {
+            return this.handleFindByParentTaxon( taxon );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.analysis.AnalysisServiceException(
+                    "Error performing 'ubic.gemma.model.analysis.AnalysisService.findByParentTaxon(ubic.gemma.model.genome.Taxon taxon)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
      * @see ubic.gemma.model.analysis.AnalysisService#findByUniqueInvestigations(java.util.Collection)
      */
     public T findByUniqueInvestigations( final java.util.Collection investigations ) {
@@ -177,6 +190,12 @@ public abstract class AnalysisServiceBase<T extends Analysis> implements ubic.ge
      * Performs the core logic for {@link #findByTaxon(ubic.gemma.model.genome.Taxon)}
      */
     protected abstract java.util.Collection handleFindByTaxon( ubic.gemma.model.genome.Taxon taxon )
+            throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #findByParentTaxon(ubic.gemma.model.genome.Taxon)}
+     */
+    protected abstract java.util.Collection handleFindByParentTaxon( ubic.gemma.model.genome.Taxon taxon )
             throws java.lang.Exception;
 
     /**

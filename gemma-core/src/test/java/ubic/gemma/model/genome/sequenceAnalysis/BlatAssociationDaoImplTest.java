@@ -101,10 +101,12 @@ public class BlatAssociationDaoImplTest extends BaseSpringContextTest {
         BioSequence bs = BioSequence.Factory.newInstance();
         Taxon t = Taxon.Factory.newInstance();
         t.setScientificName( "Mus musculus" ); // has to match what the testpersistent object is.
+        t.setIsSpecies( true );
+        t.setIsGenesUsable( true );
         bs.setSequence( testSequence );
         bs.setTaxon( t );
         bs.setName( testSequenceName );
-
+       
         BioSequence bsIn = this.bioSequenceDao.find( bs );
         assertNotNull( "Did not find " + bs, bsIn );
 

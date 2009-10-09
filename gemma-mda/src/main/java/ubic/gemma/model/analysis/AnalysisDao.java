@@ -81,4 +81,9 @@ public interface AnalysisDao<T extends Analysis> extends BaseDao<T> {
      */
     public java.util.Collection<T> findByTaxon( ubic.gemma.model.genome.Taxon taxon );
 
+    /**
+     * 
+     */
+    public java.util.Collection<T> findByParentTaxon( ubic.gemma.model.genome.Taxon taxon );
+
 }

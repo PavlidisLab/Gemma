@@ -66,6 +66,13 @@ public interface AnalysisService<T extends Analysis> {
      */
     public java.util.Collection<T> findByTaxon( ubic.gemma.model.genome.Taxon taxon );
 
+    
+    /**
+     * 
+     */
+    public java.util.Collection<T> findByParentTaxon( ubic.gemma.model.genome.Taxon taxon );
+
+
     /**
      * <p>
      * An analysis is uniquely determined by its set of investigations. Only returns an analyis if the collection of

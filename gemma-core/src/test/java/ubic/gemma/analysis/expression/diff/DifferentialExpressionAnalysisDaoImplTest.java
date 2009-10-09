@@ -23,6 +23,7 @@ import java.util.Map;
 
 import ubic.gemma.model.analysis.expression.ProbeAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultDao;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.GeneDao;
@@ -39,14 +40,22 @@ public class DifferentialExpressionAnalysisDaoImplTest extends BaseSpringContext
 
     private DifferentialExpressionAnalysisDao differentialExpressionAnalysisDao = null;
 
+    private DifferentialExpressionResultDao differentialExpressionResultDao = null;
+
     private GeneDao geneDao = null;
 
     private String officialSymbol = "ACAA1";
 
     /**
+     * @param differentialExpressionResultDao the differentialExpressionResultDao to set
+     */
+    public void setDifferentialExpressionResultDao( DifferentialExpressionResultDao differentialExpressionResultDao ) {
+        this.differentialExpressionResultDao = differentialExpressionResultDao;
+    }
+
+    /**
      * 
      */
-    @SuppressWarnings("unchecked")
     public void testFind() {
 
         Collection<Gene> genes = geneDao.findByOfficalSymbol( officialSymbol );
@@ -68,7 +77,6 @@ public class DifferentialExpressionAnalysisDaoImplTest extends BaseSpringContext
     /**
      * 
      */
-    @SuppressWarnings("unchecked")
     public void testFindResults() {
         Collection<Gene> genes = geneDao.findByOfficalSymbol( officialSymbol );
 
@@ -83,8 +91,8 @@ public class DifferentialExpressionAnalysisDaoImplTest extends BaseSpringContext
 
             log.info( "num experiments for " + g.getOfficialSymbol() + ": " + experiments.size() );
 
-            Map<ExpressionExperiment, Collection<ProbeAnalysisResult>> results = differentialExpressionAnalysisDao
-                    .findResultsForGeneInExperiments( g, experiments );
+            Map<ExpressionExperiment, Collection<ProbeAnalysisResult>> results = differentialExpressionResultDao.find(
+                    g, experiments );
 
             for ( ExpressionExperiment e : results.keySet() ) {
 

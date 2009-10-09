@@ -94,10 +94,6 @@ public class TaxonLoader {
 
         for ( Taxon taxon : results ) {
 
-            if ( filter && !SupportedTaxa.contains( taxon ) ) {
-                continue;
-            }
-
             if ( log.isDebugEnabled() ) log.debug( "Loading " + taxon );
             taxon = ( Taxon ) persisterHelper.persist( taxon );
             count++;

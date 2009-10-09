@@ -103,8 +103,23 @@ public class DifferentialExpressionAnalysisHelperService {
         for ( BioMaterial sampleUsed : samplesUsed ) {
             Collection<FactorValue> factorValuesFromBioMaterial = sampleUsed.getFactorValues();
 
+            /*
+             * Actually, it's fine if there are multiple factorValues, so long as they are from different factors.
+             */
+
             if ( factorValuesFromBioMaterial.size() != 1 ) {
-                throw new RuntimeException( "Only supports 1 factor value per biomaterial." );
+
+                /*
+                 * Check to see if they are from different factors.
+                 */
+                ExperimentalFactor seen = null;
+                for ( FactorValue fv : factorValuesFromBioMaterial ) {
+                    if ( seen != null && fv.getExperimentalFactor().equals( seen ) ) {
+                        throw new RuntimeException( "There should only be one factorvalue per factor per biomaterial, "
+                                + sampleUsed + " had multiple values for " + seen );
+                    }
+                    seen = fv.getExperimentalFactor();
+                }
             }
 
             FactorValue fv = factorValuesFromBioMaterial.iterator().next();

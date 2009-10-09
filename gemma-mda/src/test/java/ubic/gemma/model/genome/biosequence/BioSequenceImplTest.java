@@ -72,9 +72,13 @@ public class BioSequenceImplTest extends TestCase {
         b.setSequence( "AAAAAAAAAAAAAAAA" );
 
         Taxon m = Taxon.Factory.newInstance();
+        m.setIsSpecies( true );
+        m.setIsGenesUsable( true );
         m.setScientificName( "Mus musculus" );
 
         Taxon h = Taxon.Factory.newInstance();
+        h.setIsSpecies( true );
+        h.setIsGenesUsable( true );
         h.setScientificName( "Homo sapiens" );
 
         a.setTaxon( m );

@@ -190,7 +190,7 @@ Gemma.DiffExpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 
 				var geneId = record.data.probeResults[0].gene.id;
 
-				return String.format("<a href='/Gemma/dedv/downloadDEDV.html?ee={0} &g={1}' > download </a>",
+				return String.format("<a href='/Gemma/dedv/downloadDEDV.html?ee={0} &g={1}' > <img src='/Gemma/images/download.gif'/> </a>",
 						activeExperimentsString, geneId);
 			}
 

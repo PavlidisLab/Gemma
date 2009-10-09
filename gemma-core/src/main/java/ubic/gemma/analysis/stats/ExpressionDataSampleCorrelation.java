@@ -96,7 +96,7 @@ public class ExpressionDataSampleCorrelation {
      * @param ee
      */
     public static void process( ExpressionDataDoubleMatrix eeDoubleMatrix, ExpressionExperiment ee ) {
-        DoubleMatrix cormat = getMatrix( eeDoubleMatrix );
+        DoubleMatrix<BioAssay, BioAssay> cormat = getMatrix( eeDoubleMatrix );
         String fileBaseName = getMatrixFileBaseName( ee );
         try {
             createMatrixImages( cormat, getStorageDirectory(), fileBaseName );
@@ -111,7 +111,7 @@ public class ExpressionDataSampleCorrelation {
      *         original matrix.
      */
     @SuppressWarnings("unchecked")
-    public static DoubleMatrix getMatrix( ExpressionDataDoubleMatrix matrix ) {
+    public static DoubleMatrix<BioAssay, BioAssay> getMatrix( ExpressionDataDoubleMatrix matrix ) {
         int cols = matrix.columns();
         double[][] rawcols = new double[cols][];
 
@@ -163,19 +163,19 @@ public class ExpressionDataSampleCorrelation {
      * @param location directory where files will be saved
      * @param fileBaseName root name for files (without .png ending)
      */
-    protected static void createMatrixImages( DoubleMatrix matrix, File location, String fileBaseName )
-            throws IOException {
+    protected static void createMatrixImages( DoubleMatrix<BioAssay, BioAssay> matrix, File location,
+            String fileBaseName ) throws IOException {
 
         writeMatrix( matrix, location, fileBaseName + ".txt" );
 
         int numRows = matrix.rows();
 
-        DoubleMatrix clippedHard = clipData( matrix, HI_CONTRAST_COR_THRESH, 1.0 );
+        DoubleMatrix<BioAssay, BioAssay> clippedHard = clipData( matrix, HI_CONTRAST_COR_THRESH, 1.0 );
 
-        DoubleMatrix clippedSoft = clipData( matrix, LO_CONTRAST_COR_THRESH, 1.0 );
+        DoubleMatrix<BioAssay, BioAssay> clippedSoft = clipData( matrix, LO_CONTRAST_COR_THRESH, 1.0 );
 
-        ColorMatrix hard = new ColorMatrix( clippedHard );
-        ColorMatrix soft = new ColorMatrix( clippedSoft );
+        ColorMatrix<BioAssay, BioAssay> hard = new ColorMatrix<BioAssay, BioAssay>( clippedHard );
+        ColorMatrix<BioAssay, BioAssay> soft = new ColorMatrix<BioAssay, BioAssay>( clippedSoft );
 
         int smallSize = 2;
         if ( numRows > 50 ) smallSize = 1;
@@ -197,7 +197,8 @@ public class ExpressionDataSampleCorrelation {
      * @param file
      * @throws IOException
      */
-    private static void writeMatrix( DoubleMatrix matrix, File location, String file ) throws IOException {
+    private static void writeMatrix( DoubleMatrix<BioAssay, BioAssay> matrix, File location, String file )
+            throws IOException {
         File f = new File( location, file );
         OutputStream o;
 
@@ -228,10 +229,11 @@ public class ExpressionDataSampleCorrelation {
     /**
      * Clip matrix so values are within the limits; this operates on a copy.
      */
-    private static DoubleMatrix clipData( DoubleMatrix data, double lowThresh, double highThresh ) {
+    private static DoubleMatrix<BioAssay, BioAssay> clipData( DoubleMatrix<BioAssay, BioAssay> data, double lowThresh,
+            double highThresh ) {
 
         // create a copy
-        DoubleMatrix copy = DoubleMatrixFactory.dense( data );
+        DoubleMatrix<BioAssay, BioAssay> copy = data.copy();
 
         // clip the copy and return it.
         for ( int i = 0; i < copy.rows(); i++ ) {

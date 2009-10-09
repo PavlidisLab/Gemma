@@ -74,6 +74,12 @@ public class ProbeCoexpressionAnalysisServiceImpl extends
         return this.getProbeCoexpressionAnalysisDao().findByTaxon( taxon );
     }
 
+    @Override
+    protected Collection handleFindByParentTaxon( Taxon taxon ) throws Exception {
+        return this.getProbeCoexpressionAnalysisDao().findByParentTaxon( taxon );
+    }
+    
+
     @SuppressWarnings("unchecked")
     @Override
     protected ProbeCoexpressionAnalysis handleFindByUniqueInvestigations( Collection investigations ) throws Exception {

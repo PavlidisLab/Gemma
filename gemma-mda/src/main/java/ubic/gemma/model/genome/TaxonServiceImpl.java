@@ -54,6 +54,11 @@ public class TaxonServiceImpl extends ubic.gemma.model.genome.TaxonServiceBase {
     }
 
     @Override
+    protected Taxon handleFindByAbbreviation( String abbreviation ) throws Exception {
+        return this.getTaxonDao().findByAbbreviation( abbreviation );
+    }
+    
+    @Override
     protected Taxon handleFindOrCreate( Taxon taxon ) throws Exception {
         return this.getTaxonDao().findOrCreate( taxon );
     }
@@ -85,4 +90,13 @@ public class TaxonServiceImpl extends ubic.gemma.model.genome.TaxonServiceBase {
         this.getTaxonDao().update( taxon );
     }
 
+    /**
+     * @see ubic.gemma.model.genome.TaxonService#findChildTaxaByParent(ubic.gemma.model.genome.Taxon)
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    protected Collection<Taxon> handleFindChildTaxaByParent( ubic.gemma.model.genome.Taxon taxon ) throws java.lang.Exception {
+        return this.getTaxonDao().findChildTaxaByParent( taxon );
+    }
+    
 }

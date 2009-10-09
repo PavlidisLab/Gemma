@@ -56,8 +56,11 @@ public class TestExpressionDataDoubleMatrix extends ExpressionDataDoubleMatrix {
 
         Taxon taxon = Taxon.Factory.newInstance();
         taxon.setCommonName( "mouse" );
+        taxon.setIsGenesUsable( true );
+        taxon.setIsSpecies(true);
         metaData.setTaxon( taxon );
         metaData.setName( "ee" );
+        
         metaData.setQuantitationTypeName( "testing" );
         metaData.setGeneralType( GeneralType.QUANTITATIVE );
         metaData.setScale( ScaleType.LOG2 );

@@ -70,7 +70,7 @@ import ubic.gemma.loader.util.parser.Parser;
  * @author pavlidis
  * @version $Id$
  */
-public class GeoFamilyParser implements Parser {
+public class GeoFamilyParser implements Parser<Object> {
 
     /**
      * 

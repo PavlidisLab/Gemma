@@ -247,9 +247,19 @@ Ext.onReady(function() {
 
 	var taxonCombo = new Gemma.TaxonCombo({
 				id : 'taxon-combo',
-				fieldLabel : "Taxon",
-				allowBlank : false
+				fieldLabel : "Experiment taxon",
+				emptyText : "RNA Taxon",
+				allowBlank : false,
+				isDisplayTaxonSpecies : true
 			});
+	
+	var taxonArrayCombo = new Gemma.TaxonCombo({
+				id : 'taxonArray-combo',
+				fieldLabel : "Array taxon",	
+				emptyText : "Array Taxon ",
+				allowBlank : false,
+				isDisplayTaxonSpecies : true
+	});
 
 	var arrayDesignCombo = new Gemma.ArrayDesignCombo({
 				minHeight : 80,
@@ -341,7 +351,12 @@ Ext.onReady(function() {
 							columns : 1
 						},
 
-						items : [arrayDesignCombo, {
+						items : [arrayDesignCombo,{
+								//create form layout for taxon array combo cell otherwise field label not displayed
+								xtype : 'panel',
+								layout : 'form',
+								items : [taxonArrayCombo]						
+							}, {
 							id : 'array-design-info-area',
 							xtype : 'panel',
 							html : "<div style='width:400px,height:100px;overflow :auto;margin: 4px 0px 4px 0px;border:1px #CCC solid ;'"
@@ -439,14 +454,27 @@ Ext.onReady(function() {
 		tool.commandObject.arrayDesignIds = [arrayDesign.data.id];
 	});
 
-	taxonCombo.on('select', function(combo, taxon) {
-				arrayDesignCombo.taxonChanged(taxon.data);
-			}.createDelegate(this));
+	
+	
+	taxonCombo.on('select', function(combo, taxon) {		
+		//if taxon combo changes should update array taxon combo with the same taxon
+		taxonArrayCombo.setTaxon(taxon.data);
+		arrayDesignCombo.taxonChanged(taxon.data);
+	}.createDelegate(this));
 
 	taxonCombo.on('ready', function(taxon) {
-				var task = new Ext.util.DelayedTask(arrayDesignCombo.taxonChanged, arrayDesignCombo, [taxon]);
-				task.delay(500);
-			}.createDelegate(this));
+		var task = new Ext.util.DelayedTask(arrayDesignCombo.taxonChanged, arrayDesignCombo, [taxon]);
+		task.delay(500);
+	}.createDelegate(this));
+	
+	taxonArrayCombo.on('select', function(combo, taxon) {
+		arrayDesignCombo.taxonChanged(taxon.data);
+	}.createDelegate(this));
+
+    taxonArrayCombo.on('ready', function(taxon) {
+		var task = new Ext.util.DelayedTask(arrayDesignCombo.taxonChanged, arrayDesignCombo, [taxon]);
+		task.delay(500);
+	}.createDelegate(this));
 
 	uploadForm.on('start', function(result) {
 				Ext.getCmp('submit-data-button').disable();

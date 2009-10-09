@@ -33,10 +33,14 @@ import org.apache.commons.logging.LogFactory;
 
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.analysis.service.ExpressionExperimentVectorManipulatingService;
+import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
+import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
+import ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentVectorMergeEvent;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayService;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
@@ -72,6 +76,9 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
  * @spring.property name="arrayDesignService" ref="arrayDesignService"
  * @spring.property name="bioAssayDimensionService" ref="bioAssayDimensionService"
  * @spring.property name="bioAssayService" ref="bioAssayService"
+ * @spring.property name="twoChannelMissingValueService" ref="twoChannelMissingValues"
+ * @spring.property name="processedExpressionDataVectorCreateService" ref="processedExpressionDataVectorCreateService"
+ * @spring.property name="auditTrailService" ref="auditTrailService"
  * @author pavlidis
  * @version $Id$
  * @see ExpressionDataMatrixBuilder
@@ -90,6 +97,24 @@ public class VectorMergingService extends ExpressionExperimentVectorManipulating
 
     private BioAssayService bioAssayService;
 
+    private AuditTrailService auditTrailService;
+
+    private ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService;
+    private TwoChannelMissingValues twoChannelMissingValueService;
+
+    public void setProcessedExpressionDataVectorCreateService(
+            ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService ) {
+        this.processedExpressionDataVectorCreateService = processedExpressionDataVectorCreateService;
+    }
+
+    public void setTwoChannelMissingValueService( TwoChannelMissingValues twoChannelMissingValueService ) {
+        this.twoChannelMissingValueService = twoChannelMissingValueService;
+    }
+
+    public void setAuditTrailService( AuditTrailService auditTrailService ) {
+        this.auditTrailService = auditTrailService;
+    }
+
     /**
      * Merge the vectors for the given experiment.
      * 
@@ -101,11 +126,53 @@ public class VectorMergingService extends ExpressionExperimentVectorManipulating
     }
 
     /**
+     * Do missing value and processed vector creation steps.
+     * 
+     * @param ees
+     */
+    private void postProcess( ExpressionExperiment ee ) {
+
+        log.info( "Postprocessing ..." );
+
+        Collection<ArrayDesign> arrayDesignsUsed = expressionExperimentService.getArrayDesignsUsed( ee );
+        if ( arrayDesignsUsed.size() > 1 ) {
+            log.warn( "Skipping postprocessing because experiment uses "
+                    + "multiple array types. Please check valid entry and run postprocessing separately." );
+        }
+
+        ArrayDesign arrayDesignUsed = arrayDesignsUsed.iterator().next();
+        processForMissingValues( ee, arrayDesignUsed );
+        processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
+
+    }
+
+    /**
+     * @param ee
+     * @return
+     */
+    private boolean processForMissingValues( ExpressionExperiment ee, ArrayDesign design ) {
+
+        boolean wasProcessed = false;
+
+        TechnologyType tt = design.getTechnologyType();
+        if ( tt == TechnologyType.TWOCOLOR || tt == TechnologyType.DUALMODE ) {
+            log.info( ee + " uses a two-color array design, processing for missing values ..." );
+            expressionExperimentService.thawLite( ee );
+            twoChannelMissingValueService.computeMissingValues( ee );
+            wasProcessed = true;
+        }
+
+        return wasProcessed;
+    }
+
+    /**
      * A main entry point for this class.
      * 
      * @param expExp
      */
     public void mergeVectors( ExpressionExperiment expExp, Long dimId ) {
+
+        this.processedExpressionDataVectorService.removeProcessedDataVectors( expExp );
 
         expressionExperimentService.thawLite( expExp );
         Collection<QuantitationType> qts = expressionExperimentService.getQuantitationTypes( expExp );
@@ -135,12 +202,13 @@ public class VectorMergingService extends ExpressionExperimentVectorManipulating
                 allOldBioAssayDims.add( bioAssayDim );
             }
         }
-        
-        if (allOldBioAssayDims.size() == 0 ) {
-            throw new IllegalStateException("NO bioassaydimensions found to merge (previously merged ones are filtered, data may be corrupt?");
+
+        if ( allOldBioAssayDims.size() == 0 ) {
+            throw new IllegalStateException(
+                    "NO bioassaydimensions found to merge (previously merged ones are filtered, data may be corrupt?" );
         }
-        
-        if (allOldBioAssayDims.size() == 1 ){
+
+        if ( allOldBioAssayDims.size() == 1 ) {
             log.warn( "Experiment already has only a single bioassaydimension, nothing seems to need merging. Bailing" );
             return;
         }
@@ -222,6 +290,19 @@ public class VectorMergingService extends ExpressionExperimentVectorManipulating
             if ( oldDim.equals( newBioAd ) ) continue;
             bioAssayDimensionService.remove( oldDim );
         }
+
+        audit( expExp, "Vector merging peformed, merged " + allOldBioAssayDims + " old bioassay dimensions for "
+                + qts.size() + " quantitation types." );
+
+        postProcess( expExp );
+    }
+
+    /**
+     * @param arrayDesign
+     */
+    private void audit( ExpressionExperiment ee, String note ) {
+        AuditEventType eventType = ExpressionExperimentVectorMergeEvent.Factory.newInstance();
+        auditTrailService.addUpdateEvent( ee, eventType, note );
     }
 
     public void setArrayDesignService( ArrayDesignService arrayDesignService ) {

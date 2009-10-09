@@ -21,6 +21,7 @@ package ubic.gemma.model.expression.designElement;
 import java.util.Collection;
 import java.util.Map;
 
+import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.PhysicalLocation;
@@ -118,7 +119,7 @@ public interface CompositeSequenceService {
      * Returns a map of CompositeSequences to PhysicalLocation to BlatAssociations at each location.
      * </p>
      */
-    public java.util.Map<CompositeSequence, Map<PhysicalLocation, Collection<BlatAssociation>>> getGenesWithSpecificity(
+    public java.util.Map<CompositeSequence, Collection<BioSequence2GeneProduct>> getGenesWithSpecificity(
             java.util.Collection<CompositeSequence> compositeSequences );
 
     /**

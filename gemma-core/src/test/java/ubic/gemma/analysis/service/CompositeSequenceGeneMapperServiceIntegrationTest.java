@@ -67,6 +67,8 @@ public class CompositeSequenceGeneMapperServiceIntegrationTest extends AbstractG
     ExpressionExperimentService expressionExperimentService = null;
 
     AbstractGeoService geoService = null;
+    
+    TaxonService taxonService= null;
 
     static ArrayDesign ad = null;
 
@@ -98,6 +100,8 @@ public class CompositeSequenceGeneMapperServiceIntegrationTest extends AbstractG
         compositeSequenceService = ( CompositeSequenceService ) this.getBean( "compositeSequenceService" );
 
         geneService = ( GeneService ) this.getBean( "geneService" );
+        
+        taxonService= (TaxonService)this.getBean( "taxonService" );
 
         arrayDesignService = ( ArrayDesignService ) this.getBean( "arrayDesignService" );
 
@@ -155,6 +159,7 @@ public class CompositeSequenceGeneMapperServiceIntegrationTest extends AbstractG
      */
     private void loadGeneData() {
         NcbiGeneLoader loader = new NcbiGeneLoader();
+        loader.setTaxonService(taxonService);
         loader.setPersisterHelper( ( PersisterHelper ) this.getBean( "persisterHelper" ) );
         String filePath = ConfigUtils.getString( "gemma.home" ) + File.separatorChar;
         filePath = filePath + "gemma-core/src/test/resources/data/loader/genome/gene";
@@ -181,7 +186,7 @@ public class CompositeSequenceGeneMapperServiceIntegrationTest extends AbstractG
      */
     private void blatCollapsedSequences() throws IOException {
 
-        Taxon taxon = ( ( TaxonService ) getBean( "taxonService" ) ).findByScientificName( "Homo sapiens" );
+        Taxon taxon = taxonService.findByScientificName( "Homo sapiens" );
 
         ArrayDesignSequenceAlignmentService aligner = ( ArrayDesignSequenceAlignmentService ) getBean( "arrayDesignSequenceAlignmentService" );
 
@@ -190,7 +195,7 @@ public class CompositeSequenceGeneMapperServiceIntegrationTest extends AbstractG
 
         Collection<BlatResult> results = blat.processPsl( blatResultInputStream, taxon );
 
-        aligner.processArrayDesign( ad, results );
+        aligner.processArrayDesign( ad, taxon, results );
 
         // real stuff.
         ArrayDesignProbeMapperService arrayDesignProbeMapperService = ( ArrayDesignProbeMapperService ) this

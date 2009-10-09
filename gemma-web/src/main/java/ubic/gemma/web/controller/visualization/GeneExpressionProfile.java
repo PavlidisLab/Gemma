@@ -18,134 +18,117 @@
  */
 package ubic.gemma.web.controller.visualization;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
-import ubic.basecode.dataStructure.DoublePoint;
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
 import ubic.gemma.model.expression.designElement.DesignElement;
-import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 
 /**
+ * Expression data for one probe; designed for conveying small amounts of data to clients. NOTE the data are
+ * standardized.
+ * 
  * @author kelsey
  * @version $Id$
  */
 public class GeneExpressionProfile {
 
-    private static Log log = LogFactory.getLog( GeneExpressionProfile.class );
+    private boolean allMissing = true;
+    private String color = "black";
+    private double[] profile;
+    private Integer factor;
 
     /*
      * This is a collection because probes are not specific.
      */
-    Collection<GeneValueObject> genes;
-    List<DoublePoint> points;
-    DesignElement probe;
-    int factor;
-    private String color = "black";
-    private double pValue;
+    private Collection<GeneValueObject> genes;
+    private DesignElement probe;
+    private Double pValue = null;
 
-    public GeneExpressionProfile( DoubleVectorValueObject vector, String color, int factor, double pValue ) {
-        this.genes = convert2GeneValueObjects( vector.getGenes() );
+    public GeneExpressionProfile( DoubleVectorValueObject vector ) {
+        this( vector, null, null, null );
+    }
+
+    public GeneExpressionProfile( DoubleVectorValueObject vector, String color, Integer factor, Double pValue ) {
+        this.genes = GeneValueObject.convert2GeneValueObjects( vector.getGenes() );
         this.probe = vector.getDesignElement();
         this.probe.setArrayDesign( null );
-        this.points = new ArrayList<DoublePoint>();
         this.factor = factor;
         this.pValue = pValue;
-        
+
         if ( color != null ) {
             this.color = color;
         }
 
-        double[] data = vector.standardize();
+        this.profile = vector.standardize();
 
         int i = 0;
         // Also test to make sure all the data isn't NAN
-        Boolean allNan = true;
-        for ( Double d : data ) {
-
-            if ( !d.equals( Double.NaN ) ) allNan = false;
-
-            // TESTING: simulate missing data.
-            // if ( RandomUtils.nextDouble() < 0.1 || i == 0) {
-            // points.add( new DoublePoint( i, Double.NaN ) );
-            // } else {
-            points.add( new DoublePoint( i, d ) );
-            // }
+        for ( Double d : this.profile ) {
+            if ( !d.equals( Double.NaN ) ) this.allMissing = false;
             i++;
         }
-        // If all nan change points to null;
-        if ( allNan ) {
-            points = null;
-            // log.info( "All Nan removed from: " + this.probe);
-        }
-    }
 
-    // TODO move this to GeneValueObject
-    private Collection<GeneValueObject> convert2GeneValueObjects( Collection<Gene> genes ) {
-
-        Collection<GeneValueObject> converted = new HashSet<GeneValueObject>();
-        if (genes == null) return converted;
-        
-        for ( Gene g : genes ){
-            if (g == null) continue;
-            converted.add( new GeneValueObject( g.getId(), g.getName(), g.getNcbiId(), g.getOfficialSymbol(), g
-                    .getOfficialName(), g.getDescription() ) );
-        }
-        
-        return converted;
     }
 
     public String getColor() {
         return color;
     }
 
-    public void setColor( String color ) {
-        this.color = color;
+    public Integer getFactor() {
+        return factor;
     }
 
     public Collection<GeneValueObject> getGenes() {
         return genes;
     }
 
-    public void setGenes( Collection<GeneValueObject> genes ) {
-        this.genes = genes;
-    }
-
-    public List<DoublePoint> getPoints() {
-        return this.points;
-    }
-
-    public void setPoints( List<DoublePoint> points ) {
-        this.points = points;
-    }
-
     public DesignElement getProbe() {
         return probe;
+    }
+
+    public Double getPValue() {
+        return pValue;
+    }
+
+    /**
+     * @return the allMissing
+     */
+    public boolean isAllMissing() {
+        return allMissing;
+    }
+
+    public void setColor( String color ) {
+        this.color = color;
+    }
+
+    /**
+     * @return the profile
+     */
+    public double[] getProfile() {
+        return profile;
+    }
+
+    /**
+     * @param profile the profile to set
+     */
+    public void setProfile( double[] profile ) {
+        this.profile = profile;
+    }
+
+    public void setFactor( Integer factor ) {
+        this.factor = factor;
+    }
+
+    public void setGenes( Collection<GeneValueObject> genes ) {
+        this.genes = genes;
     }
 
     public void setProbe( DesignElement probe ) {
         this.probe = probe;
     }
 
-    public int getFactor() {
-        return factor;
-    }
-
-    public void setFactor( int factor ) {
-        this.factor = factor;
-    }
-
-    public double getPValue() {
-        return pValue;
-    }
-
-    public void setPValue( double value ) {
+    public void setPValue( Double value ) {
         pValue = value;
     }
 

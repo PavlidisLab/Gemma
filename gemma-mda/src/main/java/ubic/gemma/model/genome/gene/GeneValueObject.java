@@ -19,6 +19,11 @@
 
 package ubic.gemma.model.genome.gene;
 
+import java.util.Collection;
+import java.util.HashSet;
+
+import ubic.gemma.model.genome.Gene;
+
 /**
  * Took out of the model, can edit by hand
  * 
@@ -44,6 +49,21 @@ public class GeneValueObject implements java.io.Serializable {
     private java.lang.String description;
 
     public GeneValueObject() {
+    }
+
+    // TODO move this to GeneValueObject
+    public static Collection<GeneValueObject> convert2GeneValueObjects( Collection<Gene> genes ) {
+
+        Collection<GeneValueObject> converted = new HashSet<GeneValueObject>();
+        if ( genes == null ) return converted;
+
+        for ( Gene g : genes ) {
+            if ( g == null ) continue;
+            converted.add( new GeneValueObject( g.getId(), g.getName(), g.getNcbiId(), g.getOfficialSymbol(), g
+                    .getOfficialName(), g.getDescription() ) );
+        }
+
+        return converted;
     }
 
     /**

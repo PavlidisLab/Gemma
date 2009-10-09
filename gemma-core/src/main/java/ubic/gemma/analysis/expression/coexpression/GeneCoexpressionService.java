@@ -518,7 +518,15 @@ public class GeneCoexpressionService {
         Gene g = queryGenes.iterator().next();
         // note: we assume they all come from one taxon.
         Taxon t = g.getTaxon();
-        Collection<? extends Analysis> analyses = geneCoexpressionAnalysisService.findByTaxon( t );
+        Collection<? extends Analysis> analyses =null;
+        //check if the taxon is a species if it is not then it is a parent taxon and need to get child taxa coexpression analyses.
+        if(!t.getIsSpecies()){
+            analyses = geneCoexpressionAnalysisService.findByParentTaxon( t );
+        }else{
+            analyses = geneCoexpressionAnalysisService.findByTaxon( t );
+        }
+               
+       // Collection<? extends Analysis> analyses = geneCoexpressionAnalysisService.findByTaxon( t );
         if ( analyses.size() == 0 ) {
             throw new IllegalStateException( "No gene coexpression analysis is available for " + t.getScientificName() );
         } else if ( analyses.size() == 1 ) {

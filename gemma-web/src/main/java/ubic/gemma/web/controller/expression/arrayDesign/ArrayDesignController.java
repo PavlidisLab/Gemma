@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -190,8 +191,8 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
      */
     private static final int NUM_PROBES_TO_SHOW = 500;
     private ArrayDesignMapResultService arrayDesignMapResultService = null;
-    private ArrayDesignReportService arrayDesignReportService = null;
-    private ArrayDesignService arrayDesignService = null;
+    ArrayDesignReportService arrayDesignReportService = null;
+    ArrayDesignService arrayDesignService = null;
     private AuditTrailService auditTrailService;
     private Cache cache;
 
@@ -603,13 +604,10 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
         Long numCompositeSequences = new Long( arrayDesignService.getCompositeSequenceCount( arrayDesign ) );
         Collection<ExpressionExperiment> ee = arrayDesignService.getExpressionExperiments( arrayDesign );
         Long numExpressionExperiments = new Long( ee.size() );
-        Taxon t = arrayDesignService.getTaxon( id );
-        String taxon = "";
-        if ( t != null ) {
-            taxon = t.getScientificName();
-        } else {
-            taxon = "(Taxon not known)";
-        }
+
+        Collection<Taxon> t = arrayDesignService.getTaxa( id );
+        String taxa = formatTaxa( t );
+
         String colorString = formatTechnologyType( arrayDesign );
 
         ArrayDesignValueObject summary = arrayDesignReportService.getSummaryObject( id );
@@ -641,7 +639,7 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
         mav.addObject( "subsumees", subsumees );
         mav.addObject( "merger", merger );
         mav.addObject( "mergees", mergees );
-        mav.addObject( "taxon", taxon );
+        mav.addObject( "taxon", taxa );
         mav.addObject( "arrayDesign", arrayDesign );
         mav.addObject( "alternateNames", this.formatAlternateNames( arrayDesign ) );
         mav.addObject( "numCompositeSequences", numCompositeSequences );
@@ -849,6 +847,30 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
         }
         String eeIds = StringUtils.join( eeIdList, "," );
         return eeIds;
+    }
+
+    /**
+     * Method to format taxon list for display.
+     * 
+     * @param taxonSet Collection of taxon used to create array/platform
+     * @return Alpabetically sorted semicolon separated list of scientific names of taxa used on array/platform
+     */
+    private String formatTaxa( Collection<Taxon> taxonSet ) {
+        String taxonListString = "";
+        int i = 0;
+        if ( !taxonSet.isEmpty() ) {
+            String[] taxonList = new String[taxonSet.size()];
+            for ( Taxon taxon : taxonSet ) {
+                taxonList[i] = taxon.getScientificName();
+                i++;
+            }
+            Arrays.sort( taxonList, String.CASE_INSENSITIVE_ORDER );
+            taxonListString = StringUtils.join( taxonList, "; " );
+            ;
+        } else {
+            taxonListString = "(Taxon not known)";
+        }
+        return taxonListString;
     }
 
     /**

@@ -127,7 +127,7 @@ public class ExperimentalDesignVisualizationService {
         data.setRowNames( efStrings );
         data.setColumnNames( baStrings );
 
-        ColorMatrix cm = new ColorMatrix( data, ColorMap.GREENRED_COLORMAP, Color.GRAY );
+        ColorMatrix<String, String> cm = new ColorMatrix<String, String>( data, ColorMap.GREENRED_COLORMAP, Color.GRAY );
 
         try {
             writeImage( cm, File.createTempFile( e.getShortName() + "_", ".png" ) );
@@ -142,7 +142,7 @@ public class ExperimentalDesignVisualizationService {
      * @param fileName
      * @throws IOException
      */
-    private void writeImage( ColorMatrix matrix, File outputfile ) throws IOException {
+    private void writeImage( ColorMatrix<String, String> matrix, File outputfile ) throws IOException {
         log.info( outputfile );
         MatrixDisplay writer = new MatrixDisplay( matrix );
         writer.setCellSize( new Dimension( 18, 18 ) );

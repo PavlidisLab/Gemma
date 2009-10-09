@@ -274,9 +274,16 @@ public interface ArrayDesignDao extends BaseDao<ArrayDesign> {
             ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
 
     /**
-     * 
+     * @deprecated Use getTaxa as array designs can have more than one associated taxon. This method will return only the first taxon found.
      */
     public ubic.gemma.model.genome.Taxon getTaxon( java.lang.Long id );
+    
+    
+    /**
+     * 
+     */
+    public java.util.Collection<ubic.gemma.model.genome.Taxon> getTaxa( java.lang.Long id );
+    
 
     /**
      * 

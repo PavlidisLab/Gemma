@@ -34,8 +34,7 @@ import org.w3c.dom.Element;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSetService;
 import ubic.gemma.model.analysis.expression.ProbeAnalysisResult;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultService;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultService;
 import ubic.gemma.model.common.Securable;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
@@ -54,7 +53,6 @@ import ubic.gemma.model.genome.gene.GeneService;
  * @author gavin
  * @version$Id$
  */
-
 public class DifferentialExpressionProbeResultEndpoint extends AbstractGemmaEndpoint {
 
     private static Log log = LogFactory.getLog( DifferentialExpressionProbeResultEndpoint.class );
@@ -65,9 +63,7 @@ public class DifferentialExpressionProbeResultEndpoint extends AbstractGemmaEndp
 
     private TaxonService taxonService;
 
-    private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
-
-    private DifferentialExpressionAnalysisResultService differentialExpressionAnalysisResultService;
+    private DifferentialExpressionResultService differentialExpressionResultService;
 
     private ExpressionExperimentSetService expressionExperimentSetService;
 
@@ -77,16 +73,8 @@ public class DifferentialExpressionProbeResultEndpoint extends AbstractGemmaEndp
     public static final String LOCAL_NAME = "differentialExpressionProbeResult";
 
     public void setDifferentialExpressionAnalysisResultService(
-            DifferentialExpressionAnalysisResultService differentialExpressionAnalysisResultService ) {
-        this.differentialExpressionAnalysisResultService = differentialExpressionAnalysisResultService;
-    }
-
-    /**
-     * Sets the "business service" to delegate to.
-     */
-    public void setDifferentialExpressionAnalysisService(
-            DifferentialExpressionAnalysisService differentialExpressionAnalysisService ) {
-        this.differentialExpressionAnalysisService = differentialExpressionAnalysisService;
+            DifferentialExpressionResultService differentialExpressionAnalysisResultService ) {
+        this.differentialExpressionResultService = differentialExpressionAnalysisResultService;
     }
 
     public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
@@ -180,8 +168,8 @@ public class DifferentialExpressionProbeResultEndpoint extends AbstractGemmaEndp
         responseWrapper.appendChild( responseElement );
 
         for ( Gene gene : geneCol ) {
-            Map<ExpressionExperiment, Collection<ProbeAnalysisResult>> results = differentialExpressionAnalysisService
-                    .findResultsForGeneInExperimentsMetThreshold( gene, eeCol, Double.parseDouble( threshold ), null );
+            Map<ExpressionExperiment, Collection<ProbeAnalysisResult>> results = differentialExpressionResultService
+                    .find( gene, eeCol, Double.parseDouble( threshold ), null );
 
             for ( ExpressionExperiment ee : results.keySet() ) {
                 // main call to the DifferentialExpressionAnalysisService to retrieve ProbeAnalysisResultSet collection
@@ -219,7 +207,7 @@ public class DifferentialExpressionProbeResultEndpoint extends AbstractGemmaEndp
                 e2.appendChild( document.createTextNode( ee ) );
                 responseElement.appendChild( e2 );
 
-                differentialExpressionAnalysisResultService.thawAnalysisResult( par );
+                differentialExpressionResultService.thaw( par );
                 Element e3 = document.createElement( "probe" );
                 e3.appendChild( document.createTextNode( par.getProbe().getName() ) );
                 responseElement.appendChild( e3 );

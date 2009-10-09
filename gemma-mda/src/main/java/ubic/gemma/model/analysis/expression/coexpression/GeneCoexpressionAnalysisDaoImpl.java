@@ -114,6 +114,24 @@ public class GeneCoexpressionAnalysisDaoImpl extends
     }
 
     @Override
+    /**
+     * If a taxon is not a species check if it has child taxa and if so retrieve the expression experiments for the child taxa
+     */
+    protected Collection<GeneCoexpressionAnalysis> handleFindByParentTaxon( Taxon taxon ) {
+                       
+        final String queryStringParent = "select distinct goa from GeneCoexpressionAnalysisImpl as goa inner join goa.expressionExperimentSetAnalyzed"
+            + " as eesa inner join eesa.experiments as ee "
+            + "inner join ee.bioAssays as ba "
+            + "inner join ba.samplesUsed as sample where sample.sourceTaxon.parentTaxon = :taxon ";   
+        return this.getHibernateTemplate().findByNamedParam( queryStringParent, "taxon", taxon );        
+        
+    }
+    
+ 
+    
+    
+
+    @Override
     protected Collection handleGetDatasetsAnalyzed( GeneCoexpressionAnalysis analysis ) throws Exception {
         final String queryString = "select e from GeneCoexpressionAnalysisImpl g inner join g.expressionExperimentSetAnalyzed eesa inner join eesa.experiments e where g=:g";
         return getHibernateTemplate().findByNamedParam( queryString, "g", analysis );

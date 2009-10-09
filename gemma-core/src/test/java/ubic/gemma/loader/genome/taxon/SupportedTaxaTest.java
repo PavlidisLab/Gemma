@@ -24,6 +24,7 @@ import ubic.gemma.model.genome.Taxon;
 /**
  * @author pavlidis
  * @version $Id$
+ * @deprecated
  */
 public class SupportedTaxaTest extends TestCase {
 

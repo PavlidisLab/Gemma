@@ -45,7 +45,7 @@ import ubic.gemma.loader.entrez.pubmed.PubMedSearch;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.auditAndSecurity.ContactService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
-import ubic.gemma.model.common.auditAndSecurity.eventType.CommentedEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.BioMaterialMappingUpdate; 
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.BibliographicReferenceService;
 import ubic.gemma.model.common.description.DatabaseEntry;
@@ -319,6 +319,9 @@ public class ExpressionExperimentFormController extends BaseFormController {
         Map<BioAssay, BioMaterial> deleteAssociations = new HashMap<BioAssay, BioMaterial>();
         // set the bioMaterial - bioAssay associations if they are different
         Set<Entry<String, JSONValue>> bioAssays = bioAssayMap.entrySet();
+
+        int newBioMaterialCount = 0;
+
         for ( Entry<String, JSONValue> entry : bioAssays ) {
             // check if the bioAssayId is a nullElement
             // if it is, skip over this entry
@@ -338,6 +341,8 @@ public class ExpressionExperimentFormController extends BaseFormController {
                     newBioMaterials.add( newMaterial );
                 }
             }
+
+            newBioMaterialCount = newBioMaterials.size();
 
             BioAssay bioAssay = bioAssayService.load( bioAssayId );
             Collection<BioMaterial> bMats = bioAssay.getSamplesUsed();
@@ -364,6 +369,7 @@ public class ExpressionExperimentFormController extends BaseFormController {
                     BioMaterial oldBioMaterial = bMats.iterator().next();
                     newMaterial = bioMaterialService.copy( oldBioMaterial );
                     newMaterial.setName( "Modeled after " + oldBioMaterial.getName() );
+                    newMaterial.getFactorValues().clear();
                     newMaterial = ( BioMaterial ) persisterHelper.persist( newMaterial );
                 } else {
                     newMaterial = bioMaterialService.load( newBioMaterialId );
@@ -394,10 +400,8 @@ public class ExpressionExperimentFormController extends BaseFormController {
             bioAssayService.removeBioMaterialAssociation( assay, deleteAssociations.get( assay ) );
         }
 
-        /*
-         * TODO: make this a separate event class, so we can flag experiments that need to be reanalyzed after doing this.
-         */
-        audit( expressionExperiment, CommentedEvent.Factory.newInstance(), "Updated biomaterial -> bioassay map" );
+        audit( expressionExperiment, BioMaterialMappingUpdate.Factory.newInstance(), newBioMaterialCount
+                + " biomaterials" );
     }
 
     /**

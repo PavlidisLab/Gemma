@@ -569,6 +569,8 @@
 					<property name="includes">
 						<list>
 							<value>getTaxa</value>
+							<value>getTaxaSpecies</value>
+							<value>getTaxaWithGenes</value>
 							<value>getGenes</value>
 							<value>searchGenes</value>
 							<value>searchMultipleGenes</value>

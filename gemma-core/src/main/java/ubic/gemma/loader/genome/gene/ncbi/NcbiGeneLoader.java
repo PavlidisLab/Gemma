@@ -19,17 +19,20 @@
 package ubic.gemma.loader.genome.gene.ncbi;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.springframework.security.context.SecurityContext;
-import org.springframework.security.context.SecurityContextHolder;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.security.context.SecurityContext;
+import org.springframework.security.context.SecurityContextHolder;
 
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.persistence.PersisterHelper;
 
 /**
@@ -47,6 +50,7 @@ public class NcbiGeneLoader {
     private AtomicBoolean loaderDone;
     private PersisterHelper persisterHelper;
     private int loadedGeneCount = 0;
+    private TaxonService taxonService;
 
     /**
      * @param persisterHelper the persisterHelper to set
@@ -78,6 +82,7 @@ public class NcbiGeneLoader {
      * @param gene2AccFile the gene2accession file
      * @param filterTaxa should we filter out taxa we're not supporting
      */
+    @SuppressWarnings("unchecked")
     public void load( String geneInfoFile, String gene2AccFile, String geneHistoryFile, boolean filterTaxa ) {
 
         /*
@@ -87,7 +92,8 @@ public class NcbiGeneLoader {
         converterDone.set( false );
         loaderDone.set( false );
 
-        NcbiGeneDomainObjectGenerator sdog = new NcbiGeneDomainObjectGenerator();
+        Collection<Taxon> supportedTaxa = this.taxonService.loadAll();
+        NcbiGeneDomainObjectGenerator sdog = new NcbiGeneDomainObjectGenerator( supportedTaxa );
         sdog.setProducerDoneFlag( generatorDone );
         NcbiGeneConverter converter = new NcbiGeneConverter();
         converter.setSourceDoneFlag( generatorDone );
@@ -111,6 +117,10 @@ public class NcbiGeneLoader {
         // Threaded consumer. Consumes Gene objects and persists them into
         // the database
         this.load( geneQueue );
+        //update taxon table to indicate that now there are genes loaded for that taxa.
+        //all or nothing so that if fails for some taxa then no taxa will be updated. 
+        this.updateTaxaWithGenesUsable(sdog.getSupportedTaxaWithNCBIGenes());
+        
     }
 
     /**
@@ -180,8 +190,44 @@ public class NcbiGeneLoader {
         log.info( "Loaded " + loadedGeneCount + " genes. " );
         loaderDone.set( true );
     }
-
+    
+    /**
+     * Method to update taxon to indicate that genes have been loaded for that taxon are are usable. If there is a parent taxon for
+     * this species and it has genes loaded against it then use that parent's taxons genes rather than the
+     * species found in NCBI. Set the flag genesUSable to false for that child taxon that was found in ncbi.
+     * 
+     * @param taxaGenesLoaded List of taxa that have had genes loaded into GEMMA from NCBI.
+     */
+    public void updateTaxaWithGenesUsable( Collection<Taxon> taxaGenesLoaded ) {
+       
+        if ( taxaGenesLoaded != null && !taxaGenesLoaded.isEmpty() ) {
+            for ( Taxon taxon : taxaGenesLoaded ) {
+                Boolean genesUsableParent = false;
+                Taxon parentTaxon = taxon.getParentTaxon();
+                if ( parentTaxon != null && parentTaxon.getIsGenesUsable() ) {
+                    genesUsableParent = true;
+                    taxon.setIsGenesUsable( false );
+                    taxonService.update( taxon );
+                    log.warn( "Parent taxon found: " + parentTaxon + ": Not using genes from taxon: " + taxon );
+                }
+                if ( !taxon.getIsGenesUsable() && !genesUsableParent ) {
+                    taxon.setIsGenesUsable( true );
+                    taxonService.update( taxon );
+                    log.info( "Updating taxon genes usable to true for taxon " + taxon );
+                }
+            }
+        } else {
+            throw new IllegalArgumentException( "No taxa were processed for this NCBI load" );
+        }
+    }
+    
+    
     public boolean isLoaderDone() {
         return loaderDone.get();
+    }
+
+    public void setTaxonService( TaxonService bean ) {
+        this.taxonService = bean;
+
     }
 }

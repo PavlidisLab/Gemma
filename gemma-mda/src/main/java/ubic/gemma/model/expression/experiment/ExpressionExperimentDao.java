@@ -277,6 +277,12 @@ public interface ExpressionExperimentDao extends
      */
     public java.util.Collection<ExpressionExperiment> findByTaxon( ubic.gemma.model.genome.Taxon taxon );
 
+    
+    /**
+     * 
+     */
+    public java.util.Collection<ExpressionExperiment> findByParentTaxon( ubic.gemma.model.genome.Taxon taxon );
+
     /**
      * <p>
      * Does the same thing as

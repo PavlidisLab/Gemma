@@ -24,9 +24,10 @@ import java.util.Iterator;
 import java.util.Map;
 
 import ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet;
+import ubic.gemma.model.analysis.expression.ProbeAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultService;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -39,7 +40,7 @@ import ubic.gemma.testing.BaseSpringContextTest;
  */
 public class DifferentialExpressionAnalysisResultServiceTest extends BaseSpringContextTest {
 
-    private DifferentialExpressionAnalysisResultService analysisResultService = null;
+    private DifferentialExpressionResultService analysisResultService = null;
 
     private DifferentialExpressionAnalysisService analysisService = null;
 
@@ -47,13 +48,13 @@ public class DifferentialExpressionAnalysisResultServiceTest extends BaseSpringC
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.testing.BaseSpringContextTest#onSetUpInTransaction()
      */
+    @Override
     public void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();
 
-        this.analysisResultService = ( DifferentialExpressionAnalysisResultService ) getBean( "differentialExpressionAnalysisResultService" );
+        this.analysisResultService = ( DifferentialExpressionResultService ) getBean( "differentialExpressionResultService" );
 
         this.analysisService = ( DifferentialExpressionAnalysisService ) getBean( "differentialExpressionAnalysisService" );
 
@@ -87,7 +88,7 @@ public class DifferentialExpressionAnalysisResultServiceTest extends BaseSpringC
 
         Collection<DifferentialExpressionAnalysisResult> results = rs.getResults();
 
-        DifferentialExpressionAnalysisResult r = results.iterator().next();
+        ProbeAnalysisResult r = ( ProbeAnalysisResult ) results.iterator().next();
 
         Collection<ExperimentalFactor> factors = analysisResultService.getExperimentalFactors( r );
         log.info( "Num factors: " + factors.size() );
@@ -122,19 +123,19 @@ public class DifferentialExpressionAnalysisResultServiceTest extends BaseSpringC
         Collection<DifferentialExpressionAnalysisResult> results = rs.getResults();
         Iterator<DifferentialExpressionAnalysisResult> iter = results.iterator();
 
-        Collection<DifferentialExpressionAnalysisResult> testResults = new HashSet<DifferentialExpressionAnalysisResult>();
+        Collection<ProbeAnalysisResult> testResults = new HashSet<ProbeAnalysisResult>();
         int testResultsSize = 3;
 
         for ( int i = 0; i < testResultsSize; i++ ) {
-            testResults.add( iter.next() );
+            testResults.add( ( ProbeAnalysisResult ) iter.next() );
         }
 
-        Map<DifferentialExpressionAnalysisResult, Collection<ExperimentalFactor>> factorsByResultMap = analysisResultService
+        Map<ProbeAnalysisResult, Collection<ExperimentalFactor>> factorsByResultMap = analysisResultService
                 .getExperimentalFactors( testResults );
 
-        Collection<DifferentialExpressionAnalysisResult> diffResultKeys = factorsByResultMap.keySet();
+        Collection<ProbeAnalysisResult> diffResultKeys = factorsByResultMap.keySet();
 
-        for ( DifferentialExpressionAnalysisResult d : diffResultKeys ) {
+        for ( ProbeAnalysisResult d : diffResultKeys ) {
 
             Collection<ExperimentalFactor> factors = factorsByResultMap.get( d );
 

@@ -357,6 +357,19 @@ public abstract class ArrayDesignServiceBase extends ubic.gemma.model.common.Aud
     }
 
     /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#getTaxa(java.lang.Long)
+     */
+    public java.util.Collection<ubic.gemma.model.genome.Taxon> getTaxa( final java.lang.Long id ) {
+        try {
+            return this.handleGetTaxa( id );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
+                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.getTaxons(java.lang.Long id)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#isMerged(java.util.Collection)
      */
     public java.util.Map<Long, Boolean> isMerged( final java.util.Collection<Long> ids ) {
@@ -955,6 +968,12 @@ public abstract class ArrayDesignServiceBase extends ubic.gemma.model.common.Aud
      */
     protected abstract ubic.gemma.model.genome.Taxon handleGetTaxon( java.lang.Long id ) throws java.lang.Exception;
 
+    /**
+     * Performs the core logic for {@link #getTaxa(java.lang.Long)}
+     * Lmd 29/07/09 Fishmanomics provide support multi taxon arrays
+     */
+    protected abstract java.util.Collection<ubic.gemma.model.genome.Taxon> handleGetTaxa( java.lang.Long id ) throws java.lang.Exception;
+    
     /**
      * Performs the core logic for {@link #isMerged(java.util.Collection)}
      */

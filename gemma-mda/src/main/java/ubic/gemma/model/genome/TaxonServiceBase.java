@@ -70,6 +70,32 @@ public abstract class TaxonServiceBase implements ubic.gemma.model.genome.TaxonS
     }
 
     /**
+     * @see ubic.gemma.model.genome.TaxonService#findByAbbreviation(java.lang.String)
+     */
+    public ubic.gemma.model.genome.Taxon findByAbbreviation( final java.lang.String abbreviation ) {
+        try {
+            return this.handleFindByAbbreviation( abbreviation );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.genome.TaxonServiceException(
+                    "Error performing 'ubic.gemma.model.genome.TaxonService.findByAbbreviation(java.lang.String abbreviation)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.TaxonService#findChildTaxaByParent(ubic.gemma.model.genome.Taxon)
+     */
+    public java.util.Collection<ubic.gemma.model.genome.Taxon> findChildTaxaByParent( Taxon parentTaxa ) {
+        try {
+            return this.handleFindChildTaxaByParent( parentTaxa );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.genome.TaxonServiceException(
+                    "Error performing 'ubic.gemma.model.genome.TaxonService.findByScientificName(java.lang.String scientificName)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
      * @see ubic.gemma.model.genome.TaxonService#findOrCreate(ubic.gemma.model.genome.Taxon)
      */
     public ubic.gemma.model.genome.Taxon findOrCreate( final ubic.gemma.model.genome.Taxon taxon ) {
@@ -165,6 +191,12 @@ public abstract class TaxonServiceBase implements ubic.gemma.model.genome.TaxonS
             throws java.lang.Exception;
 
     /**
+     * Performs the core logic for {@link #findByScientificName(java.lang.String)}
+     */
+    protected abstract ubic.gemma.model.genome.Taxon handleFindByAbbreviation( java.lang.String abbreviation )
+            throws java.lang.Exception;
+
+    /**
      * Performs the core logic for {@link #findOrCreate(ubic.gemma.model.genome.Taxon)}
      */
     protected abstract ubic.gemma.model.genome.Taxon handleFindOrCreate( ubic.gemma.model.genome.Taxon taxon )
@@ -189,5 +221,11 @@ public abstract class TaxonServiceBase implements ubic.gemma.model.genome.TaxonS
      * Performs the core logic for {@link #update(ubic.gemma.model.genome.Taxon)}
      */
     protected abstract void handleUpdate( ubic.gemma.model.genome.Taxon taxon ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #update(ubic.gemma.model.genome.Taxon)}
+     */
+    protected abstract java.util.Collection<ubic.gemma.model.genome.Taxon> handleFindChildTaxaByParent(
+            ubic.gemma.model.genome.Taxon taxon ) throws java.lang.Exception;
 
 }

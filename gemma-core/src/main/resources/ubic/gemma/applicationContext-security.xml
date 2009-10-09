@@ -536,8 +536,8 @@
                 ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService.create=user,admin
                 ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService.delete=user,admin
                 ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService.findExperimentsWithAnalyses=user,admin,ROLE_ANONYMOUS,AFTER_ACL_COLLECTION_READ
-                ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService.findResultsForGeneInExperiments=user,admin,ROLE_ANONYMOUS
-                ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService.findResultsForGeneInExperimentsMetThreshold=user,admin,ROLE_ANONYMOUS
+                ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultService.find=user,admin,ROLE_ANONYMOUS,AFTER_ACL_MAP_READ
+                ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultService.findInResultSets=user,admin,ROLE_ANONYMOUS
                 ubic.gemma.model.analysis.AnalysisService.delete=admin
                 ubic.gemma.search.IndexService.runAll=admin
                 ubic.gemma.util.monitor.HibernateMonitor.getStats=admin
@@ -663,6 +663,22 @@
 		have authorization priviliges based on -->
 	<bean id="afterAclCollectionRead"
 		class="org.springframework.security.afterinvocation.BasicAclEntryAfterInvocationCollectionFilteringProvider">
+		<property name="aclManager">
+			<ref local="aclManager" />
+		</property>
+		<property name="requirePermission">
+			<list>
+				<ref bean="SimpleAclEntry.ADMINISTRATION" />
+				<ref bean="SimpleAclEntry.READ_WRITE" />
+				<ref bean="SimpleAclEntry.READ" />
+			</list>
+		</property>
+	</bean>
+	
+	<!-- Processes AFTER_ACL_MAP_READ configuration settings (removes objects from the collection if you do not 
+		have authorization priviliges based on -->
+	<bean id="afterAclMapRead"
+		class="ubic.gemma.security.afterInvocation.AclAfterInvocationMapFilteringProvider">
 		<property name="aclManager">
 			<ref local="aclManager" />
 		</property>

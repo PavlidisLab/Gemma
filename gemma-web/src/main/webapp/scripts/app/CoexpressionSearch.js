@@ -15,130 +15,130 @@ Ext.onReady(function() {
 		});
 	}
 
-	var getSupportingDatasetRecords = function(record, grid) {
-		var ids = record.data.supportingExperiments;
-		var supporting = [];
-		var ind = 0;
-		// this is quite inefficient, but probably doesn't matter.
-		for (var i = 0; i < ids.length; ++i) {
-			var id = ids[i];
-			for (var j = 0; j < grid.datasets.length; j++) {
-				var index = grid.datasets[j].id;
-				if (index === id) {
-					supporting.push(grid.datasets[j]);
-					break;
-				}
-			}
-		}
-		return supporting;
-	};
-
-	var geneRowClickHandler = function(grid, rowIndex, columnIndex, e) {
-		if (this.getSelectionModel().hasSelection()) {
-
-			var record = this.getStore().getAt(rowIndex);
-			var fieldName = this.getColumnModel().getDataIndex(columnIndex);
-			var queryGene = record.get("queryGene");
-			var foundGene = record.get("foundGene");			
-				
-	
-			if (fieldName == 'foundGene' && columnIndex != 7) {  //problem with outlink column field name also returns name as foundGene 
-				searchPanel.searchForGene(foundGene.id);
-			} else if (fieldName == 'visualize') {
-
-				var foundGene = record.data.foundGene;
-				var activeExperiments = record.data.supportingExperiments;
-
-				// destroy if already open
-				if (visWindow) {
-					visWindow.close();
-				}
-
-				visWindow = new Gemma.CoexpressionVisualizationWindow({
-					admin : admin
-				});
-				visWindow.displayWindow(activeExperiments, queryGene, foundGene);
-			} else if (fieldName == 'details') {
-
-				var supporting = getSupportingDatasetRecords(record, grid);
-
-				var dsGrid = new Gemma.ExpressionExperimentGrid({
-					records : supporting,
-					// width : 750,
-					// height : 340, Layout will show nothing if this isn't set to something and autoHeight is false.
-					// Most likely a loading issue (no data in store, so no height).
-					autoHeight : true,
-					stateful : false
-				});
-
-				// Close if already open
-				if (detailsWindow) {
-					detailsWindow.close();
-				}
-
-				var diffExGrid = new Gemma.ProbeLevelDiffExGrid({
-					geneId : foundGene.id,
-					threshold : 0.01,
-					// width : 750,
-					// height : 380,
-					stateful : false
-				});
-
-				var detailsTP = new Ext.TabPanel({
-					layoutOnTabChange : true,
-					activeTab : 0,
-					stateful : false,
-					items : [{
-						title : "Supporting datasets",
-						items : [dsGrid],
-						layout : 'fit',
-						autoScroll : true
-					}, {
-						title : "Differential expression of " + foundGene.officialSymbol,
-						items : [diffExGrid],
-						layout : 'fit',
-						autoScroll : true,
-						loaded : false,
-						listeners : {
-							"activate" : {
-								fn : function() {
-									if (!this.loaded) {
-										diffExGrid.getStore().load({
-											params : [foundGene.id, Gemma.DIFF_THRESHOLD, Gemma.MAX_DIFF_RESULTS]
-										});
-									}
-									this.loaded = true;
-								}
-							}
-						}
-
-					}]
-
-				});
-
-				detailsWindow = new Ext.Window({
-					modal : false,
-					layout : 'fit',
-					title : 'Details for ' + foundGene.officialSymbol,
-					closeAction : 'close',
-					items : [{					
-						items : [detailsTP],
-						layout : 'fit'
-					}],
-					width : 760,
-					height : 400,
-					//autoScroll : true,
-					stateful : false
-				});
-
-				dsGrid.getStore().load();
-				detailsWindow.show();
-
-				diffExGrid.getStore().loadData(supporting);
-
-			}
-		}
-	};
+//	var getSupportingDatasetRecords = function(record, grid) {
+//		var ids = record.data.supportingExperiments;
+//		var supporting = [];
+//		var ind = 0;
+//		// this is quite inefficient, but probably doesn't matter.
+//		for (var i = 0; i < ids.length; ++i) {
+//			var id = ids[i];
+//			for (var j = 0; j < grid.datasets.length; j++) {
+//				var index = grid.datasets[j].id;
+//				if (index === id) {
+//					supporting.push(grid.datasets[j]);
+//					break;
+//				}
+//			}
+//		}
+//		return supporting;
+//	};
+//
+//	var geneRowClickHandler = function(grid, rowIndex, columnIndex, e) {
+//		if (this.getSelectionModel().hasSelection()) {
+//
+//			var record = this.getStore().getAt(rowIndex);
+//			var fieldName = this.getColumnModel().getDataIndex(columnIndex);
+//			var queryGene = record.get("queryGene");
+//			var foundGene = record.get("foundGene");			
+//				
+//	
+//			if (fieldName == 'foundGene' && columnIndex != 7) {  //problem with outlink column field name also returns name as foundGene 
+//				searchPanel.searchForGene(foundGene.id);
+//			} else if (fieldName == 'visualize') {
+//
+//				var foundGene = record.data.foundGene;
+//				var activeExperiments = record.data.supportingExperiments;
+//
+//				// destroy if already open
+//				if (visWindow) {
+//					visWindow.close();
+//				}
+//
+//				visWindow = new Gemma.CoexpressionVisualizationWindow({
+//					admin : admin
+//				});
+//				visWindow.displayWindow(activeExperiments, queryGene, foundGene);
+//			} else if (fieldName == 'details') {
+//
+//				var supporting = getSupportingDatasetRecords(record, grid);
+//
+//				var dsGrid = new Gemma.ExpressionExperimentGrid({
+//					records : supporting,
+//					// width : 750,
+//					// height : 340, Layout will show nothing if this isn't set to something and autoHeight is false.
+//					// Most likely a loading issue (no data in store, so no height).
+//					autoHeight : true,
+//					stateful : false
+//				});
+//
+//				// Close if already open
+//				if (detailsWindow) {
+//					detailsWindow.close();
+//				}
+//
+//				var diffExGrid = new Gemma.ProbeLevelDiffExGrid({
+//					geneId : foundGene.id,
+//					threshold : 0.01,
+//					// width : 750,
+//					// height : 380,
+//					stateful : false
+//				});
+//
+//				var detailsTP = new Ext.TabPanel({
+//					layoutOnTabChange : true,
+//					activeTab : 0,
+//					stateful : false,
+//					items : [{
+//						title : "Supporting datasets",
+//						items : [dsGrid],
+//						layout : 'fit',
+//						autoScroll : true
+//					}, {
+//						title : "Differential expression of " + foundGene.officialSymbol,
+//						items : [diffExGrid],
+//						layout : 'fit',
+//						autoScroll : true,
+//						loaded : false,
+//						listeners : {
+//							"activate" : {
+//								fn : function() {
+//									if (!this.loaded) {
+//										diffExGrid.getStore().load({
+//											params : [foundGene.id, Gemma.DIFF_THRESHOLD, Gemma.MAX_DIFF_RESULTS]
+//										});
+//									}
+//									this.loaded = true;
+//								}
+//							}
+//						}
+//
+//					}]
+//
+//				});
+//
+//				detailsWindow = new Ext.Window({
+//					modal : false,
+//					layout : 'fit',
+//					title : 'Details for ' + foundGene.officialSymbol,
+//					closeAction : 'close',
+//					items : [{					
+//						items : [detailsTP],
+//						layout : 'fit'
+//					}],
+//					width : 760,
+//					height : 400,
+//					//autoScroll : true,
+//					stateful : false
+//				});
+//
+//				dsGrid.getStore().load();
+//				detailsWindow.show();
+//
+//				diffExGrid.getStore().loadData(supporting);
+//
+//			}
+//		}
+//	};
 
 	var searchPanel = new Gemma.CoexpressionSearchForm({
 		admin : admin,

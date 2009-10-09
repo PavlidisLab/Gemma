@@ -80,6 +80,17 @@ public class GeneCoexpressionAnalysisServiceImpl extends
         return this.getGeneCoexpressionAnalysisDao().findByTaxon( taxon );
     }
 
+    /*
+     * (non-Javadoc)
+     * @see
+     * ubic.gemma.model.analysis.GeneCoexpressionAnalysisServiceBase#handleFindByParentTaxon(ubic.gemma.model.genome.Taxon)
+     */
+    @Override
+    protected Collection handleFindByParentTaxon( Taxon taxon ) throws Exception {
+        return this.getGeneCoexpressionAnalysisDao().findByParentTaxon( taxon );
+    }
+    
+
     @SuppressWarnings("unchecked")
     @Override
     protected GeneCoexpressionAnalysis handleFindByUniqueInvestigations( Collection investigations ) throws Exception {

@@ -490,6 +490,22 @@ public abstract class ArrayDesignDaoBase extends HibernateDaoSupport implements 
     }
 
     /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#getTaxa(java.lang.Long)
+     */
+    public java.util.Collection<ubic.gemma.model.genome.Taxon> getTaxa( final java.lang.Long id ) {
+        try {
+            return this.handleGetTaxa( id );
+        } catch ( Throwable th ) {
+            throw new java.lang.RuntimeException(
+                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignDao.getTaxa(java.lang.Long id)' --> "
+                            + th, th );
+        }
+    }
+    
+    
+    
+
+    /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#isMerged(java.util.Collection)
      */
     public java.util.Map<Long, Boolean> isMerged( final java.util.Collection<Long> ids ) {
@@ -1098,6 +1114,14 @@ public abstract class ArrayDesignDaoBase extends HibernateDaoSupport implements 
      */
     protected abstract ubic.gemma.model.genome.Taxon handleGetTaxon( java.lang.Long id ) throws java.lang.Exception;
 
+    /**
+     * Performs the core logic for {@link #getTaxa(java.lang.Long)}
+     */
+    protected abstract java.util.Collection<ubic.gemma.model.genome.Taxon> handleGetTaxa( java.lang.Long id ) throws java.lang.Exception;
+    
+   
+        
+    
     /**
      * Performs the core logic for {@link #isMerged(java.util.Collection)}
      */

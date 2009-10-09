@@ -27,6 +27,9 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.analysis.service.ExpressionExperimentVectorManipulatingService;
+import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
+import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
+import ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentPlatformSwitchEvent;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
@@ -57,6 +60,7 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
  * @spring.property name="expressionExperimentService" ref="expressionExperimentService"
  * @spring.property name="bioAssayService" ref="bioAssayService"
  * @spring.property name="arrayDesignService" ref="arrayDesignService"
+ * @spring.property name="auditTrailService" ref="auditTrailService"
  * @author pavlidis
  * @version $Id$
  */
@@ -81,6 +85,20 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
 
     BioAssayService bioAssayService;
 
+    private AuditTrailService auditTrailService;
+
+    public void setAuditTrailService( AuditTrailService auditTrailService ) {
+        this.auditTrailService = auditTrailService;
+    }
+
+    /**
+     * @param arrayDesign
+     */
+    private void audit( ExpressionExperiment ee, String note ) {
+        AuditEventType eventType = ExpressionExperimentPlatformSwitchEvent.Factory.newInstance();
+        auditTrailService.addUpdateEvent( ee, eventType, note );
+    }
+
     /**
      * @param expExp
      * @param arrayDesign
@@ -89,7 +107,7 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
         ArrayDesign arrayDesign = locateMergedDesign( expExp );
         if ( arrayDesign == null )
             throw new IllegalArgumentException( "Experiment has no merged design to switch to" );
-        switchExperimentToArrayDesign( expExp, arrayDesign );
+        this.switchExperimentToArrayDesign( expExp, arrayDesign );
     }
 
     /**
@@ -99,6 +117,7 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
      * @param arrayDesign The array design to switch to. If some samples already use that array design, nothing will be
      *        changed for them.
      */
+    @SuppressWarnings("unchecked")
     public void switchExperimentToArrayDesign( ExpressionExperiment expExp, ArrayDesign arrayDesign ) {
         assert arrayDesign != null;
 
@@ -198,8 +217,14 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
                 + " by Gemma]" );
         expressionExperimentService.update( expExp );
         log.info( "Done switching " + expExp );
+
+        audit( expExp, "Switch to use " + arrayDesign.getShortName() );
     }
 
+    /**
+     * @param expExp
+     * @return
+     */
     private ArrayDesign locateMergedDesign( ExpressionExperiment expExp ) {
         // get the array designs for this EE
         ArrayDesign arrayDesign = null;

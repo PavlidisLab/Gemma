@@ -38,9 +38,12 @@ public class GeneImplTest extends TestCase {
         super.setUp();
         aTax = Taxon.Factory.newInstance();
         aTax.setScientificName( "Foobius Barius" );
+        aTax.setIsSpecies(true);
+        aTax.setIsGenesUsable( true );
         bTax = Taxon.Factory.newInstance();
         bTax.setScientificName( "Barioobius foobarius" );
-
+        bTax.setIsSpecies(true);
+        bTax.setIsGenesUsable( true );
         Chromosome c = Chromosome.Factory.newInstance();
         c.setName( "X" );
         c.setTaxon( aTax );

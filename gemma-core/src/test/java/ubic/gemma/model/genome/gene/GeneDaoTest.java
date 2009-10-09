@@ -85,6 +85,8 @@ public class GeneDaoTest extends BaseSpringContextTest {
         gene.setName( "test_genedao" );
         Taxon taxon = Taxon.Factory.newInstance();
         taxon.setCommonName( "human" );
+        taxon.setIsSpecies( true );
+        taxon.setIsGenesUsable( true );
         gene.setTaxon( taxon );
         Collection<ExpressionExperiment> ees = new ArrayList<ExpressionExperiment>();
         CoexpressionCollectionValueObject genes = geneDao.getCoexpressedGenes( gene, ees, 1, false );

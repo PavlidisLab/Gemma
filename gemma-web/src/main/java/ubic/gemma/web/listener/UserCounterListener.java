@@ -58,8 +58,7 @@ public class UserCounterListener implements ServletContextListener, HttpSessionA
         servletContext = sce.getServletContext();
         servletContext.setAttribute( ( COUNT_KEY ), Integer.toString( counter ) );
     }
-
-    @SuppressWarnings("unused")
+ 
     public synchronized void contextDestroyed( ServletContextEvent event ) {
         servletContext = null;
         users = null;
@@ -163,8 +162,7 @@ public class UserCounterListener implements ServletContextListener, HttpSessionA
 
     /**
      * @see javax.servlet.http.HttpSessionAttributeListener#attributeReplaced(javax.servlet.http.HttpSessionBindingEvent)
-     */
-    @SuppressWarnings("unused")
+     */ 
     public void attributeReplaced( HttpSessionBindingEvent event ) {
         // I don't really care if the user changes their information
     }

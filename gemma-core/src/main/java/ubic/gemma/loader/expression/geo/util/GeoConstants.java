@@ -39,6 +39,7 @@ public class GeoConstants {
 
     public static Collection<String> descriptionNames;
     public static Collection<String> sequenceColumnNames;
+    public static Collection<String> probeOrganismColumnNames;
 
     static {
         idNames = new HashSet<String>();
@@ -65,6 +66,15 @@ public class GeoConstants {
 
         sequenceColumnNames = new HashSet<String>();
         sequenceColumnNames.add( "SEQUENCE" ); // agilent.
+        
+        //LMD 24/07/09 Bug 1647
+        probeOrganismColumnNames = new HashSet<String>();
+        probeOrganismColumnNames.add( "ORGANISM" ); 
+        probeOrganismColumnNames.add( "Species" );  
+        probeOrganismColumnNames.add( "org" ); 
+        probeOrganismColumnNames.add( "Species Scientific name" );//agilent?
+        probeOrganismColumnNames.add( "Taxon" );
+        
     }
 
     /**
@@ -85,6 +95,11 @@ public class GeoConstants {
 
     public static boolean likelySequence( String id ) {
         return sequenceColumnNames.contains( id );
+    }
+    
+    
+    public static boolean likelyProbeOrganism( String id ) {
+        return probeOrganismColumnNames.contains( id );
     }
 
     /**

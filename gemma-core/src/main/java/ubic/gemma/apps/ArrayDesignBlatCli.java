@@ -61,7 +61,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
 
     private String taxonName;
 
-    private Taxon taxon;
+    Taxon taxon;
 
     private boolean sensitive = false;
 
@@ -94,7 +94,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
                 .hasArg()
                 .withArgName( "taxon" )
                 .withDescription(
-                        "Taxon common name (e.g., human); blat will be run for all ArrayDesigns from that taxon (overrides -a and -b)" )
+                        "Taxon common name (e.g., human); if array design name not given (analysis will be restricted to sequences on that array for taxon given), blat will be run for all ArrayDesigns from that taxon (overrides -a and -b)" )
                 .create( 't' );
 
         addOption( taxonOption );
@@ -148,8 +148,8 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
                     }
 
                     log.info( "Got " + blatResults.size() + " blat records" );
-                    persistedResults = arrayDesignSequenceAlignmentService
-                            .processArrayDesign( arrayDesign, blatResults );
+                    persistedResults = arrayDesignSequenceAlignmentService.processArrayDesign( arrayDesign, taxon,
+                            blatResults );
                     audit( arrayDesign, "BLAT results read from file: " + blatResultFile );
                 } else {
                     // Run blat from scratch.
@@ -195,7 +195,11 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
                 }
 
                 void consume( ArrayDesign x ) {
-                    if ( taxon.equals( arrayDesignService.getTaxon( x.getId() ) ) ) {
+                    if ( arrayDesignService.getTaxa( x.getId() ).contains( taxon ) ) {
+                        /*
+                         * Note that if the array design has multiple taxa, blat will be run on all of the sequences,
+                         * not just the ones from the taxon specified.
+                         */
                         processArrayDesign( skipIfLastRunLaterThan, x );
                     }
 
@@ -236,7 +240,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
      * @param skipIfLastRunLaterThan
      * @param design
      */
-    private void processArrayDesign( Date skipIfLastRunLaterThan, ArrayDesign design ) {
+    void processArrayDesign( Date skipIfLastRunLaterThan, ArrayDesign design ) {
         if ( !needToRun( skipIfLastRunLaterThan, design, ArrayDesignSequenceAnalysisEvent.class ) ) {
             log.warn( design + " was last run more recently than " + skipIfLastRunLaterThan );
             // not really an error, but nice to get notification.
@@ -265,17 +269,22 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
     }
 
     /**
+     * Process blat file which must be for one taxon.
+     * 
      * @param arrayDesign
      * @return
      * @throws IOException
      */
     private Collection<BlatResult> getBlatResultsFromFile( ArrayDesign arrayDesign ) throws IOException {
+        Taxon arrayDesignTaxon = null;
         File f = new File( blatResultFile );
         if ( !f.canRead() ) {
             log.error( "Cannot read from " + blatResultFile );
             bail( ErrorCode.INVALID_OPTION );
         }
-        Taxon arrayDesignTaxon = arrayDesignService.getTaxon( arrayDesign.getId() );
+        // check being running for just one taxon
+        arrayDesignTaxon = arrayDesignSequenceAlignmentService.validateTaxaForBlatFile( arrayDesign, taxon );
+
         log.info( "Reading blat results in from " + f.getAbsolutePath() );
         BlatResultParser parser = new BlatResultParser();
         parser.setScoreThreshold( this.blatScoreThreshold );

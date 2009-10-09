@@ -681,9 +681,10 @@
 				ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisService.getDatasetsAnalyzed=PROPAGATION_REQUIRED,readOnly
 				ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisService.thaw=PROPAGATION_REQUIRED,readOnly
 				ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisService.create=PROPAGATION_REQUIRED
-				ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultService.getExperimentalFactors=PROPAGATION_REQUIRED,readOnly
-				ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultService.thaw=PROPAGATION_REQUIRED,readOnly
-				ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultService.thawAnalysisResult=PROPAGATION_REQUIRED,readOnly
+				ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultService.getExperimentalFactors=PROPAGATION_REQUIRED,readOnly
+				ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultService.thaw=PROPAGATION_REQUIRED,readOnly
+				ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultService.find=PROPAGATION_REQUIRED,readOnly
+				ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultService.findInResultSets=PROPAGATION_REQUIRED,readOnly
 				ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService.create=PROPAGATION_REQUIRED
 				ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService.thaw=PROPAGATION_REQUIRED,readOnly
 				ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService.findExperimentsWithAnalyses=PROPAGATION_REQUIRED,readOnly
@@ -691,8 +692,6 @@
 				ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService.delete=PROPAGATION_REQUIRED
 				ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService.getResultSets=PROPAGATION_REQUIRED,readOnly
 				ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService.findByInvestigationIds=PROPAGATION_REQUIRED,readOnly
-				ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService.findResultsForGeneInExperiments=PROPAGATION_REQUIRED,readOnly
-				ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService.findResultsForGeneInExperimentsMetThreshold=PROPAGATION_REQUIRED,readOnly				
 				ubic.gemma.model.analysis.expression.ExpressionExperimentSetService.create=PROPAGATION_REQUIRED
 				ubic.gemma.model.analysis.expression.ExpressionExperimentSetService.delete=PROPAGATION_REQUIRED
 				ubic.gemma.model.analysis.expression.ExpressionExperimentSetService.update=PROPAGATION_REQUIRED 
@@ -2824,42 +2823,7 @@
 			</list>
 		</property>
 	</bean>
-	<!-- Analysis Entity Proxy with inner Analysis Entity implementation -->
-	<!--<bean id="analysisDao" class="org.springframework.aop.framework.ProxyFactoryBean">
-			<property name="target">
-				<bean class="ubic.gemma.model.analysis.AnalysisDaoImpl">
-					<property name="sessionFactory">
-						<ref local="sessionFactory" />
-					</property>
-				</bean>
-			</property>
-			<property name="proxyInterfaces">
-				<value>ubic.gemma.model.analysis.AnalysisDao</value>
-			</property>
-			<property name="interceptorNames">
-				<list>
-					<value>hibernateInterceptor</value>
-				</list>
-			</property>
-		</bean>
-		--><!-- AnalysisResult Entity Proxy with inner AnalysisResult Entity implementation -->
-	<bean id="analysisResultDao" class="org.springframework.aop.framework.ProxyFactoryBean">
-		<property name="target">
-			<bean class="ubic.gemma.model.analysis.AnalysisResultDaoImpl">
-				<property name="sessionFactory">
-					<ref local="sessionFactory" />
-				</property>
-			</bean>
-		</property>
-		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.analysis.AnalysisResultDao</value>
-		</property>
-		<property name="interceptorNames">
-			<list>
-				<value>hibernateInterceptor</value>
-			</list>
-		</property>
-	</bean>
+
 	<!-- Investigation Entity Proxy with inner Investigation Entity implementation -->
 	<!--<bean id="investigationDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 			<property name="target">
@@ -2957,16 +2921,16 @@
 			DifferentialExpressionAnalysisResult Entity Proxy with inner DifferentialExpressionAnalysisResult Entity
 			implementation
 		-->
-	<bean id="differentialExpressionAnalysisResultDao" class="org.springframework.aop.framework.ProxyFactoryBean">
+	<bean id="differentialExpressionResultDao" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
-			<bean class="ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultDaoImpl">
+			<bean class="ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultDaoImpl">
 				<property name="sessionFactory">
 					<ref local="sessionFactory" />
 				</property>
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultDao
+			<value>ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultDao
 			</value>
 		</property>
 		<property name="interceptorNames">
@@ -3005,46 +2969,6 @@
 		</property>
 		<property name="proxyInterfaces">
 			<value>ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSetDao
-			</value>
-		</property>
-		<property name="interceptorNames">
-			<list>
-				<value>hibernateInterceptor</value>
-			</list>
-		</property>
-	</bean>
-	<!--
-			FactorAssociatedAnalysisResultSet Entity Proxy with inner FactorAssociatedAnalysisResultSet Entity implementation
-		-->
-	<bean id="factorAssociatedAnalysisResultSetDao" class="org.springframework.aop.framework.ProxyFactoryBean">
-		<property name="target">
-			<bean class="ubic.gemma.model.analysis.expression.FactorAssociatedAnalysisResultSetDaoImpl">
-				<property name="sessionFactory">
-					<ref local="sessionFactory" />
-				</property>
-			</bean>
-		</property>
-		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.analysis.expression.FactorAssociatedAnalysisResultSetDao
-			</value>
-		</property>
-		<property name="interceptorNames">
-			<list>
-				<value>hibernateInterceptor</value>
-			</list>
-		</property>
-	</bean>
-	<!-- ProbeAnalysisResult Entity Proxy with inner ProbeAnalysisResult Entity implementation -->
-	<bean id="probeAnalysisResultDao" class="org.springframework.aop.framework.ProxyFactoryBean">
-		<property name="target">
-			<bean class="ubic.gemma.model.analysis.expression.ProbeAnalysisResultDaoImpl">
-				<property name="sessionFactory">
-					<ref local="sessionFactory" />
-				</property>
-			</bean>
-		</property>
-		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.analysis.expression.ProbeAnalysisResultDao
 			</value>
 		</property>
 		<property name="interceptorNames">
@@ -4412,29 +4336,7 @@
 			</list>
 		</property>
 	</bean>
-	<!-- AnalysisService Service Proxy with inner AnalysisService Service Implementation -->
-	<!--<bean id="analysisService" class="org.springframework.aop.framework.ProxyFactoryBean">
-			<property name="target">
-				<bean class="ubic.gemma.model.analysis.AnalysisServiceImpl">
-					<property name="analysisDao">
-						<ref bean="analysisDao" />
-					</property>
-				</bean>
-			</property>
-			<property name="proxyInterfaces">
-				<value>ubic.gemma.model.analysis.AnalysisService</value>
-			</property>
-			<property name="interceptorNames">
-				<list>
-					<value>serviceTransactionInterceptor</value>
-					<value>hibernateInterceptor</value>
-					<value>serviceSecurityInterceptor</value>
-					<value>addOrRemoveFromACLInterceptor</value>
-					<value>auditInterceptor</value>
-				</list>
-			</property>
-		</bean>
-		--><!-- GeneCoexpressionAnalysisService Service Proxy with inner GeneCoexpressionAnalysisService Service Implementation -->
+	<!-- GeneCoexpressionAnalysisService Service Proxy with inner GeneCoexpressionAnalysisService Service Implementation -->
 	<bean id="geneCoexpressionAnalysisService" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
 			<bean class="ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisServiceImpl">
@@ -4489,14 +4391,14 @@
 		</property>
 	</bean>
 	<!--
-			DifferentialExpressionAnalysisResultService Service Proxy with inner DifferentialExpressionAnalysisResultService
+			DifferentialExpressioResultService Service Proxy with inner DifferentialExpressionResultService
 			Service Implementation
 		-->
-	<bean id="differentialExpressionAnalysisResultService" class="org.springframework.aop.framework.ProxyFactoryBean">
+	<bean id="differentialExpressionResultService" class="org.springframework.aop.framework.ProxyFactoryBean">
 		<property name="target">
-			<bean class="ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultServiceImpl">
-				<property name="differentialExpressionAnalysisResultDao">
-					<ref bean="differentialExpressionAnalysisResultDao" />
+			<bean class="ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultServiceImpl">
+				<property name="differentialExpressionResultDao">
+					<ref bean="differentialExpressionResultDao" />
 				</property>
 				<property name="expressionAnalysisResultSetDao">
 					<ref bean="expressionAnalysisResultSetDao" />
@@ -4504,7 +4406,7 @@
 			</bean>
 		</property>
 		<property name="proxyInterfaces">
-			<value>ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultService
+			<value>ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultService
 			</value>
 		</property>
 		<property name="interceptorNames">

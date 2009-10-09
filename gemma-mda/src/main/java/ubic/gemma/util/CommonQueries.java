@@ -124,7 +124,7 @@ public class CommonQueries {
          * TODO should there be a constraint on taxon for the array design?
          */
         final String csQueryString = "select distinct cs from GeneImpl as gene"
-                + " inner join gene.products gp, BlatAssociationImpl ba, CompositeSequenceImpl cs "
+                + " inner join gene.products gp, BioSequence2GeneProductImpl ba, CompositeSequenceImpl cs "
                 + " where ba.bioSequence=cs.biologicalCharacteristic and ba.geneProduct = gp and  gene = :gene ";
 
         org.hibernate.Query queryObject = session.createQuery( csQueryString );
@@ -174,7 +174,7 @@ public class CommonQueries {
             Session session ) {
 
         final String csQueryString = "select distinct cs, gene from GeneImpl as gene"
-                + " inner join gene.products gp, BlatAssociationImpl ba, CompositeSequenceImpl cs "
+                + " inner join gene.products gp, BioSequence2GeneProductImpl ba, CompositeSequenceImpl cs "
                 + " where ba.bioSequence=cs.biologicalCharacteristic and ba.geneProduct = gp and cs in (:probes) and gene.class='GeneImpl'";
 
         return getFullCs2GeneMap( probes, session, csQueryString );
@@ -189,7 +189,7 @@ public class CommonQueries {
             Session session ) {
 
         final String csQueryString = "select distinct cs, gene from GeneImpl as gene"
-                + " inner join gene.products gp, BlatAssociationImpl ba, CompositeSequenceImpl cs "
+                + " inner join gene.products gp, BioSequence2GeneProductImpl ba, CompositeSequenceImpl cs "
                 + " where ba.bioSequence=cs.biologicalCharacteristic and ba.geneProduct = gp and cs in (:probes) ";
 
         return getFullCs2GeneMap( probes, session, csQueryString );
@@ -232,7 +232,7 @@ public class CommonQueries {
         StopWatch timer = new StopWatch();
         timer.start();
         final String csQueryString = "select distinct cs, gene from GeneImpl as gene"
-                + " inner join gene.products gp, BlatAssociationImpl ba, CompositeSequenceImpl cs "
+                + " inner join gene.products gp, BioSequence2GeneProductImpl ba, CompositeSequenceImpl cs "
                 + " where ba.bioSequence=cs.biologicalCharacteristic and ba.geneProduct = gp"
                 + " and gene in (:genes)  ";
 

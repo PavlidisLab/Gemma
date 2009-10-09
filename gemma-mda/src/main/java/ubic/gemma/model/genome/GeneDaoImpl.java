@@ -614,6 +614,11 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
     @SuppressWarnings("unchecked")
     @Override
     protected Collection handleGetGenesByTaxon( Taxon taxon ) throws Exception {
+        
+        if (taxon == null) {
+            throw new IllegalArgumentException("Must provide taxon");
+        }
+        
         final String queryString = "select gene from GeneImpl as gene where gene.taxon = :taxon ";
         return getHibernateTemplate().findByNamedParam( queryString, "taxon", taxon );
     }
@@ -625,6 +630,11 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
     @SuppressWarnings("unchecked")
     @Override
     protected Collection<Gene> handleGetMicroRnaByTaxon( Taxon taxon ) throws Exception {
+        
+        if (taxon == null) {
+            throw new IllegalArgumentException("Must provide taxon");
+        }
+        
         final String queryString = "select gene from GeneImpl as gene where gene.taxon = :taxon"
                 + " and (gene.description like '%micro RNA or sno RNA' OR gene.description = 'miRNA')";
         return getHibernateTemplate().findByNamedParam( queryString, "taxon", taxon );
@@ -637,6 +647,11 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
     @SuppressWarnings("unchecked")
     @Override
     protected Collection<Gene> handleLoadKnownGenes( Taxon taxon ) throws Exception {
+        
+        if (taxon == null) {
+            throw new IllegalArgumentException("Must provide taxon");
+        }
+        
         final String queryString = "select gene from GeneImpl as gene fetch all properties where gene.taxon = :taxon"
                 + " and gene.class = " + CoexpressionCollectionValueObject.GENE_IMPL;
 

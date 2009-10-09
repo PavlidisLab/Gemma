@@ -59,6 +59,8 @@ public class QtlDaoImplTest extends BaseSpringContextTest {
         Taxon tx = Taxon.Factory.newInstance();
         tx.setCommonName( TAXON );
         tx.setNcbiId( 4994949 );
+        tx.setIsSpecies( true );
+        tx.setIsGenesUsable( true );
         tx = taxonDao.findOrCreate( tx );
 
         // need a chromosome

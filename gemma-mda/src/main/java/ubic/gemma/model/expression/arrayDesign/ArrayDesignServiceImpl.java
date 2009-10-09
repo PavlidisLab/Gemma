@@ -24,6 +24,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedSet;
 
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignAnalysisEvent;
@@ -335,6 +336,15 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
     @Override
     protected Taxon handleGetTaxon( java.lang.Long id ) {
         return this.getArrayDesignDao().getTaxon( id );
+
+    }
+    /*
+     * (non-Javadoc)
+     * @see ubic.gemma.model.expression.arrayDesign.handleGetTaxa(long)
+     */
+    @Override
+    protected Collection<Taxon> handleGetTaxa( java.lang.Long id ) {
+        return this.getArrayDesignDao().getTaxa( id );
 
     }
 

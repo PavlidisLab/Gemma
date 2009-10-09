@@ -36,6 +36,12 @@ public interface TaxonService {
     /**
      * 
      */
+    public ubic.gemma.model.genome.Taxon findByAbbreviation( java.lang.String abbreviation );
+    
+    
+    /**
+     * 
+     */
     public ubic.gemma.model.genome.Taxon findByScientificName( java.lang.String scientificName );
 
     /**
@@ -63,4 +69,9 @@ public interface TaxonService {
      */
     public void update( ubic.gemma.model.genome.Taxon taxon );
 
+    /**
+     * 
+     */
+    public java.util.Collection<Taxon> findChildTaxaByParent(Taxon parentTaxon);
+    
 }

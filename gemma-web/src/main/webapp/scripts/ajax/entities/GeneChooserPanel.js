@@ -263,6 +263,7 @@ Gemma.GeneChooserToolBar = Ext.extend(Ext.Toolbar, {
 		Gemma.GeneChooserToolBar.superclass.initComponent.call(this);
 
 		this.taxonCombo = new Gemma.TaxonCombo({
+			isDisplayTaxonWithGenes : true,
 			listeners : {
 				'select' : {
 					fn : function(cb, rec, index) {

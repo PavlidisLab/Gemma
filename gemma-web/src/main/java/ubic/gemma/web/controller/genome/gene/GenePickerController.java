@@ -29,8 +29,7 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 import org.apache.commons.lang.StringUtils;
-
-import ubic.gemma.loader.genome.taxon.SupportedTaxa;
+ 
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
@@ -67,10 +66,39 @@ public class GenePickerController extends BaseMultiActionController {
     @SuppressWarnings("unchecked")
     public Collection<Taxon> getTaxa() {
         SortedSet<Taxon> taxa = new TreeSet<Taxon>( TAXON_COMPARATOR );
-        for ( Taxon taxon : ( Collection<Taxon> ) taxonService.loadAll() ) {
-            if ( SupportedTaxa.contains( taxon ) ) taxa.add( taxon );
+        for ( Taxon taxon : ( Collection<Taxon> ) taxonService.loadAll() ) {            
+            taxa.add( taxon );
         }
         return taxa;
+    }
+    
+    /**
+    *
+    * @return Taxon that are species.
+    */
+    @SuppressWarnings("unchecked")
+    public Collection<Taxon> getTaxaSpecies() {
+        SortedSet<Taxon> taxaSpecies = new TreeSet<Taxon>( TAXON_COMPARATOR );
+        for ( Taxon taxon : ( Collection<Taxon> ) taxonService.loadAll() ) {
+            if (taxon.getIsSpecies()){
+                taxaSpecies.add( taxon );
+            }            
+        }
+        return taxaSpecies;
+    }
+    /**
+     *
+     * @return Taxon that have genes loaded into Gemma and that should be used
+     */   
+    @SuppressWarnings("unchecked")
+    public Collection<Taxon> getTaxaWithGenes() {
+        SortedSet<Taxon> taxaWithGenes = new TreeSet<Taxon>( TAXON_COMPARATOR );
+        for ( Taxon taxon : ( Collection<Taxon> ) taxonService.loadAll() ) {
+            if (taxon.getIsGenesUsable()){
+                taxaWithGenes.add( taxon );
+            }          
+        }
+        return taxaWithGenes;
     }
 
     /**
@@ -130,7 +158,8 @@ public class GenePickerController extends BaseMultiActionController {
 
             // FIXME try not to add more than one gene per query.
 
-            // FIXME try to inform the user if there are some that don't have results.
+            // FIXME try to inform the user if there are some that don't have
+            // results.
             for ( SearchResult sr : geneSearchResults ) {
                 genes.add( ( Gene ) sr.getResultObject() );
             }

@@ -53,7 +53,6 @@ import ubic.gemma.util.ConfigUtils;
  * @spring.property name="geneService" ref="geneService"
  * @spring.property name="taxonService" ref="taxonService"
  */
-
 public class HomologeneService {
 
     private static final String LOAD_HOMOLOGENE = "load.homologene";
@@ -88,9 +87,7 @@ public class HomologeneService {
 
     public synchronized void init( boolean force ) {
 
-        log.info( "Loading homologene service" );
         if ( running.get() ) {
-            log.warn( homologeneFileName + " initialization is already running" );
             return;
         }
 
@@ -99,7 +96,7 @@ public class HomologeneService {
         }
 
         boolean loadHomologene = ConfigUtils.getBoolean( LOAD_HOMOLOGENE, true );
-        this.homologeneFileName = ConfigUtils.getString(HOMOLOGENE_FILE );
+        this.homologeneFileName = ConfigUtils.getString( HOMOLOGENE_FILE );
 
         if ( !loadHomologene ) return;
 
@@ -111,13 +108,11 @@ public class HomologeneService {
 
         enabled.set( true );
 
-       
         // Load the homologene groups for searching
-      
+
         Thread loadThread = new Thread( new Runnable() {
             public void run() {
 
-                
                 running.set( true );
 
                 log.info( "Loading Homologene..." );
@@ -125,31 +120,24 @@ public class HomologeneService {
                 loadTime.start();
 
                 boolean interrupted = false;
-                    
-                   HomologeneFetcher hf = new HomologeneFetcher();
-                   Collection<LocalFile> downloadedFiles =  hf.fetch( homologeneFileName );
-                   File f = null;
-                   
-                   if (downloadedFiles == null || downloadedFiles.isEmpty()){
-                       log.warn( "Unable to download Homologene File. Aborting" );
-                       return;
-                   }
-                   else if (downloadedFiles.size() >= 1){
-                       
-                       if (downloadedFiles.size() > 1)
-                           log.info( "Downloaded more than 1 file for homologene.  Using 1st.  ");
-                       
-                       f = downloadedFiles.iterator().next().asFile();
-                    
-                       if (!f.canRead()){
-                           log.warn( "Downloaded Homologene File. But unable to read Aborting" );
-                           return;
-                       }
-                           
-                       
-                   }
-                    
-                    
+
+                HomologeneFetcher hf = new HomologeneFetcher();
+                Collection<LocalFile> downloadedFiles = hf.fetch( homologeneFileName );
+                File f = null;
+
+                if ( downloadedFiles == null || downloadedFiles.isEmpty() ) {
+                    log.warn( "Unable to download Homologene File. Aborting" );
+                    return;
+                }
+
+                if ( downloadedFiles.size() > 1 )
+                    log.info( "Downloaded more than 1 file for homologene.  Using 1st.  " );
+
+                f = downloadedFiles.iterator().next().asFile();
+                if ( !f.canRead() ) {
+                    log.warn( "Downloaded Homologene File. But unable to read Aborting" );
+                    return;
+                }
 
                 while ( !interrupted && !ready.get() ) {
 
@@ -176,11 +164,12 @@ public class HomologeneService {
     }
 
     /**
-     * @return A list of NCBI that are available in Gemma.  Doesn't work if in the thread because taxonService is secured and at startup the security context has yet to be initilized. 
+     * @return A list of NCBI that are available in Gemma. Doesn't work if in the thread because taxonService is secured
+     *         and at startup the security context has yet to be initilized.
      */
     @SuppressWarnings("unchecked")
-    private Collection<Integer> loadAvaliableNCBITaxa(){
-        
+    private Collection<Integer> loadAvaliableNCBITaxa() {
+
         Collection<Taxon> taxaInGemma = taxonService.loadAll();
         Collection<Integer> ncbiIdsInGemma = new ArrayList<Integer>();
 
@@ -190,15 +179,14 @@ public class HomologeneService {
         return ncbiIdsInGemma;
 
     }
-    
+
     public void parseHomologGeneFile( InputStream is ) throws IOException {
 
- 
         BufferedReader br = new BufferedReader( new InputStreamReader( is ) );
         String line = null;
 
         while ( ( line = br.readLine() ) != null ) {
-            
+
             if ( StringUtils.isBlank( line ) || line.startsWith( COMMENT_CHARACTER ) ) {
                 continue;
             }
@@ -222,8 +210,9 @@ public class HomologeneService {
             }
         }
         ready.set( true );
-        log.info( "Gene Homology successfully loaded: " + gene2Group.keySet().size() + " genes covered in " + group2Gene.keySet().size() + " groups");
-        
+        log.info( "Gene Homology successfully loaded: " + gene2Group.keySet().size() + " genes covered in "
+                + group2Gene.keySet().size() + " groups" );
+
     }
 
     /**
@@ -288,8 +277,8 @@ public class HomologeneService {
             genes.add( gene );
         }
 
-        if ( !skippedNcbiIds.isEmpty() ) {
-            log.warn( "Skiped " + skippedNcbiIds.size()
+        if ( log.isDebugEnabled() && !skippedNcbiIds.isEmpty() ) {
+            log.debug( "Skipped " + skippedNcbiIds.size()
                     + " homologous genes cause unable to find in Gemma. NCBI ids are:  " + skippedNcbiIds );
         }
         return genes;
@@ -349,8 +338,8 @@ public class HomologeneService {
 
         Collection<Gene> homologues = this.getHomologues( gene );
 
-        if (homologues == null || homologues.isEmpty()) return null;
-        
+        if ( homologues == null || homologues.isEmpty() ) return null;
+
         for ( Gene g : homologues ) {
             if ( g.getTaxon().getId() == taxon.getId() ) return g;
 

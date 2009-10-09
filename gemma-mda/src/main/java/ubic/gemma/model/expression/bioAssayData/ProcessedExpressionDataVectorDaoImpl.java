@@ -79,14 +79,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
             throw new IllegalStateException( "ExpressionExperiment cannot be null" );
         }
 
-        /*
-         * If the experiment already has them, delete them.
-         */
-        Collection<ProcessedExpressionDataVector> oldVectors = this.getProcessedVectors( expressionExperiment );
-        if ( oldVectors.size() > 0 ) {
-            log.info( "Removing old processed vectors" );
-            this.remove( oldVectors );
-        }
+        removeProcessedDataVectors( expressionExperiment );
 
         // We need to commit the remove transaction, or we can end up with 'object exists in session'
         this.getHibernateTemplate().flush();
@@ -175,6 +168,17 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
 
         return expressionExperiment.getProcessedExpressionDataVectors();
 
+    }
+
+    public void removeProcessedDataVectors( final ExpressionExperiment expressionExperiment ) {
+        /*
+         * If the experiment already has them, delete them.
+         */
+        Collection<ProcessedExpressionDataVector> oldVectors = this.getProcessedVectors( expressionExperiment );
+        if ( oldVectors.size() > 0 ) {
+            log.info( "Removing old processed vectors" );
+            this.remove( oldVectors );
+        }
     }
 
     /**

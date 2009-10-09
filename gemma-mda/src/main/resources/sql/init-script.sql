@@ -40,9 +40,25 @@ insert into USER_ROLE (NAME, USER_NAME, USERS_FK ) values ("user", "test", 2 );
 insert into CONTACT (CLASS, NAME, EMAIL, AUDIT_TRAIL_FK) values ("ContactImpl", "admin", "another.admin@gemma.org", 3);
 
 -- taxa
-insert into TAXON (SCIENTIFIC_NAME,COMMON_NAME,NCBI_ID) values ("Homo sapiens","human","9606");
-insert into TAXON (SCIENTIFIC_NAME,COMMON_NAME,NCBI_ID) values ("Mus musculus","mouse","10090"); 
-insert into TAXON (SCIENTIFIC_NAME,COMMON_NAME,NCBI_ID) values ("Rattus norvegicus","rat","10116");
+-- Assumes salmonid ID is 4 to create parent id.
+insert into TAXON (SCIENTIFIC_NAME,COMMON_NAME,NCBI_ID,IS_SPECIES,IS_GENES_USABLE) values ("Homo sapiens","human","9606",1,1);
+insert into TAXON (SCIENTIFIC_NAME,COMMON_NAME,NCBI_ID,IS_SPECIES,IS_GENES_USABLE) values ("Mus musculus","mouse","10090",1,1); 
+insert into TAXON (SCIENTIFIC_NAME,COMMON_NAME,NCBI_ID,IS_SPECIES,IS_GENES_USABLE) values ("Rattus norvegicus","rat","10116",1,1);
+insert into TAXON (SCIENTIFIC_NAME,COMMON_NAME,NCBI_ID,IS_SPECIES,IS_GENES_USABLE) values ("Salmonidae","salmonid","8015",0,1);
+insert into TAXON (SCIENTIFIC_NAME,COMMON_NAME,ABBREVIATION,NCBI_ID,IS_SPECIES,PARENT_TAXON_FK,IS_GENES_USABLE) values ("Salmo salar","atlantic salmon","ssal","8030",1,4,0);
+insert into TAXON (SCIENTIFIC_NAME,COMMON_NAME,ABBREVIATION,NCBI_ID,IS_SPECIES,PARENT_TAXON_FK,IS_GENES_USABLE) values ("Oncorhynchus mykiss","rainbow troat","omyk","8022",1,4,0);
+insert into TAXON (SCIENTIFIC_NAME,COMMON_NAME,ABBREVIATION,NCBI_ID,IS_SPECIES,PARENT_TAXON_FK,IS_GENES_USABLE) values ("Coregonus clupeaformis","whitefish","cclu","59861",1,4,0);
+insert into TAXON (SCIENTIFIC_NAME,COMMON_NAME,NCBI_ID,IS_SPECIES,PARENT_TAXON_FK,IS_GENES_USABLE) values ("Oncorhynchus kisutch","Coho","8019",1,4,0);
+insert into TAXON (SCIENTIFIC_NAME,COMMON_NAME,NCBI_ID,IS_SPECIES,PARENT_TAXON_FK,IS_GENES_USABLE) values ("Oncorhynchus gorbuscha","pink","8017",1,4,0);
+insert into TAXON (SCIENTIFIC_NAME,COMMON_NAME,NCBI_ID,IS_SPECIES,PARENT_TAXON_FK,IS_GENES_USABLE) values ("Oncorhynchus nerka","sockeye","8023",1,4,0);
+insert into TAXON (SCIENTIFIC_NAME,COMMON_NAME,ABBREVIATION,NCBI_ID,IS_SPECIES,PARENT_TAXON_FK,IS_GENES_USABLE) values ("Oncorhynchus tshawytscha","chinook","otsh","74940",1,4,0);
+insert into TAXON (SCIENTIFIC_NAME,COMMON_NAME,NCBI_ID,IS_SPECIES,PARENT_TAXON_FK,IS_GENES_USABLE) values ("Oncorhynchus keta","chum","8018",1,4,0);
+insert into TAXON (SCIENTIFIC_NAME,COMMON_NAME,ABBREVIATION,NCBI_ID,IS_SPECIES,PARENT_TAXON_FK,IS_GENES_USABLE) values ("Osmerus mordax","rainbow smelt","omor","8014",1,4,0);
+insert into TAXON (SCIENTIFIC_NAME,COMMON_NAME,NCBI_ID,IS_SPECIES,IS_GENES_USABLE) values ("Saccharomyces cerevisiae","yeast","4932",1,0);
+insert into TAXON (SCIENTIFIC_NAME,COMMON_NAME,NCBI_ID,IS_SPECIES,IS_GENES_USABLE) values ("Danio rerio","zebrafish","7955",1,0); 
+insert into TAXON (SCIENTIFIC_NAME,COMMON_NAME,NCBI_ID,IS_SPECIES,IS_GENES_USABLE) values ("Drosophila melanogaster","fly","7227",1,0);
+insert into TAXON (SCIENTIFIC_NAME,COMMON_NAME,NCBI_ID,IS_SPECIES,IS_GENES_USABLE) values ("Arabidopsis thaliana","thale cress","3702",1,0); 
+insert into TAXON (SCIENTIFIC_NAME,COMMON_NAME,NCBI_ID,IS_SPECIES,IS_GENES_USABLE) values ("Caenorhabditis elegans","worm","6239",1,0);
 
 -- external databases
 insert into EXTERNAL_DATABASE (NAME, DESCRIPTION, WEB_URI, FTP_URI, AUDIT_TRAIL_FK, TYPE) values ("PubMed", "PubMed database from NCBI", "http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=PubMed", "ftp://ftp.ncbi.nlm.nih.gov/pubmed/", 4, "LITERATURE");

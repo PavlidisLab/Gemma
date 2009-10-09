@@ -48,7 +48,10 @@ public class VisualizationValueObject {
 
     private static String[] colors = new String[] { "red", "black", "blue", "green", "orange" };
 
-    private static long DEFAULT_P_VALUE = 1; // FIXME is this correct?
+    /**
+     * Only use this if there should be a pvalue; if you aren't using them, set the pvalue to null.
+     */
+    private static Double DEFAULT_P_VALUE = 1.0;
 
     private static Log log = LogFactory.getLog( VisualizationValueObject.class );
 
@@ -115,10 +118,9 @@ public class VisualizationValueObject {
                 valid = 2;
             }
 
-            GeneExpressionProfile profile = new GeneExpressionProfile( vector, color, valid, 0 );
+            GeneExpressionProfile profile = new GeneExpressionProfile( vector, color, valid, null );
 
-            // If points is empty dont add
-            if ( profile.getPoints() != null ) profiles.add( profile );
+            if ( !profile.isAllMissing() ) profiles.add( profile );
 
         }
     }
@@ -159,7 +161,7 @@ public class VisualizationValueObject {
             }
 
             int valid = 1;
-            double pValue = DEFAULT_P_VALUE;
+            Double pValue = DEFAULT_P_VALUE;
 
             if ( validatedProbes != null ) {
                 for ( DifferentialExpressionValueObject devo : validatedProbes ) {
@@ -172,8 +174,7 @@ public class VisualizationValueObject {
             }
             GeneExpressionProfile profile = new GeneExpressionProfile( vector, color, valid, pValue );
 
-            // If points is empty dont add
-            if ( profile.getPoints() != null ) profiles.add( profile );
+            if ( !profile.isAllMissing() ) profiles.add( profile );
 
         }
     }
@@ -184,7 +185,7 @@ public class VisualizationValueObject {
     public VisualizationValueObject( DoubleVectorValueObject dvvo ) {
         this();
         setEE( dvvo.getExpressionExperiment() );
-        GeneExpressionProfile profile = new GeneExpressionProfile( dvvo, null, 0, 0 );
+        GeneExpressionProfile profile = new GeneExpressionProfile( dvvo );
         profiles.add( profile );
     }
 

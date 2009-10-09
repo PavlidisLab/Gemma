@@ -60,19 +60,15 @@ import cern.colt.list.DoubleArrayList;
  */
 public class ProcessedExpressionDataVectorCreateService {
 
-    public void setAuditTrailService( AuditTrailService auditTrailService ) {
-        this.auditTrailService = auditTrailService;
-    }
-
     private static Log log = LogFactory.getLog( ProcessedExpressionDataVectorCreateService.class.getName() );
+
+    private AuditTrailService auditTrailService;
+
+    private DesignElementDataVectorService designElementDataVectorService = null;
 
     private ExpressionExperimentService eeService = null;
 
     private ProcessedExpressionDataVectorService processedDataService = null;
-
-    private DesignElementDataVectorService designElementDataVectorService = null;
-
-    private AuditTrailService auditTrailService;
 
     /**
      * @param ee
@@ -83,7 +79,7 @@ public class ProcessedExpressionDataVectorCreateService {
     public Collection<ProcessedExpressionDataVector> computeProcessedExpressionData( ExpressionExperiment ee ) {
 
         // eeService.thawLite( ee );
-
+        
         Collection<ProcessedExpressionDataVector> processedVectors = processedDataService
                 .createProcessedDataVectors( ee );
 
@@ -97,6 +93,10 @@ public class ProcessedExpressionDataVectorCreateService {
 
     }
 
+    public void setAuditTrailService( AuditTrailService auditTrailService ) {
+        this.auditTrailService = auditTrailService;
+    }
+
     public void setDesignElementDataVectorService( DesignElementDataVectorService designElementDataVectorService ) {
         this.designElementDataVectorService = designElementDataVectorService;
     }
@@ -107,6 +107,14 @@ public class ProcessedExpressionDataVectorCreateService {
 
     public void setProcessedDataService( ProcessedExpressionDataVectorService processedDataService ) {
         this.processedDataService = processedDataService;
+    }
+
+    /**
+     * @param arrayDesign
+     */
+    private void audit( ExpressionExperiment ee, String note ) {
+        AuditEventType eventType = ProcessedVectorComputationEvent.Factory.newInstance();
+        auditTrailService.addUpdateEvent( ee, eventType, note );
     }
 
     /**
@@ -137,14 +145,6 @@ public class ProcessedExpressionDataVectorCreateService {
         }
 
         return processedDataVectors;
-    }
-
-    /**
-     * @param arrayDesign
-     */
-    private void audit( ExpressionExperiment ee, String note ) {
-        AuditEventType eventType = ProcessedVectorComputationEvent.Factory.newInstance();
-        auditTrailService.addUpdateEvent( ee, eventType, note );
     }
 
     /**

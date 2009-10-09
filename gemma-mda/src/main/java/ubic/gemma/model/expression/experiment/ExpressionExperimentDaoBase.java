@@ -546,6 +546,20 @@ public abstract class ExpressionExperimentDaoBase extends
     }
 
     /**
+     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDao#findByParentTaxon(ubic.gemma.model.genome.Taxon)
+     */
+    public java.util.Collection<ExpressionExperiment> findByParentTaxon( final ubic.gemma.model.genome.Taxon taxon ) {
+        try {
+            return this.handleFindByParentTaxon( taxon );
+        } catch ( Throwable th ) {
+            throw new java.lang.RuntimeException(
+                    "Error performing 'ubic.gemma.model.expression.experiment.ExpressionExperimentDao.findByByTaxon(ubic.gemma.model.genome.Taxon taxon)' --> "
+                            + th, th );
+        }
+    }
+
+
+    /**
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDao#findOrCreate(int, java.lang.String,
      *      ubic.gemma.model.expression.experiment.ExpressionExperiment)
      */
@@ -1191,6 +1205,12 @@ public abstract class ExpressionExperimentDaoBase extends
      * Performs the core logic for {@link #findByTaxon(ubic.gemma.model.genome.Taxon)}
      */
     protected abstract java.util.Collection<ExpressionExperiment> handleFindByTaxon( ubic.gemma.model.genome.Taxon taxon )
+            throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #findByParentTaxon(ubic.gemma.model.genome.Taxon)}
+     */
+    protected abstract java.util.Collection<ExpressionExperiment> handleFindByParentTaxon( ubic.gemma.model.genome.Taxon taxon )
             throws java.lang.Exception;
 
     /**

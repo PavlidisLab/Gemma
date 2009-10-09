@@ -143,6 +143,15 @@ public interface ExpressionExperimentService extends ubic.gemma.model.common.Aud
      */
     public java.util.Collection<ExpressionExperiment> findByTaxon( ubic.gemma.model.genome.Taxon taxon );
 
+    
+    /**
+     * <p>
+     * gets all EE that match the given parent Taxon
+     * </p>
+     */
+    public java.util.Collection<ExpressionExperiment> findByParentTaxon( ubic.gemma.model.genome.Taxon taxon );
+    
+
     /**
      *  
      */

@@ -62,6 +62,7 @@ import ubic.gemma.model.genome.Chromosome;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.TaxonDao;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
@@ -102,7 +103,7 @@ public class TestPersistentObjectHelper {
      * @return
      */
     Taxon testTaxon;
-
+    Collection <Taxon> testTaxa =null;
     private Collection<BioMaterial> getBioMaterials() {
 
         if ( allFactorValues.isEmpty() )
@@ -711,11 +712,16 @@ public class TestPersistentObjectHelper {
             testTaxon.setCommonName( "elephant" );
             testTaxon.setScientificName( "Loxodonta" );
             testTaxon.setNcbiId( 1245 );
+            testTaxon.setIsSpecies( true );
+            testTaxon.setIsGenesUsable( true );
             testTaxon = ( Taxon ) persisterHelper.persist( testTaxon );
             assert testTaxon != null && testTaxon.getId() != null;
         }
         return testTaxon;
     }
+    
+       
+    
 
     /**
      * To allow the persister helper to manaage
@@ -727,6 +733,8 @@ public class TestPersistentObjectHelper {
         Taxon t = Taxon.Factory.newInstance();
         t.setCommonName( "mouse" );
         t.setScientificName( "Mus musculus" );
+        t.setIsSpecies( true );
+        t.setIsGenesUsable( true );
 
         return t;
     }

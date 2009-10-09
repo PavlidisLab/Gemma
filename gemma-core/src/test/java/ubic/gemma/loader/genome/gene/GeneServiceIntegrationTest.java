@@ -123,7 +123,7 @@ public class GeneServiceIntegrationTest extends BaseSpringContextTest {
             Blat blat = new Blat();
             Collection<BlatResult> results = blat.processPsl( blatResultInputStream, taxon );
 
-            aligner.processArrayDesign( ad, results );
+        	aligner.processArrayDesign( ad, taxon, results );
 
             // real stuff.
             ArrayDesignProbeMapperService arrayDesignProbeMapperService = ( ArrayDesignProbeMapperService ) this

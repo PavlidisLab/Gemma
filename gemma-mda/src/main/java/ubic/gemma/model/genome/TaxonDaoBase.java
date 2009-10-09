@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.genome;
 
+import java.util.Collection;
+
 /**
  * <p>
  * Base Spring DAO Class: is able to create, update, remove, load, and find objects of type
@@ -169,6 +171,56 @@ public abstract class TaxonDaoBase extends org.springframework.orm.hibernate3.su
         return this.findByCommonName( TRANSFORM_NONE, queryString, commonName );
     }
 
+    /**
+     * @see ubic.gemma.model.genome.TaxonDao#findByCommonName(int, java.lang.String)
+     */
+    public Taxon findByAbbreviation( final int transform, final java.lang.String abbreviation ) {
+        return this.findByAbbreviation( transform, "from TaxonImpl t where t.abbreviation=:abbreviation", abbreviation );
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.TaxonDao#findByCommonName(int, java.lang.String, java.lang.String)
+     */
+    @SuppressWarnings( { "unchecked" })
+    public Taxon findByAbbreviation( final int transform, final java.lang.String queryString,
+            final java.lang.String abbreviation ) {
+        java.util.List<String> argNames = new java.util.ArrayList<String>();
+        java.util.List<Object> args = new java.util.ArrayList<Object>();
+        args.add( abbreviation );
+        argNames.add( "abbreviation" );
+        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
+                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
+        Object result = null;
+
+        if ( results.size() > 1 ) {
+            throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                    "More than one instance of 'ubic.gemma.model.genome.Taxon"
+                            + "' was found when executing query --> '" + queryString + "'" );
+        } else if ( results.size() == 1 ) {
+            result = results.iterator().next();
+        }
+
+        result = transformEntity( transform, ( ubic.gemma.model.genome.Taxon ) result );
+        return ( Taxon ) result;
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.TaxonDao#findByCommonName(java.lang.String)
+     */
+    public ubic.gemma.model.genome.Taxon findByAbbreviation( java.lang.String abbreviation ) {
+        return this.findByAbbreviation( TRANSFORM_NONE, abbreviation );
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.TaxonDao#findByCommonName(java.lang.String, java.lang.String)
+     */
+    public ubic.gemma.model.genome.Taxon findByAbbreviation( final java.lang.String queryString,
+            final java.lang.String abbreviation ) {
+        return this.findByAbbreviation( TRANSFORM_NONE, queryString, abbreviation );
+    }
+
+           
+    
     /**
      * @see ubic.gemma.model.genome.TaxonDao#findByScientificName(int, java.lang.String)
      */
@@ -353,6 +405,17 @@ public abstract class TaxonDaoBase extends org.springframework.orm.hibernate3.su
                     }
                 } );
     }
+
+    /**
+     * @see ubic.gemma.model.genome.TaxonDao#findChildTaxaByParent(ubic.gemma.model.genome.Taxon)
+     */
+    @SuppressWarnings("unchecked")
+    public Collection<Taxon> findChildTaxaByParent(Taxon parentTaxon){
+        String queryString = "from ubic.gemma.model.genome.Taxon as taxon where taxon.parentTaxon = :parentTaxon";
+        Collection<Taxon> childTaxa = this.getHibernateTemplate().findByNamedParam( queryString, "parentTaxon", parentTaxon );
+        return childTaxa;               
+    }
+    
 
     /**
      * @see ubic.gemma.model.genome.TaxonDao#update(ubic.gemma.model.genome.Taxon)

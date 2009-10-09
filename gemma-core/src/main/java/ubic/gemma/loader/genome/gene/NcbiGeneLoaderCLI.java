@@ -24,6 +24,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 
 import ubic.gemma.loader.genome.gene.ncbi.NcbiGeneLoader;
+import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.util.AbstractSpringAwareCLI;
 
 /**
@@ -59,6 +60,7 @@ public class NcbiGeneLoaderCLI extends AbstractSpringAwareCLI {
         Exception err = processCommandLine( "NcbiGeneLoaderCLI", args );
         if ( err != null ) return err;
         loader = new NcbiGeneLoader();
+        loader.setTaxonService((TaxonService) this.getBean("taxonService"));
         loader.setPersisterHelper( this.getPersisterHelper() );
 
         if ( filePath != null ) {

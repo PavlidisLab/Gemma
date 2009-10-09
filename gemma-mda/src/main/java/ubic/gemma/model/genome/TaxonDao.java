@@ -168,7 +168,43 @@ public interface TaxonDao {
      * </p>
      */
     public ubic.gemma.model.genome.Taxon findByScientificName( String queryString, java.lang.String scientificName );
+  
+    
+    /**
+     * <p>
+     * Does the same thing as {@link #findByAbbreviation(java.lang.String)} with an additional flag called
+     * <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then finder results will
+     * <strong>NOT</strong> be transformed during retrieval. If this flag is any of the other constants defined here
+     * then finder results <strong>WILL BE</strong> passed through an operation which can optionally transform the
+     * entities (into value objects for example). By default, transformation does not occur.
+     * </p>
+     */
+    public Taxon findByAbbreviation( int transform, java.lang.String abbreviation );
 
+    /**
+     * <p>
+     * Does the same thing as {@link #findByAbbreviation(boolean, java.lang.String)} with an additional argument
+     * called <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string
+     * defined in {@link #findByAbbreviation(int, java.lang.String abbreviation	)}.
+     * </p>
+     */
+    public Taxon findByAbbreviation	( int transform, String queryString, java.lang.String abbreviation );
+
+    /**
+     * 
+     */
+    public ubic.gemma.model.genome.Taxon findByAbbreviation( java.lang.String abbreviation );
+
+    /**
+     * <p>
+     * Does the same thing as {@link #findByAbbreviation(java.lang.String)} with an additional argument called
+     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string defined
+     * in {@link #findByAbbreviation(java.lang.String)}.
+     * </p>
+     */
+    public ubic.gemma.model.genome.Taxon findByAbbreviation( String queryString, java.lang.String abbreviation );
+
+    
     /**
      * <p>
      * Does the same thing as {@link #findOrCreate(boolean, ubic.gemma.model.genome.Taxon)} with an additional argument
@@ -269,4 +305,9 @@ public interface TaxonDao {
      */
     public void update( ubic.gemma.model.genome.Taxon taxon );
 
+    /**
+     * Find the child<code>taxa</code> for this parent.
+     */
+    public java.util.Collection<Taxon>findChildTaxaByParent( ubic.gemma.model.genome.Taxon parentTaxon );
+    
 }

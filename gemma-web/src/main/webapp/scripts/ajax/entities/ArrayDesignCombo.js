@@ -124,9 +124,9 @@ Gemma.ArrayDesignCombo = Ext.extend(Ext.form.ComboBox, {
 			return;
 
 		this.store.filterBy(function(record, id) {
-					if (!record.data.taxon) {
-						return false;
-					} else if (record.data.taxon == taxon.commonName) {
+					if (!record.data.taxon || (record.data.taxon.indexOf(taxon.commonName)== -1)) {
+						return false;									
+					}else{
 						return true;
 					}
 				});

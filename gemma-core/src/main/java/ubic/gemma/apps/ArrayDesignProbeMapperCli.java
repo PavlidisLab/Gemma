@@ -128,7 +128,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
                 .hasArg()
                 .withArgName( "taxon" )
                 .withDescription(
-                        "Taxon common name (e.g., human); analysis will be run for all ArrayDesigns from that taxon (overrides -a)" )
+                        "Taxon common name (e.g., human); if using '-import', this taxon will be assumed; otherwise analysis will be run for all ArrayDesigns from that taxon (overrides -a)" )
                 .create( 't' );
 
         addOption( taxonOption );
@@ -342,7 +342,11 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
             }
 
             void consume( ArrayDesign x ) {
-                if ( taxon.equals( arrayDesignService.getTaxon( x.getId() ) ) ) {
+                if ( arrayDesignService.getTaxa( x.getId() ).contains( taxon ) ) {
+                    /*
+                     * Note that if the array design has multiple taxa, analysis will be run on all of the sequences,
+                     * not just the ones from the taxon specified.
+                     */
                     processArrayDesign( skipIfLastRunLaterThan, x );
                 }
 
@@ -379,7 +383,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
      * @param design
      */
     private void processArrayDesign( Date skipIfLastRunLaterThan, ArrayDesign design ) {
-        if ( taxon != null && !taxon.equals( arrayDesignService.getTaxon( design.getId() ) ) ) {
+        if ( taxon != null && !arrayDesignService.getTaxa( design.getId() ).contains( taxon ) ) {
             return;
         }
 

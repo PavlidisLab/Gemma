@@ -38,7 +38,7 @@ import org.apache.commons.logging.LogFactory;
 
 import ubic.basecode.util.FileTools;
 import ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultService;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionSummaryValueObject;
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
@@ -76,8 +76,7 @@ import ubic.gemma.util.ConfigUtils;
  * @spring.property name="probe2ProbeCoexpressionService" ref="probe2ProbeCoexpressionService"
  * @spring.property name="securityService" ref="securityService"
  * @spring.property name="differentialExpressionAnalysisService" ref="differentialExpressionAnalysisService"
- * @spring.property name="differentialExpressionAnalysisResultService" ref="differentialExpressionAnalysisResultService"
- * 
+ * @spring.property name="differentialExpressionResultService" ref="differentialExpressionResultService"
  * @version $Id$
  */
 public class ExpressionExperimentReportService {
@@ -94,7 +93,7 @@ public class ExpressionExperimentReportService {
     private Probe2ProbeCoexpressionService probe2ProbeCoexpressionService;
     private SecurityService securityService;
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
-    private DifferentialExpressionAnalysisResultService differentialExpressionAnalysisResultService;
+    private DifferentialExpressionResultService differentialExpressionResultService;
 
     /**
      * Populate information about how many annotations there are, and how many factor values there are.
@@ -290,7 +289,7 @@ public class ExpressionExperimentReportService {
                 eeVo.setBioMaterialCount( cacheVo.getBioMaterialCount() );
                 eeVo.setProcessedExpressionVectorCount( cacheVo.getProcessedExpressionVectorCount() );
                 eeVo.setCoexpressionLinkCount( cacheVo.getCoexpressionLinkCount() );
-                eeVo.setDiffExpressedProbes(cacheVo.getDiffExpressedProbes()  );
+                eeVo.setDiffExpressedProbes( cacheVo.getDiffExpressedProbes() );
                 eeVo.setDateCached( cacheVo.getDateCached() );
                 eeVo.setDateCreated( cacheVo.getDateCreated() );
                 eeVo.setDateLastUpdated( cacheVo.getDateLastUpdated() );
@@ -365,7 +364,6 @@ public class ExpressionExperimentReportService {
     public Probe2ProbeCoexpressionService getProbe2ProbeCoexpressionService() {
         return probe2ProbeCoexpressionService;
     }
-
 
     /**
      * retrieves a collection of cached value objects containing summary information
@@ -491,31 +489,32 @@ public class ExpressionExperimentReportService {
      * @param threshold
      * @return A collection of probe ids for the probes that met the threshold
      */
-    private Collection<DifferentialExpressionSummaryValueObject> getDiffExpressedProbes( ExpressionExperiment ee, double threshold ) {
-       
-        
+    private Collection<DifferentialExpressionSummaryValueObject> getDiffExpressedProbes( ExpressionExperiment ee,
+            double threshold ) {
+
         Collection<ExpressionAnalysisResultSet> results = differentialExpressionAnalysisService.getResultSets( ee );
         Collection<DifferentialExpressionSummaryValueObject> summaries = new ArrayList<DifferentialExpressionSummaryValueObject>();
-        
+
         for ( ExpressionAnalysisResultSet par : results ) {
 
             DifferentialExpressionSummaryValueObject desvo = new DifferentialExpressionSummaryValueObject();
-            differentialExpressionAnalysisResultService.thawLite( par );  //need the thaw for the experimental factor
+            differentialExpressionResultService.thawLite( par ); // need the thaw for the experimental factor
             desvo.setThreshold( threshold );
-            desvo.setExperimentalFactors(par.getExperimentalFactor()  );
-            desvo.setResultSetId( par.getId() );                       
-            
-            long probesThatMetThreshold = differentialExpressionAnalysisService.countProbesMeetingThreshold(par, threshold);           
+            desvo.setExperimentalFactors( par.getExperimentalFactor() );
+            desvo.setResultSetId( par.getId() );
+
+            long probesThatMetThreshold = differentialExpressionAnalysisService.countProbesMeetingThreshold( par,
+                    threshold );
             desvo.setNumberOfDiffExpressedProbes( probesThatMetThreshold );
-            
+
             log.info( "Probes that met threshold in result set - " + par.getId() + " : " + probesThatMetThreshold );
-            summaries.add( desvo);
+            summaries.add( desvo );
 
         }
-        
+
         return summaries;
 
-   }
+    }
 
     /**
      * @param object
@@ -719,9 +718,9 @@ public class ExpressionExperimentReportService {
         this.differentialExpressionAnalysisService = differentialExpressionAnalysisService;
     }
 
-    public void setDifferentialExpressionAnalysisResultService(
-            DifferentialExpressionAnalysisResultService differentialExpressionAnalysisResultService ) {
-        this.differentialExpressionAnalysisResultService = differentialExpressionAnalysisResultService;
+    public void setDifferentialExpressionResultService(
+            DifferentialExpressionResultService differentialExpressionResultService ) {
+        this.differentialExpressionResultService = differentialExpressionResultService;
     }
 
 }

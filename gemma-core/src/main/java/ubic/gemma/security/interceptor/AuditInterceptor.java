@@ -618,6 +618,7 @@ public class AuditInterceptor extends HibernateDaoSupport implements MethodInter
             this.entity = entity;
         }
 
+        @Override
         public boolean equals( Object other ) {
             if ( this == other ) {
                 return true;
@@ -641,6 +642,7 @@ public class AuditInterceptor extends HibernateDaoSupport implements MethodInter
             return entity.getId();
         }
 
+        @Override
         public int hashCode() {
             return 29 * entity.getId().hashCode() + entity.getClass().hashCode();
         }

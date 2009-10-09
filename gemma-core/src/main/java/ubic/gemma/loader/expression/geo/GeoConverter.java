@@ -141,7 +141,9 @@ public class GeoConverter implements Converter<Object, Object> {
 
     private Map<String, Map<String, CompositeSequence>> platformDesignElementMap = new HashMap<String, Map<String, CompositeSequence>>();
 
-    private Map<String, Taxon> platformTaxonMap = new HashMap<String, Taxon>();
+    private Map<String, Taxon> taxonScientificNameMap = new HashMap<String, Taxon>();
+
+    private Map<String, Taxon> taxonAbbreviationMap = new HashMap<String, Taxon>();
 
     private Collection<Object> results = new HashSet<Object>();
 
@@ -321,9 +323,23 @@ public class GeoConverter implements Converter<Object, Object> {
         }
 
         if ( StringUtils.isNotBlank( channel.getOrganism() ) ) {
-            Taxon taxon = Taxon.Factory.newInstance();
-            taxon.setScientificName( channel.getOrganism() );
-            bioMaterial.setSourceTaxon( taxon );
+            // if we have a case where the two channels have different taxon throw an exception.
+            String currentChannelTaxon = channel.getOrganism();
+            if ( bioMaterial.getSourceTaxon() != null ) {
+                String previousChannelTaxon = bioMaterial.getSourceTaxon().getScientificName();
+                if ( previousChannelTaxon != null && !( previousChannelTaxon.equals( currentChannelTaxon ) ) ) {
+                    throw new IllegalArgumentException( "Channel 1 taxon is "
+                            + bioMaterial.getSourceTaxon().getScientificName() + " Channel 2 taxon is "
+                            + currentChannelTaxon + " Check that is expected for sample " + sample.getGeoAccession() );
+                }
+
+            } else {
+                Taxon taxon = Taxon.Factory.newInstance();
+                taxon.setIsSpecies( true );
+                taxon.setScientificName( channel.getOrganism() );
+                bioMaterial.setSourceTaxon( taxon );
+            }
+
         }
 
         if ( channel.getMolecule() != null ) {
@@ -559,20 +575,18 @@ public class GeoConverter implements Converter<Object, Object> {
              */
             throw new IllegalStateException( "ArrayDesigns must be converted before datasets - didn't find "
                     + geoDataset.getPlatform() + "; possibly dataset has incorrect platform?" );
-        } else {
-            ad.setDescription( ad.getDescription() + "\nFrom " + platform.getGeoAccession() + "\nLast Updated: "
-                    + platform.getLastUpdateDate() );
+        }
+        ad.setDescription( ad.getDescription() + "\nFrom " + platform.getGeoAccession() + "\nLast Updated: "
+                + platform.getLastUpdateDate() );
 
-            LocalFile arrayDesignRawFile = convertSupplementaryFileToLocalFile( platform );
-            if ( arrayDesignRawFile != null ) {
-                Collection<LocalFile> arrayDesignLocalFiles = ad.getLocalFiles();
-                if ( arrayDesignLocalFiles == null ) {
-                    arrayDesignLocalFiles = new HashSet<LocalFile>();
-                }
-                arrayDesignLocalFiles.add( arrayDesignRawFile );
-                ad.setLocalFiles( arrayDesignLocalFiles );
+        LocalFile arrayDesignRawFile = convertSupplementaryFileToLocalFile( platform );
+        if ( arrayDesignRawFile != null ) {
+            Collection<LocalFile> arrayDesignLocalFiles = ad.getLocalFiles();
+            if ( arrayDesignLocalFiles == null ) {
+                arrayDesignLocalFiles = new HashSet<LocalFile>();
             }
-
+            arrayDesignLocalFiles.add( arrayDesignRawFile );
+            ad.setLocalFiles( arrayDesignLocalFiles );
         }
 
         convertDataSetDataVectors( geoDataset.getSeries().iterator().next().getValues(), geoDataset, expExp );
@@ -788,14 +802,27 @@ public class GeoConverter implements Converter<Object, Object> {
          * earlier in the conversion process (see GeoDatasetService)
          */
         String mappedName = geoPlatform.getProbeNamesInGemma().get( designElementName );
+
+        if ( mappedName == null ) {
+            // Sigh..this is unlikely to work in general, but see bug 1709.
+            mappedName = geoPlatform.getProbeNamesInGemma().get( designElementName.toUpperCase() );
+        }
+
+        if ( mappedName == null ) {
+            throw new IllegalStateException( "There is  no probe matching " + designElementName );
+        }
+
         CompositeSequence compositeSequence = designMap.get( mappedName );
 
-        assert compositeSequence != null : "No composite sequence " + designElementName;
+        if ( compositeSequence == null )
+            throw new IllegalStateException( "No composite sequence " + designElementName );
 
         if ( compositeSequence.getBiologicalCharacteristic() != null
-                && compositeSequence.getBiologicalCharacteristic().getSequenceDatabaseEntry() != null ) {
-            assert compositeSequence.getBiologicalCharacteristic().getSequenceDatabaseEntry().getExternalDatabase()
-                    .getName() != null;
+                && compositeSequence.getBiologicalCharacteristic().getSequenceDatabaseEntry() != null
+                && compositeSequence.getBiologicalCharacteristic().getSequenceDatabaseEntry().getExternalDatabase()
+                        .getName() == null ) {
+            // this is obscure.
+            throw new IllegalStateException( compositeSequence + " sequence accession external database lacks name" );
         }
 
         if ( log.isDebugEnabled() ) log.debug( "Associating " + compositeSequence + " with dedv" );
@@ -814,7 +841,6 @@ public class GeoConverter implements Converter<Object, Object> {
      * @param expExp ExpresssionExperiment
      * @return BioAssayDimension representing the samples.
      */
-    @SuppressWarnings("unchecked")
     private BioAssayDimension convertGeoSampleList( List<GeoSample> datasetSamples, ExpressionExperiment expExp ) {
         BioAssayDimension resultBioAssayDimension = BioAssayDimension.Factory.newInstance();
 
@@ -856,8 +882,6 @@ public class GeoConverter implements Converter<Object, Object> {
         log.info( "Converting platform: " + platform.getGeoAccession() );
         platformDesignElementMap.put( arrayDesign.getShortName(), new HashMap<String, CompositeSequence>() );
 
-        Taxon taxon = convertPlatformOrganism( platform );
-
         // convert the design element information.
         String identifier = platform.getIdColumnName();
         if ( identifier == null ) {
@@ -868,6 +892,7 @@ public class GeoConverter implements Converter<Object, Object> {
         Collection<String> externalReferences = determinePlatformExternalReferenceIdentifier( platform );
         String descriptionColumn = determinePlatformDescriptionColumn( platform );
         String sequenceColumn = determinePlatformSequenceColumn( platform );
+        String probeOrganismColumn = determinePlatformProbeOrganismColumn( platform );
         ExternalDatabase externalDb = determinePlatformExternalDatabase( platform );
 
         List<String> identifiers = platform.getColumnData( identifier );
@@ -876,6 +901,23 @@ public class GeoConverter implements Converter<Object, Object> {
         List<String> sequences = null;
         if ( sequenceColumn != null ) {
             sequences = platform.getColumnData( sequenceColumn );
+        }
+        // even if blank probe set it to an empty taxon
+        Taxon taxon = Taxon.Factory.newInstance();
+        // get taxon details from platform, if there are no or multiple taxons for platforms and no probeOrganismColumn
+        // stop processing
+        Collection<Taxon> platformTaxa = convertPlatformOrganism( platform, probeOrganismColumn );
+        // if there is only 1 taxon on platform set that as the taxon otherwise
+        // we have to get the taxon from the probeOrganismColumn.
+        if ( platformTaxa.size() == 1 ) {
+            taxon = platformTaxa.iterator().next();
+        }
+
+        List<String> probeOrganism = null;
+
+        if ( probeOrganismColumn != null ) {
+            log.debug( "Organism details found for probes on array " + platform.getGeoAccession() );
+            probeOrganism = platform.getColumnData( probeOrganismColumn );
         }
 
         /*
@@ -939,6 +981,12 @@ public class GeoConverter implements Converter<Object, Object> {
             cs.setName( probeName );
             cs.setDescription( description );
             cs.setArrayDesign( arrayDesign );
+
+            // LMD:1647- If There is a Organism Column given for the probe then set taxon from that overwriting platform
+            // taxon
+            if ( probeOrganism != null && StringUtils.isNotBlank( probeOrganism.get( i ) ) ) {
+                taxon = convertProbeOrganism( probeOrganism.get( i ) );
+            }
 
             BioSequence bs = createMinimalBioSequence( taxon );
 
@@ -1091,49 +1139,63 @@ public class GeoConverter implements Converter<Object, Object> {
     }
 
     /**
-     * @param platform
-     * @return
+     * Retrieve full taxon details for a platform given the organisms scientific name in GEO. If multiple organisms are
+     * recorded against an array only first taxon details are returned. Warning is given when no column is found to give
+     * the taxons for the probes
+     * 
+     * @param platform GEO platform details
+     * @param probeTaxonColumnName Column name of probe taxons
+     * @return List of taxons on platform
      */
-    private Taxon convertPlatformOrganism( GeoPlatform platform ) {
-
+    private Collection<Taxon> convertPlatformOrganism( GeoPlatform platform, String probeTaxonColumnName ) {
         Collection<String> organisms = platform.getOrganisms();
+        Collection<Taxon> platformTaxon = new HashSet<Taxon>();
+        StringBuffer taxaOnPlatform = new StringBuffer();
 
-        if ( organisms.size() > 1 ) {
-            log.warn( "!!!! " + organisms.size() + " organisms represented on platform " + platform
-                    + " --- BioSequences will be associated with the first one found." );
-            for ( String org : organisms ) {
-                log.warn( org );
+        for ( String taxonScientificName : organisms ) {
+            if ( taxonScientificName == null ) continue;
+            taxaOnPlatform.append( ": " + taxonScientificName );
+            // make sure add scientific name to map for platform
+            if ( taxonScientificNameMap.containsKey( taxonScientificName ) ) {
+                platformTaxon.add( taxonScientificNameMap.get( taxonScientificName ) );
+            } else {
+                platformTaxon.add( convertOrganismToTaxon( taxonScientificName ) );
             }
         }
 
-        if ( organisms.size() == 0 ) {
-            log.warn( "No organisms for platform " + platform );
-            return null;
+        // multiple organisms are found on the platform yet there is no column defined to represent taxon for the
+        // probes.
+        if ( platformTaxon.size() > 1 && probeTaxonColumnName == null ) {
+            throw new IllegalArgumentException( platformTaxon.size() + " taxon found on platform" + taxaOnPlatform
+                    + " but there is no probe specific taxon Column found for platform " + platform );
         }
+        // no platform organism given
+        if ( platformTaxon.size() == 0 ) {
+            throw new IllegalArgumentException( "No organisms found on platform  " + platform );
+        }
+        return platformTaxon;
 
-        String organism = null;
-        for ( String org : organisms ) {
-            if ( org == null ) continue;
-            organism = org;
-        }
-        assert organism != null;
-        log.debug( "Organism: " + organism );
+    }
 
-        /* see if taxon exists in map */
-        if ( platformTaxonMap.containsKey( organism ) ) {
-            return platformTaxonMap.get( organism );
-        }
+    /**
+     * Given an organisms name from GEO, create or find the taxon in the DB.
+     * 
+     * @param organisms name as provided by GEO presumed to be a scientific name
+     * @return Taxon details
+     */
+    private Taxon convertOrganismToTaxon( String taxonScientificName ) {
+        assert taxonScientificName != null;
 
         /* if not, either create a new one and persist, or get from db and put in map. */
 
-        if ( organism.toLowerCase().startsWith( GeoConverter.RAT ) ) {
-            organism = GeoConverter.RAT; // we don't distinguish between species.
+        if ( taxonScientificName.toLowerCase().startsWith( GeoConverter.RAT ) ) {
+            taxonScientificName = GeoConverter.RAT; // we don't distinguish between species.
         }
 
         Taxon taxon = Taxon.Factory.newInstance();
-
-        taxon.setScientificName( organism );
-
+        taxon.setScientificName( taxonScientificName );
+        taxon.setIsSpecies( true );
+        taxon.setIsGenesUsable( false );
         if ( taxonService != null ) {
             Taxon t = taxonService.findOrCreate( taxon );
             if ( t != null ) {
@@ -1141,7 +1203,53 @@ public class GeoConverter implements Converter<Object, Object> {
             }
         }
 
-        platformTaxonMap.put( organism, taxon );
+        taxonScientificNameMap.put( taxonScientificName, taxon );
+        return taxon;
+
+    }
+
+    /**
+     * Retrieve taxon details for a probe given an abbreviation or scientific name. All scientific names should be in
+     * the map as they were set there by the convertPlatform method. If the abbreviation is not found in the database
+     * then stop processing as the organism name is likely to be an unknown abbreviation.
+     * 
+     * @param probeOrganism scientific name or abbreviation of organism associated to a biosequence.
+     * @return Taxon of biosequence.
+     * @throws IllegalArgumentException taxon supplied has not been processed before, it does not match the scientific
+     *         names used in platform definition and does not match a known abbreviation in the database.
+     */
+    private Taxon convertProbeOrganism( String probeOrganism ) {
+        Taxon taxon = Taxon.Factory.newInstance();
+        // Check if we have processed this organism before as defined by scientific or abbreviation definition.
+        assert probeOrganism != null;
+        // If taxon blank seen n/a put.
+        if ( probeOrganism.equals( "n/a" ) ) {
+            return taxon;
+        }
+        if ( taxonScientificNameMap.containsKey( probeOrganism ) ) {
+            return taxonScientificNameMap.get( probeOrganism );
+        }
+        if ( taxonAbbreviationMap.containsKey( probeOrganism ) ) {
+            return taxonAbbreviationMap.get( probeOrganism );
+        }
+
+        taxon.setAbbreviation( probeOrganism );
+        // taxon not processed before check database.
+        if ( taxonService != null ) {
+            Taxon t = taxonService.findByAbbreviation( probeOrganism );
+
+            if ( t != null ) {
+                taxon = t;
+                taxonAbbreviationMap.put( taxon.getAbbreviation(), t );
+            } else {
+                // if probe organism can not be found i.e it is not a known abbreviation or scientific name
+                // and it was not already created during platform organism processing then warn user
+                throw new IllegalArgumentException(
+                        "Taxon:  "
+                                + probeOrganism
+                                + " is not a known scientific name or abbreviation in GEMMA please contact systems administrator." );
+            }
+        }
         return taxon;
 
     }
@@ -1271,31 +1379,23 @@ public class GeoConverter implements Converter<Object, Object> {
         for ( GeoChannel channel : sample.getChannels() ) {
             /*
              * In reality GEO does not have information about the samples run on each channel. We're just making it up.
-             * So we need to just add the channel information to the biomaterials we have already.
+             * So we need to just add the channel information to the biomaterials we have already. Note taxon is now
+             * taken from sample
              */
             convertChannel( sample, channel, bioMaterial );
             bioAssay.getSamplesUsed().add( bioMaterial );
         }
 
-        Taxon lastTaxon = null;
+        // Taxon lastTaxon = null;
 
         for ( GeoPlatform platform : sample.getPlatforms() ) {
             ArrayDesign arrayDesign;
             if ( seenPlatforms.containsKey( platform.getGeoAccession() ) ) {
                 arrayDesign = seenPlatforms.get( platform.getGeoAccession() );
             } else {
+                // platform not exist yet
                 arrayDesign = convertPlatform( platform );
             }
-
-            // Allow for possibility that platforms use different taxa.
-            Taxon taxon = convertPlatformOrganism( platform );
-            if ( lastTaxon != null && !taxon.equals( lastTaxon ) ) {
-                log.warn( "Multiple taxa found among platforms for single sample, "
-                        + " new biomaterial will be associated with the last taxon found." );
-            }
-            lastTaxon = taxon;
-
-            bioMaterial.setSourceTaxon( taxon );
 
             bioAssay.setArrayDesignUsed( arrayDesign );
 
@@ -2192,6 +2292,28 @@ public class GeoConverter implements Converter<Object, Object> {
             index++;
         }
         log.debug( "No platform sequence description column found for " + platform );
+        return null;
+    }
+
+    /**
+     * Allow multiple taxa for a platform. Method retrieves from parsed GEO file the header column name which contains
+     * the species/organism used to create probe.
+     * 
+     * @param platform Parsed GEO platform details.
+     * @return Column name in GEO used to identify column containing species/organism used to create probe
+     */
+    private String determinePlatformProbeOrganismColumn( GeoPlatform platform ) {
+        Collection<String> columnNames = platform.getColumnNames();
+        int index = 0;
+        for ( String columnName : columnNames ) {
+            if ( GeoConstants.likelyProbeOrganism( columnName ) ) {
+                log.debug( "'" + columnName + "' appears to indicate the sequences in column " + index
+                        + " for platform " + platform );
+                return columnName;
+            }
+            index++;
+        }
+        log.debug( "No platform organism description column found for " + platform );
         return null;
     }
 

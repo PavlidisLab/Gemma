@@ -18,6 +18,10 @@
  */
 package ubic.gemma.model.expression.designElement;
 
+import java.util.Collection;
+
+import ubic.gemma.model.association.BioSequence2GeneProduct;
+
 /**
  * <p>
  * Spring Service base class for <code>ubic.gemma.model.expression.designElement.CompositeSequenceService</code>,
@@ -226,7 +230,7 @@ public abstract class CompositeSequenceServiceBase implements
     /**
      * @see ubic.gemma.model.expression.designElement.CompositeSequenceService#getGenesWithSpecificity(java.util.Collection)
      */
-    public java.util.Map getGenesWithSpecificity( final java.util.Collection compositeSequences ) {
+    public java.util.Map<CompositeSequence, Collection<BioSequence2GeneProduct>> getGenesWithSpecificity( final java.util.Collection<CompositeSequence> compositeSequences ) {
         try {
             return this.handleGetGenesWithSpecificity( compositeSequences );
         } catch ( Throwable th ) {
@@ -464,7 +468,7 @@ public abstract class CompositeSequenceServiceBase implements
     /**
      * Performs the core logic for {@link #getGenesWithSpecificity(java.util.Collection)}
      */
-    protected abstract java.util.Map handleGetGenesWithSpecificity( java.util.Collection compositeSequences )
+    protected abstract java.util.Map<CompositeSequence, Collection<BioSequence2GeneProduct>> handleGetGenesWithSpecificity( java.util.Collection<CompositeSequence> compositeSequences )
             throws java.lang.Exception;
 
     /**

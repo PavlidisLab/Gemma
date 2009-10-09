@@ -270,6 +270,18 @@ public class ExpressionExperimentServiceImpl extends
     /*
      * (non-Javadoc)
      * @see
+     * ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleFindByParentTaxon(ubic.gemma.model.genome
+     * .Taxon)
+     */
+    @Override
+    protected Collection<ExpressionExperiment> handleFindByParentTaxon( Taxon taxon ) throws Exception {
+        return this.getExpressionExperimentDao().findByParentTaxon( taxon );
+    }
+    
+    
+    /*
+     * (non-Javadoc)
+     * @see
      * ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleFindOrCreate(ubic.gemma.model.expression
      * .experiment.ExpressionExperiment)
      */

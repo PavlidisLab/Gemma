@@ -56,6 +56,9 @@ public class GffParserTest extends TestCase {
         Taxon t = Taxon.Factory.newInstance();
         t.setCommonName( "mouse" );
         t.setScientificName( "Mus musculus" );
+        t.setIsSpecies( true );
+        t.setIsGenesUsable( true );
+        
         parser.setTaxon( t );
         parser.parse( is );
         Collection<Gene> res = parser.getResults();

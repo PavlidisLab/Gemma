@@ -774,6 +774,8 @@ public class MageMLConverterHelper {
                 String scientificName = character.getValue();
                 Taxon t = Taxon.Factory.newInstance();
                 t.setScientificName( scientificName );
+                t.setIsSpecies( true );
+                t.setIsGenesUsable( false );
                 resultBioMaterial.setSourceTaxon( t );
                 found = character;
                 break;

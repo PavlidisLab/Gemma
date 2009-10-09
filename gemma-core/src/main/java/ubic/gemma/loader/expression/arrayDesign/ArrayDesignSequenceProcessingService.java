@@ -371,6 +371,7 @@ public class ArrayDesignSequenceProcessingService {
      * @param probeSequenceFile InputStream from a tab-delimited probe sequence file.
      * @param force if true, the sequences will be overwritten even if they already exist (That is, if the actual ATGCs
      *        need to be replaced, but the BioSequences are already filled in)
+     * @param taxon validated taxon
      * @throws IOException
      */
     public Collection<BioSequence> processAffymetrixDesign( ArrayDesign arrayDesign, InputStream probeSequenceFile,
@@ -379,7 +380,7 @@ public class ArrayDesignSequenceProcessingService {
         log.info( "Processing Affymetrix design" );
         // arrayDesignService.thaw( arrayDesign );
         boolean wasOriginallyLackingCompositeSequences = arrayDesign.getCompositeSequences().size() == 0;
-
+        taxon = validateTaxon( taxon, arrayDesign );
         Collection<BioSequence> bioSequences = new HashSet<BioSequence>();
 
         int done = 0;
@@ -391,10 +392,6 @@ public class ArrayDesignSequenceProcessingService {
 
         int total = compositeSequencesFromProbes.size();
 
-        if ( taxon == null ) {
-            taxon = arrayDesignService.getTaxon( arrayDesign.getId() );
-            if ( taxon == null ) throw new IllegalStateException( "No taxon found for " + arrayDesign );
-        }
 
         Map<String, CompositeSequence> quickFindMap = new HashMap<String, CompositeSequence>();
         List<BioSequence> sequenceBuffer = new ArrayList<BioSequence>();
@@ -476,6 +473,29 @@ public class ArrayDesignSequenceProcessingService {
     }
 
     /**
+     * If taxon is null then it has not been provided on the command line, then deduce the taxon from the
+     * arrayDesign. If there are 0 or more than one taxon on the array design throw an error as this programme can only
+     * be run for 1 taxon at a time if processing from a file.
+     * 
+     * @param taxon Taxon as passed in on the command line
+     * @param arrayDesign Array design to process
+     * @return taxon Taxon to process
+     * @throws IllegalArgumentException Thrown when there is not exactly 1 taxon.
+     */
+    protected Taxon validateTaxon( Taxon taxon, ArrayDesign arrayDesign ) throws IllegalArgumentException {
+        if ( taxon == null ) {
+            Collection<Taxon> taxaOnArray = arrayDesignService.getTaxa( arrayDesign.getId() );
+            if ( taxaOnArray != null && taxaOnArray.size() == 1 && taxaOnArray.iterator().next() != null ) {
+                return taxaOnArray.iterator().next();
+            } else {
+                throw new IllegalArgumentException( taxaOnArray.size() + " taxon found for " + arrayDesign
+                        + "please specifiy which taxon to run" );
+            }
+        }
+        return taxon;
+    }
+
+    /**
      * Create a new Affymetrix design from scratch, given the name.
      * 
      * @param arrayDesignName design name.
@@ -508,7 +528,7 @@ public class ArrayDesignSequenceProcessingService {
         result.setCompositeSequences( rawCompositeSequences );
 
         result = ( ArrayDesign ) persisterHelper.persist( result );
-
+        taxon = validateTaxon( taxon, result );
         this.processAffymetrixDesign( result, probeSequenceFile, taxon, false );
 
         return result;
@@ -562,8 +582,7 @@ public class ArrayDesignSequenceProcessingService {
     }
 
     /**
-     * @param sequenceIdentifierFile with two columns: first is probe id, second is genbank accession (can be another
-     *        identifier).
+     * @param sequenceIdentifierFile with two columns: first is probe id, second is genbank accession.
      * @return
      * @throws IOException
      */
@@ -649,7 +668,9 @@ public class ArrayDesignSequenceProcessingService {
         } else if ( sequenceType.equals( SequenceType.OLIGO ) ) {
             return this.processOligoDesign( arrayDesign, sequenceFile, taxon );
         }
-
+        taxon = validateTaxon( taxon, arrayDesign );
+        //hibernate initilisation error being thrown
+        arrayDesignService.thawLite( arrayDesign );
         checkForCompositeSequences( arrayDesign );
 
         FastaParser fastaParser = new FastaParser();
@@ -663,12 +684,7 @@ public class ArrayDesignSequenceProcessingService {
         int total = bioSequences.size() + arrayDesign.getCompositeSequences().size();
         int done = 0;
         int percent = 0;
-        if ( taxon == null ) {
-            taxon = arrayDesignService.getTaxon( arrayDesign.getId() );
-        }
-        if ( taxon == null ) {
-            throw new IllegalStateException( "No taxon available for " + arrayDesign );
-        }
+        
         for ( BioSequence sequence : bioSequences ) {
 
             sequence.setType( sequenceType );
@@ -765,12 +781,7 @@ public class ArrayDesignSequenceProcessingService {
         int total = arrayDesign.getCompositeSequences().size();
         int done = 0;
         int percent = 0;
-        if ( taxon == null ) {
-            taxon = arrayDesignService.getTaxon( arrayDesign.getId() );
-        }
-        if ( taxon == null ) {
-            throw new IllegalStateException( "No taxon available for " + arrayDesign );
-        }
+        taxon = validateTaxon( taxon, arrayDesign );
 
         log.info( "Sequences done, updating composite sequences" );
 
@@ -850,7 +861,13 @@ public class ArrayDesignSequenceProcessingService {
             return null;
         }
 
-        Taxon taxon = arrayDesignService.getTaxon( arrayDesign.getId() );
+        Collection<Taxon> taxaOnArray = arrayDesignService.getTaxa( arrayDesign.getId() );
+        // not taxon found
+        if ( taxaOnArray == null || taxaOnArray.size() == 0 ) {
+            throw new IllegalArgumentException( taxaOnArray.size() + " taxon found for " + arrayDesign
+                    + "please specifiy which taxon to run" );
+        }
+
         Collection<String> notFound = accessionsToFetch.keySet();
         Collection<BioSequence> finalResult = new HashSet<BioSequence>();
 
@@ -858,7 +875,10 @@ public class ArrayDesignSequenceProcessingService {
         while ( versionNumber < MAX_VERSION_NUMBER ) {
             Collection<BioSequence> retrievedSequences = searchBlastDbs( databaseNames, blastDbHome, notFound );
 
-            Map<String, BioSequence> found = findOrUpdateSequences( accessionsToFetch, retrievedSequences, taxon, force );
+            // we can loop through the taxons as we can ignore sequence when retrieved and arraydesign taxon not match.
+
+            Map<String, BioSequence> found = findOrUpdateSequences( accessionsToFetch, retrievedSequences, taxaOnArray,
+                    force );
 
             finalResult.addAll( found.values() );
             notFound = getUnFound( notFound, found );
@@ -928,10 +948,8 @@ public class ArrayDesignSequenceProcessingService {
         Collection<String> accessionsToFetch = new HashSet<String>();
         accessionsToFetch.addAll( probe2acc.values() );
 
-        if ( taxon == null ) taxon = arrayDesignService.getTaxon( arrayDesign.getId() );
-        if ( taxon == null ) {
-            throw new IllegalStateException( "No taxon available for " + arrayDesign );
-        }
+        // only 1 taxon should be on array design if taxon not supplied on command line
+        taxon = validateTaxon( taxon, arrayDesign );
 
         /*
          * Fill in sequences from BLAST databases.
@@ -1150,13 +1168,24 @@ public class ArrayDesignSequenceProcessingService {
      * @param retrievedSequences candidate sequence information for copying into the database.
      * @param force If true, if an existing BioSequence that matches if found in the system, any existing sequence
      *        information in the BioSequence will be overwritten.
+	 * @param taxa Representing taxa on array 
      * @return Items that were found.
      */
     private Map<String, BioSequence> findOrUpdateSequences( Map<String, BioSequence> accessionsToFetch,
-            Collection<BioSequence> retrievedSequences, Taxon taxon, boolean force ) {
+            Collection<BioSequence> retrievedSequences, Collection<Taxon> taxa, boolean force ) {
 
         Map<String, BioSequence> found = new HashMap<String, BioSequence>();
+        for ( Taxon taxon : taxa ) {
         for ( BioSequence sequence : retrievedSequences ) {
+                if ( sequence.getTaxon() == null || taxon == null ) {
+                    log.warn( "Sequence taxon is" + sequence.getTaxon() + " Array taxon is " + taxon + " ; skipping" );
+                    continue;
+                }
+                if ( !sequence.getTaxon().equals( taxon ) ) {
+                    // taxon do not match skip this is when an array is multi taxon
+                    continue;
+                }
+
             sequence.setTaxon( taxon );
             if ( sequence.getSequenceDatabaseEntry() == null ) {
                 log.warn( "Sequence from BLAST db lacks database entry: " + sequence + "; skipping" );
@@ -1166,6 +1195,7 @@ public class ArrayDesignSequenceProcessingService {
             String accession = sequence.getSequenceDatabaseEntry().getAccession();
             found.put( accession, sequence );
             accessionsToFetch.remove( accession );
+        }
         }
         return found;
     }

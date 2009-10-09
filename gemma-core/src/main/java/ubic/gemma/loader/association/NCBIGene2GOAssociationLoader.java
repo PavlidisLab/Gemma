@@ -26,10 +26,11 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.springframework.security.context.SecurityContext;
-import org.springframework.security.context.SecurityContextHolder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.security.Authentication;
+import org.springframework.security.context.SecurityContext;
+import org.springframework.security.context.SecurityContextHolder;
 
 import ubic.basecode.util.FileTools;
 import ubic.gemma.model.association.Gene2GOAssociation;
@@ -49,10 +50,18 @@ public class NCBIGene2GOAssociationLoader {
     private static final int QUEUE_SIZE = 30000;
     private static final int BATCH_SIZE = 2000;
     private PersisterHelper persisterHelper;
-
+    private NCBIGene2GOAssociationParser parser =null;
+    
     AtomicBoolean producerDone = new AtomicBoolean( false );
     private AtomicBoolean consumerDone = new AtomicBoolean( false );
     private int count;
+    
+    
+    
+
+    public void setParser(NCBIGene2GOAssociationParser parser) {
+		this.parser = parser;
+	}
 
     protected void load( LocalFile ncbiFile ) {
 
@@ -73,6 +82,7 @@ public class NCBIGene2GOAssociationLoader {
     public void load( final InputStream inputStream ) {
         final BlockingQueue<Gene2GOAssociation> queue = new ArrayBlockingQueue<Gene2GOAssociation>( QUEUE_SIZE );
         final SecurityContext context = SecurityContextHolder.getContext();
+        final Authentication authentication = context.getAuthentication();
 
         Thread loadThread = new Thread( new Runnable() {
             public void run() {
@@ -87,8 +97,9 @@ public class NCBIGene2GOAssociationLoader {
         Thread parseThread = new Thread( new Runnable() {
             public void run() {
                 try {
-                    NCBIGene2GOAssociationParser parser = new NCBIGene2GOAssociationParser();
-                    parser.parse( inputStream, queue );
+                    //NCBIGene2GOAssociationParser parser = new NCBIGene2GOAssociationParser();
+                	SecurityContextHolder.getContext().setAuthentication( authentication );
+                	parser.parse( inputStream, queue );
                     setCount( parser.getCount() );
                 } catch ( IOException e ) {
                     e.printStackTrace();

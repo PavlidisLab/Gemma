@@ -593,6 +593,24 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
     /*
      * (non-Javadoc)
      * @see
+     * ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleFindByParentTaxon(ubic.gemma.model.genome.
+     * Taxon)
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    protected Collection<ExpressionExperiment> handleFindByParentTaxon( Taxon taxon ) throws Exception {
+        final String queryString = "select distinct ee from ExpressionExperimentImpl as ee "
+                + "inner join ee.bioAssays as ba "
+                + "inner join ba.samplesUsed as sample "
+                + "inner join sample.sourceTaxon as childtaxon where childtaxon.parentTaxon  = :taxon ";
+            return getHibernateTemplate().findByNamedParam( queryString, "taxon", taxon );
+    }
+    
+    
+    
+    /*
+     * (non-Javadoc)
+     * @see
      * ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleGetAnnotationCounts(java.util.Collection
      * )
      */

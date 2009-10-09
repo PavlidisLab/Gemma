@@ -431,9 +431,6 @@ public class GeneralSearchController extends BaseFormController {
     private void populateTaxonReferenceData( Map mapping ) {
         List<Taxon> taxa = new ArrayList<Taxon>();
         for ( Taxon taxon : ( Collection<Taxon> ) taxonService.loadAll() ) {
-            if ( !SupportedTaxa.contains( taxon ) ) {
-                continue;
-            }
             taxa.add( taxon );
         }
         Collections.sort( taxa, new Comparator<Taxon>() {

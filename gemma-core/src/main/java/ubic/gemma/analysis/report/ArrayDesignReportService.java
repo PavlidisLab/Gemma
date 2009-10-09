@@ -58,7 +58,11 @@ import ubic.gemma.util.ConfigUtils;
 public class ArrayDesignReportService {
     private Log log = LogFactory.getLog( this.getClass() );
 
+    private String ARRAY_DESIGN_REPORT_FILE_NAME_PREFIX = "ArrayDesignReport";
+
+    // For all array designs
     private String ARRAY_DESIGN_SUMMARY = "AllArrayDesignsSummary";
+
     private String ARRAY_DESIGN_REPORT_DIR = "ArrayDesignReports";
     private String HOME_DIR = ConfigUtils.getString( "gemma.appdata.home" );
     private ArrayDesignService arrayDesignService;
@@ -281,7 +285,7 @@ public class ArrayDesignReportService {
         adVo.setDateCached( timestamp );
 
         String reportFileName = HOME_DIR + File.separatorChar + ARRAY_DESIGN_REPORT_DIR + File.separatorChar
-                + ARRAY_DESIGN_SUMMARY + "." + adVo.getId();
+                + ARRAY_DESIGN_REPORT_FILE_NAME_PREFIX + "." + adVo.getId();
 
         try {
             // remove old file first (possible todo: don't do this until after new file is okayed - maybe this delete
@@ -415,8 +419,8 @@ public class ArrayDesignReportService {
     public ArrayDesignValueObject getSummaryObject( Long id ) {
         ArrayDesignValueObject adVo = null;
         try {
-            File f = new File( HOME_DIR + "/" + ARRAY_DESIGN_REPORT_DIR + File.separatorChar + ARRAY_DESIGN_SUMMARY
-                    + "." + id );
+            File f = new File( HOME_DIR + "/" + ARRAY_DESIGN_REPORT_DIR + File.separatorChar
+                    + ARRAY_DESIGN_REPORT_FILE_NAME_PREFIX + "." + id );
             if ( f.exists() ) {
                 FileInputStream fis = new FileInputStream( f );
                 ObjectInputStream ois = new ObjectInputStream( fis );
@@ -442,7 +446,7 @@ public class ArrayDesignReportService {
     }
 
     /**
-     * FIXME this could be refactored and used elsewhere.
+     * FIXME this could be refactored and used elsewhere. This is similar to code in the AuditableService/Dao.
      * 
      * @param id
      * @param eventType

@@ -26,11 +26,9 @@ import ubic.gemma.util.ConfigUtils;
 
 /**
  * Maintains a list of taxa that Gemma supports; this is used to filter unwanted data/results, pull-downs etc.
- * <p>
- * FIXME this should be populated from the database, not a config file.
- * 
  * @author pavlidis
  * @version $Id$
+ * @deprecated
  */
 @SuppressWarnings("unchecked")
 public class SupportedTaxa {

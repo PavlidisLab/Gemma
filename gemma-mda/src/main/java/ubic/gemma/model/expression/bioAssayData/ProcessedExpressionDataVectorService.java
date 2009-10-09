@@ -33,6 +33,9 @@ import ubic.gemma.model.genome.Gene;
  */
 public interface ProcessedExpressionDataVectorService {
 
+    
+    public void removeProcessedDataVectors( final ExpressionExperiment expressionExperiment );
+    
     /**
      * Populate the processed data for the given experiment. For two-channel studies, the missing value information
      * should already have been computed.

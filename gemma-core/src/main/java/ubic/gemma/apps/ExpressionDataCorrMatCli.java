@@ -104,7 +104,7 @@ public class ExpressionDataCorrMatCli extends ExpressionExperimentManipulatingCL
     protected void processOptions() {
         super.processOptions();
         getFilterConfigOptions();
-        analysisHelperService = ( ExpressionDataMatrixService ) this.getBean( "analysisHelperService" );
+        analysisHelperService = ( ExpressionDataMatrixService ) this.getBean( "expressionDataMatrixService" );
     }
 
     private void getFilterConfigOptions() {

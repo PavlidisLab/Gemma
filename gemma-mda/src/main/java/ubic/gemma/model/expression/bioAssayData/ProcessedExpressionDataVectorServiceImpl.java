@@ -37,8 +37,9 @@ public class ProcessedExpressionDataVectorServiceImpl implements ProcessedExpres
      * ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService#getProcessedDataMatrices(java.util
      * .Collection)
      */
-    public  Collection<DoubleVectorValueObject> getProcessedDataArrays(ExpressionExperiment ee, int limit, boolean fullMap) {
-        return this.getProcessedExpressionDataVectorDao().getProcessedDataArrays( ee, limit, fullMap);
+    public Collection<DoubleVectorValueObject> getProcessedDataArrays( ExpressionExperiment ee, int limit,
+            boolean fullMap ) {
+        return this.getProcessedExpressionDataVectorDao().getProcessedDataArrays( ee, limit, fullMap );
     }
 
     public Collection<DoubleVectorValueObject> getProcessedDataArrays(
@@ -76,10 +77,11 @@ public class ProcessedExpressionDataVectorServiceImpl implements ProcessedExpres
         return this.getProcessedExpressionDataVectorDao().getProcessedVectors( expressionExperiment );
     }
 
-    public Collection<ProcessedExpressionDataVector> getProcessedDataVectors( ExpressionExperiment expressionExperiment, int limit ) {
+    public Collection<ProcessedExpressionDataVector> getProcessedDataVectors(
+            ExpressionExperiment expressionExperiment, int limit ) {
         return this.getProcessedExpressionDataVectorDao().getProcessedVectors( expressionExperiment, limit );
     }
-    
+
     public ProcessedExpressionDataVectorDao getProcessedExpressionDataVectorDao() {
         return processedExpressionDataVectorDao;
     }
@@ -124,12 +126,18 @@ public class ProcessedExpressionDataVectorServiceImpl implements ProcessedExpres
             Collection<ExpressionExperiment> eeCol, Collection<Gene> genes ) {
         return this.getProcessedExpressionDataVectorDao().getRanksByProbe( eeCol, genes );
     }
-    
+
     public Collection<DoubleVectorValueObject> getProcessedDataArraysByProbe(
-            Collection<ExpressionExperiment> expressionExperiments, Collection<CompositeSequence> compositeSequences, boolean fullMap ){
-        
-        return this.getProcessedExpressionDataVectorDao().getProcessedDataArraysByProbe( expressionExperiments, compositeSequences, fullMap );
+            Collection<ExpressionExperiment> expressionExperiments, Collection<CompositeSequence> compositeSequences,
+            boolean fullMap ) {
+
+        return this.getProcessedExpressionDataVectorDao().getProcessedDataArraysByProbe( expressionExperiments,
+                compositeSequences, fullMap );
     }
-    
+
+    public void removeProcessedDataVectors( ExpressionExperiment expressionExperiment ) {
+        this.getProcessedExpressionDataVectorDao().removeProcessedDataVectors( expressionExperiment );
+
+    }
 
 }

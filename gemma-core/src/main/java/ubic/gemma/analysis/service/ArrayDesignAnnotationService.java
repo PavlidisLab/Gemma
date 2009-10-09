@@ -46,15 +46,14 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.basecode.util.FileTools;
+import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.association.Gene2GOAssociationService;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.genome.Gene;
-import ubic.gemma.model.genome.PhysicalLocation;
+import ubic.gemma.model.genome.Gene; 
 import ubic.gemma.model.genome.PredictedGene;
 import ubic.gemma.model.genome.ProbeAlignedRegion;
-import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.ontology.GeneOntologyService;
 import ubic.gemma.ontology.OntologyTerm;
 import ubic.gemma.util.ConfigUtils;
@@ -229,7 +228,8 @@ public class ArrayDesignAnnotationService {
 
     /**
      * @param arrayDesign
-     * @return Map of composite sequence ids to an array of strings: [probe name,genes symbol(s), gene Name(s)].
+     * @return Map of composite sequence ids to an array of delimited strings: [probe name,genes symbol, gene Name] for
+     *         a given probe id. format of string is geneSymbol then geneNames same as found in annotation file
      */
     public static Map<Long, String[]> readAnnotationFileAsString( ArrayDesign arrayDesign ) {
         Map<Long, String[]> results = new HashMap<Long, String[]>();
@@ -326,15 +326,15 @@ public class ArrayDesignAnnotationService {
      * @throws IOException
      */
     public int generateAnnotationFile( Writer writer,
-            Map<CompositeSequence, Map<PhysicalLocation, Collection<BlatAssociation>>> genesWithSpecificity,
-            OutputType ty, boolean knownGenesOnly ) throws IOException {
+            Map<CompositeSequence, Collection<BioSequence2GeneProduct>> genesWithSpecificity, OutputType ty,
+            boolean knownGenesOnly ) throws IOException {
 
         int compositeSequencesProcessed = 0;
 
         for ( CompositeSequence cs : genesWithSpecificity.keySet() ) {
 
             // Collection<Gene> genes = compositeSequenceService.getGenes( sequence );
-            Map<PhysicalLocation, Collection<BlatAssociation>> geneclusters = genesWithSpecificity.get( cs );
+            Collection<BioSequence2GeneProduct> geneclusters = genesWithSpecificity.get( cs );
 
             if ( geneclusters.isEmpty() ) {
                 writeAnnotationLine( writer, cs.getName(), "", "", null );
@@ -344,13 +344,13 @@ public class ArrayDesignAnnotationService {
             List<Collection<OntologyTerm>> goTerms = new ArrayList<Collection<OntologyTerm>>();
             List<String> genes = new ArrayList<String>();
             List<String> geneDescriptions = new ArrayList<String>();
-            for ( Collection<BlatAssociation> cluster : geneclusters.values() ) {
+            for ( BioSequence2GeneProduct bioSequence2GeneProduct : geneclusters ) {
 
                 Collection<Gene> retained = new HashSet<Gene>();
 
                 Collection<OntologyTerm> clusterGoTerms = new HashSet<OntologyTerm>();
-                for ( BlatAssociation bla : cluster ) {
-                    Gene g = bla.getGeneProduct().getGene();
+
+                Gene g = bioSequence2GeneProduct.getGeneProduct().getGene();
                     if ( knownGenesOnly && ( g instanceof PredictedGene || g instanceof ProbeAlignedRegion ) ) {
                         continue;
                     }
@@ -359,13 +359,12 @@ public class ArrayDesignAnnotationService {
                         log.debug( "Adding gene: " + g.getOfficialSymbol() + " of type: " + g.getClass() );
 
                     retained.add( g );
-                }
 
                 if ( retained.size() == 0 ) continue;
 
                 List<Gene> retainedGenes = new ArrayList<Gene>( retained );
-                for ( Gene g : retainedGenes ) {
-                    clusterGoTerms.addAll( getGoTerms( g, ty ) );
+                for ( Gene gene : retainedGenes ) {
+                    clusterGoTerms.addAll( getGoTerms( gene, ty ) );
                 }
 
                 // This will break if gene symbols contain ",".
@@ -498,8 +497,7 @@ public class ArrayDesignAnnotationService {
      * @param ty Configures which GO terms to return: With all parents, biological process only, or direct annotations
      *        only.
      * @return the goTerms for a given gene, as configured
-     */
-    @SuppressWarnings("unchecked")
+     */ 
     private Collection<OntologyTerm> getGoTerms( Gene gene, OutputType ty ) {
 
         Collection<VocabCharacteristic> ontos = new HashSet<VocabCharacteristic>( gene2GOAssociationService

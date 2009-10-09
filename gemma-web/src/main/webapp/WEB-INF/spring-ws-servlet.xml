@@ -316,8 +316,7 @@
 		<property name="geneService" ref="geneService"/>
 		<property name="expressionExperimentService" ref="expressionExperimentService"/>
 		<property name="taxonService" ref="taxonService"/>
-		<property name="differentialExpressionAnalysisService" ref="differentialExpressionAnalysisService"/>
-		<property name="differentialExpressionAnalysisResultService" ref="differentialExpressionAnalysisResultService"/>
+		<property name="differentialExpressionResultService" ref="differentialExpressionResultService"/>
 		<property name="expressionExperimentSetService" ref="expressionExperimentSetService"/>        
 		<property name="manualAuthenticationProcessing" ref="manualAuthenticationProcessing"/>
 	</bean>

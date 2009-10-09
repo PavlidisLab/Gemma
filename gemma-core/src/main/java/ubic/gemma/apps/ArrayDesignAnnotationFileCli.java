@@ -36,6 +36,7 @@ import org.apache.commons.lang.StringUtils;
 
 import ubic.gemma.analysis.service.ArrayDesignAnnotationService;
 import ubic.gemma.analysis.service.ArrayDesignAnnotationService.OutputType;
+import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignAnnotationFileEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -251,12 +252,12 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
                 }
             }
 
-            Taxon adTaxon = arrayDesignService.getTaxon( ad.getId() );
+            Collection<Taxon> adTaxa = arrayDesignService.getTaxa( ad.getId() );
 
             /*
              * If using taxon, check it.
              */
-            if ( taxon != null && ( adTaxon == null || !adTaxon.equals( taxon ) ) ) {
+            if ( taxon != null &&   !adTaxa.contains( taxon )   ) {
                 continue;
             }
 
@@ -294,8 +295,15 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
 
         unlazifyArrayDesign( ad );
         Collection<CompositeSequence> compositeSequences = ad.getCompositeSequences();
-        Map<CompositeSequence, Map<PhysicalLocation, Collection<BlatAssociation>>> genesWithSpecificity = compositeSequenceService
+        log.info("Starting genes specificity");
+        
+        //lmd test
+        
+       Map <CompositeSequence, Collection<BioSequence2GeneProduct>> genesWithSpecificity = compositeSequenceService
                 .getGenesWithSpecificity( compositeSequences );
+        
+        log.info("Ending genes specificity");
+        
 
         if ( overWrite || !sf.exists() ) {
             processCompositeSequences( ad, shortFileBaseName, OutputType.SHORT, genesWithSpecificity );
@@ -333,7 +341,7 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
 
         Collection<CompositeSequence> compositeSequences = arrayDesign.getCompositeSequences();
 
-        Map<CompositeSequence, Map<PhysicalLocation, Collection<BlatAssociation>>> genesWithSpecificity = compositeSequenceService
+        Map<CompositeSequence, Collection<BioSequence2GeneProduct>> genesWithSpecificity = compositeSequenceService
                 .getGenesWithSpecificity( compositeSequences );
 
         log.info( "Preparing file" );
@@ -351,7 +359,7 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
      * @throws IOException
      */
     private boolean processCompositeSequences( ArrayDesign arrayDesign, String fileBaseName, OutputType outputType,
-            Map<CompositeSequence, Map<PhysicalLocation, Collection<BlatAssociation>>> genesWithSpecificity )
+            Map <CompositeSequence, Collection<BioSequence2GeneProduct>> genesWithSpecificity )
             throws IOException {
 
         if ( genesWithSpecificity.size() == 0 ) {

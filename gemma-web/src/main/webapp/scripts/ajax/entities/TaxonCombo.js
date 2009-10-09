@@ -14,7 +14,7 @@ Gemma.TaxonCombo = Ext.extend(Ext.form.ComboBox, {
 	loadingText : "Loading ...",
 	triggerAction : 'all', // so selecting doesn't hide the others
 	mode : 'local', // because we load only at startup.
-	listWidth : 150,
+	listWidth : 250,
 	width : 120,
 	stateId : "Gemma.TaxonCombo",
 	stateful : true,
@@ -22,6 +22,9 @@ Gemma.TaxonCombo = Ext.extend(Ext.form.ComboBox, {
 	isReady : false,
 
 	emptyText : 'Select a taxon',
+	//this allows filtering of taxon
+	isDisplayTaxonSpecies : false,
+	isDisplayTaxonWithGenes : false,
 
 	/**
 	 * Custom cookie config.
@@ -97,14 +100,24 @@ Gemma.TaxonCombo = Ext.extend(Ext.form.ComboBox, {
 	initComponent : function() {
 
 		var tmpl = new Ext.XTemplate('<tpl for="."><div class="x-combo-list-item">{commonName} ({scientificName})</div></tpl>');
-
+		//option to either display all taxa, those taxa that are a species or those taxa that have genes.
+		if(this.isDisplayTaxonSpecies){
+			proxyTaxon =  new Ext.data.DWRProxy(GenePickerController.getTaxaSpecies);
+		}else if(this.isDisplayTaxonWithGenes){
+			proxyTaxon =  new Ext.data.DWRProxy(GenePickerController.getTaxaWithGenes);
+		}
+		else{
+			proxyTaxon =  new Ext.data.DWRProxy(GenePickerController.getTaxa);
+		}
+		
 		Ext.apply(this, {
 					store : new Ext.data.Store({
-								proxy : new Ext.data.DWRProxy(GenePickerController.getTaxa),
+								proxy : proxyTaxon,
 								reader : new Ext.data.ListRangeReader({
 											id : "id"
 										}, this.record),
-								remoteSort : true
+								remoteSort : false,
+								sortInfo: {field:'commonName'}
 							}),
 					tpl : tmpl
 				});
@@ -139,6 +152,8 @@ Gemma.TaxonCombo = Ext.extend(Ext.form.ComboBox, {
 		}
 	},
 	
+	
+	
 	/**
 	 * returns complete taxon object that matches the common name given if successful.  Else return -1.
 	 * 
@@ -160,8 +175,7 @@ Gemma.TaxonCombo = Ext.extend(Ext.form.ComboBox, {
 			}				
 		}
 		
-		return -1;
-		
+		return -1;		
 		
 	}
 

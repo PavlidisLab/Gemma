@@ -1,9 +1,4 @@
 <%@ include file="/common/taglibs.jsp"%>
-<%@ page import="org.apache.commons.lang.StringUtils"%>
-<%@ page import="java.util.Collection"%>
-<%@ page import="java.util.HashSet"%>
-<%@ page import="ubic.gemma.model.genome.gene.*"%>
-<%@ page import="ubic.gemma.image.aba.Image"%>
 
 <jsp:useBean id="gene" scope="request" class="ubic.gemma.model.genome.GeneImpl" />
 <jsp:useBean id="representativeImages" scope="request" class="java.util.HashSet" />
@@ -59,14 +54,14 @@
 			<td valign="top">
 				<%
 			    if ( gene.getAliases().size() > 0 ) {
-			        Collection<GeneAlias> aliasObjects = gene.getAliases();
+			        java.util.Collection<ubic.gemma.model.genome.gene.GeneAlias> aliasObjects = gene.getAliases();
 			        String[] aliases = new String[aliasObjects.size()];
 			        int i = 0;
-			        for ( GeneAlias a : aliasObjects ) {
+			        for ( ubic.gemma.model.genome.gene.GeneAlias a : aliasObjects ) {
 			            aliases[i] = a.getAlias();
 			            i++;
 			        }
-			        out.print( StringUtils.join( aliases, ", " ) );
+			        out.print( org.apache.commons.lang.StringUtils.join( aliases, ", " ) );
 			    } else {
 			        out.print( "No aliases defined" );
 			    }
@@ -150,52 +145,53 @@
 				onclick="showHelpTip(event, 'Below is a sampling of expression profile pictures from the allen brain atlas. Beside is a link to the allen brain atlas'); return false"><img
 					src="/Gemma/images/help.png" /> </a>
 
-			<a title="Allen Brain Atas details for ${gene.officialSymbol}" href="${abaGeneUrl}"  target="_blank"> <img
-					src="/Gemma/images/logo/abaLogo.jpg" height="20" width="20" /> </a>
+			<a title='Go to Allen Brain Atlas details for <c:out value="${gene.officialSymbol}" />' href="${abaGeneUrl}"
+				target="_blank"> <img src="/Gemma/images/logo/aba-icon.png" height="20" width="20" /> </a>
 		</h3>
 
 
 		<c:if test="${not empty gene.taxon && gene.taxon.id != 2}">
-			<p>Images are for mouse gene ${gene.officialSymbol}.</p> 
+			<p>
+				Images are for mouse gene ${gene.officialSymbol}.
+			</p>
 		</c:if>
-
-		<c:forEach var="img" items="${representativeImages}">
-&nbsp;&nbsp;
-<a title="Allen Brian Atlas Image for {$gene.officialSymbol} "
-				onclick="Gemma.geneLinkOutPopUp( &#34; ${img.downloadExpressionPath} &#34; )"> <img
-					src="${img.expressionThumbnailUrl}" /> </a>
-		</c:forEach>
-
+		<div style="valign: top; float: left">
+			<c:forEach var="img" items="${representativeImages}">
+				<div style="float: left; padding: 8px">
+					<a title='Allen Brain Atlas Image for <c:out value="{$gene.officialSymbol}"/>, click to enlarge '
+						onclick="Gemma.geneLinkOutPopUp( &#34; ${img.downloadExpressionPath} &#34; )"> <img
+							src="${img.expressionThumbnailUrl}" /> </a>
+				</div>
+			</c:forEach>
+		</div>
+		<br />
 	</c:if>
+	<div style="float: left">
+		<h3>
+			<fmt:message key="gene.ontology" />
+			terms
+			<a class="helpLink" href="?"
+				onclick="showHelpTip(event, 'Only Gene Ontology terms that are directly attached to this gene are shown. Implicit associations (i.e., with parent terms in the GO hierarchy) are not listed.'); return false"><img
+					src="/Gemma/images/help.png" /> </a>
 
-	<h3>
-		<fmt:message key="gene.ontology" />
-		terms
-		<a class="helpLink" href="?"
-			onclick="showHelpTip(event, 'Only Gene Ontology terms that are directly attached to this gene are shown. Implicit associations (i.e., with parent terms in the GO hierarchy) are not listed.'); return false"><img
-				src="/Gemma/images/help.png" /> </a>
+		</h3>
 
-	</h3>
+		<div id="go-grid"></div>
+	</div>
+	<div style="float: left">
+		<h3>
+			<fmt:message key="gene.products" />
+		</h3>
 
-	<div id="go-grid"></div>
-
-
-	<h3>
-		<fmt:message key="gene.products" />
-	</h3>
-
-	<div id="geneproduct-grid"></div>
-
+		<div id="geneproduct-grid"></div>
+	</div>
 
 	<h3>
 		<fmt:message key="gene.description" />
 	</h3>
 
 	<c:choose>
-		<c:when test="${not empty gene.description}">
-			<div class="clob" style="height: 20px;">
-				${gene.description}
-			</div>
+		<c:when test="${not empty gene.description}">${gene.description}
 		</c:when>
 		<c:otherwise>"Description unavailable"</c:otherwise>
 

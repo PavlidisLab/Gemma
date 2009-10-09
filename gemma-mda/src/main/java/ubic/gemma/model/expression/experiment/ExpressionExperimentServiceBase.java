@@ -270,6 +270,19 @@ public abstract class ExpressionExperimentServiceBase extends ubic.gemma.model.c
     }
 
     /**
+     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentService#findByParentTaxon(ubic.gemma.model.genome.Taxon)
+     */
+    public java.util.Collection<ExpressionExperiment> findByParentTaxon( final ubic.gemma.model.genome.Taxon taxon ) {
+        try {
+            return this.handleFindByParentTaxon( taxon );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.expression.experiment.ExpressionExperimentServiceException(
+                    "Error performing 'ubic.gemma.model.expression.experiment.ExpressionExperimentService.findByParentTaxon(ubic.gemma.model.genome.Taxon taxon)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentService#findOrCreate(ubic.gemma.model.expression.experiment.ExpressionExperiment)
      */
     public ubic.gemma.model.expression.experiment.ExpressionExperiment findOrCreate(
@@ -913,6 +926,13 @@ public abstract class ExpressionExperimentServiceBase extends ubic.gemma.model.c
     protected abstract java.util.Collection<ExpressionExperiment> handleFindByTaxon( ubic.gemma.model.genome.Taxon taxon )
             throws java.lang.Exception;
 
+    
+    /**
+     * Performs the core logic for {@link #findByTaxon(ubic.gemma.model.genome.Taxon)}
+     */
+    protected abstract java.util.Collection<ExpressionExperiment> handleFindByParentTaxon( ubic.gemma.model.genome.Taxon taxon )
+            throws java.lang.Exception;
+    
     /**
      * Performs the core logic for {@link #findOrCreate(ubic.gemma.model.expression.experiment.ExpressionExperiment)}
      */

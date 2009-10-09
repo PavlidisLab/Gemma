@@ -1,6 +1,6 @@
 /* $Id$ */
 
-/** 
+/**
  * @projectDescription An cross-browser implementation of the HTML5 <canvas> text methods
  * @author Fabien Ménager
  * @version $Revision$
@@ -8,32 +8,31 @@
  */
 
 /**
- * Known issues: - The 'light' font weight is not supported, neither is the
- * 'oblique' font style. - Optimize the different hacks (for Opera9)
+ * Known issues: - The 'light' font weight is not supported, neither is the 'oblique' font style. - Optimize the
+ * different hacks (for Opera9)
  */
-
 window.Canvas = window.Canvas || {};
 window.Canvas.Text = {
 	// http://mondaybynoon.com/2007/04/02/linux-font-equivalents-to-popular-web-typefaces/
 	equivalentFaces : {
 		// Web popular fonts
-		'arial' : [ 'liberation sans', 'nimbus sans l', 'freesans' ],
-		'times new roman' : [ 'liberation serif', 'linux libertine', 'freeserif' ],
-		'courier new' : [ 'dejavu sans mono', 'liberation mono', 'nimbus mono l', 'freemono' ],
-		'georgia' : [ 'nimbus roman no9 l' ],
-		'helvetica' : [ 'nimbus sans l', 'freesans' ],
-		'tahoma' : [ 'dejavu sans', 'bitstream vera sans' ],
-		'verdana' : [ 'dejavu sans', 'bitstream vera sans' ]
+		'arial' : ['liberation sans', 'nimbus sans l', 'freesans'],
+		'times new roman' : ['liberation serif', 'linux libertine', 'freeserif'],
+		'courier new' : ['dejavu sans mono', 'liberation mono', 'nimbus mono l', 'freemono'],
+		'georgia' : ['nimbus roman no9 l'],
+		'helvetica' : ['nimbus sans l', 'freesans'],
+		'tahoma' : ['dejavu sans', 'bitstream vera sans'],
+		'verdana' : ['dejavu sans', 'bitstream vera sans']
 	},
 	genericFaces : {
-		'serif' : [ 'times new roman', 'georgia', 'garamond', 'bodoni', 'minion web', 'itc stone serif',
-				'bitstream cyberbit' ],
-		'sans-serif' : [ 'helvetiker', 'arial', 'verdana', 'trebuchet', 'tahoma', 'helvetica',
-				'itc avant garde gothic', 'univers', 'futura', 'gill sans', 'akzidenz grotesk', 'attika',
-				'typiko new era', 'itc stone sans', 'monotype gill sans 571' ],
-		'monospace' : [ 'courier', 'courier new', 'prestige', 'everson mono' ],
-		'cursive' : [ 'caflisch script', 'adobe poetica', 'sanvito', 'ex ponto', 'snell roundhand', 'zapf-chancery' ],
-		'fantasy' : [ 'alpha geometrique', 'critter', 'cottonwood', 'fb reactor', 'studz' ]
+		'serif' : ['times new roman', 'georgia', 'garamond', 'bodoni', 'minion web', 'itc stone serif',
+				'bitstream cyberbit'],
+		'sans-serif' : ['helvetiker', 'arial', 'verdana', 'trebuchet', 'tahoma', 'helvetica', 'itc avant garde gothic',
+				'univers', 'futura', 'gill sans', 'akzidenz grotesk', 'attika', 'typiko new era', 'itc stone sans',
+				'monotype gill sans 571'],
+		'monospace' : ['courier', 'courier new', 'prestige', 'everson mono'],
+		'cursive' : ['caflisch script', 'adobe poetica', 'sanvito', 'ex ponto', 'snell roundhand', 'zapf-chancery'],
+		'fantasy' : ['alpha geometrique', 'critter', 'cottonwood', 'fb reactor', 'studz']
 	},
 	faces : {},
 	scaling : 0.962,
@@ -41,40 +40,40 @@ window.Canvas.Text = {
 };
 
 /** The implementation of the text functions */
-( function() {
+(function() {
 	var isOpera9 = (window.opera && navigator.userAgent.match(/Opera\/9/)); // It
-																			// seems
-																			// to
-																			// be
-																			// faster
-																			// when
-																			// the
-																			// hacked
-																			// methods
-																			// are
-																			// used.
-																			// But
-																			// there
-																			// are
-																			// artifacts
-																			// with
-																			// Opera
-																			// 10.
+	// seems
+	// to
+	// be
+	// faster
+	// when
+	// the
+	// hacked
+	// methods
+	// are
+	// used.
+	// But
+	// there
+	// are
+	// artifacts
+	// with
+	// Opera
+	// 10.
 
-	var proto = window.CanvasRenderingContext2D ? window.CanvasRenderingContext2D.prototype : document.createElement(
-			'canvas').getContext('2d').__proto__;
+	var proto = window.CanvasRenderingContext2D ? window.CanvasRenderingContext2D.prototype : document
+			.createElement('canvas').getContext('2d').__proto__;
 
 	var ctxt = window.Canvas.Text;
 
 	// Global options
 	ctxt.options = {
 		fallbackCharacter : ' ', // The character that will be drawn when not
-									// present in the font face file
+		// present in the font face file
 		dontUseMoz : false, // Don't use the builtin Firefox 3.0 functions
-							// (mozDrawText, mozPathText and mozMeasureText)
+		// (mozDrawText, mozPathText and mozMeasureText)
 		reimplement : false, // Don't use the builtin official functions
-								// present in Chrome 2, Safari 4, and Firefox
-								// 3.1+
+		// present in Chrome 2, Safari 4, and Firefox
+		// 3.1+
 		debug : false, // Debug mode, not used yet
 		autoload : 'faces'
 	};
@@ -114,19 +113,19 @@ window.Canvas.Text = {
 
 	function getCSSWeightEquivalent(weight) {
 		switch (weight) {
-		case 'bolder':
-		case 'bold':
-		case '900':
-		case '800':
-		case '700':
-			return 'bold';
-		case '600':
-		case '500':
-		case '400':
-		default:
-		case 'normal':
-			return 'normal';
-			// default: return 'light';
+			case 'bolder' :
+			case 'bold' :
+			case '900' :
+			case '800' :
+			case '700' :
+				return 'bold';
+			case '600' :
+			case '500' :
+			case '400' :
+			default :
+			case 'normal' :
+				return 'normal';
+				// default: return 'light';
 		}
 	}
 
@@ -142,13 +141,13 @@ window.Canvas.Text = {
 
 	function getXHR() {
 		if (!ctxt.xhr) {
-			var methods = [ function() {
-				return new XMLHttpRequest()
-			}, function() {
-				return new ActiveXObject('Msxml2.XMLHTTP')
-			}, function() {
-				return new ActiveXObject('Microsoft.XMLHTTP')
-			} ];
+			var methods = [function() {
+						return new XMLHttpRequest()
+					}, function() {
+						return new ActiveXObject('Msxml2.XMLHTTP')
+					}, function() {
+						return new ActiveXObject('Microsoft.XMLHTTP')
+					}];
 			for (i = 0; i < methods.length; i++) {
 				try {
 					ctxt.xhr = methods[i]();
@@ -177,6 +176,7 @@ window.Canvas.Text = {
 		if (generic[family]) {
 			for (i = 0; i < generic[family].length; i++) {
 				if (f = this.lookupFamily(generic[family][i])) {
+					return f;
 				}
 			}
 		}
@@ -195,7 +195,6 @@ window.Canvas.Text = {
 	ctxt.getFace = function(family, weight, style) {
 		var face = this.lookupFamily(family);
 
-
 		if (!face)
 			return false;
 
@@ -206,7 +205,7 @@ window.Canvas.Text = {
 			return false;
 
 		var faceName = (family.replace(/[ -]/g, '_') + '-' + weight + '-' + style), xhr = this.xhr, url = this.basePath
-				+ this.options.autoload + '/' + faceName + '.js'
+				+ this.options.autoload + '/' + faceName + '.js';
 
 		xhr = getXHR();
 		xhr.open("get", url, false);
@@ -314,17 +313,17 @@ window.Canvas.Text = {
 					action = outline[i++];
 
 					switch (action) {
-					case 'm':
-						this.moveTo(outline[i++] * scale + offset, outline[i++] * -scale);
-						break;
-					case 'l':
-						this.lineTo(outline[i++] * scale + offset, outline[i++] * -scale);
-						break;
-					case 'q':
-						cpx = outline[i++] * scale + offset;
-						cpy = outline[i++] * -scale;
-						this.quadraticCurveTo(outline[i++] * scale + offset, outline[i++] * -scale, cpx, cpy);
-						break;
+						case 'm' :
+							this.moveTo(outline[i++] * scale + offset, outline[i++] * -scale);
+							break;
+						case 'l' :
+							this.lineTo(outline[i++] * scale + offset, outline[i++] * -scale);
+							break;
+						case 'q' :
+							cpx = outline[i++] * scale + offset;
+							cpy = outline[i++] * -scale;
+							this.quadraticCurveTo(outline[i++] * scale + offset, outline[i++] * -scale, cpx, cpy);
+							break;
 					}
 				}
 			}
@@ -344,17 +343,17 @@ window.Canvas.Text = {
 					action = outline[i++];
 
 					switch (action) {
-					case 'm':
-						this.moveTo(outline[i++], outline[i++]);
-						break;
-					case 'l':
-						this.lineTo(outline[i++], outline[i++]);
-						break;
-					case 'q':
-						cpx = outline[i++];
-						cpy = outline[i++];
-						this.quadraticCurveTo(outline[i++], outline[i++], cpx, cpy);
-						break;
+						case 'm' :
+							this.moveTo(outline[i++], outline[i++]);
+							break;
+						case 'l' :
+							this.lineTo(outline[i++], outline[i++]);
+							break;
+						case 'q' :
+							cpx = outline[i++];
+							cpy = outline[i++];
+							this.quadraticCurveTo(outline[i++], outline[i++], cpx, cpy);
+							break;
 					}
 				}
 			}
@@ -365,7 +364,7 @@ window.Canvas.Text = {
 
 	proto.getTextExtents = function(text, style) {
 		var width = 0, height = 0, ha = 0, face = ctxt.getFaceFromStyle(style), i, glyph;
-
+		window.console.log(text);
 		for (i = 0; i < text.length; i++) {
 			glyph = face.glyphs[text.charAt(i)] || face.glyphs[ctxt.options.fallbackCharacter];
 			width += Math.max(glyph.ha, glyph.x_max);
@@ -411,40 +410,40 @@ window.Canvas.Text = {
 		};
 
 		switch (this.textAlign) {
-		default:
-		case null:
-		case 'left':
-			break;
-		case 'center':
-			offset.x = -metrics.width / 2;
-			break;
-		case 'right':
-			offset.x = -metrics.width;
-			break;
-		case 'start':
-			offset.x = (canvasStyle.direction == 'rtl') ? -metrics.width : 0;
-			break;
-		case 'end':
-			offset.x = (canvasStyle.direction == 'ltr') ? -metrics.width : 0;
-			break;
+			default :
+			case null :
+			case 'left' :
+				break;
+			case 'center' :
+				offset.x = -metrics.width / 2;
+				break;
+			case 'right' :
+				offset.x = -metrics.width;
+				break;
+			case 'start' :
+				offset.x = (canvasStyle.direction == 'rtl') ? -metrics.width : 0;
+				break;
+			case 'end' :
+				offset.x = (canvasStyle.direction == 'ltr') ? -metrics.width : 0;
+				break;
 		}
 
 		switch (this.textBaseline) {
-		case 'alphabetic':
-			break;
-		default:
-		case null:
-		case 'ideographic':
-		case 'bottom':
-			offset.y = face.descender;
-			break;
-		case 'hanging':
-		case 'top':
-			offset.y = face.ascender;
-			break;
-		case 'middle':
-			offset.y = (face.ascender + face.descender) / 2;
-			break;
+			case 'alphabetic' :
+				break;
+			default :
+			case null :
+			case 'ideographic' :
+			case 'bottom' :
+				offset.y = face.descender;
+				break;
+			case 'hanging' :
+			case 'top' :
+				offset.y = face.ascender;
+				break;
+			case 'middle' :
+				offset.y = (face.ascender + face.descender) / 2;
+				break;
 		}
 		offset.y *= scale;
 		return offset;

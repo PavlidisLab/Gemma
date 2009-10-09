@@ -22,8 +22,7 @@ import java.util.Collection;
 import java.util.Map;
 
 import ubic.gemma.model.analysis.Investigation;
-import ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet;
-import ubic.gemma.model.analysis.expression.ProbeAnalysisResult;
+import ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet; 
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
@@ -36,51 +35,6 @@ import ubic.gemma.model.genome.Taxon;
  */
 public class DifferentialExpressionAnalysisServiceImpl extends
         ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisServiceBase {
-
-    /*
-     * (non-Javadoc)
-     * @see
-     * ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService#findResultsForGeneInExperiments
-     * (ubic.gemma.model.genome.Gene, java.util.Collection)
-     */
-    public java.util.Map<ubic.gemma.model.expression.experiment.ExpressionExperiment, java.util.Collection<ProbeAnalysisResult>> findResultsForGeneInExperiments(
-            Gene gene, Collection<ExpressionExperiment> experimentsAnalyzed ) {
-        return this.getDifferentialExpressionAnalysisDao().findResultsForGeneInExperiments( gene, experimentsAnalyzed );
-    }
-
-    /*
-     * 
-     */
-    public java.util.Map<ubic.gemma.model.expression.experiment.ExpressionExperiment, java.util.Collection<ProbeAnalysisResult>> findResultsForGeneInExperimentsMetThreshold(
-            Gene gene, Collection<ExpressionExperiment> experimentsAnalyzed, double threshold, Integer limit ) {
-        return this.getDifferentialExpressionAnalysisDao().findResultsForGeneInExperimentsMetThreshold( gene,
-                experimentsAnalyzed, threshold, limit );
-    }
-    
-    public java.util.Map<ExpressionAnalysisResultSet, java.util.Collection<ProbeAnalysisResult>> findGenesInResultSetsThatMetThreshold(
-            java.util.Collection<ExpressionAnalysisResultSet> resultsAnalyzed,
-            double threshold, 
-            Integer limit){
-     
-        return this.getDifferentialExpressionAnalysisDao().findGenesInResultSetsThatMetThreshold( resultsAnalyzed, threshold, limit );
-    }
-    
-    public java.util.Map<ubic.gemma.model.expression.experiment.ExpressionExperiment, java.util.Collection<ProbeAnalysisResult>> findGenesInExperimentsThatMetThreshold(
-     Collection<ExpressionExperiment> experimentsAnalyzed, double threshold ) {
-        return this.getDifferentialExpressionAnalysisDao().findGenesInExperimentsThatMetThreshold(experimentsAnalyzed, threshold, null );
-    }
-    
-    public java.util.Map<ubic.gemma.model.expression.experiment.ExpressionExperiment, java.util.Collection<ProbeAnalysisResult>> findGenesInExperimentsThatMetThreshold(
-            Collection<ExpressionExperiment> experimentsAnalyzed, double threshold, Integer limit ) {
-               return this.getDifferentialExpressionAnalysisDao().findGenesInExperimentsThatMetThreshold(experimentsAnalyzed, threshold, limit );
-     }
-    
-    public java.util.Map<ExpressionAnalysisResultSet, java.util.Collection<ProbeAnalysisResult>> findGenesInResultSetsThatMetThreshold(
-            java.util.Collection<ExpressionAnalysisResultSet> resultsAnalyzed,
-            double threshold ){
-        return this.getDifferentialExpressionAnalysisDao().findGenesInResultSetsThatMetThreshold(resultsAnalyzed, threshold, null );
-
-    }
 
     /**
      * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService#create(ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis)
@@ -116,11 +70,10 @@ public class DifferentialExpressionAnalysisServiceImpl extends
         return this.getDifferentialExpressionAnalysisDao().find( gene, resultSet, threshold );
     }
 
-    public java.util.Collection<ExpressionAnalysisResultSet> getResultSets(java.util.Collection<Long> resultSetIds ) {
+    public java.util.Collection<ExpressionAnalysisResultSet> getResultSets( java.util.Collection<Long> resultSetIds ) {
         return null;
     }
 
-    
     @Override
     protected Collection handleFindByInvestigation( Investigation investigation ) throws Exception {
         return this.getDifferentialExpressionAnalysisDao().findByInvestigation( investigation );
@@ -174,6 +127,12 @@ public class DifferentialExpressionAnalysisServiceImpl extends
     protected Collection handleFindByTaxon( Taxon taxon ) throws Exception {
         return this.getDifferentialExpressionAnalysisDao().findByTaxon( taxon );
     }
+
+    @Override
+    protected Collection handleFindByParentTaxon( Taxon taxon ) throws Exception {
+        return this.getDifferentialExpressionAnalysisDao().findByParentTaxon( taxon );
+    }
+    
 
     @SuppressWarnings("unchecked")
     @Override
@@ -252,12 +211,10 @@ public class DifferentialExpressionAnalysisServiceImpl extends
     protected void handleThaw( DifferentialExpressionAnalysis differentialExpressionAnalysis ) throws Exception {
         this.getDifferentialExpressionAnalysisDao().thaw( differentialExpressionAnalysis );
     }
-    
-    
-    public long countProbesMeetingThreshold(ExpressionAnalysisResultSet ears, double threshold){
-        return this.getDifferentialExpressionAnalysisDao().countProbesMeetingThreshold(ears, threshold);
-        
+
+    public long countProbesMeetingThreshold( ExpressionAnalysisResultSet ears, double threshold ) {
+        return this.getDifferentialExpressionAnalysisDao().countProbesMeetingThreshold( ears, threshold );
+
     }
-    
-    
+
 }

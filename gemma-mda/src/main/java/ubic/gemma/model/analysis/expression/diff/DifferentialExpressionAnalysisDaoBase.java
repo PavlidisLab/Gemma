@@ -18,6 +18,7 @@
  */
 package ubic.gemma.model.analysis.expression.diff;
 
+import ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
@@ -178,7 +179,7 @@ public abstract class DifferentialExpressionAnalysisDaoBase extends
     /**
      * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao#getResultSets(ubic.gemma.model.expression.experiment.ExpressionExperiment)
      */
-    public java.util.Collection getResultSets(
+    public java.util.Collection<ExpressionAnalysisResultSet> getResultSets(
             final ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment ) {
         try {
             return this.handleGetResultSets( expressionExperiment );
@@ -352,7 +353,7 @@ public abstract class DifferentialExpressionAnalysisDaoBase extends
     /**
      * Performs the core logic for {@link #getResultSets(ubic.gemma.model.expression.experiment.ExpressionExperiment)}
      */
-    protected abstract java.util.Collection handleGetResultSets(
+    protected abstract java.util.Collection<ExpressionAnalysisResultSet> handleGetResultSets(
             ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment )
             throws java.lang.Exception;
 

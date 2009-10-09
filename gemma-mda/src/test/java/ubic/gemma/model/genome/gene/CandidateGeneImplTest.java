@@ -42,6 +42,8 @@ public class CandidateGeneImplTest extends TestCase {
         t = Taxon.Factory.newInstance();
         t.setCommonName( "mouse" );
         t.setScientificName( "mouse" );
+        t.setIsSpecies( true );
+        t.setIsGenesUsable( true );
 
         g = Gene.Factory.newInstance();
         g.setName( "testmygene" );

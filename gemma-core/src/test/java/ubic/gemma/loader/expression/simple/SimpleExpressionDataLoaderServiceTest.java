@@ -59,6 +59,8 @@ public class SimpleExpressionDataLoaderServiceTest extends BaseSpringContextTest
 
         Taxon taxon = Taxon.Factory.newInstance();
         taxon.setCommonName( "mouse" );
+        taxon.setIsGenesUsable( true );
+        taxon.setIsSpecies( true );
         metaData.setTaxon( taxon );
         metaData.setName( RandomStringUtils.randomAlphabetic( 5 ) );
         metaData.setQuantitationTypeName( "testing" );

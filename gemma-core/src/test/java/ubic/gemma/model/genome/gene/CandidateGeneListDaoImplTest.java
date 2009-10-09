@@ -65,6 +65,8 @@ public class CandidateGeneListDaoImplTest extends BaseSpringContextTest {
         t = Taxon.Factory.newInstance();
         t.setCommonName( "mouse" );
         t.setScientificName( "Mus musculus" );
+        t.setIsSpecies( true );
+        t.setIsGenesUsable( true );
         t = ( Taxon ) persisterHelper.persist( t );
 
         ad = AuditTrail.Factory.newInstance();

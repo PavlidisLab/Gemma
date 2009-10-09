@@ -90,7 +90,7 @@ CharacteristicBrowserController.findCharacteristics = function(p0, callback) {
 	dwr.engine._execute(CharacteristicBrowserController._path, 'CharacteristicBrowserController',
 			'findCharacteristics', p0, callback);
 }
-CharacteristicBrowserController.findCharacteristics = function(p0, p1, p2, p3, p4, p5, callback) {
+CharacteristicBrowserController.findCharacteristics = function(p0, p1, p2, p3, p4, callback) {
 	dwr.engine._execute(CharacteristicBrowserController._path, 'CharacteristicBrowserController',
 			'findCharacteristics', p0, p1, p2, p3, p4, p5, callback);
 }
@@ -189,9 +189,9 @@ DifferentialExpressionSearchController.getDiffExpressionForGenes = function(p0, 
 	dwr.engine._execute(DifferentialExpressionSearchController._path, 'DifferentialExpressionSearchController',
 			'getDiffExpressionForGenes', p0, callback);
 }
-DifferentialExpressionSearchController.getDifferentialExpressionForFactors = function(p0, p1, p2, p3, callback) {
+DifferentialExpressionSearchController.getDifferentialExpressionForFactors = function(p0, p1, p2, callback) {
 	dwr.engine._execute(DifferentialExpressionSearchController._path, 'DifferentialExpressionSearchController',
-			'getDifferentialExpressionForFactors', p0, p1, p2, p3, callback);
+			'getDifferentialExpressionForFactors', p0, p1, p2, callback);
 }
 DifferentialExpressionSearchController.getFactors = function(p0, callback) {
 	dwr.engine._execute(DifferentialExpressionSearchController._path, 'DifferentialExpressionSearchController',
@@ -444,6 +444,12 @@ GenePickerController.searchGenes = function(p0, p1, callback) {
 }
 GenePickerController.getTaxa = function(callback) {
 	dwr.engine._execute(GenePickerController._path, 'GenePickerController', 'getTaxa', callback);
+}
+GenePickerController.getTaxaSpecies = function(callback) {
+	dwr.engine._execute(GenePickerController._path, 'GenePickerController', 'getTaxaSpecies', callback);
+}
+GenePickerController.getTaxaWithGenes = function(callback) {
+	dwr.engine._execute(GenePickerController._path, 'GenePickerController', 'getTaxaWithGenes', callback);
 }
 GenePickerController.searchMultipleGenes = function(p0, p1, callback) {
 	dwr.engine._execute(GenePickerController._path, 'GenePickerController', 'searchMultipleGenes', p0, p1, callback);

@@ -37,7 +37,6 @@ import ubic.gemma.analysis.expression.diff.GeneDifferentialExpressionService;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSetService;
 import ubic.gemma.model.analysis.expression.FactorAssociatedAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
@@ -65,8 +64,6 @@ import ubic.gemma.web.view.TextView;
  * @spring.property name = "geneService" ref="geneService"
  * @spring.property name = "expressionExperimentService" ref="expressionExperimentService"
  * @spring.property name = "expressionExperimentSetService" ref="expressionExperimentSetService"
- * @spring.property name="differentialExpressionAnalysisResultService" ref="differentialExpressionAnalysisResultService"
-
  */
 public class DifferentialExpressionSearchController extends BaseFormController {
 
@@ -79,9 +76,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
     private GeneService geneService = null;
     private ExpressionExperimentService expressionExperimentService = null;
     private ExpressionExperimentSetService expressionExperimentSetService = null;
-    private DifferentialExpressionAnalysisResultService differentialExpressionAnalysisResultService = null;
-    
-    
+
     /**
      * 
      */
@@ -103,22 +98,21 @@ public class DifferentialExpressionSearchController extends BaseFormController {
     public Collection<DifferentialExpressionMetaAnalysisValueObject> getDiffExpressionForGenes(
             DiffExpressionSearchCommand command ) {
 
-        
         Collection<Long> eeScopeIds = command.getEeIds();
         int eeScopeSize = 0;
-        
-        if (eeScopeIds != null && !eeScopeIds.isEmpty()){            
+
+        if ( eeScopeIds != null && !eeScopeIds.isEmpty() ) {
             eeScopeSize = eeScopeIds.size();
-        }
-        else{
-            if (command.getEeSetName() != null)
-                eeScopeSize = this.expressionExperimentSetService.findByName( command.getEeSetName() ).iterator().next().getExperiments().size();
-            
-            else if (command.getEeSetId() >= 0)
+        } else {
+            if ( command.getEeSetName() != null )
+                eeScopeSize = this.expressionExperimentSetService.findByName( command.getEeSetName() ).iterator()
+                        .next().getExperiments().size();
+
+            else if ( command.getEeSetId() >= 0 )
                 eeScopeSize = this.expressionExperimentSetService.load( command.getEeSetId() ).getExperiments().size();
-            
+
         }
-        
+
         Collection<Long> geneIds = command.getGeneIds();
 
         if ( geneIds.size() > MAX_GENES_PER_QUERY ) {
@@ -194,7 +188,6 @@ public class DifferentialExpressionSearchController extends BaseFormController {
         DifferentialExpressionMetaAnalysisValueObject mavo = geneDifferentialExpressionService
                 .getDifferentialExpressionMetaAnalysis( threshold, g, eeFactorsMap, activeExperiments );
 
-        
         return mavo;
     }
 
@@ -206,13 +199,18 @@ public class DifferentialExpressionSearchController extends BaseFormController {
      * @param threshold
      * @return
      */
-    public Collection<DifferentialExpressionValueObject> getDifferentialExpression( Long geneId, double threshold, Integer limit ) {
+    public Collection<DifferentialExpressionValueObject> getDifferentialExpression( Long geneId, double threshold,
+            Integer limit ) {
 
         Gene g = geneService.load( geneId );
+
+        if ( g == null ) {
+            return new ArrayList<DifferentialExpressionValueObject>();
+        }
+
         return geneDifferentialExpressionService.getDifferentialExpression( g, threshold, limit );
     }
-    
-    
+
     /**
      * AJAX entry which returns results on a non-meta analysis basis. That is, the differential expression results for
      * the gene with the id, geneId, are returned.
@@ -223,7 +221,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
      */
     public Collection<DifferentialExpressionValueObject> getDifferentialExpression( Long geneId, double threshold ) {
 
-       return this.getDifferentialExpression( geneId, threshold, null );
+        return this.getDifferentialExpression( geneId, threshold, null );
     }
 
     /**
@@ -233,20 +231,19 @@ public class DifferentialExpressionSearchController extends BaseFormController {
      * @param geneId
      * @param threshold corrected pvalue threshold (normally this means FDR)
      * @param factorMap
+     * @deprecated as far as I can tell this is not used.
      * @return
      */
-    public Collection<DifferentialExpressionValueObject> getDifferentialExpressionForFactors( Collection<Long> eeIds,
-            Long geneId, double threshold, Collection<DiffExpressionSelectedFactorCommand> factorMap ) {
+    public Collection<DifferentialExpressionValueObject> getDifferentialExpressionForFactors( Long geneId,
+            double threshold, Collection<DiffExpressionSelectedFactorCommand> factorMap ) {
 
-        if ( eeIds.isEmpty() ) {
+        if ( factorMap.isEmpty() || geneId == null ) {
             return null;
         }
 
-        Collection<ExpressionExperiment> ees = expressionExperimentService.loadMultiple( eeIds );
-
         Gene g = geneService.load( geneId );
         Collection<DifferentialExpressionValueObject> result = geneDifferentialExpressionService
-                .getDifferentialExpression( ees, g, threshold, factorMap );
+                .getDifferentialExpression( g, threshold, factorMap );
 
         return result;
     }
@@ -258,7 +255,6 @@ public class DifferentialExpressionSearchController extends BaseFormController {
      * 
      * @param eeIds
      */
-    @SuppressWarnings("unchecked")
     public Collection<ExpressionExperimentExperimentalFactorValueObject> getFactors( final Collection<Long> eeIds ) {
 
         Collection<ExpressionExperimentExperimentalFactorValueObject> result = new HashSet<ExpressionExperimentExperimentalFactorValueObject>();
@@ -341,49 +337,49 @@ public class DifferentialExpressionSearchController extends BaseFormController {
             throws Exception {
 
         if ( request.getParameter( "export" ) == null ) return new ModelAndView( this.getFormView() );
-     
-        //-------------------------
-        //Download  diff expression data for a specific diff expresion search 
-        
-            double threshold = DEFAULT_THRESHOLD;
-            try {
-                threshold = Double.parseDouble( request.getParameter( "t" ) );
-            } catch ( NumberFormatException e ) {
-                log.warn( "invalid threshold; using default " + threshold );
-            }
 
-            Collection<Long> geneIds = extractIds( request.getParameter( "g" ) );
+        // -------------------------
+        // Download diff expression data for a specific diff expresion search
 
-            Long eeSetId = null;
-            try {
-                eeSetId = Long.parseLong( request.getParameter( "a" ) );
-            } catch ( NumberFormatException e ) {
-                //
-            }
+        double threshold = DEFAULT_THRESHOLD;
+        try {
+            threshold = Double.parseDouble( request.getParameter( "t" ) );
+        } catch ( NumberFormatException e ) {
+            log.warn( "invalid threshold; using default " + threshold );
+        }
 
-            String fs = request.getParameter( "fm" );
-            Collection<DiffExpressionSelectedFactorCommand> selectedFactors = extractFactorInfo( fs );
+        Collection<Long> geneIds = extractIds( request.getParameter( "g" ) );
 
-            DiffExpressionSearchCommand command = new DiffExpressionSearchCommand();
-            command.setGeneIds( geneIds );
-            command.setEeSetId( eeSetId );
-            command.setSelectedFactors( selectedFactors );
-            command.setThreshold( threshold );
+        Long eeSetId = null;
+        try {
+            eeSetId = Long.parseLong( request.getParameter( "a" ) );
+        } catch ( NumberFormatException e ) {
+            //
+        }
 
-            Collection<DifferentialExpressionMetaAnalysisValueObject> result = getDiffExpressionForGenes( command );
+        String fs = request.getParameter( "fm" );
+        Collection<DiffExpressionSelectedFactorCommand> selectedFactors = extractFactorInfo( fs );
 
-            ModelAndView mav = new ModelAndView( new TextView() );
+        DiffExpressionSearchCommand command = new DiffExpressionSearchCommand();
+        command.setGeneIds( geneIds );
+        command.setEeSetId( eeSetId );
+        command.setSelectedFactors( selectedFactors );
+        command.setThreshold( threshold );
 
-            StringBuilder buf = new StringBuilder();
-   
-            for ( DifferentialExpressionMetaAnalysisValueObject demavo : result ) {
-                buf.append( demavo );
-            }
+        Collection<DifferentialExpressionMetaAnalysisValueObject> result = getDiffExpressionForGenes( command );
 
-            String output = buf.toString();
+        ModelAndView mav = new ModelAndView( new TextView() );
 
-            mav.addObject( "text", output.length() > 0 ? output : "no results" );
-            return mav;
+        StringBuilder buf = new StringBuilder();
+
+        for ( DifferentialExpressionMetaAnalysisValueObject demavo : result ) {
+            buf.append( demavo );
+        }
+
+        String output = buf.toString();
+
+        mav.addObject( "text", output.length() > 0 ? output : "no results" );
+        return mav;
 
     }
 
@@ -452,11 +448,6 @@ public class DifferentialExpressionSearchController extends BaseFormController {
 
     public void setExpressionExperimentSetService( ExpressionExperimentSetService expressionExperimentSetService ) {
         this.expressionExperimentSetService = expressionExperimentSetService;
-    }
-
-    public void setDifferentialExpressionAnalysisResultService(
-            DifferentialExpressionAnalysisResultService differentialExpressionAnalysisResultService ) {
-        this.differentialExpressionAnalysisResultService = differentialExpressionAnalysisResultService;
     }
 
 }

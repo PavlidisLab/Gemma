@@ -70,7 +70,8 @@ public class BlatResultDaoImplTest extends BaseSpringContextTest {
         Taxon t = Taxon.Factory.newInstance();
         t.setCommonName( "mouse" ); // has to match what is used in the getTestPersistentBioSequence method.
         t.setScientificName( "Mus musculus" );
-
+        t.setIsSpecies( true );
+        t.setIsGenesUsable( true );
         bs.setTaxon( t );
 
         Collection res = this.blatResultDao.findByBioSequence( bs );

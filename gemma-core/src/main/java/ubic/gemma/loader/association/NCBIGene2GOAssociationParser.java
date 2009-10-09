@@ -21,13 +21,13 @@ package ubic.gemma.loader.association;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.concurrent.BlockingQueue;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import ubic.gemma.loader.genome.taxon.SupportedTaxa;
 import ubic.gemma.loader.util.QueuingParser;
 import ubic.gemma.loader.util.parser.BasicLineParser;
 import ubic.gemma.model.association.GOEvidenceCode;
@@ -37,6 +37,7 @@ import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.ontology.GeneOntologyService;
 import ubic.gemma.util.ConfigUtils;
 
@@ -77,12 +78,12 @@ import ubic.gemma.util.ConfigUtils;
  * @author keshav
  * @author pavlidis
  * @spring.bean id="gene2GOAssociationParser"
+ * @spring.property name="taxonService" ref="taxonService"
  * @version $Id$
  */
 public class NCBIGene2GOAssociationParser extends BasicLineParser<Gene2GOAssociation> implements QueuingParser {
 
     private static final String COMMENT_INDICATOR = "#";
-
     protected static final Log log = LogFactory.getLog( NCBIGene2GOAssociationParser.class );
 
     private final int TAX_ID = ConfigUtils.getInt( "gene2go.tax_id" );
@@ -93,6 +94,12 @@ public class NCBIGene2GOAssociationParser extends BasicLineParser<Gene2GOAssocia
 
     private final int GO_ID = ConfigUtils.getInt( "gene2go.go_id" );
 
+    private TaxonService taxonService;
+
+    public void setTaxonService( TaxonService taxonService ) {
+        this.taxonService = taxonService;
+    }
+
     BlockingQueue<Gene2GOAssociation> queue;
 
     private int count = 0;
@@ -101,6 +108,11 @@ public class NCBIGene2GOAssociationParser extends BasicLineParser<Gene2GOAssocia
     int i = 0;
 
     private ExternalDatabase ncbiGeneDb;
+
+    /**
+     * NCBI Ids of available taxa.
+     */
+    private Collection<Integer> taxaNcibi;
 
     public NCBIGene2GOAssociationParser() {
         goDb = ExternalDatabase.Factory.newInstance();
@@ -113,7 +125,6 @@ public class NCBIGene2GOAssociationParser extends BasicLineParser<Gene2GOAssocia
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.loader.util.parser.BasicLineMapParser#getResults()
      */
     @Override
@@ -127,7 +138,15 @@ public class NCBIGene2GOAssociationParser extends BasicLineParser<Gene2GOAssocia
      * @param line
      * @return Object
      */
+    @SuppressWarnings("unchecked")
     public Gene2GOAssociation mapFromGene2GO( String line ) {
+
+        Collection<Taxon> taxa = taxonService.loadAll();
+        taxaNcibi = new HashSet<Integer>();
+        for ( Taxon taxon : taxa ) {
+            this.taxaNcibi.add( taxon.getNcbiId() );
+        }
+
         String[] values = StringUtils.splitPreserveAllTokens( line, "\t" );
 
         if ( line.startsWith( COMMENT_INDICATOR ) ) return null;
@@ -140,7 +159,8 @@ public class NCBIGene2GOAssociationParser extends BasicLineParser<Gene2GOAssocia
         } catch ( NumberFormatException e ) {
             throw new RuntimeException( e );
         }
-        if ( !SupportedTaxa.contains( t ) ) {
+
+        if ( !taxaNcibi.contains( t.getNcbiId() ) ) {
             return null;
         }
 
@@ -198,4 +218,5 @@ public class NCBIGene2GOAssociationParser extends BasicLineParser<Gene2GOAssocia
     public int getCount() {
         return count;
     }
+
 }

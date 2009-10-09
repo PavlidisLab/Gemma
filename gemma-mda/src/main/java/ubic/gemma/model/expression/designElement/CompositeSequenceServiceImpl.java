@@ -30,6 +30,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.PhysicalLocation;
@@ -183,7 +184,7 @@ public class CompositeSequenceServiceImpl extends
 
     @SuppressWarnings("unchecked")
     @Override
-    protected Map<CompositeSequence, Map<PhysicalLocation, Collection<BlatAssociation>>> handleGetGenesWithSpecificity(
+    protected Map<CompositeSequence, Collection<BioSequence2GeneProduct>> handleGetGenesWithSpecificity(
             Collection compositeSequences ) throws Exception {
         return this.getCompositeSequenceDao().getGenesWithSpecificity( compositeSequences );
     }

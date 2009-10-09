@@ -441,13 +441,24 @@ public class GeneLinkCoexpressionAnalyzer {
         /*
          * Find the old analysis so we can disable it afterwards
          */
+        
+        Collection<? extends Analysis> analysis =null; 
+        if(!taxon.getIsSpecies()){
+            analysis = geneCoexpressionAnalysisService.findByTaxon( taxon );
+        }else{
+            analysis = geneCoexpressionAnalysisService.findByParentTaxon( taxon );
+        }
+        
         Collection<GeneCoexpressionAnalysis> oldAnalyses = new HashSet<GeneCoexpressionAnalysis>();
-        for ( Analysis a : ( Collection<? extends Analysis> ) geneCoexpressionAnalysisService.findByTaxon( taxon ) ) {
+        
+        for ( Analysis a : ( Collection<? extends Analysis> ) analysis) {
             assert a instanceof GeneCoexpressionAnalysis;
             oldAnalyses.add( ( GeneCoexpressionAnalysis ) a );
 
         }
         return oldAnalyses;
+        
+        
     }
 
     /**

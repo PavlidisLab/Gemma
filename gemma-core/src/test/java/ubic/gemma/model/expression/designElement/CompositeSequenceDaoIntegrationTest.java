@@ -65,6 +65,7 @@ public class CompositeSequenceDaoIntegrationTest extends AbstractArrayDesignProc
         if ( !setupDone ) {
             // insert the needed genes and geneproducts into the system.(can use NCBI gene loader, but for subset)
             NcbiGeneLoader loader = new NcbiGeneLoader();
+            loader.setTaxonService( ( TaxonService ) this.getBean( "taxonService" ) );
             loader.setPersisterHelper( ( PersisterHelper ) this.getBean( "persisterHelper" ) );
             String filePath = ConfigUtils.getString( "gemma.home" ) + File.separatorChar;
             filePath = filePath + "gemma-core/src/test/resources/data/loader/genome/gene";
@@ -90,7 +91,7 @@ public class CompositeSequenceDaoIntegrationTest extends AbstractArrayDesignProc
 
             Collection<BlatResult> results = blat.processPsl( blatResultInputStream, taxon );
 
-            aligner.processArrayDesign( getAd(), results );
+            aligner.processArrayDesign( getAd(), taxon, results );
 
             // real stuff.
             ArrayDesignProbeMapperService arrayDesignProbeMapperService = ( ArrayDesignProbeMapperService ) this

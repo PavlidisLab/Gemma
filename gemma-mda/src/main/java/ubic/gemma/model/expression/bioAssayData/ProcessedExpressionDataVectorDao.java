@@ -36,7 +36,9 @@ public interface ProcessedExpressionDataVectorDao extends DesignElementDataVecto
     public enum RankMethod {
         mean, max
     }
-
+    
+    public void removeProcessedDataVectors( final ExpressionExperiment expressionExperiment );
+    
     /**
      * Populate the processed data for the given experiment. For two-channel studies, the missing value information
      * should already have been computed. If the values already exist, they will be re-written.

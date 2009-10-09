@@ -266,9 +266,6 @@ public class ArrayDesignSequenceAddController extends BackgroundProcessingFormCo
         List<Taxon> taxonNames = new ArrayList<Taxon>();
 
         for ( Taxon taxon : ( Collection<Taxon> ) taxonService.loadAll() ) {
-            if ( !SupportedTaxa.contains( taxon ) ) {
-                continue;
-            }
             taxonNames.add( taxon );
         }
 

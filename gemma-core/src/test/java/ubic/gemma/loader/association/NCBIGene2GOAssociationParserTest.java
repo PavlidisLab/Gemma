@@ -24,6 +24,7 @@ import java.util.zip.GZIPInputStream;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import ubic.gemma.persistence.PersisterHelper;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
@@ -54,7 +55,7 @@ public class NCBIGene2GOAssociationParserTest extends BaseSpringContextTest {
         gZipIs.close();
         is.close();
         int count = gene2GOAssLoader.getCount();
-
+     
         assertEquals( 61, count );
 
     }
@@ -66,9 +67,10 @@ public class NCBIGene2GOAssociationParserTest extends BaseSpringContextTest {
     @Override
     protected void onSetUpInTransaction() throws Exception {
         super.onSetUpInTransaction();
-        gene2GOAssParser = new NCBIGene2GOAssociationParser();
+       // gene2GOAssParser = new NCBIGene2GOAssociationParser();
         gene2GOAssLoader = new NCBIGene2GOAssociationLoader();
-        gene2GOAssLoader.setPersisterHelper( persisterHelper );
+        gene2GOAssLoader.setPersisterHelper( persisterHelper );      
+        gene2GOAssLoader.setParser(( NCBIGene2GOAssociationParser ) getBean( "gene2GOAssociationParser" ));
     }
 
 }

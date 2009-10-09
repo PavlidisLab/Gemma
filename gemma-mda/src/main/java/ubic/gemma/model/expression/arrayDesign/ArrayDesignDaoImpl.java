@@ -25,7 +25,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-
+import java.util.TreeSet;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -230,7 +231,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
     @Override
     protected void handleDeleteGeneProductAssociations( ArrayDesign arrayDesign ) {
         final String queryString = "select ba from ArrayDesignImpl ad inner join ad.compositeSequences as cs "
-                + "inner join cs.biologicalCharacteristic bs, BlatAssociationImpl ba "
+                + "inner join cs.biologicalCharacteristic bs, BioSequence2GeneProductImpl ba "
                 + "where ba.bioSequence = bs and ad=:arrayDesign";
         getHibernateTemplate().deleteAll(
                 getHibernateTemplate().findByNamedParam( queryString, "arrayDesign", arrayDesign ) );
@@ -319,25 +320,33 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
      * (non-Javadoc)
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleGetTaxon(java.lang.Long)
      */
-    @SuppressWarnings("unchecked")
     @Override
     protected Taxon handleGetTaxon( Long id ) throws Exception {
+        Collection<Taxon> taxon = handleGetTaxa( id );
+        if ( taxon.size() == 0 ) {
+            log.warn( "No taxon found for array " + id  );
+            return null; // printwarning
+        }
+
+        if ( taxon.size() > 1 ) {
+            log.warn(taxon.size() +  " taxon found for array " + id  );
+        }
+        return ( Taxon ) taxon.iterator().next();
+    }
         /*
-         * FIXME, this could be misleading. GPL560 uses human sequences but is a "mouse array". Also this assumes that
-         * all the sequences are from the same taxon.
+     * (non-Javadoc)
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleGetTaxon(java.lang.Long)
          */
-        final String queryString = "select t from ArrayDesignImpl as arrayD "
+    @SuppressWarnings("unchecked")
+    @Override
+    protected Collection<Taxon> handleGetTaxa( Long id ) throws Exception {
+
+        final String queryString = "select distinct t from ArrayDesignImpl as arrayD "
                 + "inner join arrayD.compositeSequences as cs inner join " + "cs.biologicalCharacteristic as bioC"
                 + " inner join bioC.taxon t where arrayD.id = :id";
-        getHibernateTemplate().setMaxResults( 1 );
-        List list = getHibernateTemplate().findByNamedParam( queryString, "id", id );
-        if ( list.size() == 0 ) {
-            log.warn( "Could not determine taxon for array design id=" + id + " (no sequences?)" );
-            return null;
+
+        return getHibernateTemplate().findByNamedParam( queryString, "id", id );
         }
-        getHibernateTemplate().setMaxResults( 0 ); // restore to default.
-        return ( Taxon ) list.iterator().next();
-    }
 
     @SuppressWarnings("unchecked")
     @Override
@@ -484,6 +493,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
                     v.setTechnologyType( color );
                     if ( color != null ) v.setColor( color.getValue() );
                     v.setDescription( list.getString( 4 ) );
+                     // this is a comma separated list of taxon
                     v.setTaxon( arrayToTaxon.get( v.getId() ) );
 
                     if ( !eeCounts.containsKey( v.getId() ) ) {
@@ -958,13 +968,13 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         // Warning: this can run very slowly, so cacheing it is crucial.
         for ( ArrayDesign ad : arrayDesigns ) {
 
-            final String csString = "select taxon from ArrayDesignImpl "
+            final String csString = "select distinct taxon from ArrayDesignImpl "
                     + "as ad inner join ad.compositeSequences as cs inner join cs.biologicalCharacteristic as bioC inner join bioC.taxon as taxon"
                     + " where ad = :ad";
             org.hibernate.Query csQueryObject = super.getSession( false ).createQuery( csString );
             csQueryObject.setParameter( "ad", ad );
             csQueryObject.setCacheable( true );
-            csQueryObject.setMaxResults( 1 );
+            //csQueryObject.setMaxResults( 1 );
             // the name of the cache region is configured in ehcache.xml
             csQueryObject.setCacheRegion( null );
 
@@ -973,11 +983,18 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
             if ( csList.size() == 0 ) {
                 continue;
             }
-
+			Collection<String> taxonSet = new TreeSet();
+            Taxon t = null;
             for ( Object object : csList ) {
-                Taxon t = ( Taxon ) object;
-                arrayToTaxon.put( ad.getId(), t.getCommonName() );
+                t = ( Taxon ) object;
+                if ( t.getCommonName() != null ) {
+                    taxonSet.add( t.getCommonName() );
+                }
             }
+            String taxonListString = StringUtils.join( taxonSet, "; " );            
+            arrayToTaxon.put( ad.getId(), taxonListString );
+            
+            
         }
 
         return arrayToTaxon;

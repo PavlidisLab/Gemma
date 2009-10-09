@@ -88,7 +88,7 @@ public class NCBIGene2GOAssociationLoaderCLI extends AbstractSpringAwareCLI {
 
         NCBIGene2GOAssociationLoader gene2GOAssLoader = new NCBIGene2GOAssociationLoader();
         gene2GOAssLoader.setPersisterHelper( ( PersisterHelper ) this.getBean( "persisterHelper" ) );
-
+        gene2GOAssLoader.setParser(( NCBIGene2GOAssociationParser ) getBean( "gene2GOAssociationParser" ));
         HttpFetcher fetcher = new HttpFetcher();
 
         Collection<LocalFile> files = null;

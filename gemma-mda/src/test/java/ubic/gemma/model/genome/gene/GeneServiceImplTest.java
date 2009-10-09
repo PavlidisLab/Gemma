@@ -60,6 +60,8 @@ public class GeneServiceImplTest extends TestCase {
         t = Taxon.Factory.newInstance();
         t.setCommonName( "moose" );
         t.setScientificName( "moose" );
+        t.setIsSpecies( true );
+        t.setIsGenesUsable( true );
         // tDAO.create( t );
 
         g = Gene.Factory.newInstance();

@@ -20,12 +20,11 @@ package ubic.gemma.loader.genome.gene.ncbi;
 
 import java.util.ArrayList;
 import java.util.Collection;
-
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.gene.GeneProduct;
-import ubic.gemma.model.genome.gene.GeneProductService;
 import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.testing.BaseSpringContextTest;
 import ubic.gemma.util.ConfigUtils;
@@ -127,7 +126,7 @@ public class NCBIGeneIntegrationTest extends BaseSpringContextTest {
     public void testGeneLoader() throws Exception {
         GeneService geneService = ( GeneService ) getBean( "geneService" );
         NcbiGeneLoader loader = new NcbiGeneLoader( persisterHelper );
-
+        loader.setTaxonService(( TaxonService ) getBean( "taxonService" ));
         String geneInfoTestFile = "/gemma-core/src/test/resources/data/loader/genome/gene/gene_info.sample.gz";
         String gene2AccTestFile = "/gemma-core/src/test/resources/data/loader/genome/gene/gene2accession.sample.gz";
         String geneHistoryFile = "/gemma-core/src/test/resources/data/loader/genome/gene/geneHistory.sample.gz";

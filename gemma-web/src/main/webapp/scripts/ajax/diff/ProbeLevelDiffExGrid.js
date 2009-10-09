@@ -99,7 +99,7 @@ Gemma.ProbeLevelDiffExGrid = Ext.extend(Ext.grid.GridPanel, {
 						sortable : false,
 						width : 30
 
-					},{
+					}, {
 						id : 'expressionExperimentName',
 						header : "Name",
 						width : 100,
@@ -172,7 +172,7 @@ Gemma.ProbeLevelDiffExGrid = Ext.extend(Ext.grid.GridPanel, {
 		}
 	},
 	visStyler : function(value, metadata, record, row, col, ds) {
-				return "<img src='/Gemma/images/icons/chart_curve.png' ext:qtip='Visualize the data' />";
+		return "<img src='/Gemma/images/icons/chart_curve.png' ext:qtip='Visualize the data' />";
 	}
 
 });

@@ -65,6 +65,15 @@ public class ProbeCoexpressionAnalysisDaoImpl extends
         return this.getHibernateTemplate().findByNamedParam( queryString, "taxon", taxon );
     }
 
+    @Override
+    protected Collection handleFindByParentTaxon( Taxon taxon ) {
+        final String queryString = "select distinct poa from ProbeCoexpressionAnalysisImpl as"
+                + " poa inner join poa.expressionExperimentSetAnalyzed s inner join s.experiments  as ee "
+                + "inner join ee.bioAssays as ba "
+                + "inner join ba.samplesUsed as sample where sample.sourceTaxon = :taxon ";
+        return this.getHibernateTemplate().findByNamedParam( queryString, "taxon", taxon );
+    }
+
     @SuppressWarnings("unchecked")
     public Collection<CompositeSequence> getAssayedProbes( ExpressionExperiment experiment ) {
         Collection<ProbeCoexpressionAnalysis> analyses = this.findByInvestigation( experiment );

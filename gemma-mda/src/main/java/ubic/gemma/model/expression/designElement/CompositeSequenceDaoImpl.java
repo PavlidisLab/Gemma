@@ -189,7 +189,7 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
             return existingCompositeSequence;
         }
         if ( log.isDebugEnabled() ) log.debug( "Creating new compositeSequence: " + compositeSequence );
-        return ( CompositeSequence ) create( compositeSequence );
+        return create( compositeSequence );
     }
 
     @Override
@@ -264,7 +264,7 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
          */
         final String nativeQuery = "select CS, GENE from GENE2CS WHERE CS IN (:csids) ";
 
-        for ( CompositeSequence cs : ( Collection<CompositeSequence> ) compositeSequences ) {
+        for ( CompositeSequence cs : compositeSequences ) {
             returnVal.put( cs, new HashSet<Gene>() );
         }
         List<Object> csGene = new ArrayList<Object>();
@@ -274,7 +274,7 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
         queryObject.addScalar( "gene", new LongType() );
 
         Collection<Long> csIdBatch = new HashSet<Long>();
-        for ( CompositeSequence cs : ( Collection<CompositeSequence> ) compositeSequences ) {
+        for ( CompositeSequence cs : compositeSequences ) {
             csIdBatch.add( cs.getId() );
 
             if ( csIdBatch.size() == BATCH_SIZE ) {
@@ -352,7 +352,7 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
         }
 
         // fill in the return value.
-        for ( CompositeSequence cs : ( Collection<CompositeSequence> ) compositeSequences ) {
+        for ( CompositeSequence cs : compositeSequences ) {
             Long csId = cs.getId();
             assert csId != null;
             Collection<Long> genesToAttach = cs2geneIds.get( csId );
@@ -396,12 +396,12 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
      */
     @SuppressWarnings("unchecked")
     @Override
-    protected Map<CompositeSequence, Map<PhysicalLocation, Collection<BlatAssociation>>> handleGetGenesWithSpecificity(
+    protected Map<CompositeSequence, Collection<BioSequence2GeneProduct>> handleGetGenesWithSpecificity(
             Collection compositeSequences ) throws Exception {
 
         log.info( "Getting cs -> alignment specificity map for " + compositeSequences.size() + " composite sequences" );
         Collection<CompositeSequence> batch = new HashSet<CompositeSequence>();
-        Map<CompositeSequence, Map<PhysicalLocation, Collection<BlatAssociation>>> results = new HashMap<CompositeSequence, Map<PhysicalLocation, Collection<BlatAssociation>>>();
+        Map<CompositeSequence, Collection<BioSequence2GeneProduct>> results = new HashMap<CompositeSequence, Collection<BioSequence2GeneProduct>>();
 
         StopWatch timer = new StopWatch();
         timer.start();
@@ -457,14 +457,13 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
                 throw SessionFactoryUtils.convertHibernateAccessException( ex );
             }
 
-        } else {
-            // just a chunk.
-            final String queryString = "select cs from CompositeSequenceImpl as cs inner join cs.arrayDesign as ar where ar = :ar";
-            this.getHibernateTemplate().setMaxResults( numResults );
-            List cs = this.getHibernateTemplate().findByNamedParam( queryString, "ar", arrayDesign );
-            this.getHibernateTemplate().setMaxResults( 0 );
-            return getRawSummary( cs, 0 );
         }
+        // just a chunk.
+        final String queryString = "select cs from CompositeSequenceImpl as cs inner join cs.arrayDesign as ar where ar = :ar";
+        this.getHibernateTemplate().setMaxResults( numResults );
+        List cs = this.getHibernateTemplate().findByNamedParam( queryString, "ar", arrayDesign );
+        this.getHibernateTemplate().setMaxResults( 0 );
+        return getRawSummary( cs, 0 );
 
     }
 
@@ -525,9 +524,11 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
      * @see
      * ubic.gemma.model.expression.designElement.CompositeSequenceDaoBase#handleGetRawSummary(ubic.gemma.model.expression
      * .designElement.CompositeSequence)
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase
      */
+    @SuppressWarnings("unchecked")
     @Override
-    protected Collection handleGetRawSummary( CompositeSequence compositeSequence, Integer numResults )
+    protected Collection<Object[]> handleGetRawSummary( CompositeSequence compositeSequence, Integer numResults )
             throws Exception {
         if ( compositeSequence == null || compositeSequence.getId() == null ) {
             throw new IllegalArgumentException();
@@ -597,7 +598,7 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
                  * Note this code is copied from ArrayDesignDaoImpl
                  */
                 int numToDo = compositeSequences.size();
-                for ( CompositeSequence cs : ( Collection<CompositeSequence> ) compositeSequences ) {
+                for ( CompositeSequence cs : compositeSequences ) {
                     BioSequence bs = cs.getBiologicalCharacteristic();
                     if ( bs == null ) {
                         continue;
@@ -653,13 +654,13 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
      */
     @SuppressWarnings("unchecked")
     private void batchGetGenesWithSpecificity( Collection<CompositeSequence> batch,
-            Map<CompositeSequence, Map<PhysicalLocation, Collection<BlatAssociation>>> results ) {
+            Map<CompositeSequence, Collection<BioSequence2GeneProduct>> results ) {
 
         if ( batch.size() == 0 ) {
             return;
         }
 
-        final String queryString = "select cs,bas from CompositeSequenceImpl cs, BlatAssociationImpl bas inner join cs.biologicalCharacteristic bs "
+        final String queryString = "select cs,bas from CompositeSequenceImpl cs, BioSequence2GeneProductImpl bas inner join cs.biologicalCharacteristic bs "
                 + "inner join fetch bas.geneProduct gp inner join fetch gp.gene gene "
                 + "where bas.bioSequence=bs and cs in (:cs)";
         List qr = this.getHibernateTemplate().findByNamedParam( queryString, "cs", batch );
@@ -667,29 +668,32 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
         for ( Object o : qr ) {
             Object[] oa = ( Object[] ) o;
             CompositeSequence csa = ( CompositeSequence ) oa[0];
-            BlatAssociation ba = ( BlatAssociation ) oa[1];
-            BlatResult blatResult = ba.getBlatResult();
-            PhysicalLocation pl = blatResult.getTargetAlignedRegion();
+            BioSequence2GeneProduct ba = ( BioSequence2GeneProduct ) oa[1];
 
-            /*
-             * We didn't always used to fill in the targetAlignedRegion ... this is just in case.
-             */
-            if ( pl == null ) {
-                pl = PhysicalLocation.Factory.newInstance();
-                pl.setChromosome( blatResult.getTargetChromosome() );
-                pl.setNucleotide( blatResult.getTargetStart() );
-                pl.setNucleotideLength( blatResult.getTargetEnd().intValue() - blatResult.getTargetStart().intValue() );
-                pl.setStrand( blatResult.getStrand() );
-                // Note: not bothering to fill in the bin.
+            if ( ba instanceof BlatAssociation ) {
+                BlatResult blatResult = ( ( BlatAssociation ) ba ).getBlatResult();
+                PhysicalLocation pl = blatResult.getTargetAlignedRegion();
+
+                /*
+                 * We didn't always used to fill in the targetAlignedRegion ... this is just in case.
+                 */
+                if ( pl == null ) {
+                    pl = PhysicalLocation.Factory.newInstance();
+                    pl.setChromosome( blatResult.getTargetChromosome() );
+                    pl.setNucleotide( blatResult.getTargetStart() );
+                    pl.setNucleotideLength( blatResult.getTargetEnd().intValue()
+                            - blatResult.getTargetStart().intValue() );
+                    pl.setStrand( blatResult.getStrand() );
+                    // Note: not bothering to fill in the bin.
+                }
+
             }
 
             if ( !results.containsKey( csa ) ) {
-                results.put( csa, new HashMap<PhysicalLocation, Collection<BlatAssociation>>() );
+                results.put( csa, new HashSet<BioSequence2GeneProduct>() );
             }
-            if ( !results.get( csa ).containsKey( pl ) ) {
-                results.get( csa ).put( pl, new HashSet<BlatAssociation>() );
-            }
-            results.get( csa ).get( pl ).add( ba );
+
+            results.get( csa ).add( ba );
         }
     }
 }

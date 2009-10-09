@@ -69,87 +69,98 @@ public class ArrayDesignSequenceAlignmentService {
     BioSequenceService bioSequenceService;
 
     /**
+     * Run blat on all sequences on the array design. For arrays with sequences from multiple taxa, BLAT is run
+     * appropriately assuming sequences are available for all the represented taxa.
+     * 
      * @param ad
      * @param sensitive if true, blat will be run in a more sensitive mode, if available.
      */
     public Collection<BlatResult> processArrayDesign( ArrayDesign ad, boolean sensitive ) {
 
-        Taxon taxon = arrayDesignService.getTaxon( ad.getId() );
-        Collection<BioSequence> sequencesToBlat = getSequences( ad );
+        log.info( "Looking for old results to remove..." );
+        arrayDesignService.deleteAlignmentData( ad );
 
         Collection<BlatResult> allResults = new HashSet<BlatResult>();
 
         if ( sensitive ) log.info( "Running in 'sensitive' mode if possible" );
 
-        Map<BioSequence, Collection<BlatResult>> results = getAlignments( sequencesToBlat, sensitive, taxon );
+        Collection<Taxon> taxa = arrayDesignService.getTaxa( ad.getId() );
+        for ( Taxon taxon : taxa ) {
 
-        log.info( "Got new BLAT results for " + results.keySet().size() + " query sequences" );
+            Collection<BioSequence> sequencesToBlat = getSequences( ad, taxon );
 
-        log.info( "Looking for old results to remove..." );
-        arrayDesignService.deleteAlignmentData( ad );
+            Map<BioSequence, Collection<BlatResult>> results = getAlignments( sequencesToBlat, sensitive, taxon );
 
-        Map<String, BioSequence> nameMap = new HashMap<String, BioSequence>();
-        for ( BioSequence bs : results.keySet() ) {
-            if ( nameMap.containsKey( bs.getName() ) ) {
-                throw new IllegalStateException( "All distinct sequences on the array must have unique names; found "
-                        + bs.getName() + " more than once." );
+            log.info( "Got BLAT results for " + results.keySet().size() + " query sequences" );
+
+            Map<String, BioSequence> nameMap = new HashMap<String, BioSequence>();
+            for ( BioSequence bs : results.keySet() ) {
+                if ( nameMap.containsKey( bs.getName() ) ) {
+                    throw new IllegalStateException(
+                            "All distinct sequences on the array must have unique names; found " + bs.getName()
+                                    + " more than once." );
+                }
+                nameMap.put( bs.getName(), bs );
             }
-            nameMap.put( bs.getName(), bs );
+
+            int noresults = 0;
+            int count = 0;
+            for ( BioSequence sequence : sequencesToBlat ) {
+                if ( sequence == null ) {
+                    log.warn( "Null sequence!" );
+                    continue;
+                }
+                Collection<BlatResult> brs = results.get( nameMap.get( sequence.getName() ) );
+                if ( brs == null ) {
+                    ++noresults;
+                    continue;
+                }
+                for ( BlatResult result : brs ) {
+                    result.setQuerySequence( sequence ); // must do this to replace
+                    // placeholder instance.
+                }
+                allResults.addAll( persistBlatResults( brs ) );
+
+                if ( ++count % 2000 == 0 ) {
+                    log.info( "Checked results for " + count + " queries, " + allResults.size()
+                            + " blat results so far." );
+                }
+
+            }
+
+            log.info( noresults + "/" + sequencesToBlat.size() + " sequences had no blat results" );
         }
-
-        int noresults = 0;
-        int count = 0;
-        for ( BioSequence sequence : sequencesToBlat ) {
-            if ( sequence == null ) {
-                log.warn( "Null sequence!" );
-                continue;
-            }
-            Collection<BlatResult> brs = results.get( nameMap.get( sequence.getName() ) );
-            if ( brs == null ) {
-                ++noresults;
-                continue;
-            }
-            for ( BlatResult result : brs ) {
-                result.setQuerySequence( sequence ); // must do this to replace
-                // placeholder instance.
-            }
-            allResults.addAll( persistBlatResults( brs ) );
-
-            if ( ++count % 2000 == 0 ) {
-                log.info( "Checked results for " + count + " queries, " + allResults.size() + " blat results so far." );
-            }
-
-        }
-
-        log.info( noresults + "/" + sequencesToBlat.size() + " sequences had no blat results" );
-
         return allResults;
 
     }
 
     /**
      * @param ad
-     * @param rawBlatResults, assumed to be from alignments to the genome for the array design (that is, we don't
-     *        consider aligning mouse to human). Typically these would have been read in from a file.
+     * @param taxon (to allow for the possibility of multiple taxa for the array) - if not given, attempt to infer from
+     *        ad.
+     * @param rawBlatResults , assumed to be from alignments to correct taxon Typically these would have been read in
+     *        from a file.
      * @return persisted BlatResults.
      */
-    public Collection<BlatResult> processArrayDesign( ArrayDesign ad, Collection<BlatResult> rawBlatResults ) {
+    public Collection<BlatResult> processArrayDesign( ArrayDesign ad, Taxon taxon, Collection<BlatResult> rawBlatResults ) {
 
         log.info( "Looking for old results to remove..." );
         arrayDesignService.deleteAlignmentData( ad );
+        // Blat file processing can only be run on one taxon at a time
+        taxon = validateTaxaForBlatFile( ad, taxon );
 
         Collection<BioSequence> sequencesToBlat = getSequences( ad );
         bioSequenceService.thawLite( sequencesToBlat );
 
-        // if the blat results were loaded from a file, we have to replace the querysequences with the actual ones
-        // attached to the array design. We have to do this by name because the sequence name is what the files contain.
+        // if the blat results were loaded from a file, we have to replace the
+        // querysequences with the actual ones
+        // attached to the array design. We have to do this by name because the
+        // sequence name is what the files contain.
         // Note that if there is ambiguity there will be problems!
         Map<String, BioSequence> seqMap = new HashMap<String, BioSequence>();
         for ( BioSequence bioSequence : sequencesToBlat ) {
             seqMap.put( bioSequence.getName(), bioSequence );
         }
-
-        Taxon taxon = arrayDesignService.getTaxon( ad.getId() );
 
         ExternalDatabase searchedDatabase = Blat.getSearchedGenome( taxon );
 
@@ -192,6 +203,27 @@ public class ArrayDesignSequenceAlignmentService {
         return persistBlatResults( rawBlatResults );
     }
 
+    /**
+     * If no taxon is supplied then infer it from array. If more than one taxa is on array then stop processing as blat
+     * file details should relate to one taxon
+     * 
+     * @param arrayDesign Array design to process
+     * @param taxon Taxon supplied
+     */
+    public Taxon validateTaxaForBlatFile( ArrayDesign arrayDesign, Taxon taxon ) {
+
+        if ( taxon == null ) {
+            Collection<Taxon> taxaOnArray = arrayDesignService.getTaxa( arrayDesign.getId() );
+            if ( taxaOnArray != null && taxaOnArray.size() == 1 && taxaOnArray.iterator().next() != null ) {
+                return taxaOnArray.iterator().next();
+            }
+            throw new IllegalArgumentException( ( taxaOnArray == null ? "?" : taxaOnArray.size() )
+                    + " taxon found for " + arrayDesign + " specifiy which taxon to run" );
+
+        }
+        return taxon;
+    }
+
     public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
         this.arrayDesignService = arrayDesignService;
     }
@@ -230,10 +262,6 @@ public class ArrayDesignSequenceAlignmentService {
                     "Length information from GoldenPath annotations.", " -- " ) );
             bioSequenceService.update( sequence );
         }
-    }
-
-    private Map<BioSequence, Collection<BlatResult>> getAlignments( Collection<BioSequence> sequencesToBlat, Taxon taxon ) {
-        return this.getAlignments( sequencesToBlat, false, taxon );
     }
 
     /**
@@ -317,9 +345,19 @@ public class ArrayDesignSequenceAlignmentService {
 
     /**
      * @param ad
-     * @return
+     * @return all sequences, across all taxa that might be represented on the array design
+     * @see getSequences(ad, taxon) for method to get just the sequences for one taxon.
      */
     public static Collection<BioSequence> getSequences( ArrayDesign ad ) {
+        return getSequences( ad, null );
+    }
+
+    /**
+     * @param ad
+     * @param taxon (specified in case array has multiple taxa)
+     * @return
+     */
+    public static Collection<BioSequence> getSequences( ArrayDesign ad, Taxon taxon ) {
         Collection<CompositeSequence> compositeSequences = ad.getCompositeSequences();
         Collection<BioSequence> sequencesToBlat = new HashSet<BioSequence>();
         int numWithNoBioSequence = 0;
@@ -339,6 +377,21 @@ public class ArrayDesignSequenceAlignmentService {
                     log.warn( cs + " had no associated biosequence object" );
                 }
                 continue;
+            }
+
+            if ( bs.getTaxon() == null ) {
+                warned = true;
+                log.warn( "There is no taxon defined for this biosequence " );
+                continue;
+            }
+            // if the taxon is null that means we want this run for all taxa for that array
+            if ( taxon != null && !bs.getTaxon().equals( taxon ) ) {
+                continue;
+            }
+
+            if ( !warned && ( numWithNoBioSequence > 20 || numWithNoSequenceData > 20 ) ) {
+                warned = true;
+                log.warn( "More than 20 composite sequences don't have sequence information, no more warnings..." );
             }
 
             if ( StringUtils.isBlank( bs.getSequence() ) ) {

@@ -44,6 +44,8 @@ public class GoldenPathQueryTest extends TestCase {
     protected void setUp() throws Exception {
         Taxon t = Taxon.Factory.newInstance();
         t.setCommonName( "human" );
+        t.setIsGenesUsable( true );
+        t.setIsSpecies(true);       
         try {
             queryer = new GoldenPathQuery( t );
         } catch ( java.sql.SQLException e ) {

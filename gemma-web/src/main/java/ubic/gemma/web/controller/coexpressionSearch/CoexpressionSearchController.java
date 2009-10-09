@@ -108,9 +108,14 @@ public class CoexpressionSearchController extends BaseFormController {
                 eeSets = expressionExperimentSetService.findByName( searchOptions.getEeSetName() );
             } else {
                 eeSets = expressionExperimentSetService.findByName( "All " + gene.getTaxon().getCommonName() );
-
             }
-            if ( eeSets.size() != 1 ) {
+            //lmd eeSets was null
+            if(eeSets ==null){
+                result
+                .setErrorState( "<b> Sorry, Coexpression results are not yet available for </b>" +  gene.getTaxon().getCommonName()  );
+                log.info( "No expression experiment set results for query: " + searchOptions );
+            }
+             if ( eeSets.size() != 1 ) {
                 log.warn( "more than one set found using 1st." );
             }
             eeSetId = eeSets.iterator().next().getId();

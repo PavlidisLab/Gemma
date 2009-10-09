@@ -189,7 +189,8 @@ public class ArrayDesignDaoImplTest extends BaseSpringContextTest {
     }
 
     /*
-     * A test of getting a taxon assciated with an arrayDesign
+     * Test retrieving one taxa for an arraydesign where hibernate query is restricted to return just 1 taxon.
+     * 
      */
     public void testGetTaxon() {
 
@@ -198,6 +199,62 @@ public class ArrayDesignDaoImplTest extends BaseSpringContextTest {
         assertEquals( DEFAULT_TAXON, tax.getScientificName() );
 
     }
+    
+    /*
+     * Test retrieving one taxa for an arraydesign where hibernate query is not restricted to return just 1 taxon.
+     */
+    public void testGetTaxaOneTaxonForArray() {
+
+        ad = ( ArrayDesign ) persisterHelper.persist( ad );
+        Collection<Taxon> taxa = arrayDesignDao.getTaxa( ad.getId() );
+        assertEquals(1, taxa.size());
+        Taxon tax = taxa.iterator().next();
+        assertEquals( DEFAULT_TAXON, tax.getScientificName() );
+
+    }
+    
+    /*
+	 * Test retrieving mutiple taxa for an arraydesign where hibernate query is not restricted to return just 1 taxon.
+	 */
+	public void testGetTaxaMultipleTaxonForArray() {
+		String taxonName2 = "Fish";
+		CompositeSequence c1 = CompositeSequence.Factory.newInstance();
+		c1.setName("bar");
+
+		Taxon secondTaxon = Taxon.Factory.newInstance();
+		secondTaxon.setScientificName(taxonName2);
+		secondTaxon.setIsSpecies( true );
+		secondTaxon.setIsGenesUsable( true );
+		BioSequence bs = BioSequence.Factory.newInstance(secondTaxon);
+		bs.setName(RandomStringUtils.randomAlphabetic(10));
+		bs.setSequence(RandomStringUtils.random(40, "ATCG"));
+
+		c1.setBiologicalCharacteristic(bs);
+		ad.getCompositeSequences().add(c1);
+
+		ad = (ArrayDesign) persisterHelper.persist(ad);
+		Collection<Taxon> taxa = arrayDesignDao.getTaxa(ad.getId());
+		assertEquals(2, taxa.size());
+		Collection<String> list = new ArrayList<String>();
+		
+		for(Taxon taxon:taxa){
+			list.add(taxon.getScientificName());			
+		}
+		assertTrue(list.contains(taxonName2));
+		assertTrue(list.contains(DEFAULT_TAXON));	
+
+	}
+    /**
+     * Test to ensure that if one taxon is present on an array only 1 string is returned with taxon name
+     */
+	 public void testLoadAllValueObjectsOneTaxon() {
+	    	Collection<ArrayDesignValueObject> vos = arrayDesignDao.loadAllValueObjects();
+			assertNotNull( vos );
+		    String taxon = vos.iterator().next().getTaxon();
+	        assertEquals("human", taxon);
+	        
+	    }
+    
 
     public void testLoadCompositeSequences() {
        
@@ -234,9 +291,11 @@ public class ArrayDesignDaoImplTest extends BaseSpringContextTest {
     }
 
     public void testLoadAllValueObjects() {
-        Collection vos = arrayDesignDao.loadAllValueObjects();
+        Collection<ArrayDesignValueObject> vos = arrayDesignDao.loadAllValueObjects();
         assertNotNull( vos );
     }
+    
+       
 
     public void testUpdateSubsumingStatus() throws Exception {
         endTransaction();
@@ -260,6 +319,8 @@ public class ArrayDesignDaoImplTest extends BaseSpringContextTest {
         c1.setName( "bar" );
         Taxon tax = Taxon.Factory.newInstance();
         tax.setScientificName( DEFAULT_TAXON );
+        tax.setIsSpecies( true );
+        tax.setIsGenesUsable( true );
         BioSequence bs = BioSequence.Factory.newInstance( tax );
         bs.setName( "fred" );
         bs.setSequence( "CG" );

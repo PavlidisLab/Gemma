@@ -190,7 +190,7 @@ public class ArrayDesignSequenceProcessorTest extends BaseSpringContextTest {
             log.warn( fastacmdExe + " not found, skipping test" );
             return;
         }
-
+     
         String path = ConfigUtils.getString( "gemma.home" );
         AbstractGeoService geoService = ( AbstractGeoService ) this.getBean( "geoDatasetService" );
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path
@@ -200,11 +200,11 @@ public class ArrayDesignSequenceProcessorTest extends BaseSpringContextTest {
                 false, false, true );
         result = ads.iterator().next();
         arrayDesignService.thawLite( result );
-
+        // have to specify taxon as this has two taxons in it
         InputStream f = this.getClass().getResourceAsStream( "/data/loader/expression/arrayDesign/identifierTest.txt" );
-        Collection<BioSequence> res = app.processArrayDesign( result, f, new String[] { "testblastdb",
-                "testblastdbPartTwo" }, ConfigUtils.getString( "gemma.home" )
-                + "/gemma-core/src/test/resources/data/loader/genome/blast", null, true );
+        Collection<BioSequence> res = app.processArrayDesign( result, f,
+                new String[] { "testblastdb", "testblastdbPartTwo" }, ConfigUtils.getString( "gemma.home" )
+                        + "/gemma-core/src/test/resources/data/loader/genome/blast", taxon, true );
         assertNotNull( res );
         for ( BioSequence sequence : res ) {
             assertNotNull( sequence.getSequence() );
@@ -229,7 +229,7 @@ public class ArrayDesignSequenceProcessorTest extends BaseSpringContextTest {
                 "/data/loader/expression/arrayDesign/RN-U34_probe_tab.zip" ) );
 
         z.getNextEntry();
-
+        //tests validation of taxon
         Collection<BioSequence> res = app.processArrayDesign( result, z, SequenceType.AFFY_PROBE );
         assertEquals( 1322, res.size() );
     }
@@ -248,5 +248,24 @@ public class ArrayDesignSequenceProcessorTest extends BaseSpringContextTest {
         // .getComponentReporters().size() );
         assertTrue( result.getCompositeSequences().iterator().next().getArrayDesign() == result );
     }
+    
+    public void testMultiTaxonArray() throws Exception {
+        //This array design has not taxon so unless taxon provided will throw an exception
+        ArrayDesign ad = testHelper.getTestPersistentArrayDesign(10, false,false);
+        //as taxon provided do not check array design
+        try {
+            app.validateTaxon( taxon, ad );
+        } catch ( IllegalArgumentException e ) {
+            fail();
+        }
+        try {
+            app.validateTaxon( null, ad );
+            fail();
+        } catch ( IllegalArgumentException e ) {
+              assertTrue(e.getMessage().contains( "please specifiy which taxon to run" ));
+        }
+
+    }
+    
 
 }
