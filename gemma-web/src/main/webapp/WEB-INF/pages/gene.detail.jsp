@@ -155,7 +155,7 @@
 				Images are for mouse gene ${gene.officialSymbol}.
 			</p>
 		</c:if>
-		<div style="valign: top; float: left">
+		<div style="valign: top" class="clearfix">
 			<c:forEach var="img" items="${representativeImages}">
 				<div style="float: left; padding: 8px">
 					<a title='Allen Brain Atlas Image for <c:out value="{$gene.officialSymbol}"/>, click to enlarge '
@@ -166,7 +166,7 @@
 		</div>
 		<br />
 	</c:if>
-	<div style="float: left">
+	<div class="clearfix">
 		<h3>
 			<fmt:message key="gene.ontology" />
 			terms
@@ -178,7 +178,7 @@
 
 		<div id="go-grid"></div>
 	</div>
-	<div style="float: left">
+	<div class="clearfix">
 		<h3>
 			<fmt:message key="gene.products" />
 		</h3>
@@ -186,17 +186,12 @@
 		<div id="geneproduct-grid"></div>
 	</div>
 
-	<h3>
-		<fmt:message key="gene.description" />
-	</h3>
 
-	<c:choose>
-		<c:when test="${not empty gene.description}">${gene.description}
-		</c:when>
-		<c:otherwise>"Description unavailable"</c:otherwise>
-
-	</c:choose>
-
+	<c:if test="${not empty gene.description}">
+		<div style="width:400px;font-size:smaller;margin:3px;padding: 5px; background-color: #DDDDDD">Notes: 
+			${gene.description}
+		</div>
+	</c:if>
 
 
 	<security:authorize ifAnyGranted="admin">

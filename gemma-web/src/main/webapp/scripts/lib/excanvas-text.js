@@ -364,7 +364,6 @@ window.Canvas.Text = {
 
 	proto.getTextExtents = function(text, style) {
 		var width = 0, height = 0, ha = 0, face = ctxt.getFaceFromStyle(style), i, glyph;
-		window.console.log(text);
 		for (i = 0; i < text.length; i++) {
 			glyph = face.glyphs[text.charAt(i)] || face.glyphs[ctxt.options.fallbackCharacter];
 			width += Math.max(glyph.ha, glyph.x_max);

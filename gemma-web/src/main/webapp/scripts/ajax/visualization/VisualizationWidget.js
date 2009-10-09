@@ -112,7 +112,7 @@ Gemma.DataVectorThumbnailsView = Ext.extend(Ext.DataView, {
 					var pvalueLabel = (pvalue && pvalue != 1) ? (sprintf("%.2e", pvalue) + ": ") : "";
 
 					var labelStyle = '';
-					var qtip = ' probe + " (" + geneSymbols + ")" ';
+					var qtip = ' probe (' + geneSymbols + ') ';
 					if (factor && factor < 2) {
 						labelStyle = "font-style:italic";
 						qtip = qtip + " [Not significant]";
@@ -409,17 +409,16 @@ Gemma.VisualizationZoomPanel = Ext.extend(Ext.Panel, {
 
 		var doHeatmap = this.ownerCt ? this.ownerCt.heatmapMode : this.heatmapMode;
 
-		var loadMask = new Ext.LoadMask(this.getEl(), {
-					msg : "Updating",
-					removeMask : true
-				})
-
-		loadMask.show();
-
 		if (doHeatmap) {
+			
+			var lm = new Ext.LoadMask(Ext.getBody());
+			lm.show();
+			
 			graphConfig.legend.container = this.legendDiv ? this.legendDiv : this.body.id;
 			profiles.sort(Gemma.sortByImportance);
 			Heatmap.draw($(this.body.id), profiles, graphConfig, sampleNames, Gemma.sortByImportance);
+			
+			lm.hide();
 		} else {
 			profiles.sort(Gemma.sortByImportance);
 
@@ -474,8 +473,6 @@ Gemma.VisualizationZoomPanel = Ext.extend(Ext.Panel, {
 			}
 
 		}
-
-		loadMask.hide();
 
 	}
 
