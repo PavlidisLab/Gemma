@@ -33,6 +33,7 @@
 </head>
 <body>
 	<input type="hidden" name="gene" id="gene" value="${gene.id}" />
+	<input type="hidden" name="taxon" id="taxon" value="${gene.taxon.id}" />
 	<h3>
 		<c:if test="${not empty gene.officialSymbol}">
 		${gene.officialSymbol }
@@ -103,10 +104,10 @@
 
 
 	<h3>
-		Datasets differentially expressed in
+		Differential expression
 
 		<a class="helpLink" href="?"
-			onclick="showHelpTip(event, 'Below are the data sets the gene is Differentially expressed in. Beside is a quick link for going to a more detailed differential analysis'); return false"><img
+			onclick="showHelpTip(event, 'Top data sets in which the gene is Differentially expressed in; results are listed per probe so a data set may be listed more than once. Use the link at right for more detailed differential analysis'); return false"><img
 				src="/Gemma/images/help.png" /> </a> &nbsp;
 
 		<a title="Go To Advanced Differential Expression Search with <%out.print( gene.getOfficialSymbol() );%>"
@@ -120,10 +121,10 @@
 	<div id="diff-grid">
 	</div>
 	<h3>
-		Top Coexpressed Genes
+		Coexpression
 
 		<a class="helpLink" href="?"
-			onclick="showHelpTip(event, 'Below is a summary coexpression analysis, beside is a link to go to the detailed coexpression results'); return false"><img
+			onclick="showHelpTip(event, 'Top genes with which this gene is coexpressed. Use the link at right to go to a more detailed coexpression results'); return false"><img
 				src="/Gemma/images/help.png" /> </a> &nbsp;
 
 		<a title="Do Advanced Coexpression Search with <%out.print( gene.getOfficialSymbol() );%>"
@@ -188,8 +189,8 @@
 
 
 	<c:if test="${not empty gene.description}">
-		<div style="width:400px;font-size:smaller;margin:3px;padding: 5px; background-color: #DDDDDD">Notes: 
-			${gene.description}
+		<div style="width: 400px; font-size: smaller; margin: 3px; padding: 5px; background-color: #DDDDDD">
+			Notes: ${gene.description}
 		</div>
 	</c:if>
 

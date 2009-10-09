@@ -24,11 +24,11 @@ var Heatmap = function() {
 	var MAX_LABEL_LENGTH_CHAR = 35;
 	var MIN_BOX_WIDTH = 1; // for normal circumstances...we can go smaller.
 	var EXPANDED_BOX_WIDTH = 10;
-	var MAX_BOX_WIDTH = 20;
+	var MAX_BOX_WIDTH = 10;
 	var CLIP = 3;
 	var NAN_COLOR = "grey";
 	var SHOW_LABEL_MIN_SIZE = 8; // 6 is unreadable; 8 is almost okay.
-	var MIN_BOX_HEIGHT = 2; 
+	var MIN_BOX_HEIGHT = 2;
 	var MAX_BOX_HEIGHT = 18;
 	var MAX_ROWS_BEFORE_SCROLL = 30;
 	var MIN_IMAGE_SIZE = 50;
@@ -149,9 +149,11 @@ var Heatmap = function() {
 				boxWidth = boxWidth > MAX_BOX_WIDTH ? MAX_BOX_WIDTH : boxWidth;
 
 				/*
-				 * If drawing fewer than one pixel per, skip over columns.Thisi is
+				 * If columns are really tiny, we just skip some columns -- blur things out. This can also speed things
+				 * up, we don't try drawing details we can't see -- fewer squares to draw means less time. Note we allow
+				 * fractional values here, so the heatmap is the same exact width as before.
 				 */
-				while (boxWidth < 1) {
+				while (boxWidth < 2) {
 					increment++;
 					boxWidth += boxWidth;
 				}
@@ -272,32 +274,37 @@ var Heatmap = function() {
 				var d = vectorObjs[i].data; // points.
 
 				var offsetx = 0;
-				for (var j = 0; j < d.length; j += increment) {
+				for (var j = 0; j < d.length; j++) {
 
 					var a = d[j][1];
+
+					if (a > CLIP) {
+						a = CLIP;
+					} else if (a < -CLIP) {
+						a = -CLIP;
+					}
+
+					if (increment > 1) {
+						// take an average of adjacent columns. If we hit an NaN, too bad...
+						for (k = 1; k < increment && j < d.length - 1; k++) {
+							j++;
+							a += d[j][1];
+
+						}
+						a /= increment;
+
+					}
 
 					if (isNaN(a)) {
 						ctx.fillStyle = NAN_COLOR;
 					} else {
-
-						// Clip the data 1st
-						if (a > CLIP) {
-							a = CLIP;
-						} else if (a < -CLIP) {
-							a = -CLIP;
-						}
-
-						// Determine which color to use
-						var v = Math.floor((a + CLIP) / binSize);
-
-						if (v > colors.length - 1) {
-							v = colors.length - 1;
-						}
-
-						ctx.fillStyle = colors[v];
+						ctx.fillStyle = getColor(a, binSize, colors);
 					}
 					ctx.fillRect(offsetx, offsety, boxWidth, boxHeight);
 					offsetx = offsetx + boxWidth;
+
+					last = a;
+
 				}
 
 				// Add label or not
@@ -318,6 +325,16 @@ var Heatmap = function() {
 				offsety += boxHeight;
 			}
 
+		}
+
+		// figure out which colour to use
+		function getColor(a, binSize, colors) {
+
+			var v = Math.floor((a + CLIP) / binSize);
+			if (v > colors.length - 1) {
+				v = colors.length - 1;
+			}
+			return colors[v];
 		}
 
 		/**

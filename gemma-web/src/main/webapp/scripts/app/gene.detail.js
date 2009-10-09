@@ -16,7 +16,7 @@
 Ext.namespace('Gemma');
 
 Gemma.DIFF_THRESHOLD = 0.01;
-Gemma.MAX_DIFF_RESULTS = 25;
+Gemma.MAX_DIFF_RESULTS = 50;
 
 /**
  * 
@@ -129,6 +129,7 @@ Ext.onReady(function() {
 	Ext.QuickTips.init();
 
 	geneid = dwr.util.getValue("gene");
+//	taxonid = dw.util.getValue("taxon");
 
 	var gpGrid = new Gemma.GeneProductGrid({
 				geneid : geneid,
@@ -155,7 +156,7 @@ Ext.onReady(function() {
 			});
 
 	coexpressedGeneGrid.doSearch({
-				geneIds : [geneid],
+				geneIds : [geneid], 
 				quick : true,
 				stringency : 2,
 				forceProbeLevelSearch : false

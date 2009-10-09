@@ -28,9 +28,10 @@ Gemma.SHOW_ALL = "Show all results";
 
 Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 
-	collapsible : true,
+	collapsible : false,
 	editable : false,
 	style : "margin-bottom: 1em;",
+	height : 300,
 	stateful : false,
 
 	lite : false,
@@ -243,141 +244,49 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 		return supporting;
 	},
 
-	rowClickHandler : function(grid, rowIndex, columnIndex, e) {
-		if (this.getSelectionModel().hasSelection()) {
+	/**
+	 * 
+	 * @param {}
+	 *            isCannedAnalysis
+	 * @param {}
+	 *            numQueryGenes
+	 * @param {}
+	 *            data
+	 * @param {}
+	 *            datasets
+	 */
+	loadData : function(isCannedAnalysis, numQueryGenes, data, datasets) {
+		var queryIndex = this.getColumnModel().getIndexById('query');
+		if (numQueryGenes > 1) {
+			this.getColumnModel().setHidden(queryIndex, false);
+		} else {
+			this.getColumnModel().setHidden(queryIndex, true);
 
-			var record = this.getStore().getAt(rowIndex);
-			var fieldName = this.getColumnModel().getDataIndex(columnIndex);
-			var queryGene = record.get("queryGene");
-			var foundGene = record.get("foundGene");
-
-			if (fieldName == 'foundGene' && columnIndex != 7) {
-				// problem
-				// with
-				// outlink
-				// column
-				// field
-				// name
-				// also
-				// returns
-				// name
-				// as
-				// foundGene
-				// searchPanel.searchForGene(foundGene.id);
-			} else if (fieldName == 'visualize') {
-
-				var foundGene = record.data.foundGene;
-				var activeExperiments = record.data.supportingExperiments;
-				// destroy if already open???
-				if (this.coexpVisWindow != null) {
-					this.coexpVisWindow.close();
-					this.coexpVisWindow = null;
-				}
-
-				this.coexpVisWindow = new Gemma.CoexpressionVisualizationWindow({
-					admin : false,
-					experiments : activeExperiments,
-					queryGene : queryGene,
-					foundGene : foundGene,
-					downloadLink : String
-							.format(
-									"<a ext:qtip='Download these data in a tab delimited format' target='_blank'  href='/Gemma/dedv/downloadDEDV.html?ee={0}&g={1},{2}'' > <img src='/Gemma/images/download.gif'/></a>",
-									activeExperiments.join(','), queryGene.id, foundGene.id)
-				});
-
-				var params = [];
-				params.push(activeExperiments)
-				params.push(queryGene.id);
-				params.push(foundGene.id);
-
-				this.coexpVisWindow.show({
-							params : params
-						});
-
-			} else if (fieldName == 'details' && !this.lite) {
-
-				var supporting = this.getSupportingDatasetRecords(record, grid);
-
-				var dsGrid = new Gemma.ExpressionExperimentGrid({
-							records : supporting,
-							// width : 750,
-							// height : 340, Layout will show nothing if
-							// this isn't set to something and
-							// autoHeight is false.
-							// Most likely a loading issue (no data in
-							// store, so no height).
-							autoHeight : true,
-							stateful : false
-						});
-
-				// Close if already open
-				if (detailsWindow) {
-					detailsWindow.close();
-				}
-
-				var diffExGrid = new Gemma.ProbeLevelDiffExGrid({
-							geneId : foundGene.id,
-							threshold : 0.01,
-							// width : 750,
-							// height : 380,
-							stateful : false
-						});
-
-				var detailsTP = new Ext.TabPanel({
-							layoutOnTabChange : true,
-							activeTab : 0,
-							stateful : false,
-							items : [{
-										title : "Supporting datasets",
-										items : [dsGrid],
-										layout : 'fit',
-										autoScroll : true
-									}, {
-										title : "Differential expression of " + foundGene.officialSymbol,
-										items : [diffExGrid],
-										layout : 'fit',
-										autoScroll : true,
-										loaded : false,
-										listeners : {
-											"activate" : {
-												fn : function() {
-													if (!this.loaded) {
-														diffExGrid.getStore().load({
-															params : [foundGene.id, Gemma.DIFF_THRESHOLD,
-																	Gemma.MAX_DIFF_RESULTS]
-														});
-													}
-													this.loaded = true;
-												}
-											}
-										}
-
-									}]
-
-						});
-
-				detailsWindow = new Ext.Window({
-							modal : false,
-							layout : 'fit',
-							title : 'Details for ' + foundGene.officialSymbol,
-							closeAction : 'close',
-							items : [{
-										items : [detailsTP],
-										layout : 'fit'
-									}],
-							width : 760,
-							height : 400,
-							// autoScroll : true,
-							stateful : false
-						});
-
-				dsGrid.getStore().load();
-				detailsWindow.show();
-
-				diffExGrid.getStore().loadData(supporting);
-
-			}
 		}
+		this.getStore().proxy.data = data;
+		this.getStore().reload({
+					resetPage : true
+				});
+		// this.getView().refresh(true); // refresh column
+		// headers
+		if (!this.lite) {
+			this.datasets = datasets; // the datasets that are 'relevant'.
+			this.resizeDatasetColumn();
+		}
+
+		if (this.loadMask) {
+			this.loadMask.hide();
+		}
+	},
+
+	/**
+	 * 
+	 * @param {}
+	 *            result
+	 */
+	loadDataCb : function(result) {
+		this.loadData(result.isCannedAnalysis, result.queryGenes.length, result.knownGeneResults,
+				result.knownGeneDatasets);
 	},
 
 	doSearch : function(csc) {
@@ -390,15 +299,9 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 		this.loadMask.show();
 
 		ExtCoexpressionSearchController.doSearch(csc, {
-					/*
-					 * fixme
-					 */
-					callback : function(result) {
-						this.loadData(result.isCannedAnalysis, result.queryGenes.length, result.knownGeneResults,
-								result.knownGeneDatasets);
-						this.loadMask.hide();
-					}.createDelegate(this),
+					callback : this.loadDataCb.createDelegate(this),
 					errorHandler : function(error) {
+						console.log(error);
 					}
 				});
 
@@ -557,8 +460,18 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 			g.officialName = "";
 		}
 
+		g.taxonId = g.taxon.id;
+		g.taxonName = g.taxon.commonName;
+
 		return this.foundGeneTemplate.apply(g);
 	},
+
+	/**
+	 * 
+	 */
+	foundGeneTemplate : new Ext.Template(
+			"<a href='/Gemma/searchCoexpression.html?g={id}&s=3&t={taxonId}&an=All {taxonName}'> <img src='/Gemma/images/logo/gemmaTiny.gif' ext:qtip='Make {officialSymbol} the query gene' /> </a>",
+			" &nbsp; ", "<a href='/Gemma/gene/showGene.html?id={id}'>{officialSymbol}</a> {officialName}"),
 
 	queryGeneStyler : function(value, metadata, record, row, col, ds) {
 
@@ -653,69 +566,165 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 
 	/**
 	 * 
-	 * @param {}
-	 *            isCannedAnalysis
-	 * @param {}
-	 *            numQueryGenes
-	 * @param {}
-	 *            data
-	 * @param {}
-	 *            datasets
 	 */
-	loadData : function(isCannedAnalysis, numQueryGenes, data, datasets) {
-		var queryIndex = this.getColumnModel().getIndexById('query');
-		if (numQueryGenes > 1) {
-			this.getColumnModel().setHidden(queryIndex, false);
-		} else {
-			this.getColumnModel().setHidden(queryIndex, true);
-
-		}
-		this.getStore().proxy.data = data;
-		this.getStore().reload({
-					resetPage : true
-				});
-		// this.getView().refresh(true); // refresh column
-		// headers
-		if (!this.lite) {
-			this.datasets = datasets; // the datasets that are 'relevant'.
-			this.resizeDatasetColumn();
+	resizeDatasetColumn : function() {
+		var first = this.getStore().getAt(0);
+		if (first) {
+			var cm = this.getColumnModel();
+			var c = cm.getIndexById('datasets');
+			var headerWidth = this.view.getHeaderCell(c).firstChild.scrollWidth;
+			var imageWidth = Gemma.CoexpressionGrid.bitImageBarWidth * first.data.datasetVector.length;
+			cm.setColumnWidth(c, imageWidth < headerWidth ? headerWidth : imageWidth);
 		}
 	},
 
 	/**
 	 * 
+	 * @param {}
+	 *            grid
+	 * @param {}
+	 *            rowIndex
+	 * @param {}
+	 *            columnIndex
+	 * @param {}
+	 *            e
 	 */
-	resizeDatasetColumn : function() {
-		var first = this.getStore().getAt(0);
-		if (first) {
-			var cm = this.getColumnModel();
-			var c = cm.getIndexById('datasets');
-			var headerWidth = this.view.getHeaderCell(c).firstChild.scrollWidth;
-			var imageWidth = Gemma.CoexpressionGrid.bitImageBarWidth * first.data.datasetVector.length;
-			cm.setColumnWidth(c, imageWidth < headerWidth ? headerWidth : imageWidth);
-		}
-	},
+	rowClickHandler : function(grid, rowIndex, columnIndex, e) {
+		if (this.getSelectionModel().hasSelection()) {
 
-	foundGeneTemplate : new Ext.Template(
-			"<a href='/Gemma/searchCoexpression.html?g={id}&s=3&t={taxonId}&an=all {taxonName}'> <img src='/Gemma/images/logo/gemmaTiny.gif' ext:qtip='Make {officialSymbol} the query gene' /> </a>",
-			" &nbsp; ", "<a href='/Gemma/gene/showGene.html?id={id}'>{officialSymbol}</a> {officialName}"),
+			var record = this.getStore().getAt(rowIndex);
+			var fieldName = this.getColumnModel().getDataIndex(columnIndex);
+			var queryGene = record.get("queryGene");
+			var foundGene = record.get("foundGene");
 
-	resizeDatasetColumn : function() {
-		var first = this.getStore().getAt(0);
-		if (first) {
-			var cm = this.getColumnModel();
-			var c = cm.getIndexById('datasets');
-			var headerWidth = this.view.getHeaderCell(c).firstChild.scrollWidth;
-			var imageWidth = Gemma.CoexpressionGrid.bitImageBarWidth * first.data.datasetVector.length;
-			cm.setColumnWidth(c, imageWidth < headerWidth ? headerWidth : imageWidth);
+			if (fieldName == 'foundGene' && columnIndex != 7) {
+				// problem
+				// with
+				// outlink
+				// column
+				// field
+				// name
+				// also
+				// returns
+				// name
+				// as
+				// foundGene
+				// searchPanel.searchForGene(foundGene.id);
+			} else if (fieldName == 'visualize') {
+
+				var foundGene = record.data.foundGene;
+				var activeExperiments = record.data.supportingExperiments;
+				// destroy if already open???
+				if (this.coexpVisWindow != null) {
+					this.coexpVisWindow.close();
+					this.coexpVisWindow = null;
+				}
+
+				this.coexpVisWindow = new Gemma.CoexpressionVisualizationWindow({
+					admin : false,
+					experiments : activeExperiments,
+					queryGene : queryGene,
+					foundGene : foundGene,
+					downloadLink : String
+							.format(
+									"<a ext:qtip='Download these data in a tab delimited format' target='_blank'  href='/Gemma/dedv/downloadDEDV.html?ee={0}&g={1},{2}'' > <img src='/Gemma/images/download.gif'/></a>",
+									activeExperiments.join(','), queryGene.id, foundGene.id)
+				});
+
+				var params = [];
+				params.push(activeExperiments)
+				params.push(queryGene.id);
+				params.push(foundGene.id);
+
+				this.coexpVisWindow.show({
+							params : params
+						});
+
+			} else if (fieldName == 'details' && !this.lite) {
+
+				var supporting = this.getSupportingDatasetRecords(record, grid);
+
+				var dsGrid = new Gemma.ExpressionExperimentGrid({
+							records : supporting,
+							// width : 750,
+							// height : 340, Layout will show nothing if
+							// this isn't set to something and
+							// autoHeight is false.
+							// Most likely a loading issue (no data in
+							// store, so no height).
+							autoHeight : true,
+							stateful : false
+						});
+
+				// Close if already open
+				if (detailsWindow) {
+					detailsWindow.close();
+				}
+
+				var diffExGrid = new Gemma.ProbeLevelDiffExGrid({
+							geneId : foundGene.id,
+							threshold : 0.01,
+							// width : 750,
+							// height : 380,
+							stateful : false
+						});
+
+				var detailsTP = new Ext.TabPanel({
+							layoutOnTabChange : true,
+							activeTab : 0,
+							stateful : false,
+							items : [{
+										title : "Supporting datasets",
+										items : [dsGrid],
+										layout : 'fit',
+										autoScroll : true
+									}, {
+										title : "Differential expression of " + foundGene.officialSymbol,
+										items : [diffExGrid],
+										layout : 'fit',
+										autoScroll : true,
+										loaded : false,
+										listeners : {
+											"activate" : {
+												fn : function() {
+													if (!this.loaded) {
+														diffExGrid.getStore().load({
+															params : [foundGene.id, Gemma.DIFF_THRESHOLD,
+																	Gemma.MAX_DIFF_RESULTS]
+														});
+													}
+													this.loaded = true;
+												}
+											}
+										}
+
+									}]
+
+						});
+
+				detailsWindow = new Ext.Window({
+							modal : false,
+							layout : 'fit',
+							title : 'Details for ' + foundGene.officialSymbol,
+							closeAction : 'close',
+							items : [{
+										items : [detailsTP],
+										layout : 'fit'
+									}],
+							width : 760,
+							height : 400,
+							// autoScroll : true,
+							stateful : false
+						});
+
+				dsGrid.getStore().load();
+				detailsWindow.show();
+
+				diffExGrid.getStore().loadData(supporting);
+
+			}
 		}
 	}
-
-		// ,
-		//
-		// foundGeneTemplate : new Ext.Template(
-		// "<img src='/Gemma/images/logo/gemmaTiny.gif' ext:qtip='Make {officialSymbol} the query gene' />",
-		// " &nbsp; ", "<a href='/Gemma/gene/showGene.html?id={id}'>{officialSymbol}</a> {officialName}")
 
 });
 

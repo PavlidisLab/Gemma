@@ -75,6 +75,10 @@ Gemma.ExpressionExperimentSetPanel = Ext.extend(Ext.Panel, {
 
 			selectByName : function(name) {
 
+				if (name === undefined || !name) {
+					return;
+				}
+
 				this.store.clearFilter(false);
 
 				this.combo.suppressFiltering = true;
@@ -94,7 +98,7 @@ Gemma.ExpressionExperimentSetPanel = Ext.extend(Ext.Panel, {
 				} else {
 					Ext.Msg("Whoops",
 							"Sorry. Something went wrong in preparing the interface. Please reload the page and "
-									+ " if you have continuing problems <a href='mailto:gemma.ubic.ca'>notify us"
+									+ " if you have continuing problems <a href='mailto:gemma@chibi.ubc.ca'>notify us"
 									+ "</a>");
 					return null;
 				}

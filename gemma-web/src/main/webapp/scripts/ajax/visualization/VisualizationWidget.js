@@ -22,12 +22,12 @@ Gemma.ZOOM_PLOT_SIZE = 400;
 Gemma.SELECTED = 2;
 Gemma.LINE_THICKNESS = 1;
 Gemma.ZOOM_LINE_THICKNESS = 2;
-Gemma.THUMBNAIL_PLOT_SIZE = 100;
+Gemma.THUMBNAIL_PLOT_SIZE = 120;
 Gemma.HOT_FADE_COLOR = "#FFDDDD";
 Gemma.COLD_FADE_COLOR = "#DDDDDD";
 Gemma.MAX_LABEL_LENGTH_CHAR = 12;
 Gemma.MAX_THUMBNAILLABEL_LENGTH_CHAR = 30;
-Gemma.MAX_EE_NAME_LENGTH = 30;
+Gemma.MAX_EE_NAME_LENGTH = 40;
 
 /**
  * Vertical strip of plots, with a legend. Supports little heatmaps or little linecharts.
@@ -112,7 +112,7 @@ Gemma.DataVectorThumbnailsView = Ext.extend(Ext.DataView, {
 					var pvalueLabel = (pvalue && pvalue != 1) ? (sprintf("%.2e", pvalue) + ": ") : "";
 
 					var labelStyle = '';
-					var qtip = ' probe (' + geneSymbols + ') ';
+					var qtip = 'Probe: ' + probe + '(' + geneSymbols + ') ';
 					if (factor && factor < 2) {
 						labelStyle = "font-style:italic";
 						qtip = qtip + " [Not significant]";
@@ -289,12 +289,12 @@ Gemma.getProfileThumbnailTemplate = function(heatmap, havePvalues, smooth) {
 	if (heatmap) {
 		return new Gemma.HeatmapTemplate(
 				'<tpl for="."><tpl for="eevo">',
-				'<div class="vizWrap" id ="{shortName}_vizwrap" style="float:left; padding: 10px"> <b> {shortName}</b>: <small> {[Ext.util.Format.ellipsis( values.name, Gemma.MAX_EE_NAME_LENGTH)]} </small> &nbsp;&nbsp;<i>'
+				'<div class="vizWrap" ext.qtip="{values.name}; Click to zoom" id ="{shortName}_vizwrap" style="cursor:pointer;float:left;padding: 10px"> <strong>{shortName}</strong>: <small> {[Ext.util.Format.ellipsis( values.name, Gemma.MAX_EE_NAME_LENGTH)]} </small> &nbsp;&nbsp;<i>'
 						+ pvalueString + '</i></div>', '</tpl></tpl>');
 	} else {
 		return new Gemma.ProfileTemplate(
 				'<tpl for="."><tpl for="eevo">',
-				'<div class="vizWrap" id ="{shortName}_vizwrap" style="float:left; padding: 10px"> <b> {shortName}</b>: <small> {[Ext.util.Format.ellipsis( values.name, Gemma.MAX_EE_NAME_LENGTH)]} </small> &nbsp;&nbsp; <i>'
+				'<div class="vizWrap" ext.qtip="{values.name}; Click to zoom" id ="{shortName}_vizwrap" style="cursor:pointer;float:left;padding: 10px"> <strong> {shortName}</strong>: <small> {[Ext.util.Format.ellipsis( values.name, Gemma.MAX_EE_NAME_LENGTH)]} </small> &nbsp;&nbsp; <i>'
 						+ pvalueString + '</i></div>', '</tpl></tpl>', {
 					smooth : smooth
 				});
@@ -317,6 +317,11 @@ Gemma.VisualizationZoomPanel = Ext.extend(Ext.Panel, {
 	bodyStyle : "background:white",
 	layout : 'fit',
 	title : "Click thumbnail to zoom in",
+
+	plugins : [new Ext.ux.plugins.ContainerMask({
+				msg : 'Patience...',
+				masked : true
+			})],
 
 	/*
 	 * The following are only used if we don't have a parent container, or on initialization.
@@ -408,17 +413,13 @@ Gemma.VisualizationZoomPanel = Ext.extend(Ext.Panel, {
 		Ext.DomHelper.overwrite(this.body.id, '');
 
 		var doHeatmap = this.ownerCt ? this.ownerCt.heatmapMode : this.heatmapMode;
-
+		this.showMask();
 		if (doHeatmap) {
-			
-			var lm = new Ext.LoadMask(Ext.getBody());
-			lm.show();
-			
+
 			graphConfig.legend.container = this.legendDiv ? this.legendDiv : this.body.id;
 			profiles.sort(Gemma.sortByImportance);
 			Heatmap.draw($(this.body.id), profiles, graphConfig, sampleNames, Gemma.sortByImportance);
-			
-			lm.hide();
+
 		} else {
 			profiles.sort(Gemma.sortByImportance);
 
@@ -473,6 +474,8 @@ Gemma.VisualizationZoomPanel = Ext.extend(Ext.Panel, {
 			}
 
 		}
+
+		this.hideMask();
 
 	}
 
@@ -805,6 +808,10 @@ Gemma.VisualizationDifferentialWindow = Ext.extend(Gemma.VisualizationWithThumbs
  * @extends Gemma.VisualizationWithThumbsWindow
  */
 Gemma.CoexpressionVisualizationWindow = Ext.extend(Gemma.VisualizationWithThumbsWindow, {
+
+			/**
+			 * config : {}
+			 */
 			initComponent : function() {
 				this.tpl = Gemma.getProfileThumbnailTemplate(false, false);
 				Gemma.VisualizationDifferentialWindow.superclass.initComponent.call(this);
@@ -884,7 +891,7 @@ Gemma.sortByImportance = function(a, b) {
 		return Math.log(a.PValue) - Math.log(b.PValue); // log to avoid roundoff trouble.
 	}
 
-	// Second level sort: by factor > 1 means 'involved in sig. coexpression'
+	// Second level sort: by factor > 1 means 'involved in sig. coexpression' or "query gene".
 	if (a.factor > b.factor) {
 		return -1;
 	}
@@ -892,26 +899,10 @@ Gemma.sortByImportance = function(a, b) {
 		return 1;
 	}
 
-	// If a coepxression query then sort the query gene 1st (red)
-	if (a.color && b.color && (a.color != b.color)) {
-		if (a.color == Gemma.HOT_FADE_COLOR && b.color == "red")
-			return 0;
-		if (b.color == Gemma.HOT_FADE_COLOR && a.color == "red")
-			return 0;
-
-		if (a.color == Gemma.COLD_FADE_COLOR && b.color == "black")
-			return 0;
-		if (b.color == Gemma.COLD_FADE_COLOR && a.color == "black")
-			return 0;
-
-		return ((a.color == "red") || (a.color == Gemma.HOT_FADE_COLOR)) ? -1 : 1;
-	}
-
-	// sort by gene name
-
 	if ((!a.genes || a.genes.size() < 1) && (!b.genes || b.genes.size() < 1)) {
-		return 0;
+		return a.labelID > b.labelID;
 	}
+
 	if (!a.genes || a.genes.size() < 1) {
 		return -1;
 	}
@@ -924,7 +915,7 @@ Gemma.sortByImportance = function(a, b) {
 	} else if (a.genes[0].name < b.genes[0].name) {
 		return -1;
 	} else {
-		return (a.labelID > b.labelID);
+		return a.labelID > b.labelID;
 	}
 
 };
