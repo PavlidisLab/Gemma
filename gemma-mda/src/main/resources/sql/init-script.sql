@@ -57,7 +57,6 @@ insert into TAXON (SCIENTIFIC_NAME,COMMON_NAME,ABBREVIATION,NCBI_ID,IS_SPECIES,P
 insert into TAXON (SCIENTIFIC_NAME,COMMON_NAME,NCBI_ID,IS_SPECIES,IS_GENES_USABLE) values ("Saccharomyces cerevisiae","yeast","4932",1,0);
 insert into TAXON (SCIENTIFIC_NAME,COMMON_NAME,NCBI_ID,IS_SPECIES,IS_GENES_USABLE) values ("Danio rerio","zebrafish","7955",1,0); 
 insert into TAXON (SCIENTIFIC_NAME,COMMON_NAME,NCBI_ID,IS_SPECIES,IS_GENES_USABLE) values ("Drosophila melanogaster","fly","7227",1,0);
-insert into TAXON (SCIENTIFIC_NAME,COMMON_NAME,NCBI_ID,IS_SPECIES,IS_GENES_USABLE) values ("Arabidopsis thaliana","thale cress","3702",1,0); 
 insert into TAXON (SCIENTIFIC_NAME,COMMON_NAME,NCBI_ID,IS_SPECIES,IS_GENES_USABLE) values ("Caenorhabditis elegans","worm","6239",1,0);
 
 -- external databases
