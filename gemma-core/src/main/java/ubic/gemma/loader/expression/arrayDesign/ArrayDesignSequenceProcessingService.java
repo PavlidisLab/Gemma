@@ -1184,14 +1184,11 @@ public class ArrayDesignSequenceProcessingService {
             for ( BioSequence sequence : retrievedSequences ) {
                 if ( sequence.getTaxon() == null ) {
                     if ( !warned ) {
-                        log.warn( "Sequence taxon is " + sequence.getTaxon() + " Array taxon is " + taxon
-                                + " ; skipping; further warnings for this array taxon are suppressed." );
-                        warned = true;
+                        log.warn( "Sequence taxon is null [" + sequence + "], copying array taxon " + taxon
+                                + " ; further warnings for this array taxon are suppressed." );
                     }
-                    continue;
-                }
-                if ( !sequence.getTaxon().equals( taxon ) ) {
-                    // taxon do not match skip this is when an array is multi taxon
+                    warned = true;
+                } else if ( !sequence.getTaxon().equals( taxon ) ) {
                     continue;
                 }
 

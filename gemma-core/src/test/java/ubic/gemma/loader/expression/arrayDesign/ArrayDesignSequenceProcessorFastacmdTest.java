@@ -80,6 +80,9 @@ public class ArrayDesignSequenceProcessorFastacmdTest extends AbstractArrayDesig
                 assertTrue( res.size() > 0 );
             }
         } catch ( Exception e ) {
+            if ( e.getMessage() == null ) {
+                throw e;
+            }
             if ( e.getMessage().startsWith( "No fastacmd executable:" ) ) {
                 log.warn( "Test skipped: no fastacmd executable" );
                 return;
