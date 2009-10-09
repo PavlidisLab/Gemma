@@ -181,9 +181,8 @@ public interface ArrayDesignService extends ubic.gemma.model.common.AuditableSer
      */
     public ubic.gemma.model.genome.Taxon getTaxon( java.lang.Long id );
 
-    
     /**
-     * Return the taxa for the array design. This can be multiple.
+     * Return the taxa for the array design. This can be multiple, or zero if the array is not processed.
      * 
      * @param id The id of the array design
      * @return The Set of Taxons for array design.

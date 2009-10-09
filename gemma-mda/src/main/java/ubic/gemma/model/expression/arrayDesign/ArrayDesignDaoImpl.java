@@ -324,19 +324,20 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
     protected Taxon handleGetTaxon( Long id ) throws Exception {
         Collection<Taxon> taxon = handleGetTaxa( id );
         if ( taxon.size() == 0 ) {
-            log.warn( "No taxon found for array " + id  );
+            log.warn( "No taxon found for array " + id );
             return null; // printwarning
         }
 
         if ( taxon.size() > 1 ) {
-            log.warn(taxon.size() +  " taxon found for array " + id  );
+            log.warn( taxon.size() + " taxon found for array " + id );
         }
-        return ( Taxon ) taxon.iterator().next();
+        return taxon.iterator().next();
     }
-        /*
+
+    /*
      * (non-Javadoc)
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleGetTaxon(java.lang.Long)
-         */
+     */
     @SuppressWarnings("unchecked")
     @Override
     protected Collection<Taxon> handleGetTaxa( Long id ) throws Exception {
@@ -346,7 +347,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
                 + " inner join bioC.taxon t where arrayD.id = :id";
 
         return getHibernateTemplate().findByNamedParam( queryString, "id", id );
-        }
+    }
 
     @SuppressWarnings("unchecked")
     @Override
@@ -493,7 +494,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
                     v.setTechnologyType( color );
                     if ( color != null ) v.setColor( color.getValue() );
                     v.setDescription( list.getString( 4 ) );
-                     // this is a comma separated list of taxon
+                    // this is a comma separated list of taxon
                     v.setTaxon( arrayToTaxon.get( v.getId() ) );
 
                     if ( !eeCounts.containsKey( v.getId() ) ) {
@@ -974,7 +975,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
             org.hibernate.Query csQueryObject = super.getSession( false ).createQuery( csString );
             csQueryObject.setParameter( "ad", ad );
             csQueryObject.setCacheable( true );
-            //csQueryObject.setMaxResults( 1 );
+            // csQueryObject.setMaxResults( 1 );
             // the name of the cache region is configured in ehcache.xml
             csQueryObject.setCacheRegion( null );
 
@@ -983,7 +984,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
             if ( csList.size() == 0 ) {
                 continue;
             }
-			Collection<String> taxonSet = new TreeSet();
+            Collection<String> taxonSet = new TreeSet();
             Taxon t = null;
             for ( Object object : csList ) {
                 t = ( Taxon ) object;
@@ -991,10 +992,9 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
                     taxonSet.add( t.getCommonName() );
                 }
             }
-            String taxonListString = StringUtils.join( taxonSet, "; " );            
+            String taxonListString = StringUtils.join( taxonSet, "; " );
             arrayToTaxon.put( ad.getId(), taxonListString );
-            
-            
+
         }
 
         return arrayToTaxon;
