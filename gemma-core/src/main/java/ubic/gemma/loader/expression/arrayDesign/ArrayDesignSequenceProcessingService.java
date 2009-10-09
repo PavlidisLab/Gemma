@@ -222,7 +222,6 @@ public class ArrayDesignSequenceProcessingService {
         return probeId;
     }
 
-    @SuppressWarnings("unchecked")
     private void flushBuffer( Collection<BioSequence> bioSequences, Collection<BioSequence> sequenceBuffer,
             Map<String, CompositeSequence> csBuffer ) {
         Collection<BioSequence> newOnes = bioSequenceService.findOrCreate( sequenceBuffer );
@@ -392,7 +391,6 @@ public class ArrayDesignSequenceProcessingService {
 
         int total = compositeSequencesFromProbes.size();
 
-
         Map<String, CompositeSequence> quickFindMap = new HashMap<String, CompositeSequence>();
         List<BioSequence> sequenceBuffer = new ArrayList<BioSequence>();
         Map<String, CompositeSequence> csBuffer = new HashMap<String, CompositeSequence>();
@@ -473,9 +471,9 @@ public class ArrayDesignSequenceProcessingService {
     }
 
     /**
-     * If taxon is null then it has not been provided on the command line, then deduce the taxon from the
-     * arrayDesign. If there are 0 or more than one taxon on the array design throw an error as this programme can only
-     * be run for 1 taxon at a time if processing from a file.
+     * If taxon is null then it has not been provided on the command line, then deduce the taxon from the arrayDesign.
+     * If there are 0 or more than one taxon on the array design throw an error as this programme can only be run for 1
+     * taxon at a time if processing from a file.
      * 
      * @param taxon Taxon as passed in on the command line
      * @param arrayDesign Array design to process
@@ -485,12 +483,12 @@ public class ArrayDesignSequenceProcessingService {
     protected Taxon validateTaxon( Taxon taxon, ArrayDesign arrayDesign ) throws IllegalArgumentException {
         if ( taxon == null ) {
             Collection<Taxon> taxaOnArray = arrayDesignService.getTaxa( arrayDesign.getId() );
-            if ( taxaOnArray != null && taxaOnArray.size() == 1 && taxaOnArray.iterator().next() != null ) {
+
+            if ( taxaOnArray.size() == 1 && taxaOnArray.iterator().next() != null ) {
                 return taxaOnArray.iterator().next();
-            } else {
-                throw new IllegalArgumentException( taxaOnArray.size() + " taxon found for " + arrayDesign
-                        + "please specifiy which taxon to run" );
             }
+            throw new IllegalArgumentException( taxaOnArray.size() + " taxon found for " + arrayDesign
+                    + "please specifiy which taxon to run" );
         }
         return taxon;
     }
@@ -669,7 +667,7 @@ public class ArrayDesignSequenceProcessingService {
             return this.processOligoDesign( arrayDesign, sequenceFile, taxon );
         }
         taxon = validateTaxon( taxon, arrayDesign );
-        //hibernate initilisation error being thrown
+        // hibernate initilisation error being thrown
         arrayDesignService.thawLite( arrayDesign );
         checkForCompositeSequences( arrayDesign );
 
@@ -684,7 +682,7 @@ public class ArrayDesignSequenceProcessingService {
         int total = bioSequences.size() + arrayDesign.getCompositeSequences().size();
         int done = 0;
         int percent = 0;
-        
+
         for ( BioSequence sequence : bioSequences ) {
 
             sequence.setType( sequenceType );
@@ -863,7 +861,7 @@ public class ArrayDesignSequenceProcessingService {
 
         Collection<Taxon> taxaOnArray = arrayDesignService.getTaxa( arrayDesign.getId() );
         // not taxon found
-        if ( taxaOnArray == null || taxaOnArray.size() == 0 ) {
+        if ( taxaOnArray.size() == 0 ) {
             throw new IllegalArgumentException( taxaOnArray.size() + " taxon found for " + arrayDesign
                     + "please specifiy which taxon to run" );
         }
@@ -1168,7 +1166,7 @@ public class ArrayDesignSequenceProcessingService {
      * @param retrievedSequences candidate sequence information for copying into the database.
      * @param force If true, if an existing BioSequence that matches if found in the system, any existing sequence
      *        information in the BioSequence will be overwritten.
-	 * @param taxa Representing taxa on array 
+     * @param taxa Representing taxa on array
      * @return Items that were found.
      */
     private Map<String, BioSequence> findOrUpdateSequences( Map<String, BioSequence> accessionsToFetch,
@@ -1176,9 +1174,20 @@ public class ArrayDesignSequenceProcessingService {
 
         Map<String, BioSequence> found = new HashMap<String, BioSequence>();
         for ( Taxon taxon : taxa ) {
-        for ( BioSequence sequence : retrievedSequences ) {
-                if ( sequence.getTaxon() == null || taxon == null ) {
-                    log.warn( "Sequence taxon is" + sequence.getTaxon() + " Array taxon is " + taxon + " ; skipping" );
+
+            if ( taxon == null ) {
+                log.warn( "Null taxon ..." ); // probably should be an exception
+            }
+            assert taxon != null;
+
+            boolean warned = false;
+            for ( BioSequence sequence : retrievedSequences ) {
+                if ( sequence.getTaxon() == null ) {
+                    if ( !warned ) {
+                        log.warn( "Sequence taxon is " + sequence.getTaxon() + " Array taxon is " + taxon
+                                + " ; skipping; further warnings for this array taxon are suppressed." );
+                        warned = true;
+                    }
                     continue;
                 }
                 if ( !sequence.getTaxon().equals( taxon ) ) {
@@ -1186,16 +1195,16 @@ public class ArrayDesignSequenceProcessingService {
                     continue;
                 }
 
-            sequence.setTaxon( taxon );
-            if ( sequence.getSequenceDatabaseEntry() == null ) {
-                log.warn( "Sequence from BLAST db lacks database entry: " + sequence + "; skipping" );
-                continue;
+                sequence.setTaxon( taxon );
+                if ( sequence.getSequenceDatabaseEntry() == null ) {
+                    log.warn( "Sequence from BLAST db lacks database entry: " + sequence + "; skipping" );
+                    continue;
+                }
+                sequence = createOrUpdateGenbankSequence( sequence, force );
+                String accession = sequence.getSequenceDatabaseEntry().getAccession();
+                found.put( accession, sequence );
+                accessionsToFetch.remove( accession );
             }
-            sequence = createOrUpdateGenbankSequence( sequence, force );
-            String accession = sequence.getSequenceDatabaseEntry().getAccession();
-            found.put( accession, sequence );
-            accessionsToFetch.remove( accession );
-        }
         }
         return found;
     }
