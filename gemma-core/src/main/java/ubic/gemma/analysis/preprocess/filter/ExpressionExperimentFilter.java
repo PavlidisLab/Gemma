@@ -25,11 +25,15 @@ import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import ubic.basecode.math.MatrixStats;
 import ubic.gemma.analysis.preprocess.InsufficientProbesException;
 import ubic.gemma.analysis.preprocess.filter.AffyProbeNameFilter.Pattern;
 import ubic.gemma.analysis.preprocess.filter.RowLevelFilter.Method;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesign; 
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.common.quantitationtype.ScaleType;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.DesignElement;
@@ -93,8 +97,10 @@ public class ExpressionExperimentFilter {
     }
 
     /**
-     * Provides a ready-to-use expression data matrix. The filters that are applied, in this order:
+     * Provides a ready-to-use expression data matrix that is transformed and filtered. The processes that are applied,
+     * in this order:
      * <ol>
+     * <li>Log transform, if requested and not already done
      * <li>Use the missing value data to mask the preferred data (ratiometric data only)
      * <li>Remove rows that don't have biosequences (always applied)
      * <li>Remove Affymetrix control probes (Affymetrix only)
@@ -109,7 +115,25 @@ public class ExpressionExperimentFilter {
      */
     public ExpressionDataDoubleMatrix getFilteredMatrix( Collection<ProcessedExpressionDataVector> dataVectors ) {
         ExpressionDataDoubleMatrix eeDoubleMatrix = new ExpressionDataDoubleMatrix( dataVectors );
+        transform( eeDoubleMatrix );
         return filter( eeDoubleMatrix );
+    }
+
+    /**
+     * Transform the data as configured (e.g., take log) -- which could mean no action
+     */
+    private void transform( ExpressionDataDoubleMatrix datamatrix ) {
+
+        if ( !config.isLogTransform() ) {
+            return;
+        }
+
+        boolean alreadyLogged = this.isLogTransformed( datamatrix );
+        if ( !alreadyLogged ) {
+            MatrixStats.logTransform( datamatrix.getMatrix() );
+
+        }
+
     }
 
     /**
@@ -307,39 +331,76 @@ public class ExpressionExperimentFilter {
         return eeDoubleMatrix;
     }
 
-//    /**
-//     * Determine if the expression experiment uses two-color arrays.
-//     * 
-//     * @param ee
-//     * @return
-//     * @throws UnsupportedOperationException if the ee uses both two color and one-color technologies.
-//     */
-//    private boolean isTwoColor() {
-//        Boolean answer = null;
-//        for ( ArrayDesign arrayDesign : arrayDesignsUsed ) {
-//            TechnologyType techType = arrayDesign.getTechnologyType();
-//            boolean isTwoC = techType.equals( TechnologyType.TWOCOLOR ) || techType.equals( TechnologyType.DUALMODE );
-//            if ( answer != null && !answer.equals( isTwoC ) ) {
-//                throw new UnsupportedOperationException(
-//                        "Gemma cannot handle experiments that mix one- and two-color arrays" );
-//            }
-//            answer = isTwoC;
-//        }
-//        return answer;
-//    }
-//
-//    /**
-//     * @param matrix
-//     * @return filtered matrix
-//     */
-//    private ExpressionDataDoubleMatrix lowCVFilter( ExpressionDataDoubleMatrix matrix ) {
-//        RowLevelFilter rowLevelFilter = new RowLevelFilter();
-//        rowLevelFilter.setMethod( Method.CV );
-//        rowLevelFilter.setLowCut( config.getLowVarianceCut() );
-//        rowLevelFilter.setRemoveAllNegative( false );
-//        rowLevelFilter.setUseAsFraction( true );
-//        return rowLevelFilter.filter( matrix );
-//    }
+    /**
+     * @param eeDoubleMatrix
+     * @return true if the data looks like it is already log transformed, false otherwise. This is based on the
+     *         quantitation types and, as a check, looking at the data itself.
+     */
+    private boolean isLogTransformed( ExpressionDataDoubleMatrix eeDoubleMatrix ) {
+        Collection<QuantitationType> quantitationTypes = eeDoubleMatrix.getQuantitationTypes();
+        for ( QuantitationType qt : quantitationTypes ) {
+            ScaleType scale = qt.getScale();
+            if ( scale.equals( ScaleType.LN ) || scale.equals( ScaleType.LOG10 ) || scale.equals( ScaleType.LOG2 )
+                    || scale.equals( ScaleType.LOGBASEUNKNOWN ) ) {
+                log.info( "Quantitationtype says the data is already log transformed" );
+                return true;
+            }
+        }
+
+        if ( this.isTwoColor() ) {
+            log.info( "Data is from a two-color array, assuming it is log transformed" );
+            return true;
+        }
+
+        for ( int i = 0; i < eeDoubleMatrix.rows(); i++ ) {
+            for ( int j = 0; j < eeDoubleMatrix.columns(); j++ ) {
+                double v = eeDoubleMatrix.get( i, j );
+                if ( v > 20 ) {
+                    log.info( "Data has large values, doesn't look log transformed" );
+                    return false;
+                }
+            }
+        }
+
+        log.info( "Data looks log-transformed, but not sure...assuming it is" );
+        return true;
+
+    }
+
+    /**
+     * Determine if the expression experiment uses two-color arrays.
+     * 
+     * @param ee
+     * @return
+     * @throws UnsupportedOperationException if the ee uses both two color and one-color technologies.
+     */
+    private boolean isTwoColor() {
+        Boolean answer = null;
+        for ( ArrayDesign arrayDesign : arrayDesignsUsed ) {
+            TechnologyType techType = arrayDesign.getTechnologyType();
+            boolean isTwoC = techType.equals( TechnologyType.TWOCOLOR ) || techType.equals( TechnologyType.DUALMODE );
+            if ( answer != null && !answer.equals( isTwoC ) ) {
+                throw new UnsupportedOperationException(
+                        "Gemma cannot handle experiments that mix one- and two-color arrays" );
+            }
+            answer = isTwoC;
+        }
+        return answer;
+    }
+
+    //
+    // /**
+    // * @param matrix
+    // * @return filtered matrix
+    // */
+    // private ExpressionDataDoubleMatrix lowCVFilter( ExpressionDataDoubleMatrix matrix ) {
+    // RowLevelFilter rowLevelFilter = new RowLevelFilter();
+    // rowLevelFilter.setMethod( Method.CV );
+    // rowLevelFilter.setLowCut( config.getLowVarianceCut() );
+    // rowLevelFilter.setRemoveAllNegative( false );
+    // rowLevelFilter.setUseAsFraction( true );
+    // return rowLevelFilter.filter( matrix );
+    // }
 
     /**
      * @param matrix

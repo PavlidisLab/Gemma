@@ -28,10 +28,228 @@ import java.io.Serializable;
  */
 public class FilterConfig implements Serializable {
 
+    public static final double DEFAULT_HIGHEXPRESSION_CUT = 0.0;
+
+    public static final double DEFAULT_LOWEXPRESSIONCUT = 0.3;
+
+    public static final double DEFAULT_LOWVARIANCECUT = 0.05;
+
+    public static final double DEFAULT_MINPRESENT_FRACTION = 0.3;
+
+    public static final double DEFAULT_TOOSMALLTOKEEP = 0.5;
+
+    /**
+     * Fewer rows than this, and we bail.
+     */
+    public static final int MINIMUM_ROWS_TO_BOTHER = 100;
+
+    /**
+     * How many samples a dataset has to have before we consider analyzing it.
+     * 
+     * @see ExpressionExperimentFilter.MIN_NUMBER_OF_SAMPLES_PRESENT for a related setting.
+     */
+    public final static int MINIMUM_SAMPLE = 7;
+
     /**
      * 
      */
     private static final long serialVersionUID = 1L;
+
+    private int afterInitialFilter = 0;
+
+    private int afterLowExpressionCut = 0;
+    private int afterLowVarianceCut = 0;
+    private int afterMinPresentFilter = 0;
+    private int afterZeroVarianceCut = 0;
+    private double highExpressionCut = DEFAULT_HIGHEXPRESSION_CUT;
+    /**
+     * If true, the MINIMUM_ROWS_TO_BOTHER is ignored.
+     */
+    private boolean ignoreMinimumRowsThreshold = false;
+    /**
+     * If true, MINIMUM_SAMPLE is ignored.
+     */
+    private boolean ignoreMinimumSampleThreshold = false;
+    private boolean knownGenesOnly = false;
+    private boolean logTransform = false;
+    private double lowExpressionCut = DEFAULT_LOWEXPRESSIONCUT;
+    private boolean lowExpressionCutIsSet = true;
+    private double lowVarianceCut = DEFAULT_LOWVARIANCECUT;
+    private boolean lowVarianceCutIsSet = true;
+    private double minPresentFraction = DEFAULT_MINPRESENT_FRACTION;
+
+    private boolean minPresentFractionIsSet = true;
+
+    private int startingRows = 0;
+
+    /**
+     * @return the afterInitialFilter
+     */
+    public int getAfterInitialFilter() {
+        return afterInitialFilter;
+    }
+
+    /**
+     * @return the afterLowExpressionCut
+     */
+    public int getAfterLowExpressionCut() {
+        return afterLowExpressionCut;
+    }
+
+    /**
+     * @return the afterLowVarianceCut
+     */
+    public int getAfterLowVarianceCut() {
+        return afterLowVarianceCut;
+    }
+
+    /**
+     * @return the afterMinPresentFilter
+     */
+    public int getAfterMinPresentFilter() {
+        return afterMinPresentFilter;
+    }
+
+    public int getAfterZeroVarianceCut() {
+        return afterZeroVarianceCut;
+    }
+
+    public double getHighExpressionCut() {
+        return highExpressionCut;
+    }
+
+    public double getLowExpressionCut() {
+        return lowExpressionCut;
+    }
+
+    public double getLowVarianceCut() {
+        return lowVarianceCut;
+    }
+
+    public double getMinPresentFraction() {
+        return minPresentFraction;
+    }
+
+    /**
+     * @return the startingRows
+     */
+    public int getStartingRows() {
+        return startingRows;
+    }
+
+    /**
+     * @return the ignoreMinimumRowThreshold
+     */
+    public boolean isIgnoreMinimumRowsThreshold() {
+        return ignoreMinimumRowsThreshold;
+    }
+
+    public boolean isIgnoreMinimumSampleThreshold() {
+        return ignoreMinimumSampleThreshold;
+    }
+
+    public boolean isKnownGenesOnly() {
+        return knownGenesOnly;
+    }
+
+    /**
+     * @return the logTransform
+     */
+    public boolean isLogTransform() {
+        return logTransform;
+    }
+
+    public boolean isLowExpressionCutIsSet() {
+        return lowExpressionCutIsSet;
+    }
+
+    public boolean isLowVarianceCutIsSet() {
+        return lowVarianceCutIsSet;
+    }
+
+    public boolean isMinPresentFractionIsSet() {
+        return minPresentFractionIsSet;
+    }
+
+    /**
+     * @param afterInitialFilter the afterInitialFilter to set
+     */
+    public void setAfterInitialFilter( int afterInitialFilter ) {
+        this.afterInitialFilter = afterInitialFilter;
+    }
+
+    /**
+     * @param afterLowExpressionCut the afterLowExpressionCut to set
+     */
+    public void setAfterLowExpressionCut( int afterLowExpressionCut ) {
+        this.afterLowExpressionCut = afterLowExpressionCut;
+    }
+
+    /**
+     * @param afterLowVarianceCut the afterLowVarianceCut to set
+     */
+    public void setAfterLowVarianceCut( int afterLowVarianceCut ) {
+        this.afterLowVarianceCut = afterLowVarianceCut;
+    }
+
+    /**
+     * @param afterMinPresentFilter the afterMinPresentFilter to set
+     */
+    public void setAfterMinPresentFilter( int afterMinPresentFilter ) {
+        this.afterMinPresentFilter = afterMinPresentFilter;
+    }
+
+    public void setAfterZeroVarianceCut( int afterZeroVarianceCut ) {
+        this.afterZeroVarianceCut = afterZeroVarianceCut;
+    }
+
+    public void setHighExpressionCut( double highExpressionCut ) {
+        this.highExpressionCut = highExpressionCut;
+    }
+
+    /**
+     * @param ignoreMinimumRowThreshold the ignoreMinimumRowThreshold to set
+     */
+    public void setIgnoreMinimumRowsThreshold( boolean ignoreMinimumRowsThreshold ) {
+        this.ignoreMinimumRowsThreshold = ignoreMinimumRowsThreshold;
+    }
+
+    public void setIgnoreMinimumSampleThreshold( boolean ignoreMinimumSampleThreshold ) {
+        this.ignoreMinimumSampleThreshold = ignoreMinimumSampleThreshold;
+    }
+
+    public void setKnownGenesOnly( boolean knownGenesOnly ) {
+        this.knownGenesOnly = knownGenesOnly;
+    }
+
+    /**
+     * @param logTransform the logTransform to set
+     */
+    public void setLogTransform( boolean logTransform ) {
+        this.logTransform = logTransform;
+    }
+
+    public void setLowExpressionCut( double lowExpressionCut ) {
+        this.lowExpressionCutIsSet = true;
+        this.lowExpressionCut = lowExpressionCut;
+    }
+
+    public void setLowVarianceCut( double lowVarianceCut ) {
+        this.lowVarianceCutIsSet = true;
+        this.lowVarianceCut = lowVarianceCut;
+    }
+
+    public void setMinPresentFraction( double minPresentFraction ) {
+        this.minPresentFractionIsSet = true;
+        this.minPresentFraction = minPresentFraction;
+    }
+
+    /**
+     * @param startingRows the startingRows to set
+     */
+    public void setStartingRows( int startingRows ) {
+        this.startingRows = startingRows;
+    }
 
     @Override
     public String toString() {
@@ -45,212 +263,9 @@ public class FilterConfig implements Serializable {
         buf.append( "# afterMinPresentFilter:" + this.getAfterMinPresentFilter() + "\n" );
         buf.append( "# afterLowVarianceCut:" + this.getAfterLowVarianceCut() + "\n" );
         buf.append( "# afterLowExpressionCut:" + this.getAfterLowExpressionCut() + "\n" );
-        //buf.append( "# knownGenesOnly " + this.isKnownGenesOnly() + "\n" );
+        buf.append( "# logTransform:" + this.isLogTransform() + "\n" );
+        // buf.append( "# knownGenesOnly " + this.isKnownGenesOnly() + "\n" );
         return buf.toString();
-    }
-
-    /**
-     * How many samples a dataset has to have before we consider analyzing it.
-     * 
-     * @see ExpressionExperimentFilter.MIN_NUMBER_OF_SAMPLES_PRESENT for a related setting.
-     */
-    public final static int MINIMUM_SAMPLE = 7;
-
-    /**
-     * Fewer rows than this, and we bail.
-     */
-    public static final int MINIMUM_ROWS_TO_BOTHER = 100;
-
-    public static final double DEFAULT_HIGHEXPRESSION_CUT = 0.0;
-
-    public static final double DEFAULT_LOWEXPRESSIONCUT = 0.3;
-
-    public static final double DEFAULT_LOWVARIANCECUT = 0.05;
-
-    public static final double DEFAULT_TOOSMALLTOKEEP = 0.5;
-
-    public static final double DEFAULT_MINPRESENT_FRACTION = 0.3;
-
-    private boolean minPresentFractionIsSet = true;
-    private boolean lowExpressionCutIsSet = true;
-    private boolean lowVarianceCutIsSet = true;
-    private double minPresentFraction = DEFAULT_MINPRESENT_FRACTION;
-    private double lowExpressionCut = DEFAULT_LOWEXPRESSIONCUT;
-    private double highExpressionCut = DEFAULT_HIGHEXPRESSION_CUT;
-    private double lowVarianceCut = DEFAULT_LOWVARIANCECUT;
-    private int startingRows = 0;
-    private int afterInitialFilter = 0;
-    private int afterMinPresentFilter = 0;
-    private int afterLowVarianceCut = 0;
-    private int afterLowExpressionCut = 0;
-    private int afterZeroVarianceCut = 0;
-    
-    
-    public int getAfterZeroVarianceCut() {
-        return afterZeroVarianceCut;
-    }
-
-    public void setAfterZeroVarianceCut( int afterZeroVarianceCut ) {
-        this.afterZeroVarianceCut = afterZeroVarianceCut;
-    }
-
-    private boolean knownGenesOnly = false;
-
-    /**
-     * If true, MINIMUM_SAMPLE is ignored.
-     */
-    private boolean ignoreMinimumSampleThreshold = false;
-
-    /**
-     * If true, the MINIMUM_ROWS_TO_BOTHER is ignored.
-     */
-    private boolean ignoreMinimumRowsThreshold = false;
-
-    public boolean isKnownGenesOnly() {
-        return knownGenesOnly;
-    }
-
-    public void setKnownGenesOnly( boolean knownGenesOnly ) {
-        this.knownGenesOnly = knownGenesOnly;
-    }
-
-    public double getHighExpressionCut() {
-        return highExpressionCut;
-    }
-
-    public boolean isLowVarianceCutIsSet() {
-        return lowVarianceCutIsSet;
-    }
-
-    public void setHighExpressionCut( double highExpressionCut ) {
-        this.highExpressionCut = highExpressionCut;
-    }
-
-    public double getLowExpressionCut() {
-        return lowExpressionCut;
-    }
-
-    public void setLowExpressionCut( double lowExpressionCut ) {
-        this.lowExpressionCutIsSet = true;
-        this.lowExpressionCut = lowExpressionCut;
-    }
-
-    public boolean isLowExpressionCutIsSet() {
-        return lowExpressionCutIsSet;
-    }
-
-    public double getMinPresentFraction() {
-        return minPresentFraction;
-    }
-
-    public void setMinPresentFraction( double minPresentFraction ) {
-        this.minPresentFractionIsSet = true;
-        this.minPresentFraction = minPresentFraction;
-    }
-
-    public boolean isMinPresentFractionIsSet() {
-        return minPresentFractionIsSet;
-    }
-
-    public double getLowVarianceCut() {
-        return lowVarianceCut;
-    }
-
-    public void setLowVarianceCut( double lowVarianceCut ) {
-        this.lowVarianceCutIsSet = true;
-        this.lowVarianceCut = lowVarianceCut;
-    }
-
-    public boolean isIgnoreMinimumSampleThreshold() {
-        return ignoreMinimumSampleThreshold;
-    }
-
-    public void setIgnoreMinimumSampleThreshold( boolean ignoreMinimumSampleThreshold ) {
-        this.ignoreMinimumSampleThreshold = ignoreMinimumSampleThreshold;
-    }
-
-    /**
-     * @return the ignoreMinimumRowThreshold
-     */
-    public boolean isIgnoreMinimumRowsThreshold() {
-        return ignoreMinimumRowsThreshold;
-    }
-
-    /**
-     * @param ignoreMinimumRowThreshold the ignoreMinimumRowThreshold to set
-     */
-    public void setIgnoreMinimumRowsThreshold( boolean ignoreMinimumRowsThreshold ) {
-        this.ignoreMinimumRowsThreshold = ignoreMinimumRowsThreshold;
-    }
-
-    /**
-     * @return the afterInitialFilter
-     */
-    public int getAfterInitialFilter() {
-        return afterInitialFilter;
-    }
-
-    /**
-     * @param afterInitialFilter the afterInitialFilter to set
-     */
-    public void setAfterInitialFilter( int afterInitialFilter ) {
-        this.afterInitialFilter = afterInitialFilter;
-    }
-
-    /**
-     * @return the afterLowExpressionCut
-     */
-    public int getAfterLowExpressionCut() {
-        return afterLowExpressionCut;
-    }
-
-    /**
-     * @param afterLowExpressionCut the afterLowExpressionCut to set
-     */
-    public void setAfterLowExpressionCut( int afterLowExpressionCut ) {
-        this.afterLowExpressionCut = afterLowExpressionCut;
-    }
-
-    /**
-     * @return the afterLowVarianceCut
-     */
-    public int getAfterLowVarianceCut() {
-        return afterLowVarianceCut;
-    }
-
-    /**
-     * @param afterLowVarianceCut the afterLowVarianceCut to set
-     */
-    public void setAfterLowVarianceCut( int afterLowVarianceCut ) {
-        this.afterLowVarianceCut = afterLowVarianceCut;
-    }
-
-    /**
-     * @return the afterMinPresentFilter
-     */
-    public int getAfterMinPresentFilter() {
-        return afterMinPresentFilter;
-    }
-
-    /**
-     * @param afterMinPresentFilter the afterMinPresentFilter to set
-     */
-    public void setAfterMinPresentFilter( int afterMinPresentFilter ) {
-        this.afterMinPresentFilter = afterMinPresentFilter;
-    }
-
-    /**
-     * @return the startingRows
-     */
-    public int getStartingRows() {
-        return startingRows;
-    }
-
-    /**
-     * @param startingRows the startingRows to set
-     */
-    public void setStartingRows( int startingRows ) {
-        this.startingRows = startingRows;
     }
 
 }

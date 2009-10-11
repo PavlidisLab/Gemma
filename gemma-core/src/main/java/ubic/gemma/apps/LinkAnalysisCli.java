@@ -52,13 +52,13 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.genome.TaxonService;
 
 /**
- * Commandline tool to conduct link analysis
+ * Commandline tool to conduct link analysis.
  * 
  * @author xiangwan
  * @author paul (refactoring)
+ * @author vaneet
  * @version $Id$
  */
 public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
@@ -95,7 +95,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
 
     private String dataFileName = null;
 
-    private String analysisTaxon =null;
+    private String analysisTaxon = null;
 
     /*
      * (non-Javadoc)
@@ -135,16 +135,18 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
                 .withLongOpt( "nodb" ).create( 'd' );
         addOption( useDB );
 
-  		Option fileOpt = OptionBuilder.hasArg().withArgName( "Expression data file" ).withDescription(
+        Option fileOpt = OptionBuilder
+                .hasArg()
+                .withArgName( "Expression data file" )
+                .withDescription(
                         "Provide expression data from a tab-delimited text file, rather than from the database. Implies 'nodb' and must also provide 'array' and 't' option" )
                 .create( "dataFile" );
         addOption( fileOpt );
 
-        //supply taxon on command line
+        // supply taxon on command line
         Option taxonNameOption = OptionBuilder.hasArg().withDescription(
-                "Taxon species name e.g. 'chinook' has to be a species ")                        
-                .create( "t" );
-        addOption( taxonNameOption ); 
+                "Taxon species name e.g. 'chinook' has to be a species " ).create( "t" );
+        addOption( taxonNameOption );
 
         Option arrayOpt = OptionBuilder.hasArg().withArgName( "Array Design" ).withDescription(
                 "Provide the short name of the array design used. Only needed if you are using the 'dataFile' option" )
@@ -166,9 +168,13 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
                 .hasArg()
                 .withArgName( "method" )
                 .withDescription(
-                        "Normalization method to apply to the data matrix first: SVD, SPELL or omit this option for none (default=none)" )
+                        "Normalization method to apply to the data matrix first: SVD, BALANCE, SPELL or omit this option for none (default=none)" )
                 .create( "normalizemethod" );
         addOption( normalizationOption );
+
+        Option logTransformOption = OptionBuilder.withDescription(
+                "Log-transform the data prior to analysis, if it is not already transformed." ).create( "logtransform" );
+        addOption( logTransformOption );
 
         Option subsetOption = OptionBuilder
                 .hasArg()
@@ -207,7 +213,6 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
              */
 
             ArrayDesignService arrayDesignService = ( ArrayDesignService ) this.getBean( "arrayDesignService" );
-            TaxonService taxonService = ( TaxonService ) this.getBean( "taxonService" );
 
             ArrayDesign arrayDesign = arrayDesignService.findByShortName( this.linkAnalysisConfig.getArrayName() );
 
@@ -215,10 +220,11 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
                 return new IllegalArgumentException( "No such array design " + this.linkAnalysisConfig.getArrayName() );
             }
 
-            //this.taxon = arrayDesignService.getTaxon( arrayDesign.getId() );
+            // this.taxon = arrayDesignService.getTaxon( arrayDesign.getId() );
             this.taxon = taxonService.findByCommonName( analysisTaxon );
-            if(this.taxon==null || !this.taxon.getIsSpecies()){
-                return new IllegalArgumentException( "No such taxon held in system please check that it is a species: "  +  taxon);
+            if ( this.taxon == null || !this.taxon.getIsSpecies() ) {
+                return new IllegalArgumentException( "No such taxon held in system please check that it is a species: "
+                        + taxon );
             }
             log.debug( taxon + "is used" );
             arrayDesignService.thawLite( arrayDesign );
@@ -371,15 +377,20 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
             }
 
             if ( hasOption( 't' ) ) {
-                this.analysisTaxon = this.getOptionValue( 't' );            
-            }else {
-                log.error( "Must provide 'taxon' option if you  use 'dataFile' as RNA taxon may be different to array taxon" );
+                this.analysisTaxon = this.getOptionValue( 't' );
+            } else {
+                log
+                        .error( "Must provide 'taxon' option if you  use 'dataFile' as RNA taxon may be different to array taxon" );
                 this.bail( ErrorCode.INVALID_OPTION );
             }
-            
+
             this.dataFileName = getOptionValue( "dataFile" );
 
             this.linkAnalysisConfig.setUseDb( false );
+        }
+
+        if ( hasOption( "logTransform" ) ) {
+            this.filterConfig.setLogTransform( true );
         }
 
         if ( hasOption( 'c' ) ) {
@@ -485,7 +496,6 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
         if ( hasOption( "lv" ) ) {
             filterConfig.setLowVarianceCut( Double.parseDouble( getOptionValue( "lv" ) ) );
         }
-    }       
-
+    }
 
 }

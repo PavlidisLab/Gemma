@@ -32,7 +32,7 @@ import ubic.gemma.model.common.protocol.Protocol;
 public class LinkAnalysisConfig implements Serializable {
 
     public enum NormalizationMethod {
-        none, SPELL, SVD
+        BALANCE, none, SPELL, SVD
     }
 
     /**
@@ -50,7 +50,9 @@ public class LinkAnalysisConfig implements Serializable {
     private boolean lowerCdfCutUsed = false;
 
     private double lowerTailCut = 0.01;
+
     private boolean makeSampleCorrMatImages = true;
+
     private String metric = "pearson"; // spearman
     private NormalizationMethod normalizationMethod = NormalizationMethod.none;
     /*
@@ -59,24 +61,15 @@ public class LinkAnalysisConfig implements Serializable {
     private boolean omitNegLinks = false;
     private String singularThreshold = "none"; // fwe|cdfCut
     private boolean subset = false;
-
     private double subsetSize = 0.0;
     private boolean subsetUsed = false;
 
     private boolean textOut;
-
     private boolean upperCdfCutUsed = false;
 
     private double upperTailCut = 0.01;
 
     private boolean useDb = true;
-
-    private void checkValidMetric( String m ) {
-        if ( m.equalsIgnoreCase( "pearson" ) ) return;
-        if ( m.equalsIgnoreCase( "spearman" ) ) return;
-        throw new IllegalArgumentException( "Unrecognized metric: " + m
-                + ", valid options are 'pearson' and 'spearman'" );
-    }
 
     public String getArrayName() {
         return arrayName;
@@ -295,9 +288,9 @@ public class LinkAnalysisConfig implements Serializable {
         buf.append( "# knownGenesOnly:" + this.isKnownGenesOnly() + "\n" );
         buf.append( "# normalizationMethod:" + this.getNormalizationMethod() + "\n" );
         buf.append( "# omitNegLinks:" + this.isOmitNegLinks() + "\n" );
-/*        if ( this.isSubsetUsed() ) {
-            buf.append( "# subset:" + this.subsetSize + "\n" );
-        }*/
+        /*
+         * if ( this.isSubsetUsed() ) { buf.append( "# subset:" + this.subsetSize + "\n" ); }
+         */
         if ( this.isUpperCdfCutUsed() ) {
             buf.append( "# upperCutUsed:cdfCut\n" );
         } else {
@@ -317,5 +310,12 @@ public class LinkAnalysisConfig implements Serializable {
      */
     public boolean useKnownGenesOnly() {
         return knownGenesOnly;
+    }
+
+    private void checkValidMetric( String m ) {
+        if ( m.equalsIgnoreCase( "pearson" ) ) return;
+        if ( m.equalsIgnoreCase( "spearman" ) ) return;
+        throw new IllegalArgumentException( "Unrecognized metric: " + m
+                + ", valid options are 'pearson' and 'spearman'" );
     }
 }

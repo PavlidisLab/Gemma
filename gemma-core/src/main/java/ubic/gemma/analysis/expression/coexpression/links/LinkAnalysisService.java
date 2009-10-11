@@ -44,6 +44,7 @@ import org.apache.commons.logging.LogFactory;
 
 import ubic.basecode.dataStructure.Link;
 import ubic.basecode.math.CorrelationStats;
+import ubic.basecode.math.MatrixStats;
 import ubic.gemma.analysis.preprocess.ExpressionDataSVD;
 import ubic.gemma.analysis.preprocess.InsufficientProbesException;
 import ubic.gemma.analysis.preprocess.filter.FilterConfig;
@@ -68,6 +69,7 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.LinkAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.TooSmallDatasetLinkAnalysisEvent;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeService;
+import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -76,10 +78,10 @@ import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.model.genome.Gene; 
+import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.PredictedGene;
 import ubic.gemma.model.genome.ProbeAlignedRegion;
-import ubic.gemma.model.genome.Taxon; 
+import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.PersisterHelper;
 import ubic.gemma.util.TaxonUtility;
 import cern.colt.list.ObjectArrayList;
@@ -408,13 +410,13 @@ public class LinkAnalysisService {
                 probeToGeneMap.put( cs, new HashSet() );
             }
             Collection<BioSequence2GeneProduct> bioSequenceToGeneProducts = specificityData.get( cs );
-                Collection<Gene> cluster = new HashSet<Gene>();
+            Collection<Gene> cluster = new HashSet<Gene>();
             for ( BioSequence2GeneProduct bioSequence2GeneProduct : bioSequenceToGeneProducts ) {
                 Gene gene = bioSequence2GeneProduct.getGeneProduct().getGene();
-                    cluster.add( gene );
-                }
-                probeToGeneMap.get( cs ).add( cluster );
+                cluster.add( gene );
             }
+            probeToGeneMap.get( cs ).add( cluster );
+        }
 
         la.setProbeToGeneMap( probeToGeneMap );
     }
@@ -467,9 +469,10 @@ public class LinkAnalysisService {
     }
 
     /**
-     * Normalize the data, as configured (possibly no normalizatino)
+     * Normalize the data, as configured (possibly no normalization).
      */
     private ExpressionDataDoubleMatrix normalize( ExpressionDataDoubleMatrix datamatrix, LinkAnalysisConfig config ) {
+
         ExpressionDataSVD svd;
         switch ( config.getNormalizationMethod() ) {
             case none:
@@ -482,6 +485,10 @@ public class LinkAnalysisService {
                 log.info( "Computing U matrix via SVD" );
                 svd = new ExpressionDataSVD( datamatrix, true );
                 return svd.uMatrixAsExpressionData();
+            case BALANCE:
+                log.info( "SVD-balanceing" );
+                svd = new ExpressionDataSVD( datamatrix, true );
+                return svd.equalize();
             default:
                 return null;
         }
