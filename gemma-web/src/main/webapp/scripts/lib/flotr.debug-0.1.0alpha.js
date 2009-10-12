@@ -369,7 +369,8 @@ var Flotr = (function() {
 					show : true, // => setting to true will show the legend, hide otherwise
 					noColumns : 1, // => number of colums in legend table
 					labelFormatter : null, // => fn: string -> string
-					labelBoxBorderColor : '#ccc', // => border color for the little label boxes
+					labelBoxBorderColor : '#cccccc', // => border color for the little label boxes
+					selectedLabelBoxBorderColor : '#2222ff', // => border color for legend when selected
 					container : null, // => container (as jQuery object) to put legend in, null means default on top
 					// of graph
 					position : 'ne', // => position of default legend container within plot
@@ -1487,10 +1488,15 @@ var Flotr = (function() {
 					label = options.legend.labelFormatter(label);
 				}
 
+				var border = "1px solid " + options.legend.labelBoxBorderColor;
+				if (series[i].selected) {
+					border = "1px solid " + options.legend.selectedLabelBoxBorderColor;
+				}
+
 				// Added so possible to capture mouse events on legend
 				if (series[i].labelID != null) {
-					fragments.push('<td class="flotr-legend-color-box"><div style="border:1px solid '
-							+ options.legend.labelBoxBorderColor + ';padding:1px"><div id=' + series[i].labelID
+					fragments.push('<td class="flotr-legend-color-box"><div style="border:' + border
+							+ ';padding:1px"><div id=' + series[i].labelID
 							+ ' style="cursor:pointer;width:14px;height:10px;background-color:' + series[i].color
 							+ '"></div></div></td>' + '<td class="flotr-legend-label">' + label + '</td>');
 

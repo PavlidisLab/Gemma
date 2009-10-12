@@ -22,14 +22,26 @@
  */
 var LinePlot = function() {
 
+	var MAX_SAMPLE_LABEL_HEIGHT_PIXELS = 120;
+	var TRIM = 5;
+	var EXPANDED_BOX_WIDTH = 10; // maximum value to use when expanded.
+	var SAMPLE_LABEL_MAX_CHAR = 25;
+
 	function LinePlot(container, data, config, sampleLabels) {
 
-		drawMap(container, data, config, sampleLabels);
+		draw(container, data, config, sampleLabels);
 
 		/**
-		 * s
+		 * 
 		 */
-		function drawMap(container, series, config, sampleLabels) {
+		function draw(container, series, config, sampleLabels) {
+
+			var numberOfColumns = series[0].data.length; // assumed to be the same always.
+
+			// avoid insanity
+			if (numberOfColumns == 0) {
+				return;
+			}
 
 			/*
 			 * Smooth or unsmooth the data, but only if the previous state has changed.
@@ -55,14 +67,123 @@ var LinePlot = function() {
 				}
 			}
 
-			// todo: add sample names. Need a separate div, which leaves less room for the graph.
+			/*
+			 * Deal with plotting.
+			 */
 
-			// todo: add some white space around the graph.
+			// TOTAL area available.
+			var width = container.getWidth();
+			var height = container.getHeight();
+
+			// space used for the line plot itself.
+			var plotHeight = height; // to be modified to make room for the sample labels.
+
+			// initial guess..
+			var plotWidth = width - (2 * TRIM);
+
+			var spacePerPoint;
+
+			if (config.forceFit) {
+				spacePerPoint = plotWidth / numberOfColumns;
+			} else {
+				spacePerPoint = Math.max(EXPANDED_BOX_WIDTH, plotWidth / numberOfColumns);
+				plotWidth = spacePerPoint * numberOfColumns;
+			}
+
+			// put the heatmap in a scroll panel if it is too big to display.
+			if (!config.forceFit && plotWidth > width) {
+				Ext.DomHelper.applyStyles(container, "overflow:auto");
+			}
+
+			if (sampleLabels) {
+
+				if (spacePerPoint >= EXPANDED_BOX_WIDTH) {
+					var fontSize = spacePerPoint - 1;
+					// longest label...
+					var maxLabelLength = 0;
+					for (var j = 0; j < sampleLabels.length; j++) {
+						if (sampleLabels[j].length > maxLabelLength) {
+							maxLabelLength = sampleLabels[j].length;
+						}
+					}
+
+					// compute approximate pixel size of that label...not so easy without context.
+					var labelHeight = Math.round(Math.min(MAX_SAMPLE_LABEL_HEIGHT_PIXELS, Math.min(maxLabelLength,
+									SAMPLE_LABEL_MAX_CHAR)
+									* fontSize * 0.8)); // 0.8 is about right (pixel width)/(pixel of height).
+
+					var id = 'sampleLabels-' + Ext.id();
+
+					var sampleLabelsWidth = plotWidth + (2 * TRIM);
+
+					Ext.DomHelper.append(container, {
+								id : id,
+								tag : 'div',
+								width : sampleLabelsWidth,
+								height : labelHeight
+							});
+
+					var ctx = constructCanvas($(id), sampleLabelsWidth, labelHeight);
+
+					ctx.fillStyle = "#000000";
+					ctx.font = fontSize + "px sans-serif";
+					ctx.textAlign = "left";
+					ctx.translate(TRIM + 5, labelHeight - 2); // +extra to make sure we don't chop off the top.
+
+					for (var j = 0; j < sampleLabels.length; j++) {
+						// the shorter the better for performance.
+						var lab = Ext.util.Format.ellipsis(sampleLabels[j], SAMPLE_LABEL_MAX_CHAR);
+
+						ctx.rotate(-Math.PI / 2);
+						ctx.fillText(lab, 0, 0)
+						ctx.rotate(Math.PI / 2);
+						ctx.translate(spacePerPoint, 0);
+					}
+
+					plotHeight = plotHeight - labelHeight;
+
+				} else if (config.forceFit) {
+					var message;
+					if (numberOfColumns.length > 80) { // basically, no matter how wide they make it, there won't be
+						// room.
+						// TODO: implement expand.
+						message = "Click 'expand' to see the sample labels";
+					} else {
+						message = "Click 'expand' or try widening the window to see the sample labels";
+					}
+
+					var mid = "message-" + Ext.id();
+
+					Ext.DomHelper.append(container, {
+								id : mid,
+								tag : 'div',
+								width : plotWidth,
+								height : 20
+							});
+
+					var ctx = constructCanvas($(mid), plotWidth, 20);
+					ctx.translate(10, 10);
+					ctx.fillText(message, 0, 0);
+					plotHeight = plotHeight - 20;
+				}
+
+			}
+
+			plotHeight = plotHeight - 4 * TRIM;
+
+			if (plotHeight < 10 || plotWidth < 10) {
+				return; // don't try ...
+			}
 
 			// todo: vary colours
 
-			Flotr.draw(container, series, config);
-
+			var vid = "plotCanvas-" + Ext.id();
+			Ext.DomHelper.append(container, {
+						id : vid,
+						tag : 'div',
+						style : "margin:" + TRIM + "px;width:" + plotWidth + ";height:" + plotHeight
+					});
+			Flotr.draw($(vid), series, config);
 		}
 
 	}
@@ -153,8 +274,7 @@ var LinePlot = function() {
 		},
 
 		draw : function(target, data, options, sampleLabels) {
-			var map = new LinePlot(target, data, options, sampleLabels);
-			return map;
+			return new LinePlot(target, data, options, sampleLabels);
 		}
 	};
 }();

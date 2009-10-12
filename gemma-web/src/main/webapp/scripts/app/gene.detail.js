@@ -128,8 +128,9 @@ Ext.onReady(function() {
 
 	Ext.QuickTips.init();
 
+	Ext.state.Manager.setProvider(new Ext.state.CookieProvider());
+
 	geneid = dwr.util.getValue("gene");
-//	taxonid = dw.util.getValue("taxon");
 
 	var gpGrid = new Gemma.GeneProductGrid({
 				geneid : geneid,
@@ -156,7 +157,7 @@ Ext.onReady(function() {
 			});
 
 	coexpressedGeneGrid.doSearch({
-				geneIds : [geneid], 
+				geneIds : [geneid],
 				quick : true,
 				stringency : 2,
 				forceProbeLevelSearch : false
@@ -181,12 +182,14 @@ Ext.onReady(function() {
 
 	var visDifWindow = null;
 
+	/*
+	 * FIXME: make this part of the diff ex grid class, if at all possible!
+	 */
 	diffExGrid.geneDiffRowClickHandler = function(grid, rowIndex, columnIndex, e) {
 		if (diffExGrid.getSelectionModel().hasSelection()) {
 
 			var record = diffExGrid.getStore().getAt(rowIndex);
 			var fieldName = diffExGrid.getColumnModel().getDataIndex(columnIndex);
-			var gene = record.data.gene;
 			if (fieldName == 'visualize') {
 
 				var ee = record.data.expressionExperiment;
@@ -196,9 +199,8 @@ Ext.onReady(function() {
 
 				visDifWindow = new Gemma.VisualizationDifferentialWindow({
 					readMethod : DEDVController.getDEDVForDiffExVisualizationByExperiment,
-					queryGene : gene,
 					experiment : ee,
-					title : "Visualization of probes in:  " + ee.shortName,
+					title : "Probes for " + dwr.util.getValue("geneName") + " in " + ee.shortName,
 					downloadLink : String
 							.format(
 									"<a ext:qtip='Download these data in a tab delimited format'  target='_blank'  href='/Gemma/dedv/downloadDEDV.html?ee={0}&g={1}' > <img src='/Gemma/images/download.gif'/></a>",

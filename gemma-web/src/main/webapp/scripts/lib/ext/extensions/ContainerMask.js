@@ -9,21 +9,25 @@ Ext.ux.plugins.ContainerMask = function(opt) {
 		init : function(c) {
 			Ext.applyIf(c, {
 						showMask : function(msg, msgClass, maskClass) {
+
 							var el;
 							if (this.rendered
 									&& (el = this[options.el] || Ext.get(options.el) || this.getEl
 											? this.getEl()
 											: null)) {
+
 								el.mask.call(el, msg || options.msg, msgClass || options.msgClass, maskClass
 												|| options.maskClass);
 							}
 						},
 						hideMask : function() {
+
 							var el;
 							if (this.rendered
 									&& (el = this[options.el] || Ext.get(options.el) || this.getEl
 											? this.getEl()
 											: null)) {
+
 								el.unmask.call(el);
 							}
 						}

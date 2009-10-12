@@ -628,7 +628,8 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 					downloadLink : String
 							.format(
 									"<a ext:qtip='Download these data in a tab delimited format' target='_blank'  href='/Gemma/dedv/downloadDEDV.html?ee={0}&g={1},{2}'' > <img src='/Gemma/images/download.gif'/></a>",
-									activeExperiments.join(','), queryGene.id, foundGene.id)
+									activeExperiments.join(','), queryGene.id, foundGene.id),
+					title : "Coexpression for:  " + queryGene.name + " + " + foundGene.name
 				});
 
 				var params = [];

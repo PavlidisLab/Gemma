@@ -32,7 +32,12 @@
 	</title>
 </head>
 <body>
+
+
+
+
 	<input type="hidden" name="gene" id="gene" value="${gene.id}" />
+	<input type="hidden" name="geneName" id="geneName" value="${gene.name}" />
 	<input type="hidden" name="taxon" id="taxon" value="${gene.taxon.id}" />
 	<h3>
 		<c:if test="${not empty gene.officialSymbol}">

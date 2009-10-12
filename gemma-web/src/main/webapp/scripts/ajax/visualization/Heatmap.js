@@ -24,8 +24,7 @@ var Heatmap = function() {
 	var MAX_LABEL_LENGTH_CHAR = 35;
 	var MIN_BOX_WIDTH = 1; // for normal circumstances...we can go smaller.
 	var EXPANDED_BOX_WIDTH = 10;
-	var MAX_BOX_WIDTH = 10;
-	var CLIP = 3;
+	var CLIP = 3; // contrast. TODO: make it adjustable in range 2-4?
 	var NAN_COLOR = "grey";
 	var SHOW_LABEL_MIN_SIZE = 8; // 6 is unreadable; 8 is almost okay.
 	var MIN_BOX_HEIGHT = 2;
@@ -33,7 +32,7 @@ var Heatmap = function() {
 	var MAX_ROWS_BEFORE_SCROLL = 30;
 	var MIN_IMAGE_SIZE = 50;
 	var MAX_SAMPLE_LABEL_HEIGHT_PIXELS = 120;
-
+	var SAMPLE_LABEL_MAX_CHAR = 25;
 	var TRIM = 5;
 	var DEFAULT_ROW_LABEL = "&nbsp;";
 
@@ -94,10 +93,9 @@ var Heatmap = function() {
 			}
 
 			var heatmapHeight = target.getHeight() - TRIM; // initial guess.
+			var labelHeight;
 
 			if (sampleLabels) {
-
-				var rowTextMax = 25; // characters
 
 				// compute the room needed for the labels.
 				var maxLabelLength = 0;
@@ -108,7 +106,8 @@ var Heatmap = function() {
 				}
 
 				// compute approximate pixel size of that label...not so easy.
-				var labelHeight = Math.min(MAX_SAMPLE_LABEL_HEIGHT_PIXELS, Math.min(maxLabelLength, rowTextMax) * 8);
+				labelHeight = Math.min(MAX_SAMPLE_LABEL_HEIGHT_PIXELS, Math.min(maxLabelLength, SAMPLE_LABEL_MAX_CHAR)
+								* 8);
 
 				heatmapHeight = heatmapHeight - labelHeight;
 			}
@@ -142,20 +141,16 @@ var Heatmap = function() {
 				heatmapWidth = config.label ? Math.max(panelWidth - rowLabelSizePixels, MIN_IMAGE_SIZE) : panelWidth;
 
 				/* do not use Math.floor, canvas will handle fractional values okay and fill the space. */
-				var calculatedBoxWidth = heatmapWidth / numberOfColumns;
-
-				boxWidth = calculatedBoxWidth < config.minBoxWidth ? config.minBoxWidth : calculatedBoxWidth;
-
-				boxWidth = boxWidth > MAX_BOX_WIDTH ? MAX_BOX_WIDTH : boxWidth;
+				var boxWidth = heatmapWidth / numberOfColumns;
 
 				/*
 				 * If columns are really tiny, we just skip some columns -- blur things out. This can also speed things
 				 * up, we don't try drawing details we can't see -- fewer squares to draw means less time. Note we allow
 				 * fractional values here, so the heatmap is the same exact width as before.
 				 */
-				while (boxWidth < 2) {
+				while (boxWidth < 1) {
 					increment++;
-					boxWidth += boxWidth;
+					boxWidth += boxWidth; // DO NOT adjust heatmapwidth now.
 				}
 
 			} else {
@@ -167,37 +162,23 @@ var Heatmap = function() {
 			}
 
 			// put the heatmap in a scroll panel if it is too big to display.
-			var scrollPanel = null;
 			if (vectorObjs.length > numberOfRowsToComputeSizeBy
 					|| (!config.forceFit && heatmapWidth + rowLabelSizePixels > panelWidth)) {
 
 				// update height
 				heatmapHeight = boxHeight * vectorObjs.length + TRIM;
-
-				panelId = "heatmapScrollPanel-" + Ext.id();
-				scrollPanel = new Ext.Panel({
-							autoScroll : true,
-							unstyled : true,
-							stateful : false,
-							applyTo : target,
-							html : {
-								id : panelId,
-								tag : 'div'
-							}
-						});
-				// update target
-				target = $(panelId);
-
+				Ext.DomHelper.applyStyles(target, "overflow:auto");
 			}
 
 			if (config.legend && config.legend.show && config.legend.container)
 				insertLegend(config.legend.container);
 
+				console.log(config.forceFit + " " + heatmapWidth);
+				
 			/*
 			 * Add labels to the columns.
 			 */
 			if (sampleLabels) {
-				var sampleTextMax = 25;
 				var id = 'sampleLabels-' + Ext.id();
 
 				if (boxWidth >= SHOW_LABEL_MIN_SIZE) {
@@ -216,22 +197,22 @@ var Heatmap = function() {
 					ctx.font = (boxWidth - 1) + "px sans-serif";
 					ctx.textAlign = "left";
 					ctx.translate(0, labelHeight - 2);
-					ctx.save();
 
 					for (var j = 0; j < sampleLabels.length; j++) {
 						// the shorter the better for performance.
-						var lab = Ext.util.Format.ellipsis(sampleLabels[j], sampleTextMax);
+						var lab = Ext.util.Format.ellipsis(sampleLabels[j], SAMPLE_LABEL_MAX_CHAR);
 
 						ctx.translate(boxWidth, 0);
-						ctx.save();
 						ctx.rotate(-Math.PI / 2);
 						ctx.fillText(lab, 0, 0)
 						ctx.rotate(Math.PI / 2);
 					}
-				} else {
+				} else if (config.forceFit) {
 
 					var message;
-					if (vectorObjs.length > 80) { // basically, no matter how wide they make it, there won't be room.
+					// If too many, no matter how wide they make it, there won't be room
+					// -- expand is better.
+					if (numberOfColumns.length > 60) {
 						message = "Click 'expand' to see the sample labels";
 					} else {
 						message = "Click 'expand' or try widening the window to see the sample labels";
@@ -307,7 +288,7 @@ var Heatmap = function() {
 
 				}
 
-				// Add label or not
+				// Add row label or not
 				if (config.label) {
 					var rowLabel = DEFAULT_ROW_LABEL;
 					if (vectorObjs[i].label) {
