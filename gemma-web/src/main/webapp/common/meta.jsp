@@ -18,6 +18,11 @@
 
 <c:set var="ctxPath" value="${pageContext.request.contextPath}" scope="request" />
 
-<meta name="author" content="Gemma admin (gemma@ubic.ca)" />
+<meta name="author" content="Gemma admin (gemma@chibi.ubc.ca)" />
+
+<c:if test="${fn:contains(header['User-Agent'],'chromeframe') }">
+	<meta http-equiv="X-UA-Compatible" content="chrome=1">
+</c:if>
+
 
 <link rel="icon" href="<c:url value="/images/logo/gemOnlyTiny.ico"/>" />
