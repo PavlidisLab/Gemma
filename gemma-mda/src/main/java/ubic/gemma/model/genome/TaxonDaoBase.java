@@ -20,6 +20,8 @@ package ubic.gemma.model.genome;
 
 import java.util.Collection;
 
+
+
 /**
  * <p>
  * Base Spring DAO Class: is able to create, update, remove, load, and find objects of type
@@ -31,6 +33,28 @@ import java.util.Collection;
 public abstract class TaxonDaoBase extends org.springframework.orm.hibernate3.support.HibernateDaoSupport implements
         ubic.gemma.model.genome.TaxonDao {
 
+    
+    /**
+     * Performs the core logic for {@link #findByAbbreviation(java.lang.String abbreviation)}
+     */
+    protected abstract Taxon handleFindByAbbreviation( java.lang.String abbreviation )
+            throws java.lang.Exception;
+    
+    
+    /**
+     * @see ubic.gemma.model.genome.TaxonDao#findByAbbreviation(java.lang.String abbreviation)
+     */
+    public Taxon findByAbbreviation( final java.lang.String abbreviation ) {
+        try {
+            return this.handleFindByAbbreviation( abbreviation );
+        } catch ( Throwable th ) {
+            throw new java.lang.RuntimeException(
+                    "Error performing 'ubic.gemma.model.genome.TaxonDaoBase.findByAbbreviation(java.lang.String abbreviation)' --> "
+                            + th, th );
+        }
+    }
+    
+    
     /**
      * @see ubic.gemma.model.genome.TaxonDao#create(int, java.util.Collection)
      */
@@ -171,55 +195,7 @@ public abstract class TaxonDaoBase extends org.springframework.orm.hibernate3.su
         return this.findByCommonName( TRANSFORM_NONE, queryString, commonName );
     }
 
-    /**
-     * @see ubic.gemma.model.genome.TaxonDao#findByCommonName(int, java.lang.String)
-     */
-    public Taxon findByAbbreviation( final int transform, final java.lang.String abbreviation ) {
-        return this.findByAbbreviation( transform, "from TaxonImpl t where t.abbreviation=:abbreviation", abbreviation );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.TaxonDao#findByCommonName(int, java.lang.String, java.lang.String)
-     */
-    @SuppressWarnings( { "unchecked" })
-    public Taxon findByAbbreviation( final int transform, final java.lang.String queryString,
-            final java.lang.String abbreviation ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( abbreviation );
-        argNames.add( "abbreviation" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-
-        if ( results.size() > 1 ) {
-            throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                    "More than one instance of 'ubic.gemma.model.genome.Taxon"
-                            + "' was found when executing query --> '" + queryString + "'" );
-        } else if ( results.size() == 1 ) {
-            result = results.iterator().next();
-        }
-
-        result = transformEntity( transform, ( ubic.gemma.model.genome.Taxon ) result );
-        return ( Taxon ) result;
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.TaxonDao#findByCommonName(java.lang.String)
-     */
-    public ubic.gemma.model.genome.Taxon findByAbbreviation( java.lang.String abbreviation ) {
-        return this.findByAbbreviation( TRANSFORM_NONE, abbreviation );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.TaxonDao#findByCommonName(java.lang.String, java.lang.String)
-     */
-    public ubic.gemma.model.genome.Taxon findByAbbreviation( final java.lang.String queryString,
-            final java.lang.String abbreviation ) {
-        return this.findByAbbreviation( TRANSFORM_NONE, queryString, abbreviation );
-    }
-
-           
+            
     
     /**
      * @see ubic.gemma.model.genome.TaxonDao#findByScientificName(int, java.lang.String)

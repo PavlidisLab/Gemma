@@ -20,6 +20,8 @@
  */
 package ubic.gemma.model.genome;
 
+import java.util.List;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
@@ -83,5 +85,24 @@ public class TaxonDaoImpl extends ubic.gemma.model.genome.TaxonDaoBase {
         if ( log.isDebugEnabled() ) log.debug( "Creating new taxon: " + taxon );
         return create( taxon );
     }
-
+      
+    
+    /**
+     * @see ubic.gemma.model.genome.TaxonDao#findByAbbreviation(int, java.lang.String)
+     */
+    @SuppressWarnings( { "unchecked" })
+    public Taxon handleFindByAbbreviation(final java.lang.String abbreviation ) {
+        final String queryString = "from TaxonImpl t where t.abbreviation=:abbreviation";
+        List results = getHibernateTemplate().findByNamedParam( queryString, "abbreviation", abbreviation.toLowerCase());
+        Taxon result =null;
+        if ( results.size() > 1 ) {
+            throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                    "More than one instance of 'ubic.gemma.model.genome.Taxon"
+                            + "' was found when executing query --> '" + queryString + "'" );
+        } else if ( results.size() == 1 ) {
+            result = (Taxon)results.iterator().next();
+        }
+        return result;     
+        
+    }
 }
