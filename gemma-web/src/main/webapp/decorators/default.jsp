@@ -27,8 +27,6 @@
 	<body <decorator:getProperty property="body.id" writeEntireProperty="true"/>
 		<decorator:getProperty property="body.class" writeEntireProperty="true"/>>
 
-		<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/chrome-frame/1/CFInstall.min.js"></script>
-
 
 		<div id="page">
 
@@ -101,15 +99,16 @@
 		</c:if>
 
 		<%-- Google chrome frame check --%>
-		<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/chrome-frame/1/CFInstall.min.js"></script>
-		<div id="placeholder"></div>
-		<script>
+		<c:if test="${fn:contains(header['User-Agent'], 'MSIE')}">
+			<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/chrome-frame/1/CFInstall.min.js"></script>
+			<div id="placeholder"></div>
+			<script>
 	CFInstall.check( {
 		node : "placeholder",
-		destination : "http://www.waikiki.com"
+		destination : "http://www.google.com"
 	});
 </script>
-
+		</c:if>
 
 	</body>
 </html>

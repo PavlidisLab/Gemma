@@ -17,8 +17,8 @@
 	<p style="font-size: 0.9em">
 		More information about the project is
 		<a href="<c:url value="/static/about.html"/>">here</a>. Gemma also has a
-		<a href="http://chibi.ubc.ca/faculty/pavlidis/wiki/display/gemma">Wiki</a> where you can read additional documentation,
-		in addition to the in-line help.
+		<a href="http://chibi.ubc.ca/faculty/pavlidis/wiki/display/gemma">Wiki</a> where you can read additional
+		documentation, in addition to the in-line help.
 	</p>
 </div>
 
@@ -34,8 +34,7 @@
 				<p class="emphasized" style="font-size: 0.90em">
 					Most features of Gemma are open to guests. However, to access some functionality, such as data upload, you'll need
 					an account.
-					<strong><a href="<c:url value="/register.html"/>">Sign up</a>
-					</strong>, or
+					<strong><a href="<c:url value="/register.html"/>">Sign up</a> </strong>, or
 					<strong><a href="<c:url value="/login.jsp" />">log in</a> </strong> if you already have an account.
 				</p>
 			</div>
@@ -72,8 +71,8 @@
 			<strong>Contacting us</strong>
 			<p class="emphasized" style="font-size: 0.90em">
 				To get emails about updates to the Gemma software, subscribe to the
-				<a href="http://lists.chibi.ubc.ca/mailman/listinfo/gemma-announce">Gemma-announce mailing
-					list</a>. Please send bug reports or feature requests
+				<a href="http://lists.chibi.ubc.ca/mailman/listinfo/gemma-announce">Gemma-announce mailing list</a>. Please send bug
+				reports or feature requests
 				<a href="mailto:gemma@chibi.ubc.ca">here</a>.
 			</p>
 		</div>
