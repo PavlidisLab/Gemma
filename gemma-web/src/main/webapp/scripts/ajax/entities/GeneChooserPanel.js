@@ -19,7 +19,6 @@ Gemma.MAX_GENES_PER_QUERY = 20;
  * @class Gemma.GeneChooserPanel
  * @extends Gemma.GemmaGridPanel
  */
-
 Gemma.GeneGrid = Ext.extend(Ext.grid.GridPanel, {
 
 			collapsible : true,
