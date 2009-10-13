@@ -1236,7 +1236,7 @@ public class GeoConverter implements Converter<Object, Object> {
         taxon.setAbbreviation( probeOrganism );
         // taxon not processed before check database.
         if ( taxonService != null ) {
-            Taxon t = taxonService.findByAbbreviation( probeOrganism );
+            Taxon t = taxonService.findByAbbreviation( probeOrganism.toLowerCase() );
 
             if ( t != null ) {
                 taxon = t;
