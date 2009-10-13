@@ -190,9 +190,17 @@ var Heatmap = function() {
 
 				// update height
 				heatmapHeight = boxHeight * vectorObjs.length + TRIM;
-				Ext.DomHelper.applyStyles(target, "overflow:auto");
+				try {
+					Ext.DomHelper.applyStyles(target, "overflow:auto");
+				} catch (e) {
+
+				}
 			} else {
-				Ext.DomHelper.applyStyles(target, "overflow:inherit");
+				try {
+					Ext.DomHelper.applyStyles(target, "overflow:inherit");
+				} catch (e) {
+
+				}
 			}
 
 			if (config.legend && config.legend.show && config.legend.container)
