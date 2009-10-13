@@ -1,7 +1,7 @@
 /*
  * The Gemma project
  * 
- * Copyright (c) 2008 University of British Columbia
+ * Copyright (c) 2009 University of British Columbia
  * 
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
@@ -55,113 +55,7 @@ Gemma.DataVectorThumbnailsView = Ext.extend(Ext.DataView, {
 			 * @overrride
 			 */
 			prepareData : function(data) {
-				var flotrData = [];
-				var geneExpressionProfile = data.profiles;
-
-				for (var i = 0; i < geneExpressionProfile.size(); i++) {
-					var profile = geneExpressionProfile[i].profile;
-
-					var probeId = geneExpressionProfile[i].probe.id;
-					var probe = geneExpressionProfile[i].probe.name;
-					var genes = geneExpressionProfile[i].genes;
-					var color = geneExpressionProfile[i].color;
-					var factor = geneExpressionProfile[i].factor;
-					var pvalue = geneExpressionProfile[i].PValue; // yes, it's PValue, not pValue.
-
-					var fade = factor < 2;
-
-					if (fade) {
-						color = color == 'red' ? Gemma.HOT_FADE_COLOR : Gemma.COLD_FADE_COLOR;
-					}
-
-					/*
-					 * Format the gene symbols and names into strings that will be displayed in the legend.
-					 */
-					var geneSymbols = genes[0].name;
-					var k, gene;
-					for (k = 1; k < genes.size(); k++) {
-						gene = genes[k].name;
-
-						// put the query gene first.
-						if (this.queryGene && gene == this.queryGene) {
-							geneSymbols = gene + ", " + geneSymbols;
-						} else {
-							geneSymbols = geneSymbols + "," + gene;
-						}
-					}
-
-					var geneNames = genes[0].officialName;
-					for (k = 1; k < genes.size(); k++) {
-						gene = genes[k].name;
-						var genen = genes[k].officialName;
-
-						// put the query gene first.
-						if (this.queryGene && gene == this.queryGene) {
-							geneNames = genen + ", " + geneNames;
-						} else {
-							geneNames = geneNames + "," + genen;
-						}
-					}
-
-					/*
-					 * Turn a flat vector into an array of points (that's what flotr needs)
-					 */
-					var points = [];
-					for (var j = 0; j < profile.size(); j++) {
-						var point = [j, profile[j]];
-						points.push(point);
-					}
-
-					// Label for the thumbnail legend.
-					var pvalueLabel = (pvalue && pvalue != 1) ? (sprintf("%.2e", pvalue) + ": ") : "";
-
-					var labelStyle = '';
-					var qtip = 'Probe: ' + probe + ' (' + geneSymbols + ') ';
-					if (factor && factor < 2) {
-						labelStyle = "font-style:italic";
-						qtip = qtip + " [Not significant]";
-					}
-
-					/*
-					 * Note: flotr requires that the data be called 'data'.
-					 */
-					var plotConfig = {
-						profile : profile,
-						data : points, // this is what gets plotteed
-						color : color,
-						genes : genes,
-						rawLabel : pvalueLabel + " " + geneSymbols + " " + geneNames,
-						label : pvalueLabel + "<span style='" + labelStyle
-								+ "'><a  href='/Gemma/compositeSequence/show.html?id=" + probeId
-								+ "' target='_blank' ext:qtip= '" + qtip + "'>"
-								+ Ext.util.Format.ellipsis(geneSymbols, Gemma.MAX_THUMBNAILLABEL_LENGTH_CHAR) + "</a> "
-								+ geneNames + "</span>",
-						lines : {
-							lineWidth : Gemma.LINE_THICKNESS
-						},
-
-						labelID : probeId,
-						factor : factor,
-						probe : {
-							id : probeId,
-							name : probe
-						},
-						PValue : pvalue, // yes, it's PValue, not pValue.
-						smoothed : false
-
-					};
-
-					flotrData.push(plotConfig);
-				}
-
-				/*
-				 * We're basically keeping a copy.
-				 */
-				data.profiles = flotrData;
-
-				data.profiles.sort(Gemma.sortByImportance);
-
-				return data;
+				return Gemma.prepareProfiles(data);
 			},
 
 			/**
@@ -199,6 +93,127 @@ Gemma.DataVectorThumbnailsView = Ext.extend(Ext.DataView, {
 			}
 
 		});
+
+/**
+ * Takes a collection of VisualizationValueObjects, which in turn each contain a collection of GeneExpressionProfiles.
+ * 
+ * @param {}
+ *            data
+ * @return {}
+ */
+Gemma.prepareProfiles = function(data) {
+	var preparedData = [];
+	var geneExpressionProfile = data.profiles;
+
+	for (var i = 0; i < geneExpressionProfile.size(); i++) {
+		var profile = geneExpressionProfile[i].profile;
+
+		var probeId = geneExpressionProfile[i].probe.id;
+		var probe = geneExpressionProfile[i].probe.name;
+		var genes = geneExpressionProfile[i].genes;
+		var color = geneExpressionProfile[i].color;
+		var factor = geneExpressionProfile[i].factor;
+		var pvalue = geneExpressionProfile[i].PValue; // yes, it's PValue, not pValue.
+
+		var fade = factor < 2;
+
+		if (fade) {
+			color = color == 'red' ? Gemma.HOT_FADE_COLOR : Gemma.COLD_FADE_COLOR;
+		}
+
+		/*
+		 * Format the gene symbols and names into strings that will be displayed in the legend.
+		 */
+
+		var geneSymbols = "No genes";
+		var geneNames = "";
+		if (genes !== undefined && genes.length > 0) {
+			geneSymbols = genes[0].name;
+			var k, gene;
+			for (k = 1; k < genes.size(); k++) {
+				gene = genes[k].name;
+
+				// put the query gene first.
+				if (this.queryGene && gene == this.queryGene) {
+					geneSymbols = gene + ", " + geneSymbols;
+				} else {
+					geneSymbols = geneSymbols + "," + gene;
+				}
+			}
+
+			geneNames = genes[0].officialName;
+			for (k = 1; k < genes.size(); k++) {
+				gene = genes[k].name;
+				var genen = genes[k].officialName;
+
+				// put the query gene first.
+				if (this.queryGene && gene == this.queryGene) {
+					geneNames = genen + ", " + geneNames;
+				} else {
+					geneNames = geneNames + "," + genen;
+				}
+			}
+		}
+
+		/*
+		 * Turn a flat vector into an array of points (that's what flotr needs)
+		 */
+		var points = [];
+		for (var j = 0; j < profile.size(); j++) {
+			var point = [j, profile[j]];
+			points.push(point);
+		}
+
+		// Label for the thumbnail legend.
+		var pvalueLabel = (pvalue && pvalue != 1) ? (sprintf("%.2e", pvalue) + ": ") : "";
+
+		var labelStyle = '';
+		var qtip = 'Probe: ' + probe + ' (' + geneSymbols + ') ';
+		if (factor && factor < 2) {
+			labelStyle = "font-style:italic";
+			qtip = qtip + " [Not significant]"; // FIXME this might not always be appropriate.
+		}
+
+		/*
+		 * Note: flotr requires that the data be called 'data'.
+		 */
+		var plotConfig = {
+			profile : profile,
+			data : points, // this is what gets plotted. Flotr wants this name.
+			color : color,
+			genes : genes,
+			rawLabel : pvalueLabel + " " + geneSymbols + " " + geneNames,
+			label : pvalueLabel + "<span style='" + labelStyle + "'><a  href='/Gemma/compositeSequence/show.html?id="
+					+ probeId + "' target='_blank' ext:qtip= '" + qtip + "'>"
+					+ Ext.util.Format.ellipsis(geneSymbols, Gemma.MAX_THUMBNAILLABEL_LENGTH_CHAR) + "</a> " + geneNames
+					+ "</span>",
+			lines : {
+				lineWidth : Gemma.LINE_THICKNESS
+			},
+
+			labelID : probeId,
+			factor : factor,
+			probe : {
+				id : probeId,
+				name : probe
+			},
+			PValue : pvalue, // yes, it's PValue, not pValue.
+			smoothed : false
+
+		};
+
+		preparedData.push(plotConfig);
+	}
+
+	/*
+	 * The prepared data is augmented with the 'data' field and formatted labels.
+	 */
+	data.profiles = preparedData;
+
+	data.profiles.sort(Gemma.sortByImportance);
+
+	return data;
+}
 
 /**
  * Used for thumbnails.
@@ -333,10 +348,10 @@ Gemma.VisualizationZoomPanel = Ext.extend(Ext.Panel, {
 	closeAction : 'destroy',
 	bodyStyle : "background:white",
 	layout : 'fit',
-	title : "Click thumbnail to zoom in",
+	title : "", // dont show a title.
 
 	plugins : [new Ext.ux.plugins.ContainerMask({
-				msg : 'Patience please ... <img src="/Gemma/images/loading.gif" />',
+				msg : 'Loading ... <img src="/Gemma/images/loading.gif" />',
 				masked : true
 			})],
 
@@ -390,9 +405,15 @@ Gemma.VisualizationZoomPanel = Ext.extend(Ext.Panel, {
 		}
 
 		if (eevo) {
-			this
-					.setTitle("<a ext.qtip='Click for details on experiment (opens in new window)' target='_blank'  href='/Gemma/expressionExperiment/showExpressionExperiment.html?id="
-							+ eevo.id + " '> " + eevo.shortName + "</a>: " + Ext.util.Format.ellipsis(eevo.name, 75));
+
+			var eeInfoTitle = "<a ext.qtip='Click for details on experiment (opens in new window)' target='_blank'  href='/Gemma/expressionExperiment/showExpressionExperiment.html?id="
+					+ eevo.id + " '> " + eevo.shortName + "</a>: " + Ext.util.Format.ellipsis(eevo.name, 75);
+
+			if (this.ownerCt) {
+				// FIXME...update the owning panel title. Must keep a copy of the original.
+			} else {
+				this.setTitle(eeInfoTitle);
+			}
 		}
 
 		var forceFit = this.ownerCt ? this.ownerCt.forceFitPlots : this.forceFitPlots;
@@ -515,6 +536,8 @@ Gemma.VisualizationWithThumbsWindow = Ext.extend(Ext.Window, {
 	height : Gemma.ZOOM_PLOT_SIZE,
 	width : 600,
 
+	thumbnails : true,
+
 	showThumbNails : true,
 
 	heatmapSortMethod : Gemma.sortByImportance,
@@ -554,7 +577,7 @@ Gemma.VisualizationWithThumbsWindow = Ext.extend(Ext.Window, {
 		this.zoom(records[0], this.body.id);
 
 		if (this.downloadLink) {
-			this.thumbnailPanel.setTitle("Thumbnails &nbsp; " + this.downloadLink);
+			// this.setTitle((this.title ? this.title + " " : "") + this.downloadLink);
 		}
 	},
 
@@ -571,6 +594,8 @@ Gemma.VisualizationWithThumbsWindow = Ext.extend(Ext.Window, {
 	 *            record
 	 */
 	zoom : function(record) {
+		if (!record)
+			return;
 		var eevo = record.get("eevo");
 		var profiles = record.get("profiles");
 		var sampleNames = record.get("sampleNames");
@@ -761,8 +786,12 @@ Gemma.VisualizationWithThumbsWindow = Ext.extend(Ext.Window, {
 					autoScroll : true,
 					zoomPanel : this.zoomPanel,
 					legendDiv : this.zoomLegendId,
+					hidden : !this.thumbnails,
 
-					/* legend div */
+					/*
+					 * legend div FIXME make this go to the TOP. Might need to make it a separate div in this panel
+					 * instead.
+					 */
 					html : {
 						id : this.zoomLegendId,
 						tag : 'div',
@@ -770,6 +799,7 @@ Gemma.VisualizationWithThumbsWindow = Ext.extend(Ext.Window, {
 								+ 'px; float:left;'
 					}
 				});
+		var items = [this.thumbnailPanel, this.zoomPanel]
 
 		var browserWarning = "";
 		if (Ext.isIE) { // fixme: detect chromeframe, though this might already be okay. test.
@@ -778,7 +808,7 @@ Gemma.VisualizationWithThumbsWindow = Ext.extend(Ext.Window, {
 		}
 
 		Ext.apply(this, {
-					items : [this.thumbnailPanel, this.zoomPanel],
+					items : items,
 					bbar : new Ext.Toolbar({
 								items : [browserWarning, '->', {
 											xtype : 'tbbutton', // in ext3, use button; tbbutton is deprecated.
@@ -814,7 +844,8 @@ Gemma.VisualizationWithThumbsWindow = Ext.extend(Ext.Window, {
 
 		Gemma.VisualizationWithThumbsWindow.superclass.initComponent.call(this);
 
-		this.dv.getStore().on('load', function() {
+		this.dv.getStore().on('load', function(s, records, options) {
+
 					Ext.getCmp(this.toggleViewBtnId).enable();
 					Ext.getCmp(this.smoothBtnId).enable();
 					Ext.getCmp(this.forceFitBtnId).enable();
@@ -827,6 +858,14 @@ Gemma.VisualizationWithThumbsWindow = Ext.extend(Ext.Window, {
 					Ext.getCmp(this.forceFitBtnId).setText(this.forceFitPlots ? "Expand" : "Force fit");
 					Ext.getCmp(this.toggleLegendBtnId).setText(this.showLegend ? "Hide legend" : "Show legend");
 					Ext.getCmp(this.smoothBtnId).setText(this.smoothLineGraphs ? "Unsmooth" : "Smooth");
+
+					if (this.heatmapMode) {
+						Ext.getCmp(this.smoothBtnId).hide();
+						Ext.getCmp(this.toggleLegendBtnId).hide();
+					} else {
+						Ext.getCmp(this.smoothBtnId).show();
+						Ext.getCmp(this.toggleLegendBtnId).show();
+					}
 
 				}, this);
 

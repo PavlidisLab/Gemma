@@ -658,8 +658,8 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 						});
 
 				// Close if already open
-				if (detailsWindow) {
-					detailsWindow.close();
+				if (this.detailsWindow !== undefined && this.detailsWindow != null) {
+					this.detailsWindow.close();
 				}
 
 				var diffExGrid = new Gemma.ProbeLevelDiffExGrid({
@@ -703,7 +703,7 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 
 						});
 
-				detailsWindow = new Ext.Window({
+				this.detailsWindow = new Ext.Window({
 							modal : false,
 							layout : 'fit',
 							title : 'Details for ' + foundGene.officialSymbol,
@@ -719,7 +719,7 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 						});
 
 				dsGrid.getStore().load();
-				detailsWindow.show();
+				this.detailsWindow.show();
 
 				diffExGrid.getStore().loadData(supporting);
 

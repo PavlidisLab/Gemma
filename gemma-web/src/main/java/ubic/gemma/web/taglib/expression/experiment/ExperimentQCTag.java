@@ -21,6 +21,7 @@ package ubic.gemma.web.taglib.expression.experiment;
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.tagext.TagSupport;
 import ubic.gemma.analysis.stats.ExpressionDataSampleCorrelation;
+import ubic.gemma.web.controller.expression.experiment.ExpressionExperimentQCController;
 
 /**
  * @jsp.tag name="expressionQC" body-content="empty"
@@ -64,35 +65,57 @@ public class ExperimentQCTag extends TagSupport {
     public int doStartTag() throws JspException {
         StringBuilder buf = new StringBuilder();
 
+        /*
+         * check if the files are available...if not, show something intelligent. Currently we show a broken box etc.
+         */
+
         buf.append( "<div class=\"eeqc\" id=\"eeqc\">" );
-        buf
-                .append( "<table border=\"0\"  ><tr><td valign=\"top\" align=\"left\" style=\"padding-right:30px;\"><strong>Sample correlation (black &le; "
-                        + ExpressionDataSampleCorrelation.HI_CONTRAST_COR_THRESH + ")</strong><br />" );
-        buf
-                .append( "<a target=\"_blank\" title=\"Click for larger version (opens in new window)\" href=\"visualizeCorrMat.html?id="
-                        + this.eeid
-                        + "&size=large\"><img src=\"visualizeCorrMat.html?id="
-                        + this.eeid
-                        + "&size="
-                        + this.size + "\" alt='Image unavailable'/></a>" );
+        buf.append( "<table border=\"0\" cellspacing=\"8\"  ><tr>" );
 
-        // link to lower contrast version
         buf
-                .append( "<ul class='glassList'><li><a target=\"_blank\" title=\"Click for larger lower contrast version (opens in new window)\" href=\"visualizeCorrMat.html?id="
-                        + this.eeid
-                        + "&size=large&contr=lo\">lower contrast version (black &le;"
-                        + ExpressionDataSampleCorrelation.LO_CONTRAST_COR_THRESH + ")</a></li>" );
-        buf
-                .append( "<li><a title=\"Download a file containing the raw correlation matrix data\" href=\"visualizeCorrMat.html?id="
-                        + this.eeid + "&text=1\">Data</a></li>" );
+                .append( "<tr><th valign=\"top\" align=\"center\"><strong>Sample correlation (black &le; "
+                        + ExpressionDataSampleCorrelation.HI_CONTRAST_COR_THRESH
+                        + ")</strong></th><th valign=\"top\" align=\"center\"><strong>Probe correlation</strong</th><th valign=\"top\" align=\"center\"><strong>Pvalue distributions</strong></th></tr>" );
 
-        buf.append( "</ul></td>" );
+        buf.append( "<tr>" );
 
-        buf.append( "<td valign=\"top\" align=\"center\"><strong>Probe correlation</strong><br />" );
-        buf.append( " <img alt='Image unavailable' src=\"visualizeProbeCorrDist.html?id=" + this.eeid + "\" /></td>" );
+        if ( ExpressionExperimentQCController.hasCorrMatFile( this.eeid ) ) {
 
-        buf.append( "<td valign=\"top\" align=\"center\"><strong>Pvalue distributions</strong><br />" );
-        buf.append( " <img alt='Image unavailable' src=\"visualizePvalueDist.html?id=" + this.eeid + "\" /></td>" );
+            buf
+                    .append( "<a target=\"_blank\" title=\"Click for larger version (opens in new window)\" href=\"visualizeCorrMat.html?id="
+                            + this.eeid
+                            + "&size=large\"><img src=\"visualizeCorrMat.html?id="
+                            + this.eeid
+                            + "&size="
+                            + this.size + "\" alt='Image unavailable'/></a>" );
+
+            // link to lower contrast version
+            buf
+                    .append( "<ul class='glassList'><li><a target=\"_blank\" title=\"Click for larger lower contrast version (opens in new window)\" href=\"visualizeCorrMat.html?id="
+                            + this.eeid
+                            + "&size=large&contr=lo\">lower contrast version (black &le;"
+                            + ExpressionDataSampleCorrelation.LO_CONTRAST_COR_THRESH + ")</a></li>" );
+            buf
+                    .append( "<li><a title=\"Download a file containing the raw correlation matrix data\" href=\"visualizeCorrMat.html?id="
+                            + this.eeid + "&text=1\">Data</a></li>" );
+
+            buf.append( "</ul></td>" );
+        } else {
+            buf.append( "<td>Not available</td>" );
+        }
+
+        if ( ExpressionExperimentQCController.hasCorrDistFile( this.eeid ) ) {
+            buf.append( " <img alt='Image unavailable' src=\"visualizeProbeCorrDist.html?id=" + this.eeid
+                    + "\" /></td>" );
+        } else {
+            buf.append( "<td>Not available</td>" );
+        }
+
+        if ( ExpressionExperimentQCController.hasPvalueDistFiles( this.eeid ) ) {
+            buf.append( " <img alt='Image unavailable' src=\"visualizePvalueDist.html?id=" + this.eeid + "\" /></td>" );
+        } else {
+            buf.append( "<td>Not available</td>" );
+        }
 
         buf.append( "</tr></table></div>" );
         try {

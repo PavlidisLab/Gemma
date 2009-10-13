@@ -113,9 +113,9 @@ public class VisualizationValueObject {
                 }
             }
 
-            int valid = 1;
-            if ( validatedProbeIdList != null && validatedProbeIdList.contains( vector.getDesignElement().getId() ) ) {
-                valid = 2;
+            int valid = 2; // default. // FIXME Actually, this might not work.
+            if ( validatedProbeIdList != null && !validatedProbeIdList.contains( vector.getDesignElement().getId() ) ) {
+                valid = 1;
             }
 
             GeneExpressionProfile profile = new GeneExpressionProfile( vector, color, valid, null );

@@ -3,9 +3,9 @@
 	<title>Details for ${expressionExperiment.shortName}</title>
 	<jwr:script src='/scripts/ajax/ext/data/DwrProxy.js' useRandomParam="false" />
 	<jwr:script src='/scripts/app/eeDataFetch.js' useRandomParam="false" />
-	<jwr:script src='/scripts/app/ExpressionExperimentDetails.js' useRandomParam="false"/>
-	<jwr:script src='/scripts/ajax/visualization/EEDetailsVisualizationWidget.js' useRandomParam="false"/>
-	
+	<jwr:script src='/scripts/app/ExpressionExperimentDetails.js' useRandomParam="false" />
+	<jwr:script src='/scripts/ajax/visualization/EEDetailsVisualizationWidget.js' useRandomParam="false" />
+
 </head>
 
 
@@ -17,13 +17,13 @@
 </div>
 
 <input id="eeId" type="hidden" value="${eeId}" />
-
+<input id="taxonName" type="hidden" value="${taxonName} }" />
 <div id="eedetails">
 	<div id="messages"></div>
 	<div id="basics" style="padding: 5px;"></div>
 	<div id="annotator" style="padding: 5px;"></div>
 
-	<div id="downloads" style="padding: 5px;">
+	<div id="downloads" style="padding: 5px;font-size:smaller">
 
 		Download data Files:
 
@@ -35,7 +35,7 @@
 
 	</div>
 
-	<div id="design" style="padding: 5px;">
+	<div class="clearfix" id="design" style="padding: 5px;">
 		<h3>
 			<fmt:message key="experimentalDesign.title" />
 			&nbsp;
@@ -47,10 +47,12 @@
 	</div>
 
 
-	<br>
- 	<div id="visualization"> 	<h3> Visualization</h3>  </div>
 
-	<div id="bioMaterialMapping" style="padding: 5px;"></div>
+	<div class="clearfix" id="visualization" style="padding: 5px;">
+		<h3>
+			Visualization
+		</h3>
+	</div>
 
 	<div id="qc" style="padding: 5px;">
 		<h3>
@@ -59,16 +61,12 @@
 		<Gemma:expressionQC ee="${expressionExperiment.id}" />
 	</div>
 
-
-
-	<div style="padding-bottom:12px;" id="qts">
+	<div style="padding-bottom: 12px;" id="qts">
 		<h3>
 			Quantitation types
 		</h3>
-		<display:table name="quantitationTypes" class="scrollTable"
-			requestURI="/Gemma/expressionExperiment/showExpressionExperiment.html" id="dataVectorList" pagesize="100"
+		<display:table name="quantitationTypes" class="scrollTable" id="qtList" pagesize="100"
 			decorator="ubic.gemma.web.taglib.displaytag.quantitationType.QuantitationTypeWrapper">
-			<%--<display:column property="data" sortable="false" title="Get data" />--%>
 			<display:column property="qtName" sortable="true" maxWords="20" titleKey="name" />
 			<display:column property="description" sortable="true" maxLength="20" titleKey="description" />
 			<display:column property="qtPreferredStatus" sortable="true" maxWords="20" titleKey="quantitationType.preferred" />
@@ -90,7 +88,7 @@
 		<div id="history" style="padding: 5px;">
 		</div>
 		<c:if test="${ lastArrayDesignUpdate != null}">
-			<p>
+			<p style="font-size: smaller; padding: 5px">
 				The last time an array design associated with this experiment was updated: ${lastArrayDesignUpdate.date}
 			</p>
 		</c:if>

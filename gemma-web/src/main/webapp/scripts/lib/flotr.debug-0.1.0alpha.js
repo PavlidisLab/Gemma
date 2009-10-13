@@ -1060,6 +1060,17 @@ var Flotr = (function() {
 					var x1 = data[i][0], y1 = data[i][1], x2 = data[i + 1][0], y2 = data[i + 1][1];
 
 					if (isNaN(y1) || isNaN(y2)) {
+
+						/*
+						 * If the second point is missing, the first point ends up with nothing shown. Example: GSE867.
+						 * (Id=392) FIXME: probably a similar problem happens whenever there is an isolated 'present'
+						 * value. See bug 1720.
+						 */
+						if (isNaN(y2) && i == 0) {
+							// Draw a short line to mark the spot. Possible better solution: draw dashed line to the
+							// next present point?
+							ctx.lineTo(prevx + 2, prevy);
+						}
 						continue;
 					}
 

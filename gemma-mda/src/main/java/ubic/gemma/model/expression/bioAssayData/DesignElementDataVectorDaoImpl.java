@@ -113,11 +113,9 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
 
         if ( designElementDataVectors == null ) return;
 
-        Session session = this.getSessionFactory().getCurrentSession();
+        Session session = this.getSessionFactory().openSession();
 
-        FlushMode oldFlushMode = session.getFlushMode();
-        CacheMode oldCacheMode = session.getCacheMode();
-        session.setCacheMode( CacheMode.IGNORE ); // Don't hit the secondary cache
+        session.setCacheMode( CacheMode.GET ); // Don't populate the secondary cache (??)
         session.setFlushMode( FlushMode.MANUAL ); // We're READ-ONLY so this is okay.
         int count = 0;
         StopWatch timer = new StopWatch();
@@ -128,7 +126,7 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
         for ( DesignElementDataVector vector : ( Collection<DesignElementDataVector> ) designElementDataVectors ) {
             session.lock( vector, LockMode.NONE );
             Hibernate.initialize( vector );
-            Hibernate.initialize( vector.getExpressionExperiment() );
+            Hibernate.initialize( vector.getQuantitationType() );
             dims.add( vector.getBioAssayDimension() );
             cs.add( vector.getDesignElement() );
             ees.add( vector.getExpressionExperiment() );
@@ -136,10 +134,12 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
             session.evict( vector );
         }
 
-        if ( timer.getTime() > 1000 ) {
-            log.info( "Thaw phase 1," + designElementDataVectors.size() + " vectors in " + timer.getTime()
-                    + "ms elapsed" );
+        if ( timer.getTime() > designElementDataVectors.size() ) {
+            log.info( "Thaw phase 1, " + designElementDataVectors.size() + " vectors initialized in " + timer.getTime()
+                    + "ms " );
         }
+        timer.reset();
+        timer.start();
 
         // lightly thaw the EEs we saw
         for ( ExpressionExperiment ee : ees ) {
@@ -147,12 +147,16 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
             session.evict( ee );
         }
 
-        if ( timer.getTime() > 2000 ) {
-            log.info( "Thaw phase 2," + designElementDataVectors.size() + " vectors in " + timer.getTime()
-                    + "ms elapsed total" );
+        if ( timer.getTime() > 100 ) {
+            log.info( "Thaw phase 2, " + ees.size() + " vector-associated expression experiments in " + timer.getTime()
+                    + "ms " );
         }
 
-        // thaw the bioassaydimensions we saw
+        timer.reset();
+        timer.start();
+
+        // thaw the bioassaydimensions we saw -- This requires a lot of queries, but there usually aren't very many dims
+        // to do.
         for ( BioAssayDimension bad : dims ) {
             Hibernate.initialize( bad );
             for ( BioAssay ba : bad.getBioAssays() ) {
@@ -185,13 +189,15 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
             }
         }
 
-        if ( timer.getTime() > 3000 ) {
-            log.info( "Thaw phase 3," + designElementDataVectors.size() + " vectors in " + timer.getTime()
-                    + "ms elapsed total" );
+        if ( timer.getTime() > 100 ) {
+            log.info( "Thaw phase 3, " + dims.size() + " vector-associated bioassaydimensions in " + timer.getTime()
+                    + "ms " );
         }
+        timer.reset();
+        timer.start();
 
         // thaw the designelements we saw.
-        int lastTime = 0;
+        long lastTime = 0;
         for ( DesignElement de : cs ) {
             BioSequence seq = ( ( CompositeSequence ) de ).getBiologicalCharacteristic();
             if ( seq == null ) continue;
@@ -206,15 +212,15 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
                 if ( timer.getTime() - lastTime > 1000 ) {
                     log.info( "Thawed " + count + " vector-associated probes " + timer.getTime() + " ms" );
                 }
+                lastTime = timer.getTime();
             }
         }
 
         timer.stop();
-        if ( designElementDataVectors.size() >= 2000 || timer.getTime() > 20 ) {
-            log.info( "Done, thawed " + designElementDataVectors.size() + " vectors in " + timer.getTime() + "ms" );
+        if ( designElementDataVectors.size() >= 2000 || timer.getTime() > 200 ) {
+            log.info( "Thaw phase 4 " + cs.size() + " vector-associated probes thawed in " + timer.getTime() + "ms" );
         }
-        session.setFlushMode( oldFlushMode );
-        session.setCacheMode( oldCacheMode );
+        session.close();
 
     }
 
@@ -236,7 +242,7 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
      * @param session
      * @param designElementDataVector
      */
-    private void thaw( org.hibernate.Session session, T designElementDataVector ) {
+    void thaw( org.hibernate.Session session, T designElementDataVector ) {
         // thaw the design element.
         BioSequence seq = ( ( CompositeSequence ) designElementDataVector.getDesignElement() )
                 .getBiologicalCharacteristic();

@@ -92,6 +92,8 @@ public class DifferentialExpressionResultDaoImpl extends
         if ( threshold > 0 ) qs = qs + " and r.correctedPvalue < :threshold";
 
         HibernateTemplate tpl = new HibernateTemplate( this.getSessionFactory() );
+        tpl.setQueryCacheRegion( "diffExResult" );
+        tpl.setCacheQueries( true );
 
         if ( limit != null ) {
             tpl.setMaxResults( limit );
@@ -145,6 +147,8 @@ public class DifferentialExpressionResultDaoImpl extends
         String qs = fetchResultsByGeneAndExperimentsQuery + " and r.correctedPvalue < :threshold";
 
         HibernateTemplate tpl = new HibernateTemplate( this.getSessionFactory() );
+        tpl.setQueryCacheRegion( "diffExResult" );
+        tpl.setCacheQueries( true );
 
         if ( limit != null ) {
             tpl.setMaxResults( limit );
@@ -194,22 +198,24 @@ public class DifferentialExpressionResultDaoImpl extends
             java.util.Collection<ubic.gemma.model.expression.experiment.ExpressionExperiment> experiments,
             double qvalueThreshold, Integer limit ) {
 
+        Map<ExpressionExperiment, Collection<ProbeAnalysisResult>> results = new HashMap<ExpressionExperiment, Collection<ProbeAnalysisResult>>();
+
+        if ( experiments.size() == 0 ) {
+            return results;
+        }
+
         StopWatch timer = new StopWatch();
         timer.start();
 
         String qs = fetchResultsByExperimentsQuery + " and r.correctedPvalue < :threshold";
 
         HibernateTemplate tpl = new HibernateTemplate( this.getSessionFactory() );
+        tpl.setQueryCacheRegion( "diffExResult" );
+        tpl.setCacheQueries( true );
 
         if ( limit != null ) {
             tpl.setMaxResults( limit );
             qs += " order by r.correctedPvalue";
-        }
-
-        Map<ExpressionExperiment, Collection<ProbeAnalysisResult>> results = new HashMap<ExpressionExperiment, Collection<ProbeAnalysisResult>>();
-
-        if ( experiments.size() == 0 ) {
-            return results;
         }
 
         String[] paramNames = { "experimentsAnalyzed", "threshold" };
@@ -249,6 +255,13 @@ public class DifferentialExpressionResultDaoImpl extends
     @SuppressWarnings("unchecked")
     public java.util.Map<ExpressionAnalysisResultSet, java.util.Collection<ProbeAnalysisResult>> findInResultSets(
             java.util.Collection<ExpressionAnalysisResultSet> resultsAnalyzed, double threshold, Integer limit ) {
+
+        Map<ExpressionAnalysisResultSet, Collection<ProbeAnalysisResult>> results = new HashMap<ExpressionAnalysisResultSet, Collection<ProbeAnalysisResult>>();
+
+        if ( resultsAnalyzed.size() == 0 ) {
+            return results;
+        }
+
         StopWatch timer = new StopWatch();
         timer.start();
         String qs = fetchResultsByResultSetQuery + " and r.correctedPvalue < :threshold";
@@ -258,12 +271,6 @@ public class DifferentialExpressionResultDaoImpl extends
         if ( limit != null ) {
             tpl.setMaxResults( limit );
             qs += " order by r.correctedPvalue";
-        }
-
-        Map<ExpressionAnalysisResultSet, Collection<ProbeAnalysisResult>> results = new HashMap<ExpressionAnalysisResultSet, Collection<ProbeAnalysisResult>>();
-
-        if ( resultsAnalyzed.size() == 0 ) {
-            return results;
         }
 
         String[] paramNames = { "resultsAnalyzed", "threshold" };
@@ -300,13 +307,15 @@ public class DifferentialExpressionResultDaoImpl extends
     @SuppressWarnings("unchecked")
     public Map<ExpressionExperiment, Collection<ProbeAnalysisResult>> find( Gene gene,
             Collection<ExpressionExperiment> experimentsAnalyzed ) {
-        StopWatch timer = new StopWatch();
-        timer.start();
+
         Map<ExpressionExperiment, Collection<ProbeAnalysisResult>> results = new HashMap<ExpressionExperiment, Collection<ProbeAnalysisResult>>();
 
         if ( experimentsAnalyzed.size() == 0 ) {
             return results;
         }
+
+        StopWatch timer = new StopWatch();
+        timer.start();
 
         String[] paramNames = { "gene", "experimentsAnalyzed" };
         Object[] objectValues = { gene, experimentsAnalyzed };
@@ -344,8 +353,13 @@ public class DifferentialExpressionResultDaoImpl extends
         StopWatch timer = new StopWatch();
         timer.start();
         Map<ExpressionExperiment, Collection<ProbeAnalysisResult>> results = new HashMap<ExpressionExperiment, Collection<ProbeAnalysisResult>>();
+        if ( gene == null ) return results;
 
-        List qresult = this.getHibernateTemplate().findByNamedParam( fetchResultsByGene, "gene", gene );
+        HibernateTemplate tpl = new HibernateTemplate( this.getSessionFactory() );
+        tpl.setQueryCacheRegion( "diffExResult" );
+        tpl.setCacheQueries( true );
+
+        List qresult = tpl.findByNamedParam( fetchResultsByGene, "gene", gene );
 
         for ( Object o : qresult ) {
 
@@ -366,6 +380,9 @@ public class DifferentialExpressionResultDaoImpl extends
         return results;
     }
 
+    /**
+     * 
+     */
     public void thaw( final ProbeAnalysisResult result ) throws Exception {
         HibernateTemplate templ = this.getHibernateTemplate();
 

@@ -20,25 +20,30 @@
  */
 var Heatmap = function() {
 
-	var MAX_LABEL_LENGTH_PIXELS = 200;
-	var MAX_LABEL_LENGTH_CHAR = 35;
-	var MIN_BOX_WIDTH = 1; // for normal circumstances...we can go smaller.
+	// row labels
+	var MAX_LABEL_LENGTH_PIXELS = 400;
+	var MAX_LABEL_LENGTH_CHAR = 175;
 	var EXPANDED_BOX_WIDTH = 10;
 	var CLIP = 3; // contrast. TODO: make it adjustable in range 2-4?
 	var NAN_COLOR = "grey";
-	var SHOW_LABEL_MIN_SIZE = 8; // 6 is unreadable; 8 is almost okay.
-	var MIN_BOX_HEIGHT = 2;
-	var MAX_BOX_HEIGHT = 18;
+	var SHOW_LABEL_MIN_SIZE = 9; // 6 is unreadable; 8 is almost okay.
+	var MIN_BOX_HEIGHT = 10;
+	var MAX_BOX_HEIGHT = 14;
 	var MAX_ROWS_BEFORE_SCROLL = 30;
 	var MIN_IMAGE_SIZE = 50;
-	var MAX_SAMPLE_LABEL_HEIGHT_PIXELS = 120;
-	var SAMPLE_LABEL_MAX_CHAR = 25;
+
+	// column labels
+	var MAX_SAMPLE_LABEL_HEIGHT_PIXELS = 220;
+	var SAMPLE_LABEL_MAX_CHAR = 125;
+
+	// extra space
 	var TRIM = 5;
+
 	var DEFAULT_ROW_LABEL = "&nbsp;";
 
 	var DEFAULT_CONFIG = {
-		label : false, // shows labels at end of row
-		minBoxWidth : MIN_BOX_WIDTH
+		label : false
+		// shows labels at end of row
 	};
 
 	// black-red-orange-yellow-white
@@ -49,7 +54,8 @@ var Heatmap = function() {
 
 	/**
 	 * @param container
-	 * @param data
+	 * @param data -
+	 *            in form of VisualizationValueObject array with 'data' series.
 	 * @param config
 	 *            optional
 	 * @param sampleLabels
@@ -65,6 +71,10 @@ var Heatmap = function() {
 
 		// Creates 1 canvas per row of the heat map
 		function drawMap(vectorObjs, target, colors, config, sampleLabels) {
+
+			if (target.getWidth() <= 0 || target.getHeight() <= 0) {
+				return;
+			}
 
 			var binSize = (2 * CLIP) / colors.length;
 
@@ -105,6 +115,14 @@ var Heatmap = function() {
 					}
 				}
 
+				// maximum space for the label depends on mode.
+				var maxLabelSize;
+				if (config.forceFit) {
+					// if we know the heatmap height here...
+				} else {
+					// FIXME allow as much as it wants.
+				}
+
 				// compute approximate pixel size of that label...not so easy.
 				labelHeight = Math.min(MAX_SAMPLE_LABEL_HEIGHT_PIXELS, Math.min(maxLabelLength, SAMPLE_LABEL_MAX_CHAR)
 								* 8);
@@ -114,6 +132,7 @@ var Heatmap = function() {
 
 			var numberOfRowsToComputeSizeBy = Math.min(MAX_ROWS_BEFORE_SCROLL, vectorObjs.length);
 
+			// FIXME maybe make the boxheight fixed, that way we can figure out how much space the labels can have.
 			var calculatedBoxHeight = Math.floor(heatmapHeight / numberOfRowsToComputeSizeBy) - 2;
 
 			if (calculatedBoxHeight > MAX_BOX_HEIGHT) {
@@ -140,6 +159,10 @@ var Heatmap = function() {
 				 */
 				heatmapWidth = config.label ? Math.max(panelWidth - rowLabelSizePixels, MIN_IMAGE_SIZE) : panelWidth;
 
+				if (heatmapWidth <= 0) {
+					return;
+				}
+
 				/* do not use Math.floor, canvas will handle fractional values okay and fill the space. */
 				var boxWidth = heatmapWidth / numberOfColumns;
 
@@ -161,22 +184,23 @@ var Heatmap = function() {
 				heatmapWidth = boxWidth * numberOfColumns;
 			}
 
-			// put the heatmap in a scroll panel if it is too big to display.
+			// put the heatmap in a scroll panel if it is too big to display. // FIXME: check height properly
 			if (vectorObjs.length > numberOfRowsToComputeSizeBy
 					|| (!config.forceFit && heatmapWidth + rowLabelSizePixels > panelWidth)) {
 
 				// update height
 				heatmapHeight = boxHeight * vectorObjs.length + TRIM;
 				Ext.DomHelper.applyStyles(target, "overflow:auto");
+			} else {
+				Ext.DomHelper.applyStyles(target, "overflow:inherit");
 			}
 
 			if (config.legend && config.legend.show && config.legend.container)
 				insertLegend(config.legend.container);
 
-				console.log(config.forceFit + " " + heatmapWidth);
-				
 			/*
-			 * Add labels to the columns.
+			 * Add labels to the columns. FIXME: if the heatmap itself isn't taking much space, make more room for the
+			 * labels.
 			 */
 			if (sampleLabels) {
 				var id = 'sampleLabels-' + Ext.id();
@@ -194,7 +218,7 @@ var Heatmap = function() {
 					var ctx = constructCanvas($(labelDiv), heatmapWidth, labelHeight);
 
 					ctx.fillStyle = "#000000";
-					ctx.font = (boxWidth - 1) + "px sans-serif";
+					ctx.font = Math.min(12, boxWidth - 1) + "px sans-serif";
 					ctx.textAlign = "left";
 					ctx.translate(0, labelHeight - 2);
 
@@ -212,7 +236,7 @@ var Heatmap = function() {
 					var message;
 					// If too many, no matter how wide they make it, there won't be room
 					// -- expand is better.
-					if (numberOfColumns.length > 60) {
+					if (numberOfColumns.length > 100) { // FIXME -- see if they have access to 'expand'.
 						message = "Click 'expand' to see the sample labels";
 					} else {
 						message = "Click 'expand' or try widening the window to see the sample labels";
@@ -288,7 +312,8 @@ var Heatmap = function() {
 
 				}
 
-				// Add row label or not
+				// Add row label or not FIXME let these have more room if the heatmap fits okay, instead of chopping it
+				// off.
 				if (config.label) {
 					var rowLabel = DEFAULT_ROW_LABEL;
 					if (vectorObjs[i].label) {

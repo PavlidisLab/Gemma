@@ -7,9 +7,14 @@
 	<head>
 		<%-- Include common set of meta tags for each layout --%>
 		<%@ include file="/common/meta.jsp"%>
-		<title><decorator:title /> | <fmt:message key="webapp.name" /></title>
+		<title><decorator:title /> | <fmt:message key="webapp.name" />
+		</title>
 
 		<jwr:style src="/bundles/gemma-all.css" />
+
+
+
+
 
 		<script type='text/javascript' src='/Gemma/dwr/engine.js'></script>
 		<script type='text/javascript' src='/Gemma/dwr/util.js'></script>
@@ -21,6 +26,9 @@
 	</head>
 	<body <decorator:getProperty property="body.id" writeEntireProperty="true"/>
 		<decorator:getProperty property="body.class" writeEntireProperty="true"/>>
+
+		<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/chrome-frame/1/CFInstall.min.js"></script>
+
 
 		<div id="page">
 
@@ -34,26 +42,7 @@
 
 				<div id="main">
 					<%@ include file="/common/messages.jsp"%>
-
-					<%
-					    //Adds the page help link if not a help page already
-								String pageUri = request.getRequestURI();
-								if (pageUri != null && !pageUri.toLowerCase().contains("_help")
-										&& !pageUri.toLowerCase().contains("static")) {
-					%>
-					<div id="help" style="font-size: smaller; float: right;">
-						<a target="_blank"
-							href="
-	<%String helpuri = pageUri.substring(0, pageUri.length() - 5)
-						+ "_help.html";
-				helpuri = helpuri.replace("Gemma/", "Gemma/static/");
-				out.print(helpuri);%>
-		">page
-							help</a>
-					</div>
-					<%
-					    }
-					%>
+					<%@ include file="/common/helpLink.jsp"%>
 
 					<h2>
 						<decorator:getProperty property="page.heading" />
@@ -97,12 +86,9 @@
 
 		<c:if test='${ appConfig["ga.tracker"] != null}'>
 			<script type="text/javascript">
-	var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl."
-			: "http://www.");
-	document
-			.write(unescape("%3Cscript src='"
-					+ gaJsHost
-					+ "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+	var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+	document.write(unescape("%3Cscript src='" + gaJsHost
+			+ "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
 </script>
 			<script type="text/javascript">
 	try {
@@ -113,6 +99,18 @@
 </script>
 
 		</c:if>
+
+		<%-- Google chrome frame check --%>
+		<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/chrome-frame/1/CFInstall.min.js"></script>
+		<div id="placeholder"></div>
+		<script>
+	CFInstall.check( {
+		node : "placeholder",
+		destination : "http://www.waikiki.com"
+	});
+</script>
+
+
 	</body>
 </html>
 

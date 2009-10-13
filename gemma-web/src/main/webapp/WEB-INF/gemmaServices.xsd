@@ -98,7 +98,7 @@
         		<element name="adName" type="string" minOccurs="0" maxOccurs="unbounded">
         		  	<annotation>
         		  		<documentation>
-        		  			    The names of the array designs used by the give expresssion experiment
+        		  			    The names of the array designs used by the given expresssion experiment
         		  		</documentation>
         		  	</annotation>
         		</element>

@@ -61,7 +61,7 @@ public class ExpressionExperimentQCController extends BaseMultiActionController 
 
     private static final String DEFAULT_CONTENT_TYPE = "image/png";
     private static final int HISTOGRAM_IMAGE_SIZE = 200;
-    private ExpressionExperimentService expressionExperimentService;
+    private static ExpressionExperimentService expressionExperimentService;
 
     /**
      * @param ee
@@ -175,6 +175,60 @@ public class ExpressionExperimentQCController extends BaseMultiActionController 
         return f;
     }
 
+    public static boolean hasPvalueDistFiles( Long id ) {
+
+        ExpressionExperiment ee = expressionExperimentService.load( id );
+
+        if ( ee == null ) return false;
+
+        String shortName = ee.getShortName();
+
+        File directory = DifferentialExpressionFileUtils.getBaseDifferentialDirectory( shortName );
+        if ( !directory.exists() ) {
+            return false;
+        }
+
+        String[] fileNames = directory.list();
+        String suffix = DifferentialExpressionFileUtils.PVALUE_DIST_SUFFIX;
+        for ( String fileName : fileNames ) {
+            if ( fileName.endsWith( suffix ) ) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @param ee
+     * @return
+     */
+    public static boolean hasCorrDistFile( Long id ) {
+        ExpressionExperiment ee = expressionExperimentService.load( id );
+
+        if ( ee == null ) return false;
+        String shortName = ee.getShortName();
+        String analysisStoragePath = ConfigUtils.getAnalysisStoragePath();
+        String suffix = ".correlDist.txt";
+        File f = new File( analysisStoragePath + File.separatorChar + shortName + suffix );
+        return f.exists() && f.canRead();
+    }
+
+    /**
+     * @param ee
+     * @return
+     */
+    public static boolean hasCorrMatFile( Long id ) {
+        ExpressionExperiment ee = expressionExperimentService.load( id );
+
+        if ( ee == null ) return false;
+        String shortName = ee.getShortName();
+        String analysisStoragePath = ConfigUtils.getAnalysisStoragePath() + File.separatorChar
+                + ExpressionDataSampleCorrelation.CORRMAT_DIR_NAME;
+        File f = new File( analysisStoragePath + File.separatorChar + shortName + "_corrmat" + ".txt" );
+        return f.exists() && f.canRead();
+    }
+
     /**
      * @param ee
      * @return
@@ -201,8 +255,8 @@ public class ExpressionExperimentQCController extends BaseMultiActionController 
         return files;
     }
 
-    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
-        this.expressionExperimentService = expressionExperimentService;
+    public void setExpressionExperimentService( ExpressionExperimentService ees ) {
+        expressionExperimentService = ees;
     }
 
     /**
@@ -275,7 +329,6 @@ public class ExpressionExperimentQCController extends BaseMultiActionController 
         }
         assert idl != null;
 
-        
         ExpressionExperiment ee = expressionExperimentService.load( idl );
         if ( ee == null ) {
             log.warn( "No such experiment with id " + idl );
@@ -464,7 +517,7 @@ public class ExpressionExperimentQCController extends BaseMultiActionController 
             out = response.getOutputStream();
 
             response.setContentType( contentType );
-            
+
             byte[] buf = new byte[1024];
             int len;
             while ( ( len = in.read( buf ) ) > 0 ) {

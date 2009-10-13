@@ -44,7 +44,7 @@ import org.hibernate.criterion.Restrictions;
 import org.hibernate.type.LongType;
 import org.springframework.orm.hibernate3.HibernateCallback;
 
-import ubic.gemma.model.common.auditAndSecurity.AuditEvent; 
+import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.LocalFile;
@@ -56,7 +56,7 @@ import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
-import ubic.gemma.model.expression.biomaterial.BioMaterial; 
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.util.BusinessKey;
@@ -593,21 +593,18 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
     /*
      * (non-Javadoc)
      * @see
-     * ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleFindByParentTaxon(ubic.gemma.model.genome.
-     * Taxon)
+     * ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleFindByParentTaxon(ubic.gemma.model.genome
+     * . Taxon)
      */
     @SuppressWarnings("unchecked")
     @Override
     protected Collection<ExpressionExperiment> handleFindByParentTaxon( Taxon taxon ) throws Exception {
         final String queryString = "select distinct ee from ExpressionExperimentImpl as ee "
-                + "inner join ee.bioAssays as ba "
-                + "inner join ba.samplesUsed as sample "
+                + "inner join ee.bioAssays as ba " + "inner join ba.samplesUsed as sample "
                 + "inner join sample.sourceTaxon as childtaxon where childtaxon.parentTaxon  = :taxon ";
-            return getHibernateTemplate().findByNamedParam( queryString, "taxon", taxon );
+        return getHibernateTemplate().findByNamedParam( queryString, "taxon", taxon );
     }
-    
-    
-    
+
     /*
      * (non-Javadoc)
      * @see
@@ -1173,6 +1170,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                 + "ee.source as source, "
                 + "ee.accession.accession as accession, "
                 + "taxon.commonName as taxonCommonName,"
+                + "taxon.id as taxonId,"
                 + "count(distinct BA) as bioAssayCount, "
                 + "count(distinct AD) as arrayDesignCount, "
                 + "ee.shortName as shortName, "
@@ -1208,13 +1206,14 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                 v.setSource( list.getString( 4 ) );
                 v.setAccession( list.getString( 5 ) );
                 v.setTaxon( list.getString( 6 ) );
-                v.setBioAssayCount( list.getLong( 7 ) );
-                v.setArrayDesignCount( list.getLong( 8 ) );
-                v.setShortName( list.getString( 9 ) );
-                v.setDateCreated( list.getDate( 10 ) );
-                String type = list.get( 11 ) != null ? list.get( 11 ).toString() : null;
-                v.setClazz( list.getString( 12 ) );
-                v.setExperimentalDesign( list.getLong( 13 ) );
+                v.setTaxonId( list.getLong( 7 ) );
+                v.setBioAssayCount( list.getLong( 8 ) );
+                v.setArrayDesignCount( list.getLong( 9 ) );
+                v.setShortName( list.getString( 10 ) );
+                v.setDateCreated( list.getDate( 11 ) );
+                String type = list.get( 12 ) != null ? list.get( 12 ).toString() : null;
+                v.setClazz( list.getString( 13 ) );
+                v.setExperimentalDesign( list.getLong( 14 ) );
                 fillQuantitationTypeInfo( qtMap, v, eeId, type );
                 vo.put( eeId, v );
             }
@@ -1244,6 +1243,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                 + "ee.source as source, "
                 + "ee.accession.accession as accession, "
                 + "taxon.commonName as taxonCommonName,"
+                + "taxon.id as taxonId,"
                 + "count(distinct BA) as bioAssayCount, "
                 + "count(distinct AD) as arrayDesignCount, "
                 + "ee.shortName as shortName, "
@@ -1286,16 +1286,17 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                 v.setSource( ( String ) res[4] );
                 v.setAccession( ( String ) res[5] );
                 v.setTaxon( ( String ) res[6] );
-                v.setBioAssayCount( ( Long ) res[7] );
-                v.setArrayDesignCount( ( Long ) res[8] );
-                v.setShortName( ( String ) res[9] );
-                v.setDateCreated( ( ( Date ) res[10] ) );
+                v.setTaxonId( ( Long ) res[7] );
+                v.setBioAssayCount( ( Long ) res[8] );
+                v.setArrayDesignCount( ( Long ) res[9] );
+                v.setShortName( ( String ) res[10] );
+                v.setDateCreated( ( ( Date ) res[11] ) );
                 if ( !qtMap.isEmpty() && res[11] != null ) {
                     String type = res[11].toString();
                     fillQuantitationTypeInfo( qtMap, v, eeId, type );
                 }
-                v.setClazz( ( String ) res[12] );
-                v.setExperimentalDesign( ( Long ) res[13] );
+                v.setClazz( ( String ) res[13] );
+                v.setExperimentalDesign( ( Long ) res[14] );
                 vo.put( eeId, v );
             }
 

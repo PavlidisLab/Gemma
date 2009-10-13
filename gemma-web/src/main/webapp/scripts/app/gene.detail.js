@@ -201,6 +201,7 @@ Ext.onReady(function() {
 					readMethod : DEDVController.getDEDVForDiffExVisualizationByExperiment,
 					experiment : ee,
 					title : "Probes for " + dwr.util.getValue("geneName") + " in " + ee.shortName,
+					thumbnails : false,// only one ee.
 					downloadLink : String
 							.format(
 									"<a ext:qtip='Download these data in a tab delimited format'  target='_blank'  href='/Gemma/dedv/downloadDEDV.html?ee={0}&g={1}' > <img src='/Gemma/images/download.gif'/></a>",
@@ -227,12 +228,13 @@ Ext.onReady(function() {
 Gemma.geneLinkOutPopUp = function(abaImageUrl) {
 
 	// TODO put a null, empty string check in.
-	win = new Ext.Window({
-				html : "<img src='" + abaImageUrl + "'>",
-				width : 500,
-				height : 400,
-				autoScroll : true
-			});
+	var win = new Ext.Window({
+		html : "<img src='" + abaImageUrl + "'>"
+			// ,
+			// width : 500,
+			// height : 400,
+			// autoScroll : true
+		});
 	win.setTitle("<img height='15'  src='/Gemma/images/abaExpressionLegend.gif'>");
 	win.show(this);
 

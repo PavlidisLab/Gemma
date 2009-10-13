@@ -26,7 +26,7 @@ import ubic.gemma.model.genome.gene.GeneValueObject;
 
 /**
  * Expression data for one probe; designed for conveying small amounts of data to clients. NOTE the data are
- * standardized.
+ * standardized by default.
  * 
  * @author kelsey
  * @version $Id$
@@ -34,8 +34,22 @@ import ubic.gemma.model.genome.gene.GeneValueObject;
 public class GeneExpressionProfile {
 
     private boolean allMissing = true;
+
+    /**
+     * A hint about what color to use to display this vector in visualizations.
+     */
     private String color = "black";
+
     private double[] profile;
+
+    /**
+     * Whether the vector is adjusted to mean=0, variance=1
+     */
+    private boolean standardized = true;
+
+    /**
+     * A value indicating 'importance', which can be used to influence display in visualizations. BADLY NAMED.
+     */
     private Integer factor;
 
     /*
@@ -45,11 +59,32 @@ public class GeneExpressionProfile {
     private DesignElement probe;
     private Double pValue = null;
 
+    /**
+     * @param vector
+     */
     public GeneExpressionProfile( DoubleVectorValueObject vector ) {
-        this( vector, null, null, null );
+        this( vector, null, null, null, true );
     }
 
+    /**
+     * @param vector
+     * @param color
+     * @param factor
+     * @param pValue
+     */
     public GeneExpressionProfile( DoubleVectorValueObject vector, String color, Integer factor, Double pValue ) {
+        this( vector, color, factor, pValue, true );
+    }
+
+    /**
+     * @return the standardized
+     */
+    public boolean isStandardized() {
+        return standardized;
+    }
+
+    public GeneExpressionProfile( DoubleVectorValueObject vector, String color, Integer factor, Double pValue,
+            boolean standardize ) {
         this.genes = GeneValueObject.convert2GeneValueObjects( vector.getGenes() );
         this.probe = vector.getDesignElement();
         this.probe.setArrayDesign( null );
@@ -60,7 +95,13 @@ public class GeneExpressionProfile {
             this.color = color;
         }
 
-        this.profile = vector.standardize();
+        this.standardized = standardize;
+
+        if ( this.standardized ) {
+            this.profile = vector.standardize();
+        } else {
+            this.profile = vector.getData();
+        }
 
         int i = 0;
         // Also test to make sure all the data isn't NAN

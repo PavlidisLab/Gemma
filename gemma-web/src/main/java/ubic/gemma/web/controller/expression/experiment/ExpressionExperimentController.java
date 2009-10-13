@@ -885,27 +885,26 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
             return redirectToList( request );
         }
 
-        expressionExperimentService.thawLite( expressionExperiment ); // need to
-        // get at
-        // bioassays.
-
-        Collection<Long> ids = new HashSet<Long>();
+        List<Long> ids = new ArrayList<Long>();
         ids.add( id );
 
-        request.setAttribute( "id", id );
+        Collection<ExpressionExperimentValueObject> eevo = expressionExperimentService.loadValueObjects( ids );
 
-        ModelAndView mav = new ModelAndView( "expressionExperiment.detail" ).addObject( "expressionExperiment",
-                expressionExperiment );
+        // /
 
-        Collection<QuantitationType> prefQts = expressionExperimentService
-                .getPreferredQuantitationType( expressionExperiment );
+        ModelAndView mav = new ModelAndView( "expressionExperiment.detail" );
 
-        if ( prefQts.size() > 0 ) {
-            QuantitationType prefQt = prefQts.iterator().next();
-            mav.addObject( "prefQt", prefQt.getId() );
-        } else {
-            log.warn( expressionExperiment + " has no preferred quantitation type" );
-        }
+        mav.addObject( "expressionExperiment", expressionExperiment );
+
+        // Collection<QuantitationType> prefQts = expressionExperimentService
+        // .getPreferredQuantitationType( expressionExperiment );
+        //
+        // if ( prefQts.size() > 0 ) {
+        // QuantitationType prefQt = prefQts.iterator().next();
+        // mav.addObject( "prefQt", prefQt.getId() );
+        // } else {
+        // log.warn( expressionExperiment + " has no preferred quantitation type" );
+        // }
 
         getEventsOfInterest( expressionExperiment, mav );
 
@@ -916,38 +915,27 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         mav.addObject( "quantitationTypes", quantitationTypes );
         mav.addObject( "qtCount", quantitationTypes.size() );
 
-        // add arrayDesigns used, by name
-        Collection<ArrayDesign> arrayDesigns = new ArrayList<ArrayDesign>();
-        Collection<BioAssay> bioAssays = expressionExperiment.getBioAssays();
-        for ( BioAssay assay : bioAssays ) {
-            ArrayDesign design = assay.getArrayDesignUsed();
-            if ( !arrayDesigns.contains( design ) ) {
-                arrayDesigns.add( design );
-            }
-        }
+        // Collection<ArrayDesign> arrayDesigns = expressionExperimentService.getArrayDesignsUsed( expressionExperiment
+        // );
+        // mav.addObject( "arrayDesigns", arrayDesigns );
 
-        mav.addObject( "arrayDesigns", arrayDesigns );
-
-        // add count of designElementDataVectors
-        Long designElementDataVectorCount = new Long( expressionExperimentService
-                .getDesignElementDataVectorCountById( id ) );
-        mav.addObject( "designElementDataVectorCount", designElementDataVectorCount );
-
-        // load coexpression link count from cache
-        Collection<Long> eeId = new ArrayList<Long>();
-        eeId.add( id );
-        Collection<ExpressionExperimentValueObject> eeVos = expressionExperimentReportService
-                .retrieveSummaryObjects( eeId );
+        // // add count of designElementDataVectors
+        // Long designElementDataVectorCount = new Long( expressionExperimentService
+        // .getDesignElementDataVectorCountById( id ) );
+        // mav.addObject( "designElementDataVectorCount", designElementDataVectorCount );
 
         AuditEvent lastArrayDesignUpdate = expressionExperimentService.getLastArrayDesignUpdate( expressionExperiment,
                 null );
         mav.addObject( "lastArrayDesignUpdate", lastArrayDesignUpdate );
 
-        if ( eeVos != null && eeVos.size() > 0 ) {
-            ExpressionExperimentValueObject vo = eeVos.iterator().next();
-            String eeLinks = vo.getCoexpressionLinkCount().toString();
-            mav.addObject( "eeCoexpressionLinks", eeLinks );
-        }
+        // load report info from cache
+        // Collection<ExpressionExperimentValueObject> eeVos = expressionExperimentReportService
+        // .retrieveSummaryObjects( ids );
+        // if ( eeVos.size() > 0 ) {
+        // ExpressionExperimentValueObject vo = eeVos.iterator().next();
+        // String eeLinks = vo.getCoexpressionLinkCount().toString();
+        // mav.addObject( "eeCoexpressionLinks", eeLinks );
+        // }
 
         mav.addObject( "eeId", id );
         mav.addObject( "eeClass", ExpressionExperiment.class.getName() );
@@ -956,7 +944,7 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         mav.addObject( "isPrivate", isPrivate );
 
         if ( timer.getTime() > 200 ) {
-            log.info( "Get Experiment was slow: id=" + id + " " + timer.getTime() + "ms" );
+            log.info( "Show Experiment was slow: id=" + id + " " + timer.getTime() + "ms" );
         }
 
         return mav;

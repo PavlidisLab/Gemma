@@ -8,6 +8,8 @@ Ext.namespace('Gemma');
  */
 Gemma.TaxonCombo = Ext.extend(Ext.form.ComboBox, {
 
+	name : "taxcomb",
+
 	displayField : 'commonName',
 	valueField : 'id',
 	editable : false,
@@ -22,7 +24,7 @@ Gemma.TaxonCombo = Ext.extend(Ext.form.ComboBox, {
 	isReady : false,
 
 	emptyText : 'Select a taxon',
-	//this allows filtering of taxon
+	// this allows filtering of taxon
 	isDisplayTaxonSpecies : false,
 	isDisplayTaxonWithGenes : false,
 
@@ -59,18 +61,24 @@ Gemma.TaxonCombo = Ext.extend(Ext.form.ComboBox, {
 		}
 	},
 
+	/**
+	 * Called after loading.
+	 */
 	restoreState : function() {
+
 		if (this.tmpState) {
 			this.setTaxon(this.tmpState);
-			delete this.tmpState;			
+			delete this.tmpState;
 		}
 		this.isReady = true;
+
 		if (this.getTaxon()) {
 			this.fireEvent('ready', this.getTaxon().data);
 		} else {
-			// FIXME this happens with Diff but not Coexp.
+			// FIXME this happens with Diff but not Coexp. [???]
 			this.fireEvent('ready');
 		}
+
 	},
 
 	record : Ext.data.Record.create([{
@@ -100,16 +108,15 @@ Gemma.TaxonCombo = Ext.extend(Ext.form.ComboBox, {
 	initComponent : function() {
 
 		var tmpl = new Ext.XTemplate('<tpl for="."><div class="x-combo-list-item">{commonName} ({scientificName})</div></tpl>');
-		//option to either display all taxa, those taxa that are a species or those taxa that have genes.
-		if(this.isDisplayTaxonSpecies){
-			proxyTaxon =  new Ext.data.DWRProxy(GenePickerController.getTaxaSpecies);
-		}else if(this.isDisplayTaxonWithGenes){
-			proxyTaxon =  new Ext.data.DWRProxy(GenePickerController.getTaxaWithGenes);
+		// option to either display all taxa, those taxa that are a species or those taxa that have genes.
+		if (this.isDisplayTaxonSpecies) {
+			proxyTaxon = new Ext.data.DWRProxy(GenePickerController.getTaxaSpecies);
+		} else if (this.isDisplayTaxonWithGenes) {
+			proxyTaxon = new Ext.data.DWRProxy(GenePickerController.getTaxaWithGenes);
+		} else {
+			proxyTaxon = new Ext.data.DWRProxy(GenePickerController.getTaxa);
 		}
-		else{
-			proxyTaxon =  new Ext.data.DWRProxy(GenePickerController.getTaxa);
-		}
-		
+
 		Ext.apply(this, {
 					store : new Ext.data.Store({
 								proxy : proxyTaxon,
@@ -117,7 +124,9 @@ Gemma.TaxonCombo = Ext.extend(Ext.form.ComboBox, {
 											id : "id"
 										}, this.record),
 								remoteSort : false,
-								sortInfo: {field:'commonName'}
+								sortInfo : {
+									field : 'commonName'
+								}
 							}),
 					tpl : tmpl
 				});
@@ -147,36 +156,35 @@ Gemma.TaxonCombo = Ext.extend(Ext.form.ComboBox, {
 	setTaxon : function(taxon) {
 		if (taxon.id) {
 			this.setValue(taxon.id);
-		} else{ 
-				this.setValue(taxon);
+		} else {
+			this.setValue(taxon);
 		}
 	},
-	
-	
-	
+
 	/**
-	 * returns complete taxon object that matches the common name given if successful.  Else return -1.
+	 * returns complete taxon object that matches the common name given if successful. Else return -1.
 	 * 
-	 * @param {commonName} the common name of the taxon 
-	 *            
+	 * @param {commonName}
+	 *            the common name of the taxon
+	 * 
 	 */
-	setTaxonByCommonName : function(commonName){
+	setTaxonByCommonName : function(commonName) {
 		var records = this.store.getRange();
 
-		if (!records || records.size() < 1){			
+		if (!records || records.size() < 1) {
 			return -1;
 		}
-		
+
 		var taxonId = -1;
-		for(var i = 0; i<records.size(); i++){
-			if (records[i].data.commonName === commonName){
-					this.setTaxon(records[i].data.id);
-					return records[i].data;
-			}				
+		for (var i = 0; i < records.size(); i++) {
+			if (records[i].data.commonName === commonName) {
+				this.setTaxon(records[i].data.id);
+				return records[i].data;
+			}
 		}
-		
-		return -1;		
-		
+
+		return -1;
+
 	}
 
 });

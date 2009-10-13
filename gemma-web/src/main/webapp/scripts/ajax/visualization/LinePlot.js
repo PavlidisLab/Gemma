@@ -25,7 +25,7 @@ var LinePlot = function() {
 	var MAX_SAMPLE_LABEL_HEIGHT_PIXELS = 120;
 	var TRIM = 5;
 	var EXPANDED_BOX_WIDTH = 10; // maximum value to use when expanded.
-	var SAMPLE_LABEL_MAX_CHAR = 25;
+	var SAMPLE_LABEL_MAX_CHAR = 125;
 
 	function LinePlot(container, data, config, sampleLabels) {
 
@@ -98,7 +98,7 @@ var LinePlot = function() {
 			if (sampleLabels) {
 
 				if (spacePerPoint >= EXPANDED_BOX_WIDTH) {
-					var fontSize = spacePerPoint - 1;
+					var fontSize = Math.min(12, spacePerPoint - 1);
 					// longest label...
 					var maxLabelLength = 0;
 					for (var j = 0; j < sampleLabels.length; j++) {

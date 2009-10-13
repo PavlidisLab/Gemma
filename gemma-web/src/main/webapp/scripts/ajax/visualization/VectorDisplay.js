@@ -1,182 +1,124 @@
+/*
+ * The Gemma project
+ * 
+ * Copyright (c) 2008 University of British Columbia
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
+ * 
+ */
 Ext.namespace('Gemma');
 Gemma.MAX_LABEL_LENGTH_CHAR = 25;
 Gemma.MAX_GENEINFO_LENGTH_CHAR = 125;
 
 /**
- * Configure : title, readMethod; then call 'show' passing in the parameters for
- * the read method.
+ * Simple display of vectors in a heatmap display, without thumbnails. Configuration : title, readMethod; then call
+ * 'show' passing in the array of parameters for the read method.
  * 
  * @version $Id$
+ * @deprecated
  * @author Paul based on klcs classes.
  */
+Gemma.VectorDisplay = Ext.extend(Ext.Window,
 
-Gemma.VectorDisplay = Ext
-		.extend(
-				Ext.Window,
+{
+			width : 420,
+			height : 400,
+			bodyStyle : "background:white",
+			stateful : false,
+			noGeneLabel : "[No gene]",
 
-				{
-					width : 420,
-					height : 400,
-					bodyStyle : "background:white",
-					stateful : false,
-					noGeneLabel : "[No gene]",
+			plugins : [new Ext.ux.plugins.ContainerMask({
+						msg : 'Loading ... <img src="/Gemma/images/loading.gif" />',
+						masked : true
+					})],
 
-					heatmapConfig : {
-						xaxis : {
-							noTicks : 0
-						},
-						yaxis : {
-							noTicks : 0
-						},
-						grid : {
-							labelMargin : 0,
-							marginColor : "white"
-						},
-						shadowSize : 0,
+			graphConfig : {
+				label : true,
+				forceFit : true
+			},
 
-						label : true
-					},
+			show : function(config) {
 
-					show : function(config) {
+				this.showMask();
 
-						this.loadMask = new Ext.LoadMask(Ext.getBody());
+				var params = [];
+				if (config.params) {
+					params = config.params;
+				}
 
-						var params = [];
-						if (config.params) {
-							params = config.params;
-						}
-
-						this.dataView.getStore().load( {
+				this.dataView.getStore().load({
 							params : params,
 							callback : this.dedvCallback.createDelegate(this)
 						});
 
-						Gemma.VectorDisplay.superclass.show.call(this);
+				Gemma.VectorDisplay.superclass.show.call(this);
 
-						this.loadMask.show();
+			},
 
-					},
+			dedvCallback : function(data) {
 
-					dedvCallback : function(data) {
+				/*
+				 * Note that this only handles data from a single experiment --- data.length == 1.
+				 */
+				if (!data || data[0].data.profiles.length == 0) {
+					this.hide();
+					Ext.Msg.alert('Status', 'No data available');
+					return;
+				}
 
-						if (!data || data.size() == 0) {
-							this.hide();
-							Ext.Msg.alert('Status', 'Data not yet available');
-							return;
-						}
+				this.sampleLabels = data[0].data.sampleNames;
 
-						this.flotrData = [];
+				this.preparedData = Gemma.prepareProfiles(data[0].data);
 
-						/*
-						 * FIXME this doesn't handle the case where we got
-						 * multiple chunks back! (for multiple ees)
-						 */
-						var coordinateProfile = data[0].data.profiles;
+				var eevo = data[0].data.eevo;
 
-						// can be null
-						this.sampleLabels = data[0].data.sampleNames;
+				Heatmap.draw($(this.body.id), this.preparedData.profiles, this.graphConfig, this.sampleLabels);
 
-						var geneIds = [];
+				this.hideMask();
 
-						for ( var i = 0; i < coordinateProfile.size(); i++) {
+				// var downloadLink = String
+				// .format(
+				// "<a ext:qtip='Download raw data in a tab delimited format' target='_blank'
+				// href='/Gemma/dedv/downloadDEDV.html?ee={0}&g={1}' ><img src='/Gemma/images/download.gif'/></a>",
+				// eevo.id, geneIds);
 
-							var coordinateObject = coordinateProfile[i].points;
+				// this.setTitle(this.title + "&nbsp;&nbsp;" + downloadLink);
 
-							var probeId = coordinateProfile[i].probe.id;
-							var probe = coordinateProfile[i].probe.name;
-							var genes = coordinateProfile[i].genes;
+				this.doLayout();
 
-							var geneNames = this.noGeneLabel;
+			},
 
-							var geneOfficialName = '';
+			/**
+			 * 
+			 */
+			refresh : function() {
+				$(this.body.id).innerHTML = '';
+				Heatmap.draw($(this.body.id), this.preparedData.profiles, this.graphConfig, this.sampleLabels);
+			},
 
-							if (genes && genes.size() > 0 && genes[0].name) {
+			initComponent : function() {
 
-								geneNames = genes[0].name;
-								geneOfficialName = genes[0].officialName == null ? '[?]' : genes[0].officialName;
-
-								for ( var k = 1; k < genes.size(); k++) {
-
-									geneOfficialName = geneOfficialName + ", "
-											+ (genes[k].officialName == null ? '[?]' : genes[k].officialName);
-
-									geneIds.push(genes[k].id);
-
-									geneNames = geneNames + ", " + genes[k].name;
-
-								}
-							}
-
-							var oneProfile = [];
-							for ( var j = 0; j < coordinateObject.size(); j++) {
-								var point = [ coordinateObject[j].x, coordinateObject[j].y ];
-								oneProfile.push(point);
-							}
-
-							var plotConfig = {
-								data : oneProfile,
-								genes : genes,
-								label : " <a  href='/Gemma/compositeSequence/show.html?id=" + probeId
-										+ "' target='_blank' ext:qtip= '" + probe + " (" + geneNames + ")" + "'> "
-										+ Ext.util.Format.ellipsis(geneNames, Gemma.MAX_LABEL_LENGTH_CHAR)
-										+ "</a> &nbsp;&nbsp;&nbsp;"
-										+ Ext.util.Format.ellipsis(geneOfficialName, Gemma.MAX_GENEINFO_LENGTH_CHAR),
-								labelID : probeId,
-								lines : {
-									lineWidth : Gemma.LINE_THICKNESS
-								},
-								// Needs to be added so switching views work
-								probe : {
-									id : probeId,
-									name : probe
-								},
-								points : coordinateObject
-
-							};
-
-							this.flotrData.push(plotConfig);
-						}
-
-						var eevo = data[0].data.eevo;
-
-						Heatmap.draw($(this.body.id), this.flotrData, this.heatmapConfig, this.sampleLabels);
-
-						if (this.loadMask) {
-							this.loadMask.hide();
-						}
-
-						var downloadLink = String
-								.format(
-										"<a ext:qtip='Download raw data in a tab delimted format'  target='_blank'  href='/Gemma/dedv/downloadDEDV.html?ee={0} &g={1}' > <img src='/Gemma/images/download.gif'/></a>",
-										eevo.id, geneIds);
-
-						this.setTitle(this.title + "&nbsp;&nbsp;" + downloadLink);
-
-						this.doLayout(true, true);
-
-					},
-
-					refresh : function() {
-						$(this.body.id).innerHTML = '';
-						Heatmap.draw($(this.body.id), this.flotrData, this.heatmapConfig, this.sampleLabels);
-					},
-
-					initComponent : function() {
-
-						this.dataView = new Ext.DataView( {
+				this.dataView = new Ext.DataView({
 							autoHeight : true,
 							emptyText : 'Data not available',
 							loadingText : 'Loading...',
-							store : new Gemma.VisualizationStore( {
-								readMethod : this.readMethod
-							})
+							store : new Gemma.VisualizationStore({
+										readMethod : this.readMethod
+									})
 						});
 
-						Gemma.VectorDisplay.superclass.initComponent.call(this);
+				Gemma.VectorDisplay.superclass.initComponent.call(this);
 
-						this.on('resize', function(component, width, height) {
+				this.on('resize', function(component, width, height) {
 
-							if (!this.flotrData) {
+							if (!this.preparedData) {
 								return;
 							}
 
@@ -184,6 +126,6 @@ Gemma.VectorDisplay = Ext
 
 						}.createDelegate(this))
 
-					}
+			}
 
-				});
+		});
