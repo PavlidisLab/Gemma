@@ -99,7 +99,7 @@ public class NCBIGeneInfo {
      * 36
      */
     public enum GeneType {
-        UNKNOWN, TRNA, RRNA, SNRNA, SCRNA, SNORNA, PROTEINCODING, PSEUDO, TRANSPOSON, MISCRNA, OTHER
+        UNKNOWN, TRNA, RRNA, SNRNA, SCRNA, SNORNA, PROTEINCODING, PSEUDO, TRANSPOSON, MISCRNA, NCRNA, OTHER
     };
 
     public enum NomenclatureStatus {
@@ -134,7 +134,9 @@ public class NCBIGeneInfo {
             return GeneType.TRANSPOSON;
         } else if ( typeString.equals( "miscRNA" ) ) {
             return GeneType.MISCRNA;
-        } else if ( typeString.equals( "other" ) ) {
+        }else if ( typeString.equals( "ncRNA" ) ) {
+            return GeneType.NCRNA;
+        }else if ( typeString.equals( "other" ) ) {
             return GeneType.OTHER;
         } else {
             throw new IllegalArgumentException( "Unknown gene type '" + typeString + "'" );
