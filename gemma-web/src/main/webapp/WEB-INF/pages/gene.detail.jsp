@@ -163,7 +163,7 @@
 		</c:if>
 		<div style="valign: top" class="clearfix">
 			<c:forEach var="img" items="${representativeImages}">
-				<div style="float: left; padding: 8px">
+				<div style="cursor:pointer;float: left; padding: 8px">
 					<a title='Allen Brain Atlas Image for <c:out value="${gene.officialSymbol}"/>, click to enlarge ' 
 						onClick="Gemma.geneLinkOutPopUp( &#34; ${img.downloadExpressionPath} &#34; )"> <img
 							src="${img.expressionThumbnailUrl}" /> </a>

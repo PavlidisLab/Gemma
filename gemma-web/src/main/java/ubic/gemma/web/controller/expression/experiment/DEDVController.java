@@ -525,7 +525,7 @@ public class DEDVController extends BaseFormController {
 
         ModelAndView mav = new ModelAndView( new TextView() );
 
-        if ( geneIds == null || geneIds.isEmpty() || eeIds == null || eeIds.isEmpty() ) {
+        if ( eeIds == null || eeIds.isEmpty() ) {
             mav.addObject( "text", "Input empty for finding DEDVs: " + geneIds + " and " + eeIds );
             return mav;
 

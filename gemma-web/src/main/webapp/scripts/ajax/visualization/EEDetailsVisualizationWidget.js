@@ -67,16 +67,21 @@ Gemma.EEDetailsVisualizationWidget = Ext.extend(Gemma.GeneChooserPanel, {
 		var geneList = this.getGeneIds();
 		var eeId = Ext.get("eeId").getValue();
 		var title = '';
+		var downloadLink = '';
 		if (geneList.length > 0) {
 			title = "Data for selected genes";
+			downloadLink = String.format("/Gemma/dedv/downloadDEDV.html?ee={0}&g={1}", eeId, geneList.join(','));
 		} else {
 			geneList = [];
-			title = "Data for a 'random' sampling of probes"
+			title = "Data for a 'random' sampling of probes", downloadLink = String.format(
+					"/Gemma/dedv/downloadDEDV.html?ee={0}", eeId);
+
 		}
 
 		this.visWindow = new Gemma.VisualizationWithThumbsWindow({
 					title : title,
-					thumbnails : false
+					thumbnails : false,
+					downloadLink : downloadLink
 				});
 
 		this.visWindow.show({

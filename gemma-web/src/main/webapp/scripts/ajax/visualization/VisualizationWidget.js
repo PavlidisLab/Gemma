@@ -40,6 +40,7 @@ Gemma.DataVectorThumbnailsView = Ext.extend(Ext.DataView, {
 			autoHeight : true,
 			emptyText : 'No data',
 			loadingText : 'Loading data ...',
+			name : "vectorDV",
 
 			singleSelect : true,
 
@@ -247,11 +248,11 @@ Gemma.ProfileTemplate = Ext.extend(Ext.XTemplate, {
 
 				Gemma.ProfileTemplate.superclass.overwrite.call(this, el, values, ret);
 
-				if (this.smooth) {
-					this.graphConfig.smoothLineGraphs = true;
-				} else {
-					this.graphConfig.smoothLineGraphs = false;
-				}
+				// if (this.smooth) {
+				// this.graphConfig.smoothLineGraphs = true;
+				// } else {
+				// this.graphConfig.smoothLineGraphs = false;
+				// }
 
 				for (var i = 0; i < values.length; i++) {
 					var record = values[i];
@@ -278,7 +279,10 @@ Gemma.HeatmapTemplate = Ext.extend(Ext.XTemplate, {
 
 			graphConfig : {
 				label : false, // shows labels at end of row, no for thumbnails
-				forceFit : true
+				forceFit : true,
+				maxBoxHeight : 3,
+				allowTargetSizeAdjust : true
+				// make the rows smaller in the thumbnails
 			},
 
 			overwrite : function(el, values, ret) {
@@ -349,6 +353,7 @@ Gemma.VisualizationZoomPanel = Ext.extend(Ext.Panel, {
 	bodyStyle : "background:white",
 	layout : 'fit',
 	title : "", // dont show a title.
+	name : "vizZoom",
 
 	plugins : [new Ext.ux.plugins.ContainerMask({
 				msg : 'Loading ... <img src="/Gemma/images/loading.gif" />',
@@ -407,10 +412,10 @@ Gemma.VisualizationZoomPanel = Ext.extend(Ext.Panel, {
 		if (eevo) {
 
 			var eeInfoTitle = "<a ext.qtip='Click for details on experiment (opens in new window)' target='_blank'  href='/Gemma/expressionExperiment/showExpressionExperiment.html?id="
-					+ eevo.id + " '> " + eevo.shortName + "</a>: " + Ext.util.Format.ellipsis(eevo.name, 75);
+					+ eevo.id + " '>" + eevo.shortName + "</a> (" + Ext.util.Format.ellipsis(eevo.name, 35) + ")";
 
-			if (this.ownerCt) {
-				// FIXME...update the owning panel title. Must keep a copy of the original.
+			if (this.ownerCt && this.ownerCt.originalTitle) {
+				this.ownerCt.setTitle(this.ownerCt.originalTitle + "&nbsp;In:&nbsp;" + eeInfoTitle);
 			} else {
 				this.setTitle(eeInfoTitle);
 			}
@@ -535,6 +540,7 @@ Gemma.VisualizationWithThumbsWindow = Ext.extend(Ext.Window, {
 	maximizable : true,
 	height : Gemma.ZOOM_PLOT_SIZE,
 	width : 600,
+	name : "VizWin",
 
 	thumbnails : true,
 
@@ -560,6 +566,8 @@ Gemma.VisualizationWithThumbsWindow = Ext.extend(Ext.Window, {
 
 	toggleLegendBtnId : 'toggleLegendBtn-' + Ext.id(),
 
+	downloadDataBtnId : 'downloadDataBtn-' + Ext.id(),
+
 	getState : function() {
 		return Ext.apply(Ext.Window.superclass.getState.call(this) || {}, {
 					heatmapMode : this.heatmapMode,
@@ -573,12 +581,7 @@ Gemma.VisualizationWithThumbsWindow = Ext.extend(Ext.Window, {
 		if (!success || records.length === 0) {
 			return;
 		}
-
 		this.zoom(records[0], this.body.id);
-
-		if (this.downloadLink) {
-			// this.setTitle((this.title ? this.title + " " : "") + this.downloadLink);
-		}
 	},
 
 	setHeatmapMode : function(b) {
@@ -613,7 +616,7 @@ Gemma.VisualizationWithThumbsWindow = Ext.extend(Ext.Window, {
 		if (this.forceFitPlots) {
 			this.forceFitPlots = false;
 			this.zoomPanel.forceFitPlots = false;
-			btn.setText("Force fit");
+			btn.setText("Fit width");
 		} else {
 			this.forceFitPlots = true;
 			this.zoomPanel.forceFitPlots = true;
@@ -629,7 +632,7 @@ Gemma.VisualizationWithThumbsWindow = Ext.extend(Ext.Window, {
 	/**
 	 * handler
 	 * 
-	 * @param {}
+	 * @param {}F
 	 *            btn
 	 */
 	toggleLegend : function(btn) {
@@ -648,7 +651,8 @@ Gemma.VisualizationWithThumbsWindow = Ext.extend(Ext.Window, {
 		}
 
 		// force a refresh of the thumbnails.
-		var template = Gemma.getProfileThumbnailTemplate(this.heatmapMode, this.havePvalues, this.smoothLineGraphs);
+		var template = Gemma.getProfileThumbnailTemplate(this.heatmapMode, this.havePvalues, /* this.smoothLineGraphs */
+				false);
 		this.dv.setTemplate(template);
 
 		// force a refresh of the zoom.
@@ -658,38 +662,51 @@ Gemma.VisualizationWithThumbsWindow = Ext.extend(Ext.Window, {
 	},
 
 	/**
+	 * Handler
+	 * 
+	 * @param {}
+	 *            btn
+	 */
+	downloadData : function(btn) {
+		if (this.downloadLink) {
+			window.open(this.downloadLink);
+		}
+	},
+
+	/**
 	 * handler
 	 * 
 	 * @param {}
 	 *            btn
 	 */
 	toggleSmooth : function(btn) {
-		if (this.heatmapMode) {
-			return;
-		}
-
-		if (this.smoothLineGraphs) {
-			this.smoothLineGraphs = false;
-			this.zoomPanel.smoothLineGraphs = false;
-			btn.setText("Smooth");
-		} else {
-			this.smoothLineGraphs = true;
-			this.zoomPanel.smoothLineGraphs = true;
-			btn.setText("Unsmooth");
-		}
-
-		// force a refresh of the thumbnails.
-		var template = Gemma.getProfileThumbnailTemplate(this.heatmapMode, this.havePvalues, this.smoothLineGraphs);
-		this.dv.setTemplate(template);
-
-		// force a refresh of the zoom.
-		var record = this.dv.getSelectedOrFirst();
-
-		this.zoom(record);
+		// if (this.heatmapMode) {
+		// return;
+		// }
+		//
+		// if (this.smoothLineGraphs) {
+		// this.smoothLineGraphs = false;
+		// this.zoomPanel.smoothLineGraphs = false;
+		// btn.setText("Smooth");
+		// } else {
+		// this.smoothLineGraphs = true;
+		// this.zoomPanel.smoothLineGraphs = true;
+		// btn.setText("Unsmooth");
+		// }
+		//
+		// // force a refresh of the thumbnails.
+		// var template = Gemma.getProfileThumbnailTemplate(this.heatmapMode, this.havePvalues, this.smoothLineGraphs);
+		// this.dv.setTemplate(template);
+		//
+		// // force a refresh of the zoom.
+		// var record = this.dv.getSelectedOrFirst();
+		//
+		// this.zoom(record);
 	},
 
 	updateTemplate : function() {
-		var template = Gemma.getProfileThumbnailTemplate(this.heatmapMode, this.havePvalues, this.smoothLineGraphs);
+		var template = Gemma.getProfileThumbnailTemplate(this.heatmapMode, this.havePvalues, /* this.smoothLineGraphs */
+				false);
 		this.dv.setTemplate(template); // causes update of thumbnails.
 	},
 
@@ -700,15 +717,15 @@ Gemma.VisualizationWithThumbsWindow = Ext.extend(Ext.Window, {
 	 *            btn
 	 */
 	switchView : function(btn) {
-		var smoothBtn = Ext.getCmp(this.smoothBtnId);
+		// var smoothBtn = Ext.getCmp(this.smoothBtnId);
 		var toggleLegendBtn = Ext.getCmp(this.toggleLegendBtnId);
 		if (this.heatmapMode) {
 			this.setHeatmapMode(false);
 			btn.setText("Switch to heatmap");
 
-			if (smoothBtn) {
-				smoothBtn.setVisible(true);
-			}
+			// if (smoothBtn) {
+			// smoothBtn.setVisible(true);
+			// }
 
 			if (toggleLegendBtn) {
 				toggleLegendBtn.setVisible(true);
@@ -717,9 +734,9 @@ Gemma.VisualizationWithThumbsWindow = Ext.extend(Ext.Window, {
 		} else {
 			this.setHeatmapMode(true);
 
-			if (smoothBtn) {
-				smoothBtn.setVisible(false);
-			}
+			// if (smoothBtn) {
+			// smoothBtn.setVisible(false);
+			// }
 
 			if (toggleLegendBtn) {
 				toggleLegendBtn.setVisible(false);
@@ -754,6 +771,10 @@ Gemma.VisualizationWithThumbsWindow = Ext.extend(Ext.Window, {
 	},
 
 	initComponent : function() {
+
+		if (this.title) {
+			this.originalTitle = this.title;
+		}
 
 		this.zoomLegendId = 'zoomLegend-' + Ext.id();
 
@@ -810,26 +831,39 @@ Gemma.VisualizationWithThumbsWindow = Ext.extend(Ext.Window, {
 		Ext.apply(this, {
 					items : items,
 					bbar : new Ext.Toolbar({
-								items : [browserWarning, '->', {
+								items : [{
+											xtype : 'tbbutton',
+											id : this.downloadDataBtnId,
+											icon : '../images/download.gif',
+											cls : 'x-btn-text-icon',
+											disabled : true, // enabled after load.
+											tooltip : "Download displayed data in a tab-delimited format",
+											handler : this.downloadData.createDelegate(this)
+										}, browserWarning, '->', {
 											xtype : 'tbbutton', // in ext3, use button; tbbutton is deprecated.
 											text : this.showLegend ? "Hide legend" : "Show legend",
 											id : this.toggleLegendBtnId,
 											handler : this.toggleLegend.createDelegate(this),
+											tooltip : "Toggle display of the plot legend",
 											disabled : true,
 											hidden : this.heatmapMode
-										}, {
+										},
+
+										// {
+										// xtype : 'tbbutton',
+										// text : this.smoothLineGraphs ? "Unsmooth" : "Smooth",
+										// id : this.smoothBtnId,
+										// handler : this.toggleSmooth.createDelegate(this),
+										// disabled : true,
+										// hidden : true
+										// },
+										//											
+										{
 											xtype : 'tbbutton',
-											text : this.smoothLineGraphs ? "Unsmooth" : "Smooth",
-											id : this.smoothBtnId,
-											handler : this.toggleSmooth.createDelegate(this),
-											disabled : true,
-											hidden : this.heatmapMode
-											// visible only in line graph mode.
-									}	, {
-											xtype : 'tbbutton',
-											text : this.forceFitPlots ? "Expand" : "Force fit",
+											text : this.forceFitPlots ? "Expand" : "Fit width",
 											id : this.forceFitBtnId,
 											handler : this.toggleForceFit.createDelegate(this),
+											tooltip : "Toggle forcing of the plot to fit in the width of the window",
 											disabled : true,
 											hidden : false
 										}, {
@@ -847,23 +881,24 @@ Gemma.VisualizationWithThumbsWindow = Ext.extend(Ext.Window, {
 		this.dv.getStore().on('load', function(s, records, options) {
 
 					Ext.getCmp(this.toggleViewBtnId).enable();
-					Ext.getCmp(this.smoothBtnId).enable();
+					// Ext.getCmp(this.smoothBtnId).enable();
 					Ext.getCmp(this.forceFitBtnId).enable();
 					Ext.getCmp(this.toggleLegendBtnId).enable();
+					Ext.getCmp(this.downloadDataBtnId).enable();
 
 					// So initial state is sure to be okay, after restore from cookie
 					Ext.getCmp(this.toggleViewBtnId).setText(this.heatmapMode
 							? "Switch to line plot"
 							: "Switch to heatmap");
-					Ext.getCmp(this.forceFitBtnId).setText(this.forceFitPlots ? "Expand" : "Force fit");
+					Ext.getCmp(this.forceFitBtnId).setText(this.forceFitPlots ? "Expand" : "Fit width");
 					Ext.getCmp(this.toggleLegendBtnId).setText(this.showLegend ? "Hide legend" : "Show legend");
-					Ext.getCmp(this.smoothBtnId).setText(this.smoothLineGraphs ? "Unsmooth" : "Smooth");
+					// Ext.getCmp(this.smoothBtnId).setText(this.smoothLineGraphs ? "Unsmooth" : "Smooth");
 
 					if (this.heatmapMode) {
-						Ext.getCmp(this.smoothBtnId).hide();
+						// Ext.getCmp(this.smoothBtnId).hide();
 						Ext.getCmp(this.toggleLegendBtnId).hide();
 					} else {
-						Ext.getCmp(this.smoothBtnId).show();
+						// Ext.getCmp(this.smoothBtnId).show();
 						Ext.getCmp(this.toggleLegendBtnId).show();
 					}
 
@@ -882,7 +917,7 @@ Gemma.VisualizationWithThumbsWindow = Ext.extend(Ext.Window, {
 		this.on('staterestore', function(w, state) {
 					this.zoomPanel.heatmapMode = this.heatmapMode;
 					this.zoomPanel.forceFitPlots = this.forceFitPlots;
-					this.zoomPanel.smoothLineGraphs = this.smoothLineGraphs;
+					// this.zoomPanel.smoothLineGraphs = this.smoothLineGraphs;
 					this.zoomPanel.showLegend = this.showLegend;
 					this.updateTemplate();
 				}, this);

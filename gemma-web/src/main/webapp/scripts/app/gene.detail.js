@@ -126,104 +126,61 @@ Gemma.GeneProductGrid = Ext.extend(Gemma.GemmaGridPanel, {
 
 Ext.onReady(function() {
 
-	Ext.QuickTips.init();
+			Ext.QuickTips.init();
 
-	Ext.state.Manager.setProvider(new Ext.state.CookieProvider());
+			Ext.state.Manager.setProvider(new Ext.state.CookieProvider());
 
-	geneid = dwr.util.getValue("gene");
+			geneid = dwr.util.getValue("gene");
 
-	var gpGrid = new Gemma.GeneProductGrid({
-				geneid : geneid,
-				renderTo : "geneproduct-grid",
-				height : 200,
-				width : 400
-			});
+			var gpGrid = new Gemma.GeneProductGrid({
+						geneid : geneid,
+						renderTo : "geneproduct-grid",
+						height : 200,
+						width : 400
+					});
 
-	var gogrid = new Gemma.GeneGOGrid({
-				renderTo : "go-grid",
-				geneid : geneid,
-				height : 200,
-				width : 500
-			});
+			var gogrid = new Gemma.GeneGOGrid({
+						renderTo : "go-grid",
+						geneid : geneid,
+						height : 200,
+						width : 500
+					});
 
-	// Coexpression grid.
+			// Coexpression grid.
 
-	var coexpressedGeneGrid = new Gemma.CoexpressionGrid({
-				width : 400,
-				colspan : 2,
-				// user : false,
-				lite : true,
-				renderTo : "coexpression-grid"
-			});
+			var coexpressedGeneGrid = new Gemma.CoexpressionGrid({
+						width : 400,
+						colspan : 2,
+						// user : false,
+						lite : true,
+						renderTo : "coexpression-grid"
+					});
 
-	coexpressedGeneGrid.doSearch({
-				geneIds : [geneid],
-				quick : true,
-				stringency : 2,
-				forceProbeLevelSearch : false
-			});
+			coexpressedGeneGrid.doSearch({
+						geneIds : [geneid],
+						quick : true,
+						stringency : 2,
+						forceProbeLevelSearch : false
+					});
 
-	// diff expression grid
+			// diff expression grid
 
-	var diffExGrid = new Gemma.ProbeLevelDiffExGrid({
-				width : 650,
-				height : 200,
-				renderTo : "diff-grid"
-			});
+			var diffExGrid = new Gemma.ProbeLevelDiffExGrid({
+						width : 650,
+						height : 200,
+						renderTo : "diff-grid"
+					});
 
-	var eeNameColumnIndex = diffExGrid.getColumnModel().getIndexById('expressionExperimentName');
-	diffExGrid.getColumnModel().setHidden(eeNameColumnIndex, true);
-	var visColumnIndex = diffExGrid.getColumnModel().getIndexById('visualize');
-	diffExGrid.getColumnModel().setHidden(visColumnIndex, false);
+			var eeNameColumnIndex = diffExGrid.getColumnModel().getIndexById('expressionExperimentName');
+			diffExGrid.getColumnModel().setHidden(eeNameColumnIndex, true);
+			var visColumnIndex = diffExGrid.getColumnModel().getIndexById('visualize');
+			diffExGrid.getColumnModel().setHidden(visColumnIndex, false);
 
-	diffExGrid.getStore().load({
-				params : [geneid, Gemma.DIFF_THRESHOLD, Gemma.MAX_DIFF_RESULTS]
-			});
+			diffExGrid.getStore().load({
+						params : [geneid, Gemma.DIFF_THRESHOLD, Gemma.MAX_DIFF_RESULTS]
+					});
 
-	var visDifWindow = null;
-
-	/*
-	 * FIXME: make this part of the diff ex grid class, if at all possible!
-	 */
-	diffExGrid.geneDiffRowClickHandler = function(grid, rowIndex, columnIndex, e) {
-		if (diffExGrid.getSelectionModel().hasSelection()) {
-
-			var record = diffExGrid.getStore().getAt(rowIndex);
-			var fieldName = diffExGrid.getColumnModel().getDataIndex(columnIndex);
-			if (fieldName == 'visualize') {
-
-				var ee = record.data.expressionExperiment;
-
-				if (visDifWindow != null)
-					visDifWindow.close();
-
-				visDifWindow = new Gemma.VisualizationDifferentialWindow({
-					readMethod : DEDVController.getDEDVForDiffExVisualizationByExperiment,
-					experiment : ee,
-					title : "Probes for " + dwr.util.getValue("geneName") + " in " + ee.shortName,
-					thumbnails : false,// only one ee.
-					downloadLink : String
-							.format(
-									"<a ext:qtip='Download these data in a tab delimited format'  target='_blank'  href='/Gemma/dedv/downloadDEDV.html?ee={0}&g={1}' > <img src='/Gemma/images/download.gif'/></a>",
-									ee.id, geneid)
-				});
-
-				var params = [];
-				params.push(ee.id);
-				params.push(geneid);
-				params.push(Gemma.DIFF_THRESHOLD);
-
-				visDifWindow.show({
-							params : params
-						});
-
-			}
-		}
-	};
-
-	diffExGrid.on("cellclick", diffExGrid.geneDiffRowClickHandler.createDelegate(visDifWindow), diffExGrid);
-
-});
+		});
 
 Gemma.geneLinkOutPopUp = function(abaImageUrl) {
 

@@ -27,8 +27,9 @@ var Heatmap = function() {
 	var CLIP = 3; // contrast. TODO: make it adjustable in range 2-4?
 	var NAN_COLOR = "grey";
 	var SHOW_LABEL_MIN_SIZE = 9; // 6 is unreadable; 8 is almost okay.
-	var MIN_BOX_HEIGHT = 10;
-	var MAX_BOX_HEIGHT = 14;
+	var MIN_BOX_HEIGHT_FOR_LABELS = 12;
+	var MAX_BOX_HEIGHT = 16;
+	var MIN_BOX_HEIGHT = 2;
 	var MAX_ROWS_BEFORE_SCROLL = 30;
 	var MIN_IMAGE_SIZE = 50;
 
@@ -42,8 +43,9 @@ var Heatmap = function() {
 	var DEFAULT_ROW_LABEL = "&nbsp;";
 
 	var DEFAULT_CONFIG = {
-		label : false
-		// shows labels at end of row
+		label : false,
+		maxBoxHeight : MAX_BOX_HEIGHT,
+		allowTargetSizeAdjust : false
 	};
 
 	// black-red-orange-yellow-white
@@ -65,6 +67,10 @@ var Heatmap = function() {
 
 		if (!config) {
 			config = DEFAULT_CONFIG;
+		} else {
+			config.label = config.label || false;
+			config.maxBoxHeight = config.maxBoxHeight || MAX_BOX_HEIGHT;
+			config.allowTargetSizeAdjust = config.allowTargetSizeAdjust || false;
 		}
 
 		drawMap(data, container, COLOR_16, config, sampleLabels);
@@ -80,8 +86,10 @@ var Heatmap = function() {
 
 			// Get dimensions of target to determine box size in heat map
 			var panelWidth = target.getWidth() - TRIM;
+			var panelHeight = target.getHeight() - TRIM;
+			var numRows = vectorObjs.length;
 
-			var rowLabelSizePixels = MAX_LABEL_LENGTH_PIXELS;
+			var rowLabelSizePixels = 0;
 
 			if (config.label) {
 
@@ -102,8 +110,8 @@ var Heatmap = function() {
 				rowLabelSizePixels = Math.min(MAX_LABEL_LENGTH_PIXELS, maxRowLabelLength * 8);
 			}
 
-			var heatmapHeight = target.getHeight() - TRIM; // initial guess.
-			var labelHeight;
+			var heatmapHeight = panelHeight; // initial guess.
+			var labelHeight = 0;
 
 			if (sampleLabels) {
 
@@ -130,18 +138,22 @@ var Heatmap = function() {
 				heatmapHeight = heatmapHeight - labelHeight;
 			}
 
-			var numberOfRowsToComputeSizeBy = Math.min(MAX_ROWS_BEFORE_SCROLL, vectorObjs.length);
+			var calculatedBoxHeight = Math.floor(heatmapHeight / numRows);
 
-			// FIXME maybe make the boxheight fixed, that way we can figure out how much space the labels can have.
-			var calculatedBoxHeight = Math.floor(heatmapHeight / numberOfRowsToComputeSizeBy) - 2;
-
-			if (calculatedBoxHeight > MAX_BOX_HEIGHT) {
-				boxHeight = MAX_BOX_HEIGHT;
-			} else if (calculatedBoxHeight < MIN_BOX_HEIGHT) {
-				boxHeight = MIN_BOX_HEIGHT;
+			if (calculatedBoxHeight > config.maxBoxHeight) {
+				boxHeight = config.maxBoxHeight;
+			} else if (calculatedBoxHeight < MIN_BOX_HEIGHT_FOR_LABELS && config.label) {
+				boxHeight = MIN_BOX_HEIGHT_FOR_LABELS;
 			} else {
-				boxHeight = calculatedBoxHeight;
+				boxHeight = Math.max(MIN_BOX_HEIGHT, calculatedBoxHeight);
 			}
+
+			if (boxHeight <= 0) {
+				return;
+			}
+
+			// Final.
+			heatmapHeight = boxHeight * numRows + TRIM;
 
 			var numberOfColumns = vectorObjs[0].data.length; // assumed to be the same always.
 
@@ -151,8 +163,8 @@ var Heatmap = function() {
 			}
 
 			var increment = 1;
-			var heatmapWidth;
-			var boxWidth;
+			var heatmapWidth = 1;
+			var boxWidth = 1;
 			if (config.forceFit) {
 				/*
 				 * shrink it down. Should always be true for thumbnails, or settable by user for big ones.
@@ -184,22 +196,28 @@ var Heatmap = function() {
 				heatmapWidth = boxWidth * numberOfColumns;
 			}
 
-			// put the heatmap in a scroll panel if it is too big to display. // FIXME: check height properly
-			if (vectorObjs.length > numberOfRowsToComputeSizeBy
+			if (config.allowTargetSizeAdjust && heatmapHeight < panelHeight) {
+				try {
+					Ext.DomHelper.applyStyles(target, "height:" + heatmapHeight + "px");
+				} catch (e) {
+					// just in case.
+				}
+			}
+
+			// put the heatmap in a scroll panel if it is too big to display.
+			if (heatmapHeight + labelHeight > panelHeight
 					|| (!config.forceFit && heatmapWidth + rowLabelSizePixels > panelWidth)) {
 
-				// update height
-				heatmapHeight = boxHeight * vectorObjs.length + TRIM;
 				try {
 					Ext.DomHelper.applyStyles(target, "overflow:auto");
 				} catch (e) {
-
+					// IE sometimes throws.
 				}
 			} else {
 				try {
 					Ext.DomHelper.applyStyles(target, "overflow:inherit");
 				} catch (e) {
-
+					// IE sometimes throws.
 				}
 			}
 
@@ -265,7 +283,6 @@ var Heatmap = function() {
 
 			}
 
-			var heatmapHeight = vectorObjs.length * boxHeight;
 			var vid = "heatmapCanvas-" + Ext.id();
 			Ext.DomHelper.append(target, {
 						id : vid,
@@ -313,16 +330,24 @@ var Heatmap = function() {
 					} else {
 						ctx.fillStyle = getColor(a, binSize, colors);
 					}
-					ctx.fillRect(offsetx, offsety, boxWidth, boxHeight);
+
+					try {
+						ctx.fillRect(offsetx, offsety, boxWidth, boxHeight);
+					} catch (e) {
+						/*
+						 * Probably a config error somewhere...
+						 */
+
+					}
 					offsetx = offsetx + boxWidth;
 
 					last = a;
 
 				}
 
-				// Add row label or not FIXME let these have more room if the heatmap fits okay, instead of chopping it
-				// off.
 				if (config.label) {
+					// Add row label FIXME let these have more room if the heatmap fits okay, instead of
+					// chopping it off.
 					var rowLabel = DEFAULT_ROW_LABEL;
 					if (vectorObjs[i].label) {
 						rowLabel = vectorObjs[i].label;
@@ -360,8 +385,9 @@ var Heatmap = function() {
 
 		function insertLegend(container, vertical) {
 
-			if (!container)
+			if (!container) {
 				return;
+			}
 
 			var legendDiv = $(container);
 
@@ -494,6 +520,7 @@ var Heatmap = function() {
 
 			return canvas.getContext('2d');
 		}
+
 	}
 
 	return {
