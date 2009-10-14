@@ -126,7 +126,7 @@ Gemma.prepareProfiles = function(data) {
 		 * Format the gene symbols and names into strings that will be displayed in the legend.
 		 */
 
-		var geneSymbols = "No genes";
+		var geneSymbols = "Unmapped"; // was 'no gene'...
 		var geneNames = "";
 		if (genes !== undefined && genes.length > 0) {
 			geneSymbols = genes[0].name;
