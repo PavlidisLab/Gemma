@@ -27,6 +27,7 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -287,7 +288,8 @@ public class HomologeneService {
 
     /**
      * @param gene
-     * @return Collection of genes found in Gemma that are homologous with the given gene
+     * @return Collection of genes found in Gemma that are homologous with the given gene. Empty if no homologues or
+     *         gene lacks homologue information.
      */
 
     public Collection<Gene> getHomologues( Gene gene ) {
@@ -296,9 +298,15 @@ public class HomologeneService {
             return null;
         }
 
-        Collection<Gene> genes;
+        Collection<Gene> genes = new HashSet<Gene>();
 
-        Long groupId = this.getHomologeneGroup( Long.parseLong( gene.getNcbiId() ) );
+        Long groupId;
+
+        try {
+            groupId = this.getHomologeneGroup( Long.parseLong( gene.getNcbiId() ) );
+        } catch ( NumberFormatException e ) {
+            return genes;
+        }
 
         genes = this.getGenesInGroup( groupId );
         genes.remove( gene ); // remove the given gene from the list
