@@ -823,7 +823,7 @@ Gemma.VisualizationWithThumbsWindow = Ext.extend(Ext.Window, {
 		var items = [this.thumbnailPanel, this.zoomPanel]
 
 		var browserWarning = "";
-		if (Ext.isIE) { // fixme: detect chromeframe, though this might already be okay. test.
+		if (Ext.isIE) {
 			browserWarning = "<span ext:qtip='Plots use a feature of HTML 5 that runs in IE via emulation unless you have Chrome Frame installed. Firefox, Chrome, Safari and Opera will be faster too.'>"
 					+ "Too slow in Explorer? Try <a href='http://www.google.com/chromeframe/' target='_blank'>Chrome Frame</a></span>";
 		}
