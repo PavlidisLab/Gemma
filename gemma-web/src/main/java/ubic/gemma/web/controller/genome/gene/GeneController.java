@@ -187,7 +187,6 @@ public class GeneController extends BaseMultiActionController {
      * @param errors
      * @return ModelAndView
      */
-    @SuppressWarnings( { "unchecked" })
     public ModelAndView show( HttpServletRequest request, HttpServletResponse response ) {
 
         Long id = null;
