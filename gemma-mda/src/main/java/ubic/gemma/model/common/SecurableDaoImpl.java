@@ -129,6 +129,11 @@ public class SecurableDaoImpl<T extends Securable> extends ubic.gemma.model.comm
     private String createObjectIdentityFromObject( Securable target ) {
 
         Securable implementation = ( Securable ) EntityUtils.getImplementationForProxy( target );
+        if (implementation == null){
+            log.warn( "No Implemntation returned for proxy: " + target );
+            return null;
+        }
+        
         Long id = implementation.getId();
 
         return implementation.getClass().getName() + ":" + id;
