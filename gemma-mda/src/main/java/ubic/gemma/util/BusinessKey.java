@@ -73,6 +73,11 @@ public class BusinessKey {
      */
     public static void addRestrictions( Criteria queryObject, ArrayDesign arrayDesign ) {
 
+        if ( arrayDesign.getId() != null ) {
+            queryObject.add( Restrictions.eq( "id", arrayDesign.getId() ) );
+            return;
+        }
+
         /*
          * Test whether ANY of the associated external references match any of the given external references.
          */
@@ -115,6 +120,11 @@ public class BusinessKey {
             attachCriteria( queryObject, bioAssay.getAccession(), "accession" );
         }
         queryObject.add( Restrictions.eq( "name", bioAssay.getName() ) );
+
+        // look through to the array design used.
+        if ( bioAssay.getArrayDesignUsed() != null ) {
+            attachCriteria( queryObject, bioAssay.getArrayDesignUsed(), "arrayDesignUsed" );
+        }
     }
 
     /**
@@ -169,6 +179,9 @@ public class BusinessKey {
     public static void addRestrictions( Criteria queryObject, Chromosome chromosome ) {
         queryObject.add( Restrictions.eq( "name", chromosome.getName() ) );
         attachCriteria( queryObject, chromosome.getTaxon(), "taxon" );
+        if ( chromosome.getSequence() != null ) {
+            attachCriteria( queryObject, chromosome.getSequence(), "sequence" );
+        }
     }
 
     /**
@@ -340,6 +353,18 @@ public class BusinessKey {
     public static void attachCriteria( Criteria queryObject, BioSequence bioSequence, String propertyName ) {
         Criteria innerQuery = queryObject.createCriteria( propertyName );
         addRestrictions( innerQuery, bioSequence );
+    }
+
+    /**
+     * Restricts the query to the provided ArrayDesign
+     * 
+     * @param queryObject
+     * @param arrayDesign
+     * @param propertyName e.g. "arrayDesignUsed"
+     */
+    private static void attachCriteria( Criteria queryObject, ArrayDesign arrayDesign, String propertyName ) {
+        Criteria innerQuery = queryObject.createCriteria( propertyName );
+        addRestrictions( innerQuery, arrayDesign );
     }
 
     /**
