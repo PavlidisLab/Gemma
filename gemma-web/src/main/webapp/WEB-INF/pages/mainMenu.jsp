@@ -154,6 +154,6 @@
 	<div id="sampleQueries" style="padding: 4px; width: 300px; margin-bottom: 6px;">
 		Examples:
 		<a href='<c:url value="/gene/showGene.html?id=938103"/>'>Grin1</a> (Rat)
-		<a href='<c:url value="gene/showGene.html?id=598735" />'>Mapk3</a> (Mouse)
+		<a href='<c:url value="gene/showGene.html?id=772080" />'>Dsp</a> (Mouse)
 	</div>
 </div>

@@ -234,7 +234,8 @@
 					src="/Gemma/images/help.png" /> </a>
 		</td>
 		<td>
-			<c:if test="{$arrayDesign.externalReferences} != null && ${fn:length($arrayDesign.externalReferences)} > 0">
+
+		<c:if test="${(not empty arrayDesign.externalReferences)}">
 				<c:forEach var="accession" items="${ arrayDesign.externalReferences }">
 					<Gemma:databaseEntry databaseEntry="${accession}" />
 					<br />
