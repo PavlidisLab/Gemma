@@ -1291,8 +1291,8 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                 v.setArrayDesignCount( ( Long ) res[9] );
                 v.setShortName( ( String ) res[10] );
                 v.setDateCreated( ( ( Date ) res[11] ) );
-                if ( !qtMap.isEmpty() && res[11] != null ) {
-                    String type = res[11].toString();
+                if ( !qtMap.isEmpty() && res[12] != null ) {
+                    String type = res[12].toString();
                     fillQuantitationTypeInfo( qtMap, v, eeId, type );
                 }
                 v.setClazz( ( String ) res[13] );
@@ -1413,6 +1413,15 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
             boolean hasIntensityB = false;
             boolean hasBothIntensities = false;
             boolean mayBeOneChannel = false;
+            
+            
+            if (qts == null){
+                log.warn( "No Quantitation type found for: " + v.getShortName() );
+                return;
+            }
+                
+                
+                
             for ( QuantitationType qt : qts ) {
                 if ( qt.getIsPreferred() && !qt.getIsRatio() ) {
                     /*
