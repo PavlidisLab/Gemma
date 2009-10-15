@@ -5,7 +5,6 @@ Ext.namespace('Gemma');
  */
 Gemma.DiffExpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 
-	
 	width : 800,
 	collapsible : true,
 	editable : false,
@@ -143,16 +142,20 @@ Gemma.DiffExpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 		this.on("cellclick", this.rowClickHandler.createDelegate(this), this);
 	},
 
-
 	rowClickHandler : function(grid, rowIndex, columnIndex, e) {
-		
-			if (this.getSelectionModel().hasSelection()) {
+
+		if (this.getSelectionModel().hasSelection()) {
 
 			var record = this.getStore().getAt(rowIndex);
 			var fieldName = this.getColumnModel().getDataIndex(columnIndex);
 			var gene = record.data.gene;
 
 			if (fieldName == 'visualize') {
+
+				// destroy if already open
+				if (this.visWindow) {
+					this.visWindow.close();
+				}
 
 				var activeExperiments = record.data.activeExperiments;
 				var activeExperimentIds = [];
@@ -161,21 +164,24 @@ Gemma.DiffExpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 					activeExperimentIds.push(activeExperiments[i].id);
 				}
 
-				// destroy if already open
-				if (this.visWindow) {
-					this.visWindow.close();
-				}
+				var downloadDedvLink = String
+						.format(
+								"/Gemma/dedv/downloadDEDV.html?ee={0}&g={1}",
+								activeExperimentIds.join(','), gene.id);
 
 				this.visWindow = new Gemma.VisualizationDifferentialWindow({
+							readMethod : DEDVController.getDEDVForDiffExVisualization,
+							downloadLink : downloadDedvLink,
+							title : "Differential expression of " + gene.officialSymbol
 						});
-				
-						console.log({ params : [activeExperimentIds, gene, Ext.getCmp('thresholdField').getValue(),
-						this.searchPanel.efChooserPanel.eeFactorsMap]});
-				this.visWindow.show({ params : [activeExperimentIds, gene, Ext.getCmp('thresholdField').getValue(),
-						this.searchPanel.efChooserPanel.eeFactorsMap]});
+
+				this.visWindow.show({
+							params : [activeExperimentIds, [gene.id], Ext.getCmp('thresholdField').getValue(),
+									this.searchPanel.efChooserPanel.eeFactorsMap]
+						});
 			} else if (fieldName == 'details') {
 
-					// destroy if already open
+				// destroy if already open
 				if (this.detailsWindow) {
 					this.detailsWindow.close();
 				}
@@ -202,8 +208,6 @@ Gemma.DiffExpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 
 			}
 		}
-		
-		
 
 	},
 
