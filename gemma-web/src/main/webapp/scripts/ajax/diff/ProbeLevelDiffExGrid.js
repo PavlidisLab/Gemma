@@ -146,6 +146,8 @@ Gemma.ProbeLevelDiffExGrid = Ext.extend(Ext.grid.GridPanel, {
 
 		Gemma.ProbeLevelDiffExGrid.superclass.initComponent.call(this);
 
+			this.on("cellclick", this.rowClickHandler.createDelegate(this), this);
+
 	},
 
 	getEEIds : function() {
@@ -171,8 +173,52 @@ Gemma.ProbeLevelDiffExGrid = Ext.extend(Ext.grid.GridPanel, {
 			return "";
 		}
 	},
+	
 	visStyler : function(value, metadata, record, row, col, ds) {
 		return "<img src='/Gemma/images/icons/chart_curve.png' ext:qtip='Visualize the data' />";
+	},
+	
+	rowClickHandler : function(grid, rowIndex, columnIndex, e) {
+	
+		if (!this.getSelectionModel().hasSelection()) 
+			return;
+
+
+			var record = this.getStore().getAt(rowIndex);
+			var fieldName = this.getColumnModel().getDataIndex(columnIndex);
+			
+
+			if (fieldName == 'visualize') {
+				
+				var ee = record.data.expressionExperiment;
+				var gene = record.data.gene;
+				var geneId;
+				
+				//Gene object might not be availiable in store, if not check if geneId is embeded in page. 
+				if (gene != null){
+						geneId = gene.id;
+				}else{
+					 geneId = dwr.util.getValue("gene");	//would be nice if there was a way to get the gene object.... 
+				}
+
+				if (this.visDifWindow != null)
+					this.visDifWindow.close();
+			
+							
+				var title = "Visualization of probes in:  "	+ ee.shortName;
+				var downloadDedvLink = String.format(
+											"<a ext:qtip='Download raw data in a tab delimted format'  target='_blank'  href='/Gemma/dedv/downloadDEDV.html?ee={0} &g={1}' > <img src='/Gemma/images/download.gif'/></a>",
+											ee.id, geneId);
+					
+				this.visDifWindow = new Gemma.VisualizationWithThumbsWindow({
+					title : title,
+					thumbnails : false,
+					downloadLink : downloadDedvLink,
+					readMethod : DEDVController.getDEDVForDiffExVisualizationByExperiment
+				});
+								
+				this.visDifWindow.show({params : [ee.id, geneId, Gemma.DIFFEXVIS_QVALUE_THRESHOLD] });
+			}
 	}
 
 });
@@ -237,3 +283,6 @@ Gemma.ProbeLevelDiffExGrid.getEFStyler = function() {
 	}
 	return Gemma.ProbeLevelDiffExGrid.efStyler;
 };
+
+
+		

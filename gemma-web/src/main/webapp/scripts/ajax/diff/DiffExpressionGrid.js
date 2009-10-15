@@ -5,6 +5,7 @@ Ext.namespace('Gemma');
  */
 Gemma.DiffExpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 
+	
 	width : 800,
 	collapsible : true,
 	editable : false,
@@ -142,37 +143,68 @@ Gemma.DiffExpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 		this.on("cellclick", this.rowClickHandler.createDelegate(this), this);
 	},
 
+
 	rowClickHandler : function(grid, rowIndex, columnIndex, e) {
-		if (this.getSelectionModel().hasSelection()) {
+		
+			if (this.getSelectionModel().hasSelection()) {
 
 			var record = this.getStore().getAt(rowIndex);
 			var fieldName = this.getColumnModel().getDataIndex(columnIndex);
+			var gene = record.data.gene;
+
 			if (fieldName == 'visualize') {
 
-				var ee = record.data.expressionExperiment;
+				var activeExperiments = record.data.activeExperiments;
+				var activeExperimentIds = [];
 
-				if (this.visDifWindow != null)
-					this.visDifWindow.close();
+				for (var i = 0; i < activeExperiments.size(); i++) {
+					activeExperimentIds.push(activeExperiments[i].id);
+				}
 
-				this.visDifWindow = new Gemma.VisualizationDifferentialWindow({
-							readMethod : DEDVController.getDEDVForDiffExVisualizationByExperiment,
-							experiment : ee,
-							title : "Probes for " + dwr.util.getValue("geneName") + " in " + ee.shortName,
-							thumbnails : false,// only one ee.
-							downloadLink : String.format("/Gemma/dedv/downloadDEDV.html?ee={0}&g={1}", ee.id, geneid)
+				// destroy if already open
+				if (this.visWindow) {
+					this.visWindow.close();
+				}
+
+				this.visWindow = new Gemma.VisualizationDifferentialWindow({
+						});
+				
+						console.log({ params : [activeExperimentIds, gene, Ext.getCmp('thresholdField').getValue(),
+						this.searchPanel.efChooserPanel.eeFactorsMap]});
+				this.visWindow.show({ params : [activeExperimentIds, gene, Ext.getCmp('thresholdField').getValue(),
+						this.searchPanel.efChooserPanel.eeFactorsMap]});
+			} else if (fieldName == 'details') {
+
+					// destroy if already open
+				if (this.detailsWindow) {
+					this.detailsWindow.close();
+				}
+
+				var diffExGrid = new Gemma.ProbeLevelDiffExGrid({
+							width : 750,
+							height : 300
 						});
 
-				var params = [];
-				params.push(ee.id);
-				params.push(geneid);
-				params.push(Gemma.DIFF_THRESHOLD);
-
-				this.visDifWindow.show({
-							params : params
+				this.detailsWindow = new Ext.Window({
+							modal : false,
+							layout : 'fit',
+							title : 'Details for ' + gene.officialSymbol,
+							closeAction : 'close',
+							items : [diffExGrid],
+							width : 750,
+							height : 400
 						});
+
+				this.detailsWindow.show();
+
+				var supporting = record.data.probeResults;
+				diffExGrid.getStore().loadData(supporting);
 
 			}
 		}
+		
+		
+
 	},
 
 	loadData : function(results) {

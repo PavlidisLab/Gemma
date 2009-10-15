@@ -1,7 +1,6 @@
 Ext.namespace('Gemma');
 Ext.BLANK_IMAGE_URL = '/Gemma/images/default/s.gif';
 
-Gemma.DIFFEXVIS_QVALUE_THRESHOLD = 0.05;
 
 /**
  * This is not a visual component but we want to use it with the componentmanager.

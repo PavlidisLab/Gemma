@@ -16,6 +16,8 @@
 Ext.namespace('Gemma');
 
 Gemma.ZOOM_PLOT_SIZE = 400;
+Gemma.DIFFEXVIS_QVALUE_THRESHOLD = 0.05;
+
 
 // Multiply the line thickness by this factor when it is
 // selected in the legend
