@@ -651,7 +651,7 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 							// autoHeight is false.
 							// Most likely a loading issue (no data in
 							// store, so no height).
-							autoHeight : true,
+							//autoHeight : true,
 							stateful : false
 						});
 
@@ -665,7 +665,7 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 							threshold : 0.01,
 							// width : 750,
 							// height : 380,
-							stateful : false
+							stateful : false							
 						});
 
 				var detailsTP = new Ext.TabPanel({

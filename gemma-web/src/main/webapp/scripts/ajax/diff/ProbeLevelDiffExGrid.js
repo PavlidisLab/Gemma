@@ -49,6 +49,21 @@ Gemma.ProbeLevelDiffExGrid = Ext.extend(Ext.grid.GridPanel, {
 							}])
 				});
 
+			this.searchInGridField = new Ext.form.TextField({
+					enableKeyEvents : true,
+					emptyText : 'Filter',
+					tooltip : "Text typed here will ",
+					listeners : {
+						"keyup" : {
+							fn : this.searchForText.createDelegate(this),
+							scope : this,
+							options : {
+								delay : 100
+							}
+						}
+					}
+				});
+				
 		if (this.pageSize) {
 			Ext.apply(this, {
 						store : new Gemma.PagingDataStore({
@@ -64,7 +79,14 @@ Gemma.ProbeLevelDiffExGrid = Ext.extend(Ext.grid.GridPanel, {
 			Ext.apply(this, {
 						bbar : new Gemma.PagingToolbar({
 									pageSize : this.pageSize,
-									store : this.store
+									store : this.store,
+									items : ['->', {
+												xtype : 'button',
+												handler : this.clearFilter.createDelegate(this),
+												scope : this,
+												cls : 'x-btn-text',
+												text : 'Reset filter'
+											}, ' ', this.searchInGridField]
 								})
 					});
 		} else {
@@ -77,6 +99,19 @@ Gemma.ProbeLevelDiffExGrid = Ext.extend(Ext.grid.GridPanel, {
 										field : "p",
 										direction : "ASC"
 									}
+								})
+					});
+					
+		
+					Ext.apply(this, {
+						bbar : new Ext.Toolbar({
+									items : ['->', {
+												xtype : 'button',
+												handler : this.clearFilter.createDelegate(this),
+												scope : this,
+												cls : 'x-btn-text',
+												text : 'Reset filter'
+											}, ' ', this.searchInGridField]
 								})
 					});
 		}
@@ -150,6 +185,27 @@ Gemma.ProbeLevelDiffExGrid = Ext.extend(Ext.grid.GridPanel, {
 
 	},
 
+		searchForText : function(button, keyev) {
+		var text = this.searchInGridField.getValue();
+		if (text.length < 2) {
+			this.clearFilter();
+			return;
+		}
+		this.getStore().filterBy(this.getSearchFun(text), this, 0);
+	},
+
+	clearFilter : function() {
+		this.getStore().clearFilter();
+	},
+
+	getSearchFun : function(text) {
+		var value = new RegExp(Ext.escapeRe(text), 'i');
+		return function(r, id) {
+			var obj = r.data;
+			return value.match(obj.expressionExperiment.name) || value.match(obj.expressionExperiment.shortName);
+		}
+	},
+	
 	getEEIds : function() {
 		var result = [];
 		this.store.each(function(rec) {
