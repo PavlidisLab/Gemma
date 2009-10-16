@@ -179,9 +179,12 @@ public class BusinessKey {
     public static void addRestrictions( Criteria queryObject, Chromosome chromosome ) {
         queryObject.add( Restrictions.eq( "name", chromosome.getName() ) );
         attachCriteria( queryObject, chromosome.getTaxon(), "taxon" );
-        if ( chromosome.getSequence() != null ) {
-            attachCriteria( queryObject, chromosome.getSequence(), "sequence" );
-        }
+        /*
+         * It's best if we keep the name only. Different sources might refer to different chromosome sequences, and we don't really care about it.
+         */
+//        if ( chromosome.getSequence() != null ) {
+//            attachCriteria( queryObject, chromosome.getSequence(), "sequence" );
+//        }
     }
 
     /**
