@@ -55,7 +55,7 @@
 	<table cellspacing="6">
 		<tr>
 			<td align="right" valign="top">
-				<b> <fmt:message key="gene.aliases" /> </b>
+				<b> <fmt:message key="gene.aliases" /> </b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;
 			</td>
 			<td valign="top">
 				<%
@@ -157,9 +157,9 @@
 
 
 		<c:if test="${not empty gene.taxon && gene.taxon.id != 2}">
-			<p>
-				Images are for mouse gene ${gene.officialSymbol}.
-			</p>
+			<div style="width: 350px; font-size: smaller; margin: 3px; padding: 5px; background-color: #DDDDDD">
+				Note: Images are from the homologous mouse gene, ${homologousMouseGene.officialSymbol}.
+			</div>
 		</c:if>
 		<div style="valign: top" class="clearfix">
 			<c:forEach var="img" items="${representativeImages}">

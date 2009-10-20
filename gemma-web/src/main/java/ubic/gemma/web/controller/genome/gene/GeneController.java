@@ -256,6 +256,7 @@ public class GeneController extends BaseMultiActionController {
                 if ( !representativeImages.isEmpty() ) {
                     mav.addObject( "representativeImages", representativeImages );
                     mav.addObject( "abaGeneUrl", abaGeneUrl );
+                    mav.addObject( "homologousMouseGene", mouseGene );
                 }
             } catch ( IOException e ) {
                 log.warn( "Could not get ABA data: " + e );
