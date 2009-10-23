@@ -110,12 +110,13 @@ public class CoexpressionSearchController extends BaseFormController {
                 eeSets = expressionExperimentSetService.findByName( "All " + gene.getTaxon().getCommonName() );
             }
             //lmd eeSets was null
-            if(eeSets ==null){
+            if(eeSets ==null || eeSets.size() ==0){
                 result
-                .setErrorState( "<b> Sorry, Coexpression results are not yet available for </b>" +  gene.getTaxon().getCommonName()  );
+                .setErrorState("No gene coexpression analysis is available for " +  gene.getTaxon().getScientificName());
                 log.info( "No expression experiment set results for query: " + searchOptions );
+                return result;                
             }
-             if ( eeSets.size() != 1 ) {
+            if ( eeSets.size() > 1 ) {
                 log.warn( "more than one set found using 1st." );
             }
             eeSetId = eeSets.iterator().next().getId();
@@ -131,10 +132,10 @@ public class CoexpressionSearchController extends BaseFormController {
 
         if ( result.getKnownGeneResults() == null || result.getKnownGeneResults().isEmpty() ) {
             result
-                    .setErrorState( "<b> Sorry, No genes are currently coexpressed under the selected search conditions </b>" );
+                    .setErrorState( "Sorry, No genes are currently coexpressed under the selected search conditions " );
             log.info( "No search results for query: " + searchOptions );
         }
-
+        
         return result;
 
     }
