@@ -47,6 +47,7 @@
 		</c:if>
 			<c:if test="${not empty gene.taxon}">
 			[${gene.taxon.scientificName}]
+			<input type="hidden" id="taxonScientificName" value="${gene.taxon.scientificName}" />			
 		</c:if>
 
 		</c:if>
