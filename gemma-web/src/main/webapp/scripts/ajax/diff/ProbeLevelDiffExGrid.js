@@ -15,7 +15,7 @@ Gemma.ProbeLevelDiffExGrid = Ext.extend(Ext.grid.GridPanel, {
 	viewConfig : {
 // forceFit : true
 	},
-
+	
 	readMethod : DifferentialExpressionSearchController.getDifferentialExpression,
 
 	convertEE : function(s) {
@@ -27,7 +27,7 @@ Gemma.ProbeLevelDiffExGrid = Ext.extend(Ext.grid.GridPanel, {
 	},
 
 	initComponent : function() {
-
+			
 		Ext.apply(this, {
 					record : Ext.data.Record.create([{
 								name : "expressionExperiment",
@@ -182,10 +182,46 @@ Gemma.ProbeLevelDiffExGrid = Ext.extend(Ext.grid.GridPanel, {
 		Gemma.ProbeLevelDiffExGrid.superclass.initComponent.call(this);
 
 			this.on("cellclick", this.rowClickHandler.createDelegate(this), this);
-
+			//once the store is loaded validate to see if it has any records and pass delegate reference to store
+			this.store.on("load", this.validate.createDelegate(this));			
+			
 	},
-
-		searchForText : function(button, keyev) {
+	
+	
+	
+	/**
+	 * Checks if store contains any results if not print message indicating that there are no
+	 * differential analyses for this taxon. Triggered on load event firing.
+	 */
+	validate : function() {	
+		if(this.store.getCount()==0){
+			//taxon from hidden field in jsp.
+			var scientificNameTaxon = dwr.util.getValue("taxonScientificName");
+			this.handleError("No gene differential analysis is available for " 	+ scientificNameTaxon);					
+		}
+	},
+	
+	
+	
+	/**
+	 * Print error message called when application throws and exception or error message set on result.
+	 */
+	handleError : function(errorMessage) {
+		Ext.DomHelper.applyStyles("diffExpression-msg", "height: 2.2em");
+		Ext.DomHelper.overwrite("diffExpression-msg", [{
+			tag : 'img',
+			src : '/Gemma/images/icons/warning.png'
+		},
+		{
+			tag : 'span',
+			html : "&nbsp;&nbsp;" + errorMessage					
+		}]);	
+		
+	},
+	
+	
+	
+	searchForText : function(button, keyev) {
 		var text = this.searchInGridField.getValue();
 		if (text.length < 2) {
 			this.clearFilter();
