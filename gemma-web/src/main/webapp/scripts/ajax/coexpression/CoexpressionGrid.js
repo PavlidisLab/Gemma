@@ -280,14 +280,21 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 	},
 
 	/**
-	 * 
+	 * Load the data if there is no data returned an errorState message is set on the result
+	 * to indicate what the exact problem was.
 	 * @param {}
-	 *            result
+	 *      	result 
 	 */
 	loadDataCb : function(result) {
-		this.loadData(result.isCannedAnalysis, result.queryGenes.length, result.knownGeneResults,
+		if (result.errorState) {
+			this.handleError(result.errorState);
+		}
+		else{		
+			this.loadData(result.isCannedAnalysis, result.queryGenes.length, result.knownGeneResults,
 				result.knownGeneDatasets);
+		}
 	},
+		
 
 	doSearch : function(csc) {
 
@@ -297,15 +304,35 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 							})
 				});
 		this.loadMask.show();
-
-		ExtCoexpressionSearchController.doSearch(csc, {
+		var errorHandler = this.handleError.createDelegate(this);
+		ExtCoexpressionSearchController.doSearch(csc, {			
 					callback : this.loadDataCb.createDelegate(this),
-					errorHandler : function(error) {
-						console.log(error);
-					}
+					errorHandler : errorHandler
 				});
-
 	},
+	
+	/**
+	 * Checks if store contains any results if not print message indicating that there are non.
+	 * Stop loader. Called when an error thrown of after data load processing
+	 */
+	handleError : function(errorMessage) {
+		Ext.DomHelper.applyStyles("coexpression-msg", "height: 2.2em");
+		Ext.DomHelper.overwrite("coexpression-msg", [{
+			tag : 'img',
+			src : '/Gemma/images/icons/warning.png'
+		},
+		{
+			tag : 'span',
+			html : "&nbsp;&nbsp;" + errorMessage					
+		}]);
+		
+		this.loadMask.hide();		
+	},
+
+	clearError : function() {
+		Ext.DomHelper.overwrite("coexpression-messages", "");
+	},
+		
 
 	toggleMyData : function(btn, pressed) {
 		var buttonText = btn.getText();
