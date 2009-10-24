@@ -72,7 +72,7 @@ public class DifferentialExpressionProbeResultEndpoint extends AbstractGemmaEndp
      */
     public static final String LOCAL_NAME = "differentialExpressionProbeResult";
 
-    public void setDifferentialExpressionAnalysisResultService(
+    public void setDifferentialExpressionResultService(
             DifferentialExpressionResultService differentialExpressionAnalysisResultService ) {
         this.differentialExpressionResultService = differentialExpressionAnalysisResultService;
     }
