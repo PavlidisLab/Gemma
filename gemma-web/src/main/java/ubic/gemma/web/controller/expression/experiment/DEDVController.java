@@ -827,7 +827,7 @@ public class DEDVController extends BaseFormController {
             VisualizationValueObject vvo = new VisualizationValueObject( vvoMap.get( ee2P.getEEId() ), genes, ee2P
                     .getPValue(), validatedProbes.get( ee2P.getEEId() ) );
 
-            getSampleNames( dedvs, vvo );
+            getSampleNames( vvoMap.get( ee2P.getEEId() ), vvo );
 
             /*
              * Set up the experimental designinfo so we can show it above the graph.
@@ -945,6 +945,8 @@ public class DEDVController extends BaseFormController {
      * @param vectors
      * @param vvo
      */
+    //TODO: Both parameters aren't necessary to pass in as VVO object contains the vectors
+    
     private void getSampleNames( Collection<DoubleVectorValueObject> vectors, VisualizationValueObject vvo ) {
         DoubleVectorValueObject vec = vectors.iterator().next();
         List<String> sampleNames = getSampleNames( vec );
