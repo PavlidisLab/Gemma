@@ -184,15 +184,25 @@ Ext.onReady(function() {
 
 Gemma.geneLinkOutPopUp = function(abaImageUrl) {
 
-	// TODO put a null, empty string check in.
-	var win = new Ext.Window({
-		html : "<img src='" + abaImageUrl + "'>"
+	if (abaImageUrl == null )
+		return;
+	
+	var abaWindowId = "geneDetailsAbaWindow";
+	var win = Ext.getCmp(abaWindowId);
+	if (win != null) {
+		win.close();
+	}
+	
+	 win = new Ext.Window({
+		html : "<img src='" + abaImageUrl + "'>", 
+		id : abaWindowId, 
+		stateful : false, 
+		title : "<img height='15'  src='/Gemma/images/abaExpressionLegend.gif'>"
 			// ,
 			// width : 500,
 			// height : 400,
 			// autoScroll : true
 		});
-	win.setTitle("<img height='15'  src='/Gemma/images/abaExpressionLegend.gif'>");
 	win.show(this);
 
 };
