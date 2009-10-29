@@ -231,6 +231,7 @@ Gemma.ProbeLevelDiffExGrid = Ext.extend(Ext.grid.GridPanel, {
 	},
 
 	clearFilter : function() {
+		this.searchInGridField.setValue("");
 		this.getStore().clearFilter();
 	},
 
