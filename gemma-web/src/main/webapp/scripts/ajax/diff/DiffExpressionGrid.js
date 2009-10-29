@@ -285,8 +285,18 @@ Gemma.DiffExpressionGrid.linkOutPopUp = function(linkOutValueObject) {
 		popUpHtml = String.format("<a href='{0}' target='_blank' > <img height=200 width=400 src={1}> </a>",
 				linkOutValueObject.abaGeneUrl, linkOutValueObject.abaGeneImageUrls[0]);
 	}
+	
+	var abaWindowId = "diffExpressionAbaWindow";
+	
+	var popUpLinkOutWin = Ext.getCmp(abaWindowId);
+	if (popUpLinkOutWin != null) {
+		popUpLinkOutWin.close();
+		popUpLinkOutWin = null;		
+	}
 
 	popUpLinkOutWin = new Ext.Window({
+				id : abaWindowId,
+				stateful : false, 
 				html : popUpHtml,
 				resizable : false
 			});

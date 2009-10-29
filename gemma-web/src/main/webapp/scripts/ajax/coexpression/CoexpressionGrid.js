@@ -807,8 +807,18 @@ Gemma.CoexpressionGrid.linkOutPopUp = function(linkOutValueObject) {
 		popUpHtml = String.format("<img height=200 width=400 src={0}>", linkOutValueObject.abaGeneImageUrls[0]);
 	}
 
+	var abaWindowId = "coexpressionAbaWindow";
+	
+	var popUpLinkOutWin = Ext.getCmp(abaWindowId);
+	if (popUpLinkOutWin != null) {
+		popUpLinkOutWin.close();
+		popUpLinkOutWin = null;		
+	}
+	
 	popUpLinkOutWin = new Ext.Window({
+				id : abaWindowId,
 				html : popUpHtml,
+				stateful : false, 
 				resizable : false
 			});
 	popUpLinkOutWin
