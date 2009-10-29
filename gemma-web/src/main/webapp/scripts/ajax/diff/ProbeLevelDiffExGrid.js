@@ -142,7 +142,7 @@ Gemma.ProbeLevelDiffExGrid = Ext.extend(Ext.grid.GridPanel, {
 						toolTip : "The experiment name (abbreviated)",
 						sortable : true,
 						renderer : function(value, metadata, record, row, col, ds) {
-							return Ext.util.Format.ellipsis(record.get('expressionExperiment').name, 20);
+							return Ext.util.Format.ellipsis(record.get('expressionExperiment').name, 50);
 						}.createDelegate(this)
 					}, {
 						id : 'probe',
@@ -224,7 +224,7 @@ Gemma.ProbeLevelDiffExGrid = Ext.extend(Ext.grid.GridPanel, {
 	searchForText : function(button, keyev) {
 		var text = this.searchInGridField.getValue();
 		if (text.length < 2) {
-			this.clearFilter();
+			this.getStore().clearFilter();
 			return;
 		}
 		this.getStore().filterBy(this.getSearchFun(text), this, 0);
@@ -239,7 +239,8 @@ Gemma.ProbeLevelDiffExGrid = Ext.extend(Ext.grid.GridPanel, {
 		var value = new RegExp(Ext.escapeRe(text), 'i');
 		return function(r, id) {
 			var obj = r.data;
-			return value.match(obj.expressionExperiment.name) || value.match(obj.expressionExperiment.shortName);
+			console.log(obj);
+			return value.match(obj.expressionExperiment.name) || value.match(obj.expressionExperiment.shortName) || value.match(obj.experimentalFactors[0].name);
 		}
 	},
 	

@@ -166,13 +166,13 @@ Ext.onReady(function() {
 			// diff expression grid
 
 			var diffExGrid = new Gemma.ProbeLevelDiffExGrid({
-						width : 650,
+						width : 725,
 						height : 200,
 						renderTo : "diff-grid"
 					});
-
-			var eeNameColumnIndex = diffExGrid.getColumnModel().getIndexById('expressionExperimentName');
-			diffExGrid.getColumnModel().setHidden(eeNameColumnIndex, true);
+// Hide Expression experiment full name				
+//			var eeNameColumnIndex = diffExGrid.getColumnModel().getIndexById('expressionExperimentName');
+//			diffExGrid.getColumnModel().setHidden(eeNameColumnIndex, true);
 			var visColumnIndex = diffExGrid.getColumnModel().getIndexById('visualize');
 			diffExGrid.getColumnModel().setHidden(visColumnIndex, false);
 
