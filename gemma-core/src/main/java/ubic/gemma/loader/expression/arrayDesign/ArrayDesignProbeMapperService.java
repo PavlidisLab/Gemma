@@ -24,16 +24,18 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.StringTokenizer;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.springframework.security.context.SecurityContext;
-import org.springframework.security.context.SecurityContextHolder;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.security.context.SecurityContext;
+import org.springframework.security.context.SecurityContextHolder;
 
 import ubic.gemma.analysis.sequence.ProbeMapper;
 import ubic.gemma.analysis.sequence.ProbeMapperConfig;
@@ -273,6 +275,8 @@ public class ArrayDesignProbeMapperService {
             String probeId = fields[0];
             String seqName = fields[1];
             String geneSymbol = fields[2];
+            
+          
 
             CompositeSequence c = compositeSequenceService.findByName( arrayDesign, probeId );
 
@@ -281,14 +285,32 @@ public class ArrayDesignProbeMapperService {
                 numSkipped++;
                 continue;
             }
-
-            Gene g = geneService.findByOfficialSymbol( geneSymbol, taxon );
-
-            if ( g == null ) {
+                        
+            //a probe can have more than one gene associated with it if so they are piped |
+            Collection<Gene> geneListProbe = new HashSet<Gene>();
+            
+            //indicate multiple genes
+            Gene geneDetails =null;            
+            
+            StringTokenizer st = new StringTokenizer (geneSymbol, "|");
+                     
+            while (st.hasMoreTokens ()) {
+                String geneToken = st.nextToken();
+                geneDetails = geneService.findByOfficialSymbol( geneToken.trim(), taxon );
+                if(geneDetails!=null){
+                    geneListProbe.add(geneDetails);
+                }              
+            }
+          
+                                    
+            if ( geneListProbe == null || geneListProbe.size()==0) {
                 log.warn( "No gene found for '" + geneSymbol + "' in " + taxon + ", skipping" );
                 numSkipped++;
                 continue;
+            }else if(geneListProbe.size()>1){
+                log.warn( "More than one gene found for '" + geneSymbol + "' in " + taxon  );
             }
+            
 
             BioSequence bs = c.getBiologicalCharacteristic();
 
@@ -324,26 +346,27 @@ public class ArrayDesignProbeMapperService {
             }
 
             assert bs.getId() != null;
-
-            geneService.thaw( g );
-            if ( g.getProducts().size() == 0 ) {
-                log.warn( "There are no gene products for " + g + ", it cannot be mapped to probes. Skipping" );
-                numSkipped++;
-                continue;
-            }
-            for ( GeneProduct gp : g.getProducts() ) {
-                AnnotationAssociation association = AnnotationAssociation.Factory.newInstance();
-                association.setBioSequence( bs );
-                association.setGeneProduct( gp );
-                association.setSource( sourceDB );
-                annotationAssociationService.create( association );
-            }
-
+            for(Gene gene: geneListProbe){
+                geneService.thaw( gene );
+                if ( gene.getProducts().size() == 0 ) {
+                    log.warn( "There are no gene products for " + gene + ", it cannot be mapped to probes. Skipping" );
+                    numSkipped++;
+                    continue;
+                }
+                for ( GeneProduct gp : gene.getProducts() ) {
+                    AnnotationAssociation association = AnnotationAssociation.Factory.newInstance();
+                    association.setBioSequence( bs );
+                    association.setGeneProduct( gp );
+                    association.setSource( sourceDB );
+                    annotationAssociationService.create( association );
+                }
+             }
         }
 
         log.info( "Completed association processing for " + arrayDesign + ", " + numSkipped + " were skipped" );
 
     }
+    
 
     /**
      * @param annotationAssociationService the annotationAssociationService to set
