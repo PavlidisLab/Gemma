@@ -44,6 +44,7 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.biosequence.SequenceType;
 import ubic.gemma.model.genome.gene.GeneProduct;
+import ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResultService;
@@ -283,32 +284,47 @@ public class CompositeSequenceController extends BaseMultiActionController {
 
         Collection<BioSequence2GeneProduct> bs2gps = cs.getBiologicalCharacteristic().getBioSequence2GeneProduct();
 
-        for ( BioSequence2GeneProduct bs2gp : bs2gps ) {
-            if ( !( bs2gp instanceof BlatAssociation ) ) {
-                continue;
-            }
-            BlatAssociation blatAssociation = ( BlatAssociation ) bs2gp;
-            GeneProduct geneProduct = blatAssociation.getGeneProduct();
-            Gene gene = geneProduct.getGene();
-            BlatResult blatResult = blatAssociation.getBlatResult();
-            if ( blatResult instanceof HibernateProxy ) {
-                // this code is reached.
-                blatResult = ( BlatResult ) ( ( HibernateProxy ) blatResult ).getHibernateLazyInitializer()
-                        .getImplementation();
-            }
+        for ( BioSequence2GeneProduct bs2gp : bs2gps ) {          
+           
+            if (( bs2gp instanceof BlatAssociation ) ) {
+                BlatAssociation blatAssociation = ( BlatAssociation ) bs2gp;
+                GeneProduct geneProduct = blatAssociation.getGeneProduct();
+                Gene gene = geneProduct.getGene();
+                BlatResult blatResult = blatAssociation.getBlatResult();
+                if ( blatResult instanceof HibernateProxy ) {
+                    // this code is reached.
+                    blatResult = ( BlatResult ) ( ( HibernateProxy ) blatResult ).getHibernateLazyInitializer()
+                            .getImplementation();
+                }
 
-            blatResult.getQuerySequence().getTaxon(); // FIXME: Cruft or thaw attempt? Tested and apparently not needed
-            // (PP)
+                blatResult.getQuerySequence().getTaxon(); // FIXME: Cruft or thaw attempt? Tested and apparently not
+                                                          // needed
+                // (PP)
 
-            if ( blatResults.containsKey( blatResult ) ) {
-                blatResults.get( blatResult ).addGene( geneProduct, gene );
-            } else {
+                if ( blatResults.containsKey( blatResult ) ) {
+                    blatResults.get( blatResult ).addGene( geneProduct, gene );
+                } else {
+                    BlatResultGeneSummary summary = new BlatResultGeneSummary();
+                    summary.addGene( geneProduct, gene );
+                    summary.setBlatResult( blatResult );
+                    summary.setCompositeSequence( cs );
+                    blatResults.put( blatResult, summary );
+                }
+
+            }
+			//ugly doing this but this code needs refactor to take away emphasis on BLAT
+            if ( ( bs2gp instanceof AnnotationAssociation ) ) {
+                AnnotationAssociation blatAssociation = ( AnnotationAssociation ) bs2gp;
+                GeneProduct geneProduct = blatAssociation.getGeneProduct();
+                Gene gene = geneProduct.getGene();
+                BlatResult newInstance = BlatResult.Factory.newInstance();
                 BlatResultGeneSummary summary = new BlatResultGeneSummary();
                 summary.addGene( geneProduct, gene );
-                summary.setBlatResult( blatResult );
+                summary.setBlatResult( newInstance );
                 summary.setCompositeSequence( cs );
-                blatResults.put( blatResult, summary );
+                blatResults.put( newInstance, summary );
             }
+
         }
 
         addBlatResultsLackingGenes( cs, blatResults );
