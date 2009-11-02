@@ -254,8 +254,11 @@ public class HomologeneService {
      * @return ArrayList of unthawed gemma genes
      */
 
-    public Collection<Gene> getGenesInGroup( long homologeneGrouopId ) {
+    public Collection<Gene> getGenesInGroup( Long homologeneGrouopId ) {
 
+        if (homologeneGrouopId == null){
+            return null;
+        }
         if ( !this.ready.get() ) {
             return null;
         }
