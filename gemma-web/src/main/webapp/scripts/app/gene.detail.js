@@ -16,7 +16,7 @@
 Ext.namespace('Gemma');
 
 Gemma.DIFF_THRESHOLD = 0.01;
-Gemma.MAX_DIFF_RESULTS = 50;
+Gemma.MAX_DIFF_RESULTS = 75;
 
 /**
  * 

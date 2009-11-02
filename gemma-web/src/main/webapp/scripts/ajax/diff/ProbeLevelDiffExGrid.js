@@ -239,7 +239,6 @@ Gemma.ProbeLevelDiffExGrid = Ext.extend(Ext.grid.GridPanel, {
 		var value = new RegExp(Ext.escapeRe(text), 'i');
 		return function(r, id) {
 			var obj = r.data;
-			console.log(obj);
 			return value.match(obj.expressionExperiment.name) || value.match(obj.expressionExperiment.shortName) || value.match(obj.experimentalFactors[0].name);
 		}
 	},
