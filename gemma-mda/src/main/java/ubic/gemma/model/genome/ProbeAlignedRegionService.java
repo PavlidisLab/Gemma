@@ -19,20 +19,17 @@
 package ubic.gemma.model.genome;
 
 /**
- * 
+ * @author kelsey
+ * @version $Id$
  */
 public interface ProbeAlignedRegionService {
 
-    /**
-     * 
-     */
-    public java.util.Collection findAssociations( ubic.gemma.model.genome.PhysicalLocation physicalLocation );
+    public java.util.Collection<ProbeAlignedRegion> findAssociations(
+            ubic.gemma.model.genome.PhysicalLocation physicalLocation );
 
-    /**
-     * 
-     */
-    public java.util.Collection findAssociations( ubic.gemma.model.genome.sequenceAnalysis.BlatResult blatResult );
-    
-    public void thaw(ProbeAlignedRegion par);
+    public java.util.Collection<ProbeAlignedRegion> findAssociations(
+            ubic.gemma.model.genome.sequenceAnalysis.BlatResult blatResult );
+
+    public void thaw( ProbeAlignedRegion par );
 
 }

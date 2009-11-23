@@ -53,71 +53,36 @@ public class DiffExpressionSearchCommand implements Serializable {
 
     private boolean dirty;
 
-    public String getEeQuery() {
-        return eeQuery;
+    public Collection<Long> getEeIds() {
+        return eeIds;
     }
 
-    public void setEeQuery( String eeQuery ) {
-        this.eeQuery = eeQuery;
+    public String getEeQuery() {
+        return eeQuery;
     }
 
     public Long getEeSetId() {
         return eeSetId;
     }
 
-    public void setEeSetId( Long eeSetId ) {
-        this.eeSetId = eeSetId;
-    }
-
     public String getEeSetName() {
         return eeSetName;
-    }
-
-    public void setEeSetName( String eeSetName ) {
-        this.eeSetName = eeSetName;
     }
 
     public Collection<Long> getGeneIds() {
         return geneIds;
     }
 
-    public void setGeneIds( Collection<Long> geneIds ) {
-        this.geneIds = geneIds;
+    public Collection<DiffExpressionSelectedFactorCommand> getSelectedFactors() {
+        return selectedFactors;
     }
 
     public Long getTaxonId() {
         return taxonId;
     }
 
-    public void setTaxonId( Long taxonId ) {
-        this.taxonId = taxonId;
-    }
-
     public Double getThreshold() {
         return threshold;
-    }
-
-    public void setThreshold( Double threshold ) {
-        this.threshold = threshold;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see java.lang.Object#toString()
-     */
-    @Override
-    public String toString() {
-        return "GeneIds=" + StringUtils.join( getGeneIds(), "," ) + " taxon=" + getTaxonId() + " Threshold="
-                + threshold;
-    }
-
-    public Collection<DiffExpressionSelectedFactorCommand> getSelectedFactors() {
-        return selectedFactors;
-    }
-
-    public void setSelectedFactors( Collection<DiffExpressionSelectedFactorCommand> selectedFactors ) {
-        this.selectedFactors = selectedFactors;
     }
 
     public boolean isDirty() {
@@ -128,11 +93,45 @@ public class DiffExpressionSearchCommand implements Serializable {
         this.dirty = dirty;
     }
 
-    public Collection<Long> getEeIds() {
-        return eeIds;
-    }
-
     public void setEeIds( Collection<Long> eeIds ) {
         this.eeIds = eeIds;
+    }
+
+    public void setEeQuery( String eeQuery ) {
+        this.eeQuery = eeQuery;
+    }
+
+    public void setEeSetId( Long eeSetId ) {
+        this.eeSetId = eeSetId;
+    }
+
+    public void setEeSetName( String eeSetName ) {
+        this.eeSetName = eeSetName;
+    }
+
+    public void setGeneIds( Collection<Long> geneIds ) {
+        this.geneIds = geneIds;
+    }
+
+    public void setSelectedFactors( Collection<DiffExpressionSelectedFactorCommand> selectedFactors ) {
+        this.selectedFactors = selectedFactors;
+    }
+
+    public void setTaxonId( Long taxonId ) {
+        this.taxonId = taxonId;
+    }
+
+    public void setThreshold( Double threshold ) {
+        this.threshold = threshold;
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see java.lang.Object#toString()
+     */
+    @Override
+    public String toString() {
+        return "GeneIds=" + StringUtils.join( getGeneIds(), "," ) + " taxon=" + getTaxonId() + " Threshold="
+                + threshold;
     }
 }

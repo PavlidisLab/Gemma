@@ -29,7 +29,6 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.security.context.SecurityContextHolder;
  
 
 import ubic.gemma.util.progress.ProgressData;
@@ -78,8 +77,7 @@ public class UploadListener implements OutputStreamListener {
     public void start() {
         this.taskId = TaskRunningService.generateTaskId();
 
-        this.pJob = ProgressManager.createProgressJob( taskId, SecurityContextHolder.getContext().getAuthentication()
-                .getName(), "File Upload" );
+        this.pJob = ProgressManager.createProgressJob( taskId, "File Upload" );
 
         pJob.setForwardWhenDone( false );
         pJob.updateProgress( new ProgressData( 0, "Uploading File..." ) );

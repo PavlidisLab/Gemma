@@ -18,12 +18,17 @@
  */
 package ubic.gemma.model.expression.bioAssay;
 
+import java.util.Collection;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 import org.hibernate.Hibernate;
 import org.hibernate.LockMode;
+import org.hibernate.SessionFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.orm.hibernate3.HibernateTemplate;
+import org.springframework.stereotype.Repository;
 
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.util.BusinessKey;
@@ -32,15 +37,22 @@ import ubic.gemma.util.BusinessKey;
  * @author pavlidis
  * @version $Id$
  */
+@Repository
 public class BioAssayDaoImpl extends ubic.gemma.model.expression.bioAssay.BioAssayDaoBase {
 
     private static Log log = LogFactory.getLog( BioAssayDaoImpl.class.getName() );
+
+    @Autowired
+    public BioAssayDaoImpl( SessionFactory sessionFactory ) {
+        super.setSessionFactory( sessionFactory );
+    }
+   
 
     @SuppressWarnings("unchecked")
     @Override
     public BioAssay find( BioAssay bioAssay ) {
         try {
-            Criteria queryObject = BusinessKey.createQueryObject( super.getSession( false ), bioAssay );
+            Criteria queryObject = BusinessKey.createQueryObject( super.getSession(   ), bioAssay );
 
             java.util.List results = queryObject.list();
             Object result = null;
@@ -77,7 +89,7 @@ public class BioAssayDaoImpl extends ubic.gemma.model.expression.bioAssay.BioAss
     @Override
     public void handleThaw( final BioAssay bioAssay ) throws Exception {
         HibernateTemplate templ = this.getHibernateTemplate();
-        templ.executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback() {
+        templ.executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
                 session.lock( bioAssay, LockMode.NONE );
                 Hibernate.initialize( bioAssay.getArrayDesignUsed() );
@@ -97,7 +109,7 @@ public class BioAssayDaoImpl extends ubic.gemma.model.expression.bioAssay.BioAss
     protected Integer handleCountAll() throws Exception {
         final String query = "select count(*) from BioAssayImpl";
         try {
-            org.hibernate.Query queryObject = super.getSession( false ).createQuery( query );
+            org.hibernate.Query queryObject = super.getSession().createQuery( query );
             queryObject.setCacheable( true );
             queryObject.setCacheRegion( "org.hibernate.cache.StandardQueryCache" );
             return ( ( Long ) queryObject.iterate().next() ).intValue();

@@ -20,12 +20,15 @@ package ubic.gemma.model.common.quantitationtype;
 
 import java.util.Collection;
 
+import org.springframework.stereotype.Service;
+
 /**
  * @author keshav
  * @author pavlidis
  * @version $Id$
  * @see ubic.gemma.model.common.quantitationtype.QuantitationTypeService
  */
+@Service
 public class QuantitationTypeServiceImpl extends ubic.gemma.model.common.quantitationtype.QuantitationTypeServiceBase {
 
     /**
@@ -34,7 +37,7 @@ public class QuantitationTypeServiceImpl extends ubic.gemma.model.common.quantit
     @Override
     protected ubic.gemma.model.common.quantitationtype.QuantitationType handleCreate(
             ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType ) throws java.lang.Exception {
-        return ( QuantitationType ) this.getQuantitationTypeDao().create( quantitationType );
+        return this.getQuantitationTypeDao().create( quantitationType );
     }
 
     /**
@@ -53,7 +56,7 @@ public class QuantitationTypeServiceImpl extends ubic.gemma.model.common.quantit
 
     @Override
     protected QuantitationType handleLoad( Long id ) throws Exception {
-        return ( QuantitationType ) this.getQuantitationTypeDao().load( id );
+        return this.getQuantitationTypeDao().load( id );
     }
 
     @Override

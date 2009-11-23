@@ -18,6 +18,12 @@
  */
 package ubic.gemma.model.common.description;
 
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+
 /**
  * <p>
  * Spring Service base class for <code>ubic.gemma.model.common.description.BibliographicReferenceService</code>,
@@ -26,13 +32,16 @@ package ubic.gemma.model.common.description;
  * 
  * @see ubic.gemma.model.common.description.BibliographicReferenceService
  */
-public abstract class BibliographicReferenceServiceBase extends ubic.gemma.model.common.AuditableServiceImpl implements
+public abstract class BibliographicReferenceServiceBase   implements
         ubic.gemma.model.common.description.BibliographicReferenceService {
 
+    @Autowired
     private ubic.gemma.model.common.description.BibliographicReferenceDao bibliographicReferenceDao;
 
+    @Autowired
     private ubic.gemma.model.common.description.ExternalDatabaseDao externalDatabaseDao;
 
+    @Autowired
     private ubic.gemma.model.common.description.LocalFileDao localFileDao;
 
     /**
@@ -136,7 +145,7 @@ public abstract class BibliographicReferenceServiceBase extends ubic.gemma.model
     /**
      * @see ubic.gemma.model.common.description.BibliographicReferenceService#getAllExperimentLinkedReferences()
      */
-    public java.util.Collection getAllExperimentLinkedReferences() {
+    public Map<ExpressionExperiment, BibliographicReference> getAllExperimentLinkedReferences() {
         try {
             return this.handleGetAllExperimentLinkedReferences();
         } catch ( Throwable th ) {
@@ -305,7 +314,7 @@ public abstract class BibliographicReferenceServiceBase extends ubic.gemma.model
     /**
      * Performs the core logic for {@link #getAllExperimentLinkedReferences()}
      */
-    protected abstract java.util.Collection handleGetAllExperimentLinkedReferences() throws java.lang.Exception;
+    protected abstract Map<ExpressionExperiment, BibliographicReference> handleGetAllExperimentLinkedReferences() throws java.lang.Exception;
 
     /**
      * Performs the core logic for

@@ -18,12 +18,20 @@
  */
 package ubic.gemma.model.expression.bioAssayData;
 
+import org.springframework.stereotype.Service;
+
 /**
  * @author pavlidis
  * @version $Id$
  * @see ubic.gemma.model.expression.bioAssayData.BioAssayDimensionService
  */
+@Service
 public class BioAssayDimensionServiceImpl extends ubic.gemma.model.expression.bioAssayData.BioAssayDimensionServiceBase {
+
+    public void thaw( BioAssayDimension bioAssayDimension ) {
+        this.getBioAssayDimensionDao().thaw( bioAssayDimension );
+
+    }
 
     @Override
     protected BioAssayDimension handleCreate( BioAssayDimension bioAssayDimension ) throws Exception {
@@ -52,11 +60,6 @@ public class BioAssayDimensionServiceImpl extends ubic.gemma.model.expression.bi
     @Override
     protected void handleUpdate( BioAssayDimension bioAssayDimension ) throws Exception {
         this.getBioAssayDimensionDao().update( bioAssayDimension );
-    }
-
-    public void thaw( BioAssayDimension bioAssayDimension ) {
-        this.getBioAssayDimensionDao().thaw( bioAssayDimension );
-
     }
 
 }

@@ -22,8 +22,18 @@
 //
 package ubic.gemma.model.common.description;
 
+import org.hibernate.SessionFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
+
 /**
  * @see ubic.gemma.model.common.description.NotedReference
  */
+@Repository
 public class NotedReferenceDaoImpl extends ubic.gemma.model.common.description.NotedReferenceDaoBase {
+
+    @Autowired
+    public NotedReferenceDaoImpl( SessionFactory sessionFactory ) {
+        super.setSessionFactory( sessionFactory );
+    }
 }

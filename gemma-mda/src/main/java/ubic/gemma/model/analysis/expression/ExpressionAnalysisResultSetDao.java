@@ -18,8 +18,6 @@
  */
 package ubic.gemma.model.analysis.expression;
 
-import java.util.Collection;
-
 import ubic.gemma.persistence.BaseDao;
 
 /**
@@ -27,53 +25,10 @@ import ubic.gemma.persistence.BaseDao;
  */
 public interface ExpressionAnalysisResultSetDao extends BaseDao<ExpressionAnalysisResultSet> {
 
-    public ExpressionAnalysisResultSet create( ExpressionAnalysisResultSet expressionAnalysisResultSet );
-
-    public Collection<ExpressionAnalysisResultSet> create( Collection<ExpressionAnalysisResultSet> resultSets );
-
-    /**
-     * Loads an instance of ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet from the persistent store.
-     */
-    public ExpressionAnalysisResultSet load( java.lang.Long id );
-
-    /**
-     * Loads all entities of type {@link ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet}.
-     * 
-     * @return the loaded entities.
-     */
-    public java.util.Collection<ExpressionAnalysisResultSet> loadAll();
-
-    /**
-     * Removes the instance of ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet having the given
-     * <code>identifier</code> from the persistent store.
-     */
-    public void remove( java.lang.Long id );
-
-    /**
-     * Removes all entities in the given <code>entities<code> collection.
-     */
-    public void remove( java.util.Collection<ExpressionAnalysisResultSet> entities );
-
-    /**
-     * Removes the instance of ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet from the persistent
-     * store.
-     */
-    public void remove( ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet expressionAnalysisResultSet );
-
     /**
      * 
      */
     public void thaw( ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet resultSet );
-
-    /**
-     * Updates all instances in the <code>entities</code> collection in the persistent store.
-     */
-    public void update( java.util.Collection<ExpressionAnalysisResultSet> entities );
-
-    /**
-     * Updates the <code>expressionAnalysisResultSet</code> instance in the persistent store.
-     */
-    public void update( ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet expressionAnalysisResultSet );
 
     /**
      * @param resultSet Only thaws the factor not the probe information

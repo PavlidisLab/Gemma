@@ -20,8 +20,7 @@ package ubic.gemma.web.controller;
 
 import java.util.concurrent.FutureTask;
 
-import org.springframework.security.context.SecurityContext;
-import org.springframework.security.context.SecurityContextHolder;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
@@ -34,11 +33,29 @@ import ubic.gemma.web.util.MessageUtil;
  * 
  * @author pavlidis
  * @version $Id$
- * @spring.property name="taskRunningService" ref="taskRunningService"
  */
 public abstract class BackgroundProcessingFormController extends BaseFormController {
 
+    @Autowired
     protected TaskRunningService taskRunningService;
+
+    /**
+     * This method can be exposed via AJAX to allow asynchronous calls
+     * 
+     * @param command The command object containing parameters.
+     * @return the task id.
+     */
+    public String run( Object command ) {
+
+        String taskId = TaskRunningService.generateTaskId();
+
+        BackgroundControllerJob<ModelAndView> job = getRunner( taskId, command, this.getMessageUtil() );
+
+        assert taskId != null;
+
+        taskRunningService.submitTask( taskId, new FutureTask<ModelAndView>( job ) );
+        return taskId;
+    }
 
     /**
      * @param taskRunningService the taskRunningService to set
@@ -46,6 +63,16 @@ public abstract class BackgroundProcessingFormController extends BaseFormControl
     public void setTaskRunningService( TaskRunningService taskRunningService ) {
         this.taskRunningService = taskRunningService;
     }
+
+    /**
+     * You have to implement this in your subclass.
+     * 
+     * @param jobId a unique job identifier that is used to retrieve results and status information about the job.
+     * @param command from form
+     * @return
+     */
+    protected abstract BackgroundControllerJob<ModelAndView> getRunner( String jobId, Object command,
+            MessageUtil messenger );
 
     /**
      * @param command
@@ -59,38 +86,5 @@ public abstract class BackgroundProcessingFormController extends BaseFormControl
         mnv.addObject( "taskId", taskId );
         return mnv;
     }
-
-    /**
-     * This method can be exposed via AJAX to allow asynchronous calls
-     * 
-     * @param command The command object containing parameters.
-     * @return the task id.
-     */
-    public String run( Object command ) {
-        /*
-         * all new threads need this to acccess protected resources (like services)
-         */
-        SecurityContext context = SecurityContextHolder.getContext();
-
-        String taskId = TaskRunningService.generateTaskId();
-
-        BackgroundControllerJob<ModelAndView> job = getRunner( taskId, context, command, this.getMessageUtil() );
-
-        assert taskId != null;
-
-        taskRunningService.submitTask( taskId, new FutureTask<ModelAndView>( job ) );
-        return taskId;
-    }
-
-    /**
-     * You have to implement this in your subclass.
-     * 
-     * @param jobId a unique job identifier that is used to retrieve results and status information about the job.
-     * @param securityContext
-     * @param command from form
-     * @return
-     */
-    protected abstract BackgroundControllerJob<ModelAndView> getRunner( String jobId, SecurityContext securityContext,
-            Object command, MessageUtil messenger );
 
 }

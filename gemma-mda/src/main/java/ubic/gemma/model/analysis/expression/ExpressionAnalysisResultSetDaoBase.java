@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.analysis.expression;
 
+import java.util.Collection;
+
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 
 /**
@@ -34,13 +36,13 @@ public abstract class ExpressionAnalysisResultSetDaoBase extends HibernateDaoSup
     /**
      * @see ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSetDao#create(int, java.util.Collection)
      */
-    public java.util.Collection<ExpressionAnalysisResultSet> create(
-            final java.util.Collection<ExpressionAnalysisResultSet> entities ) {
+    public java.util.Collection<? extends ExpressionAnalysisResultSet> create(
+            final java.util.Collection<? extends ExpressionAnalysisResultSet> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "ExpressionAnalysisResultSet.create - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback() {
+                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
@@ -53,6 +55,12 @@ public abstract class ExpressionAnalysisResultSetDaoBase extends HibernateDaoSup
         return entities;
     }
 
+    
+    public Collection<? extends ExpressionAnalysisResultSet> load( Collection<Long> ids ) {
+        return this.getHibernateTemplate().findByNamedParam( "from ExpressionAnalysisResultSetImpl where id in (:ids)",
+                "ids", ids );
+    }
+
     /**
      * @see ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSetDao#create(int transform,
      *      ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet)
@@ -63,7 +71,8 @@ public abstract class ExpressionAnalysisResultSetDaoBase extends HibernateDaoSup
             throw new IllegalArgumentException(
                     "ExpressionAnalysisResultSet.create - 'expressionAnalysisResultSet' can not be null" );
         }
-        return ( ExpressionAnalysisResultSet ) this.getHibernateTemplate().save( expressionAnalysisResultSet );
+        this.getHibernateTemplate().save( expressionAnalysisResultSet );
+        return expressionAnalysisResultSet;
 
     }
 
@@ -74,14 +83,14 @@ public abstract class ExpressionAnalysisResultSetDaoBase extends HibernateDaoSup
         if ( id == null ) {
             throw new IllegalArgumentException( "ExpressionAnalysisResultSet.load - 'id' can not be null" );
         }
-        return ( ExpressionAnalysisResultSet ) this.getHibernateTemplate().get(
+        return this.getHibernateTemplate().get(
                 ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSetImpl.class, id );
     }
 
     /**
      * @see ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSetDao#loadAll(int)
      */
-    public java.util.Collection<ExpressionAnalysisResultSet> loadAll() {
+    public java.util.Collection<? extends ExpressionAnalysisResultSet> loadAll() {
         return this.getHibernateTemplate().loadAll(
                 ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSetImpl.class );
     }
@@ -102,7 +111,7 @@ public abstract class ExpressionAnalysisResultSetDaoBase extends HibernateDaoSup
     /**
      * @see ubic.gemma.model.analysis.AnalysisResultSetDao#remove(java.util.Collection)
      */
-    public void remove( java.util.Collection<ExpressionAnalysisResultSet> entities ) {
+    public void remove( java.util.Collection<? extends ExpressionAnalysisResultSet> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "ExpressionAnalysisResultSet.remove - 'entities' can not be null" );
         }
@@ -136,16 +145,16 @@ public abstract class ExpressionAnalysisResultSetDaoBase extends HibernateDaoSup
     /**
      * @see ubic.gemma.model.analysis.AnalysisResultSetDao#update(java.util.Collection)
      */
-    public void update( final java.util.Collection<ExpressionAnalysisResultSet> entities ) {
+    public void update( final java.util.Collection<? extends ExpressionAnalysisResultSet> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "ExpressionAnalysisResultSet.update - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback() {
+                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator<ExpressionAnalysisResultSet> entityIterator = entities.iterator(); entityIterator
-                                .hasNext(); ) {
+                        for ( java.util.Iterator<? extends ExpressionAnalysisResultSet> entityIterator = entities
+                                .iterator(); entityIterator.hasNext(); ) {
                             update( entityIterator.next() );
                         }
                         return null;

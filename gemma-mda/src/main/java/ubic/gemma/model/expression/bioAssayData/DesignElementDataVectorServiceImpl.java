@@ -22,6 +22,8 @@ package ubic.gemma.model.expression.bioAssayData;
 
 import java.util.Collection;
 
+import org.springframework.stereotype.Service;
+
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -31,26 +33,9 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
  * @version $Id$
  * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService
  */
+@Service
 public class DesignElementDataVectorServiceImpl extends
         ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorServiceBase {
-
-    /**
-     * @param vectors
-     * @return
-     */
-    private Class<? extends DesignElementDataVector> getVectorClass(
-            Collection<? extends DesignElementDataVector> vectors ) {
-        Class<? extends DesignElementDataVector> vectorClass = null;
-        for ( DesignElementDataVector designElementDataVector : vectors ) {
-            if ( vectorClass == null ) {
-                vectorClass = designElementDataVector.getClass();
-            }
-            if ( !vectorClass.equals( designElementDataVector.getClass() ) ) {
-                throw new IllegalArgumentException( "Two types of vector in one collection, not supported" );
-            }
-        }
-        return vectorClass;
-    }
 
     @Override
     protected Integer handleCountAll() throws Exception {
@@ -149,21 +134,16 @@ public class DesignElementDataVectorServiceImpl extends
         this.getRawExpressionDataVectorDao().removeDataForQuantitationType( quantitationType );
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     protected void handleThaw( Collection<? extends DesignElementDataVector> vectors ) throws Exception {
 
-        if ( vectors == null || vectors.isEmpty() ) {
+        if ( vectors == null ) {
             return;
         }
 
-        Class<? extends DesignElementDataVector> vectorClass = getVectorClass( vectors );
+        // Doesn't matter which kind, the same thaw method gets called.
+        this.getRawExpressionDataVectorDao().thaw( vectors );
 
-        if ( vectorClass.equals( RawExpressionDataVector.class ) ) {
-            this.getRawExpressionDataVectorDao().thaw( ( Collection<RawExpressionDataVector> ) vectors );
-        } else {
-            this.getProcessedExpressionDataVectorDao().thaw( ( Collection<ProcessedExpressionDataVector> ) vectors );
-        }
     }
 
     @Override
@@ -191,6 +171,24 @@ public class DesignElementDataVectorServiceImpl extends
     @Override
     protected void handleUpdate( RawExpressionDataVector dedv ) throws Exception {
         this.getRawExpressionDataVectorDao().update( dedv );
+    }
+
+    /**
+     * @param vectors
+     * @return
+     */
+    private Class<? extends DesignElementDataVector> getVectorClass(
+            Collection<? extends DesignElementDataVector> vectors ) {
+        Class<? extends DesignElementDataVector> vectorClass = null;
+        for ( DesignElementDataVector designElementDataVector : vectors ) {
+            if ( vectorClass == null ) {
+                vectorClass = designElementDataVector.getClass();
+            }
+            if ( !vectorClass.equals( designElementDataVector.getClass() ) ) {
+                throw new IllegalArgumentException( "Two types of vector in one collection, not supported" );
+            }
+        }
+        return vectorClass;
     }
 
 }

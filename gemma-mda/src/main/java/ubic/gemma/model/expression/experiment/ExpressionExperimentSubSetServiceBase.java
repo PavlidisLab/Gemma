@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.expression.experiment;
 
+import org.springframework.beans.factory.annotation.Autowired;
+
 /**
  * <p>
  * Spring Service base class for <code>ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetService</code>,
@@ -29,6 +31,7 @@ package ubic.gemma.model.expression.experiment;
 public abstract class ExpressionExperimentSubSetServiceBase implements
         ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetService {
 
+    @Autowired
     private ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetDao expressionExperimentSubSetDao;
 
     /**

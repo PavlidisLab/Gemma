@@ -43,7 +43,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
-import ubic.gemma.security.authentication.ManualAuthenticationProcessing;
+import ubic.gemma.security.authentication.ManualAuthenticationService;
 import ubic.gemma.util.ConfigUtils;
 
 /**
@@ -54,7 +54,7 @@ import ubic.gemma.util.ConfigUtils;
  */
 public abstract class AbstractGemmaEndpoint extends AbstractDomPayloadEndpoint {
 
-    protected ManualAuthenticationProcessing manualAuthenticationProcessing;
+    protected ManualAuthenticationService manualAuthenticationProcessing;
 
     /**
      * Namespace of both request and response.
@@ -78,13 +78,13 @@ public abstract class AbstractGemmaEndpoint extends AbstractDomPayloadEndpoint {
 
     }
 
-    public void setManualAuthenticationProcessing( ManualAuthenticationProcessing map ) {
+    public void setManualAuthenticationProcessing( ManualAuthenticationService map ) {
         this.manualAuthenticationProcessing = map;
 
     }
 
     protected boolean authenticate() {
-        this.manualAuthenticationProcessing.anonymousAuthentication();
+        this.manualAuthenticationProcessing.authenticateAnonymously();
         return true;
     }
 

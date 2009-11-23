@@ -41,7 +41,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentImpl;
  *                                      &lt;/experiment&gt;
  *                                     ....
  * </pre>
- * 
  * <p>
  * (Ending with a &lt;/experiment_set&gt;). Note that SMD uses a naming convention that deviates from MAGE. An
  * "experiment_set" is like a MAGE experiment. A "experiment" is a BioAssay.
@@ -131,7 +130,6 @@ public class SMDExperiment {
         StringBuilder expBuf;
 
         @Override
-        @SuppressWarnings("unused")
         public void startElement( String uri, String value, String qName, Attributes atts ) {
 
             if ( value.equals( "experiment_set" ) ) {
@@ -146,7 +144,7 @@ public class SMDExperiment {
         }
 
         @Override
-        @SuppressWarnings( { "unused", "synthetic-access" })
+        @SuppressWarnings( { "synthetic-access" })
         public void endElement( String uri, String tagName, String qName ) {
             if ( tagName.equals( "experiment_set" ) && !inExp ) {
                 inSet = false;

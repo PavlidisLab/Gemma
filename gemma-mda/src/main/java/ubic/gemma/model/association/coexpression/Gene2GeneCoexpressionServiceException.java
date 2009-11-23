@@ -31,40 +31,6 @@ public class Gene2GeneCoexpressionServiceException extends java.lang.RuntimeExce
     private static final long serialVersionUID = 829006585272495104L;
 
     /**
-     * The default constructor for <code>Gene2GeneCoexpressionServiceException</code>.
-     */
-    public Gene2GeneCoexpressionServiceException() {
-    }
-
-    /**
-     * Constructs a new instance of <code>Gene2GeneCoexpressionServiceException</code>.
-     * 
-     * @param throwable the parent Throwable
-     */
-    public Gene2GeneCoexpressionServiceException( Throwable throwable ) {
-        super( findRootCause( throwable ) );
-    }
-
-    /**
-     * Constructs a new instance of <code>Gene2GeneCoexpressionServiceException</code>.
-     * 
-     * @param message the throwable message.
-     */
-    public Gene2GeneCoexpressionServiceException( String message ) {
-        super( message );
-    }
-
-    /**
-     * Constructs a new instance of <code>Gene2GeneCoexpressionServiceException</code>.
-     * 
-     * @param message the throwable message.
-     * @param throwable the parent of this Throwable.
-     */
-    public Gene2GeneCoexpressionServiceException( String message, Throwable throwable ) {
-        super( message, findRootCause( throwable ) );
-    }
-
-    /**
      * Finds the root cause of the parent exception by traveling up the exception tree
      */
     private static Throwable findRootCause( Throwable th ) {
@@ -98,5 +64,39 @@ public class Gene2GeneCoexpressionServiceException extends java.lang.RuntimeExce
             }
         }
         return th;
+    }
+
+    /**
+     * The default constructor for <code>Gene2GeneCoexpressionServiceException</code>.
+     */
+    public Gene2GeneCoexpressionServiceException() {
+    }
+
+    /**
+     * Constructs a new instance of <code>Gene2GeneCoexpressionServiceException</code>.
+     * 
+     * @param message the throwable message.
+     */
+    public Gene2GeneCoexpressionServiceException( String message ) {
+        super( message );
+    }
+
+    /**
+     * Constructs a new instance of <code>Gene2GeneCoexpressionServiceException</code>.
+     * 
+     * @param message the throwable message.
+     * @param throwable the parent of this Throwable.
+     */
+    public Gene2GeneCoexpressionServiceException( String message, Throwable throwable ) {
+        super( message, findRootCause( throwable ) );
+    }
+
+    /**
+     * Constructs a new instance of <code>Gene2GeneCoexpressionServiceException</code>.
+     * 
+     * @param throwable the parent Throwable
+     */
+    public Gene2GeneCoexpressionServiceException( Throwable throwable ) {
+        super( findRootCause( throwable ) );
     }
 }

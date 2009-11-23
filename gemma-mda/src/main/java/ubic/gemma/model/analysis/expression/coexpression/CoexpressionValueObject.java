@@ -114,17 +114,8 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
     private Map<Long, Collection<Long>> queryProbeInfo;
 
     private Long taxonId;
-    
-    
+
     private String abaGeneUrl;
-
-    public String getAbaGeneUrl() {
-        return abaGeneUrl;
-    }
-
-    public void setAbaGeneUrl( String abaGeneUrl ) {
-        this.abaGeneUrl = abaGeneUrl;
-    }
 
     public CoexpressionValueObject() {
         geneName = "";
@@ -226,6 +217,10 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
         return true;
     }
 
+    public String getAbaGeneUrl() {
+        return abaGeneUrl;
+    }
+
     /**
      * @return IDs of genes that may be crosshybridizing with the target gene for this.
      */
@@ -317,6 +312,15 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
         return Math.max( positiveLinks, negativeLinks );
     }
 
+    /**
+     * @param eeId
+     * @return
+     */
+    public Collection<Long> getNegativeCorrelationProbes( Long eeId ) {
+        if ( !negativeScores.containsKey( eeId ) ) return new HashSet<Long>();
+        return negativeScores.get( eeId ).keySet();
+    }
+
     // /**
     // * @return
     // */
@@ -330,15 +334,6 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
     // buf.append( taxonId );
     // return buf.toString();
     // }
-
-    /**
-     * @param eeId
-     * @return
-     */
-    public Collection<Long> getNegativeCorrelationProbes( Long eeId ) {
-        if ( !negativeScores.containsKey( eeId ) ) return new HashSet<Long>();
-        return negativeScores.get( eeId ).keySet();
-    }
 
     /**
      * @return the negative link counts
@@ -570,6 +565,10 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
         }
         return true;
 
+    }
+
+    public void setAbaGeneUrl( String abaGeneUrl ) {
+        this.abaGeneUrl = abaGeneUrl;
     }
 
     public void setDatasetsTestedIn( Collection<Long> datasetsTestedIn ) {

@@ -18,35 +18,25 @@
  */
 package ubic.gemma.datastructure.matrix;
 
+import static org.junit.Assert.assertEquals;
+
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 
-import junit.framework.TestCase;
-
 import org.apache.commons.lang.math.RandomUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.junit.Test;
 
-import ubic.gemma.analysis.preprocess.ExpressionDataMatrixBuilder;
-import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
-import ubic.gemma.loader.expression.geo.service.AbstractGeoService;
 import ubic.gemma.model.common.measurement.Measurement;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
-import ubic.gemma.model.expression.bioAssayData.BioAssayDimensionService;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
-import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.FactorValue;
-import ubic.gemma.testing.AbstractGeoServiceTest;
 import ubic.gemma.testing.BaseSpringContextTest;
-import ubic.gemma.util.ConfigUtils;
 
 /**
  * @author paul
@@ -69,7 +59,7 @@ public class ExpressionDataMatrixColumnSortTest extends BaseSpringContextTest {
     // */
     // @SuppressWarnings("unchecked")
     // public void testOrderByExperimentalDesign() throws Exception {
-    // endTransaction();
+    //
     // expressionExperimentService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
     // adService = ( ArrayDesignService ) this.getBean( "arrayDesignService" );
     // designElementDataVectorService = ( DesignElementDataVectorService ) this
@@ -98,6 +88,7 @@ public class ExpressionDataMatrixColumnSortTest extends BaseSpringContextTest {
     // assertEquals( 4, orderByExperimentalDesign.size() );
     // }
 
+    @Test
     public void testOrderByExperimentalDesignB() throws Exception {
 
         BioAssayDimension bad = BioAssayDimension.Factory.newInstance();

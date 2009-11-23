@@ -25,6 +25,8 @@ import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import ubic.gemma.analysis.service.ExpressionExperimentVectorManipulatingService;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
@@ -56,14 +58,10 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
  * <li>commit changes.
  * </ul>
  * 
- * @spring.bean id="expressionExperimentPlatformSwitchService"
- * @spring.property name="expressionExperimentService" ref="expressionExperimentService"
- * @spring.property name="bioAssayService" ref="bioAssayService"
- * @spring.property name="arrayDesignService" ref="arrayDesignService"
- * @spring.property name="auditTrailService" ref="auditTrailService"
  * @author pavlidis
  * @version $Id$
  */
+@Service
 public class ExpressionExperimentPlatformSwitchService extends ExpressionExperimentVectorManipulatingService {
 
     /**
@@ -79,12 +77,16 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
 
     private static Log log = LogFactory.getLog( ExpressionExperimentPlatformSwitchService.class.getName() );
 
+    @Autowired
     ExpressionExperimentService expressionExperimentService;
 
+    @Autowired
     ArrayDesignService arrayDesignService;
 
+    @Autowired
     BioAssayService bioAssayService;
 
+    @Autowired
     private AuditTrailService auditTrailService;
 
     public void setAuditTrailService( AuditTrailService auditTrailService ) {

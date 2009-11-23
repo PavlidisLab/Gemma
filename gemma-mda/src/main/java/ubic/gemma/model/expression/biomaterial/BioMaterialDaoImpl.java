@@ -19,20 +19,32 @@
 package ubic.gemma.model.expression.biomaterial;
 
 import java.util.Collection;
+import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
+import org.hibernate.SessionFactory;
 import org.hibernate.criterion.Restrictions;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
+
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
  * @author pavlidis
  * @version $Id$
  * @see ubic.gemma.model.expression.biomaterial.BioMaterial
  */
+@Repository
 public class BioMaterialDaoImpl extends ubic.gemma.model.expression.biomaterial.BioMaterialDaoBase {
 
     private static Log log = LogFactory.getLog( BioMaterialDaoImpl.class.getName() );
+
+    @Autowired
+    public BioMaterialDaoImpl( SessionFactory sessionFactory ) {
+        super.setSessionFactory( sessionFactory );
+    }
 
     /*
      * (non-Javadoc)
@@ -43,7 +55,7 @@ public class BioMaterialDaoImpl extends ubic.gemma.model.expression.biomaterial.
     @Override
     public BioMaterial find( BioMaterial bioMaterial ) {
         try {
-            Criteria queryObject = super.getSession( false ).createCriteria( BioMaterial.class );
+            Criteria queryObject = super.getSession().createCriteria( BioMaterial.class );
 
             if ( bioMaterial.getName() != null ) {
                 queryObject.add( Restrictions.eq( "name", bioMaterial.getName() ) );
@@ -102,7 +114,7 @@ public class BioMaterialDaoImpl extends ubic.gemma.model.expression.biomaterial.
     protected BioMaterial handleCopy( final BioMaterial bioMaterial ) throws Exception {
 
         return ( BioMaterial ) this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback() {
+                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
 
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
@@ -128,7 +140,7 @@ public class BioMaterialDaoImpl extends ubic.gemma.model.expression.biomaterial.
     protected Integer handleCountAll() throws Exception {
         final String query = "select count(*) from BioMaterialImpl";
         try {
-            org.hibernate.Query queryObject = super.getSession( false ).createQuery( query );
+            org.hibernate.Query queryObject = super.getSession().createQuery( query );
 
             return ( Integer ) queryObject.iterate().next();
         } catch ( org.hibernate.HibernateException ex ) {
@@ -142,11 +154,11 @@ public class BioMaterialDaoImpl extends ubic.gemma.model.expression.biomaterial.
      */
     @SuppressWarnings("unchecked")
     @Override
-    protected Collection handleLoad( Collection ids ) throws Exception {
+    protected Collection<BioMaterial> handleLoad( Collection<Long> ids ) throws Exception {
         Collection<BioMaterial> bs = null;
         final String queryString = "select distinct b from BioMaterialImpl b where b.id in (:ids)";
         try {
-            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            org.hibernate.Query queryObject = super.getSession().createQuery( queryString );
             queryObject.setParameterList( "ids", ids );
             bs = queryObject.list();
 
@@ -154,5 +166,23 @@ public class BioMaterialDaoImpl extends ubic.gemma.model.expression.biomaterial.
             throw super.convertHibernateAccessException( ex );
         }
         return bs;
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see ubic.gemma.model.expression.biomaterial.BioMaterialDao#getExpressionExperiment(java.lang.Long)
+     */
+    public ExpressionExperiment getExpressionExperiment( Long bioMaterialId ) {
+        List<?> result = getHibernateTemplate()
+                .findByNamedParam(
+                        "select distinct e from ExpressionExperimentImpl e inner join e.bioAssays ba inner join ba.samplesUsed bm where bm.id =:bmid ",
+                        "bmid", bioMaterialId );
+
+        if ( result.size() > 1 )
+            throw new IllegalStateException( "MOre than one EE for biomaterial with id=" + bioMaterialId );
+
+        if ( result.size() > 0 ) return ( ExpressionExperiment ) result.iterator().next();
+
+        return null;
     }
 }

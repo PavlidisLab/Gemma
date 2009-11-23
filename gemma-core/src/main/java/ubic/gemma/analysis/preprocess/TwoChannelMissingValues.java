@@ -26,6 +26,8 @@ import java.util.HashSet;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.Constants;
@@ -79,26 +81,26 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
  * consistency).
  * </ol>
  * 
- * @spring.bean id="twoChannelMissingValues"
- * @spring.property name="expressionExperimentService" ref="expressionExperimentService"
- * @spring.property name="designElementDataVectorService" ref="designElementDataVectorService"
- * @spring.property name="quantitationTypeService" ref="quantitationTypeService"
- * @spring.property name="auditTrailService" ref="auditTrailService"
  * @author pavlidis
  * @version $Id$
  */
+@Service
 public class TwoChannelMissingValues {
 
     public static final double DEFAULT_SIGNAL_TO_NOISE_THRESHOLD = 2.0;
 
     private static Log log = LogFactory.getLog( TwoChannelMissingValues.class.getName() );
 
+    @Autowired
     private AuditTrailService auditTrailService;
 
+    @Autowired
     private DesignElementDataVectorService designElementDataVectorService;
 
+    @Autowired
     private ExpressionExperimentService expressionExperimentService;
 
+    @Autowired
     private QuantitationTypeService quantitationTypeService;
 
     /**
@@ -119,7 +121,6 @@ public class TwoChannelMissingValues {
      *        (foolish, but true). This can be null or empty and it will be ignored.
      * @return DesignElementDataVectors corresponding to a new PRESENTCALL quantitation type for the experiment.
      */
-    @SuppressWarnings("unchecked")
     public Collection<RawExpressionDataVector> computeMissingValues( ExpressionExperiment expExp,
             double signalToNoiseThreshold, Collection<Double> extraMissingValueIndicators ) {
 

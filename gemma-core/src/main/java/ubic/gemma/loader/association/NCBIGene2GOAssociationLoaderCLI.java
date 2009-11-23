@@ -30,7 +30,8 @@ import org.apache.commons.cli.OptionBuilder;
 import ubic.gemma.loader.util.fetcher.HttpFetcher;
 import ubic.gemma.model.association.Gene2GOAssociationService;
 import ubic.gemma.model.common.description.LocalFile;
-import ubic.gemma.persistence.PersisterHelper;
+import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.util.AbstractSpringAwareCLI;
 
 /**
@@ -86,9 +87,15 @@ public class NCBIGene2GOAssociationLoaderCLI extends AbstractSpringAwareCLI {
             return e;
         }
 
+        TaxonService taxonService = ( TaxonService ) this.getBean( "taxonService" );
+
         NCBIGene2GOAssociationLoader gene2GOAssLoader = new NCBIGene2GOAssociationLoader();
-        gene2GOAssLoader.setPersisterHelper( ( PersisterHelper ) this.getBean( "persisterHelper" ) );
-        gene2GOAssLoader.setParser(( NCBIGene2GOAssociationParser ) getBean( "gene2GOAssociationParser" ));
+        gene2GOAssLoader.setPersisterHelper( this.persisterHelper );
+
+        Collection<Taxon> taxa = taxonService.loadAll();
+
+        gene2GOAssLoader.setParser( new NCBIGene2GOAssociationParser( taxa ) );
+
         HttpFetcher fetcher = new HttpFetcher();
 
         Collection<LocalFile> files = null;

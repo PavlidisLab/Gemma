@@ -18,10 +18,14 @@
  */
 package ubic.gemma.analysis.expression.diff;
 
+import static org.junit.Assert.assertEquals;
+
 import java.util.Collection;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
@@ -36,24 +40,13 @@ public class TwoWayAnovaWithoutInteractionsAnalyzerTest extends BaseAnalyzerConf
 
     private Log log = LogFactory.getLog( this.getClass() );
 
+    @Autowired
     TwoWayAnovaWithoutInteractionsAnalyzer analyzer = null;
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.analysis.diff.BaseAnalyzerConfigurationTest#onSetUpInTransaction()
-     */
-    @Override
-    public void onSetUpInTransaction() throws Exception {
-        super.onSetUpInTransaction();
-
-        analyzer = ( TwoWayAnovaWithoutInteractionsAnalyzer ) this.getBean( "twoWayAnovaWithoutInteractionsAnalyzer" );
-
-    }
 
     /**
      * Tests the TwoWayAnova method.
      */
+    @Test
     public void testTwoWayAnova() throws Exception {
 
         log.debug( "Testing getPValues method in " + TwoWayAnovaWithoutInteractionsAnalyzer.class.getName() );
@@ -67,8 +60,7 @@ public class TwoWayAnovaWithoutInteractionsAnalyzerTest extends BaseAnalyzerConf
 
         configureMocks();
 
-        DifferentialExpressionAnalysis differentialExpressionAnalysis = analyzer
-                .run( expressionExperiment );
+        DifferentialExpressionAnalysis differentialExpressionAnalysis = analyzer.run( expressionExperiment );
 
         Collection<ExpressionAnalysisResultSet> resultSets = differentialExpressionAnalysis.getResultSets();
 
@@ -83,7 +75,6 @@ public class TwoWayAnovaWithoutInteractionsAnalyzerTest extends BaseAnalyzerConf
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.analysis.diff.BaseAnalyzerConfigurationTest#configureMocks()
      */
     @Override

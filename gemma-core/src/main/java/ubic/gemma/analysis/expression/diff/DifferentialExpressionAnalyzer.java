@@ -22,6 +22,8 @@ import java.util.Collection;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService.AnalysisType;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
@@ -38,28 +40,30 @@ import ubic.gemma.model.expression.experiment.FactorValue;
  * <p>
  * See http://www.bioinformatics.ubc.ca/pavlidis/lab/docs/reprints/anova-methods.pdf.
  * 
- * @spring.bean id="differentialExpressionAnalyzer"
- * @spring.property name="studenttTestAnalyzer" ref="tTestAnalyzer"
- * @spring.property name="oneWayAnovaAnalyzer" ref="oneWayAnovaAnalyzer"
- * @spring.property name="twoWayAnovaWithInteractionsAnalyzer" ref="twoWayAnovaWithInteractionsAnalyzer"
- * @spring.property name="twoWayAnovaWithoutInteractionsAnalyzer" ref="twoWayAnovaWithoutInteractionsAnalyzer"
- * @spring.property name="differentialExpressionAnalysisHelperService" ref="differentialExpressionAnalysisHelperService"
  * @author keshav
  * @version $Id$
  */
+@Service
 public class DifferentialExpressionAnalyzer {
 
-    private DifferentialExpressionAnalysisHelperService differentialExpressionAnalysisHelperService = null;
+    private DifferentialExpressionAnalysisHelperService differentialExpressionAnalysisHelperService = new DifferentialExpressionAnalysisHelperService();
     private int EXPERIMENTAL_FACTOR_ONE = 1;
     private int EXPERIMENTAL_FACTOR_TWO = 2;
 
     private int FACTOR_VALUE_ONE = 1;
     private int FACTOR_VALUE_TWO = 2;
     private Log log = LogFactory.getLog( this.getClass() );
+
+    @Autowired
     private OneWayAnovaAnalyzer oneWayAnovaAnalyzer = null;
-    private AbstractDifferentialExpressionAnalyzer studenttTestAnalyzer = null;
+
+    @Autowired
+    private TTestAnalyzer studenttTestAnalyzer = null;
+
+    @Autowired
     private TwoWayAnovaWithInteractionsAnalyzer twoWayAnovaWithInteractionsAnalyzer = null;
 
+    @Autowired
     private TwoWayAnovaWithoutInteractionsAnalyzer twoWayAnovaWithoutInteractionsAnalyzer = null;
 
     /**
@@ -119,29 +123,6 @@ public class DifferentialExpressionAnalyzer {
 
         return analysis;
 
-    }
-
-    public void setDifferentialExpressionAnalysisHelperService(
-            DifferentialExpressionAnalysisHelperService differentialExpressionAnalysisHelperService ) {
-        this.differentialExpressionAnalysisHelperService = differentialExpressionAnalysisHelperService;
-    }
-
-    public void setOneWayAnovaAnalyzer( OneWayAnovaAnalyzer oneWayAnovaAnalyzer ) {
-        this.oneWayAnovaAnalyzer = oneWayAnovaAnalyzer;
-    }
-
-    public void setStudenttTestAnalyzer( AbstractDifferentialExpressionAnalyzer studenttTestAnalyzer ) {
-        this.studenttTestAnalyzer = studenttTestAnalyzer;
-    }
-
-    public void setTwoWayAnovaWithInteractionsAnalyzer(
-            TwoWayAnovaWithInteractionsAnalyzer twoWayAnovaWithInteractionsAnalyzer ) {
-        this.twoWayAnovaWithInteractionsAnalyzer = twoWayAnovaWithInteractionsAnalyzer;
-    }
-
-    public void setTwoWayAnovaWithoutInteractionsAnalyzer(
-            TwoWayAnovaWithoutInteractionsAnalyzer twoWayAnovaWithoutInteractionsAnalyzer ) {
-        this.twoWayAnovaWithoutInteractionsAnalyzer = twoWayAnovaWithoutInteractionsAnalyzer;
     }
 
     public AbstractDifferentialExpressionAnalyzer determineAnalysis( ExpressionExperiment expressionExperiment,
@@ -249,31 +230,6 @@ public class DifferentialExpressionAnalyzer {
         log.warn( "Differential expression analysis supports a maximum of 2 experimental factors at this time." );
         return null;
 
-    }
-
-    /**
-     * Disconnect from R.
-     */
-    public void disconnectR() {
-
-        if ( studenttTestAnalyzer == null && oneWayAnovaAnalyzer == null
-                && twoWayAnovaWithoutInteractionsAnalyzer == null && twoWayAnovaWithInteractionsAnalyzer == null ) {
-            throw new RuntimeException( "No analyzer was specified.  Could not try to terminate R connection." );
-        }
-
-        /* disconnect all analyzers */
-        if ( studenttTestAnalyzer != null ) {
-            studenttTestAnalyzer.disconnectR();
-        }
-        if ( oneWayAnovaAnalyzer != null ) {
-            oneWayAnovaAnalyzer.disconnectR();
-        }
-        if ( twoWayAnovaWithoutInteractionsAnalyzer != null ) {
-            twoWayAnovaWithoutInteractionsAnalyzer.disconnectR();
-        }
-        if ( twoWayAnovaWithInteractionsAnalyzer != null ) {
-            twoWayAnovaWithInteractionsAnalyzer.disconnectR();
-        }
     }
 
     /**

@@ -18,10 +18,13 @@
  */
 package ubic.gemma.persistence;
 
+import static org.junit.Assert.assertNotNull;
+
 import java.util.Collection;
 import java.util.HashSet;
 
 import org.apache.commons.lang.RandomStringUtils;
+import org.junit.Test;
 
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneProduct;
@@ -33,8 +36,9 @@ import ubic.gemma.testing.BaseSpringContextTest;
  */
 public class GenomePersisterTest extends BaseSpringContextTest {
 
+    @Test
     public void testPersistGene() throws Exception {
-        endTransaction();
+
         Gene gene = Gene.Factory.newInstance();
         gene.setName( RandomStringUtils.randomAlphabetic( 10 ) );
         gene.setNcbiId( RandomStringUtils.randomAlphabetic( 10 ) );
@@ -65,6 +69,7 @@ public class GenomePersisterTest extends BaseSpringContextTest {
      * 
      * @throws Exception
      */
+    @Test
     public void testPersistGeneProduct() throws Exception {
         Gene gene = Gene.Factory.newInstance();
         gene.setName( RandomStringUtils.randomAlphabetic( 10 ) );

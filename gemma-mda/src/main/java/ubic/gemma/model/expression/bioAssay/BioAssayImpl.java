@@ -20,6 +20,8 @@
  */
 package ubic.gemma.model.expression.bioAssay;
 
+import ubic.gemma.model.common.auditAndSecurity.Securable;
+
 /**
  * @see ubic.gemma.model.expression.bioAssay.BioAssay
  */
@@ -54,12 +56,12 @@ public class BioAssayImpl extends ubic.gemma.model.expression.bioAssay.BioAssay 
 
         if ( this.getId() != null ) {
             return 29 * getId().hashCode();
-        } else {
-            int nameHash = this.getName() == null ? 0 : getName().hashCode();
-
-            int descHash = this.getDescription() == null ? 0 : getDescription().hashCode();
-            hashCode = 29 * nameHash + descHash;
         }
+        int nameHash = this.getName() == null ? 0 : getName().hashCode();
+
+        int descHash = this.getDescription() == null ? 0 : getDescription().hashCode();
+        hashCode = 29 * nameHash + descHash;
+
         return hashCode;
     }
 }

@@ -46,12 +46,22 @@ import org.apache.commons.logging.LogFactory;
 @SuppressWarnings("unchecked")
 public class ConfigUtils {
 
-    private static Log log = LogFactory.getLog( ConfigUtils.class.getName() );
+    /**
+     * For web application, the key for the tracker ID in your configuration file. Tracker id for Google is something
+     * like 'UA-12441-1'. In your Gemma.properties file add a line like:
+     * 
+     * <pre>
+     * ga.tracker = UA_123456_1
+     * </pre>
+     */
+    private static final String ANALYTICS_TRACKER_PROPERTY = "ga.tracker";
 
     /**
-     * The name of the file users can use to configure Gemma.
+     * Name of the resource that is used to configure Gemma internally.
      */
-    private static final String USER_CONFIGURATION = "Gemma.properties";
+    private static final String BUILTIN_CONFIGURATION = "project.properties";
+
+    private static CompositeConfiguration config;
 
     /**
      * Name of the resource containing defaults that the user can override (classpath)
@@ -59,15 +69,21 @@ public class ConfigUtils {
     private static final String DEFAULT_CONFIGURATION = "default.properties";
 
     /**
-     * Name of the resource that is used to configure Gemma internally.
+     * Configuration parameter for lib directory, where jars shouldu be copied to make them available to the compute
+     * grid (for example)
      */
-    private static final String BUILTIN_CONFIGURATION = "project.properties";
-
-    private static final String QUARTZ_ENABLED_PROPERTY = "quartzOn";
+    private static final String GEMMA_LIB_DIR = "gemma.lib.dir";
 
     private static final String GRID_ENBALED_PROPERTY = "gemma.grid.enabled";
 
-    private static CompositeConfiguration config;
+    private static Log log = LogFactory.getLog( ConfigUtils.class.getName() );
+
+    private static final String QUARTZ_ENABLED_PROPERTY = "quartzOn";
+
+    /**
+     * The name of the file users can use to configure Gemma.
+     */
+    private static final String USER_CONFIGURATION = "Gemma.properties";
 
     static {
 
@@ -143,23 +159,8 @@ public class ConfigUtils {
 
     }
 
-    /**
-     * Attempt to get the version information about the application.
-     * 
-     * @return
-     */
-    public static String getAppVersion() {
-        return getString( "gemma.version" );
-    }
-
-    /**
-     * @return The local directory where files downloaded/uploaded are stored. It will end in a file separator ("/" on
-     *         unix).
-     */
-    public static String getDownloadPath() {
-        String val = getString( "gemma.download.path" );
-        if ( val.endsWith( File.separator ) ) return val;
-        return val + File.separatorChar;
+    public static String getAdminEmailAddress() {
+        return getString( "gemma.admin.email" );
     }
 
     /**
@@ -172,14 +173,24 @@ public class ConfigUtils {
         return val + File.separatorChar;
     }
 
+    public static String getAnalyticsKey() {
+        return getString( ANALYTICS_TRACKER_PROPERTY );
+    }
+
     /**
-     * @param key
-     * @param defaultValue
+     * Attempt to get the version information about the application.
+     * 
      * @return
-     * @see org.apache.commons.configuration.AbstractConfiguration#getBigDecimal(java.lang.String, java.math.BigDecimal)
      */
-    public static BigDecimal getBigDecimal( String key, BigDecimal defaultValue ) {
-        return config.getBigDecimal( key, defaultValue );
+    public static String getAppVersion() {
+        return getString( "gemma.version" );
+    }
+
+    /**
+     * @return the configured base url (e.g., http://www.chibi.ubc. a/Gemma) , or a warning if not configured.
+     */
+    public static String getBaseUrl() {
+        return getString( "gemma.base.url", "[URL to Gemma not configured]" );
     }
 
     /**
@@ -195,10 +206,10 @@ public class ConfigUtils {
      * @param key
      * @param defaultValue
      * @return
-     * @see org.apache.commons.configuration.AbstractConfiguration#getBigInteger(java.lang.String, java.math.BigInteger)
+     * @see org.apache.commons.configuration.AbstractConfiguration#getBigDecimal(java.lang.String, java.math.BigDecimal)
      */
-    public static BigInteger getBigInteger( String key, BigInteger defaultValue ) {
-        return config.getBigInteger( key, defaultValue );
+    public static BigDecimal getBigDecimal( String key, BigDecimal defaultValue ) {
+        return config.getBigDecimal( key, defaultValue );
     }
 
     /**
@@ -208,6 +219,31 @@ public class ConfigUtils {
      */
     public static BigInteger getBigInteger( String key ) {
         return config.getBigInteger( key );
+    }
+
+    /**
+     * @param key
+     * @param defaultValue
+     * @return
+     * @see org.apache.commons.configuration.AbstractConfiguration#getBigInteger(java.lang.String, java.math.BigInteger)
+     */
+    public static BigInteger getBigInteger( String key, BigInteger defaultValue ) {
+        return config.getBigInteger( key, defaultValue );
+    }
+
+    /**
+     * @param key
+     * @return
+     * @see org.apache.commons.configuration.AbstractConfiguration#getBoolean(java.lang.String)
+     */
+    public static boolean getBoolean( String key ) {
+        try {
+            return config.getBoolean( key );
+        } catch ( NoSuchElementException nsee ) {
+            log.info( key + " is not configured, returning default value of false" );
+            return false;
+        }
+
     }
 
     /**
@@ -233,16 +269,15 @@ public class ConfigUtils {
     /**
      * @param key
      * @return
-     * @see org.apache.commons.configuration.AbstractConfiguration#getBoolean(java.lang.String)
+     * @see org.apache.commons.configuration.AbstractConfiguration#getByte(java.lang.String)
      */
-    public static boolean getBoolean( String key ) {
+    public static byte getByte( String key ) {
         try {
-            return config.getBoolean( key );
+            return config.getByte( key );
         } catch ( NoSuchElementException nsee ) {
-            log.info( key + " is not configured, returning default value of false" );
-            return false;
+            log.info( key + " is not configured, returning default value of 1" );
+            return 1;
         }
-
     }
 
     /**
@@ -266,26 +301,35 @@ public class ConfigUtils {
     }
 
     /**
-     * @param key
-     * @return
-     * @see org.apache.commons.configuration.AbstractConfiguration#getByte(java.lang.String)
-     */
-    public static byte getByte( String key ) {
-        try {
-            return config.getByte( key );
-        } catch ( NoSuchElementException nsee ) {
-            log.info( key + " is not configured, returning default value of 1" );
-            return 1;
-        }
-    }
-
-    /**
      * @param index
      * @return
      * @see org.apache.commons.configuration.CompositeConfiguration#getConfiguration(int)
      */
     public static Configuration getConfiguration( int index ) {
         return config.getConfiguration( index );
+    }
+
+    /**
+     * The default value given if none is defined is AND.
+     * 
+     * @return
+     */
+    public static String getDefaultSearchOperator() {
+        return getString( "gemma.search.defaultOperator", "AND" );
+    }
+
+    /**
+     * @param key
+     * @return
+     * @see org.apache.commons.configuration.AbstractConfiguration#getDouble(java.lang.String)
+     */
+    public static double getDouble( String key ) {
+        try {
+            return config.getDouble( key );
+        } catch ( NoSuchElementException nsee ) {
+            log.info( key + " is not configured, returning default value of 1" );
+            return 1;
+        }
     }
 
     /**
@@ -309,13 +353,23 @@ public class ConfigUtils {
     }
 
     /**
+     * @return The local directory where files downloaded/uploaded are stored. It will end in a file separator ("/" on
+     *         unix).
+     */
+    public static String getDownloadPath() {
+        String val = getString( "gemma.download.path" );
+        if ( val.endsWith( File.separator ) ) return val;
+        return val + File.separatorChar;
+    }
+
+    /**
      * @param key
      * @return
-     * @see org.apache.commons.configuration.AbstractConfiguration#getDouble(java.lang.String)
+     * @see org.apache.commons.configuration.AbstractConfiguration#getFloat(java.lang.String)
      */
-    public static double getDouble( String key ) {
+    public static float getFloat( String key ) {
         try {
-            return config.getDouble( key );
+            return config.getFloat( key );
         } catch ( NoSuchElementException nsee ) {
             log.info( key + " is not configured, returning default value of 1" );
             return 1;
@@ -343,35 +397,11 @@ public class ConfigUtils {
     }
 
     /**
-     * @param key
-     * @return
-     * @see org.apache.commons.configuration.AbstractConfiguration#getFloat(java.lang.String)
-     */
-    public static float getFloat( String key ) {
-        try {
-            return config.getFloat( key );
-        } catch ( NoSuchElementException nsee ) {
-            log.info( key + " is not configured, returning default value of 1" );
-            return 1;
-        }
-    }
-
-    /**
      * @return
      * @see org.apache.commons.configuration.CompositeConfiguration#getInMemoryConfiguration()
      */
     public static Configuration getInMemoryConfiguration() {
         return config.getInMemoryConfiguration();
-    }
-
-    /**
-     * @param key
-     * @param defaultValue
-     * @return
-     * @see org.apache.commons.configuration.AbstractConfiguration#getInt(java.lang.String, int)
-     */
-    public static int getInt( String key, int defaultValue ) {
-        return config.getInt( key, defaultValue );
     }
 
     /**
@@ -386,6 +416,16 @@ public class ConfigUtils {
             log.info( key + " is not configured, returning default value of 1" );
             return 1;
         }
+    }
+
+    /**
+     * @param key
+     * @param defaultValue
+     * @return
+     * @see org.apache.commons.configuration.AbstractConfiguration#getInt(java.lang.String, int)
+     */
+    public static int getInt( String key, int defaultValue ) {
+        return config.getInt( key, defaultValue );
     }
 
     /**
@@ -416,13 +456,12 @@ public class ConfigUtils {
     }
 
     /**
-     * @param key
-     * @param defaultValue
+     * The directory where the Gemma jar files will be available to other applications (e.g., the compute grid).
+     * 
      * @return
-     * @see org.apache.commons.configuration.CompositeConfiguration#getList(java.lang.String, java.util.List)
      */
-    public static List getList( String key, List defaultValue ) {
-        return config.getList( key, defaultValue );
+    public static String getLibDirectoryPath() {
+        return getString( GEMMA_LIB_DIR );
     }
 
     /**
@@ -438,6 +477,30 @@ public class ConfigUtils {
         } catch ( NoSuchElementException nsee ) {
             log.info( key + " is not configured, returning empty arrayList" );
             return new ArrayList();
+        }
+    }
+
+    /**
+     * @param key
+     * @param defaultValue
+     * @return
+     * @see org.apache.commons.configuration.CompositeConfiguration#getList(java.lang.String, java.util.List)
+     */
+    public static List getList( String key, List defaultValue ) {
+        return config.getList( key, defaultValue );
+    }
+
+    /**
+     * @param key
+     * @return
+     * @see org.apache.commons.configuration.AbstractConfiguration#getLong(java.lang.String)
+     */
+    public static long getLong( String key ) {
+        try {
+            return config.getLong( key );
+        } catch ( NoSuchElementException nsee ) {
+            log.info( key + " is not configured, returning default value of 1" );
+            return 1;
         }
     }
 
@@ -462,25 +525,20 @@ public class ConfigUtils {
     }
 
     /**
-     * @param key
-     * @return
-     * @see org.apache.commons.configuration.AbstractConfiguration#getLong(java.lang.String)
-     */
-    public static long getLong( String key ) {
-        try {
-            return config.getLong( key );
-        } catch ( NoSuchElementException nsee ) {
-            log.info( key + " is not configured, returning default value of 1" );
-            return 1;
-        }
-    }
-
-    /**
      * @return
      * @see org.apache.commons.configuration.CompositeConfiguration#getNumberOfConfigurations()
      */
     public static int getNumberOfConfigurations() {
         return config.getNumberOfConfigurations();
+    }
+
+    /**
+     * @param key
+     * @return
+     * @see org.apache.commons.configuration.AbstractConfiguration#getProperties(java.lang.String)
+     */
+    public static Properties getProperties( String key ) {
+        return config.getProperties( key );
     }
 
     /**
@@ -496,19 +554,25 @@ public class ConfigUtils {
     /**
      * @param key
      * @return
-     * @see org.apache.commons.configuration.AbstractConfiguration#getProperties(java.lang.String)
+     * @see org.apache.commons.configuration.CompositeConfiguration#getProperty(java.lang.String)
      */
-    public static Properties getProperties( String key ) {
-        return config.getProperties( key );
+    public static Object getProperty( String key ) {
+        return config.getProperty( key );
     }
 
     /**
      * @param key
      * @return
-     * @see org.apache.commons.configuration.CompositeConfiguration#getProperty(java.lang.String)
+     * @see org.apache.commons.configuration.AbstractConfiguration#getShort(java.lang.String)
      */
-    public static Object getProperty( String key ) {
-        return config.getProperty( key );
+    public static short getShort( String key ) {
+        try {
+            return config.getShort( key );
+
+        } catch ( NoSuchElementException nsee ) {
+            log.info( key + " is not configured, returning default value of 1" );
+            return 1;
+        }
     }
 
     /**
@@ -534,15 +598,14 @@ public class ConfigUtils {
     /**
      * @param key
      * @return
-     * @see org.apache.commons.configuration.AbstractConfiguration#getShort(java.lang.String)
+     * @see org.apache.commons.configuration.AbstractConfiguration#getString(java.lang.String)
      */
-    public static short getShort( String key ) {
+    public static String getString( String key ) {
         try {
-            return config.getShort( key );
-
+            return config.getString( key );
         } catch ( NoSuchElementException nsee ) {
-            log.info( key + " is not configured, returning default value of 1" );
-            return 1;
+            log.info( key + " is not configured, returning empty string" );
+            return "";
         }
     }
 
@@ -554,20 +617,6 @@ public class ConfigUtils {
      */
     public static String getString( String key, String defaultValue ) {
         return config.getString( key, defaultValue );
-    }
-
-    /**
-     * @param key
-     * @return
-     * @see org.apache.commons.configuration.AbstractConfiguration#getString(java.lang.String)
-     */
-    public static String getString( String key ) {
-        try {
-            return config.getString( key );
-        } catch ( NoSuchElementException nsee ) {
-            log.info( key + " is not configured, returning empty string" );
-            return "";
-        }
     }
 
     /**
@@ -585,27 +634,6 @@ public class ConfigUtils {
     }
 
     /**
-     * Set an environment/application variable programatically.
-     * 
-     * @param enablePropertyName
-     * @param b
-     */
-    public static void setProperty( String key, Object value ) {
-        config.setProperty( key, value );
-    }
-
-    public static String getAdminEmailAddress() {
-        return getString( "gemma.admin.email" );
-    }
-
-    /**
-     * @return the configured base url (e.g., http://www.chibi.ubc. a/Gemma) , or a warning if not configured.
-     */
-    public static String getBaseUrl() {
-        return getString( "gemma.base.url", "[URL to Gemma not configured]" );
-    }
-
-    /**
      * @return true if the compute grid (e.g., JavaSpaces) is enabled by the user's configuration
      */
     public static boolean isGridEnabled() {
@@ -620,12 +648,13 @@ public class ConfigUtils {
     }
 
     /**
-     * The default value given if none is defined is AND.
+     * Set an environment/application variable programatically.
      * 
-     * @return
+     * @param enablePropertyName
+     * @param b
      */
-    public static String getDefaultSearchOperator() {
-        return getString( "gemma.search.defaultOperator", "AND" );
+    public static void setProperty( String key, Object value ) {
+        config.setProperty( key, value );
     }
 
 }

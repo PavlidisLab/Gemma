@@ -26,23 +26,28 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.CacheMode;
 import org.hibernate.Criteria;
-import org.hibernate.FlushMode;
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
+import org.hibernate.Query;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.orm.hibernate3.HibernateCallback;
 import org.springframework.orm.hibernate3.HibernateTemplate;
+import org.springframework.stereotype.Repository;
 
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -51,6 +56,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.biosequence.BioSequenceImpl;
 import ubic.gemma.util.BusinessKey;
+import ubic.gemma.util.EntityUtils;
 import ubic.gemma.util.NativeQueryUtils;
 
 /**
@@ -58,10 +64,16 @@ import ubic.gemma.util.NativeQueryUtils;
  * @version $Id$
  * @see ubic.gemma.model.expression.arrayDesign.ArrayDesign
  */
+@Repository
 public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase {
 
     static Log log = LogFactory.getLog( ArrayDesignDaoImpl.class.getName() );
     private static final int LOGGING_UPDATE_EVENT_COUNT = 5000;
+
+    @Autowired
+    public ArrayDesignDaoImpl( SessionFactory sessionFactory ) {
+        super.setSessionFactory( sessionFactory );
+    }
 
     public ArrayDesign arrayDesignValueObjectToEntity( ArrayDesignValueObject arrayDesignValueObject ) {
         Long id = arrayDesignValueObject.getId();
@@ -73,12 +85,13 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
      * @see
      * ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#find(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
+    @Override
     @SuppressWarnings("unchecked")
     public ArrayDesign find( ArrayDesign arrayDesign ) {
         try {
 
             BusinessKey.checkValidKey( arrayDesign );
-            Criteria queryObject = super.getSession( false ).createCriteria( ArrayDesign.class );
+            Criteria queryObject = super.getSession().createCriteria( ArrayDesign.class );
             BusinessKey.addRestrictions( queryObject, arrayDesign );
 
             java.util.List results = queryObject.list();
@@ -121,9 +134,11 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
             throw new IllegalArgumentException( "ArrayDesign.remove - 'arrayDesign' can not be null" );
         }
 
-        this.getHibernateTemplate().executeWithNativeSession( new HibernateCallback() {
+        this.getHibernateTemplate().executeWithNativeSession( new HibernateCallback<Object>() {
             public Object doInHibernate( Session session ) throws HibernateException {
-                session.update( arrayDesign );
+                session.lock( arrayDesign, LockMode.NONE );
+                Hibernate.initialize( arrayDesign.getMergees() );
+                Hibernate.initialize( arrayDesign.getSubsumedArrayDesigns() );
                 arrayDesign.getMergees().clear();
                 arrayDesign.getSubsumedArrayDesigns().clear();
                 return null;
@@ -320,6 +335,21 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
      * (non-Javadoc)
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleGetTaxon(java.lang.Long)
      */
+    @SuppressWarnings("unchecked")
+    @Override
+    protected Collection<Taxon> handleGetTaxa( Long id ) throws Exception {
+
+        final String queryString = "select distinct t from ArrayDesignImpl as arrayD "
+                + "inner join arrayD.compositeSequences as cs inner join " + "cs.biologicalCharacteristic as bioC"
+                + " inner join bioC.taxon t where arrayD.id = :id";
+
+        return getHibernateTemplate().findByNamedParam( queryString, "id", id );
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleGetTaxon(java.lang.Long)
+     */
     @Override
     protected Taxon handleGetTaxon( Long id ) throws Exception {
         Collection<Taxon> taxon = handleGetTaxa( id );
@@ -332,21 +362,6 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
             log.warn( taxon.size() + " taxon found for array " + id );
         }
         return taxon.iterator().next();
-    }
-
-    /*
-     * (non-Javadoc)
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleGetTaxon(java.lang.Long)
-     */
-    @SuppressWarnings("unchecked")
-    @Override
-    protected Collection<Taxon> handleGetTaxa( Long id ) throws Exception {
-
-        final String queryString = "select distinct t from ArrayDesignImpl as arrayD "
-                + "inner join arrayD.compositeSequences as cs inner join " + "cs.biologicalCharacteristic as bioC"
-                + " inner join bioC.taxon t where arrayD.id = :id";
-
-        return getHibernateTemplate().findByNamedParam( queryString, "id", id );
     }
 
     @SuppressWarnings("unchecked")
@@ -459,15 +474,12 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
     }
 
     @Override
-    // FIXME why is this so much different than handleLoadValueObjects(collection)?
-    // refarctoring is necessary
     protected Collection<ArrayDesignValueObject> handleLoadAllValueObjects() throws Exception {
 
         // get the expression experiment counts
         Map<Long, Integer> eeCounts = this.getExpressionExperimentCountMap();
 
         log.info( eeCounts.size() + " ADS FROM EECOUNTS" );
-        Collection<ArrayDesignValueObject> result = new ArrayList<ArrayDesignValueObject>();
 
         final String queryString = "select ad.id as id, ad.name as name, ad.shortName as shortName, "
                 + "ad.technologyType, ad.description, event.date as createdDate,  mergedInto  from ArrayDesignImpl ad "
@@ -477,40 +489,56 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         try {
             Map<Long, String> arrayToTaxon = getArrayToTaxonMap();
 
-            /*
-             * Now load the ADs.
-             */
-            org.hibernate.Query queryObject = super.getSession().createQuery( queryString );
-            queryObject.setCacheable( true );
-            ScrollableResults list = queryObject.scroll( ScrollMode.FORWARD_ONLY );
-            if ( list != null ) {
-                while ( list.next() ) {
-                    ArrayDesignValueObject v = new ArrayDesignValueObject();
-                    v.setId( list.getLong( 0 ) );
-                    v.setName( list.getString( 1 ) );
-                    v.setShortName( list.getString( 2 ) );
+            Query queryObject = super.getSession().createQuery( queryString );
 
-                    TechnologyType color = ( TechnologyType ) list.get( 3 );
-                    v.setTechnologyType( color );
-                    if ( color != null ) v.setColor( color.getValue() );
-                    v.setDescription( list.getString( 4 ) );
-                    // this is a comma separated list of taxon
-                    v.setTaxon( arrayToTaxon.get( v.getId() ) );
+            Collection<ArrayDesignValueObject> result = processADValueObjectQueryResults( eeCounts, queryObject,
+                    arrayToTaxon );
 
-                    if ( !eeCounts.containsKey( v.getId() ) ) {
-                        v.setExpressionExperimentCount( 0L );
-                    } else {
-                        v.setExpressionExperimentCount( eeCounts.get( v.getId() ).longValue() );
-                    }
-                    v.setDateCreated( list.getDate( 5 ) );
-
-                    v.setIsMergee( list.get( 6 ) != null );
-
-                    result.add( v );
-                }
-            }
+            return result;
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
+        }
+
+    }
+
+    /**
+     * Process query results for handleLoadAllValueObjects or handleLoadValueObjects
+     * 
+     * @param eeCounts
+     * @param queryString
+     * @param arrayToTaxon
+     * @return
+     */
+    private Collection<ArrayDesignValueObject> processADValueObjectQueryResults( Map<Long, Integer> eeCounts,
+            final Query queryObject, Map<Long, String> arrayToTaxon ) {
+        Collection<ArrayDesignValueObject> result = new ArrayList<ArrayDesignValueObject>();
+
+        queryObject.setCacheable( true );
+        ScrollableResults list = queryObject.scroll( ScrollMode.FORWARD_ONLY );
+        if ( list != null ) {
+            while ( list.next() ) {
+                ArrayDesignValueObject v = new ArrayDesignValueObject();
+                v.setId( list.getLong( 0 ) );
+                v.setName( list.getString( 1 ) );
+                v.setShortName( list.getString( 2 ) );
+
+                TechnologyType color = ( TechnologyType ) list.get( 3 );
+                v.setTechnologyType( color );
+                if ( color != null ) v.setColor( color.getValue() );
+                v.setDescription( list.getString( 4 ) );
+                v.setTaxon( arrayToTaxon.get( v.getId() ) );
+
+                if ( !eeCounts.containsKey( v.getId() ) ) {
+                    v.setExpressionExperimentCount( 0L );
+                } else {
+                    v.setExpressionExperimentCount( eeCounts.get( v.getId() ).longValue() );
+                }
+                v.setDateCreated( list.getDate( 5 ) );
+
+                v.setIsMergee( list.get( 6 ) != null );
+
+                result.add( v );
+            }
         }
         return result;
     }
@@ -578,13 +606,12 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
      */
     @Override
     protected Collection<ArrayDesignValueObject> handleLoadValueObjects( Collection<Long> ids ) throws Exception {
-        Collection<ArrayDesignValueObject> vo = new ArrayList<ArrayDesignValueObject>();
         // sanity check
         if ( ids == null || ids.size() == 0 ) {
-            return vo;
+            return new ArrayList<ArrayDesignValueObject>();
         }
 
-        // get the expression experiment counts
+        Map<Long, String> arrayToTaxon = getArrayToTaxonMap( ids );
         Map<Long, Integer> eeCounts = this.getExpressionExperimentCountMap( ids );
 
         final String queryString = "select ad.id as id, ad.name as name, "
@@ -596,29 +623,15 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
                 + " where ad.id in (:ids) and event.action='C' group by ad  ";
 
         try {
-            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+
+            Query queryObject = super.getSession().createQuery( queryString );
+
             queryObject.setParameterList( "ids", ids );
-            ScrollableResults list = queryObject.scroll( ScrollMode.FORWARD_ONLY );
-            while ( list.next() ) {
-                ArrayDesignValueObject v = new ArrayDesignValueObject();
-                v.setId( list.getLong( 0 ) );
-                v.setName( list.getString( 1 ) );
-                v.setShortName( list.getString( 2 ) );
-                TechnologyType color = ( TechnologyType ) list.get( 3 );
-                v.setTechnologyType( color );
-                if ( color != null ) v.setColor( color.getValue() );
-                v.setDescription( list.getString( 4 ) );
-                Integer eecount = eeCounts.get( v.getId() );
-                if ( eecount == null ) eecount = 0;
-                v.setExpressionExperimentCount( eecount.longValue() );
-                v.setDateCreated( list.getDate( 5 ) );
-                v.setIsMergee( list.get( 6 ) != null );
-                vo.add( v );
-            }
+
+            return processADValueObjectQueryResults( eeCounts, queryObject, arrayToTaxon );
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }
-        return vo;
     }
 
     /*
@@ -851,7 +864,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
             throw new IllegalArgumentException( "Array design cannot be null" );
         }
         HibernateTemplate templ = this.getHibernateTemplate();
-        templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+        templ.execute( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
                 session.lock( arrayDesign, LockMode.READ );
                 int count = 0;
@@ -964,7 +977,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
     @SuppressWarnings("unchecked")
     private Map<Long, String> getArrayToTaxonMap() {
         Map<Long, String> arrayToTaxon = new HashMap<Long, String>();
-        Collection<ArrayDesign> arrayDesigns = this.loadAll();
+        Collection<? extends ArrayDesign> arrayDesigns = this.loadAll();
 
         // Warning: this can run very slowly, so cacheing it is crucial.
         for ( ArrayDesign ad : arrayDesigns ) {
@@ -972,7 +985,49 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
             final String csString = "select distinct taxon from ArrayDesignImpl "
                     + "as ad inner join ad.compositeSequences as cs inner join cs.biologicalCharacteristic as bioC inner join bioC.taxon as taxon"
                     + " where ad = :ad";
-            org.hibernate.Query csQueryObject = super.getSession( false ).createQuery( csString );
+            org.hibernate.Query csQueryObject = super.getSession().createQuery( csString );
+            csQueryObject.setParameter( "ad", ad );
+            csQueryObject.setCacheable( true );
+            // csQueryObject.setMaxResults( 1 );
+            // the name of the cache region is configured in ehcache.xml
+            csQueryObject.setCacheRegion( null );
+
+            List csList = csQueryObject.list();
+
+            if ( csList.size() == 0 ) {
+                continue;
+            }
+            Collection<String> taxonSet = new TreeSet();
+            Taxon t = null;
+            for ( Object object : csList ) {
+                t = ( Taxon ) object;
+                if ( t.getCommonName() != null ) {
+                    taxonSet.add( t.getCommonName() );
+                }
+            }
+            String taxonListString = StringUtils.join( taxonSet, "; " );
+            arrayToTaxon.put( ad.getId(), taxonListString );
+
+        }
+
+        return arrayToTaxon;
+    }
+
+    /**
+     * @return Map of ArrayDesign id to Taxon string for ValueObjects.
+     */
+    @SuppressWarnings("unchecked")
+    private Map<Long, String> getArrayToTaxonMap( Collection<Long> ids ) {
+        Map<Long, String> arrayToTaxon = new HashMap<Long, String>();
+        Collection<? extends ArrayDesign> arrayDesigns = this.load( ids );
+
+        // Warning: this can run very slowly, so cacheing it is crucial.
+        for ( ArrayDesign ad : arrayDesigns ) {
+
+            final String csString = "select distinct taxon from ArrayDesignImpl "
+                    + "as ad inner join ad.compositeSequences as cs inner join cs.biologicalCharacteristic as bioC inner join bioC.taxon as taxon"
+                    + " where ad = :ad";
+            org.hibernate.Query csQueryObject = super.getSession().createQuery( csString );
             csQueryObject.setParameter( "ad", ad );
             csQueryObject.setCacheable( true );
             // csQueryObject.setMaxResults( 1 );
@@ -1073,91 +1128,89 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         final int FETCH_SIZE = 400;
         templ.setFetchSize( FETCH_SIZE );
 
-        templ.executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+        Session session = this.getSession();
 
-                long lastTime = 0;
-                // The following are VERY important for performance. (actually not so sure anymore as we now have the
-                // transaction
-                // marked 'readonly' for this method)
-                FlushMode oldFlushMode = session.getFlushMode();
-                CacheMode oldCacheMode = session.getCacheMode();
-                session.setCacheMode( CacheMode.IGNORE ); // Don't hit the secondary cache
-                session.setFlushMode( FlushMode.MANUAL ); // We're READ-ONLY so this is okay.
-                session.lock( arrayDesign, LockMode.NONE );
+        long lastTime = 0;
+        // The following are VERY important for performance. (actually not so sure anymore as we now have the
+        // transaction
+        // marked 'readonly' for this method)
+        CacheMode oldCacheMode = session.getCacheMode();
+        session.setCacheMode( CacheMode.IGNORE ); // Don't hit the secondary cache
 
-                if ( log.isDebugEnabled() ) log.debug( "Thawing " + arrayDesign + " ..." );
+        EntityUtils.attach( session, arrayDesign, ArrayDesignImpl.class, arrayDesign.getId() );
 
-                arrayDesign.getLocalFiles().size();
-                for ( DatabaseEntry d : arrayDesign.getExternalReferences() ) {
-                    session.update( d );
-                    session.evict( d );
-                }
+        if ( log.isDebugEnabled() ) log.debug( "Thawing " + arrayDesign + " ..." );
 
-                arrayDesign.getAuditTrail().getEvents().size();
+        arrayDesign.getLocalFiles().size();
+        for ( DatabaseEntry d : arrayDesign.getExternalReferences() ) {
+            session.update( d );
+            session.evict( d );
+        }
 
-                if ( arrayDesign.getDesignProvider() != null ) {
-                    session.update( arrayDesign.getDesignProvider() );
-                    session.update( arrayDesign.getDesignProvider().getAuditTrail() );
-                    arrayDesign.getDesignProvider().getAuditTrail().getEvents().size();
-                }
+        if ( arrayDesign.getAuditTrail() != null ) arrayDesign.getAuditTrail().getEvents().size();
 
-                if ( arrayDesign.getMergees() != null ) arrayDesign.getMergees().size();
-
-                if ( arrayDesign.getSubsumedArrayDesigns() != null ) arrayDesign.getSubsumedArrayDesigns().size();
-
-                if ( arrayDesign.getCompositeSequences() == null ) return null;
-
-                log.debug( "Loading CS proxies for " + arrayDesign + " ..." );
-                int numToDo = arrayDesign.getCompositeSequences().size();
-                if ( numToDo > LOGGING_UPDATE_EVENT_COUNT )
-                    log.info( "Must thaw " + ( deep ? " (deep) " : " (lite) " ) + numToDo
-                            + " composite sequence associations ..." );
-
-                StopWatch timer = new StopWatch();
-                timer.start();
-                int i = 0;
-
-                for ( CompositeSequence cs : arrayDesign.getCompositeSequences() ) {
-
-                    if ( ++i % LOGGING_UPDATE_EVENT_COUNT == 0 ) {
-                        if ( timer.getTime() - lastTime > 5000 ) {
-                            log.info( arrayDesign.getShortName() + " CS assoc thaw progress: " + i + "/" + numToDo
-                                    + " ... (" + timer.getTime() / 1000 + "s elapsed)" );
-                            lastTime = timer.getTime();
-                        }
-                    }
-
-                    if ( log.isDebugEnabled() ) log.debug( "Processing: " + cs );
-                    if ( cs.getId() != null ) session.lock( cs, LockMode.NONE );
-
-                    BioSequence bs = cs.getBiologicalCharacteristic();
-                    if ( bs != null && session.get( BioSequenceImpl.class, bs.getId() ) == null ) {
-                        session.lock( bs, LockMode.NONE );
-                        if ( !Hibernate.isInitialized( bs ) ) {
-                            Hibernate.initialize( bs );
-                            session.evict( bs );
-                        }
-                    }
-
-                    session.evict( cs );
-
-                    // temporary code: more logging if we're getting really slow.
-                    if ( i % 500 == 0 && timer.getTime() > 2e5 ) {
-                        log.info( "Slow thaw: Last processed: " + cs + "," + i + "/" + numToDo );
-                    }
-
-                }
-
-                if ( timer.getTime() > 5000 )
-                    log.info( arrayDesign.getShortName() + ": CS assoc thaw done (" + timer.getTime() / 1000
-                            + "s elapsed)" );
-
-                session.setFlushMode( oldFlushMode );
-                session.setCacheMode( oldCacheMode );
-                return null;
+        if ( arrayDesign.getDesignProvider() != null ) {
+            session.update( arrayDesign.getDesignProvider() );
+            AuditTrail auditTrail = arrayDesign.getDesignProvider().getAuditTrail();
+            if ( auditTrail != null ) {
+                session.update( auditTrail );
+                auditTrail.getEvents().size();
             }
-        } );
+        }
+
+        if ( arrayDesign.getMergees() != null ) arrayDesign.getMergees().size();
+
+        if ( arrayDesign.getSubsumedArrayDesigns() != null ) arrayDesign.getSubsumedArrayDesigns().size();
+
+        if ( arrayDesign.getCompositeSequences() == null ) return;
+
+        // / if we got this far, we have to thaw the probes.
+
+        log.debug( "Loading CS proxies for " + arrayDesign + " ..." );
+        int numToDo = arrayDesign.getCompositeSequences().size();
+        if ( numToDo > LOGGING_UPDATE_EVENT_COUNT )
+            log.info( "Must thaw " + ( deep ? " (deep) " : " (lite) " ) + numToDo
+                    + " composite sequence associations ..." );
+
+        StopWatch timer = new StopWatch();
+        timer.start();
+        int i = 0;
+
+        for ( CompositeSequence cs : arrayDesign.getCompositeSequences() ) {
+
+            if ( ++i % LOGGING_UPDATE_EVENT_COUNT == 0 ) {
+                if ( timer.getTime() - lastTime > 5000 ) {
+                    log.info( arrayDesign.getShortName() + " CS assoc thaw progress: " + i + "/" + numToDo + " ... ("
+                            + timer.getTime() / 1000 + "s elapsed)" );
+                    lastTime = timer.getTime();
+                }
+            }
+
+            if ( log.isDebugEnabled() ) log.debug( "Processing: " + cs );
+            if ( cs.getId() != null ) session.lock( cs, LockMode.NONE );
+
+            BioSequence bs = cs.getBiologicalCharacteristic();
+            if ( bs != null && session.get( BioSequenceImpl.class, bs.getId() ) == null ) {
+                session.lock( bs, LockMode.NONE );
+                if ( !Hibernate.isInitialized( bs ) ) {
+                    Hibernate.initialize( bs );
+                    session.evict( bs );
+                }
+            }
+
+            session.evict( cs );
+
+            // temporary code: more logging if we're getting really slow.
+            if ( i % 500 == 0 && timer.getTime() > 2e5 ) {
+                log.info( "Slow thaw: Last processed: " + cs + "," + i + "/" + numToDo );
+            }
+
+        }
+
+        if ( timer.getTime() > 5000 )
+            log.info( arrayDesign.getShortName() + ": CS assoc thaw done (" + timer.getTime() / 1000 + "s elapsed)" );
+
+        session.setCacheMode( oldCacheMode );
 
     }
 }

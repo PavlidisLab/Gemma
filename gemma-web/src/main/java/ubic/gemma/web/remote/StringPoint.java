@@ -18,9 +18,7 @@
  */
 package ubic.gemma.web.remote;
 
-
 /**
- * 
  * @author kelsey
  * @version $Id$
  */

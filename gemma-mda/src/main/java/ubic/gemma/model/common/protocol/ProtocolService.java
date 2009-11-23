@@ -18,29 +18,44 @@
  */
 package ubic.gemma.model.common.protocol;
 
+import java.util.Collection;
+
+import org.springframework.security.access.annotation.Secured;
+
 /**
- * 
+ * @author kelsey
+ * @version $Id$
  */
 public interface ProtocolService {
 
     /**
      * 
      */
-    public ubic.gemma.model.common.protocol.Protocol find( ubic.gemma.model.common.protocol.Protocol protocol );
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    public Protocol find( Protocol protocol );
 
     /**
      * 
      */
-    public ubic.gemma.model.common.protocol.Protocol findOrCreate( ubic.gemma.model.common.protocol.Protocol protocol );
+    @Secured( { "GROUP_USER", "AFTER_ACL_READ" })
+    public Protocol findOrCreate( Protocol protocol );
 
     /**
      * 
      */
-    public void remove( ubic.gemma.model.common.protocol.Protocol protocol );
+    @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    public void remove( Protocol protocol );
 
     /**
      * 
      */
-    public void update( ubic.gemma.model.common.protocol.Protocol protocol );
+    @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    public void update( Protocol protocol );
+
+    /**
+     * @return
+     */
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    public Collection<Protocol> loadAll();
 
 }

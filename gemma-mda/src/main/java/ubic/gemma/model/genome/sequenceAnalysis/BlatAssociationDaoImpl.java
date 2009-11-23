@@ -25,8 +25,11 @@ import org.apache.commons.lang.StringUtils;
 import org.hibernate.Criteria;
 import org.hibernate.Hibernate;
 import org.hibernate.LockMode;
+import org.hibernate.SessionFactory;
 import org.hibernate.criterion.Restrictions;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.orm.hibernate3.HibernateTemplate;
+import org.springframework.stereotype.Repository;
 
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.biosequence.BioSequence;
@@ -36,7 +39,13 @@ import ubic.gemma.util.BusinessKey;
 /**
  * @see ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation
  */
+@Repository
 public class BlatAssociationDaoImpl extends ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationDaoBase {
+
+    @Autowired
+    public BlatAssociationDaoImpl( SessionFactory sessionFactory ) {
+        super.setSessionFactory( sessionFactory );
+    }
 
     /*
      * (non-Javadoc)
@@ -50,7 +59,7 @@ public class BlatAssociationDaoImpl extends ubic.gemma.model.genome.sequenceAnal
 
         BusinessKey.checkValidKey( bioSequence );
 
-        Criteria queryObject = super.getSession( false ).createCriteria( BlatAssociation.class );
+        Criteria queryObject = super.getSession().createCriteria( BlatAssociation.class );
 
         BusinessKey.attachCriteria( queryObject, bioSequence, "bioSequence" );
 
@@ -76,7 +85,7 @@ public class BlatAssociationDaoImpl extends ubic.gemma.model.genome.sequenceAnal
 
             BusinessKey.checkValidKey( geneProduct );
 
-            Criteria queryObject = super.getSession( false ).createCriteria( BlatAssociation.class );
+            Criteria queryObject = super.getSession().createCriteria( BlatAssociation.class );
             Criteria innerQuery = queryObject.createCriteria( "geneProduct" );
 
             if ( StringUtils.isNotBlank( geneProduct.getNcbiId() ) ) {
@@ -99,7 +108,7 @@ public class BlatAssociationDaoImpl extends ubic.gemma.model.genome.sequenceAnal
         if ( blatAssociation == null ) return;
         if ( blatAssociation.getId() == null ) return;
         HibernateTemplate templ = this.getHibernateTemplate();
-        templ.executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback() {
+        templ.executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
                 thawBlatAssociation( session, blatAssociation );
                 return null;
@@ -111,7 +120,7 @@ public class BlatAssociationDaoImpl extends ubic.gemma.model.genome.sequenceAnal
     protected void handleThaw( final Collection<BlatAssociation> blatAssociations ) throws Exception {
         if ( blatAssociations == null ) return;
         HibernateTemplate templ = this.getHibernateTemplate();
-        templ.executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback() {
+        templ.executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
                 for ( Object object : blatAssociations ) {
                     BlatAssociation blatAssociation = ( BlatAssociation ) object;

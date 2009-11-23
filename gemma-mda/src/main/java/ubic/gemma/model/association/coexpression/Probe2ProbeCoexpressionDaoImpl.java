@@ -39,13 +39,15 @@ import org.hibernate.SQLQuery;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
+import org.hibernate.SessionFactory;
 import org.hibernate.type.DoubleType;
 import org.hibernate.type.LongType;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.orm.hibernate3.HibernateCallback;
+import org.springframework.stereotype.Repository;
 
 import ubic.basecode.util.BatchIterator;
 import ubic.gemma.model.analysis.Analysis;
-import ubic.gemma.model.analysis.expression.coexpression.Link;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
@@ -61,15 +63,77 @@ import ubic.gemma.util.TaxonUtility;
  * @author joseph
  * @author paul
  */
+@Repository
 public class Probe2ProbeCoexpressionDaoImpl extends
         ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoBase {
 
     private static final String TMP_TABLE_PREFIX = "TMP_";
+
     private static Log log = LogFactory.getLog( Probe2ProbeCoexpressionDaoImpl.class.getName() );
 
     // FIXME figure out the taxon instead of this iteration.
     private static final String[] p2pClassNames = new String[] { "HumanProbeCoExpressionImpl",
             "MouseProbeCoExpressionImpl", "RatProbeCoExpressionImpl", "OtherProbeCoExpressionImpl" };
+
+    @Autowired
+    public Probe2ProbeCoexpressionDaoImpl( SessionFactory sessionFactory ) {
+        super.setSessionFactory( sessionFactory );
+    }
+
+    public Collection<ProbeLink> getTopCoexpressedLinks( ExpressionExperiment ee, double threshold, Integer limit ) {
+
+        for ( String p2pClassName : p2pClassNames ) {
+
+            final String queryString = "SELECT p2p.firstVector, p2p.secondVector, p2p.score FROM "
+                    + getTableName( p2pClassName, false )
+                    + " as p2p where EXPRESSION_EXPERIMENT_FK = :eeid AND score <= :threshold order by p2p.score";
+
+            int oldmax = getHibernateTemplate().getMaxResults();
+            if ( limit != null ) getHibernateTemplate().setMaxResults( limit );
+
+            SQLQuery queryObject = super.getSession().createSQLQuery( queryString );
+            queryObject.setMaxResults( 1 );
+            queryObject.setParameter( "eeid", ee.getId() );
+            queryObject.setParameter( "threshold", threshold );
+            List<?> results = queryObject.list();
+
+            // Was the right taxon or not?
+            if ( results.iterator().next() == null ) {
+                if ( limit != null ) {
+                    getHibernateTemplate().setMaxResults( oldmax );
+                }
+                continue;
+            }
+
+            Collection<ProbeLink> links = new ArrayList<ProbeLink>();
+
+            for ( Object o : results ) {
+                Object[] oa = ( Object[] ) o;
+                Long firstProbeId = ( Long ) oa[0];
+                Long secondProbeId = ( Long ) oa[1];
+                Double score = ( Double ) oa[2];
+
+                ProbeLink link = new ProbeLink();
+
+                assert firstProbeId != null;
+                assert secondProbeId != null;
+
+                link.setFirstDesignElementId( firstProbeId );
+                link.setSecondDesignElementId( secondProbeId );
+                link.setScore( score );
+                links.add( link );
+
+            }
+
+            if ( limit != null ) {
+                getHibernateTemplate().setMaxResults( oldmax );
+            }
+
+            return links;
+
+        }
+        return null;
+    }
 
     /*
      * (non-Javadoc) This should be faster than doing it one at a time; uses the "DML-style" syntax. This implementation
@@ -93,7 +157,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
 
         Collection<Probe2ProbeCoexpression> batch = new HashSet<Probe2ProbeCoexpression>();
 
-        Query query = super.getSession( false ).createQuery( "DELETE from " + className + " d where d in (:vals)" );
+        Query query = super.getSession().createQuery( "DELETE from " + className + " d where d in (:vals)" );
 
         int count = 0;
         for ( Probe2ProbeCoexpression o : ( Collection<Probe2ProbeCoexpression> ) entities ) {
@@ -102,8 +166,8 @@ public class Probe2ProbeCoexpressionDaoImpl extends
                 count += batch.size();
                 query.setParameterList( "vals", batch );
                 query.executeUpdate();
-                super.getSession( false ).flush();
-                super.getSession( false ).clear();
+                super.getSession().flush();
+                super.getSession().clear();
                 batch.clear();
 
                 if ( count % 100000 == 0 ) log.debug( "Deleted " + count + "/" + entities.size() + " links" );
@@ -114,8 +178,8 @@ public class Probe2ProbeCoexpressionDaoImpl extends
             count += batch.size();
             query.setParameterList( "vals", batch );
             query.executeUpdate();
-            super.getSession( false ).flush();
-            super.getSession( false ).clear();
+            super.getSession().flush();
+            super.getSession().clear();
         }
 
         if ( entities.size() > 0 && count != entities.size() )
@@ -123,6 +187,29 @@ public class Probe2ProbeCoexpressionDaoImpl extends
                     + ")" );
 
         // log.debug( "Deleted " + count + " links" );
+    }
+
+    /*
+     * (non-Javadoc)
+     * @seeubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDao#validateProbesInCoexpression(java.util.
+     * Collection, java.util.Collection, ubic.gemma.model.expression.experiment.ExpressionExperiment, java.lang.String)
+     */
+    public Collection<Long> validateProbesInCoexpression( Collection<Long> queryProbeIds,
+            Collection<Long> coexpressedProbeIds, ExpressionExperiment ee, String taxon ) {
+
+        String tableName = getTableName( taxon, false );
+
+        Collection<ProbeLink> links = getLinks( queryProbeIds, coexpressedProbeIds, ee.getId(), tableName );
+
+        Collection<Long> results = new HashSet<Long>();
+        if ( links == null || links.isEmpty() ) return results;
+
+        for ( ProbeLink probeLink : links ) {
+            results.add( probeLink.getFirstDesignElementId() );
+            results.add( probeLink.getSecondDesignElementId() );
+        }
+
+        return results;
     }
 
     /*
@@ -140,7 +227,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
             final String queryString = "SELECT COUNT(*) FROM " + getTableName( p2pClassName, false )
                     + " where EXPRESSION_EXPERIMENT_FK = :eeid";
 
-            SQLQuery queryObject = super.getSession( false ).createSQLQuery( queryString );
+            SQLQuery queryObject = super.getSession().createSQLQuery( queryString );
             queryObject.setMaxResults( 1 );
             queryObject.setParameter( "eeid", expressionExperiment.getId() );
             List results = queryObject.list();
@@ -153,82 +240,32 @@ public class Probe2ProbeCoexpressionDaoImpl extends
         }
         return 0;
     }
-    
-    
-    public Collection<ProbeLink> getTopCoexpressedLinks( ExpressionExperiment ee, double threshold, Integer limit ) {
 
-        for ( String p2pClassName : p2pClassNames ) {
-
-            final String queryString = "SELECT p2p.firstVector, p2p.secondVector, p2p.score FROM " + getTableName( p2pClassName, false ) 
-                    + " as p2p where EXPRESSION_EXPERIMENT_FK = :eeid AND score <= :threshold order by p2p.score";
-
-            int oldmax = getHibernateTemplate().getMaxResults();        
-            if (limit != null )
-                getHibernateTemplate().setMaxResults( limit );
-                
-            SQLQuery queryObject = super.getSession( false ).createSQLQuery( queryString );
-            queryObject.setMaxResults( 1 );
-            queryObject.setParameter( "eeid", ee.getId() );
-            queryObject.setParameter("threshold" , threshold );
-            List results = queryObject.list();
-
-            //Was the right taxon or not?
-            if (results.iterator().next() == null){
-                if (limit != null ){
-                    getHibernateTemplate().setMaxResults( oldmax );
-                }
-                continue;                
-            }
-                       
-            Collection<ProbeLink> links = new ArrayList<ProbeLink>();
-            
-            for ( Object o : results ) {
-                Object[] oa = ( Object[] ) o;
-                Long firstProbeId = ( Long ) oa[0];
-                Long secondProbeId = ( Long ) oa[1];
-                Double score = ( Double ) oa[2];
-
-                ProbeLink link = new ProbeLink();
-
-                assert firstProbeId != null;
-                assert secondProbeId != null;
-
-                link.setFirstDesignElementId( firstProbeId );
-                link.setSecondDesignElementId( secondProbeId );
-                link.setScore( score );
-                links.add( link );
-                       
-            }
-                        
-            if (limit != null ){
-                getHibernateTemplate().setMaxResults( oldmax );
-            }
-            
-            return links;
-
-        }
-        return null;
-    }
-    
-
-    @SuppressWarnings("unchecked")
+    /*
+     * (non-Javadoc)
+     * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoBase#handleCreate(java.util.Collection)
+     */
     @Override
-    protected List handleCreate( final List links ) {
-        List result = ( List ) this.getHibernateTemplate().executeWithNativeSession( new HibernateCallback() {
-            public Object doInHibernate( Session session ) throws HibernateException {
-                int numDone = 0;
-                List<Object> result = new ArrayList<Object>();
-                for ( Object object : links ) {
-                    result.add( session.save( object ) );
-                    if ( ++numDone % 500 == 0 ) {
-                        session.flush();
-                        session.clear();
-                    }
-                }
-                return result;
+    protected Collection<? extends Probe2ProbeCoexpression> handleCreate(
+            final Collection<? extends Probe2ProbeCoexpression> links ) {
+
+        Session session = getSession();
+
+        int numDone = 0;
+        List<Probe2ProbeCoexpression> result = new ArrayList<Probe2ProbeCoexpression>();
+        for ( Probe2ProbeCoexpression object : links ) {
+            session.save( object );
+            result.add( object );
+            if ( ++numDone % 500 == 0 ) {
+                session.flush();
+                session.clear();
             }
-        } );
+        }
+
+        session.flush();
+        session.clear();
         return result;
+
     }
 
     /*
@@ -239,6 +276,10 @@ public class Probe2ProbeCoexpressionDaoImpl extends
     @SuppressWarnings("unchecked")
     @Override
     protected void handleDeleteLinks( final ExpressionExperiment ee ) throws Exception {
+
+        if ( ee == null ) {
+            throw new IllegalArgumentException( "Experiment cannot be null" );
+        }
 
         /*
          * Note that the expression experiment is not directly associated with P2P objects. The EE column in the P2P
@@ -259,7 +300,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
             final String nativeDeleteQuery = "DELETE FROM " + getTableName( p2pClassName, false )
                     + " where EXPRESSION_EXPERIMENT_FK = :eeid";
 
-            SQLQuery q = super.getSession( false ).createSQLQuery( nativeDeleteQuery );
+            SQLQuery q = super.getSession().createSQLQuery( nativeDeleteQuery );
             q.setParameter( "eeid", ee.getId() );
             StopWatch timer = new StopWatch();
             timer.start();
@@ -317,38 +358,6 @@ public class Probe2ProbeCoexpressionDaoImpl extends
 
         assert result.size() <= expressionExperiments.size();
         return result;
-    }
-
-    /*
-     * (non-Javadoc)
-     * @see
-     * ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoBase#handleGetGenesTestedBy(ubic.gemma.model
-     * .expression.experiment.ExpressionExperiment, boolean)
-     */
-    @SuppressWarnings("unchecked")
-    @Override
-    protected Collection<Long> handleGetGenesTestedBy( BioAssaySet ee, boolean filterNonSpecific ) throws Exception {
-
-        // FIXME implement filterNonSpecific.
-        if ( filterNonSpecific ) {
-            throw new UnsupportedOperationException( "Sorry, filterNonSpecific is not supported yet" );
-        }
-
-        // this is _much_ faster than going through blatassociation.
-        final String nativeQueryString = "SELECT gc.GENE FROM "
-                + " EXPERIMENTS2EXPRESSION_EXPERIMENT_SETS e2ees INNER JOIN INVESTIGATION e ON e.ID=e2ees.EXPERIMENTS_FK "
-                + "INNER JOIN EXPRESSION_EXPERIMENT_SET eeset ON eeset.ID=e2ees.EXPRESSION_EXPERIMENT_SETS_FK "
-                + "INNER JOIN ANALYSIS a ON a.EXPRESSION_EXPERIMENT_SET_ANALYZED_FK=eeset.ID "
-                + "INNER JOIN PROBE_COEXPRESSION_ANALYSIS_PROBES_USED pu ON pu.PROBE_COEXPRESSION_ANALYSES_FK=a.ID "
-                + "INNER JOIN GENE2CS gc ON gc.CS=pu.PROBES_USED_FK WHERE a.class='ProbeCoexpressionAnalysisImpl' AND e.ID= :eeid ";
-
-        List<BigInteger> r = NativeQueryUtils.findByNamedParam( this.getHibernateTemplate(), nativeQueryString, "eeid",
-                ee.getId() );
-        List<Long> results = new ArrayList<Long>();
-        for ( BigInteger i : r ) {
-            results.add( i.longValue() );
-        }
-        return results;
     }
 
     /*
@@ -452,6 +461,38 @@ public class Probe2ProbeCoexpressionDaoImpl extends
     /*
      * (non-Javadoc)
      * @see
+     * ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoBase#handleGetGenesTestedBy(ubic.gemma.model
+     * .expression.experiment.ExpressionExperiment, boolean)
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    protected Collection<Long> handleGetGenesTestedBy( BioAssaySet ee, boolean filterNonSpecific ) throws Exception {
+
+        // FIXME implement filterNonSpecific.
+        if ( filterNonSpecific ) {
+            throw new UnsupportedOperationException( "Sorry, filterNonSpecific is not supported yet" );
+        }
+
+        // this is _much_ faster than going through blatassociation.
+        final String nativeQueryString = "SELECT gc.GENE FROM "
+                + " EXPERIMENTS2EXPRESSION_EXPERIMENT_SETS e2ees INNER JOIN INVESTIGATION e ON e.ID=e2ees.EXPERIMENTS_FK "
+                + "INNER JOIN EXPRESSION_EXPERIMENT_SET eeset ON eeset.ID=e2ees.EXPRESSION_EXPERIMENT_SETS_FK "
+                + "INNER JOIN ANALYSIS a ON a.EXPRESSION_EXPERIMENT_SET_ANALYZED_FK=eeset.ID "
+                + "INNER JOIN PROBE_COEXPRESSION_ANALYSIS_PROBES_USED pu ON pu.PROBE_COEXPRESSION_ANALYSES_FK=a.ID "
+                + "INNER JOIN GENE2CS gc ON gc.CS=pu.PROBES_USED_FK WHERE a.class='ProbeCoexpressionAnalysisImpl' AND e.ID= :eeid ";
+
+        List<BigInteger> r = NativeQueryUtils.findByNamedParam( this.getHibernateTemplate(), nativeQueryString, "eeid",
+                ee.getId() );
+        List<Long> results = new ArrayList<Long>();
+        for ( BigInteger i : r ) {
+            results.add( i.longValue() );
+        }
+        return results;
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see
      * ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoBase#handleGetProbeCoExpression(ubic.gemma
      * .model.expression.experiment.ExpressionExperiment, java.lang.String, boolean)
      */
@@ -472,7 +513,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
     protected Map<Gene, Collection<DesignElementDataVector>> handleGetVectorsForLinks( Collection<Gene> genes,
             Collection<ExpressionExperiment> ees ) throws Exception {
 
-        Gene testG = ( Gene ) genes.iterator().next(); // todo: check to make sure that all the given genes are of the
+        Gene testG = genes.iterator().next(); // todo: check to make sure that all the given genes are of the
         // same taxon throw exception
 
         String p2pClassName = getP2PClassName( testG );
@@ -499,14 +540,14 @@ public class Probe2ProbeCoexpressionDaoImpl extends
 
         try {
 
-            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryStringFirstVector );
+            org.hibernate.Query queryObject = super.getSession().createQuery( queryStringFirstVector );
             queryObject.setParameterList( "collectionOfEE", ees );
             queryObject.setParameterList( "collectionOfGenes", genes );
             ScrollableResults list1 = queryObject.scroll();
             buildMap( results, list1 );
 
             // do query joining coexpressed genes through the secondVector to the firstVector
-            queryObject = super.getSession( false ).createQuery( queryStringSecondVector );
+            queryObject = super.getSession().createQuery( queryStringSecondVector );
             queryObject.setParameterList( "collectionOfEE", ees );
             queryObject.setParameterList( "collectionOfGenes", genes );
             ScrollableResults list2 = queryObject.scroll();
@@ -600,6 +641,8 @@ public class Probe2ProbeCoexpressionDaoImpl extends
     }
 
     /**
+     * Only used for experimental exploration of links, not used by regular applications.
+     * 
      * @param tableName
      * @throws Exception
      */
@@ -609,51 +652,18 @@ public class Probe2ProbeCoexpressionDaoImpl extends
             throw new IllegalStateException( "Attempt to create table named " + tableName );
         }
 
-        this.getHibernateTemplate().execute( new HibernateCallback() {
+        Session session = getSession();
 
-            public Object doInHibernate( Session session ) throws HibernateException, SQLException {
-                String queryString = "DROP TABLE IF EXISTS " + tableName + ";";
+        String queryString = "DROP TABLE IF EXISTS " + tableName + ";";
 
-                session.createSQLQuery( queryString ).executeUpdate();
+        session.createSQLQuery( queryString ).executeUpdate();
 
-                queryString = "CREATE TABLE "
-                        + tableName
-                        + "(id BIGINT NOT NULL AUTO_INCREMENT, FIRST_DESIGN_ELEMENT_FK BIGINT NOT NULL, "
-                        + "SECOND_DESIGN_ELEMENT_FK BIGINT NOT NULL, SCORE DOUBLE, EXPRESSION_EXPERIMENT_FK BIGINT NOT NULL, "
-                        + "PRIMARY KEY(id), KEY(EXPRESSION_EXPERIMENT_FK)) " + "ENGINE=MYISAM";
+        queryString = "CREATE TABLE " + tableName
+                + "(id BIGINT NOT NULL AUTO_INCREMENT, FIRST_DESIGN_ELEMENT_FK BIGINT NOT NULL, "
+                + "SECOND_DESIGN_ELEMENT_FK BIGINT NOT NULL, SCORE DOUBLE, EXPRESSION_EXPERIMENT_FK BIGINT NOT NULL, "
+                + "PRIMARY KEY(id), KEY(EXPRESSION_EXPERIMENT_FK)) " + "ENGINE=MYISAM";
 
-                session.createSQLQuery( queryString ).executeUpdate();
-                session.flush();
-                return null;
-            }
-        } );
-
-    }
-
-    /**
-     * Dump the probe-probe data for an experiment to the working table for shuffling. This ignores links for probes
-     * that are not mapped to 'known' genes.
-     * 
-     * @param ee
-     * @param taxon
-     * @throws Exception
-     */
-    private void processRawLinksForExperiment( ExpressionExperiment ee, String taxon, boolean filterNonSpecific )
-            throws Exception {
-        String tableName = getTableName( taxon, false );
-        Collection<ProbeLink> links = getLinks( ee, tableName );
-        Set<Long> csIds = new HashSet<Long>();
-        for ( ProbeLink link : links ) {
-            assert link.getFirstDesignElementId() != null;
-            assert link.getSecondDesignElementId() != null;
-            csIds.add( link.getFirstDesignElementId() );
-            csIds.add( link.getSecondDesignElementId() );
-        }
-        Map<Long, Collection<Long>> cs2genes = getCs2GenesMap( csIds );
-        links = filterNonSpecificAndRedundant( links, cs2genes, filterNonSpecific );
-        String workingTableName = getTableName( taxon, true );
-        savedSimplifiedLinks( links, ee, workingTableName );
-
+        session.createSQLQuery( queryString ).executeUpdate();
     }
 
     /**
@@ -710,139 +720,102 @@ public class Probe2ProbeCoexpressionDaoImpl extends
         final Map<Long, Collection<Long>> cs2genes = new HashMap<Long, Collection<Long>>();
         if ( csIds == null || csIds.size() == 0 ) return cs2genes;
 
-        this.getHibernateTemplate().execute( new HibernateCallback() {
+        Session session = this.getSession();
 
-            public Object doInHibernate( Session session ) throws HibernateException, SQLException {
-                int CHUNK_LIMIT = 1000;
+        int CHUNK_LIMIT = 1000;
 
-                Collection<Long> batch = new HashSet<Long>();
+        Collection<Long> batch = new HashSet<Long>();
 
-                for ( Iterator<Long> it = csIds.iterator(); it.hasNext(); ) {
-                    batch.add( it.next() );
+        for ( Iterator<Long> it = csIds.iterator(); it.hasNext(); ) {
+            batch.add( it.next() );
 
-                    if ( batch.size() > 0 && ( batch.size() == CHUNK_LIMIT || !it.hasNext() ) ) {
-                        String queryString = "SELECT CS, GENE FROM GENE2CS, CHROMOSOME_FEATURE as C WHERE GENE2CS.GENE = C.ID and C.CLASS = 'GeneImpl' and "
-                                + " CS in (" + StringUtils.join( batch, "," ) + ")";
+            if ( batch.size() > 0 && ( batch.size() == CHUNK_LIMIT || !it.hasNext() ) ) {
+                String queryString = "SELECT CS, GENE FROM GENE2CS, CHROMOSOME_FEATURE as C WHERE GENE2CS.GENE = C.ID and C.CLASS = 'GeneImpl' and "
+                        + " CS in (" + StringUtils.join( batch, "," ) + ")";
 
-                        org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString );
-                        List results = queryObject.list();
-                        for ( Object r : results ) {
-                            Object[] or = ( Object[] ) r;
-                            Long csid = ( ( BigInteger ) or[0] ).longValue();
-                            Long geneId = ( ( BigInteger ) or[1] ).longValue();
+                org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString );
+                List results = queryObject.list();
+                for ( Object r : results ) {
+                    Object[] or = ( Object[] ) r;
+                    Long csid = ( ( BigInteger ) or[0] ).longValue();
+                    Long geneId = ( ( BigInteger ) or[1] ).longValue();
 
-                            Collection<Long> geneIds = cs2genes.get( csid );
-                            if ( geneIds == null ) {
-                                geneIds = new HashSet<Long>();
-                                cs2genes.put( csid, geneIds );
-                            }
-                            geneIds.add( geneId );
-                        }
-                        session.clear();
-                        batch.clear();
+                    Collection<Long> geneIds = cs2genes.get( csid );
+                    if ( geneIds == null ) {
+                        geneIds = new HashSet<Long>();
+                        cs2genes.put( csid, geneIds );
                     }
+                    geneIds.add( geneId );
                 }
-                return null;
+                session.clear();
+                batch.clear();
             }
-        } );
+        }
 
         return cs2genes;
     }
 
     /**
-     * Given a list of probeIds and a taxon tests to see if the given list of probeIds were invloved in any coexpression
-     * analysis's. That is to say: which of the given probes could have been involved in any coexpression results
+     * Retrieve links, if any, between two sets of probes in an EE.
+     * <p>
+     * IMPLEMENTATION NOTE: this requires that the triggers are installed so the DESIGN_ELEMENT columns are populated in
+     * the PROBE_COEXIRESSION tables; and furthermore assumes that probes are stored twice (once with A-B and again B-A)
+     * so only one query is needed.
      * 
-     * @param probeIds
-     * @param taxon
-     * @param cleaned
-     * @return
-     * @throws Exception
-     */
-    public Collection<Long> validateProbesInCoexpression( Collection<Long> queryProbeIds,
-            Collection<Long> coexpressedProbeIds, ExpressionExperiment ee, String taxon ) {
-
-        String tableName = getTableName( taxon, false );
-
-        Collection<ProbeLink> links = getLinks( queryProbeIds, coexpressedProbeIds, ee.getId(), tableName );
-
-        Collection<Long> results = new HashSet<Long>();
-        if ( links == null || links.isEmpty() ) return results;
-
-        for ( ProbeLink probeLink : links ) {
-            results.add( probeLink.getFirstDesignElementId() );
-            results.add( probeLink.getSecondDesignElementId() );
-        }
-
-        return results;
-    }
-
-    /**
-     * @param probeIds
+     * @param probeAIds
+     * @param probeBIds
+     * @param eeId
      * @param tableName
-     * @return
+     * @return links that are between the two sets of given probes, if any, within the given experiment.
      * @throws Exception
      */
-    private Collection<ProbeLink> getLinks( Collection<Long> probeSetAIds, Collection<Long> probeSetBIds, Long eeId,
+    private Collection<ProbeLink> getLinks( Collection<Long> probeAIds, Collection<Long> probeBIds, Long eeId,
             String tableName ) {
 
-        if ( probeSetAIds == null || probeSetBIds == null || probeSetAIds.isEmpty() || probeSetBIds.isEmpty() ) {
-            log.info( "Called get links with null or empty collection a: " + probeSetAIds + "  b: " + probeSetBIds );
+        if ( probeAIds == null || probeBIds == null || probeAIds.isEmpty() || probeBIds.isEmpty() ) {
+            log.info( "Called get links with null or empty collection a: " + probeAIds + "  b: " + probeBIds );
             return null;
         }
 
-        StringBuilder probeSetAIdsString = new StringBuilder();
-        probeSetAIdsString.append( '(' );
-        probeSetAIdsString.append( StringUtils.join( probeSetAIds, "," ) );
-        probeSetAIdsString.append( ')' );
+        String baseQueryString = "SELECT FIRST_DESIGN_ELEMENT_FK, SECOND_DESIGN_ELEMENT_FK FROM " + tableName
+                + " WHERE EXPRESSION_EXPERIMENT_FK = " + eeId + " AND FIRST_DESIGN_ELEMENT_FK IN ("
+                + StringUtils.join( probeAIds, "," ) + ") AND SECOND_DESIGN_ELEMENT_FK IN ("
+                + StringUtils.join( probeBIds, "," ) + ") limit ";
 
-        StringBuilder probeSetBIdsString = new StringBuilder();
-        probeSetBIdsString.append( '(' );
-        probeSetBIdsString.append( StringUtils.join( probeSetBIds, "," ) );
-        probeSetBIdsString.append( ')' );
+        int chunkSize = 500000;
+        Collection<ProbeLink> links = new ArrayList<ProbeLink>();
 
-        final String baseQueryString = "SELECT FIRST_DESIGN_ELEMENT_FK, SECOND_DESIGN_ELEMENT_FK FROM " + tableName
-                + " WHERE EXPRESSION_EXPERIMENT_FK = " + eeId + " AND FIRST_DESIGN_ELEMENT_FK IN "
-                + probeSetAIdsString.toString() + " AND SECOND_DESIGN_ELEMENT_FK IN " + probeSetBIdsString.toString()
-                + " limit ";
+        Session session = getSession();
 
-        final int chunkSize = 500000;
-        final Collection<ProbeLink> links = new ArrayList<ProbeLink>();
-        getHibernateTemplate().execute( new HibernateCallback() {
+        long offset = 0;
 
-            public Object doInHibernate( Session session ) throws HibernateException {
-                long offset = 0;
+        while ( true ) {
+            String queryString = baseQueryString + offset + "," + chunkSize + ";";
 
-                while ( true ) {
-                    String queryString = baseQueryString + offset + "," + chunkSize + ";";
+            org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString );
+            queryObject.addScalar( "FIRST_DESIGN_ELEMENT_FK", new LongType() );
+            queryObject.addScalar( "SECOND_DESIGN_ELEMENT_FK", new LongType() );
 
-                    org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString );
-                    queryObject.addScalar( "FIRST_DESIGN_ELEMENT_FK", new LongType() );
-                    queryObject.addScalar( "SECOND_DESIGN_ELEMENT_FK", new LongType() );
+            ScrollableResults scroll = queryObject.scroll( ScrollMode.FORWARD_ONLY );
+            int count = 0;
+            while ( scroll.next() ) {
+                Long firstDEId = scroll.getLong( 0 );
+                Long secondDEId = scroll.getLong( 1 );
 
-                    ScrollableResults scroll = queryObject.scroll( ScrollMode.FORWARD_ONLY );
-                    int count = 0;
-                    while ( scroll.next() ) {
-                        Long first_design_element_fk = scroll.getLong( 0 );
-                        Long second_design_element_fk = scroll.getLong( 1 );
+                ProbeLink oneLink = new ProbeLink();
+                oneLink.setFirstDesignElementId( firstDEId );
+                oneLink.setSecondDesignElementId( secondDEId );
 
-                        ProbeLink oneLink = new ProbeLink();
-                        oneLink.setFirstDesignElementId( first_design_element_fk );
-                        oneLink.setSecondDesignElementId( second_design_element_fk );
-
-                        links.add( oneLink );
-                        if ( ++count == chunkSize ) {
-                            offset = offset + chunkSize;
-                            log.info( "Read " + offset );
-                        }
-                    }
-                    if ( count < chunkSize ) break;
+                links.add( oneLink );
+                if ( ++count == chunkSize ) {
+                    offset = offset + chunkSize;
+                    log.info( "Read " + offset );
                 }
-
-                session.clear();
-                return null;
             }
-        } );
+            if ( count < chunkSize ) break;
+        }
+
+        session.clear();
 
         return links;
     }
@@ -858,51 +831,47 @@ public class Probe2ProbeCoexpressionDaoImpl extends
                 + tableName + " WHERE EXPRESSION_EXPERIMENT_FK = " + expressionExperiment.getId() + " limit ";
         final int chunkSize = 500000;
         final Collection<ProbeLink> links = new ArrayList<ProbeLink>();
-        getHibernateTemplate().execute( new HibernateCallback() {
 
-            @SuppressWarnings("unchecked")
-            public Object doInHibernate( Session session ) throws HibernateException {
-                long offset = 0;
+        Session session = getSession();
 
-                while ( true ) {
-                    String queryString = baseQueryString + offset + "," + chunkSize + ";";
+        long offset = 0;
 
-                    org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString );
-                    queryObject.addScalar( "FIRST_DESIGN_ELEMENT_FK", new LongType() );
-                    queryObject.addScalar( "SECOND_DESIGN_ELEMENT_FK", new LongType() );
-                    queryObject.addScalar( "SCORE", new DoubleType() );
+        while ( true ) {
+            String queryString = baseQueryString + offset + "," + chunkSize + ";";
 
-                    List results = queryObject.list();
+            org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString );
+            queryObject.addScalar( "FIRST_DESIGN_ELEMENT_FK", new LongType() );
+            queryObject.addScalar( "SECOND_DESIGN_ELEMENT_FK", new LongType() );
+            queryObject.addScalar( "SCORE", new DoubleType() );
 
-                    int count = 0;
-                    for ( Object o : results ) {
-                        Object[] oa = ( Object[] ) o;
-                        Long firstProbeId = ( Long ) oa[0];
-                        Long secondProbeId = ( Long ) oa[1];
-                        Double score = ( Double ) oa[2];
+            List<?> results = queryObject.list();
 
-                        ProbeLink link = new ProbeLink();
+            int count = 0;
+            for ( Object o : results ) {
+                Object[] oa = ( Object[] ) o;
+                Long firstProbeId = ( Long ) oa[0];
+                Long secondProbeId = ( Long ) oa[1];
+                Double score = ( Double ) oa[2];
 
-                        assert firstProbeId != null;
-                        assert secondProbeId != null;
+                ProbeLink link = new ProbeLink();
 
-                        link.setFirstDesignElementId( firstProbeId );
-                        link.setSecondDesignElementId( secondProbeId );
-                        link.setScore( score );
-                        links.add( link );
-                        if ( ++count == chunkSize ) {
-                            offset = offset + chunkSize;
-                            log.info( "Read " + offset );
-                        }
-                    }
+                assert firstProbeId != null;
+                assert secondProbeId != null;
 
-                    if ( count < chunkSize ) break;
+                link.setFirstDesignElementId( firstProbeId );
+                link.setSecondDesignElementId( secondProbeId );
+                link.setScore( score );
+                links.add( link );
+                if ( ++count == chunkSize ) {
+                    offset = offset + chunkSize;
+                    log.info( "Read " + offset );
                 }
-                log.info( "Done with " + expressionExperiment.getShortName() + ": Fetched " + links.size() );
-                session.clear();
-                return null;
             }
-        } );
+
+            if ( count < chunkSize ) break;
+        }
+        log.info( "Done with " + expressionExperiment.getShortName() + ": Fetched " + links.size() );
+        session.clear();
 
         return links;
     }
@@ -950,6 +919,32 @@ public class Probe2ProbeCoexpressionDaoImpl extends
     }
 
     /**
+     * Dump the probe-probe data for an experiment to the working table for shuffling. This ignores links for probes
+     * that are not mapped to 'known' genes.
+     * 
+     * @param ee
+     * @param taxon
+     * @throws Exception
+     */
+    private void processRawLinksForExperiment( ExpressionExperiment ee, String taxon, boolean filterNonSpecific )
+            throws Exception {
+        String tableName = getTableName( taxon, false );
+        Collection<ProbeLink> links = getLinks( ee, tableName );
+        Set<Long> csIds = new HashSet<Long>();
+        for ( ProbeLink link : links ) {
+            assert link.getFirstDesignElementId() != null;
+            assert link.getSecondDesignElementId() != null;
+            csIds.add( link.getFirstDesignElementId() );
+            csIds.add( link.getSecondDesignElementId() );
+        }
+        Map<Long, Collection<Long>> cs2genes = getCs2GenesMap( csIds );
+        links = filterNonSpecificAndRedundant( links, cs2genes, filterNonSpecific );
+        String workingTableName = getTableName( taxon, true );
+        savedSimplifiedLinks( links, ee, workingTableName );
+
+    }
+
+    /**
      * @param analysis
      */
     private void removeAnalysisObject( Analysis analysis ) {
@@ -977,7 +972,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
 
         final int CHUNK_LIMIT = 10000;
 
-        this.getHibernateTemplate().execute( new HibernateCallback() {
+        this.getHibernateTemplate().execute( new HibernateCallback<Object>() {
 
             public Object doInHibernate( Session session ) throws HibernateException, SQLException {
                 Collection<String> chunk = new ArrayList<String>();
@@ -1008,61 +1003,6 @@ public class Probe2ProbeCoexpressionDaoImpl extends
             }
         } );
 
-    }
-
-    /**
-     * Helper class.
-     */
-    public class ProbeLink implements Link {
-        private Long firstDesignElementId = 0L;
-        private Long secondDesignElementId = 0L;
-        private Double score = 0.0;
-        private Long eeId = null;
-
-        public ProbeLink() {
-        }
-
-        public Long getFirstDesignElementId() {
-            return firstDesignElementId;
-        }
-
-        public Long getEeId() {
-            return eeId;
-        }
-
-        public void setEeId( Long eeId ) {
-            this.eeId = eeId;
-        }
-
-        public Double getScore() {
-            return score;
-        }
-
-        public Long getSecondDesignElementId() {
-            return secondDesignElementId;
-        }
-
-        public void setFirstDesignElementId( Long first_design_element_fk ) {
-            this.firstDesignElementId = first_design_element_fk;
-        }
-
-        public void setScore( Double score ) {
-            this.score = score;
-        }
-
-        public void setSecondDesignElementId( Long second_design_element_fk ) {
-            this.secondDesignElementId = second_design_element_fk;
-        }
-
-        public String toSqlString() {
-            return "(" + firstDesignElementId + ", " + secondDesignElementId + ",  " + score + ", " + eeId + ")";
-        }
-
-        @Override
-        public String toString() {
-            return "DE1=" + firstDesignElementId + ", DE2=" + secondDesignElementId + ", SCORE=s" + score + ", EE="
-                    + eeId;
-        }
     }
 
 }

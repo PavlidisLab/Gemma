@@ -31,6 +31,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 
 import ubic.gemma.loader.expression.simple.ExperimentalDesignImporter;
@@ -52,7 +55,7 @@ import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueService;
 import ubic.gemma.model.expression.experiment.FactorValueValueObject;
 import ubic.gemma.util.AnchorTagUtil;
-import ubic.gemma.web.controller.BaseMultiActionController;
+import ubic.gemma.web.controller.BaseController;
 import ubic.gemma.web.remote.EntityDelegator;
 import ubic.gemma.web.util.EntityNotFoundException;
 
@@ -61,27 +64,35 @@ import ubic.gemma.web.util.EntityNotFoundException;
  * 
  * @author keshav
  * @version $Id$
- * @spring.bean id="experimentalDesignController"
- * @spring.property name = "experimentalDesignService" ref="experimentalDesignService"
- * @spring.property name = "methodNameResolver" ref="experimentalDesignActions"
- * @spring.property name = "expressionExperimentService" ref="expressionExperimentService"
- * @spring.property name = "bioMaterialService" ref="bioMaterialService"
- * @spring.property name = "experimentalFactorService" ref="experimentalFactorService"
- * @spring.property name = "factorValueService" ref="factorValueService"
- * @spring.property name = "characteristicService" ref="characteristicService"
- * @spring.property name="experimentalDesignImporter" ref="experimentalDesignImporter"
  */
-public class ExperimentalDesignController extends BaseMultiActionController {
+@Controller
+@RequestMapping("/experimentalDesign")
+public class ExperimentalDesignController extends BaseController {
 
+    @Autowired
     private BioMaterialService bioMaterialService = null;
+
+    @Autowired
     private CharacteristicService characteristicService = null;
+
+    @Autowired
     private ExperimentalDesignImporter experimentalDesignImporter = null;
+
+    @Autowired
     private ExperimentalDesignService experimentalDesignService = null;
+
+    @Autowired
     private ExperimentalFactorService experimentalFactorService = null;
+
+    @Autowired
     private ExpressionExperimentService expressionExperimentService = null;
+
+    @Autowired
     private FactorValueService factorValueService = null;
 
     /**
+     * AJAX
+     * 
      * @param eeid
      * @param filePath
      */
@@ -142,8 +153,11 @@ public class ExperimentalDesignController extends BaseMultiActionController {
         ef.setName( efvo.getName() );
         ef.setDescription( efvo.getDescription() );
         ef.setCategory( createCategoryCharacteristic( efvo.getCategory(), efvo.getCategoryUri() ) );
-        experimentalFactorService.create( ef ); // until the larger problem is fixed...
 
+        /*
+         * Note: this call should not be needed because of cascade behaviour.
+         */
+        // experimentalFactorService.create( ef );
         if ( ed.getExperimentalFactors() == null ) ed.setExperimentalFactors( new HashSet<ExperimentalFactor>() );
         ed.getExperimentalFactors().add( ef );
 
@@ -422,49 +436,6 @@ public class ExperimentalDesignController extends BaseMultiActionController {
     }
 
     /**
-     * TODO add delete to the model
-     * 
-     * @param request
-     * @param response
-     * @return
-     */
-    // @SuppressWarnings("unused")
-    // public ModelAndView delete(HttpServletRequest request,
-    // HttpServletResponse response) {
-    // String name = request.getParameter("name");
-    //
-    // if (name == null) {
-    // // should be a validation error.
-    // throw new EntityNotFoundException("Must provide a name");
-    // }
-    //
-    // ExperimentalDesign experimentalDesign = experimentalDesignService
-    // .findByName(name);
-    // if (experimentalDesign == null) {
-    // throw new EntityNotFoundException(experimentalDesign
-    // + " not found");
-    // }
-    //
-    // return doDelete(request, experimentalDesign);
-    // }
-    /**
-     * TODO add doDelete to the model
-     * 
-     * @param request
-     * @param experimentalDesign
-     * @return
-     */
-    // private ModelAndView doDelete(HttpServletRequest request,
-    // ExperimentalDesign experimentalDesign) {
-    // experimentalDesignService.delete(experimentalDesign);
-    // log.info("Expression Experiment with name: "
-    // + experimentalDesign.getName() + " deleted");
-    // addMessage(request, "experimentalDesign.deleted",
-    // new Object[] { experimentalDesign.getName() });
-    // return new ModelAndView("experimentalDesigns",
-    // "experimentalDesign", experimentalDesign);
-    // }
-    /**
      * @param expressionExperimentService the expressionExperimentService to set
      */
     public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
@@ -484,6 +455,7 @@ public class ExperimentalDesignController extends BaseMultiActionController {
      * @param errors
      * @return ModelAndView
      */
+    @RequestMapping("/showExperimentalDesign.html")
     public ModelAndView show( HttpServletRequest request, HttpServletResponse response ) {
 
         String idstr = request.getParameter( "eeid" );
@@ -538,16 +510,6 @@ public class ExperimentalDesignController extends BaseMultiActionController {
     }
 
     /**
-     * @param request
-     * @param response
-     * @return
-     */
-    public ModelAndView showAll( HttpServletRequest request, HttpServletResponse response ) {
-        return new ModelAndView( "experimentalDesigns" ).addObject( "experimentalDesigns", experimentalDesignService
-                .loadAll() );
-    }
-
-    /**
      * Updates the specified BioMaterials's factor values. This completely removes any pre-existing factor values.
      * 
      * @param bmvos a collection of BioMaterialValueObjects containing the updated values
@@ -556,81 +518,6 @@ public class ExperimentalDesignController extends BaseMultiActionController {
         for ( BioMaterialValueObject bmvo : bmvos ) {
             updateBioMaterial( bmvo );
         }
-    }
-
-    /**
-     * Update the factor values for a single biomaterial. Old factor values are removed.
-     * 
-     * @param bmvo
-     */
-    private void updateBioMaterial( BioMaterialValueObject bmvo ) {
-        BioMaterial bm = bioMaterialService.load( bmvo.getId() );
-
-        Collection<FactorValue> updatedFactorValues = new HashSet<FactorValue>();
-        Map<String, String> factorIdToFactorValueId = bmvo.getFactorIdToFactorValueId(); // all of them.
-        for ( String factorIdString : factorIdToFactorValueId.keySet() ) {
-            String factorValueString = factorIdToFactorValueId.get( factorIdString );
-
-            assert factorIdString.matches( "factor\\d+" );
-            Long factorId = Long.parseLong( factorIdString.substring( 6 ) );
-
-            if ( StringUtils.isBlank( factorValueString ) ) {
-                // no value provided, that's okay, the curator can fill it in later.
-                continue;
-
-            } else if ( factorValueString.matches( "fv\\d+" ) ) {
-                // categorical
-                long fvId = Long.parseLong( factorValueString.substring( 2 ) );
-                FactorValue fv = factorValueService.load( fvId );
-                if ( fv == null ) {
-                    throw new EntityNotFoundException( "No such factorValue with id=" + fvId );
-                }
-                updatedFactorValues.add( fv );
-            } else {
-                // continuous, the value send is the actual value, not an id. This will only make sense if the value is
-                // a measurement.
-                boolean found = false;
-                // find the right factor value.
-                for ( FactorValue fv : bm.getFactorValues() ) {
-                    if ( fv.getExperimentalFactor().getId().equals( factorId ) ) {
-                        if ( fv.getMeasurement() == null ) {
-                            throw new IllegalStateException( "Should have been a measurement associated with fv=" + fv
-                                    + ", cannot update." );
-                        } else if ( !fv.getMeasurement().getValue().equals( factorValueString ) ) {
-                            log.debug( "Updating continuous value on biomaterial:" + bmvo + ", factor="
-                                    + fv.getExperimentalFactor() + " value= '" + factorValueString + "'" );
-                            fv.getMeasurement().setValue( factorValueString );
-                        } else {
-                            log.debug( "Value unchanged from " + fv.getMeasurement().getValue() );
-                        }
-
-                        // always add...
-                        updatedFactorValues.add( fv );
-                        found = true;
-                        break;
-                    }
-                }
-
-                if ( !found ) {
-                    /*
-                     * What happens if there is no value set for this factor already? Have to load the factor, create a
-                     * factor value. But there should be one
-                     */
-                    throw new IllegalStateException( "Sorry, biomaterial " + bmvo
-                            + " didn't have a value for continuous factor=" + factorId
-                            + ", and one cannot be added at this time." );
-                }
-
-            }
-        }
-
-        // <= because we might have just added one.
-        assert bm.getFactorValues().size() <= updatedFactorValues.size();
-
-        bm.getFactorValues().clear();
-        bm.getFactorValues().addAll( updatedFactorValues );
-
-        bioMaterialService.update( bm );
     }
 
     /**
@@ -748,6 +635,81 @@ public class ExperimentalDesignController extends BaseMultiActionController {
         }
         template.setEvidenceCode( GOEvidenceCode.IEA ); // automatically added characteristic
         return template;
+    }
+
+    /**
+     * Update the factor values for a single biomaterial. Old factor values are removed.
+     * 
+     * @param bmvo
+     */
+    private void updateBioMaterial( BioMaterialValueObject bmvo ) {
+        BioMaterial bm = bioMaterialService.load( bmvo.getId() );
+
+        Collection<FactorValue> updatedFactorValues = new HashSet<FactorValue>();
+        Map<String, String> factorIdToFactorValueId = bmvo.getFactorIdToFactorValueId(); // all of them.
+        for ( String factorIdString : factorIdToFactorValueId.keySet() ) {
+            String factorValueString = factorIdToFactorValueId.get( factorIdString );
+
+            assert factorIdString.matches( "factor\\d+" );
+            Long factorId = Long.parseLong( factorIdString.substring( 6 ) );
+
+            if ( StringUtils.isBlank( factorValueString ) ) {
+                // no value provided, that's okay, the curator can fill it in later.
+                continue;
+
+            } else if ( factorValueString.matches( "fv\\d+" ) ) {
+                // categorical
+                long fvId = Long.parseLong( factorValueString.substring( 2 ) );
+                FactorValue fv = factorValueService.load( fvId );
+                if ( fv == null ) {
+                    throw new EntityNotFoundException( "No such factorValue with id=" + fvId );
+                }
+                updatedFactorValues.add( fv );
+            } else {
+                // continuous, the value send is the actual value, not an id. This will only make sense if the value is
+                // a measurement.
+                boolean found = false;
+                // find the right factor value.
+                for ( FactorValue fv : bm.getFactorValues() ) {
+                    if ( fv.getExperimentalFactor().getId().equals( factorId ) ) {
+                        if ( fv.getMeasurement() == null ) {
+                            throw new IllegalStateException( "Should have been a measurement associated with fv=" + fv
+                                    + ", cannot update." );
+                        } else if ( !fv.getMeasurement().getValue().equals( factorValueString ) ) {
+                            log.debug( "Updating continuous value on biomaterial:" + bmvo + ", factor="
+                                    + fv.getExperimentalFactor() + " value= '" + factorValueString + "'" );
+                            fv.getMeasurement().setValue( factorValueString );
+                        } else {
+                            log.debug( "Value unchanged from " + fv.getMeasurement().getValue() );
+                        }
+
+                        // always add...
+                        updatedFactorValues.add( fv );
+                        found = true;
+                        break;
+                    }
+                }
+
+                if ( !found ) {
+                    /*
+                     * What happens if there is no value set for this factor already? Have to load the factor, create a
+                     * factor value. But there should be one
+                     */
+                    throw new IllegalStateException( "Sorry, biomaterial " + bmvo
+                            + " didn't have a value for continuous factor=" + factorId
+                            + ", and one cannot be added at this time." );
+                }
+
+            }
+        }
+
+        // <= because we might have just added one.
+        assert bm.getFactorValues().size() <= updatedFactorValues.size();
+
+        bm.getFactorValues().clear();
+        bm.getFactorValues().addAll( updatedFactorValues );
+
+        bioMaterialService.update( bm );
     }
 
 }

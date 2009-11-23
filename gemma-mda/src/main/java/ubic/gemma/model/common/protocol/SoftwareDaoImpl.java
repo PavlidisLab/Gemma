@@ -19,19 +19,28 @@
 package ubic.gemma.model.common.protocol;
 
 import org.hibernate.Criteria;
+import org.hibernate.SessionFactory;
 import org.hibernate.criterion.Restrictions;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
 
 /**
  * @author pavlidis
  * @version $Id$
  * @see ubic.gemma.model.common.protocol.Software
  */
+@Repository
 public class SoftwareDaoImpl extends ubic.gemma.model.common.protocol.SoftwareDaoBase {
+
+    @Autowired
+    public SoftwareDaoImpl( SessionFactory sessionFactory ) {
+        super.setSessionFactory( sessionFactory );
+    }
 
     @Override
     public Software find( Software software ) {
         try {
-            Criteria queryObject = super.getSession( false ).createCriteria( Software.class );
+            Criteria queryObject = super.getSession().createCriteria( Software.class );
 
             queryObject.add( Restrictions.eq( "name", software.getName() ) );
 

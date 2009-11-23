@@ -18,16 +18,19 @@
  */
 package ubic.gemma.model.common.auditAndSecurity;
 
+import org.springframework.security.access.annotation.Secured;
+
 /**
- * 
+ * @author kelsey
+ * @version $Id$
  */
 public interface PersonService {
 
     /**
      * 
      */
-    public ubic.gemma.model.common.auditAndSecurity.Person create(
-            ubic.gemma.model.common.auditAndSecurity.Person person );
+    @Secured( { "GROUP_USER" })
+    public Person create( Person person );
 
     /**
      * 
@@ -37,17 +40,31 @@ public interface PersonService {
     /**
      * 
      */
-    public ubic.gemma.model.common.auditAndSecurity.Person findOrCreate(
-            ubic.gemma.model.common.auditAndSecurity.Person person );
+    @Secured( { "GROUP_USER" })
+    public Person findOrCreate( Person person );
 
     /**
      * 
      */
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public java.util.Collection<Person> loadAll();
 
     /**
      * 
      */
-    public void remove( ubic.gemma.model.common.auditAndSecurity.Person person );
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    public Person load( Long id );
+
+    /**
+     * 
+     */
+    @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    public void update( Person p );
+
+    /**
+     * 
+     */
+    @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    public void remove( Person person );
 
 }

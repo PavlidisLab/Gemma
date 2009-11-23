@@ -18,6 +18,7 @@
  */
 package ubic.gemma.model.expression.arrayDesign;
 
+
 /**
  * @see ubic.gemma.model.expression.arrayDesign.AlternateName
  */

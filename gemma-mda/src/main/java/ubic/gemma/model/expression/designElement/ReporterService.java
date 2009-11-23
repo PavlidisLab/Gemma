@@ -18,19 +18,24 @@
  */
 package ubic.gemma.model.expression.designElement;
 
+import org.springframework.security.access.annotation.Secured;
+
 /**
- * 
+ * @author kelsey
+ * @version $Id$
  */
 public interface ReporterService {
 
     /**
      * 
      */
-    public java.util.Collection create( java.util.Collection reporters );
+    @Secured( { "GROUP_USER" })
+    public java.util.Collection<Reporter> create( java.util.Collection<Reporter> reporters );
 
     /**
      * 
      */
+    @Secured( { "GROUP_USER" })
     public ubic.gemma.model.expression.designElement.Reporter create(
             ubic.gemma.model.expression.designElement.Reporter reporter );
 
@@ -43,12 +48,14 @@ public interface ReporterService {
     /**
      * 
      */
+    @Secured( { "GROUP_USER" })
     public ubic.gemma.model.expression.designElement.Reporter findOrCreate(
             ubic.gemma.model.expression.designElement.Reporter reporter );
 
     /**
      * 
      */
+    @Secured( { "GROUP_USER" })
     public void remove( ubic.gemma.model.expression.designElement.Reporter reporter );
 
 }

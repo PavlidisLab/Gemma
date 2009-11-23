@@ -18,7 +18,13 @@
  */
 package ubic.gemma.model.genome;
 
+import static org.junit.Assert.assertNotNull;
+
 import org.apache.commons.lang.RandomStringUtils;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.springframework.transaction.annotation.Transactional;
 
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
@@ -35,11 +41,9 @@ public class BioSequencePersistTest extends BaseSpringContextTest {
 
     BioSequence bs;
 
-    @Override
-    protected void onSetUpInTransaction() throws Exception {
-        super.onSetUpInTransaction();
-        endTransaction();
-        
+    @Before
+    public void onSetUpInTransaction() throws Exception {
+
         bs = BioSequence.Factory.newInstance();
 
         Taxon t = Taxon.Factory.newInstance();
@@ -59,13 +63,14 @@ public class BioSequencePersistTest extends BaseSpringContextTest {
         bs.setSequenceDatabaseEntry( de );
     }
 
-    @Override
-    protected void onTearDownInTransaction() throws Exception {
-        super.onTearDownInTransaction();
+    @After
+    public void onTearDownInTransaction() throws Exception {
         BioSequenceService bss = ( BioSequenceService ) this.getBean( "bioSequenceService" );
         bss.remove( bs );
     }
 
+    @Test
+    @Transactional
     public final void testPersistBioSequence() throws Exception {
         PersisterHelper ph = ( PersisterHelper ) this.getBean( "persisterHelper" );
         bs = ( BioSequence ) ph.persist( bs );

@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.genome;
 
+import java.util.Collection;
+
 import ubic.gemma.model.genome.gene.GeneValueObject;
 
 /**
@@ -63,7 +65,7 @@ public abstract class PredictedGeneDaoBase extends ubic.gemma.model.genome.Chrom
             throw new IllegalArgumentException( "PredictedGene.create - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback() {
+                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
@@ -90,7 +92,6 @@ public abstract class PredictedGeneDaoBase extends ubic.gemma.model.genome.Chrom
      * @see ubic.gemma.model.genome.PredictedGeneDao#create(java.util.Collection)
      */
 
-    @SuppressWarnings( { "unchecked" })
     public java.util.Collection create( final java.util.Collection entities ) {
         return create( TRANSFORM_NONE, entities );
     }
@@ -106,7 +107,6 @@ public abstract class PredictedGeneDaoBase extends ubic.gemma.model.genome.Chrom
      * @see ubic.gemma.model.genome.PredictedGeneDao#find(int, java.lang.String, ubic.gemma.model.genome.Gene)
      */
 
-    @SuppressWarnings( { "unchecked" })
     public Object find( final int transform, final java.lang.String queryString, final ubic.gemma.model.genome.Gene gene ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
         java.util.List<Object> args = new java.util.ArrayList<Object>();
@@ -115,15 +115,15 @@ public abstract class PredictedGeneDaoBase extends ubic.gemma.model.genome.Chrom
         java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
                 argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
         Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'ubic.gemma.model.genome.Gene"
-                                + "' was found when executing query --> '" + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
+
+        if ( results.size() > 1 ) {
+            throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                    "More than one instance of 'ubic.gemma.model.genome.Gene"
+                            + "' was found when executing query --> '" + queryString + "'" );
+        } else if ( results.size() == 1 ) {
+            result = results.iterator().next();
         }
+
         result = transformEntity( transform, ( ubic.gemma.model.genome.PredictedGene ) result );
         return result;
     }
@@ -132,7 +132,6 @@ public abstract class PredictedGeneDaoBase extends ubic.gemma.model.genome.Chrom
      * @see ubic.gemma.model.genome.PredictedGeneDao#find(int, ubic.gemma.model.genome.Gene)
      */
 
-    @SuppressWarnings( { "unchecked" })
     public Object find( final int transform, final ubic.gemma.model.genome.Gene gene ) {
         return this.find( transform,
                 "from ubic.gemma.model.genome.PredictedGene as predictedGene where predictedGene.gene = :gene", gene );
@@ -142,7 +141,6 @@ public abstract class PredictedGeneDaoBase extends ubic.gemma.model.genome.Chrom
      * @see ubic.gemma.model.genome.PredictedGeneDao#find(java.lang.String, ubic.gemma.model.genome.Gene)
      */
 
-    @SuppressWarnings( { "unchecked" })
     public ubic.gemma.model.genome.Gene find( final java.lang.String queryString,
             final ubic.gemma.model.genome.Gene gene ) {
         return ( ubic.gemma.model.genome.Gene ) this.find( TRANSFORM_NONE, queryString, gene );
@@ -160,7 +158,6 @@ public abstract class PredictedGeneDaoBase extends ubic.gemma.model.genome.Chrom
      * @see ubic.gemma.model.genome.PredictedGeneDao#findByNcbiId(int, java.lang.String)
      */
 
-    @SuppressWarnings( { "unchecked" })
     public java.util.Collection findByNcbiId( final int transform, final java.lang.String ncbiId ) {
         return this.findByNcbiId( transform, "from GeneImpl g where g.ncbiId = :ncbiId", ncbiId );
     }
@@ -169,7 +166,6 @@ public abstract class PredictedGeneDaoBase extends ubic.gemma.model.genome.Chrom
      * @see ubic.gemma.model.genome.PredictedGeneDao#findByNcbiId(int, java.lang.String, java.lang.String)
      */
 
-    @SuppressWarnings( { "unchecked" })
     public java.util.Collection findByNcbiId( final int transform, final java.lang.String queryString,
             final java.lang.String ncbiId ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -195,7 +191,6 @@ public abstract class PredictedGeneDaoBase extends ubic.gemma.model.genome.Chrom
      */
 
     @Override
-    @SuppressWarnings( { "unchecked" })
     public java.util.Collection findByNcbiId( final java.lang.String queryString, final java.lang.String ncbiId ) {
         return this.findByNcbiId( TRANSFORM_NONE, queryString, ncbiId );
     }
@@ -204,7 +199,6 @@ public abstract class PredictedGeneDaoBase extends ubic.gemma.model.genome.Chrom
      * @see ubic.gemma.model.genome.PredictedGeneDao#findByOfficalSymbol(int, java.lang.String)
      */
 
-    @SuppressWarnings( { "unchecked" })
     public java.util.Collection findByOfficalSymbol( final int transform, final java.lang.String officialSymbol ) {
         return this.findByOfficalSymbol( transform,
                 "from GeneImpl g where g.officialSymbol=:officialSymbol order by g.officialName", officialSymbol );
@@ -214,7 +208,6 @@ public abstract class PredictedGeneDaoBase extends ubic.gemma.model.genome.Chrom
      * @see ubic.gemma.model.genome.PredictedGeneDao#findByOfficalSymbol(int, java.lang.String, java.lang.String)
      */
 
-    @SuppressWarnings( { "unchecked" })
     public java.util.Collection findByOfficalSymbol( final int transform, final java.lang.String queryString,
             final java.lang.String officialSymbol ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -239,7 +232,6 @@ public abstract class PredictedGeneDaoBase extends ubic.gemma.model.genome.Chrom
      * @see ubic.gemma.model.genome.PredictedGeneDao#findByOfficalSymbol(java.lang.String, java.lang.String)
      */
 
-    @SuppressWarnings( { "unchecked" })
     public java.util.Collection findByOfficalSymbol( final java.lang.String queryString,
             final java.lang.String officialSymbol ) {
         return this.findByOfficalSymbol( TRANSFORM_NONE, queryString, officialSymbol );
@@ -249,7 +241,6 @@ public abstract class PredictedGeneDaoBase extends ubic.gemma.model.genome.Chrom
      * @see ubic.gemma.model.genome.PredictedGeneDao#findByOfficialName(int, java.lang.String)
      */
 
-    @SuppressWarnings( { "unchecked" })
     public java.util.Collection findByOfficialName( final int transform, final java.lang.String officialName ) {
         return this.findByOfficialName( transform,
                 "from GeneImpl g where g.officialName=:officialName order by g.officialName", officialName );
@@ -259,7 +250,6 @@ public abstract class PredictedGeneDaoBase extends ubic.gemma.model.genome.Chrom
      * @see ubic.gemma.model.genome.PredictedGeneDao#findByOfficialName(int, java.lang.String, java.lang.String)
      */
 
-    @SuppressWarnings( { "unchecked" })
     public java.util.Collection findByOfficialName( final int transform, final java.lang.String queryString,
             final java.lang.String officialName ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -284,7 +274,6 @@ public abstract class PredictedGeneDaoBase extends ubic.gemma.model.genome.Chrom
      * @see ubic.gemma.model.genome.PredictedGeneDao#findByOfficialName(java.lang.String, java.lang.String)
      */
 
-    @SuppressWarnings( { "unchecked" })
     public java.util.Collection findByOfficialName( final java.lang.String queryString,
             final java.lang.String officialName ) {
         return this.findByOfficialName( TRANSFORM_NONE, queryString, officialName );
@@ -294,7 +283,6 @@ public abstract class PredictedGeneDaoBase extends ubic.gemma.model.genome.Chrom
      * @see ubic.gemma.model.genome.PredictedGeneDao#findByOfficialSymbolInexact(int, java.lang.String)
      */
 
-    @SuppressWarnings( { "unchecked" })
     public java.util.Collection findByOfficialSymbolInexact( final int transform, final java.lang.String officialSymbol ) {
         return this
                 .findByOfficialSymbolInexact( transform,
@@ -307,7 +295,6 @@ public abstract class PredictedGeneDaoBase extends ubic.gemma.model.genome.Chrom
      *      java.lang.String)
      */
 
-    @SuppressWarnings( { "unchecked" })
     public java.util.Collection findByOfficialSymbolInexact( final int transform, final java.lang.String queryString,
             final java.lang.String officialSymbol ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -332,7 +319,6 @@ public abstract class PredictedGeneDaoBase extends ubic.gemma.model.genome.Chrom
      * @see ubic.gemma.model.genome.PredictedGeneDao#findByOfficialSymbolInexact(java.lang.String, java.lang.String)
      */
 
-    @SuppressWarnings( { "unchecked" })
     public java.util.Collection findByOfficialSymbolInexact( final java.lang.String queryString,
             final java.lang.String officialSymbol ) {
         return this.findByOfficialSymbolInexact( TRANSFORM_NONE, queryString, officialSymbol );
@@ -344,7 +330,6 @@ public abstract class PredictedGeneDaoBase extends ubic.gemma.model.genome.Chrom
      */
 
     @Override
-    @SuppressWarnings( { "unchecked" })
     public java.util.Collection findByPhysicalLocation( final int transform, final java.lang.String queryString,
             final ubic.gemma.model.genome.PhysicalLocation location ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -363,7 +348,6 @@ public abstract class PredictedGeneDaoBase extends ubic.gemma.model.genome.Chrom
      */
 
     @Override
-    @SuppressWarnings( { "unchecked" })
     public java.util.Collection findByPhysicalLocation( final int transform,
             final ubic.gemma.model.genome.PhysicalLocation location ) {
         return this.findByPhysicalLocation( transform,
@@ -377,7 +361,6 @@ public abstract class PredictedGeneDaoBase extends ubic.gemma.model.genome.Chrom
      */
 
     @Override
-    @SuppressWarnings( { "unchecked" })
     public java.util.Collection findByPhysicalLocation( final java.lang.String queryString,
             final ubic.gemma.model.genome.PhysicalLocation location ) {
         return this.findByPhysicalLocation( TRANSFORM_NONE, queryString, location );
@@ -396,7 +379,6 @@ public abstract class PredictedGeneDaoBase extends ubic.gemma.model.genome.Chrom
      * @see ubic.gemma.model.genome.PredictedGeneDao#findOrCreate(int, java.lang.String, ubic.gemma.model.genome.Gene)
      */
 
-    @SuppressWarnings( { "unchecked" })
     public Object findOrCreate( final int transform, final java.lang.String queryString,
             final ubic.gemma.model.genome.Gene gene ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -406,15 +388,15 @@ public abstract class PredictedGeneDaoBase extends ubic.gemma.model.genome.Chrom
         java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
                 argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
         Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'ubic.gemma.model.genome.Gene"
-                                + "' was found when executing query --> '" + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
+
+        if ( results.size() > 1 ) {
+            throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                    "More than one instance of 'ubic.gemma.model.genome.Gene"
+                            + "' was found when executing query --> '" + queryString + "'" );
+        } else if ( results.size() == 1 ) {
+            result = results.iterator().next();
         }
+
         result = transformEntity( transform, ( ubic.gemma.model.genome.PredictedGene ) result );
         return result;
     }
@@ -423,7 +405,6 @@ public abstract class PredictedGeneDaoBase extends ubic.gemma.model.genome.Chrom
      * @see ubic.gemma.model.genome.PredictedGeneDao#findOrCreate(int, ubic.gemma.model.genome.Gene)
      */
 
-    @SuppressWarnings( { "unchecked" })
     public Object findOrCreate( final int transform, final ubic.gemma.model.genome.Gene gene ) {
         return this.findOrCreate( transform,
                 "from ubic.gemma.model.genome.PredictedGene as predictedGene where predictedGene.gene = :gene", gene );
@@ -433,7 +414,6 @@ public abstract class PredictedGeneDaoBase extends ubic.gemma.model.genome.Chrom
      * @see ubic.gemma.model.genome.PredictedGeneDao#findOrCreate(java.lang.String, ubic.gemma.model.genome.Gene)
      */
 
-    @SuppressWarnings( { "unchecked" })
     public ubic.gemma.model.genome.Gene findOrCreate( final java.lang.String queryString,
             final ubic.gemma.model.genome.Gene gene ) {
         return ( ubic.gemma.model.genome.Gene ) this.findOrCreate( TRANSFORM_NONE, queryString, gene );
@@ -487,6 +467,10 @@ public abstract class PredictedGeneDaoBase extends ubic.gemma.model.genome.Chrom
         }
     }
 
+    public Collection<? extends PredictedGene> load( Collection<Long> ids ) {
+        return this.getHibernateTemplate().findByNamedParam( "from PredictedGeneImpl where id in (:ids)", "ids", ids );
+    }
+
     /**
      * @see ubic.gemma.model.genome.PredictedGeneDao#load(int, java.lang.Long)
      */
@@ -511,7 +495,6 @@ public abstract class PredictedGeneDaoBase extends ubic.gemma.model.genome.Chrom
      * @see ubic.gemma.model.genome.PredictedGeneDao#loadAll()
      */
 
-    @SuppressWarnings( { "unchecked" })
     public java.util.Collection loadAll() {
         return this.loadAll( TRANSFORM_NONE );
     }
@@ -604,7 +587,7 @@ public abstract class PredictedGeneDaoBase extends ubic.gemma.model.genome.Chrom
             throw new IllegalArgumentException( "PredictedGene.update - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback() {
+                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {

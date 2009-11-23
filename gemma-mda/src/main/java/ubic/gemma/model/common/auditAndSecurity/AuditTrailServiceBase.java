@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.common.auditAndSecurity;
 
+import org.springframework.beans.factory.annotation.Autowired;
+
 /**
  * <p>
  * Spring Service base class for <code>ubic.gemma.model.common.auditAndSecurity.AuditTrailService</code>, provides
@@ -28,12 +30,13 @@ package ubic.gemma.model.common.auditAndSecurity;
  */
 public abstract class AuditTrailServiceBase implements ubic.gemma.model.common.auditAndSecurity.AuditTrailService {
 
-    private ubic.gemma.model.common.AuditableService auditableService;
-
+    @Autowired
     private ubic.gemma.model.common.auditAndSecurity.AuditTrailDao auditTrailDao;
-
+    
+    @Autowired
     private ubic.gemma.model.common.auditAndSecurity.UserDao userDao;
 
+    @Autowired
     private ubic.gemma.model.common.auditAndSecurity.AuditEventDao auditEventDao;
 
     /**
@@ -203,13 +206,6 @@ public abstract class AuditTrailServiceBase implements ubic.gemma.model.common.a
     }
 
     /**
-     * Sets the reference to <code>auditableService</code>.
-     */
-    public void setAuditableService( ubic.gemma.model.common.AuditableService auditableService ) {
-        this.auditableService = auditableService;
-    }
-
-    /**
      * Sets the reference to <code>auditEvent</code>'s DAO.
      */
     public void setAuditEventDao( ubic.gemma.model.common.auditAndSecurity.AuditEventDao auditEventDao ) {
@@ -254,13 +250,6 @@ public abstract class AuditTrailServiceBase implements ubic.gemma.model.common.a
                     "Error performing 'ubic.gemma.model.common.auditAndSecurity.AuditTrailService.thaw(ubic.gemma.model.common.auditAndSecurity.AuditTrail auditTrail)' --> "
                             + th, th );
         }
-    }
-
-    /**
-     * Gets the reference to <code>auditableService</code>.
-     */
-    protected ubic.gemma.model.common.AuditableService getAuditableService() {
-        return this.auditableService;
     }
 
     /**

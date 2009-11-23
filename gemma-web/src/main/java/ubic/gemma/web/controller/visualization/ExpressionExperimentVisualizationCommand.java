@@ -52,45 +52,10 @@ public class ExpressionExperimentVisualizationCommand implements Serializable {
     }
 
     /**
-     * @return boolean
+     * @return Long
      */
-    public boolean isViewSampling() {
-        return viewSampling;
-    }
-
-    /**
-     * @param viewSampling
-     */
-    public void setViewSampling( boolean viewSampling ) {
-        this.viewSampling = viewSampling;
-    }
-
-    /**
-     * @return String
-     */
-    public String getSearchString() {
-        return searchString;
-    }
-
-    /**
-     * @param searchString
-     */
-    public void setSearchString( String searchString ) {
-        this.searchString = searchString;
-    }
-
-    /**
-     * @return String
-     */
-    public String getSearchCriteria() {
-        return searchCriteria;
-    }
-
-    /**
-     * @param searchCriteria
-     */
-    public void setSearchCriteria( String searchCriteria ) {
-        this.searchCriteria = searchCriteria;
+    public Long getExpressionExperimentId() {
+        return expressionExperimentId;
     }
 
     /**
@@ -101,27 +66,6 @@ public class ExpressionExperimentVisualizationCommand implements Serializable {
     }
 
     /**
-     * @param name
-     */
-    public void setName( String name ) {
-        this.name = name;
-    }
-
-    /**
-     * @return Long
-     */
-    public Long getExpressionExperimentId() {
-        return expressionExperimentId;
-    }
-
-    /**
-     * @param id
-     */
-    public void setExpressionExperimentId( Long id ) {
-        this.expressionExperimentId = id;
-    }
-
-    /**
      * @return String
      */
     public QuantitationType getQuantitationType() {
@@ -129,10 +73,17 @@ public class ExpressionExperimentVisualizationCommand implements Serializable {
     }
 
     /**
-     * @param standardQuantitationType
+     * @return String
      */
-    public void setQuantitationType( QuantitationType quantitationType ) {
-        this.quantitationType = quantitationType;
+    public String getSearchCriteria() {
+        return searchCriteria;
+    }
+
+    /**
+     * @return String
+     */
+    public String getSearchString() {
+        return searchString;
     }
 
     /**
@@ -143,10 +94,59 @@ public class ExpressionExperimentVisualizationCommand implements Serializable {
     }
 
     /**
+     * @return boolean
+     */
+    public boolean isViewSampling() {
+        return viewSampling;
+    }
+
+    /**
+     * @param id
+     */
+    public void setExpressionExperimentId( Long id ) {
+        this.expressionExperimentId = id;
+    }
+
+    /**
      * @param maskMissing
      */
     public void setMaskMissing( boolean maskMissing ) {
         this.maskMissing = maskMissing;
+    }
+
+    /**
+     * @param name
+     */
+    public void setName( String name ) {
+        this.name = name;
+    }
+
+    /**
+     * @param standardQuantitationType
+     */
+    public void setQuantitationType( QuantitationType quantitationType ) {
+        this.quantitationType = quantitationType;
+    }
+
+    /**
+     * @param searchCriteria
+     */
+    public void setSearchCriteria( String searchCriteria ) {
+        this.searchCriteria = searchCriteria;
+    }
+
+    /**
+     * @param searchString
+     */
+    public void setSearchString( String searchString ) {
+        this.searchString = searchString;
+    }
+
+    /**
+     * @param viewSampling
+     */
+    public void setViewSampling( boolean viewSampling ) {
+        this.viewSampling = viewSampling;
     }
 
 }

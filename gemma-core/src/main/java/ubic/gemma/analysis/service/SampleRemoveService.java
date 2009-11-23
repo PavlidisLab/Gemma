@@ -26,8 +26,9 @@ import java.util.List;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
-import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.auditAndSecurity.eventType.SampleRemovalEvent;
@@ -38,8 +39,6 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayService;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
-import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
-import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 
@@ -54,21 +53,21 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
  * <p>
  * In the meantime, this should be used very judiciously!
  * 
- * @spring.bean id="sampleRemoveService"
- * @spring.property ref="expressionExperimentService" name="expressionExperimentService"
- * @spring.property ref="auditTrailService" name="auditTrailService"
- * @spring.property name="bioAssayService" ref = "bioAssayService"
  * @author pavlidis
  * @version $Id$
  */
+@Service
 public class SampleRemoveService extends ExpressionExperimentVectorManipulatingService {
 
     private static Log log = LogFactory.getLog( SampleRemoveService.class.getName() );
 
+    @Autowired
     BioAssayService bioAssayService;
 
+    @Autowired
     AuditTrailService auditTrailService;
 
+    @Autowired
     ExpressionExperimentService expressionExperimentService;
 
     public void setBioAssayService( BioAssayService bioAssayService ) {
@@ -112,8 +111,7 @@ public class SampleRemoveService extends ExpressionExperimentVectorManipulatingS
      * 
      * @param expExp
      * @param assaysToRemove
-     */
-    @SuppressWarnings("unchecked")
+     */ 
     public void markAsMissing( ExpressionExperiment expExp, Collection<BioAssay> assaysToRemove ) {
 
         if ( assaysToRemove == null || assaysToRemove.size() == 0 ) return;

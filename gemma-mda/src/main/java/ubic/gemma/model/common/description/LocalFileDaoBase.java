@@ -37,7 +37,7 @@ public abstract class LocalFileDaoBase extends org.springframework.orm.hibernate
             throw new IllegalArgumentException( "LocalFile.create - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback() {
+                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
@@ -64,7 +64,7 @@ public abstract class LocalFileDaoBase extends org.springframework.orm.hibernate
     /**
      * @see ubic.gemma.model.common.description.LocalFileDao#create(java.util.Collection)
      */
-    @SuppressWarnings( { "unchecked" })
+    
     public java.util.Collection create( final java.util.Collection entities ) {
         return create( TRANSFORM_NONE, entities );
     }
@@ -80,7 +80,7 @@ public abstract class LocalFileDaoBase extends org.springframework.orm.hibernate
      * @see ubic.gemma.model.common.description.LocalFileDao#find(int, java.lang.String,
      *      ubic.gemma.model.common.description.LocalFile)
      */
-    @SuppressWarnings( { "unchecked" })
+    
     public Object find( final int transform, final java.lang.String queryString,
             final ubic.gemma.model.common.description.LocalFile localFile ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -90,23 +90,21 @@ public abstract class LocalFileDaoBase extends org.springframework.orm.hibernate
         java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
                 argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
         Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'ubic.gemma.model.common.description.LocalFile"
-                                + "' was found when executing query --> '" + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
+        if ( results.size() > 1 ) {
+            throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                    "More than one instance of 'ubic.gemma.model.common.description.LocalFile"
+                            + "' was found when executing query --> '" + queryString + "'" );
+        } else if ( results.size() == 1 ) {
+            result = results.iterator().next();
         }
+
         result = transformEntity( transform, ( ubic.gemma.model.common.description.LocalFile ) result );
         return result;
     }
 
     /**
      * @see ubic.gemma.model.common.description.LocalFileDao#find(int, ubic.gemma.model.common.description.LocalFile)
-     */
-    @SuppressWarnings( { "unchecked" })
+     */ 
     public Object find( final int transform, final ubic.gemma.model.common.description.LocalFile localFile ) {
         return this
                 .find(
@@ -118,8 +116,7 @@ public abstract class LocalFileDaoBase extends org.springframework.orm.hibernate
     /**
      * @see ubic.gemma.model.common.description.LocalFileDao#find(java.lang.String,
      *      ubic.gemma.model.common.description.LocalFile)
-     */
-    @SuppressWarnings( { "unchecked" })
+     */ 
     public ubic.gemma.model.common.description.LocalFile find( final java.lang.String queryString,
             final ubic.gemma.model.common.description.LocalFile localFile ) {
         return ( ubic.gemma.model.common.description.LocalFile ) this.find( TRANSFORM_NONE, queryString, localFile );
@@ -136,7 +133,7 @@ public abstract class LocalFileDaoBase extends org.springframework.orm.hibernate
      * @see ubic.gemma.model.common.description.LocalFileDao#findByLocalURL(int, java.lang.String, java.net.URL,
      *      java.lang.Long)
      */
-    @SuppressWarnings( { "unchecked" })
+    
     public Object findByLocalURL( final int transform, final java.lang.String queryString, final java.net.URL url,
             final java.lang.Long size ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -147,24 +144,21 @@ public abstract class LocalFileDaoBase extends org.springframework.orm.hibernate
         argNames.add( "size" );
         java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
                 argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-        if ( results != null ) {
+        Object result = null; 
             if ( results.size() > 1 ) {
                 throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
                         "More than one instance of 'ubic.gemma.model.common.description.LocalFile"
                                 + "' was found when executing query --> '" + queryString + "'" );
             } else if ( results.size() == 1 ) {
                 result = results.iterator().next();
-            }
-        }
+            } 
         result = transformEntity( transform, ( ubic.gemma.model.common.description.LocalFile ) result );
         return result;
     }
 
     /**
      * @see ubic.gemma.model.common.description.LocalFileDao#findByLocalURL(int, java.net.URL, java.lang.Long)
-     */
-    @SuppressWarnings( { "unchecked" })
+     */ 
     public Object findByLocalURL( final int transform, final java.net.URL url, final java.lang.Long size ) {
         return this
                 .findByLocalURL(
@@ -176,8 +170,7 @@ public abstract class LocalFileDaoBase extends org.springframework.orm.hibernate
     /**
      * @see ubic.gemma.model.common.description.LocalFileDao#findByLocalURL(java.lang.String, java.net.URL,
      *      java.lang.Long)
-     */
-    @SuppressWarnings( { "unchecked" })
+     */ 
     public ubic.gemma.model.common.description.LocalFile findByLocalURL( final java.lang.String queryString,
             final java.net.URL url, final java.lang.Long size ) {
         return ( ubic.gemma.model.common.description.LocalFile ) this.findByLocalURL( TRANSFORM_NONE, queryString, url,
@@ -195,7 +188,7 @@ public abstract class LocalFileDaoBase extends org.springframework.orm.hibernate
      * @see ubic.gemma.model.common.description.LocalFileDao#findByRemoteURL(int, java.lang.String, java.net.URL,
      *      java.lang.Long)
      */
-    @SuppressWarnings( { "unchecked" })
+    
     public Object findByRemoteURL( final int transform, final java.lang.String queryString, final java.net.URL url,
             final java.lang.Long size ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -206,24 +199,21 @@ public abstract class LocalFileDaoBase extends org.springframework.orm.hibernate
         argNames.add( "size" );
         java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
                 argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-        if ( results != null ) {
+        Object result = null; 
             if ( results.size() > 1 ) {
                 throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
                         "More than one instance of 'ubic.gemma.model.common.description.LocalFile"
                                 + "' was found when executing query --> '" + queryString + "'" );
             } else if ( results.size() == 1 ) {
                 result = results.iterator().next();
-            }
-        }
+            } 
         result = transformEntity( transform, ( ubic.gemma.model.common.description.LocalFile ) result );
         return result;
     }
 
     /**
      * @see ubic.gemma.model.common.description.LocalFileDao#findByRemoteURL(int, java.net.URL, java.lang.Long)
-     */
-    @SuppressWarnings( { "unchecked" })
+     */ 
     public Object findByRemoteURL( final int transform, final java.net.URL url, final java.lang.Long size ) {
         return this
                 .findByRemoteURL(
@@ -235,8 +225,7 @@ public abstract class LocalFileDaoBase extends org.springframework.orm.hibernate
     /**
      * @see ubic.gemma.model.common.description.LocalFileDao#findByRemoteURL(java.lang.String, java.net.URL,
      *      java.lang.Long)
-     */
-    @SuppressWarnings( { "unchecked" })
+     */ 
     public ubic.gemma.model.common.description.LocalFile findByRemoteURL( final java.lang.String queryString,
             final java.net.URL url, final java.lang.Long size ) {
         return ( ubic.gemma.model.common.description.LocalFile ) this.findByRemoteURL( TRANSFORM_NONE, queryString,
@@ -254,7 +243,7 @@ public abstract class LocalFileDaoBase extends org.springframework.orm.hibernate
      * @see ubic.gemma.model.common.description.LocalFileDao#findOrCreate(int, java.lang.String,
      *      ubic.gemma.model.common.description.LocalFile)
      */
-    @SuppressWarnings( { "unchecked" })
+    
     public Object findOrCreate( final int transform, final java.lang.String queryString,
             final ubic.gemma.model.common.description.LocalFile localFile ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -263,16 +252,14 @@ public abstract class LocalFileDaoBase extends org.springframework.orm.hibernate
         argNames.add( "localFile" );
         java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
                 argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-        if ( results != null ) {
+        Object result = null; 
             if ( results.size() > 1 ) {
                 throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
                         "More than one instance of 'ubic.gemma.model.common.description.LocalFile"
                                 + "' was found when executing query --> '" + queryString + "'" );
             } else if ( results.size() == 1 ) {
                 result = results.iterator().next();
-            }
-        }
+            } 
         result = transformEntity( transform, ( ubic.gemma.model.common.description.LocalFile ) result );
         return result;
     }
@@ -280,8 +267,7 @@ public abstract class LocalFileDaoBase extends org.springframework.orm.hibernate
     /**
      * @see ubic.gemma.model.common.description.LocalFileDao#findOrCreate(int,
      *      ubic.gemma.model.common.description.LocalFile)
-     */
-    @SuppressWarnings( { "unchecked" })
+     */ 
     public Object findOrCreate( final int transform, final ubic.gemma.model.common.description.LocalFile localFile ) {
         return this
                 .findOrCreate(
@@ -293,8 +279,7 @@ public abstract class LocalFileDaoBase extends org.springframework.orm.hibernate
     /**
      * @see ubic.gemma.model.common.description.LocalFileDao#findOrCreate(java.lang.String,
      *      ubic.gemma.model.common.description.LocalFile)
-     */
-    @SuppressWarnings( { "unchecked" })
+     */ 
     public ubic.gemma.model.common.description.LocalFile findOrCreate( final java.lang.String queryString,
             final ubic.gemma.model.common.description.LocalFile localFile ) {
         return ( ubic.gemma.model.common.description.LocalFile ) this.findOrCreate( TRANSFORM_NONE, queryString,
@@ -331,7 +316,7 @@ public abstract class LocalFileDaoBase extends org.springframework.orm.hibernate
     /**
      * @see ubic.gemma.model.common.description.LocalFileDao#loadAll()
      */
-    @SuppressWarnings( { "unchecked" })
+    
     public java.util.Collection loadAll() {
         return this.loadAll( TRANSFORM_NONE );
     }
@@ -387,7 +372,7 @@ public abstract class LocalFileDaoBase extends org.springframework.orm.hibernate
             throw new IllegalArgumentException( "LocalFile.update - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback() {
+                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {

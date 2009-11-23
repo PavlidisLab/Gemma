@@ -29,7 +29,10 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Hibernate;
 import org.hibernate.LockMode;
+import org.hibernate.SessionFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.orm.hibernate3.HibernateTemplate;
+import org.springframework.stereotype.Repository;
 
 import ubic.gemma.model.analysis.Investigation;
 import ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet;
@@ -46,10 +49,36 @@ import ubic.gemma.util.CommonQueries;
  * @version $Id$
  * @author paul
  */
+@Repository
 public class DifferentialExpressionAnalysisDaoImpl extends
         ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDaoBase {
 
     private Log log = LogFactory.getLog( this.getClass() );
+
+    @Autowired
+    public DifferentialExpressionAnalysisDaoImpl( SessionFactory sessionFactory ) {
+        super.setSessionFactory( sessionFactory );
+    }
+
+    public long countProbesMeetingThreshold( ExpressionAnalysisResultSet ears, double threshold ) {
+
+        String query = "select count(r) from ExpressionAnalysisResultSetImpl rs inner join rs.results r where rs = :rs and r.correctedPvalue < :threshold";
+
+        String[] paramNames = { "rs", "threshold" };
+        Object[] objectValues = { ears, threshold };
+
+        List qresult = this.getHibernateTemplate().findByNamedParam( query, paramNames, objectValues );
+
+        Long count = null;
+        for ( Object o : qresult ) {
+
+            count = ( Long ) o;
+            log.info( "Found " + count + " differentially expressed genes in result set (" + ears.getId()
+                    + ") at a threshold of " + threshold );
+
+        }
+        return count;
+    }
 
     @SuppressWarnings("unchecked")
     @Override
@@ -64,7 +93,7 @@ public class DifferentialExpressionAnalysisDaoImpl extends
      */
     @SuppressWarnings("unchecked")
     @Override
-    public void handleThaw( final Collection expressionAnalyses ) throws Exception {
+    public void handleThaw( final Collection<DifferentialExpressionAnalysis> expressionAnalyses ) throws Exception {
         for ( DifferentialExpressionAnalysis ea : ( Collection<DifferentialExpressionAnalysis> ) expressionAnalyses ) {
             DifferentialExpressionAnalysis dea = ea;
             thaw( dea );
@@ -160,10 +189,11 @@ public class DifferentialExpressionAnalysisDaoImpl extends
      */
     @SuppressWarnings("unchecked")
     @Override
-    protected Collection<DifferentialExpressionAnalysis> handleFindByTaxon( Taxon taxon ) {
+    protected Collection<DifferentialExpressionAnalysis> handleFindByParentTaxon( Taxon taxon ) {
         final String queryString = "select distinct doa from DifferentialExpressionAnalysisImpl as doa inner join doa.expressionExperimentSetAnalyzed eesa inner join eesa.experiments as ee "
                 + "inner join ee.bioAssays as ba "
-                + "inner join ba.samplesUsed as sample where sample.sourceTaxon = :taxon ";
+                + "inner join ba.samplesUsed as sample "
+                + "inner join sample.sourceTaxon as childtaxon where childtaxon.parentTaxon  = :taxon ";
         return this.getHibernateTemplate().findByNamedParam( queryString, "taxon", taxon );
     }
 
@@ -173,11 +203,10 @@ public class DifferentialExpressionAnalysisDaoImpl extends
      */
     @SuppressWarnings("unchecked")
     @Override
-    protected Collection<DifferentialExpressionAnalysis> handleFindByParentTaxon( Taxon taxon ) {
+    protected Collection<DifferentialExpressionAnalysis> handleFindByTaxon( Taxon taxon ) {
         final String queryString = "select distinct doa from DifferentialExpressionAnalysisImpl as doa inner join doa.expressionExperimentSetAnalyzed eesa inner join eesa.experiments as ee "
                 + "inner join ee.bioAssays as ba "
-                + "inner join ba.samplesUsed as sample "
-                + "inner join sample.sourceTaxon as childtaxon where childtaxon.parentTaxon  = :taxon ";
+                + "inner join ba.samplesUsed as sample where sample.sourceTaxon = :taxon ";
         return this.getHibernateTemplate().findByNamedParam( queryString, "taxon", taxon );
     }
 
@@ -253,16 +282,14 @@ public class DifferentialExpressionAnalysisDaoImpl extends
         }
 
         if ( batch.size() > 0 ) {
-            if ( !taxon.getIsSpecies() ) {
-                log.debug( "Finding children taxa experiments" );
-                Object[] values = { batch, taxon };
-                result.addAll( this.getHibernateTemplate()
-                        .findByNamedParam( queryStringParentTaxon, paramNames, values ) );
-            } else {
-                result.addAll( this.getHibernateTemplate().findByNamedParam( queryString,
-                        new String[] { "probes", "taxon" }, new Object[] { batch, gene.getTaxon() } ) );
-            }
+            log.debug( "Finding children taxa experiments" );
+            Object[] values = { batch, taxon };
+            result.addAll( this.getHibernateTemplate().findByNamedParam( queryStringParentTaxon, paramNames, values ) );
+        } else {
+            result.addAll( this.getHibernateTemplate().findByNamedParam( queryString,
+                    new String[] { "probes", "taxon" }, new Object[] { batch, gene.getTaxon() } ) );
         }
+
         if ( timer.getTime() > 1000 ) {
             log.info( "Find experiments: " + timer.getTime() + " ms" );
         }
@@ -297,7 +324,7 @@ public class DifferentialExpressionAnalysisDaoImpl extends
     protected void handleThaw( final DifferentialExpressionAnalysis differentialExpressionAnalysis ) throws Exception {
         HibernateTemplate templ = this.getHibernateTemplate();
 
-        templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+        templ.execute( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
 
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
                 session.lock( differentialExpressionAnalysis, LockMode.NONE );
@@ -323,26 +350,6 @@ public class DifferentialExpressionAnalysisDaoImpl extends
                 return null;
             }
         } );
-    }
-
-    public long countProbesMeetingThreshold( ExpressionAnalysisResultSet ears, double threshold ) {
-
-        String query = "select count(r) from ExpressionAnalysisResultSetImpl rs inner join rs.results r where rs = :rs and r.correctedPvalue < :threshold";
-
-        String[] paramNames = { "rs", "threshold" };
-        Object[] objectValues = { ears, threshold };
-
-        List qresult = this.getHibernateTemplate().findByNamedParam( query, paramNames, objectValues );
-
-        Long count = null;
-        for ( Object o : qresult ) {
-
-            count = ( Long ) o;
-            log.info( "Found " + count + " differentially expressed genes in result set (" + ears.getId()
-                    + ") at a threshold of " + threshold );
-
-        }
-        return count;
     }
 
 }

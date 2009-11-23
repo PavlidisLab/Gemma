@@ -19,6 +19,29 @@ import ubic.gemma.model.common.quantitationtype.QuantitationType;
  */
 public interface RawExpressionDataVectorDao extends DesignElementDataVectorDao<RawExpressionDataVector> {
     /**
+     * 
+     */
+    public java.util.Collection<RawExpressionDataVector> find( java.util.Collection<QuantitationType> quantitationTypes );
+
+    /**
+     * 
+     */
+    public RawExpressionDataVector find( RawExpressionDataVector designElementDataVector );
+
+    /**
+     * 
+     */
+    public java.util.Collection<RawExpressionDataVector> find(
+            ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType );
+
+    /**
+     * 
+     */
+    public java.util.Collection<RawExpressionDataVector> find(
+            ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign,
+            ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType );
+
+    /**
      * <p>
      * remove Design Element Data Vectors and Probe2ProbeCoexpression entries for a specified CompositeSequence.
      * </p>
@@ -33,28 +56,5 @@ public interface RawExpressionDataVectorDao extends DesignElementDataVectorDao<R
      * </p>
      */
     public void removeDataForQuantitationType(
-            ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType );
-
-    /**
-     * 
-     */
-    public RawExpressionDataVector find( RawExpressionDataVector designElementDataVector );
-
-    /**
-     * 
-     */
-    public java.util.Collection<RawExpressionDataVector> find( java.util.Collection<QuantitationType> quantitationTypes );
-
-    /**
-     * 
-     */
-    public java.util.Collection<RawExpressionDataVector> find(
-            ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType );
-
-    /**
-     * 
-     */
-    public java.util.Collection<RawExpressionDataVector> find(
-            ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign,
             ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType );
 }

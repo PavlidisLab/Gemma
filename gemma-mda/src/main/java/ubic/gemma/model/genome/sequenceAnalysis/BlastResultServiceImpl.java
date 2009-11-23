@@ -18,9 +18,12 @@
  */
 package ubic.gemma.model.genome.sequenceAnalysis;
 
+import org.springframework.stereotype.Service;
+
 /**
  * @see ubic.gemma.model.genome.sequenceAnalysis.BlastResultService
  */
+@Service
 public class BlastResultServiceImpl extends ubic.gemma.model.genome.sequenceAnalysis.BlastResultServiceBase {
 
     /**
@@ -29,7 +32,7 @@ public class BlastResultServiceImpl extends ubic.gemma.model.genome.sequenceAnal
     @Override
     protected ubic.gemma.model.genome.sequenceAnalysis.BlastResult handleCreate(
             ubic.gemma.model.genome.sequenceAnalysis.BlastResult blastResult ) throws java.lang.Exception {
-        return ( BlastResult ) this.getBlastResultDao().create( blastResult );
+        return this.getBlastResultDao().create( blastResult );
     }
 
     /*

@@ -29,6 +29,8 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.rosuda.REngine.REXPMismatchException;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Service;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.dataStructure.matrix.FastRowAccessDoubleMatrix;
@@ -69,11 +71,12 @@ import ubic.gemma.model.expression.experiment.FactorValue;
  * Statistics are obtained in the same way.
  * <p>
  * qvalue(pvals)$qvalues
- * 
- * @spring.bean id="oneWayAnovaAnalyzer"
+ *  
  * @author keshav
  * @version $Id$
  */
+@Service
+@Scope(value="prototype")
 public class OneWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer {
 
     private Map<Integer, DesignElement> filteredMatrixDesignElementIndexMap = null;
@@ -333,6 +336,9 @@ public class OneWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer 
 
         expressionAnalysis.setName( this.getClass().getSimpleName() );
         expressionAnalysis.setDescription( "One-way ANOVA for " + experimentalFactor );
+        
+        disconnectR();
+        
         log.info( "R analysis done" );
         return expressionAnalysis;
 

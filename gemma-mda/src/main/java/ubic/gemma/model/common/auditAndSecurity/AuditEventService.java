@@ -18,28 +18,62 @@
  */
 package ubic.gemma.model.common.auditAndSecurity;
 
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.security.access.annotation.Secured;
+
+import ubic.gemma.model.common.Auditable;
+import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
+
 /**
- * 
+ * @author paul
+ * @version $Id$
  */
 public interface AuditEventService {
 
     /**
-     * <p>
      * Returns a collection of Auditables created since the date given.
-     * </p>
      */
-    public java.util.Collection getNewSinceDate( java.util.Date date );
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    public java.util.Collection<Auditable> getNewSinceDate( java.util.Date date );
 
     /**
-     * <p>
      * Returns a collection of Auditable objects that were updated since the date entered.
-     * </p>
      */
-    public java.util.Collection getUpdatedSinceDate( java.util.Date date );
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    public java.util.Collection<Auditable> getUpdatedSinceDate( java.util.Date date );
 
     /**
      * 
      */
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY" })
     public void thaw( ubic.gemma.model.common.auditAndSecurity.AuditEvent auditEvent );
+
+    /**
+     * @param auditable
+     * @return
+     */
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY" })
+    public List<AuditEvent> getEvents( Auditable auditable );
+
+    /**
+     * @param auditable
+     * @param type
+     * @return
+     */
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    public AuditEvent getLastEvent( Auditable auditable, Class<? extends AuditEventType> type );
+
+    /**
+     * Return a map of Auditables to AuditEvents for the given AuditEventType.
+     */
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_MAP_READ" })
+    public Map<Auditable, AuditEvent> getLastEvent( java.util.Collection<? extends Auditable> auditables,
+            Class<? extends AuditEventType> type );
+
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY" })
+    public AuditEvent getLastOutstandingTroubleEvent( Collection<AuditEvent> events );
 
 }

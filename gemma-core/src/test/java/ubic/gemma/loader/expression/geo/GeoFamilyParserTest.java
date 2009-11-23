@@ -22,6 +22,9 @@ import java.io.InputStream;
 import java.util.zip.GZIPInputStream;
 
 import junit.framework.TestCase;
+
+import org.junit.Test;
+
 import ubic.gemma.loader.expression.geo.model.GeoPlatform;
 import ubic.gemma.loader.expression.geo.model.GeoSample;
 
@@ -34,57 +37,12 @@ public class GeoFamilyParserTest extends TestCase {
     InputStream is;
     GeoFamilyParser parser;
 
-    /*
-     * @see TestCase#setUp()
-     */
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
-        parser = new GeoFamilyParser();
-    }
-
+    @Test
     public void testParseBigA() throws Exception {
         is = new GZIPInputStream( this.getClass().getResourceAsStream(
                 "/data/loader/expression/geo/fullSizeTests/GSE1623_family.soft.txt.gz" ) );
         parser.parse( is );
         assertEquals( 8, ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSamples().size() );
-    }
-
-    // /**
-    // * This is a SAGE file, with repeated tags. - we don't support this.
-    // *
-    // * @throws Exception
-    // */
-    // public void testParseBigB() throws Exception {
-    // is = new GZIPInputStream( this.getClass().getResourceAsStream(
-    // "/data/loader/expression/geo/fullSizeTests/GSE993_family.soft.txt.gz" ) );
-    // parser.parse( is );
-    // assertEquals( 1, ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSamples().size() );
-    // }
-
-    public void testParseGenePix() throws Exception {
-        is = new GZIPInputStream( this.getClass().getResourceAsStream(
-                "/data/loader/expression/geo/shortGenePix/GSE2221_family.soft.gz" ) );
-        parser.parse( is );
-        GeoSample sample = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSamples().values()
-                .iterator().next();
-        assertTrue( sample.isGenePix() );
-        assertEquals( 54, sample.getColumnNames().size() ); // includes ones we aren't using.
-    }
-
-    /**
-     * Failed with a 'already a datum for CH1_BKG ... ' error. GSE1347 has same problem.
-     * 
-     * @throws Exception
-     */
-    public void testParseGse432() throws Exception {
-        is = new GZIPInputStream( this.getClass().getResourceAsStream(
-                "/data/loader/expression/geo/gse432Short/GSE432_family.soft.gz" ) );
-        parser.parse( is );
-        // GeoSeries series = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSeriesMap().get( "GSE432"
-        // );
-        // GeoValues values = series.getValues();
-        // System.err.print( values );
     }
 
     /**
@@ -138,12 +96,60 @@ public class GeoFamilyParserTest extends TestCase {
         assertEquals( 12488, p.getColumnData( "GB_ACC" ).size() );
     }
 
+    // /**
+    // * This is a SAGE file, with repeated tags. - we don't support this.
+    // *
+    // * @throws Exception
+    // */
+    // public void testParseBigB() throws Exception {
+    // is = new GZIPInputStream( this.getClass().getResourceAsStream(
+    // "/data/loader/expression/geo/fullSizeTests/GSE993_family.soft.txt.gz" ) );
+    // parser.parse( is );
+    // assertEquals( 1, ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSamples().size() );
+    // }
+
     public void testParseDataset() throws Exception {
         is = new GZIPInputStream( this.getClass().getResourceAsStream(
                 "/data/loader/expression/geo/fullSizeTests/GDS100.soft.txt.gz" ) );
         assert is != null;
         parser.parse( is );
         assertEquals( 8, ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSamples().size() );
+    }
+
+    @Test
+    public void testParseGenePix() throws Exception {
+        is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/shortGenePix/GSE2221_family.soft.gz" ) );
+        parser.parse( is );
+        GeoSample sample = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSamples().values()
+                .iterator().next();
+        assertTrue( sample.isGenePix() );
+        assertEquals( 54, sample.getColumnNames().size() ); // includes ones we aren't using.
+    }
+
+    /**
+     * Failed with a 'already a datum for CH1_BKG ... ' error. GSE1347 has same problem.
+     * 
+     * @throws Exception
+     */
+    @Test
+    public void testParseGse432() throws Exception {
+        is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/gse432Short/GSE432_family.soft.gz" ) );
+        parser.parse( is );
+        // GeoSeries series = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSeriesMap().get( "GSE432"
+        // );
+        // GeoValues values = series.getValues();
+        // System.err.print( values );
+    }
+
+    /*
+     * @see TestCase#setUp()
+     */
+    @Override
+    protected void setUp() throws Exception {
+        super.setUp();
+        parser = new GeoFamilyParser();
     }
 
 }

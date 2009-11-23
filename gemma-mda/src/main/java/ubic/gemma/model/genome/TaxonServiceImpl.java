@@ -20,10 +20,13 @@ package ubic.gemma.model.genome;
 
 import java.util.Collection;
 
+import org.springframework.stereotype.Service;
+
 /**
  * @author keshav
  * @version $Id$
  */
+@Service
 public class TaxonServiceImpl extends ubic.gemma.model.genome.TaxonServiceBase {
 
     /**
@@ -44,6 +47,11 @@ public class TaxonServiceImpl extends ubic.gemma.model.genome.TaxonServiceBase {
     }
 
     @Override
+    protected Taxon handleFindByAbbreviation( String abbreviation ) throws Exception {
+        return this.getTaxonDao().findByAbbreviation( abbreviation );
+    }
+
+    @Override
     protected Taxon handleFindByCommonName( String commonName ) throws Exception {
         return this.getTaxonDao().findByCommonName( commonName );
     }
@@ -53,11 +61,15 @@ public class TaxonServiceImpl extends ubic.gemma.model.genome.TaxonServiceBase {
         return this.getTaxonDao().findByScientificName( scientificName );
     }
 
+    /**
+     * @see ubic.gemma.model.genome.TaxonService#findChildTaxaByParent(ubic.gemma.model.genome.Taxon)
+     */
     @Override
-    protected Taxon handleFindByAbbreviation( String abbreviation ) throws Exception {
-        return this.getTaxonDao().findByAbbreviation( abbreviation );
+    protected Collection<Taxon> handleFindChildTaxaByParent( ubic.gemma.model.genome.Taxon taxon )
+            throws java.lang.Exception {
+        return this.getTaxonDao().findChildTaxaByParent( taxon );
     }
-    
+
     @Override
     protected Taxon handleFindOrCreate( Taxon taxon ) throws Exception {
         return this.getTaxonDao().findOrCreate( taxon );
@@ -68,7 +80,6 @@ public class TaxonServiceImpl extends ubic.gemma.model.genome.TaxonServiceBase {
         return this.getTaxonDao().load( id );
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     protected Collection<Taxon> handleLoadAll() throws Exception {
         return this.getTaxonDao().loadAll();
@@ -90,13 +101,4 @@ public class TaxonServiceImpl extends ubic.gemma.model.genome.TaxonServiceBase {
         this.getTaxonDao().update( taxon );
     }
 
-    /**
-     * @see ubic.gemma.model.genome.TaxonService#findChildTaxaByParent(ubic.gemma.model.genome.Taxon)
-     */
-    @SuppressWarnings("unchecked")
-    @Override
-    protected Collection<Taxon> handleFindChildTaxaByParent( ubic.gemma.model.genome.Taxon taxon ) throws java.lang.Exception {
-        return this.getTaxonDao().findChildTaxaByParent( taxon );
-    }
-    
 }

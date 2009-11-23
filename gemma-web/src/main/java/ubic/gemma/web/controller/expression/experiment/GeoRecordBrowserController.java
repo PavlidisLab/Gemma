@@ -24,30 +24,30 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 
 import ubic.gemma.loader.expression.geo.model.GeoRecord;
 import ubic.gemma.loader.expression.geo.service.GeoBrowserService;
-import ubic.gemma.web.controller.BaseMultiActionController;
 
 /**
- * @spring.bean id="geoRecordBrowserController"
- * @spring.property name="geoBrowserService" ref="geoBrowserService"
- * @spring.property name="methodNameResolver" ref="geoRecordBrowserActions"
  * @version $Id$
  * @author pavlidis
  */
-public class GeoRecordBrowserController extends BaseMultiActionController {
+@Controller
+public class GeoRecordBrowserController {
 
     private static final int DEFAULT_BATCH_SIZE = 50;
     private static final int DEFAULT_START = 0;
-    GeoBrowserService geoBrowserService;
 
-    public void setGeoBrowserService( GeoBrowserService geoBrowserService ) {
-        this.geoBrowserService = geoBrowserService;
-    }
+    @Autowired
+    private GeoBrowserService geoBrowserService;
 
-    public ModelAndView showBatch( HttpServletRequest request, HttpServletResponse response ) {
+    @RequestMapping("/admin/geoBrowser/showBatch.html")
+    @SuppressWarnings("unused")
+    public ModelAndView handleRequest( HttpServletRequest request, HttpServletResponse response ) throws Exception {
 
         boolean next = request.getParameter( "next" ) != null;
         boolean prev = request.getParameter( "prev" ) != null;
@@ -93,7 +93,7 @@ public class GeoRecordBrowserController extends BaseMultiActionController {
 
         Collection<GeoRecord> geoRecords = geoBrowserService.getRecentGeoRecords( start, count );
 
-        ModelAndView mav = new ModelAndView( "geoRecordBrowser" );
+        ModelAndView mav = new ModelAndView( "/admin/geoRecordBrowser" );
 
         mav.addObject( "start", start );
         if ( geoRecords != null ) {
@@ -104,4 +104,9 @@ public class GeoRecordBrowserController extends BaseMultiActionController {
         }
         return mav;
     }
+
+    public void setGeoBrowserService( GeoBrowserService geoBrowserService ) {
+        this.geoBrowserService = geoBrowserService;
+    }
+
 }

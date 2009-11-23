@@ -50,16 +50,18 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.index.CorruptIndexException;
 import org.apache.lucene.index.IndexWriter;
+import org.apache.lucene.index.IndexWriter.MaxFieldLength;
 import org.apache.lucene.queryParser.ParseException;
 import org.apache.lucene.queryParser.QueryParser;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
-import org.apache.lucene.search.Hits;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.PhraseQuery;
 import org.apache.lucene.search.PrefixQuery;
 import org.apache.lucene.search.Query;
-import org.apache.lucene.search.Searcher;
+import org.apache.lucene.search.ScoreDoc;
+import org.apache.lucene.search.TopDocCollector;
+import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.LockObtainFailedException;
 import org.apache.lucene.store.RAMDirectory;
@@ -73,9 +75,10 @@ import org.compass.core.CompassHits;
 import org.compass.core.CompassQuery;
 import org.compass.core.CompassSession;
 import org.compass.core.CompassTemplate;
-import org.compass.core.CompassTransaction;
 import org.compass.core.engine.SearchEngineException;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import ubic.gemma.model.association.Gene2GOAssociationService;
 import ubic.gemma.model.common.Auditable;
@@ -123,7 +126,13 @@ import ubic.gemma.util.ReflectionUtil;
  * @author keshav
  * @version $Id$
  */
+@Service
 public class SearchService implements InitializingBean {
+
+    /**
+     * Key for internal in-memory on-the-fly indexes
+     */
+    private static final String INDEX_KEY = "content";
 
     /**
      * Defines the properties we look at for 'highlighting'.
@@ -174,47 +183,58 @@ public class SearchService implements InitializingBean {
 
     private Cache childTermCache;
 
+    @Autowired
     private Gene2GOAssociationService gene2GOAssociationService;
 
+    @Autowired
     private GeneService geneService;
 
+    @Autowired
     private GeneProductService geneProductService;
 
+    @Autowired
     private CompositeSequenceService compositeSequenceService;
 
+    @Autowired
     private ArrayDesignService arrayDesignService;
 
+    @Autowired
     private ExpressionExperimentService expressionExperimentService;
 
+    @Autowired
     private BibliographicReferenceService bibliographicReferenceService;
 
+    @Autowired
     private BioSequenceService bioSequenceService;
 
+    @Autowired
     private CharacteristicService characteristicService;
 
+    @Autowired
     private OntologyService ontologyService;
 
+    @Autowired
     private TaxonService taxonService;
 
-    private Compass geneBean;
+    @Autowired
+    private Compass compassGene;
 
-    private Compass eeBean;
+    @Autowired
+    private Compass compassExpression;
 
-    private Compass arrayBean;
+    @Autowired
+    private Compass compassArray;
 
-    private Compass bibliographicReferenceBean;
+    @Autowired
+    private Compass compassBibliographic;
 
-    private Compass biosequenceBean;
+    @Autowired
+    private Compass compassBiosequence;
 
-    /**
-     * @param cacheManager the cacheManager to set
-     */
-    public void setCacheManager( CacheManager cacheManager ) {
-        this.cacheManager = cacheManager;
-    }
+    @Autowired
+    private Compass compassProbe;
 
-    private Compass probeBean;
-
+    @Autowired
     private CacheManager cacheManager;
 
     /*
@@ -256,13 +276,12 @@ public class SearchService implements InitializingBean {
      * @param settings
      * @return Map of Class to SearchResults. The results are already filtered for security considerations.
      */
-    @SuppressWarnings("unchecked")
-    public Map<Class, List<SearchResult>> search( SearchSettings settings ) {
-        Map<Class, List<SearchResult>> searchResults = new HashMap<Class, List<SearchResult>>();
+    public Map<Class<?>, List<SearchResult>> search( SearchSettings settings ) {
+        Map<Class<?>, List<SearchResult>> searchResults = new HashMap<Class<?>, List<SearchResult>>();
         try {
             searchResults = this.search( settings, true );
         } catch ( Exception e ) {
-            log.error( "Search error for " + settings + ". Error is: " + e.getMessage() );
+            log.error( "Search error: " + e.getMessage() );
         }
         return searchResults;
     }
@@ -276,15 +295,14 @@ public class SearchService implements InitializingBean {
      * @return
      * @see SearchService.search(SearchSettings settings)
      */
-    @SuppressWarnings("unchecked")
-    public Map<Class, List<SearchResult>> search( SearchSettings settings, boolean fillObjects ) {
+    public Map<Class<?>, List<SearchResult>> search( SearchSettings settings, boolean fillObjects ) {
 
         String searchString = StringEscapeUtils.escapeJava( StringUtils.strip( settings.getQuery() ) ); // probably not
         // necessay to
         // escape...
 
         if ( StringUtils.isBlank( searchString ) ) {
-            return new HashMap<Class, List<SearchResult>>();
+            return new HashMap<Class<?>, List<SearchResult>>();
         }
 
         List<SearchResult> rawResults = new ArrayList<SearchResult>();
@@ -327,7 +345,7 @@ public class SearchService implements InitializingBean {
             accreteResults( rawResults, bibliographicReferences );
         }
 
-        Map<Class, List<SearchResult>> sortedLimitedResults = getSortedLimitedResults( settings, rawResults,
+        Map<Class<?>, List<SearchResult>> sortedLimitedResults = getSortedLimitedResults( settings, rawResults,
                 fillObjects );
 
         log.info( "search for: " + settings.getQuery() + " " + rawResults.size()
@@ -372,101 +390,6 @@ public class SearchService implements InitializingBean {
             }
         }
         return eeIds;
-    }
-
-    /**
-     * @param arrayBean the arrayBean to set
-     */
-    public void setArrayBean( Compass arrayBean ) {
-        this.arrayBean = arrayBean;
-    }
-
-    public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
-        this.arrayDesignService = arrayDesignService;
-    }
-
-    /**
-     * @param bibliographicReferenceBean the bibliographicReferenceBean to set
-     */
-    public void setBibliographicReferenceBean( Compass bibliographicReferenceBean ) {
-        this.bibliographicReferenceBean = bibliographicReferenceBean;
-    }
-
-    public void setBibliographicReferenceService( BibliographicReferenceService bibliographicReferenceService ) {
-        this.bibliographicReferenceService = bibliographicReferenceService;
-    }
-
-    public void setBiosequenceBean( Compass biosequenceBean ) {
-        this.biosequenceBean = biosequenceBean;
-    }
-
-    /**
-     * @param bioSequenceService the bioSequenceService to set
-     */
-    public void setBioSequenceService( BioSequenceService bioSequenceService ) {
-        this.bioSequenceService = bioSequenceService;
-    }
-
-    public void setCharacteristicService( CharacteristicService characteristicService ) {
-        this.characteristicService = characteristicService;
-    }
-
-    /**
-     * @param compositeSequenceService the compositeSequenceService to set
-     */
-    public void setCompositeSequenceService( CompositeSequenceService compositeSequenceService ) {
-        this.compositeSequenceService = compositeSequenceService;
-    }
-
-    /**
-     * @param eeBean the eeBean to set
-     */
-    public void setEeBean( Compass eeBean ) {
-        this.eeBean = eeBean;
-    }
-
-    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
-        this.expressionExperimentService = expressionExperimentService;
-    }
-
-    public void setGene2GOAssociationService( Gene2GOAssociationService gene2GOAssociationService ) {
-        this.gene2GOAssociationService = gene2GOAssociationService;
-    }
-
-    /**
-     * @param geneBean the geneBean to set
-     */
-    public void setGeneBean( Compass geneBean ) {
-        this.geneBean = geneBean;
-    }
-
-    /**
-     * @param geneProductService the geneProductService to set
-     */
-    public void setGeneProductService( GeneProductService geneProductService ) {
-        this.geneProductService = geneProductService;
-    }
-
-    /**
-     * @param geneService The geneService to set.
-     */
-    public void setGeneService( GeneService geneService ) {
-        this.geneService = geneService;
-    }
-
-    public void setOntologyService( OntologyService ontologyService ) {
-        this.ontologyService = ontologyService;
-    }
-
-    /**
-     * @param probeBean the probeBean to set
-     */
-    public void setProbeBean( Compass probeBean ) {
-        this.probeBean = probeBean;
-    }
-
-    public void setTaxonService( TaxonService taxonService ) {
-        this.taxonService = taxonService;
     }
 
     /**
@@ -827,7 +750,7 @@ public class SearchService implements InitializingBean {
      * @return {@link Collection}
      */
     private Collection<SearchResult> compassArrayDesignSearch( SearchSettings settings ) {
-        return compassSearch( arrayBean, settings );
+        return compassSearch( compassArray, settings );
     }
 
     /**
@@ -835,7 +758,7 @@ public class SearchService implements InitializingBean {
      * @return
      */
     private Collection<SearchResult> compassBibliographicReferenceSearch( SearchSettings settings ) {
-        return compassSearch( bibliographicReferenceBean, settings );
+        return compassSearch( compassBibliographic, settings );
     }
 
     /**
@@ -848,11 +771,10 @@ public class SearchService implements InitializingBean {
      * @return
      * @throws Exception
      */
-    @SuppressWarnings("unchecked")
     private Collection<SearchResult> compassBioSequenceSearch( SearchSettings settings,
             Collection<SearchResult> previousGeneSearchResults ) {
 
-        Collection<SearchResult> results = compassSearch( biosequenceBean, settings );
+        Collection<SearchResult> results = compassSearch( compassBiosequence, settings );
 
         Collection<SearchResult> geneResults = null;
         if ( previousGeneSearchResults == null ) {
@@ -881,7 +803,7 @@ public class SearchService implements InitializingBean {
      * @return
      */
     private Collection<SearchResult> compassCompositeSequenceSearch( final SearchSettings settings ) {
-        return compassSearch( probeBean, settings );
+        return compassSearch( compassProbe, settings );
     }
 
     /**
@@ -891,7 +813,7 @@ public class SearchService implements InitializingBean {
      * @return {@link Collection}
      */
     private Collection<SearchResult> compassExpressionSearch( SearchSettings settings ) {
-        return compassSearch( eeBean, settings );
+        return compassSearch( compassExpression, settings );
     }
 
     /**
@@ -899,7 +821,7 @@ public class SearchService implements InitializingBean {
      * @return
      */
     private Collection<SearchResult> compassGeneSearch( final SearchSettings settings ) {
-        return compassSearch( geneBean, settings );
+        return compassSearch( compassGene, settings );
     }
 
     /**
@@ -913,12 +835,11 @@ public class SearchService implements InitializingBean {
         if ( !settings.isUseIndices() ) return new HashSet<SearchResult>();
 
         CompassTemplate template = new CompassTemplate( bean );
-        Collection<SearchResult> searchResults = ( Collection<SearchResult> ) template.execute(
-                CompassTransaction.TransactionIsolation.READ_ONLY_READ_COMMITTED, new CompassCallback() {
-                    public Object doInCompass( CompassSession session ) throws CompassException {
-                        return performSearch( settings, session );
-                    }
-                } );
+        Collection<SearchResult> searchResults = ( Collection<SearchResult> ) template.execute( new CompassCallback() {
+            public Object doInCompass( CompassSession session ) throws CompassException {
+                return performSearch( settings, session );
+            }
+        } );
         if ( log.isDebugEnabled() ) {
             log.debug( "Compass search via " + bean.getSettings().getSetting( "compass.name" ) + " : " + settings
                     + " -> " + searchResults.size() + " hits" );
@@ -971,7 +892,7 @@ public class SearchService implements InitializingBean {
      */
     private Document createDocument( String content ) {
         Document doc = new Document();
-        Field f = new Field( "", content, Field.Store.YES, Field.Index.TOKENIZED );
+        Field f = new Field( INDEX_KEY, content, Field.Store.YES, Field.Index.ANALYZED );
         doc.add( f );
         return doc;
     }
@@ -1133,7 +1054,6 @@ public class SearchService implements InitializingBean {
      * @return
      * @throws Exception
      */
-    @SuppressWarnings("unchecked")
     private Collection<SearchResult> databaseGeneSearch( SearchSettings settings ) {
 
         if ( !settings.isUseDatabase() ) return new HashSet<SearchResult>();
@@ -1370,18 +1290,28 @@ public class SearchService implements InitializingBean {
             Query parsedQuery ) {
         Collection<SearchResult> results = new HashSet<SearchResult>();
         try {
+
             Map<String, Collection<SearchResult>> invertedMatches = new HashMap<String, Collection<SearchResult>>();
             Directory idx = indexCharacteristicHits( matches, invertedMatches );
-            Searcher searcher = new IndexSearcher( idx );
-            Hits hits = searcher.search( parsedQuery );
+            IndexSearcher searcher = new IndexSearcher( idx );
+            TopDocCollector hc = new TopDocCollector( 1000 );
+            searcher.search( parsedQuery, hc );
 
-            int hitCount = hits.length();
+            TopDocs topDocs = hc.topDocs();
+
+            int hitcount = topDocs.totalHits;
+
             /*
              * If we got hits, it means that some of our results match... so we have to retrive the objects.
              */
-            for ( int i = 0; i < hitCount; i++ ) {
-                Document doc = hits.doc( i );
-                String match = doc.getField( "" ).stringValue();
+
+            for ( int i = 0; i < hitcount; i++ ) {
+
+                ScoreDoc scoreDoc = topDocs.scoreDocs[i];
+
+                Document doc = searcher.doc( scoreDoc.doc );
+
+                String match = doc.getField( INDEX_KEY ).stringValue();
                 Collection<SearchResult> resultsMatching = invertedMatches.get( match );
                 if ( resultsMatching != null ) {
                     log.debug( "All matches to '" + match + "': " + resultsMatching.size() );
@@ -1646,10 +1576,10 @@ public class SearchService implements InitializingBean {
      * @param rawResults
      * @param fillObjects
      */
-    private Map<Class, List<SearchResult>> getSortedLimitedResults( SearchSettings settings,
+    private Map<Class<?>, List<SearchResult>> getSortedLimitedResults( SearchSettings settings,
             List<SearchResult> rawResults, boolean fillObjects ) {
 
-        Map<Class, List<SearchResult>> results = new HashMap<Class, List<SearchResult>>();
+        Map<Class<?>, List<SearchResult>> results = new HashMap<Class<?>, List<SearchResult>>();
         Collections.sort( rawResults );
 
         results.put( ArrayDesign.class, new ArrayList<SearchResult>() );
@@ -1670,7 +1600,8 @@ public class SearchService implements InitializingBean {
             /*
              * FIXME This is unpleasant and should be removed when BioSequences are correctly detached.
              */
-            Class resultClass = EntityUtils.getImplementationForProxy( sr.getResultObject() ).getClass();
+            Class<? extends Object> resultClass = EntityUtils.getImplementationForProxy( sr.getResultObject() )
+                    .getClass();
 
             resultClass = ReflectionUtil.getBaseForImpl( resultClass );
 
@@ -1683,7 +1614,7 @@ public class SearchService implements InitializingBean {
              * Now retrieve the entities and put them in the SearchResult. Entities that are filtered out by the
              * SecurityInterceptor will be removed at this stage.
              */
-            for ( Class clazz : results.keySet() ) {
+            for ( Class<? extends Object> clazz : results.keySet() ) {
                 List<SearchResult> r = results.get( clazz );
                 if ( r.size() == 0 ) continue;
                 Map<Long, SearchResult> rMap = new HashMap<Long, SearchResult>();
@@ -1694,7 +1625,7 @@ public class SearchService implements InitializingBean {
                     }
                 }
 
-                Collection entities = retrieveResultEntities( clazz, r );
+                Collection<? extends Object> entities = retrieveResultEntities( clazz, r );
                 List<SearchResult> filteredResults = new ArrayList<SearchResult>();
                 for ( Object entity : entities ) {
                     Long id = EntityUtils.getId( entity );
@@ -1730,7 +1661,7 @@ public class SearchService implements InitializingBean {
          * of date); maybe there is an easier way
          */
         RAMDirectory idx = new RAMDirectory();
-        IndexWriter writer = new IndexWriter( idx, this.analyzer, true );
+        IndexWriter writer = new IndexWriter( idx, this.analyzer, true, MaxFieldLength.LIMITED );
 
         for ( SearchResult o : matches.keySet() ) {
             String text = matches.get( o );
@@ -1860,7 +1791,7 @@ public class SearchService implements InitializingBean {
      * @return
      */
     @SuppressWarnings("unchecked")
-    private Collection retrieveResultEntities( Class entityClass, List<SearchResult> results ) {
+    private Collection<? extends Object> retrieveResultEntities( Class entityClass, List<SearchResult> results ) {
         List<Long> ids = getIds( results );
         if ( ExpressionExperiment.class.isAssignableFrom( entityClass ) ) {
             return expressionExperimentService.loadMultiple( ids );

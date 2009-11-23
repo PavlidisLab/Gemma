@@ -31,12 +31,6 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 public class CompositeSequenceParserTest extends TestCase {
     InputStream designElementStream;
 
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
-        designElementStream = this.getClass().getResourceAsStream( "/data/loader/expression/arrayDesign/MG-U74A.txt" );
-    }
-
     public void testParseInputStream() throws Exception {
         CompositeSequenceParser csp = new CompositeSequenceParser();
 
@@ -47,6 +41,12 @@ public class CompositeSequenceParserTest extends TestCase {
         assertTrue( results.size() == 33 );
         assertTrue( results.iterator().next().getName().endsWith( "_at" ) );
         assertTrue( results.iterator().next().getDescription().startsWith( "\"" ) );
+    }
+
+    @Override
+    protected void setUp() throws Exception {
+        super.setUp();
+        designElementStream = this.getClass().getResourceAsStream( "/data/loader/expression/arrayDesign/MG-U74A.txt" );
     }
 
 }

@@ -18,10 +18,9 @@
  */
 package ubic.gemma.web.controller.common.description.bibref;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.List;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -29,16 +28,17 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 
 import ubic.gemma.loader.entrez.pubmed.PubMedXMLFetcher;
 import ubic.gemma.model.common.description.BibliographicReference;
-import ubic.gemma.model.common.description.BibliographicReferenceImpl;
 import ubic.gemma.model.common.description.BibliographicReferenceService;
-import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.PersisterHelper;
-import ubic.gemma.web.controller.BaseMultiActionController;
+import ubic.gemma.web.controller.BaseController;
 import ubic.gemma.web.util.EntityNotFoundException;
 
 /**
@@ -46,27 +46,95 @@ import ubic.gemma.web.util.EntityNotFoundException;
  * pubMed.Detail.view when they click on a specific link in that list.
  * 
  * @author keshav
- * @author pavlidis
- * @version $Id$
- * @spring.bean id="bibliographicReferenceController" name="/bibRefList.html"
- * @spring.property name = "bibliographicReferenceService" ref="bibliographicReferenceService"
- * @spring.property name="persisterHelper" ref="persisterHelper"
- * @spring.property name="methodNameResolver" ref="bibRefActions"
- * @spring.property name="pubMedXmlFetcher" ref="pubMedXmlFetcher"
  */
-public class BibliographicReferenceController extends BaseMultiActionController {
+@Controller
+@RequestMapping("/bibRef")
+public class BibliographicReferenceController extends BaseController {
     private static Log log = LogFactory.getLog( BibliographicReferenceController.class.getName() );
 
+    @Autowired
     private BibliographicReferenceService bibliographicReferenceService = null;
+    @Autowired
     private PersisterHelper persisterHelper;
     private final String messagePrefix = "Reference with PubMed Id";
-    private PubMedXMLFetcher pubMedXmlFetcher;
+    private PubMedXMLFetcher pubMedXmlFetcher = new PubMedXMLFetcher();
+
+    /**
+     * Add or update a record.
+     * 
+     * @param request
+     * @param response
+     * @return
+     */
+    @RequestMapping("/bibRefAdd.html")
+    public ModelAndView add( HttpServletRequest request, HttpServletResponse response ) {
+        String pubMedId = request.getParameter( "acc" ); // FIXME: allow use of the primary key as well.
+
+        if ( pubMedId == null ) {
+            throw new EntityNotFoundException( "Must provide a PubMed Id" );
+        }
+
+        BibliographicReference bibRef = bibliographicReferenceService.findByExternalId( pubMedId );
+        if ( bibRef == null ) {
+            bibRef = this.pubMedXmlFetcher.retrieveByHTTP( Integer.parseInt( pubMedId ) );
+            if ( bibRef == null ) {
+                throw new EntityNotFoundException( "Could not locate reference with pubmed id=" + pubMedId );
+            }
+            bibRef = ( BibliographicReference ) persisterHelper.persist( bibRef );
+            saveMessage( request, "Added " + pubMedId + " to the system." );
+        } else if ( StringUtils.isNotBlank( request.getParameter( "refresh" ) ) ) {
+
+            this.update( bibRef.getId() );
+            bibRef = bibliographicReferenceService.load( bibRef.getId() );
+
+            saveMessage( request, "Updated record for pubmed id " + pubMedId );
+        }
+
+        return new ModelAndView( "bibRefView" ).addObject( "bibliographicReference", bibRef ).addObject(
+                "existsInSystem", Boolean.TRUE );
+    }
 
     /**
      * @param request
      * @param response
      * @return
      */
+    @RequestMapping("/deleteBibRef.html")
+    public ModelAndView delete( HttpServletRequest request, HttpServletResponse response ) {
+        String pubMedId = request.getParameter( "acc" );
+
+        if ( pubMedId == null ) {
+            // should be a validation error.
+            throw new EntityNotFoundException( "Must provide a PubMed Id" );
+        }
+
+        BibliographicReference bibRef = bibliographicReferenceService.findByExternalId( pubMedId );
+        if ( bibRef == null ) {
+            String message = "There is no reference with accession=" + pubMedId + " in the system any more.";
+            saveMessage( request, message );
+            return new ModelAndView( "bibRefView" ).addObject( "errors", message );
+        }
+
+        return doDelete( request, bibRef );
+    }
+
+    /**
+     * @param bibliographicReferenceService The bibliographicReferenceService to set.
+     */
+    public void setBibliographicReferenceService( BibliographicReferenceService bibliographicReferenceService ) {
+        this.bibliographicReferenceService = bibliographicReferenceService;
+    }
+
+    public void setPersisterHelper( PersisterHelper persisterHelper ) {
+        this.persisterHelper = persisterHelper;
+    }
+
+    /**
+     * @param request
+     * @param response
+     * @return
+     */
+    @RequestMapping("/bibRefView.html")
     public ModelAndView show( HttpServletRequest request, HttpServletResponse response ) {
         String pubMedId = request.getParameter( "accession" );
 
@@ -89,6 +157,31 @@ public class BibliographicReferenceController extends BaseMultiActionController 
         addMessage( request, "object.found", new Object[] { messagePrefix, pubMedId } );
         return new ModelAndView( "bibRefView" ).addObject( "bibliographicReference", bibRef ).addObject(
                 "existsInSystem", Boolean.TRUE ).addObject( "incompleteEntry", isIncomplete );
+    }
+
+    /**
+     * @param request
+     * @param response
+     * @return
+     */
+    @RequestMapping("/showAllEeBibRefs.html")
+    public ModelAndView showAllForExperiments( HttpServletRequest request, HttpServletResponse response ) {
+        Map<ExpressionExperiment, BibliographicReference> allExperimentLinkedReferences = bibliographicReferenceService
+                .getAllExperimentLinkedReferences();
+
+        Collection<BibliographicReferenceValueObject> vos = new HashSet<BibliographicReferenceValueObject>();
+        for ( ExpressionExperiment e : allExperimentLinkedReferences.keySet() ) {
+            BibliographicReference b = allExperimentLinkedReferences.get( e );
+            BibliographicReferenceValueObject vo = new BibliographicReferenceValueObject( b );
+
+            if ( !vos.contains( vo ) ) {
+                vos.add( vo );
+            }
+
+            vo.getExperiments().add( e );
+        }
+
+        return new ModelAndView( "bibRefList" ).addObject( "bibliographicReferences", vos );
     }
 
     /**
@@ -125,106 +218,6 @@ public class BibliographicReferenceController extends BaseMultiActionController 
     }
 
     /**
-     * Add or update a record.
-     * 
-     * @param request
-     * @param response
-     * @return
-     */
-    public ModelAndView add( HttpServletRequest request, HttpServletResponse response ) {
-        String pubMedId = request.getParameter( "acc" ); // FIXME: allow use of the primary key as well.
-
-        if ( pubMedId == null ) {
-            throw new EntityNotFoundException( "Must provide a PubMed Id" );
-        }
-
-        BibliographicReference bibRef = bibliographicReferenceService.findByExternalId( pubMedId );
-        if ( bibRef == null ) {
-            bibRef = this.pubMedXmlFetcher.retrieveByHTTP( Integer.parseInt( pubMedId ) );
-            if ( bibRef == null ) {
-                throw new EntityNotFoundException( "Could not locate reference with pubmed id=" + pubMedId );
-            }
-            bibRef = ( BibliographicReference ) persisterHelper.persist( bibRef );
-            saveMessage( request, "Added " + pubMedId + " to the system." );
-        } else if ( StringUtils.isNotBlank( request.getParameter( "refresh" ) ) ) {
-
-            this.update( bibRef.getId() );
-            bibRef = bibliographicReferenceService.load( bibRef.getId() );
-
-            saveMessage( request, "Updated record for pubmed id " + pubMedId );
-        }
-
-        return new ModelAndView( "bibRefView" ).addObject( "bibliographicReference", bibRef ).addObject(
-                "existsInSystem", Boolean.TRUE );
-    }
-
-    /**
-     * @param request
-     * @param response
-     * @return
-     */
-    @SuppressWarnings( { "unchecked" })
-    public ModelAndView showAllForExperiments( HttpServletRequest request, HttpServletResponse response ) {
-        Collection<BibliographicReference> allExperimentLinkedReferences = bibliographicReferenceService
-                .getAllExperimentLinkedReferences();
-
-        // FIXME this loop is slow; instead just put a link to the service method to get the experiments.
-        Collection<BibliographicReferenceValueObject> vos = new HashSet<BibliographicReferenceValueObject>();
-        for ( BibliographicReference b : allExperimentLinkedReferences ) {
-            Collection<ExpressionExperiment> ees = bibliographicReferenceService.getRelatedExperiments( b );
-            BibliographicReferenceValueObject vo = new BibliographicReferenceValueObject( b );
-            vo.setExperiments( ees );
-            vos.add( vo );
-        }
-
-        return new ModelAndView( "bibRefList" ).addObject( "bibliographicReferences", vos );
-    }
-
-    /**
-     * @param request
-     * @param response
-     * @return
-     */
-    public ModelAndView delete( HttpServletRequest request, HttpServletResponse response ) {
-        String pubMedId = request.getParameter( "acc" );
-
-        if ( pubMedId == null ) {
-            // should be a validation error.
-            throw new EntityNotFoundException( "Must provide a PubMed Id" );
-        }
-
-        BibliographicReference bibRef = bibliographicReferenceService.findByExternalId( pubMedId );
-        if ( bibRef == null ) {
-            String message = "There is no reference with accession=" + pubMedId + " in the system any more.";
-            saveMessage( request, message );
-            return new ModelAndView( "bibRefView" ).addObject( "errors", message );
-        }
-
-        return doDelete( request, bibRef );
-    }
-
-    /**
-     * Error handler for 'not found' condition.
-     * 
-     * @param request
-     * @param response
-     * @param error
-     * @return
-     */
-    @SuppressWarnings( { "unchecked" })
-    public ModelAndView notFoundError( HttpServletRequest request, HttpServletResponse response,
-            EntityNotFoundException error ) {
-        List<String> errors = ( List<String> ) request.getAttribute( "errors" );
-        if ( errors == null ) {
-            errors = new ArrayList<String>();
-        }
-        errors.add( error.getMessage() );
-        request.setAttribute( "errors", errors );
-        saveMessage( request, error.getMessage() );
-        return new ModelAndView( "bibRefView", "bibliographicReference", null );
-    }
-
-    /**
      * @param request
      * @param locale
      * @param bibRef
@@ -235,39 +228,6 @@ public class BibliographicReferenceController extends BaseMultiActionController 
         log.info( "Bibliographic reference with pubMedId: " + bibRef.getPubAccession().getAccession() + " deleted" );
         addMessage( request, "object.deleted", new Object[] { messagePrefix, bibRef.getPubAccession().getAccession() } );
         return new ModelAndView( "bibRefView", "bibliographicReference", bibRef );
-    }
-
-    /**
-     * @param bibliographicReferenceService The bibliographicReferenceService to set.
-     */
-    public void setBibliographicReferenceService( BibliographicReferenceService bibliographicReferenceService ) {
-        this.bibliographicReferenceService = bibliographicReferenceService;
-    }
-
-    /*
-     * (non-Javadoc)
-     * @see org.springframework.web.servlet.mvc.multiaction.MultiActionController#newCommandObject(java.lang.Class)
-     */
-    @SuppressWarnings("unchecked")
-    @Override
-    protected Object newCommandObject( Class clazz ) throws Exception {
-        if ( clazz.isAssignableFrom( BibliographicReferenceImpl.class ) ) {
-            BibliographicReference bibRef = BibliographicReference.Factory.newInstance();
-            bibRef.setPubAccession( DatabaseEntry.Factory.newInstance() );
-            return bibRef;
-        }
-        return super.newCommandObject( clazz );
-    }
-
-    /**
-     * @param pubMedXmlFetcher The pubMedXmlFetcher to set.
-     */
-    public void setPubMedXmlFetcher( PubMedXMLFetcher pubMedXmlFetcher ) {
-        this.pubMedXmlFetcher = pubMedXmlFetcher;
-    }
-
-    public void setPersisterHelper( PersisterHelper persisterHelper ) {
-        this.persisterHelper = persisterHelper;
     }
 
 }

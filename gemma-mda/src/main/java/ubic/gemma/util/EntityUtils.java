@@ -27,6 +27,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
+import org.hibernate.LockMode;
+import org.hibernate.Session;
 import org.hibernate.proxy.HibernateProxy;
 
 /**
@@ -112,6 +114,30 @@ public class EntityUtils {
      */
     public static void unProxy( Object target ) {
         target = getImplementationForProxy( target );
+    }
+
+    /**
+     * Put the given entity into the Session, with LockMode.NONE
+     * <p>
+     * Based on idea from {@link https://forum.hibernate.org/viewtopic.php?p=2284826#p2284826}
+     * 
+     * @param session Hibernate Session (use factory.getCurrentSession())
+     * @param obj the entity
+     * @param clazz the class type of the persisted entity. Don't use obj.getClass() as this might return a proxy type.
+     * @param id identifier of the obj
+     */
+    public static void attach( Session session, Object obj, Class<?> clazz, Long id ) {
+        if ( obj == null || id == null ) return;
+        if ( !session.isOpen() ) throw new IllegalArgumentException( "Illegal attempt to use a closed session" );
+        if ( !session.contains( obj ) ) {
+
+            Object oldObj = session.get( clazz, id );
+
+            if ( oldObj != null ) {
+                session.evict( oldObj );
+            }
+        }
+        session.lock( obj, LockMode.NONE );
     }
 
 }

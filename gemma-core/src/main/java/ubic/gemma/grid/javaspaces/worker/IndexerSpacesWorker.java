@@ -19,12 +19,11 @@
 
 package ubic.gemma.grid.javaspaces.worker;
 
-import org.springframework.security.context.SecurityContextHolder;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import ubic.gemma.grid.javaspaces.AbstractSpacesWorkerCLI;
 import ubic.gemma.grid.javaspaces.CustomDelegatingWorker;
-import ubic.gemma.grid.javaspaces.index.IndexerTask;
-import ubic.gemma.util.SecurityUtil;
+import ubic.gemma.grid.javaspaces.task.index.IndexerTask; 
 
 /**
  * Worker for indexing jobs.
@@ -75,8 +74,6 @@ public class IndexerSpacesWorker extends AbstractSpacesWorkerCLI {
      */
     public static void main( String[] args ) {
         log.info( "Starting GemmaSpaces worker to index Gemma ..." );
-
-        SecurityUtil.passAuthenticationToChildThreads();
 
         IndexerSpacesWorker p = new IndexerSpacesWorker();
         try {

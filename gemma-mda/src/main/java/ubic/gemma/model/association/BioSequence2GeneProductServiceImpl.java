@@ -18,10 +18,14 @@
  */
 package ubic.gemma.model.association;
 
+import org.springframework.stereotype.Service;
+
 /**
  * @see ubic.gemma.model.association.BioSequence2GeneProductService
  */
-public class BioSequence2GeneProductServiceImpl extends ubic.gemma.model.association.BioSequence2GeneProductServiceBase {
+@Service
+public abstract class BioSequence2GeneProductServiceImpl extends
+        ubic.gemma.model.association.BioSequence2GeneProductServiceBase {
 
     /**
      * @see ubic.gemma.model.association.BioSequence2GeneProductService#create(ubic.gemma.model.association.BioSequence2GeneProduct)

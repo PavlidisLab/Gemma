@@ -24,8 +24,6 @@ import java.util.Observer;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import ubic.gemma.util.progress.ProgressData;
-
 /**
  * Just a mock client inner class to ease testing
  * 
@@ -37,29 +35,6 @@ public class MockClient implements Observer {
     private static Log log = LogFactory.getLog( MockClient.class.getName() );
 
     private static final long TIMEOUT = 600000;
-    private int update;
-
-    private ProgressData pData;
-
-    public MockClient() {
-        super();
-        this.update = 0;
-    }
-
-    @SuppressWarnings("unused")
-    public void update( Observable o, Object pd ) {
-        pData = ( ProgressData ) pd;
-        update++;
-    }
-
-    public int upDateTimes() {
-        return this.update;
-
-    }
-
-    public ProgressData getProgressData() {
-        return pData;
-    }
 
     /**
      * monitors the a background (test) progress that was started and returns after 60 seconds or when it is finished.
@@ -106,5 +81,28 @@ public class MockClient implements Observer {
             throw new IllegalStateException( "Test timed out" );
         }
         return mc.getProgressData();
+    }
+
+    private int update;
+
+    private ProgressData pData;
+
+    public MockClient() {
+        super();
+        this.update = 0;
+    }
+
+    public ProgressData getProgressData() {
+        return pData;
+    }
+
+    public void update( Observable o, Object pd ) {
+        pData = ( ProgressData ) pd;
+        update++;
+    }
+
+    public int upDateTimes() {
+        return this.update;
+
     }
 }

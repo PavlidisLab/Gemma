@@ -39,15 +39,16 @@ import org.hibernate.LockMode;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
+import org.hibernate.SessionFactory;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.type.LongType;
-import org.springframework.orm.hibernate3.HibernateCallback;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
 
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.DatabaseEntry;
-import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
@@ -57,17 +58,20 @@ import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.util.BusinessKey;
 import ubic.gemma.util.ChannelUtils;
 import ubic.gemma.util.CommonQueries;
+import ubic.gemma.util.EntityUtils;
 
 /**
  * @author pavlidis
  * @version $Id$
  * @see ubic.gemma.model.expression.experiment.ExpressionExperiment
  */
+@Repository
 public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase {
 
     static Log log = LogFactory.getLog( ExpressionExperimentDaoImpl.class.getName() );
@@ -75,6 +79,11 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
     private static final int BATCH_SIZE = 1000;
 
     private static final String EXPRESSION_EXPERIMENT_QCACHE_REGION = "expressionExperiment-qc";
+
+    @Autowired
+    public ExpressionExperimentDaoImpl( SessionFactory sessionFactory ) {
+        super.setSessionFactory( sessionFactory );
+    }
 
     public ExpressionExperiment expressionExperimentValueObjectToEntity(
             ExpressionExperimentValueObject expressionExperimentValueObject ) {
@@ -231,152 +240,157 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
     @Override
     public void remove( final ExpressionExperiment toDelete ) {
 
+        Session session = this.getSession();
+
         // Note that links and analyses are deleted separately - see the ExpressionExperimentService.
-        this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback() {
-                    public Object doInHibernate( Session session ) throws HibernateException {
 
-                        // At this point, the ee is probably still in the session, as the service already has gotten it
-                        // in this transaction.
-                        session.flush();
-                        session.clear();
+        // At this point, the ee is probably still in the session, as the service already has gotten it
+        // in this transaction.
+        session.flush();
+        session.clear();
 
-                        session.lock( toDelete, LockMode.NONE );
+        session.lock( toDelete, LockMode.NONE );
 
-                        Hibernate.initialize( toDelete.getBioAssayDataVectors() );
-                        Hibernate.initialize( toDelete.getAuditTrail() );
+        Hibernate.initialize( toDelete.getBioAssayDataVectors() );
+        Hibernate.initialize( toDelete.getAuditTrail() );
 
-                        Set<BioAssayDimension> dims = new HashSet<BioAssayDimension>();
-                        Set<QuantitationType> qts = new HashSet<QuantitationType>();
-                        Collection<RawExpressionDataVector> designElementDataVectors = toDelete
-                                .getRawExpressionDataVectors();
-                        Hibernate.initialize( designElementDataVectors );
-                        toDelete.setRawExpressionDataVectors( null );
+        Set<BioAssayDimension> dims = new HashSet<BioAssayDimension>();
+        Set<QuantitationType> qts = new HashSet<QuantitationType>();
+        Collection<RawExpressionDataVector> designElementDataVectors = toDelete.getRawExpressionDataVectors();
+        Hibernate.initialize( designElementDataVectors );
+        toDelete.setRawExpressionDataVectors( null );
 
-                        int count = 0;
-                        log.info( "Removing Design Element Data Vectors ..." );
-                        for ( RawExpressionDataVector dv : designElementDataVectors ) {
-                            dims.add( dv.getBioAssayDimension() );
-                            qts.add( dv.getQuantitationType() );
-                            dv.setBioAssayDimension( null );
-                            dv.setQuantitationType( null );
-                            session.delete( dv );
-                            if ( ++count % 1000 == 0 ) {
-                                session.flush();
-                            }
-                            if ( count % 20000 == 0 ) {
-                                log.info( count + " design Element data vectors deleted" );
-                            }
-                        }
-                        count = 0;
-                        designElementDataVectors.clear();
+        int count = 0;
+        if ( designElementDataVectors != null ) {
+            log.info( "Removing Design Element Data Vectors ..." );
+            for ( RawExpressionDataVector dv : designElementDataVectors ) {
+                BioAssayDimension bad = dv.getBioAssayDimension();
+                dims.add( bad );
+                QuantitationType qt = dv.getQuantitationType();
+                qts.add( qt );
+                dv.setBioAssayDimension( null );
+                dv.setQuantitationType( null );
+                session.delete( dv );
+                if ( ++count % 1000 == 0 ) {
+                    session.flush();
+                }
+                // put back...
+                dv.setBioAssayDimension( bad );
+                dv.setQuantitationType( qt );
 
-                        Collection<ProcessedExpressionDataVector> processedVectors = toDelete
-                                .getProcessedExpressionDataVectors();
+                if ( count % 20000 == 0 ) {
+                    log.info( count + " design Element data vectors deleted" );
+                }
+            }
+            count = 0;
+            // designElementDataVectors.clear();
+        }
 
-                        Hibernate.initialize( processedVectors );
-                        if ( processedVectors != null && processedVectors.size() > 0 ) {
+        Collection<ProcessedExpressionDataVector> processedVectors = toDelete.getProcessedExpressionDataVectors();
 
-                            toDelete.setProcessedExpressionDataVectors( null );
+        Hibernate.initialize( processedVectors );
+        if ( processedVectors != null && processedVectors.size() > 0 ) {
 
-                            for ( ProcessedExpressionDataVector dv : processedVectors ) {
-                                dims.add( dv.getBioAssayDimension() );
-                                qts.add( dv.getQuantitationType() );
-                                dv.setBioAssayDimension( null );
-                                dv.setQuantitationType( null );
-                                session.delete( dv );
-                                if ( ++count % 1000 == 0 ) {
-                                    session.flush();
-                                }
-                                if ( count % 20000 == 0 ) {
-                                    log.info( count + " processed design Element data vectors deleted" );
-                                }
-                            }
-                            processedVectors.clear();
-                        }
+            toDelete.setProcessedExpressionDataVectors( null );
 
-                        // this can take a while.
-                        log.info( "Flushing changes ..." );
-                        session.flush();
-                        session.clear();
-                        session.update( toDelete );
+            for ( ProcessedExpressionDataVector dv : processedVectors ) {
+                BioAssayDimension bad = dv.getBioAssayDimension();
+                dims.add( bad );
+                QuantitationType qt = dv.getQuantitationType();
+                qts.add( qt );
+                dv.setBioAssayDimension( null );
+                dv.setQuantitationType( null );
+                session.delete( dv );
+                if ( ++count % 1000 == 0 ) {
+                    session.flush();
+                }
+                if ( count % 20000 == 0 ) {
+                    log.info( count + " processed design Element data vectors deleted" );
+                }
 
-                        log.info( "Removing BioAssay Dimensions ..." );
-                        for ( BioAssayDimension dim : dims ) {
-                            dim.getBioAssays().clear();
-                            session.update( dim );
-                            session.delete( dim );
-                        }
-                        dims.clear();
-                        session.flush();
+                // put back..
+                dv.setBioAssayDimension( bad );
+                dv.setQuantitationType( qt );
+            }
+            // processedVectors.clear();
+        }
 
-                        log.info( "Removing Bioassays and biomaterials ..." );
-                        Collection<BioMaterial> bioMaterialsToDelete = new HashSet<BioMaterial>();
-                        for ( BioAssay ba : toDelete.getBioAssays() ) {
-                            // delete references to files on disk
-                            for ( LocalFile lf : ba.getDerivedDataFiles() ) {
-                                for ( LocalFile sf : lf.getSourceFiles() ) {
-                                    session.delete( sf );
-                                }
-                                lf.getSourceFiles().clear();
-                                session.delete( lf );
-                            }
-                            ba.getDerivedDataFiles().clear();
+        session.flush();
+        session.clear();
+        session.update( toDelete );
 
-                            // Delete raw data files
-                            if ( ba.getRawDataFile() != null ) {
-                                session.delete( ba.getRawDataFile() );
-                                ba.setRawDataFile( null );
-                                // session.flush();
-                            }
-                            session.saveOrUpdate( ba );
-                            Collection<BioMaterial> biomaterials = ba.getSamplesUsed();
-                            bioMaterialsToDelete.addAll( biomaterials );
-                            for ( BioMaterial bm : biomaterials ) {
+        log.info( "Removing BioAssay Dimensions ..." );
+        for ( BioAssayDimension dim : dims ) {
+            dim.getBioAssays().clear();
+            session.update( dim );
+            session.delete( dim );
+        }
+        dims.clear();
+        session.flush();
 
-                                // fix for bug 855 - make sure this collection
-                                // is initialized.
-                                bm = ( BioMaterial ) session.merge( bm );
-                                Hibernate.initialize( bm.getBioAssaysUsedIn() );
-                                Hibernate.initialize( bm.getFactorValues() );
-                                bm.getFactorValues().clear();
-                                bm.getBioAssaysUsedIn().clear();
-                                session.saveOrUpdate( bm );
-                            }
-                            biomaterials.clear();
-                            // session.evict( ba );
-                        }
+        log.info( "Removing Bioassays and biomaterials ..." );
 
-                        session.flush();
+        // keep to put back in the object.
+        Map<BioAssay, Collection<BioMaterial>> copyOfRelations = new HashMap<BioAssay, Collection<BioMaterial>>();
 
-                        log.info( "Last bits ..." );
+        Collection<BioMaterial> bioMaterialsToDelete = new HashSet<BioMaterial>();
+        Collection<BioAssay> bioAssays = toDelete.getBioAssays();
 
-                        for ( BioMaterial bm : bioMaterialsToDelete ) {
-                            session.evict( bm );
-                        }
+        for ( BioAssay ba : bioAssays ) {
+            // relations to files cascade, so we only have to worry about biomaterials, which aren't cascaded from
+            // anywhere.
 
-                        for ( QuantitationType qt : qts ) {
-                            session.delete( qt );
-                        }
+            Collection<BioMaterial> biomaterials = ba.getSamplesUsed();
 
-                        // log.info( "Finishing up ..." );
-                        session.flush();
-                        // session.clear();
-                        session.update( toDelete );
-                        session.delete( toDelete );
+            ba.setSamplesUsed( null ); // let this cascade?? It doesn't. biomaterial-bioassay is many-to-many.
 
-                        session.getSessionFactory().evictQueries( EXPRESSION_EXPERIMENT_QCACHE_REGION );
+            copyOfRelations.put( ba, biomaterials );
 
-                        log.info( "Deleted " + toDelete );
-                        return null;
-                    }
-                } );
+            bioMaterialsToDelete.addAll( biomaterials );
+            for ( BioMaterial bm : biomaterials ) {
+                // see bug 855
+                session.lock( bm, LockMode.NONE );
+                Hibernate.initialize( bm );
+                // this can easily end up with an unattached object.
+                Hibernate.initialize( bm.getBioAssaysUsedIn() );
+
+                bm.setFactorValues( null );
+                bm.getBioAssaysUsedIn().clear();
+
+            }
+        }
+
+        log.info( "Last bits ..." );
+
+        // We delete them here in case they are associated to more than one bioassay-- no cascade is possible.
+        for ( BioMaterial bm : bioMaterialsToDelete ) {
+            session.delete( bm );
+        }
+
+        for ( QuantitationType qt : qts ) {
+            session.delete( qt );
+        }
+
+        session.delete( toDelete );
+
+        session.getSessionFactory().evictQueries( EXPRESSION_EXPERIMENT_QCACHE_REGION );
+
+        /*
+         * Put transient instances back. This is possibly useful for clearing ACLS.
+         */
+        toDelete.setProcessedExpressionDataVectors( processedVectors );
+        toDelete.setRawExpressionDataVectors( designElementDataVectors );
+        for ( BioAssay ba : toDelete.getBioAssays() ) {
+            ba.setSamplesUsed( copyOfRelations.get( ba ) );
+        }
+
+        log.info( "Deleted " + toDelete );
     }
 
     @Override
     protected Integer handleCountAll() throws Exception {
         final String queryString = "select count(*) from ExpressionExperimentImpl";
-        List list = getHibernateTemplate().find( queryString );
+        List<?> list = getHibernateTemplate().find( queryString );
         return ( ( Long ) list.iterator().next() ).intValue();
     }
 
@@ -394,13 +408,12 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         return getHibernateTemplate().findByNamedParam( queryString, "bibID", bibRefID );
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     protected ExpressionExperiment handleFindByBioMaterial( BioMaterial bm ) throws Exception {
 
         final String queryString = "select distinct ee from ExpressionExperimentImpl as ee "
                 + "inner join ee.bioAssays as ba inner join ba.samplesUsed as sample where sample = :bm";
-        List list = getHibernateTemplate().findByNamedParam( queryString, "bm", bm );
+        List<?> list = getHibernateTemplate().findByNamedParam( queryString, "bm", bm );
         if ( list.size() == 0 ) {
             log.warn( "No expression experiment for " + bm );
             return null;
@@ -455,7 +468,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         Collection<Long> eeIds = null;
 
         try {
-            Session session = super.getSession( false );
+            Session session = super.getSession();
             org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString );
             queryObject.setLong( "geneID", gene.getId() );
             queryObject.setDouble( "rank", rank );
@@ -542,7 +555,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         Collection<Long> eeIds = null;
 
         try {
-            Session session = super.getSession( false );
+            Session session = super.getSession();
             org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString );
             queryObject.setLong( "geneID", gene.getId() );
             queryObject.addScalar( "eeID", new LongType() );
@@ -558,6 +571,21 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         }
 
         return this.load( eeIds );
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see
+     * ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleFindByParentTaxon(ubic.gemma.model.genome
+     * . Taxon)
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    protected Collection<ExpressionExperiment> handleFindByParentTaxon( Taxon taxon ) throws Exception {
+        final String queryString = "select distinct ee from ExpressionExperimentImpl as ee "
+                + "inner join ee.bioAssays as ba " + "inner join ba.samplesUsed as sample "
+                + "inner join sample.sourceTaxon as childtaxon where childtaxon.parentTaxon  = :taxon ";
+        return getHibernateTemplate().findByNamedParam( queryString, "taxon", taxon );
     }
 
     @SuppressWarnings("unchecked")
@@ -587,21 +615,6 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         final String queryString = "select distinct ee from ExpressionExperimentImpl as ee "
                 + "inner join ee.bioAssays as ba "
                 + "inner join ba.samplesUsed as sample where sample.sourceTaxon = :taxon ";
-        return getHibernateTemplate().findByNamedParam( queryString, "taxon", taxon );
-    }
-
-    /*
-     * (non-Javadoc)
-     * @see
-     * ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleFindByParentTaxon(ubic.gemma.model.genome
-     * . Taxon)
-     */
-    @SuppressWarnings("unchecked")
-    @Override
-    protected Collection<ExpressionExperiment> handleFindByParentTaxon( Taxon taxon ) throws Exception {
-        final String queryString = "select distinct ee from ExpressionExperimentImpl as ee "
-                + "inner join ee.bioAssays as ba " + "inner join ba.samplesUsed as sample "
-                + "inner join sample.sourceTaxon as childtaxon where childtaxon.parentTaxon  = :taxon ";
         return getHibernateTemplate().findByNamedParam( queryString, "taxon", taxon );
     }
 
@@ -640,12 +653,13 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
      * Collection)
      */
     @Override
-    protected Map handleGetArrayDesignAuditEvents( Collection ids ) throws Exception {
+    protected Map<Long, Map<Long, Collection<AuditEvent>>> handleGetArrayDesignAuditEvents( Collection<Long> ids )
+            throws Exception {
         final String queryString = "select ee.id, ad.id, event " + "from ExpressionExperimentImpl ee "
                 + "inner join ee.bioAssays b " + "inner join b.arrayDesignUsed ad " + "inner join ad.auditTrail trail "
                 + "inner join trail.events event " + "where ee.id in (:ids) ";
 
-        List result = getHibernateTemplate().findByNamedParam( queryString, "ids", ids );
+        List<?> result = getHibernateTemplate().findByNamedParam( queryString, "ids", ids );
 
         Map<Long, Map<Long, Collection<AuditEvent>>> eventMap = new HashMap<Long, Map<Long, Collection<AuditEvent>>>();
         // process list of expression experiment ids that have events
@@ -744,17 +758,27 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
     protected long handleGetBioMaterialCount( ExpressionExperiment expressionExperiment ) throws Exception {
         final String queryString = "select count(distinct sample) from ExpressionExperimentImpl as ee "
                 + "inner join ee.bioAssays as ba " + "inner join ba.samplesUsed as sample where ee.id = :eeId ";
-        List result = getHibernateTemplate().findByNamedParam( queryString, "eeId", expressionExperiment.getId() );
+        List<?> result = getHibernateTemplate().findByNamedParam( queryString, "eeId", expressionExperiment.getId() );
         return ( Long ) result.iterator().next();
     }
 
-    // FIXME
+    /*
+     * (non-Javadoc)
+     * @see
+     * ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleGetDesignElementDataVectorCountById(
+     * long)
+     */
     @Override
     protected long handleGetDesignElementDataVectorCountById( long Id ) {
+
+        /*
+         * Note that this gets the count of RAW vectors.
+         */
+
         final String queryString = "select count(dedv) from ExpressionExperimentImpl ee "
                 + "inner join ee.rawExpressionDataVectors dedv where ee.id = :ee";
 
-        List list = getHibernateTemplate().findByNamedParam( queryString, "ee", Id );
+        List<?> list = getHibernateTemplate().findByNamedParam( queryString, "ee", Id );
         if ( list.size() == 0 ) {
             log.warn( "No vectors for experiment with id " + Id );
             return 0;
@@ -790,15 +814,15 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
      */
     @SuppressWarnings("unchecked")
     @Override
-    protected Collection handleGetDesignElementDataVectors( Collection designElements, QuantitationType quantitationType )
-            throws Exception {
+    protected Collection handleGetDesignElementDataVectors( Collection<? extends DesignElement> designElements,
+            QuantitationType quantitationType ) throws Exception {
         if ( designElements == null || designElements.size() == 0 ) return new HashSet();
 
         assert quantitationType.getId() != null;
 
         final String queryString = "select dev from RawExpressionDataVectorImpl as dev inner join dev.designElement as de "
-                + " where de in (:de) and dev.quantitationType = :qt";
-        return getHibernateTemplate().findByNamedParam( queryString, new String[] { "de", "qt" },
+                + " where de in (:des) and dev.quantitationType = :qt";
+        return getHibernateTemplate().findByNamedParam( queryString, new String[] { "des", "qt" },
                 new Object[] { designElements, quantitationType } );
     }
 
@@ -840,7 +864,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         Map<ExpressionExperiment, AuditEvent> result = new HashMap<ExpressionExperiment, AuditEvent>();
 
         try {
-            Session session = super.getSession( false );
+            Session session = super.getSession();
             org.hibernate.Query queryObject = session.createQuery( queryString );
             queryObject.setCacheable( true );
             queryObject.setParameterList( "ads", ads );
@@ -892,7 +916,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                 + " where ee = :ee " + classRestriction + " order by event.date desc ";
 
         try {
-            Session session = super.getSession( false );
+            Session session = super.getSession();
             org.hibernate.Query queryObject = session.createQuery( queryString );
             queryObject.setCacheable( true );
             queryObject.setMaxResults( 1 );
@@ -930,11 +954,12 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
 
         Map<Taxon, Long> taxonCount = new HashMap<Taxon, Long>();
         final String queryString = "select t, count(distinct ee) from ExpressionExperimentImpl "
-                + "ee inner join ee.bioAssays as ba inner join ba.samplesUsed su inner join su.sourceTaxon t group by t";
+                + "ee inner join ee.bioAssays as ba inner join ba.samplesUsed su "
+                + "inner join su.sourceTaxon t where ee.publiclyViewable=true group by t";
 
         try {
             // it is important to cache this, as it gets called on the home page.
-            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            org.hibernate.Query queryObject = super.getSession().createQuery( queryString );
             queryObject.setCacheable( true );
             ScrollableResults list = queryObject.scroll();
             while ( list.next() ) {
@@ -1188,7 +1213,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                 + " group by ee order by ee.name";
 
         try {
-            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            org.hibernate.Query queryObject = super.getSession().createQuery( queryString );
 
             queryObject.setCacheable( true );
             Map<Long, Collection<QuantitationType>> qtMap = getQuantitationTypeMap( null );
@@ -1260,7 +1285,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
 
             List<Long> idl = new ArrayList<Long>( ids );
             Collections.sort( idl ); // so it's consistent and therefore cacheable.
-            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            org.hibernate.Query queryObject = super.getSession().createQuery( queryString );
 
             Map<Long, Collection<QuantitationType>> qtMap = getQuantitationTypeMap( idl );
 
@@ -1291,8 +1316,8 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                 v.setArrayDesignCount( ( Long ) res[9] );
                 v.setShortName( ( String ) res[10] );
                 v.setDateCreated( ( ( Date ) res[11] ) );
-                if ( !qtMap.isEmpty() && res[12] != null ) {
-                    String type = res[12].toString();
+                if ( !qtMap.isEmpty() && res[11] != null ) {
+                    String type = res[11].toString();
                     fillQuantitationTypeInfo( qtMap, v, eeId, type );
                 }
                 v.setClazz( ( String ) res[13] );
@@ -1311,86 +1336,108 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
      * (non-Javadoc)
      * @see
      * ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleThaw(ubic.gemma.model.expression.experiment
-     * .ExpressionExperiment)
+     * .ExpressionExperiment, boolean)
      */
     @Override
-    protected void handleThaw( final ExpressionExperiment expressionExperiment ) throws Exception {
-        thawBioAssays( expressionExperiment );
-        this.getHibernateTemplate().executeWithNativeSession( new HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                session.lock( expressionExperiment, LockMode.NONE );
-                Hibernate.initialize( expressionExperiment.getRawExpressionDataVectors() );
-                Hibernate.initialize( expressionExperiment.getProcessedExpressionDataVectors() );
-                return null;
-            }
-        } );
-    }
-
-    // thaw lite. Misnamed because it thaws out things other than the bioassays.
-    @Override
-    protected void handleThawBioAssays( final ExpressionExperiment ee ) {
+    protected void handleThaw( ExpressionExperiment ee, boolean vectorsAlso ) {
         if ( ee == null ) {
             return;
         }
-        this.getHibernateTemplate().executeWithNativeSession( new HibernateCallback() {
 
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                session.lock( ee, LockMode.NONE );
+        if ( ee.getId() == null ) throw new IllegalArgumentException( "Id cannot be null, cannot be thawed: " + ee );
 
-                Hibernate.initialize( ee );
-                Hibernate.initialize( ee.getQuantitationTypes() );
-                Hibernate.initialize( ee.getCharacteristics() );
-                Hibernate.initialize( ee.getInvestigators() );
+        Session session = this.getSessionFactory().getCurrentSession();
+        EntityUtils.attach( session, ee, ExpressionExperimentImpl.class, ee.getId() );
 
-                for ( QuantitationType type : ee.getQuantitationTypes() ) {
-                    session.lock( type, LockMode.NONE );
-                    Hibernate.initialize( type );
-                    session.evict( type );
-                }
-                Hibernate.initialize( ee.getAuditTrail().getEvents() );
-                thawReferences( ee, session );
+        Hibernate.initialize( ee );
+        Hibernate.initialize( ee.getQuantitationTypes() );
+        Hibernate.initialize( ee.getCharacteristics() );
+        Hibernate.initialize( ee.getInvestigators() );
 
-                ExperimentalDesign experimentalDesign = ee.getExperimentalDesign();
-                if ( experimentalDesign != null ) {
-                    session.lock( experimentalDesign, LockMode.NONE );
-                    Hibernate.initialize( experimentalDesign );
-                    Hibernate.initialize( experimentalDesign.getExperimentalFactors() );
-                    experimentalDesign.getTypes().size();
-                    for ( ExperimentalFactor factor : experimentalDesign.getExperimentalFactors() ) {
-                        Hibernate.initialize( factor.getAnnotations() );
-                        for ( FactorValue f : factor.getFactorValues() ) {
-                            Hibernate.initialize( f.getCharacteristics() );
-                            if ( f.getMeasurement() != null ) {
-                                Hibernate.initialize( f.getMeasurement() );
-                                if ( f.getMeasurement().getUnit() != null ) {
-                                    Hibernate.initialize( f.getMeasurement().getUnit() );
-                                }
-                            }
+        for ( QuantitationType type : ee.getQuantitationTypes() ) {
+            type = ( QuantitationType ) session.get( type.getClass(), type.getId(), LockMode.NONE );
+            Hibernate.initialize( type );
+            session.evict( type );
+        }
+
+        if ( ee.getAuditTrail() != null ) Hibernate.initialize( ee.getAuditTrail().getEvents() );
+        thawReferences( ee, session );
+
+        ExperimentalDesign experimentalDesign = ee.getExperimentalDesign();
+        if ( experimentalDesign != null ) {
+            session.lock( experimentalDesign, LockMode.NONE );
+            Hibernate.initialize( experimentalDesign );
+            Hibernate.initialize( experimentalDesign.getExperimentalFactors() );
+            experimentalDesign.getTypes().size();
+            for ( ExperimentalFactor factor : experimentalDesign.getExperimentalFactors() ) {
+                Hibernate.initialize( factor.getAnnotations() );
+                for ( FactorValue f : factor.getFactorValues() ) {
+                    Hibernate.initialize( f.getCharacteristics() );
+                    if ( f.getMeasurement() != null ) {
+                        Hibernate.initialize( f.getMeasurement() );
+                        if ( f.getMeasurement().getUnit() != null ) {
+                            Hibernate.initialize( f.getMeasurement().getUnit() );
                         }
-                        session.evict( factor );
                     }
                 }
-
-                if ( ee.getAccession() != null ) ee.getAccession().getExternalDatabase();
-                for ( BioAssay ba : ee.getBioAssays() ) {
-                    Hibernate.initialize( ba );
-                    Hibernate.initialize( ba.getSamplesUsed() );
-                    for ( BioMaterial bm : ba.getSamplesUsed() ) {
-                        Hibernate.initialize( bm );
-                        // FIXME this causes a "collection is not associated with any session" error
-                        // Hibernate.initialize( bm.getBioAssaysUsedIn() );
-                        Hibernate.initialize( bm.getFactorValues() );
-                        session.evict( bm );
-                    }
-                    Hibernate.initialize( ba.getDerivedDataFiles() );
-                    Hibernate.initialize( ba.getArrayDesignUsed() );
-                    session.evict( ba );
-                }
-                session.clear(); // FIXME this could cause problems??
-                return null;
+                session.evict( factor );
             }
-        } );
+        }
 
+        if ( ee.getAccession() != null ) ee.getAccession().getExternalDatabase();
+        for ( BioAssay ba : ee.getBioAssays() ) {
+            Hibernate.initialize( ba );
+            Hibernate.initialize( ba.getSamplesUsed() );
+            for ( BioMaterial bm : ba.getSamplesUsed() ) {
+                session.lock( bm, LockMode.NONE );
+                Hibernate.initialize( bm );
+                // FIXME this often causes a "collection is not associated with any session" error ... but if we don't
+                // thaw it we get lazy exceptions later.
+                try {
+                    Hibernate.initialize( bm.getBioAssaysUsedIn() );
+                    Hibernate.initialize( bm.getFactorValues() );
+                } catch ( HibernateException e ) {
+                    log.warn( "Could not initialize a biomaterial association: " + e.getMessage() );
+                }
+                session.evict( bm );
+            }
+            Hibernate.initialize( ba.getDerivedDataFiles() );
+            Hibernate.initialize( ba.getArrayDesignUsed() );
+            session.evict( ba );
+        }
+
+        if ( vectorsAlso ) {
+            /*
+             * Optional because this could be slow.
+             */
+            Hibernate.initialize( ee.getRawExpressionDataVectors() );
+            Hibernate.initialize( ee.getProcessedExpressionDataVectors() );
+
+        }
+
+        session.evict( ee );
+
+    }
+
+    /**
+     * @param expressionExperiment
+     * @param session
+     */
+    void thawReferences( final ExpressionExperiment expressionExperiment, org.hibernate.Session session ) {
+        if ( expressionExperiment.getPrimaryPublication() != null ) {
+            Hibernate.initialize( expressionExperiment.getPrimaryPublication() );
+            Hibernate.initialize( expressionExperiment.getPrimaryPublication().getPubAccession() );
+            Hibernate.initialize( expressionExperiment.getPrimaryPublication().getPubAccession().getExternalDatabase() );
+            expressionExperiment.getPrimaryPublication().getAuthors().size();
+        }
+        if ( expressionExperiment.getOtherRelevantPublications() != null ) {
+            Hibernate.initialize( expressionExperiment.getOtherRelevantPublications() );
+            for ( BibliographicReference bf : expressionExperiment.getOtherRelevantPublications() ) {
+                Hibernate.initialize( bf.getPubAccession() );
+                Hibernate.initialize( bf.getPubAccession().getExternalDatabase() );
+                bf.getAuthors().size();
+            }
+        }
     }
 
     /**
@@ -1409,19 +1456,16 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
 
         if ( !type.equals( TechnologyType.ONECOLOR.toString() ) ) {
             Collection<QuantitationType> qts = qtMap.get( eeId );
+
+            if ( qts == null ) {
+                log.warn( "No quantitation types for EE=" + eeId + "?" );
+                return;
+            }
+
             boolean hasIntensityA = false;
             boolean hasIntensityB = false;
             boolean hasBothIntensities = false;
             boolean mayBeOneChannel = false;
-            
-            
-            if (qts == null){
-                log.warn( "No Quantitation type found for: " + v.getShortName() );
-                return;
-            }
-                
-                
-                
             for ( QuantitationType qt : qts ) {
                 if ( qt.getIsPreferred() && !qt.getIsRatio() ) {
                     /*
@@ -1443,6 +1487,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                     }
                 }
             }
+
             v.setHasBothIntensities( hasBothIntensities && !mayBeOneChannel );
             v.setHasEitherIntensity( hasIntensityA || hasIntensityB );
         }
@@ -1457,7 +1502,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         if ( eeids != null ) {
             queryString = queryString + " where ee.id in (:eeids)";
         }
-        org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+        org.hibernate.Query queryObject = super.getSession().createQuery( queryString );
         // make sure we use the cache.
         if ( eeids != null ) {
             List idList = new ArrayList( eeids );
@@ -1488,26 +1533,6 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
 
         }
         return results;
-    }
-
-    /**
-     * @param expressionExperiment
-     * @param session
-     */
-    private void thawReferences( final ExpressionExperiment expressionExperiment, org.hibernate.Session session ) {
-        if ( expressionExperiment.getPrimaryPublication() != null ) {
-            session.update( expressionExperiment.getPrimaryPublication() );
-            session.update( expressionExperiment.getPrimaryPublication().getPubAccession() );
-            session.update( expressionExperiment.getPrimaryPublication().getPubAccession().getExternalDatabase() );
-            expressionExperiment.getPrimaryPublication().getAuthors().size();
-        }
-        if ( expressionExperiment.getOtherRelevantPublications() != null ) {
-            for ( BibliographicReference bf : expressionExperiment.getOtherRelevantPublications() ) {
-                session.update( bf.getPubAccession() );
-                session.update( bf.getPubAccession().getExternalDatabase() );
-                bf.getAuthors().size();
-            }
-        }
     }
 
 }

@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.genome;
 
+import org.springframework.beans.factory.annotation.Autowired;
+
 /**
  * <p>
  * Spring Service base class for <code>ubic.gemma.model.genome.ProbeAlignedRegionService</code>, provides access to all
@@ -28,6 +30,7 @@ package ubic.gemma.model.genome;
  */
 public abstract class ProbeAlignedRegionServiceBase implements ubic.gemma.model.genome.ProbeAlignedRegionService {
 
+    @Autowired
     private ubic.gemma.model.genome.ProbeAlignedRegionDao probeAlignedRegionDao;
 
     /**

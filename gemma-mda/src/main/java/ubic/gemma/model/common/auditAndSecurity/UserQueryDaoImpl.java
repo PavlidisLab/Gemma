@@ -26,7 +26,10 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
+import org.hibernate.SessionFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
+import org.springframework.stereotype.Repository;
 
 /**
  * TODO Document Me
@@ -34,7 +37,13 @@ import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
  * @author Paul
  * @version $Id$
  */
+@Repository
 public class UserQueryDaoImpl extends HibernateDaoSupport implements UserQueryDao {
+
+    @Autowired
+    public UserQueryDaoImpl( SessionFactory sessionFactory ) {
+        super.setSessionFactory( sessionFactory );
+    }
 
     /*
      * (non-Javadoc)
@@ -90,16 +99,14 @@ public class UserQueryDaoImpl extends HibernateDaoSupport implements UserQueryDa
         if ( id == null ) {
             throw new IllegalArgumentException( "UserRole.load - 'id' can not be null" );
         }
-        return ( UserQuery ) this.getHibernateTemplate().get(
-                ubic.gemma.model.common.auditAndSecurity.UserQueryImpl.class, id );
+        return this.getHibernateTemplate().get( ubic.gemma.model.common.auditAndSecurity.UserQueryImpl.class, id );
     }
 
     /*
      * (non-Javadoc)
      * @see ubic.gemma.model.common.auditAndSecurity.UserQueryDao#loadAll()
      */
-    @SuppressWarnings("unchecked")
-    public Collection<UserQuery> loadAll() {
+    public Collection<? extends UserQuery> loadAll() {
         return this.getHibernateTemplate().loadAll( ubic.gemma.model.common.auditAndSecurity.UserQueryImpl.class );
     }
 

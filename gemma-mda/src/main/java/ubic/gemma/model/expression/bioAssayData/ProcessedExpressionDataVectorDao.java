@@ -36,9 +36,7 @@ public interface ProcessedExpressionDataVectorDao extends DesignElementDataVecto
     public enum RankMethod {
         mean, max
     }
-    
-    public void removeProcessedDataVectors( final ExpressionExperiment expressionExperiment );
-    
+
     /**
      * Populate the processed data for the given experiment. For two-channel studies, the missing value information
      * should already have been computed. If the values already exist, they will be re-written.
@@ -48,22 +46,23 @@ public interface ProcessedExpressionDataVectorDao extends DesignElementDataVecto
     public Collection<ProcessedExpressionDataVector> createProcessedDataVectors(
             ExpressionExperiment expressionExperiment );
 
-    public  Collection<DoubleVectorValueObject> getProcessedDataArrays(
-            ExpressionExperiment ee, int limit, boolean fullMap );
-
     public Collection<DoubleVectorValueObject> getProcessedDataArrays(
             Collection<ExpressionExperiment> expressionExperiments, Collection<Gene> genes );
 
     public Collection<DoubleVectorValueObject> getProcessedDataArrays(
             Collection<ExpressionExperiment> expressionExperiments, Collection<Gene> genes, boolean fullMap );
-    
+
     public Collection<DoubleVectorValueObject> getProcessedDataArrays( ExpressionExperiment expressionExperiment );
 
     public Collection<DoubleVectorValueObject> getProcessedDataArrays( ExpressionExperiment expressionExperiment,
             Collection<Gene> genes );
 
+    public Collection<DoubleVectorValueObject> getProcessedDataArrays( ExpressionExperiment ee, int limit,
+            boolean fullMap );
+
     public Collection<DoubleVectorValueObject> getProcessedDataArraysByProbe(
-            Collection<ExpressionExperiment> expressionExperiments, Collection<CompositeSequence> probes, boolean fullMap );
+            Collection<ExpressionExperiment> expressionExperiments, Collection<CompositeSequence> probes,
+            boolean fullMap );
 
     /**
      * @param expressionExperiment
@@ -71,9 +70,9 @@ public interface ProcessedExpressionDataVectorDao extends DesignElementDataVecto
      */
     public Collection<ProcessedExpressionDataVector> getProcessedVectors( ExpressionExperiment expressionExperiment );
 
-    public Collection<ProcessedExpressionDataVector> getProcessedVectors( ExpressionExperiment expressionExperiment, Integer limit );
+    public Collection<ProcessedExpressionDataVector> getProcessedVectors( ExpressionExperiment expressionExperiment,
+            Integer limit );
 
-    
     public Map<ExpressionExperiment, Map<Gene, Collection<Double>>> getRanks(
             Collection<ExpressionExperiment> expressionExperiments, Collection<Gene> genes, RankMethod method );
 
@@ -91,5 +90,7 @@ public interface ProcessedExpressionDataVectorDao extends DesignElementDataVecto
      */
     public Map<ExpressionExperiment, Map<Gene, Map<DesignElement, Double[]>>> getRanksByProbe(
             Collection<ExpressionExperiment> expressionExperiments, Collection<Gene> genes );
+
+    public void removeProcessedDataVectors( final ExpressionExperiment expressionExperiment );
 
 }

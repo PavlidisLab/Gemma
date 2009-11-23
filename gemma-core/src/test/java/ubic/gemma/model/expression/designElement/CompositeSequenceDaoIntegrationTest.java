@@ -18,11 +18,18 @@
  */
 package ubic.gemma.model.expression.designElement;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 import java.io.File;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.Map;
 import java.util.zip.GZIPInputStream;
+
+import org.junit.Before;
+import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.apps.Blat;
 import ubic.gemma.loader.expression.arrayDesign.AbstractArrayDesignProcessingTest;
@@ -37,7 +44,7 @@ import ubic.gemma.model.genome.biosequence.SequenceType;
 import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.persistence.PersisterHelper;
-import ubic.gemma.persistence.TableMaintenanceUtil;
+import ubic.gemma.persistence.TableMaintenenceUtil;
 import ubic.gemma.util.ConfigUtils;
 
 /**
@@ -47,8 +54,14 @@ import ubic.gemma.util.ConfigUtils;
 public class CompositeSequenceDaoIntegrationTest extends AbstractArrayDesignProcessingTest {
 
     static Blat blat = new Blat();
-    static CompositeSequenceService compositeSequenceService;
+
+    @Autowired
+    CompositeSequenceService compositeSequenceService;
+
     static boolean setupDone = false;
+
+    @Autowired
+    GeneService geneService;
 
     /**
      * The test files have only ~100 genes. This is still a very slow test to run, because it does many steps of
@@ -56,10 +69,9 @@ public class CompositeSequenceDaoIntegrationTest extends AbstractArrayDesignProc
      * 
      * @see ubic.gemma.loader.expression.arrayDesign.AbstractArrayDesignProcessingTest#onSetUpInTransaction()
      */
-    @Override
-    protected void onSetUpInTransaction() throws Exception {
-        super.onSetUpInTransaction();
-        compositeSequenceService = ( CompositeSequenceService ) this.getBean( "compositeSequenceService" );
+    @Before
+    public void setup() throws Exception {
+
         Taxon taxon = ( ( TaxonService ) getBean( "taxonService" ) ).findByScientificName( "Homo sapiens" );
 
         if ( !setupDone ) {
@@ -74,13 +86,13 @@ public class CompositeSequenceDaoIntegrationTest extends AbstractArrayDesignProc
             String geneHistoryFile = filePath + File.separatorChar + "selected_gene_history.gz";
 
             loader.load( geneInfoFile, gene2AccFile, geneHistoryFile, true );
-
+            
             // needed to fill in the sequence information for blat scoring.
             InputStream sequenceFile = this.getClass().getResourceAsStream(
                     "/data/loader/genome/gpl140.sequences.fasta" );
             ArrayDesignSequenceProcessingService app = ( ArrayDesignSequenceProcessingService ) getBean( "arrayDesignSequenceProcessingService" );
             app.processArrayDesign( getAd(), sequenceFile, SequenceType.EST );
-
+            
             // fill in the blat results. Note that each time you run this test you
             // get the results loaded again (so they
             // pile up)
@@ -92,34 +104,36 @@ public class CompositeSequenceDaoIntegrationTest extends AbstractArrayDesignProc
             Collection<BlatResult> results = blat.processPsl( blatResultInputStream, taxon );
 
             aligner.processArrayDesign( getAd(), taxon, results );
-
+            
             // real stuff.
             ArrayDesignProbeMapperService arrayDesignProbeMapperService = ( ArrayDesignProbeMapperService ) this
                     .getBean( "arrayDesignProbeMapperService" );
             arrayDesignProbeMapperService.processArrayDesign( getAd() );
             setupDone = true;
+            
         }
-        endTransaction();
 
     }
- 
+
+    @Test
     public void testFindByGene() {
-        GeneService geneService = ( GeneService ) this.getBean( "geneService" );
         Collection<Gene> genes = geneService.findByOfficialSymbol( "PON2" );
         Gene g = genes.iterator().next();
         Collection<CompositeSequence> collection = compositeSequenceService.findByGene( g );
         assertEquals( 1, collection.size() );
 
     }
- 
+
+    @Test
     public void testFindByGeneAndArrayDesign() {
-        GeneService geneService = ( GeneService ) this.getBean( "geneService" );
         Collection<Gene> genes = geneService.findByOfficialSymbol( "PON2" );
+        assertTrue( genes.size() > 0 );
         Gene g = genes.iterator().next();
         Collection<CompositeSequence> collection = compositeSequenceService.findByGene( g, getAd() );
         assertEquals( 1, collection.size() );
     }
- 
+
+    @Test
     public void testHandleGetGenesCompositeSequence() {
 
         Collection<CompositeSequence> css = compositeSequenceService.findByName( "C277" );
@@ -127,10 +141,11 @@ public class CompositeSequenceDaoIntegrationTest extends AbstractArrayDesignProc
         Collection<Gene> genes = compositeSequenceService.getGenes( cs );
         assertEquals( 1, genes.size() );
     }
- 
+
+    @Test
     public void testHandleGetGenesCompositeSequences() {
 
-        TableMaintenanceUtil tu = ( TableMaintenanceUtil ) this.getBean( "tableMaintenanceUtil" );
+        TableMaintenenceUtil tu = ( TableMaintenenceUtil ) this.getBean( "tableMaintenanceUtil" );
         tu.updateGene2CsEntries();
 
         Collection<CompositeSequence> css = compositeSequenceService.findByName( "C277" );

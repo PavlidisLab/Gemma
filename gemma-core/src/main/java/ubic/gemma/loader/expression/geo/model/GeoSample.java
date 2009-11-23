@@ -35,6 +35,8 @@ import org.apache.commons.logging.LogFactory;
  */
 public class GeoSample extends GeoData implements Comparable<GeoData> {
 
+    private static final long serialVersionUID = -8820012224856178673L;
+
     private static Log log = LogFactory.getLog( GeoSample.class.getName() );
 
     private List<GeoChannel> channels;
@@ -86,6 +88,8 @@ public class GeoSample extends GeoData implements Comparable<GeoData> {
     private String anchor;
     private int tagCount;
     private int tagLength;
+
+    private boolean warnedAboutGenePix = false;
 
     public GeoSample() {
         channels = new ArrayList<GeoChannel>();
@@ -191,8 +195,9 @@ public class GeoSample extends GeoData implements Comparable<GeoData> {
     public void setDescription( String description ) {
         this.description = description;
         this.isGenePix = description.contains( "GenePix" );
-        if ( isGenePix ) {
-            log.warn( "GenePix data detected: Some unused quantitation types may be skipped" );
+        if ( isGenePix && !this.warnedAboutGenePix ) {
+            log.warn( "GenePix data detected: Some unused quantitation types may be skipped (futher warnings skipped)" );
+            warnedAboutGenePix = true;
         }
     }
 
@@ -224,10 +229,12 @@ public class GeoSample extends GeoData implements Comparable<GeoData> {
 
     public void addToDescription( String s ) {
         this.description = this.description + " " + s;
-        if ( !isGenePix && description.contains( "GenePix" ) ) { // so we only get the first time around.
-            log.warn( "GenePix data detected in " + this + ": Some unused quantitation types may be skipped" );
-        }
         this.isGenePix = description.contains( "GenePix" );
+
+        if ( isGenePix && !this.warnedAboutGenePix ) {
+            log.warn( "GenePix data detected in " + this + ": Some unused quantitation types may be skipped" );
+            warnedAboutGenePix = true;
+        }
 
     }
 

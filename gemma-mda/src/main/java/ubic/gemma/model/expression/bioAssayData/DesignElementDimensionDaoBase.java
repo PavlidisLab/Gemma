@@ -15,8 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- */ 
+ */
 package ubic.gemma.model.expression.bioAssayData;
+
+import java.util.Collection;
 
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 
@@ -38,16 +40,25 @@ public abstract class DesignElementDimensionDaoBase extends HibernateDaoSupport 
         if ( entities == null ) {
             throw new IllegalArgumentException( "DesignElementDimension.create - 'entities' can not be null" );
         }
-        this.getHibernateTemplate().executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                    create( transform,
-                            ( ubic.gemma.model.expression.bioAssayData.DesignElementDimension ) entityIterator.next() );
-                }
-                return null;
-            }
-        }  );
+        this.getHibernateTemplate().executeWithNativeSession(
+                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
+                    public Object doInHibernate( org.hibernate.Session session )
+                            throws org.hibernate.HibernateException {
+                        for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                            create( transform,
+                                    ( ubic.gemma.model.expression.bioAssayData.DesignElementDimension ) entityIterator
+                                            .next() );
+                        }
+                        return null;
+                    }
+                } );
         return entities;
+    }
+
+    
+    public Collection<? extends DesignElementDimension> load( Collection<Long> ids ) {
+        return this.getHibernateTemplate().findByNamedParam( "from DesignElementDimensionImpl where id in (:ids)",
+                "ids", ids );
     }
 
     /**
@@ -67,7 +78,7 @@ public abstract class DesignElementDimensionDaoBase extends HibernateDaoSupport 
     /**
      * @see ubic.gemma.model.expression.bioAssayData.DesignElementDimensionDao#create(java.util.Collection)
      */
-    @SuppressWarnings( { "unchecked" })
+    
     public java.util.Collection create( final java.util.Collection entities ) {
         return create( TRANSFORM_NONE, entities );
     }
@@ -85,7 +96,7 @@ public abstract class DesignElementDimensionDaoBase extends HibernateDaoSupport 
      * @see ubic.gemma.model.expression.bioAssayData.DesignElementDimensionDao#find(int, java.lang.String,
      *      ubic.gemma.model.expression.bioAssayData.DesignElementDimension)
      */
-    @SuppressWarnings( { "unchecked" })
+    
     public Object find( final int transform, final java.lang.String queryString,
             final ubic.gemma.model.expression.bioAssayData.DesignElementDimension designElementDimension ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -95,15 +106,15 @@ public abstract class DesignElementDimensionDaoBase extends HibernateDaoSupport 
         java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
                 argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
         Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'ubic.gemma.model.expression.bioAssayData.DesignElementDimension"
-                                + "' was found when executing query --> '" + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
+
+        if ( results.size() > 1 ) {
+            throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                    "More than one instance of 'ubic.gemma.model.expression.bioAssayData.DesignElementDimension"
+                            + "' was found when executing query --> '" + queryString + "'" );
+        } else if ( results.size() == 1 ) {
+            result = results.iterator().next();
         }
+
         result = transformEntity( transform, ( ubic.gemma.model.expression.bioAssayData.DesignElementDimension ) result );
         return result;
     }
@@ -112,7 +123,7 @@ public abstract class DesignElementDimensionDaoBase extends HibernateDaoSupport 
      * @see ubic.gemma.model.expression.bioAssayData.DesignElementDimensionDao#find(int,
      *      ubic.gemma.model.expression.bioAssayData.DesignElementDimension)
      */
-    @SuppressWarnings( { "unchecked" })
+    
     public Object find( final int transform,
             final ubic.gemma.model.expression.bioAssayData.DesignElementDimension designElementDimension ) {
         return this
@@ -126,7 +137,7 @@ public abstract class DesignElementDimensionDaoBase extends HibernateDaoSupport 
      * @see ubic.gemma.model.expression.bioAssayData.DesignElementDimensionDao#find(java.lang.String,
      *      ubic.gemma.model.expression.bioAssayData.DesignElementDimension)
      */
-    @SuppressWarnings( { "unchecked" })
+    
     public ubic.gemma.model.expression.bioAssayData.DesignElementDimension find( final java.lang.String queryString,
             final ubic.gemma.model.expression.bioAssayData.DesignElementDimension designElementDimension ) {
         return ( ubic.gemma.model.expression.bioAssayData.DesignElementDimension ) this.find( TRANSFORM_NONE,
@@ -146,7 +157,7 @@ public abstract class DesignElementDimensionDaoBase extends HibernateDaoSupport 
      * @see ubic.gemma.model.expression.bioAssayData.DesignElementDimensionDao#findOrCreate(int, java.lang.String,
      *      ubic.gemma.model.expression.bioAssayData.DesignElementDimension)
      */
-    @SuppressWarnings( { "unchecked" })
+    
     public Object findOrCreate( final int transform, final java.lang.String queryString,
             final ubic.gemma.model.expression.bioAssayData.DesignElementDimension designElementDimension ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -156,15 +167,15 @@ public abstract class DesignElementDimensionDaoBase extends HibernateDaoSupport 
         java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
                 argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
         Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'ubic.gemma.model.expression.bioAssayData.DesignElementDimension"
-                                + "' was found when executing query --> '" + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
+
+        if ( results.size() > 1 ) {
+            throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                    "More than one instance of 'ubic.gemma.model.expression.bioAssayData.DesignElementDimension"
+                            + "' was found when executing query --> '" + queryString + "'" );
+        } else if ( results.size() == 1 ) {
+            result = results.iterator().next();
         }
+
         result = transformEntity( transform, ( ubic.gemma.model.expression.bioAssayData.DesignElementDimension ) result );
         return result;
     }
@@ -173,7 +184,7 @@ public abstract class DesignElementDimensionDaoBase extends HibernateDaoSupport 
      * @see ubic.gemma.model.expression.bioAssayData.DesignElementDimensionDao#findOrCreate(int,
      *      ubic.gemma.model.expression.bioAssayData.DesignElementDimension)
      */
-    @SuppressWarnings( { "unchecked" })
+    
     public Object findOrCreate( final int transform,
             final ubic.gemma.model.expression.bioAssayData.DesignElementDimension designElementDimension ) {
         return this
@@ -187,7 +198,7 @@ public abstract class DesignElementDimensionDaoBase extends HibernateDaoSupport 
      * @see ubic.gemma.model.expression.bioAssayData.DesignElementDimensionDao#findOrCreate(java.lang.String,
      *      ubic.gemma.model.expression.bioAssayData.DesignElementDimension)
      */
-    @SuppressWarnings( { "unchecked" })
+    
     public ubic.gemma.model.expression.bioAssayData.DesignElementDimension findOrCreate(
             final java.lang.String queryString,
             final ubic.gemma.model.expression.bioAssayData.DesignElementDimension designElementDimension ) {
@@ -207,7 +218,7 @@ public abstract class DesignElementDimensionDaoBase extends HibernateDaoSupport 
     /**
      * @see ubic.gemma.model.expression.bioAssayData.DesignElementDimensionDao#load(int, java.lang.Long)
      */
-    
+
     public Object load( final int transform, final java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "DesignElementDimension.load - 'id' can not be null" );
@@ -220,7 +231,7 @@ public abstract class DesignElementDimensionDaoBase extends HibernateDaoSupport 
     /**
      * @see ubic.gemma.model.expression.bioAssayData.DesignElementDimensionDao#load(java.lang.Long)
      */
-    
+
     public DesignElementDimension load( java.lang.Long id ) {
         return ( ubic.gemma.model.expression.bioAssayData.DesignElementDimension ) this.load( TRANSFORM_NONE, id );
     }
@@ -228,8 +239,8 @@ public abstract class DesignElementDimensionDaoBase extends HibernateDaoSupport 
     /**
      * @see ubic.gemma.model.expression.bioAssayData.DesignElementDimensionDao#loadAll()
      */
+
     
-    @SuppressWarnings( { "unchecked" })
     public java.util.Collection loadAll() {
         return this.loadAll( TRANSFORM_NONE );
     }
@@ -237,7 +248,7 @@ public abstract class DesignElementDimensionDaoBase extends HibernateDaoSupport 
     /**
      * @see ubic.gemma.model.expression.bioAssayData.DesignElementDimensionDao#loadAll(int)
      */
-    
+
     public java.util.Collection loadAll( final int transform ) {
         final java.util.Collection results = this.getHibernateTemplate().loadAll(
                 ubic.gemma.model.expression.bioAssayData.DesignElementDimensionImpl.class );
@@ -248,13 +259,12 @@ public abstract class DesignElementDimensionDaoBase extends HibernateDaoSupport 
     /**
      * @see ubic.gemma.model.expression.bioAssayData.DesignElementDimensionDao#remove(java.lang.Long)
      */
-    
+
     public void remove( java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "DesignElementDimension.remove - 'id' can not be null" );
         }
-        ubic.gemma.model.expression.bioAssayData.DesignElementDimension entity = ( ubic.gemma.model.expression.bioAssayData.DesignElementDimension ) this
-                .load( id );
+        ubic.gemma.model.expression.bioAssayData.DesignElementDimension entity = this.load( id );
         if ( entity != null ) {
             this.remove( entity );
         }
@@ -263,7 +273,7 @@ public abstract class DesignElementDimensionDaoBase extends HibernateDaoSupport 
     /**
      * @see ubic.gemma.model.common.SecurableDao#remove(java.util.Collection)
      */
-    
+
     public void remove( java.util.Collection entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "DesignElementDimension.remove - 'entities' can not be null" );
@@ -285,19 +295,22 @@ public abstract class DesignElementDimensionDaoBase extends HibernateDaoSupport 
     /**
      * @see ubic.gemma.model.common.SecurableDao#update(java.util.Collection)
      */
-    
+
     public void update( final java.util.Collection entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "DesignElementDimension.update - 'entities' can not be null" );
         }
-        this.getHibernateTemplate().executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                    update( ( ubic.gemma.model.expression.bioAssayData.DesignElementDimension ) entityIterator.next() );
-                }
-                return null;
-            }
-        }  );
+        this.getHibernateTemplate().executeWithNativeSession(
+                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
+                    public Object doInHibernate( org.hibernate.Session session )
+                            throws org.hibernate.HibernateException {
+                        for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                            update( ( ubic.gemma.model.expression.bioAssayData.DesignElementDimension ) entityIterator
+                                    .next() );
+                        }
+                        return null;
+                    }
+                } );
     }
 
     /**
@@ -324,7 +337,7 @@ public abstract class DesignElementDimensionDaoBase extends HibernateDaoSupport 
      * @return the same collection as the argument, but this time containing the transformed entities
      * @see #transformEntity(int,ubic.gemma.model.expression.bioAssayData.DesignElementDimension)
      */
-    
+
     protected void transformEntities( final int transform, final java.util.Collection entities ) {
         switch ( transform ) {
             case TRANSFORM_NONE: // fall-through

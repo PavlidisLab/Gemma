@@ -10,6 +10,8 @@ package ubic.gemma.model.genome.sequenceAnalysis;
 
 import java.util.Collection;
 
+import org.springframework.security.access.annotation.Secured;
+
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 
@@ -19,8 +21,10 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
  */
 public interface AnnotationAssociationService {
 
+    @Secured( { "GROUP_USER" })
     public AnnotationAssociation create( AnnotationAssociation annotationAssociation );
 
+    @Secured( { "GROUP_USER" })
     public Collection<AnnotationAssociation> create( Collection<AnnotationAssociation> anCollection );
 
     public Collection<AnnotationAssociation> find( BioSequence bioSequence );
@@ -31,16 +35,20 @@ public interface AnnotationAssociationService {
 
     public AnnotationAssociation load( Long id );
 
+    @Secured( { "GROUP_USER" })
     public void remove( AnnotationAssociation annotationAssociation );
 
+    @Secured( { "GROUP_USER" })
     public void remove( Collection<AnnotationAssociation> anCollection );
 
     public void thaw( AnnotationAssociation annotationAssociation );
 
     public void thaw( Collection<AnnotationAssociation> anCollection );
 
+    @Secured( { "GROUP_USER" })
     public void update( AnnotationAssociation annotationAssociation );
 
+    @Secured( { "GROUP_USER" })
     public void update( Collection<AnnotationAssociation> anCollection );
 
 }

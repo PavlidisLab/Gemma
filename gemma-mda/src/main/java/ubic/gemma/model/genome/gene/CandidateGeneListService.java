@@ -18,49 +18,63 @@
  */
 package ubic.gemma.model.genome.gene;
 
+import org.springframework.security.access.annotation.Secured;
+
 /**
- * 
+ * @author kelsey
+ * @version $Id$
  */
 public interface CandidateGeneListService {
 
     /**
-     * 
+     * @param newName
+     * @return
      */
+    @Secured( { "GROUP_USER" })
     public ubic.gemma.model.genome.gene.CandidateGeneList createByName( java.lang.String newName );
 
     /**
      * 
      */
-    public java.util.Collection findAll();
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    public java.util.Collection<CandidateGeneList> findAll();
 
     /**
      * 
      */
-    public java.util.Collection findByContributer( ubic.gemma.model.common.auditAndSecurity.Person person );
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    public java.util.Collection<CandidateGeneList> findByContributer(
+            ubic.gemma.model.common.auditAndSecurity.Person person );
 
     /**
      * 
      */
-    public java.util.Collection findByGeneOfficialName( java.lang.String geneName );
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    public java.util.Collection<CandidateGeneList> findByGeneOfficialName( java.lang.String geneName );
 
     /**
      * 
      */
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     public ubic.gemma.model.genome.gene.CandidateGeneList findByID( java.lang.Long id );
 
     /**
      * 
      */
-    public java.util.Collection findByListOwner( ubic.gemma.model.common.auditAndSecurity.Person owner );
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    public java.util.Collection<CandidateGeneList> findByListOwner(
+            ubic.gemma.model.common.auditAndSecurity.Person owner );
 
     /**
      * 
      */
+    @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
     public void removeCandidateGeneList( ubic.gemma.model.genome.gene.CandidateGeneList candidateGeneList );
 
     /**
      * 
      */
+    @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
     public ubic.gemma.model.genome.gene.CandidateGeneList saveCandidateGeneList(
             ubic.gemma.model.genome.gene.CandidateGeneList candidateGeneList );
 
@@ -72,6 +86,7 @@ public interface CandidateGeneListService {
     /**
      * 
      */
+    @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
     public void updateCandidateGeneList( ubic.gemma.model.genome.gene.CandidateGeneList candidateList );
 
 }

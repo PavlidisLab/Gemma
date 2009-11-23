@@ -19,6 +19,8 @@
 
 package ubic.gemma.ontology;
 
+import static org.junit.Assert.assertEquals;
+
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -26,8 +28,10 @@ import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
-import ubic.gemma.model.genome.gene.GeneService;
+import org.junit.Before;
+import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+ 
 import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
@@ -39,8 +43,9 @@ import ubic.gemma.testing.BaseSpringContextTest;
  */
 public class GoMetricTest extends BaseSpringContextTest {
 
+    @Autowired
     private GeneOntologyService geneOntologyService;
-    private GeneService geneService;
+
     private GoMetric goMetric;
 
     private OntologyTerm entry;
@@ -51,19 +56,13 @@ public class GoMetricTest extends BaseSpringContextTest {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.testing.BaseSpringContextTest#onSetUpInTransaction()
      */
+    @Before
     public void onSetUpInTransaction() throws Exception {
-        super.onSetUpInTransaction();
 
-        geneOntologyService = ( GeneOntologyService ) this.getBean( "geneOntologyService" );
-        geneService = ( GeneService ) this.getBean( "geneService" );
-        // tests disabled.
-        goMetric = ( GoMetric ) this.getBean( "goMetric" );
         this.enabled = false;
 
-        return;
         // geneOntologyService.init( false );
         // if ( !GeneOntologyService.isEnabled() ) {
         // this.enabled = false;
@@ -89,51 +88,7 @@ public class GoMetricTest extends BaseSpringContextTest {
     /**
      * @throws Exception
      */
-    public final void testGetTermOccurrence() throws Exception {
-        if ( !enabled ) {
-            // log.warn( "GO is not enabled, Test skipped" );
-            log.info( "Test is disabled." );
-            return;
-        }
-        Collection<String> stringTerms = new HashSet<String>();
-        for ( OntologyTerm t : terms )
-            stringTerms.add( t.getUri() );
-
-        Map<Long, Collection<String>> gene2GOMap = new HashMap<Long, Collection<String>>();
-        gene2GOMap.put( ( long ) 14415, stringTerms );
-        gene2GOMap.put( ( long ) 22129, stringTerms );
-
-        Map<String, Integer> countMap = goMetric.getTermOccurrence( gene2GOMap );
-        int expected = 0;
-
-        for ( String uri : countMap.keySet() ) {
-            expected += countMap.get( uri );
-        }
-
-        assertEquals( expected, ( 2 * stringTerms.size() ) );
-    }
-
-    /**
-     * @throws Exception
-     */
-    public final void testGetChildrenOccurrence() throws Exception {
-        if ( !enabled ) {
-            // log.warn( "GO is not enabled, Test skipped" );
-            log.info( "Test is disabled." );
-            return;
-        }
-        Map<String, Integer> countMap = new HashMap<String, Integer>();
-        for ( OntologyTerm t : terms )
-            countMap.put( t.getUri(), 1 );
-
-        Integer expected = countMap.size();
-        Integer count = goMetric.getChildrenOccurrence( countMap, entry.getUri() );
-        assertEquals( expected, count );
-    }
-
-    /**
-     * @throws Exception
-     */
+    @Test
     public final void testCheckParents() throws Exception {
         if ( !enabled ) {
             // log.warn( "GO is not enabled, Test skipped" );
@@ -157,6 +112,53 @@ public class GoMetricTest extends BaseSpringContextTest {
 
         assertEquals( expected, value );
 
+    }
+
+    /**
+     * @throws Exception
+     */
+    @Test
+    public final void testGetChildrenOccurrence() throws Exception {
+        if ( !enabled ) {
+            // log.warn( "GO is not enabled, Test skipped" );
+            log.info( "Test is disabled." );
+            return;
+        }
+        Map<String, Integer> countMap = new HashMap<String, Integer>();
+        for ( OntologyTerm t : terms )
+            countMap.put( t.getUri(), 1 );
+
+        Integer expected = countMap.size();
+        Integer count = goMetric.getChildrenOccurrence( countMap, entry.getUri() );
+        assertEquals( expected, count );
+    }
+
+    /**
+     * @throws Exception
+     */
+    @Test
+    public final void testGetTermOccurrence() throws Exception {
+        if ( !enabled ) {
+            // log.warn( "GO is not enabled, Test skipped" );
+            log.info( "Test is disabled." );
+            return;
+        }
+        Collection<String> stringTerms = new HashSet<String>();
+        for ( OntologyTerm t : terms )
+            stringTerms.add( t.getUri() );
+
+        Map<Long, Collection<String>> gene2GOMap = new HashMap<Long, Collection<String>>();
+        gene2GOMap.put( ( long ) 14415, stringTerms );
+        gene2GOMap.put( ( long ) 22129, stringTerms );
+
+        Map<String, Integer> countMap = goMetric.getTermOccurrence( gene2GOMap );
+        int expected = 0;
+
+        for ( String uri : countMap.keySet() ) {
+            expected += countMap.get( uri );
+        }
+
+        assertEquals( expected, ( 2 * stringTerms.size() ) );
     }
 
     /**
@@ -198,10 +200,4 @@ public class GoMetricTest extends BaseSpringContextTest {
     // // if ( chooseMetric.equals( Metric.lin ) ) assertEquals( 2.160964047443681, value );
     // // if ( chooseMetric.equals( Metric.jiang ) ) assertEquals( 0.6185149837908823, value );
     // }
-    /**
-     * @param geneOntologyService the geneOntologyService to set
-     */
-    public void setGeneOntologyService( GeneOntologyService geneOntologyService ) {
-        this.geneOntologyService = geneOntologyService;
-    }
 }

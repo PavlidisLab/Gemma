@@ -20,77 +20,12 @@ package ubic.gemma.model.association.coexpression;
 
 import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.persistence.BaseDao;
 
 /**
  * @see ubic.gemma.model.association.coexpression.Gene2GeneCoexpression
  */
-public interface Gene2GeneCoexpressionDao extends ubic.gemma.model.association.Gene2GeneAssociationDao {
-    /**
-     * Loads an instance of ubic.gemma.model.association.coexpression.Gene2GeneCoexpression from the persistent store.
-     */
-    public Gene2GeneCoexpression load( java.lang.Long id );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #load(java.lang.Long)} with an additional flag called <code>transform</code>. If
-     * this flag is set to <code>TRANSFORM_NONE</code> then the returned entity will <strong>NOT</strong> be
-     * transformed. If this flag is any of the other constants defined in this class then the result <strong>WILL
-     * BE</strong> passed through an operation which can optionally transform the entity (into a value object for
-     * example). By default, transformation does not occur.
-     * </p>
-     * 
-     * @param id the identifier of the entity to load.
-     * @return either the entity or the object transformed from the entity.
-     */
-    public Object load( int transform, java.lang.Long id );
-
-    /**
-     * Loads all entities of type {@link ubic.gemma.model.association.coexpression.Gene2GeneCoexpression}.
-     * 
-     * @return the loaded entities.
-     */
-    public java.util.Collection<Gene2GeneCoexpression> loadAll();
-
-    /**
-     * <p>
-     * Does the same thing as {@link #loadAll()} with an additional flag called <code>transform</code>. If this flag is
-     * set to <code>TRANSFORM_NONE</code> then the returned entity will <strong>NOT</strong> be transformed. If this
-     * flag is any of the other constants defined here then the result <strong>WILL BE</strong> passed through an
-     * operation which can optionally transform the entity (into a value object for example). By default, transformation
-     * does not occur.
-     * </p>
-     * 
-     * @param transform the flag indicating what transformation to use.
-     * @return the loaded entities.
-     */
-    public java.util.Collection<Gene2GeneCoexpression> loadAll( final int transform );
-
-    /**
-     * Updates the <code>gene2GeneCoexpression</code> instance in the persistent store.
-     */
-    public void update( ubic.gemma.model.association.coexpression.Gene2GeneCoexpression gene2GeneCoexpression );
-
-    /**
-     * Updates all instances in the <code>entities</code> collection in the persistent store.
-     */
-    public void update( java.util.Collection<Gene2GeneCoexpression> entities );
-
-    /**
-     * Removes the instance of ubic.gemma.model.association.coexpression.Gene2GeneCoexpression from the persistent
-     * store.
-     */
-    public void remove( ubic.gemma.model.association.coexpression.Gene2GeneCoexpression gene2GeneCoexpression );
-
-    /**
-     * Removes the instance of ubic.gemma.model.association.coexpression.Gene2GeneCoexpression having the given
-     * <code>identifier</code> from the persistent store.
-     */
-    public void remove( java.lang.Long id );
-
-    /**
-     * Removes all entities in the given <code>entities<code> collection.
-     */
-    public void remove( java.util.Collection<Gene2GeneCoexpression> entities );
+public interface Gene2GeneCoexpressionDao extends BaseDao<Gene2GeneCoexpression> {
 
     /**
      * <p>

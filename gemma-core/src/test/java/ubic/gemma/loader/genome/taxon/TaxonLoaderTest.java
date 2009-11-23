@@ -18,7 +18,13 @@
  */
 package ubic.gemma.loader.genome.taxon;
 
+import static org.junit.Assert.assertEquals;
+
 import java.io.InputStream;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 import ubic.gemma.testing.BaseSpringContextTest;
 
@@ -29,22 +35,23 @@ import ubic.gemma.testing.BaseSpringContextTest;
 public class TaxonLoaderTest extends BaseSpringContextTest {
     InputStream is;
 
-    @Override
-    protected void onSetUpInTransaction() throws Exception {
-        super.onSetUpInTransaction();
+    @After
+    public void onTearDownInTransaction() throws Exception {
+        is.close();
+    }
+
+    @Before
+    public void setup() throws Exception {
+
         is = this.getClass().getResourceAsStream( "/data/loader/genome/taxon.names.dmp.sample.txt" );
     }
 
+    @Test
     public void testLoadInputStream() throws Exception {
         TaxonLoader tl = new TaxonLoader();
-        tl.setFilter( false);
+        tl.setFilter( false );
         tl.setPersisterHelper( persisterHelper );
         int actualValue = tl.load( is );
         assertEquals( 75, actualValue );
-    }
-
-    @Override
-    protected void onTearDownInTransaction() throws Exception {
-        is.close();
     }
 }

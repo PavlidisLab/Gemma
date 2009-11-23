@@ -25,5 +25,5 @@ package ubic.gemma.model.genome;
 /**
  * @see ubic.gemma.model.genome.ChromosomeLocation
  */
-public class ChromosomeLocationDaoImpl extends ubic.gemma.model.genome.ChromosomeLocationDaoBase {
+public abstract class ChromosomeLocationDaoImpl extends ubic.gemma.model.genome.ChromosomeLocationDaoBase {
 }

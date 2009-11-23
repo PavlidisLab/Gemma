@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.analysis.expression;
 
+import org.springframework.beans.factory.annotation.Autowired;
+
 /**
  * <p>
  * Spring Service base class for <code>ubic.gemma.model.analysis.expression.ExpressionExperimentSetService</code>,
@@ -29,6 +31,7 @@ package ubic.gemma.model.analysis.expression;
 public abstract class ExpressionExperimentSetServiceBase implements
         ubic.gemma.model.analysis.expression.ExpressionExperimentSetService {
 
+    @Autowired
     private ubic.gemma.model.analysis.expression.ExpressionExperimentSetDao expressionExperimentSetDao;
 
     /**
@@ -128,6 +131,7 @@ public abstract class ExpressionExperimentSetServiceBase implements
     /**
      * Sets the reference to <code>expressionExperimentSet</code>'s DAO.
      */
+    
     public void setExpressionExperimentSetDao(
             ubic.gemma.model.analysis.expression.ExpressionExperimentSetDao expressionExperimentSetDao ) {
         this.expressionExperimentSetDao = expressionExperimentSetDao;

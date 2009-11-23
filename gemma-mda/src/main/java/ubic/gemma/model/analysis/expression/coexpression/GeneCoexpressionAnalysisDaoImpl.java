@@ -27,7 +27,10 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Hibernate;
 import org.hibernate.LockMode;
+import org.hibernate.SessionFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.orm.hibernate3.HibernateTemplate;
+import org.springframework.stereotype.Repository;
 
 import ubic.gemma.model.analysis.Investigation;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -37,6 +40,7 @@ import ubic.gemma.model.genome.Taxon;
  * @see ubic.gemma.model.analysis.GeneCoexpressionAnalysis
  * @$Id$
  */
+@Repository
 public class GeneCoexpressionAnalysisDaoImpl extends
         ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisDaoBase {
 
@@ -44,6 +48,11 @@ public class GeneCoexpressionAnalysisDaoImpl extends
 
     String[] linkClasses = new String[] { "HumanGeneCoExpressionImpl", "MouseGeneCoExpressionImpl",
             "RatGeneCoExpressionImpl", "OtherGeneCoExpressionImpl" };
+
+    @Autowired
+    public GeneCoexpressionAnalysisDaoImpl( SessionFactory sessionFactory ) {
+        super.setSessionFactory( sessionFactory );
+    }
 
     @SuppressWarnings("unchecked")
     @Override
@@ -105,6 +114,21 @@ public class GeneCoexpressionAnalysisDaoImpl extends
     }
 
     @Override
+    /*
+     * * If a taxon is not a species check if it has child taxa and if so retrieve the expression experiments for the
+     * child taxa
+     */
+    protected Collection<GeneCoexpressionAnalysis> handleFindByParentTaxon( Taxon taxon ) {
+
+        final String queryStringParent = "select distinct goa from GeneCoexpressionAnalysisImpl as goa inner join goa.expressionExperimentSetAnalyzed"
+                + " as eesa inner join eesa.experiments as ee "
+                + "inner join ee.bioAssays as ba "
+                + "inner join ba.samplesUsed as sample where sample.sourceTaxon.parentTaxon = :taxon ";
+        return this.getHibernateTemplate().findByNamedParam( queryStringParent, "taxon", taxon );
+
+    }
+
+    @Override
     protected Collection<GeneCoexpressionAnalysis> handleFindByTaxon( Taxon taxon ) {
         final String queryString = "select distinct goa from GeneCoexpressionAnalysisImpl as goa inner join goa.expressionExperimentSetAnalyzed"
                 + " as eesa inner join eesa.experiments as ee "
@@ -112,24 +136,6 @@ public class GeneCoexpressionAnalysisDaoImpl extends
                 + "inner join ba.samplesUsed as sample where sample.sourceTaxon = :taxon ";
         return this.getHibernateTemplate().findByNamedParam( queryString, "taxon", taxon );
     }
-
-    @Override
-    /**
-     * If a taxon is not a species check if it has child taxa and if so retrieve the expression experiments for the child taxa
-     */
-    protected Collection<GeneCoexpressionAnalysis> handleFindByParentTaxon( Taxon taxon ) {
-                       
-        final String queryStringParent = "select distinct goa from GeneCoexpressionAnalysisImpl as goa inner join goa.expressionExperimentSetAnalyzed"
-            + " as eesa inner join eesa.experiments as ee "
-            + "inner join ee.bioAssays as ba "
-            + "inner join ba.samplesUsed as sample where sample.sourceTaxon.parentTaxon = :taxon ";   
-        return this.getHibernateTemplate().findByNamedParam( queryStringParent, "taxon", taxon );        
-        
-    }
-    
- 
-    
-    
 
     @Override
     protected Collection handleGetDatasetsAnalyzed( GeneCoexpressionAnalysis analysis ) throws Exception {
@@ -147,7 +153,7 @@ public class GeneCoexpressionAnalysisDaoImpl extends
     @Override
     protected void handleThaw( final GeneCoexpressionAnalysis geneCoexpressionAnalysis ) {
         HibernateTemplate templ = this.getHibernateTemplate();
-        templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+        templ.execute( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
                 session.lock( geneCoexpressionAnalysis, LockMode.NONE );
                 Hibernate.initialize( geneCoexpressionAnalysis );

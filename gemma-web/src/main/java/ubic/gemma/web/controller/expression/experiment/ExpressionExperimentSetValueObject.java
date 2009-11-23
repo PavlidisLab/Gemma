@@ -36,72 +36,72 @@ public class ExpressionExperimentSetValueObject {
     private String taxonName;
     private Long taxonId;
 
-    public boolean isModifiable() {
-        return modifiable;
-    }
-
-    public void setModifiable( boolean modifiable ) {
-        this.modifiable = modifiable;
-    }
-
-    public Integer getNumExperiments() {
-        return numExperiments;
-    }
-
-    public void setNumExperiments( Integer numExperiments ) {
-        this.numExperiments = numExperiments;
-    }
-
     public ExpressionExperimentSetValueObject() {
         this.expressionExperimentIds = new HashSet<Long>();
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName( String name ) {
-        this.name = name;
     }
 
     public String getDescription() {
         return description;
     }
 
-    public void setDescription( String description ) {
-        this.description = description;
-    }
-
     public Collection<Long> getExpressionExperimentIds() {
         return expressionExperimentIds;
-    }
-
-    public void setExpressionExperimentIds( Collection<Long> expressionExperimentIds ) {
-        this.expressionExperimentIds = expressionExperimentIds;
     }
 
     public Long getId() {
         return id;
     }
 
-    public void setId( Long id ) {
-        this.id = id;
+    public String getName() {
+        return name;
     }
 
-    public String getTaxonName() {
-        return taxonName;
-    }
-
-    public void setTaxonName( String taxonName ) {
-        this.taxonName = taxonName;
+    public Integer getNumExperiments() {
+        return numExperiments;
     }
 
     public Long getTaxonId() {
         return taxonId;
     }
 
+    public String getTaxonName() {
+        return taxonName;
+    }
+
+    public boolean isModifiable() {
+        return modifiable;
+    }
+
+    public void setDescription( String description ) {
+        this.description = description;
+    }
+
+    public void setExpressionExperimentIds( Collection<Long> expressionExperimentIds ) {
+        this.expressionExperimentIds = expressionExperimentIds;
+    }
+
+    public void setId( Long id ) {
+        this.id = id;
+    }
+
+    public void setModifiable( boolean modifiable ) {
+        this.modifiable = modifiable;
+    }
+
+    public void setName( String name ) {
+        this.name = name;
+    }
+
+    public void setNumExperiments( Integer numExperiments ) {
+        this.numExperiments = numExperiments;
+    }
+
     public void setTaxonId( Long taxonId ) {
         this.taxonId = taxonId;
+    }
+
+    public void setTaxonName( String taxonName ) {
+        this.taxonName = taxonName;
     }
 
 }

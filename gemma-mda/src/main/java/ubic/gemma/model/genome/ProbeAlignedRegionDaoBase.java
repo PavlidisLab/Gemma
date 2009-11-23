@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.genome;
 
+import java.util.Collection;
+
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 
 import ubic.gemma.model.genome.gene.GeneValueObject;
@@ -60,16 +62,16 @@ public abstract class ProbeAlignedRegionDaoBase extends HibernateDaoSupport impl
      * @see ubic.gemma.model.genome.ProbeAlignedRegionDao#create(int, java.util.Collection)
      */
 
-    public java.util.Collection<ProbeAlignedRegion> create( final int transform,
-            final java.util.Collection<ProbeAlignedRegion> entities ) {
+    public java.util.Collection<? extends ProbeAlignedRegion> create( final int transform,
+            final java.util.Collection<? extends ProbeAlignedRegion> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "ProbeAlignedRegion.create - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback() {
+                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator<ProbeAlignedRegion> entityIterator = entities.iterator(); entityIterator
+                        for ( java.util.Iterator<? extends ProbeAlignedRegion> entityIterator = entities.iterator(); entityIterator
                                 .hasNext(); ) {
                             create( transform, entityIterator.next() );
                         }
@@ -95,7 +97,8 @@ public abstract class ProbeAlignedRegionDaoBase extends HibernateDaoSupport impl
     /**
      * @see ubic.gemma.model.genome.ProbeAlignedRegionDao#create(java.util.Collection)
      */
-    public java.util.Collection<ProbeAlignedRegion> create( final java.util.Collection<ProbeAlignedRegion> entities ) {
+    public java.util.Collection<? extends ProbeAlignedRegion> create(
+            final java.util.Collection<? extends ProbeAlignedRegion> entities ) {
         return create( TRANSFORM_NONE, entities );
     }
 
@@ -103,14 +106,13 @@ public abstract class ProbeAlignedRegionDaoBase extends HibernateDaoSupport impl
      * @see ubic.gemma.model.genome.ProbeAlignedRegionDao#create(ubic.gemma.model.genome.ProbeAlignedRegion)
      */
     public ProbeAlignedRegion create( ubic.gemma.model.genome.ProbeAlignedRegion probeAlignedRegion ) {
-        return ( ubic.gemma.model.genome.ProbeAlignedRegion ) this.create( TRANSFORM_NONE, probeAlignedRegion );
+        return this.create( TRANSFORM_NONE, probeAlignedRegion );
     }
 
     /**
      * @see ubic.gemma.model.genome.ProbeAlignedRegionDao#find(int, java.lang.String, ubic.gemma.model.genome.Gene)
      */
 
-    @SuppressWarnings( { "unchecked" })
     public ProbeAlignedRegion find( final int transform, final java.lang.String queryString,
             final ubic.gemma.model.genome.Gene gene ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -120,15 +122,15 @@ public abstract class ProbeAlignedRegionDaoBase extends HibernateDaoSupport impl
         java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
                 argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
         Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'ubic.gemma.model.genome.Gene"
-                                + "' was found when executing query --> '" + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
+
+        if ( results.size() > 1 ) {
+            throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                    "More than one instance of 'ubic.gemma.model.genome.Gene"
+                            + "' was found when executing query --> '" + queryString + "'" );
+        } else if ( results.size() == 1 ) {
+            result = results.iterator().next();
         }
+
         result = transformEntity( transform, ( ubic.gemma.model.genome.ProbeAlignedRegion ) result );
         return ( ProbeAlignedRegion ) result;
     }
@@ -137,7 +139,7 @@ public abstract class ProbeAlignedRegionDaoBase extends HibernateDaoSupport impl
      * @see ubic.gemma.model.genome.ProbeAlignedRegionDao#find(int, java.lang.String,
      *      ubic.gemma.model.genome.sequenceAnalysis.BlatResult)
      */
-    @SuppressWarnings( { "unchecked" })
+
     public java.util.Collection<ProbeAlignedRegion> find( final int transform, final java.lang.String queryString,
             final ubic.gemma.model.genome.sequenceAnalysis.BlatResult blatResult ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -178,7 +180,7 @@ public abstract class ProbeAlignedRegionDaoBase extends HibernateDaoSupport impl
      */
     public ubic.gemma.model.genome.Gene find( final java.lang.String queryString,
             final ubic.gemma.model.genome.Gene gene ) {
-        return ( ubic.gemma.model.genome.Gene ) this.find( TRANSFORM_NONE, queryString, gene );
+        return this.find( TRANSFORM_NONE, queryString, gene );
     }
 
     /**
@@ -195,7 +197,7 @@ public abstract class ProbeAlignedRegionDaoBase extends HibernateDaoSupport impl
      */
 
     public ubic.gemma.model.genome.Gene find( ubic.gemma.model.genome.Gene gene ) {
-        return ( ubic.gemma.model.genome.Gene ) this.find( TRANSFORM_NONE, gene );
+        return this.find( TRANSFORM_NONE, gene );
     }
 
     /**
@@ -215,7 +217,7 @@ public abstract class ProbeAlignedRegionDaoBase extends HibernateDaoSupport impl
     /**
      * @see ubic.gemma.model.genome.ProbeAlignedRegionDao#findByNcbiId(int, java.lang.String, java.lang.String)
      */
-    @SuppressWarnings("unchecked")
+
     public java.util.Collection<ProbeAlignedRegion> findByNcbiId( final int transform,
             final java.lang.String queryString, final java.lang.String ncbiId ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -256,7 +258,6 @@ public abstract class ProbeAlignedRegionDaoBase extends HibernateDaoSupport impl
      * @see ubic.gemma.model.genome.ProbeAlignedRegionDao#findByOfficalSymbol(int, java.lang.String, java.lang.String)
      */
 
-    @SuppressWarnings( { "unchecked" })
     public java.util.Collection<ProbeAlignedRegion> findByOfficalSymbol( final int transform,
             final java.lang.String queryString, final java.lang.String officialSymbol ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -298,7 +299,6 @@ public abstract class ProbeAlignedRegionDaoBase extends HibernateDaoSupport impl
      * @see ubic.gemma.model.genome.ProbeAlignedRegionDao#findByOfficialName(int, java.lang.String, java.lang.String)
      */
 
-    @SuppressWarnings( { "unchecked" })
     public java.util.Collection<ProbeAlignedRegion> findByOfficialName( final int transform,
             final java.lang.String queryString, final java.lang.String officialName ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -343,7 +343,6 @@ public abstract class ProbeAlignedRegionDaoBase extends HibernateDaoSupport impl
      *      java.lang.String)
      */
 
-    @SuppressWarnings( { "unchecked" })
     public java.util.Collection<ProbeAlignedRegion> findByOfficialSymbolInexact( final int transform,
             final java.lang.String queryString, final java.lang.String officialSymbol ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -378,7 +377,6 @@ public abstract class ProbeAlignedRegionDaoBase extends HibernateDaoSupport impl
      *      ubic.gemma.model.genome.PhysicalLocation)
      */
 
-    @SuppressWarnings( { "unchecked" })
     public java.util.Collection<ProbeAlignedRegion> findByPhysicalLocation( final int transform,
             final java.lang.String queryString, final ubic.gemma.model.genome.PhysicalLocation location ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -427,7 +425,6 @@ public abstract class ProbeAlignedRegionDaoBase extends HibernateDaoSupport impl
      *      ubic.gemma.model.genome.Gene)
      */
 
-    @SuppressWarnings( { "unchecked" })
     public ProbeAlignedRegion findOrCreate( final int transform, final java.lang.String queryString,
             final ubic.gemma.model.genome.Gene gene ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -437,17 +434,16 @@ public abstract class ProbeAlignedRegionDaoBase extends HibernateDaoSupport impl
         java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
                 argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
         ProbeAlignedRegion result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'ubic.gemma.model.genome.Gene"
-                                + "' was found when executing query --> '" + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = ( ProbeAlignedRegion ) results.iterator().next();
-            }
+
+        if ( results.size() > 1 ) {
+            throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                    "More than one instance of 'ubic.gemma.model.genome.Gene"
+                            + "' was found when executing query --> '" + queryString + "'" );
+        } else if ( results.size() == 1 ) {
+            result = ( ProbeAlignedRegion ) results.iterator().next();
         }
-        result = ( ProbeAlignedRegion ) transformEntity( transform,
-                ( ubic.gemma.model.genome.ProbeAlignedRegion ) result );
+
+        result = ( ProbeAlignedRegion ) transformEntity( transform, result );
         return result;
     }
 
@@ -467,7 +463,7 @@ public abstract class ProbeAlignedRegionDaoBase extends HibernateDaoSupport impl
      */
     public ubic.gemma.model.genome.Gene findOrCreate( final java.lang.String queryString,
             final ubic.gemma.model.genome.Gene gene ) {
-        return ( ubic.gemma.model.genome.Gene ) this.findOrCreate( TRANSFORM_NONE, queryString, gene );
+        return this.findOrCreate( TRANSFORM_NONE, queryString, gene );
     }
 
     /**
@@ -506,7 +502,7 @@ public abstract class ProbeAlignedRegionDaoBase extends HibernateDaoSupport impl
     /**
      * @see ubic.gemma.model.genome.GeneDao#geneValueObjectToEntityCollection(java.util.Collection)
      */
-    @SuppressWarnings("unchecked")
+
     public final void geneValueObjectToEntityCollection( java.util.Collection instances ) {
         if ( instances != null ) {
             for ( final java.util.Iterator iterator = instances.iterator(); iterator.hasNext(); ) {
@@ -517,6 +513,11 @@ public abstract class ProbeAlignedRegionDaoBase extends HibernateDaoSupport impl
             }
             org.apache.commons.collections.CollectionUtils.transform( instances, GeneValueObjectToEntityTransformer );
         }
+    }
+
+    public Collection<? extends ProbeAlignedRegion> load( Collection<Long> ids ) {
+        return this.getHibernateTemplate().findByNamedParam( "from ProbeAlignedRegionImpl where id in (:ids)", "ids",
+                ids );
     }
 
     /**
@@ -543,7 +544,7 @@ public abstract class ProbeAlignedRegionDaoBase extends HibernateDaoSupport impl
     /**
      * @see ubic.gemma.model.genome.ProbeAlignedRegionDao#loadAll()
      */
-    public java.util.Collection<ProbeAlignedRegion> loadAll() {
+    public java.util.Collection<? extends ProbeAlignedRegion> loadAll() {
         return this.loadAll( TRANSFORM_NONE );
     }
 
@@ -551,9 +552,8 @@ public abstract class ProbeAlignedRegionDaoBase extends HibernateDaoSupport impl
      * @see ubic.gemma.model.genome.ProbeAlignedRegionDao#loadAll(int)
      */
 
-    @SuppressWarnings("unchecked")
-    public java.util.Collection<ProbeAlignedRegion> loadAll( final int transform ) {
-        final java.util.Collection<ProbeAlignedRegion> results = this.getHibernateTemplate().loadAll(
+    public java.util.Collection<? extends ProbeAlignedRegion> loadAll( final int transform ) {
+        final java.util.Collection<? extends ProbeAlignedRegion> results = this.getHibernateTemplate().loadAll(
                 ubic.gemma.model.genome.ProbeAlignedRegionImpl.class );
         this.transformEntities( transform, results );
         return results;
@@ -577,7 +577,7 @@ public abstract class ProbeAlignedRegionDaoBase extends HibernateDaoSupport impl
      * @see ubic.gemma.model.common.SecurableDao#remove(java.util.Collection)
      */
 
-    public void remove( java.util.Collection<ProbeAlignedRegion> entities ) {
+    public void remove( java.util.Collection<? extends ProbeAlignedRegion> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "ProbeAlignedRegion.remove - 'entities' can not be null" );
         }
@@ -621,7 +621,7 @@ public abstract class ProbeAlignedRegionDaoBase extends HibernateDaoSupport impl
     /**
      * @see ubic.gemma.model.genome.GeneDao#toGeneValueObjectCollection(java.util.Collection)
      */
-    public final void toGeneValueObjectCollection( java.util.Collection<ProbeAlignedRegion> entities ) {
+    public final void toGeneValueObjectCollection( java.util.Collection<? extends ProbeAlignedRegion> entities ) {
         if ( entities != null ) {
             org.apache.commons.collections.CollectionUtils.transform( entities, GENEVALUEOBJECT_TRANSFORMER );
         }
@@ -631,15 +631,15 @@ public abstract class ProbeAlignedRegionDaoBase extends HibernateDaoSupport impl
      * @see ubic.gemma.model.common.SecurableDao#update(java.util.Collection)
      */
 
-    public void update( final java.util.Collection<ProbeAlignedRegion> entities ) {
+    public void update( final java.util.Collection<? extends ProbeAlignedRegion> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "ProbeAlignedRegion.update - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback() {
+                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator<ProbeAlignedRegion> entityIterator = entities.iterator(); entityIterator
+                        for ( java.util.Iterator<? extends ProbeAlignedRegion> entityIterator = entities.iterator(); entityIterator
                                 .hasNext(); ) {
                             update( entityIterator.next() );
                         }
@@ -693,7 +693,8 @@ public abstract class ProbeAlignedRegionDaoBase extends HibernateDaoSupport impl
      * @see #transformEntity(int,ubic.gemma.model.genome.ProbeAlignedRegion)
      */
 
-    protected void transformEntities( final int transform, final java.util.Collection<ProbeAlignedRegion> entities ) {
+    protected void transformEntities( final int transform,
+            final java.util.Collection<? extends ProbeAlignedRegion> entities ) {
         switch ( transform ) {
             case ubic.gemma.model.genome.GeneDao.TRANSFORM_GENEVALUEOBJECT:
                 toGeneValueObjectCollection( entities );

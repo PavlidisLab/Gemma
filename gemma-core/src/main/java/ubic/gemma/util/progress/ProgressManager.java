@@ -25,15 +25,16 @@ import java.util.Map;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.springframework.security.context.SecurityContextHolder;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.security.access.AccessDeniedException; 
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
 import ubic.gemma.model.common.auditAndSecurity.JobInfo;
 import ubic.gemma.model.common.auditAndSecurity.JobInfoDao;
 import ubic.gemma.model.common.auditAndSecurity.User;
-import ubic.gemma.model.common.auditAndSecurity.UserService;
+import ubic.gemma.security.authentication.UserManager;
 
 /**
  * Singleton for creating observers for monitoring long-running processes.
@@ -44,9 +45,6 @@ import ubic.gemma.model.common.auditAndSecurity.UserService;
  * 
  * @author kelsey
  * @version $Id$
- * @spring.bean id="progressManager"
- * @spring.property name="jobInfoDao" ref="jobInfoDao"
- * @spring.property name="userService" ref="userService"
  */
 public class ProgressManager {
 
@@ -67,7 +65,15 @@ public class ProgressManager {
     private static Map<String, ProgressJob> progressJobsByTaskId = new ConcurrentHashMap<String, ProgressJob>();
 
     private static JobInfoDao jobInfoDao;
-    private static UserService userService;
+
+    private static UserManager userManager;
+
+    /**
+     * @param userManger the userManger to set
+     */
+    public void setUserManager( UserManager u ) {
+        userManager = u;
+    }
 
     public ProgressJob getJob( String taskId ) {
         return progressJobsByTaskId.get( taskId );
@@ -75,15 +81,15 @@ public class ProgressManager {
 
     /**
      * @param taskId The id of the job to be started.
+     * @param description (description of the job)
      * @param UserId This could be a user name or some kind of sessionID that the user is using. If a user name is not
      *        used then the HTTPSessionID must be used for anonymous users. If it is not used there will be no way for
      *        the Ajax call back to get the progress job that it wants to observer. todo: should session id's be
      *        persisted to the database for anonymous users?
-     * @param description (description of the job)
      * @return Use this static method for creating ProgressJobs. if the currently running thread already has a progress
      *         job assciated with it that progress job will be returned.
      */
-    public static ProgressJob createProgressJob( String taskId, String userId, String description ) {
+    public static ProgressJob createProgressJob( String taskId, String description ) {
 
         Collection<ProgressJob> usersJobs;
         ProgressJob newJob = null;
@@ -91,6 +97,8 @@ public class ProgressManager {
         if ( taskId == null ) {
             throw new IllegalArgumentException( "Task id cannot be null" );
         }
+
+        String userId = userManager.getCurrentUsername();
 
         if ( !progressJobs.containsKey( userId ) ) {
             log.debug( "Creating new progress job(s) with key " + userId );
@@ -103,7 +111,7 @@ public class ProgressManager {
 
         // No job currently assciated with this thread or the job assciated with the thread is no longer valid
         if ( ( currentJob.get() == null ) || ( progressJobsByTaskId.get( currentJob.get() ) == null ) ) {
-            JobInfo jobI = createnewJobInfo( taskId, userId, description );
+            JobInfo jobI = createnewJobInfo( taskId, description );
 
             try {
                 JobInfo createdJobI = jobInfoDao.create( jobI );
@@ -111,7 +119,6 @@ public class ProgressManager {
             } catch ( Exception e ) {
                 log.warn( "Unable to create jobinfo in database: " + e.getMessage() );
                 newJob = new ProgressJobImpl( jobI, description );
-
             }
 
             currentJob.set( taskId );
@@ -139,7 +146,7 @@ public class ProgressManager {
      * @param description
      * @return
      */
-    private static JobInfo createnewJobInfo( String taskId, String userName, String description ) {
+    private static JobInfo createnewJobInfo( String taskId, String description ) {
 
         Calendar cal = new GregorianCalendar();
         JobInfo jobI = JobInfo.Factory.newInstance();
@@ -148,18 +155,11 @@ public class ProgressManager {
         jobI.setDescription( description );
         jobI.setTaskId( taskId );
 
-        User aUser = userService.findByUserName( userName );
-
-        // Try to use the userName asscciated with the security context
-        if ( aUser == null )
-            aUser = userService.findByUserName( SecurityContextHolder.getContext().getAuthentication().getName() );
-
-        if ( aUser != null )
-            jobI.setUser( aUser );
-        else {
-            jobI.setUser( null );
-            log
-                    .debug( "No user assciated with job. Client side observer will have no way to receive progress messages.  Use sesison ID for anonymous users." );
+        try {
+            User u = userManager.getCurrentUser();
+            jobI.setUser( u );
+        } catch ( UsernameNotFoundException e ) {
+        } catch ( AccessDeniedException e ) {
         }
 
         return jobI;
@@ -378,10 +378,6 @@ public class ProgressManager {
         jobInfoDao = jobDao;
     }
 
-    public void setUserService( UserService usrService ) {
-        userService = usrService;
-    }
-
     /**
      * @param key
      */
@@ -429,8 +425,14 @@ public class ProgressManager {
         if ( job != null ) job.updateProgress( message );
     }
 
-    public static ProgressJob createProgressJob( String taskId, String name, String string, boolean doForward ) {
-        ProgressJob job = createProgressJob( taskId, name, string );
+    /**
+     * @param taskId
+     * @param string
+     * @param doForward
+     * @return
+     */
+    public static ProgressJob createProgressJob( String taskId, String string, boolean doForward ) {
+        ProgressJob job = createProgressJob( taskId, string );
         job.setForwardWhenDone( doForward );
         return job;
     }

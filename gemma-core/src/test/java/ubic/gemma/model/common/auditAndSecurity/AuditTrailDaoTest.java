@@ -18,10 +18,16 @@
  */
 package ubic.gemma.model.common.auditAndSecurity;
 
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 import java.util.Date;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.junit.Before;
+import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -35,7 +41,9 @@ import ubic.gemma.testing.BaseSpringContextTest;
 public class AuditTrailDaoTest extends BaseSpringContextTest {
     protected static final Log log = LogFactory.getLog( AuditTrailDaoTest.class );
 
+    @Autowired
     AuditTrailDao auditTrailDao;
+
     Auditable auditable;
     AuditTrail auditTrail;
     AuditEvent auditEvent0;
@@ -47,8 +55,8 @@ public class AuditTrailDaoTest extends BaseSpringContextTest {
     /**
      * @exception Exception
      */
-    @Override
-    protected void onSetUpInTransaction() throws Exception {
+    @Before
+    public void setup() throws Exception {
 
         ArrayDesign ad = ArrayDesign.Factory.newInstance();
         ad.setName( "testing" );
@@ -86,14 +94,16 @@ public class AuditTrailDaoTest extends BaseSpringContextTest {
 
     }
 
+    @Test
     public void testCreate() {
         log.info( "Creating audit trail" );
         assert auditTrail != null;
-        AuditTrail t = getAuditTrailDao().create( auditTrail );
+        AuditTrail t = auditTrailDao.create( auditTrail );
         assertNotNull( t );
         assertNotNull( t.getId() );
     }
 
+    @Test
     public void testHandleAddEventAuditableAuditEvent() throws Exception {
         AuditTrailDao atd = ( AuditTrailDao ) getBean( "auditTrailDao" );
         AuditEvent auditEvent = AuditEvent.Factory.newInstance();
@@ -105,17 +115,4 @@ public class AuditTrailDaoTest extends BaseSpringContextTest {
 
     }
 
-    /**
-     * @return Returns the auditTrailDao.
-     */
-    public AuditTrailDao getAuditTrailDao() {
-        return auditTrailDao;
-    }
-
-    /**
-     * @param auditTrailDao The auditTrailDao to set.
-     */
-    public void setAuditTrailDao( AuditTrailDao auditTrailDao ) {
-        this.auditTrailDao = auditTrailDao;
-    }
 }

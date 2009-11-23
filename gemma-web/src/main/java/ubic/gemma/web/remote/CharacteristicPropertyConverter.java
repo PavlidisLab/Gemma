@@ -44,10 +44,6 @@ import org.directwebremoting.util.Messages;
 public class CharacteristicPropertyConverter extends BeanConverter {
     private static Log log = LogFactory.getLog( CharacteristicPropertyConverter.class.getName() );
 
-    public OutboundVariable convertOutbound( Object data, OutboundContext outctx ) {
-        return new SimpleOutboundVariable( '\'' + data.toString() + '\'', outctx, true );
-    }
-
     @Override
     public Object convertInbound( Class paramType, InboundVariable iv, InboundContext inctx ) throws MarshallException {
         String value = iv.getValue();
@@ -140,6 +136,11 @@ public class CharacteristicPropertyConverter extends BeanConverter {
         } catch ( Exception ex ) {
             throw new MarshallException( paramType, ex );
         }
+    }
+
+    @Override
+    public OutboundVariable convertOutbound( Object data, OutboundContext outctx ) {
+        return new SimpleOutboundVariable( '\'' + data.toString() + '\'', outctx, true );
     }
 
 }

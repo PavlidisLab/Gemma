@@ -10,6 +10,8 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import ubic.basecode.math.metaanalysis.MetaAnalysis;
 import ubic.gemma.model.analysis.expression.ProbeAnalysisResult;
@@ -31,9 +33,8 @@ import cern.colt.list.DoubleArrayList;
  * 
  * @author keshav
  * @version $Id$
- * @spring.bean id="geneDifferentialExpressionService"
- * @spring.property name="differentialExpressionResultService" ref="differentialExpressionResultService"
  */
+@Service
 public class GeneDifferentialExpressionService {
 
     private static final String FV_SEP = ", ";
@@ -46,6 +47,7 @@ public class GeneDifferentialExpressionService {
      */
     private static final double PVALUE_CLIP_THRESHOLD = 1e-8;
 
+    @Autowired
     private DifferentialExpressionResultService differentialExpressionResultService = null;
 
     private Log log = LogFactory.getLog( this.getClass() );

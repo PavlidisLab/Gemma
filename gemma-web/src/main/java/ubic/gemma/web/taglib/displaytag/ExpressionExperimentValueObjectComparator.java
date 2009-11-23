@@ -29,6 +29,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 public class ExpressionExperimentValueObjectComparator extends DateStringComparator {
 
     
+    @Override
     public int compare( Object arg0, Object arg1 ) {
         
        ExpressionExperimentValueObject eevo0 = (ExpressionExperimentValueObject) arg0;

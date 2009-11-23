@@ -38,19 +38,6 @@ public class GffParserTest extends TestCase {
     private static Log log = LogFactory.getLog( GffParserTest.class.getName() );
     InputStream is;
 
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
-        is = GffParserTest.class.getResourceAsStream( "/data/loader/genome/microrna-mmu.gff" );
-    }
-
-    @Override
-    protected void tearDown() throws Exception {
-        if ( is != null ) is.close();
-        super.tearDown();
-    }
-
-    @SuppressWarnings("unchecked")
     public void testParseInputStream() throws Exception {
         GffParser parser = new GffParser();
         Taxon t = Taxon.Factory.newInstance();
@@ -58,7 +45,7 @@ public class GffParserTest extends TestCase {
         t.setScientificName( "Mus musculus" );
         t.setIsSpecies( true );
         t.setIsGenesUsable( true );
-        
+
         parser.setTaxon( t );
         parser.parse( is );
         Collection<Gene> res = parser.getResults();
@@ -72,6 +59,18 @@ public class GffParserTest extends TestCase {
             log.debug( object );
         }
         assertEquals( 382, res.size() );
+    }
+
+    @Override
+    protected void setUp() throws Exception {
+        super.setUp();
+        is = GffParserTest.class.getResourceAsStream( "/data/loader/genome/microrna-mmu.gff" );
+    }
+
+    @Override
+    protected void tearDown() throws Exception {
+        if ( is != null ) is.close();
+        super.tearDown();
     }
 
 }

@@ -18,12 +18,27 @@
  */
 package ubic.gemma.model.common.auditAndSecurity;
 
+import java.util.Collection;
+
 import ubic.gemma.persistence.BaseDao;
 
 /**
  * @see ubic.gemma.model.common.auditAndSecurity.User
+ * @version $Id$
+ * @author Gemma
  */
 public interface UserDao extends BaseDao<User> {
+
+    /**
+     * 
+     */
+    public void addAuthority( ubic.gemma.model.common.auditAndSecurity.User user, java.lang.String roleName );
+
+    /**
+     * @param user
+     * @param password - encrypted
+     */
+    public void changePassword( ubic.gemma.model.common.auditAndSecurity.User user, String password );
 
     /**
      * @param contact
@@ -37,37 +52,20 @@ public interface UserDao extends BaseDao<User> {
     public ubic.gemma.model.common.auditAndSecurity.User findByEmail( java.lang.String email );
 
     /**
-     * <p>
-     * Does the same thing as {@link #findByUserName(java.lang.String)} with an additional flag called
-     * <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then finder results will
-     * <strong>NOT</strong> be transformed during retrieval. If this flag is any of the other constants defined here
-     * then finder results <strong>WILL BE</strong> passed through an operation which can optionally transform the
-     * entities (into value objects for example). By default, transformation does not occur.
-     * </p>
-     */
-    public User findByUserName( int transform, java.lang.String userName );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findByUserName(boolean, java.lang.String)} with an additional argument called
-     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string defined
-     * in {@link #findByUserName(int, java.lang.String userName)}.
-     * </p>
-     */
-    public User findByUserName( int transform, String queryString, java.lang.String userName );
-
-    /**
      * 
      */
     public ubic.gemma.model.common.auditAndSecurity.User findByUserName( java.lang.String userName );
 
     /**
-     * <p>
-     * Does the same thing as {@link #findByUserName(java.lang.String)} with an additional argument called
-     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string defined
-     * in {@link #findByUserName(java.lang.String)}.
-     * </p>
+     * @param u
+     * @return
      */
-    public ubic.gemma.model.common.auditAndSecurity.User findByUserName( String queryString, java.lang.String userName );
+    public Collection<GroupAuthority> loadGroupAuthorities( User u );
+
+    /**
+     * @param user
+     * @return
+     */
+    public Collection<UserGroup> loadGroups( User user );
 
 }

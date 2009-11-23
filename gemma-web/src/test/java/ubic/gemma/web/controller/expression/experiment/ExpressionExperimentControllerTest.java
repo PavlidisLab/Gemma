@@ -18,8 +18,12 @@
  */
 package ubic.gemma.web.controller.expression.experiment;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.junit.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
 
 import ubic.gemma.testing.BaseSpringContextTest;
@@ -33,18 +37,6 @@ import ubic.gemma.testing.BaseSpringContextTest;
 public class ExpressionExperimentControllerTest extends BaseSpringContextTest {
     private static Log log = LogFactory.getLog( ExpressionExperimentControllerTest.class.getName() );
 
-    // ExpressionExperimentController expressionExperimentController;
-
-    /**
-     * @throws Exception
-     */
-    @Override
-    @SuppressWarnings("unchecked")
-    public void onSetUp() throws Exception {
-        super.onSetUpInTransaction();
-
-    }
-
     /**
      * Tests getting all the expressionExperiments, which is implemented in
      * {@link ubic.gemma.web.controller.expression.experiment.ExpressionExperimentController} in method
@@ -52,6 +44,7 @@ public class ExpressionExperimentControllerTest extends BaseSpringContextTest {
      * 
      * @throws Exception
      */
+    @Test
     public void testGetExpressionExperiments() throws Exception {
         log.debug( "-> (association), => (composition)" );
 
@@ -73,7 +66,7 @@ public class ExpressionExperimentControllerTest extends BaseSpringContextTest {
         // assertEquals( mav.getViewName(), "expressionExperiments" );
 
         /* uncomment to leave data in the database */
-        // this.setComplete();
+        // this.
     }
 
     // /**

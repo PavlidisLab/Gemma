@@ -241,6 +241,9 @@
 
 	<cache name="ubic.gemma.model.common.auditAndSecurity.UserGroupImpl.notedReferenceLists" maxElementsInMemory="10000"
 		eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
+	
+	<cache name="ubic.gemma.model.common.auditAndSecurity.UserGroupImpl.authorities" maxElementsInMemory="10000" eternal="false"
+		timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
 	<cache name="ubic.gemma.model.common.auditAndSecurity.ContactImpl" maxElementsInMemory="10000" eternal="false"
 		timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
@@ -275,7 +278,10 @@
 
 	<cache name="ubic.gemma.model.common.auditAndSecurity.UserRoleImpl" maxElementsInMemory="10000" eternal="false"
 		timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
-
+		
+		<cache name="ubic.gemma.model.common.auditAndSecurity.GroupAuthorityImpl" maxElementsInMemory="10000" eternal="false"
+		timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
+	
 	<cache name="ubic.gemma.model.common.auditAndSecurity.JobInfoImpl" maxElementsInMemory="10000" eternal="false"
 		timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 

@@ -37,7 +37,7 @@ public abstract class ReporterDaoBase extends ubic.gemma.model.expression.design
             throw new IllegalArgumentException( "Reporter.create - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback() {
+                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
@@ -65,7 +65,7 @@ public abstract class ReporterDaoBase extends ubic.gemma.model.expression.design
     /**
      * @see ubic.gemma.model.expression.designElement.ReporterDao#create(java.util.Collection)
      */
-    @SuppressWarnings( { "unchecked" })
+    
     public java.util.Collection create( final java.util.Collection entities ) {
         return create( TRANSFORM_NONE, entities );
     }
@@ -81,7 +81,7 @@ public abstract class ReporterDaoBase extends ubic.gemma.model.expression.design
      * @see ubic.gemma.model.expression.designElement.ReporterDao#find(int, java.lang.String,
      *      ubic.gemma.model.expression.designElement.Reporter)
      */
-    @SuppressWarnings( { "unchecked" })
+    
     public Object find( final int transform, final java.lang.String queryString,
             final ubic.gemma.model.expression.designElement.Reporter reporter ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -91,15 +91,15 @@ public abstract class ReporterDaoBase extends ubic.gemma.model.expression.design
         java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
                 argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
         Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'ubic.gemma.model.expression.designElement.Reporter"
-                                + "' was found when executing query --> '" + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
+
+        if ( results.size() > 1 ) {
+            throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                    "More than one instance of 'ubic.gemma.model.expression.designElement.Reporter"
+                            + "' was found when executing query --> '" + queryString + "'" );
+        } else if ( results.size() == 1 ) {
+            result = results.iterator().next();
         }
+
         result = transformEntity( transform, ( ubic.gemma.model.expression.designElement.Reporter ) result );
         return result;
     }
@@ -108,7 +108,7 @@ public abstract class ReporterDaoBase extends ubic.gemma.model.expression.design
      * @see ubic.gemma.model.expression.designElement.ReporterDao#find(int,
      *      ubic.gemma.model.expression.designElement.Reporter)
      */
-    @SuppressWarnings( { "unchecked" })
+    
     public Object find( final int transform, final ubic.gemma.model.expression.designElement.Reporter reporter ) {
         return this
                 .find(
@@ -121,7 +121,7 @@ public abstract class ReporterDaoBase extends ubic.gemma.model.expression.design
      * @see ubic.gemma.model.expression.designElement.ReporterDao#find(java.lang.String,
      *      ubic.gemma.model.expression.designElement.Reporter)
      */
-    @SuppressWarnings( { "unchecked" })
+    
     public ubic.gemma.model.expression.designElement.Reporter find( final java.lang.String queryString,
             final ubic.gemma.model.expression.designElement.Reporter reporter ) {
         return ( ubic.gemma.model.expression.designElement.Reporter ) this.find( TRANSFORM_NONE, queryString, reporter );
@@ -139,7 +139,7 @@ public abstract class ReporterDaoBase extends ubic.gemma.model.expression.design
      * @see ubic.gemma.model.expression.designElement.ReporterDao#findOrCreate(int, java.lang.String,
      *      ubic.gemma.model.expression.designElement.Reporter)
      */
-    @SuppressWarnings( { "unchecked" })
+    
     public Object findOrCreate( final int transform, final java.lang.String queryString,
             final ubic.gemma.model.expression.designElement.Reporter reporter ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -149,15 +149,15 @@ public abstract class ReporterDaoBase extends ubic.gemma.model.expression.design
         java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
                 argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
         Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'ubic.gemma.model.expression.designElement.Reporter"
-                                + "' was found when executing query --> '" + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
+
+        if ( results.size() > 1 ) {
+            throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                    "More than one instance of 'ubic.gemma.model.expression.designElement.Reporter"
+                            + "' was found when executing query --> '" + queryString + "'" );
+        } else if ( results.size() == 1 ) {
+            result = results.iterator().next();
         }
+
         result = transformEntity( transform, ( ubic.gemma.model.expression.designElement.Reporter ) result );
         return result;
     }
@@ -166,7 +166,7 @@ public abstract class ReporterDaoBase extends ubic.gemma.model.expression.design
      * @see ubic.gemma.model.expression.designElement.ReporterDao#findOrCreate(int,
      *      ubic.gemma.model.expression.designElement.Reporter)
      */
-    @SuppressWarnings( { "unchecked" })
+    
     public Object findOrCreate( final int transform, final ubic.gemma.model.expression.designElement.Reporter reporter ) {
         return this
                 .findOrCreate(
@@ -179,7 +179,7 @@ public abstract class ReporterDaoBase extends ubic.gemma.model.expression.design
      * @see ubic.gemma.model.expression.designElement.ReporterDao#findOrCreate(java.lang.String,
      *      ubic.gemma.model.expression.designElement.Reporter)
      */
-    @SuppressWarnings( { "unchecked" })
+    
     public ubic.gemma.model.expression.designElement.Reporter findOrCreate( final java.lang.String queryString,
             final ubic.gemma.model.expression.designElement.Reporter reporter ) {
         return ( ubic.gemma.model.expression.designElement.Reporter ) this.findOrCreate( TRANSFORM_NONE, queryString,
@@ -219,7 +219,7 @@ public abstract class ReporterDaoBase extends ubic.gemma.model.expression.design
      * @see ubic.gemma.model.expression.designElement.ReporterDao#loadAll()
      */
 
-    @SuppressWarnings( { "unchecked" })
+    
     public java.util.Collection loadAll() {
         return this.loadAll( TRANSFORM_NONE );
     }
@@ -243,8 +243,7 @@ public abstract class ReporterDaoBase extends ubic.gemma.model.expression.design
         if ( id == null ) {
             throw new IllegalArgumentException( "Reporter.remove - 'id' can not be null" );
         }
-        ubic.gemma.model.expression.designElement.Reporter entity = ( ubic.gemma.model.expression.designElement.Reporter ) this
-                .load( id );
+        ubic.gemma.model.expression.designElement.Reporter entity = this.load( id );
         if ( entity != null ) {
             this.remove( entity );
         }
@@ -280,7 +279,7 @@ public abstract class ReporterDaoBase extends ubic.gemma.model.expression.design
             throw new IllegalArgumentException( "Reporter.update - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback() {
+                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {

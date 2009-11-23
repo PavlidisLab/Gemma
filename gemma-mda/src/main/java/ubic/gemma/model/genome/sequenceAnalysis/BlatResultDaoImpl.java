@@ -22,6 +22,9 @@ import java.util.Collection;
 import java.util.List;
 
 import org.hibernate.Criteria;
+import org.hibernate.SessionFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
 
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.util.BusinessKey;
@@ -29,7 +32,13 @@ import ubic.gemma.util.BusinessKey;
 /**
  * @see ubic.gemma.model.genome.sequenceAnalysis.BlatResult
  */
+@Repository
 public class BlatResultDaoImpl extends ubic.gemma.model.genome.sequenceAnalysis.BlatResultDaoBase {
+
+    @Autowired
+    public BlatResultDaoImpl( SessionFactory sessionFactory ) {
+        super.setSessionFactory( sessionFactory );
+    }
 
     /*
      * (non-Javadoc)
@@ -41,7 +50,7 @@ public class BlatResultDaoImpl extends ubic.gemma.model.genome.sequenceAnalysis.
     public Collection<BlatResult> findByBioSequence( BioSequence bioSequence ) {
         BusinessKey.checkValidKey( bioSequence );
 
-        Criteria queryObject = super.getSession( false ).createCriteria( BlatResult.class );
+        Criteria queryObject = super.getSession().createCriteria( BlatResult.class );
 
         BusinessKey.attachCriteria( queryObject, bioSequence, "querySequence" );
 
@@ -76,7 +85,7 @@ public class BlatResultDaoImpl extends ubic.gemma.model.genome.sequenceAnalysis.
         if ( result != null ) return result;
 
         logger.debug( "Creating new BlatResult: " + blatResult.toString() );
-        result = ( BlatResult ) create( blatResult );
+        result = create( blatResult );
         return result;
     }
 

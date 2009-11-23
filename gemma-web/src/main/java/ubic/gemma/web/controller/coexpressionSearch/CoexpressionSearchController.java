@@ -26,6 +26,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.servlet.ModelAndView;
 
 import ubic.gemma.analysis.expression.coexpression.CoexpressionMetaValueObject;
@@ -34,28 +36,19 @@ import ubic.gemma.analysis.expression.coexpression.GeneCoexpressionService;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSetService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.search.SearchService;
-import ubic.gemma.security.expression.experiment.ExpressionExperimentSecureService;
 import ubic.gemma.web.controller.BaseFormController;
 import ubic.gemma.web.view.TextView;
 
 /**
  * @author luke
  * @version $Id$
- * @spring.bean id="coexpressionSearchController"
- * @spring.property name = "geneService" ref="geneService"
- * @spring.property name = "searchService" ref="searchService"
- * @spring.property name="geneCoexpressionService" ref="geneCoexpressionService"
- * @spring.property name="expressionExperimentSecureService" ref="expressionExperimentSecureService"
- * @spring.property name="expressionExperimentSetService" ref="expressionExperimentSetService"
  */
+@Controller
 public class CoexpressionSearchController extends BaseFormController {
-
-    public void setExpressionExperimentSetService( ExpressionExperimentSetService expressionExperimentSetService ) {
-        this.expressionExperimentSetService = expressionExperimentSetService;
-    }
 
     private static final int MAX_RESULTS = 200;
 
@@ -63,11 +56,19 @@ public class CoexpressionSearchController extends BaseFormController {
 
     private static final int MAX_GENES_PER_QUERY = 20;
 
+    @Autowired
     private GeneService geneService = null;
-    private SearchService searchService = null;
 
+    @Autowired
+    private SearchService searchService = null;
+    
+    @Autowired
     private GeneCoexpressionService geneCoexpressionService;
-    private ExpressionExperimentSecureService expressionExperimentSecureService;
+
+    @Autowired
+    private ExpressionExperimentService expressionExperimentService;
+    
+    @Autowired
     private ExpressionExperimentSetService expressionExperimentSetService;
 
     /**
@@ -109,19 +110,19 @@ public class CoexpressionSearchController extends BaseFormController {
             } else {
                 eeSets = expressionExperimentSetService.findByName( "All " + gene.getTaxon().getCommonName() );
             }
-            //lmd eeSets was null
-            if(eeSets ==null || eeSets.size() ==0){
-                result
-                .setErrorState("No gene coexpression analysis is available for " +  gene.getTaxon().getScientificName());
+            // lmd eeSets was null
+            if ( eeSets == null || eeSets.size() == 0 ) {
+                result.setErrorState( "No gene coexpression analysis is available for "
+                        + gene.getTaxon().getScientificName() );
                 log.info( "No expression experiment set results for query: " + searchOptions );
-                return result;                
+                return result;
             }
             if ( eeSets.size() > 1 ) {
                 log.warn( "more than one set found using 1st." );
             }
             eeSetId = eeSets.iterator().next().getId();
         }
-        
+
         List<Gene> genes = new ArrayList<Gene>();
         genes.add( gene );
         result.setQueryGenes( genes );
@@ -131,11 +132,10 @@ public class CoexpressionSearchController extends BaseFormController {
         result.setKnownGeneResults( geneResults );
 
         if ( result.getKnownGeneResults() == null || result.getKnownGeneResults().isEmpty() ) {
-            result
-                    .setErrorState( "Sorry, No genes are currently coexpressed under the selected search conditions " );
+            result.setErrorState( "Sorry, No genes are currently coexpressed under the selected search conditions " );
             log.info( "No search results for query: " + searchOptions );
         }
-        
+
         return result;
 
     }
@@ -189,7 +189,7 @@ public class CoexpressionSearchController extends BaseFormController {
 
         // Add the users datasets to the selected datasets
         if ( searchOptions.isUseMyDatasets() ) {
-            myEE = expressionExperimentSecureService.loadExpressionExperimentsForUser();
+            myEE = expressionExperimentService.loadMyExpressionExperiments();
             if ( myEE != null && !myEE.isEmpty() ) {
                 for ( ExpressionExperiment ee : myEE )
                     searchOptions.getEeIds().add( ee.getId() );
@@ -340,8 +340,4 @@ public class CoexpressionSearchController extends BaseFormController {
 
     }
 
-    public void setExpressionExperimentSecureService(
-            ExpressionExperimentSecureService expressionExperimentSecureService ) {
-        this.expressionExperimentSecureService = expressionExperimentSecureService;
-    }
 }

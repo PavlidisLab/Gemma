@@ -18,6 +18,10 @@
  */
 package ubic.gemma.model.genome.gene;
 
+import org.springframework.beans.factory.annotation.Autowired;
+
+import ubic.gemma.model.common.auditAndSecurity.AuditEventDao;
+
 /**
  * <p>
  * Spring Service base class for <code>ubic.gemma.model.genome.gene.GeneProductService</code>, provides access to all
@@ -26,10 +30,14 @@ package ubic.gemma.model.genome.gene;
  * 
  * @see ubic.gemma.model.genome.gene.GeneProductService
  */
-public abstract class GeneProductServiceBase extends ubic.gemma.model.common.AuditableServiceImpl implements
-        ubic.gemma.model.genome.gene.GeneProductService {
+public abstract class GeneProductServiceBase implements ubic.gemma.model.genome.gene.GeneProductService {
 
+    @Autowired
     private ubic.gemma.model.genome.gene.GeneProductDao geneProductDao;
+
+    @SuppressWarnings("unused")
+    @Autowired
+    private AuditEventDao auditEventDao;
 
     /**
      * @see ubic.gemma.model.genome.gene.GeneProductService#countAll()

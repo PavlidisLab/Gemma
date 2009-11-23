@@ -20,11 +20,14 @@ package ubic.gemma.model.common.measurement;
 
 import java.util.Collection;
 
+import org.springframework.stereotype.Service;
+
 /**
  * @author paul
  * @version $Id$
  * @see UnitService
  */
+@Service
 public class UnitServiceImpl implements UnitService {
 
     private UnitDao unitDao;
@@ -35,7 +38,7 @@ public class UnitServiceImpl implements UnitService {
      * @see ubic.gemma.model.common.measurement.UnitDao#create(java.util.Collection)
      */
     public Collection<Unit> create( Collection<Unit> entities ) {
-        return unitDao.create( entities );
+        return ( Collection<Unit> ) unitDao.create( entities );
     }
 
     /**
@@ -85,17 +88,8 @@ public class UnitServiceImpl implements UnitService {
      * @return
      * @see ubic.gemma.model.common.measurement.UnitDao#loadAll()
      */
-    public Collection<Unit> loadAll() {
+    public Collection loadAll() {
         return unitDao.loadAll();
-    }
-
-    /**
-     * @param transform
-     * @return
-     * @see ubic.gemma.model.common.measurement.UnitDao#loadAll(int)
-     */
-    public Collection<Unit> loadAll( int transform ) {
-        return unitDao.loadAll( transform );
     }
 
     /**

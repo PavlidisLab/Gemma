@@ -22,6 +22,7 @@ import java.util.Collection;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.loader.expression.geo.GeoConverter;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
@@ -31,26 +32,21 @@ import ubic.gemma.persistence.PersisterHelper;
 /**
  * @author pavlidis
  * @version $Id$
- * @spring.property name="geoConverter" ref="geoConverter"
- * @spring.property name="arrayDesignService" ref="arrayDesignService"
- * @spring.property name="persisterHelper" ref="persisterHelper"
  */
 public abstract class AbstractGeoService {
 
     protected static Log log = LogFactory.getLog( AbstractGeoService.class );
-    protected GeoDomainObjectGenerator geoDomainObjectGenerator;
-    protected PersisterHelper persisterHelper;
-    protected ArrayDesignService arrayDesignService;
-    protected GeoConverter geoConverter;
 
-    /**
-     * @param geoAccession
-     * @return
-     * @deprecated Use {@link #fetchAndLoad(String,boolean,boolean,boolean,boolean,boolean)} instead
-     */
-    @Deprecated
-    public abstract Collection<?> fetchAndLoad( String geoAccession, boolean loadPlatformOnly,
-            boolean doSampleMatching, boolean aggressiveQuantitationTypeRemoval, boolean splitIncompatiblePlatforms );
+    protected GeoDomainObjectGenerator geoDomainObjectGenerator;
+
+    @Autowired
+    protected PersisterHelper persisterHelper;
+
+    @Autowired
+    protected ArrayDesignService arrayDesignService;
+
+    @Autowired
+    protected GeoConverter geoConverter;
 
     /**
      * @param geoAccession
@@ -58,7 +54,8 @@ public abstract class AbstractGeoService {
      * @return
      */
     public abstract Collection<?> fetchAndLoad( String geoAccession, boolean loadPlatformOnly,
-            boolean doSampleMatching, boolean aggressiveQuantitationTypeRemoval, boolean splitIncompatiblePlatforms, boolean allowSuperSeriesImport );
+            boolean doSampleMatching, boolean aggressiveQuantitationTypeRemoval, boolean splitIncompatiblePlatforms,
+            boolean allowSuperSeriesImport );
 
     /**
      * This is supplied to allow clients to check that the generator has been set correctly.

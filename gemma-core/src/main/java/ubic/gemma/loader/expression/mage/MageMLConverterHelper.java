@@ -92,7 +92,6 @@ import org.biomage.DesignElement.ReporterCompositeMap;
 import org.biomage.DesignElement.ReporterPosition;
 import org.biomage.Experiment.Experiment;
 import org.biomage.Experiment.ExperimentDesign;
-import org.biomage.Measurement.TemperatureUnit;
 import org.biomage.Measurement.Unit;
 import org.biomage.Measurement.Measurement.KindCV;
 import org.biomage.Measurement.Measurement.Type;
@@ -184,10 +183,9 @@ import ubic.gemma.util.ReflectionUtil;
  * In Gemma we only have BioMaterial, not distinct BioSample, BioSource and LabeledExtract objects.
  * </p>
  * 
- * @see ubic.gemma.model.loader.mage.MageMLParser
+ * @see ubic.gemma.loader.expression.mage.MageMLParser
  * @author pavlidis
  * @version $Id$
- * @spring.bean id="mageMLConverterHelper" singleton="false"
  */
 @SuppressWarnings("unchecked")
 public class MageMLConverterHelper {
@@ -204,7 +202,11 @@ public class MageMLConverterHelper {
 
     private static final String ARRAY_EXPRESS_LOCAL_DATAFILE_BASEPATH = "arrayExpress.local.datafile.basepath";
 
-    private static final String[] DATE_FORMATS = new String[] { "yyyy-MM-dd HH:mm:ss" };
+    /*
+     * The weird second format shows up in at least one mage-ml file...I don't think it's supposed to be a literal Z but
+     * that's what's in the date.
+     */
+    private static final String[] DATE_FORMATS = new String[] { "yyyy-MM-dd HH:mm:ss", "yyyy-MM-dd'T'hh-mm-ss'Z'" };
 
     private static Log log = LogFactory.getLog( MageMLConverterHelper.class.getName() );
 
@@ -3600,11 +3602,20 @@ public class MageMLConverterHelper {
      */
     private void initMGEDOntology() {
         log.info( "Reading MGED Ontology" );
-        try {
-            mgedOntologyHelper = new OntologyHelper( MGED_ONTOLOGY_URL );
-        } catch ( Exception e ) {
-            throw new RuntimeException( e );
+        int maxTries = 3;
+        for ( int i = 0; i < maxTries; i++ ) {
+            try {
+                mgedOntologyHelper = new OntologyHelper( MGED_ONTOLOGY_URL );
+                return;
+            } catch ( Exception a ) {
+                try {
+                    Thread.sleep( 5000 );
+                } catch ( InterruptedException e1 ) {
+                    throw new RuntimeException( a );
+                }
+            }
         }
+        throw new RuntimeException( "Failed to initialize MGED Ontology" );
     }
 
     /**

@@ -23,6 +23,9 @@ import java.util.HashSet;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+
 import ubic.gemma.analysis.expression.diff.AbstractDifferentialExpressionAnalyzer;
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzer;
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService;
@@ -33,14 +36,14 @@ import ubic.gemma.analysis.expression.diff.TwoWayAnovaWithoutInteractionsAnalyze
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService.AnalysisType;
 import ubic.gemma.grid.javaspaces.TaskCommand;
 import ubic.gemma.grid.javaspaces.TaskResult;
-import ubic.gemma.grid.javaspaces.diff.DifferentialExpressionAnalysisTask;
-import ubic.gemma.grid.javaspaces.diff.DifferentialExpressionAnalysisTaskCommand;
+import ubic.gemma.grid.javaspaces.task.diff.DifferentialExpressionAnalysisTask;
+import ubic.gemma.grid.javaspaces.task.diff.DifferentialExpressionAnalysisTaskCommand;
+import ubic.gemma.grid.javaspaces.util.SpacesEnum;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.util.grid.javaspaces.SpacesEnum;
 import ubic.gemma.web.controller.BackgroundControllerJob;
 import ubic.gemma.web.controller.BaseControllerJob;
 import ubic.gemma.web.controller.grid.AbstractSpacesController;
@@ -48,13 +51,10 @@ import ubic.gemma.web.controller.grid.AbstractSpacesController;
 /**
  * A controller to run differential expression analysis either locally or in a space.
  * 
- * @spring.bean id="differentialExpressionAnalysisController"
- * @spring.property name = "expressionExperimentService" ref="expressionExperimentService"
- * @spring.property name="differentialExpressionAnalyzerService" ref="differentialExpressionAnalyzerService"
- * @spring.property name="differentialExpressionAnalyzer" ref="differentialExpressionAnalyzer"
  * @author keshav
  * @version $Id$
  */
+@Controller
 public class DifferentialExpressionAnalysisController extends AbstractSpacesController<DifferentialExpressionAnalysis> {
 
     /**
@@ -144,11 +144,51 @@ public class DifferentialExpressionAnalysisController extends AbstractSpacesCont
 
     }
 
+    @Autowired
     private DifferentialExpressionAnalyzer differentialExpressionAnalyzer;
 
+    @Autowired
     private DifferentialExpressionAnalyzerService differentialExpressionAnalyzerService;
 
+    @Autowired
     private ExpressionExperimentService expressionExperimentService = null;
+
+    /**
+     * @param id
+     * @return
+     */
+    public DifferentialExpressionAnalyzerInfo determineAnalysisType( Long id ) {
+        ExpressionExperiment ee = expressionExperimentService.load( id );
+        if ( ee == null ) {
+            throw new IllegalArgumentException( "Cannot access experiment with id=" + id );
+        }
+        AbstractDifferentialExpressionAnalyzer analyzer = this.differentialExpressionAnalyzer.determineAnalysis( ee );
+
+        DifferentialExpressionAnalyzerInfo result = new DifferentialExpressionAnalyzerInfo();
+
+        for ( ExperimentalFactor factor : ee.getExperimentalDesign().getExperimentalFactors() ) {
+            result.getFactors().add( new ExperimentalFactorValueObject( factor ) );
+        }
+
+        if ( analyzer == null ) {
+            /*
+             * Either there are no viable automatic choices, or there are no factors...
+             */
+
+        } else if ( analyzer instanceof TTestAnalyzer ) {
+            result.setType( AnalysisType.TTEST );
+        } else if ( analyzer instanceof OneWayAnovaAnalyzer ) {
+            result.setType( AnalysisType.OWA );
+        } else if ( analyzer instanceof TwoWayAnovaWithInteractionsAnalyzer ) {
+            result.setType( AnalysisType.TWIA );
+        } else if ( analyzer instanceof TwoWayAnovaWithoutInteractionsAnalyzer ) {
+            result.setType( AnalysisType.TWA );
+        } else {
+            throw new UnsupportedOperationException( "Don't know how to handle analyzer of class: "
+                    + analyzer.getClass().getSimpleName() );
+        }
+        return result;
+    }
 
     /**
      * FIXME: used?
@@ -206,40 +246,24 @@ public class DifferentialExpressionAnalysisController extends AbstractSpacesCont
     }
 
     /**
-     * @param id
+     * AJAX entry point.
+     * 
+     * @param cmd
      * @return
+     * @throws Exception
      */
-    public DifferentialExpressionAnalyzerInfo determineAnalysisType( Long id ) {
+    public String run( Long id ) throws Exception {
+        /* this 'run' method is exported in the spring-beans.xml */
+
         ExpressionExperiment ee = expressionExperimentService.load( id );
         if ( ee == null ) {
             throw new IllegalArgumentException( "Cannot access experiment with id=" + id );
         }
-        AbstractDifferentialExpressionAnalyzer analyzer = this.differentialExpressionAnalyzer.determineAnalysis( ee );
 
-        DifferentialExpressionAnalyzerInfo result = new DifferentialExpressionAnalyzerInfo();
+        DifferentialExpressionAnalysisTaskCommand cmd = new DifferentialExpressionAnalysisTaskCommand( ee );
 
-        for ( ExperimentalFactor factor : ee.getExperimentalDesign().getExperimentalFactors() ) {
-            result.getFactors().add( new ExperimentalFactorValueObject( factor ) );
-        }
-
-        if ( analyzer == null ) {
-            /*
-             * Either there are no viable automatic choices, or there are no factors...
-             */
-
-        } else if ( analyzer instanceof TTestAnalyzer ) {
-            result.setType( AnalysisType.TTEST );
-        } else if ( analyzer instanceof OneWayAnovaAnalyzer ) {
-            result.setType( AnalysisType.OWA );
-        } else if ( analyzer instanceof TwoWayAnovaWithInteractionsAnalyzer ) {
-            result.setType( AnalysisType.TWIA );
-        } else if ( analyzer instanceof TwoWayAnovaWithoutInteractionsAnalyzer ) {
-            result.setType( AnalysisType.TWA );
-        } else {
-            throw new UnsupportedOperationException( "Don't know how to handle analyzer of class: "
-                    + analyzer.getClass().getSimpleName() );
-        }
-        return result;
+        return super.run( cmd, SpacesEnum.DEFAULT_SPACE.getSpaceUrl(), DifferentialExpressionAnalysisTask.class
+                .getName(), false );
     }
 
     /**
@@ -299,27 +323,6 @@ public class DifferentialExpressionAnalysisController extends AbstractSpacesCont
         DifferentialExpressionAnalysisTaskCommand cmd = new DifferentialExpressionAnalysisTaskCommand( ee );
         cmd.setAnalysisType( type );
         cmd.setFactors( factors );
-
-        return super.run( cmd, SpacesEnum.DEFAULT_SPACE.getSpaceUrl(), DifferentialExpressionAnalysisTask.class
-                .getName(), false );
-    }
-
-    /**
-     * AJAX entry point.
-     * 
-     * @param cmd
-     * @return
-     * @throws Exception
-     */
-    public String run( Long id ) throws Exception {
-        /* this 'run' method is exported in the spring-beans.xml */
-
-        ExpressionExperiment ee = expressionExperimentService.load( id );
-        if ( ee == null ) {
-            throw new IllegalArgumentException( "Cannot access experiment with id=" + id );
-        }
-
-        DifferentialExpressionAnalysisTaskCommand cmd = new DifferentialExpressionAnalysisTaskCommand( ee );
 
         return super.run( cmd, SpacesEnum.DEFAULT_SPACE.getSpaceUrl(), DifferentialExpressionAnalysisTask.class
                 .getName(), false );

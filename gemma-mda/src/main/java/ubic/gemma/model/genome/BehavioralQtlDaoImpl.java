@@ -18,8 +18,19 @@
  */
 package ubic.gemma.model.genome;
 
+import org.hibernate.SessionFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
+
 /**
  * @see ubic.gemma.model.genome.BehavioralQtl
  */
+@Repository
 public class BehavioralQtlDaoImpl extends ubic.gemma.model.genome.BehavioralQtlDaoBase {
+
+    @Autowired
+    public BehavioralQtlDaoImpl( SessionFactory sessionFactory ) {
+        super.setSessionFactory( sessionFactory );
+    }
+
 }

@@ -18,15 +18,20 @@
  */
 package ubic.gemma.analysis.expression.diff;
 
+import static org.junit.Assert.assertEquals;
+
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
-import ubic.gemma.model.analysis.expression.ExpressionAnalysis;
+import org.junit.Before;
+import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+ 
 import ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
@@ -47,7 +52,8 @@ public class TTestAnalyzerTest extends BaseAnalyzerConfigurationTest {
      * resulting p-value: 0.677
      */
 
-    TTestAnalyzer analyzer = null;
+    @Autowired
+    private TTestAnalyzer analyzer = null;
 
     private Log log = LogFactory.getLog( this.getClass() );
 
@@ -57,15 +63,10 @@ public class TTestAnalyzerTest extends BaseAnalyzerConfigurationTest {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.analysis.diff.BaseAnalyzerConfigurationTest#onSetUpInTransaction()
      */
-    @Override
-    public void onSetUpInTransaction() throws Exception {
-
-        super.onSetUpInTransaction();
-
-        analyzer = ( TTestAnalyzer ) this.getBean( "tTestAnalyzer" );
+    @Before
+    public void setupTTest() throws Exception {
 
         /*
          * Doing this here because the test experiment has 2 experimental factors, each with 2 factor values. To test
@@ -97,6 +98,7 @@ public class TTestAnalyzerTest extends BaseAnalyzerConfigurationTest {
      * Tests the t-test with an {@link ExpressionExperiment}.
      */
     @SuppressWarnings("unchecked")
+    @Test
     public void testTTestWithExpressionExperiment() throws Exception {
 
         if ( !connected ) {
@@ -106,7 +108,7 @@ public class TTestAnalyzerTest extends BaseAnalyzerConfigurationTest {
 
         configureMocks();
 
-        ExpressionAnalysis expressionAnalysis = analyzer.tTest( expressionExperiment, factorValueA, factorValueB );
+        DifferentialExpressionAnalysis expressionAnalysis = analyzer.tTest( expressionExperiment, factorValueA, factorValueB );
 
         log.info( expressionAnalysis );
 
@@ -124,7 +126,6 @@ public class TTestAnalyzerTest extends BaseAnalyzerConfigurationTest {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.analysis.diff.BaseAnalyzerConfigurationTest#configureMocks()
      */
     @Override

@@ -18,22 +18,28 @@
  */
 package ubic.gemma.model.common.description;
 
+import org.springframework.security.access.annotation.Secured;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+
 /**
- * 
+ * @author kelsey
+ * @version $Id$
  */
-public interface BibliographicReferenceService extends ubic.gemma.model.common.AuditableService {
+public interface BibliographicReferenceService {
 
     /**
      * <p>
      * Adds a document (in PDF format) for the reference.
      * </p>
      */
+    @Secured( { "GROUP_USER" })
     public void addPDF( ubic.gemma.model.common.description.LocalFile pdfFile,
             ubic.gemma.model.common.description.BibliographicReference bibliographicReference );
 
     /**
      * 
      */
+    @Secured( { "GROUP_USER" })
     public ubic.gemma.model.common.description.BibliographicReference create(
             ubic.gemma.model.common.description.BibliographicReference bibliographicReference );
 
@@ -53,13 +59,19 @@ public interface BibliographicReferenceService extends ubic.gemma.model.common.A
     public ubic.gemma.model.common.description.BibliographicReference findByExternalId( java.lang.String id );
 
     /**
-     * <p>
      * Retrieve a reference by identifier, qualified by the database name (such as 'pubmed').
-     * </p>
      */
     public ubic.gemma.model.common.description.BibliographicReference findByExternalId( java.lang.String id,
             java.lang.String databaseName );
 
+    
+    /**
+     * F
+     * @param accession
+     * @return
+     */
+    public ubic.gemma.model.common.description.BibliographicReference findByExternalId( DatabaseEntry accession );
+    
     /**
      * 
      */
@@ -68,22 +80,21 @@ public interface BibliographicReferenceService extends ubic.gemma.model.common.A
     /**
      * 
      */
+    @Secured( { "GROUP_USER" })
     public ubic.gemma.model.common.description.BibliographicReference findOrCreate(
             ubic.gemma.model.common.description.BibliographicReference BibliographicReference );
 
     /**
-     * <p>
      * Return all the BibRefs that are linked to ExpressionExperiments.
-     * </p>
      */
-    public java.util.Collection getAllExperimentLinkedReferences();
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_MAP_READ" })
+    public java.util.Map<ExpressionExperiment, BibliographicReference> getAllExperimentLinkedReferences();
 
     /**
-     * <p>
      * Get the ExpressionExperiments, if any, that are linked to the given reference.
-     * </p>
      */
-    public java.util.Collection getRelatedExperiments(
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    public java.util.Collection<ExpressionExperiment> getRelatedExperiments(
             ubic.gemma.model.common.description.BibliographicReference bibliographicReference );
 
     /**
@@ -94,16 +105,18 @@ public interface BibliographicReferenceService extends ubic.gemma.model.common.A
     /**
      * 
      */
-    public java.util.Collection loadMultiple( java.util.Collection ids );
+    public java.util.Collection<BibliographicReference> loadMultiple( java.util.Collection<Long> ids );
 
     /**
      * 
      */
+    @Secured( { "GROUP_ADMIN" })
     public void remove( ubic.gemma.model.common.description.BibliographicReference BibliographicReference );
 
     /**
      * 
      */
+    @Secured( { "GROUP_ADMIN" })
     public void update( ubic.gemma.model.common.description.BibliographicReference bibliographicReference );
 
 }

@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.common.description;
 
+import org.springframework.beans.factory.annotation.Autowired;
+
 /**
  * <p>
  * Spring Service base class for <code>ubic.gemma.model.common.description.NotedReferenceListService</code>, provides
@@ -29,10 +31,13 @@ package ubic.gemma.model.common.description;
 public abstract class NotedReferenceListServiceBase implements
         ubic.gemma.model.common.description.NotedReferenceListService {
 
+    @Autowired
     private ubic.gemma.model.common.description.NotedReferenceDao notedReferenceDao;
 
+    @Autowired
     private ubic.gemma.model.common.description.NotedReferenceListDao notedReferenceListDao;
 
+    @Autowired
     private ubic.gemma.model.common.description.BibliographicReferenceDao bibliographicReferenceDao;
 
     /**

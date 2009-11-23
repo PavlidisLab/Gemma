@@ -29,7 +29,9 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 import org.apache.commons.lang.StringUtils;
- 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
@@ -37,22 +39,24 @@ import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.search.SearchResult;
 import ubic.gemma.search.SearchService;
 import ubic.gemma.search.SearchSettings;
-import ubic.gemma.web.controller.BaseMultiActionController;
+import ubic.gemma.web.controller.BaseController;
 
 /**
  * For 'live searches' from the web interface.
  * 
  * @author luke
  * @version $Id$
- * @spring.bean id="genePickerController"
- * @spring.property name="geneService" ref="geneService"
- * @spring.property name="taxonService" ref="taxonService"
- * @spring.property name="searchService" ref="searchService"
  */
-public class GenePickerController extends BaseMultiActionController {
+@Controller
+public class GenePickerController extends BaseController {
 
+    @Autowired
     private GeneService geneService = null;
+
+    @Autowired
     private TaxonService taxonService = null;
+
+    @Autowired
     private SearchService searchService = null;
 
     private static final int MAX_GENES_PER_QUERY = 20;
@@ -63,50 +67,46 @@ public class GenePickerController extends BaseMultiActionController {
         }
     };
 
-    @SuppressWarnings("unchecked")
-    public Collection<Taxon> getTaxa() {
-        SortedSet<Taxon> taxa = new TreeSet<Taxon>( TAXON_COMPARATOR );
-        for ( Taxon taxon : ( Collection<Taxon> ) taxonService.loadAll() ) {            
-            taxa.add( taxon );
-        }
-        return taxa;
-    }
-    
-    /**
-    *
-    * @return Taxon that are species.
-    */
-    @SuppressWarnings("unchecked")
-    public Collection<Taxon> getTaxaSpecies() {
-        SortedSet<Taxon> taxaSpecies = new TreeSet<Taxon>( TAXON_COMPARATOR );
-        for ( Taxon taxon : ( Collection<Taxon> ) taxonService.loadAll() ) {
-            if (taxon.getIsSpecies()){
-                taxaSpecies.add( taxon );
-            }            
-        }
-        return taxaSpecies;
-    }
-    /**
-     *
-     * @return Taxon that have genes loaded into Gemma and that should be used
-     */   
-    @SuppressWarnings("unchecked")
-    public Collection<Taxon> getTaxaWithGenes() {
-        SortedSet<Taxon> taxaWithGenes = new TreeSet<Taxon>( TAXON_COMPARATOR );
-        for ( Taxon taxon : ( Collection<Taxon> ) taxonService.loadAll() ) {
-            if (taxon.getIsGenesUsable()){
-                taxaWithGenes.add( taxon );
-            }          
-        }
-        return taxaWithGenes;
-    }
-
     /**
      * @param geneIds
      * @return
      */
     public Collection<Gene> getGenes( Collection<Long> geneIds ) {
         return geneService.loadMultiple( geneIds );
+    }
+
+    public Collection<Taxon> getTaxa() {
+        SortedSet<Taxon> taxa = new TreeSet<Taxon>( TAXON_COMPARATOR );
+        for ( Taxon taxon : taxonService.loadAll() ) {
+            taxa.add( taxon );
+        }
+        return taxa;
+    }
+
+    /**
+     * @return Taxon that are species.
+     */
+    public Collection<Taxon> getTaxaSpecies() {
+        SortedSet<Taxon> taxaSpecies = new TreeSet<Taxon>( TAXON_COMPARATOR );
+        for ( Taxon taxon : taxonService.loadAll() ) {
+            if ( taxon.getIsSpecies() ) {
+                taxaSpecies.add( taxon );
+            }
+        }
+        return taxaSpecies;
+    }
+
+    /**
+     * @return Taxon that have genes loaded into Gemma and that should be used
+     */
+    public Collection<Taxon> getTaxaWithGenes() {
+        SortedSet<Taxon> taxaWithGenes = new TreeSet<Taxon>( TAXON_COMPARATOR );
+        for ( Taxon taxon : taxonService.loadAll() ) {
+            if ( taxon.getIsGenesUsable() ) {
+                taxaWithGenes.add( taxon );
+            }
+        }
+        return taxaWithGenes;
     }
 
     /**
@@ -176,17 +176,17 @@ public class GenePickerController extends BaseMultiActionController {
     }
 
     /**
-     * @param taxonService The taxonService to set.
-     */
-    public void setTaxonService( TaxonService taxonService ) {
-        this.taxonService = taxonService;
-    }
-
-    /**
      * @param searchService The searchService to set.
      */
     public void setSearchService( SearchService searchService ) {
         this.searchService = searchService;
+    }
+
+    /**
+     * @param taxonService The taxonService to set.
+     */
+    public void setTaxonService( TaxonService taxonService ) {
+        this.taxonService = taxonService;
     }
 
 }

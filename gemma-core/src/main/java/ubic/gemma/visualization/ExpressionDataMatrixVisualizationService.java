@@ -36,6 +36,7 @@ import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.title.TextTitle;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
+import org.springframework.stereotype.Service;
 
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
@@ -55,8 +56,8 @@ import cern.colt.list.DoubleArrayList;
  * 
  * @author keshav
  * @version $Id$
- * @spring.bean name="expressionDataMatrixVisualizationService"
  */
+@Service
 public class ExpressionDataMatrixVisualizationService {
 
     private static final int IMAGE_CELL_SIZE = 10;
@@ -75,7 +76,7 @@ public class ExpressionDataMatrixVisualizationService {
      * @param expressionDataMatrix
      * @return JMatrixDisplay
      */
-    public MatrixDisplay createHeatMap( ExpressionDataMatrix expressionDataMatrix ) {
+    public MatrixDisplay createHeatMap( ExpressionDataMatrix<Double> expressionDataMatrix ) {
 
         if ( expressionDataMatrix == null )
             throw new RuntimeException( "Cannot create color matrix due to null ExpressionDataMatrix" );
@@ -218,10 +219,10 @@ public class ExpressionDataMatrixVisualizationService {
      * @param threshold The threhold at which the data will be clipped (ie. 2 clips the data at -2 and +2).
      * @return ExpressionDataMatrix
      */
-    public ExpressionDataMatrix standardizeExpressionDataDoubleMatrix( ExpressionDataMatrix expressionDataMatrix,
-            Double threshold ) {
+    public ExpressionDataMatrix<Double> standardizeExpressionDataDoubleMatrix(
+            ExpressionDataMatrix<Double> expressionDataMatrix, Double threshold ) {
 
-        ExpressionDataMatrix normalizedExpressionDataMatrix = expressionDataMatrix;
+        ExpressionDataMatrix<Double> normalizedExpressionDataMatrix = expressionDataMatrix;
 
         Object[][] matrix = normalizedExpressionDataMatrix.getRawMatrix();
 

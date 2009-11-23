@@ -23,7 +23,7 @@ import java.util.Collection;
 import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
-import ubic.gemma.model.genome.Gene; 
+import ubic.gemma.model.genome.Gene;
 import cern.colt.list.DoubleArrayList;
 
 /**

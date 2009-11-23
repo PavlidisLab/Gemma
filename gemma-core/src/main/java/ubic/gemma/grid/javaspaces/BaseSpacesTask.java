@@ -23,7 +23,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.log4j.Level;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
-import org.springframework.security.context.SecurityContextHolder;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springmodules.javaspaces.gigaspaces.GigaSpacesTemplate;
 
 import ubic.gemma.util.progress.TaskRunningService;
@@ -60,15 +60,6 @@ public abstract class BaseSpacesTask implements SpacesTask {
      */
     public String getTaskId() {
         return this.taskId;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.grid.javaspaces.SpacesTask#setTaskId(java.lang.String)
-     */
-    public void setTaskId( String taskId ) {
-        this.taskId = taskId;
     }
 
     /**
@@ -109,6 +100,22 @@ public abstract class BaseSpacesTask implements SpacesTask {
     }
 
     /**
+     * @param gigaSpacesTemplate
+     */
+    public void setGigaSpacesTemplate( GigaSpacesTemplate gigaSpacesTemplate ) {
+        this.gigaSpacesTemplate = gigaSpacesTemplate;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.grid.javaspaces.SpacesTask#setTaskId(java.lang.String)
+     */
+    public void setTaskId( String taskId ) {
+        this.taskId = taskId;
+    }
+
+    /**
      * Removes the {@link SpacesProgressAppender} from the list of appenders, and removes the progress entry from the
      * space. Typically, this is called after at the end of a task's execute method.
      */
@@ -125,13 +132,6 @@ public abstract class BaseSpacesTask implements SpacesTask {
 
             spacesProgressAppender.removeProgressEntry();
         }
-    }
-
-    /**
-     * @param gigaSpacesTemplate
-     */
-    public void setGigaSpacesTemplate( GigaSpacesTemplate gigaSpacesTemplate ) {
-        this.gigaSpacesTemplate = gigaSpacesTemplate;
     }
 
 }

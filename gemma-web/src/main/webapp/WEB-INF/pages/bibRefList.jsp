@@ -2,7 +2,7 @@
 <head>
 	<title>Bibligraphic Reference List</title>
 
-	<jwr:script src='/scripts/ext/data/DwrProxy.js' />
+	<jwr:script src='/scripts/ajax/ext/data/DwrProxy.js'   />
 	<jwr:script src='/scripts/app/bibRef.js' />
 
 </head>
@@ -11,19 +11,7 @@
 </h2>
 
 <p>
-	Found
-	<%
-if ( request.getAttribute( "bibliographicReferences" ) != null ) {
-%>
-	<%=( ( java.util.Collection ) request.getAttribute( "bibliographicReferences" ) ).size()%>
-	<%
-	} else {
-	%>
-	<%="0"%>
-	<%
-	}
-	%>
-	references.
+	Found ${fn:length(bibliographicReferences)} references.
 </p>
 
 <div style="padding: 4px;" id="messages"></div>
@@ -31,7 +19,8 @@ if ( request.getAttribute( "bibliographicReferences" ) != null ) {
 <display:table cellpadding="4" pagesize="100" name="bibliographicReferences" class="list" requestURI=""
 	id="bibliographicReferenceList"
 	decorator="ubic.gemma.web.taglib.displaytag.common.description.BibliographicReferenceWrapper">
-	<display:column sortable="true" href="bibRefView.html" paramId="accession" paramProperty="pubAccession.accession" title="">
+	<display:column sortable="true" href="bibRefView.html" paramId="accession" paramProperty="pubAccession.accession"
+		title="">
 		<img src="/Gemma/images/magnifier.png" />
 	</display:column>
 	<display:column property="title" sortable="true" titleKey="pubMed.title" maxLength="50" />
@@ -42,17 +31,12 @@ if ( request.getAttribute( "bibliographicReferences" ) != null ) {
 	<display:column sortable="true"
 		href="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?cmd=Retrieve&db=pubmed&dopt=Abstract&list_uids=ID&query_hl=3"
 		paramId="list_uids" paramProperty="pubAccession.accession" title="PubMed">
-		<%="<img src='/Gemma/images/pubmed.gif' />"%>
+		<img src='/Gemma/images/pubmed.gif' />
 	</display:column>
 	<display:column title="Experiments" property="experiments" />
-	<security:authorize ifAnyGranted="admin">
+	<security:authorize ifAnyGranted="GROUP_ADMIN">
 		<display:column property="update" sortable="false" title="Update from NCBI" />
 	</security:authorize>
 </display:table>
-
-<div align="right">
-	<input type="button" onclick="javascript:document.newSearchForm.submit()" value="New Search">
-</div>
-
 
 

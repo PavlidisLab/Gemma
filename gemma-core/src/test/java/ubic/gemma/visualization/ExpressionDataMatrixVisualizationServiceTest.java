@@ -18,8 +18,15 @@
  */
 package ubic.gemma.visualization;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
 import java.util.Collection;
 import java.util.LinkedHashSet;
+
+import org.junit.Before;
+import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.basecode.graphics.MatrixDisplay;
 import ubic.basecode.io.ByteArrayConverter;
@@ -58,16 +65,17 @@ import ubic.gemma.testing.BaseSpringContextTest;
  */
 public class ExpressionDataMatrixVisualizationServiceTest extends BaseSpringContextTest {
 
-    ExpressionDataMatrix expressionDataMatrix = null;
+    ExpressionDataMatrix<Double> expressionDataMatrix = null;
+
+    @Autowired
+    ExpressionDataMatrixVisualizationService expressionDataMatrixVisualizationService;
 
     /*
      * (non-Javadoc)
-     * 
      * @see org.springframework.test.AbstractTransactionalSpringContextTests#onSetUpInTransaction()
      */
-    @Override
-    protected void onSetUpInTransaction() throws Exception {
-        super.onSetUpInTransaction();
+    @Before
+    public void setup() throws Exception {
 
         ByteArrayConverter bac = new ByteArrayConverter();
 
@@ -163,31 +171,27 @@ public class ExpressionDataMatrixVisualizationServiceTest extends BaseSpringCont
     }
 
     /**
+     * Tests creating the heatmap.
+     */
+    @Test
+    public void testCreateHeatMap() {
+
+        MatrixDisplay display = expressionDataMatrixVisualizationService.createHeatMap( expressionDataMatrix );
+
+        assertNotNull( display );
+
+    }
+
+    /**
      * Tests normalization of the matrix.
      */
+    @Test
     public void testNormalizeExpressionDataDoubleMatrixByRowMean() {
-
-        ExpressionDataMatrixVisualizationService expressionDataMatrixVisualizationService = ( ExpressionDataMatrixVisualizationService ) this
-                .getBean( "expressionDataMatrixVisualizationService" );
 
         ExpressionDataMatrix normalizedExpressonDataMatrix = expressionDataMatrixVisualizationService
                 .standardizeExpressionDataDoubleMatrix( expressionDataMatrix, null );
 
         assertEquals( normalizedExpressonDataMatrix.columns(), expressionDataMatrix.columns() );
-
-    }
-
-    /**
-     * Tests creating the heatmap.
-     */
-    public void testCreateHeatMap() {
-
-        ExpressionDataMatrixVisualizationService expressionDataMatrixVisualizationService = ( ExpressionDataMatrixVisualizationService ) this
-                .getBean( "expressionDataMatrixVisualizationService" );
-
-        MatrixDisplay display = expressionDataMatrixVisualizationService.createHeatMap( expressionDataMatrix );
-
-        assertNotNull( display );
 
     }
 }

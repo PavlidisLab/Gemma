@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.expression.bioAssayData;
 
+import ubic.gemma.model.common.auditAndSecurity.Securable;
+
 /**
  * @see ubic.gemma.model.expression.bioAssayData.DesignElementDimension
  */

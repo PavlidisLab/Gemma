@@ -1,15 +1,13 @@
 <?xml version="1.0"?>
-<!DOCTYPE compass-core-mapping PUBLIC
-    "-//Compass/Compass Core Mapping DTD 2.0//EN"
-    "http://www.compass-project.org/dtd/compass-core-mapping-2.1.dtd">
-<!--
-	This document is a Compass mapping file, allowing the Gemma objects to be 
-	indexed and searched.  All "searchable" expression experiment attributes 
-	(as well as associations) should be included here.
-	
-	author: keshav
-	version: $Id$
--->
+<!DOCTYPE compass-core-mapping PUBLIC 
+    "-//Compass/Compass Core Mapping DTD 2.2//EN"
+    "http://www.compass-project.org/dtd/compass-core-mapping-2.2.dtd">
+
+	<!--
+		This document is a Compass mapping file, allowing the Gemma objects to be indexed and searched. All "searchable"
+		expression experiment attributes (as well as associations) should be included here. author: keshav version: $Id:
+		expression_mappings.cpm.xml,v 1.5 2008/07/14 06:25:05 paul Exp $
+	-->
 <compass-core-mapping package="ubic.gemma.model">
 	<class name="expression.experiment.ExpressionExperimentImpl" alias="expressionExperiment" root="true">
 		<id name="id" />
@@ -149,30 +147,10 @@
 			<meta-data>description</meta-data>
 		</property>
 	</class>
-	<!-- 
-		<class name="common.auditAndSecurity.Contact" alias="owner" root="false">
-		
-		<id name="id" />
-		
-		<property name="name">
-		<meta-data>name</meta-data>
-		<meta-data>username</meta-data>
-		</property>
-		
-		<property name="address">
-		<meta-data>address</meta-data>
-		</property>
-		
-		<property name="phone">
-		<meta-data>phone</meta-data> 	
-		<meta-data>telephone</meta-data>
-		</property>
-		
-		<property name="email">
-		<meta-data>email</meta-data>
-		</property>
-		
-		</class>
-		
+	<!--
+		<class name="common.auditAndSecurity.Contact" alias="owner" root="false"> <id name="id" /> <property name="name">
+		<meta-data>name</meta-data> <meta-data>username</meta-data> </property> <property name="address">
+		<meta-data>address</meta-data> </property> <property name="phone"> <meta-data>phone</meta-data>
+		<meta-data>telephone</meta-data> </property> <property name="email"> <meta-data>email</meta-data> </property> </class>
 	-->
 </compass-core-mapping>

@@ -23,6 +23,13 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import org.directwebremoting.annotations.Param;
+import org.directwebremoting.annotations.RemoteMethod;
+import org.directwebremoting.annotations.RemoteProxy;
+import org.directwebremoting.spring.BeanCreator;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+
 import ubic.gemma.image.LinkOutValueObject;
 import ubic.gemma.image.aba.AllenBrainAtlasService;
 import ubic.gemma.image.aba.Image;
@@ -33,17 +40,13 @@ import ubic.gemma.image.aba.ImageSeries;
  * 
  * @author kelsey
  * @version $Id$
- * @spring.bean id="linkOutController"
- * @spring.property name="allenBrainAtlasService" ref="allenBrainAtlasService"
  */
-
+@Controller
+@RemoteProxy(creator = BeanCreator.class, creatorParams = @Param(name = "bean", value = "linkOutController"), name = "LinkOutController")
 public class LinkOutController {
 
+    @Autowired
     private AllenBrainAtlasService allenBrainAtlasService = null;
-
-    public void setAllenBrainAtlasService( AllenBrainAtlasService allenBrainAtlasService ) {
-        this.allenBrainAtlasService = allenBrainAtlasService;
-    }
 
     /**
      * AJAX METHOD Given a gene's official symbol will return value object with the link to use
@@ -51,6 +54,7 @@ public class LinkOutController {
      * @param geneOfficialSymbol
      * @return
      */
+    @RemoteMethod
     public LinkOutValueObject getAllenBrainAtlasLink( String geneOfficialSymbol ) {
 
         Collection<ImageSeries> imageSeries = null;
@@ -74,6 +78,10 @@ public class LinkOutController {
         }
         return new LinkOutValueObject( imageUrls, abaGeneUrl, geneOfficialSymbol );
 
+    }
+
+    public void setAllenBrainAtlasService( AllenBrainAtlasService allenBrainAtlasService ) {
+        this.allenBrainAtlasService = allenBrainAtlasService;
     }
 
 }

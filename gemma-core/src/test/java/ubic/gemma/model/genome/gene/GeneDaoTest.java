@@ -18,8 +18,15 @@
  */
 package ubic.gemma.model.genome.gene;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 import java.util.ArrayList;
 import java.util.Collection;
+
+import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionCollectionValueObject;
 import ubic.gemma.model.common.description.DatabaseEntry;
@@ -41,28 +48,102 @@ import ubic.gemma.testing.BaseSpringContextTest;
  */
 public class GeneDaoTest extends BaseSpringContextTest {
 
+    @Autowired
     private GeneDao geneDao = null;
 
-    public void testGetCompositeSequenceCountById() {
-        geneDao = ( GeneDao ) this.getBean( "geneDao" );
+    @Autowired
+    TaxonService taxonService;
+
+    @Test
+    public void testFindByAccessionNcbi() {
+
         Gene gene = Gene.Factory.newInstance();
         gene.setId( ( long ) 1 );
+        gene.setNcbiId( "12345" );
         gene.setName( "test_genedao" );
-        long num = geneDao.getCompositeSequenceCountById( 1 );
-        assertNotNull( num );
+
+        Taxon human = taxonService.findByCommonName( "human" );
+        gene.setTaxon( human );
+
+        geneDao.create( gene );
+
+        Gene g = geneDao.findByAccession( "12345", null );
+        assertNotNull( g );
+        assertEquals( g, gene );
+        geneDao.remove( gene );
     }
 
-    public void testGetCompositeSequencesById() {
-        geneDao = ( GeneDao ) this.getBean( "geneDao" );
+    @Test
+    public void testFindByAccessionNcbiWithSource() {
+        ExternalDatabaseService edbs = ( ExternalDatabaseService ) this.getBean( "externalDatabaseService" );
+
         Gene gene = Gene.Factory.newInstance();
         gene.setId( ( long ) 1 );
+        gene.setNcbiId( "12345" );
         gene.setName( "test_genedao" );
-        Collection<CompositeSequence> cs = geneDao.getCompositeSequencesById( 1 );
-        assertNotNull( cs );
+        ExternalDatabase ncbi = edbs.find( "Entrez Gene" );
+        DatabaseEntry dbe = DatabaseEntry.Factory.newInstance();
+        dbe.setAccession( "12345" ); // this gets ignored, because the ncbi id is part of the object.
+        dbe.setExternalDatabase( ncbi );
+        gene.getAccessions().add( dbe );
+
+        Taxon human = taxonService.findByCommonName( "human" );
+        gene.setTaxon( human );
+
+        geneDao.create( gene );
+
+        Gene g = geneDao.findByAccession( "12345", ncbi );
+        assertNotNull( g );
+        assertEquals( g, gene );
+        geneDao.remove( gene );
     }
 
+    @Test
+    public void testFindByAccessionOther() {
+        ExternalDatabaseService edbs = ( ExternalDatabaseService ) this.getBean( "externalDatabaseService" );
+
+        Gene gene = Gene.Factory.newInstance();
+        gene.setId( ( long ) 1 );
+        gene.setNcbiId( "12345" );
+        gene.setName( "test_genedao" );
+        ExternalDatabase ensembl = edbs.find( "Ensembl" );
+        DatabaseEntry dbe = DatabaseEntry.Factory.newInstance();
+        dbe.setAccession( "E129458" );
+        dbe.setExternalDatabase( ensembl );
+        gene.getAccessions().add( dbe );
+
+        Taxon human = taxonService.findByCommonName( "human" );
+        gene.setTaxon( human );
+
+        geneDao.create( gene );
+
+        Gene g = geneDao.findByAccession( "E129458", ensembl );
+        assertNotNull( g );
+        assertEquals( g, gene );
+        geneDao.remove( gene );
+    }
+
+    @Test
+    public void testFindByNcbiId() {
+
+        Gene gene = Gene.Factory.newInstance();
+        gene.setId( ( long ) 1 );
+        gene.setNcbiId( "12345" );
+        gene.setName( "test_genedao" );
+
+        Taxon human = taxonService.findByCommonName( "human" );
+        gene.setTaxon( human );
+
+        geneDao.create( gene );
+
+        Collection<Gene> genes = geneDao.findByNcbiId( "12345" );
+        assertNotNull( genes );
+        assertTrue( genes.contains( gene ) );
+        geneDao.remove( gene );
+    }
+
+    @Test
     public void testGetByGeneAlias() {
-        geneDao = ( GeneDao ) this.getBean( "geneDao" );
         Gene gene = Gene.Factory.newInstance();
         gene.setId( ( long ) 1 );
         gene.setName( "test_genedao" );
@@ -78,8 +159,8 @@ public class GeneDaoTest extends BaseSpringContextTest {
         assertNotNull( genes );
     }
 
+    @Test
     public void testGetCoexpressedGenes() {
-        geneDao = ( GeneDao ) this.getBean( "geneDao" );
         Gene gene = Gene.Factory.newInstance();
         gene.setId( ( long ) 1 );
         gene.setName( "test_genedao" );
@@ -93,10 +174,26 @@ public class GeneDaoTest extends BaseSpringContextTest {
         assertNotNull( genes );
     }
 
-    public void testGetMicroRnaByTaxon() {
+    @Test
+    public void testGetCompositeSequenceCountById() {
+        Gene gene = Gene.Factory.newInstance();
+        gene.setId( ( long ) 1 );
+        gene.setName( "test_genedao" );
+        long num = geneDao.getCompositeSequenceCountById( 1 );
+        assertNotNull( num );
+    }
 
-        geneDao = ( GeneDao ) this.getBean( "geneDao" );
-        TaxonService taxonSrv = ( TaxonService ) this.getBean( "taxonService" );
+    @Test
+    public void testGetCompositeSequencesById() {
+        Gene gene = Gene.Factory.newInstance();
+        gene.setId( ( long ) 1 );
+        gene.setName( "test_genedao" );
+        Collection<CompositeSequence> cs = geneDao.getCompositeSequencesById( 1 );
+        assertNotNull( cs );
+    }
+
+    @Test
+    public void testGetMicroRnaByTaxon() {
 
         Gene gene = Gene.Factory.newInstance();
         gene.setId( ( long ) 1 );
@@ -105,7 +202,7 @@ public class GeneDaoTest extends BaseSpringContextTest {
         // either one of these should work now.
         // gene.setDescription( "Imported from Golden Path: micro RNA or sno RNA" );
         gene.setDescription( "miRNA" );
-        Taxon human = taxonSrv.findByCommonName( "human" );
+        Taxon human = taxonService.findByCommonName( "human" );
         gene.setTaxon( human );
 
         geneDao.create( gene );
@@ -117,104 +214,10 @@ public class GeneDaoTest extends BaseSpringContextTest {
 
     }
 
-    public void testFindByNcbiId() {
-        geneDao = ( GeneDao ) this.getBean( "geneDao" );
-        TaxonService taxonSrv = ( TaxonService ) this.getBean( "taxonService" );
-
-        Gene gene = Gene.Factory.newInstance();
-        gene.setId( ( long ) 1 );
-        gene.setNcbiId( "12345" );
-        gene.setName( "test_genedao" );
-
-        Taxon human = taxonSrv.findByCommonName( "human" );
-        gene.setTaxon( human );
-
-        geneDao.create( gene );
-
-        Collection<Gene> genes = geneDao.findByNcbiId( "12345" );
-        assertNotNull( genes );
-        assertTrue( genes.contains( gene ) );
-        geneDao.remove( gene );
-    }
-
-    public void testFindByAccessionNcbi() {
-        geneDao = ( GeneDao ) this.getBean( "geneDao" );
-        TaxonService taxonSrv = ( TaxonService ) this.getBean( "taxonService" );
-
-        Gene gene = Gene.Factory.newInstance();
-        gene.setId( ( long ) 1 );
-        gene.setNcbiId( "12345" );
-        gene.setName( "test_genedao" );
-
-        Taxon human = taxonSrv.findByCommonName( "human" );
-        gene.setTaxon( human );
-
-        geneDao.create( gene );
-
-        Gene g = geneDao.findByAccession( "12345", null );
-        assertNotNull( g );
-        assertEquals( g, gene );
-        geneDao.remove( gene );
-    }
-
-    public void testFindByAccessionOther() {
-        geneDao = ( GeneDao ) this.getBean( "geneDao" );
-        TaxonService taxonSrv = ( TaxonService ) this.getBean( "taxonService" );
-        ExternalDatabaseService edbs = ( ExternalDatabaseService ) this.getBean( "externalDatabaseService" );
-
-        Gene gene = Gene.Factory.newInstance();
-        gene.setId( ( long ) 1 );
-        gene.setNcbiId( "12345" );
-        gene.setName( "test_genedao" );
-        ExternalDatabase ensembl = edbs.find( "Ensembl" );
-        DatabaseEntry dbe = DatabaseEntry.Factory.newInstance();
-        dbe.setAccession( "E129458" );
-        dbe.setExternalDatabase( ensembl );
-        gene.getAccessions().add( dbe );
-
-        Taxon human = taxonSrv.findByCommonName( "human" );
-        gene.setTaxon( human );
-
-        geneDao.create( gene );
-
-        Gene g = geneDao.findByAccession( "E129458", ensembl );
-        assertNotNull( g );
-        assertEquals( g, gene );
-        geneDao.remove( gene );
-    }
-
-    public void testFindByAccessionNcbiWithSource() {
-        geneDao = ( GeneDao ) this.getBean( "geneDao" );
-        TaxonService taxonSrv = ( TaxonService ) this.getBean( "taxonService" );
-        ExternalDatabaseService edbs = ( ExternalDatabaseService ) this.getBean( "externalDatabaseService" );
-
-        Gene gene = Gene.Factory.newInstance();
-        gene.setId( ( long ) 1 );
-        gene.setNcbiId( "12345" );
-        gene.setName( "test_genedao" );
-        ExternalDatabase ncbi = edbs.find( "Entrez Gene" );
-        DatabaseEntry dbe = DatabaseEntry.Factory.newInstance();
-        dbe.setAccession( "12345" ); // this gets ignored, because the ncbi id is part of the object.
-        dbe.setExternalDatabase( ncbi );
-        gene.getAccessions().add( dbe );
-
-        Taxon human = taxonSrv.findByCommonName( "human" );
-        gene.setTaxon( human );
-
-        geneDao.create( gene );
-
-        Gene g = geneDao.findByAccession( "12345", ncbi );
-        assertNotNull( g );
-        assertEquals( g, gene );
-        geneDao.remove( gene );
-    }
-
+    @Test
     public void testLoadGenes() {
 
-        geneDao = ( GeneDao ) this.getBean( "geneDao" );
-        TaxonService taxonSrv = ( TaxonService ) this.getBean( "taxonService" );
-
-        Taxon human = taxonSrv.findByCommonName( "human" );
+        Taxon human = taxonService.findByCommonName( "human" );
 
         Gene gene = Gene.Factory.newInstance();
         gene.setId( ( long ) 1 );
@@ -230,33 +233,10 @@ public class GeneDaoTest extends BaseSpringContextTest {
 
     }
 
-    public void testLoadProbeAlignedRegions() {
-
-        geneDao = ( GeneDao ) this.getBean( "geneDao" );
-        TaxonService taxonSrv = ( TaxonService ) this.getBean( "taxonService" );
-
-        Taxon human = taxonSrv.findByCommonName( "human" );
-
-        Gene gene = ProbeAlignedRegion.Factory.newInstance();
-        gene.setId( ( long ) 1 );
-        gene.setName( "Ma_pal" );
-        gene.setDescription( "Lost in space" );
-        gene.setTaxon( human );
-        geneDao.create( gene );
-
-        Collection<ProbeAlignedRegion> genes = geneDao.loadProbeAlignedRegions( human );
-        assertNotNull( genes );
-        assertTrue( genes.contains( gene ) );
-        geneDao.remove( gene );
-
-    }
-
+    @Test
     public void testLoadPredictedGenes() {
 
-        geneDao = ( GeneDao ) this.getBean( "geneDao" );
-        TaxonService taxonSrv = ( TaxonService ) this.getBean( "taxonService" );
-
-        Taxon human = taxonSrv.findByCommonName( "human" );
+        Taxon human = taxonService.findByCommonName( "human" );
 
         Gene gene = PredictedGene.Factory.newInstance();
         gene.setId( ( long ) 1 );
@@ -266,6 +246,25 @@ public class GeneDaoTest extends BaseSpringContextTest {
         geneDao.create( gene );
 
         Collection<PredictedGene> genes = geneDao.loadPredictedGenes( human );
+        assertNotNull( genes );
+        assertTrue( genes.contains( gene ) );
+        geneDao.remove( gene );
+
+    }
+
+    @Test
+    public void testLoadProbeAlignedRegions() {
+
+        Taxon human = taxonService.findByCommonName( "human" );
+
+        Gene gene = ProbeAlignedRegion.Factory.newInstance();
+        gene.setId( ( long ) 1 );
+        gene.setName( "Ma_pal" );
+        gene.setDescription( "Lost in space" );
+        gene.setTaxon( human );
+        geneDao.create( gene );
+
+        Collection<ProbeAlignedRegion> genes = geneDao.loadProbeAlignedRegions( human );
         assertNotNull( genes );
         assertTrue( genes.contains( gene ) );
         geneDao.remove( gene );

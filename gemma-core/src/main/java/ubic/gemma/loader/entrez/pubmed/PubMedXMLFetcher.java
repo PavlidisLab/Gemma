@@ -35,7 +35,6 @@ import ubic.gemma.util.ConfigUtils;
  * 
  * @author pavlidis
  * @version $Id$
- * @spring.bean id="pubMedXmlFetcher"
  */
 public class PubMedXMLFetcher {
 

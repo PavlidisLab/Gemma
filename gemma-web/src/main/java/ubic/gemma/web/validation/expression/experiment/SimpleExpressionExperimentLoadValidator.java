@@ -28,8 +28,7 @@ import ubic.gemma.web.controller.expression.experiment.SimpleExpressionExperimen
  * This custom validator is needed because the fields in this command object aren't simple java objects (int, String).
  * 
  * @author pavlidis
- * @version $Id$
- * @spring.bean id="simpleExpressionExperimentLoadValidator"
+ * @version $Id$ 
  * @deprecated as we aren't using spring mvc really for this (ext + ajax instead)
  */
 @Deprecated

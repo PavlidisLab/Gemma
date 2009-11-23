@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.common.description;
 
+import java.util.Collection;
+
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 
 /**
@@ -39,7 +41,7 @@ public abstract class CharacteristicDaoBase extends HibernateDaoSupport implemen
             throw new IllegalArgumentException( "Characteristic.create - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback() {
+                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
@@ -50,6 +52,11 @@ public abstract class CharacteristicDaoBase extends HibernateDaoSupport implemen
                     }
                 } );
         return entities;
+    }
+    
+    
+    public Collection<? extends Characteristic > load( Collection<Long> ids ) {
+        return this.getHibernateTemplate().findByNamedParam( "from CharacteristicImpl where id in (:ids)", "ids", ids );
     }
 
     /**
@@ -67,7 +74,7 @@ public abstract class CharacteristicDaoBase extends HibernateDaoSupport implemen
     /**
      * @see ubic.gemma.model.common.description.CharacteristicDao#create(java.util.Collection)
      */
-    @SuppressWarnings( { "unchecked" })
+    
     public java.util.Collection create( final java.util.Collection entities ) {
         return create( TRANSFORM_NONE, entities );
     }
@@ -169,7 +176,7 @@ public abstract class CharacteristicDaoBase extends HibernateDaoSupport implemen
      * @see ubic.gemma.model.common.description.CharacteristicDao#loadAll()
      */
 
-    @SuppressWarnings( { "unchecked" })
+    
     public java.util.Collection loadAll() {
         return this.loadAll( TRANSFORM_NONE );
     }
@@ -229,7 +236,7 @@ public abstract class CharacteristicDaoBase extends HibernateDaoSupport implemen
             throw new IllegalArgumentException( "Characteristic.update - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback() {
+                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {

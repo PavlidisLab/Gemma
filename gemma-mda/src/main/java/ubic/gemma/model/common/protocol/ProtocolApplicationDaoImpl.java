@@ -18,8 +18,18 @@
  */
 package ubic.gemma.model.common.protocol;
 
+import org.hibernate.SessionFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
+
 /**
  * @see ubic.gemma.model.common.protocol.ProtocolApplication
  */
+@Repository
 public class ProtocolApplicationDaoImpl extends ubic.gemma.model.common.protocol.ProtocolApplicationDaoBase {
+
+    @Autowired
+    public ProtocolApplicationDaoImpl( SessionFactory sessionFactory ) {
+        super.setSessionFactory( sessionFactory );
+    }
 }

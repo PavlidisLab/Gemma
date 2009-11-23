@@ -25,50 +25,34 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang.time.DateUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
 import ubic.gemma.analysis.report.WhatsNew;
 import ubic.gemma.analysis.report.WhatsNewService;
-import ubic.gemma.web.controller.BaseMultiActionController;
 
 /**
  * Controller to provide information on "what's new" in the system
  * 
- * @spring.bean id="whatsNewController"
- * @spring.property name="whatsNewService" ref="whatsNewService"
  * @author pavlidis
  * @version $Id$
  */
-public class WhatsNewController extends BaseMultiActionController {
+@Controller
+@RequestMapping("/whatsnew")
+public class WhatsNewController {
 
-    WhatsNewService whatsNewService;
-
-    public void setWhatsNewService( WhatsNewService whatsNewService ) {
-        this.whatsNewService = whatsNewService;
-    }
-
-    /**
-     * @param request
-     * @param response
-     * @return
-     */
-    public ModelAndView weekly( HttpServletRequest request, HttpServletResponse response ) {
-        ModelAndView mav = new ModelAndView( "wnWeek" );
-        Calendar c = Calendar.getInstance();
-        Date date = c.getTime();
-        date = DateUtils.addWeeks( date, -1 );
-        WhatsNew wn = whatsNewService.getReport( date );
-        mav.addObject( "whatsnew", wn );
-        mav.addObject( "timeSpan", "In the past week" );
-        return mav;
-    }
+    @Autowired
+    private WhatsNewService whatsNewService;
 
     /**
      * @param request
      * @param response
      * @return
      */
+    @RequestMapping("/daily.html")
     public ModelAndView daily( HttpServletRequest request, HttpServletResponse response ) {
         ModelAndView mav = new ModelAndView( "wnDay" );
         Calendar c = Calendar.getInstance();
@@ -85,6 +69,7 @@ public class WhatsNewController extends BaseMultiActionController {
      * @param response
      * @return
      */
+    @RequestMapping("/generateCache.html")
     public ModelAndView generateCache( HttpServletRequest request, HttpServletResponse response ) {
         ModelAndView mav = new ModelAndView( new RedirectView( "/Gemma/mainMenu.html" ) );
 
@@ -94,6 +79,30 @@ public class WhatsNewController extends BaseMultiActionController {
         // save a report for a week's duration
         whatsNewService.saveReport( date );
 
+        return mav;
+    }
+
+    /**
+     * @param whatsNewService the whatsNewService to set
+     */
+    public void setWhatsNewService( WhatsNewService whatsNewService ) {
+        this.whatsNewService = whatsNewService;
+    }
+
+    /**
+     * @param request
+     * @param response
+     * @return
+     */
+    @RequestMapping("/weekly.html")
+    public ModelAndView weekly( HttpServletRequest request, HttpServletResponse response ) {
+        ModelAndView mav = new ModelAndView( "wnWeek" );
+        Calendar c = Calendar.getInstance();
+        Date date = c.getTime();
+        date = DateUtils.addWeeks( date, -1 );
+        WhatsNew wn = whatsNewService.getReport( date );
+        mav.addObject( "whatsnew", wn );
+        mav.addObject( "timeSpan", "In the past week" );
         return mav;
     }
 

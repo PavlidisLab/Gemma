@@ -22,8 +22,19 @@
 //
 package ubic.gemma.model.common.description;
 
+import org.hibernate.SessionFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
+
 /**
  * @see ubic.gemma.model.common.description.MedicalSubjectHeading
  */
+@Repository
 public class MedicalSubjectHeadingDaoImpl extends ubic.gemma.model.common.description.MedicalSubjectHeadingDaoBase {
+
+    @Autowired
+    public MedicalSubjectHeadingDaoImpl( SessionFactory sessionFactory ) {
+        super.setSessionFactory( sessionFactory );
+    }
+
 }

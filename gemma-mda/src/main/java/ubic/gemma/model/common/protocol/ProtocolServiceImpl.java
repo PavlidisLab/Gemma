@@ -18,14 +18,17 @@
  */
 package ubic.gemma.model.common.protocol;
 
+import java.util.Collection;
+
+import org.springframework.stereotype.Service;
+
 /**
- * <hr>
- * 
  * @author keshav
  * @author pavlidis
  * @version $Id$
  * @see ubic.gemma.model.common.protocol.ProtocolService
  */
+@Service
 public class ProtocolServiceImpl extends ubic.gemma.model.common.protocol.ProtocolServiceBase {
 
     /**
@@ -56,6 +59,10 @@ public class ProtocolServiceImpl extends ubic.gemma.model.common.protocol.Protoc
     @Override
     protected void handleUpdate( ubic.gemma.model.common.protocol.Protocol protocol ) throws java.lang.Exception {
         this.getProtocolDao().update( protocol );
+    }
+
+    public Collection<Protocol> loadAll() {
+        return ( Collection<Protocol> ) this.getProtocolDao().loadAll();
     }
 
 }

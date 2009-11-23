@@ -25,19 +25,16 @@ import org.springframework.web.servlet.ModelAndView;
 
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorService;
-import ubic.gemma.web.controller.BaseMultiActionController;
+import ubic.gemma.web.controller.BaseController;
 import ubic.gemma.web.util.EntityNotFoundException;
 
 /**
  * @author keshav
  * @version $Id$
- * @spring.bean id="experimentalFactorController"
- * @spring.property name = "experimentalFactorService" ref="experimentalFactorService"
- * @spring.property name="methodNameResolver" ref="experimentalFactorActions"
- * @deprecated This is no longer used and can probably be deleted (corresponding entry in spring config too)
+ * @deprecated This is no longer used and can probably be deleted (corresponding entry in spring config already removed)
  */
 @Deprecated
-public class ExperimentalFactorController extends BaseMultiActionController {
+public class ExperimentalFactorController extends BaseController {
 
     private ExperimentalFactorService experimentalFactorService = null;
 

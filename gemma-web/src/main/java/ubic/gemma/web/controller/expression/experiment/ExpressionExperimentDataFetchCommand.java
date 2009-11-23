@@ -30,44 +30,44 @@ public class ExpressionExperimentDataFetchCommand {
     private Long experimentalDesignId;
     private String format;
 
-    public Long getQuantitationTypeId() {
-        return quantitationTypeId;
-    }
-
-    public void setQuantitationTypeId( Long quantitationTypeId ) {
-        this.quantitationTypeId = quantitationTypeId;
+    public Long getExperimentalDesignId() {
+        return experimentalDesignId;
     }
 
     public Long getExpressionExperimentId() {
         return expressionExperimentId;
     }
 
-    public void setExpressionExperimentId( Long expressionExperimentId ) {
-        this.expressionExperimentId = expressionExperimentId;
+    public String getFormat() {
+        return format;
+    }
+
+    public Long getQuantitationTypeId() {
+        return quantitationTypeId;
     }
 
     public boolean isFilter() {
         return filter;
     }
 
-    public void setFilter( boolean filter ) {
-        this.filter = filter;
-    }
-
-    public Long getExperimentalDesignId() {
-        return experimentalDesignId;
-    }
-
     public void setExperimentalDesignId( Long experimentalDesignId ) {
         this.experimentalDesignId = experimentalDesignId;
     }
 
-    public String getFormat() {
-        return format;
+    public void setExpressionExperimentId( Long expressionExperimentId ) {
+        this.expressionExperimentId = expressionExperimentId;
+    }
+
+    public void setFilter( boolean filter ) {
+        this.filter = filter;
     }
 
     public void setFormat( String format ) {
         this.format = format;
+    }
+
+    public void setQuantitationTypeId( Long quantitationTypeId ) {
+        this.quantitationTypeId = quantitationTypeId;
     }
 
 }

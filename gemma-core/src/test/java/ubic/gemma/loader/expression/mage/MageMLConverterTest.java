@@ -18,9 +18,17 @@
  */
 package ubic.gemma.loader.expression.mage;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 import java.io.File;
 import java.io.InputStream;
 import java.util.Collection;
+
+import org.junit.Before;
+import org.junit.Test;
+
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.measurement.MeasurementType;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
@@ -41,20 +49,13 @@ import ubic.gemma.util.ConfigUtils;
 public class MageMLConverterTest extends AbstractMageTest {
 
     private MageMLConverter mageMLConverter = null;
+
     private MageMLParser mageMLParser = null;
 
-    /**
-     * @param mageMLConverter The mageMLConverter to set.
-     */
-    public void setMageMLConverter( MageMLConverter mageMLConverter ) {
-        this.mageMLConverter = mageMLConverter;
-    }
-
-    /**
-     * @param mageMLParser The mageMLParser to set.
-     */
-    public void setMageMLParser( MageMLParser mageMLParser ) {
-        this.mageMLParser = mageMLParser;
+    @Before
+    public void setup() {
+        this.mageMLConverter = new MageMLConverter();
+        this.mageMLParser = new MageMLParser();
     }
 
     /**
@@ -63,12 +64,11 @@ public class MageMLConverterTest extends AbstractMageTest {
      * @throws Exception
      */
     @SuppressWarnings("null")
+    @Test
     public final void testConvert1() throws Exception {
         /* invoke mageMLParser */
         InputStream istMageExamples = MageMLConverterTest.class.getResourceAsStream( MAGE_DATA_RESOURCE_PATH
                 + "jml_projID_4_E-HGMP-2.part.xml" );
-
-        assert mageMLParser != null;
 
         mageMLParser.parse( istMageExamples );
 
@@ -80,7 +80,17 @@ public class MageMLConverterTest extends AbstractMageTest {
         istMageExamples.close();
 
         ExpressionExperiment expressionExperiment = null;
-        Collection<Object> gemmaObjects = mageMLConverter.convert( mageObjects );
+
+        Collection<Object> gemmaObjects = null;
+        try {
+            gemmaObjects = mageMLConverter.convert( mageObjects );
+        } catch ( RuntimeException e ) {
+            if ( e.getMessage().equals( "Failed to initialize MGED Ontology" ) ) {
+                log.warn( "MGED Ontology could not be initialized. Possible MGED server problem, skipping test." );
+                return;
+            }
+            throw e;
+        }
         log.debug( "number of GDOs: " + gemmaObjects.size() );
 
         int numExpExp = 0;
@@ -142,13 +152,12 @@ public class MageMLConverterTest extends AbstractMageTest {
      * @throws Exception
      */
     @SuppressWarnings("null")
+    @Test
     public final void testConvert2() throws Exception {
         /* invoke mageMLParser */
         InputStream istMageExamples = MageMLConverterTest.class
                 .getResourceAsStream( MAGE_DATA_RESOURCE_PATH
                         + "HeCESbilaterals__intra-individual_differences_between_asymptomatic_and_symptomatic_carotid_plaques.part.xml" );
-
-        assert mageMLParser != null;
 
         mageMLParser.parse( istMageExamples );
 
@@ -160,7 +169,16 @@ public class MageMLConverterTest extends AbstractMageTest {
         istMageExamples.close();
 
         ExpressionExperiment expressionExperiment = null;
-        Collection<Object> gemmaObjects = mageMLConverter.convert( mageObjects );
+        Collection<Object> gemmaObjects = null;
+        try {
+            gemmaObjects = mageMLConverter.convert( mageObjects );
+        } catch ( RuntimeException e ) {
+            if ( e.getMessage().equals( "Failed to initialize MGED Ontology" ) ) {
+                log.warn( "MGED Ontology could not be initialized. Possible MGED server problem, skipping test." );
+                return;
+            }
+            throw e;
+        }
         log.debug( "number of GDOs: " + gemmaObjects.size() );
 
         int numExpExp = 0;
@@ -220,12 +238,11 @@ public class MageMLConverterTest extends AbstractMageTest {
      * @throws Exception
      */
     @SuppressWarnings("null")
+    @Test
     public final void testConvert3() throws Exception {
         /* invoke mageMLParser */
         InputStream istMageExamples = MageMLConverterTest.class.getResourceAsStream( MAGE_DATA_RESOURCE_PATH
                 + "E-MEXP-297_fixed.part.xml" );
-
-        assert mageMLParser != null;
 
         mageMLParser.parse( istMageExamples );
 
@@ -238,7 +255,16 @@ public class MageMLConverterTest extends AbstractMageTest {
 
         ExpressionExperiment expressionExperiment = null;
 
-        Collection<Object> gemmaObjects = mageMLConverter.convert( mageObjects );
+        Collection<Object> gemmaObjects = null;
+        try {
+            gemmaObjects = mageMLConverter.convert( mageObjects );
+        } catch ( RuntimeException e ) {
+            if ( e.getMessage().equals( "Failed to initialize MGED Ontology" ) ) {
+                log.warn( "MGED Ontology could not be initialized. Possible MGED server problem, skipping test." );
+                return;
+            }
+            throw e;
+        }
         log.debug( "number of GDOs: " + gemmaObjects.size() );
 
         int numExpExp = 0;
@@ -292,12 +318,11 @@ public class MageMLConverterTest extends AbstractMageTest {
      * @throws Exception
      */
     @SuppressWarnings("null")
+    @Test
     public final void testConvert4() throws Exception {
         /* invoke mageMLParser */
         InputStream istMageExamples = MageMLConverterTest.class.getResourceAsStream( MAGE_DATA_RESOURCE_PATH
                 + "export3_part.xml" );
-
-        assert mageMLParser != null;
 
         mageMLParser.parse( istMageExamples );
 
@@ -310,7 +335,16 @@ public class MageMLConverterTest extends AbstractMageTest {
 
         ExpressionExperiment expressionExperiment = null;
 
-        Collection<Object> gemmaObjects = mageMLConverter.convert( mageObjects );
+        Collection<Object> gemmaObjects = null;
+        try {
+            gemmaObjects = mageMLConverter.convert( mageObjects );
+        } catch ( RuntimeException e ) {
+            if ( e.getMessage().equals( "Failed to initialize MGED Ontology" ) ) {
+                log.warn( "MGED Ontology could not be initialized. Possible MGED server problem, skipping test." );
+                return;
+            }
+            throw e;
+        }
         log.debug( "number of GDOs: " + gemmaObjects.size() );
 
         int numExpExp = 0;
@@ -350,12 +384,11 @@ public class MageMLConverterTest extends AbstractMageTest {
      * @throws Exception
      */
     @SuppressWarnings("null")
+    @Test
     public final void testConvert5() throws Exception {
         /* invoke mageMLParser */
         InputStream istMageExamples = MageMLConverterTest.class.getResourceAsStream( MAGE_DATA_RESOURCE_PATH
                 + "E-CBIL-22-PGC1alphaKO_2380_part.xml" );
-
-        assert mageMLParser != null;
 
         mageMLParser.parse( istMageExamples );
 
@@ -367,7 +400,16 @@ public class MageMLConverterTest extends AbstractMageTest {
         istMageExamples.close();
 
         ExpressionExperiment expressionExperiment = null;
-        Collection<Object> gemmaObjects = mageMLConverter.convert( mageObjects );
+        Collection<Object> gemmaObjects = null;
+        try {
+            gemmaObjects = mageMLConverter.convert( mageObjects );
+        } catch ( RuntimeException e ) {
+            if ( e.getMessage().equals( "Failed to initialize MGED Ontology" ) ) {
+                log.warn( "MGED Ontology could not be initialized. Possible MGED server problem, skipping test." );
+                return;
+            }
+            throw e;
+        }
         log.debug( "number of GDOs: " + gemmaObjects.size() );
 
         int numExpExp = 0;
@@ -426,6 +468,7 @@ public class MageMLConverterTest extends AbstractMageTest {
      * @throws Exception
      */
     @SuppressWarnings("null")
+    @Test
     public void testConvert6() throws Exception {
 
         /* PARSING */
@@ -434,8 +477,6 @@ public class MageMLConverterTest extends AbstractMageTest {
         /* invoke mageMLParser */
         InputStream istMageExamples = MageMLConverterTest.class.getResourceAsStream( MAGE_DATA_RESOURCE_PATH
                 + "E-MEXP-955.xml" );
-
-        assert mageMLParser != null;
 
         mageMLParser.parse( istMageExamples );
 
@@ -453,7 +494,16 @@ public class MageMLConverterTest extends AbstractMageTest {
                 + "gemma-core/src/test/resources" + MAGE_DATA_RESOURCE_PATH + "E-MEXP-955" );
 
         ExpressionExperiment expressionExperiment = null;
-        Collection<Object> gemmaObjects = mageMLConverter.convert( mageObjects );
+        Collection<Object> gemmaObjects = null;
+        try {
+            gemmaObjects = mageMLConverter.convert( mageObjects );
+        } catch ( RuntimeException e ) {
+            if ( e.getMessage().equals( "Failed to initialize MGED Ontology" ) ) {
+                log.warn( "MGED Ontology could not be initialized. Possible MGED server problem, skipping test." );
+                return;
+            }
+            throw e;
+        }
         log.debug( "number of GDOs: " + gemmaObjects.size() );
 
         int numExpExp = 0;
@@ -512,12 +562,11 @@ public class MageMLConverterTest extends AbstractMageTest {
      * @throws Exception
      */
     @SuppressWarnings("null")
+    @Test
     public final void testConvert7() throws Exception {
         /* invoke mageMLParser */
         InputStream istMageExamples = MageMLConverterTest.class.getResourceAsStream( MAGE_DATA_RESOURCE_PATH
                 + "E-MEXP-740.xml" );
-
-        assert mageMLParser != null;
 
         mageMLParser.parse( istMageExamples );
 
@@ -530,7 +579,16 @@ public class MageMLConverterTest extends AbstractMageTest {
 
         ExpressionExperiment expressionExperiment = null;
 
-        Collection<Object> gemmaObjects = mageMLConverter.convert( mageObjects );
+        Collection<Object> gemmaObjects = null;
+        try {
+            gemmaObjects = mageMLConverter.convert( mageObjects );
+        } catch ( RuntimeException e ) {
+            if ( e.getMessage().equals( "Failed to initialize MGED Ontology" ) ) {
+                log.warn( "MGED Ontology could not be initialized. Possible MGED server problem, skipping test." );
+                return;
+            }
+            throw e;
+        }
         log.debug( "number of GDOs: " + gemmaObjects.size() );
 
         int numExpExp = 0;
@@ -582,12 +640,11 @@ public class MageMLConverterTest extends AbstractMageTest {
      * @throws Exception
      */
     @SuppressWarnings("null")
+    @Test
     public final void testConvert8() throws Exception {
         /* invoke mageMLParser */
         InputStream istMageExamples = MageMLConverterTest.class.getResourceAsStream( MAGE_DATA_RESOURCE_PATH
                 + "E-SMDB-1853-Exptset_1853.part.xml" );
-
-        assert mageMLParser != null;
 
         mageMLParser.parse( istMageExamples );
 
@@ -600,7 +657,16 @@ public class MageMLConverterTest extends AbstractMageTest {
 
         ExpressionExperiment expressionExperiment = null;
 
-        Collection<Object> gemmaObjects = mageMLConverter.convert( mageObjects );
+        Collection<Object> gemmaObjects = null;
+        try {
+            gemmaObjects = mageMLConverter.convert( mageObjects );
+        } catch ( RuntimeException e ) {
+            if ( e.getMessage().equals( "Failed to initialize MGED Ontology" ) ) {
+                log.warn( "MGED Ontology could not be initialized. Possible MGED server problem, skipping test." );
+                return;
+            }
+            throw e;
+        }
         log.debug( "number of GDOs: " + gemmaObjects.size() );
 
         int numExpExp = 0;
@@ -650,7 +716,6 @@ public class MageMLConverterTest extends AbstractMageTest {
             }
         }
 
-        boolean found = false;
         boolean foundBA = false;
         boolean foundBB = false;
         boolean foundSA = false;

@@ -18,6 +18,8 @@
  */
 package ubic.gemma.testing;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -26,7 +28,6 @@ import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.lang.math.RandomUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.security.providers.encoding.ShaPasswordEncoder;
 
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
@@ -34,12 +35,12 @@ import ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalys
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
-import ubic.gemma.model.common.auditAndSecurity.User;
-import ubic.gemma.model.common.auditAndSecurity.UserRole;
 import ubic.gemma.model.common.description.BibliographicReference;
+import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.ExternalDatabaseService;
+import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.model.common.protocol.Protocol;
 import ubic.gemma.model.common.quantitationtype.GeneralType;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
@@ -62,14 +63,11 @@ import ubic.gemma.model.genome.Chromosome;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.model.genome.TaxonDao;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.persistence.PersisterHelper;
-import ubic.gemma.util.ConfigUtils;
-import ubic.gemma.util.UserConstants;
 
 /**
  * Used to generate test data.
@@ -103,7 +101,8 @@ public class TestPersistentObjectHelper {
      * @return
      */
     Taxon testTaxon;
-    Collection <Taxon> testTaxa =null;
+    Collection<Taxon> testTaxa = null;
+
     private Collection<BioMaterial> getBioMaterials() {
 
         if ( allFactorValues.isEmpty() )
@@ -124,6 +123,11 @@ public class TestPersistentObjectHelper {
                 iter = allFactorValues.iterator();
                 fvCol.add( iter.next() );
             }
+
+            Characteristic c = Characteristic.Factory.newInstance();
+            c.setValue( "test_char_" + RandomStringUtils.randomAlphanumeric( 10 ) );
+
+            bm.getCharacteristics().add( c );
 
             bm.setFactorValues( fvCol );
             baCol.add( bm );
@@ -155,8 +159,8 @@ public class TestPersistentObjectHelper {
     private Collection<RawExpressionDataVector> getDesignElementDataVectors( ExpressionExperiment ee,
             Collection<QuantitationType> quantitationTypes, Collection<BioAssay> bioAssays, ArrayDesign ad ) {
 
-        BioAssayDimension baDim = BioAssayDimension.Factory.newInstance( RandomStringUtils.randomAlphanumeric( 20 ),
-                null, bioAssays, null );
+        BioAssayDimension baDim = BioAssayDimension.Factory.newInstance( ee.getShortName() + "_"
+                + RandomStringUtils.randomAlphanumeric( 20 ), null, bioAssays );
 
         Collection<RawExpressionDataVector> vectors = new HashSet<RawExpressionDataVector>();
         for ( QuantitationType quantType : quantitationTypes ) {
@@ -248,6 +252,7 @@ public class TestPersistentObjectHelper {
      */
     public ExpressionExperiment getTestPersistentBasicExpressionExperiment() {
         ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
+        ee.setShortName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) );
         ee.setName( "Expression Experiment " + RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) );
         ee.setDescription( "A test expression experiment" );
         ee.setSource( "http://www.ncbi.nlm.nih.gov/geo/" );
@@ -268,8 +273,6 @@ public class TestPersistentObjectHelper {
         bioAssays.addAll( bioAssaysA );
         bioAssays.addAll( bioAssaysB );
         ee.setBioAssays( bioAssays );
-
-        log.debug( "expression experiment => design element data vectors" );
 
         Collection<QuantitationType> quantitationTypes = new HashSet<QuantitationType>();
         for ( int quantitationTypeNum = 0; quantitationTypeNum < NUM_QUANTITATION_TYPES; quantitationTypeNum++ ) {
@@ -298,11 +301,20 @@ public class TestPersistentObjectHelper {
         this.allFactorValues.clear();
 
         ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
+        ee.setShortName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) );
         ee.setName( "Expression Experiment " + RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) );
         ee.setDescription( "A test expression experiment" );
         ee.setSource( "http://www.ncbi.nlm.nih.gov/geo/" );
         DatabaseEntry de1 = this.getTestPersistentDatabaseEntry( geo );
         ee.setAccession( de1 );
+
+        LocalFile file = LocalFile.Factory.newInstance();
+        try {
+            file.setLocalURL( new URL( "file:///tmp/" + ee.getShortName() ) );
+        } catch ( MalformedURLException e ) {
+        }
+
+        ee.setRawDataFile( file );
 
         ArrayDesign adA = this.getTestPersistentArrayDesign( TEST_ELEMENT_COLLECTION_SIZE, false, dosequence );
         ArrayDesign adB = this.getTestPersistentArrayDesign( TEST_ELEMENT_COLLECTION_SIZE, false, dosequence );
@@ -481,11 +493,33 @@ public class TestPersistentObjectHelper {
         return ( BioAssay ) persisterHelper.persist( ba );
     }
 
+    /**
+     * @param ad
+     * @param bm
+     * @return
+     */
     private BioAssay getTestNonPersistentBioAssay( ArrayDesign ad, BioMaterial bm ) {
         BioAssay ba = ubic.gemma.model.expression.bioAssay.BioAssay.Factory.newInstance();
         ba.setName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) + "_testbioassay" );
         ba.getSamplesUsed().add( bm );
         ba.setArrayDesignUsed( ad );
+
+        LocalFile file = LocalFile.Factory.newInstance();
+        try {
+            file.setLocalURL( new URL( "file:///tmp/" + ba.getName() ) );
+        } catch ( MalformedURLException e ) {
+        }
+        ba.setRawDataFile( file );
+
+        LocalFile fileb = LocalFile.Factory.newInstance();
+        try {
+            fileb.setLocalURL( new URL( "file:///tmp/raw" + ba.getName() ) );
+        } catch ( MalformedURLException e ) {
+        }
+        ba.setRawDataFile( file );
+
+        ba.getDerivedDataFiles().add( fileb );
+
         return ba;
     }
 
@@ -571,7 +605,11 @@ public class TestPersistentObjectHelper {
      */
     public BlatResult getTestPersistentBlatResult( BioSequence querySequence ) {
         BlatResult br = BlatResult.Factory.newInstance();
-        br.setTargetChromosome( Chromosome.Factory.newInstance( "X", this.getTestPersistentTaxon() ) );
+
+        Chromosome chromosome = Chromosome.Factory.newInstance( "X", this.getTestPersistentTaxon() );
+        chromosome.setSequence( getTestPersistentBioSequence() );
+        chromosome = ( Chromosome ) persisterHelper.persist( chromosome );
+        br.setTargetChromosome( chromosome );
         br.setQuerySequence( querySequence );
         br.setTargetStart( 1L );
         br.setTargetEnd( 1000L );
@@ -719,9 +757,6 @@ public class TestPersistentObjectHelper {
         }
         return testTaxon;
     }
-    
-       
-    
 
     /**
      * To allow the persister helper to manaage
@@ -737,36 +772,6 @@ public class TestPersistentObjectHelper {
         t.setIsGenesUsable( true );
 
         return t;
-    }
-
-    public User getTestPersistentUser() {
-        return getTestPersistentUser( RandomStringUtils.randomAlphabetic( 6 ), ConfigUtils
-                .getString( "gemma.admin.password" ) );
-    }
-
-    /**
-     * @return
-     */
-    public User getTestPersistentUser( String username, String password ) {
-        User testUser = User.Factory.newInstance();
-
-        testUser.setName( "Foo" );
-        testUser.setLastName( "Bar" );
-        testUser.setEnabled( Boolean.TRUE );
-        testUser.setUserName( username );
-        testUser.setEmail( RandomStringUtils.randomAlphabetic( 6 ).toLowerCase() + "@gemma.org" );
-
-        ShaPasswordEncoder encoder = new ShaPasswordEncoder();
-        String encryptedPassword = encoder.encodePassword( password, ConfigUtils.getProperty( "gemma.salt" ) );
-
-        UserRole ur = UserRole.Factory.newInstance( username, UserConstants.USER_ROLE, "regular user" );
-
-        testUser.getRoles().add( ur );
-        testUser.setPassword( encryptedPassword );
-        testUser.setPasswordHint( "I am an idiot" );
-
-        return ( User ) persisterHelper.persist( testUser );
-
     }
 
     /**

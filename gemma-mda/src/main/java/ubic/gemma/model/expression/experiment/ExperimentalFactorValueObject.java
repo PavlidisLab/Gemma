@@ -23,14 +23,12 @@ import java.util.HashSet;
 
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.VocabCharacteristic;
-import ubic.gemma.model.expression.experiment.ExperimentalFactor;
-import ubic.gemma.model.expression.experiment.FactorValue;
 
 /**
  * @author luke
  * @author keshav
- * @version $Id$ This is the "experimentalFActor"
- *          value object
+ * @version $Id$ This is the
+ *          "experimentalFActor" value object
  */
 public class ExperimentalFactorValueObject implements java.io.Serializable {
 
@@ -38,7 +36,7 @@ public class ExperimentalFactorValueObject implements java.io.Serializable {
      * 
      */
     private static final long serialVersionUID = -2615804031123874251L;
-    
+
     private long id;
     private String name;
     private String description;
@@ -47,39 +45,9 @@ public class ExperimentalFactorValueObject implements java.io.Serializable {
     private String factorValues;
     private int numValues = 0;
 
-    /**
-     * @return the numValues
-     */
-    public int getNumValues() {
-        return this.numValues;
-    }
-
-    /**
-     * @param numValues the numValues to set
-     */
-    public void setNumValues( int numValues ) {
-        this.numValues = numValues;
-    }
-
     private String type = "Categorical"; // continuous or categorical.
 
-    public String getType() {
-        return type;
-    }
-
-    public void setType( String type ) {
-        this.type = type;
-    }
-
     private Collection<FactorValueValueObject> values;
-
-    public Collection<FactorValueValueObject> getValues() {
-        return values;
-    }
-
-    public void setValues( Collection<FactorValueValueObject> values ) {
-        this.values = values;
-    }
 
     public ExperimentalFactorValueObject() {
     }
@@ -125,57 +93,55 @@ public class ExperimentalFactorValueObject implements java.io.Serializable {
         this.setValues( vals );
     }
 
-    private String getCategoryUri( Characteristic c ) {
-        if ( c instanceof VocabCharacteristic ) {
-            VocabCharacteristic vc = ( VocabCharacteristic ) c;
-            return vc.getCategoryUri();
-        }
-        return null;
-
-    }
-
-    public long getId() {
-        return id;
-    }
-
-    public void setId( long id ) {
-        this.id = id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName( String name ) {
-        this.name = name;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription( String description ) {
-        this.description = description;
-    }
-
     public String getCategory() {
         return category;
-    }
-
-    public void setCategory( String category ) {
-        this.category = category;
     }
 
     public String getCategoryUri() {
         return categoryUri;
     }
 
-    public void setCategoryUri( String categoryUri ) {
-        this.categoryUri = categoryUri;
+    public String getDescription() {
+        return description;
     }
 
     public String getFactorValues() {
         return factorValues;
+    }
+
+    public long getId() {
+        return id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    /**
+     * @return the numValues
+     */
+    public int getNumValues() {
+        return this.numValues;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public Collection<FactorValueValueObject> getValues() {
+        return values;
+    }
+
+    public void setCategory( String category ) {
+        this.category = category;
+    }
+
+    public void setCategoryUri( String categoryUri ) {
+        this.categoryUri = categoryUri;
+    }
+
+    public void setDescription( String description ) {
+        this.description = description;
     }
 
     /**
@@ -185,6 +151,38 @@ public class ExperimentalFactorValueObject implements java.io.Serializable {
      */
     public void setFactorValues( String factorValues ) {
         this.factorValues = factorValues;
+    }
+
+    public void setId( long id ) {
+        this.id = id;
+    }
+
+    public void setName( String name ) {
+        this.name = name;
+    }
+
+    /**
+     * @param numValues the numValues to set
+     */
+    public void setNumValues( int numValues ) {
+        this.numValues = numValues;
+    }
+
+    public void setType( String type ) {
+        this.type = type;
+    }
+
+    public void setValues( Collection<FactorValueValueObject> values ) {
+        this.values = values;
+    }
+
+    private String getCategoryUri( Characteristic c ) {
+        if ( c instanceof VocabCharacteristic ) {
+            VocabCharacteristic vc = ( VocabCharacteristic ) c;
+            return vc.getCategoryUri();
+        }
+        return null;
+
     }
 
 }

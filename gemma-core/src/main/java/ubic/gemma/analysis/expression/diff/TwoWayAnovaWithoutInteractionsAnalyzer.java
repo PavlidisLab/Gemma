@@ -27,6 +27,8 @@ import java.util.List;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Service;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.util.TwoWayAnovaResult;
@@ -52,11 +54,12 @@ import ubic.gemma.model.expression.experiment.FactorValue;
  * <p>
  * qvalue(pvals)$qvalues
  * 
- * @spring.bean id="twoWayAnovaWithoutInteractionsAnalyzer"
  * @author keshav
  * @version $Id$
  * @see AbstractTwoWayAnovaAnalyzer
  */
+@Service
+@Scope(value="prototype")
 public class TwoWayAnovaWithoutInteractionsAnalyzer extends AbstractTwoWayAnovaAnalyzer {
 
     private static final int NUM_RESULTS_FROM_R = 2;
@@ -153,9 +156,9 @@ public class TwoWayAnovaWithoutInteractionsAnalyzer extends AbstractTwoWayAnovaA
 
         command.append( "apply(" );
         command.append( matrixName );
-        
+
         String modelDeclaration = "x ~ " + factorA + "+" + factorB;
-        
+
         command.append( ", 1, function(x) {anova(aov(" + modelDeclaration + "))}" );
         command.append( ")" );
 
@@ -191,6 +194,7 @@ public class TwoWayAnovaWithoutInteractionsAnalyzer extends AbstractTwoWayAnovaA
         effects.add( experimentalFactorB );
         writePValuesHistogram( anovaResult.getPvalues(), expressionExperiment, effects );
 
+        disconnectR();
         log.info( "R analysis done" );
         return createExpressionAnalysis( dmatrix, mainEffectAPvalues, mainEffectBPvalues, null, anovaResult
                 .getStatistics(), NUM_RESULTS_FROM_R, experimentalFactorA, experimentalFactorB, quantitationType );

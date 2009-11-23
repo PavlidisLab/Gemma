@@ -24,13 +24,12 @@ import java.util.HashSet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
 
-public class DifferentialExpressionSummaryValueObject implements java.io.Serializable  {
+public class DifferentialExpressionSummaryValueObject implements java.io.Serializable {
 
     /**
      * 
      */
-    private static final long serialVersionUID = 2063274043081170625L
-    ;
+    private static final long serialVersionUID = 2063274043081170625L;
     private Collection<ExperimentalFactorValueObject> experimentalFactors;
     private Double qValue;
     private Double threshold;
@@ -56,6 +55,22 @@ public class DifferentialExpressionSummaryValueObject implements java.io.Seriali
         return experimentalFactors;
     }
 
+    public long getNumberOfDiffExpressedProbes() {
+        return numberOfDiffExpressedProbes;
+    }
+
+    public Double getQValue() {
+        return qValue;
+    }
+
+    public long getResultSetId() {
+        return resultSetId;
+    }
+
+    public Double getThreshold() {
+        return threshold;
+    }
+
     public void setExperimentalFactors( Collection<ExperimentalFactor> experimentalFactors ) {
 
         this.experimentalFactors = new HashSet<ExperimentalFactorValueObject>();
@@ -72,36 +87,20 @@ public class DifferentialExpressionSummaryValueObject implements java.io.Seriali
         this.experimentalFactors = experimentalFactors;
     }
 
-    public Double getQValue() {
-        return qValue;
+    public void setNumberOfDiffExpressedProbes( long numberOfDiffExpressedProbes ) {
+        this.numberOfDiffExpressedProbes = numberOfDiffExpressedProbes;
     }
 
     public void setQValue( Double value ) {
         qValue = value;
     }
 
-    public Double getThreshold() {
-        return threshold;
+    public void setResultSetId( long resultSetId ) {
+        this.resultSetId = resultSetId;
     }
 
     public void setThreshold( Double threshold ) {
         this.threshold = threshold;
-    }
-
-    public long getNumberOfDiffExpressedProbes() {
-        return numberOfDiffExpressedProbes;
-    }
-
-    public void setNumberOfDiffExpressedProbes( long numberOfDiffExpressedProbes ) {
-        this.numberOfDiffExpressedProbes = numberOfDiffExpressedProbes;
-    }
-
-    public long getResultSetId() {
-        return resultSetId;
-    }
-
-    public void setResultSetId( long resultSetId ) {
-        this.resultSetId = resultSetId;
     }
 
 }

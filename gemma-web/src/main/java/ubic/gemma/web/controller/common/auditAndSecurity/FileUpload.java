@@ -44,6 +44,10 @@ public class FileUpload implements Serializable {
         return file;
     }
 
+    public String getLocalPath() {
+        return localPath;
+    }
+
     /**
      * @param name The name to set.
      */
@@ -53,9 +57,5 @@ public class FileUpload implements Serializable {
 
     public void setLocalPath( String file ) {
         this.localPath = file;
-    }
-
-    public String getLocalPath() {
-        return localPath;
     }
 }

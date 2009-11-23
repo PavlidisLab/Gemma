@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.genome.gene;
 
+import org.springframework.beans.factory.annotation.Autowired;
+
 /**
  * <p>
  * Spring Service base class for <code>ubic.gemma.model.genome.gene.CandidateGeneListService</code>, provides access to
@@ -28,16 +30,22 @@ package ubic.gemma.model.genome.gene;
  */
 public abstract class CandidateGeneListServiceBase implements ubic.gemma.model.genome.gene.CandidateGeneListService {
 
+    @Autowired
     private ubic.gemma.model.genome.gene.GeneService geneService;
 
+    @Autowired
     private ubic.gemma.model.genome.gene.CandidateGeneListDao candidateGeneListDao;
 
+    @Autowired
     private ubic.gemma.model.genome.gene.CandidateGeneDao candidateGeneDao;
 
+    @Autowired
     private ubic.gemma.model.genome.GeneDao geneDao;
 
+    @Autowired
     private ubic.gemma.model.common.auditAndSecurity.AuditEventDao auditEventDao;
 
+    @Autowired
     private ubic.gemma.model.common.auditAndSecurity.AuditTrailDao auditTrailDao;
 
     /**

@@ -18,17 +18,21 @@
  */
 package ubic.gemma.model.genome.gene;
 
+import static org.junit.Assert.assertEquals;
+
 import java.util.Collection;
 import java.util.Iterator;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.junit.Before;
+import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 import ubic.gemma.model.common.auditAndSecurity.Person;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.persistence.PersisterHelper;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
@@ -38,26 +42,23 @@ import ubic.gemma.testing.BaseSpringContextTest;
 public class CandidateGeneListDaoImplTest extends BaseSpringContextTest {
     private final Log log = LogFactory.getLog( CandidateGeneListDaoImplTest.class );
 
+    @Autowired
     private CandidateGeneListDao candidateGeneListDao;
-    private PersisterHelper persisterHelper;
     private Gene g;
     private Gene g2;
     private Taxon t;
     private CandidateGeneList candidateGeneList;
 
-    @Override
-    protected void onSetUpInTransaction() throws Exception {
-        super.onSetUpInTransaction();
-
-        persisterHelper = ( PersisterHelper ) this.getBean( "persisterHelper" );
+    @Before
+    public void setup() throws Exception {
 
         candidateGeneList = CandidateGeneList.Factory.newInstance();
 
         AuditTrail ad = AuditTrail.Factory.newInstance();
-//        User u = User.Factory.newInstance();
-//        u.setUserName( J"joe" );
-//        ad.set
-        
+        // User u = User.Factory.newInstance();
+        // u.setUserName( J"joe" );
+        // ad.set
+
         ad = ( AuditTrail ) persisterHelper.persist( ad );
         candidateGeneList.setAuditTrail( ad );
 
@@ -102,10 +103,11 @@ public class CandidateGeneListDaoImplTest extends BaseSpringContextTest {
 
         candidateGeneList.setOwner( u );
 
-        candidateGeneList = ( CandidateGeneList ) candidateGeneListDao.create( candidateGeneList );
+        candidateGeneList = candidateGeneListDao.create( candidateGeneList );
 
     }
 
+    @Test
     public final void testAddGeneToList() throws Exception {
         log.info( "testing adding gene to list" );
         assert candidateGeneList != null;
@@ -114,6 +116,24 @@ public class CandidateGeneListDaoImplTest extends BaseSpringContextTest {
         assertEquals( cg.getGene().getName(), "testmygene" );
     }
 
+    @Test
+    public final void testRankingChanges() throws Exception {
+        log.info( "testing ranking changes" );
+        assert candidateGeneList != null;
+        CandidateGene cg1 = candidateGeneList.addCandidate( g );
+        CandidateGene cg2 = candidateGeneList.addCandidate( g2 );
+        candidateGeneList.increaseRanking( cg2 );
+        Collection<CandidateGene> c = candidateGeneList.getCandidates();
+        for ( Iterator<CandidateGene> iter = c.iterator(); iter.hasNext(); ) {
+            cg1 = iter.next();
+            if ( cg1.getGene().getName().matches( "testmygene2" ) )
+                assertEquals( cg1.getRank().intValue(), 0 );
+            else
+                assertEquals( cg1.getRank().intValue(), 1 );
+        }
+    }
+
+    @Test
     public final void testRemoveGeneFromList() throws Exception {
         log.info( "testing removing gene from list" );
         assert candidateGeneList != null;
@@ -124,29 +144,6 @@ public class CandidateGeneListDaoImplTest extends BaseSpringContextTest {
         candidateGeneList.removeCandidate( cg );
         log.info( candidateGeneList.getCandidates().size() + " candidates left" );
         assert ( candidateGeneList.getCandidates().size() == 0 );
-    }
-
-    public final void testRankingChanges() throws Exception {
-        log.info( "testing ranking changes" );
-        assert candidateGeneList != null;
-        CandidateGene cg1 = candidateGeneList.addCandidate( g );
-        CandidateGene cg2 = candidateGeneList.addCandidate( g2 );
-        candidateGeneList.increaseRanking( cg2 );
-        Collection c = candidateGeneList.getCandidates();
-        for ( Iterator iter = c.iterator(); iter.hasNext(); ) {
-            cg1 = ( CandidateGene ) iter.next();
-            if ( cg1.getGene().getName().matches( "testmygene2" ) )
-                assertEquals( cg1.getRank().intValue(), 0 );
-            else
-                assertEquals( cg1.getRank().intValue(), 1 );
-        }
-    }
-
-    /**
-     * @param candidateGeneListDao The candidateGeneListDao to set.
-     */
-    public void setCandidateGeneListDao( CandidateGeneListDao candidateGeneListDao ) {
-        this.candidateGeneListDao = candidateGeneListDao;
     }
 
 }

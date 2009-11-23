@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.common.description;
 
+import org.springframework.beans.factory.annotation.Autowired;
+
 /**
  * <p>
  * Spring Service base class for <code>ubic.gemma.model.common.description.ExternalDatabaseService</code>, provides
@@ -26,9 +28,10 @@ package ubic.gemma.model.common.description;
  * 
  * @see ubic.gemma.model.common.description.ExternalDatabaseService
  */
-public abstract class ExternalDatabaseServiceBase extends ubic.gemma.model.common.AuditableServiceImpl implements
+public abstract class ExternalDatabaseServiceBase   implements
         ubic.gemma.model.common.description.ExternalDatabaseService {
 
+    @Autowired
     private ubic.gemma.model.common.description.ExternalDatabaseDao externalDatabaseDao;
 
     /**

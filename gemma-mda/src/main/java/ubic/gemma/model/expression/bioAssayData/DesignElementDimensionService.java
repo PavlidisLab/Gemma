@@ -18,14 +18,18 @@
  */
 package ubic.gemma.model.expression.bioAssayData;
 
+import org.springframework.security.access.annotation.Secured;
+
 /**
- * 
+ * @author kelsey
+ * @version $Id$
  */
 public interface DesignElementDimensionService {
 
     /**
      * 
      */
+    @Secured( { "GROUP_USER", "AFTER_ACL_READ"})
     public ubic.gemma.model.expression.bioAssayData.DesignElementDimension findOrCreate(
             ubic.gemma.model.expression.bioAssayData.DesignElementDimension designElementDimension );
 

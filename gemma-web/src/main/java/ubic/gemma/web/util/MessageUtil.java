@@ -26,14 +26,15 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
 import org.springframework.context.support.ApplicationObjectSupport;
+import org.springframework.stereotype.Component;
 
 /**
  * Provides methods for putting messages to the user in the session.
  * 
  * @author pavlidis
  * @version $Id$
- * @spring.bean id="messageUtil"
  */
+@Component
 public class MessageUtil extends ApplicationObjectSupport {
 
     /**
@@ -100,17 +101,15 @@ public class MessageUtil extends ApplicationObjectSupport {
     @SuppressWarnings("unchecked")
     public void saveMessage( HttpSession session, String msg ) {
         Object sessAttr = session.getAttribute( "messages" );
-        List<String> messages; 
+        List<String> messages;
 
         if ( sessAttr == null ) {
             messages = new ArrayList<String>();
-        }
-        else {
-            if (sessAttr instanceof String) {
+        } else {
+            if ( sessAttr instanceof String ) {
                 messages = new ArrayList<String>();
-                messages.add( (String) sessAttr );
-            }
-            else {
+                messages.add( ( String ) sessAttr );
+            } else {
                 messages = ( List<String> ) sessAttr;
             }
         }

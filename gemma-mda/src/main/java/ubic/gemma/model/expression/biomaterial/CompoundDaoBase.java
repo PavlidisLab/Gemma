@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.expression.biomaterial;
 
+import java.util.Collection;
+
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 
 /**
@@ -39,7 +41,7 @@ public abstract class CompoundDaoBase extends HibernateDaoSupport implements
             throw new IllegalArgumentException( "Compound.create - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback() {
+                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator<Compound> entityIterator = entities.iterator(); entityIterator
@@ -52,6 +54,11 @@ public abstract class CompoundDaoBase extends HibernateDaoSupport implements
         return entities;
     }
 
+    
+    public Collection<? extends Compound > load( Collection<Long> ids ) {
+        return this.getHibernateTemplate().findByNamedParam( "from CompoundImpl where id in (:ids)", "ids", ids );
+    }
+    
     /**
      * @see ubic.gemma.model.expression.biomaterial.CompoundDao#create(int transform,
      *      ubic.gemma.model.expression.biomaterial.Compound)
@@ -67,7 +74,7 @@ public abstract class CompoundDaoBase extends HibernateDaoSupport implements
     /**
      * @see ubic.gemma.model.expression.biomaterial.CompoundDao#create(java.util.Collection)
      */
-    @SuppressWarnings( { "unchecked" })
+    
     public java.util.Collection create( final java.util.Collection entities ) {
         return create( TRANSFORM_NONE, entities );
     }
@@ -83,7 +90,7 @@ public abstract class CompoundDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.expression.biomaterial.CompoundDao#find(int, java.lang.String,
      *      ubic.gemma.model.expression.biomaterial.Compound)
      */
-    @SuppressWarnings( { "unchecked" })
+    
     public Compound find( final int transform, final java.lang.String queryString,
             final ubic.gemma.model.expression.biomaterial.Compound compound ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -137,7 +144,7 @@ public abstract class CompoundDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.expression.biomaterial.CompoundDao#findOrCreate(int, java.lang.String,
      *      ubic.gemma.model.expression.biomaterial.Compound)
      */
-    @SuppressWarnings( { "unchecked" })
+    
     public Compound findOrCreate( final int transform, final java.lang.String queryString,
             final ubic.gemma.model.expression.biomaterial.Compound compound ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -221,7 +228,7 @@ public abstract class CompoundDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.expression.biomaterial.CompoundDao#loadAll(int)
      */
 
-    @SuppressWarnings("unchecked")
+    
     public java.util.Collection<Compound> loadAll( final int transform ) {
         final java.util.Collection results = this.getHibernateTemplate().loadAll(
                 ubic.gemma.model.expression.biomaterial.CompoundImpl.class );
@@ -247,7 +254,7 @@ public abstract class CompoundDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.common.SecurableDao#remove(java.util.Collection)
      */
 
-    public void remove( java.util.Collection<Compound> entities ) {
+    public void remove( java.util.Collection<? extends Compound> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "Compound.remove - 'entities' can not be null" );
         }
@@ -268,15 +275,15 @@ public abstract class CompoundDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.common.SecurableDao#update(java.util.Collection)
      */
 
-    public void update( final java.util.Collection<Compound> entities ) {
+    public void update( final java.util.Collection<? extends Compound> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "Compound.update - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback() {
+                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator<Compound> entityIterator = entities.iterator(); entityIterator
+                        for ( java.util.Iterator<? extends Compound> entityIterator = entities.iterator(); entityIterator
                                 .hasNext(); ) {
                             update( entityIterator.next() );
                         }

@@ -34,7 +34,7 @@ public abstract class ChromosomeFeatureDaoBase<T extends ChromosomeFeature> exte
     /**
      * @see ubic.gemma.model.genome.ChromosomeFeatureDao#findByNcbiId(java.lang.String, java.lang.String)
      */
-    @SuppressWarnings( { "unchecked" })
+
     public java.util.Collection findByNcbiId( final java.lang.String queryString, final java.lang.String ncbiId ) {
         return this.findByNcbiId( TRANSFORM_NONE, queryString, ncbiId );
     }
@@ -43,7 +43,7 @@ public abstract class ChromosomeFeatureDaoBase<T extends ChromosomeFeature> exte
      * @see ubic.gemma.model.genome.ChromosomeFeatureDao#findByPhysicalLocation(int, java.lang.String,
      *      ubic.gemma.model.genome.PhysicalLocation)
      */
-    @SuppressWarnings( { "unchecked" })
+
     public java.util.Collection findByPhysicalLocation( final int transform, final java.lang.String queryString,
             final ubic.gemma.model.genome.PhysicalLocation location ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -60,7 +60,7 @@ public abstract class ChromosomeFeatureDaoBase<T extends ChromosomeFeature> exte
      * @see ubic.gemma.model.genome.ChromosomeFeatureDao#findByPhysicalLocation(int,
      *      ubic.gemma.model.genome.PhysicalLocation)
      */
-    @SuppressWarnings( { "unchecked" })
+
     public java.util.Collection<T> findByPhysicalLocation( final int transform,
             final ubic.gemma.model.genome.PhysicalLocation location ) {
         return this
@@ -74,7 +74,7 @@ public abstract class ChromosomeFeatureDaoBase<T extends ChromosomeFeature> exte
      * @see ubic.gemma.model.genome.ChromosomeFeatureDao#findByPhysicalLocation(java.lang.String,
      *      ubic.gemma.model.genome.PhysicalLocation)
      */
-    @SuppressWarnings( { "unchecked" })
+
     public java.util.Collection<T> findByPhysicalLocation( final java.lang.String queryString,
             final ubic.gemma.model.genome.PhysicalLocation location ) {
         return this.findByPhysicalLocation( TRANSFORM_NONE, queryString, location );
@@ -100,7 +100,7 @@ public abstract class ChromosomeFeatureDaoBase<T extends ChromosomeFeature> exte
      * @see #transformEntity(int,ubic.gemma.model.genome.ChromosomeFeature)
      */
 
-    protected void transformEntities( final int transform, final java.util.Collection<T> entities ) {
+    protected void transformEntities( final int transform, final java.util.Collection<? extends T> entities ) {
         switch ( transform ) {
             case TRANSFORM_NONE: // fall-through
             default:

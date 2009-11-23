@@ -18,10 +18,15 @@
  */
 package ubic.gemma.analysis.expression.diff;
 
+import static org.junit.Assert.assertTrue;
+
 import java.io.IOException;
 import java.util.Collection;
 
 import org.apache.commons.lang.time.StopWatch;
+import org.junit.Before;
+import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
@@ -35,8 +40,10 @@ import ubic.gemma.testing.BaseSpringContextTest;
  */
 public class DifferentialExpressionAnalyzerServiceTest extends BaseSpringContextTest {
 
+    @Autowired
     private DifferentialExpressionAnalyzerService differentialExpressionAnalyzerService = null;
 
+    @Autowired
     private ExpressionExperimentService expressionExperimentService = null;
 
     ExpressionExperiment ee = null;
@@ -47,32 +54,16 @@ public class DifferentialExpressionAnalyzerServiceTest extends BaseSpringContext
      * (non-Javadoc)
      * @see ubic.gemma.testing.BaseSpringContextTest#onSetUpInTransaction()
      */
-    @Override
-    public void onSetUpInTransaction() throws Exception {
-        super.onSetUpInTransaction();
-
-        differentialExpressionAnalyzerService = ( DifferentialExpressionAnalyzerService ) this
-                .getBean( "differentialExpressionAnalyzerService" );
-
-        expressionExperimentService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
-
+    @Before
+    public void setup() throws Exception {
         ee = expressionExperimentService.findByShortName( shortName );
-
         if ( ee != null ) expressionExperimentService.thawLite( ee );
-    }
-
-    /*
-     * (non-Javadoc)
-     * @see ubic.gemma.testing.BaseSpringContextTest#onTearDownInTransaction()
-     */
-    @Override
-    protected void onTearDownInTransaction() throws Exception {
-        super.onTearDownInTransaction();
     }
 
     /**
      * @throws Exception
      */
+    @Test
     public void testDelete() throws Exception {
 
         if ( ee == null ) return;
@@ -100,6 +91,7 @@ public class DifferentialExpressionAnalyzerServiceTest extends BaseSpringContext
     /**
      * 
      */
+    @Test
     public void testWritePValuesHistogram() {
 
         if ( ee == null ) return;

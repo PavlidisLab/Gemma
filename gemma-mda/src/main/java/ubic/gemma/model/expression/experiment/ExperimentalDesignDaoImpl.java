@@ -23,14 +23,23 @@ import java.util.List;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
+import org.hibernate.SessionFactory;
 import org.hibernate.criterion.Restrictions;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
 
 /**
  * @see ubic.gemma.model.expression.experiment.ExperimentalDesign
  */
+@Repository
 public class ExperimentalDesignDaoImpl extends ubic.gemma.model.expression.experiment.ExperimentalDesignDaoBase {
 
     private static Log log = LogFactory.getLog( ExperimentalDesignDaoImpl.class.getName() );
+
+    @Autowired
+    public ExperimentalDesignDaoImpl( SessionFactory sessionFactory ) {
+        super.setSessionFactory( sessionFactory );
+    }
 
     /*
      * (non-Javadoc)
@@ -42,7 +51,7 @@ public class ExperimentalDesignDaoImpl extends ubic.gemma.model.expression.exper
     @Override
     public ExperimentalDesign find( ExperimentalDesign ExperimentalDesign ) {
         try {
-            Criteria queryObject = super.getSession( false ).createCriteria( ExperimentalDesign.class );
+            Criteria queryObject = super.getSession().createCriteria( ExperimentalDesign.class );
 
             queryObject.add( Restrictions.eq( "name", ExperimentalDesign.getName() ) );
 

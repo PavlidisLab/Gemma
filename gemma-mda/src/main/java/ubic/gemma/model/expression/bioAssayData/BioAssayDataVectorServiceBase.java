@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.expression.bioAssayData;
 
+import org.springframework.beans.factory.annotation.Autowired;
+
 /**
  * <p>
  * Spring Service base class for <code>ubic.gemma.model.expression.bioAssayData.BioAssayDataVectorService</code>,
@@ -29,6 +31,7 @@ package ubic.gemma.model.expression.bioAssayData;
 public abstract class BioAssayDataVectorServiceBase implements
         ubic.gemma.model.expression.bioAssayData.BioAssayDataVectorService {
 
+    @Autowired
     private ubic.gemma.model.expression.bioAssayData.BioAssayDataVectorDao bioAssayDataVectorDao;
 
     /**

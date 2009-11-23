@@ -18,75 +18,20 @@
  */
 package ubic.gemma.model.common.protocol;
 
+import org.springframework.stereotype.Repository;
+
+import ubic.gemma.persistence.BaseDao;
+
 /**
  * @see ubic.gemma.model.common.protocol.Hardware
  */
-public interface HardwareDao extends ubic.gemma.model.common.protocol.ParameterizableDao<Hardware> {
-    /**
-     * <p>
-     * Does the same thing as {@link #find(boolean, ubic.gemma.model.common.protocol.Hardware)} with an additional
-     * argument called <code>queryString</code>. This <code>queryString</code> argument allows you to override the query
-     * string defined in {@link #find(int, ubic.gemma.model.common.protocol.Hardware hardware)}.
-     * </p>
-     */
-    public Object find( int transform, String queryString, ubic.gemma.model.common.protocol.Hardware hardware );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #find(ubic.gemma.model.common.protocol.Hardware)} with an additional flag called
-     * <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then finder results will
-     * <strong>NOT</strong> be transformed during retrieval. If this flag is any of the other constants defined here
-     * then finder results <strong>WILL BE</strong> passed through an operation which can optionally transform the
-     * entities (into value objects for example). By default, transformation does not occur.
-     * </p>
-     */
-    public Object find( int transform, ubic.gemma.model.common.protocol.Hardware hardware );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #find(ubic.gemma.model.common.protocol.Hardware)} with an additional argument
-     * called <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string
-     * defined in {@link #find(ubic.gemma.model.common.protocol.Hardware)}.
-     * </p>
-     */
-    public ubic.gemma.model.common.protocol.Hardware find( String queryString,
-            ubic.gemma.model.common.protocol.Hardware hardware );
+@Repository
+public interface HardwareDao extends BaseDao<Hardware> {
 
     /**
      * 
      */
     public ubic.gemma.model.common.protocol.Hardware find( ubic.gemma.model.common.protocol.Hardware hardware );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findOrCreate(boolean, ubic.gemma.model.common.protocol.Hardware)} with an
-     * additional argument called <code>queryString</code>. This <code>queryString</code> argument allows you to
-     * override the query string defined in {@link #findOrCreate(int, ubic.gemma.model.common.protocol.Hardware
-     * hardware)}.
-     * </p>
-     */
-    public Object findOrCreate( int transform, String queryString, ubic.gemma.model.common.protocol.Hardware hardware );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findOrCreate(ubic.gemma.model.common.protocol.Hardware)} with an additional flag
-     * called <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then finder results will
-     * <strong>NOT</strong> be transformed during retrieval. If this flag is any of the other constants defined here
-     * then finder results <strong>WILL BE</strong> passed through an operation which can optionally transform the
-     * entities (into value objects for example). By default, transformation does not occur.
-     * </p>
-     */
-    public Object findOrCreate( int transform, ubic.gemma.model.common.protocol.Hardware hardware );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findOrCreate(ubic.gemma.model.common.protocol.Hardware)} with an additional
-     * argument called <code>queryString</code>. This <code>queryString</code> argument allows you to override the query
-     * string defined in {@link #findOrCreate(ubic.gemma.model.common.protocol.Hardware)}.
-     * </p>
-     */
-    public ubic.gemma.model.common.protocol.Hardware findOrCreate( String queryString,
-            ubic.gemma.model.common.protocol.Hardware hardware );
 
     /**
      * 

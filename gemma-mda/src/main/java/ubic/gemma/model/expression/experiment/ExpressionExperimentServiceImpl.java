@@ -25,11 +25,11 @@ import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.stereotype.Service;
 
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
-import ubic.gemma.model.common.AuditableDao;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
@@ -45,6 +45,7 @@ import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.util.monitor.Monitored;
@@ -55,6 +56,7 @@ import ubic.gemma.util.monitor.Monitored;
  * @version $Id$
  * @see ubic.gemma.model.expression.experiment.ExpressionExperimentService
  */
+@Service
 public class ExpressionExperimentServiceImpl extends
         ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase {
 
@@ -83,6 +85,14 @@ public class ExpressionExperimentServiceImpl extends
         return this.getExpressionExperimentDao().getProcessedDataVectors( ee );
     }
 
+    /*
+     * Note: implemented via SpringSecurity.
+     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentService#loadMyExpressionExperiments()
+     */
+    public Collection<ExpressionExperiment> loadMyExpressionExperiments() {
+        return loadAll();
+    }
+
     @Override
     protected Integer handleCountAll() throws Exception {
         return this.getExpressionExperimentDao().countAll();
@@ -107,6 +117,10 @@ public class ExpressionExperimentServiceImpl extends
      */
     @Override
     protected void handleDelete( ExpressionExperiment ee ) throws Exception {
+
+        if ( ee == null ) {
+            throw new IllegalArgumentException( "Experiment cannot be null" );
+        }
 
         /*
          * If we remove the experiment from the set, analyses that used the set have to cope with this. For G2G,the data
@@ -194,7 +208,7 @@ public class ExpressionExperimentServiceImpl extends
     }
 
     @Override
-    protected Collection<ExpressionExperiment> handleFindByBioMaterials( Collection bioMaterials ) throws Exception {
+    protected Collection<ExpressionExperiment> handleFindByBioMaterials( Collection<BioMaterial> bioMaterials ) throws Exception {
         return this.getExpressionExperimentDao().findByBioMaterials( bioMaterials );
     }
 
@@ -236,7 +250,6 @@ public class ExpressionExperimentServiceImpl extends
      * ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleFindByInvestigator(ubic.gemma.model
      * .common.auditAndSecurity.Contact)
      */
-    @SuppressWarnings("unchecked")
     @Override
     protected Collection<ExpressionExperiment> handleFindByInvestigator( Contact investigator ) throws Exception {
         return this.getExpressionExperimentDao().findByInvestigator( investigator );
@@ -249,6 +262,17 @@ public class ExpressionExperimentServiceImpl extends
     @Override
     protected ExpressionExperiment handleFindByName( String name ) throws Exception {
         return this.getExpressionExperimentDao().findByName( name );
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see
+     * ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleFindByParentTaxon(ubic.gemma.model
+     * .genome .Taxon)
+     */
+    @Override
+    protected Collection<ExpressionExperiment> handleFindByParentTaxon( Taxon taxon ) throws Exception {
+        return this.getExpressionExperimentDao().findByParentTaxon( taxon );
     }
 
     @Override
@@ -270,18 +294,6 @@ public class ExpressionExperimentServiceImpl extends
     /*
      * (non-Javadoc)
      * @see
-     * ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleFindByParentTaxon(ubic.gemma.model.genome
-     * .Taxon)
-     */
-    @Override
-    protected Collection<ExpressionExperiment> handleFindByParentTaxon( Taxon taxon ) throws Exception {
-        return this.getExpressionExperimentDao().findByParentTaxon( taxon );
-    }
-    
-    
-    /*
-     * (non-Javadoc)
-     * @see
      * ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleFindOrCreate(ubic.gemma.model.expression
      * .experiment.ExpressionExperiment)
      */
@@ -291,7 +303,7 @@ public class ExpressionExperimentServiceImpl extends
     }
 
     @Override
-    protected Map handleGetAnnotationCounts( Collection ids ) throws Exception {
+    protected Map handleGetAnnotationCounts( Collection<Long> ids ) throws Exception {
         return this.getExpressionExperimentDao().getAnnotationCounts( ids );
     }
 
@@ -322,6 +334,12 @@ public class ExpressionExperimentServiceImpl extends
         return this.getExpressionExperimentDao().getDesignElementDataVectorCountById( id );
     }
 
+    @Override
+    protected Collection<DesignElementDataVector> handleGetDesignElementDataVectors(
+            Collection<? extends DesignElement> designElements, QuantitationType quantitationType ) throws Exception {
+        return this.getExpressionExperimentDao().getDesignElementDataVectors( designElements, quantitationType );
+    }
+
     /*
      * (non-Javadoc)
      * @see
@@ -329,18 +347,15 @@ public class ExpressionExperimentServiceImpl extends
      * .gemma.model.expression.experiment.ExpressionExperiment, java.util.Collection)
      */
     @Override
-    protected Collection handleGetDesignElementDataVectors( Collection quantitationTypes ) throws Exception {
+    protected Collection<DesignElementDataVector> handleGetDesignElementDataVectors(
+            Collection<QuantitationType> quantitationTypes ) throws Exception {
         return this.getExpressionExperimentDao().getDesignElementDataVectors( quantitationTypes );
     }
 
     @Override
-    protected Collection handleGetDesignElementDataVectors( Collection designElements, QuantitationType quantitationType )
+    protected Map<ExpressionExperiment, AuditEvent> handleGetLastArrayDesignUpdate(
+            Collection<ExpressionExperiment> expressionExperiments, Class<? extends AuditEventType> type )
             throws Exception {
-        return this.getExpressionExperimentDao().getDesignElementDataVectors( designElements, quantitationType );
-    }
-
-    @Override
-    protected Map handleGetLastArrayDesignUpdate( Collection expressionExperiments, Class type ) throws Exception {
         return this.getExpressionExperimentDao().getLastArrayDesignUpdate( expressionExperiments, type );
     }
 
@@ -358,7 +373,7 @@ public class ExpressionExperimentServiceImpl extends
      */
     @SuppressWarnings("unchecked")
     @Override
-    protected Map handleGetLastLinkAnalysis( Collection ids ) throws Exception {
+    protected Map<Long, AuditEvent> handleGetLastLinkAnalysis( Collection ids ) throws Exception {
 
         return getLastEvent( ids, LinkAnalysisEvent.Factory.newInstance() );
 
@@ -372,7 +387,7 @@ public class ExpressionExperimentServiceImpl extends
      */
     @SuppressWarnings("unchecked")
     @Override
-    protected Map handleGetLastMissingValueAnalysis( Collection ids ) throws Exception {
+    protected Map<Long, AuditEvent> handleGetLastMissingValueAnalysis( Collection ids ) throws Exception {
         return getLastEvent( ids, MissingValueAnalysisEvent.Factory.newInstance() );
     }
 
@@ -384,9 +399,15 @@ public class ExpressionExperimentServiceImpl extends
      */
     @SuppressWarnings("unchecked")
     @Override
-    protected Map handleGetLastProcessedDataUpdate( Collection ids ) throws Exception {
+    protected Map<Long, AuditEvent> handleGetLastProcessedDataUpdate( Collection ids ) throws Exception {
         return getLastEvent( ids, ProcessedVectorComputationEvent.Factory.newInstance() );
     }
+
+    //
+    // @Override
+    // protected QuantitationType handleGetMaskedPreferredQuantitationType( ExpressionExperiment ee ) throws Exception {
+    // return this.getExpressionExperimentDao().getMaskedPreferredQuantitationType( ee );
+    // }
 
     /*
      * Note this is a little tricky since we have to reach through to check the ArrayDesigns. (non-Javadoc)
@@ -396,7 +417,7 @@ public class ExpressionExperimentServiceImpl extends
      */
     @SuppressWarnings("unchecked")
     @Override
-    protected Map handleGetLastTroubleEvent( Collection /* <Long> */ids ) throws Exception {
+    protected Map<Long, AuditEvent> handleGetLastTroubleEvent( Collection /* <Long> */ids ) throws Exception {
         Map<Long, Collection<AuditEvent>> eeEvents = this.getExpressionExperimentDao().getAuditEvents( ids );
         Map<Long, Map<Long, Collection<AuditEvent>>> adEvents = this.getExpressionExperimentDao()
                 .getArrayDesignAuditEvents( ids );
@@ -409,7 +430,7 @@ public class ExpressionExperimentServiceImpl extends
             Collection<AuditEvent> events = eeEvents.get( eeId );
             AuditEvent troubleEvent = null;
             if ( events != null ) {
-                troubleEvent = getLastOutstandingTroubleEvent( events );
+                troubleEvent = this.getAuditEventDao().getLastOutstandingTroubleEvent( events );
                 if ( troubleEvent != null ) {
                     troubleMap.put( eeId, troubleEvent );
                     continue;
@@ -426,7 +447,7 @@ public class ExpressionExperimentServiceImpl extends
                     events = myAdEvents.get( adId );
                     if ( events == null ) continue;
 
-                    AuditEvent adTroubleEvent = getLastOutstandingTroubleEvent( events );
+                    AuditEvent adTroubleEvent = this.getAuditEventDao().getLastOutstandingTroubleEvent( events );
                     if ( adTroubleEvent != null )
                         if ( troubleEvent == null || troubleEvent.getDate().before( adTroubleEvent.getDate() ) )
                             troubleEvent = adTroubleEvent;
@@ -439,12 +460,6 @@ public class ExpressionExperimentServiceImpl extends
         return troubleMap;
     }
 
-    //
-    // @Override
-    // protected QuantitationType handleGetMaskedPreferredQuantitationType( ExpressionExperiment ee ) throws Exception {
-    // return this.getExpressionExperimentDao().getMaskedPreferredQuantitationType( ee );
-    // }
-
     /*
      * (non-Javadoc)
      * @see
@@ -453,7 +468,7 @@ public class ExpressionExperimentServiceImpl extends
      */
     @SuppressWarnings("unchecked")
     @Override
-    protected Map handleGetLastValidationEvent( Collection ids ) throws Exception {
+    protected Map<Long, AuditEvent> handleGetLastValidationEvent( Collection ids ) throws Exception {
         return getLastEvent( ids, ValidatedFlagEvent.Factory.newInstance() );
     }
 
@@ -462,12 +477,12 @@ public class ExpressionExperimentServiceImpl extends
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleGetPerTaxonCount()
      */
     @Override
-    protected Map handleGetPerTaxonCount() throws Exception {
+    protected Map<Taxon, Long> handleGetPerTaxonCount() throws Exception {
         return this.getExpressionExperimentDao().getPerTaxonCount();
     }
 
     @Override
-    protected Map handleGetPopulatedFactorCounts( Collection ids ) throws Exception {
+    protected Map handleGetPopulatedFactorCounts( Collection<Long> ids ) throws Exception {
         return this.getExpressionExperimentDao().getPopulatedFactorCounts( ids );
     }
 
@@ -481,8 +496,11 @@ public class ExpressionExperimentServiceImpl extends
     protected Collection<QuantitationType> handleGetPreferredQuantitationType( ExpressionExperiment ee )
             throws Exception {
         Collection<QuantitationType> preferredQuantitationTypes = new HashSet<QuantitationType>();
+
+        Collection<QuantitationType> quantitationTypes = this.getQuantitationTypes( ee );
+
         handleThawLite( ee );
-        for ( QuantitationType qt : ee.getQuantitationTypes() ) {
+        for ( QuantitationType qt : quantitationTypes ) {
             if ( qt.getIsPreferred() ) {
                 preferredQuantitationTypes.add( qt );
             }
@@ -525,7 +543,7 @@ public class ExpressionExperimentServiceImpl extends
     }
 
     @Override
-    protected Map /* <ExpressionExperiment, Collection<AuditEvent>> */handleGetSampleRemovalEvents(
+    protected Map<ExpressionExperiment, Collection<AuditEvent>> handleGetSampleRemovalEvents(
             Collection expressionExperiments ) throws Exception {
         return this.getExpressionExperimentDao().getSampleRemovalEvents( expressionExperiments );
     }
@@ -569,7 +587,7 @@ public class ExpressionExperimentServiceImpl extends
     @Override
     @Monitored
     protected Collection<ExpressionExperiment> handleLoadAll() throws Exception {
-        return this.getExpressionExperimentDao().loadAll();
+        return ( Collection<ExpressionExperiment> ) this.getExpressionExperimentDao().loadAll();
     }
 
     /*
@@ -599,8 +617,9 @@ public class ExpressionExperimentServiceImpl extends
      * ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleLoadMultiple(java.util.Collection)
      */
     @Override
-    protected Collection<ExpressionExperiment> handleLoadMultiple( Collection ids ) throws Exception {
-        Collection<ExpressionExperiment> ees = this.getExpressionExperimentDao().load( ids );
+    protected Collection<ExpressionExperiment> handleLoadMultiple( Collection<Long> ids ) throws Exception {
+        Collection<ExpressionExperiment> ees = ( Collection<ExpressionExperiment> ) this.getExpressionExperimentDao()
+                .load( ids );
         return ees;
     }
 
@@ -653,9 +672,10 @@ public class ExpressionExperimentServiceImpl extends
         Collection<ExpressionExperiment> ees = this.loadMultiple( ids );
         AuditEvent last;
         for ( ExpressionExperiment experiment : ees ) {
-            last = getLastAuditEvent( experiment, type );
+            last = this.getAuditEventDao().getLastEvent( experiment, type.getClass() );
             lastEventMap.put( experiment.getId(), last );
         }
         return lastEventMap;
     }
+
 }

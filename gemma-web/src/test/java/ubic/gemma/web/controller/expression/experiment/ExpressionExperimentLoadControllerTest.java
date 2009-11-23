@@ -18,6 +18,10 @@
  */
 package ubic.gemma.web.controller.expression.experiment;
 
+import static org.junit.Assert.assertEquals;
+
+import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.web.servlet.ModelAndView;
@@ -30,25 +34,20 @@ import ubic.gemma.testing.BaseSpringWebTest;
  */
 public class ExpressionExperimentLoadControllerTest extends BaseSpringWebTest {
 
+    @Autowired
     private ExpressionExperimentLoadController controller;
 
-    /**
-     * @throws Exception
-     */
     @Override
-    public void onSetUpInTransaction() throws Exception {
-        super.onSetUpInTransaction();
-        controller = ( ExpressionExperimentLoadController ) getBean( "expressionExperimentLoadController" );
-    }
-
-    public MockHttpServletRequest newPost( String url ) {
-        return new MockHttpServletRequest( "POST", url );
-    }
-
     public MockHttpServletRequest newGet( String url ) {
         return new MockHttpServletRequest( "GET", url );
     }
 
+    @Override
+    public MockHttpServletRequest newPost( String url ) {
+        return new MockHttpServletRequest( "POST", url );
+    }
+
+    @Test
     public final void testShowForm() throws Exception {
         MockHttpServletResponse response = new MockHttpServletResponse();
         MockHttpServletRequest request = newGet( "/loadExpressionExperiment.html" );

@@ -300,7 +300,7 @@ public class LabelTag extends TagSupport {
      * @return ValidatorResources from a ValidatorFactory.
      */
     private ValidatorResources getValidatorResources() {
-        // look in servlet beans definition (i.e. action-servlet.xml)
+        // look in servlet beans definition (i.e. gemma-servlet.xml)
         WebApplicationContext ctx = ( WebApplicationContext ) pageContext.getRequest().getAttribute(
                 DispatcherServlet.WEB_APPLICATION_CONTEXT_ATTRIBUTE );
         ValidatorFactory factory = null;

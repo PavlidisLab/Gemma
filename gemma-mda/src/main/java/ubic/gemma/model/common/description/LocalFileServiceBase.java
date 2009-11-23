@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.common.description;
 
+import org.springframework.beans.factory.annotation.Autowired;
+
 /**
  * <p>
  * Spring Service base class for <code>ubic.gemma.model.common.description.LocalFileService</code>, provides access to
@@ -28,6 +30,7 @@ package ubic.gemma.model.common.description;
  */
 public abstract class LocalFileServiceBase implements ubic.gemma.model.common.description.LocalFileService {
 
+    @Autowired
     private ubic.gemma.model.common.description.LocalFileDao localFileDao;
 
     /**

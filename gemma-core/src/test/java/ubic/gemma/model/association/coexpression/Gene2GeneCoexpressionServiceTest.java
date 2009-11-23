@@ -19,9 +19,14 @@
 
 package ubic.gemma.model.association.coexpression;
 
-import java.util.Calendar;
+import static org.junit.Assert.assertEquals;
+
 import java.util.Collection;
-import java.util.GregorianCalendar;
+import java.util.Date;
+
+import org.junit.Before;
+import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis;
 import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisService;
@@ -35,38 +40,36 @@ import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
  * @author klc
+ * @version $Id$
  */
 public class Gene2GeneCoexpressionServiceTest extends BaseSpringContextTest {
 
+    @Autowired
     private Gene2GeneCoexpressionService g2gCoexpressionS;
-    private ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisService analysisS;
+
+    @Autowired
+    private GeneCoexpressionAnalysisService analysisS;
+
+    @Autowired
     private ProtocolService protocolS;
+
+    @Autowired
     private GeneService geneS;
+
+    @Autowired
     private TaxonService taxonS;
 
     private GeneCoexpressionAnalysis analysis;
     private Gene firstGene;
 
-    @Override
-    protected void onSetUpInTransaction() throws Exception {
-        super.onSetUpInTransaction();
-        this.endTransaction();
-
-        g2gCoexpressionS = ( Gene2GeneCoexpressionService ) this.getBean( "gene2GeneCoexpressionService" );
-        analysisS = ( GeneCoexpressionAnalysisService ) this.getBean( "geneCoexpressionAnalysisService" );
-        protocolS = ( ProtocolService ) this.getBean( "protocolService" );
-        geneS = ( GeneService ) this.getBean( "geneService" );
-        taxonS = ( TaxonService ) this.getBean( "taxonService" );
+    @Before
+    public void setup() throws Exception {
 
         analysis = GeneCoexpressionAnalysis.Factory.newInstance();
         // analysis.setAnalyzedInvestigation( new HashSet<Investigation>( toUseEE ) );
         analysis.setDescription( "test" );
 
-        Calendar cal = new GregorianCalendar();
-
-        analysis.setName( "Test: " + cal.get( Calendar.YEAR ) + " " + cal.get( Calendar.MONTH ) + " "
-                + cal.get( Calendar.DAY_OF_MONTH ) + " " + cal.get( Calendar.HOUR_OF_DAY ) + ":"
-                + cal.get( Calendar.MINUTE ) );
+        analysis.setName( "Test: " + new Date() );
 
         Protocol protocol = Protocol.Factory.newInstance();
         protocol.setName( "Stored Gene2GeneCoexpressions" );
@@ -106,12 +109,7 @@ public class Gene2GeneCoexpressionServiceTest extends BaseSpringContextTest {
         g2gCoexpressionS.create( g2gCoexpression );
     }
 
-    @Override
-    protected void onTearDownInTransaction() throws Exception {
-        super.onTearDownInTransaction();
-
-    }
-
+    @Test
     public void testFindCoexpressionRelationships() {
 
         Collection<Gene2GeneCoexpression> results = g2gCoexpressionS.findCoexpressionRelationships( firstGene, 3, 100,
@@ -119,51 +117,5 @@ public class Gene2GeneCoexpressionServiceTest extends BaseSpringContextTest {
         assertEquals( 1, results.size() );
 
     }
-
-    // Notice this test requires that the gene2genecoepressionGeneratorCLI has be run with analysis
-    // name = checkResult, brain for the expression experiment keyword, grin1 as the only gene in the gene list
-    // and mouse as the taxon
-
-    // public void testValidResults() {
-    //       
-    // Collection<ExpressionExperiment> ees = searchS.compassExpressionSearch( "brain" );
-    // Collection<ExpressionExperiment> allMouseEEs = new HashSet<ExpressionExperiment>();
-    //       
-    // //Filter out all the ee that are not of mouse taxon
-    // for ( ExpressionExperiment ee : ees ) {
-    // Taxon t = eeS.getTaxon( ee.getId() );
-    // if ( t.getCommonName().equalsIgnoreCase( "mouse" ))
-    // allMouseEEs.add( ee );
-    // }
-    //       
-    // Collection grins = geneS.findByOfficialSymbol( "grin1" );
-    //        
-    // Gene grin1 = null;
-    // for(Object obj : grins){
-    // Gene g = (Gene) obj;
-    // if (g.getTaxon().getCommonName().equalsIgnoreCase( "mouse" )){
-    // grin1 = g;
-    // break;
-    // }
-    // }
-    // CoexpressionCollectionValueObject coexpressions = ( CoexpressionCollectionValueObject ) geneS
-    // .getCoexpressedGenes(grin1 , null, 4 );
-    //  
-    // Analysis check = analysisS.findByName( "resultCheck31" );
-    // Collection geneCoexpressions = this.g2gCoexpressionS.findCoexpressionRelationships( grin1, check, 4 );
-    //        
-    // assertTrue( validate(geneCoexpressions, coexpressions));
-    // }
-    //    
-    //    
-    // private boolean validate( Collection g2g, CoexpressionCollectionValueObject p2p ) {
-    //
-    // int actualLinkCount = p2p.getKnownGeneCoexpression().getNegativeStringencyLinkCount()
-    // + p2p.getKnownGeneCoexpression().getPositiveStringencyLinkCount();
-    //
-    // if ( g2g.size() == actualLinkCount ) return true;
-    //
-    // return false;
-    // }
 
 }

@@ -22,8 +22,18 @@
 //
 package ubic.gemma.model.association;
 
+import org.hibernate.SessionFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
+
 /**
  * @see ubic.gemma.model.association.ProteinProteinInteraction
  */
+@Repository
 public class ProteinProteinInteractionDaoImpl extends ubic.gemma.model.association.ProteinProteinInteractionDaoBase {
+
+    @Autowired
+    public ProteinProteinInteractionDaoImpl( SessionFactory sessionFactory ) {
+        super.setSessionFactory( sessionFactory );
+    }
 }

@@ -20,8 +20,7 @@ package ubic.gemma.testing;
 
 import static org.easymock.EasyMock.createMock;
 import junit.framework.TestCase;
-import ubic.gemma.model.common.auditAndSecurity.UserDao;
-import ubic.gemma.model.common.auditAndSecurity.UserRoleDao;
+import ubic.gemma.model.common.auditAndSecurity.UserDao; 
 import ubic.gemma.model.common.description.BibliographicReferenceDao;
 import ubic.gemma.model.common.description.ExternalDatabaseDao;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignDao;
@@ -42,7 +41,6 @@ public abstract class BaseMockTest extends TestCase {
     private CandidateGeneListDao candidateGeneListDao;
     private BibliographicReferenceDao bibliographicReferenceDao;
     private ExternalDatabaseDao externalDatabaseDao;
-    private UserRoleDao userRoleDao;
     private ArrayDesignDao arrayDesignDao;
     private GeneDao geneDao;
     private UserDao userDao;
@@ -56,7 +54,6 @@ public abstract class BaseMockTest extends TestCase {
         candidateGeneListDao = createMock( CandidateGeneListDao.class );
         arrayDesignDao = createMock( ArrayDesignDao.class );
         bibliographicReferenceDao = createMock( BibliographicReferenceDao.class );
-        userRoleDao = createMock( UserRoleDao.class );
         externalDatabaseDao = createMock( ExternalDatabaseDao.class );
     }
 
@@ -114,13 +111,6 @@ public abstract class BaseMockTest extends TestCase {
      */
     public UserDao getUserDao() {
         return this.userDao;
-    }
-
-    /**
-     * @return Returns the userRoleDao.
-     */
-    public UserRoleDao getUserRoleDao() {
-        return this.userRoleDao;
     }
 
 }

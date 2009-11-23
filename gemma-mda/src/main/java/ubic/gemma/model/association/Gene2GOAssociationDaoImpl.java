@@ -22,6 +22,9 @@ import java.util.Collection;
 import java.util.HashSet;
 
 import org.hibernate.Criteria;
+import org.hibernate.SessionFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
 
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.genome.Gene;
@@ -33,7 +36,13 @@ import ubic.gemma.util.BusinessKey;
  * @author pavlidis
  * @version $Id$
  */
+@Repository
 public class Gene2GOAssociationDaoImpl extends ubic.gemma.model.association.Gene2GOAssociationDaoBase {
+
+    @Autowired
+    public Gene2GOAssociationDaoImpl( SessionFactory sessionFactory ) {
+        super.setSessionFactory( sessionFactory );
+    }
 
     /*
      * (non-Javadoc)
@@ -44,7 +53,7 @@ public class Gene2GOAssociationDaoImpl extends ubic.gemma.model.association.Gene
         try {
 
             BusinessKey.checkValidKey( gene2GOAssociation );
-            Criteria queryObject = super.getSession( false ).createCriteria( Gene2GOAssociation.class );
+            Criteria queryObject = super.getSession().createCriteria( Gene2GOAssociation.class );
             BusinessKey.addRestrictions( queryObject, gene2GOAssociation );
 
             java.util.List results = queryObject.list();
@@ -87,7 +96,7 @@ public class Gene2GOAssociationDaoImpl extends ubic.gemma.model.association.Gene
      * ubic.gemma.model.association.Gene2GOAssociationDaoBase#handleFindAssociationByGene(ubic.gemma.model.genome.Gene)
      */
     @Override
-    protected Collection handleFindAssociationByGene( Gene gene ) throws Exception {
+    protected Collection<Gene2GOAssociation> handleFindAssociationByGene( Gene gene ) throws Exception {
         final String queryString = "from Gene2GOAssociationImpl where gene = :gene";
         return this.getHibernateTemplate().findByNamedParam( queryString, "gene", gene );
     }
@@ -104,7 +113,7 @@ public class Gene2GOAssociationDaoImpl extends ubic.gemma.model.association.Gene
 
     @SuppressWarnings("unchecked")
     @Override
-    protected Collection handleFindByGoTerm( String goId, Taxon taxon ) throws Exception {
+    protected Collection<Gene> handleFindByGoTerm( String goId, Taxon taxon ) throws Exception {
 
         final String queryString = "select distinct geneAss.gene from Gene2GOAssociationImpl as geneAss  where geneAss.ontologyEntry.value = :goID and geneAss.gene.taxon = :taxon";
 
@@ -113,7 +122,7 @@ public class Gene2GOAssociationDaoImpl extends ubic.gemma.model.association.Gene
         Collection<Gene> results;
 
         try {
-            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            org.hibernate.Query queryObject = super.getSession().createQuery( queryString );
             queryObject.setParameter( "goID", goId.replaceFirst( ":", "_" ) );
             queryObject.setParameter( "taxon", taxon );
 

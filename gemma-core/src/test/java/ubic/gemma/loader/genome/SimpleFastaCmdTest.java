@@ -18,7 +18,6 @@
  */
 package ubic.gemma.loader.genome;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 
@@ -40,6 +39,97 @@ public class SimpleFastaCmdTest extends TestCase {
             + "/gemma-core/src/test/resources/data/loader/genome/blast";
     private static final String TESTBLASTDB = "testblastdb";
     private static Log log = LogFactory.getLog( SimpleFastaCmdTest.class.getName() );
+
+    // Test may need to be disabled because it fails in continuum, sometimes (unpredictable)
+    public void testGetMultiple() throws Exception {
+        if ( !fastaCmdExecutableExists() ) {
+            return;
+        }
+        SimpleFastaCmd fastaCmd = new SimpleFastaCmd();
+
+        Collection<Integer> input = new ArrayList<Integer>();
+        input.add( 1435867 );
+        input.add( 1435868 );
+
+        Collection<BioSequence> bs = fastaCmd.getBatchIdentifiers( input, TESTBLASTDB, TEST_RESOURCE_PATH );
+        assertNotNull( bs );
+        // assertEquals( 2, bs.size() );
+    }
+
+    // Test may need to be disabled because it fails in continuum, sometimes (unpredictable)
+    public void testGetMultipleAcc() throws Exception {
+        if ( !fastaCmdExecutableExists() ) {
+            return;
+        }
+        SimpleFastaCmd fastaCmd = new SimpleFastaCmd();
+
+        Collection<String> input = new ArrayList<String>();
+        input.add( "AA000002.1" );
+        input.add( "AA000003.1" );
+
+        Collection<BioSequence> bs = fastaCmd.getBatchAccessions( input, TESTBLASTDB, TEST_RESOURCE_PATH );
+        assertNotNull( bs );
+        // assertEquals( 2, bs.size() );
+    }
+
+    public void testGetMultipleAccSomeNotFound() throws Exception {
+        if ( !fastaCmdExecutableExists() ) {
+            return;
+        }
+        SimpleFastaCmd fastaCmd = new SimpleFastaCmd();
+
+        Collection<String> input = new ArrayList<String>();
+        input.add( "FAKE.2" );
+        input.add( "AA000002.1" );
+        input.add( "FAKE.1" );
+        input.add( "AA000003.1" );
+
+        Collection<BioSequence> bs = fastaCmd.getBatchAccessions( input, TESTBLASTDB, TEST_RESOURCE_PATH );
+        assertNotNull( bs );
+        // assertEquals( 2, bs.size() );
+    }
+
+    public void testGetSingle() throws Exception {
+        if ( !fastaCmdExecutableExists() ) {
+            return;
+        }
+        SimpleFastaCmd fastaCmd = new SimpleFastaCmd();
+        BioSequence bs = fastaCmd.getByIdentifier( 1435867, TESTBLASTDB, TEST_RESOURCE_PATH );
+        assertNotNull( bs );
+        String expected = "CCACCTTTCCCTCCACTCCTCACGTTCTCACCTGTAAAGCGTCCCTCCCTCATCCCCATGCCCCCTTACCCTGCAGGGTA"
+                + "GAGTAGGCTAGAAACCAGAGAGCTCCAAGCTCCATCTGTGGAGAGGTGCCATCCTTGGGCTGCAGAGAGAGGAGAATTTG"
+                + "CCCCAAAGCTGCCTGCAGAGCTTCACCACCCTTAGTCTCACAAAGCCTTGAGTTCATAGCATTTCTTGAGTTTTCACCCT"
+                + "GCCCAGCAGGACACTGCAGCACCCAAAGGGCTTCCCAGGAGTAGGGTTGCCCTCAAGAGGCTCTTGGGTCTGATGGCCAC"
+                + "ATCCTGGAATTGTTTTCAAGTTGATGGTCACAGCCCTGAGGCATGTAGGGGCGTGGGGATGCGCTCTGCTCTGCTCTCCT"
+                + "CTCCTGAACCCCTGAACCCTCTGGCTACCCCAGAGCACTTAGAGCCAG";
+        // assertEquals( expected, bs.getSequence() );
+    }
+
+    public void testGetSingleAcc() throws Exception {
+        if ( !fastaCmdExecutableExists() ) {
+            return;
+        }
+        SimpleFastaCmd fastaCmd = new SimpleFastaCmd();
+        String accession = "AA000002";
+        BioSequence bs = fastaCmd.getByAccession( accession, TESTBLASTDB, TEST_RESOURCE_PATH );
+        assertNotNull( "fastacmd failed to find " + accession, bs );
+        String expected = "CCACCTTTCCCTCCACTCCTCACGTTCTCACCTGTAAAGCGTCCCTCCCTCATCCCCATGCCCCCTTACCCTGCAGGGTA"
+                + "GAGTAGGCTAGAAACCAGAGAGCTCCAAGCTCCATCTGTGGAGAGGTGCCATCCTTGGGCTGCAGAGAGAGGAGAATTTG"
+                + "CCCCAAAGCTGCCTGCAGAGCTTCACCACCCTTAGTCTCACAAAGCCTTGAGTTCATAGCATTTCTTGAGTTTTCACCCT"
+                + "GCCCAGCAGGACACTGCAGCACCCAAAGGGCTTCCCAGGAGTAGGGTTGCCCTCAAGAGGCTCTTGGGTCTGATGGCCAC"
+                + "ATCCTGGAATTGTTTTCAAGTTGATGGTCACAGCCCTGAGGCATGTAGGGGCGTGGGGATGCGCTCTGCTCTGCTCTCCT"
+                + "CTCCTGAACCCCTGAACCCTCTGGCTACCCCAGAGCACTTAGAGCCAG";
+        // assertEquals( expected, bs.getSequence() );
+    }
+
+    public void testGetSingleAccNotFound() throws Exception {
+        if ( !fastaCmdExecutableExists() ) {
+            return;
+        }
+        SimpleFastaCmd fastaCmd = new SimpleFastaCmd();
+        BioSequence bs = fastaCmd.getByAccession( "FAKE.1", TESTBLASTDB, TEST_RESOURCE_PATH );
+        assertNull( bs );
+    }
 
     /*
      * (non-Javadoc)
@@ -77,96 +167,5 @@ public class SimpleFastaCmdTest extends TestCase {
         // return false;
         // }
         // return true;
-    }
-
-    public void testGetSingle() throws Exception {
-        if ( !fastaCmdExecutableExists() ) {
-            return;
-        }
-        SimpleFastaCmd fastaCmd = new SimpleFastaCmd();
-        BioSequence bs = fastaCmd.getByIdentifier( 1435867, TESTBLASTDB, TEST_RESOURCE_PATH );
-        assertNotNull( bs );
-        String expected = "CCACCTTTCCCTCCACTCCTCACGTTCTCACCTGTAAAGCGTCCCTCCCTCATCCCCATGCCCCCTTACCCTGCAGGGTA"
-                + "GAGTAGGCTAGAAACCAGAGAGCTCCAAGCTCCATCTGTGGAGAGGTGCCATCCTTGGGCTGCAGAGAGAGGAGAATTTG"
-                + "CCCCAAAGCTGCCTGCAGAGCTTCACCACCCTTAGTCTCACAAAGCCTTGAGTTCATAGCATTTCTTGAGTTTTCACCCT"
-                + "GCCCAGCAGGACACTGCAGCACCCAAAGGGCTTCCCAGGAGTAGGGTTGCCCTCAAGAGGCTCTTGGGTCTGATGGCCAC"
-                + "ATCCTGGAATTGTTTTCAAGTTGATGGTCACAGCCCTGAGGCATGTAGGGGCGTGGGGATGCGCTCTGCTCTGCTCTCCT"
-                + "CTCCTGAACCCCTGAACCCTCTGGCTACCCCAGAGCACTTAGAGCCAG";
-        // assertEquals( expected, bs.getSequence() );
-    }
-
-    // Test may need to be disabled because it fails in continuum, sometimes (unpredictable)
-    public void testGetMultiple() throws Exception {
-        if ( !fastaCmdExecutableExists() ) {
-            return;
-        }
-        SimpleFastaCmd fastaCmd = new SimpleFastaCmd();
-
-        Collection<Integer> input = new ArrayList<Integer>();
-        input.add( 1435867 );
-        input.add( 1435868 );
-
-        Collection<BioSequence> bs = fastaCmd.getBatchIdentifiers( input, TESTBLASTDB, TEST_RESOURCE_PATH );
-        assertNotNull( bs );
-        // assertEquals( 2, bs.size() );
-    }
-
-    public void testGetSingleAcc() throws Exception {
-        if ( !fastaCmdExecutableExists() ) {
-            return;
-        }
-        SimpleFastaCmd fastaCmd = new SimpleFastaCmd();
-        String accession = "AA000002";
-        BioSequence bs = fastaCmd.getByAccession( accession, TESTBLASTDB, TEST_RESOURCE_PATH );
-        assertNotNull( "fastacmd failed to find " + accession, bs );
-        String expected = "CCACCTTTCCCTCCACTCCTCACGTTCTCACCTGTAAAGCGTCCCTCCCTCATCCCCATGCCCCCTTACCCTGCAGGGTA"
-                + "GAGTAGGCTAGAAACCAGAGAGCTCCAAGCTCCATCTGTGGAGAGGTGCCATCCTTGGGCTGCAGAGAGAGGAGAATTTG"
-                + "CCCCAAAGCTGCCTGCAGAGCTTCACCACCCTTAGTCTCACAAAGCCTTGAGTTCATAGCATTTCTTGAGTTTTCACCCT"
-                + "GCCCAGCAGGACACTGCAGCACCCAAAGGGCTTCCCAGGAGTAGGGTTGCCCTCAAGAGGCTCTTGGGTCTGATGGCCAC"
-                + "ATCCTGGAATTGTTTTCAAGTTGATGGTCACAGCCCTGAGGCATGTAGGGGCGTGGGGATGCGCTCTGCTCTGCTCTCCT"
-                + "CTCCTGAACCCCTGAACCCTCTGGCTACCCCAGAGCACTTAGAGCCAG";
-        // assertEquals( expected, bs.getSequence() );
-    }
-
-    public void testGetSingleAccNotFound() throws Exception {
-        if ( !fastaCmdExecutableExists() ) {
-            return;
-        }
-        SimpleFastaCmd fastaCmd = new SimpleFastaCmd();
-        BioSequence bs = fastaCmd.getByAccession( "FAKE.1", TESTBLASTDB, TEST_RESOURCE_PATH );
-        assertNull( bs );
-    }
-
-    // Test may need to be disabled because it fails in continuum, sometimes (unpredictable)
-    public void testGetMultipleAcc() throws Exception {
-        if ( !fastaCmdExecutableExists() ) {
-            return;
-        }
-        SimpleFastaCmd fastaCmd = new SimpleFastaCmd();
-
-        Collection<String> input = new ArrayList<String>();
-        input.add( "AA000002.1" );
-        input.add( "AA000003.1" );
-
-        Collection<BioSequence> bs = fastaCmd.getBatchAccessions( input, TESTBLASTDB, TEST_RESOURCE_PATH );
-        assertNotNull( bs );
-        // assertEquals( 2, bs.size() );
-    }
-
-    public void testGetMultipleAccSomeNotFound() throws Exception {
-        if ( !fastaCmdExecutableExists() ) {
-            return;
-        }
-        SimpleFastaCmd fastaCmd = new SimpleFastaCmd();
-
-        Collection<String> input = new ArrayList<String>();
-        input.add( "FAKE.2" );
-        input.add( "AA000002.1" );
-        input.add( "FAKE.1" );
-        input.add( "AA000003.1" );
-
-        Collection<BioSequence> bs = fastaCmd.getBatchAccessions( input, TESTBLASTDB, TEST_RESOURCE_PATH );
-        assertNotNull( bs );
-        // assertEquals( 2, bs.size() );
     }
 }

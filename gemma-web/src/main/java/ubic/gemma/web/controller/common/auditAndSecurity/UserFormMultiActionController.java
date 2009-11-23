@@ -25,18 +25,22 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.lang.StringUtils;
-import org.springframework.context.MessageSource;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.support.MessageSourceAccessor;
-import org.springframework.security.Authentication;
-import org.springframework.security.GrantedAuthority;
-import org.springframework.security.GrantedAuthorityImpl;
-import org.springframework.security.context.SecurityContextHolder;
-import org.springframework.security.providers.UsernamePasswordAuthenticationToken;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.security.authentication.encoding.PasswordEncoder;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
 
 import ubic.gemma.model.common.auditAndSecurity.User;
-import ubic.gemma.security.RunAsManager;
-import ubic.gemma.security.SecurityService;
-import ubic.gemma.util.RequestUtil;
+import ubic.gemma.model.common.auditAndSecurity.UserService;
+import ubic.gemma.security.authentication.UserDetailsImpl;
+import ubic.gemma.security.authentication.UserManager;
+import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.web.controller.BaseController;
 import ubic.gemma.web.util.JSONUtil;
 
 /**
@@ -45,17 +49,105 @@ import ubic.gemma.web.util.JSONUtil;
  * @author pavlidis
  * @author keshav
  * @version $Id$
- * @spring.bean id="userFormMultiActionController"
- * @spring.property name="userService" ref="userService"
- * @spring.property name="mailEngine" ref="mailEngine"
- * @spring.property name="mailMessage" ref="mailMessage"
- * @spring.property name="messageSource" ref="messageSource"
- * @spring.property name="methodNameResolver" ref="editUserActions"
  */
-public class UserFormMultiActionController extends UserAuthenticatingMultiActionController {
+@Controller
+public class UserFormMultiActionController extends BaseController {
 
-    private static final int MIN_PASSWORD_LENGTH = 8;
-    private MessageSource messageSource = null;
+    public static final int MIN_PASSWORD_LENGTH = 6;
+
+    @Autowired
+    private UserService userService;
+
+    @Autowired
+    private UserManager userManager;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    /**
+     * Entry point for updates.
+     * 
+     * @param request
+     * @param response
+     * @throws Exception
+     */
+    @RequestMapping("/editUser.html")
+    public void editUser( HttpServletRequest request, HttpServletResponse response ) throws Exception {
+
+        String email = request.getParameter( "email" );
+        // String firstname = request.getParameter( "firstname" );
+        // String lastname = request.getParameter( "lastname" );
+        String password = request.getParameter( "password" );
+        String passwordConfirm = request.getParameter( "passwordConfirm" );
+        String oldPassword = request.getParameter( "oldpassword" );
+
+        /*
+         * I had this idea we could let users change their user names, but this turns out to be a PITA.
+         */
+        String originalUserName = request.getParameter( "username" );
+
+        String jsonText = null;
+        JSONUtil jsonUtil = new JSONUtil( request, response );
+
+        try {
+            /*
+             * Pulling username out of security context to ensure users are logged in and can only update themselves.
+             */
+            String username = SecurityContextHolder.getContext().getAuthentication().getName();
+
+            if ( !username.equals( originalUserName ) ) {
+                throw new RuntimeException( "You must be logged in to edit your profile." );
+            }
+
+            userManager.reauthenticate( originalUserName, oldPassword );
+
+            UserDetailsImpl user = ( UserDetailsImpl ) userManager.loadUserByUsername( username );
+
+            boolean changed = false;
+
+            // if ( StringUtils.isNotBlank( firstname ) ) {
+            // changed = true;
+            // }
+            //
+            // if ( StringUtils.isNotBlank( lastname ) ) {
+            // changed = true;
+            // }
+
+            if ( StringUtils.isNotBlank( email ) && !user.getEmail().equals( email ) ) {
+                if ( !email.matches( "/^(\\w+)([-+.][\\w]+)*@(\\w[-\\w]*\\.){1,5}([A-Za-z]){2,4}$/;" ) ) {
+                    jsonText = "{success:false,message:'The email address does not look valid'}";
+                    jsonUtil.writeToResponse( jsonText );
+                    return;
+                }
+                user.setEmail( email );
+                changed = true;
+            }
+
+            if ( password.length() > 0 ) {
+                if ( !StringUtils.equals( password, passwordConfirm ) ) {
+                    throw new RuntimeException( "Passwords do not match." );
+                }
+                String encryptedPassword = passwordEncoder.encodePassword( password, username );
+                userManager.changePassword( oldPassword, encryptedPassword );
+            }
+
+            if ( changed ) {
+                saveMessage( request, "Changes saved." );
+                userManager.updateUser( user );
+            } else {
+                saveMessage( request, "No changes recorded" );
+            }
+
+            jsonText = "{success:true}";
+
+        } catch ( Exception e ) {
+            log.error( e.getLocalizedMessage() );
+            jsonText = jsonUtil.getJSONErrorMessage( e );
+            log.info( jsonText );
+        } finally {
+            jsonUtil.writeToResponse( jsonText );
+        }
+    }
 
     /**
      * AJAX entry point. Loads a user.
@@ -63,6 +155,7 @@ public class UserFormMultiActionController extends UserAuthenticatingMultiAction
      * @param request
      * @param response
      */
+    @RequestMapping("/loadUser.html")
     public void loadUser( HttpServletRequest request, HttpServletResponse response ) {
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -73,18 +166,32 @@ public class UserFormMultiActionController extends UserAuthenticatingMultiAction
             return;
         }
 
-        String username = authentication.getPrincipal().toString();
+        Object o = authentication.getPrincipal();
+        String username = null;
+
+        if ( o instanceof UserDetails ) {
+            username = ( ( UserDetails ) o ).getUsername();
+        } else {
+            username = o.toString();
+        }
+
         User user = userService.findByUserName( username );
+
         JSONUtil jsonUtil = new JSONUtil( request, response );
 
         String jsonText = null;
         try {
-            jsonText = "{success:true, data:{username:" + "\"" + username + "\"" + ",email:" + "\"" + user.getEmail()
-                    + "\"" + "}}";
+
+            if ( user == null ) {
+                // this shouldn't happen.
+                jsonText = "{success:false,message:'No user with name " + username + "}";
+            } else {
+                jsonText = "{success:true, data:{username:" + "\"" + username + "\"" + ",email:" + "\""
+                        + user.getEmail() + "\"" + "}}";
+            }
 
         } catch ( Exception e ) {
-            e.printStackTrace();
-            jsonText = "{success:false}";
+            jsonText = "{success:false,message:" + e.getLocalizedMessage() + "}";
         } finally {
             try {
                 jsonUtil.writeToResponse( jsonText );
@@ -96,66 +203,12 @@ public class UserFormMultiActionController extends UserAuthenticatingMultiAction
     }
 
     /**
-     * AJAX entry point.
-     * 
-     * @param request
-     * @param response
-     * @throws Exception
-     */
-    public void onSubmit( HttpServletRequest request, HttpServletResponse response ) {
-
-        String email = request.getParameter( "email" );
-        String firstname = request.getParameter( "firstname" );
-        String lastname = request.getParameter( "lastname" );
-        String password = request.getParameter( "password" );
-        String passwordConfirm = request.getParameter( "passwordConfirm" );
-
-        /*
-         * Pulling username out of security context to ensure users are logged in and can only update themselves.
-         */
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-
-        User user = userService.findByUserName( username );
-        if ( !StringUtils.equals( password, passwordConfirm ) ) {
-            throw new RuntimeException( "Passwords do not match." );
-        }
-        String encryptedPassword = super.encryptPassword( password, request );
-        user.setPassword( encryptedPassword );
-
-        if ( StringUtils.isNotBlank( firstname ) ) {
-            user.setName( firstname );
-        }
-
-        if ( StringUtils.isNotBlank( lastname ) ) {
-            user.setName( lastname );
-        }
-
-        user.setEmail( email );
-
-        JSONUtil jsonUtil = new JSONUtil( request, response );
-        String jsonText = null;
-        try {
-            userService.update( user );
-            jsonText = "{success:true}";
-        } catch ( Exception e ) {
-            log.error( e.getLocalizedMessage() );
-            jsonText = jsonUtil.getJSONErrorMessage( e );
-            log.info( jsonText );
-        } finally {
-            try {
-                jsonUtil.writeToResponse( jsonText );
-            } catch ( IOException e ) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    /**
-     * Resets the password to a random alphanumeric (of length 8).
+     * Resets the password to a random alphanumeric (of length MIN_PASSWORD_LENGTH).
      * 
      * @param request
      * @param response
      */
+    @RequestMapping("/resetPassword.html")
     public void resetPassword( HttpServletRequest request, HttpServletResponse response ) {
         if ( log.isDebugEnabled() ) {
             log.debug( "entering 'resetPassword' method..." );
@@ -196,35 +249,21 @@ public class UserFormMultiActionController extends UserAuthenticatingMultiAction
                 throw new RuntimeException( txt );
             }
 
-            /*
-             * Must run as someone else to update user. Run as the user we are resetting the password for. First, save
-             * the current authentication.
-             */
-            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-
-            /* Create a new authentication for the user we are resetting password for. */
-            UsernamePasswordAuthenticationToken token = new UsernamePasswordAuthenticationToken( user.getUserName(),
-                    user.getPassword(), new GrantedAuthority[] { new GrantedAuthorityImpl(
-                            SecurityService.USER_AUTHORITY ) } );
-
-            RunAsManager r = new RunAsManager();
-            String recipient = user.getUserName();
-            Authentication runAs = r.buildRunAs( user, token, recipient );
-
-            SecurityContextHolder.getContext().setAuthentication( runAs );
-
             /* Change the password. */
-            String pwd = RandomStringUtils.randomAlphanumeric( UserFormMultiActionController.MIN_PASSWORD_LENGTH );
-            String encryptedPwd = super.encryptPassword( pwd, request );
-            user.setPassword( encryptedPwd );
-            userService.update( user );
+            String pwd = RandomStringUtils.randomAlphanumeric( UserFormMultiActionController.MIN_PASSWORD_LENGTH )
+                    .toLowerCase();
 
-            /* Set the context back */
-            SecurityContextHolder.getContext().setAuthentication( auth );
+            user.setPassword( passwordEncoder.encodePassword( pwd, user.getUserName() ) );
+
+            userService.update( user );
 
             StringBuffer body = new StringBuffer();
             body.append( "Your password is: " + pwd );
-            body.append( "\n\nLogin at: " + RequestUtil.getAppURL( request ) + "/login.jsp" );
+
+            body.append( "\n\nLogin at: http://www.chibi.ubc.ca/Gemma/login.jsp" );
+
+            SimpleMailMessage mailMessage = new SimpleMailMessage();
+            mailMessage.setFrom( ConfigUtils.getAdminEmailAddress() );
 
             mailMessage.setTo( user.getUserName() + "<" + user.getEmail() + ">" );
             String subject = text.getMessage( "webapp.prefix" ) + text.getMessage( "user.passwordReset" );
@@ -249,7 +288,4 @@ public class UserFormMultiActionController extends UserAuthenticatingMultiAction
         }
     }
 
-    public void setMessageSource( MessageSource messageSource ) {
-        this.messageSource = messageSource;
-    }
 }

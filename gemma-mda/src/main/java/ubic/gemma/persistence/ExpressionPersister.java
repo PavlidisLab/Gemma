@@ -26,6 +26,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
+import org.hibernate.SessionFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.basecode.util.CancellationException;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
@@ -55,36 +57,40 @@ import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueService;
 
 /**
- * @spring.property name="factorValueService" ref="factorValueService"
- * @spring.property name="bioAssayDimensionService" ref="bioAssayDimensionService"
- * @spring.property name="expressionExperimentService" ref="expressionExperimentService"
- * @spring.property name="bioMaterialService" ref="bioMaterialService"
- * @spring.property name="bioAssayService" ref="bioAssayService"
- * @spring.property name="compoundService" ref="compoundService"
- * @spring.property name="experimentalDesignService" ref="experimentalDesignService"
- * @spring.property name="experimentalFactorService" ref="experimentalFactorService"
  * @author pavlidis
  * @version $Id$
  */
 abstract public class ExpressionPersister extends ArrayDesignPersister {
 
+    @Autowired
     private ExpressionExperimentService expressionExperimentService;
 
+    @Autowired
     private BioAssayDimensionService bioAssayDimensionService;
 
+    @Autowired
     private BioAssayService bioAssayService;
 
+    @Autowired
     private BioMaterialService bioMaterialService;
 
+    @Autowired
     private FactorValueService factorValueService;
 
+    @Autowired
     private CompoundService compoundService;
 
+    @Autowired
     private ExperimentalDesignService experimentalDesignService;
 
+    @Autowired
     private ExperimentalFactorService experimentalFactorService;
 
     Map<String, BioAssayDimension> bioAssayDimensionCache = new HashMap<String, BioAssayDimension>();
+
+    public ExpressionPersister( SessionFactory sessionFactory ) {
+        super( sessionFactory );
+    }
 
     /*
      * (non-Javadoc)
@@ -194,6 +200,71 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
         return bioAssayDimensionCache.get( dimensionName );
     }
 
+    /**
+     * If there are factorvalues, check if they are setup right and if they are used by biomaterials.
+     * 
+     * @param expExp
+     */
+    private void checkExperimentalDesign( ExpressionExperiment expExp ) {
+
+        if ( expExp == null ) {
+            return;
+        }
+
+        if ( expExp.getExperimentalDesign() == null ) {
+            log.warn( "No experimental design!" );
+            return;
+        }
+
+        Collection<ExperimentalFactor> efs = expExp.getExperimentalDesign().getExperimentalFactors();
+
+        if ( efs.size() == 0 ) return;
+
+        log.info( "Checking experimental design for valid setup" );
+
+        Collection<BioAssay> bioAssays = expExp.getBioAssays();
+
+        /*
+         * note this is very inefficient but it doesn't matter.
+         */
+        for ( ExperimentalFactor ef : efs ) {
+            log.info( "Checking: " + ef + ", " + ef.getFactorValues().size() + " factor values to check..." );
+
+            for ( FactorValue fv : ef.getFactorValues() ) {
+
+                if ( fv.getExperimentalFactor() == null || !fv.getExperimentalFactor().equals( ef ) ) {
+                    throw new IllegalStateException( "Factor value " + fv + " should have had experimental factor "
+                            + ef + ", it had " + fv.getExperimentalFactor() );
+                }
+
+                boolean found = false;
+                // make sure there is at least one bioassay using it.
+                for ( BioAssay ba : bioAssays ) {
+                    for ( BioMaterial bm : ba.getSamplesUsed() ) {
+                        for ( FactorValue fvb : bm.getFactorValues() ) {
+
+                            // they should be persistent already at this point.
+                            if ( ( fvb.getId() != null || fv.getId() != null ) && fvb.equals( fv ) && fvb == fv ) {
+                                // Note we use == because they should be the same objects.
+                                found = true;
+                            }
+                        }
+                    }
+                }
+                if ( !found ) {
+                    /*
+                     * Basically this means there is factorvalue but no biomaterial is associated with it. This can
+                     * happen...especially with test objects, so we just warn.
+                     */
+                    // throw new IllegalStateException( "Unused factorValue: No bioassay..biomaterial association with "
+                    // + fv );
+                    log.warn( "Unused factorValue: No bioassay..biomaterial association with " + fv );
+                }
+            }
+
+        }
+    }
+
     private void clearCache() {
         bioAssayDimensionCache.clear();
         clearArrayDesignCache();
@@ -273,10 +344,13 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
                 designElement = getDesignElementSequenceCache().get( seqName );
                 if ( log.isDebugEnabled() ) log.debug( "Found " + designElement + " with sequence key=" + seqName );
             } else {
-                throw new IllegalStateException( "Adding new probe to existing array design " + ad.getShortName()
-                        + ": " + designElement + " bioseq=" + designElement.getBiologicalCharacteristic()
-                        + ": not supported, sorry" );
-                // designElement = addNewDesignElementToPersistentArrayDesign( ad, designElement );
+                log.warn( "Adding new probe to existing array design " + ad.getShortName() + ": " + designElement
+                        + " bioseq=" + designElement.getBiologicalCharacteristic() );
+
+                // throw new IllegalStateException( "Adding new probe to existing array design " + ad.getShortName()
+                // + ": " + designElement + " bioseq=" + designElement.getBiologicalCharacteristic()
+                // + ": not supported, sorry" );
+                designElement = addNewDesignElementToPersistentArrayDesign( ad, designElement );
             }
         }
 
@@ -500,72 +574,9 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
             throw new CancellationException( "Thread canceled during EE persisting. " + this.getClass() );
         }
 
+        expressionExperimentService.update( expExp ); // help fix up ACLs. Yes, this is a good idea. See AclAdviceTest
+
         return expExp;
-    }
-
-    /**
-     * If there are factorvalues, check if they are setup right and if they are used by biomaterials.
-     * 
-     * @param expExp
-     */
-    private void checkExperimentalDesign( ExpressionExperiment expExp ) {
-
-        if ( expExp == null ) {
-            return;
-        }
-
-        if ( expExp.getExperimentalDesign() == null ) {
-            log.warn( "No experimental design!" );
-            return;
-        }
-
-        Collection<ExperimentalFactor> efs = expExp.getExperimentalDesign().getExperimentalFactors();
-
-        if ( efs.size() == 0 ) return;
-
-        log.info( "Checking experimental design for valid setup" );
-
-        Collection<BioAssay> bioAssays = expExp.getBioAssays();
-
-        /*
-         * note this is very inefficient but it doesn't matter.
-         */
-        for ( ExperimentalFactor ef : efs ) {
-            log.info( "Checking: " + ef + ", " + ef.getFactorValues().size() + " factor values to check..." );
-
-            for ( FactorValue fv : ef.getFactorValues() ) {
-
-                if ( fv.getExperimentalFactor() == null || !fv.getExperimentalFactor().equals( ef ) ) {
-                    throw new IllegalStateException( "Factor value " + fv + " should have had experimental factor "
-                            + ef + ", it had " + fv.getExperimentalFactor() );
-                }
-
-                boolean found = false;
-                // make sure there is at least one bioassay using it.
-                for ( BioAssay ba : bioAssays ) {
-                    for ( BioMaterial bm : ba.getSamplesUsed() ) {
-                        for ( FactorValue fvb : bm.getFactorValues() ) {
-
-                            // they should be persistent already at this point.
-                            if ( ( fvb.getId() != null || fv.getId() != null ) && fvb.equals( fv ) && fvb == fv ) {
-                                // Note we use == because they should be the same objects.
-                                found = true;
-                            }
-                        }
-                    }
-                }
-                if ( !found ) {
-                    /*
-                     * Basically this means there is factorvalue but no biomaterial is associated with it. This can
-                     * happen...especially with test objects, so we just warn.
-                     */
-                    // throw new IllegalStateException( "Unused factorValue: No bioassay..biomaterial association with "
-                    // + fv );
-                    log.warn( "Unused factorValue: No bioassay..biomaterial association with " + fv );
-                }
-            }
-
-        }
     }
 
     /**
@@ -615,7 +626,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
         //
         // // thaw - this is necessary to avoid lazy exceptions later, but perhaps could be done more elegantly!
         // HibernateTemplate templ = this.getHibernateTemplate();
-        // templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+        // templ.execute( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
         // public Object doInHibernate( org.hibernate.Session session )
         // throws org.hibernate.HibernateException {
         // ArrayDesign arrayDesignUsed = baF.getArrayDesignUsed();
@@ -651,8 +662,6 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
      */
     private void processExperimentalDesign( ExperimentalDesign experimentalDesign ) {
 
-        /* At this point, the bioassay experimental factor values have already been persisted. */
-
         persistCollectionElements( experimentalDesign.getTypes() );
 
         // withhold to avoid premature cascade.
@@ -669,7 +678,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
 
             experimentalFactor.setExperimentalDesign( experimentalDesign );
 
-            // override casade like above.
+            // override cascade like above.
             Collection<FactorValue> factorValues = experimentalFactor.getFactorValues();
             experimentalFactor.setFactorValues( null );
             experimentalFactor = persistExperimentalFactor( experimentalFactor );

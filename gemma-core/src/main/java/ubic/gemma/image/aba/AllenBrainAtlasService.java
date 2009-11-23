@@ -39,6 +39,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.stereotype.Service;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -56,6 +57,7 @@ import ubic.gemma.util.ConfigUtils;
  * @version $Id$
  * @spring.bean id="allenBrainAtlasService"
  */
+@Service
 public class AllenBrainAtlasService {
 
     private static final String ABA_CACHE = "/abaCache/";

@@ -24,15 +24,15 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Collection;
+
+import org.springframework.stereotype.Service;
 
 /**
- * <hr>
- * <p>
- * Copyright (c) 2004-2006 University of British Columbia
- * 
  * @author pavlidis
  * @version $Id$
  */
+@Service
 public class LocalFileServiceImpl extends ubic.gemma.model.common.description.LocalFileServiceBase {
 
     /**
@@ -145,6 +145,10 @@ public class LocalFileServiceImpl extends ubic.gemma.model.common.description.Lo
     @Override
     protected void handleUpdate( LocalFile localFile ) throws Exception {
         this.getLocalFileDao().update( localFile );
+    }
+
+    public Collection<LocalFile> loadAll() {
+        return this.getLocalFileDao().loadAll();
     }
 
 }

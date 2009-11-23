@@ -18,18 +18,28 @@
  */
 package ubic.gemma.model.common.auditAndSecurity;
 
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.stereotype.Service;
+
+import ubic.gemma.model.common.Auditable;
+import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
+
 /**
  * @see ubic.gemma.model.common.auditAndSecurity.AuditEventService
  * @author pavlidis
  * @version $Id$
  */
+@Service
 public class AuditEventServiceImpl extends ubic.gemma.model.common.auditAndSecurity.AuditEventServiceBase {
 
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.AuditEventService#getNewSinceDate(java.util.Date)
      */
     @Override
-    protected java.util.Collection handleGetNewSinceDate( java.util.Date date ) throws java.lang.Exception {
+    protected java.util.Collection<Auditable> handleGetNewSinceDate( java.util.Date date ) throws java.lang.Exception {
         return this.getAuditEventDao().getNewSinceDate( date );
     }
 
@@ -44,6 +54,23 @@ public class AuditEventServiceImpl extends ubic.gemma.model.common.auditAndSecur
     @Override
     protected void handleThaw( AuditEvent auditEvent ) throws Exception {
         this.getAuditEventDao().thaw( auditEvent );
+    }
+
+    public List<AuditEvent> getEvents( Auditable auditable ) {
+        return this.getAuditEventDao().getEvents( auditable );
+    }
+
+    public AuditEvent getLastEvent( Auditable auditable, Class<? extends AuditEventType> type ) {
+        return this.getAuditEventDao().getLastEvent( auditable, type );
+    }
+
+    public Map<Auditable, AuditEvent> getLastEvent( Collection<? extends Auditable> auditables,
+            Class<? extends AuditEventType> type ) {
+        return this.getAuditEventDao().getLastEvent( auditables, type );
+    }
+
+    public AuditEvent getLastOutstandingTroubleEvent( Collection<AuditEvent> events ) {
+        return this.getAuditEventDao().getLastOutstandingTroubleEvent( events );
     }
 
 }

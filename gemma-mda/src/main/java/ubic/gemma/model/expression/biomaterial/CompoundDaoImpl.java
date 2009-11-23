@@ -21,16 +21,25 @@ package ubic.gemma.model.expression.biomaterial;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
+import org.hibernate.SessionFactory;
 import org.hibernate.criterion.Restrictions;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
 
 /**
  * @author pavlidis
  * @version $Id$
  * @see ubic.gemma.model.expression.biomaterial.Compound
  */
+@Repository
 public class CompoundDaoImpl extends ubic.gemma.model.expression.biomaterial.CompoundDaoBase {
 
     private static Log log = LogFactory.getLog( CompoundDaoImpl.class.getName() );
+
+    @Autowired
+    public CompoundDaoImpl( SessionFactory sessionFactory ) {
+        super.setSessionFactory( sessionFactory );
+    }
 
     /*
      * (non-Javadoc)
@@ -40,7 +49,7 @@ public class CompoundDaoImpl extends ubic.gemma.model.expression.biomaterial.Com
     @Override
     public Compound find( Compound compound ) {
         try {
-            Criteria queryObject = super.getSession( false ).createCriteria( Compound.class );
+            Criteria queryObject = super.getSession().createCriteria( Compound.class );
             queryObject.add( Restrictions.eq( "name", compound.getName() ) );
 
             java.util.List results = queryObject.list();
@@ -78,6 +87,6 @@ public class CompoundDaoImpl extends ubic.gemma.model.expression.biomaterial.Com
             return newCompound;
         }
         log.debug( "Creating new compound: " + compound.getName() );
-        return ( Compound ) create( compound );
+        return create( compound );
     }
 }

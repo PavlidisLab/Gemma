@@ -21,6 +21,8 @@ package ubic.gemma.model.genome.gene;
 import java.util.Collection;
 import java.util.Map;
 
+import org.springframework.security.access.annotation.Secured;
+
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionCollectionValueObject;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
@@ -32,23 +34,17 @@ import ubic.gemma.model.genome.Qtl;
 import ubic.gemma.model.genome.RelativeLocationData;
 
 /**
- * 
+ * @author kelsey
+ * @version $Id$
  */
-public interface GeneService extends ubic.gemma.model.common.AuditableService {
+public interface GeneService {
 
-    /**
-     * 
-     */
     public java.lang.Integer countAll();
 
-    /**
-     * 
-     */
+    @Secured( { "GROUP_ADMIN" })
     public java.util.Collection<Gene> create( java.util.Collection<Gene> genes );
 
-    /**
-     * 
-     */
+    @Secured( { "GROUP_ADMIN" })
     public ubic.gemma.model.genome.Gene create( ubic.gemma.model.genome.Gene gene );
 
     /**
@@ -60,52 +56,25 @@ public interface GeneService extends ubic.gemma.model.common.AuditableService {
      */
     public Collection<Gene> find( PhysicalLocation physicalLocation );
 
-    /**
-     * 
-     */
     public ubic.gemma.model.genome.Gene find( ubic.gemma.model.genome.Gene gene );
 
-    /**
-     * 
-     */
     public java.util.Collection<Qtl> findAllQtlsByPhysicalMapLocation(
             ubic.gemma.model.genome.PhysicalLocation physicalMapLocation );
 
-    /**
-     * 
-     */
     public ubic.gemma.model.genome.Gene findByAccession( java.lang.String accession,
             ubic.gemma.model.common.description.ExternalDatabase source );
 
-    /**
-     * 
-     */
     public java.util.Collection<Gene> findByAlias( java.lang.String search );
 
-    /**
-     * 
-     */
     public ubic.gemma.model.genome.Gene findByNCBIId( java.lang.String accession );
 
-    /**
-     * 
-     */
     public java.util.Collection<Gene> findByOfficialName( java.lang.String officialName );
 
-    /**
-     * 
-     */
     public java.util.Collection<Gene> findByOfficialSymbol( java.lang.String officialSymbol );
 
-    /**
-     * 
-     */
     public ubic.gemma.model.genome.Gene findByOfficialSymbol( java.lang.String symbol,
             ubic.gemma.model.genome.Taxon taxon );
 
-    /**
-     * 
-     */
     public java.util.Collection<Gene> findByOfficialSymbolInexact( java.lang.String officialSymbol );
 
     /**
@@ -118,9 +87,7 @@ public interface GeneService extends ubic.gemma.model.common.AuditableService {
      */
     public RelativeLocationData findNearest( PhysicalLocation physicalLocation, boolean useStrand );
 
-    /**
-     * 
-     */
+    @Secured( { "GROUP_ADMIN" })
     public ubic.gemma.model.genome.Gene findOrCreate( ubic.gemma.model.genome.Gene gene );
 
     /**
@@ -133,6 +100,7 @@ public interface GeneService extends ubic.gemma.model.common.AuditableService {
      *        single gene is entered
      * @return
      */
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     public Map<Gene, CoexpressionCollectionValueObject> getCoexpressedGenes( Collection<Gene> genes,
             Collection<? extends BioAssaySet> ees, Integer stringency, boolean knownGenesOnly, boolean interGenesOnly );
 
@@ -148,6 +116,7 @@ public interface GeneService extends ubic.gemma.model.common.AuditableService {
      * @param knownGenesOnly
      * @return
      */
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     public CoexpressionCollectionValueObject getCoexpressedGenes( ubic.gemma.model.genome.Gene gene,
             java.util.Collection<? extends BioAssaySet> ees, java.lang.Integer stringency, boolean knownGenesOnly );
 
@@ -157,12 +126,10 @@ public interface GeneService extends ubic.gemma.model.common.AuditableService {
      * didn't have any specificty problems (ie all the probes were clean).
      * </p>
      */
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     public java.util.Collection<Gene> getCoexpressedKnownGenes( ubic.gemma.model.genome.Gene gene,
             java.util.Collection<? extends BioAssaySet> ees, java.lang.Integer stringency );
 
-    /**
-     * 
-     */
     public long getCompositeSequenceCountById( java.lang.Long id );
 
     /**
@@ -170,11 +137,13 @@ public interface GeneService extends ubic.gemma.model.common.AuditableService {
      * Returns a list of compositeSequences associated with the given gene and array design
      * </p>
      */
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     public java.util.Collection<CompositeSequence> getCompositeSequences( ubic.gemma.model.genome.Gene gene,
             ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
 
     /**
-     * Return probes for a gene id.
+     * @param id gemma gene id
+     * @return Return probes for a given gene id.
      */
     public java.util.Collection<CompositeSequence> getCompositeSequencesById( java.lang.Long id );
 
@@ -193,14 +162,8 @@ public interface GeneService extends ubic.gemma.model.common.AuditableService {
      */
     public java.util.Collection getMicroRnaByTaxon( ubic.gemma.model.genome.Taxon taxon );
 
-    /**
-     * 
-     */
     public ubic.gemma.model.genome.Gene load( long id );
 
-    /**
-     * 
-     */
     public java.util.Collection<Gene> loadAll();
 
     /**
@@ -231,19 +194,12 @@ public interface GeneService extends ubic.gemma.model.common.AuditableService {
      */
     public java.util.Collection<ProbeAlignedRegion> loadProbeAlignedRegions( ubic.gemma.model.genome.Taxon taxon );
 
-    /**
-     * 
-     */
-    public void remove( java.lang.String officialName );
+    @Secured( { "GROUP_ADMIN" })
+    public void remove( Gene gene );
 
-    /**
-     * 
-     */
+    @Secured( { "GROUP_ADMIN" })
     public void remove( java.util.Collection<Gene> genes );
 
-    /**
-     * 
-     */
     public void thaw( ubic.gemma.model.genome.Gene gene );
 
     /**
@@ -256,9 +212,7 @@ public interface GeneService extends ubic.gemma.model.common.AuditableService {
      */
     public void thawLite( java.util.Collection<Gene> genes );
 
-    /**
-     * 
-     */
+    @Secured( { "GROUP_ADMIN" })
     public void update( ubic.gemma.model.genome.Gene gene );
 
 }

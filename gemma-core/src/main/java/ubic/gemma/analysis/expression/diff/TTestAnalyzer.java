@@ -26,6 +26,8 @@ import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Service;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
@@ -56,12 +58,13 @@ import ubic.gemma.model.expression.experiment.FactorValue;
  * <p>
  * NOTE: facts is first transposed and then factor is applied (as indicated in the equations above)
  * <p>
- * qvalue(pvals)$qvalues
+ * qvalue(pvals)$qvalues "
  * 
- * @spring.bean id="tTestAnalyzer"
  * @author keshav
  * @version $Id$
  */
+@Service
+@Scope(value="prototype")
 public class TTestAnalyzer extends AbstractDifferentialExpressionAnalyzer {
 
     private Log log = LogFactory.getLog( this.getClass() );
@@ -233,7 +236,7 @@ public class TTestAnalyzer extends AbstractDifferentialExpressionAnalyzer {
 
         expressionAnalysis.setName( this.getClass().getSimpleName() );
         expressionAnalysis.setDescription( "T-test for " + factorValueA + " vs " + factorValueB );
-
+        disconnectR();
         log.info( "R analysis done" );
 
         return expressionAnalysis;

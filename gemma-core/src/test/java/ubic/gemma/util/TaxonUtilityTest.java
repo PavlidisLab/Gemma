@@ -19,6 +19,11 @@
 
 package ubic.gemma.util;
 
+import static org.junit.Assert.assertTrue;
+
+import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.gene.GeneService;
@@ -30,14 +35,19 @@ import ubic.gemma.testing.BaseSpringContextTest;
  */
 public class TaxonUtilityTest extends BaseSpringContextTest {
 
+    @Autowired
     GeneService geneService;
+
+    @Autowired
     TaxonService taxonService;
- 
+
+    @Test
     public void testIsHuman() throws Exception {
         Taxon humanTax = taxonService.findByCommonName( "human" );
         assertTrue( TaxonUtility.isHuman( humanTax ) );
     }
- 
+
+    @Test
     public void testIsMouse() throws Exception {
 
         Taxon mouseTax = taxonService.findByCommonName( "mouse" );
@@ -45,6 +55,7 @@ public class TaxonUtilityTest extends BaseSpringContextTest {
 
     }
 
+    @Test
     public void testIsRat() throws Exception {
 
         Taxon ratTax = taxonService.findByCommonName( "rat" );
@@ -52,11 +63,4 @@ public class TaxonUtilityTest extends BaseSpringContextTest {
 
     }
 
-    @Override 
-    protected void onSetUpInTransaction() throws Exception {
-        super.onSetUpInTransaction();
-
-        geneService = ( GeneService ) this.getBean( "geneService" );
-        taxonService = ( TaxonService ) this.getBean( "taxonService" );
-    }
 }

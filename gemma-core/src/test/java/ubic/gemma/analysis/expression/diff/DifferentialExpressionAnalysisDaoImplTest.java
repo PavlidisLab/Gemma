@@ -18,8 +18,13 @@
  */
 package ubic.gemma.analysis.expression.diff;
 
+import static org.junit.Assert.assertNotNull;
+
 import java.util.Collection;
 import java.util.Map;
+
+import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.model.analysis.expression.ProbeAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao;
@@ -37,11 +42,13 @@ import ubic.gemma.testing.BaseSpringContextTest;
 public class DifferentialExpressionAnalysisDaoImplTest extends BaseSpringContextTest {
 
     /* to load data, use mini-gemma */
-
+    @Autowired
     private DifferentialExpressionAnalysisDao differentialExpressionAnalysisDao = null;
 
+    @Autowired
     private DifferentialExpressionResultDao differentialExpressionResultDao = null;
 
+    @Autowired
     private GeneDao geneDao = null;
 
     private String officialSymbol = "ACAA1";
@@ -56,6 +63,7 @@ public class DifferentialExpressionAnalysisDaoImplTest extends BaseSpringContext
     /**
      * 
      */
+    @Test
     public void testFind() {
 
         Collection<Gene> genes = geneDao.findByOfficalSymbol( officialSymbol );
@@ -77,6 +85,7 @@ public class DifferentialExpressionAnalysisDaoImplTest extends BaseSpringContext
     /**
      * 
      */
+    @Test
     public void testFindResults() {
         Collection<Gene> genes = geneDao.findByOfficalSymbol( officialSymbol );
 
@@ -109,18 +118,4 @@ public class DifferentialExpressionAnalysisDaoImplTest extends BaseSpringContext
         }
     }
 
-    /**
-     * @param differentialExpressionAnalysisDao
-     */
-    public void setDifferentialExpressionAnalysisDao(
-            DifferentialExpressionAnalysisDao differentialExpressionAnalysisDao ) {
-        this.differentialExpressionAnalysisDao = differentialExpressionAnalysisDao;
-    }
-
-    /**
-     * @param geneDao
-     */
-    public void setGeneDao( GeneDao geneDao ) {
-        this.geneDao = geneDao;
-    }
 }

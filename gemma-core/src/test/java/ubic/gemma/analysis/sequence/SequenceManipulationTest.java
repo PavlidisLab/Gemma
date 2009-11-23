@@ -26,16 +26,6 @@ import junit.framework.TestCase;
  */
 public class SequenceManipulationTest extends TestCase {
 
-    public void testStripPolyT() {
-
-        String expectedResult = "ATGCCCCCC";
-
-        String actualResult = SequenceManipulation.stripPolyAorT( expectedResult + "AAAAAAAAAAAAAAAAAA", 10 );
-
-        assertEquals( expectedResult, actualResult );
-
-    }
-
     public void testStripPolyA() {
 
         String expectedResult = "ATGCCCCCC";
@@ -45,13 +35,22 @@ public class SequenceManipulationTest extends TestCase {
         assertEquals( expectedResult, actualResult );
 
     }
-    
-    
+
     public void testStripPolyAtooShort() {
 
         String expectedResult = "TGCCCCCCAAAA";
 
         String actualResult = SequenceManipulation.stripPolyAorT( expectedResult, 10 );
+
+        assertEquals( expectedResult, actualResult );
+
+    }
+
+    public void testStripPolyT() {
+
+        String expectedResult = "ATGCCCCCC";
+
+        String actualResult = SequenceManipulation.stripPolyAorT( expectedResult + "AAAAAAAAAAAAAAAAAA", 10 );
 
         assertEquals( expectedResult, actualResult );
 

@@ -18,14 +18,18 @@
  */
 package ubic.gemma.model.association;
 
+import org.springframework.security.access.annotation.Secured;
+
 /**
- * 
+ * @author kelsey
+ * @version $Id$
  */
 public interface BioSequence2GeneProductService {
 
     /**
      * 
      */
+    @Secured( { "GROUP_ADMIN" })
     public ubic.gemma.model.association.BioSequence2GeneProduct create(
             ubic.gemma.model.association.BioSequence2GeneProduct bioSequence2GeneProduct );
 

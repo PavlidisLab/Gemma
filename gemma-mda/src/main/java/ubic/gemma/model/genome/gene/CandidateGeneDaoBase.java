@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.genome.gene;
 
+import java.util.Collection;
+
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 
 /**
@@ -40,7 +42,7 @@ public abstract class CandidateGeneDaoBase extends HibernateDaoSupport implement
             throw new IllegalArgumentException( "CandidateGene.create - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback() {
+                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
@@ -67,7 +69,7 @@ public abstract class CandidateGeneDaoBase extends HibernateDaoSupport implement
     /**
      * @see ubic.gemma.model.genome.gene.CandidateGeneDao#create(java.util.Collection)
      */
-    @SuppressWarnings( { "unchecked" })
+
     public java.util.Collection create( final java.util.Collection entities ) {
         return create( TRANSFORM_NONE, entities );
     }
@@ -77,6 +79,10 @@ public abstract class CandidateGeneDaoBase extends HibernateDaoSupport implement
      */
     public CandidateGene create( ubic.gemma.model.genome.gene.CandidateGene candidateGene ) {
         return this.create( TRANSFORM_NONE, candidateGene );
+    }
+
+    public Collection<? extends CandidateGene> load( Collection<Long> ids ) {
+        return this.getHibernateTemplate().findByNamedParam( "from CandidateGeneImpl where id in (:ids)", "ids", ids );
     }
 
     /**
@@ -104,7 +110,6 @@ public abstract class CandidateGeneDaoBase extends HibernateDaoSupport implement
      * @see ubic.gemma.model.genome.gene.CandidateGeneDao#loadAll()
      */
 
-    @SuppressWarnings( { "unchecked" })
     public java.util.Collection<CandidateGene> loadAll() {
         return this.loadAll( TRANSFORM_NONE );
     }
@@ -138,7 +143,7 @@ public abstract class CandidateGeneDaoBase extends HibernateDaoSupport implement
      * @see ubic.gemma.model.common.SecurableDao#remove(java.util.Collection)
      */
 
-    public void remove( java.util.Collection<CandidateGene> entities ) {
+    public void remove( java.util.Collection<? extends CandidateGene> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "CandidateGene.remove - 'entities' can not be null" );
         }
@@ -159,12 +164,12 @@ public abstract class CandidateGeneDaoBase extends HibernateDaoSupport implement
      * @see ubic.gemma.model.common.SecurableDao#update(java.util.Collection)
      */
 
-    public void update( final java.util.Collection<CandidateGene> entities ) {
+    public void update( final java.util.Collection<? extends CandidateGene> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "CandidateGene.update - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback() {
+                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {

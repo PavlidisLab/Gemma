@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.common.quantitationtype;
 
+import org.springframework.beans.factory.annotation.Autowired;
+
 /**
  * <p>
  * Spring Service base class for <code>ubic.gemma.model.common.quantitationtype.QuantitationTypeService</code>, provides
@@ -29,6 +31,7 @@ package ubic.gemma.model.common.quantitationtype;
 public abstract class QuantitationTypeServiceBase implements
         ubic.gemma.model.common.quantitationtype.QuantitationTypeService {
 
+    @Autowired
     private ubic.gemma.model.common.quantitationtype.QuantitationTypeDao quantitationTypeDao;
 
     /**

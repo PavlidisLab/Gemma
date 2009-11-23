@@ -18,7 +18,13 @@
  */
 package ubic.gemma.loader.genome.llnl;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 import java.io.InputStream;
+
+import org.junit.Before;
+import org.junit.Test;
 
 import ubic.gemma.model.common.description.ExternalDatabaseService;
 import ubic.gemma.model.genome.biosequence.BioSequenceService;
@@ -33,16 +39,16 @@ public class ImageCumulativePlatesLoaderTest extends BaseSpringContextTest {
     InputStream is;
     ImageCumulativePlatesLoader loader;
 
-    @Override
-    protected void onSetUpInTransaction() throws Exception {
-        super.onSetUpInTransaction();
-        endTransaction();
+    @Before
+    public void setup() throws Exception {
+
         is = this.getClass().getResourceAsStream( "/data/loader/genome/cumulative.plates.test.txt" );
 
         assertTrue( is.available() > 0 );
 
     }
 
+    @Test
     public void testLoadInputStream() throws Exception {
 
         loader = new ImageCumulativePlatesLoader();

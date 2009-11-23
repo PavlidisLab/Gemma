@@ -1,7 +1,8 @@
 <?xml version="1.0"?>
 <!DOCTYPE compass-core-mapping PUBLIC
-    "-//Compass/Compass Core Mapping DTD 2.0//EN"
-    "http://www.compass-project.org/dtd/compass-core-mapping-2.1.dtd">
+    "-//Compass/Compass Core Mapping DTD 2.2//EN"
+    "http://www.compass-project.org/dtd/compass-core-mapping-2.2.dtd">
+
 <!--
 	This document is a Compass mapping file, allowing the Gemma objects to be 
 	indexed and searched.  All "searchable" bibliographic reference attributes 

@@ -33,6 +33,8 @@ import java.util.Set;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceProcessingService;
@@ -103,10 +105,8 @@ import ubic.gemma.ontology.MgedOntologyService;
  * @author keshav
  * @author pavlidis
  * @version $Id$
- * @spring.bean id="geoConverter"
- * @spring.property name="externalDatabaseService" ref="externalDatabaseService"
- * @spring.property name="taxonService" ref="taxonService"
  */
+@Service
 public class GeoConverter implements Converter<Object, Object> {
 
     /**
@@ -131,8 +131,10 @@ public class GeoConverter implements Converter<Object, Object> {
      */
     private static final int INITIAL_VECTOR_CAPACITY = 10000;
 
+    @Autowired
     private ExternalDatabaseService externalDatabaseService;
 
+    @Autowired
     private TaxonService taxonService;
 
     private ByteArrayConverter byteArrayConverter = new ByteArrayConverter();
@@ -289,14 +291,14 @@ public class GeoConverter implements Converter<Object, Object> {
                     VocabCharacteristic gemmaChar = convertVariableType( GeoVariable.convertStringToType( category ) );
                     gemmaChar.setDescription( defaultDescription );
                     gemmaChar.setValue( value );
-                    gemmaChar.setEvidenceCode( GOEvidenceCode.IEA );
+                    gemmaChar.setEvidenceCode( GOEvidenceCode.IIA );
                     bioMaterial.getCharacteristics().add( gemmaChar );
                 } catch ( Exception e ) {
                     // conversion didn't work, fall back.
                     Characteristic gemmaChar = Characteristic.Factory.newInstance();
                     gemmaChar.setValue( characteristic );
                     gemmaChar.setDescription( defaultDescription );
-                    gemmaChar.setEvidenceCode( GOEvidenceCode.IEA );
+                    gemmaChar.setEvidenceCode( GOEvidenceCode.IIA );
                     bioMaterial.getCharacteristics().add( gemmaChar );
                 }
 
@@ -305,7 +307,7 @@ public class GeoConverter implements Converter<Object, Object> {
                 Characteristic gemmaChar = Characteristic.Factory.newInstance();
                 gemmaChar.setValue( characteristic );
                 gemmaChar.setDescription( defaultDescription );
-                gemmaChar.setEvidenceCode( GOEvidenceCode.IEA );
+                gemmaChar.setEvidenceCode( GOEvidenceCode.IIA );
                 bioMaterial.getCharacteristics().add( gemmaChar );
             }
 
@@ -318,7 +320,7 @@ public class GeoConverter implements Converter<Object, Object> {
             sourceChar.setCategory( "BioSource" );
             sourceChar.setCategoryUri( MgedOntologyService.MGED_ONTO_BASE_URL + "#BioSource" );
             sourceChar.setValue( characteristic );
-            sourceChar.setEvidenceCode( GOEvidenceCode.IEA );
+            sourceChar.setEvidenceCode( GOEvidenceCode.IIA );
             bioMaterial.getCharacteristics().add( sourceChar );
         }
 
@@ -356,7 +358,7 @@ public class GeoConverter implements Converter<Object, Object> {
             labelChar.setCategory( "LabelCompound" );
             labelChar.setCategoryUri( MgedOntologyService.MGED_ONTO_BASE_URL + "#LabelCompound" );
             labelChar.setValue( characteristic );
-            labelChar.setEvidenceCode( GOEvidenceCode.IEA );
+            labelChar.setEvidenceCode( GOEvidenceCode.IIA );
             bioMaterial.getCharacteristics().add( labelChar );
         }
 
@@ -381,8 +383,11 @@ public class GeoConverter implements Converter<Object, Object> {
      */
     private Person convertContact( GeoContact contact ) {
         Person result = Person.Factory.newInstance();
-        result.setAddress( contact.getCity() + " " + contact.getState() + " " + contact.getCountry() + " "
-                + contact.getPostCode() );
+
+        /*
+         * Note: removed address conversion. We don't normally get that info from GEO nor do we need it.
+         */
+
         result.setPhone( contact.getPhone() );
         result.setName( contact.getName() );
         result.setEmail( contact.getEmail() );
@@ -846,10 +851,11 @@ public class GeoConverter implements Converter<Object, Object> {
 
         StringBuilder bioAssayDimName = new StringBuilder();
         Collections.sort( datasetSamples );
+        bioAssayDimName.append( expExp.getShortName() + ": " );
         for ( GeoSample sample : datasetSamples ) {
             boolean found = false;
             String sampleAcc = sample.getGeoAccession();
-            bioAssayDimName.append( sampleAcc + "," ); // this is rather silly!
+            bioAssayDimName.append( sampleAcc + "," ); // FIXME this is rather silly!
             found = matchSampleToBioAssay( expExp, resultBioAssayDimension, sampleAcc );
             if ( !found ) {
                 // this is normal because not all headings are
@@ -1262,7 +1268,7 @@ public class GeoConverter implements Converter<Object, Object> {
         VocabCharacteristic result = VocabCharacteristic.Factory.newInstance();
         result.setCategory( "ReplicateDescriptionType" );
         result.setCategoryUri( MgedOntologyService.MGED_ONTO_BASE_URL + "#ReplicateDescriptionType" );
-        result.setEvidenceCode( GOEvidenceCode.IEA );
+        result.setEvidenceCode( GOEvidenceCode.IIA );
         ExternalDatabase mged = ExternalDatabase.Factory.newInstance();
 
         if ( !repType.equals( VariableType.other ) ) {
@@ -1764,7 +1770,7 @@ public class GeoConverter implements Converter<Object, Object> {
                 Characteristic o = Characteristic.Factory.newInstance();
                 o.setDescription( "GEO Keyword" );
                 o.setValue( keyWord );
-                o.setEvidenceCode( GOEvidenceCode.IEA );
+                o.setEvidenceCode( GOEvidenceCode.IIA );
                 o.setDescription( "Keyword from GEO series definition file." );
             }
         }
@@ -2253,7 +2259,7 @@ public class GeoConverter implements Converter<Object, Object> {
         VocabCharacteristic categoryTerm = VocabCharacteristic.Factory.newInstance();
         categoryTerm.setCategory( mgedTerm );
         categoryTerm.setCategoryUri( MgedOntologyService.MGED_ONTO_BASE_URL + "#" + mgedTerm );
-        categoryTerm.setEvidenceCode( GOEvidenceCode.IEA );
+        categoryTerm.setEvidenceCode( GOEvidenceCode.IIA );
         return categoryTerm;
     }
 

@@ -18,8 +18,15 @@
  */
 package ubic.gemma.web.controller.common.description.bibref;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
 import java.io.IOException;
 
+import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.validation.BindingResult;
@@ -33,18 +40,23 @@ import ubic.gemma.testing.BaseSpringWebTest;
  * @version $Id$
  */
 public class PubMedQueryControllerTest extends BaseSpringWebTest {
+
+    @Autowired
     private PubMedQueryController controller;
 
-    @Override
-    public void onSetUpInTransaction() throws Exception {
-        super.onSetUpInTransaction();
-        controller = ( PubMedQueryController ) getBean( "pubMedQueryController" );
+    public void testDisplayForm() throws Exception {
+        MockHttpServletRequest request = newGet( "/pubMedSearch.html" );
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        ModelAndView mv = controller.handleRequest( request, response );
+        assertEquals( "bibRefSearch", mv.getViewName() );
     }
 
     /**
      * Test method for
-     * {@link ubic.gemma.web.controller.common.description.bibref.PubMedQueryController#onSubmit(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse, java.lang.Object, org.springframework.validation.BindException)}.
+     * {@link ubic.gemma.web.controller.common.description.bibref.PubMedQueryController#onSubmit(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse, java.lang.Object, org.springframework.validation.BindException)}
+     * .
      */
+    @Test
     public final void testOnSubmit() throws Exception {
         MockHttpServletRequest request = newPost( "/pubMedSearch.html" );
         MockHttpServletResponse response = new MockHttpServletResponse();
@@ -72,6 +84,7 @@ public class PubMedQueryControllerTest extends BaseSpringWebTest {
 
     }
 
+    @Test
     public final void testOnSubmitAlreadyExists() throws Exception {
         // put it in the system.
         this.getTestPersistentBibliographicReference( "12299" );
@@ -105,13 +118,6 @@ public class PubMedQueryControllerTest extends BaseSpringWebTest {
         ModelAndView mv = controller.handleRequest( request, response );
         Errors errors = ( Errors ) mv.getModel().get( BindingResult.MODEL_KEY_PREFIX + "searchCriteria" );
         assertTrue( "Expected an error", errors != null );
-        assertEquals( "bibRefSearch", mv.getViewName() );
-    }
-
-    public void testDisplayForm() throws Exception {
-        MockHttpServletRequest request = newGet( "/pubMedSearch.html" );
-        MockHttpServletResponse response = new MockHttpServletResponse();
-        ModelAndView mv = controller.handleRequest( request, response );
         assertEquals( "bibRefSearch", mv.getViewName() );
     }
 }

@@ -35,7 +35,7 @@ public abstract class CoexpressionAnalysisDaoBase<T extends CoexpressionAnalysis
      */
 
     @Override
-    @SuppressWarnings( { "unchecked" })
+    
     public java.util.Collection findByName( final int transform, final java.lang.String name ) {
         return this.findByName( transform, "select a from AnalysisImpl as a where a.name like :name", name );
     }
@@ -46,7 +46,7 @@ public abstract class CoexpressionAnalysisDaoBase<T extends CoexpressionAnalysis
      */
 
     @Override
-    @SuppressWarnings( { "unchecked" })
+    
     public java.util.Collection findByName( final int transform, final java.lang.String queryString,
             final java.lang.String name ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -74,7 +74,7 @@ public abstract class CoexpressionAnalysisDaoBase<T extends CoexpressionAnalysis
      */
 
     @Override
-    @SuppressWarnings( { "unchecked" })
+    
     public java.util.Collection findByName( final java.lang.String queryString, final java.lang.String name ) {
         return this.findByName( TRANSFORM_NONE, queryString, name );
     }
@@ -123,7 +123,7 @@ public abstract class CoexpressionAnalysisDaoBase<T extends CoexpressionAnalysis
             throw new IllegalArgumentException( "CoexpressionAnalysis.update - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback() {
+                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {

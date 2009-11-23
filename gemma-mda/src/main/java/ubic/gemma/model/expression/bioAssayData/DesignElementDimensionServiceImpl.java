@@ -18,10 +18,13 @@
  */
 package ubic.gemma.model.expression.bioAssayData;
 
+import org.springframework.stereotype.Service;
+
 /**
  * @author pavlidis
  * @version $Id$
  */
+@Service
 public class DesignElementDimensionServiceImpl extends
         ubic.gemma.model.expression.bioAssayData.DesignElementDimensionServiceBase {
 

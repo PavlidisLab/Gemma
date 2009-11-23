@@ -18,28 +18,32 @@
  */
 package ubic.gemma.web.controller.expression.experiment;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 import java.util.Map;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.web.servlet.ModelAndView;
 
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.testing.BaseSpringContextTest;
+import ubic.gemma.testing.BaseSpringWebTest;
 
 /**
  * @author Kiran Keshav
  * @version $Id$
  */
-public class ExperimentalDesignControllerTest extends BaseSpringContextTest {
+public class ExperimentalDesignControllerTest extends BaseSpringWebTest {
 
-    @Override
-    public void onSetUpInTransaction() throws Exception {
-        super.onSetUpInTransaction();
-
-    }
+    @Autowired
+    ExperimentalDesignController experimentalDesignController;
 
     /**
      * Tests showing an experimentalDesign which is implemented in
@@ -48,15 +52,12 @@ public class ExperimentalDesignControllerTest extends BaseSpringContextTest {
      * 
      * @throws Exception
      */
+    @Test
     public void testShowExperimentalDesign() throws Exception {
-        endTransaction();
 
         ExpressionExperiment ee = this.getTestPersistentCompleteExpressionExperiment( true ); // readonly
 
-        ExperimentalDesignController c = ( ExperimentalDesignController ) getBean( "experimentalDesignController" );
-
-        MockHttpServletRequest req = new MockHttpServletRequest( "GET",
-                "/experimentalDesign/showExperimentalDesign.html" );
+        MockHttpServletRequest req = super.newGet( "/experimentalDesign/showExperimentalDesign.html" );
 
         ExperimentalDesign ed = ee.getExperimentalDesign();
 
@@ -68,9 +69,9 @@ public class ExperimentalDesignControllerTest extends BaseSpringContextTest {
 
         req.setRequestURI( "/experimentalDesign/showExperimentalDesign.html" );
 
-        ModelAndView mav = c.handleRequest( req, ( HttpServletResponse ) null );
+        ModelAndView mav = experimentalDesignController.show( req, ( HttpServletResponse ) null );
 
-        Map m = mav.getModel();
+        Map<String, Object> m = mav.getModel();
         assertNotNull( m.get( "expressionExperiment" ) );
 
         assertEquals( mav.getViewName(), "experimentalDesign.detail" );

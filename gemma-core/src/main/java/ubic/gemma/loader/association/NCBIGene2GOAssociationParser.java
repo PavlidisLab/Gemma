@@ -37,7 +37,6 @@ import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.ontology.GeneOntologyService;
 import ubic.gemma.util.ConfigUtils;
 
@@ -77,8 +76,6 @@ import ubic.gemma.util.ConfigUtils;
  * 
  * @author keshav
  * @author pavlidis
- * @spring.bean id="gene2GOAssociationParser"
- * @spring.property name="taxonService" ref="taxonService"
  * @version $Id$
  */
 public class NCBIGene2GOAssociationParser extends BasicLineParser<Gene2GOAssociation> implements QueuingParser {
@@ -94,12 +91,6 @@ public class NCBIGene2GOAssociationParser extends BasicLineParser<Gene2GOAssocia
 
     private final int GO_ID = ConfigUtils.getInt( "gene2go.go_id" );
 
-    private TaxonService taxonService;
-
-    public void setTaxonService( TaxonService taxonService ) {
-        this.taxonService = taxonService;
-    }
-
     BlockingQueue<Gene2GOAssociation> queue;
 
     private int count = 0;
@@ -114,13 +105,21 @@ public class NCBIGene2GOAssociationParser extends BasicLineParser<Gene2GOAssocia
      */
     private Collection<Integer> taxaNcibi;
 
-    public NCBIGene2GOAssociationParser() {
+    /**
+     * @param taxa to consider (usually we pass in all)
+     */
+    public NCBIGene2GOAssociationParser( Collection<Taxon> taxa ) {
         goDb = ExternalDatabase.Factory.newInstance();
         goDb.setName( "GO" );
         goDb.setType( DatabaseType.ONTOLOGY );
 
         ncbiGeneDb = ExternalDatabase.Factory.newInstance();
         ncbiGeneDb.setName( "Entrez Gene" );
+
+        this.taxaNcibi = new HashSet<Integer>();
+        for ( Taxon taxon : taxa ) {
+            this.taxaNcibi.add( taxon.getNcbiId() );
+        }
     }
 
     /*
@@ -136,16 +135,10 @@ public class NCBIGene2GOAssociationParser extends BasicLineParser<Gene2GOAssocia
      * Note that "-" means a missing value, which in practice only occurs in the "qualifier" and "pubmed" columns.
      * 
      * @param line
+     * @param taxa to use
      * @return Object
      */
-    @SuppressWarnings("unchecked")
     public Gene2GOAssociation mapFromGene2GO( String line ) {
-
-        Collection<Taxon> taxa = taxonService.loadAll();
-        taxaNcibi = new HashSet<Integer>();
-        for ( Taxon taxon : taxa ) {
-            this.taxaNcibi.add( taxon.getNcbiId() );
-        }
 
         String[] values = StringUtils.splitPreserveAllTokens( line, "\t" );
 

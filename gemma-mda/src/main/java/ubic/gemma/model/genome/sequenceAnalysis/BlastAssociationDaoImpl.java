@@ -22,8 +22,18 @@
 //
 package ubic.gemma.model.genome.sequenceAnalysis;
 
+import org.hibernate.SessionFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
+
 /**
  * @see ubic.gemma.model.genome.sequenceAnalysis.BlastAssociation
  */
+@Repository
 public class BlastAssociationDaoImpl extends ubic.gemma.model.genome.sequenceAnalysis.BlastAssociationDaoBase {
+
+    @Autowired
+    public BlastAssociationDaoImpl( SessionFactory sessionFactory ) {
+        super.setSessionFactory( sessionFactory );
+    }
 }

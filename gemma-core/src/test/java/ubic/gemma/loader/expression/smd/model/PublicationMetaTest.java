@@ -34,6 +34,16 @@ public class PublicationMetaTest extends TestCase {
     SMDPublication pubtest;
 
     /*
+     * Class under test for void read(InputStream)
+     */
+    public void testReadInputStream() throws IOException, SAXException {
+        pubtest.read( testStream );
+        String expectedReturn = "Diversity of gene expression in adenocarcinoma of the lung.";
+        String actualReturn = pubtest.getTitle();
+        assertEquals( expectedReturn, actualReturn );
+    }
+
+    /*
      * @see TestCase#setUp()
      */
     @Override
@@ -49,16 +59,6 @@ public class PublicationMetaTest extends TestCase {
     @Override
     protected void tearDown() throws Exception {
         super.tearDown();
-    }
-
-    /*
-     * Class under test for void read(InputStream)
-     */
-    public void testReadInputStream() throws IOException, SAXException {
-        pubtest.read( testStream );
-        String expectedReturn = "Diversity of gene expression in adenocarcinoma of the lung.";
-        String actualReturn = pubtest.getTitle();
-        assertEquals( expectedReturn, actualReturn );
     }
 
 }

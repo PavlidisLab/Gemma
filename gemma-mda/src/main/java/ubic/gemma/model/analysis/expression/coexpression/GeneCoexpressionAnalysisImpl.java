@@ -18,8 +18,6 @@
  */
 package ubic.gemma.model.analysis.expression.coexpression;
 
-import java.util.Collection;
-
 /**
  * @see ubic.gemma.model.analysis.GeneCoexpressionAnalysis
  */
@@ -29,10 +27,5 @@ public class GeneCoexpressionAnalysisImpl extends
      * The serial version UID of this class. Needed for serialization.
      */
     private static final long serialVersionUID = -419775141228684493L;
-
-    @Override
-    public Collection getResultSets() {
-        throw new UnsupportedOperationException();
-    }
 
 }

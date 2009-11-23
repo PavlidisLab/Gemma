@@ -18,11 +18,16 @@
  */
 package ubic.gemma.analysis.expression.diff;
 
+import static org.junit.Assert.assertEquals;
+
 import java.util.Collection;
 import java.util.Iterator;
 
-import ubic.gemma.model.analysis.expression.ExpressionAnalysis;
+import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+
 import ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 
 /**
@@ -52,26 +57,14 @@ public class TwoWayAnovaWithInteractionsAnalyzerTest extends BaseAnalyzerConfigu
      * tested out on the R console the same one way anova call used in the {@link OneWayAnovaAnalyzer}).
      */
 
+    @Autowired
     TwoWayAnovaWithInteractionsAnalyzer analyzer = null;
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.analysis.diff.BaseAnalyzerConfigurationTest#onSetUpInTransaction()
-     */
-    @Override
-    public void onSetUpInTransaction() throws Exception {
-        super.onSetUpInTransaction();
-
-        analyzer = ( TwoWayAnovaWithInteractionsAnalyzer ) this.getBean( "twoWayAnovaWithInteractionsAnalyzer" );
-
-    }
 
     /**
      * 
      *
      */
-    @SuppressWarnings("unchecked")
+    @Test
     public void testTwoWayAnova() throws Exception {
 
         log.debug( "Testing TwoWayAnova method in " + TwoWayAnovaWithInteractionsAnalyzer.class.getName() );
@@ -90,8 +83,8 @@ public class TwoWayAnovaWithInteractionsAnalyzerTest extends BaseAnalyzerConfigu
 
         ExperimentalFactor experimentalFactorB = iter.next();
 
-        ExpressionAnalysis expressionAnalysis = analyzer.twoWayAnova( expressionExperiment, experimentalFactorA,
-                experimentalFactorB );
+        DifferentialExpressionAnalysis expressionAnalysis = analyzer.twoWayAnova( expressionExperiment,
+                experimentalFactorA, experimentalFactorB );
 
         Collection<ExpressionAnalysisResultSet> resultSets = expressionAnalysis.getResultSets();
 
@@ -109,7 +102,6 @@ public class TwoWayAnovaWithInteractionsAnalyzerTest extends BaseAnalyzerConfigu
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.analysis.diff.BaseAnalyzerConfigurationTest#configureMocks()
      */
     @Override

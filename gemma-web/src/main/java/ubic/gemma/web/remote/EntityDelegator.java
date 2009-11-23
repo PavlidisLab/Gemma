@@ -26,23 +26,23 @@ package ubic.gemma.web.remote;
  */
 public class EntityDelegator {
 
-    public EntityDelegator() {
-    }
-
     private Long id;
 
     private String classDelegatingFor;
+
+    public EntityDelegator() {
+    }
 
     public String getClassDelegatingFor() {
         return classDelegatingFor;
     }
 
-    public void setClassDelegatingFor( String classDelegatingFor ) {
-        this.classDelegatingFor = classDelegatingFor;
-    }
-
     public Long getId() {
         return id;
+    }
+
+    public void setClassDelegatingFor( String classDelegatingFor ) {
+        this.classDelegatingFor = classDelegatingFor;
     }
 
     public void setId( Long id ) {

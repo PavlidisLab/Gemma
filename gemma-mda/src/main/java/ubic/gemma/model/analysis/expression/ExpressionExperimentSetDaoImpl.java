@@ -21,6 +21,10 @@ package ubic.gemma.model.analysis.expression;
 import java.util.Collection;
 import java.util.List;
 
+import org.hibernate.SessionFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
+
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 
 /**
@@ -28,7 +32,13 @@ import ubic.gemma.model.expression.experiment.BioAssaySet;
  * @version $Id$
  * @author paul
  */
+@Repository
 public class ExpressionExperimentSetDaoImpl extends ubic.gemma.model.analysis.expression.ExpressionExperimentSetDaoBase {
+
+    @Autowired
+    public ExpressionExperimentSetDaoImpl( SessionFactory sessionFactory ) {
+        super.setSessionFactory( sessionFactory );
+    }
 
     /*
      * (non-Javadoc)
@@ -47,7 +57,6 @@ public class ExpressionExperimentSetDaoImpl extends ubic.gemma.model.analysis.ex
         List result = this.getHibernateTemplate().find(
                 "select distinct ees from ExpressionExperimentSetImpl ees"
                         + " inner join ees.experiments where size(ees.experiments) > 1" );
-        // log.info(result.size());
         return result;
     }
 

@@ -18,6 +18,13 @@
  */
 package ubic.gemma.analysis.report;
 
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+import org.junit.Before;
+import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignGeneMappingEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceAnalysisEvent;
@@ -31,16 +38,17 @@ import ubic.gemma.testing.BaseSpringContextTest;
  */
 public class ArrayDesignReportServiceTest extends BaseSpringContextTest {
 
-    static AuditTrailService ads;
-    static ArrayDesignReportService adrs;
+    @Autowired
+    AuditTrailService ads;
+
+    @Autowired
+    ArrayDesignReportService adrs;
+
     static ArrayDesign ad;
     static boolean persisted = false;
 
-    @Override
-    protected void onSetUpInTransaction() throws Exception {
-        super.onSetUpInTransaction();
-        adrs = ( ArrayDesignReportService ) this.getBean( "arrayDesignReportService" );
-        ads = ( AuditTrailService ) this.getBean( "auditTrailService" );
+    @Before
+    public void setup() throws Exception {
         if ( !persisted ) {
             ad = this.getTestPersistentArrayDesign( 5, true, false, false ); // not read only.
 
@@ -59,9 +67,19 @@ public class ArrayDesignReportServiceTest extends BaseSpringContextTest {
             persisted = true;
         }
 
-        endTransaction();
     }
 
+    @Test
+    public void testGenerateArrayDesignGeneMappingEvent() {
+
+        String report = adrs.getLastGeneMappingEvent( ad.getId() );
+
+        log.info( report );
+        assertTrue( !report.equals( "[None]" ) );
+        assertNotNull( report );
+    }
+
+    @Test
     public void testGenerateArrayDesignSequenceAnalysisEvent() {
 
         String report = adrs.getLastSequenceAnalysisEvent( ad.getId() );
@@ -71,18 +89,10 @@ public class ArrayDesignReportServiceTest extends BaseSpringContextTest {
         assertNotNull( report );
     }
 
+    @Test
     public void testGenerateArrayDesignSequenceUpdateEvent() {
 
         String report = adrs.getLastSequenceUpdateEvent( ad.getId() );
-
-        log.info( report );
-        assertTrue( !report.equals( "[None]" ) );
-        assertNotNull( report );
-    }
-
-    public void testGenerateArrayDesignGeneMappingEvent() {
-
-        String report = adrs.getLastGeneMappingEvent( ad.getId() );
 
         log.info( report );
         assertTrue( !report.equals( "[None]" ) );

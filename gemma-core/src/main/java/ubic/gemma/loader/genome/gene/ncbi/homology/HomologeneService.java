@@ -35,6 +35,8 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import ubic.basecode.util.FileTools;
 import ubic.gemma.model.common.description.LocalFile;
@@ -49,41 +51,177 @@ import ubic.gemma.util.ConfigUtils;
  * mapping off
  * 
  * @author kelsey
- * @version $Id: HomologeneService.java,
- * @spring.bean id="homologeneService"
- * @spring.property name="geneService" ref="geneService"
- * @spring.property name="taxonService" ref="taxonService"
+ * @version $Id$
  */
+@Service
 public class HomologeneService {
 
-    private static final String LOAD_HOMOLOGENE = "load.homologene";
-    private static final String HOMOLOGENE_FILE = "ncbi.homologene.fileName";
+    protected static final Log log = LogFactory.getLog( HomologeneService.class );
+    private static final String COMMENT_CHARACTER = "#";
 
     private static final char DELIMITING_CHARACTER = '\t';
 
-    private static final String COMMENT_CHARACTER = "#";
+    private static final String HOMOLOGENE_FILE = "ncbi.homologene.fileName";
 
-    protected static final Log log = LogFactory.getLog( HomologeneService.class );
+    private static final String LOAD_HOMOLOGENE = "load.homologene";
 
-    protected AtomicBoolean running = new AtomicBoolean( false );
-    protected AtomicBoolean ready = new AtomicBoolean( false );
     protected AtomicBoolean enabled = new AtomicBoolean( false );
-
-    protected String homologeneFileName = "homologene.data";
-    protected GeneService geneService;
-    protected TaxonService taxonService;
-
-    protected Map<Long, Collection<Long>> group2Gene = new HashMap<Long, Collection<Long>>(); // Homology group ID to
     // a collection of gene
     // IDs
     protected Map<Long, Long> gene2Group = new HashMap<Long, Long>();
+    protected Map<Long, Collection<Long>> group2Gene = new HashMap<Long, Collection<Long>>(); // Homology group ID to
 
-    public void setGeneService( GeneService geneService ) {
-        this.geneService = geneService;
+    protected String homologeneFileName = "homologene.data";
+
+    protected AtomicBoolean ready = new AtomicBoolean( false );
+
+    protected AtomicBoolean running = new AtomicBoolean( false );
+
+    @Autowired
+    private GeneService geneService;
+
+    /**
+     * Given an NCBI Homologene Group ID returns a list of all the genes in gemma in that given group
+     * 
+     * @param homologeneGrouopId NCBI Homologene group ID
+     * @return ArrayList of unthawed gemma genes
+     */
+
+    public Collection<Gene> getGenesInGroup( Long homologeneGroupId ) {
+
+        if ( homologeneGroupId == null ) {
+            return null;
+        }
+
+        if ( !this.ready.get() ) {
+            return null;
+        }
+
+        Collection<Long> ncbiIds = this.group2Gene.get( homologeneGroupId );
+
+        if ( ncbiIds == null || ncbiIds.isEmpty() ) return null;
+
+        Collection<Long> skippedNcbiIds = new ArrayList<Long>();
+
+        Collection<Gene> genes = new ArrayList<Gene>();
+
+        for ( Long ncbiId : ncbiIds ) {
+            Gene gene = this.geneService.findByNCBIId( ncbiId.toString() );
+            if ( gene == null ) {
+                skippedNcbiIds.add( ncbiId );
+                continue;
+            }
+
+            genes.add( gene );
+        }
+
+        if ( log.isDebugEnabled() && !skippedNcbiIds.isEmpty() ) {
+            log.debug( "Skipped " + skippedNcbiIds.size()
+                    + " homologous genes cause unable to find in Gemma. NCBI ids are:  " + skippedNcbiIds );
+        }
+        return genes;
+
     }
 
-    public void setTaxonService( TaxonService ts ) {
-        this.taxonService = ts;
+    /**
+     * Given an NCBI Gene ID returns the NCBI homologene group
+     * 
+     * @param ncbiID
+     * @return
+     */
+    public Long getHomologeneGroup( long ncbiID ) {
+
+        if ( !this.ready.get() ) {
+            return null;
+        }
+
+        return this.gene2Group.get( ncbiID );
+    }
+
+    /**
+     * @param gene
+     * @param taxon desired taxon to find homolouge in
+     * @return Finds the homologue of the given gene for the taxon specified.
+     */
+
+    public Gene getHomologue( Gene gene, Taxon taxon ) {
+        if ( gene.getTaxon().getId() == taxon.getId() ) return gene;
+
+        Collection<Gene> homologues = this.getHomologues( gene );
+
+        if ( homologues == null || homologues.isEmpty() ) return null;
+
+        for ( Gene g : homologues ) {
+            if ( g.getTaxon().getId() == taxon.getId() ) return g;
+
+        }
+
+        return null;
+    }
+
+    /**
+     * @param gene
+     * @return Collection of genes found in Gemma that are homologous with the given gene. Empty if no homologues or
+     *         gene lacks homologue information.
+     */
+
+    public Collection<Gene> getHomologues( Gene gene ) {
+
+        if ( !this.ready.get() ) {
+            return null;
+        }
+
+        Collection<Gene> genes = new HashSet<Gene>();
+
+        Long groupId;
+
+        try {
+            groupId = this.getHomologeneGroup( Long.parseLong( gene.getNcbiId() ) );
+        } catch ( NumberFormatException e ) {
+            return genes;
+        }
+
+        genes = this.getGenesInGroup( groupId );
+        genes.remove( gene ); // remove the given gene from the list
+
+        return genes;
+
+    }
+
+    /**
+     * @param ncbiId
+     * @return A collection of NCBI gene ids that are homologous with the given NCBI Gene Id
+     */
+    public Collection<Long> getHomologues( Long ncbiId ) {
+
+        if ( !this.ready.get() ) {
+            return null;
+        }
+
+        Collection<Long> NcbiGeneIds;
+        Long groupId = this.getHomologeneGroup( ncbiId );
+        if ( groupId == null ) return null;
+        NcbiGeneIds = this.getNCBIGeneIdsInGroup( groupId );
+        NcbiGeneIds.remove( ncbiId ); // remove the given gene from the list
+
+        return NcbiGeneIds;
+
+    }
+
+    /**
+     * Given an NCBI Homologene Group ID returns a list of all the NCBI Gene Ids in the given group
+     * 
+     * @param homologeneGrouopId
+     * @return ArrayList of NCBI Gene Ids
+     */
+    public Collection<Long> getNCBIGeneIdsInGroup( long homologeneGrouopId ) {
+
+        if ( !this.ready.get() ) {
+            return null;
+        }
+
+        return this.group2Gene.get( homologeneGrouopId );
+
     }
 
     public synchronized void init( boolean force ) {
@@ -164,23 +302,6 @@ public class HomologeneService {
 
     }
 
-    /**
-     * @return A list of NCBI that are available in Gemma. Doesn't work if in the thread because taxonService is secured
-     *         and at startup the security context has yet to be initilized.
-     */
-    @SuppressWarnings("unchecked")
-    private Collection<Integer> loadAvaliableNCBITaxa() {
-
-        Collection<Taxon> taxaInGemma = taxonService.loadAll();
-        Collection<Integer> ncbiIdsInGemma = new ArrayList<Integer>();
-
-        for ( Taxon tax : taxaInGemma ) {
-            ncbiIdsInGemma.add( tax.getNcbiId() );
-        }
-        return ncbiIdsInGemma;
-
-    }
-
     public void parseHomologGeneFile( InputStream is ) throws IOException {
 
         BufferedReader br = new BufferedReader( new InputStreamReader( is ) );
@@ -216,147 +337,8 @@ public class HomologeneService {
 
     }
 
-    /**
-     * Given an NCBI Gene ID returns the NCBI homologene group
-     * 
-     * @param ncbiID
-     * @return
-     */
-    public Long getHomologeneGroup( long ncbiID ) {
-
-        if ( !this.ready.get() ) {
-            return null;
-        }
-
-        return this.gene2Group.get( ncbiID );
-    }
-
-    /**
-     * Given an NCBI Homologene Group ID returns a list of all the NCBI Gene Ids in the given group
-     * 
-     * @param homologeneGrouopId
-     * @return ArrayList of NCBI Gene Ids
-     */
-    public Collection<Long> getNCBIGeneIdsInGroup( long homologeneGrouopId ) {
-
-        if ( !this.ready.get() ) {
-            return null;
-        }
-
-        return this.group2Gene.get( homologeneGrouopId );
-
-    }
-
-    /**
-     * Given an NCBI Homologene Group ID returns a list of all the genes in gemma in that given group
-     * 
-     * @param homologeneGrouopId NCBI Homologene group ID
-     * @return ArrayList of unthawed gemma genes
-     */
-
-    public Collection<Gene> getGenesInGroup( Long homologeneGrouopId ) {
-
-        if (homologeneGrouopId == null){
-            return null;
-        }
-        if ( !this.ready.get() ) {
-            return null;
-        }
-
-        Collection<Long> ncbiIds = this.group2Gene.get( homologeneGrouopId );
-
-        if ( ncbiIds == null || ncbiIds.isEmpty() ) return null;
-
-        Collection<Long> skippedNcbiIds = new ArrayList<Long>();
-
-        Collection<Gene> genes = new ArrayList<Gene>();
-
-        for ( Long ncbiId : ncbiIds ) {
-            Gene gene = this.geneService.findByNCBIId( ncbiId.toString() );
-            if ( gene == null ) {
-                skippedNcbiIds.add( ncbiId );
-                continue;
-            }
-
-            genes.add( gene );
-        }
-
-        if ( log.isDebugEnabled() && !skippedNcbiIds.isEmpty() ) {
-            log.debug( "Skipped " + skippedNcbiIds.size()
-                    + " homologous genes cause unable to find in Gemma. NCBI ids are:  " + skippedNcbiIds );
-        }
-        return genes;
-
-    }
-
-    /**
-     * @param gene
-     * @return Collection of genes found in Gemma that are homologous with the given gene. Empty if no homologues or
-     *         gene lacks homologue information.
-     */
-
-    public Collection<Gene> getHomologues( Gene gene ) {
-
-        if ( !this.ready.get() ) {
-            return null;
-        }
-
-        Collection<Gene> genes = new HashSet<Gene>();
-
-        Long groupId;
-
-        try {
-            groupId = this.getHomologeneGroup( Long.parseLong( gene.getNcbiId() ) );
-        } catch ( NumberFormatException e ) {
-            return genes;
-        }
-
-        genes = this.getGenesInGroup( groupId );
-        genes.remove( gene ); // remove the given gene from the list
-
-        return genes;
-
-    }
-
-    /**
-     * @param ncbiId
-     * @return A collection of NCBI gene ids that are homologous with the given NCBI Gene Id
-     */
-    public Collection<Long> getHomologues( Long ncbiId ) {
-
-        if ( !this.ready.get() ) {
-            return null;
-        }
-
-        Collection<Long> NcbiGeneIds;
-        Long groupId = this.getHomologeneGroup( ncbiId );
-        if ( groupId == null ) return null;
-        NcbiGeneIds = this.getNCBIGeneIdsInGroup( groupId );
-        NcbiGeneIds.remove( ncbiId ); // remove the given gene from the list
-
-        return NcbiGeneIds;
-
-    }
-
-    /**
-     * @param gene
-     * @param taxon desired taxon to find homolouge in
-     * @return Finds the homologue of the given gene for the taxon specified.
-     */
-
-    public Gene getHomologue( Gene gene, Taxon taxon ) {
-        if ( gene.getTaxon().getId() == taxon.getId() ) return gene;
-
-        Collection<Gene> homologues = this.getHomologues( gene );
-
-        if ( homologues == null || homologues.isEmpty() ) return null;
-
-        for ( Gene g : homologues ) {
-            if ( g.getTaxon().getId() == taxon.getId() ) return g;
-
-        }
-
-        return null;
+    public void setGeneService( GeneService geneService ) {
+        this.geneService = geneService;
     }
 
 }

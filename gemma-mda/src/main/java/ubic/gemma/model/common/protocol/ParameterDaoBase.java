@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.common.protocol;
 
+import java.util.Collection;
+
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 
 /**
@@ -34,15 +36,16 @@ public abstract class ParameterDaoBase extends HibernateDaoSupport implements
     /**
      * @see ubic.gemma.model.common.protocol.ParameterDao#create(int, java.util.Collection)
      */
-    public java.util.Collection<Parameter> create( final int transform, final java.util.Collection<Parameter> entities ) {
+    public java.util.Collection<? extends Parameter> create( final int transform,
+            final java.util.Collection<? extends Parameter> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "Parameter.create - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback() {
+                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator<Parameter> entityIterator = entities.iterator(); entityIterator
+                        for ( java.util.Iterator<? extends Parameter> entityIterator = entities.iterator(); entityIterator
                                 .hasNext(); ) {
                             create( transform, entityIterator.next() );
                         }
@@ -50,6 +53,11 @@ public abstract class ParameterDaoBase extends HibernateDaoSupport implements
                     }
                 } );
         return entities;
+    }
+    
+    
+    public Collection<? extends Parameter > load( Collection<Long> ids ) {
+        return this.getHibernateTemplate().findByNamedParam( "from ParameterImpl where id in (:ids)", "ids", ids );
     }
 
     /**
@@ -67,8 +75,8 @@ public abstract class ParameterDaoBase extends HibernateDaoSupport implements
     /**
      * @see ubic.gemma.model.common.protocol.ParameterDao#create(java.util.Collection)
      */
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Collection<Parameter> create( final java.util.Collection entities ) {
+    
+    public java.util.Collection<? extends Parameter> create( final java.util.Collection entities ) {
         return create( TRANSFORM_NONE, entities );
     }
 
@@ -103,8 +111,8 @@ public abstract class ParameterDaoBase extends HibernateDaoSupport implements
     /**
      * @see ubic.gemma.model.common.protocol.ParameterDao#loadAll()
      */
- 
-    public java.util.Collection<Parameter> loadAll() {
+
+    public java.util.Collection<? extends Parameter> loadAll() {
         return this.loadAll( TRANSFORM_NONE );
     }
 
@@ -112,9 +120,9 @@ public abstract class ParameterDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.common.protocol.ParameterDao#loadAll(int)
      */
 
-    @SuppressWarnings("unchecked")
-    public java.util.Collection<Parameter> loadAll( final int transform ) {
-        final java.util.Collection<Parameter> results = this.getHibernateTemplate().loadAll(
+    
+    public java.util.Collection<? extends Parameter> loadAll( final int transform ) {
+        final java.util.Collection<? extends Parameter> results = this.getHibernateTemplate().loadAll(
                 ubic.gemma.model.common.protocol.ParameterImpl.class );
         this.transformEntities( transform, results );
         return results;
@@ -138,7 +146,7 @@ public abstract class ParameterDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.common.SecurableDao#remove(java.util.Collection)
      */
 
-    public void remove( java.util.Collection<Parameter> entities ) {
+    public void remove( java.util.Collection<? extends Parameter> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "Parameter.remove - 'entities' can not be null" );
         }
@@ -159,15 +167,15 @@ public abstract class ParameterDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.common.SecurableDao#update(java.util.Collection)
      */
 
-    public void update( final java.util.Collection<Parameter> entities ) {
+    public void update( final java.util.Collection<? extends Parameter> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "Parameter.update - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback() {
+                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator<Parameter> entityIterator = entities.iterator(); entityIterator
+                        for ( java.util.Iterator<? extends Parameter> entityIterator = entities.iterator(); entityIterator
                                 .hasNext(); ) {
                             update( entityIterator.next() );
                         }
@@ -199,7 +207,7 @@ public abstract class ParameterDaoBase extends HibernateDaoSupport implements
      * @see #transformEntity(int,ubic.gemma.model.common.protocol.Parameter)
      */
 
-    protected void transformEntities( final int transform, final java.util.Collection<Parameter> entities ) {
+    protected void transformEntities( final int transform, final java.util.Collection<? extends Parameter> entities ) {
         switch ( transform ) {
             case TRANSFORM_NONE: // fall-through
             default:

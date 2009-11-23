@@ -18,9 +18,6 @@
  */
 package ubic.gemma.apps;
 
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.OptionBuilder;
-
 import ubic.gemma.analysis.preprocess.VectorMergingService;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -44,8 +41,6 @@ public class VectorMergingCli extends ExpressionExperimentManipulatingCLI {
         }
     }
 
-    private Long dimId = null;
-
     private VectorMergingService mergingService;
 
     @Override
@@ -53,15 +48,9 @@ public class VectorMergingCli extends ExpressionExperimentManipulatingCLI {
         return "For experiments that used multiple array designs, merge the expression profiles";
     }
 
-    @SuppressWarnings("static-access")
     @Override
     protected void buildOptions() {
         super.buildOptions();
-        Option dimOption = OptionBuilder.hasArg().withArgName( "Dimension ID" ).withDescription(
-                "ID of pre-existing BioAssayDimension to use (instead of creating a new one)" ).withLongOpt( "dim" )
-                .create( 'd' );
-
-        addOption( dimOption );
 
     }
 
@@ -88,25 +77,15 @@ public class VectorMergingCli extends ExpressionExperimentManipulatingCLI {
 
     }
 
-    @Override
-    protected void processOptions() {
-        super.processOptions();
-        if ( this.hasOption( 'd' ) ) {
-            this.dimId = new Long( this.getIntegerOptionValue( 'd' ) );
-        }
-    }
-
     /**
      * @param expressionExperiment
      */
     private void processExperiment( ExpressionExperiment expressionExperiment ) {
         try {
             eeService.thawLite( expressionExperiment );
-            if ( this.dimId != null ) {
-                mergingService.mergeVectors( expressionExperiment, dimId );
-            } else {
-                mergingService.mergeVectors( expressionExperiment );
-            }
+
+            mergingService.mergeVectors( expressionExperiment );
+
             super.successObjects.add( expressionExperiment.toString() );
         } catch ( Exception e ) {
             log.error( e, e );

@@ -1,0 +1,2050 @@
+<?xml version="1.0" encoding="UTF-8"?>
+	<!--
+  @author Gemma @version $Id$
+	-->
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context" xmlns:mvc="http://www.springframework.org/schema/mvc"
+
+	xsi:schemaLocation="http://www.springframework.org/schema/beans 
+          http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+          http://www.springframework.org/schema/context 
+          http://www.springframework.org/schema/context/spring-context-3.0.xsd 
+          http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-3.0.xsd">
+
+	<context:component-scan base-package="ubic.gemma.web" />
+
+	<!--
+	 Mapping URLS to controllers 
+	-->
+
+	<!--
+		This is provided by spring by default, but this declaration is needed because we define other mappers, and to allow
+		configuration of the interceptor; otherwise this would be configured by default.
+	-->
+	<bean class="org.springframework.web.servlet.mvc.annotation.DefaultAnnotationHandlerMapping">
+		<property name="order" value="1" />
+		<property name="interceptors">
+			<list>
+				<ref bean="openSessionInViewInterceptor" />
+			</list>
+		</property>
+	</bean>
+
+	<!-- see http://static.springsource.org/spring/docs/3.0.x/spring-framework-reference/html/ch15s10.html -->
+	<bean class="org.springframework.web.servlet.mvc.support.ControllerClassNameHandlerMapping">
+		<property name="order" value="2" />
+		<property name="interceptors">
+			<list>
+				<ref bean="openSessionInViewInterceptor" />
+			</list>
+		</property>
+	</bean>
+
+	<!-- see http://static.springsource.org/spring/docs/3.0.x/spring-framework-reference/html/ch15s10.html -->
+	<bean id="viewNameTranslator" class="org.springframework.web.servlet.view.DefaultRequestToViewNameTranslator" />
+
+	<!-- explicit mappings of patterns to urls -->
+	<bean id="simpleUrlMapping" class="org.springframework.web.servlet.handler.SimpleUrlHandlerMapping">
+		<property name="order" value="3" />
+		<property name="alwaysUseFullPath" value="true" />
+		<property name="interceptors">
+			<list>
+				<ref bean="openSessionInViewInterceptor" />
+			</list>
+		</property>
+		<property name="mappings"><!-- replace with annotations ... -->
+			<props>
+				<prop key="/dwr/**/*">dwrController</prop>
+				<prop key="/uploadFile.html">fileUploadController</prop>
+				<prop key="/bibRefEdit.html">bibliographicReferenceEditFormController</prop>
+				<prop key="/bibRef/*">bibliographicReferenceController</prop>
+				<prop key="/bibliographicReferenceView.html">bibliographicReferenceEditFormController</prop>
+				<prop key="/bibRefSearch.html">pubMedQueryController</prop>
+				<prop key="/arrayDesign/editArrayDesign.html">arrayDesignFormController</prop>
+				<prop key="/arrayDesign/associateSequences.html">arrayDesignSequenceAddController</prop>
+				<prop key="/bioAssay/editBioAssay.html">bioAssayFormController</prop>
+				<prop key="/bioMaterial/editBioMaterial.html">bioMaterialFormController</prop>
+				<prop key="/bioMaterial/*">bioMaterialController</prop>
+				<prop key="/compositeSequence/*">compositeSequenceController</prop>
+				<prop key="/experimentalDesign/*">experimentalDesignController</prop>
+				<prop key="/experimentalDesign/editExperimentalDesign.html">experimentalDesignFormController</prop>
+				<prop key="/expressionExperiment/editExpressionExperiment.html">expressionExperimentFormController</prop>
+				<prop key="/expressionExperiment/upload.html">expressionDataFileUploadController</prop>
+				<prop key="/loadSimpleExpressionExperiment.html">expressionDataFileUploadController</prop>
+				<prop key="/getData.html">expressionExperimentDataFetchController</prop>
+				<prop key="/candidateGeneList*">candidateGeneListController</prop>
+				<prop key="/genome/bioSequence/*">bioSequenceController</prop>
+				<prop key="/checkJobProgress.html">taskCompletionController</prop>
+				<prop key="/searchCoexpression.html">coexpressionSearchController</prop>
+				<prop key="/gene/*">geneController</prop>
+				<prop key="/geoBrowser/*">geoRecordBrowserController</prop>
+				<prop key="/blatTrack.html">blatResultTrackController</prop>
+				<prop key="/admin/securityManager.html">securityFormController</prop>
+				<prop key="/admin/maintenanceMode.html">maintenanceModeController</prop>
+				<prop key="/admin/systemStats.html">systemStatsController</prop>
+				<prop key="/diff/diffExpressionAnalysis.html">differentialExpressionAnalysisController</prop>
+				<prop key="/diff/diffExpressionSearch.html">differentialExpressionSearchController</prop>
+				<prop key="/expressionExperimentSetManager.html">expressionExperimentSetController</prop>
+			</props>
+		</property>
+	</bean>
+	<!-- default mapping, as a fallback. Avoid using. -->
+	<bean id="beanNameUrlHandlerMapping" class="org.springframework.web.servlet.handler.BeanNameUrlHandlerMapping">
+		<property name="order" value="4" />
+		<property name="interceptors">
+			<list>
+				<ref bean="openSessionInViewInterceptor" />
+			</list>
+		</property>
+	</bean>
+
+
+	<!-- ==================================================== -->
+	<!--
+		openSessionInViewInterceptor: Interceptor to keep Hibernate sessions available in views
+	-->
+	<!-- ==================================================== -->
+	<bean id="openSessionInViewInterceptor" class="org.springframework.orm.hibernate3.support.OpenSessionInViewInterceptor">
+		<property name="sessionFactory">
+			<ref bean="sessionFactory" />
+		</property>
+	</bean>
+
+	<!-- ==================================================== -->
+	<!--
+		Mapping urls to views. List views here that are just jsps and that don't need a controller to generate the view.
+	-->
+	<!-- ==================================================== -->
+	<bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/register.html" />
+	<bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/userProfile.html" />
+	<bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/passwordHint.html" />
+	<bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/admin/userManager.html" />
+	<bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/admin/indexer.html" />
+
+	<!-- ==================================================== -->
+	<!-- Exception handler. -->
+	<!-- ==================================================== -->
+	<bean id="exceptionResolver" class="org.springframework.web.servlet.handler.SimpleMappingExceptionResolver">
+		<property name="defaultErrorView" value="error" />
+		<property name="exceptionMappings">
+			<props>
+				<prop key="org.springframework.dao.DataAccessException">dataAccessFailure</prop>
+				<!--
+					<prop key="ubic.gemma.loader.expression.geo.InvalidAccessionException">invalidGeoAccession</prop>
+				-->
+				<!--
+					<prop key="ubic.gemma.loader.util.AlreadyExistsInSystemException">alreadyExistsInSystem</prop>
+				-->
+				<prop key="org.springframework.security.access.AccessDeniedException">/error</prop>
+				<prop key="java.lang.Exception">error</prop>
+			</props>
+		</property>
+	</bean>
+
+
+
+	<!-- ==================================================== -->
+	<!--           Used to configure menus on pages           -->
+	<!-- ==================================================== -->
+	<bean id="menu" class="net.sf.navigator.menu.MenuLoader">
+		<property name="menuConfig">
+			<value>/WEB-INF/menu-config.xml</value>
+		</property>
+	</bean>
+
+	<!--
+		 Used for file uploads. Simply defining this makes Spring use it.
+	-->
+	<bean id="multipartResolver" class="ubic.gemma.web.util.upload.CommonsMultipartMonitoredResolver">
+		<property name="maxUploadSize">
+			<value>20097152</value>
+		</property>
+	</bean>
+
+	<!--
+		View Resolver for JSPs. This means that a jsp named "myform.jsp" can be referred to as "myform" in your controller
+		bean declarations.
+	-->
+	<bean id="viewResolver" class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+		<property name="requestContextAttribute">
+			<value>rc</value>
+		</property>
+		<property name="viewClass">
+			<value>org.springframework.web.servlet.view.JstlView
+		</value>
+		</property>
+		<property name="prefix">
+			<value>/WEB-INF/pages/</value>
+		</property>
+		<property name="suffix">
+			<value>.jsp</value>
+		</property>
+	</bean>
+
+	<!-- ==================================================== -->
+	<!-- Make spring aware of our i18n support files -->
+	<!-- ==================================================== -->
+	<bean id="messageSource" class="org.springframework.context.support.ResourceBundleMessageSource">
+		<property name="basenames">
+			<list>
+				<value>messages</value>
+			</list>
+		</property>
+	</bean>
+
+	<bean id="expressionExperimentSetController" class="ubic.gemma.web.controller.expression.experiment.ExpressionExperimentSetController">
+
+		<property name="formView">
+			<value>expressionExperimentSetManager</value>
+		</property>
+		<property name="successView">
+			<value>expressionExperimentSetManager</value>
+		</property>
+		<property name="expressionExperimentSetService">
+			<ref bean="expressionExperimentSetService" />
+		</property>
+		<property name="expressionExperimentService">
+			<ref bean="expressionExperimentService" />
+		</property>
+		<property name="differentialExpressionAnalysisService">
+			<ref bean="differentialExpressionAnalysisService" />
+		</property>
+		<property name="persisterHelper">
+			<ref bean="persisterHelper" />
+		</property>
+		<property name="taxonService">
+			<ref bean="taxonService" />
+		</property>
+	</bean>
+
+	<bean id="fileUploadController" class="ubic.gemma.web.controller.common.auditAndSecurity.FileUploadController" />
+
+	<bean id="arrayDesignSequenceAddController" class="ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignSequenceAddController">
+
+		<property name="commandName">
+			<value>arrayDesignSequenceAddCommand</value>
+		</property>
+		<property name="commandClass">
+			<value>ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignSequenceAddCommand
+			</value>
+		</property>
+		<property name="formView">
+			<value>arrayDesignSequenceAdd</value>
+		</property>
+		<property name="successView">
+			<value>redirect:/arrayDesign/associateSequences.html</value>
+		</property>
+		<property name="arrayDesignService">
+			<ref bean="arrayDesignService" />
+		</property>
+		<property name="validator">
+			<ref bean="arrayDesignSequenceAddValidator" />
+		</property>
+		<property name="taxonService">
+			<ref bean="taxonService" />
+		</property>
+		<property name="arrayDesignSequenceProcessingService">
+			<ref bean="arrayDesignSequenceProcessingService" />
+		</property>
+	</bean>
+
+	<bean id="expressionExperimentFormController" class="ubic.gemma.web.controller.expression.experiment.ExpressionExperimentFormController">
+
+		<property name="commandName">
+			<value>expressionExperiment</value>
+		</property>
+		<property name="commandClass">
+			<value>ubic.gemma.web.controller.expression.experiment.ExpressionExperimentEditCommand
+			</value>
+		</property>
+		<property name="formView">
+			<value>expressionExperiment.edit</value>
+		</property>
+		<property name="successView">
+			<value>redirect:/expressionExperiment/showAllExpressionExperiments.html
+			</value>
+		</property>
+		<property name="expressionExperimentService">
+			<ref bean="expressionExperimentService" />
+		</property>
+		<property name="bioAssayService">
+			<ref bean="bioAssayService" />
+		</property>
+		<property name="bioMaterialService">
+			<ref bean="bioMaterialService" />
+		</property>
+		<property name="contactService">
+			<ref bean="contactService" />
+		</property>
+		<property name="externalDatabaseService">
+			<ref bean="externalDatabaseService" />
+		</property>
+		<property name="bibliographicReferenceService">
+			<ref bean="bibliographicReferenceService" />
+		</property>
+		<property name="persisterHelper">
+			<ref bean="persisterHelper" />
+		</property>
+		<property name="validator">
+			<ref bean="expressionExperimentValidator" />
+		</property>
+		<property name="quantitationTypeService">
+			<ref bean="quantitationTypeService" />
+		</property>
+		<property name="auditTrailService">
+			<ref bean="auditTrailService" />
+		</property>
+	</bean>
+
+	<bean id="differentialExpressionSearchController" class="ubic.gemma.web.controller.diff.DifferentialExpressionSearchController">
+
+		<property name="commandName">
+			<value>diffExpressionSearchCommand</value>
+		</property>
+		<property name="commandClass">
+			<value>ubic.gemma.web.controller.diff.DiffExpressionSearchCommand
+			</value>
+		</property>
+		<property name="formView">
+			<value>diffExpressionSearchForm</value>
+		</property>
+		<property name="successView">
+			<value>diffExpressionResultsByExperiment</value>
+		</property>
+		<property name="differentialExpressionAnalysisService">
+			<ref bean="differentialExpressionAnalysisService" />
+		</property>
+		<property name="geneDifferentialExpressionService">
+			<ref bean="geneDifferentialExpressionService" />
+		</property>
+		<property name="geneService">
+			<ref bean="geneService" />
+		</property>
+		<property name="expressionExperimentService">
+			<ref bean="expressionExperimentService" />
+		</property>
+		<property name="expressionExperimentSetService">
+			<ref bean="expressionExperimentSetService" />
+		</property>
+	</bean>
+
+	<bean id="maintenanceModeController" class="ubic.gemma.web.controller.common.auditAndSecurity.MaintenanceModeController">
+		<property name="formView">
+			<value>/admin/maintenanceMode</value>
+		</property>
+	</bean>
+
+	<bean id="JSONTableRenderer" class="ubic.gemma.web.view.JSONTableRenderer" />
+
+	<bean id="arrayDesignSequenceAddValidator" class="ubic.gemma.web.validation.expression.arrayDesign.ArrayDesignSeqeunceAddValidator" />
+
+	<bean id="bioAssayFormController" class="ubic.gemma.web.controller.expression.bioAssay.BioAssayFormController">
+
+		<property name="commandName">
+			<value>bioAssayImpl</value>
+		</property>
+		<property name="formView">
+			<value>bioAssay.edit</value>
+		</property>
+		<property name="successView">
+			<value>redirect:/expressionExperiment/showAllExpressionExperiments.html
+			</value>
+		</property>
+		<property name="bioAssayService">
+			<ref bean="bioAssayService" />
+		</property>
+		<property name="externalDatabaseService">
+			<ref bean="externalDatabaseService" />
+		</property>
+		<property name="validator">
+			<ref bean="bioAssayValidator" />
+		</property>
+	</bean>
+
+	<bean id="pubMedQueryController" name="/bibRefSearch.html" class="ubic.gemma.web.controller.common.description.bibref.PubMedQueryController">
+
+		<property name="commandClass">
+			<value>ubic.gemma.web.controller.common.description.bibref.PubMedSearchCommand
+			</value>
+		</property>
+		<property name="commandName">
+			<value>searchCriteria</value>
+		</property>
+		<property name="formView">
+			<value>bibRefSearch</value>
+		</property>
+		<property name="successView">
+			<value>bibRefView</value>
+		</property>
+		<property name="validator">
+			<ref bean="genericBeanValidator" />
+		</property>
+		<property name="bibliographicReferenceService">
+			<ref bean="bibliographicReferenceService" />
+		</property>
+	</bean>
+
+	<bean id="arrayDesignFormController" class="ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignFormController">
+
+		<property name="commandName">
+			<value>arrayDesign</value>
+		</property>
+		<property name="commandClass">
+			<value>ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject
+			</value>
+		</property>
+		<property name="formView">
+			<value>arrayDesign.edit</value>
+		</property>
+		<property name="successView">
+			<value>redirect:/arrays/showAllArrayDesigns.html</value>
+		</property>
+		<property name="arrayDesignService">
+			<ref bean="arrayDesignService" />
+		</property>
+	</bean>
+
+
+	<bean id="bioMaterialFormController" class="ubic.gemma.web.controller.expression.biomaterial.BioMaterialFormController">
+
+		<property name="commandName">
+			<value>bioMaterial</value>
+		</property>
+		<property name="formView">
+			<value>bioMaterial.edit</value>
+		</property>
+		<property name="successView">
+			<value>redirect:/expressionExperiment/showAllExpressionExperiments.html
+			</value>
+		</property>
+		<property name="bioMaterialService">
+			<ref bean="bioMaterialService" />
+		</property>
+		<property name="externalDatabaseService">
+			<ref bean="externalDatabaseService" />
+		</property>
+		<property name="validator">
+			<ref bean="bioMaterialValidator" />
+		</property>
+	</bean>
+
+	<bean id="securityFormController" class="ubic.gemma.web.controller.security.SecurityFormController">
+
+		<property name="commandName">
+			<value>securityCommand</value>
+		</property>
+		<property name="commandClass">
+			<value>ubic.gemma.web.controller.security.SecurityCommand</value>
+		</property>
+		<property name="securityService">
+			<ref bean="securityService" />
+		</property>
+		<property name="expressionExperimentService">
+			<ref bean="expressionExperimentService" />
+		</property>
+		<property name="arrayDesignService">
+			<ref bean="arrayDesignService" />
+		</property>
+		<property name="probeCoexpressionAnalysisService">
+			<ref bean="probeCoexpressionAnalysisService" />
+		</property>
+		<property name="geneCoexpressionAnalysisService">
+			<ref bean="geneCoexpressionAnalysisService" />
+		</property>
+		<property name="differentialExpressionAnalysisService">
+			<ref bean="differentialExpressionAnalysisService" />
+		</property>
+		<property name="expressionExperimentSetService">
+			<ref bean="expressionExperimentSetService" />
+		</property>
+		<property name="formView">
+			<value>/admin/securityManager</value>
+		</property>
+		<property name="successView">
+			<value>/admin/securityManager</value>
+		</property>
+	</bean>
+
+	<bean id="bibliographicReferenceEditFormController" class="ubic.gemma.web.controller.common.description.bibref.BibliographicReferenceEditFormController">
+
+		<property name="commandClass">
+			<value>ubic.gemma.model.common.description.BibliographicReference
+			</value>
+		</property>
+		<property name="commandName">
+			<value>bibliographicReference</value>
+		</property>
+		<property name="formView">
+			<value>bibRefEdit</value>
+		</property>
+		<property name="successView">
+			<value>bibRefView</value>
+		</property>
+		<property name="validator">
+			<ref bean="bibliographicReferenceValidator" />
+		</property>
+		<property name="bibliographicReferenceService">
+			<ref bean="bibliographicReferenceService" />
+		</property>
+		<property name="externalDatabaseService">
+			<ref bean="externalDatabaseService" />
+		</property>
+		<property name="localFileService">
+			<ref bean="localFileService" />
+		</property>
+	</bean>
+
+
+	<!-- ==================================================== -->
+	<!--
+		Validation settings. The validator factory is defined in
+		applicationContext-validation.xml
+	-->
+	<!-- ==================================================== -->
+	<!--
+		Use this if the command class is a command object that has Xdoclet
+		validation tags in the source.
+	-->
+	<bean id="genericBeanValidator" class="org.springmodules.validation.commons.DefaultBeanValidator">
+		<property name="validatorFactory">
+			<ref bean="validatorFactory" />
+		</property>
+	</bean>
+
+	<!--
+		Use this type of validator if you use a data model object as the command object . Each of these corresonds to a form
+		declared in validation-global.xml (which gets merged into validation.xml)
+	-->
+	<!-- FIXME these aren't used much, we need to update our validation setup -->
+	<bean id="userValidator" class="org.springmodules.validation.commons.ConfigurableBeanValidator">
+		<property name="validatorFactory">
+			<ref bean="validatorFactory" />
+		</property>
+		<property name="formName">
+			<value>user</value>
+		</property>
+	</bean>
+
+	<bean id="bibliographicReferenceValidator" class="org.springmodules.validation.commons.ConfigurableBeanValidator">
+		<property name="validatorFactory">
+			<ref bean="validatorFactory" />
+		</property>
+		<property name="formName">
+			<value>bibliographicReference</value>
+		</property>
+	</bean>
+
+	<bean id="simpleExpressionExperimentLoadValidator" class="ubic.gemma.web.validation.expression.experiment.SimpleExpressionExperimentLoadValidator" />
+
+
+	<bean id="databaseEntryValidator" class="org.springmodules.validation.commons.ConfigurableBeanValidator">
+		<property name="validatorFactory">
+			<ref bean="validatorFactory" />
+		</property>
+		<property name="formName">
+			<value>databaseEntry</value>
+		</property>
+	</bean>
+
+	<bean id="fileUploadValidator" class="ubic.gemma.web.validation.auditAndSecurity.FileUploadValidator" />
+
+	<bean id="bioAssayValidator" class="org.springmodules.validation.commons.ConfigurableBeanValidator">
+		<property name="validatorFactory">
+			<ref bean="validatorFactory" />
+		</property>
+		<property name="formName">
+			<value>bioAssay</value>
+		</property>
+	</bean>
+
+	<bean id="bioMaterialValidator" class="org.springmodules.validation.commons.ConfigurableBeanValidator">
+		<property name="validatorFactory">
+			<ref bean="validatorFactory" />
+		</property>
+		<property name="formName">
+			<value>bioMaterial</value>
+		</property>
+	</bean>
+
+	<bean id="expressionExperimentValidator" class="org.springmodules.validation.commons.ConfigurableBeanValidator">
+		<property name="validatorFactory">
+			<ref bean="validatorFactory" />
+		</property>
+		<property name="formName">
+			<value>expressionExperiment</value>
+		</property>
+	</bean>
+
+
+	<!--  ============================================ -->
+	<!--             DWR CONFIGURATION                 -->
+	<!--  ============================================ -->
+
+
+
+	<bean id="dwrController" class="org.directwebremoting.spring.DwrController">
+		<property name="configurators">
+			<list>
+				<ref bean="dwrConfiguration" />
+			</list>
+		</property>
+		<property name="configParams">
+			<map>
+				<entry key="allowScriptTagRemoting" value="true"></entry>
+				<!--
+					<entry key="crossDomainSessionSecurity" value="false"></entry> Uncomment for development if you are getting DWR
+					security errors
+				-->
+				<!--
+					<entry key="activeReverseAjaxEnabled" value="true"></entry> <entry
+					key="org.directwebremoting.extend.ServerLoadMonitor"
+					value="org.directwebremoting.impl.PollingServerLoadMonitor"></entry> <entry key="disconnectedTime"
+					value="1000"></entry>
+				-->
+			</map>
+		</property>
+		<!--
+			turn debug true on to get access to dwr debugging tools (very helpful)
+		-->
+		<property name="debug" value="true" />
+	</bean>
+
+	<bean id="dwrConfiguration" class="org.directwebremoting.spring.SpringConfigurator">
+		<property name="converterTypes">
+			<map>
+				<entry key="characteristicPropertyConverter" value="ubic.gemma.web.remote.CharacteristicPropertyConverter">
+				</entry>
+				<entry key="characteristicConverter" value="ubic.gemma.web.remote.CharacteristicConverter"></entry>
+				<entry key="standardQuantitationTypeConverter" value="ubic.gemma.web.remote.StandardQuantitationTypeConverter">
+				</entry>
+				<entry key="scaleTypeConverter" value="ubic.gemma.web.remote.ScaleTypeConverter"></entry>
+				<entry key="ontologyTermConverter" value="ubic.gemma.web.remote.OntologyTermConverter"></entry>
+				<entry key="classConverter" value="ubic.gemma.web.remote.ClassConverter"></entry>
+				<entry key="goEvidenceCodeConverter" value="ubic.gemma.web.remote.GOEvidenceCodeConverter"></entry>
+				<entry key="doublePointConverter" value="ubic.gemma.web.remote.DoublePointConverter"></entry>
+				<entry key="diffAnalysisTypeConverter" value="ubic.gemma.web.remote.DiffAnalysisTypeConverter"></entry>
+
+			</map>
+		</property>
+		<property name="creators">
+			<map>
+				<entry key="GeneController">
+					<bean class="org.directwebremoting.spring.CreatorConfig">
+						<property name="creator">
+							<bean class="org.directwebremoting.spring.BeanCreator">
+								<property name="bean" ref="geneController" />
+							</bean>
+						</property>
+						<property name="includes">
+							<list>
+								<value>findGOTerms</value>
+								<value>getProducts</value>
+							</list>
+						</property>
+					</bean>
+				</entry>
+				<entry key="BioMaterialController">
+					<bean class="org.directwebremoting.spring.CreatorConfig">
+						<property name="creator">
+							<bean class="org.directwebremoting.spring.BeanCreator">
+								<property name="bean" ref="bioMaterialController" />
+							</bean>
+						</property>
+						<property name="includes">
+							<list>
+								<value>getBioMaterials</value>
+								<value>getAnnotation</value>
+								<value>getFactorValues</value>
+								<value>addFactorValueTo</value>
+							</list>
+						</property>
+					</bean>
+				</entry>
+				<entry key="CompositeSequenceController">
+					<bean class="org.directwebremoting.spring.CreatorConfig">
+						<property name="creator">
+							<bean class="org.directwebremoting.spring.BeanCreator">
+								<property name="bean" ref="compositeSequenceController" />
+							</bean>
+						</property>
+						<property name="includes">
+							<list>
+								<value>getBlatMappingSummary</value>
+								<value>getCsSummaries</value>
+								<value>search</value>
+							</list>
+						</property>
+					</bean>
+				</entry>
+				<entry key="FileUploadController">
+					<bean class="org.directwebremoting.spring.CreatorConfig">
+						<property name="creator">
+							<bean class="org.directwebremoting.spring.BeanCreator">
+								<property name="bean" ref="fileUploadController" />
+							</bean>
+						</property>
+						<property name="includes">
+							<list>
+								<value>upload</value>
+							</list>
+						</property>
+					</bean>
+				</entry>
+				<entry key="ArrayDesignController">
+					<bean class="org.directwebremoting.spring.CreatorConfig">
+						<property name="creator">
+							<bean class="org.directwebremoting.spring.BeanCreator">
+								<property name="bean" ref="arrayDesignController" />
+							</bean>
+						</property>
+						<property name="includes">
+							<list>
+								<value>getCsSummaries</value>
+								<value>updateReport</value>
+								<value>getReportHtml</value>
+								<value>addAlternateName</value>
+								<value>getArrayDesigns</value>
+								<value>remove</value>
+							</list>
+						</property>
+					</bean>
+				</entry>
+				<entry key="BibliographicReferenceController">
+					<bean class="org.directwebremoting.spring.CreatorConfig">
+						<property name="creator">
+							<bean class="org.directwebremoting.spring.BeanCreator">
+								<property name="bean" ref="bibliographicReferenceController" />
+							</bean>
+						</property>
+						<property name="includes">
+							<list>
+								<value>update</value>
+							</list>
+						</property>
+					</bean>
+				</entry>
+				<entry key="ExperimentalDesignController">
+					<bean class="org.directwebremoting.spring.CreatorConfig">
+						<property name="creator">
+							<bean class="org.directwebremoting.spring.BeanCreator">
+								<property name="bean" ref="experimentalDesignController" />
+							</bean>
+						</property>
+						<property name="includes">
+							<list>
+								<value>createDesignFromFile</value>
+								<value>getExperimentalFactors</value>
+								<value>createExperimentalFactor</value>
+								<value>deleteExperimentalFactors</value>
+								<value>updateExperimentalFactors</value>
+								<value>getFactorValues</value>
+								<value>createFactorValue</value>
+								<value>deleteFactorValues</value>
+								<value>getFactorValuesWithCharacteristics</value>
+								<value>createFactorValueCharacteristic</value>
+								<value>deleteFactorValueCharacteristics</value>
+								<value>updateFactorValueCharacteristics</value>
+								<value>getBioMaterials</value>
+								<value>updateBioMaterials</value>
+							</list>
+						</property>
+					</bean>
+				</entry>
+				<entry key="TaskCompletionController">
+					<bean class="org.directwebremoting.spring.CreatorConfig">
+						<property name="creator">
+							<bean class="org.directwebremoting.spring.BeanCreator">
+								<property name="bean" ref="taskCompletionController" />
+							</bean>
+						</property>
+						<property name="includes">
+							<list>
+								<value>checkResult</value>
+							</list>
+						</property>
+					</bean>
+				</entry>
+				<entry key="ExpressionExperimentDataFetchController">
+					<bean class="org.directwebremoting.spring.CreatorConfig">
+						<property name="creator">
+							<bean class="org.directwebremoting.spring.BeanCreator">
+								<property name="bean" ref="expressionExperimentDataFetchController" />
+							</bean>
+						</property>
+						<property name="includes">
+							<list>
+								<value>getDataFile</value>
+								<value>getCoExpressionDataFile</value>
+								<value>getDiffExpressionDataFile</value>
+							</list>
+						</property>
+					</bean>
+				</entry>
+				<entry key="SearchService">
+					<bean class="org.directwebremoting.spring.CreatorConfig">
+						<property name="creator">
+							<bean class="org.directwebremoting.spring.BeanCreator">
+								<property name="bean" ref="generalSearchController" />
+							</bean>
+						</property>
+						<property name="includes">
+							<list>
+								<value>search</value>
+							</list>
+						</property>
+					</bean>
+				</entry>
+				<entry key="ProgressStatusService">
+					<bean class="org.directwebremoting.spring.CreatorConfig">
+						<property name="creator">
+							<bean class="org.directwebremoting.spring.BeanCreator">
+								<property name="bean" ref="progressStatusService" />
+							</bean>
+						</property>
+						<property name="includes">
+							<list>
+								<value>getProgressStatus</value>
+								<value>cancelJob</value>
+							</list>
+						</property>
+					</bean>
+				</entry>
+				<entry key="MgedOntologyService">
+					<bean class="org.directwebremoting.spring.CreatorConfig">
+						<property name="creator">
+							<bean class="org.directwebremoting.spring.BeanCreator">
+								<property name="bean" ref="mgedOntologyService" />
+							</bean>
+						</property>
+						<property name="includes">
+							<list>
+								<value>getBioMaterialTerms</value>
+								<value>getBioMaterialTreeNodeTerms</value>
+								<value>getTerm</value>
+								<value>getTermIndividuals</value>
+								<value>getTermRestrictions</value>
+								<value>loadNewOntology</value>
+								<value>isOntologyLoaded</value>
+								<value>getUsefulMgedTerms</value>
+								<value>getMgedTermsByKey</value>
+							</list>
+						</property>
+					</bean>
+				</entry>
+				<entry key="OntologyService">
+					<bean class="org.directwebremoting.spring.CreatorConfig">
+						<property name="creator">
+							<bean class="org.directwebremoting.spring.BeanCreator">
+								<property name="bean" ref="ontologyService" />
+							</bean>
+						</property>
+						<property name="includes">
+							<list>
+								<value>findTerm</value>
+								<value>findExactTerm</value>
+								<value>saveBioMaterialStatement</value>
+								<value>saveExpressionExperimentStatement</value>
+								<value>saveExpressionExperimentsStatement</value> <!-- multiple ees at a time -->
+								<value>removeExpressionExperimentStatement</value>
+								<value>removeBioMaterialStatement</value>
+							</list>
+						</property>
+					</bean>
+				</entry>
+				<entry key="CustomCompassIndexController">
+					<bean class="org.directwebremoting.spring.CreatorConfig">
+						<property name="creator">
+							<bean class="org.directwebremoting.spring.BeanCreator">
+								<property name="bean" ref="indexController" />
+							</bean>
+						</property>
+						<property name="includes">
+							<list>
+								<value>run</value>
+							</list>
+						</property>
+					</bean>
+				</entry>
+				<entry key="ExpressionExperimentLoadController">
+					<bean class="org.directwebremoting.spring.CreatorConfig">
+						<property name="creator">
+							<bean class="org.directwebremoting.spring.BeanCreator">
+								<property name="bean" ref="expressionExperimentLoadController" />
+							</bean>
+						</property>
+						<property name="includes">
+							<list>
+								<value>run</value>
+							</list>
+						</property>
+					</bean>
+				</entry>
+				<entry key="ExpressionDataFileUploadController">
+					<bean class="org.directwebremoting.spring.CreatorConfig">
+						<property name="creator">
+							<bean class="org.directwebremoting.spring.BeanCreator">
+								<property name="bean" ref="expressionDataFileUploadController" />
+							</bean>
+						</property>
+						<property name="includes">
+							<list>
+								<value>load</value>
+								<value>validate</value>
+							</list>
+						</property>
+					</bean>
+				</entry>
+
+				<entry key="ExpressionExperimentReportGenerationController">
+					<bean class="org.directwebremoting.spring.CreatorConfig">
+						<property name="creator">
+							<bean class="org.directwebremoting.spring.BeanCreator">
+								<property name="bean" ref="expressionExperimentReportGenerationController" />
+							</bean>
+						</property>
+						<property name="includes">
+							<list>
+								<value>run</value>
+								<value>runAll</value>
+							</list>
+						</property>
+					</bean>
+				</entry>
+
+				<entry key="DifferentialExpressionAnalysisController">
+					<bean class="org.directwebremoting.spring.CreatorConfig">
+						<property name="creator">
+							<bean class="org.directwebremoting.spring.BeanCreator">
+								<property name="bean" ref="differentialExpressionAnalysisController" />
+							</bean>
+						</property>
+						<property name="includes">
+							<list>
+								<value>run</value>
+								<value>runCustom</value>
+								<value>determineAnalysisType</value>
+							</list>
+						</property>
+					</bean>
+				</entry>
+				<entry key="ProcessedExpressionDataVectorCreateController">
+					<bean class="org.directwebremoting.spring.CreatorConfig">
+						<property name="creator">
+							<bean class="org.directwebremoting.spring.BeanCreator">
+								<property name="bean" ref="processedExpressionDataVectorCreateController" />
+							</bean>
+						</property>
+						<property name="includes">
+							<list>
+								<value>run</value>
+							</list>
+						</property>
+					</bean>
+				</entry>
+				<entry key="TwoChannelMissingValueController">
+					<bean class="org.directwebremoting.spring.CreatorConfig">
+						<property name="creator">
+							<bean class="org.directwebremoting.spring.BeanCreator">
+								<property name="bean" ref="twoChannelMissingValueController" />
+							</bean>
+						</property>
+						<property name="includes">
+							<list>
+								<value>run</value>
+							</list>
+						</property>
+					</bean>
+				</entry>
+				<entry key="LinkAnalysisController">
+					<bean class="org.directwebremoting.spring.CreatorConfig">
+						<property name="creator">
+							<bean class="org.directwebremoting.spring.BeanCreator">
+								<property name="bean" ref="linkAnalysisController" />
+							</bean>
+						</property>
+						<property name="includes">
+							<list>
+								<value>run</value>
+							</list>
+						</property>
+					</bean>
+				</entry>
+				<entry key="ArrayDesignRepeatScanController">
+					<bean class="org.directwebremoting.spring.CreatorConfig">
+						<property name="creator">
+							<bean class="org.directwebremoting.spring.BeanCreator">
+								<property name="bean" ref="arrayDesignRepeatScanController" />
+							</bean>
+						</property>
+						<property name="includes">
+							<list>
+								<value>run</value>
+							</list>
+						</property>
+					</bean>
+				</entry>
+				<entry key="ExpressionExperimentController">
+					<bean class="org.directwebremoting.spring.CreatorConfig">
+						<property name="creator">
+							<bean class="org.directwebremoting.spring.BeanCreator">
+								<property name="bean" ref="expressionExperimentController" />
+							</bean>
+						</property>
+						<property name="includes">
+							<list>
+								<value>deleteById</value>
+								<value>find</value>
+								<value>updateReport</value>
+								<value>updateAllReports</value>
+								<value>updateBasics</value>
+								<value>updateQuantiationTypes</value>
+								<value>updateBioMaterialMapping</value>
+								<value>updatePubMed</value>
+								<value>removePrimaryPublication</value>
+								<value>getAnnotation</value>
+								<value>getExperimentalFactors</value>
+								<value>getFactorValues</value>
+								<value>getDesignMatrixRows</value>
+								<value>loadExpressionExperiments</value>
+								<value>loadExpressionExperimentDetails</value>
+								<value>loadStatusSummaries</value>
+								<value>getDescription</value>
+							</list>
+						</property>
+					</bean>
+				</entry>
+				<entry key="CharacteristicBrowserController">
+					<bean class="org.directwebremoting.spring.CreatorConfig">
+						<property name="creator">
+							<bean class="org.directwebremoting.spring.BeanCreator">
+								<property name="bean" ref="characteristicBrowserController" />
+							</bean>
+						</property>
+						<property name="includes">
+							<list>
+								<value>findCharacteristics</value>
+								<value>findCharacteristicsCustom</value>
+								<value>removeCharacteristics</value>
+								<value>updateCharacteristics</value>
+							</list>
+						</property>
+					</bean>
+				</entry>
+				<entry key="AuditController">
+					<bean class="org.directwebremoting.spring.CreatorConfig">
+						<property name="creator">
+							<bean class="org.directwebremoting.spring.BeanCreator">
+								<property name="bean" ref="auditController" />
+							</bean>
+						</property>
+						<property name="includes">
+							<list>
+								<value>getEvents</value>
+								<value>getAuditable</value>
+								<value>addAuditEvent</value>
+							</list>
+						</property>
+					</bean>
+				</entry>
+				<entry key="GenePickerController">
+					<bean class="org.directwebremoting.spring.CreatorConfig">
+						<property name="creator">
+							<bean class="org.directwebremoting.spring.BeanCreator">
+								<property name="bean" ref="genePickerController" />
+							</bean>
+						</property>
+						<property name="includes">
+							<list>
+								<value>getTaxa</value>
+								<value>getTaxaSpecies</value>
+								<value>getTaxaWithGenes</value>
+								<value>getGenes</value>
+								<value>searchGenes</value>
+								<value>searchMultipleGenes</value>
+							</list>
+						</property>
+					</bean>
+				</entry>
+				<entry key="ExtCoexpressionSearchController">
+					<bean class="org.directwebremoting.spring.CreatorConfig">
+						<property name="creator">
+							<bean class="org.directwebremoting.spring.BeanCreator">
+								<property name="bean" ref="coexpressionSearchController" />
+							</bean>
+						</property>
+						<property name="includes">
+							<list>
+								<value>doSearch</value>
+								<value>findExpressionExperiments</value>
+							</list>
+						</property>
+					</bean>
+				</entry>
+				<entry key="ExpressionExperimentSetController">
+					<bean class="org.directwebremoting.spring.CreatorConfig">
+						<property name="creator">
+							<bean class="org.directwebremoting.spring.BeanCreator">
+								<property name="bean" ref="expressionExperimentSetController" />
+							</bean>
+						</property>
+						<property name="includes">
+							<list>
+								<value>getExperimentsInSet</value>
+								<value>getAvailableExpressionExperimentSets</value>
+								<value>update</value>
+								<value>create</value>
+								<value>remove</value>
+							</list>
+						</property>
+					</bean>
+				</entry>
+				<entry key="DifferentialExpressionSearchController">
+					<bean class="org.directwebremoting.spring.CreatorConfig">
+						<property name="creator">
+							<bean class="org.directwebremoting.spring.BeanCreator">
+								<property name="bean" ref="differentialExpressionSearchController" />
+							</bean>
+						</property>
+						<property name="includes">
+							<list>
+								<value>getDifferentialExpression</value>
+								<value>getDiffExpressionForGenes</value>
+								<value>getDifferentialExpressionForFactors</value>
+								<value>getDiffMetaAnalysisForGenes</value>
+								<value>getFactors</value>
+							</list>
+						</property>
+					</bean>
+				</entry>
+				<entry key="GeoBrowserService">
+					<bean class="org.directwebremoting.spring.CreatorConfig">
+						<property name="creator">
+							<bean class="org.directwebremoting.spring.BeanCreator">
+								<property name="bean" ref="geoBrowserService" />
+							</bean>
+						</property>
+						<property name="includes">
+							<list>
+								<value>getDetails</value>
+								<value>toggleUsability</value>
+							</list>
+						</property>
+					</bean>
+				</entry>
+				<entry key="DEDVController">
+					<bean class="org.directwebremoting.spring.CreatorConfig">
+						<property name="creator">
+							<bean class="org.directwebremoting.spring.BeanCreator">
+								<property name="bean" ref="dedvController" />
+							</bean>
+						</property>
+						<property name="includes">
+							<list>
+								<value>getDEDV</value>
+								<value>getDEDVForVisualization</value>
+								<value>getDEDVForCoexpressionVisualization</value>
+								<value>getDEDVForDiffExVisualization</value>
+								<value>getVectorData</value>
+								<value>getDEDVForVisualizationByProbe</value>
+								<value>getDEDVForDiffExVisualizationByThreshold</value>
+								<value>getDEDVForDiffExVisualizationByExperiment</value>
+							</list>
+						</property>
+					</bean>
+				</entry>
+				<entry key="SystemMonitorController">
+					<bean class="org.directwebremoting.spring.CreatorConfig">
+						<property name="creator">
+							<bean class="org.directwebremoting.spring.BeanCreator">
+								<property name="bean" ref="systemMonitorController" />
+							</bean>
+						</property>
+						<property name="includes">
+							<list>
+								<value>getHibernateStatus</value>
+								<value>getCacheStatus</value>
+								<value>getSpaceStatus</value>
+								<value>flushCache</value>
+								<value>flushAllCaches</value>
+							</list>
+						</property>
+					</bean>
+				</entry>
+				<entry key="FeedReader">
+					<bean class="org.directwebremoting.spring.CreatorConfig">
+						<property name="creator">
+							<bean class="org.directwebremoting.spring.BeanCreator">
+								<property name="bean" ref="feedReader" />
+							</bean>
+						</property>
+						<property name="includes">
+							<list>
+								<value>getLatestNews</value>
+							</list>
+						</property>
+					</bean>
+				</entry>
+				<entry key="UserListController">
+					<bean class="org.directwebremoting.spring.CreatorConfig">
+						<property name="creator">
+							<bean class="org.directwebremoting.spring.BeanCreator">
+								<property name="bean" ref="userListController" />
+							</bean>
+						</property>
+						<property name="includes">
+							<list>
+								<value>getUsers</value>
+								<value>saveUser</value>
+							</list>
+						</property>
+					</bean>
+				</entry>
+				<entry key="LinkOutController">
+					<bean class="org.directwebremoting.spring.CreatorConfig">
+						<property name="creator">
+							<bean class="org.directwebremoting.spring.BeanCreator">
+								<property name="bean" ref="linkOutController" />
+							</bean>
+						</property>
+						<property name="includes">
+							<list>
+								<value>getAllenBrainAtlasLink</value>
+							</list>
+						</property>
+					</bean>
+				</entry>
+			</map>
+		</property>
+		<!--
+			**************************************************************************** exporting/importing object definitions:
+			Specifications determine what will be marshelled to and from the client
+			***************************************************************************
+		-->
+		<property name="converters">
+			<map>
+				<entry key="ubic.gemma.web.remote.EntityDelegator">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="bean" />
+						<property name="includes">
+							<list>
+								<value>id</value>
+								<value>classDelegatingFor</value>
+							</list>
+						</property>
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.web.remote.ListRange">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="bean" />
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.model.common.description.VocabCharacteristic">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="characteristicConverter" />
+						<property name="includes">
+							<list>
+								<value>value</value>
+								<value>valueUri</value>
+								<value>category</value>
+								<value>categoryUri</value>
+								<value>properties</value>
+								<value>description</value>
+								<value>evidenceCode</value>
+							</list>
+						</property>
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.model.common.description.Characteristic">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="characteristicConverter" />
+						<property name="excludes">
+							<list>
+								<value>auditTrail</value>
+							</list>
+						</property>
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.model.association.GOEvidenceCode">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="goEvidenceCodeConverter" />
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.model.common.description.CharacteristicProperty">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="characteristicPropertyConverter" />
+						<property name="includes">
+							<list>
+								<value>valueUri</value>
+								<value>categoryUri</value>
+								<value>data</value>
+								<value>object</value>
+								<value>value</value>
+								<value>description</value>
+							</list>
+						</property>
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.model.common.description.Property">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="bean" />
+						<property name="includes">
+							<list>
+								<value>valueUri</value>
+								<value>categoryUri</value>
+								<value>object</value>
+								<value>value</value>
+							</list>
+						</property>
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.model.common.description.DataProperty">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="bean" />
+						<property name="includes">
+							<list>
+								<value>valueUri</value>
+								<value>categoryUri</value>
+								<value>data</value>
+								<value>type</value>
+								<value>value</value>
+							</list>
+						</property>
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.model.genome.Taxon">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="bean" />
+						<property name="includes">
+							<list>
+								<value>id</value>
+								<value>commonName</value>
+								<value>scientificName</value>
+								<value>ncbiId</value>
+								<!-- needed to make links to ucsc -->
+								<value>externalDatabase</value>
+							</list>
+						</property>
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.model.genome.gene.GeneProductValueObject">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="bean" />
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.model.genome.gene.GeneProductType">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="bean" />
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.model.genome.gene.GeneValueObject">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="bean" />
+					</bean>
+				</entry>
+
+				<entry key="ubic.gemma.model.genome.gene.GeneProduct">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="bean" />
+						<property name="includes">
+							<list>
+								<value>id</value>
+								<value>name</value>
+								<value>description</value>
+								<value>type</value>
+								<value>taxon</value>
+							</list>
+						</property>
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.model.genome.Gene">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="bean" />
+						<property name="includes">
+							<list>
+								<value>id</value>
+								<value>name</value>
+								<value>officialSymbol</value>
+								<value>officialName</value>
+								<value>taxon</value>
+							</list>
+						</property>
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.model.expression.biomaterial.BioMaterial">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="bean" />
+						<property name="includes">
+							<list>
+								<value>id</value>
+								<value>name</value>
+								<value>description</value>
+							</list>
+						</property>
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.web.controller.expression.experiment.BioMaterialValueObject">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="bean" />
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.util.progress.ProgressData">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="bean" />
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.ontology.OntologyTermImpl">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="ontologyTermConverter" />
+						<property name="includes">
+							<list>
+								<value>term</value>
+								<value>uri</value>
+								<value>label</value>
+								<value>comment</value>
+								<!--
+									<value>restrictions</value><value>individuals</value>
+									<value>annotations</value>
+								-->
+							</list>
+						</property>
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.ontology.OntologyRestrictionImpl">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="ontologyTermConverter" />
+						<property name="includes">
+							<list>
+								<value>restrictionOn</value>
+								<value>restrictions</value>
+								<value>term</value>
+								<value>uri</value>
+								<value>label</value>
+								<value>individuals</value>
+								<value>comment</value>
+								<value>annotations</value>
+							</list>
+						</property>
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.ontology.OntologyCardinalityRestrictionImpl">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="ontologyTermConverter" />
+						<property name="includes">
+							<list>
+								<value>restrictionOn</value>
+								<value>restrictions</value>
+								<value>term</value>
+								<value>uri</value>
+								<value>label</value>
+								<value>individuals</value>
+								<value>comment</value>
+								<value>annotations</value>
+								<value>cardinality</value>
+								<value>cardinalityType</value>
+							</list>
+						</property>
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.ontology.OntologyClassRestrictionImpl">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="ontologyTermConverter" />
+						<property name="includes">
+							<list>
+								<value>restrictionOn</value>
+								<value>restrictions</value>
+								<value>restrictedTo</value>
+								<value>term</value>
+								<value>uri</value>
+								<value>label</value>
+								<value>individuals</value>
+								<value>comment</value>
+								<value>annotations</value>
+							</list>
+						</property>
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.ontology.OntologyDatatypeRestrictionImpl">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="ontologyTermConverter" />
+						<property name="includes">
+							<list>
+								<value>restrictionOn</value>
+								<value>restrictions</value>
+								<value>restrictedTo</value>
+								<value>term</value>
+								<value>uri</value>
+								<value>label</value>
+								<value>individuals</value>
+								<value>comment</value>
+								<value>annotations</value>
+							</list>
+						</property>
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.ontology.OntologyPropertyImpl">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="ontologyTermConverter" />
+						<property name="includes">
+							<list>
+								<value>uri</value>
+								<value>label</value>
+							</list>
+						</property>
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.ontology.DatatypePropertyImpl">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="bean" />
+						<property name="includes">
+							<list>
+								<value>uri</value>
+								<value>label</value>
+								<value>type</value>
+							</list>
+						</property>
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.ontology.ObjectPropertyImpl">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="bean" />
+						<property name="includes">
+							<list>
+								<value>uri</value>
+								<value>label</value>
+								<value>range</value>
+							</list>
+						</property>
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.ontology.OntologyIndividualImpl">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="bean" />
+						<property name="includes">
+							<list>
+								<value>uri</value>
+								<value>label</value>
+							</list>
+						</property>
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.ontology.AnnotationPropertyImpl">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="bean" />
+						<property name="includes">
+							<list>
+								<value>contents</value>
+								<value>property</value>
+							</list>
+						</property>
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.ontology.OntologyData">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="bean" />
+						<property name="includes">
+							<list>
+								<value>comment</value>
+								<value>id</value>
+								<value>term</value>
+							</list>
+						</property>
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.ontology.OntologyDataList">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="bean" />
+						<property name="includes">
+							<list>
+								<value>data</value>
+								<value>totalSize</value>
+							</list>
+						</property>
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.analysis.sequence.BlatResultGeneSummary">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="bean" />
+						<property name="excludes">
+							<list>
+								<value>geneProductMap</value>
+								<value>geneProducts</value>
+							</list>
+						</property>
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.analysis.sequence.CompositeSequenceMapValueObject">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="bean" />
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.web.controller.common.description.bibref.BibliographicReferenceValueObject">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="bean" />
+						<property name="excludes">
+							<list>
+								<value>fullTextPDF</value>
+							</list>
+						</property>
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.model.genome.sequenceAnalysis.BlatResult">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="bean" />
+						<property name="excludes">
+							<list>
+								<value>targetAlignedRegion</value>
+								<value>searchedDatabase</value>
+							</list>
+						</property>
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.model.genome.biosequence.BioSequence">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="bean" />
+						<property name="includes">
+							<list>
+								<value>name</value>
+								<value>description</value>
+								<value>id</value>
+								<value>sequence</value>
+								<!--  this is questionable, as it can be big. -->
+								<value>sequenceDatabaseEntry</value>
+								<value>length</value>
+								<value>type</value>
+								<value>fractionRepeats</value>
+								<value>taxon</value>
+							</list>
+						</property>
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.model.genome.biosequence.SequenceType">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="hibernate3" />
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.model.common.description.DatabaseEntry">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="hibernate3" />
+						<property name="includes">
+							<list>
+								<value>accession</value>
+								<value>externalDatabase</value>
+							</list>
+						</property>
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.model.expression.arrayDesign.ArrayDesign">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="hibernate3" />
+						<property name="excludes">
+							<list>
+								<value>compositeSequences</value>
+								<value>alternateNames</value>
+								<value>technologyType</value>
+								<value>designProvider</value>
+								<value>auditTrail</value>
+								<value>localfiles</value>
+							</list>
+						</property>
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.model.expression.designElement.CompositeSequence">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="hibernate3" />
+						<property name="includes">
+							<list>
+								<value>id</value>
+								<value>name</value>
+								<value>description</value>
+								<value>arrayDesign</value>
+							</list>
+						</property>
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.model.common.description.ExternalDatabase">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="hibernate3" />
+						<property name="includes">
+							<list>
+								<value>name</value>
+							</list>
+						</property>
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.model.expression.experiment.ExpressionExperiment">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="hibernate3" />
+						<property name="includes">
+							<list>
+								<value>id</value>
+								<value>name</value>
+								<value>shortName</value>
+								<value>description</value>
+							</list>
+						</property>
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="hibernate3" />
+						<!--
+							<property name="includes"> <list> <value>id</value> <value>name</value> <value>shortName</value>
+							<value>description</value> <value>probeSpecificForQueryGene</value> <value>arrayDesignCount</value>
+							<value>bioAssayCount</value> <value>rawCoexpressionLinkCount</value> <value>coexpressionLinkCount</value>
+							<value>externalUri</value> <value>differentialExpressionAnalysisId</value> </list> </property>
+						-->
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="hibernate3" />
+						<!--
+							<property name="includes"> <list> <value>id</value> <value>name</value> <value>shortName</value>
+							<value>description</value> <value>probeSpecificForQueryGene</value> <value>arrayDesignCount</value>
+							<value>bioAssayCount</value> <value>rawCoexpressionLinkCount</value> <value>coexpressionLinkCount</value>
+							<value>externalUri</value> <value>differentialExpressionAnalysisId</value> </list> </property>
+						-->
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.web.controller.expression.experiment.ExpressionExperimentSetValueObject">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="hibernate3" />
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.web.controller.coexpressionSearch.CoexpressionSearchCommand">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="bean" />
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.analysis.expression.coexpression.CoexpressionValueObjectExt">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="bean" />
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.analysis.expression.coexpression.CoexpressionDatasetValueObject">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="bean" />
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.analysis.expression.coexpression.CoexpressionMetaValueObject">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="bean" />
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.analysis.expression.coexpression.CoexpressionSummaryValueObject">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="bean" />
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.analysis.expression.coexpression.CannedAnalysisValueObject">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="bean" />
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.web.controller.diff.DiffExpressionSearchCommand">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="bean" />
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.analysis.expression.diff.DiffExpressionSelectedFactorCommand">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="bean" />
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.analysis.expression.diff.DifferentialExpressionValueObject">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="bean" />
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.analysis.expression.diff.DifferentialExpressionMetaAnalysisValueObject">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="bean" />
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.image.LinkOutValueObject">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="bean" />
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.model.analysis.expression.diff.DifferentialExpressionSummaryValueObject">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="bean" />
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.web.controller.diff.DifferentialExpressionAnalyzerInfo">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="bean" />
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService$AnalysisType">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="diffAnalysisTypeConverter" />
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.model.common.description.BibliographicReference">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="hibernate3" />
+						<property name="includes">
+							<list>
+								<value>id</value>
+								<value>title</value>
+							</list>
+						</property>
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.model.genome.Chromosome">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="hibernate3" />
+						<property name="includes">
+							<list>
+								<value>id</value>
+								<value>name</value>
+								<value>taxon</value>
+							</list>
+						</property>
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.model.common.quantitationtype.PrimitiveType">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="bean" />
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.grid.javaspaces.task.index.IndexerTaskCommand">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="bean" />
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.grid.javaspaces.task.expression.experiment.ExpressionExperimentLoadTaskCommand">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="bean" />
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.web.controller.expression.experiment.SimpleExpressionExperimentLoadCommand">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="bean" />
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.web.controller.expression.experiment.SimpleExpressionExperimentCommandValidation">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="bean" />
+					</bean>
+				</entry>
+				<entry key="java.lang.Exception">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="exception" />
+					</bean>
+				</entry>
+				<entry key="java.lang.StackTraceElement">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="bean" />
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.ontology.OntologyTreeNode">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="bean" />
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.model.common.auditAndSecurity.AuditEvent">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="bean" />
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.model.common.auditAndSecurity.AuditAction">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="bean" />
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="bean" />
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.web.controller.common.auditAndSecurity.UserValueObject">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="bean" />
+						<property name="includes">
+							<list>
+								<value>userName</value>
+								<value>email</value>
+								<value>enabled</value>
+								<value>role</value>
+							</list>
+						</property>
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.model.common.auditAndSecurity.AuditEventValueObject">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="bean" />
+						<property name="includes">
+							<list>
+								<value>performer</value>
+								<value>date</value>
+								<value>actionName</value>
+								<value>eventTypeName</value>
+								<value>note</value>
+								<value>detail</value>
+							</list>
+						</property>
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.web.controller.expression.experiment.AnnotationValueObject">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="bean" />
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.web.controller.expression.experiment.DesignMatrixRowValueObject">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="bean" />
+						<property name="includes">
+							<list>
+								<value>factors</value>
+								<value>factorValueMap</value>
+								<value>count</value>
+							</list>
+						</property>
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="bean" />
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.model.expression.experiment.FactorValueValueObject">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="bean" />
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.web.controller.expression.experiment.ExpressionExperimentExperimentalFactorValueObject">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="bean" />
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="bean" />
+						<property name="includes">
+							<list>
+								<value>id</value>
+								<value>name</value>
+								<value>shortName</value>
+								<value>description</value>
+								<value>taxon</value>
+							</list>
+						</property>
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.web.controller.common.auditAndSecurity.FileUpload">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="bean" />
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.model.common.quantitationtype.StandardQuantitationType">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="standardQuantitationTypeConverter" />
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.model.common.quantitationtype.ScaleType">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="scaleTypeConverter" />
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.search.SearchResult">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="bean" />
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.web.controller.expression.experiment.ExpressionExperimentDataFetchCommand">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="bean" />
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.search.SearchSettings">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="bean" />
+					</bean>
+				</entry>
+				<entry key="java.lang.Class">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="classConverter" />
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="bean" />
+						<property name="includes">
+							<list>
+								<value>id</value>
+								<value>data</value>
+								<value>expressionExperiment</value>
+							</list>
+						</property>
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.web.controller.visualization.VisualizationValueObject">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="bean" />
+						<property name="includes">
+							<list>
+								<value>profiles</value>
+								<value>factorProfiles</value>
+								<value>eevo</value>
+								<value>sampleNames</value>
+							</list>
+						</property>
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.web.controller.visualization.FactorProfile">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="bean" />
+					</bean>
+				</entry>
+				<entry key="ubic.basecode.dataStructure.DoublePoint">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="doublePointConverter" />
+						<property name="includes">
+							<list>
+								<value>x</value>
+								<value>y</value>
+							</list>
+						</property>
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.web.remote.StringPoint"><!--  can this be removed? -->
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="bean" />
+					</bean>
+				</entry>
+
+				<entry key="ubic.gemma.web.controller.visualization.ExpressionProfileDataObject"> <!-- can this be removed only used in DEDVController, looks redundent -->
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="bean" />
+					</bean>
+				</entry>
+
+				<entry key="ubic.gemma.web.controller.visualization.GeneExpressionProfile">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="bean" />
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.web.feed.NewsItem">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="bean" />
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="bean" />
+						<property name="includes">
+							<list>
+								<value>name</value>
+								<value>description</value>
+							</list>
+						</property>
+					</bean>
+				</entry>
+			</map>
+		</property>
+	</bean>
+
+
+</beans>

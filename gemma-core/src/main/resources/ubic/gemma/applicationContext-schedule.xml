@@ -1,48 +1,50 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE beans PUBLIC
-    "-//SPRING//DTD BEAN//EN"
-    "http://www.springframework.org/dtd/spring-beans.dtd">
-<!-- 
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:util="http://www.springframework.org/schema/util" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:task="http://www.springframework.org/schema/task"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans 
+          http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+          http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-3.0.xsd
+          http://www.springframework.org/schema/context 
+          http://www.springframework.org/schema/context/spring-context-3.0.xsd http://www.springframework.org/schema/task  
+          http://www.springframework.org/schema/task/spring-task-3.0.xsd">
+	<!-- 
 	author: keshav   
 	$Id$ 
 -->
-<beans>
-	
-	<!--<ref local="indexTrigger"/>-->
-	
-	
-	<!-- Quartz Configuration. The schedulerFactorBean is the main entry point. See also QuartzUtils for how this can be turned off. -->
+
+
+	<!--
+		Note: we cannot use @Scheduled and @Async because the security context is not available to the runnables they create.
+	-->
+
+	<!--
+		Quartz Configuration. The schedulerFactorBean is the main entry point. See also QuartzUtils for how this can be turned
+		off.
+	-->
 	<bean id="schedulerFactoryBean" class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
 		<property name="triggers">
-			<list>		
-				<ref local="indexTrigger"/>
-				<ref local="arrayDesignReportTrigger"/>
-				<ref local="expressionExperimentReportTrigger"/>
-				<ref local="whatsNewTrigger"/>
-			<!--	<ref local="hibernateStatsTrigger"/> Functionality now provided by the monitor page. -->
-				<ref local="gene2CsUpdateTrigger"/>
+			<list>
+				<ref local="indexTrigger" />
+				<ref local="arrayDesignReportTrigger" />
+				<ref local="expressionExperimentReportTrigger" />
+				<ref local="whatsNewTrigger" />
+				<ref local="gene2CsUpdateTrigger" />
 			</list>
 		</property>
 	</bean>
-	
+
 	<!-- Triggers -->
-	<!-- Cron trigger fields are:
-	Seconds 	    	0-59 	  	, - * /
-	Minutes 	  	   0-59 	  	, - * /
-	Hours 	  	        0-23 	  	, - * /
-	Day-of-month 	  	1-31 	  	, - * ? / L W
-	Month 	  	1-12 or JAN-DEC 	  	, - * /
-	Day-of-Week 	  	1-7 or SUN-SAT 	  	, - * ? / L #
-	Year (Optional) 	  	empty, 1970-2099 	  	, - * /
-	
-	
-	See http://www.opensymphony.com/quartz/api/org/quartz/CronExpression.html for details, http://www.opensymphony.com/quartz/api/org/quartz/CronTrigger.html for examples.
-	
-	If you want a schedule that fire frequently for testing, try <value>0 0/2 * ? * *</value>.
+	<!--
+		Cron trigger fields are: Seconds 0-59 , - * / Minutes 0-59 , - * / Hours 0-23 , - * / Day-of-month 1-31 , - * ? / L W
+		Month 1-12 or JAN-DEC , - * / Day-of-Week 1-7 or SUN-SAT , - * ? / L # Year (Optional) empty, 1970-2099 , - * / See
+		http://www.opensymphony.com/quartz/api/org/quartz/CronExpression.html for details,
+		http://www.opensymphony.com/quartz/api/org/quartz/CronTrigger.html for examples. If you want a schedule that fire
+		frequently for testing, try <value>0 0/2 * ? * *</value>.
 	-->
 	<bean id="indexTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
 		<property name="jobDetail">
-			<ref bean="indexJobDetail"/>
+			<ref bean="indexJobDetail" />
 		</property>
 		<property name="cronExpression">
 			<value>0 15 1 ? * SAT</value><!-- Every Saturday at 1:15 am -->
@@ -50,7 +52,7 @@
 	</bean>
 	<bean id="arrayDesignReportTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
 		<property name="jobDetail">
-			<ref bean="arrayDesignReportJobDetail"/>
+			<ref bean="arrayDesignReportJobDetail" />
 		</property>
 		<property name="cronExpression">
 			<value>0 30 1 1 * ?</value><!-- monthly at 1:30  -->
@@ -58,7 +60,7 @@
 	</bean>
 	<bean id="expressionExperimentReportTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
 		<property name="jobDetail">
-			<ref bean="expressionExperimentReportJobDetail"/>
+			<ref bean="expressionExperimentReportJobDetail" />
 		</property>
 		<property name="cronExpression">
 			<value>0 15 0 1 * ?</value><!-- monthly at 00:15 -->
@@ -66,7 +68,7 @@
 	</bean>
 	<bean id="whatsNewTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
 		<property name="jobDetail">
-			<ref bean="whatsNewJobDetail"/>
+			<ref bean="whatsNewJobDetail" />
 		</property>
 		<property name="cronExpression">
 			<value>0 15 0 ? * *</value><!-- daily at 00:15 -->
@@ -74,71 +76,57 @@
 	</bean>
 	<bean id="gene2CsUpdateTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
 		<property name="jobDetail">
-			<ref bean="gene2CsUpdateJobDetail"/>
+			<ref bean="gene2CsUpdateJobDetail" />
 		</property>
 		<property name="cronExpression">
 			<value>0 40 0 ? * *</value><!-- daily at 00:40 (should only update if it needs to) -->
 		</property>
 	</bean>
-	<!-- <bean id="hibernateStatsTrigger" class="org.springframework.scheduling.quartz.SimpleTriggerBean">
-		<property name="jobDetail">
-			<ref bean="hibernateStatsJobDetail"/>
-		</property>
-		<property name="repeatInterval">
-			<value>1800000</value>  
-		</property>
-		<property name="startDelay">
-			<value>1800000</value> 
-		</property>
-	</bean> -->
-	
+
+
 	<!-- Job details -->
-	<bean id="indexJobDetail" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+	<bean id="indexJobDetail" class="ubic.gemma.security.authentication.SecureMethodInvokingJobDetailFactoryBean">
 		<property name="targetObject">
-			<ref bean="indexService"/>
+			<ref bean="indexService" />
 		</property>
+		<property name="concurrent" value="false" />
 		<property name="targetMethod">
 			<value>runAll</value>
 		</property>
 	</bean>
-	<bean id="arrayDesignReportJobDetail"
-		class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+	<bean id="arrayDesignReportJobDetail" class="ubic.gemma.security.authentication.SecureMethodInvokingJobDetailFactoryBean">
 		<property name="targetObject">
-			<ref bean="arrayDesignReportService"/>
+			<ref bean="arrayDesignReportService" />
 		</property>
+		<property name="concurrent" value="false" />
 		<property name="targetMethod">
 			<value>generateArrayDesignReport</value>
 		</property>
 	</bean>
-	<bean id="expressionExperimentReportJobDetail"
-		class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+	<bean id="expressionExperimentReportJobDetail" class="ubic.gemma.security.authentication.SecureMethodInvokingJobDetailFactoryBean">
 		<property name="targetObject">
-			<ref bean="expressionExperimentReportService"/>
+			<ref bean="expressionExperimentReportService" />
 		</property>
+		<property name="concurrent" value="false" />
 		<property name="targetMethod">
 			<value>generateSummaryObjects</value>
 		</property>
 	</bean>
-	<bean id="whatsNewJobDetail" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+	<bean id="whatsNewJobDetail" class="ubic.gemma.security.authentication.SecureMethodInvokingJobDetailFactoryBean">
 		<property name="targetObject">
-			<ref bean="whatsNewService"/>
+			<ref bean="whatsNewService" />
 		</property>
+		<property name="concurrent" value="false" />
 		<property name="targetMethod">
 			<value>generateWeeklyReport</value>
 		</property>
 	</bean>
-	<!-- <bean id="hibernateStatsJobDetail" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+
+	<bean id="gene2CsUpdateJobDetail" class="ubic.gemma.security.authentication.SecureMethodInvokingJobDetailFactoryBean">
 		<property name="targetObject">
-			<ref bean="hibernateMonitor"/>
+			<ref bean="tableMaintenanceUtil" />
 		</property>
-		<property name="targetMethod">
-			<value>getStats</value>
-		</property>
-	</bean> -->
-	<bean id="gene2CsUpdateJobDetail" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
-		<property name="targetObject">
-			<ref bean="tableMaintenanceUtil"/>
-		</property>
+		<property name="concurrent" value="false" />
 		<property name="targetMethod">
 			<value>updateGene2CsEntries</value>
 		</property>

@@ -15,8 +15,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- */ 
+ */
 package ubic.gemma.model.association;
+
+import java.util.Collection;
+
+import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 
 /**
  * <p>
@@ -26,101 +30,74 @@ package ubic.gemma.model.association;
  * 
  * @see ubic.gemma.model.association.ReferenceAssociation
  */
-public abstract class ReferenceAssociationDaoBase extends ubic.gemma.model.association.BioSequence2GeneProductDaoImpl
-        implements ubic.gemma.model.association.ReferenceAssociationDao {
+public abstract class ReferenceAssociationDaoBase extends HibernateDaoSupport implements
+        ubic.gemma.model.association.ReferenceAssociationDao {
 
     /**
      * @see ubic.gemma.model.association.ReferenceAssociationDao#create(int, java.util.Collection)
      */
-    public java.util.Collection create( final int transform, final java.util.Collection entities ) {
+    public java.util.Collection create( final java.util.Collection entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "ReferenceAssociation.create - 'entities' can not be null" );
         }
-        this.getHibernateTemplate().executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                    create( transform, ( ubic.gemma.model.association.ReferenceAssociation ) entityIterator.next() );
-                }
-                return null;
-            }
-        }  );
+        this.getHibernateTemplate().executeWithNativeSession(
+                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
+                    public Object doInHibernate( org.hibernate.Session session )
+                            throws org.hibernate.HibernateException {
+                        for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                            create( ( ubic.gemma.model.association.ReferenceAssociation ) entityIterator.next() );
+                        }
+                        return null;
+                    }
+                } );
         return entities;
     }
 
+    
+    public Collection<? extends ReferenceAssociation > load( Collection<Long> ids ) {
+        return this.getHibernateTemplate().findByNamedParam( "from ReferenceAssociationImpl where id in (:ids)", "ids", ids );
+    }
+    
     /**
      * @see ubic.gemma.model.association.ReferenceAssociationDao#create(int transform,
      *      ubic.gemma.model.association.ReferenceAssociation)
      */
-    public Object create( final int transform,
-            final ubic.gemma.model.association.ReferenceAssociation referenceAssociation ) {
+    public ReferenceAssociation create( final ubic.gemma.model.association.ReferenceAssociation referenceAssociation ) {
         if ( referenceAssociation == null ) {
             throw new IllegalArgumentException( "ReferenceAssociation.create - 'referenceAssociation' can not be null" );
         }
         this.getHibernateTemplate().save( referenceAssociation );
-        return this.transformEntity( transform, referenceAssociation );
-    }
-
-    /**
-     * @see ubic.gemma.model.association.ReferenceAssociationDao#create(java.util.Collection)
-     */
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Collection create( final java.util.Collection entities ) {
-        return create( TRANSFORM_NONE, entities );
-    }
-
-    /**
-     * @see ubic.gemma.model.association.ReferenceAssociationDao#create(ubic.gemma.model.association.ReferenceAssociation)
-     */
-    public ubic.gemma.model.association.Relationship create(
-            ubic.gemma.model.association.ReferenceAssociation referenceAssociation ) {
-        return ( ubic.gemma.model.association.ReferenceAssociation ) this.create( TRANSFORM_NONE, referenceAssociation );
+        return referenceAssociation;
     }
 
     /**
      * @see ubic.gemma.model.association.ReferenceAssociationDao#load(int, java.lang.Long)
      */
-    @Override
-    public Object load( final int transform, final java.lang.Long id ) {
+
+    public ReferenceAssociation load( final java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "ReferenceAssociation.load - 'id' can not be null" );
         }
         final Object entity = this.getHibernateTemplate().get(
                 ubic.gemma.model.association.ReferenceAssociationImpl.class, id );
-        return transformEntity( transform, ( ubic.gemma.model.association.ReferenceAssociation ) entity );
-    }
-
-    /**
-     * @see ubic.gemma.model.association.ReferenceAssociationDao#load(java.lang.Long)
-     */
-    @Override
-    public ubic.gemma.model.association.Relationship load( java.lang.Long id ) {
-        return ( ubic.gemma.model.association.ReferenceAssociation ) this.load( TRANSFORM_NONE, id );
-    }
-
-    /**
-     * @see ubic.gemma.model.association.ReferenceAssociationDao#loadAll()
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Collection loadAll() {
-        return this.loadAll( TRANSFORM_NONE );
+        return ( ubic.gemma.model.association.ReferenceAssociation ) entity;
     }
 
     /**
      * @see ubic.gemma.model.association.ReferenceAssociationDao#loadAll(int)
      */
-    @Override
-    public java.util.Collection loadAll( final int transform ) {
+
+    public java.util.Collection loadAll() {
         final java.util.Collection results = this.getHibernateTemplate().loadAll(
                 ubic.gemma.model.association.ReferenceAssociationImpl.class );
-        this.transformEntities( transform, results );
+
         return results;
     }
 
     /**
      * @see ubic.gemma.model.association.ReferenceAssociationDao#remove(java.lang.Long)
      */
-    @Override
+
     public void remove( java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "ReferenceAssociation.remove - 'id' can not be null" );
@@ -135,7 +112,7 @@ public abstract class ReferenceAssociationDaoBase extends ubic.gemma.model.assoc
     /**
      * @see ubic.gemma.model.association.RelationshipDao#remove(java.util.Collection)
      */
-    @Override
+
     public void remove( java.util.Collection entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "ReferenceAssociation.remove - 'entities' can not be null" );
@@ -156,19 +133,21 @@ public abstract class ReferenceAssociationDaoBase extends ubic.gemma.model.assoc
     /**
      * @see ubic.gemma.model.association.RelationshipDao#update(java.util.Collection)
      */
-    @Override
+
     public void update( final java.util.Collection entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "ReferenceAssociation.update - 'entities' can not be null" );
         }
-        this.getHibernateTemplate().executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                    update( ( ubic.gemma.model.association.ReferenceAssociation ) entityIterator.next() );
-                }
-                return null;
-            }
-        }  );
+        this.getHibernateTemplate().executeWithNativeSession(
+                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
+                    public Object doInHibernate( org.hibernate.Session session )
+                            throws org.hibernate.HibernateException {
+                        for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                            update( ( ubic.gemma.model.association.ReferenceAssociation ) entityIterator.next() );
+                        }
+                        return null;
+                    }
+                } );
     }
 
     /**
@@ -179,53 +158,6 @@ public abstract class ReferenceAssociationDaoBase extends ubic.gemma.model.assoc
             throw new IllegalArgumentException( "ReferenceAssociation.update - 'referenceAssociation' can not be null" );
         }
         this.getHibernateTemplate().update( referenceAssociation );
-    }
-
-    /**
-     * Transforms a collection of entities using the
-     * {@link #transformEntity(int,ubic.gemma.model.association.ReferenceAssociation)} method. This method does not
-     * instantiate a new collection.
-     * <p/>
-     * This method is to be used internally only.
-     * 
-     * @param transform one of the constants declared in
-     *        <code>ubic.gemma.model.association.ReferenceAssociationDao</code>
-     * @param entities the collection of entities to transform
-     * @return the same collection as the argument, but this time containing the transformed entities
-     * @see #transformEntity(int,ubic.gemma.model.association.ReferenceAssociation)
-     */
-    @Override
-    protected void transformEntities( final int transform, final java.util.Collection entities ) {
-        switch ( transform ) {
-            case TRANSFORM_NONE: // fall-through
-            default:
-                // do nothing;
-        }
-    }
-
-    /**
-     * Allows transformation of entities into value objects (or something else for that matter), when the
-     * <code>transform</code> flag is set to one of the constants defined in
-     * <code>ubic.gemma.model.association.ReferenceAssociationDao</code>, please note that the {@link #TRANSFORM_NONE}
-     * constant denotes no transformation, so the entity itself will be returned. If the integer argument value is
-     * unknown {@link #TRANSFORM_NONE} is assumed.
-     * 
-     * @param transform one of the constants declared in {@link ubic.gemma.model.association.ReferenceAssociationDao}
-     * @param entity an entity that was found
-     * @return the transformed entity (i.e. new value object, etc)
-     * @see #transformEntities(int,java.util.Collection)
-     */
-    protected Object transformEntity( final int transform,
-            final ubic.gemma.model.association.ReferenceAssociation entity ) {
-        Object target = null;
-        if ( entity != null ) {
-            switch ( transform ) {
-                case TRANSFORM_NONE: // fall-through
-                default:
-                    target = entity;
-            }
-        }
-        return target;
     }
 
 }

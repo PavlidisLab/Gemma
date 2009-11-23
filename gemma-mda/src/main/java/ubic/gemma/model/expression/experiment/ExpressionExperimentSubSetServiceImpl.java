@@ -20,11 +20,14 @@
  */
 package ubic.gemma.model.expression.experiment;
 
+import org.springframework.stereotype.Service;
+
 /**
  * @author pavlidis
  * @version $Id$
  * @see ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetService
  */
+@Service
 public class ExpressionExperimentSubSetServiceImpl extends
         ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetServiceBase {
 
@@ -35,8 +38,7 @@ public class ExpressionExperimentSubSetServiceImpl extends
     protected ExpressionExperimentSubSet handleCreate(
             ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet expressionExperimentSubSet )
             throws java.lang.Exception {
-        return ( ExpressionExperimentSubSet ) this.getExpressionExperimentSubSetDao().create(
-                expressionExperimentSubSet );
+        return this.getExpressionExperimentSubSetDao().create( expressionExperimentSubSet );
     }
 
     /**
@@ -46,7 +48,7 @@ public class ExpressionExperimentSubSetServiceImpl extends
      */
     @Override
     protected ExpressionExperimentSubSet handleLoad( Long id ) throws java.lang.Exception {
-        return ( ExpressionExperimentSubSet ) this.getExpressionExperimentSubSetDao().load( id );
+        return this.getExpressionExperimentSubSetDao().load( id );
     }
 
     /**

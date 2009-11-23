@@ -20,6 +20,8 @@ package ubic.gemma.loader.util.parser;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.DatabaseType;
@@ -29,15 +31,15 @@ import ubic.gemma.model.common.description.ExternalDatabaseDao;
 /**
  * Provides convenience methods to provide ExternalDatabases and DatabaseEntries for common cases, such as Genbank.
  * 
- * @spring.bean externalDatabaseUtils
- * @spring.property name="externalDatabaseDao" ref="externalDatabaseDao"
  * @author pavlidis
  * @version $Id$
  */
+@Service
 public class ExternalDatabaseUtils {
 
     private static Log log = LogFactory.getLog( ExternalDatabaseUtils.class.getName() );
 
+    @Autowired
     ExternalDatabaseDao externalDatabaseDao;
 
     /**

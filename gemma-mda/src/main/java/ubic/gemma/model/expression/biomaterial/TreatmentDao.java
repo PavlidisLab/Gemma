@@ -23,6 +23,6 @@ import ubic.gemma.persistence.BaseDao;
 /**
  * @see ubic.gemma.model.expression.biomaterial.Treatment
  */
-public interface TreatmentDao extends BaseDao<Treatment>{
+public interface TreatmentDao extends BaseDao<Treatment> {
 
 }

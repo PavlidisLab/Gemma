@@ -22,12 +22,17 @@ package ubic.gemma.model.expression.biomaterial;
 
 import java.util.Collection;
 
+import org.springframework.stereotype.Service;
+
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+
 /**
  * @author pavlidis
  * @author keshav
  * @version $Id$
  * @see ubic.gemma.model.expression.biomaterial.BioMaterialService
  */
+@Service
 public class BioMaterialServiceImpl extends ubic.gemma.model.expression.biomaterial.BioMaterialServiceBase {
 
     /*
@@ -77,7 +82,7 @@ public class BioMaterialServiceImpl extends ubic.gemma.model.expression.biomater
      */
     @Override
     protected Collection<BioMaterial> handleLoadAll() throws Exception {
-        return this.getBioMaterialDao().loadAll();
+        return ( Collection<BioMaterial> ) this.getBioMaterialDao().loadAll();
     }
 
     /*
@@ -115,6 +120,10 @@ public class BioMaterialServiceImpl extends ubic.gemma.model.expression.biomater
     @Override
     protected void handleUpdate( BioMaterial bioMaterial ) throws Exception {
         this.getBioMaterialDao().update( bioMaterial );
+    }
+
+    public ExpressionExperiment getExpressionExperiment( Long id ) {
+        return this.getBioMaterialDao().getExpressionExperiment( id );
     }
 
 }

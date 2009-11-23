@@ -30,6 +30,14 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
  */
 public class BlatResultParserTest extends TestCase {
 
+    public void testParseInputStreamNoheader() throws Exception {
+        InputStream is = this.getClass().getResourceAsStream( "/data/loader/genome/blatResult.noheader.txt" );
+        BlatResultParser bp = new BlatResultParser();
+        bp.parse( is );
+        Collection<BlatResult> res = bp.getResults();
+        assertEquals( 18, res.size() );
+    }
+
     /*
      * Test method for 'ubic.gemma.loader.loaderutils.BasicLineParser.parse(InputStream)'
      */
@@ -40,14 +48,6 @@ public class BlatResultParserTest extends TestCase {
         Collection<BlatResult> res = bp.getResults();
         assertEquals( 15, res.size() );
 
-    }
-
-    public void testParseInputStreamNoheader() throws Exception {
-        InputStream is = this.getClass().getResourceAsStream( "/data/loader/genome/blatResult.noheader.txt" );
-        BlatResultParser bp = new BlatResultParser();
-        bp.parse( is );
-        Collection<BlatResult> res = bp.getResults();
-        assertEquals( 18, res.size() );
     }
 
 }

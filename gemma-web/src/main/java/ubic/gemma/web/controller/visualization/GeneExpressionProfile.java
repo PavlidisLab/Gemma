@@ -76,13 +76,6 @@ public class GeneExpressionProfile {
         this( vector, color, factor, pValue, true );
     }
 
-    /**
-     * @return the standardized
-     */
-    public boolean isStandardized() {
-        return standardized;
-    }
-
     public GeneExpressionProfile( DoubleVectorValueObject vector, String color, Integer factor, Double pValue,
             boolean standardize ) {
         this.genes = GeneValueObject.convert2GeneValueObjects( vector.getGenes() );
@@ -128,6 +121,13 @@ public class GeneExpressionProfile {
         return probe;
     }
 
+    /**
+     * @return the profile
+     */
+    public double[] getProfile() {
+        return profile;
+    }
+
     public Double getPValue() {
         return pValue;
     }
@@ -139,22 +139,15 @@ public class GeneExpressionProfile {
         return allMissing;
     }
 
+    /**
+     * @return the standardized
+     */
+    public boolean isStandardized() {
+        return standardized;
+    }
+
     public void setColor( String color ) {
         this.color = color;
-    }
-
-    /**
-     * @return the profile
-     */
-    public double[] getProfile() {
-        return profile;
-    }
-
-    /**
-     * @param profile the profile to set
-     */
-    public void setProfile( double[] profile ) {
-        this.profile = profile;
     }
 
     public void setFactor( Integer factor ) {
@@ -167,6 +160,13 @@ public class GeneExpressionProfile {
 
     public void setProbe( DesignElement probe ) {
         this.probe = probe;
+    }
+
+    /**
+     * @param profile the profile to set
+     */
+    public void setProfile( double[] profile ) {
+        this.profile = profile;
     }
 
     public void setPValue( Double value ) {

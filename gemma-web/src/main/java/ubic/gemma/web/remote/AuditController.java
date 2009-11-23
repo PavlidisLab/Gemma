@@ -23,10 +23,12 @@ import java.util.HashSet;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
 
 import ubic.gemma.model.common.Auditable;
-import ubic.gemma.model.common.AuditableService;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.model.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventValueObject;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -39,26 +41,32 @@ import ubic.gemma.model.genome.gene.GeneService;
 /**
  * This is required soley for exposing auditables to remote services would try to marshall the abstract class Auditable.
  * 
- * @spring.bean id="auditController"
- * @spring.property name="arrayDesignService" ref="arrayDesignService"
- * @spring.property name="expressionExperimentService" ref="expressionExperimentService"
- * @spring.property name="auditTrailService" ref="auditTrailService"
- * @spring.property name="auditableService" ref="auditableService"
- * @spring.property name="geneService" ref="geneService"
  * @author pavlidis
  * @version $Id$
  */
+@Controller
 public class AuditController {
 
     private static Log log = LogFactory.getLog( AuditController.class.getName() );
 
+    @Autowired
     ArrayDesignService arrayDesignService;
-    ExpressionExperimentService expressionExperimentService;
+
+    @Autowired
+    AuditEventService auditEventService;
+
+    @Autowired
     AuditTrailService auditTrailService;
-    AuditableService auditableService;
+
+    @Autowired
+    ExpressionExperimentService expressionExperimentService;
+
+    @Autowired
     GeneService geneService;
 
     /**
+     * AJAX
+     * 
      * @param e
      * @param auditEventType
      * @param comment
@@ -80,12 +88,14 @@ public class AuditController {
         } else if ( auditEventType.equals( "ValidatedFlagEvent" ) ) {
             auditTrailService.addValidatedFlag( entity, comment, detail );
         } else {
-            log.warn( "We don't support that type of audit event yet, sorry" );
+            log.warn( "We don't support that type of audit event yet, sorry: " + auditEventType );
         }
 
     }
 
     /**
+     * AJAX
+     * 
      * @param e
      * @return
      */
@@ -103,7 +113,7 @@ public class AuditController {
         if ( ExpressionExperiment.class.isAssignableFrom( clazz ) ) {
             result = expressionExperimentService.load( e.getId() );
         } else if ( ArrayDesign.class.isAssignableFrom( clazz ) ) {
-           result = arrayDesignService.load( e.getId() );
+            result = arrayDesignService.load( e.getId() );
         } else if ( Gene.class.isAssignableFrom( clazz ) ) {
             result = geneService.load( e.getId() );
         } else {
@@ -118,45 +128,26 @@ public class AuditController {
     }
 
     /**
+     * AJAX
+     * 
      * @param e
      * @return
      */
-    @SuppressWarnings("unchecked")
     public Collection<AuditEventValueObject> getEvents( EntityDelegator e ) {
         Collection<AuditEventValueObject> result = new HashSet<AuditEventValueObject>();
-        Collection events = new HashSet<AuditEvent>();
 
         Auditable entity = getAuditable( e );
-        
-        if (entity == null) {
+
+        if ( entity == null ) {
             return result;
         }
-        
-        events = auditableService.getEvents( entity );
-        for ( AuditEvent ev : ( Collection<AuditEvent> ) events ) {
+
+        Collection<AuditEvent> events = auditEventService.getEvents( entity );
+        for ( AuditEvent ev : events ) {
             result.add( new AuditEventValueObject( ev ) );
         }
 
         return result;
     }
 
-    public void setArrayDesignService( ArrayDesignService auditableService ) {
-        this.arrayDesignService = auditableService;
-    }
-
-    public void setAuditableService( AuditableService auditableService ) {
-        this.auditableService = auditableService;
-    }
-
-    public void setAuditTrailService( AuditTrailService auditTrailService ) {
-        this.auditTrailService = auditTrailService;
-    }
-
-    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
-        this.expressionExperimentService = expressionExperimentService;
-    }
-
-    public void setGeneService( GeneService geneService ) {
-        this.geneService = geneService;
-    }
 }

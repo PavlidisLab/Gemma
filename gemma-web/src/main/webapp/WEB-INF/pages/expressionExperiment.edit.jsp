@@ -175,7 +175,7 @@
 
 	</table>
 
-	<security:authorize ifAnyGranted="admin">
+	<security:authorize ifAnyGranted="GROUP_ADMIN">
 		<h3>
 			<fmt:message key="experimentalDesign.title" />
 			:
@@ -363,7 +363,7 @@
 		</c:otherwise>
 	</c:choose>
 
-	<security:authorize ifAnyGranted="admin">
+	<security:authorize ifAnyGranted="GROUP_ADMIN">
 		<h3>
 			Biomaterials and Assays
 		</h3>

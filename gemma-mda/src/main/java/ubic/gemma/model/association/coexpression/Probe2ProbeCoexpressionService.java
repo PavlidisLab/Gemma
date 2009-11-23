@@ -19,151 +19,191 @@
 package ubic.gemma.model.association.coexpression;
 
 import java.util.Collection;
-import java.util.HashMap;
+import java.util.Map;
 
-import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoImpl.ProbeLink;
+import org.springframework.security.access.annotation.Secured;
+
+import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.genome.Gene;
 
 /**
- * 
+ * @author paul
+ * @version $Id$
  */
 public interface Probe2ProbeCoexpressionService {
 
-    /**
-     * <p>
-     * Creates a probe2probeCoexpressionService. handles all differnt types of probe2probeCoexpression. Mouse, human,
-     * rat
-     * </p>
+    /*
+     * Security notes: p2p mod methods set so users can update coexpression.
      */
-    public ubic.gemma.model.association.coexpression.Probe2ProbeCoexpression create(
-            ubic.gemma.model.association.coexpression.Probe2ProbeCoexpression p2pCoexpression );
 
     /**
-     * <p>
-     * Adds a collection of probe2probeCoexpression objects at one time to the DB, in the order given.
-     * </p>
-     */
-    public java.util.List create( java.util.List p2pExpressions );
-
-    /**
-     * 
-     */
-    public void delete( ubic.gemma.model.association.coexpression.Probe2ProbeCoexpression toDelete );
-
-    /**
-     * 
-     */
-    public void delete( java.util.Collection deletes );
-
-    /**
-     * <p>
-     * Given a Gene, a collection of EE's returns a collection of all the designElementDataVectors that were coexpressed
-     * under the said given conditions.
-     * </p>
-     */
-    public java.util.Collection getVectorsForLinks( ubic.gemma.model.genome.Gene gene, java.util.Collection ees );
-
-    /**
-     * <p>
-     * removes all the probe2probeCoexpression links for the given expression experiment
-     * </p>
-     */
-    public void deleteLinks( ubic.gemma.model.expression.experiment.ExpressionExperiment ee );
-
-    /**
-     * 
+     * @param expressionExperiment
+     * @return number of coexpression links for the given experiments.
      */
     public java.lang.Integer countLinks(
             ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment );
 
     /**
-     * <p>
-     * Returns a map of Genes to a Collection of DesignElementDataVectors for genes coexpressed with the gene (and
-     * including the gene).
-     * </p>
+     * Adds a collection of probe2probeCoexpression objects at one time to the DB, in the order given.
      */
-    public java.util.Map getVectorsForLinks( java.util.Collection genes, java.util.Collection ees );
+    @Secured( { "GROUP_USER" })
+    public java.util.Collection<? extends Probe2ProbeCoexpression> create(
+            java.util.Collection<? extends Probe2ProbeCoexpression> p2pExpressions );
 
     /**
-     * <p>
-     * Create a working table containing links by removing redundant and (optionally) non-specific probes from
-     * PROBE_CO_EXPRESSION. Results are stored in a species-specific temporary table managed by this method.
-     * </p>
+     * @param deletes
      */
-    public void prepareForShuffling( java.util.Collection ees, java.lang.String taxon, boolean filterNonSpecific );
+    @Secured( { "GROUP_USER" })
+    public void delete( java.util.Collection<? extends Probe2ProbeCoexpression> deletes );
 
     /**
-     * <p>
-     * get the co-expression by using native sql query
-     * </p>
+     * @param toDelete
      */
-    public java.util.Collection getProbeCoExpression(
-            ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment, java.lang.String taxon,
-            boolean useWorkingTable );
+    @Secured( { "GROUP_USER" })
+    public void delete( ubic.gemma.model.association.coexpression.Probe2ProbeCoexpression toDelete );
 
-    
     /**
-     * <p>
-     * get the co-expression by using native sql query but doesn't use a temporary DB table.
-     * </p>
+     * removes all the probe2probeCoexpression links for the given expression experiment
+     * 
+     * @param ee
      */
-    public java.util.Collection<ProbeLink> getProbeCoExpression(
-            ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment, java.lang.String taxon);
-    /**
-     * <p>
+    @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    public void deleteLinks( ubic.gemma.model.expression.experiment.ExpressionExperiment ee );
+
+    /***
      * Return a list of all ExpressionExperiments in which the given gene was tested for coexpression in, among the
      * given ExpressionExperiments. A gene was tested if any probe for that gene passed filtering criteria during
      * analysis. It is assumed that in the database there is only one analysis per ExpressionExperiment. The boolean
      * parameter filterNonSpecific can be used to exclude ExpressionExperiments in which the gene was detected by only
      * probes predicted to be non-specific for the gene.
-     * </p>
+     * 
+     * @param gene
+     * @param expressionExperiments
+     * @param filterNonSpecific
+     * @return
      */
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ", "ACL_SECURABLE_COLLECTION_READ" })
     public java.util.Collection<BioAssaySet> getExpressionExperimentsLinkTestedIn( ubic.gemma.model.genome.Gene gene,
             java.util.Collection<BioAssaySet> expressionExperiments, boolean filterNonSpecific );
 
-    /**
-     * <p>
+    /***
      * Return a map of genes in genesB to all ExpressionExperiments in which the given set of pairs of genes was tested
      * for coexpression in, among the given ExpressionExperiments. A gene was tested if any probe for that gene passed
      * filtering criteria during analysis. It is assumed that in the database there is only one analysis per
      * ExpressionExperiment. The boolean parameter filterNonSpecific can be used to exclude ExpressionExperiments in
      * which one or both of the genes were detected by only probes predicted to be non-specific for the gene.
-     * </p>
+     * 
+     * @param geneA
+     * @param genesB
+     * @param expressionExperiments
+     * @param filterNonSpecific
+     * @return
      */
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ" })
     public java.util.Map<Long, Collection<BioAssaySet>> getExpressionExperimentsLinkTestedIn(
             ubic.gemma.model.genome.Gene geneA, java.util.Collection<Long> genesB,
             java.util.Collection<BioAssaySet> expressionExperiments, boolean filterNonSpecific );
 
     /**
-     * <p>
-     * Retrieve all genes that were included in the link analysis for the experiment.
-     * </p>
+     * @param geneIds
+     * @param experiments
+     * @param filterNonSpecific
+     * @return Map of gene ids to BioAssaySets among those provided in which the gene was tested for coexpression.
      */
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ" })
+    public java.util.Map<Long, Collection<BioAssaySet>> getExpressionExperimentsTestedIn(
+            java.util.Collection<Long> geneIds, java.util.Collection<BioAssaySet> experiments, boolean filterNonSpecific );
+
+    /**
+     * Retrieve all genes that were included in the link analysis for the experiment.
+     * 
+     * @param expressionExperiment
+     * @param filterNonSpecific
+     * @return
+     */
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     public java.util.Collection<Long> getGenesTestedBy(
             ubic.gemma.model.expression.experiment.BioAssaySet expressionExperiment, boolean filterNonSpecific );
 
     /**
+     * get the co-expression by using native sql query but doesn't use a temporary DB table.
      * 
+     * @param expressionExperiment
+     * @param taxon
+     * @return
      */
-    public java.util.Map<Long, Collection<BioAssaySet>> getExpressionExperimentsTestedIn(
-            java.util.Collection<Long> geneIds, java.util.Collection<BioAssaySet> experiments, boolean filterNonSpecific );
-    
-    public Collection<Long> validateProbesInCoexpression( Collection<Long> queryProbeIds,
-            Collection<Long> coexpressedProbeIds, ExpressionExperiment ee, String taxon );
-    
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    public java.util.Collection<ProbeLink> getProbeCoExpression(
+            ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment, java.lang.String taxon );
+
     /**
+     * Get the co-expression by using native sql query
      * 
-     * Returns the top coexpressed links under a given threshold for a given experiment up to a given limit. 
-     * If the limit is null then all results under the threshold will be returned. 
+     * @param expressionExperiment
+     * @param taxon
+     * @param useWorkingTable
+     * @return
+     */
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    public java.util.Collection<ProbeLink> getProbeCoExpression(
+            ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment, java.lang.String taxon,
+            boolean useWorkingTable );
+
+    /**
+     * Returns the top coexpressed links under a given threshold for a given experiment up to a given limit. If the
+     * limit is null then all results under the threshold will be returned.
      * 
      * @param ee
      * @param threshold
      * @param limit
      * @return
      */
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     public Collection<ProbeLink> getTopCoexpressedLinks( ExpressionExperiment ee, double threshold, Integer limit );
 
+    /**
+     * Returns a map of Genes to a Collection of DesignElementDataVectors for genes coexpressed with the gene (and
+     * including the gene).
+     */
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ" })
+    public Map<Gene, Collection<DesignElementDataVector>> getVectorsForLinks( java.util.Collection<Gene> genes,
+            java.util.Collection<ExpressionExperiment> ees );
 
+    /**
+     * Given a Gene, a collection of EE's returns a collection of all the designElementDataVectors that were coexpressed
+     * under the said given conditions.
+     */
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ" })
+    public java.util.Collection<DesignElementDataVector> getVectorsForLinks( ubic.gemma.model.genome.Gene gene,
+            java.util.Collection<ExpressionExperiment> ees );
+
+    /**
+     * Create a working table containing links by removing redundant and (optionally) non-specific probes from
+     * PROBE_CO_EXPRESSION. Results are stored in a species-specific temporary table managed by this method. This is
+     * only used for statistics gathering in probe evaluation experiments, not used by normal applications.
+     * 
+     * @param ees
+     * @param taxon
+     * @param filterNonSpecific
+     */
+    @Secured( { "GROUP_ADMIN", "ACL_SECURABLE_COLLECTION_READ" })
+    public void prepareForShuffling( java.util.Collection<ExpressionExperiment> ees, java.lang.String taxon,
+            boolean filterNonSpecific );
+
+    /**
+     * Given a list of probeIds and a taxon tests to see if the given list of probeIds were invloved in any coexpression
+     * links. That is to say: which of the given probes could have been involved in any coexpression results
+     * 
+     * @param queryProbeIds
+     * @param coexpressedProbeIds
+     * @param ee
+     * @param taxon
+     * @return
+     */
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    public Collection<Long> validateProbesInCoexpression( Collection<Long> queryProbeIds,
+            Collection<Long> coexpressedProbeIds, ExpressionExperiment ee, String taxon );
 
 }

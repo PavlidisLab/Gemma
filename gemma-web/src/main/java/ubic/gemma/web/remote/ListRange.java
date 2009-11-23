@@ -42,12 +42,12 @@ public class ListRange implements Serializable {
         return data;
     }
 
-    public void setData( Object[] data ) {
-        this.data = data;
-    }
-
     public int getTotalSize() {
         return totalSize;
+    }
+
+    public void setData( Object[] data ) {
+        this.data = data;
     }
 
     public void setTotalSize( int totalSize ) {

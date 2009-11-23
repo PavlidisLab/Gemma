@@ -18,7 +18,16 @@
  */
 package ubic.gemma.web.controller.expression.arrayDesign;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
 import org.apache.commons.lang.RandomStringUtils;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.validation.BindingResult;
@@ -29,28 +38,27 @@ import org.springframework.web.servlet.view.RedirectView;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
-import ubic.gemma.persistence.PersisterHelper;
-import ubic.gemma.testing.BaseSpringContextTest;
+import ubic.gemma.testing.BaseSpringWebTest;
 import ubic.gemma.util.ConfigUtils;
 
 /**
  * @author keshav
  * @version $Id$
  */
-public class ArrayDesignFormControllerTest extends BaseSpringContextTest {
+public class ArrayDesignFormControllerTest extends BaseSpringWebTest {
 
     ArrayDesign ad = null;
+
+    @Autowired
+    ArrayDesignFormController arrayDesignFormController;
 
     private MockHttpServletRequest request = null;
 
     /**
      * setUp
      */
-    @SuppressWarnings("unchecked")
-    @Override
-    public void onSetUpInTransaction() throws Exception {
-        super.onSetUpInTransaction();
-        endTransaction();
+    @Before
+    public void setup() throws Exception {
         ad = ArrayDesign.Factory.newInstance();
         ad.setName( RandomStringUtils.randomAlphabetic( 20 ) );
         ad.setDescription( "An array design created in the ArrayDesignFormControllerTest." );
@@ -59,35 +67,40 @@ public class ArrayDesignFormControllerTest extends BaseSpringContextTest {
         c.setName( RandomStringUtils.randomAlphabetic( 20 ) );
         ad.setDesignProvider( c );
 
-        PersisterHelper persisterHelper = ( PersisterHelper ) getBean( "persisterHelper" );
         ad = ( ArrayDesign ) persisterHelper.persist( ad );
         assert ad.getId() != null;
-    }
-
-    @Override
-    protected void onTearDownInTransaction() throws Exception {
-        super.onTearDownInTransaction();
-        ArrayDesignService ads = ( ArrayDesignService ) getBean( "arrayDesignService" );
-        if ( ad != null ) {
-            ads.remove( ad );
-        }
     }
 
     /**
      * @throws Exception
      */
+    @Test
+    public void testEdit() throws Exception {
+
+        request = super.newGet( "/arrays/editArrayDesign.html" );
+        request.setParameter( "name", ad.getName() );
+        request.setParameter( "id", ad.getId().toString() );
+        request.setRemoteUser( ConfigUtils.getString( "gemma.admin.user" ) );
+
+        ModelAndView mav = arrayDesignFormController.handleRequest( request, ( new MockHttpServletResponse() ) );
+
+        assertEquals( "arrayDesign.edit", mav.getViewName() );
+    }
+
+    /**
+     * @throws Exception
+     */
+    @Test
     public void testSave() throws Exception {
 
-        ArrayDesignFormController c = ( ArrayDesignFormController ) getBean( "arrayDesignFormController" );
-
-        request = new MockHttpServletRequest( "POST", "/arrays/editArrayDesign.html" );
+        request = newPost( "/arrays/editArrayDesign.html" );
         request.setParameter( "name", ad.getName() );
         request.setParameter( "description", ad.getDescription() );
         request.setRemoteUser( ConfigUtils.getString( "gemma.admin.user" ) );
         request.setParameter( "id", ad.getId().toString() );
-        ModelAndView mav = c.handleRequest( request, ( new MockHttpServletResponse() ) );
+        ModelAndView mav = arrayDesignFormController.handleRequest( request, ( new MockHttpServletResponse() ) );
 
-        String errorsKey = BindingResult.MODEL_KEY_PREFIX + c.getCommandName();
+        String errorsKey = BindingResult.MODEL_KEY_PREFIX + arrayDesignFormController.getCommandName();
         Errors errors = ( Errors ) mav.getModel().get( errorsKey );
 
         assertNull( "Got errors:" + errors, errors );
@@ -98,20 +111,11 @@ public class ArrayDesignFormControllerTest extends BaseSpringContextTest {
 
     }
 
-    /**
-     * @throws Exception
-     */
-    public void testEdit() throws Exception {
-        endTransaction();
-        ArrayDesignFormController c = ( ArrayDesignFormController ) getBean( "arrayDesignFormController" );
-
-        request = new MockHttpServletRequest( "GET", "/arrays/editArrayDesign.html" );
-        request.setParameter( "name", ad.getName() );
-        request.setParameter( "id", ad.getId().toString() );
-        request.setRemoteUser( ConfigUtils.getString( "gemma.admin.user" ) );
-
-        ModelAndView mav = c.handleRequest( request, ( new MockHttpServletResponse() ) );
-
-        assertEquals( "arrayDesign.edit", mav.getViewName() );
+    @After
+    public void tearDown() throws Exception {
+        if ( ad != null ) {
+            ArrayDesignService ads = ( ArrayDesignService ) getBean( "arrayDesignService" );
+            ads.remove( ad );
+        }
     }
 }

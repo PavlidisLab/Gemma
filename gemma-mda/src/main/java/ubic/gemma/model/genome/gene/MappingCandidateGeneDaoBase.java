@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.genome.gene;
 
+import java.util.Collection;
+
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 
 /**
@@ -35,13 +37,13 @@ public abstract class MappingCandidateGeneDaoBase extends HibernateDaoSupport im
      * @see ubic.gemma.model.genome.gene.MappingCandidateGeneDao#create(int, java.util.Collection)
      */
 
-    public java.util.Collection<MappingCandidateGene> create( final int transform,
-            final java.util.Collection<MappingCandidateGene> entities ) {
+    public java.util.Collection<? extends MappingCandidateGene> create( final int transform,
+            final java.util.Collection<? extends MappingCandidateGene> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "MappingCandidateGene.create - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback() {
+                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
@@ -71,8 +73,8 @@ public abstract class MappingCandidateGeneDaoBase extends HibernateDaoSupport im
      * @see ubic.gemma.model.genome.gene.MappingCandidateGeneDao#create(java.util.Collection)
      */
 
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Collection<MappingCandidateGene> create( final java.util.Collection<MappingCandidateGene> entities ) {
+    public java.util.Collection<? extends MappingCandidateGene> create(
+            final java.util.Collection<? extends MappingCandidateGene> entities ) {
         return create( TRANSFORM_NONE, entities );
     }
 
@@ -81,6 +83,11 @@ public abstract class MappingCandidateGeneDaoBase extends HibernateDaoSupport im
      */
     public MappingCandidateGene create( ubic.gemma.model.genome.gene.MappingCandidateGene mappingCandidateGene ) {
         return ( ubic.gemma.model.genome.gene.MappingCandidateGene ) this.create( TRANSFORM_NONE, mappingCandidateGene );
+    }
+
+    public Collection<? extends MappingCandidateGene> load( Collection<Long> ids ) {
+        return this.getHibernateTemplate().findByNamedParam( "from MappingCandidateGeneImpl where id in (:ids)", "ids",
+                ids );
     }
 
     /**
@@ -109,7 +116,6 @@ public abstract class MappingCandidateGeneDaoBase extends HibernateDaoSupport im
      * @see ubic.gemma.model.genome.gene.MappingCandidateGeneDao#loadAll()
      */
 
-    @SuppressWarnings( { "unchecked" })
     public java.util.Collection<MappingCandidateGene> loadAll() {
         return this.loadAll( TRANSFORM_NONE );
     }
@@ -118,7 +124,6 @@ public abstract class MappingCandidateGeneDaoBase extends HibernateDaoSupport im
      * @see ubic.gemma.model.genome.gene.MappingCandidateGeneDao#loadAll(int)
      */
 
-    @SuppressWarnings("unchecked")
     public java.util.Collection<MappingCandidateGene> loadAll( final int transform ) {
         final java.util.Collection results = this.getHibernateTemplate().loadAll(
                 ubic.gemma.model.genome.gene.MappingCandidateGeneImpl.class );
@@ -170,7 +175,7 @@ public abstract class MappingCandidateGeneDaoBase extends HibernateDaoSupport im
             throw new IllegalArgumentException( "MappingCandidateGene.update - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback() {
+                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {

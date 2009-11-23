@@ -38,31 +38,6 @@ public class TwoColorArrayLoessNormalizerTest extends TestCase {
     private boolean connected = false;
 
     /*
-     * @see TestCase#setUp()
-     */
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
-        connected = false;
-        try {
-            normalizer = new TwoColorArrayLoessNormalizer();
-            connected = true;
-        } catch ( Exception e1 ) {
-            connected = false;
-        }
-
-    }
-
-    /*
-     * @see TestCase#tearDown()
-     */
-    @Override
-    protected void tearDown() throws Exception {
-        super.tearDown();
-        if ( connected ) normalizer.cleanup();
-    }
-
-    /*
      * Test method for 'ubic.gemma.model.analysis.preprocess.TwoColorArrayLoessNormalizer.normalize(DoubleMatrixNamed,
      * DoubleMatrixNamed, DoubleMatrixNamed, DoubleMatrixNamed, DoubleMatrixNamed)'
      */
@@ -106,6 +81,31 @@ public class TwoColorArrayLoessNormalizerTest extends TestCase {
 
         assertEquals( 100, result.rows() );
         assertEquals( 4, result.columns() );
+    }
+
+    /*
+     * @see TestCase#setUp()
+     */
+    @Override
+    protected void setUp() throws Exception {
+        super.setUp();
+        connected = false;
+        try {
+            normalizer = new TwoColorArrayLoessNormalizer();
+            connected = true;
+        } catch ( Exception e1 ) {
+            connected = false;
+        }
+
+    }
+
+    /*
+     * @see TestCase#tearDown()
+     */
+    @Override
+    protected void tearDown() throws Exception {
+        super.tearDown();
+        if ( connected ) normalizer.cleanup();
     }
 
 }

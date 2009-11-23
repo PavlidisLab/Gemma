@@ -31,18 +31,19 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.collections.Predicate;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindException;
-import org.springframework.web.bind.ServletRequestDataBinder;
+import org.springframework.web.bind.WebDataBinder;
+import org.springframework.web.bind.annotation.InitBinder;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
-import ubic.gemma.loader.genome.taxon.SupportedTaxa;
 import ubic.gemma.model.association.Gene2GOAssociationService;
-import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -59,8 +60,8 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.search.SearchResult;
 import ubic.gemma.search.SearchService;
 import ubic.gemma.search.SearchSettings;
-import ubic.gemma.security.AuditableUtil;
 import ubic.gemma.security.SecurityService;
+import ubic.gemma.security.audit.AuditableUtil;
 import ubic.gemma.util.EntityUtils;
 import ubic.gemma.web.propertyeditor.TaxonPropertyEditor;
 import ubic.gemma.web.remote.ListRange;
@@ -68,51 +69,40 @@ import ubic.gemma.web.remote.ListRange;
 /**
  * @author klc
  * @version $Id$
- * @spring.bean id="generalSearchController"
- * @spring.property name = "commandName" value="searchSettings"
- * @spring.property name = "commandClass" value="ubic.gemma.search.SearchSettings"
- * @spring.property name="formView" value="generalSearch"
- * @spring.property name="successView" value="generalSearch"
- * @spring.property name="searchService" ref="searchService"
- * @spring.property name = "expressionExperimentService" ref="expressionExperimentService"
- * @spring.property name = "arrayDesignService" ref="arrayDesignService"
- * @spring.property name = "gene2GOAssociationService" ref="gene2GOAssociationService"
- * @spring.property name = "taxonService" ref="taxonService"
- * @spring.property name="auditableUtil" ref="auditableUtil"
  */
+@Controller
 public class GeneralSearchController extends BaseFormController {
+    @Autowired
     private SearchService searchService;
 
+    @Autowired
     private ExpressionExperimentService expressionExperimentService;
 
+    @Autowired
     private ArrayDesignService arrayDesignService;
 
+    @Autowired
     private Gene2GOAssociationService gene2GOAssociationService;
 
+    @Autowired
     private TaxonService taxonService;
 
+    @Autowired
     private AuditableUtil auditableUtil;
 
-    /**
-     * @param auditableUtil the auditableUtil to set
-     */
-    public void setAuditableUtil( AuditableUtil auditableUtil ) {
-        this.auditableUtil = auditableUtil;
-    }
-
-    @Override
     @SuppressWarnings("unchecked")
-    public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
+    @RequestMapping(value = "/searcher.html", method = RequestMethod.POST)
+    public ModelAndView doSearch( HttpServletRequest request, HttpServletResponse response, SearchSettings command,
             BindException errors ) throws Exception {
 
-        SearchSettings settings = ( SearchSettings ) command;
+        SearchSettings settings = command;
 
-        ModelAndView mav = super.showForm( request, errors, getSuccessView() );
+        ModelAndView mav = new ModelAndView( "generalSearch" );
 
         if ( !searchStringValidator( settings.getQuery() ) ) {
             this.saveMessage( request, "Invalid search string" );
             log.info( "User entered an invalid search: " + settings.getQuery() );
-            return super.showForm( request, errors, getSuccessView() );
+            return mav;
         }
 
         log.info( "General search for " + settings );
@@ -125,7 +115,7 @@ public class GeneralSearchController extends BaseFormController {
         /*
          * Here is where the magic happens.
          */
-        Map<Class, List<SearchResult>> searchResults = searchService.search( settings );
+        Map<Class<?>, List<SearchResult>> searchResults = searchService.search( settings );
 
         if ( searchResults != null ) {
             for ( Class clazz : searchResults.keySet() ) {
@@ -151,9 +141,8 @@ public class GeneralSearchController extends BaseFormController {
     /**
      * 
      */
-    @Override
     public ModelAndView processFormSubmission( HttpServletRequest request, HttpServletResponse response,
-            Object command, BindException errors ) throws Exception {
+            SearchSettings command, BindException errors ) throws Exception {
 
         if ( request.getParameter( "query" ) != null ) {
             ModelAndView mav = new ModelAndView();
@@ -166,7 +155,7 @@ public class GeneralSearchController extends BaseFormController {
             return new ModelAndView( new RedirectView( "mainMenu.html" ) );
         }
 
-        return super.processFormSubmission( request, response, command, errors );
+        return this.doSearch( request, response, command, errors );
     }
 
     /**
@@ -182,11 +171,11 @@ public class GeneralSearchController extends BaseFormController {
             // FIXME validate input better, and return error.
             log.info( "No query or invalid." );
             // return new ListRange( finalResults );
-            throw new IllegalArgumentException( "Query " + settings.getQuery() + " was invalid" );
+            throw new IllegalArgumentException( "Query '" + settings + "' was invalid" );
         }
         StopWatch watch = new StopWatch();
         watch.start();
-        Map<Class, List<SearchResult>> searchResults = searchService.search( settings );
+        Map<Class<?>, List<SearchResult>> searchResults = searchService.search( settings );
         watch.stop();
 
         if ( watch.getTime() > 500 ) {
@@ -233,6 +222,13 @@ public class GeneralSearchController extends BaseFormController {
     }
 
     /**
+     * @param auditableUtil the auditableUtil to set
+     */
+    public void setAuditableUtil( AuditableUtil auditableUtil ) {
+        this.auditableUtil = auditableUtil;
+    }
+
+    /**
      * @param expressionExperimentService the expressionExperimentService to set
      */
     public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
@@ -273,12 +269,12 @@ public class GeneralSearchController extends BaseFormController {
     }
 
     @Override
-    protected void initBinder( HttpServletRequest request, ServletRequestDataBinder binder ) {
-        super.initBinder( request, binder );
+    @InitBinder
+    protected void initBinder( WebDataBinder binder ) {
+        super.initBinder( binder );
         binder.registerCustomEditor( Taxon.class, new TaxonPropertyEditor( this.taxonService ) );
     }
 
-    @SuppressWarnings("unused")
     @Override
     protected Map referenceData( HttpServletRequest request ) {
         Map<String, List<? extends Object>> mapping = new HashMap<String, List<? extends Object>>();
@@ -295,6 +291,7 @@ public class GeneralSearchController extends BaseFormController {
      * javax.servlet.http.HttpServletResponse, org.springframework.validation.BindException)
      */
     @Override
+    @RequestMapping(value = "/searcher.html", method = RequestMethod.GET)
     protected ModelAndView showForm( HttpServletRequest request, HttpServletResponse response, BindException errors )
             throws Exception {
         if ( request.getParameter( "query" ) != null ) {
@@ -331,10 +328,10 @@ public class GeneralSearchController extends BaseFormController {
                 csc.setGeneralSearch( true );
             }
 
-            return this.onSubmit( request, response, csc, errors );
+            return this.doSearch( request, response, csc, errors );
         }
 
-        return super.showForm( request, response, errors );
+        return new ModelAndView( "generalSearch" );
     }
 
     /**
@@ -430,7 +427,7 @@ public class GeneralSearchController extends BaseFormController {
     @SuppressWarnings("unchecked")
     private void populateTaxonReferenceData( Map mapping ) {
         List<Taxon> taxa = new ArrayList<Taxon>();
-        for ( Taxon taxon : ( Collection<Taxon> ) taxonService.loadAll() ) {
+        for ( Taxon taxon : taxonService.loadAll() ) {
             taxa.add( taxon );
         }
         Collections.sort( taxa, new Comparator<Taxon>() {

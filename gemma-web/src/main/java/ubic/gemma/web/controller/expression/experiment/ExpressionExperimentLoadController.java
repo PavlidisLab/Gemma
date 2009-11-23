@@ -22,11 +22,13 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.Future;
 
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.lang.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
@@ -34,8 +36,9 @@ import ubic.gemma.analysis.preprocess.ProcessedExpressionDataVectorCreateService
 import ubic.gemma.analysis.preprocess.TwoChannelMissingValues;
 import ubic.gemma.grid.javaspaces.TaskCommand;
 import ubic.gemma.grid.javaspaces.TaskResult;
-import ubic.gemma.grid.javaspaces.expression.experiment.ExpressionExperimentLoadTask;
-import ubic.gemma.grid.javaspaces.expression.experiment.ExpressionExperimentLoadTaskCommand;
+import ubic.gemma.grid.javaspaces.task.expression.experiment.ExpressionExperimentLoadTask;
+import ubic.gemma.grid.javaspaces.task.expression.experiment.ExpressionExperimentLoadTaskCommand;
+import ubic.gemma.grid.javaspaces.util.SpacesEnum;
 import ubic.gemma.loader.expression.arrayExpress.ArrayExpressLoadService;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.loader.expression.geo.service.GeoDatasetService;
@@ -43,9 +46,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.util.grid.javaspaces.SpacesEnum;
-import ubic.gemma.util.progress.TaskRunningService;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentService; 
 import ubic.gemma.web.controller.BackgroundControllerJob;
 import ubic.gemma.web.controller.BaseControllerJob;
 import ubic.gemma.web.controller.grid.AbstractSpacesController;
@@ -58,108 +59,12 @@ import ubic.gemma.web.controller.grid.AbstractSpacesController;
  * @author pavlidis
  * @author keshav
  * @version $Id$
- * @spring.bean id="expressionExperimentLoadController"
- * @spring.property name="geoDatasetService" ref="geoDatasetService"
- * @spring.property name="arrayDesignService" ref="arrayDesignService"
- * @spring.property name="arrayExpressLoadService" ref="arrayExpressLoadService"
- * @spring.property name="eeService" ref="expressionExperimentService"
- * @spring.property name="twoChannelMissingValueService" ref="twoChannelMissingValues"
- * @spring.property name="processedExpressionDataVectorCreateService" ref="processedExpressionDataVectorCreateService"
  * @see ubic.gemma.web.controller.expression.experiment.ExpressionDataFileUploadController for how flat-file data is
  *      loaded.
  */
+@Controller
+@RequestMapping("/admin/loadExpressionExperiment.html")
 public class ExpressionExperimentLoadController extends AbstractSpacesController<ModelAndView> {
-
-    public void setEeService( ExpressionExperimentService eeService ) {
-        this.eeService = eeService;
-    }
-
-    GeoDatasetService geoDatasetService;
-
-    ArrayDesignService arrayDesignService;
-
-    ArrayExpressLoadService arrayExpressLoadService;
-    ExpressionExperimentService eeService;
-    ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService;
-    TwoChannelMissingValues twoChannelMissingValueService;
-
-    public void setProcessedExpressionDataVectorCreateService(
-            ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService ) {
-        this.processedExpressionDataVectorCreateService = processedExpressionDataVectorCreateService;
-    }
-
-    public void setTwoChannelMissingValueService( TwoChannelMissingValues twoChannelMissingValueService ) {
-        this.twoChannelMissingValueService = twoChannelMissingValueService;
-    }
-
-    /**
-     * Main entry point for AJAX calls.
-     * 
-     * @param command
-     * @return
-     */
-    public String run( ExpressionExperimentLoadTaskCommand command ) {
-        // remove stray whitespace.
-        command.setAccession( StringUtils.strip( command.getAccession() ) );
-
-        if ( StringUtils.isBlank( command.getAccession() ) ) {
-            throw new IllegalArgumentException( "Must provide an accession" );
-        }
-
-        return run( command, SpacesEnum.DEFAULT_SPACE.getSpaceUrl(), ExpressionExperimentLoadTask.class.getName(), true );
-    }
-
-    /**
-     * @param arrayDesignService the arrayDesignService to set
-     */
-    public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
-        this.arrayDesignService = arrayDesignService;
-    }
-
-    /**
-     * @param arrayExpressLoadService the arrayExpressLoadService to set
-     */
-    public void setArrayExpressLoadService( ArrayExpressLoadService arrayExpressLoadService ) {
-        this.arrayExpressLoadService = arrayExpressLoadService;
-    }
-
-    /**
-     * @param geoDatasetService the geoDatasetService to set
-     */
-    public void setGeoDatasetService( GeoDatasetService geoDatasetService ) {
-        this.geoDatasetService = geoDatasetService;
-    }
-
-    /*
-     * (non-Javadoc)
-     * @see ubic.gemma.web.controller.grid.AbstractSpacesController#getRunner(java.lang.String, java.lang.Object)
-     */
-    @Override
-    protected BackgroundControllerJob<ModelAndView> getRunner( String taskId, Object command ) {
-
-        return new LoadJob( taskId, command );
-    }
-
-    /*
-     * (non-Javadoc)
-     * @see ubic.gemma.web.controller.grid.AbstractSpacesController#getSpaceRunner(java.lang.String, java.lang.Object)
-     */
-    @Override
-    protected BackgroundControllerJob<ModelAndView> getSpaceRunner( String taskId, Object command ) {
-        return new LoadInSpaceJob( taskId, command );
-    }
-
-    /**
-     * This method has been deprecated in favor of an ajax call.
-     * 
-     * @param request
-     * @deprecated
-     */
-    @Deprecated
-    private void cancel( HttpServletRequest request ) {
-        Future job = ( Future ) request.getSession().getAttribute( TaskRunningService.JOB_ATTRIBUTE );
-        job.cancel( true );
-    }
 
     /**
      * Job that loads in a javaspace.
@@ -190,24 +95,6 @@ public class ExpressionExperimentLoadController extends AbstractSpacesController
         }
 
         /**
-         * @param cmd
-         * @return
-         */
-        private TaskResult process( ExpressionExperimentLoadTaskCommand cmd ) {
-            cmd.setTaskId( this.taskId );
-            try {
-                TaskResult result = eeTaskProxy.execute( cmd );
-                return result;
-            } catch ( Exception e ) {
-                if ( e instanceof InterruptedException ) {
-                    log.info( "Job was cancelled" );
-                    return null;
-                }
-                throw new RuntimeException( e );
-            }
-        }
-
-        /**
          * @param model
          * @param list
          * @return
@@ -224,6 +111,24 @@ public class ExpressionExperimentLoadController extends AbstractSpacesController
         protected ModelAndView processPlatformOnlyJob( ExpressionExperimentLoadTaskCommand eeLoadCommand ) {
             TaskResult result = this.process( eeLoadCommand );
             return super.processArrayDesignResult( ( Collection<ArrayDesign> ) result.getAnswer() );
+        }
+
+        /**
+         * @param cmd
+         * @return
+         */
+        private TaskResult process( ExpressionExperimentLoadTaskCommand cmd ) {
+            cmd.setTaskId( this.taskId );
+            try {
+                TaskResult result = eeTaskProxy.execute( cmd );
+                return result;
+            } catch ( Exception e ) {
+                if ( e instanceof InterruptedException ) {
+                    log.info( "Job was cancelled" );
+                    return null;
+                }
+                throw new RuntimeException( e );
+            }
         }
 
     }
@@ -258,25 +163,6 @@ public class ExpressionExperimentLoadController extends AbstractSpacesController
             super.initializeProgressJob( expressionExperimentLoadCommand.getAccession() );
 
             return processJob( expressionExperimentLoadCommand );
-
-        }
-
-        /*
-         * (non-Javadoc)
-         * @see ubic.gemma.web.controller.BaseControllerJob#processJob(ubic.gemma.grid.javaspaces.TaskCommand)
-         */
-        @Override
-        protected ModelAndView processJob( TaskCommand c ) {
-
-            ExpressionExperimentLoadTaskCommand expressionExperimentLoadCommand = ( ExpressionExperimentLoadTaskCommand ) c;
-
-            if ( expressionExperimentLoadCommand.isLoadPlatformOnly() ) {
-                return processPlatformOnlyJob( expressionExperimentLoadCommand );
-            } else if ( expressionExperimentLoadCommand.isArrayExpress() ) {
-                return processArrayExpressJob( expressionExperimentLoadCommand );
-            } else /* GEO */{
-                return processGEODataJob( expressionExperimentLoadCommand );
-            }
 
         }
 
@@ -359,6 +245,88 @@ public class ExpressionExperimentLoadController extends AbstractSpacesController
         }
 
         /**
+         * @param result
+         * @return
+         */
+        protected ModelAndView processGeoLoadResult( Collection<ExpressionExperiment> result ) {
+            Map<Object, Object> model = new HashMap<Object, Object>();
+            if ( result == null || result.size() == 0 ) {
+                throw new RuntimeException( "No results were returned (cancelled or failed)" );
+            }
+            if ( result.size() == 1 ) {
+                ExpressionExperiment loaded = result.iterator().next();
+                this.saveMessage( "Successfully loaded " + loaded );
+                model.put( "expressionExperiment", loaded );
+                return new ModelAndView( new RedirectView(
+                        "/Gemma/expressionExperiment/showExpressionExperiment.html?id="
+                                + result.iterator().next().getId() ) );
+            }
+
+            this.saveMessage( "Successfully loaded " + result.size() + " expression experiments" );
+            String list = "";
+            for ( ExpressionExperiment ee : result )
+                list += ee.getId() + ",";
+            return new ModelAndView( new RedirectView(
+                    "/Gemma/expressionExperiment/showAllExpressionExperiments.html?ids=" + list ) );
+        }
+
+        /*
+         * (non-Javadoc)
+         * @see ubic.gemma.web.controller.BaseControllerJob#processJob(ubic.gemma.grid.javaspaces.TaskCommand)
+         */
+        @Override
+        protected ModelAndView processJob( TaskCommand c ) {
+
+            ExpressionExperimentLoadTaskCommand expressionExperimentLoadCommand = ( ExpressionExperimentLoadTaskCommand ) c;
+
+            if ( expressionExperimentLoadCommand.isLoadPlatformOnly() ) {
+                return processPlatformOnlyJob( expressionExperimentLoadCommand );
+            } else if ( expressionExperimentLoadCommand.isArrayExpress() ) {
+                return processArrayExpressJob( expressionExperimentLoadCommand );
+            } else /* GEO */{
+                return processGEODataJob( expressionExperimentLoadCommand );
+            }
+
+        }
+
+        /**
+         * For when we're only loading the platform.
+         * 
+         * @param job
+         * @param accesionNum
+         * @param doSampleMatching
+         * @param aggressiveQtRemoval
+         * @param model
+         * @param list
+         * @return
+         */
+        @SuppressWarnings("unchecked")
+        protected ModelAndView processPlatformOnlyJob(
+                ExpressionExperimentLoadTaskCommand expressionExperimentLoadCommand ) {
+            String accession = getAccession( expressionExperimentLoadCommand );
+
+            boolean doSampleMatching = !expressionExperimentLoadCommand.isSuppressMatching();
+            boolean aggressiveQtRemoval = expressionExperimentLoadCommand.isAggressiveQtRemoval();
+            Collection<ArrayDesign> arrayDesigns = geoDatasetService.fetchAndLoad( accession, true, doSampleMatching,
+                    aggressiveQtRemoval, false, true ); // last parameters are irrelevant.
+
+            return processArrayDesignResult( arrayDesigns );
+        }
+
+        /**
+         * Clean up the access provided by the user.
+         * 
+         * @param expressionExperimentLoadCommand
+         * @return
+         */
+        private String getAccession( ExpressionExperimentLoadTaskCommand expressionExperimentLoadCommand ) {
+            String accesionNum = expressionExperimentLoadCommand.getAccession();
+            accesionNum = StringUtils.strip( accesionNum );
+            accesionNum = StringUtils.upperCase( accesionNum );
+            return accesionNum;
+        }
+
+        /**
          * Do missing value and processed vector creation steps.
          * 
          * @param ees
@@ -400,69 +368,94 @@ public class ExpressionExperimentLoadController extends AbstractSpacesController
 
             return wasProcessed;
         }
+    }
 
-        /**
-         * @param result
-         * @return
-         */
-        protected ModelAndView processGeoLoadResult( Collection<ExpressionExperiment> result ) {
-            Map<Object, Object> model = new HashMap<Object, Object>();
-            if ( result == null || result.size() == 0 ) {
-                throw new RuntimeException( "No results were returned (cancelled or failed)" );
-            }
-            if ( result.size() == 1 ) {
-                ExpressionExperiment loaded = result.iterator().next();
-                this.saveMessage( "Successfully loaded " + loaded );
-                model.put( "expressionExperiment", loaded );
-                return new ModelAndView( new RedirectView(
-                        "/Gemma/expressionExperiment/showExpressionExperiment.html?id="
-                                + result.iterator().next().getId() ) );
-            }
+    @Autowired
+    GeoDatasetService geoDatasetService;
 
-            this.saveMessage( "Successfully loaded " + result.size() + " expression experiments" );
-            String list = "";
-            for ( ExpressionExperiment ee : result )
-                list += ee.getId() + ",";
-            return new ModelAndView( new RedirectView(
-                    "/Gemma/expressionExperiment/showAllExpressionExperiments.html?ids=" + list ) );
+    @Autowired
+    ArrayDesignService arrayDesignService;
+
+    @Autowired
+    ArrayExpressLoadService arrayExpressLoadService;
+
+    @Autowired
+    ExpressionExperimentService eeService;
+
+    @Autowired
+    ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService;
+
+    @Autowired
+    TwoChannelMissingValues twoChannelMissingValueService;
+
+    /**
+     * Main entry point for AJAX calls.
+     * 
+     * @param command
+     * @return
+     */
+    public String run( ExpressionExperimentLoadTaskCommand command ) {
+        // remove stray whitespace.
+        command.setAccession( StringUtils.strip( command.getAccession() ) );
+
+        if ( StringUtils.isBlank( command.getAccession() ) ) {
+            throw new IllegalArgumentException( "Must provide an accession" );
         }
 
-        /**
-         * For when we're only loading the platform.
-         * 
-         * @param job
-         * @param accesionNum
-         * @param doSampleMatching
-         * @param aggressiveQtRemoval
-         * @param model
-         * @param list
-         * @return
-         */
-        @SuppressWarnings("unchecked")
-        protected ModelAndView processPlatformOnlyJob(
-                ExpressionExperimentLoadTaskCommand expressionExperimentLoadCommand ) {
-            String accession = getAccession( expressionExperimentLoadCommand );
+        return run( command, SpacesEnum.DEFAULT_SPACE.getSpaceUrl(), ExpressionExperimentLoadTask.class.getName(), true );
+    }
 
-            boolean doSampleMatching = !expressionExperimentLoadCommand.isSuppressMatching();
-            boolean aggressiveQtRemoval = expressionExperimentLoadCommand.isAggressiveQtRemoval();
-            Collection<ArrayDesign> arrayDesigns = geoDatasetService.fetchAndLoad( accession, true, doSampleMatching,
-                    aggressiveQtRemoval, false, true ); // last parameters are irrelevant.
+    /**
+     * @param arrayDesignService the arrayDesignService to set
+     */
+    public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
+        this.arrayDesignService = arrayDesignService;
+    }
 
-            return processArrayDesignResult( arrayDesigns );
-        }
+    /**
+     * @param arrayExpressLoadService the arrayExpressLoadService to set
+     */
+    public void setArrayExpressLoadService( ArrayExpressLoadService arrayExpressLoadService ) {
+        this.arrayExpressLoadService = arrayExpressLoadService;
+    }
 
-        /**
-         * Clean up the access provided by the user.
-         * 
-         * @param expressionExperimentLoadCommand
-         * @return
-         */
-        private String getAccession( ExpressionExperimentLoadTaskCommand expressionExperimentLoadCommand ) {
-            String accesionNum = expressionExperimentLoadCommand.getAccession();
-            accesionNum = StringUtils.strip( accesionNum );
-            accesionNum = StringUtils.upperCase( accesionNum );
-            return accesionNum;
-        }
+    public void setEeService( ExpressionExperimentService eeService ) {
+        this.eeService = eeService;
+    }
+
+    /**
+     * @param geoDatasetService the geoDatasetService to set
+     */
+    public void setGeoDatasetService( GeoDatasetService geoDatasetService ) {
+        this.geoDatasetService = geoDatasetService;
+    }
+
+    public void setProcessedExpressionDataVectorCreateService(
+            ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService ) {
+        this.processedExpressionDataVectorCreateService = processedExpressionDataVectorCreateService;
+    }
+
+    public void setTwoChannelMissingValueService( TwoChannelMissingValues twoChannelMissingValueService ) {
+        this.twoChannelMissingValueService = twoChannelMissingValueService;
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see ubic.gemma.web.controller.grid.AbstractSpacesController#getRunner(java.lang.String, java.lang.Object)
+     */
+    @Override
+    protected BackgroundControllerJob<ModelAndView> getRunner( String taskId, Object command ) {
+
+        return new LoadJob( taskId, command );
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see ubic.gemma.web.controller.grid.AbstractSpacesController#getSpaceRunner(java.lang.String, java.lang.Object)
+     */
+    @Override
+    protected BackgroundControllerJob<ModelAndView> getSpaceRunner( String taskId, Object command ) {
+        return new LoadInSpaceJob( taskId, command );
     }
 
     /*
@@ -472,7 +465,7 @@ public class ExpressionExperimentLoadController extends AbstractSpacesController
      */
     @Override
     protected String getViewNameForRequest( HttpServletRequest arg0 ) {
-        return "loadExpressionExperimentForm";
+        return "/admin/loadExpressionExperimentForm";
     }
 
 }

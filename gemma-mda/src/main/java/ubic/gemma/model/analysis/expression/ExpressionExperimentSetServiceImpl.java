@@ -21,11 +21,13 @@ package ubic.gemma.model.analysis.expression;
 import java.util.Collection;
 
 import org.apache.commons.lang.StringUtils;
+import org.springframework.stereotype.Service;
 
 /**
  * @version $Id$
  * @see ubic.gemma.model.analysis.expression.ExpressionExperimentSetService
  */
+@Service
 public class ExpressionExperimentSetServiceImpl extends
         ubic.gemma.model.analysis.expression.ExpressionExperimentSetServiceBase {
 
@@ -77,7 +79,7 @@ public class ExpressionExperimentSetServiceImpl extends
      */
     @Override
     protected java.util.Collection<ExpressionExperimentSet> handleLoadAll() throws java.lang.Exception {
-        return this.getExpressionExperimentSetDao().loadAll();
+        return ( Collection<ExpressionExperimentSet> ) this.getExpressionExperimentSetDao().loadAll();
 
     }
 

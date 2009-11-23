@@ -18,8 +18,11 @@
  */
 package ubic.gemma.model.common.description;
 
+import org.springframework.security.access.annotation.Secured;
+
 /**
- * 
+ * @author kelsey
+ * @version $Id$
  */
 public interface DatabaseEntryService {
 
@@ -37,11 +40,13 @@ public interface DatabaseEntryService {
     /**
      * 
      */
+    @Secured( { "GROUP_USER" })
     public void remove( ubic.gemma.model.common.description.DatabaseEntry databaseEntry );
 
     /**
      * 
      */
+    @Secured( { "GROUP_USER" })
     public void update( ubic.gemma.model.common.description.DatabaseEntry databaseEntry );
 
 }

@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.common.description;
 
+import java.util.Collection;
+
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 
 /**
@@ -40,7 +42,7 @@ public abstract class DataPropertyDaoBase extends HibernateDaoSupport implements
             throw new IllegalArgumentException( "DataProperty.create - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback() {
+                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
@@ -51,6 +53,11 @@ public abstract class DataPropertyDaoBase extends HibernateDaoSupport implements
                     }
                 } );
         return entities;
+    }
+    
+    
+    public Collection<? extends DataProperty > load( Collection<Long> ids ) {
+        return this.getHibernateTemplate().findByNamedParam( "from DataPropertyImpl where id in (:ids)", "ids", ids );
     }
 
     /**
@@ -69,7 +76,7 @@ public abstract class DataPropertyDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.common.description.DataPropertyDao#create(java.util.Collection)
      */
 
-    @SuppressWarnings( { "unchecked" })
+    
     public java.util.Collection create( final java.util.Collection entities ) {
         return create( TRANSFORM_NONE, entities );
     }
@@ -106,7 +113,7 @@ public abstract class DataPropertyDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.common.description.DataPropertyDao#loadAll()
      */
 
-    @SuppressWarnings( { "unchecked" })
+    
     public java.util.Collection loadAll() {
         return this.loadAll( TRANSFORM_NONE );
     }
@@ -166,7 +173,7 @@ public abstract class DataPropertyDaoBase extends HibernateDaoSupport implements
             throw new IllegalArgumentException( "DataProperty.update - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback() {
+                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {

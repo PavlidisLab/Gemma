@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.expression.designElement;
 
+import org.springframework.beans.factory.annotation.Autowired;
+
 /**
  * <p>
  * Spring Service base class for <code>ubic.gemma.model.expression.designElement.ReporterService</code>, provides access
@@ -28,6 +30,7 @@ package ubic.gemma.model.expression.designElement;
  */
 public abstract class ReporterServiceBase implements ubic.gemma.model.expression.designElement.ReporterService {
 
+    @Autowired
     private ubic.gemma.model.expression.designElement.ReporterDao reporterDao;
 
     /**

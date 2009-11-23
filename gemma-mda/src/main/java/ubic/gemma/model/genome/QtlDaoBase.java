@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.genome;
 
+import java.util.Collection;
+
 /**
  * <p>
  * Base Spring DAO Class: is able to create, update, remove, load, and find objects of type
@@ -36,7 +38,7 @@ public abstract class QtlDaoBase extends BaseQtlDaoImpl<Qtl> implements QtlDao {
             throw new IllegalArgumentException( "Qtl.create - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback() {
+                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator<Qtl> entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
@@ -62,7 +64,7 @@ public abstract class QtlDaoBase extends BaseQtlDaoImpl<Qtl> implements QtlDao {
     /**
      * @see ubic.gemma.model.genome.BaseQtlDao#create(java.util.Collection)
      */
-    @SuppressWarnings( { "unchecked" })
+
     public java.util.Collection create( final java.util.Collection entities ) {
         return create( TRANSFORM_NONE, entities );
     }
@@ -72,6 +74,10 @@ public abstract class QtlDaoBase extends BaseQtlDaoImpl<Qtl> implements QtlDao {
      */
     public Qtl create( ubic.gemma.model.genome.Qtl qtl ) {
         return ( ubic.gemma.model.genome.Qtl ) this.create( TRANSFORM_NONE, qtl );
+    }
+
+    public Collection<? extends Qtl> load( Collection<Long> ids ) {
+        return this.getHibernateTemplate().findByNamedParam( "from QtlImpl where id in (:ids)", "ids", ids );
     }
 
     /**
@@ -98,7 +104,6 @@ public abstract class QtlDaoBase extends BaseQtlDaoImpl<Qtl> implements QtlDao {
      * @see ubic.gemma.model.genome.BaseQtlDao#loadAll()
      */
 
-    @SuppressWarnings( { "unchecked" })
     public java.util.Collection loadAll() {
         return this.loadAll( TRANSFORM_NONE );
     }
@@ -107,9 +112,8 @@ public abstract class QtlDaoBase extends BaseQtlDaoImpl<Qtl> implements QtlDao {
      * @see ubic.gemma.model.genome.BaseQtlDao#loadAll(int)
      */
 
-    @SuppressWarnings("unchecked")
-    public java.util.Collection<Qtl> loadAll( final int transform ) {
-        final java.util.Collection<Qtl> results = this.getHibernateTemplate().loadAll(
+    public java.util.Collection<? extends Qtl> loadAll( final int transform ) {
+        final java.util.Collection<? extends Qtl> results = this.getHibernateTemplate().loadAll(
                 ubic.gemma.model.genome.QtlImpl.class );
         this.transformEntities( transform, results );
         return results;
@@ -133,7 +137,7 @@ public abstract class QtlDaoBase extends BaseQtlDaoImpl<Qtl> implements QtlDao {
      * @see ubic.gemma.model.common.SecurableDao#remove(java.util.Collection)
      */
 
-    public void remove( java.util.Collection<Qtl> entities ) {
+    public void remove( java.util.Collection<? extends Qtl> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "Qtl.remove - 'entities' can not be null" );
         }
@@ -154,15 +158,16 @@ public abstract class QtlDaoBase extends BaseQtlDaoImpl<Qtl> implements QtlDao {
      * @see ubic.gemma.model.common.SecurableDao#update(java.util.Collection)
      */
 
-    public void update( final java.util.Collection<Qtl> entities ) {
+    public void update( final java.util.Collection<? extends Qtl> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "Qtl.update - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback() {
+                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator<Qtl> entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                        for ( java.util.Iterator<? extends Qtl> entityIterator = entities.iterator(); entityIterator
+                                .hasNext(); ) {
                             update( entityIterator.next() );
                         }
                         return null;

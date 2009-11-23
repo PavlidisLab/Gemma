@@ -21,6 +21,8 @@ package ubic.gemma.model.analysis.expression.coexpression;
 import java.util.Collection;
 import java.util.Map;
 
+import org.springframework.stereotype.Service;
+
 import ubic.gemma.model.analysis.Investigation;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -31,8 +33,13 @@ import ubic.gemma.model.genome.Taxon;
  * @version $Id$
  * @author paul
  */
+@Service
 public class ProbeCoexpressionAnalysisServiceImpl extends
         ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisServiceBase {
+
+    public Collection<CompositeSequence> getAssayedProbes( ExpressionExperiment experiment ) {
+        return this.getProbeCoexpressionAnalysisDao().getAssayedProbes( experiment );
+    }
 
     /**
      * @see ubic.gemma.model.analysis.expression.ProbeCoexpressionAnalysisService#create(ubic.gemma.model.analysis.expression.ProbeCoexpressionAnalysis)
@@ -42,11 +49,6 @@ public class ProbeCoexpressionAnalysisServiceImpl extends
             ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis probeCoexpressionAnalysis )
             throws java.lang.Exception {
         return this.getProbeCoexpressionAnalysisDao().create( probeCoexpressionAnalysis );
-    }
-
-    @Override
-    protected void handleDelete( Long idToDelete ) throws Exception {
-        this.getProbeCoexpressionAnalysisDao().remove( idToDelete );
     }
 
     @Override
@@ -70,15 +72,14 @@ public class ProbeCoexpressionAnalysisServiceImpl extends
     }
 
     @Override
-    protected Collection handleFindByTaxon( Taxon taxon ) throws Exception {
-        return this.getProbeCoexpressionAnalysisDao().findByTaxon( taxon );
-    }
-
-    @Override
     protected Collection handleFindByParentTaxon( Taxon taxon ) throws Exception {
         return this.getProbeCoexpressionAnalysisDao().findByParentTaxon( taxon );
     }
-    
+
+    @Override
+    protected Collection handleFindByTaxon( Taxon taxon ) throws Exception {
+        return this.getProbeCoexpressionAnalysisDao().findByTaxon( taxon );
+    }
 
     @SuppressWarnings("unchecked")
     @Override
@@ -122,8 +123,8 @@ public class ProbeCoexpressionAnalysisServiceImpl extends
         return this.getProbeCoexpressionAnalysisDao().loadAll();
     }
 
-    public Collection<CompositeSequence> getAssayedProbes( ExpressionExperiment experiment ) {
-        return this.getProbeCoexpressionAnalysisDao().getAssayedProbes( experiment );
+    public void update( ProbeCoexpressionAnalysis o ) {
+        this.getProbeCoexpressionAnalysisDao().update( o );
     }
 
 }

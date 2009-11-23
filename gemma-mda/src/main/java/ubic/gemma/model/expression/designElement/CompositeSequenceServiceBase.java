@@ -20,6 +20,8 @@ package ubic.gemma.model.expression.designElement;
 
 import java.util.Collection;
 
+import org.springframework.beans.factory.annotation.Autowired;
+
 import ubic.gemma.model.association.BioSequence2GeneProduct;
 
 /**
@@ -33,6 +35,7 @@ import ubic.gemma.model.association.BioSequence2GeneProduct;
 public abstract class CompositeSequenceServiceBase implements
         ubic.gemma.model.expression.designElement.CompositeSequenceService {
 
+    @Autowired
     private ubic.gemma.model.expression.designElement.CompositeSequenceDao compositeSequenceDao;
 
     /**
@@ -230,7 +233,8 @@ public abstract class CompositeSequenceServiceBase implements
     /**
      * @see ubic.gemma.model.expression.designElement.CompositeSequenceService#getGenesWithSpecificity(java.util.Collection)
      */
-    public java.util.Map<CompositeSequence, Collection<BioSequence2GeneProduct>> getGenesWithSpecificity( final java.util.Collection<CompositeSequence> compositeSequences ) {
+    public java.util.Map<CompositeSequence, Collection<BioSequence2GeneProduct>> getGenesWithSpecificity(
+            final java.util.Collection<CompositeSequence> compositeSequences ) {
         try {
             return this.handleGetGenesWithSpecificity( compositeSequences );
         } catch ( Throwable th ) {
@@ -468,8 +472,8 @@ public abstract class CompositeSequenceServiceBase implements
     /**
      * Performs the core logic for {@link #getGenesWithSpecificity(java.util.Collection)}
      */
-    protected abstract java.util.Map<CompositeSequence, Collection<BioSequence2GeneProduct>> handleGetGenesWithSpecificity( java.util.Collection<CompositeSequence> compositeSequences )
-            throws java.lang.Exception;
+    protected abstract java.util.Map<CompositeSequence, Collection<BioSequence2GeneProduct>> handleGetGenesWithSpecificity(
+            java.util.Collection<CompositeSequence> compositeSequences ) throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #getRawSummary(java.util.Collection, java.lang.Integer)}

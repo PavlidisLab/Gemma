@@ -23,17 +23,28 @@ import java.util.Collection;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
+import org.hibernate.SessionFactory;
 import org.hibernate.criterion.Restrictions;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
 
 /**
  * @author pavlidis
  * @version $Id$
  * @see ubic.gemma.model.expression.designElement.Reporter
  */
+@Repository
 public class ReporterDaoImpl extends ubic.gemma.model.expression.designElement.ReporterDaoBase {
 
     private static Log log = LogFactory.getLog( ReporterDaoImpl.class.getName() );
 
+    
+
+    @Autowired
+    public ReporterDaoImpl( SessionFactory sessionFactory ) {
+        super.setSessionFactory( sessionFactory );
+    }
+    
     /*
      * (non-Javadoc)
      * @see
@@ -45,7 +56,7 @@ public class ReporterDaoImpl extends ubic.gemma.model.expression.designElement.R
 
         if ( reporter.getName() == null ) return null;
         try {
-            Criteria queryObject = super.getSession( false ).createCriteria( Reporter.class );
+            Criteria queryObject = super.getSession().createCriteria( Reporter.class );
 
             queryObject.add( Restrictions.eq( "name", reporter.getName() ) );
 
@@ -102,7 +113,7 @@ public class ReporterDaoImpl extends ubic.gemma.model.expression.designElement.R
         Collection<Reporter> reporters = null;
         final String queryString = "select distinct cs from ReporterImpl cs where cs.id in (:ids)";
         try {
-            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            org.hibernate.Query queryObject = super.getSession().createQuery( queryString );
             queryObject.setParameterList( "ids", ids );
             reporters = queryObject.list();
 

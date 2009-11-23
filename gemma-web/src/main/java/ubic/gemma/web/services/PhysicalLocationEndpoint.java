@@ -191,14 +191,12 @@ public class PhysicalLocationEndpoint extends AbstractGemmaEndpoint {
     }
 
     private Long getMaxNT( String strand, Long nt, int ntLength ) {
-        if ( strand.equals( "-" ) )
-            return nt;
+        if ( strand.equals( "-" ) ) return nt;
         return ( nt + ntLength );
     }
 
     private Long getMinNT( String strand, Long nt, int ntLength ) {
-        if ( strand.equals( "-" ) )
-            return ( nt - ntLength );
+        if ( strand.equals( "-" ) ) return ( nt - ntLength );
         return nt;
     }
 

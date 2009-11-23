@@ -22,6 +22,9 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.hibernate.SessionFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+
 import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.genome.Chromosome;
@@ -48,36 +51,36 @@ import ubic.gemma.model.genome.sequenceAnalysis.SequenceSimilaritySearchResult;
 import ubic.gemma.util.SequenceBinUtils;
 
 /**
- * @spring.property name="geneService" ref="geneService"
- * @spring.property name="bioSequenceService" ref="bioSequenceService"
- * @spring.property name="taxonService" ref="taxonService"
- * @spring.property name="blatAssociationService" ref="blatAssociationService"
- * @spring.property name="blastAssociationService" ref="blastAssociationService"
- * @spring.property name="blatResultService" ref="blatResultService"
- * @spring.property name="blastResultService" ref="blastResultService"
- * @spring.property name="geneProductService" ref="geneProductService"
- * @spring.property name="chromosomeService" ref="chromosomeService"
  * @author pavlidis
  * @version $Id$
  */
 abstract public class GenomePersister extends CommonPersister {
 
+    @Autowired
     protected GeneService geneService;
 
+    @Autowired
     protected ChromosomeService chromosomeService;
 
+    @Autowired
     protected GeneProductService geneProductService;
 
+    @Autowired
     protected BioSequenceService bioSequenceService;
 
+    @Autowired
     protected TaxonService taxonService;
 
+    @Autowired
     protected BlatAssociationService blatAssociationService;
 
+    @Autowired
     protected BlastAssociationService blastAssociationService;
 
+    @Autowired
     protected BlatResultService blatResultService;
 
+    @Autowired
     protected BlastResultService blastResultService;
 
     protected Map<Object, Taxon> seenTaxa = new HashMap<Object, Taxon>();
@@ -85,6 +88,10 @@ abstract public class GenomePersister extends CommonPersister {
     protected Map<Object, Chromosome> seenChromosomes = new HashMap<Object, Chromosome>();
 
     protected boolean firstBioSequence = false;
+
+    public GenomePersister( SessionFactory sessionFactory ) {
+        super( sessionFactory );
+    }
 
     /*
      * (non-Javadoc)
@@ -396,9 +403,9 @@ abstract public class GenomePersister extends CommonPersister {
 
         // updated gene products.
         geneService.thaw( existingGene );
-        //NCBI id can be null if gene has been loaded from a gene info file
+        // NCBI id can be null if gene has been loaded from a gene info file
         String existingNcbiId = existingGene.getNcbiId();
-        if (existingNcbiId!=null && !existingNcbiId.equals( gene.getNcbiId() ) ) {
+        if ( existingNcbiId != null && !existingNcbiId.equals( gene.getNcbiId() ) ) {
             log.info( "NCBI ID Change for " + existingGene + ", new id =" + gene.getNcbiId() );
             String previousId = gene.getPreviousNcbiId();
             if ( previousId != null ) {
@@ -406,13 +413,12 @@ abstract public class GenomePersister extends CommonPersister {
                     throw new IllegalStateException( "The NCBI ID for " + gene
                             + " has changed and the previous NCBI id on record with NCBI (" + gene.getPreviousNcbiId()
                             + ") doesn't match either." );
-                } else {
-                    existingGene.setPreviousNcbiId( existingGene.getNcbiId() );
-                    existingGene.setNcbiId( gene.getNcbiId() );
                 }
+                existingGene.setPreviousNcbiId( existingGene.getNcbiId() );
+                existingGene.setNcbiId( gene.getNcbiId() );
+
             }
         }
-        assert existingGene.getAuditTrail() != null;
 
         // We assume the taxon hasn't changed.
 

@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.analysis.expression;
 
+import java.util.Collection;
+
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 
 /**
@@ -34,23 +36,28 @@ public abstract class ExpressionExperimentSetDaoBase extends HibernateDaoSupport
     /**
      * @see ubic.gemma.model.analysis.expression.ExpressionExperimentSetDao#create(int, java.util.Collection)
      */
-    public java.util.Collection<ExpressionExperimentSet> create( final int transform,
-            final java.util.Collection<ExpressionExperimentSet> entities ) {
+    public java.util.Collection<? extends ExpressionExperimentSet> create( final int transform,
+            final java.util.Collection<? extends ExpressionExperimentSet> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "ExpressionExperimentSet.create - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback() {
+                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator<ExpressionExperimentSet> entityIterator = entities.iterator(); entityIterator
-                                .hasNext(); ) {
+                        for ( java.util.Iterator<? extends ExpressionExperimentSet> entityIterator = entities
+                                .iterator(); entityIterator.hasNext(); ) {
                             create( transform, entityIterator.next() );
                         }
                         return null;
                     }
                 } );
         return entities;
+    }
+    
+    
+    public Collection<? extends ExpressionExperimentSet > load( Collection<Long> ids ) {
+        return this.getHibernateTemplate().findByNamedParam( "from ExpressionExperimentSetImpl where id in (:ids)", "ids", ids );
     }
 
     /**
@@ -70,8 +77,8 @@ public abstract class ExpressionExperimentSetDaoBase extends HibernateDaoSupport
     /**
      * @see ubic.gemma.model.analysis.expression.ExpressionExperimentSetDao#create(java.util.Collection)
      */
-    public java.util.Collection<ExpressionExperimentSet> create(
-            final java.util.Collection<ExpressionExperimentSet> entities ) {
+    public java.util.Collection<? extends ExpressionExperimentSet> create(
+            final java.util.Collection<? extends ExpressionExperimentSet> entities ) {
         return create( TRANSFORM_NONE, entities );
     }
 
@@ -135,7 +142,7 @@ public abstract class ExpressionExperimentSetDaoBase extends HibernateDaoSupport
      * @see ubic.gemma.model.analysis.expression.ExpressionExperimentSetDao#loadAll()
      */
 
-    public java.util.Collection<ExpressionExperimentSet> loadAll() {
+    public java.util.Collection<? extends ExpressionExperimentSet> loadAll() {
         return this.loadAll( TRANSFORM_NONE );
     }
 
@@ -143,9 +150,9 @@ public abstract class ExpressionExperimentSetDaoBase extends HibernateDaoSupport
      * @see ubic.gemma.model.analysis.expression.ExpressionExperimentSetDao#loadAll(int)
      */
 
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Collection<ExpressionExperimentSet> loadAll( final int transform ) {
-        final java.util.Collection<ExpressionExperimentSet> results = this.getHibernateTemplate().loadAll(
+    
+    public java.util.Collection<? extends ExpressionExperimentSet> loadAll( final int transform ) {
+        final java.util.Collection<? extends ExpressionExperimentSet> results = this.getHibernateTemplate().loadAll(
                 ubic.gemma.model.analysis.expression.ExpressionExperimentSetImpl.class );
         this.transformEntities( transform, results );
         return results;
@@ -169,7 +176,7 @@ public abstract class ExpressionExperimentSetDaoBase extends HibernateDaoSupport
      * @see ubic.gemma.model.common.SecurableDao#remove(java.util.Collection)
      */
 
-    public void remove( java.util.Collection<ExpressionExperimentSet> entities ) {
+    public void remove( java.util.Collection<? extends ExpressionExperimentSet> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "ExpressionExperimentSet.remove - 'entities' can not be null" );
         }
@@ -191,16 +198,16 @@ public abstract class ExpressionExperimentSetDaoBase extends HibernateDaoSupport
      * @see ubic.gemma.model.common.SecurableDao#update(java.util.Collection)
      */
 
-    public void update( final java.util.Collection<ExpressionExperimentSet> entities ) {
+    public void update( final java.util.Collection<? extends ExpressionExperimentSet> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "ExpressionExperimentSet.update - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback() {
+                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator<ExpressionExperimentSet> entityIterator = entities.iterator(); entityIterator
-                                .hasNext(); ) {
+                        for ( java.util.Iterator<? extends ExpressionExperimentSet> entityIterator = entities
+                                .iterator(); entityIterator.hasNext(); ) {
                             update( entityIterator.next() );
                         }
                         return null;
@@ -246,7 +253,8 @@ public abstract class ExpressionExperimentSetDaoBase extends HibernateDaoSupport
      * @see #transformEntity(int,ubic.gemma.model.analysis.expression.ExpressionExperimentSet)
      */
 
-    protected void transformEntities( final int transform, final java.util.Collection<ExpressionExperimentSet> entities ) {
+    protected void transformEntities( final int transform,
+            final java.util.Collection<? extends ExpressionExperimentSet> entities ) {
         switch ( transform ) {
             case TRANSFORM_NONE: // fall-through
             default:

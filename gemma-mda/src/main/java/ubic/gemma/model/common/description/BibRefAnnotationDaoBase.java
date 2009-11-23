@@ -51,7 +51,7 @@ public abstract class BibRefAnnotationDaoBase extends org.springframework.orm.hi
     /**
      * @see ubic.gemma.model.common.description.BibRefAnnotationDao#loadAll()
      */
-    @SuppressWarnings( { "unchecked" })
+    
     public java.util.Collection loadAll() {
         return this.loadAll( TRANSFORM_NONE );
     }
@@ -107,7 +107,7 @@ public abstract class BibRefAnnotationDaoBase extends org.springframework.orm.hi
             throw new IllegalArgumentException( "BibRefAnnotation.update - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback() {
+                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {

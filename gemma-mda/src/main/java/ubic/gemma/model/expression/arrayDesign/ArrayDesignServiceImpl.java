@@ -24,7 +24,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.SortedSet;
+
+import org.springframework.stereotype.Service;
 
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignAnalysisEvent;
@@ -44,6 +45,7 @@ import ubic.gemma.model.genome.Taxon;
  * @version $Id$
  * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService
  */
+@Service
 public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase {
 
     /*
@@ -157,6 +159,7 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
      */
     @Override
     protected Integer handleGetCompositeSequenceCount( ArrayDesign arrayDesign ) throws Exception {
+        if ( arrayDesign == null ) throw new IllegalArgumentException( "Array design cannot be null" );
         return this.getArrayDesignDao().numCompositeSequences( arrayDesign.getId() );
     }
 
@@ -273,7 +276,7 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
             if ( events == null ) {
                 lastEventMap.put( arrayDesignId, null );
             } else {
-                lastEvent = getLastOutstandingTroubleEvent( events );
+                lastEvent = this.getAuditEventDao().getLastOutstandingTroubleEvent( events );
                 lastEventMap.put( arrayDesignId, lastEvent );
 
                 /*
@@ -305,7 +308,9 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
             if ( events == null ) {
                 lastEventMap.put( arrayDesignId, null );
             } else {
-                lastEvent = getLastEvent( events, ValidatedFlagEvent.class );
+                ArrayDesign ad = this.load( arrayDesignId );
+
+                lastEvent = this.getAuditEventDao().getLastEvent( ad, ValidatedFlagEvent.class );
                 lastEventMap.put( arrayDesignId, lastEvent );
 
                 /*
@@ -331,20 +336,21 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
 
     /*
      * (non-Javadoc)
-     * @see ubic.gemma.model.expression.arrayDesign.handleGetTaxon(long)
-     */
-    @Override
-    protected Taxon handleGetTaxon( java.lang.Long id ) {
-        return this.getArrayDesignDao().getTaxon( id );
-
-    }
-    /*
-     * (non-Javadoc)
      * @see ubic.gemma.model.expression.arrayDesign.handleGetTaxa(long)
      */
     @Override
     protected Collection<Taxon> handleGetTaxa( java.lang.Long id ) {
         return this.getArrayDesignDao().getTaxa( id );
+
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see ubic.gemma.model.expression.arrayDesign.handleGetTaxon(long)
+     */
+    @Override
+    protected Taxon handleGetTaxon( java.lang.Long id ) {
+        return this.getArrayDesignDao().getTaxon( id );
 
     }
 
@@ -382,7 +388,7 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
      */
     @Override
     protected java.util.Collection<ArrayDesign> handleLoadAll() throws java.lang.Exception {
-        return this.getArrayDesignDao().loadAll();
+        return ( Collection<ArrayDesign> ) this.getArrayDesignDao().loadAll();
     }
 
     /*
@@ -634,11 +640,9 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
         return this.getArrayDesignDao().updateSubsumingStatus( candidateSubsumer, candidateSubsumee );
     }
 
-    @SuppressWarnings("unchecked")
     private void checkForMoreRecentMethod( Map<Long, AuditEvent> lastEventMap,
             Class<ArrayDesignAnalysisEvent> eventclass, Long arrayDesignId, ArrayDesign subsumedInto ) {
-        Collection<AuditEvent> subsumerEvents = this.getEvents( subsumedInto );
-        AuditEvent lastSubsumerEvent = getLastEvent( subsumerEvents, eventclass );
+        AuditEvent lastSubsumerEvent = this.getAuditEventDao().getLastEvent( subsumedInto, eventclass );
         if ( lastSubsumerEvent != null && lastEventMap.containsKey( arrayDesignId )
                 && lastEventMap.get( arrayDesignId ) != null
                 && lastEventMap.get( arrayDesignId ).getDate().before( lastSubsumerEvent.getDate() ) ) {
@@ -662,7 +666,8 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
             if ( events == null ) {
                 lastEventMap.put( arrayDesignId, null );
             } else {
-                lastEvent = getLastEvent( events, eventclass );
+                ArrayDesign ad = this.load( arrayDesignId );
+                lastEvent = this.getAuditEventDao().getLastEvent( ad, eventclass );
                 lastEventMap.put( arrayDesignId, lastEvent );
             }
 

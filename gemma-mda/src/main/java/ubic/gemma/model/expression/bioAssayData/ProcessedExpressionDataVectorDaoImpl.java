@@ -32,6 +32,9 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Hibernate;
 import org.hibernate.LockMode;
+import org.hibernate.SessionFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
 
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeImpl;
@@ -47,23 +50,18 @@ import ubic.gemma.util.CommonQueries;
  * @author Paul
  * @version $Id$
  */
+@Repository
 public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVectorDaoImpl<ProcessedExpressionDataVector>
         implements ProcessedExpressionDataVectorDao {
 
     private static Log log = LogFactory.getLog( ProcessedExpressionDataVectorDaoImpl.class.getName() );
 
+    @Autowired
     private ProcessedDataVectorCache processedDataVectorCache;
 
-    @Override
-    protected Integer handleCountAll() throws Exception {
-        final String query = "select count(*) from ProcessedExpressionDataVectorImpl";
-        try {
-            org.hibernate.Query queryObject = super.getSession( false ).createQuery( query );
-
-            return ( Integer ) queryObject.iterate().next();
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
-        }
+    @Autowired
+    public ProcessedExpressionDataVectorDaoImpl( SessionFactory sessionFactory ) {
+        super.setSessionFactory( sessionFactory );
     }
 
     /*
@@ -81,9 +79,8 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
 
         removeProcessedDataVectors( expressionExperiment );
 
-        // We need to commit the remove transaction, or we can end up with 'object exists in session'
+        // We need to commit or we can end up with 'object exists in session'
         this.getHibernateTemplate().flush();
-        this.getHibernateTemplate().clear();
         expressionExperiment.setProcessedExpressionDataVectors( null );
         this.getHibernateTemplate().update( expressionExperiment );
         this.getHibernateTemplate().flush();
@@ -170,60 +167,18 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
 
     }
 
-    public void removeProcessedDataVectors( final ExpressionExperiment expressionExperiment ) {
-        /*
-         * If the experiment already has them, delete them.
-         */
-        Collection<ProcessedExpressionDataVector> oldVectors = this.getProcessedVectors( expressionExperiment );
-        if ( oldVectors.size() > 0 ) {
-            log.info( "Removing old processed vectors" );
-            this.remove( oldVectors );
-        }
+    public Collection<DoubleVectorValueObject> getProcessedDataArrays(
+            Collection<ExpressionExperiment> expressionExperiments, Collection<Gene> genes ) {
+        return this.handleGetProcessedExpressionDataArrays( expressionExperiments, genes, true );
     }
 
-    /**
-     * @param ee
-     * @return
-     */
-    @SuppressWarnings("unchecked")
-    protected Collection<RawExpressionDataVector> getMissingValueVectors( ExpressionExperiment ee ) {
-        final String queryString = "select dedv from RawExpressionDataVectorImpl dedv "
-                + "inner join dedv.quantitationType q where q.type = 'PRESENTABSENT'"
-                + " and dedv.expressionExperiment  = :ee ";
-        return this.getHibernateTemplate().findByNamedParam( queryString, "ee", ee );
+    public Collection<DoubleVectorValueObject> getProcessedDataArrays(
+            Collection<ExpressionExperiment> expressionExperiments, Collection<Gene> genes, boolean fullMap ) {
+        return this.handleGetProcessedExpressionDataArrays( expressionExperiments, genes, fullMap );
     }
 
-    /**
-     * @param ee
-     * @return
-     */
-    @SuppressWarnings("unchecked")
-    protected Collection<RawExpressionDataVector> getPreferredDataVectors( ExpressionExperiment ee ) {
-        final String queryString = "select dedv from RawExpressionDataVectorImpl dedv inner join dedv.quantitationType q "
-                + " where q.isPreferred = true  and dedv.expressionExperiment = :ee ";
-        return this.getHibernateTemplate().findByNamedParam( queryString, "ee", ee );
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDao#load(int, java.lang.Long)
-     */
-
-    public ProcessedExpressionDataVector load( final java.lang.Long id ) {
-        if ( id == null ) {
-            throw new IllegalArgumentException( "ProcessedExpressionDataVector.load - 'id' can not be null" );
-        }
-        return ( ProcessedExpressionDataVector ) this.getHibernateTemplate().get(
-                ProcessedExpressionDataVectorImpl.class, id );
-
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDao#loadAll()
-     */
-
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Collection<ProcessedExpressionDataVector> loadAll() {
-        return this.getHibernateTemplate().loadAll( ProcessedExpressionDataVectorImpl.class );
+    public Collection<DoubleVectorValueObject> getProcessedDataArrays( ExpressionExperiment expressionExperiment ) {
+        return getProcessedDataArrays( expressionExperiment, 50, false );
     }
 
     /*
@@ -237,6 +192,75 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         Collection<ExpressionExperiment> expressionExperiments = new HashSet<ExpressionExperiment>();
         expressionExperiments.add( expressionExperiment );
         return this.handleGetProcessedExpressionDataArrays( expressionExperiments, genes, true );
+    }
+
+    public Collection<DoubleVectorValueObject> getProcessedDataArrays( ExpressionExperiment ee, int limit,
+            boolean fullMap ) {
+
+        Collection<ProcessedExpressionDataVector> pedvs = this.getProcessedVectors( ee, limit );
+
+        Collection<CompositeSequence> probes = new ArrayList<CompositeSequence>();
+        for ( ProcessedExpressionDataVector pedv : pedvs ) {
+            probes.add( ( CompositeSequence ) pedv.getDesignElement() );
+        }
+
+        if ( probes.isEmpty() ) {
+            return unpack( pedvs );
+        }
+
+        Map<CompositeSequence, Collection<Gene>> cs2gene = null;
+        if ( fullMap ) {
+            cs2gene = CommonQueries.getFullCs2AllGeneMap( probes, this.getSession() );
+        } else {
+            cs2gene = CommonQueries.getFullCs2GeneMap( probes, this.getSession() );
+        }
+        return unpack( pedvs, cs2gene );
+    }
+
+    public Collection<DoubleVectorValueObject> getProcessedDataArraysByProbe( Collection<ExpressionExperiment> ees,
+            Collection<CompositeSequence> probes, boolean fullMap ) {
+
+        Collection<DoubleVectorValueObject> results = new HashSet<DoubleVectorValueObject>();
+
+        Map<CompositeSequence, Collection<Gene>> cs2gene = null;
+        if ( fullMap ) {
+            cs2gene = CommonQueries.getFullCs2AllGeneMap( probes, this.getSession() );
+        } else {
+            cs2gene = CommonQueries.getFullCs2GeneMap( probes, this.getSession() );
+        }
+        /*
+         * To Check the cached we need the list of genes 1st. Get from CS2Gene list then check the cache.
+         */
+        Collection<Gene> genes = new HashSet<Gene>();
+        for ( CompositeSequence cs : cs2gene.keySet() ) {
+            genes.addAll( cs2gene.get( cs ) );
+        }
+
+        Collection<ExpressionExperiment> needToSearch = new HashSet<ExpressionExperiment>();
+        Collection<Gene> genesToSearch = new HashSet<Gene>();
+        checkCache( ees, genes, results, needToSearch, genesToSearch );
+
+        if ( needToSearch.size() != 0 ) {
+
+            if ( cs2gene.size() == 0 ) {
+                if ( results.isEmpty() ) {
+                    log.warn( "No composite sequences found for genes" );
+                    return new HashSet<DoubleVectorValueObject>();
+                }
+                return results;
+
+            }
+
+            Map<ProcessedExpressionDataVector, Collection<Gene>> processedDataVectors = getProcessedVectors(
+                    needToSearch, cs2gene );
+
+            Collection<DoubleVectorValueObject> newResults = unpack( processedDataVectors );
+            cacheResults( newResults );
+            results.addAll( newResults );
+        }
+
+        return results;
+
     }
 
     /*
@@ -334,56 +358,6 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         return result;
     }
 
-    @SuppressWarnings("unchecked")
-    public Map<ExpressionExperiment, Map<Gene, Map<DesignElement, Double[]>>> getRanksByProbe(
-            Collection<ExpressionExperiment> expressionExperiments, Collection<Gene> genes ) {
-        Map<CompositeSequence, Collection<Gene>> cs2gene = CommonQueries.getCs2GeneMap( genes, this.getSession() );
-        if ( cs2gene.keySet().size() == 0 ) {
-            log.warn( "No composite sequences found for genes" );
-            return new HashMap<ExpressionExperiment, Map<Gene, Map<DesignElement, Double[]>>>();
-        }
-
-        final String queryString = "select distinct dedv.expressionExperiment, dedv.designElement, dedv.rankByMean, dedv.rankByMax from ProcessedExpressionDataVectorImpl dedv "
-                + " inner join dedv.bioAssayDimension bd "
-                + " inner join dedv.designElement de  "
-                + " where dedv.designElement in ( :cs ) and dedv.expressionExperiment in (:ees) ";
-
-        List qr = this.getHibernateTemplate().findByNamedParam( queryString, new String[] { "cs", "ees" },
-                new Object[] { cs2gene.keySet(), expressionExperiments } );
-
-        Map<ExpressionExperiment, Map<Gene, Map<DesignElement, Double[]>>> resultnew = new HashMap<ExpressionExperiment, Map<Gene, Map<DesignElement, Double[]>>>();
-        for ( Object o : qr ) {
-            Object[] oa = ( Object[] ) o;
-            ExpressionExperiment e = ( ExpressionExperiment ) oa[0];
-            DesignElement d = ( DesignElement ) oa[1];
-            Double rMean = ( Double ) oa[2];
-            Double rMax = ( Double ) oa[3];
-
-            if ( !resultnew.containsKey( e ) ) {
-                resultnew.put( e, new HashMap<Gene, Map<DesignElement, Double[]>>() );
-            }
-
-            Map<Gene, Map<DesignElement, Double[]>> rmapnew = resultnew.get( e );
-
-            Collection<Gene> genes4probe = cs2gene.get( d );
-
-            for ( Gene gene : genes4probe ) {
-                if ( !rmapnew.containsKey( gene ) ) {
-                    rmapnew.put( gene, new HashMap<DesignElement, Double[]>() );
-                }
-
-                // return BOTH mean and max
-
-                if ( rMean == null || rMax == null ) {
-                    continue;
-                }
-                Double[] MeanMax = new Double[] { rMean, rMax };
-                rmapnew.get( gene ).put( d, MeanMax );
-            }
-        }
-        return resultnew;
-    }
-
     /*
      * (non-Javadoc)
      * @see
@@ -469,6 +443,94 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
 
     }
 
+    @SuppressWarnings("unchecked")
+    public Map<ExpressionExperiment, Map<Gene, Map<DesignElement, Double[]>>> getRanksByProbe(
+            Collection<ExpressionExperiment> expressionExperiments, Collection<Gene> genes ) {
+        Map<CompositeSequence, Collection<Gene>> cs2gene = CommonQueries.getCs2GeneMap( genes, this.getSession() );
+        if ( cs2gene.keySet().size() == 0 ) {
+            log.warn( "No composite sequences found for genes" );
+            return new HashMap<ExpressionExperiment, Map<Gene, Map<DesignElement, Double[]>>>();
+        }
+
+        final String queryString = "select distinct dedv.expressionExperiment, dedv.designElement, dedv.rankByMean, dedv.rankByMax from ProcessedExpressionDataVectorImpl dedv "
+                + " inner join dedv.bioAssayDimension bd "
+                + " inner join dedv.designElement de  "
+                + " where dedv.designElement in ( :cs ) and dedv.expressionExperiment in (:ees) ";
+
+        List qr = this.getHibernateTemplate().findByNamedParam( queryString, new String[] { "cs", "ees" },
+                new Object[] { cs2gene.keySet(), expressionExperiments } );
+
+        Map<ExpressionExperiment, Map<Gene, Map<DesignElement, Double[]>>> resultnew = new HashMap<ExpressionExperiment, Map<Gene, Map<DesignElement, Double[]>>>();
+        for ( Object o : qr ) {
+            Object[] oa = ( Object[] ) o;
+            ExpressionExperiment e = ( ExpressionExperiment ) oa[0];
+            DesignElement d = ( DesignElement ) oa[1];
+            Double rMean = ( Double ) oa[2];
+            Double rMax = ( Double ) oa[3];
+
+            if ( !resultnew.containsKey( e ) ) {
+                resultnew.put( e, new HashMap<Gene, Map<DesignElement, Double[]>>() );
+            }
+
+            Map<Gene, Map<DesignElement, Double[]>> rmapnew = resultnew.get( e );
+
+            Collection<Gene> genes4probe = cs2gene.get( d );
+
+            for ( Gene gene : genes4probe ) {
+                if ( !rmapnew.containsKey( gene ) ) {
+                    rmapnew.put( gene, new HashMap<DesignElement, Double[]>() );
+                }
+
+                // return BOTH mean and max
+
+                if ( rMean == null || rMax == null ) {
+                    continue;
+                }
+                Double[] MeanMax = new Double[] { rMean, rMax };
+                rmapnew.get( gene ).put( d, MeanMax );
+            }
+        }
+        return resultnew;
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDao#load(int, java.lang.Long)
+     */
+
+    public ProcessedExpressionDataVector load( final java.lang.Long id ) {
+        if ( id == null ) {
+            throw new IllegalArgumentException( "ProcessedExpressionDataVector.load - 'id' can not be null" );
+        }
+        return this.getHibernateTemplate().get( ProcessedExpressionDataVectorImpl.class, id );
+
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDao#loadAll()
+     */
+
+    @SuppressWarnings( { "unchecked" })
+    public java.util.Collection<? extends ProcessedExpressionDataVector> loadAll() {
+        return this.getHibernateTemplate().loadAll( ProcessedExpressionDataVectorImpl.class );
+    }
+
+    @Override
+    public void remove( ProcessedExpressionDataVector designElementDataVector ) {
+        this.getHibernateTemplate().delete( designElementDataVector );
+
+    }
+
+    public void removeProcessedDataVectors( final ExpressionExperiment expressionExperiment ) {
+        /*
+         * If the experiment already has them, delete them.
+         */
+        Collection<ProcessedExpressionDataVector> oldVectors = this.getProcessedVectors( expressionExperiment );
+        if ( oldVectors.size() > 0 ) {
+            log.info( "Removing old processed vectors" );
+            this.remove( oldVectors );
+        }
+    }
+
     /**
      * @param processedDataVectorCache the processedDataVectorCache to set
      */
@@ -477,10 +539,45 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
     }
 
     /**
+     * @param ee
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    protected Collection<RawExpressionDataVector> getMissingValueVectors( ExpressionExperiment ee ) {
+        final String queryString = "select dedv from RawExpressionDataVectorImpl dedv "
+                + "inner join dedv.quantitationType q where q.type = 'PRESENTABSENT'"
+                + " and dedv.expressionExperiment  = :ee ";
+        return this.getHibernateTemplate().findByNamedParam( queryString, "ee", ee );
+    }
+
+    /**
+     * @param ee
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    protected Collection<RawExpressionDataVector> getPreferredDataVectors( ExpressionExperiment ee ) {
+        final String queryString = "select dedv from RawExpressionDataVectorImpl dedv inner join dedv.quantitationType q "
+                + " where q.isPreferred = true  and dedv.expressionExperiment = :ee ";
+        return this.getHibernateTemplate().findByNamedParam( queryString, "ee", ee );
+    }
+
+    /**
      * @return the processedDataVectorCache
      */
     protected ProcessedDataVectorCache getProcessedDataVectorCache() {
         return processedDataVectorCache;
+    }
+
+    @Override
+    protected Integer handleCountAll() throws Exception {
+        final String query = "select count(*) from ProcessedExpressionDataVectorImpl";
+        try {
+            org.hibernate.Query queryObject = super.getSession().createQuery( query );
+
+            return ( Integer ) queryObject.iterate().next();
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
     }
 
     /**
@@ -544,7 +641,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         present.setIsRatio( preferredQt.getIsRatio() );
         present.setType( preferredQt.getType() );
         Long id = ( Long ) this.getHibernateTemplate().save( present );
-        return ( QuantitationType ) this.getHibernateTemplate().load( QuantitationTypeImpl.class, id );
+        return this.getHibernateTemplate().load( QuantitationTypeImpl.class, id );
     }
 
     /**
@@ -717,10 +814,12 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
      * @param data
      * @return
      */
-    private Collection<DoubleVectorValueObject> unpack( Map<? extends DesignElementDataVector, Collection<Gene>> data ) {
+    private Collection<DoubleVectorValueObject> unpack( Collection<? extends DesignElementDataVector> data,
+            Map<? extends CompositeSequence, Collection<Gene>> cs2GeneMap ) {
         Collection<DoubleVectorValueObject> result = new HashSet<DoubleVectorValueObject>();
-        for ( DesignElementDataVector v : data.keySet() ) {
-            result.add( new DoubleVectorValueObject( v, data.get( v ) ) );
+
+        for ( DesignElementDataVector v : data ) {
+            result.add( new DoubleVectorValueObject( v, cs2GeneMap.get( v.getDesignElement() ) ) );
         }
         return result;
     }
@@ -729,12 +828,10 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
      * @param data
      * @return
      */
-    private Collection<DoubleVectorValueObject> unpack( Collection<? extends DesignElementDataVector> data,
-            Map<? extends CompositeSequence, Collection<Gene>> cs2GeneMap ) {
+    private Collection<DoubleVectorValueObject> unpack( Map<? extends DesignElementDataVector, Collection<Gene>> data ) {
         Collection<DoubleVectorValueObject> result = new HashSet<DoubleVectorValueObject>();
-
-        for ( DesignElementDataVector v : data ) {
-            result.add( new DoubleVectorValueObject( v, cs2GeneMap.get( v.getDesignElement() ) ) );
+        for ( DesignElementDataVector v : data.keySet() ) {
+            result.add( new DoubleVectorValueObject( v, data.get( v ) ) );
         }
         return result;
     }
@@ -746,94 +843,5 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
             result.add( new BooleanVectorValueObject( v ) );
         }
         return result;
-    }
-
-    public Collection<DoubleVectorValueObject> getProcessedDataArrays( ExpressionExperiment ee, int limit,
-            boolean fullMap ) {
-
-        Collection<ProcessedExpressionDataVector> pedvs = this.getProcessedVectors( ee, limit );
-
-        Collection<CompositeSequence> probes = new ArrayList<CompositeSequence>();
-        for ( ProcessedExpressionDataVector pedv : pedvs ) {
-            probes.add( ( CompositeSequence ) pedv.getDesignElement() );
-        }
-
-        if ( probes.isEmpty() ) {
-            return unpack( pedvs );
-        }
-
-        Map<CompositeSequence, Collection<Gene>> cs2gene = null;
-        if ( fullMap ) {
-            cs2gene = CommonQueries.getFullCs2AllGeneMap( probes, this.getSession() );
-        } else {
-            cs2gene = CommonQueries.getFullCs2GeneMap( probes, this.getSession() );
-        }
-        return unpack( pedvs, cs2gene );
-    }
-
-    public Collection<DoubleVectorValueObject> getProcessedDataArrays(
-            Collection<ExpressionExperiment> expressionExperiments, Collection<Gene> genes ) {
-        return this.handleGetProcessedExpressionDataArrays( expressionExperiments, genes, true );
-    }
-
-    public Collection<DoubleVectorValueObject> getProcessedDataArrays(
-            Collection<ExpressionExperiment> expressionExperiments, Collection<Gene> genes, boolean fullMap ) {
-        return this.handleGetProcessedExpressionDataArrays( expressionExperiments, genes, fullMap );
-    }
-
-    @Override
-    public void remove( ProcessedExpressionDataVector designElementDataVector ) {
-        this.getHibernateTemplate().delete( designElementDataVector );
-
-    }
-
-    public Collection<DoubleVectorValueObject> getProcessedDataArrays( ExpressionExperiment expressionExperiment ) {
-        return getProcessedDataArrays( expressionExperiment, 50, false );
-    }
-
-    public Collection<DoubleVectorValueObject> getProcessedDataArraysByProbe( Collection<ExpressionExperiment> ees,
-            Collection<CompositeSequence> probes, boolean fullMap ) {
-
-        Collection<DoubleVectorValueObject> results = new HashSet<DoubleVectorValueObject>();
-
-        Map<CompositeSequence, Collection<Gene>> cs2gene = null;
-        if ( fullMap ) {
-            cs2gene = CommonQueries.getFullCs2AllGeneMap( probes, this.getSession() );
-        } else {
-            cs2gene = CommonQueries.getFullCs2GeneMap( probes, this.getSession() );
-        }
-        /*
-         * To Check the cached we need the list of genes 1st. Get from CS2Gene list then check the cache.
-         */
-        Collection<Gene> genes = new HashSet<Gene>();
-        for ( CompositeSequence cs : cs2gene.keySet() ) {
-            genes.addAll( cs2gene.get( cs ) );
-        }
-
-        Collection<ExpressionExperiment> needToSearch = new HashSet<ExpressionExperiment>();
-        Collection<Gene> genesToSearch = new HashSet<Gene>();
-        checkCache( ees, genes, results, needToSearch, genesToSearch );
-
-        if ( needToSearch.size() != 0 ) {
-
-            if ( cs2gene.size() == 0 ) {
-                if ( results.isEmpty() ) {
-                    log.warn( "No composite sequences found for genes" );
-                    return new HashSet<DoubleVectorValueObject>();
-                }
-                return results;
-
-            }
-
-            Map<ProcessedExpressionDataVector, Collection<Gene>> processedDataVectors = getProcessedVectors(
-                    needToSearch, cs2gene );
-
-            Collection<DoubleVectorValueObject> newResults = unpack( processedDataVectors );
-            cacheResults( newResults );
-            results.addAll( newResults );
-        }
-
-        return results;
-
     }
 }

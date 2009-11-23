@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.common.auditAndSecurity;
 
+import java.util.Collection;
+
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 
 /**
@@ -40,7 +42,7 @@ public abstract class OrganizationDaoBase extends HibernateDaoSupport implements
             throw new IllegalArgumentException( "Organization.create - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback() {
+                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
@@ -51,6 +53,11 @@ public abstract class OrganizationDaoBase extends HibernateDaoSupport implements
                     }
                 } );
         return entities;
+    }
+
+    
+    public Collection<? extends Organization> load( Collection<Long> ids ) {
+        return this.getHibernateTemplate().findByNamedParam( "from OrganizationImpl where id in (:ids)", "ids", ids );
     }
 
     /**
@@ -69,7 +76,7 @@ public abstract class OrganizationDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.common.auditAndSecurity.OrganizationDao#create(java.util.Collection)
      */
 
-    @SuppressWarnings( { "unchecked" })
+    
     public java.util.Collection create( final java.util.Collection entities ) {
         return create( TRANSFORM_NONE, entities );
     }
@@ -86,7 +93,7 @@ public abstract class OrganizationDaoBase extends HibernateDaoSupport implements
      *      ubic.gemma.model.common.auditAndSecurity.Contact)
      */
 
-    @SuppressWarnings( { "unchecked" })
+    
     public Object find( final int transform, final java.lang.String queryString,
             final ubic.gemma.model.common.auditAndSecurity.Contact contact ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -96,15 +103,15 @@ public abstract class OrganizationDaoBase extends HibernateDaoSupport implements
         java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
                 argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
         Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'ubic.gemma.model.common.auditAndSecurity.Contact"
-                                + "' was found when executing query --> '" + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
+
+        if ( results.size() > 1 ) {
+            throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                    "More than one instance of 'ubic.gemma.model.common.auditAndSecurity.Contact"
+                            + "' was found when executing query --> '" + queryString + "'" );
+        } else if ( results.size() == 1 ) {
+            result = results.iterator().next();
         }
+
         result = transformEntity( transform, ( ubic.gemma.model.common.auditAndSecurity.Organization ) result );
         return result;
     }
@@ -114,7 +121,7 @@ public abstract class OrganizationDaoBase extends HibernateDaoSupport implements
      *      ubic.gemma.model.common.auditAndSecurity.Contact)
      */
 
-    @SuppressWarnings( { "unchecked" })
+    
     public Object find( final int transform, final ubic.gemma.model.common.auditAndSecurity.Contact contact ) {
         return this
                 .find(
@@ -128,7 +135,7 @@ public abstract class OrganizationDaoBase extends HibernateDaoSupport implements
      *      ubic.gemma.model.common.auditAndSecurity.Contact)
      */
 
-    @SuppressWarnings( { "unchecked" })
+    
     public ubic.gemma.model.common.auditAndSecurity.Contact find( final java.lang.String queryString,
             final ubic.gemma.model.common.auditAndSecurity.Contact contact ) {
         return ( ubic.gemma.model.common.auditAndSecurity.Contact ) this.find( TRANSFORM_NONE, queryString, contact );
@@ -147,7 +154,7 @@ public abstract class OrganizationDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.common.auditAndSecurity.OrganizationDao#findByEmail(int, java.lang.String)
      */
 
-    @SuppressWarnings( { "unchecked" })
+    
     public Object findByEmail( final int transform, final java.lang.String email ) {
         return this.findByEmail( transform, "from ContactImpl c where c.email = :email", email );
     }
@@ -157,7 +164,7 @@ public abstract class OrganizationDaoBase extends HibernateDaoSupport implements
      *      java.lang.String)
      */
 
-    @SuppressWarnings( { "unchecked" })
+    
     public Object findByEmail( final int transform, final java.lang.String queryString, final java.lang.String email ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
         java.util.List<Object> args = new java.util.ArrayList<Object>();
@@ -166,15 +173,15 @@ public abstract class OrganizationDaoBase extends HibernateDaoSupport implements
         java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
                 argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
         Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'ubic.gemma.model.common.auditAndSecurity.Contact"
-                                + "' was found when executing query --> '" + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
+
+        if ( results.size() > 1 ) {
+            throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                    "More than one instance of 'ubic.gemma.model.common.auditAndSecurity.Contact"
+                            + "' was found when executing query --> '" + queryString + "'" );
+        } else if ( results.size() == 1 ) {
+            result = results.iterator().next();
         }
+
         result = transformEntity( transform, ( ubic.gemma.model.common.auditAndSecurity.Organization ) result );
         return result;
     }
@@ -191,7 +198,7 @@ public abstract class OrganizationDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.common.auditAndSecurity.OrganizationDao#findByEmail(java.lang.String, java.lang.String)
      */
 
-    @SuppressWarnings( { "unchecked" })
+    
     public ubic.gemma.model.common.auditAndSecurity.Contact findByEmail( final java.lang.String queryString,
             final java.lang.String email ) {
         return ( ubic.gemma.model.common.auditAndSecurity.Contact ) this.findByEmail( TRANSFORM_NONE, queryString,
@@ -203,7 +210,7 @@ public abstract class OrganizationDaoBase extends HibernateDaoSupport implements
      *      ubic.gemma.model.common.auditAndSecurity.Contact)
      */
 
-    @SuppressWarnings( { "unchecked" })
+    
     public Object findOrCreate( final int transform, final java.lang.String queryString,
             final ubic.gemma.model.common.auditAndSecurity.Contact contact ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -213,15 +220,15 @@ public abstract class OrganizationDaoBase extends HibernateDaoSupport implements
         java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
                 argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
         Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'ubic.gemma.model.common.auditAndSecurity.Contact"
-                                + "' was found when executing query --> '" + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
+
+        if ( results.size() > 1 ) {
+            throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                    "More than one instance of 'ubic.gemma.model.common.auditAndSecurity.Contact"
+                            + "' was found when executing query --> '" + queryString + "'" );
+        } else if ( results.size() == 1 ) {
+            result = results.iterator().next();
         }
+
         result = transformEntity( transform, ( ubic.gemma.model.common.auditAndSecurity.Organization ) result );
         return result;
     }
@@ -231,7 +238,7 @@ public abstract class OrganizationDaoBase extends HibernateDaoSupport implements
      *      ubic.gemma.model.common.auditAndSecurity.Contact)
      */
 
-    @SuppressWarnings( { "unchecked" })
+    
     public Object findOrCreate( final int transform, final ubic.gemma.model.common.auditAndSecurity.Contact contact ) {
         return this
                 .findOrCreate(
@@ -245,7 +252,7 @@ public abstract class OrganizationDaoBase extends HibernateDaoSupport implements
      *      ubic.gemma.model.common.auditAndSecurity.Contact)
      */
 
-    @SuppressWarnings( { "unchecked" })
+    
     public ubic.gemma.model.common.auditAndSecurity.Contact findOrCreate( final java.lang.String queryString,
             final ubic.gemma.model.common.auditAndSecurity.Contact contact ) {
         return ( ubic.gemma.model.common.auditAndSecurity.Contact ) this.findOrCreate( TRANSFORM_NONE, queryString,
@@ -286,7 +293,7 @@ public abstract class OrganizationDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.common.auditAndSecurity.OrganizationDao#loadAll()
      */
 
-    @SuppressWarnings( { "unchecked" })
+    
     public java.util.Collection loadAll() {
         return this.loadAll( TRANSFORM_NONE );
     }
@@ -346,7 +353,7 @@ public abstract class OrganizationDaoBase extends HibernateDaoSupport implements
             throw new IllegalArgumentException( "Organization.update - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback() {
+                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {

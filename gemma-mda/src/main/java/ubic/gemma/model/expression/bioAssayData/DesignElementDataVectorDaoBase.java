@@ -51,7 +51,7 @@ public abstract class DesignElementDataVectorDaoBase<T extends DesignElementData
             throw new IllegalArgumentException( "DesignElementDataVector.create - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback() {
+                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator<T> entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
@@ -114,7 +114,7 @@ public abstract class DesignElementDataVectorDaoBase<T extends DesignElementData
     /**
      * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDao#thaw(java.util.Collection)
      */
-    public void thaw( final java.util.Collection<T> designElementDataVectors ) {
+    public void thaw( final java.util.Collection<? extends DesignElementDataVector> designElementDataVectors ) {
         try {
             this.handleThaw( designElementDataVectors );
         } catch ( Throwable th ) {
@@ -146,7 +146,7 @@ public abstract class DesignElementDataVectorDaoBase<T extends DesignElementData
             throw new IllegalArgumentException( "DesignElementDataVector.update - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback() {
+                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator<T> entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
@@ -176,7 +176,8 @@ public abstract class DesignElementDataVectorDaoBase<T extends DesignElementData
     /**
      * Performs the core logic for {@link #thaw(java.util.Collection)}
      */
-    protected abstract void handleThaw( java.util.Collection<T> designElementDataVectors ) throws java.lang.Exception;
+    protected abstract void handleThaw( java.util.Collection<? extends DesignElementDataVector> designElementDataVectors )
+            throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #thaw(ubic.gemma.model.expression.bioAssayData.DesignElementDataVector)}

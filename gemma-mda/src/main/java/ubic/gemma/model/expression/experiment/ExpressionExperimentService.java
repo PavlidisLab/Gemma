@@ -21,165 +21,170 @@ package ubic.gemma.model.expression.experiment;
 import java.util.Collection;
 import java.util.Map;
 
+import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.core.userdetails.User;
+
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
+import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.util.monitor.Monitored;
 
 /**
- * 
+ * @author kelsey
+ * @version $Id$
  */
-public interface ExpressionExperimentService extends ubic.gemma.model.common.AuditableService {
+public interface ExpressionExperimentService {
 
     /**
-     * <p>
      * Count how many ExpressionExperiments are in the database
-     * </p>
      */
     public java.lang.Integer countAll();
 
-    /**
-     * 
-     */
-    public ubic.gemma.model.expression.experiment.ExpressionExperiment create(
-            ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment );
+    @Secured( { "GROUP_USER" })
+    public ExpressionExperiment create( ExpressionExperiment expressionExperiment );
 
     /**
-     * <p>
      * Deletes an experiment and all of its associated objects, including coexpression links. Some types of associated
      * objects may need to be deleted before this can be run (example: analyses involving multiple experiments; these
      * will not be deleted automatically, though this behavior could be changed)
-     * </p>
      */
-    public void delete( ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment );
+    @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    public void delete( ExpressionExperiment expressionExperiment );
 
     /**
      * 
      */
-    public ubic.gemma.model.expression.experiment.ExpressionExperiment find(
-            ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment );
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    public ExpressionExperiment find( ExpressionExperiment expressionExperiment );
 
     /**
-     * 
+     * @param accession
+     * @return
      */
-    public ubic.gemma.model.expression.experiment.ExpressionExperiment findByAccession(
-            ubic.gemma.model.common.description.DatabaseEntry accession );
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    public ExpressionExperiment findByAccession( ubic.gemma.model.common.description.DatabaseEntry accession );
 
     /**
-     * <p>
      * given a bibliographicReference returns a collection of EE that have that reference that BibliographicReference
-     * </p>
      */
-    public java.util.Collection<ExpressionExperiment> findByBibliographicReference(
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    public Collection<ExpressionExperiment> findByBibliographicReference(
             ubic.gemma.model.common.description.BibliographicReference bibRef );
 
     /**
-     * <p>
      * Given a bioMaterial returns an expressionExperiment
-     * </p>
      */
-    public ubic.gemma.model.expression.experiment.ExpressionExperiment findByBioMaterial(
-            ubic.gemma.model.expression.biomaterial.BioMaterial bm );
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    public ExpressionExperiment findByBioMaterial( ubic.gemma.model.expression.biomaterial.BioMaterial bm );
 
     /**
-     * 
+     * @param bioMaterials
+     * @return
      */
-    public java.util.Collection<ExpressionExperiment> findByBioMaterials( java.util.Collection<BioMaterial> bioMaterials );
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    public Collection<ExpressionExperiment> findByBioMaterials( Collection<BioMaterial> bioMaterials );
 
     /**
-     * <p>
      * Returns a collection of expression experiment ids that express the given gene above the given expression level
-     * </p>
-     */
-    public java.util.Collection<ExpressionExperiment> findByExpressedGene( ubic.gemma.model.genome.Gene gene,
-            double rank );
-
-    /**
      * 
+     * @param gene
+     * @param rank
+     * @return
      */
-    public ubic.gemma.model.expression.experiment.ExpressionExperiment findByFactorValue(
-            ubic.gemma.model.expression.experiment.FactorValue factorValue );
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    public Collection<ExpressionExperiment> findByExpressedGene( ubic.gemma.model.genome.Gene gene, double rank );
 
     /**
-     * 
+     * @param factorValue
+     * @return
      */
-    public java.util.Collection<ExpressionExperiment> findByFactorValues( java.util.Collection<FactorValue> factorValues );
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    public ExpressionExperiment findByFactorValue( FactorValue factorValue );
 
     /**
-     * <p>
+     * @param factorValues
+     * @return
+     */
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    public Collection<ExpressionExperiment> findByFactorValues( Collection<FactorValue> factorValues );
+
+    /**
      * Returns a collection of expression experiments that have an AD that detects the given Gene (ie a probe on the AD
      * hybidizes to the given Gene)
-     * </p>
      */
-    public java.util.Collection<ExpressionExperiment> findByGene( ubic.gemma.model.genome.Gene gene );
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    public Collection<ExpressionExperiment> findByGene( ubic.gemma.model.genome.Gene gene );
 
     /**
-     * 
+     * @param investigator
+     * @return
      */
-    public java.util.Collection<ExpressionExperiment> findByInvestigator(
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    public Collection<ExpressionExperiment> findByInvestigator(
             ubic.gemma.model.common.auditAndSecurity.Contact investigator );
 
     /**
-     * 
+     * @param name
+     * @return
      */
-    public ubic.gemma.model.expression.experiment.ExpressionExperiment findByName( java.lang.String name );
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    public ExpressionExperiment findByName( java.lang.String name );
 
+    /**
+     * gets all EE that match the given parent Taxon
+     */
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    public Collection<ExpressionExperiment> findByParentTaxon( ubic.gemma.model.genome.Taxon taxon );
+
+    /**
+     * @param type
+     * @return
+     */
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     public ExpressionExperiment findByQuantitationType( QuantitationType type );
 
     /**
-     * 
+     * @param shortName
+     * @return
      */
-    public ubic.gemma.model.expression.experiment.ExpressionExperiment findByShortName( java.lang.String shortName );
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    public ExpressionExperiment findByShortName( java.lang.String shortName );
 
     /**
-     * <p>
      * gets all EE that match the given Taxon
-     * </p>
      */
-    public java.util.Collection<ExpressionExperiment> findByTaxon( ubic.gemma.model.genome.Taxon taxon );
-
-    
     /**
-     * <p>
-     * gets all EE that match the given parent Taxon
-     * </p>
+     * @param taxon
+     * @return
      */
-    public java.util.Collection<ExpressionExperiment> findByParentTaxon( ubic.gemma.model.genome.Taxon taxon );
-    
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    public Collection<ExpressionExperiment> findByTaxon( ubic.gemma.model.genome.Taxon taxon );
 
     /**
-     *  
+     * @param expressionExperiment
+     * @return
      */
-    public ubic.gemma.model.expression.experiment.ExpressionExperiment findOrCreate(
-            ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment );
+    @Secured( { "GROUP_USER", "AFTER_ACL_READ" })
+    public ExpressionExperiment findOrCreate( ExpressionExperiment expressionExperiment );
 
     /**
-     * <p>
      * Get the map of ids to number of terms associated with each expression experiment.
-     * </p>
      */
-    public java.util.Map getAnnotationCounts( java.util.Collection<Long> ids );
+    public Map<Long, Integer> getAnnotationCounts( Collection<Long> ids );
 
     /**
-     * <p>
      * Returns a collection of ArrayDesigns referenced by any of the BioAssays that make up the given
      * ExpressionExperiment.
-     * </p>
      */
-    public java.util.Collection<ArrayDesign> getArrayDesignsUsed(
-            ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment );
-
-    /**
-     * <p>
-     * Counts the number of biomaterials associated with this expression experiment.
-     * </p>
-     */
-    public long getBioMaterialCount( ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment );
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    public Collection<ArrayDesign> getArrayDesignsUsed( ExpressionExperiment expressionExperiment );
 
     /**
      * Retrieve the BioAssayDimensions for the study.
@@ -187,204 +192,218 @@ public interface ExpressionExperimentService extends ubic.gemma.model.common.Aud
      * @param expressionExperiment
      * @return
      */
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public Collection<BioAssayDimension> getBioAssayDimensions( ExpressionExperiment expressionExperiment );
 
     /**
-     * 
+     * Counts the number of biomaterials associated with this expression experiment.
+     */
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    public long getBioMaterialCount( ExpressionExperiment expressionExperiment );
+
+    /**
+     * @param id
+     * @return
      */
     public long getDesignElementDataVectorCountById( long id );
 
     /**
-     * <p>
-     * Get all the vectors for the given expression experiment, but limited to the given quantitation types.
-     * </p>
+     * Find vectors constrained to the given quantitation type and design elements. Returns vectors for all experiments
+     * the user has access to.
      */
-    public java.util.Collection getDesignElementDataVectors( java.util.Collection<QuantitationType> quantitationTypes );
-
-    /**
-     * <p>
-     * Find vectors for the given expression experiment, constrained to the given quantitation type and design elements
-     * </p>
-     */
-    public java.util.Collection getDesignElementDataVectors( java.util.Collection designElements,
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_DATAVECTOR_COLLECTION_READ" })
+    public Collection<DesignElementDataVector> getDesignElementDataVectors(
+            Collection<? extends DesignElement> designElements,
             ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType );
 
     /**
-     * 
+     * Get all the vectors for the given quantitation types.
      */
-    public java.util.Map getLastArrayDesignUpdate( java.util.Collection expressionExperiments, java.lang.Class type );
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_DATAVECTOR_COLLECTION_READ" })
+    public Collection<DesignElementDataVector> getDesignElementDataVectors(
+            Collection<QuantitationType> quantitationTypes );
 
     /**
-     * <p>
+     * @param expressionExperiments
+     * @param type
+     * @return
+     */
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_MAP_READ" })
+    public Map<ExpressionExperiment, AuditEvent> getLastArrayDesignUpdate(
+            Collection<ExpressionExperiment> expressionExperiments, Class<? extends AuditEventType> type );
+
+    /**
      * Get the date of the last time any of the array designs associated with this experiment were updated.
-     * </p>
      */
-    public ubic.gemma.model.common.auditAndSecurity.AuditEvent getLastArrayDesignUpdate(
-            ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment, java.lang.Class eventType );
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    public AuditEvent getLastArrayDesignUpdate( ExpressionExperiment expressionExperiment,
+            java.lang.Class<? extends AuditEventType> eventType );
 
     /**
-     * <p>
      * Gets the AuditEvents of the latest link analyses for the specified expression experiment ids. This returns a map
      * of id -> AuditEvent. If the events do not exist, the map entry will point to null.
-     * </p>
      */
-    public java.util.Map getLastLinkAnalysis( java.util.Collection<Long> ids );
+    public Map<Long, AuditEvent> getLastLinkAnalysis( Collection<Long> ids );
 
     /**
-     * <p>
      * Gets the AuditEvents of the latest missing value analysis for the specified expression experiment ids. This
      * returns a map of id -> AuditEvent. If the events do not exist, the map entry will point to null.
-     * </p>
      */
-    public java.util.Map getLastMissingValueAnalysis( java.util.Collection<Long> ids );
+    public Map<Long, AuditEvent> getLastMissingValueAnalysis( Collection<Long> ids );
 
     /**
-     * <p>
      * Gets the AuditEvents of the latest rank computation for the specified expression experiment ids. This returns a
      * map of id -> AuditEvent. If the events do not exist, the map entry will point to null.
-     * </p>
      */
-    public java.util.Map getLastProcessedDataUpdate( java.util.Collection<Long> ids );
+    public Map<Long, AuditEvent> getLastProcessedDataUpdate( Collection<Long> ids );
 
     /**
-     * 
+     * @param ids
+     * @return
      */
-    public java.util.Map getLastTroubleEvent( java.util.Collection<Long> ids );
+    public Map<Long, AuditEvent> getLastTroubleEvent( Collection<Long> ids );
 
     /**
-     * 
+     * @param ids
+     * @return
      */
-    public java.util.Map getLastValidationEvent( java.util.Collection<Long> ids );
+    public Map<Long, AuditEvent> getLastValidationEvent( Collection<Long> ids );
 
     /**
-     * <p>
      * Function to get a count of expression experiments, grouped by Taxon
-     * </p>
      */
-    public java.util.Map<Taxon, Long> getPerTaxonCount();
+    public Map<Taxon, Long> getPerTaxonCount();
 
     /**
-     * <p>
      * Get map of ids to how many factor values the experiment has, counting only factor values which are associated
      * with biomaterials.
-     * </p>
      */
-    public java.util.Map getPopulatedFactorCounts( java.util.Collection<Long> ids );
+    public Map<Long, Integer> getPopulatedFactorCounts( Collection<Long> ids );
 
     /**
-     * <p>
      * Iterates over the quantiation types for a given expression experiment and returns the preferred quantitation
      * types.
-     * </p>
      */
-    public java.util.Collection getPreferredQuantitationType(
-            ubic.gemma.model.expression.experiment.ExpressionExperiment EE );
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    public Collection<QuantitationType> getPreferredQuantitationType( ExpressionExperiment EE );
 
+    /**
+     * @param ee
+     * @return
+     */
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ", "AFTER_ACL_DATAVECTOR_COLLECTION_READ" })
     public Collection<ProcessedExpressionDataVector> getProcessedDataVectors( ExpressionExperiment ee );
 
     /**
-     * <p>
      * Counts the number of ProcessedExpressionDataVectors.
-     * </p>
      */
-    public long getProcessedExpressionVectorCount(
-            ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment );
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    public long getProcessedExpressionVectorCount( ExpressionExperiment expressionExperiment );
 
     /**
-     * <p>
      * Function to get a count of an expressionExperiment's designelementdatavectors, grouped by quantitation type
-     * </p>
      */
-    public java.util.Map<QuantitationType, Long> getQuantitationTypeCountById( java.lang.Long Id );
+    public Map<QuantitationType, Long> getQuantitationTypeCountById( java.lang.Long Id );
 
     /**
-     * <p>
      * Return all the quantitation types used by the given expression experiment
-     * </p>
      */
-    public java.util.Collection<QuantitationType> getQuantitationTypes(
-            ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment );
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    public Collection<QuantitationType> getQuantitationTypes( ExpressionExperiment expressionExperiment );
 
     /**
-     * <p>
      * Get the quantitation types for the expression experiment, for the array design specified. This is really only
      * useful for expression experiments that use more than one array design.
-     * </p>
      */
-    public java.util.Collection<QuantitationType> getQuantitationTypes(
-            ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment,
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    public Collection<QuantitationType> getQuantitationTypes( ExpressionExperiment expressionExperiment,
             ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
 
     /**
-     * 
+     * @param expressionExperiments
+     * @return
      */
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_MAP_READ" })
     public Map<ExpressionExperiment, Collection<AuditEvent>> getSampleRemovalEvents(
-            java.util.Collection<ExpressionExperiment> expressionExperiments );
+            Collection<ExpressionExperiment> expressionExperiments );
 
     /**
-     * <p>
      * Retrieve some of the vectors for the given expressionExperiment and quantitation type. Used for peeking at the
      * data without retrieving the whole data set.
-     * </p>
+     * 
+     * @param quantitationType
+     * @param limit
+     * @return
      */
-    public java.util.Collection getSamplingOfVectors(
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_DATAVECTOR_COLLECTION_READ" })
+    public Collection<DesignElementDataVector> getSamplingOfVectors(
             ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType, java.lang.Integer limit );
 
     /**
-     * <p>
      * Return any ExpressionExperimentSubSets this Experiment might have.
-     * </p>
      */
-    public java.util.Collection<ExpressionExperimentSubSet> getSubSets(
-            ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment );
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    public Collection<ExpressionExperimentSubSet> getSubSets( ExpressionExperiment expressionExperiment );
 
     /**
-     * <p>
      * Returns the taxon of the given expressionExperiment.
-     * </p>
      */
     public ubic.gemma.model.genome.Taxon getTaxon( java.lang.Long ExpressionExperimentID );
 
-    /**
-     * 
-     */
-    public ubic.gemma.model.expression.experiment.ExpressionExperiment load( java.lang.Long id );
+    @Monitored
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    public ExpressionExperiment load( java.lang.Long id );
+
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    public Collection<ExpressionExperiment> loadAll();
 
     /**
+     * TODO SECURE: How to secure value objects, should take a secured EE or a collection of secured EE's....?
      * 
+     * @return
      */
-    public java.util.Collection<ExpressionExperiment> loadAll();
+    public Collection<ExpressionExperimentValueObject> loadAllValueObjects();
+
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    public Collection<ExpressionExperiment> loadMultiple( Collection<Long> ids );
 
     /**
-     * 
-     */
-    public java.util.Collection<ExpressionExperimentValueObject> loadAllValueObjects();
-
-    /**
-     * 
-     */
-    public java.util.Collection<ExpressionExperiment> loadMultiple( java.util.Collection<Long> ids );
-
-    /**
-     * 
-     */
-    public java.util.Collection<ExpressionExperimentValueObject> loadValueObjects( java.util.Collection<Long> ids );
-
-    /**
-     * 
-     */
-    public void thaw( ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment );
-
-    /**
+     * Returns the {@link ExpressionExperiment}s for the currently logged in {@link User} - i.e, ones for which the
+     * current user has specific read permissions on (as opposed to data sets which are public). Important: This method
+     * will return all experiments if security is not enabled.
      * <p>
-     * Partially thaw the expression experiment given - do not thaw the raw data.
-     * </p>
+     * Implementation note: Via a methodInvocationFilter. See AclAfterFilterCollectionForMyData for
+     * processConfigAttribute. (in Gemma-core)
+     * 
+     * @return
      */
-    public void thawLite( ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment );
+    @Secured( { "GROUP_USER", "AFTER_ACL_FILTER_MY_DATA" })
+    public Collection<ExpressionExperiment> loadMyExpressionExperiments();
 
     /**
+     * TODO SECURE: How to secure value objects, should take a secured EE or a collection of secured EE's....?
      * 
+     * @param ids
+     * @return
      */
-    public void update( ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment );
+    public Collection<ExpressionExperimentValueObject> loadValueObjects( Collection<Long> ids );
+
+    /**
+     * @param expressionExperiment
+     */
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    public void thaw( ExpressionExperiment expressionExperiment );
+
+    /**
+     * Partially thaw the expression experiment given - do not thaw the raw data.
+     */
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    public void thawLite( ExpressionExperiment expressionExperiment );
+
+    /**
+     * @param expressionExperiment
+     */
+    @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    public void update( ExpressionExperiment expressionExperiment );
 
 }

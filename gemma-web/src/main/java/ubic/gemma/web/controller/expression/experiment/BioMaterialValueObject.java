@@ -77,6 +77,78 @@ public class BioMaterialValueObject {
         }
     }
 
+    public String getAssayDescription() {
+        return assayDescription;
+    }
+
+    public String getAssayName() {
+        return assayName;
+    }
+
+    public String getCharacteristics() {
+        return characteristics;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public Map<String, String> getFactorIdToFactorValueId() {
+        return factorIdToFactorValueId;
+    }
+
+    public Map<String, String> getFactors() {
+        return factors;
+    }
+
+    public Map<String, String> getFactorValues() {
+        return factorValues;
+    }
+
+    public long getId() {
+        return id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setAssayDescription( String assayDescription ) {
+        this.assayDescription = assayDescription;
+    }
+
+    public void setAssayName( String assayName ) {
+        this.assayName = assayName;
+    }
+
+    public void setCharacteristics( String characteristics ) {
+        this.characteristics = characteristics;
+    }
+
+    public void setDescription( String description ) {
+        this.description = description;
+    }
+
+    public void setFactorIdToFactorValueId( Map<String, String> factorIdToFactorValueId ) {
+        this.factorIdToFactorValueId = factorIdToFactorValueId;
+    }
+
+    public void setFactors( Map<String, String> factors ) {
+        this.factors = factors;
+    }
+
+    public void setFactorValues( Map<String, String> factorValues ) {
+        this.factorValues = factorValues;
+    }
+
+    public void setId( long id ) {
+        this.id = id;
+    }
+
+    public void setName( String name ) {
+        this.name = name;
+    }
+
     /**
      * @param characters
      * @return
@@ -105,78 +177,6 @@ public class BioMaterialValueObject {
         } else {
             return value.getValue();
         }
-    }
-
-    public long getId() {
-        return id;
-    }
-
-    public void setId( long id ) {
-        this.id = id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName( String name ) {
-        this.name = name;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription( String description ) {
-        this.description = description;
-    }
-
-    public String getCharacteristics() {
-        return characteristics;
-    }
-
-    public void setCharacteristics( String characteristics ) {
-        this.characteristics = characteristics;
-    }
-
-    public String getAssayName() {
-        return assayName;
-    }
-
-    public void setAssayName( String assayName ) {
-        this.assayName = assayName;
-    }
-
-    public String getAssayDescription() {
-        return assayDescription;
-    }
-
-    public void setAssayDescription( String assayDescription ) {
-        this.assayDescription = assayDescription;
-    }
-
-    public Map<String, String> getFactors() {
-        return factors;
-    }
-
-    public void setFactors( Map<String, String> factors ) {
-        this.factors = factors;
-    }
-
-    public Map<String, String> getFactorValues() {
-        return factorValues;
-    }
-
-    public void setFactorValues( Map<String, String> factorValues ) {
-        this.factorValues = factorValues;
-    }
-
-    public Map<String, String> getFactorIdToFactorValueId() {
-        return factorIdToFactorValueId;
-    }
-
-    public void setFactorIdToFactorValueId( Map<String, String> factorIdToFactorValueId ) {
-        this.factorIdToFactorValueId = factorIdToFactorValueId;
     }
 
 }

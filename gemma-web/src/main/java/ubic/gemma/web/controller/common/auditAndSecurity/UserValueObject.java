@@ -18,13 +18,10 @@
  */
 package ubic.gemma.web.controller.common.auditAndSecurity;
 
-import java.util.Collection;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.model.common.auditAndSecurity.User;
-import ubic.gemma.model.common.auditAndSecurity.UserRole;
 
 /**
  * @author keshav
@@ -35,7 +32,8 @@ public class UserValueObject {
 
     private String userName;
     private String email;
-    private String role;
+    private String password;
+
     private boolean enabled;
 
     public UserValueObject() {
@@ -46,42 +44,34 @@ public class UserValueObject {
         userName = user.getUserName();
         email = user.getEmail();
         enabled = user.getEnabled();
-        Collection<UserRole> roles = user.getRoles();
-        if ( roles.size() > 1 ) {
-            log.error( "Too many roles for user " + user.getName() + ".  Not setting role on "
-                    + UserValueObject.class.getName() );
-        } else {
-            role = roles.iterator().next().getName();
-        }
-
+        password = user.getPassword();
     }
 
     public String getEmail() {
         return email;
     }
 
-    public void setEmail( String email ) {
-        this.email = email;
+    /**
+     * @return the password
+     */
+    public String getPassword() {
+        return password;
+    }
+
+    public String getUserName() {
+        return userName;
     }
 
     public boolean isEnabled() {
         return enabled;
     }
 
+    public void setEmail( String email ) {
+        this.email = email;
+    }
+
     public void setEnabled( boolean enabled ) {
         this.enabled = enabled;
-    }
-
-    public String getRole() {
-        return role;
-    }
-
-    public void setRole( String role ) {
-        this.role = role;
-    }
-
-    public String getUserName() {
-        return userName;
     }
 
     public void setUserName( String userName ) {

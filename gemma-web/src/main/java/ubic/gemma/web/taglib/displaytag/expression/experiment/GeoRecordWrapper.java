@@ -118,9 +118,9 @@ public class GeoRecordWrapper extends TableDecorator {
 
             return title;
 
-        } else {
-            return "<span style=\"color:#BBBBBB;\">" + record.getTitle() + "</span>";
         }
+        return "<span style=\"color:#BBBBBB;\">" + record.getTitle() + "</span>";
+
     }
 
     /**

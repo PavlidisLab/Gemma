@@ -32,10 +32,13 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 import org.hibernate.Hibernate;
+import org.hibernate.SessionFactory;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.type.LongType;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.orm.hibernate3.HibernateTemplate;
 import org.springframework.orm.hibernate3.SessionFactoryUtils;
+import org.springframework.stereotype.Repository;
 
 import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -50,6 +53,7 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
  * @author pavlidis
  * @version $Id$
  */
+@Repository
 public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.designElement.CompositeSequenceDaoBase {
 
     private static final int PROBE_TO_GENE_MAP_BATCH_SIZE = 2000;
@@ -93,6 +97,11 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
             + "left join CHROMOSOME_FEATURE gene on (geneProductRNA.GENE_FK=gene.ID)"
             + " left join ARRAY_DESIGN ad on (cs.ARRAY_DESIGN_FK=ad.ID) ";
 
+    @Autowired
+    public CompositeSequenceDaoImpl( SessionFactory sessionFactory ) {
+        super.setSessionFactory( sessionFactory );
+    }
+
     /*
      * (non-Javadoc)
      * @see
@@ -107,7 +116,7 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
 
         try {
 
-            Criteria queryObject = super.getSession( false ).createCriteria( CompositeSequence.class );
+            Criteria queryObject = super.getSession().createCriteria( CompositeSequence.class );
 
             queryObject.add( Restrictions.eq( "name", compositeSequence.getName() ) );
 
@@ -196,7 +205,7 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
     protected Integer handleCountAll() throws Exception {
         final String query = "select count(*) from CompositeSequenceImpl";
         try {
-            org.hibernate.Query queryObject = super.getSession( false ).createQuery( query );
+            org.hibernate.Query queryObject = super.getSession().createQuery( query );
 
             return ( Integer ) queryObject.iterate().next();
         } catch ( org.hibernate.HibernateException ex ) {
@@ -217,7 +226,7 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
         final String queryString = "select distinct cs from CompositeSequenceImpl"
                 + " cs where cs.biologicalCharacteristic = :id";
         try {
-            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            org.hibernate.Query queryObject = super.getSession().createQuery( queryString );
             queryObject.setParameter( "id", bioSequence );
             compositeSequences = queryObject.list();
 
@@ -239,7 +248,7 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
         final String queryString = "select distinct cs from CompositeSequenceImpl"
                 + " cs inner join cs.biologicalCharacteristic b where b.name = :name";
         try {
-            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            org.hibernate.Query queryObject = super.getSession().createQuery( queryString );
             queryObject.setParameter( "name", name );
             compositeSequences = queryObject.list();
 
@@ -324,7 +333,7 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
         Collection<Gene> genes = new HashSet<Gene>();
         String geneQuery = "from GeneImpl g where g.id in ( :gs )";
 
-        org.hibernate.Query geneQueryObject = super.getSession( false ).createQuery( geneQuery ).setFetchSize( 1000 );
+        org.hibernate.Query geneQueryObject = super.getSession().createQuery( geneQuery ).setFetchSize( 1000 );
 
         for ( Long gene : genesToFetch ) {
             batch.add( gene );
@@ -566,7 +575,7 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
         }
 
         final String queryString = "select cs from CompositeSequenceImpl cs where cs.id in (:ids)";
-        org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+        org.hibernate.Query queryObject = super.getSession().createQuery( queryString );
         int batchSize = 2000;
         Collection<Long> batch = new HashSet<Long>();
         Collection<CompositeSequence> results = new HashSet<CompositeSequence>();
@@ -591,7 +600,7 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
     @Override
     protected void handleThaw( final Collection<CompositeSequence> compositeSequences ) throws Exception {
         HibernateTemplate templ = this.getHibernateTemplate();
-        templ.executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback() {
+        templ.executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
                 int i = 0;
                 /*

@@ -18,14 +18,15 @@
  */
 package ubic.gemma.model.genome.sequenceAnalysis;
 
+import org.springframework.security.access.annotation.Secured;
+
 /**
- * 
+ * @author kelsey
+ * @version $Id$
  */
 public interface BlastAssociationService {
 
-    /**
-     * 
-     */
+    @Secured( { "GROUP_USER" })
     public ubic.gemma.model.genome.sequenceAnalysis.BlastAssociation create(
             ubic.gemma.model.genome.sequenceAnalysis.BlastAssociation blastAssociation );
 

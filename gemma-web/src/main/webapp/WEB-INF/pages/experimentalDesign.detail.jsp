@@ -10,10 +10,10 @@
 	<jwr:script src='/scripts/app/ExperimentalDesign.js' />
 </head>
 
-<security:authorize ifAnyGranted="user,admin">
+<security:authorize ifAnyGranted="GROUP_ADMIN,GROUP_USER">
 	<input type="hidden" name="hasAdmin" id="hasAdmin" value="true" />
 </security:authorize>
-<security:authorize ifNotGranted="user,admin">
+<security:authorize ifNotGranted="GROUP_ADMIN,GROUP_USER">
 	<input type="hidden" name="hasAdmin" id="hasAdmin" value="" />
 </security:authorize>
 
@@ -32,8 +32,7 @@
 
 	<c:choose>
 		<c:when test="${!hasPopulatedDesign}">
-			<p>
-				<strong>This experiment does not have any experimental design details filled in.</strong>
+			<strong>This experiment does not have any experimental design details filled in.</strong>
 		</c:when>
 		<c:otherwise>
 			<p>
@@ -57,15 +56,12 @@
 				<b><fmt:message key="expressionExperiment.name" /> </b>
 			</td>
 			<td>
-				<%
-				    if (expressionExperiment.getName() != null) {
-				%>
-				<jsp:getProperty name="expressionExperiment" property="name" />
-				<%
-				    } else {
-								out.print("Expression Experiment Name unavailable");
-							}
-				%>
+				<c:choose>
+					<c:when test="${not empty expressionExperiment.name}">
+				${expressionExperiment.name}
+			</c:when>
+					<c:otherwise>(Name not available)</c:otherwise>
+				</c:choose>
 			</td>
 		</tr>
 		<tr>
@@ -73,18 +69,12 @@
 				<fmt:message key="expressionExperiment.description" />
 			</td>
 			<td>
-				<%
-				    if (expressionExperiment.getDescription() != null) {
-				%>
-				<div class="clob" style="width: 60%;">
-					<jsp:getProperty name="expressionExperiment" property="description" />
-				</div>
-
-				<%
-				    } else {
-								out.print("Description unavailable");
-							}
-				%>
+				<c:choose>
+					<c:when test="${not empty expressionExperiment.description}">
+				${expressionExperiment.description}
+			</c:when>
+					<c:otherwise>(Description not available)</c:otherwise>
+				</c:choose>
 			</td>
 		</tr>
 		<tr>
@@ -99,21 +89,22 @@
 			<td class="label">
 				<fmt:message key="pubMed.publication" />
 			</td>
+
+
 			<td>
-				<%
-				    if (expressionExperiment.getPrimaryPublication() != null) {
-				%>
-				<Gemma:citation citation="${expressionExperiment.primaryPublication }" />
-				<%
-				    } else {
-								out.print("Primary publication unavailable");
-							}
-				%>
+				<c:choose>
+					<c:when test="${not empty expressionExperiment.primaryPublication}">
+						<Gemma:citation citation="${expressionExperiment.primaryPublication }" />
+					</c:when>
+					<c:otherwise>(Primary publication not available)</c:otherwise>
+				</c:choose>
 			</td>
+
+
 		</tr>
 	</table>
 </div>
-<security:acl domainObject="${expressionExperiment}" hasPermission="1,6">
+<security:accesscontrollist domainObject="${expressionExperiment}" hasPermission="1,6">
 	<c:if test="${!hasPopulatedDesign}">
 		<div style="width: 600px; background-color: #EEEEEE; margin: 7px; padding: 7px;">
 			<p>
@@ -128,7 +119,7 @@
 			</p>
 		</div>
 	</c:if>
-</security:acl>
+</security:accesscontrollist>
 
 <!-- Experimental Factors -->
 

@@ -84,9 +84,8 @@ public class BibliographicReferenceWrapper extends TableDecorator {
         Date publicationDate = bibliographicReference.getPublicationDate();
         if ( publicationDate != null ) {
             return form.format( publicationDate );
-        } else {
-            return "?";
         }
+        return "?";
 
     }
 

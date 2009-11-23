@@ -25,6 +25,9 @@ import java.util.List;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
+import org.hibernate.SessionFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
 
 import ubic.gemma.model.common.protocol.ProtocolDaoImpl;
 import ubic.gemma.util.BusinessKey;
@@ -34,9 +37,15 @@ import ubic.gemma.util.BusinessKey;
  * @version $Id$
  * @see ubic.gemma.model.genome.Taxon
  */
+@Repository
 public class TaxonDaoImpl extends ubic.gemma.model.genome.TaxonDaoBase {
 
     private static Log log = LogFactory.getLog( ProtocolDaoImpl.class.getName() );
+
+    @Autowired
+    public TaxonDaoImpl( SessionFactory sessionFactory ) {
+        super.setSessionFactory( sessionFactory );
+    }
 
     /*
      * (non-Javadoc)
@@ -49,7 +58,7 @@ public class TaxonDaoImpl extends ubic.gemma.model.genome.TaxonDaoBase {
 
             BusinessKey.checkValidKey( taxon );
 
-            Criteria queryObject = super.getSession( false ).createCriteria( Taxon.class );
+            Criteria queryObject = super.getSession().createCriteria( Taxon.class );
 
             BusinessKey.addRestrictions( queryObject, taxon );
 
@@ -85,24 +94,25 @@ public class TaxonDaoImpl extends ubic.gemma.model.genome.TaxonDaoBase {
         if ( log.isDebugEnabled() ) log.debug( "Creating new taxon: " + taxon );
         return create( taxon );
     }
-      
-    
+
     /**
      * @see ubic.gemma.model.genome.TaxonDao#findByAbbreviation(int, java.lang.String)
      */
+    @Override
     @SuppressWarnings( { "unchecked" })
-    public Taxon handleFindByAbbreviation(final java.lang.String abbreviation ) {
+    public Taxon handleFindByAbbreviation( final java.lang.String abbreviation ) {
         final String queryString = "from TaxonImpl t where t.abbreviation=:abbreviation";
-        List results = getHibernateTemplate().findByNamedParam( queryString, "abbreviation", abbreviation.toLowerCase());
-        Taxon result =null;
+        List results = getHibernateTemplate()
+                .findByNamedParam( queryString, "abbreviation", abbreviation.toLowerCase() );
+        Taxon result = null;
         if ( results.size() > 1 ) {
             throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
                     "More than one instance of 'ubic.gemma.model.genome.Taxon"
                             + "' was found when executing query --> '" + queryString + "'" );
         } else if ( results.size() == 1 ) {
-            result = (Taxon)results.iterator().next();
+            result = ( Taxon ) results.iterator().next();
         }
-        return result;     
-        
+        return result;
+
     }
 }

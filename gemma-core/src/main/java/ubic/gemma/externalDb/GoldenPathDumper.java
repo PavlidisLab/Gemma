@@ -312,8 +312,7 @@ public class GoldenPathDumper extends GoldenPath {
             compile();
         }
 
-        @Override
-        @SuppressWarnings("unused")
+        @Override 
         public Object mapRow( ResultSet rs, int rowNumber ) throws SQLException {
             BioSequence bioSequence = BioSequence.Factory.newInstance();
 

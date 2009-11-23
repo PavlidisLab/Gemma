@@ -30,6 +30,8 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.description.Characteristic;
@@ -40,7 +42,7 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.BioMaterialService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.model.genome.Gene; 
+import ubic.gemma.model.genome.Gene;
 import ubic.gemma.search.SearchResult;
 import ubic.gemma.search.SearchService;
 import ubic.gemma.search.SearchSettings;
@@ -55,17 +57,8 @@ import com.hp.hpl.jena.util.iterator.ExtendedIterator;
  * 
  * @author pavlidis
  * @version $Id$
- * @spring.bean id="ontologyService"
- * @spring.property name="birnLexOntologyService" ref ="birnLexOntologyService"
- * @spring.property name="fmaOntologyService" ref ="fmaOntologyService"
- * @spring.property name="diseaseOntologyService" ref ="diseaseOntologyService"
- * @spring.property name="mgedOntologyService" ref ="mgedOntologyService"
- * @spring.property name="bioMaterialService" ref ="bioMaterialService"
- * @spring.property name="expressionExperimentService" ref="expressionExperimentService"
- * @spring.property name="characteristicService" ref="characteristicService"
- * @spring.property name="chebiOntologyService" ref="chebiOntologyService"
- * @spring.property name="searchService" ref="searchService"
  */
+@Service
 public class OntologyService {
 
     // Private class for sorting Characteristics
@@ -124,17 +117,26 @@ public class OntologyService {
 
     }
 
+    @Autowired
     private BioMaterialService bioMaterialService;
 
+    @Autowired
     private BirnLexOntologyService birnLexOntologyService;
+    @Autowired
     private CharacteristicService characteristicService;
+    @Autowired
     private ChebiOntologyService chebiOntologyService;
-    private HumanDiseaseOntologyService diseaseOntologyService;
+    @Autowired
+    private DiseaseOntologyService diseaseOntologyService;
+    @Autowired
     private ExpressionExperimentService eeService;
+    @Autowired
     private FMAOntologyService fmaOntologyService;
 
+    @Autowired
     private SearchService searchService;
 
+    @Autowired
     private MgedOntologyService mgedOntologyService;
 
     private Collection<AbstractOntologyService> ontologyServices = new HashSet<AbstractOntologyService>();
@@ -256,7 +258,7 @@ public class OntologyService {
             ss.setQuery( queryString );
             ss.noSearches();
             ss.setSearchGenes( true );
-            Map<Class, List<SearchResult>> geneResults = this.searchService.search( ss, true );
+            Map<Class<?>, List<SearchResult>> geneResults = this.searchService.search( ss, true );
 
             if ( geneResults.containsKey( Gene.class ) ) {
                 for ( SearchResult sr : geneResults.get( Gene.class ) ) {
@@ -590,7 +592,7 @@ public class OntologyService {
     /**
      * @param diseaseOntologyService the diseaseOntologyService to set
      */
-    public void setDiseaseOntologyService( HumanDiseaseOntologyService diseaseOntologyService ) {
+    public void setDiseaseOntologyService( DiseaseOntologyService diseaseOntologyService ) {
         this.diseaseOntologyService = diseaseOntologyService;
         ontologyServices.add( diseaseOntologyService );
     }

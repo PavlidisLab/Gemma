@@ -93,27 +93,7 @@ public interface ProbeAlignedRegionDao extends BaseDao<ProbeAlignedRegion> {
      * Converts a Collection of instances of type {@link ubic.gemma.model.genome.gene.GeneValueObject} to this DAO's
      * entity.
      */
-    public void geneValueObjectToEntityCollection( java.util.Collection<ProbeAlignedRegion> instances );
-
-    /**
-     * Converts this DAO's entity to an object of type {@link ubic.gemma.model.genome.gene.GeneValueObject}.
-     */
-    public ubic.gemma.model.genome.gene.GeneValueObject toGeneValueObject(
-            ubic.gemma.model.genome.ProbeAlignedRegion entity );
-
-    /**
-     * Copies the fields of the specified entity to the target value object. This method is similar to
-     * toGeneValueObject(), but it does not handle any attributes in the target value object that are "read-only" (as
-     * those do not have setter methods exposed).
-     */
-    public void toGeneValueObject( ubic.gemma.model.genome.ProbeAlignedRegion sourceEntity,
-            ubic.gemma.model.genome.gene.GeneValueObject targetVO );
-
-    /**
-     * Converts this DAO's entity to a Collection of instances of type
-     * {@link ubic.gemma.model.genome.gene.GeneValueObject}.
-     */
-    public void toGeneValueObjectCollection( java.util.Collection<ProbeAlignedRegion> entities );
+    public void geneValueObjectToEntityCollection( java.util.Collection<? extends ProbeAlignedRegion> instances );
 
     public void thaw( ProbeAlignedRegion par );
 }

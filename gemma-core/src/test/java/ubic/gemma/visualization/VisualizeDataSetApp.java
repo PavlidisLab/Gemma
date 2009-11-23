@@ -56,6 +56,37 @@ import ubic.basecode.io.reader.DoubleMatrixReader;
 public class VisualizeDataSetApp {
     private static Log log = LogFactory.getLog( VisualizeDataSetApp.class );
 
+    /**
+     * @param args
+     */
+    public static void main( String[] args ) {
+
+        VisualizeDataSetApp visualizeDataSet = new VisualizeDataSetApp();
+
+        DoubleMatrix matrix = null;
+        try {
+            matrix = visualizeDataSet.parseData( true );
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
+        }
+
+        ColorMatrix colorMatrix = new ColorMatrix( matrix );
+        visualizeDataSet.showDataMatrix( "A heat map", new MatrixDisplay( colorMatrix ) );
+
+        List<double[]> data = new ArrayList<double[]>();
+
+        data.add( matrix.getRow( 4 ) );
+        data.add( matrix.getRow( 16 ) );
+        data.add( matrix.getRow( 22 ) );
+        data.add( matrix.getRow( 26 ) );
+        data.add( matrix.getRow( 36 ) );
+
+        visualizeDataSet.showProfilesLineChartView( "A line chart", data, 5 );
+
+        visualizeDataSet.showProfilesPolarView( "A polar chart", data, 5 );
+
+    }
+
     private String filePath = "aov.results-2-monocyte-data-bytime.bypat.data.sort";
 
     private static final int DEFAULT_MAX_SIZE = 3;
@@ -102,6 +133,27 @@ public class VisualizeDataSetApp {
      * @param dataCol
      * @param numProfiles
      */
+    public void showProfilesBubbleChartView( String title, double[][] dataMatrix, int numProfiles ) {
+
+        if ( dataMatrix == null ) throw new RuntimeException( "dataMatrix cannot be " + null );
+
+        JFreeChart chart = ChartFactory.createXYLineChart( title, "Microarray", "Expression Value", null,
+                PlotOrientation.VERTICAL, false, false, false );
+
+        MatrixSeries series = new MatrixSeries( title, dataMatrix[0].length, dataMatrix.length );
+        XYPlot plot = chart.getXYPlot();
+        plot.setDataset( new MatrixSeriesCollection( series ) );
+
+        ChartFrame frame = new ChartFrame( title, chart, true );
+
+        showWindow( frame );
+    }
+
+    /**
+     * @param title
+     * @param dataCol
+     * @param numProfiles
+     */
     public void showProfilesLineChartView( String title, Collection<double[]> dataCol, int numProfiles ) {
 
         if ( dataCol == null ) throw new RuntimeException( "dataCol cannot be " + null );
@@ -128,16 +180,6 @@ public class VisualizeDataSetApp {
         ChartFrame frame = new ChartFrame( title, chart, true );
 
         showWindow( frame );
-    }
-
-    /**
-     * @param frame
-     */
-    private void showWindow( ChartFrame frame ) {
-        // Display the window.
-        frame.setLocationRelativeTo( null );
-        frame.pack();
-        frame.setVisible( true );
     }
 
     /**
@@ -181,27 +223,6 @@ public class VisualizeDataSetApp {
     }
 
     /**
-     * @param title
-     * @param dataCol
-     * @param numProfiles
-     */
-    public void showProfilesBubbleChartView( String title, double[][] dataMatrix, int numProfiles ) {
-
-        if ( dataMatrix == null ) throw new RuntimeException( "dataMatrix cannot be " + null );
-
-        JFreeChart chart = ChartFactory.createXYLineChart( title, "Microarray", "Expression Value", null,
-                PlotOrientation.VERTICAL, false, false, false );
-
-        MatrixSeries series = new MatrixSeries( title, dataMatrix[0].length, dataMatrix.length );
-        XYPlot plot = chart.getXYPlot();
-        plot.setDataset( new MatrixSeriesCollection( series ) );
-
-        ChartFrame frame = new ChartFrame( title, chart, true );
-
-        showWindow( frame );
-    }
-
-    /**
      * @param headerExists
      * @return
      * @throws IOException
@@ -214,34 +235,13 @@ public class VisualizeDataSetApp {
     }
 
     /**
-     * @param args
+     * @param frame
      */
-    public static void main( String[] args ) {
-
-        VisualizeDataSetApp visualizeDataSet = new VisualizeDataSetApp();
-
-        DoubleMatrix matrix = null;
-        try {
-            matrix = visualizeDataSet.parseData( true );
-        } catch ( IOException e ) {
-            throw new RuntimeException( e );
-        }
-
-        ColorMatrix colorMatrix = new ColorMatrix( matrix );
-        visualizeDataSet.showDataMatrix( "A heat map", new MatrixDisplay( colorMatrix ) );
-
-        List<double[]> data = new ArrayList<double[]>();
-
-        data.add( matrix.getRow( 4 ) );
-        data.add( matrix.getRow( 16 ) );
-        data.add( matrix.getRow( 22 ) );
-        data.add( matrix.getRow( 26 ) );
-        data.add( matrix.getRow( 36 ) );
-
-        visualizeDataSet.showProfilesLineChartView( "A line chart", data, 5 );
-
-        visualizeDataSet.showProfilesPolarView( "A polar chart", data, 5 );
-
+    private void showWindow( ChartFrame frame ) {
+        // Display the window.
+        frame.setLocationRelativeTo( null );
+        frame.pack();
+        frame.setVisible( true );
     }
 
 }

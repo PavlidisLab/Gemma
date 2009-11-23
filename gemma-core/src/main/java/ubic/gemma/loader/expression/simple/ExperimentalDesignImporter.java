@@ -32,6 +32,9 @@ import java.util.regex.Pattern;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import ubic.gemma.datastructure.matrix.ExperimentalDesignWriter;
 import ubic.gemma.datastructure.matrix.ExpressionDataWriterUtils;
@@ -77,15 +80,11 @@ import ubic.gemma.ontology.OntologyTerm;
  *    f-af     60  Bipolar     70  Little or none
  * </pre>
  * 
- * @spring.bean id="experimentalDesignImporter"
- * @spring.property name="mgedOntologyService" ref="mgedOntologyService"
- * @spring.property name="bioMaterialService" ref="bioMaterialService"
- * @spring.property name="factorValueService" ref="factorValueService"
- * @spring.property name="experimentalDesignService" ref="experimentalDesignService"
  * @author Paul
  * @version $Id$
  * @see ExperimentalDesignWriter
  */
+@Service
 public class ExperimentalDesignImporter {
 
     enum FactorType {
@@ -95,10 +94,17 @@ public class ExperimentalDesignImporter {
     public static final String EXPERIMENTAL_FACTOR_DESCRIPTION_LINE_INDICATOR = "#$";
 
     private static Log log = LogFactory.getLog( ExperimentalDesignImporter.class.getName() );
+
+    @Autowired
     private BioMaterialService bioMaterialService;
+
+    @Autowired
     private ExperimentalDesignService experimentalDesignService;
+
+    @Autowired
     private FactorValueService factorValueService;
 
+    @Autowired
     private MgedOntologyService mgedOntologyService;
 
     /**
@@ -116,6 +122,7 @@ public class ExperimentalDesignImporter {
      * @param dryRun
      * @throws IOException
      */
+    @Transactional
     public void importDesign( ExpressionExperiment experiment, InputStream is, boolean dryRun ) throws IOException {
 
         if ( mgedOntologyService == null ) {
@@ -188,7 +195,6 @@ public class ExperimentalDesignImporter {
             }
         }
         updateBioMaterials( bms, ed );
-
     }
 
     public void setBioMaterialService( BioMaterialService bioMaterialService ) {

@@ -22,6 +22,8 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
 
+import org.springframework.stereotype.Service;
+
 import ubic.gemma.model.common.description.DatabaseEntry;
 
 /**
@@ -30,6 +32,7 @@ import ubic.gemma.model.common.description.DatabaseEntry;
  * @version $Id$
  * @see ubic.gemma.model.genome.biosequence.BioSequenceService
  */
+@Service
 public class BioSequenceServiceImpl extends ubic.gemma.model.genome.biosequence.BioSequenceServiceBase {
 
     @Override

@@ -26,25 +26,26 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 
 import ubic.basecode.graphics.MatrixDisplay;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
 import ubic.gemma.visualization.ExpressionDataMatrixVisualizationService;
-import ubic.gemma.web.controller.BaseMultiActionController;
+import ubic.gemma.web.controller.BaseController;
 import ubic.gemma.web.view.TextView;
 
 /**
  * This controller allows images to be created in a web environment. Specifically, the image is written to the
  * {@link OutputStream} as a Portable Network Graphic (PNG).
  * 
- * @spring.bean id="expressionExperimentVisualizationController"
- * @spring.property name="methodNameResolver" ref="expressionExperimentVisualizationActions"
- * @spring.property name = "expressionDataMatrixVisualizationService" ref="expressionDataMatrixVisualizationService"
  * @author keshav
  * @version $Id$
  */
-public class ExpressionExperimentVisualizationController extends BaseMultiActionController {
+@Controller 
+public class ExpressionExperimentVisualizationController extends BaseController {
     private Log log = LogFactory.getLog( ExpressionExperimentVisualizationController.class );
 
     private static final String DEFAULT_CONTENT_TYPE = "image/png";
@@ -53,9 +54,8 @@ public class ExpressionExperimentVisualizationController extends BaseMultiAction
 
     private static final String TEXT_TYPE = "text";
 
+    @Autowired
     private ExpressionDataMatrixVisualizationService expressionDataMatrixVisualizationService = null;
-
-    // private static final String EXPRESSION_PROFILE_IMAGE_TYPE = "profile";
 
     /**
      * @param request
@@ -63,6 +63,7 @@ public class ExpressionExperimentVisualizationController extends BaseMultiAction
      * @param errors
      * @return ModelAndView
      */
+    @RequestMapping("/expressionExperiment/visualizeDataMatrix.html")
     public ModelAndView show( HttpServletRequest request, HttpServletResponse response ) {
 
         String type = request.getParameter( "type" );
@@ -116,13 +117,5 @@ public class ExpressionExperimentVisualizationController extends BaseMultiAction
             return null;
         }
 
-    }
-
-    /**
-     * @param expressionDataMatrixVisualizationService The expressionDataMatrixVisualizationService to set.
-     */
-    public void setExpressionDataMatrixVisualizationService(
-            ExpressionDataMatrixVisualizationService expressionDataMatrixVisualizationService ) {
-        this.expressionDataMatrixVisualizationService = expressionDataMatrixVisualizationService;
     }
 }

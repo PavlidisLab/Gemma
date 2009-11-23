@@ -1,7 +1,7 @@
 /*
  * The Gemma project
  * 
- * Copyright (c) 2006 University of British Columbia
+ * Copyright (c) 2006-2010 University of British Columbia
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -49,22 +49,31 @@ import ubic.gemma.util.ConfigUtils;
  * @author pavlidis
  * @author keshav
  * @version $Id$
- * @spring.bean id="mageMLPreprocessor" singleton="false"
- * @spring.property name="persisterHelper" ref="persisterHelper"
  */
 public class MageMLPreprocessor implements Preprocessor {
-    private final String experimentName;
-    private String localMatrixFilepath;
+    private String experimentName = null;
+    private String localMatrixFilepath = null;
+
+    /*
+     * Note: currently this is not wired into the context and it is not used. We can put it back if we need it, but it's
+     * semi-deprecated?
+     */
 
     private PersisterHelper persisterHelper;
 
     Log log = LogFactory.getLog( MageMLPreprocessor.class.getName() );
-    RawDataParser rdp = new RawDataParser();
     private int whichQuantitationType = -1;
 
-    public MageMLPreprocessor( String experimentName ) {
-        this.experimentName = experimentName.replaceAll( "\\W+", "_" );
+    public MageMLPreprocessor() {
         this.localMatrixFilepath = ConfigUtils.getString( "local.rawData.matrix.basepath" );
+    }
+
+    /*
+     * FIXME never called.
+     */
+    public MageMLPreprocessor( String experimentName ) {
+        this();
+        this.experimentName = experimentName.replaceAll( "\\W+", "_" );
     }
 
     /*
@@ -73,7 +82,7 @@ public class MageMLPreprocessor implements Preprocessor {
      * ubic.gemma.loader.expression.mage.BioAssayDimensions)
      */
     public void preprocess( List<BioAssay> bioAssays, BioAssayDimensions dimensions ) throws IOException {
-
+        RawDataParser rdp = new RawDataParser();
         rdp.setDimensions( dimensions );
         rdp.setBioAssays( bioAssays );
         rdp.setSeparator( ' ' );
@@ -94,12 +103,12 @@ public class MageMLPreprocessor implements Preprocessor {
                 for ( BioAssay assay : bioAssays ) {
                     sourceFiles.add( assay.getRawDataFile() );
                 }
-                // processResults( sourceFiles );
+                processResults( sourceFiles, rdp );
             }
             i++;
         }
 
-        setSelector( -1 );
+        setSelector( rdp, -1 );
 
     }
 
@@ -115,6 +124,7 @@ public class MageMLPreprocessor implements Preprocessor {
     public void preprocessStreams( List<InputStream> streams, ExpressionExperiment expressionExperiment,
             List<BioAssay> orderedBioAssays, BioAssayDimensions dimensions ) throws IOException {
         assert expressionExperiment != null;
+        RawDataParser rdp = new RawDataParser();
         rdp.setExpressionExperiment( expressionExperiment );
         rdp.setDimensions( dimensions );
         rdp.setBioAssays( orderedBioAssays );
@@ -126,7 +136,7 @@ public class MageMLPreprocessor implements Preprocessor {
             is.close();
         }
         // processResults( null );
-        makeTabbedFiles( null );
+        makeTabbedFiles( null, rdp );
     }
 
     /**
@@ -159,7 +169,7 @@ public class MageMLPreprocessor implements Preprocessor {
     /**
      * Make the DesignElementDataVectors persistent.
      */
-    public void makePersistent() {
+    public void makePersistent( RawDataParser rdp ) {
         Collection<Object> matrices = rdp.getResults();
         // int i = 0;
         // for ( Object object : matrices ) {
@@ -220,7 +230,7 @@ public class MageMLPreprocessor implements Preprocessor {
      * @param sourceFiles
      * @throws IOException
      */
-    public void makeTabbedFiles( Collection<LocalFile> sourceFiles ) throws IOException {
+    public void makeTabbedFiles( Collection<LocalFile> sourceFiles, RawDataParser rdp ) throws IOException {
         Collection<Object> matrices = rdp.getResults();
         Collection<LocalFile> localFiles = new HashSet<LocalFile>();
 
@@ -273,18 +283,18 @@ public class MageMLPreprocessor implements Preprocessor {
      * @param sourceFiles
      * @throws IOException
      */
-    private void processResults( Collection<LocalFile> sourceFiles ) throws IOException {
-        makeTabbedFiles( sourceFiles );
-        makePersistent();
+    private void processResults( Collection<LocalFile> sourceFiles, RawDataParser rdp ) throws IOException {
+        makeTabbedFiles( sourceFiles, rdp );
+        makePersistent( rdp );
     }
 
     /*
      * (non-Javadoc)
      * @see ubic.gemma.loader.expression.mage.RawDataParser#setSelector(int)
      */
-    public void setSelector( int selector ) {
+    public void setSelector( RawDataParser rdp, int selector ) {
         assert rdp != null;
         this.whichQuantitationType = selector;
-        this.rdp.setSelector( selector );
+        rdp.setSelector( selector );
     }
 }

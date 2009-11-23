@@ -20,6 +20,7 @@ package ubic.gemma.web.controller.common.description.bibref;
 
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashSet;
 
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 import ubic.gemma.model.common.auditAndSecurity.Person;
@@ -41,13 +42,42 @@ public class BibliographicReferenceValueObject {
 
     BibliographicReference bibRef;
 
-    Collection<ExpressionExperiment> experiments;
+    Collection<ExpressionExperiment> experiments = new HashSet<ExpressionExperiment>();
 
-    public BibliographicReference getBibRef() {
-        return bibRef;
+    public BibliographicReferenceValueObject() {
+        super();
     }
 
-    public void setBibRef( BibliographicReference bibRef ) {
+    /*
+     * (non-Javadoc)
+     * @see java.lang.Object#hashCode()
+     */
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ( ( bibRef == null ) ? 0 : bibRef.hashCode() );
+        return result;
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see java.lang.Object#equals(java.lang.Object)
+     */
+    @Override
+    public boolean equals( Object obj ) {
+        if ( this == obj ) return true;
+        if ( obj == null ) return false;
+        if ( getClass() != obj.getClass() ) return false;
+        BibliographicReferenceValueObject other = ( BibliographicReferenceValueObject ) obj;
+        if ( bibRef == null ) {
+            if ( other.bibRef != null ) return false;
+        } else if ( !bibRef.equals( other.bibRef ) ) return false;
+        return true;
+    }
+
+    public BibliographicReferenceValueObject( BibliographicReference bibRef ) {
+        super();
         this.bibRef = bibRef;
     }
 
@@ -75,6 +105,10 @@ public class BibliographicReferenceValueObject {
         return bibRef.getAuthors();
     }
 
+    public BibliographicReference getBibRef() {
+        return bibRef;
+    }
+
     public Collection<Compound> getChemicals() {
         return bibRef.getChemicals();
     }
@@ -89,6 +123,10 @@ public class BibliographicReferenceValueObject {
 
     public String getEditor() {
         return bibRef.getEditor();
+    }
+
+    public Collection<ExpressionExperiment> getExperiments() {
+        return experiments;
     }
 
     public LocalFile getFullTextPDF() {
@@ -151,21 +189,12 @@ public class BibliographicReferenceValueObject {
         return bibRef.getVolume();
     }
 
-    public BibliographicReferenceValueObject() {
-        super();
-    }
-
-    public Collection<ExpressionExperiment> getExperiments() {
-        return experiments;
+    public void setBibRef( BibliographicReference bibRef ) {
+        this.bibRef = bibRef;
     }
 
     public void setExperiments( Collection<ExpressionExperiment> experiments ) {
         this.experiments = experiments;
-    }
-
-    public BibliographicReferenceValueObject( BibliographicReference bibRef ) {
-        super();
-        this.bibRef = bibRef;
     }
 
 }

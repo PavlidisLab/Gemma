@@ -34,15 +34,16 @@ import org.hibernate.stat.SecondLevelCacheStatistics;
 import org.hibernate.stat.Statistics;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 /**
  * Monitoring of Hibernate status.
  * 
- * @spring.bean id="hibernateMonitor"
- * @spring.property name="sessionFactory" ref="sessionFactory"
  * @author pavlidis
  * @version $Id$
  */
+@Component
 public class HibernateMonitor implements InitializingBean, DisposableBean {
 
     /**
@@ -52,7 +53,8 @@ public class HibernateMonitor implements InitializingBean, DisposableBean {
 
     private static Log log = LogFactory.getLog( HibernateMonitor.class.getName() );
 
-    SessionFactory sessionFactory;
+    @Autowired
+    private SessionFactory sessionFactory;
 
     private boolean showQueryCacheStats = true;
 
@@ -191,21 +193,21 @@ public class HibernateMonitor implements InitializingBean, DisposableBean {
         // Define ObjectName of the MBean
         ObjectName on = new ObjectName( HIBERNATE_MBEAN_OBJECTNAME );
 
-//        // Enable Hibernate JMX Statistics
-//        StatisticsService statsMBean = new StatisticsService();
-//        statsMBean.setSessionFactory( this.sessionFactory );
-//        statsMBean.setStatisticsEnabled( true );
-//        MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
-//
-//        try {
-//            mbs.getMBeanInfo( on );
-//        } catch ( InstanceNotFoundException e ) {
-//            try {
-//                mbs.registerMBean( statsMBean, on );
-//            } catch ( InstanceAlreadyExistsException e1 ) {
-//                // no problem
-//            }
-//        }
+        // // Enable Hibernate JMX Statistics
+        // StatisticsService statsMBean = new StatisticsService();
+        // statsMBean.setSessionFactory( this.sessionFactory );
+        // statsMBean.setStatisticsEnabled( true );
+        // MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
+        //
+        // try {
+        // mbs.getMBeanInfo( on );
+        // } catch ( InstanceNotFoundException e ) {
+        // try {
+        // mbs.registerMBean( statsMBean, on );
+        // } catch ( InstanceAlreadyExistsException e1 ) {
+        // // no problem
+        // }
+        // }
 
         /**
          * Enable Ehcache JMX Statistics Use CacheManager.getInstance() instead of new CacheManager() as
@@ -214,7 +216,7 @@ public class HibernateMonitor implements InitializingBean, DisposableBean {
          */
         try {
             CacheManager cacheMgr = CacheManager.getInstance();
-    //        ManagementService.registerMBeans( cacheMgr, mbs, true, true, true, true );
+            // ManagementService.registerMBeans( cacheMgr, mbs, true, true, true, true );
         } catch ( RuntimeException e1 ) {
             // no problem, it already exists...
         }

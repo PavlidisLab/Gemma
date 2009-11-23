@@ -18,10 +18,15 @@
  */
 package ubic.gemma.model.genome.gene;
 
+import org.springframework.security.access.annotation.Secured;
+
+import ubic.gemma.model.genome.Gene;
+
 /**
- * 
+ * @author kelsey
+ * @version $Id$
  */
-public interface GeneProductService extends ubic.gemma.model.common.AuditableService {
+public interface GeneProductService {
 
     /**
      * 
@@ -31,11 +36,13 @@ public interface GeneProductService extends ubic.gemma.model.common.AuditableSer
     /**
      * 
      */
+    @Secured( { "GROUP_USER" })
     public ubic.gemma.model.genome.gene.GeneProduct create( ubic.gemma.model.genome.gene.GeneProduct geneProduct );
 
     /**
      * 
      */
+    @Secured( { "GROUP_USER" })
     public void delete( ubic.gemma.model.genome.gene.GeneProduct geneProduct );
 
     /**
@@ -46,20 +53,30 @@ public interface GeneProductService extends ubic.gemma.model.common.AuditableSer
     /**
      * 
      */
+    @Secured( { "GROUP_USER" })
     public ubic.gemma.model.genome.gene.GeneProduct findOrCreate( ubic.gemma.model.genome.gene.GeneProduct geneProduct );
 
     /**
+     * Returns all the genes that share the given gene product name
      * 
+     * @param search
+     * @return
      */
-    public java.util.Collection getGenesByName( java.lang.String search );
+    public java.util.Collection<Gene> getGenesByName( java.lang.String search );
 
     /**
+     * Returns all the genes that share the given gene product ncbi id
      * 
+     * @param search
+     * @return
      */
-    public java.util.Collection getGenesByNcbiId( java.lang.String search );
+    public java.util.Collection<Gene> getGenesByNcbiId( java.lang.String search );
 
     /**
+     * Returns all the genes that share the given gene product id
      * 
+     * @param id
+     * @return
      */
     public ubic.gemma.model.genome.gene.GeneProduct load( java.lang.Long id );
 
@@ -68,11 +85,12 @@ public interface GeneProductService extends ubic.gemma.model.common.AuditableSer
      * loads geneProducts specified by the given ids.
      * </p>
      */
-    public java.util.Collection loadMultiple( java.util.Collection ids );
+    public java.util.Collection<GeneProduct> loadMultiple( java.util.Collection<Long> ids );
 
     /**
      * 
      */
+    @Secured( { "GROUP_USER" })
     public void update( ubic.gemma.model.genome.gene.GeneProduct geneProduct );
 
 }

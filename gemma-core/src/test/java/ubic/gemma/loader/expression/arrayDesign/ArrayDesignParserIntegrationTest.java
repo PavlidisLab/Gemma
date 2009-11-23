@@ -18,18 +18,21 @@
  */
 package ubic.gemma.loader.expression.arrayDesign;
 
+import static org.junit.Assert.assertTrue;
+
 import java.io.InputStream;
 import java.util.Collection;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.junit.Before;
+import org.junit.Test;
 
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
- * Loads the database with ArrayDesigns. This test is more representative of integration testing than unit testing as it
- * tests both parsing and loading.
+ * Loads the database with ArrayDesigns.
  * 
  * @author keshav
  * @version $Id$
@@ -44,18 +47,9 @@ public class ArrayDesignParserIntegrationTest extends BaseSpringContextTest {
     /**
      * set up
      */
-    @Override
-    protected void onSetUpInTransaction() throws Exception {
-        super.onSetUpInTransaction();
+    @Before
+    public void setup() throws Exception {
         arrayDesignParser = new ArrayDesignParser();
-    }
-
-    @Override
-    protected void onTearDownInTransaction() throws Exception {
-        super.onTearDownInTransaction();
-        // for ( ArrayDesign ad : result ) {
-        // ( ( ArrayDesignService ) this.getBean( "arrayDesignService" ) ).remove( ad );
-        // }
     }
 
     /**
@@ -65,6 +59,7 @@ public class ArrayDesignParserIntegrationTest extends BaseSpringContextTest {
      * @throws Exception
      */
     @SuppressWarnings("unchecked")
+    @Test
     public void testParseAndLoad() throws Exception {
         InputStream is = this.getClass().getResourceAsStream( "/data/loader/expression/arrayDesign/array.txt" );
 

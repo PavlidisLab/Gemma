@@ -18,12 +18,14 @@
  */
 package ubic.gemma.loader.entrez.pubmed;
 
-import java.io.IOException;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
-import junit.framework.TestCase;
+import java.io.IOException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.junit.Test;
 
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.DatabaseEntry;
@@ -34,11 +36,12 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * @author pavlidis
  * @version $Id$
  */
-public class ExpressionExperimentBibRefFinderTest extends TestCase {
+public class ExpressionExperimentBibRefFinderTest {
 
     private static Log log = LogFactory.getLog( ExpressionExperimentBibRefFinderTest.class.getName() );
 
-    public void testLocatePrimaryReference() {
+    @Test
+    public void testLocatePrimaryReference() throws Exception {
         ExpressionExperimentBibRefFinder finder = new ExpressionExperimentBibRefFinder();
         ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
         DatabaseEntry de = DatabaseEntry.Factory.newInstance();
@@ -52,14 +55,15 @@ public class ExpressionExperimentBibRefFinderTest extends TestCase {
             assertNotNull( bibref );
             assertEquals( "Differential gene expression in anatomical compartments of the human eye.", bibref
                     .getTitle() );
-        } catch ( RuntimeException e ) {
+        } catch ( Exception e ) {
             checkCause( e );
             return;
         }
 
     }
 
-    public void testLocatePrimaryReferenceInvalidGSE() {
+    @Test
+    public void testLocatePrimaryReferenceInvalidGSE() throws Exception {
         ExpressionExperimentBibRefFinder finder = new ExpressionExperimentBibRefFinder();
         ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
         DatabaseEntry de = DatabaseEntry.Factory.newInstance();
@@ -71,7 +75,7 @@ public class ExpressionExperimentBibRefFinderTest extends TestCase {
         try {
             BibliographicReference bibref = finder.locatePrimaryReference( ee );
             assert ( bibref == null );
-        } catch ( RuntimeException e ) {
+        } catch ( Exception e ) {
             checkCause( e );
             return;
         }
@@ -80,13 +84,27 @@ public class ExpressionExperimentBibRefFinderTest extends TestCase {
     /**
      * @param e
      */
-    private void checkCause( RuntimeException e ) {
-        if ( e.getCause() instanceof IOException && e.getMessage().contains( "503" ) ) {
+    private void checkCause( Exception e ) throws Exception {
+
+        Throwable k = null;
+        if ( e instanceof IOException ) {
+            k = e;
+        } else if ( e.getCause() instanceof IOException ) {
+            k = e.getCause();
+        } else {
+            throw e;
+        }
+
+        if ( k instanceof IOException && k.getMessage().contains( "503" ) ) {
             log.warn( "Test skipped due to a 503 error from NCBI" );
             return;
         }
-        if ( e.getCause() instanceof IOException && e.getMessage().contains( "502" ) ) {
+        if ( k instanceof IOException && k.getMessage().contains( "502" ) ) {
             log.warn( "Test skipped due to a 502 error from NCBI" );
+            return;
+        }
+        if ( k instanceof IOException && k.getMessage().contains( "500" ) ) {
+            log.warn( "Test skipped due to a 500 error from NCBI" );
             return;
         }
         throw e;

@@ -18,9 +18,9 @@
  */
 package ubic.gemma.model.expression.bioAssayData;
 
+import org.springframework.security.access.annotation.Secured;
+
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.genome.Gene;
 
 /**
  * @author Paul
@@ -36,6 +36,7 @@ public interface DesignElementDataVectorService {
     /**
      * 
      */
+    @Secured( { "GROUP_ADMIN" })
     public java.util.Collection<? extends DesignElementDataVector> create(
             java.util.Collection<? extends DesignElementDataVector> vectors );
 
@@ -66,11 +67,13 @@ public interface DesignElementDataVectorService {
     /**
      * 
      */
+    @Secured( { "GROUP_ADMIN" })
     public void remove( java.util.Collection<? extends DesignElementDataVector> vectors );
 
     /**
      * 
      */
+    @Secured( { "GROUP_ADMIN" })
     public void remove( ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector designElementDataVector );
 
     /**
@@ -78,6 +81,7 @@ public interface DesignElementDataVectorService {
      * remove Design Element Data Vectors and Probe2ProbeCoexpression entries for a specified CompositeSequence.
      * </p>
      */
+    @Secured( { "GROUP_ADMIN" })
     public void removeDataForCompositeSequence(
             ubic.gemma.model.expression.designElement.CompositeSequence compositeSequence );
 
@@ -87,6 +91,7 @@ public interface DesignElementDataVectorService {
      * QuantitationType (which always comes from a specific ExpressionExperiment)
      * </p>
      */
+    @Secured( { "GROUP_ADMIN" })
     public void removeDataForQuantitationType(
             ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType );
 
@@ -107,6 +112,7 @@ public interface DesignElementDataVectorService {
      * updates a collection of designElementDataVectors
      * </p>
      */
+    @Secured( { "GROUP_USER" })
     public void update( java.util.Collection<? extends DesignElementDataVector> dedvs );
 
     /**
@@ -114,6 +120,7 @@ public interface DesignElementDataVectorService {
      * updates an already existing dedv
      * </p>
      */
+    @Secured( { "GROUP_USER"})
     public void update( RawExpressionDataVector dedv );
 
 }

@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.expression.biomaterial;
 
+import org.springframework.beans.factory.annotation.Autowired;
+
 /**
  * <p>
  * Spring Service base class for <code>ubic.gemma.model.expression.biomaterial.CompoundService</code>, provides access
@@ -28,6 +30,7 @@ package ubic.gemma.model.expression.biomaterial;
  */
 public abstract class CompoundServiceBase implements ubic.gemma.model.expression.biomaterial.CompoundService {
 
+    @Autowired
     private ubic.gemma.model.expression.biomaterial.CompoundDao compoundDao;
 
     /**

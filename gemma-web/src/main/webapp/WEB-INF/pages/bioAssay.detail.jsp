@@ -81,12 +81,12 @@
             onclick="location.href='/Gemma/expressionExperiment/showAllExpressionExperiments.html'"
             value="Back"></DIV>
             </TD>
-        <security:acl domainObject="${bioAssay}" hasPermission="1,6">
+        <security:accesscontrollist domainObject="${bioAssay}" hasPermission="1,6">
             <TD COLSPAN="2">    
             <DIV align="left"><input type="button"
             onclick="location.href='/Gemma/bioAssay/editBioAssay.html?id=<%=bioAssay.getId()%>'"
             value="Edit"></DIV>
             </TD>
-        </security:acl>
+        </security:accesscontrollist>
     </TR>
     </table>

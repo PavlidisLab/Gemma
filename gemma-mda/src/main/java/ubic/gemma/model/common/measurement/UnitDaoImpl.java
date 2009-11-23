@@ -19,6 +19,9 @@
 package ubic.gemma.model.common.measurement;
 
 import org.hibernate.Criteria;
+import org.hibernate.SessionFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
 
 import ubic.gemma.util.BusinessKey;
 
@@ -27,7 +30,13 @@ import ubic.gemma.util.BusinessKey;
  * @version $Id$
  * @see ubic.gemma.model.common.measurement.Unit
  */
+@Repository
 public class UnitDaoImpl extends ubic.gemma.model.common.measurement.UnitDaoBase {
+
+    @Autowired
+    public UnitDaoImpl( SessionFactory sessionFactory ) {
+        super.setSessionFactory( sessionFactory );
+    }
 
     @SuppressWarnings("unchecked")
     public Unit find( Unit unit ) {
@@ -35,7 +44,7 @@ public class UnitDaoImpl extends ubic.gemma.model.common.measurement.UnitDaoBase
 
             BusinessKey.checkValidKey( unit );
 
-            Criteria queryObject = BusinessKey.createQueryObject( super.getSession( false ), unit );
+            Criteria queryObject = BusinessKey.createQueryObject( super.getSession(), unit );
 
             java.util.List results = queryObject.list();
             Object result = null;

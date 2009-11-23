@@ -58,6 +58,8 @@ import org.apache.commons.logging.LogFactory;
  */
 public class HelpTag extends TagSupport {
 
+    private static final long serialVersionUID = -7035535312981283722L;
+
     private static Log log = LogFactory.getLog( HelpTag.class.getName() );
     String helpFile;
 
@@ -66,6 +68,7 @@ public class HelpTag extends TagSupport {
         return EVAL_PAGE;
     }
 
+    @Override
     public int doStartTag() throws JspException {
 
         StringBuilder buf = new StringBuilder();

@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.genome;
 
+import org.springframework.beans.factory.annotation.Autowired;
+
 /**
  * <p>
  * Spring Service base class for <code>ubic.gemma.model.genome.ChromosomeService</code>, provides access to all services
@@ -28,6 +30,7 @@ package ubic.gemma.model.genome;
  */
 public abstract class ChromosomeServiceBase implements ubic.gemma.model.genome.ChromosomeService {
 
+    @Autowired
     private ubic.gemma.model.genome.ChromosomeDao chromosomeDao;
 
     /**

@@ -18,9 +18,20 @@
  */
 package ubic.gemma.model.expression.experiment;
 
+import org.hibernate.SessionFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
+
 /**
  * @see ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet
  */
+@Repository
 public class ExpressionExperimentSubSetDaoImpl extends
         ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetDaoBase {
+
+    @Autowired
+    public ExpressionExperimentSubSetDaoImpl( SessionFactory sessionFactory ) {
+        super.setSessionFactory( sessionFactory );
+    }
+
 }

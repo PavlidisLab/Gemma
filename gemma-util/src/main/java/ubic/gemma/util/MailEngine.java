@@ -66,7 +66,7 @@ public class MailEngine {
      * @param templateName
      * @param model
      */
-    public void sendMessage( SimpleMailMessage msg, String templateName, Map model ) {
+    public void sendMessage( SimpleMailMessage msg, String templateName, Map<String, Object> model ) {
         String result = null;
 
         try {

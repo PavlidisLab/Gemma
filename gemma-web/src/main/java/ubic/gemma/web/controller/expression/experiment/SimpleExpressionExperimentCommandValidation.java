@@ -58,39 +58,56 @@ public class SimpleExpressionExperimentCommandValidation {
         this.nonMatchingProbeNameExamples = new HashSet<String>();
     }
 
-    public boolean isValid() {
-        return isValid;
+    public String getArrayDesignMismatchProblemMessage() {
+        return arrayDesignMismatchProblemMessage;
     }
 
-    public boolean isQuantitationTypeIsValid() {
-        return quantitationTypeIsValid;
+    public String getDataFileFormatProblemMessage() {
+        return dataFileFormatProblemMessage;
     }
 
-    public void setQuantitationTypeIsValid( boolean quantitationTypeIsValid ) {
-        this.quantitationTypeIsValid = quantitationTypeIsValid;
-        this.isValid = this.isValid && quantitationTypeIsValid;
+    public Collection<String> getNonMatchingProbeNameExamples() {
+        return nonMatchingProbeNameExamples;
     }
 
-    public boolean isShortNameIsUnique() {
-        return shortNameIsUnique;
+    public int getNumberMatchingProbes() {
+        return numberMatchingProbes;
     }
 
-    public void setShortNameIsUnique( boolean shortNameIsUnique ) {
-        this.shortNameIsUnique = shortNameIsUnique;
-        this.isValid = this.isValid && shortNameIsUnique;
+    public int getNumberOfNonMatchingProbes() {
+        return numberOfNonMatchingProbes;
+    }
+
+    public int getNumColumns() {
+        return numColumns;
+    }
+
+    public int getNumRows() {
+        return numRows;
+    }
+
+    public String getQuantitationTypeProblemMessage() {
+        return quantitationTypeProblemMessage;
+    }
+
+    public boolean isArrayDesignMatchesDataFile() {
+        return arrayDesignMatchesDataFile;
     }
 
     public boolean isDataFileIsValidFormat() {
         return dataFileIsValidFormat;
     }
 
-    public void setDataFileIsValidFormat( boolean dataFileIsValidFormat ) {
-        this.dataFileIsValidFormat = dataFileIsValidFormat;
-        this.isValid = this.isValid && dataFileIsValidFormat;
+    public boolean isQuantitationTypeIsValid() {
+        return quantitationTypeIsValid;
     }
 
-    public boolean isArrayDesignMatchesDataFile() {
-        return arrayDesignMatchesDataFile;
+    public boolean isShortNameIsUnique() {
+        return shortNameIsUnique;
+    }
+
+    public boolean isValid() {
+        return isValid;
     }
 
     public void setArrayDesignMatchesDataFile( boolean arrayDesignMatchesDataFile ) {
@@ -98,68 +115,51 @@ public class SimpleExpressionExperimentCommandValidation {
         this.isValid = this.isValid && arrayDesignMatchesDataFile;
     }
 
-    public int getNumberOfNonMatchingProbes() {
-        return numberOfNonMatchingProbes;
-    }
-
-    public void setNumberOfNonMatchingProbes( int numberOfNonMatchingProbes ) {
-        this.numberOfNonMatchingProbes = numberOfNonMatchingProbes;
-    }
-
-    public Collection<String> getNonMatchingProbeNameExamples() {
-        return nonMatchingProbeNameExamples;
-    }
-
-    public void setNonMatchingProbeNameExamples( Collection<String> nonMatchingProbeNameExamples ) {
-        this.nonMatchingProbeNameExamples = nonMatchingProbeNameExamples;
-    }
-
-    public String getQuantitationTypeProblemMessage() {
-        return quantitationTypeProblemMessage;
-    }
-
-    public void setQuantitationTypeProblemMessage( String quantitationTypeProblemMessage ) {
-        this.quantitationTypeProblemMessage = quantitationTypeProblemMessage;
-    }
-
-    public String getDataFileFormatProblemMessage() {
-        return dataFileFormatProblemMessage;
+    public void setArrayDesignMismatchProblemMessage( String arrayDesignMismatchProblemMessage ) {
+        this.arrayDesignMismatchProblemMessage = arrayDesignMismatchProblemMessage;
     }
 
     public void setDataFileFormatProblemMessage( String dataFileFormatProblemMessage ) {
         this.dataFileFormatProblemMessage = dataFileFormatProblemMessage;
     }
 
-    public String getArrayDesignMismatchProblemMessage() {
-        return arrayDesignMismatchProblemMessage;
+    public void setDataFileIsValidFormat( boolean dataFileIsValidFormat ) {
+        this.dataFileIsValidFormat = dataFileIsValidFormat;
+        this.isValid = this.isValid && dataFileIsValidFormat;
     }
 
-    public void setArrayDesignMismatchProblemMessage( String arrayDesignMismatchProblemMessage ) {
-        this.arrayDesignMismatchProblemMessage = arrayDesignMismatchProblemMessage;
-    }
-
-    public int getNumberMatchingProbes() {
-        return numberMatchingProbes;
-    }
-
-    public int getNumRows() {
-        return numRows;
-    }
-
-    public int getNumColumns() {
-        return numColumns;
+    public void setNonMatchingProbeNameExamples( Collection<String> nonMatchingProbeNameExamples ) {
+        this.nonMatchingProbeNameExamples = nonMatchingProbeNameExamples;
     }
 
     public void setNumberMatchingProbes( int numberMatchingProbes ) {
         this.numberMatchingProbes = numberMatchingProbes;
     }
 
-    public void setNumRows( int numRows ) {
-        this.numRows = numRows;
+    public void setNumberOfNonMatchingProbes( int numberOfNonMatchingProbes ) {
+        this.numberOfNonMatchingProbes = numberOfNonMatchingProbes;
     }
 
     public void setNumColumns( int numColumns ) {
         this.numColumns = numColumns;
+    }
+
+    public void setNumRows( int numRows ) {
+        this.numRows = numRows;
+    }
+
+    public void setQuantitationTypeIsValid( boolean quantitationTypeIsValid ) {
+        this.quantitationTypeIsValid = quantitationTypeIsValid;
+        this.isValid = this.isValid && quantitationTypeIsValid;
+    }
+
+    public void setQuantitationTypeProblemMessage( String quantitationTypeProblemMessage ) {
+        this.quantitationTypeProblemMessage = quantitationTypeProblemMessage;
+    }
+
+    public void setShortNameIsUnique( boolean shortNameIsUnique ) {
+        this.shortNameIsUnique = shortNameIsUnique;
+        this.isValid = this.isValid && shortNameIsUnique;
     }
 
 }

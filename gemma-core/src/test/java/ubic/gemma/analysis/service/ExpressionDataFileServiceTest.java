@@ -18,6 +18,9 @@
  */
 package ubic.gemma.analysis.service;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -29,6 +32,9 @@ import java.util.Date;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
+import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.testing.BaseSpringContextTest;
@@ -39,27 +45,18 @@ import ubic.gemma.testing.BaseSpringContextTest;
  */
 public class ExpressionDataFileServiceTest extends BaseSpringContextTest {
 
+    @Autowired
     private ExpressionDataFileService expressionDataFileService = null;
 
+    @Autowired
     private ExpressionExperimentService expressionExperimentService = null;
 
     private String shortName = "GSE1997";
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.testing.BaseSpringContextTest#onSetUpInTransaction()
-     */
-    @Override
-    protected void onSetUpInTransaction() throws Exception {
-        expressionDataFileService = ( ExpressionDataFileService ) this.getBean( "expressionDataFileService" );
-        expressionExperimentService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
-        super.onSetUpInTransaction();
-    }
-
     /**
      * 
      */
+    @Test
     public void testGetOutputFile() throws Exception {
 
         ExpressionExperiment ee = expressionExperimentService.findByShortName( shortName );
@@ -89,6 +86,7 @@ public class ExpressionDataFileServiceTest extends BaseSpringContextTest {
     /**
      * 
      */
+    @Test
     public void testGetUnfilteredOutputFile() throws Exception {
 
         ExpressionExperiment ee = expressionExperimentService.findByShortName( shortName );

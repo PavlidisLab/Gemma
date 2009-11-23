@@ -36,21 +36,6 @@ public class GeneValueObject implements java.io.Serializable {
      */
     private static final long serialVersionUID = -7098036090107647318L;
 
-    private java.lang.Long id;
-
-    private java.lang.String name;
-
-    private java.lang.String ncbiId;
-
-    private java.lang.String officialSymbol;
-
-    private java.lang.String officialName;
-
-    private java.lang.String description;
-
-    public GeneValueObject() {
-    }
-
     // TODO move this to GeneValueObject
     public static Collection<GeneValueObject> convert2GeneValueObjects( Collection<Gene> genes ) {
 
@@ -64,6 +49,21 @@ public class GeneValueObject implements java.io.Serializable {
         }
 
         return converted;
+    }
+
+    private java.lang.Long id;
+
+    private java.lang.String name;
+
+    private java.lang.String ncbiId;
+
+    private java.lang.String officialSymbol;
+
+    private java.lang.String officialName;
+
+    private java.lang.String description;
+
+    public GeneValueObject() {
     }
 
     /**

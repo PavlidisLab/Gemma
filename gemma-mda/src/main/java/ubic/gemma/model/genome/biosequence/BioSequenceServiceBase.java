@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.genome.biosequence;
 
+import org.springframework.beans.factory.annotation.Autowired;
+
 /**
  * <p>
  * Spring Service base class for <code>ubic.gemma.model.genome.biosequence.BioSequenceService</code>, provides access to
@@ -28,6 +30,7 @@ package ubic.gemma.model.genome.biosequence;
  */
 public abstract class BioSequenceServiceBase implements ubic.gemma.model.genome.biosequence.BioSequenceService {
 
+    @Autowired
     private ubic.gemma.model.genome.biosequence.BioSequenceDao bioSequenceDao;
 
     /**

@@ -18,6 +18,10 @@
  */
 package ubic.gemma.model.common.auditAndSecurity;
 
+import java.util.Collection;
+
+import org.springframework.security.access.annotation.Secured;
+
 /**
  * @version $Id$
  * @author paul
@@ -25,57 +29,129 @@ package ubic.gemma.model.common.auditAndSecurity;
 public interface UserService {
 
     /**
+     * @param group
+     * @param authority
+     */
+    @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    public void addGroupAuthority( UserGroup group, String authority );
+
+    /**
+     * @param user
+     * @param group
+     */
+    @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    public void addUserToGroup( User user, UserGroup group );
+
+    /**
+     * @param user
+     * @return
+     * @throws ubic.gemma.model.common.auditAndSecurity.UserExistsException
+     */
+    @Secured( { "GROUP_ADMIN" })
+    public User create( User user ) throws UserExistsException;
+
+    /**
+     * @param group
+     * @return
+     */
+    @Secured( { "GROUP_USER" })
+    public UserGroup create( UserGroup group );
+
+    /**
+     * Remove a user from the persistent store.
+     * 
+     * @param user
+     */
+    @Secured( { "GROUP_ADMIN" })
+    public void delete( User user );
+
+    /**
+     * Remove a group from the persistent store
+     * 
+     * @param group
+     */
+    @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    public void delete( UserGroup group );
+
+    /**
      * 
      */
-    public void addRole( ubic.gemma.model.common.auditAndSecurity.User user, java.lang.String roleName );
-
-    /**
-     * <p>
-     * Saves a user's information
-     * </p>
-     */
-    public ubic.gemma.model.common.auditAndSecurity.User create( ubic.gemma.model.common.auditAndSecurity.User user )
-            throws ubic.gemma.model.common.auditAndSecurity.UserExistsException;
-
-    /**
-     * <p>
-     * Removes a user from the database by their username
-     * </p>
-     */
-    public void delete( java.lang.String userName );
-
-    /**
-     * 
-     */
+    @Secured( { "GROUP_USER", "AFTER_ACL_READ" })
     public ubic.gemma.model.common.auditAndSecurity.User findByEmail( java.lang.String email );
 
     /**
-     * 
+     * @param userName
+     * @return user or null if they don't exist.
      */
-    public ubic.gemma.model.common.auditAndSecurity.User findByUserName( java.lang.String userName );
+    public User findByUserName( java.lang.String userName ); // don't secure,
+
+    // to allow login
 
     /**
-     * 
+     * @param oldName
+     * @return
      */
+    @Secured( { "GROUP_USER", "AFTER_ACL_READ" })
+    public UserGroup findGroupByName( String name );
+
+    /**
+     * @param usernName
+     * @return
+     */
+    @Secured( { "GROUP_USER", "AFTER_ACL_COLLECTION_READ" })
+    public Collection<UserGroup> findGroupsForUser( User user );
+
+    /**
+     * A list of groups available (will be security-filtered)...might need to allow anonymous.
+     */
+    @Secured( { "GROUP_USER", "AFTER_ACL_COLLECTION_READ" })
+    public Collection<UserGroup> listAvailableGroups();
+
+    /**
+     * @param id
+     * @return
+     */
+    @Secured( { "GROUP_USER", "AFTER_ACL_READ" })
     public ubic.gemma.model.common.auditAndSecurity.User load( java.lang.Long id );
 
     /**
-     * <p>
-     * Retrieves a list of users, filtering with parameters on a user object
-     * </p>
+     * Retrieves a list of users
      */
+    @Secured( { "GROUP_ADMIN" })
     public java.util.Collection<User> loadAll();
 
     /**
-     * <p>
-     * Returns a list of possible roles, used to populate admin tool where roles can be altered.
-     * </p>
+     * @param u
+     * @return
      */
-    public java.util.Collection<UserRole> loadAllRoles();
+    public Collection<GroupAuthority> loadGroupAuthorities( User u ); // must not be secured to allow login...
 
     /**
+     * Remove an authority from a group. Would rarely be used.
      * 
+     * @param group
+     * @param authority
      */
+    @Secured( { "GROUP_ADMIN" })
+    public void removeGroupAuthority( UserGroup group, String authority );
+
+    /**
+     * @param user
+     * @param group
+     */
+    @Secured("GROUP_ADMIN")
+    public void removeUserFromGroup( User user, UserGroup group );
+
+    /**
+     * @param user
+     */
+    @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
     public void update( ubic.gemma.model.common.auditAndSecurity.User user );
+
+    /**
+     * @param group
+     */
+    @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    public void update( UserGroup group );
 
 }

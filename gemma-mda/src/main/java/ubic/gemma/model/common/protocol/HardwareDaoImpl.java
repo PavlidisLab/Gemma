@@ -19,19 +19,28 @@
 package ubic.gemma.model.common.protocol;
 
 import org.hibernate.Criteria;
+import org.hibernate.SessionFactory;
 import org.hibernate.criterion.Restrictions;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
 
 /**
  * @author pavlidis
  * @version $Id$
  * @see ubic.gemma.model.common.protocol.Hardware
  */
+@Repository
 public class HardwareDaoImpl extends ubic.gemma.model.common.protocol.HardwareDaoBase {
+
+    @Autowired
+    public HardwareDaoImpl( SessionFactory sessionFactory ) {
+        super.setSessionFactory( sessionFactory );
+    }
 
     @Override
     public Hardware find( Hardware hardware ) {
         try {
-            Criteria queryObject = super.getSession( false ).createCriteria( Hardware.class );
+            Criteria queryObject = super.getSession().createCriteria( Hardware.class );
 
             if ( hardware.getName() != null ) {
                 queryObject.add( Restrictions.eq( "name", hardware.getName() ) );

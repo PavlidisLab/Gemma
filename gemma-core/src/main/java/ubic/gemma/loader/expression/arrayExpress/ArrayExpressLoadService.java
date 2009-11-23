@@ -28,6 +28,8 @@ import java.util.HashSet;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import ubic.basecode.util.FileTools;
 import ubic.gemma.analysis.report.ArrayDesignReportService;
@@ -52,25 +54,27 @@ import ubic.gemma.persistence.PersisterHelper;
 /**
  * Puts together the workflow to load a data set from ArrayExpress
  * 
- * @spring.bean id="arrayExpressLoadService"
- * @spring.property name="persisterHelper" ref="persisterHelper"
- * @spring.property name="mageMLConverter" ref="mageMLConverter"
- * @spring.property name="arrayDesignService" ref="arrayDesignService"
- * @spring.property name="arrayDesignReportService" ref="arrayDesignReportService"
- * @spring.property name="expressionExperimentReportService" ref="expressionExperimentReportService"
- * @spring.property name="expressionExperimentService" ref="expressionExperimentService"
  * @author pavlidis
  * @version $Id$
  */
+@Service
 public class ArrayExpressLoadService {
 
     private static Log log = LogFactory.getLog( ArrayExpressLoadService.class.getName() );
 
+    @Autowired
     private ArrayDesignReportService arrayDesignReportService;
+
+    @Autowired
     private ArrayDesignService arrayDesignService;
+
+    @Autowired
     private ExpressionExperimentReportService expressionExperimentReportService;
+
+    @Autowired
     private ExpressionExperimentService expressionExperimentService;
-    private MageMLConverter mageMLConverter;
+
+    @Autowired
     private PersisterHelper persisterHelper;
 
     /**
@@ -255,6 +259,7 @@ public class ArrayExpressLoadService {
      */
     private Collection<Object> fetchAndConvertMageML( InputStream mageMLInputStream ) {
 
+        MageMLConverter mageMLConverter = new MageMLConverter();
         MageMLParser mlp = new MageMLParser();
         try {
             mlp.parse( mageMLInputStream );
@@ -295,6 +300,7 @@ public class ArrayExpressLoadService {
 
         log.info( "Parsing MAGE-ML" );
         log.info( "Converting MAGE objects" );
+        MageMLConverter mageMLConverter = new MageMLConverter();
         Collection<Object> result = mageMLConverter.convert( parseResult );
         return result;
     }
@@ -364,13 +370,6 @@ public class ArrayExpressLoadService {
      */
     public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
         this.expressionExperimentService = expressionExperimentService;
-    }
-
-    /**
-     * @param mageMLConverter
-     */
-    public void setMageMLConverter( MageMLConverter mageMLConverter ) {
-        this.mageMLConverter = mageMLConverter;
     }
 
     /**

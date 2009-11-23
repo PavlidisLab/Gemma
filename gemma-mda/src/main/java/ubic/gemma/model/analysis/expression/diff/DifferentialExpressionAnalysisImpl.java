@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.analysis.expression.diff;
 
+import ubic.gemma.model.common.auditAndSecurity.SecuredNotChild;
+
 /**
  * @see ubic.gemma.model.analysis.DifferentialExpressionAnalysis
  */

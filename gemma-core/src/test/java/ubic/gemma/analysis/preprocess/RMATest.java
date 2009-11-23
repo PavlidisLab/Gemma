@@ -45,6 +45,35 @@ public class RMATest extends TestCase {
     static boolean connected = false;
 
     /*
+     * Test method for 'ubic.gemma.tools.AffyAnalyze.rma(DoubleMatrixNamed, ArrayDesign)'
+     */
+    public void testRma() {
+        if ( !connected ) {
+            log.warn( "Could not connect to R, skipping test." );
+            return;
+        }
+        aa.setArrayDesign( arrayDesign );
+
+        /*
+         * This is needed to make sure cdfenv.example is loaded.
+         */
+        aa.getRCommandObject().loadLibrary( "affy" );
+        aa.getRCommandObject().voidEval( "data(cdfenv.example)" );
+
+        DoubleMatrix<String, String> result = aa.summarize( celmatrix );
+        assertTrue( result != null );
+        assertEquals( 150, result.rows() );
+        assertEquals( 3, result.columns() );
+        assertEquals( "A28102_at", result.getRowName( 0 ) );
+
+        /*
+         * values come from exprs(bg.correct.rma(affybatch.example))[11,3]
+         */
+
+        assertEquals( 7.000993, result.get( 10, 2 ), 0.0001 );
+    }
+
+    /*
      * @see TestCase#setUp()
      */
     @Override
@@ -66,35 +95,6 @@ public class RMATest extends TestCase {
                 connected = false;
             }
         }
-    }
-
-    /*
-     * Test method for 'ubic.gemma.tools.AffyAnalyze.rma(DoubleMatrixNamed, ArrayDesign)'
-     */
-    public void testRma() {
-        if ( !connected ) {
-            log.warn( "Could not connect to R, skipping test." );
-            return;
-        }
-        aa.setArrayDesign( arrayDesign );
-        
-        /*
-         * This is needed to make sure cdfenv.example is loaded.
-         */
-        aa.getRCommandObject().loadLibrary("affy");
-        aa.getRCommandObject().voidEval("data(cdfenv.example)");
-        
-        DoubleMatrix<String, String> result = aa.summarize( celmatrix );
-        assertTrue( result != null );
-        assertEquals( 150, result.rows() );
-        assertEquals( 3, result.columns() );
-        assertEquals( "A28102_at", result.getRowName( 0 ) );
-
-        /*
-         * values come from exprs(bg.correct.rma(affybatch.example))[11,3]
-         */
-
-        assertEquals( 7.000993, result.get( 10, 2 ), 0.0001 );
     }
 
 }

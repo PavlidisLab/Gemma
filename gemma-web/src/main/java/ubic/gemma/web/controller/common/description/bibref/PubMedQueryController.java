@@ -37,25 +37,27 @@ import ubic.gemma.web.controller.BaseFormController;
  * 
  * @author pavlidis
  * @version $Id$
- * @spring.bean id="pubMedQueryController" name="/bibRefSearch.html"
- * @spring.property name="commandClass" value="ubic.gemma.web.controller.common.description.bibref.PubMedSearchCommand"
- * @spring.property name="commandName" value="searchCriteria"
- * @spring.property name="formView" value="bibRefSearch"
- * @spring.property name="successView" value="bibRefView"
- * @spring.property name="validator" ref="genericBeanValidator"
- * @spring.property name="bibliographicReferenceService" ref="bibliographicReferenceService"
- * @spring.property name="pubMedXmlFetcher" ref="pubMedXmlFetcher"
  */
 public class PubMedQueryController extends BaseFormController {
     private BibliographicReferenceService bibliographicReferenceService;
 
-    private PubMedXMLFetcher pubMedXmlFetcher;
+    private PubMedXMLFetcher pubMedXmlFetcher = new PubMedXMLFetcher();
+
+    public void setBibliographicReferenceService( BibliographicReferenceService bibliographicReferenceService ) {
+        this.bibliographicReferenceService = bibliographicReferenceService;
+    }
+
+    /**
+     * @param pubMedXmlFetcher The pubMedXmlFetcher to set.
+     */
+    public void setPubMedXmlFetcher( PubMedXMLFetcher pubMedXmlFetcher ) {
+        this.pubMedXmlFetcher = pubMedXmlFetcher;
+    }
 
     /*
      * (non-Javadoc)
-     * 
      * @see org.springframework.web.servlet.mvc.SimpleFormController#onSubmit(javax.servlet.http.HttpServletRequest,
-     *      javax.servlet.http.HttpServletResponse, java.lang.Object, org.springframework.validation.BindException)
+     * javax.servlet.http.HttpServletResponse, java.lang.Object, org.springframework.validation.BindException)
      */
     @Override
     protected ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
@@ -101,17 +103,6 @@ public class PubMedQueryController extends BaseFormController {
             }
         }
         return new ModelAndView( getSuccessView() ).addObject( "bibliographicReference", bibRefFound );
-    }
-
-    public void setBibliographicReferenceService( BibliographicReferenceService bibliographicReferenceService ) {
-        this.bibliographicReferenceService = bibliographicReferenceService;
-    }
-
-    /**
-     * @param pubMedXmlFetcher The pubMedXmlFetcher to set.
-     */
-    public void setPubMedXmlFetcher( PubMedXMLFetcher pubMedXmlFetcher ) {
-        this.pubMedXmlFetcher = pubMedXmlFetcher;
     }
 
 }

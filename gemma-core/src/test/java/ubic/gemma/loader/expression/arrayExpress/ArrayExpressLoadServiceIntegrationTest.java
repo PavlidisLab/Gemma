@@ -18,8 +18,14 @@
  */
 package ubic.gemma.loader.expression.arrayExpress;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 import java.util.HashSet;
 import java.util.Set;
+
+import org.junit.Test;
 
 import ubic.gemma.model.common.measurement.MeasurementType;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
@@ -53,13 +59,13 @@ public class ArrayExpressLoadServiceIntegrationTest extends BaseSpringContextTes
      * 
      * @throws Exception
      */
-    final public void testLoad() throws Exception {
-        endTransaction();
+    @Test
+    public void testLoad() throws Exception {
         // Affymetrix GeneChip® Murine Genome U74Av2 [MG_U74Av2] = GPL81
         ArrayDesignService ads = ( ArrayDesignService ) this.getBean( "arrayDesignService" );
         ArrayDesign ad = ads.findByShortName( "GPL81" );
 
-        if ( ads.getCompositeSequenceCount( ad ) < 12000 ) {
+        if ( ad == null || ads.getCompositeSequenceCount( ad ) < 12000 ) {
             log.warn( "Skipping integration test, GPL81 is not fully loaded" );
             return;
         }
@@ -74,8 +80,9 @@ public class ArrayExpressLoadServiceIntegrationTest extends BaseSpringContextTes
      * 
      * @throws Exception
      */
-    final public void testLoadWithAEDesign1() throws Exception {
-        endTransaction();
+    @Test
+    public void testLoadWithAEDesign1() throws Exception {
+
         ArrayExpressLoadService svc = ( ArrayExpressLoadService ) this.getBean( "arrayExpressLoadService" );
         ExpressionExperiment experiment = svc.load( "E-MEXP-297", null, true, false ); // uses A-MEXP-153
         assertNotNull( experiment );
@@ -100,8 +107,9 @@ public class ArrayExpressLoadServiceIntegrationTest extends BaseSpringContextTes
      * 
      * @throws Exception
      */
+    @Test
     final public void testLoadWithAEDesign2() throws Exception {
-        endTransaction();
+
         ArrayExpressLoadService svc = ( ArrayExpressLoadService ) this.getBean( "arrayExpressLoadService" );
         ExpressionExperiment experiment = svc.load( "E-MEXP-955", null, true, false );
         assertNotNull( experiment );
@@ -126,8 +134,9 @@ public class ArrayExpressLoadServiceIntegrationTest extends BaseSpringContextTes
      * 
      * @throws Exception
      */
+    @Test
     final public void testLoadWithAEDesign3() throws Exception {
-        endTransaction();
+
         ArrayExpressLoadService svc = ( ArrayExpressLoadService ) this.getBean( "arrayExpressLoadService" );
         ExpressionExperiment experiment = svc.load( "E-TABM-631", null, true, false ); // uses A-MEXP-691, Illumina
         assertNotNull( experiment );
@@ -154,8 +163,9 @@ public class ArrayExpressLoadServiceIntegrationTest extends BaseSpringContextTes
      * 
      * @throws Exception
      */
+    @Test
     final public void testLoadWithAEDesign4() throws Exception {
-        endTransaction();
+
         ArrayExpressLoadService svc = ( ArrayExpressLoadService ) this.getBean( "arrayExpressLoadService" );
         ExpressionExperiment expressionExperiment = svc.load( "E-SMDB-1853", null, true, true ); // <----
         assertNotNull( expressionExperiment );
@@ -166,7 +176,7 @@ public class ArrayExpressLoadServiceIntegrationTest extends BaseSpringContextTes
          * Make sure we start with the persistent instance. This is just paranoia.
          */
         expressionExperiment = ees.load( expressionExperiment.getId() );
-        ees.thaw( expressionExperiment );
+        ees.thawLite( expressionExperiment );
 
         Set<String> probeNames = new HashSet<String>();
         assertEquals( 20, expressionExperiment.getBioAssays().size() );
@@ -266,8 +276,9 @@ public class ArrayExpressLoadServiceIntegrationTest extends BaseSpringContextTes
      * 
      * @throws Exception
      */
+    @Test
     final public void testLoadWithAEDesign5() throws Exception {
-        endTransaction();
+
         ArrayExpressLoadService svc = ( ArrayExpressLoadService ) this.getBean( "arrayExpressLoadService" );
         ExpressionExperiment experiment = svc.load( "E-MEXP-740", null, true, false );
         assertNotNull( experiment );
@@ -293,8 +304,9 @@ public class ArrayExpressLoadServiceIntegrationTest extends BaseSpringContextTes
      * 
      * @throws Exception
      */
+    @Test
     final public void testLoadWithAEDesign6() throws Exception {
-        endTransaction();
+
         ArrayExpressLoadService svc = ( ArrayExpressLoadService ) this.getBean( "arrayExpressLoadService" );
         ExpressionExperiment experiment = svc.load( "E-SMDB-3827", null, true, false );
         assertNotNull( experiment );

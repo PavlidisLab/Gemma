@@ -20,57 +20,47 @@ package ubic.gemma.web.controller.common.auditAndSecurity;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.security.authentication.encoding.PasswordEncoder;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
-import org.springframework.web.servlet.mvc.Controller;
 
-import ubic.gemma.Constants;
 import ubic.gemma.model.common.auditAndSecurity.User;
-import ubic.gemma.model.common.auditAndSecurity.UserExistsException;
 import ubic.gemma.model.common.auditAndSecurity.UserService;
-import ubic.gemma.security.SecurityService;
-import ubic.gemma.util.SecurityUtil;
+import ubic.gemma.security.authentication.UserDetailsImpl;
+import ubic.gemma.security.authentication.UserManager;
+import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.web.controller.BaseFormController;
 
 /**
- * Simple class to retrieve a list of users from the database. From appfuse.
+ * For display and editing of users.
  * 
- * @author <a href="mailto:matt@raibledesigns.com">Matt Raible</a>
  * @author pavlidis
  * @version $Id$
- * @spring.bean id="userListController"
- * @spring.property name="userService" ref="userService"
- * @spring.property name="securityService" ref="securityService"
+ * @see UserFormMultiActionController
+ * @see SignupController
  */
-public class UserListController implements Controller {
-    private transient final Log log = LogFactory.getLog( UserListController.class );
-    private UserService userService = null;
-    private SecurityService securityService = null;
+@Controller
+public class UserListController extends BaseFormController {
 
-    public void setSecurityService( SecurityService securityService ) {
-        this.securityService = securityService;
-    }
+    @Autowired
+    private UserManager userManager;
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.springframework.web.servlet.mvc.Controller#handleRequest(javax.servlet.http.HttpServletRequest,
-     *      javax.servlet.http.HttpServletResponse)
-     */
-    @SuppressWarnings("unused")
-    public ModelAndView handleRequest( HttpServletRequest request, HttpServletResponse response ) throws Exception {
-        // TODO remove this method (is spring mvc based). Also remove /users.html and activeUsers.html from the
-        // security context xml file
-        if ( log.isDebugEnabled() ) {
-            log.debug( "entering 'handleRequest' method..." );
-        }
+    @Autowired
+    private UserService userService;
 
-        return new ModelAndView( "userList", Constants.USER_LIST, userService.loadAll() );
-    }
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     /**
      * AJAX entry point.
@@ -92,31 +82,36 @@ public class UserListController implements Controller {
         return userValueObjects;
     }
 
+    @Override
+    @RequestMapping(value = "/admin/activeUsers.html", method = RequestMethod.GET)
+    public ModelAndView handleRequest( HttpServletRequest request, HttpServletResponse response ) throws Exception {
+        /*
+         * FIXME: this lists all users, not the ones who are active.
+         */
+        return new ModelAndView( "/admin/activeUsers", "users", userService.loadAll() );
+    }
+
     /**
-     * Save the user.
+     * Save or create the user. FIXME this is pretty inflexible - need to be able to reset password.
      * 
      * @param user
      */
-    public void saveUser( UserValueObject user ) throws UserExistsException {
+    public void saveUser( UserValueObject user ) {
 
         String userName = user.getUserName();
         User u = userService.findByUserName( userName );
-        /* other fields */
-        String email = user.getEmail();
-        boolean enabled = user.isEnabled();
-        String role = user.getRole();
+
+        UserDetailsImpl userDetails;
 
         boolean newUser = false;
         if ( u == null ) {
-            /* new user */
-            u = User.Factory.newInstance();
-            newUser = true;
+            userDetails = new UserDetailsImpl(
+                    passwordEncoder.encodePassword( user.getPassword(), user.getUserName() ), user.getUserName(),
+                    false, null, user.getEmail(), userManager.generateSignupToken( user.getUserName() ), new Date() );
+        } else {
+            u.setEmail( user.getEmail() );
+            userDetails = new UserDetailsImpl( u );
         }
-        u.setUserName( userName );
-        u.setEmail( email );
-        u.setEnabled( enabled );
-
-        SecurityUtil.addRole( u, role );
 
         /*
          * When changing the roles (from user to say, admin), we must first create a new or update an existing user,
@@ -126,20 +121,50 @@ public class UserListController implements Controller {
          */
 
         if ( newUser ) {
-            userService.create( u );
+            /*
+             * FIXME: send the user an email message containing the account details and a confirmation link.
+             */
+            sendSignupConfirmationEmail( userDetails );
+            userManager.createUser( userDetails );
         } else {
-            userService.update( u );
+            userManager.updateUser( userDetails );
         }
-
-        securityService.changeControlNode( u, role );
 
     }
 
     /**
-     * @param userService
+     * Send an email to request signup confirmation.
+     * 
+     * @param request
+     * @param u
      */
-    public void setUserService( UserService userService ) {
-        this.userService = userService;
+    private void sendSignupConfirmationEmail( UserDetailsImpl u ) {
+
+        SimpleMailMessage mailMessage = new SimpleMailMessage();
+        mailMessage.setFrom( ConfigUtils.getAdminEmailAddress() );
+        mailMessage.setSubject( "An account was created for you on Gemma" );
+        try {
+            Map<String, Object> model = new HashMap<String, Object>();
+            model.put( "username", u.getUsername() );
+
+            /*
+             * FIXME: make this url configurable.
+             */
+            model.put( "confirmLink", "http://www.chibi.ubc.ca/Gemma/confirmRegistration.html?key="
+                    + u.getSignupToken() );
+            // model.put( "message", getText( "signup.email.message", request.getLocale() ) );
+
+            /*
+             * FIXME: make the template name configurable.
+             */
+            String templateName = "accountCreated.vm";
+            // sendEmail( u.getUsername(), u.getEmail(), templateName, model );
+            // this.saveMessage( request, "signup.email.sent", u.getEmail(),
+            // "A confirmation email was sent. Please check your mail and click the link it contains" );
+        } catch ( Exception e ) {
+            log.error( "Couldn't send email to " + u.getEmail(), e );
+        }
+
     }
 
 }

@@ -19,23 +19,25 @@
 
 package ubic.gemma.ontology;
 
+import org.springframework.stereotype.Service;
+
 import ubic.gemma.util.ConfigUtils;
 
 import com.hp.hpl.jena.ontology.OntModel;
 
 /**
- * Loads the CHEBI Ontology at startup in its own thread. Controlled in build.properties by load.chebiOntology 
+ * Loads the CHEBI Ontology at startup in its own thread. Controlled in build.properties by load.chebiOntology
  * 
  * @author klc
  * @spring.bean id="chebiOntologyService"
  */
+@Service
 public class ChebiOntologyService extends AbstractOntologyService {
 
-    
     private static final String CHEBI_ONTOLOGY_URL = "url.chibiOntology";
+
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.ontology.AbstractOntologyService#getOntologyName()
      */
     @Override
@@ -46,20 +48,18 @@ public class ChebiOntologyService extends AbstractOntologyService {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.ontology.AbstractOntologyService#getOntologyUrl()
      */
     @Override
     protected String getOntologyUrl() {
-        return ConfigUtils.getString( CHEBI_ONTOLOGY_URL );       
-        
+        return ConfigUtils.getString( CHEBI_ONTOLOGY_URL );
+
     }
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.ontology.AbstractOntologyService#loadModel(java.lang.String,
-     *      com.hp.hpl.jena.ontology.OntModelSpec)
+     * com.hp.hpl.jena.ontology.OntModelSpec)
      */
     @Override
     protected OntModel loadModel( String url ) {

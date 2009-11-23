@@ -41,10 +41,8 @@ public class ExceptionTag extends TagSupport {
 
     /*
      * (non-Javadoc)
-     * 
      * @see javax.servlet.jsp.tagext.TagSupport#doEndTag()
      */
-    @SuppressWarnings("unused")
     @Override
     public int doEndTag() throws JspException {
         return EVAL_PAGE;
@@ -52,7 +50,6 @@ public class ExceptionTag extends TagSupport {
 
     /*
      * (non-Javadoc)
-     * 
      * @see javax.servlet.jsp.tagext.TagSupport#doStartTag()
      */
     @Override
@@ -62,13 +59,9 @@ public class ExceptionTag extends TagSupport {
             if ( this.exception == null ) {
                 buf.append( "Error was not recovered" );
             } else {
-                buf.append( "<p id=\"exception-message\">" );
-                buf.append( exception.getMessage() );
-                buf.append( "</p>" );
 
                 if ( showStackTrace ) {
-                    buf
-                            .append( "<div id=\"stacktrace\" class=\"stacktrace\" name=\"stacktrace\" >" );
+                    buf.append( "<div id=\"stacktrace\" class=\"stacktrace\" >" );
                     if ( exception.getStackTrace() != null ) {
                         buf.append( ExceptionUtils.getFullStackTrace( exception ) );
                     } else {

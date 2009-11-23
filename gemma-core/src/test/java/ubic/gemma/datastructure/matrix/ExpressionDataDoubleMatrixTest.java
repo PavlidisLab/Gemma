@@ -18,17 +18,25 @@
  */
 package ubic.gemma.datastructure.matrix;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.analysis.preprocess.ExpressionDataMatrixBuilder;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
-import ubic.gemma.loader.expression.geo.service.AbstractGeoService;
+import ubic.gemma.loader.expression.geo.service.GeoDatasetService;
 import ubic.gemma.loader.expression.simple.SimpleExpressionDataLoaderService;
 import ubic.gemma.loader.expression.simple.model.SimpleExpressionExperimentMetaData;
 import ubic.gemma.loader.util.AlreadyExistsInSystemException;
@@ -64,54 +72,43 @@ public class ExpressionDataDoubleMatrixTest extends BaseSpringContextTest {
 
     SimpleExpressionExperimentMetaData metaData = null;
 
-    DoubleMatrix<String, String> matrix = null;
-
     ExpressionExperiment ee = null;
     ExpressionExperiment newee = null;
 
+    @Autowired
     ExpressionExperimentService expressionExperimentService;
+
+    @Autowired
     DesignElementDataVectorService designElementDataVectorService;
+
+    @Autowired
+    SimpleExpressionDataLoaderService simpleExpressionDataLoaderService;
+
+    @Autowired
     ArrayDesignService adService;
-    Collection<ArrayDesign> ads;
-    protected AbstractGeoService geoService;
 
-    @SuppressWarnings("unchecked")
-    @Override
-    protected void onTearDownAfterTransaction() throws Exception {
-        super.onTearDownAfterTransaction();
-        if ( ee != null && ee.getId() != null ) {
-            expressionExperimentService.delete( ee );
-        }
-        if ( newee != null && newee.getId() != null ) {
-            expressionExperimentService.delete( newee );
-        }
-
-    }
+    @Autowired
+    protected GeoDatasetService geoService;
 
     /*
      * (non-Javadoc)
-     * 
      * @see org.springframework.test.AbstractTransactionalSpringContextTests#onSetUpInTransaction()
      */
-    @Override
-    protected void onSetUpInTransaction() throws Exception {
+    @Before
+    public void setup() throws Exception {
 
-        super.onSetUpInTransaction();
-        ads = new HashSet<ArrayDesign>();
-        SimpleExpressionDataLoaderService service = ( SimpleExpressionDataLoaderService ) this
-                .getBean( "simpleExpressionDataLoaderService" );
+        Collection<ArrayDesign> ads = new HashSet<ArrayDesign>();
 
         metaData = new SimpleExpressionExperimentMetaData();
         ArrayDesign ad = ArrayDesign.Factory.newInstance();
         ad.setName( "new ad" );
-        Collection<ArrayDesign> ads = new HashSet<ArrayDesign>();
         ads.add( ad );
         metaData.setArrayDesigns( ads );
 
         Taxon taxon = Taxon.Factory.newInstance();
         taxon.setCommonName( "mouse" );
         taxon.setIsGenesUsable( true );
-        taxon.setIsSpecies(true);
+        taxon.setIsSpecies( true );
         metaData.setTaxon( taxon );
         metaData.setName( "ee" );
         metaData.setQuantitationTypeName( "testing" );
@@ -123,46 +120,13 @@ public class ExpressionDataDoubleMatrixTest extends BaseSpringContextTest {
         InputStream data = this.getClass().getResourceAsStream(
                 "/data/loader/aov.results-2-monocyte-data-bytime.bypat.data.sort" );
 
-        matrix = service.parse( data );
-        ee = service.convert( metaData, matrix );
+        DoubleMatrix<String, String> matrix = simpleExpressionDataLoaderService.parse( data );
+        ee = simpleExpressionDataLoaderService.convert( metaData, matrix );
 
         assertNotNull( ee );
         assertEquals( 200, ee.getRawExpressionDataVectors().size() );
         assertEquals( 59, ee.getBioAssays().size() );
-        designElementDataVectorService = ( DesignElementDataVectorService ) this
-                .getBean( "designElementDataVectorService" );
-        expressionExperimentService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
-        adService = ( ArrayDesignService ) this.getBean( "arrayDesignService" );
-        geoService = ( AbstractGeoService ) this.getBean( "geoDatasetService" );
 
-    }
-
-    @SuppressWarnings("unchecked")
-    public void testMatrixConversionGSE432() throws Exception {
-        endTransaction();
-        flushAndClearSession();
-        try {
-            String path = ConfigUtils.getString( "gemma.home" );
-            assert path != null;
-            geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path
-                    + AbstractGeoServiceTest.GEO_TEST_DATA_ROOT + "gse432Short" ) );
-            Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad(
-                    "GSE432", false, true, false, false, true );
-            newee = results.iterator().next();
-        } catch ( AlreadyExistsInSystemException e ) {
-            newee = ( ExpressionExperiment ) e.getData();
-        }
-
-        expressionExperimentService.thaw( newee );
-        // make sure we really thaw them, so we can get the design element sequences.
-
-        Collection<RawExpressionDataVector> designElementDataVectors = newee.getRawExpressionDataVectors();
-        designElementDataVectorService.thaw( designElementDataVectors );
-
-        ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( designElementDataVectors );
-        ExpressionDataDoubleMatrix matrix = builder.getPreferredData();
-        assertEquals( 40, matrix.rows() ); // there would be 100 but there are lots of missing values.
-        assertEquals( 11, matrix.columns() );
     }
 
     /**
@@ -170,6 +134,7 @@ public class ExpressionDataDoubleMatrixTest extends BaseSpringContextTest {
      * 
      * @throws IOException
      */
+    @Test
     public void testConstructExpressionDataDoubleMatrix() {
 
         /* test creating the ExpressionDataDoubleMatrix */
@@ -210,11 +175,10 @@ public class ExpressionDataDoubleMatrixTest extends BaseSpringContextTest {
     }
 
     /**
-     * This is a self-contained test. That is, it does not depend on the setup in {@link onSetUpInTransaction}. It
-     * tests creating an {@link ExpressionDataDoubleMatrix} using real values from the Gene Expression Omnibus (GEO).
-     * That is, we have obtained information from GSE994. The probe sets used are 218120_s_at and 121_at, and the
-     * samples used are GSM15697 and GSM15744. Specifically, we the Gemma objects that correspond to the GEO objects
-     * are:
+     * This is a self-contained test. That is, it does not depend on the setup in {@link onSetUpInTransaction}. It tests
+     * creating an {@link ExpressionDataDoubleMatrix} using real values from the Gene Expression Omnibus (GEO). That is,
+     * we have obtained information from GSE994. The probe sets used are 218120_s_at and 121_at, and the samples used
+     * are GSM15697 and GSM15744. Specifically, we the Gemma objects that correspond to the GEO objects are:
      * <p>
      * DesignElement 1 = 218120_s_at, DesignElement 2 = 121_at
      * <p>
@@ -224,10 +188,11 @@ public class ExpressionDataDoubleMatrixTest extends BaseSpringContextTest {
      * <p>
      * BioAssayDimension = "GSM15697, GSM15744" (the names of all the biomaterials).
      */
+    @Test
     public void testConstructExpressionDataDoubleMatrixWithGeoValues() {
         ByteArrayConverter bac = new ByteArrayConverter();
 
-        ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
+        ee = ExpressionExperiment.Factory.newInstance();
 
         QuantitationType qt = QuantitationType.Factory.newInstance();
         qt.setName( "VALUE" );
@@ -327,5 +292,44 @@ public class ExpressionDataDoubleMatrixTest extends BaseSpringContextTest {
         assertNotNull( expressionDataMatrix );
         assertEquals( expressionDataMatrix.rows(), 2 );
         assertEquals( expressionDataMatrix.columns(), 2 );
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testMatrixConversionGSE432() throws Exception {
+
+        try {
+            String path = ConfigUtils.getString( "gemma.home" );
+            assert path != null;
+            geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path
+                    + AbstractGeoServiceTest.GEO_TEST_DATA_ROOT + "gse432Short" ) );
+            Collection<ExpressionExperiment> results = geoService.fetchAndLoad( "GSE432", false, true, false, false,
+                    true );
+            newee = results.iterator().next();
+        } catch ( AlreadyExistsInSystemException e ) {
+            newee = ( ExpressionExperiment ) e.getData();
+        }
+
+        expressionExperimentService.thaw( newee );
+        // make sure we really thaw them, so we can get the design element sequences.
+
+        Collection<RawExpressionDataVector> designElementDataVectors = newee.getRawExpressionDataVectors();
+        designElementDataVectorService.thaw( designElementDataVectors );
+
+        ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( designElementDataVectors );
+        ExpressionDataDoubleMatrix matrix = builder.getPreferredData();
+        assertEquals( 40, matrix.rows() ); // there would be 100 but there are lots of missing values.
+        assertEquals( 11, matrix.columns() );
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        // if ( ee != null && ee.getId() != null ) {
+        // expressionExperimentService.delete( ee );
+        // }
+        // if ( newee != null && newee.getId() != null ) {
+        // expressionExperimentService.delete( newee );
+        // }
+
     }
 }

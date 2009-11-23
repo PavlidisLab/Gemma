@@ -18,32 +18,26 @@
  */
 package ubic.gemma.model.genome.sequenceAnalysis;
 
+import org.springframework.security.access.annotation.Secured;
+
 /**
- * 
+ * @author kelsey
+ * @version $Id$
  */
 public interface BlastResultService {
 
-    /**
-     * 
-     */
+    @Secured( { "GROUP_USER" })
     public ubic.gemma.model.genome.sequenceAnalysis.BlastResult create(
             ubic.gemma.model.genome.sequenceAnalysis.BlastResult blastResult );
 
-    /**
-     * 
-     */
     public ubic.gemma.model.genome.sequenceAnalysis.BlastResult find(
             ubic.gemma.model.genome.sequenceAnalysis.BlastResult resultToFind );
 
-    /**
-     * 
-     */
+    @Secured( { "GROUP_USER" })
     public ubic.gemma.model.genome.sequenceAnalysis.BlastResult findOrCreate(
             ubic.gemma.model.genome.sequenceAnalysis.BlastResult resultToFindOrCreate );
 
-    /**
-     * 
-     */
+    @Secured( { "GROUP_USER" })
     public void remove( ubic.gemma.model.genome.sequenceAnalysis.BlastResult blastResult );
 
 }

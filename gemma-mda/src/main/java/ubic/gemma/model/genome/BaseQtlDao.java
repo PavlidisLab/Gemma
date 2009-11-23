@@ -24,42 +24,6 @@ import ubic.gemma.persistence.BaseDao;
  * @see ubic.gemma.model.genome.Qtl
  */
 public interface BaseQtlDao<T extends Qtl> extends BaseDao<T> {
-    /**
-     * <p>
-     * Does the same thing as
-     * {@link #findByPhysicalMarkers(boolean, ubic.gemma.model.genome.PhysicalMarker, ubic.gemma.model.genome.PhysicalMarker)}
-     * with an additional argument called <code>queryString</code>. This <code>queryString</code> argument allows you to
-     * override the query string defined in {@link #findByPhysicalMarkers(int, ubic.gemma.model.genome.PhysicalMarker
-     * startMarker, ubic.gemma.model.genome.PhysicalMarker endMarker)}.
-     * </p>
-     */
-    public java.util.Collection<T> findByPhysicalMarkers( int transform, String queryString,
-            ubic.gemma.model.genome.PhysicalMarker startMarker, ubic.gemma.model.genome.PhysicalMarker endMarker );
-
-    /**
-     * <p>
-     * Does the same thing as
-     * {@link #findByPhysicalMarkers(ubic.gemma.model.genome.PhysicalMarker, ubic.gemma.model.genome.PhysicalMarker)}
-     * with an additional flag called <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then
-     * finder results will <strong>NOT</strong> be transformed during retrieval. If this flag is any of the other
-     * constants defined here then finder results <strong>WILL BE</strong> passed through an operation which can
-     * optionally transform the entities (into value objects for example). By default, transformation does not occur.
-     * </p>
-     */
-    public java.util.Collection<T> findByPhysicalMarkers( int transform,
-            ubic.gemma.model.genome.PhysicalMarker startMarker, ubic.gemma.model.genome.PhysicalMarker endMarker );
-
-    /**
-     * <p>
-     * Does the same thing as
-     * {@link #findByPhysicalMarkers(ubic.gemma.model.genome.PhysicalMarker, ubic.gemma.model.genome.PhysicalMarker)}
-     * with an additional argument called <code>queryString</code>. This <code>queryString</code> argument allows you to
-     * override the query string defined in
-     * {@link #findByPhysicalMarkers(ubic.gemma.model.genome.PhysicalMarker, ubic.gemma.model.genome.PhysicalMarker)}.
-     * </p>
-     */
-    public java.util.Collection<T> findByPhysicalMarkers( String queryString,
-            ubic.gemma.model.genome.PhysicalMarker startMarker, ubic.gemma.model.genome.PhysicalMarker endMarker );
 
     /**
      * 

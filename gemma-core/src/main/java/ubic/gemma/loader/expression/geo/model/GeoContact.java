@@ -26,11 +26,6 @@ import java.io.Serializable;
  */
 public class GeoContact implements Serializable {
 
-   
-
-    /**
-     * 
-     */
     private static final long serialVersionUID = -2042747972349661568L;
     private String city;
     private String department;

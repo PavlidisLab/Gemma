@@ -22,6 +22,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.hibernate.SessionFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.orm.hibernate3.HibernateTemplate;
 
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
@@ -63,60 +65,63 @@ import ubic.gemma.model.common.quantitationtype.QuantitationTypeService;
 /**
  * Persister for ubic.gemma.model.common package classes.
  * 
- * @spring.property name="protocolService" ref="protocolService"
- * @spring.property name="softwareService" ref="softwareService"
- * @spring.property name="hardwareService" ref="hardwareService"
- * @spring.property name="personService" ref="personService"
- * @spring.property name="userService" ref="userService"
- * @spring.property name="localFileService" ref="localFileService"
- * @spring.property name="databaseEntryService" ref="databaseEntryService"
- * @spring.property name="contactService" ref="contactService"
- * @spring.property name="auditTrailService" ref="auditTrailService"
- * @spring.property name="measurementService" ref="measurementService"
- * @spring.property name="externalDatabaseService" ref="externalDatabaseService"
- * @spring.property name="quantitationTypeService" ref="quantitationTypeService"
- * @spring.property name="bibliographicReferenceService" ref="bibliographicReferenceService"
- * @spring.property name="unitService" ref="unitService"
  * @author pavlidis
  * @version $Id$
  */
 abstract public class CommonPersister extends AbstractPersister {
 
+    @Autowired
     protected AuditTrailService auditTrailService;
 
+    @Autowired
     protected BibliographicReferenceService bibliographicReferenceService;
 
+    @Autowired
     protected ContactService contactService;
 
+    @Autowired
     protected DatabaseEntryService databaseEntryService;
 
     protected Person defaultOwner;
 
+    @Autowired
     protected ExternalDatabaseService externalDatabaseService;
 
+    @Autowired
     protected HardwareService hardwareService;
 
+    @Autowired
     protected LocalFileService localFileService;
 
+    @Autowired
     protected MeasurementService measurementService;
+    @Autowired
+    protected PersonService personService;
 
     // protected OntologyEntryService ontologyEntryService;
 
-    protected PersonService personService;
-
+    @Autowired
     protected ProtocolService protocolService;
 
+    @Autowired
     protected QuantitationTypeService quantitationTypeService;
 
     protected Map<Object, ExternalDatabase> seenDatabases = new HashMap<Object, ExternalDatabase>();
 
+    @Autowired
     protected SoftwareService softwareService;
 
+    @Autowired
     protected UnitService unitService;
 
+    @Autowired
     protected UserService userService;
 
     Map<Object, QuantitationType> quantitationTypeCache = new HashMap<Object, QuantitationType>();
+
+    public CommonPersister( SessionFactory sessionFactory ) {
+        super( sessionFactory );
+    }
 
     // protected TermRelationshipService termRelationshipService;
 
@@ -129,7 +134,8 @@ abstract public class CommonPersister extends AbstractPersister {
         if ( entity instanceof AuditTrail ) {
             return persistAuditTrail( ( AuditTrail ) entity );
         } else if ( entity instanceof User ) {
-            return persistUser( ( User ) entity );
+            throw new UnsupportedOperationException( "Don't persist users via this class; use the UserManager (core)" );
+            // return persistUser( ( User ) entity );
         } else if ( entity instanceof Person ) {
             return persistPerson( ( Person ) entity );
         } else if ( entity instanceof Contact ) {
@@ -353,7 +359,6 @@ abstract public class CommonPersister extends AbstractPersister {
     /**
      * Fetch the fallback owner to use for newly-imported data.
      */
-    @SuppressWarnings("unchecked")
     protected void initializeDefaultOwner() {
         Collection<Person> matchingPersons = personService.findByFullName( "nobody", "nobody" );
 
@@ -390,7 +395,7 @@ abstract public class CommonPersister extends AbstractPersister {
 
         // thaw - this is necessary to avoid lazy exceptions later, but perhaps could be done more elegantly!
         HibernateTemplate templ = this.getHibernateTemplate();
-        templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+        templ.execute( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
                 session.update( perReference );
                 perReference.getAuthors().size();
@@ -459,12 +464,6 @@ abstract public class CommonPersister extends AbstractPersister {
         if ( file == null ) return null;
         if ( !isTransient( file ) ) return file;
         return localFileService.findOrCreate( file );
-    }
-
-    protected Unit persistUnit( Unit unit ) {
-        if ( unit == null ) return null;
-        if ( !isTransient( unit ) ) return unit;
-        return this.unitService.findOrCreate( unit );
     }
 
     /**
@@ -552,32 +551,39 @@ abstract public class CommonPersister extends AbstractPersister {
 
     }
 
-    /**
-     * @param user
-     * @return
-     */
-    protected User persistUser( User user ) {
-        if ( user == null ) return null;
-
-        User existingUser = this.userService.findByUserName( user.getUserName() );
-
-        if ( existingUser == null ) {
-            log.warn( "No such user '" + user.getUserName() + "' exists" );
-            for ( Organization affiliation : user.getAffiliations() ) {
-                affiliation = persistOrganization( affiliation );
-            }
-            try {
-                return userService.create( user );
-            } catch ( Exception e ) {
-                throw new RuntimeException( e );
-            }
-        }
-
-        for ( Organization affiliation : existingUser.getAffiliations() ) {
-            affiliation = persistOrganization( affiliation );
-        }
-        return existingUser;
+    protected Unit persistUnit( Unit unit ) {
+        if ( unit == null ) return null;
+        if ( !isTransient( unit ) ) return unit;
+        return this.unitService.findOrCreate( unit );
     }
+
+    //
+    // /**
+    // * @param user
+    // * @return
+    // */
+    // protected User persistUser( User user ) {
+    // if ( user == null ) return null;
+    //
+    // User existingUser = this.userService.findByUserName( user.getUserName() );
+    //
+    // if ( existingUser == null ) {
+    // log.warn( "No such user '" + user.getUserName() + "' exists" );
+    // for ( Organization affiliation : user.getAffiliations() ) {
+    // affiliation = persistOrganization( affiliation );
+    // }
+    // try {
+    // return userService.create( user );
+    // } catch ( Exception e ) {
+    // throw new RuntimeException( e );
+    // }
+    // }
+    //
+    // for ( Organization affiliation : existingUser.getAffiliations() ) {
+    // affiliation = persistOrganization( affiliation );
+    // }
+    // return existingUser;
+    // }
 
     /**
      * @param affiliation

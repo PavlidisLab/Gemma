@@ -18,102 +18,33 @@
  */
 package ubic.gemma.model.association.coexpression;
 
+import org.springframework.beans.factory.annotation.Autowired;
+
 import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis;
 
 /**
- * <p>
  * Spring Service base class for <code>ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionService</code>,
  * provides access to all services and entities referenced by this service.
- * </p>
  * 
  * @see ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionService
  */
 public abstract class Gene2GeneCoexpressionServiceBase implements
         ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionService {
 
-    private ubic.gemma.model.association.coexpression.RatGeneCoExpressionDao ratGeneCoExpressionDao;
+    @Autowired
+    Gene2GeneCoexpressionDao gene2GeneCoexpressionDao;
 
     /**
-     * Sets the reference to <code>ratGeneCoExpression</code>'s DAO.
+     * @see ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionService#create(java.util.Collection)
      */
-    public void setRatGeneCoExpressionDao(
-            ubic.gemma.model.association.coexpression.RatGeneCoExpressionDao ratGeneCoExpressionDao ) {
-        this.ratGeneCoExpressionDao = ratGeneCoExpressionDao;
-    }
-
-    /**
-     * Gets the reference to <code>ratGeneCoExpression</code>'s DAO.
-     */
-    protected ubic.gemma.model.association.coexpression.RatGeneCoExpressionDao getRatGeneCoExpressionDao() {
-        return this.ratGeneCoExpressionDao;
-    }
-
-    private ubic.gemma.model.association.coexpression.OtherGeneCoExpressionDao otherGeneCoExpressionDao;
-
-    /**
-     * Sets the reference to <code>otherGeneCoExpression</code>'s DAO.
-     */
-    public void setOtherGeneCoExpressionDao(
-            ubic.gemma.model.association.coexpression.OtherGeneCoExpressionDao otherGeneCoExpressionDao ) {
-        this.otherGeneCoExpressionDao = otherGeneCoExpressionDao;
-    }
-
-    /**
-     * Gets the reference to <code>otherGeneCoExpression</code>'s DAO.
-     */
-    protected ubic.gemma.model.association.coexpression.OtherGeneCoExpressionDao getOtherGeneCoExpressionDao() {
-        return this.otherGeneCoExpressionDao;
-    }
-
-    private ubic.gemma.model.association.coexpression.HumanGeneCoExpressionDao humanGeneCoExpressionDao;
-
-    /**
-     * Sets the reference to <code>humanGeneCoExpression</code>'s DAO.
-     */
-    public void setHumanGeneCoExpressionDao(
-            ubic.gemma.model.association.coexpression.HumanGeneCoExpressionDao humanGeneCoExpressionDao ) {
-        this.humanGeneCoExpressionDao = humanGeneCoExpressionDao;
-    }
-
-    /**
-     * Gets the reference to <code>humanGeneCoExpression</code>'s DAO.
-     */
-    protected ubic.gemma.model.association.coexpression.HumanGeneCoExpressionDao getHumanGeneCoExpressionDao() {
-        return this.humanGeneCoExpressionDao;
-    }
-
-    private ubic.gemma.model.association.coexpression.MouseGeneCoExpressionDao mouseGeneCoExpressionDao;
-
-    /**
-     * Sets the reference to <code>mouseGeneCoExpression</code>'s DAO.
-     */
-    public void setMouseGeneCoExpressionDao(
-            ubic.gemma.model.association.coexpression.MouseGeneCoExpressionDao mouseGeneCoExpressionDao ) {
-        this.mouseGeneCoExpressionDao = mouseGeneCoExpressionDao;
-    }
-
-    /**
-     * Gets the reference to <code>mouseGeneCoExpression</code>'s DAO.
-     */
-    protected ubic.gemma.model.association.coexpression.MouseGeneCoExpressionDao getMouseGeneCoExpressionDao() {
-        return this.mouseGeneCoExpressionDao;
-    }
-
-    private ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionDao gene2GeneCoexpressionDao;
-
-    /**
-     * Sets the reference to <code>gene2GeneCoexpression</code>'s DAO.
-     */
-    public void setGene2GeneCoexpressionDao(
-            ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionDao gene2GeneCoexpressionDao ) {
-        this.gene2GeneCoexpressionDao = gene2GeneCoexpressionDao;
-    }
-
-    /**
-     * Gets the reference to <code>gene2GeneCoexpression</code>'s DAO.
-     */
-    protected ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionDao getGene2GeneCoexpressionDao() {
-        return this.gene2GeneCoexpressionDao;
+    public java.util.Collection create( final java.util.Collection gene2geneCoexpressions ) {
+        try {
+            return this.handleCreate( gene2geneCoexpressions );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionServiceException(
+                    "Error performing 'ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionService.create(java.util.Collection gene2geneCoexpressions)' --> "
+                            + th, th );
+        }
     }
 
     /**
@@ -131,31 +62,6 @@ public abstract class Gene2GeneCoexpressionServiceBase implements
     }
 
     /**
-     * Performs the core logic for {@link #create(ubic.gemma.model.association.coexpression.Gene2GeneCoexpression)}
-     */
-    protected abstract ubic.gemma.model.association.coexpression.Gene2GeneCoexpression handleCreate(
-            ubic.gemma.model.association.coexpression.Gene2GeneCoexpression gene2gene ) throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionService#create(java.util.Collection)
-     */
-    public java.util.Collection create( final java.util.Collection gene2geneCoexpressions ) {
-        try {
-            return this.handleCreate( gene2geneCoexpressions );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionServiceException(
-                    "Error performing 'ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionService.create(java.util.Collection gene2geneCoexpressions)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #create(java.util.Collection)}
-     */
-    protected abstract java.util.Collection handleCreate( java.util.Collection gene2geneCoexpressions )
-            throws java.lang.Exception;
-
-    /**
      * @see ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionService#delete(ubic.gemma.model.association.coexpression.Gene2GeneCoexpression)
      */
     public void delete( final ubic.gemma.model.association.coexpression.Gene2GeneCoexpression toDelete ) {
@@ -167,33 +73,6 @@ public abstract class Gene2GeneCoexpressionServiceBase implements
                             + th, th );
         }
     }
-
-    /**
-     * Performs the core logic for {@link #delete(ubic.gemma.model.association.coexpression.Gene2GeneCoexpression)}
-     */
-    protected abstract void handleDelete( ubic.gemma.model.association.coexpression.Gene2GeneCoexpression toDelete )
-            throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionService#findCoexpressionRelationships(ubic.gemma.model.genome.Gene,
-     *      int, int)
-     */
-    public java.util.Collection findCoexpressionRelationships( final ubic.gemma.model.genome.Gene gene,
-            final int stringency, final int maxResults, GeneCoexpressionAnalysis sourceAnalysis ) {
-        try {
-            return this.handleFindCoexpressionRelationships( gene, stringency, maxResults, sourceAnalysis );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionServiceException(
-                    "Error performing 'ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionService.findCoexpressionRelationships(ubic.gemma.model.genome.Gene gene, int stringency, int maxResults)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Performs the core logic for {@link #findCoexpressionRelationships(ubic.gemma.model.genome.Gene, int, int)}
-     */
-    protected abstract java.util.Collection handleFindCoexpressionRelationships( ubic.gemma.model.genome.Gene gene,
-            int stringency, int maxResults, GeneCoexpressionAnalysis sourceAnalysis ) throws java.lang.Exception;
 
     /**
      * @see ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionService#findCoexpressionRelationships(java.util.Collection,
@@ -211,10 +90,19 @@ public abstract class Gene2GeneCoexpressionServiceBase implements
     }
 
     /**
-     * Performs the core logic for {@link #findCoexpressionRelationships(java.util.Collection, int, int)}
+     * @see ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionService#findCoexpressionRelationships(ubic.gemma.model.genome.Gene,
+     *      int, int)
      */
-    protected abstract java.util.Map handleFindCoexpressionRelationships( java.util.Collection genes, int stringency,
-            int maxResults, GeneCoexpressionAnalysis sourceAnalysis ) throws java.lang.Exception;
+    public java.util.Collection findCoexpressionRelationships( final ubic.gemma.model.genome.Gene gene,
+            final int stringency, final int maxResults, GeneCoexpressionAnalysis sourceAnalysis ) {
+        try {
+            return this.handleFindCoexpressionRelationships( gene, stringency, maxResults, sourceAnalysis );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionServiceException(
+                    "Error performing 'ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionService.findCoexpressionRelationships(ubic.gemma.model.genome.Gene gene, int stringency, int maxResults)' --> "
+                            + th, th );
+        }
+    }
 
     /**
      * @see ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionService#findInterCoexpressionRelationship(java.util.Collection,
@@ -230,6 +118,50 @@ public abstract class Gene2GeneCoexpressionServiceBase implements
                             + th, th );
         }
     }
+
+    /**
+     * @return the gene2GeneCoexpressionDao
+     */
+    public Gene2GeneCoexpressionDao getGene2GeneCoexpressionDao() {
+        return gene2GeneCoexpressionDao;
+    }
+
+    /**
+     * @param gene2GeneCoexpressionDao the gene2GeneCoexpressionDao to set
+     */
+    public void setGene2GeneCoexpressionDao( Gene2GeneCoexpressionDao gene2GeneCoexpressionDao ) {
+        this.gene2GeneCoexpressionDao = gene2GeneCoexpressionDao;
+    }
+
+    /**
+     * Performs the core logic for {@link #create(java.util.Collection)}
+     */
+    protected abstract java.util.Collection handleCreate( java.util.Collection gene2geneCoexpressions )
+            throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #create(ubic.gemma.model.association.coexpression.Gene2GeneCoexpression)}
+     */
+    protected abstract ubic.gemma.model.association.coexpression.Gene2GeneCoexpression handleCreate(
+            ubic.gemma.model.association.coexpression.Gene2GeneCoexpression gene2gene ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #delete(ubic.gemma.model.association.coexpression.Gene2GeneCoexpression)}
+     */
+    protected abstract void handleDelete( ubic.gemma.model.association.coexpression.Gene2GeneCoexpression toDelete )
+            throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #findCoexpressionRelationships(java.util.Collection, int, int)}
+     */
+    protected abstract java.util.Map handleFindCoexpressionRelationships( java.util.Collection genes, int stringency,
+            int maxResults, GeneCoexpressionAnalysis sourceAnalysis ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #findCoexpressionRelationships(ubic.gemma.model.genome.Gene, int, int)}
+     */
+    protected abstract java.util.Collection handleFindCoexpressionRelationships( ubic.gemma.model.genome.Gene gene,
+            int stringency, int maxResults, GeneCoexpressionAnalysis sourceAnalysis ) throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #findInterCoexpressionRelationship(java.util.Collection, int)}

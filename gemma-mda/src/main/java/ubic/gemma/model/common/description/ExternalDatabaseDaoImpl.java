@@ -23,16 +23,25 @@ package ubic.gemma.model.common.description;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
+import org.hibernate.SessionFactory;
 import org.hibernate.criterion.Restrictions;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
 
 /**
  * @author pavlidis
  * @version $Id$
  * @see ubic.gemma.model.common.description.ExternalDatabase
  */
+@Repository
 public class ExternalDatabaseDaoImpl extends ubic.gemma.model.common.description.ExternalDatabaseDaoBase {
 
     private static Log log = LogFactory.getLog( ExternalDatabaseDaoImpl.class.getName() );
+
+    @Autowired
+    public ExternalDatabaseDaoImpl( SessionFactory sessionFactory ) {
+        super.setSessionFactory( sessionFactory );
+    }
 
     @Override
     public ExternalDatabase find( ExternalDatabase externalDatabase ) {
@@ -42,7 +51,7 @@ public class ExternalDatabaseDaoImpl extends ubic.gemma.model.common.description
                 throw new IllegalArgumentException( "No valid business key for " + externalDatabase );
             }
 
-            Criteria queryObject = super.getSession( false ).createCriteria( ExternalDatabase.class );
+            Criteria queryObject = super.getSession().createCriteria( ExternalDatabase.class );
             queryObject.add( Restrictions.eq( "name", externalDatabase.getName() ) );
             java.util.List results = queryObject.list();
             Object result = null;

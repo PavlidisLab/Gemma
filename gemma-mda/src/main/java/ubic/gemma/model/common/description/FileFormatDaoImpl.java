@@ -20,8 +20,20 @@
  */
 package ubic.gemma.model.common.description;
 
+import org.hibernate.SessionFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
+
 /**
  * @see ubic.gemma.model.common.description.FileFormat
  */
+@Repository
 public class FileFormatDaoImpl extends ubic.gemma.model.common.description.FileFormatDaoBase {
+    
+    
+
+    @Autowired
+    public FileFormatDaoImpl( SessionFactory sessionFactory ) {
+        super.setSessionFactory( sessionFactory );
+    }
 }

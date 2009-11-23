@@ -141,14 +141,14 @@ public class ExperimentalDesignMatrixTag extends TagSupport {
     private String getString( Collection<FactorValue> values ) {
         if ( values == null || values.isEmpty() ) {
             return "unknown";
-        } else {
-            StringBuffer buf = new StringBuffer();
-            for ( Iterator<FactorValue> it = values.iterator(); it.hasNext(); ) {
-                buf.append( it.next() );
-                if ( it.hasNext() ) buf.append( "<br>" );
-            }
-            return buf.toString();
         }
+        StringBuffer buf = new StringBuffer();
+        for ( Iterator<FactorValue> it = values.iterator(); it.hasNext(); ) {
+            buf.append( it.next() );
+            if ( it.hasNext() ) buf.append( "<br>" );
+        }
+        return buf.toString();
+
     }
 
     class FactorValueVectorComparator implements Comparator<FactorValueVector> {
@@ -168,10 +168,9 @@ public class ExperimentalDesignMatrixTag extends TagSupport {
             String s1 = getString( o1.getValuesForFactor( factors.get( i ) ) );
             String s2 = getString( o2.getValuesForFactor( factors.get( i ) ) );
             int compare = s1.compareTo( s2 );
-            if ( compare != 0 )
-                return compare;
-            else
-                return compare( o1, o2, ++i );
+            if ( compare != 0 ) return compare;
+
+            return compare( o1, o2, ++i );
         }
 
         private String getString( Collection<FactorValue> values ) {
@@ -234,19 +233,21 @@ class FactorValueVector {
         return values;
     }
 
+    @Override
     public String toString() {
         return key;
     }
 
+    @Override
     public int hashCode() {
         return key.hashCode();
     }
 
+    @Override
     public boolean equals( Object obj ) {
-        if ( obj instanceof FactorValueVector )
-            return key.equals( ( ( FactorValueVector ) obj ).key );
-        else
-            return false;
+        if ( obj instanceof FactorValueVector ) return key.equals( ( ( FactorValueVector ) obj ).key );
+
+        return false;
     }
 }
 
@@ -261,16 +262,14 @@ class DescribableComparator implements Comparator<Describable> {
         String s1 = d1.getName();
         String s2 = d2.getName();
         if ( s1 != null ) {
-            if ( s2 != null )
-                return s1.compareTo( s2 );
-            else
-                return 1;
-        } else {
-            if ( s2 != null )
-                return -1;
-            else
-                return 0;
+            if ( s2 != null ) return s1.compareTo( s2 );
+
+            return 1;
         }
+        if ( s2 != null ) return -1;
+
+        return 0;
+
     }
 }
 
@@ -285,15 +284,13 @@ class FactorValueComparator implements Comparator<FactorValue> {
         String s1 = v1.toString();
         String s2 = v2.toString();
         if ( s1 != null ) {
-            if ( s2 != null )
-                return s1.compareTo( s2 );
-            else
-                return 1;
-        } else {
-            if ( s2 != null )
-                return -1;
-            else
-                return 0;
+            if ( s2 != null ) return s1.compareTo( s2 );
+
+            return 1;
         }
+        if ( s2 != null ) return -1;
+
+        return 0;
+
     }
 }

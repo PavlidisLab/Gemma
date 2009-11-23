@@ -30,15 +30,6 @@ public class ArrayDesignValueObject implements java.io.Serializable {
      */
     private static final long serialVersionUID = -8259245319391937522L;
 
-    /*
-     * (non-Javadoc)
-     * @see java.lang.Object#toString()
-     */
-    @Override
-    public String toString() {
-        return this.getShortName();
-    }
-
     private String color;
 
     private String dateCached;
@@ -606,6 +597,15 @@ public class ArrayDesignValueObject implements java.io.Serializable {
 
     public void setValidationEvent( ubic.gemma.model.common.auditAndSecurity.AuditEvent validationEvent ) {
         this.validationEvent = validationEvent;
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see java.lang.Object#toString()
+     */
+    @Override
+    public String toString() {
+        return this.getShortName();
     }
 
     // ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject value-object java merge-point

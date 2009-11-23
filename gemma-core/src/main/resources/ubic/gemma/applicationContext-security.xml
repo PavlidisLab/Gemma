@@ -1,860 +1,354 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN"
-    "http://www.springframework.org/dtd/spring-beans.dtd">
+	<!-- 
+@author Gemma
+@version $Id$
+ -->
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:s="http://www.springframework.org/schema/security"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:util="http://www.springframework.org/schema/util"
+	xmlns:context="http://www.springframework.org/schema/context" xmlns:aop="http://www.springframework.org/schema/aop"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans  http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+          http://www.springframework.org/schema/security 
+          http://www.springframework.org/schema/security/spring-security-3.0.xsd
+          http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-3.0.xsd  
+          http://www.springframework.org/schema/context 
+          http://www.springframework.org/schema/context/spring-context-3.0.xsd
+           http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.0.xsd">
+	<bean id="authenticationLoggerListener" class="org.springframework.security.authentication.event.LoggerListener" />
 
-<!-- 
-	author: keshav   
-	$Id$ 
--->
+	<bean id="securityExpressionHandler" class="org.springframework.security.access.expression.method.DefaultMethodSecurityExpressionHandler">
+		<property name="permissionEvaluator" ref="permissionEvaluator" />
+	</bean>
 
-<beans>
+	<bean id="runasManager" class="org.springframework.security.access.intercept.RunAsManagerImpl">
+		<property name="rolePrefix" value="GROUP_" />
+		<property name="key" value="${gemma.runas.password}" />
+	</bean>
 
 	<!--
-		======================== FILTER CHAIN ======================= 
-		Order here matters.  We were using this guide but it is not longer available:  
-		
-		http://www.acegisecurity.org/docbook/acegi.html#filters
-		
-		Currently looking for an up-to-date guide on filter ordering. 
+		Notes. 1) The auto-config doesn't do much since we customize most things. 2) We provide a custom accessDecisionManager
+		so we can get the role hierarchy and GROUP_ prefix applied to http request.
 	-->
-	<bean id="filterChainProxy"
-		class="org.springframework.security.util.FilterChainProxy">
-		<property name="filterInvocationDefinitionSource">
-			<value><!--  CONVERT_URL_TO_LOWERCASE_BEFORE_COMPARISON  -->
-				<!-- Put "channelProcessingFilter," first in this list to turn on SSL switching -->
-				<![CDATA[
-                PATTERN_TYPE_APACHE_ANT 
-                  /**=httpSessionContextIntegrationFilter,logoutFilter,authenticationProcessingFilter,remoteUserFilter,rememberMeProcessingFilter,anonymousProcessingFilter,exceptionTranslationFilter,filterInvocationInterceptor
-            ]]>
-			</value>
-		</property>
-	</bean>
+	<s:http auto-config="false" access-decision-manager-ref="httpAccessDecisionManager" realm="Gemma">
 
-	<!-- ======================== FILTERS ======================= -->
+		<s:http-basic />
 
-	<!--   Populates the SecurityContextHolder with information obtained from the HttpSession. -->
-	<bean id="httpSessionContextIntegrationFilter"
-		class="org.springframework.security.context.HttpSessionContextIntegrationFilter">
-		<property name="contextClass">
-			<value>
-				org.springframework.security.context.SecurityContextImpl
-			</value>
-		</property>
-	</bean>
+		<s:anonymous granted-authority="GROUP_ANONYMOUS" /> 
+		
+		<s:intercept-url pattern="/admin/**" access="GROUP_ADMIN" />
+		<s:intercept-url pattern="/expressionExperiment/showAllExpressionExperimentLinkSummaries.html" access="GROUP_USER" />
+		<s:intercept-url pattern="/whatsnew/generateCache.html" access="GROUP_ADMIN" />
+		<s:intercept-url pattern="/geneLinkAnalysisManager.html" access="GROUP_ADMIN" />
+		<s:intercept-url pattern="/userProfile.html" access="GROUP_USER" />
+		<s:intercept-url pattern="/loadExpressionExperiment.html" access="GROUP_ADMIN" />
+		<s:intercept-url pattern="/loadSimpleExpressionExperiment.html" access="GROUP_USER" />
+		<s:intercept-url pattern="/**" access="IS_AUTHENTICATED_ANONYMOUSLY" />
 
-	<bean id="logoutFilter"
-		class="org.springframework.security.ui.logout.LogoutFilter">
-		<constructor-arg value="/index.jsp" /><!-- URL redirected to after logout -->
-		<constructor-arg>
-			<list>
-				<ref bean="rememberMeServices" />
-				<bean
-					class="org.springframework.security.ui.logout.SecurityContextLogoutHandler" />
-			</list>
-		</constructor-arg>
-		<property name="filterProcessesUrl" value="/logout.html" />
-	</bean>
-
-	<bean id="remoteUserFilter"
-		class="org.springframework.security.wrapper.SecurityContextHolderAwareRequestFilter" />
-
-	<bean id="anonymousProcessingFilter"
-		class="org.springframework.security.providers.anonymous.AnonymousProcessingFilter">
-		<property name="key">
-			<value>anonymous</value>
-		</property>
-		<property name="userAttribute">
-			<value>anonymous,ROLE_ANONYMOUS</value>
-		</property>
-		<property name="removeAfterRequest">
-			<value>false</value>
-		</property>
-	</bean>
-
-	<!-- ======================== AUTHENTICATION FILTER ======================= -->
-
-	<bean id="authenticationProcessingFilter"
-		class="org.springframework.security.ui.webapp.AuthenticationProcessingFilter">
-		<property name="authenticationManager">
-			<ref local="authenticationManager" />
-		</property>
-		<property name="authenticationFailureUrl">
-			<value>/login.jsp?login_error=1</value>
-		</property>
-		<property name="defaultTargetUrl">
-			<value>/</value>
-		</property>
-		<property name="filterProcessesUrl">
-			<value>/j_security_check</value>
-		</property>
-		<property name="rememberMeServices" ref="rememberMeServices" />
-	</bean>
-
-	<bean id="manualAuthenticationProcessing"
-		class="ubic.gemma.security.authentication.ManualAuthenticationProcessing">
-		<property name="authenticationManager">
-			<ref bean="authenticationManager" />
-		</property>
-
-	</bean>
-
-	<bean id="authenticationManager"
-		class="org.springframework.security.providers.ProviderManager">
-		<property name="providers">
-			<list>
-				<ref local="daoAuthenticationProvider" />
-				<ref local="anonymousAuthenticationProvider" />
-				<ref local="rememberMeAuthenticationProvider" />
-			</list>
-		</property>
-	</bean>
-
-	<!-- Automatically receives AuthenticationEvent messages from DaoAuthenticationProvider -->
-	<bean id="loggerListener"
-		class="org.springframework.security.event.authentication.LoggerListener" />
-
-	<bean id="daoAuthenticationProvider"
-		class="org.springframework.security.providers.dao.DaoAuthenticationProvider">
-		<property name="userDetailsService" ref="userDetailsService" />
-		<property name="saltSource" ref="saltSource" />
-		<property name="passwordEncoder" ref="passwordEncoder" />
-	</bean>
-
-	<!-- This bean definition must be available to ApplicationContext.getBean() so StartupListener
-		can look for it and detect if password encryption is turned on or not -->
-	<bean id="passwordEncoder"
-		class="org.springframework.security.providers.encoding.ShaPasswordEncoder" />
-
-	<!-- Declare a stable source of salt for passwords. The parameter used must not change for the given user. -->
-	<bean id="saltSource"
-		class="org.springframework.security.providers.dao.salt.SystemWideSaltSource">
-		<property name="systemWideSalt">
-			<value>${gemma.salt}</value>
-		</property>
-	</bean>
-
-	<!-- Read users from database -->
-	<bean id="userDetailsService"
-		class="ubic.gemma.security.principal.UserDetailsServiceImpl">
-		<property name="userService" ref="userService" />
-	</bean>
+		<s:logout logout-success-url="/login.jsp" />
+		<s:form-login login-page="/login.jsp" default-target-url="/" />
+		<s:remember-me key="gemma_rm" />
 
 
-
-	<bean id="anonymousAuthenticationProvider"
-		class="org.springframework.security.providers.anonymous.AnonymousAuthenticationProvider">
-		<property name="key">
-			<value>anonymous</value>
-		</property>
-	</bean>
-
-	<!-- ===================== REMEMBER ME ==================== -->
-	<bean id="rememberMeProcessingFilter"
-		class="org.springframework.security.ui.rememberme.RememberMeProcessingFilter">
-		<property name="rememberMeServices" ref="rememberMeServices" />
-		<property name="authenticationManager"
-			ref="authenticationManager" />
-	</bean>
-
-	<bean id="rememberMeServices"
-		class="org.springframework.security.ui.rememberme.TokenBasedRememberMeServices">
-		<property name="userDetailsService" ref="userDetailsService" />
-		<property name="key" value="gemmapleaserememberme" />
-		<property name="parameter" value="rememberMe" />
-		<property name="tokenValiditySeconds" value="604800"/><!-- 7 days -->
-	</bean>
-
-	<bean id="rememberMeAuthenticationProvider"
-		class="org.springframework.security.providers.rememberme.RememberMeAuthenticationProvider">
-		<property name="key" value="gemmapleaserememberme" />
-	</bean>
-
-	<!-- ===================== HTTP REQUEST SECURITY ==================== -->
-
-	<bean id="exceptionTranslationFilter"
-		class="org.springframework.security.ui.ExceptionTranslationFilter">
-		<property name="authenticationEntryPoint">
-			<ref local="authenticationProcessingFilterEntryPoint" />
-		</property>
-	</bean>
-
-	<!-- Note the order that entries are placed against the objectDefinitionSource is critical.
-		The FilterSecurityInterceptor will work from the top of the list down to the FIRST pattern that matches the request URL.
-		Accordingly, you should place MOST SPECIFIC (ie a/b/c/d.*) expressions first, with LEAST SPECIFIC (ie a/.*) expressions last -->
-	<bean id="filterInvocationInterceptor"
-		class="org.springframework.security.intercept.web.FilterSecurityInterceptor">
-		<property name="authenticationManager">
-			<ref local="authenticationManager" />
-		</property>
-		<property name="accessDecisionManager">
-			<ref local="roleAccessDecisionManager" />
-		</property>
-		<property name="objectDefinitionSource">
-			<value>
-				<![CDATA[
-                PATTERN_TYPE_APACHE_ANT 
-                /signup.html=admin,user,ROLE_ANONYMOUS
-                /securityManager.html=admin
-                /userManager.html=admin
-				/indexer.html=admin
-				/maintenanceMode.html=admin
-				/geneLinkAnalysisManager.html=admin
-				/whatsnew/generateCache.html=admin
-				/arrayDesign/associateSequences.html=admin
-				/geoBrowser/showBatch.html=admin
-				/characteristicBrowser.html=admin,user
-				/loadExpressionExperiment.html=admin
-				/loadSimpleExpressionExperiment.html=admin,user
-				/expressionExperiment/showAllExpressionExperimentLinkSummaries.html=admin,user
-                /userProfile.html*=admin,user
-                /loadUser.html*=admin,user
-                /users.html*=admin
-                /activeUsers.html*=admin
-                /clickstreams.jsp*=admin
-                /flushCache.*=admin
-                /reload.*=admin
-                /dwr/**/*.dwr =admin,user,ROLE_ANONYMOUS
-                /**/*.html*=admin,user,ROLE_ANONYMOUS
-             ]]>
-			</value>
-		</property>
-	</bean>
-
-	<!-- if user requests a secure Http resource but has not been authenticated, they will be presented this login form -->
-	<bean id="authenticationProcessingFilterEntryPoint"
-		class="org.springframework.security.ui.webapp.AuthenticationProcessingFilterEntryPoint">
-		<property name="loginFormUrl">
-			<value>/login.jsp</value>
-		</property>
-		<!-- 
-			<property name="serverSideRedirect">
-			<value>true</value>
-			</property>
+		<!--
+			See http://jira.springframework.org/browse/SEC-834 about the session fixation problem. If we enable it, we get
+			exceptions galore.
 		-->
-		<property name="forceHttps">
-			<value>false</value>
-		</property>
-	</bean>
+		<s:session-management session-fixation-protection="none">
+			<s:concurrency-control max-sessions="1" />
+		</s:session-management>
 
-	<!-- ===================== SSL SWITCHING - add to filterchainproxy to turn on ==================== -->
-	<bean id="channelProcessingFilter"
-		class="org.springframework.security.securechannel.ChannelProcessingFilter">
-		<property name="channelDecisionManager"
-			ref="channelDecisionManager" />
-		<property name="filterInvocationDefinitionSource">
-			<value>
-				<![CDATA[
-                PATTERN_TYPE_APACHE_ANT
-                /admin/**=REQUIRES_SECURE_CHANNEL
-                /login*=REQUIRES_SECURE_CHANNEL
-                /activeUsers.html*=REQUIRES_SECURE_CHANNEL
-                /j_security_check*=REQUIRES_SECURE_CHANNEL
-                /userProfile.html*=REQUIRES_SECURE_CHANNEL
-                /loadUser.html*=REQUIRES_SECURE_CHANNEL
-                /signup.html*=REQUIRES_SECURE_CHANNEL
-                /saveUser.html*=REQUIRES_SECURE_CHANNEL
-                /**=REQUIRES_INSECURE_CHANNEL
-             ]]>
-			</value>
-		</property>
-	</bean>
+	</s:http>
 
-	<bean id="channelDecisionManager"
-		class="org.springframework.security.securechannel.ChannelDecisionManagerImpl">
-		<property name="channelProcessors">
-			<list>
-				<bean
-					class="org.springframework.security.securechannel.SecureChannelProcessor" />
-				<bean
-					class="org.springframework.security.securechannel.InsecureChannelProcessor" />
-			</list>
-		</property>
-	</bean>
-
-	<!-- ===================== AUTHORIZATION ==================== -->
-
-	<!-- Spring-Security serviceSecurityInterceptor. You must manually add objectDefinitionSource lines for methods in services. 
-		 If you don't add methods to this, the default is they can be invoked by anyone.  See
-		 http://www.chibi.ubc.ca/pavlidis/lab/bugzilla/show_bug.cgi?id=1375
-	-->
-	<!--  <bean id="serviceSecurityInterceptor" class="org.springframework.security.intercept.method.aopalliance.MethodSecurityInterceptor"> -->
-	<bean id="serviceSecurityInterceptor"
-		class="ubic.gemma.security.interceptor.method.aopalliance.CustomMethodSecurityInterceptor">
-		<property name="userDetailsService">
-			<ref bean="userDetailsService" />
-		</property>
-		<property name="authenticationManager">
-			<ref bean="authenticationManager" />
-		</property>
-		<property name="accessDecisionManager">
-			<ref bean="httpRequestAccessDecisionManager" />
-		</property>
-		<property name="afterInvocationManager">
-			<ref bean="afterInvocationManager" />
-		</property>
-		<property name="objectDefinitionSource">
-			<value>
-				<![CDATA[
-                ubic.gemma.model.genome.sequenceAnalysis.BlatResultService.create=user,admin
-                ubic.gemma.model.genome.sequenceAnalysis.BlatResultService.find=user,admin,ROLE_ANONYMOUS
-                ubic.gemma.model.genome.sequenceAnalysis.BlatResultService.findOrCreate=user,admin
-                ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationService.create=user,admin
-                ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationService.find=user,admin,ROLE_ANONYMOUS
-                ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociationService.create=user,admin
-                ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociationService.find=user,admin,ROLE_ANONYMOUS
-                ubic.gemma.model.genome.sequenceAnalysis.BlastResultService.create=user,admin
-                ubic.gemma.model.genome.sequenceAnalysis.BlastAssociationService.create=user,admin
-                ubic.gemma.model.expression.experiment.ExpressionExperimentService.load=user,admin,ROLE_ANONYMOUS,AFTER_ACL_READ
-                ubic.gemma.model.expression.experiment.ExpressionExperimentService.loadMultiple=user,admin,ROLE_ANONYMOUS,AFTER_ACL_COLLECTION_READ
-                ubic.gemma.model.expression.experiment.ExpressionExperimentService.loadAll=user,admin,ROLE_ANONYMOUS,AFTER_ACL_COLLECTION_READ
-                ubic.gemma.model.expression.experiment.ExpressionExperimentService.findOrCreate=user,admin
-                ubic.gemma.model.expression.experiment.ExpressionExperimentService.update=user,admin
-                ubic.gemma.model.expression.experiment.ExpressionExperimentService.create=user,admin
-                ubic.gemma.model.expression.experiment.ExpressionExperimentService.find=user,admin,ROLE_ANONYMOUS
-                ubic.gemma.model.expression.experiment.ExpressionExperimentService.delete=user,admin
-                ubic.gemma.model.expression.experiment.ExpressionExperimentService.findByInvestigator=user,admin,ROLE_ANONYMOUS
-                ubic.gemma.model.expression.experiment.ExpressionExperimentService.findByGene=user,admin,ROLE_ANONYMOUS
-                ubic.gemma.model.expression.experiment.ExpressionExperimentService.findByAccession=user,admin,ROLE_ANONYMOUS
-                ubic.gemma.model.expression.experiment.ExpressionExperimentService.findByName=user,admin,ROLE_ANONYMOUS,AFTER_ACL_READ
-                ubic.gemma.model.expression.experiment.ExpressionExperimentService.findByShortName=user,admin,ROLE_ANONYMOUS,AFTER_ACL_READ
-                ubic.gemma.model.expression.experiment.ExpressionExperimentService.findByFactorValue=user,admin,ROLE_ANONYMOUS
-                ubic.gemma.model.expression.experiment.ExpressionExperimentService.findByQuantitationType=user,admin,ROLE_ANONYMOUS
-                ubic.gemma.model.expression.experiment.ExpressionExperimentService.findByTaxon=user,admin,ROLE_ANONYMOUS,AFTER_ACL_COLLECTION_READ
-                ubic.gemma.model.expression.experiment.ExpressionExperimentService.getArrayDesignsUsed=user,admin,ROLE_ANONYMOUS
-                ubic.gemma.model.expression.experiment.ExpressionExperimentService.getQuantitationTypeCountById=user,admin,ROLE_ANONYMOUS
-                ubic.gemma.model.expression.experiment.ExpressionExperimentService.findOrCreate=ACL_SECURABLE_EDIT,admin,user
-                ubic.gemma.security.expression.experiment.ExpressionExperimentSecureService.loadExpressionExperimentsForUser=user,admin,AFTER_ACL_FILTER_PUBLIC_EXPRESSION_EXPERIMENT_FROM_COLLECTION
-                ubic.gemma.security.expression.experiment.ExpressionExperimentSecureService.loadExpressionExperimentsForAnotherUser=user,admin,AFTER_ACL_FILTER_PUBLIC_EXPRESSION_EXPERIMENT_FROM_COLLECTION
-                ubic.gemma.analysis.report.ExpressionExperimentReportService.generateSummaryObjects=admin
-                ubic.gemma.analysis.report.ExpressionExperimentReportService.generateSummaryObject=admin   
-                ubic.gemma.analysis.report.ExpressionExperimentReportService.retrieveSummaryObjects=user,admin,ROLE_ANONYMOUS
-                ubic.gemma.model.expression.experiment.ExperimentalDesignService.loadAll=user,admin,ROLE_ANONYMOUS
-                ubic.gemma.model.expression.experiment.ExperimentalDesignService.create=user,admin
-                ubic.gemma.model.expression.experiment.ExperimentalDesignService.findOrCreate=user,admin
-                ubic.gemma.model.expression.experiment.ExperimentalDesignService.findByName=user,admin,ROLE_ANONYMOUS
-                ubic.gemma.model.expression.experiment.ExperimentalDesignService.load=user,admin,ROLE_ANONYMOUS,AFTER_ACL_READ
-                ubic.gemma.model.expression.experiment.ExperimentalDesignService.update=user,admin
-                ubic.gemma.model.expression.experiment.ExperimentalDesignService.find=user,admin,ROLE_ANONYMOUS
-                ubic.gemma.model.expression.experiment.ExperimentalFactorService.loadAll=user,admin,ROLE_ANONYMOUS
-                ubic.gemma.model.expression.experiment.ExperimentalFactorService.create=user,admin
-                ubic.gemma.model.expression.experiment.ExperimentalFactorService.load=user,admin,ROLE_ANONYMOUS,AFTER_ACL_READ
-                ubic.gemma.model.expression.experiment.FactorValueService.loadAll=user,admin,ROLE_ANONYMOUS
-                ubic.gemma.model.expression.experiment.FactorValueService.findOrCreate=user,admin 
-                ubic.gemma.model.expression.experiment.FactorValueService.delete=user,admin
-                ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetService.loadAll=user,admin,ROLE_ANONYMOUS
-                ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetService.load=user,admin,ROLE_ANONYMOUS,AFTER_ACL_READ
-                ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetService.create=user,admin
-                ubic.gemma.model.expression.designElement.CompositeSequenceService.findOrCreate=user,admin
-                ubic.gemma.model.expression.designElement.CompositeSequenceService.remove=user,admin
-                ubic.gemma.model.expression.designElement.CompositeSequenceService.find=user,admin,ROLE_ANONYMOUS
-                ubic.gemma.model.expression.designElement.CompositeSequenceService.create=user,admin
-                ubic.gemma.model.expression.designElement.CompositeSequenceService.findByName=user,admin,ROLE_ANONYMOUS,AFTER_ACL_ARRAYDESIGN_COLLECTION_READ
-                ubic.gemma.model.expression.designElement.ReporterService.findOrCreate=user,admin 
-                ubic.gemma.model.expression.designElement.ReporterService.remove=user,admin
-                ubic.gemma.model.expression.designElement.ReporterService.create=user,admin
-                ubic.gemma.model.expression.designElement.ReporterService.find=user,admin,ROLE_ANONYMOUS
-                ubic.gemma.model.expression.arrayDesign.ArrayDesignService.load=user,admin,ROLE_ANONYMOUS,AFTER_ACL_READ
-                ubic.gemma.model.expression.arrayDesign.ArrayDesignService.loadMultiple=user,admin,ROLE_ANONYMOUS,AFTER_ACL_COLLECTION_READ             
-                ubic.gemma.model.expression.arrayDesign.ArrayDesignService.loadAll=user,admin,ROLE_ANONYMOUS
-                ubic.gemma.model.expression.arrayDesign.ArrayDesignService.findOrCreate=ACL_SECURABLE_EDIT,admin,user
-                ubic.gemma.model.expression.arrayDesign.ArrayDesignService.remove=admin,ACL_SECURABLE_EDIT
-                ubic.gemma.model.expression.arrayDesign.ArrayDesignService.findByName=user,admin,ROLE_ANONYMOUS
-                ubic.gemma.model.expression.arrayDesign.ArrayDesignService.update=user,admin,ACL_SECURABLE_EDIT 
-                ubic.gemma.model.expression.arrayDesign.ArrayDesignService.find=user,admin,ROLE_ANONYMOUS
-                ubic.gemma.model.expression.arrayDesign.ArrayDesignService.create=user,admin
-                ubic.gemma.model.expression.arrayDesign.ArrayDesignService.getCompositeSequenceCount=user,admin,ROLE_ANONYMOUS
-                ubic.gemma.model.expression.arrayDesign.ArrayDesignService.getReporterCount=user,admin,ROLE_ANONYMOUS               
-                ubic.gemma.model.expression.arrayDesign.ArrayDesignService.loadCompositeSequences=user,admin,ROLE_ANONYMOUS
-                ubic.gemma.model.expression.bioAssay.BioAssayService.findOrCreate=ACL_SECURABLE_EDIT,user,admin
-                ubic.gemma.model.expression.bioAssay.BioAssayService.remove=ACL_SECURABLE_EDIT
-                ubic.gemma.model.expression.bioAssay.BioAssayService.loadAll=user,admin,ROLE_ANONYMOUS
-                ubic.gemma.model.expression.bioAssay.BioAssayService.load=user,admin,ROLE_ANONYMOUS,AFTER_ACL_READ
-                ubic.gemma.model.expression.bioAssay.BioAssayService.update=user,admin
-                ubic.gemma.model.expression.bioAssay.BioAssayService.findBioAssayDimensions=user,admin,ROLE_ANONYMOUS
-                ubic.gemma.model.expression.bioAssayData.BioAssayDataVectorService.findOrCreate=ACL_SECURABLE_EDIT,user,admin
-                ubic.gemma.model.expression.bioAssayData.BioAssayDataVectorService.remove=user,admin 
-                ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService.remove=user,admin
-                ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService.create=user,admin
-                ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService.load=user,admin,ROLE_ANONYMOUS
-                ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService.update=user,admin
-                ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService.find=user,admin,ROLE_ANONYMOUS
-                ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService.getProcessedDataArrays=user,admin,ROLE_ANONYMOUS,AFTER_ACL_DATAVECTOR_COLLECTION_READ
-				ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService.createProcessedDataVectors=user,admin
-                ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService.getRanks=user,admin,ROLE_ANONYMOUS  
-                ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService.update=user,admin
-                ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService.thaw=user,admin,ROLE_ANONYMOUS
-                ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisService.getAssayedProbes=user,admin,ROLE_ANONYMOUS
-                ubic.gemma.model.expression.bioAssayData.BioAssayDimensionService.findOrCreate=user,admin
-				ubic.gemma.model.expression.bioAssayData.DesignElementDimensionService.findOrCreate=user,admin
-				ubic.gemma.model.expression.biomaterial.BioMaterialService.countAll=user,admin,ROLE_ANONYMOUS 
-                ubic.gemma.model.expression.biomaterial.BioMaterialService.update=user,admin
-                ubic.gemma.model.expression.biomaterial.BioMaterialService.findOrCreate=user,admin 
-                ubic.gemma.model.expression.biomaterial.BioMaterialService.remove=user,admin
-                ubic.gemma.model.expression.biomaterial.BioMaterialService.load=user,admin,ROLE_ANONYMOUS,AFTER_ACL_READ
-                ubic.gemma.model.expression.biomaterial.BioMaterialService.loadAll=user,admin,ROLE_ANONYMOUS
-                ubic.gemma.model.expression.biomaterial.BioMaterialService.loadMultiple=user,admin,ROLE_ANONYMOUS
-                ubic.gemma.model.expression.biomaterial.TreatmentService.getTreatments=user,admin,ROLE_ANONYMOUS
-                ubic.gemma.model.expression.biomaterial.TreatmentService.saveTreatment=user,admin 
-                ubic.gemma.model.expression.biomaterial.CompoundService.find=user,admin,ROLE_ANONYMOUS
-                ubic.gemma.model.expression.biomaterial.CompoundService.findOrCreate=user,admin 
-                ubic.gemma.model.expression.biomaterial.CompoundService.update=user,admin
-                ubic.gemma.model.expression.biomaterial.CompoundService.remove=user,admin 
-                ubic.gemma.model.common.description.BibliographicReferenceService.getAllExperimentLinkedReferences=user,admin,ROLE_ANONYMOUS
-                ubic.gemma.model.common.description.BibliographicReferenceService.getRelatedExperiments=user,admin,ROLE_ANONYMOUS
-                ubic.gemma.model.common.description.BibliographicReferenceService.findOrCreate=ACL_SECURABLE_EDIT,user,admin
-                ubic.gemma.model.common.description.BibliographicReferenceService.findByExternalId=user,admin,ROLE_ANONYMOUS
-                ubic.gemma.model.common.description.BibliographicReferenceService.find=user,admin,ROLE_ANONYMOUS
-                ubic.gemma.model.common.description.BibliographicReferenceService.findByTitle=user,admin,ROLE_ANONYMOUS
-                ubic.gemma.model.common.description.BibliographicReferenceService.create=ACL_SECURABLE_EDIT,user,admin
-                ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisService.getDatasetsAnalyzed=user,admin,ROLE_ANONYMOUS
-                ubic.gemma.model.common.description.BibliographicReferenceService.update=ACL_SECURABLE_EDIT,admin
-                ubic.gemma.model.common.description.BibliographicReferenceService.remove=ACL_SECURABLE_EDIT
-                ubic.gemma.model.common.description.BibliographicReferenceService.addPDF=user,admin 
-                ubic.gemma.model.common.description.ExternalDatabaseService.find=user,admin,ROLE_ANONYMOUS
-                ubic.gemma.model.common.description.ExternalDatabaseService.findOrCreate=user,admin
-                ubic.gemma.model.common.description.ExternalDatabaseService.remove=user,admin
-                ubic.gemma.model.common.description.ExternalDatabaseService.loadAll=user,admin,ROLE_ANONYMOUS
-              	ubic.gemma.model.common.measurement.MeasurementService.create=user,admin
-				ubic.gemma.model.common.measurement.UnitService.create=user,admin
-				ubic.gemma.model.common.measurement.UnitService.update=admin
-				ubic.gemma.model.common.measurement.UnitService.remove=admin
-				ubic.gemma.model.common.measurement.UnitService.load=user,admin,ROLE_ANONYMOUS
-				ubic.gemma.model.common.measurement.UnitService.loadAll=user,admin,ROLE_ANONYMOUS
-                ubic.gemma.model.common.description.NotedReferenceListService.createNewList=user,admin
-                ubic.gemma.model.common.description.NotedReferenceListService.addReferenceToList=user,admin
-                ubic.gemma.model.common.description.NotedReferenceListService.getAllReferencesForList=user,admin
-                ubic.gemma.model.common.description.NotedReferenceListService.setListDescription=user,admin
-                ubic.gemma.model.common.description.NotedReferenceListService.setComment=user,admin
-                ubic.gemma.model.common.description.NotedReferenceListService.removeList=user,admin
-                ubic.gemma.model.common.description.NotedReferenceListService.removeReferenceFromList=user,admin
-                ubic.gemma.model.common.description.NotedReferenceListService.setRating=user,admin
-                ubic.gemma.model.common.description.FileFormatService.findByIdentifier=user,admin,ROLE_ANONYMOUS
-                ubic.gemma.model.common.description.LocalFileService.deleteFile=ACL_SECURABLE_EDIT
-                ubic.gemma.model.common.description.LocalFileService.copyFile=ACL_SECURABLE_EDIT 
-                ubic.gemma.model.common.description.LocalFileService.findByPath=user,admin,ROLE_ANONYMOUS
-                ubic.gemma.model.common.description.LocalFileService.find=user,admin,ROLE_ANONYMOUS
-                ubic.gemma.model.common.description.LocalFileService.save=user,admin
-                ubic.gemma.model.common.description.LocalFileService.update=user,admin 
-                ubic.gemma.model.common.description.LocalFileService.findOrCreate=user,admin
-                ubic.gemma.model.common.description.DatabaseEntryService.find=user,admin,ROLE_ANONYMOUS 
-                ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisService.getDatasetsAnalyzed=user,admin,ROLE_ANONYMOUS
-                ubic.gemma.model.common.description.DatabaseEntryService.update=user,admin 
-                ubic.gemma.model.common.description.DatabaseEntryService.remove=user,admin
-                ubic.gemma.model.common.auditAndSecurity.PersonService.create=user,admin 
-                ubic.gemma.model.common.auditAndSecurity.PersonService.loadAll=user,admin,ROLE_ANONYMOUS
-                ubic.gemma.model.common.auditAndSecurity.PersonService.remove=user,admin 
-                ubic.gemma.model.common.auditAndSecurity.PersonService.findByFullName=user,admin,ROLE_ANONYMOUS 
-                ubic.gemma.model.common.auditAndSecurity.PersonService.findOrCreate=user,admin
-                ubic.gemma.model.common.auditAndSecurity.UserService.findByUserName=user,admin,ROLE_ANONYMOUS
-                ubic.gemma.model.common.auditAndSecurity.UserService.findByEmail=user,admin,ROLE_ANONYMOUS
-                ubic.gemma.model.common.auditAndSecurity.UserService.loadAll=user,admin,ROLE_ANONYMOUS,AFTER_ACL_COLLECTION_READ
-                ubic.gemma.model.common.auditAndSecurity.UserService.create=user,admin,ROLE_ANONYMOUS
-                ubic.gemma.model.common.auditAndSecurity.UserService.delete=user,admin 
-                ubic.gemma.model.common.auditAndSecurity.UserService.addRole=user,admin,ROLE_ANONYMOUS 
-                ubic.gemma.model.common.auditAndSecurity.UserService.load=user,admin,ROLE_ANONYMOUS,AFTER_ACL_READ
-                ubic.gemma.model.common.auditAndSecurity.UserService.update=user,admin
-                ubic.gemma.model.common.auditAndSecurity.UserQueryService.create=user,admin
-                ubic.gemma.model.common.auditAndSecurity.UserQueryService.removeAllForUser=user,admin
-                ubic.gemma.model.common.auditAndSecurity.UserQueryService.removeOldForUser=user,admin
-                ubic.gemma.model.common.auditAndSecurity.UserQueryService.findByUser=user,admin
-                ubic.gemma.model.common.auditAndSecurity.UserQueryService.findMostRecentForUser=user,admin
-                ubic.gemma.model.common.auditAndSecurity.UserQueryService.load=user,admin
-                ubic.gemma.model.common.auditAndSecurity.UserQueryService.loadAll=admin
-                ubic.gemma.model.common.auditAndSecurity.UserQueryService.remove=user,admin
-                ubic.gemma.model.common.auditAndSecurity.UserGroupService.create=user,admin
-                ubic.gemma.model.common.auditAndSecurity.UserGroupService.update=user,admin
-                ubic.gemma.model.common.auditAndSecurity.ContactService.findOrCreate=user,admin
-                ubic.gemma.model.common.auditAndSecurity.ContactService.find=user,admin,ROLE_ANONYMOUS 
-                ubic.gemma.model.common.auditAndSecurity.ContactService.remove=user,admin
-                ubic.gemma.model.common.auditAndSecurity.ContactService.update=user,admin
-                ubic.gemma.model.common.protocol.HardwareService.find=user,admin,ROLE_ANONYMOUS
-                ubic.gemma.model.common.protocol.HardwareService.findOrCreate=user,admin 
-                ubic.gemma.model.common.protocol.HardwareService.update=user,admin
-                ubic.gemma.model.common.protocol.HardwareService.remove=user,admin 
-                ubic.gemma.model.common.protocol.ProtocolService.find=user,admin,ROLE_ANONYMOUS
-                ubic.gemma.model.common.protocol.ProtocolService.findOrCreate=user,admin 
-                ubic.gemma.model.common.protocol.ProtocolService.update=user,admin
-                ubic.gemma.model.common.protocol.ProtocolService.remove=user,admin 
-                ubic.gemma.model.common.protocol.SoftwareService.findOrCreate=user,admin
-                ubic.gemma.model.common.protocol.SoftwareService.find=user,admin,ROLE_ANONYMOUS 
-                ubic.gemma.model.common.protocol.SoftwareService.update=user,admin
-                ubic.gemma.model.common.protocol.SoftwareService.remove=user,admin 
-                ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisService.getDatasetsAnalyzed=user,admin,ROLE_ANONYMOUS
-                ubic.gemma.model.common.quantitationtype.QuantitationTypeService.find=user,admin,ROLE_ANONYMOUS
-                ubic.gemma.model.common.quantitationtype.QuantitationTypeService.findOrCreate=user,admin
-                ubic.gemma.model.common.quantitationtype.QuantitationTypeService.update=user,admin
-                ubic.gemma.model.common.quantitationtype.QuantitationTypeService.load=user,admin,ROLE_ANONYMOUS,AFTER_ACL_READ
-                ubic.gemma.model.common.quantitationtype.QuantitationTypeService.loadAll=user,admin,ROLE_ANONYMOUS,AFTER_ACL_COLLECTION_READ
-                ubic.gemma.model.common.quantitationtype.QuantitationTypeService.remove=user,admin 
-                ubic.gemma.model.genome.biosequence.BioSequenceService.find=user,admin,ROLE_ANONYMOUS
-                ubic.gemma.model.genome.biosequence.BioSequenceService.remove=user,admin 
-                ubic.gemma.model.genome.biosequence.BioSequenceService.findOrCreate=user,admin
-                ubic.gemma.model.genome.biosequence.BioSequenceService.update=user,admin
-                ubic.gemma.model.genome.biosequence.BioSequenceService.create=user,admin 
-                ubic.gemma.model.genome.gene.CandidateGeneListService.createByName=user,admin
-                ubic.gemma.model.genome.gene.CandidateGeneListService.updateCandidateGeneList=user,admin
-                ubic.gemma.model.genome.gene.CandidateGeneListService.removeCandidateGeneList=user,admin
-                ubic.gemma.model.genome.gene.CandidateGeneListService.findByContributer=user,admin,ROLE_ANONYMOUS
-                ubic.gemma.model.genome.gene.CandidateGeneListService.findByGeneOfficialName=user,admin,ROLE_ANONYMOUS
-                ubic.gemma.model.genome.gene.CandidateGeneListService.findByID=user,admin,ROLE_ANONYMOUS
-                ubic.gemma.model.genome.gene.CandidateGeneListService.findByListOwner=user,admin,ROLE_ANONYMOUS
-                ubic.gemma.model.genome.gene.CandidateGeneListService.findAll=user,admin,ROLE_ANONYMOUS 
-                ubic.gemma.model.genome.gene.CandidateGeneListService.setActor=user,admin
-                ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisService.getDatasetsAnalyzed=user,admin,ROLE_ANONYMOUS
-                ubic.gemma.model.genome.gene.CandidateGeneListService.saveCandidateGeneList=user,admin 
-                ubic.gemma.model.genome.gene.GeneService.update=admin
-                ubic.gemma.model.genome.gene.GeneService.loadAll=user,admin,ROLE_ANONYMOUS 
-                ubic.gemma.model.genome.gene.GeneService.remove=admin
-                ubic.gemma.model.genome.gene.GeneService.findByOfficialName=user,admin,ROLE_ANONYMOUS 
-                ubic.gemma.model.genome.gene.GeneService.findAllQtlsByPhysicalMapLocation=user,admin,ROLE_ANONYMOUS
-                ubic.gemma.model.genome.gene.GeneService.findByOfficialSymbol=user,admin,ROLE_ANONYMOUS
-                ubic.gemma.model.genome.gene.GeneService.findByOfficialSymbolInexact=user,admin,ROLE_ANONYMOUS
-                ubic.gemma.model.genome.gene.GeneService.findOrCreate=user,admin
-                ubic.gemma.model.genome.gene.GeneService.remove=user,admin
-                ubic.gemma.model.genome.gene.GeneProductService.create=user,admin
-                ubic.gemma.model.genome.gene.GeneProductService.findOrCreate=user,admin
-                ubic.gemma.model.genome.gene.GeneProductService.delete=user,admin
-                ubic.gemma.model.genome.gene.GeneProductService.update=user,admin
-                ubic.gemma.model.genome.gene.GeneProductService.load=user,admin,ROLE_ANONYMOUS,AFTER_ACL_READ 
-                ubic.gemma.model.genome.TaxonService.find=user,admin,ROLE_ANONYMOUS
-                ubic.gemma.model.genome.TaxonService.update=user,admin 
-                ubic.gemma.model.genome.TaxonService.remove=user,admin
-                ubic.gemma.model.genome.TaxonService.findOrCreate=user,admin
-                ubic.gemma.model.genome.TaxonService.loadAll=user,admin,ROLE_ANONYMOUS
-                ubic.gemma.model.genome.TaxonService.findByScientificName=user,admin,ROLE_ANONYMOUS
-                ubic.gemma.model.genome.TaxonService.findByCommonName=user,admin,ROLE_ANONYMOUS
-                ubic.gemma.model.analysis.expression.ExpressionExperimentSetService.create=user,admin
-                ubic.gemma.model.analysis.expression.ExpressionExperimentSetService.update=user,admin
-                ubic.gemma.model.analysis.expression.ExpressionExperimentSetService.delete=user,admin
-                ubic.gemma.model.analysis.expression.ExpressionExperimentSetService.findByName=user,admin,ROLE_ANONYMOUS,AFTER_ACL_COLLECTION_READ
-                ubic.gemma.model.analysis.expression.ExpressionExperimentSetService.loadAll=user,admin,ROLE_ANONYMOUS,AFTER_ACL_COLLECTION_READ
-                ubic.gemma.model.analysis.expression.ExpressionExperimentSetService.load=user,admin,ROLE_ANONYMOUS,AFTER_ACL_READ
-                ubic.gemma.model.analysis.expression.ExpressionExperimentSetService.loadAllMultiExperimentSets=user,admin,ROLE_ANONYMOUS,AFTER_ACL_COLLECTION_READ
-                ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisService.create=admin
-                ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisService.update=admin
-                ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisService.getDatasetsAnalyzed=user,admin,ROLE_ANONYMOUS
-                ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService.create=user,admin
-                ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService.delete=user,admin
-                ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService.findExperimentsWithAnalyses=user,admin,ROLE_ANONYMOUS,AFTER_ACL_COLLECTION_READ
-                ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultService.find=user,admin,ROLE_ANONYMOUS,AFTER_ACL_MAP_READ
-                ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultService.findInResultSets=user,admin,ROLE_ANONYMOUS
-                ubic.gemma.model.analysis.AnalysisService.delete=admin
-                ubic.gemma.search.IndexService.runAll=admin
-                ubic.gemma.util.monitor.HibernateMonitor.getStats=admin
-                ubic.gemma.util.monitor.CacheMonitor.getStats=admin
-                ubic.gemma.loader.expression.simple.SimpleExpressionDataLoaderService.load=user,admin
-                ubic.gemma.loader.expression.simple.SimpleExpressionDataLoaderService.parse=user,admin
-           ]]>
-			</value>
-		</property>
-	</bean>
-
-	<!-- An access decision manager used by the serviceSecurityInterceptor, which uses method interception (as well as the role voter). -->
-	<bean id="httpRequestAccessDecisionManager"
-		class="org.springframework.security.vote.AffirmativeBased">
-		<property name="allowIfAllAbstainDecisions">
-			<value>false</value>
-		</property>
+	<bean id="httpAccessDecisionManager" class="org.springframework.security.access.vote.AffirmativeBased">
+		<property name="allowIfAllAbstainDecisions" value="true" />
 		<property name="decisionVoters">
 			<list>
-				<ref local="roleVoter" />
-				<ref bean="securableVoter" />
-				<ref bean="localFileEditVoter" />
+				<bean class="org.springframework.security.web.access.expression.WebExpressionVoter" />
+				<ref local="roleHierarchyVoter" />
+				<bean class="org.springframework.security.access.vote.AuthenticatedVoter" /> <!-- so we can use 'IS_AUTHENTICATED_ANONYMOUSLY in security (as opposed to ROLE_ANONYMOUS) -->
 			</list>
 		</property>
 	</bean>
 
-	<!--  An access decision manager used by filterInvocationInterceptor, which is incompatible with BasicAclVoter (inherits from AbstractAclVoter) -->
-	<bean id="roleAccessDecisionManager"
-		class="org.springframework.security.vote.AffirmativeBased">
-		<property name="allowIfAllAbstainDecisions">
-			<value>false</value>
-		</property>
-		<property name="decisionVoters">
-			<list>
-				<ref bean="roleVoter" />
-			</list>
-		</property>
+	<s:authentication-manager alias="authenticationManager">
+		<s:authentication-provider user-service-ref="userManager">
+			<s:password-encoder ref="passwordEncoder">
+				<s:salt-source user-property="username" />
+			</s:password-encoder>
+		</s:authentication-provider>
+		<s:authentication-provider ref="runAsAuthenticationProvider" />
+	</s:authentication-manager>
+
+	<bean id="runAsAuthenticationProvider" class="org.springframework.security.access.intercept.RunAsImplAuthenticationProvider">
+		<property name="key" value="${gemma.runas.password}" />
 	</bean>
+
+	<!-- declared separately so we can use it direclty. -->
+	<bean id="passwordEncoder" class="org.springframework.security.authentication.encoding.ShaPasswordEncoder" />
+
+	<bean id="aclCache" class="org.springframework.security.acls.domain.EhCacheBasedAclCache">
+		<constructor-arg>
+			<bean class="org.springframework.cache.ehcache.EhCacheFactoryBean">
+				<property name="cacheManager">
+					<bean class="org.springframework.cache.ehcache.EhCacheManagerFactoryBean" />
+				</property>
+				<property name="cacheName" value="aclCache" />
+			</bean>
+		</constructor-arg>
+	</bean>
+
+
+	<!--- global method security configuration -->
+
+	<s:global-method-security run-as-manager-ref="runasManager" secured-annotations="enabled"
+		access-decision-manager-ref="accessDecisionManager">
+		<s:expression-handler ref="securityExpressionHandler" />
+
+		<!-- these filters are declared below -->
+		<s:after-invocation-provider ref="afterAclRead" />
+		<s:after-invocation-provider ref="afterAclCollectionRead" />
+		<s:after-invocation-provider ref="afterAclArrayDesignCollectionRead" />
+		<s:after-invocation-provider ref="afterAclDataVectorCollectionRead" />
+		<s:after-invocation-provider ref="afterAclMyDataRead" />
+		<s:after-invocation-provider ref="afterAclMapRead" />
+
+	</s:global-method-security>
 
 	<!-- ===================== VOTING ==================== -->
 
-	<!-- role-based voting -->
-	<bean id="roleVoter"
-		class="org.springframework.security.vote.RoleVoter">
-		<property name="rolePrefix">
-			<value />
-		</property>
-	</bean>
 
-	<!-- ============== "BEFORE METHOD-CALL" AUTHORIZATION (happens before the method is executed) =========== -->
-
-	<!-- An access decision voters that read processConfigAttribute settings -->
-
-	<!--  voter that can be applied to any operation on a securable -->
-	<bean id="securableVoter"
-		class="org.springframework.security.vote.BasicAclEntryVoter">
-		<property name="aclManager">
-			<ref bean="aclManager" />
-		</property>
-		<property name="processConfigAttribute">
-			<value>ACL_SECURABLE_EDIT</value>
-		</property>
-		<property name="processDomainObjectClass">
-			<value>ubic.gemma.model.common.Securable</value>
-		</property>
-		<property name="requirePermission">
+	<!-- Decide whether the user has access to a particular resource, method, or data-->
+	<bean id="accessDecisionManager" class="org.springframework.security.access.vote.UnanimousBased">
+		<property name="allowIfAllAbstainDecisions" value="false" />
+		<property name="decisionVoters">
 			<list>
-				<ref local="SimpleAclEntry.ADMINISTRATION" />
-				<ref local="SimpleAclEntry.READ_WRITE" />
+				<ref local="securableEditVoter" />
+				<ref local="securableReadVoter" />
+				<ref local="roleHierarchyVoter" />
+				<bean class="org.springframework.security.access.vote.AuthenticatedVoter" />
+				<ref local="securableCollectionReadVoter" />
 			</list>
 		</property>
 	</bean>
 
-	<bean id="localFileEditVoter"
-		class="org.springframework.security.vote.BasicAclEntryVoter">
-		<property name="aclManager">
-			<ref bean="aclManager" />
-		</property>
-		<property name="processConfigAttribute">
-			<value>ACL_LOCALFILE_EDIT</value>
-		</property>
-		<property name="processDomainObjectClass">
-			<value>ubic.gemma.model.common.description.LocalFile</value>
-		</property>
-		<property name="requirePermission">
+
+	<!--
+		role-based voting, in which roles inherit from each other. GROUP_ADMIN has all the rights of GROUP_USER for example.
+	-->
+	<bean id="roleHierarchyVoter" class="org.springframework.security.access.vote.RoleHierarchyVoter">
+		<constructor-arg>
+			<ref local="roleHierarchy" />
+		</constructor-arg>
+		<property name="rolePrefix" value="GROUP_" />
+	</bean>
+
+	<!-- Customized to user our roleHierarchy (otherwise we wouldn't need to declare this) -->
+	<bean id="sidRetrievalStrategy" class="org.springframework.security.acls.domain.SidRetrievalStrategyImpl">
+		<constructor-arg>
+			<ref local="roleHierarchy" />
+		</constructor-arg>
+	</bean>
+
+
+	<!--
+		Voter that can be applied to any method that takes a securable as an argument (NOT on the return value, this is
+		checked before the call)
+	-->
+	<bean id="securableEditVoter" class="org.springframework.security.acls.AclEntryVoter">
+		<constructor-arg ref="aclService" />
+		<constructor-arg value="ACL_SECURABLE_EDIT" />
+		<constructor-arg>
 			<list>
-				<ref local="SimpleAclEntry.ADMINISTRATION" />
-				<ref local="SimpleAclEntry.READ_WRITE" />
+				<util:constant static-field="org.springframework.security.acls.domain.BasePermission.ADMINISTRATION" />
+				<util:constant static-field="org.springframework.security.acls.domain.BasePermission.WRITE" />
 			</list>
-		</property>
+		</constructor-arg>
+		<property name="sidRetrievalStrategy" ref="sidRetrievalStrategy" />
+		<property name="processDomainObjectClass" value="ubic.gemma.model.common.auditAndSecurity.Securable" />
 	</bean>
 
-	<!-- ============== "AFTER METHOD-CALL" AUTHORIZATION (happens after the method is executed) =========== -->
-
-	<bean id="afterInvocationManager"
-		class="org.springframework.security.afterinvocation.AfterInvocationProviderManager">
-		<property name="providers">
+	<bean id="securableReadVoter" class="org.springframework.security.acls.AclEntryVoter">
+		<constructor-arg ref="aclService" />
+		<constructor-arg value="ACL_SECURABLE_READ" />
+		<constructor-arg>
 			<list>
-				<ref local="afterAclRead" />
-				<ref local="afterAclCollectionRead" />
-				<ref local="afterAclArrayDesignCollectionRead" />
-				<ref local="afterAclFilterPublicExpressionExperimentFromCollection" />
+				<util:constant static-field="org.springframework.security.acls.domain.BasePermission.ADMINISTRATION" />
+				<util:constant static-field="org.springframework.security.acls.domain.BasePermission.READ" />
 			</list>
-		</property>
+		</constructor-arg>
+		<property name="sidRetrievalStrategy" ref="sidRetrievalStrategy" />
+		<property name="processDomainObjectClass" value="ubic.gemma.model.common.auditAndSecurity.Securable" />
 	</bean>
 
-	<!-- Processes AFTER_ACL_READ configuration settings -->
-	<bean id="afterAclRead"
-		class="org.springframework.security.afterinvocation.BasicAclEntryAfterInvocationProvider">
-		<property name="aclManager">
-			<ref local="aclManager" />
-		</property>
-		<property name="requirePermission">
+	<bean id="securableCollectionReadVoter" class="ubic.gemma.security.authorization.acl.AclCollectionEntryVoter">
+		<constructor-arg ref="aclService" />
+		<constructor-arg value="ACL_SECURABLE_COLLECTION_READ" />
+		<constructor-arg>
 			<list>
-				<ref bean="SimpleAclEntry.ADMINISTRATION" />
-				<ref bean="SimpleAclEntry.READ_WRITE" />
-				<ref bean="SimpleAclEntry.READ" />
+				<util:constant static-field="org.springframework.security.acls.domain.BasePermission.ADMINISTRATION" />
+				<util:constant static-field="org.springframework.security.acls.domain.BasePermission.READ" />
 			</list>
+		</constructor-arg>
+		<property name="sidRetrievalStrategy" ref="sidRetrievalStrategy" />
+		<property name="processDomainObjectClass" value="ubic.gemma.model.common.auditAndSecurity.Securable" />
+	</bean>
+
+	<!--
+		Check: 'GROUP_RUN_AS_' guys are so we can allow some exposed methods to be run by users with lower privileges - such
+		as servers or certain user operations that need to happen when users are logging in or signing up. Note that
+		IS_AUTHENTICATED_ANONYMOUSLY is not recognized by the role voter, but it is by other uses of this hierarchy.
+	-->
+	<bean id="roleHierarchy" class="org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl">
+		<property name="hierarchy">
+			<value>[CDATA[
+				GROUP_ADMIN > GROUP_USER
+				GROUP_RUN_AS_ADMIN > GROUP_ADMIN
+				GROUP_USER > GROUP_ANONYMOUS
+				GROUP_RUN_AS_USER > GROUP_USER
+				GROUP_ADMIN > GROUP_AGENT
+				GROUP_ANONYMOUS > IS_AUTHENTICATED_ANONYMOUSLY
+				]]
+            </value>
 		</property>
 	</bean>
 
-	<!-- Processes AFTER_ACL_COLLECTION_READ configuration settings (removes objects from the collection if you do not 
-		have authorization priviliges based on -->
-	<bean id="afterAclCollectionRead"
-		class="org.springframework.security.afterinvocation.BasicAclEntryAfterInvocationCollectionFilteringProvider">
-		<property name="aclManager">
-			<ref local="aclManager" />
-		</property>
-		<property name="requirePermission">
+
+	<!-- ACL configuration -->
+
+	<!-- how ACLs are retrived, with configuration of who is allowed to do this -->
+	<bean id="lookupStrategy" class="org.springframework.security.acls.jdbc.BasicLookupStrategy">
+		<constructor-arg ref="dataSource" />
+		<constructor-arg ref="aclCache" />
+		<constructor-arg>
+			<bean class="org.springframework.security.acls.domain.AclAuthorizationStrategyImpl">
+				<constructor-arg>
+					<list>
+						<bean class="org.springframework.security.core.authority.GrantedAuthorityImpl">
+							<constructor-arg value="GROUP_ADMIN" /> <!-- change acl ownership -->
+						</bean>
+						<bean class="org.springframework.security.core.authority.GrantedAuthorityImpl">
+							<constructor-arg value="GROUP_ADMIN" /> <!-- change acl auditing -->
+						</bean>
+						<bean class="org.springframework.security.core.authority.GrantedAuthorityImpl">
+							<constructor-arg value="GROUP_ADMIN" /> <!-- change acl details -->
+						</bean>
+					</list>
+				</constructor-arg>
+			</bean>
+		</constructor-arg>
+		<constructor-arg>
+			<bean class="ubic.gemma.security.audit.AclAuditLogger" />
+		</constructor-arg>
+	</bean>
+
+	<bean id="permissionEvaluator" class="org.springframework.security.acls.AclPermissionEvaluator">
+		<constructor-arg ref="aclService" />
+		<property name="sidRetrievalStrategy" ref="sidRetrievalStrategy" />
+	</bean>
+
+	<!-- Service that handles CRUD operations on ACLs.  -->
+	<bean id="aclService" class="org.springframework.security.acls.jdbc.JdbcMutableAclService">
+		<constructor-arg ref="dataSource" />
+		<constructor-arg ref="lookupStrategy" />
+		<constructor-arg ref="aclCache" />
+		<property name="classIdentityQuery" value="SELECT @@IDENTITY" /> <!-- for mysql -->
+		<property name="sidIdentityQuery" value="SELECT @@IDENTITY" />
+	</bean>
+
+	<!-- Aspect that adds ACLs for new entities, and deletes them for deleted entities. -->
+	<aop:config>
+		<aop:aspect id="aclAspect" ref="aclAdvice">
+			<aop:after-returning pointcut="ubic.gemma.security.authorization.acl.AclPointcut.requiresAclAction()"
+				method="doAclAdvice" returning="retValue" />
+		</aop:aspect>
+	</aop:config>
+
+
+	<!-- Aspect to add audit info for objects after CRUD operations. -->
+	<aop:config>
+		<aop:aspect id="auditAspect" ref="auditAdvice">
+			<aop:after-returning method="doAuditAdvice" pointcut="ubic.gemma.util.SystemArchitectureAspect.crud()"
+				returning="retValue" />
+		</aop:aspect>
+	</aop:config>
+
+
+	<!-- All our filters -->
+
+	<!-- After reading an object  filter.-->
+	<bean id="afterAclRead" class="org.springframework.security.acls.afterinvocation.AclEntryAfterInvocationProvider">
+		<constructor-arg ref="aclService" />
+		<constructor-arg>
 			<list>
-				<ref bean="SimpleAclEntry.ADMINISTRATION" />
-				<ref bean="SimpleAclEntry.READ_WRITE" />
-				<ref bean="SimpleAclEntry.READ" />
+				<util:constant static-field="org.springframework.security.acls.domain.BasePermission.ADMINISTRATION" />
+				<util:constant static-field="org.springframework.security.acls.domain.BasePermission.READ" />
 			</list>
-		</property>
+		</constructor-arg>
+		<property name="sidRetrievalStrategy" ref="sidRetrievalStrategy" />
+		<property name="processDomainObjectClass" value="ubic.gemma.model.common.auditAndSecurity.Securable" />
 	</bean>
-	
-	<!-- Processes AFTER_ACL_MAP_READ configuration settings (removes objects from the collection if you do not 
-		have authorization priviliges based on -->
-	<bean id="afterAclMapRead"
-		class="ubic.gemma.security.afterInvocation.AclAfterInvocationMapFilteringProvider">
-		<property name="aclManager">
-			<ref local="aclManager" />
-		</property>
-		<property name="requirePermission">
+
+	<!-- after reading a collection filter -->
+	<bean id="afterAclCollectionRead" class="org.springframework.security.acls.afterinvocation.AclEntryAfterInvocationCollectionFilteringProvider">
+		<constructor-arg ref="aclService" />
+		<constructor-arg>
 			<list>
-				<ref bean="SimpleAclEntry.ADMINISTRATION" />
-				<ref bean="SimpleAclEntry.READ_WRITE" />
-				<ref bean="SimpleAclEntry.READ" />
+				<util:constant static-field="org.springframework.security.acls.domain.BasePermission.ADMINISTRATION" />
+				<util:constant static-field="org.springframework.security.acls.domain.BasePermission.READ" />
 			</list>
-		</property>
+		</constructor-arg>
+		<property name="sidRetrievalStrategy" ref="sidRetrievalStrategy" />
+		<property name="processDomainObjectClass" value="ubic.gemma.model.common.auditAndSecurity.Securable" />
 	</bean>
 
-	<!-- Process AFTER_ACL_ARRAYDESIGN_COLLECTION_READ -->
-	<bean id="afterAclArrayDesignCollectionRead"
-		class="ubic.gemma.security.afterInvocation.AclAfterCollectionCompSeqByArrayDesignFilter">
-		<property name="aclManager">
-			<ref local="aclManager" />
-		</property>
-		<property name="requirePermission">
+	<!-- after reading a map: filter -->
+	<bean id="afterAclMapRead" class="ubic.gemma.security.authorization.acl.AclAfterInvocationMapFilteringProvider">
+		<constructor-arg ref="aclService" />
+		<constructor-arg>
 			<list>
-				<ref bean="SimpleAclEntry.ADMINISTRATION" />
-				<ref bean="SimpleAclEntry.READ_WRITE" />
-				<ref bean="SimpleAclEntry.READ" />
+				<util:constant static-field="org.springframework.security.acls.domain.BasePermission.ADMINISTRATION" />
+				<util:constant static-field="org.springframework.security.acls.domain.BasePermission.READ" />
 			</list>
-		</property>
+		</constructor-arg>
+		<property name="sidRetrievalStrategy" ref="sidRetrievalStrategy" />
+		<property name="processDomainObjectClass" value="ubic.gemma.model.common.auditAndSecurity.Securable" />
 	</bean>
-	<!--  Process AFTER_ACL_DATAVECTOR_COLLECTION_READ -->
-	<bean id="afterAclDataVectorCollectionRead"
-		class="ubic.gemma.security.afterInvocation.AclAfterCollectionDataVectorByExpressionExperimentFilter">
-		<property name="aclManager">
-			<ref local="aclManager" />
-		</property>
-		<property name="requirePermission">
+
+	<!-- After reading collection of composite sequences -->
+	<bean id="afterAclArrayDesignCollectionRead" class="ubic.gemma.security.authorization.acl.AclAfterCollectionCompSeqByArrayDesignFilter">
+		<constructor-arg ref="aclService" />
+		<constructor-arg>
 			<list>
-				<ref bean="SimpleAclEntry.ADMINISTRATION" />
-				<ref bean="SimpleAclEntry.READ_WRITE" />
-				<ref bean="SimpleAclEntry.READ" />
+				<util:constant static-field="org.springframework.security.acls.domain.BasePermission.ADMINISTRATION" />
+				<util:constant static-field="org.springframework.security.acls.domain.BasePermission.READ" />
 			</list>
-		</property>
+		</constructor-arg>
+		<property name="sidRetrievalStrategy" ref="sidRetrievalStrategy" />
 	</bean>
-	
-	<!-- Process AFTER_ACL_FILTER_PUBLIC_EXPRESSION_EXPERIMENT_FROM_COLLECTION -->
-	<bean id="afterAclFilterPublicExpressionExperimentFromCollection"
-		class="ubic.gemma.security.afterInvocation.AclAfterCollectionPublicExpressionExperimentFilter">
-		<property name="aclManager">
-			<ref local="aclManager" />
-		</property>
-		<property name="requirePermission">
+
+	<!-- After reading collection of vectors -->
+	<bean id="afterAclDataVectorCollectionRead" class="ubic.gemma.security.authorization.acl.AclAfterCollectionDataVectorByExpressionExperimentFilter">
+		<constructor-arg ref="aclService" />
+		<constructor-arg>
 			<list>
-				<ref bean="SimpleAclEntry.ADMINISTRATION" />
-				<ref bean="SimpleAclEntry.READ_WRITE" />
-				<ref bean="SimpleAclEntry.READ" />
+				<util:constant static-field="org.springframework.security.acls.domain.BasePermission.ADMINISTRATION" />
+				<util:constant static-field="org.springframework.security.acls.domain.BasePermission.READ" />
 			</list>
-		</property>
+		</constructor-arg>
+		<property name="sidRetrievalStrategy" ref="sidRetrievalStrategy" />
 	</bean>
 
-	<!-- ========= ACCESS CONTROL LIST LOOKUP MANAGER DEFINITIONS ========= -->
-
-	<bean id="aclManager"
-		class="org.springframework.security.acl.AclProviderManager">
-		<property name="providers">
+	<!-- special filter that returns only Non-public data that user can see -->
+	<bean id="afterAclMyDataRead" class="ubic.gemma.security.authorization.acl.AclAfterFilterCollectionForMyData">
+		<constructor-arg ref="aclService" />
+		<constructor-arg>
 			<list>
-				<ref local="basicAclProvider" />
+				<util:constant static-field="org.springframework.security.acls.domain.BasePermission.ADMINISTRATION" />
+				<util:constant static-field="org.springframework.security.acls.domain.BasePermission.READ" />
 			</list>
-		</property>
-	</bean>
-
-	<bean id="basicAclProvider"
-		class="org.springframework.security.acl.basic.BasicAclProvider">
-		<property name="basicAclDao">
-			<ref local="basicAclExtendedDao" />
-		</property>
-	</bean>
-
-	<bean id="basicAclExtendedDao"
-		class="ubic.gemma.security.acl.basic.jdbc.CustomJdbcExtendedDaoImpl">
-		<property name="dataSource">
-			<ref bean="dataSource" />
-		</property>
-	</bean>
-
-	<bean id="customAclDao"
-		class="ubic.gemma.security.acl.basic.jdbc.CustomAclDao">
-		<property name="dataSource">
-			<ref bean="dataSource" />
-		</property>
-	</bean>
-
-	<!-- ~~~~~~~~~~~~~~~~~~ AUTHORIZATION MASK DEFINITIONS ~~~~~~~~~~~~~~~~~~~ -->
-
-	<!-- ACL permission masks -->
-
-	<bean id="SimpleAclEntry.ADMINISTRATION"
-		class="org.springframework.beans.factory.config.FieldRetrievingFactoryBean">
-		<property name="staticField">
-			<value>
-				org.springframework.security.acl.basic.SimpleAclEntry.ADMINISTRATION
-			</value>
-		</property>
-	</bean>
-
-	<bean id="SimpleAclEntry.READ_WRITE"
-		class="org.springframework.beans.factory.config.FieldRetrievingFactoryBean">
-		<property name="staticField">
-			<value>
-				org.springframework.security.acl.basic.SimpleAclEntry.READ_WRITE
-			</value>
-		</property>
-	</bean>
-
-	<bean id="SimpleAclEntry.READ"
-		class="org.springframework.beans.factory.config.FieldRetrievingFactoryBean">
-		<property name="staticField">
-			<value>
-				org.springframework.security.acl.basic.SimpleAclEntry.READ
-			</value>
-		</property>
-	</bean>
-
-	<bean id="SimpleAclEntry.CREATE"
-		class="org.springframework.beans.factory.config.FieldRetrievingFactoryBean">
-		<property name="staticField">
-			<value>
-				org.springframework.security.acl.basic.SimpleAclEntry.CREATE
-			</value>
-		</property>
-	</bean>
-
-	<bean id="SimpleAclEntry.DELETE"
-		class="org.springframework.beans.factory.config.FieldRetrievingFactoryBean">
-		<property name="staticField">
-			<value>
-				org.springframework.security.acl.basic.SimpleAclEntry.DELETE
-			</value>
-		</property>
-	</bean>
-
-	<!-- ================================================================== -->
-
-	<!--  Interceptor to persist ACL objects -->
-	<bean id="addOrRemoveFromACLInterceptor"
-		class="org.springframework.aop.support.DefaultPointcutAdvisor">
-		<property name="advice">
-			<ref bean="aclAdvice" /><!-- defined elsewhere -->
-		</property>
-		<property name="pointcut">
-			<bean class="ubic.gemma.security.interceptor.AclPointcut" />
-		</property>
+		</constructor-arg>
+		<property name="sidRetrievalStrategy" ref="sidRetrievalStrategy" />
 	</bean>
 
 
-	<!--  pointcut that identifies crud operations -->
-	<bean id="crudPointcut"
-		class="ubic.gemma.security.interceptor.CrudPointcut" />
-
-	<bean id="auditInterceptor"
-		class="org.springframework.aop.support.DefaultPointcutAdvisor">
-		<property name="advice">
-			<ref bean="auditAdvice" /><!-- defined elsewhere -->
-		</property>
-		<property name="pointcut">
-			<ref bean="crudPointcut" />
-		</property>
-	</bean>
-
-	<!-- This interceptor insures that that users can only update themselves, not other users -->
-	<bean id="userSecurityInterceptor"
-		class="org.springframework.aop.support.DefaultPointcutAdvisor">
-		<property name="advice" ref="userSecurityAdvice" />
-		<property name="pointcut">
-			<bean
-				class="ubic.gemma.security.interceptor.UserSecurityPointcut" />
-		</property>
-	</bean>
-
-	<bean id="userSecurityAdvice"
-		class="ubic.gemma.security.interceptor.UserSecurityAdvice" />
 
 </beans>

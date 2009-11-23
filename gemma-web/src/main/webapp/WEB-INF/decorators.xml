@@ -17,7 +17,7 @@
     </decorator>
     
     <!--  Need this filter so that ajax json responses don't get decorated 
-          Would have rather used and exclude but they don't work -
+          Would have rather used an exclude but they don't work -
      -->
     
     <decorator name="ajax">

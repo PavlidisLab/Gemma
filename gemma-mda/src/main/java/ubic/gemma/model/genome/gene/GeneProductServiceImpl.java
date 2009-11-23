@@ -20,9 +20,12 @@ package ubic.gemma.model.genome.gene;
 
 import java.util.Collection;
 
+import org.springframework.stereotype.Service;
+
 /**
  * @see ubic.gemma.model.genome.gene.GeneProductService
  */
+@Service
 public class GeneProductServiceImpl extends ubic.gemma.model.genome.gene.GeneProductServiceBase {
 
     @Override

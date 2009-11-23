@@ -21,6 +21,11 @@
 package ubic.gemma.model.common.description;
 
 import java.util.Collection;
+import java.util.Map;
+
+import org.springframework.stereotype.Service;
+
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
  * Implementation of BibliographicReferenceService.
@@ -29,6 +34,7 @@ import java.util.Collection;
  * @version $Id$
  * @see ubic.gemma.model.common.description.BibliographicReferenceService
  */
+@Service
 public class BibliographicReferenceServiceImpl extends
         ubic.gemma.model.common.description.BibliographicReferenceServiceBase {
 
@@ -110,7 +116,8 @@ public class BibliographicReferenceServiceImpl extends
     }
 
     @Override
-    protected Collection handleGetAllExperimentLinkedReferences() throws Exception {
+    protected Map<ExpressionExperiment, BibliographicReference> handleGetAllExperimentLinkedReferences()
+            throws Exception {
         return this.getBibliographicReferenceDao().getAllExperimentLinkedReferences();
     }
 
@@ -151,6 +158,13 @@ public class BibliographicReferenceServiceImpl extends
     protected void handleUpdate( ubic.gemma.model.common.description.BibliographicReference BibliographicReference )
             throws java.lang.Exception {
         getBibliographicReferenceDao().update( BibliographicReference );
+    }
+
+    /**
+     * 
+     */
+    public BibliographicReference findByExternalId( DatabaseEntry accession ) {
+        return this.getBibliographicReferenceDao().findByExternalId( accession );
     }
 
 }

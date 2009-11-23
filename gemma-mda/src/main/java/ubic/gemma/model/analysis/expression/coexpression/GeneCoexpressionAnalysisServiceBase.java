@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.analysis.expression.coexpression;
 
+import org.springframework.beans.factory.annotation.Autowired;
+
 /**
  * <p>
  * Spring Service base class for
@@ -31,6 +33,7 @@ public abstract class GeneCoexpressionAnalysisServiceBase extends
         ubic.gemma.model.analysis.AnalysisServiceImpl<GeneCoexpressionAnalysis> implements
         ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisService {
 
+    @Autowired
     private ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisDao geneCoexpressionAnalysisDao;
 
     /**

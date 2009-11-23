@@ -50,28 +50,6 @@
 				<property name="enableTemplating">true</property>
 			</properties>
 		</namespace>
-		<namespace name="bpm4struts">
-			<!--  Note that we are not using this -->
-			<properties>
-				<property name="forms">${maven.andromda.core.generated.dir}</property>
-				<property name="pages">${maven.andromda.web.generated.pages.dir}/pages
-				</property>
-				<property name="actions">${maven.andromda.core.generated.dir}</property>
-				<property name="controllers">${maven.andromda.core.generated.dir}</property>
-				<property name="controller-impls">${maven.andromda.core.manual.dir}</property>
-				<property name="decorators">${maven.andromda.core.manual.dir}</property>
-				<property name="messages">${maven.andromda.web.messages.dir}</property>
-				<property name="configuration">${maven.andromda.web.conf.generated.dir}/WEB-INF
-				</property>
-				<property name="securityRealm"></property>
-				<property name="serviceAccessorPattern">
-					${application.package}.ServiceLocator.instance().get{1}()
-				</property>
-				<property name="manageableServiceAccessorPattern">
-					${application.package}.spring.ManageableServiceLocator.instance().get{1}()
-				</property>
-			</properties>
-		</namespace>
 		<namespace name="hibernate">
 			<properties>
 				<property name="hibernateDialect">org.hibernate.dialect.MySQLInnoDBDialect</property>
@@ -82,7 +60,7 @@
 				<property name="hibernateQueryCacheFactory">org.hibernate.cache.StandardQueryCacheFactory
 				</property>
 				<property name="hibernateInheritanceStrategy">${hibernate.inheritance.strategy}</property>
-				<property name="hibernateCacheProvider">org.hibernate.cache.EhCacheProvider</property>
+				<property name="hibernateCacheProvider">net.sf.ehcache.hibernate.EhCacheProvider</property>
 				<property name="entities">${maven.andromda.core.generated.dir}</property>
 				<property name="entity-impls">${maven.andromda.core.manual.dir}</property>
 				<property name="entity-mappings">${maven.andromda.hibernate.configuration.dir}
@@ -112,11 +90,6 @@
 				<property name="ehCacheTimeToLiveSeconds">1200</property>
 				<property name="ehCacheMaxElementsInMemory">10000</property>
 				<property name="ehCacheOverflowToDisk">false</property>
-
-				<!--
-					<property name="hibernateTransactionFactoryClass"> org.hibernate.transaction.JTATransactionFactory </property>
-					<property name="hibernateXMLPersistence">true</property>
-				-->
 			</properties>
 		</namespace>
 		<namespace name="cs">

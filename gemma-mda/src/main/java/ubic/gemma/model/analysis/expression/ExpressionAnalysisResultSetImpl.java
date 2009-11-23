@@ -33,47 +33,44 @@ public class ExpressionAnalysisResultSetImpl extends ubic.gemma.model.analysis.e
      * The serial version UID of this class. Needed for serialization.
      */
     private static final long serialVersionUID = 4890973130395919422L;
-    
-    
-    public String toString(){
+
+    @Override
+    public String toString() {
         StringBuilder buf = new StringBuilder();
-     
+
         for ( DifferentialExpressionAnalysisResult dear : this.getResults() ) {
             int count = 0;
-            
-            if (dear instanceof ProbeAnalysisResult){
-                    CompositeSequence cs = ((ProbeAnalysisResult) dear).getProbe();
-                    buf.append(cs.getName() + "\t");
-                    for (BioSequence2GeneProduct bs2gp : cs.getBiologicalCharacteristic().getBioSequence2GeneProduct()){
-                        Gene g = bs2gp.getGeneProduct().getGene();
-                        if (g instanceof GeneImpl){
-                           buf.append( bs2gp.getGeneProduct().getGene().getOfficialSymbol() + ",");
-                           count++;
-                        }
-                    }
-                    if (count != 0)
-                        buf.deleteCharAt( buf.lastIndexOf( "," ) ); //removing trailing ,
-                    buf.append( "\t" );
 
+            if ( dear instanceof ProbeAnalysisResult ) {
+                CompositeSequence cs = ( ( ProbeAnalysisResult ) dear ).getProbe();
+                buf.append( cs.getName() + "\t" );
+                for ( BioSequence2GeneProduct bs2gp : cs.getBiologicalCharacteristic().getBioSequence2GeneProduct() ) {
+                    Gene g = bs2gp.getGeneProduct().getGene();
+                    if ( g instanceof GeneImpl ) {
+                        buf.append( bs2gp.getGeneProduct().getGene().getOfficialSymbol() + "," );
+                        count++;
+                    }
+                }
+                if ( count != 0 ) buf.deleteCharAt( buf.lastIndexOf( "," ) ); // removing trailing ,
+                buf.append( "\t" );
+
+            } else {
+                buf.append( "missing probe details \t" );
             }
-            else{
-                buf.append("missing probe details \t");
-            }
-            
+
             count = 0;
-            for(ExperimentalFactor ef : this.getExperimentalFactor()){
-                buf.append(ef.getName() + ",");     
+            for ( ExperimentalFactor ef : this.getExperimentalFactor() ) {
+                buf.append( ef.getName() + "," );
                 count++;
             }
-            if (count != 0)
-                buf.deleteCharAt( buf.lastIndexOf( "," ) ); //removing trailing ,
-            
+            if ( count != 0 ) buf.deleteCharAt( buf.lastIndexOf( "," ) ); // removing trailing ,
+
             buf.append( "\t" );
-            
+
             buf.append( dear.getCorrectedPvalue() + "\n" );
         }
         return buf.toString();
-        
+
     }
 
 }

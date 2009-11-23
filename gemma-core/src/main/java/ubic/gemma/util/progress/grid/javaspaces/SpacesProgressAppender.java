@@ -24,8 +24,8 @@ import org.apache.log4j.Level;
 import org.apache.log4j.spi.LoggingEvent;
 import org.springmodules.javaspaces.gigaspaces.GigaSpacesTemplate;
 
-import ubic.gemma.util.grid.javaspaces.SpacesUtil;
-import ubic.gemma.util.grid.javaspaces.entry.SpacesProgressEntry;
+import ubic.gemma.grid.javaspaces.util.SpacesUtil;
+import ubic.gemma.grid.javaspaces.util.entry.SpacesProgressEntry;
 import ubic.gemma.util.progress.ProgressAppender;
 
 /**

@@ -28,9 +28,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.biomage.Common.MAGEJava;
 import org.biomage.tools.xmlutils.MAGEContentHandler;
 import org.xml.sax.EntityResolver;
@@ -48,16 +45,10 @@ import ubic.gemma.loader.util.parser.Parser;
  * @see ubic.gemma.loader.mage.MageMLConverter
  * @author pavlidis
  * @version $Id$
- * @spring.bean id="mageMLParser" singleton="false"
  */
-public class MageMLParser extends AbstractMageTool implements Parser {
+public class MageMLParser extends AbstractMageTool implements Parser<Object> {
 
-    /**
-     * 
-     */
     private static final String XMLREADER = "org.apache.xerces.parsers.SAXParser";
-
-    protected static final Log log = LogFactory.getLog( MageMLParser.class );
 
     private MAGEContentHandler cHandler;
 
@@ -103,7 +94,6 @@ public class MageMLParser extends AbstractMageTool implements Parser {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.loader.loaderutils.Parser#iterator()
      */
     public Collection<Object> getResults() {
@@ -112,7 +102,6 @@ public class MageMLParser extends AbstractMageTool implements Parser {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.loader.loaderutils.Parser#parse(java.io.File)
      */
     public void parse( File f ) throws IOException {
@@ -205,7 +194,7 @@ public class MageMLParser extends AbstractMageTool implements Parser {
 
             for ( int j = 0; j < mageClasses.length; j++ ) {
                 try {
-                    Class c = Class.forName( name + "." + mageClasses[j] );
+                    Class<?> c = Class.forName( name + "." + mageClasses[j] );
                     // Collection<Object> d = getConvertedData( c );
                     Collection<Object> d = getDomainObjectsForClass( c );
                     if ( d != null && d.size() > 0 ) {

@@ -20,7 +20,9 @@ package ubic.gemma.model.genome;
 
 /**
  * @see ubic.gemma.model.genome.ChromosomeFeature
+ * @version $Id$
  */
 public abstract class ChromosomeFeatureDaoImpl<T extends ChromosomeFeature> extends
         ubic.gemma.model.genome.ChromosomeFeatureDaoBase<T> {
+
 }

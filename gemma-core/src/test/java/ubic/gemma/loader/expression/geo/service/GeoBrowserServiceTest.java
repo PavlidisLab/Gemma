@@ -18,7 +18,14 @@
  */
 package ubic.gemma.loader.expression.geo.service;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
+import java.net.UnknownHostException;
 import java.util.List;
+
+import org.junit.Test;
 
 import ubic.gemma.loader.expression.geo.model.GeoRecord;
 import ubic.gemma.testing.BaseSpringContextTest;
@@ -29,6 +36,7 @@ import ubic.gemma.testing.BaseSpringContextTest;
  */
 public class GeoBrowserServiceTest extends BaseSpringContextTest {
 
+    @Test
     public final void testGetDetails() throws Exception {
         GeoBrowserService gbs = ( GeoBrowserService ) this.getBean( "geoBrowserService" );
 
@@ -47,8 +55,13 @@ public class GeoBrowserServiceTest extends BaseSpringContextTest {
             // occurs in a "accessioned in GEO as..."
             assertFalse( details.contains( "<strong>GPL8321" ) );
         } catch ( Exception e ) {
-            if ( e.getMessage().contains( "502" ) || e.getMessage().contains( "503" ) ) {
-                log.warn( "NCBI returned 502/503, skipping test" );
+            if ( e.getMessage().contains( "502" ) || e.getMessage().contains( "503" )
+                    || e.getMessage().contains( "GEO returned an error" ) ) {
+                log.warn( "NCBI returned error, skipping test" );
+                return;
+            }
+            if ( e.getCause() instanceof UnknownHostException ) {
+                log.warn( "UnknownHostException, skipping test" );
                 return;
             }
             throw e;
@@ -58,17 +71,7 @@ public class GeoBrowserServiceTest extends BaseSpringContextTest {
 
     }
 
-    public final void testToggleUsability() throws Exception {
-        GeoBrowserService gbs = ( GeoBrowserService ) this.getBean( "geoBrowserService" );
-
-        boolean oneWay = gbs.toggleUsability( "GSE15904" );
-
-        boolean sw = gbs.toggleUsability( "GSE15904" );
-
-        assertFalse( oneWay && sw );
-        assertTrue( oneWay || sw );
-    }
-
+    @Test
     public final void testGetRecentRecords() throws Exception {
         GeoBrowserService gbs = ( GeoBrowserService ) this.getBean( "geoBrowserService" );
 
@@ -106,12 +109,29 @@ public class GeoBrowserServiceTest extends BaseSpringContextTest {
 
             assertEquals( oldCount + 1, newCount );
         } catch ( Exception e ) {
-            if ( e.getMessage().contains( "502" ) || e.getMessage().contains( "503" ) ) {
-                log.warn( "NCBI returned 502/503, skipping test" );
+            if ( e.getMessage().contains( "502" ) || e.getMessage().contains( "503" )
+                    || e.getMessage().contains( "GEO returned an error" ) ) {
+                log.warn( "NCBI returned error, skipping test" );
+                return;
+            }
+            if ( e.getCause() instanceof UnknownHostException ) {
+                log.warn( "UnknownHostException, skipping test" );
                 return;
             }
             throw e;
         }
+    }
+
+    @Test
+    public final void testToggleUsability() throws Exception {
+        GeoBrowserService gbs = ( GeoBrowserService ) this.getBean( "geoBrowserService" );
+
+        boolean oneWay = gbs.toggleUsability( "GSE15904" );
+
+        boolean sw = gbs.toggleUsability( "GSE15904" );
+
+        assertFalse( oneWay && sw );
+        assertTrue( oneWay || sw );
     }
 
 }

@@ -22,6 +22,9 @@ import java.io.InputStream;
 import java.util.Collection;
 import java.util.zip.GZIPInputStream;
 
+import org.junit.Before;
+import org.junit.Test;
+
 import ubic.gemma.apps.Blat;
 import ubic.gemma.loader.expression.arrayDesign.ArrayDesignProbeMapperService;
 import ubic.gemma.loader.expression.arrayDesign.ArrayDesignProbeMapperServiceIntegrationTest;
@@ -50,48 +53,12 @@ public class GeneServiceIntegrationTest extends BaseSpringContextTest {
     String officialName = "PPARA";
     String accession = "GPL140";
 
-    public void testGetCompositeSequenceCountById() throws Exception {
-
-        // get geneService
-        GeneService geneService = ( GeneService ) this.getBean( "geneService" );
-        // get a gene to get the id
-        Collection<Gene> geneCollection = geneService.findByOfficialSymbol( officialName );
-        Gene g = geneCollection.iterator().next();
-
-        long count = geneService.getCompositeSequenceCountById( g.getId() );
-        assert ( count != 0 );
-    }
-
-    public void testGetCompositeSequencesById() throws Exception {
-
-        // get geneService
-        GeneService geneService = ( GeneService ) this.getBean( "geneService" );
-        // get a gene to get the id
-        Collection<Gene> geneCollection = geneService.findByOfficialSymbol( officialName );
-        Gene g = geneCollection.iterator().next();
-
-        Collection<CompositeSequence> compSequences = geneService.getCompositeSequencesById( g.getId() );
-        assert ( compSequences.size() != 0 );
-    }
-
-    public void testGetGenesByTaxon() throws Exception {
-        // get geneService
-        GeneService geneService = ( GeneService ) this.getBean( "geneService" );
-
-        Taxon taxon = taxonService.findByCommonName( "human" );
-        Collection<Gene> geneCollection = geneService.getGenesByTaxon( taxon );
-        assert ( geneCollection.size() != 0 );
-
-    }
-
     static boolean setupDone = false;
 
-    // preloads GPL140. See ArrayDesignProbeMapperServiceIntegrationTest
-    @Override
     @SuppressWarnings("unchecked")
-    protected void onSetUpInTransaction() throws Exception {
-        super.onSetUpInTransaction();
-        endTransaction();
+    @Before
+    public void setup() throws Exception {
+
         if ( !setupDone ) {
             ArrayDesign ad;
             // first load small twoc-color
@@ -123,7 +90,7 @@ public class GeneServiceIntegrationTest extends BaseSpringContextTest {
             Blat blat = new Blat();
             Collection<BlatResult> results = blat.processPsl( blatResultInputStream, taxon );
 
-        	aligner.processArrayDesign( ad, taxon, results );
+            aligner.processArrayDesign( ad, taxon, results );
 
             // real stuff.
             ArrayDesignProbeMapperService arrayDesignProbeMapperService = ( ArrayDesignProbeMapperService ) this
@@ -131,5 +98,44 @@ public class GeneServiceIntegrationTest extends BaseSpringContextTest {
             arrayDesignProbeMapperService.processArrayDesign( ad );
             setupDone = true;
         }
+    }
+
+    @Test
+    public void testGetCompositeSequenceCountById() throws Exception {
+
+        // get geneService
+        GeneService geneService = ( GeneService ) this.getBean( "geneService" );
+        // get a gene to get the id
+        Collection<Gene> geneCollection = geneService.findByOfficialSymbol( officialName );
+        Gene g = geneCollection.iterator().next();
+
+        long count = geneService.getCompositeSequenceCountById( g.getId() );
+        assert ( count != 0 );
+    }
+
+    @Test
+    public void testGetCompositeSequencesById() throws Exception {
+
+        // get geneService
+        GeneService geneService = ( GeneService ) this.getBean( "geneService" );
+        // get a gene to get the id
+        Collection<Gene> geneCollection = geneService.findByOfficialSymbol( officialName );
+        Gene g = geneCollection.iterator().next();
+
+        Collection<CompositeSequence> compSequences = geneService.getCompositeSequencesById( g.getId() );
+        assert ( compSequences.size() != 0 );
+    }
+
+    // preloads GPL140. See ArrayDesignProbeMapperServiceIntegrationTest
+
+    @Test
+    public void testGetGenesByTaxon() throws Exception {
+        // get geneService
+        GeneService geneService = ( GeneService ) this.getBean( "geneService" );
+
+        Taxon taxon = taxonService.findByCommonName( "human" );
+        Collection<Gene> geneCollection = geneService.getGenesByTaxon( taxon );
+        assert ( geneCollection.size() != 0 );
+
     }
 }

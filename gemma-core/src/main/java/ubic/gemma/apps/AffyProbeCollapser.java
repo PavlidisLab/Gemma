@@ -40,6 +40,7 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
  * @version $Id$
  * @deprecated because this is normally not needed; we do this step automagically during Affy probe analysis.
  */
+@Deprecated
 public class AffyProbeCollapser {
 
     public void collapse( String arrayName, InputStream is, Writer writer ) throws IOException {

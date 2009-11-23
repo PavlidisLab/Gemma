@@ -37,7 +37,7 @@ public abstract class ChromosomeDaoBase extends org.springframework.orm.hibernat
             throw new IllegalArgumentException( "Chromosome.create - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback() {
+                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
@@ -63,7 +63,7 @@ public abstract class ChromosomeDaoBase extends org.springframework.orm.hibernat
     /**
      * @see ubic.gemma.model.genome.ChromosomeDao#create(java.util.Collection)
      */
-    @SuppressWarnings( { "unchecked" })
+
     public java.util.Collection create( final java.util.Collection entities ) {
         return create( TRANSFORM_NONE, entities );
     }
@@ -78,7 +78,7 @@ public abstract class ChromosomeDaoBase extends org.springframework.orm.hibernat
     /**
      * @see ubic.gemma.model.genome.ChromosomeDao#find(int, java.lang.String, ubic.gemma.model.genome.Chromosome)
      */
-    @SuppressWarnings( { "unchecked" })
+
     public Object find( final int transform, final java.lang.String queryString,
             final ubic.gemma.model.genome.Chromosome chromosome ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -88,15 +88,15 @@ public abstract class ChromosomeDaoBase extends org.springframework.orm.hibernat
         java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
                 argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
         Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'ubic.gemma.model.genome.Chromosome"
-                                + "' was found when executing query --> '" + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
+
+        if ( results.size() > 1 ) {
+            throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                    "More than one instance of 'ubic.gemma.model.genome.Chromosome"
+                            + "' was found when executing query --> '" + queryString + "'" );
+        } else if ( results.size() == 1 ) {
+            result = results.iterator().next();
         }
+
         result = transformEntity( transform, ( ubic.gemma.model.genome.Chromosome ) result );
         return result;
     }
@@ -104,7 +104,7 @@ public abstract class ChromosomeDaoBase extends org.springframework.orm.hibernat
     /**
      * @see ubic.gemma.model.genome.ChromosomeDao#find(int, ubic.gemma.model.genome.Chromosome)
      */
-    @SuppressWarnings( { "unchecked" })
+
     public Object find( final int transform, final ubic.gemma.model.genome.Chromosome chromosome ) {
         return this.find( transform,
                 "from ubic.gemma.model.genome.Chromosome as chromosome where chromosome.chromosome = :chromosome",
@@ -114,7 +114,7 @@ public abstract class ChromosomeDaoBase extends org.springframework.orm.hibernat
     /**
      * @see ubic.gemma.model.genome.ChromosomeDao#find(java.lang.String, ubic.gemma.model.genome.Chromosome)
      */
-    @SuppressWarnings( { "unchecked" })
+
     public ubic.gemma.model.genome.Chromosome find( final java.lang.String queryString,
             final ubic.gemma.model.genome.Chromosome chromosome ) {
         return ( ubic.gemma.model.genome.Chromosome ) this.find( TRANSFORM_NONE, queryString, chromosome );
@@ -131,7 +131,7 @@ public abstract class ChromosomeDaoBase extends org.springframework.orm.hibernat
      * @see ubic.gemma.model.genome.ChromosomeDao#findOrCreate(int, java.lang.String,
      *      ubic.gemma.model.genome.Chromosome)
      */
-    @SuppressWarnings( { "unchecked" })
+
     public Object findOrCreate( final int transform, final java.lang.String queryString,
             final ubic.gemma.model.genome.Chromosome chromosome ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -141,15 +141,15 @@ public abstract class ChromosomeDaoBase extends org.springframework.orm.hibernat
         java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
                 argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
         Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'ubic.gemma.model.genome.Chromosome"
-                                + "' was found when executing query --> '" + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
+
+        if ( results.size() > 1 ) {
+            throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                    "More than one instance of 'ubic.gemma.model.genome.Chromosome"
+                            + "' was found when executing query --> '" + queryString + "'" );
+        } else if ( results.size() == 1 ) {
+            result = results.iterator().next();
         }
+
         result = transformEntity( transform, ( ubic.gemma.model.genome.Chromosome ) result );
         return result;
     }
@@ -157,7 +157,7 @@ public abstract class ChromosomeDaoBase extends org.springframework.orm.hibernat
     /**
      * @see ubic.gemma.model.genome.ChromosomeDao#findOrCreate(int, ubic.gemma.model.genome.Chromosome)
      */
-    @SuppressWarnings( { "unchecked" })
+
     public Object findOrCreate( final int transform, final ubic.gemma.model.genome.Chromosome chromosome ) {
         return this.findOrCreate( transform,
                 "from ubic.gemma.model.genome.Chromosome as chromosome where chromosome.chromosome = :chromosome",
@@ -167,7 +167,7 @@ public abstract class ChromosomeDaoBase extends org.springframework.orm.hibernat
     /**
      * @see ubic.gemma.model.genome.ChromosomeDao#findOrCreate(java.lang.String, ubic.gemma.model.genome.Chromosome)
      */
-    @SuppressWarnings( { "unchecked" })
+
     public ubic.gemma.model.genome.Chromosome findOrCreate( final java.lang.String queryString,
             final ubic.gemma.model.genome.Chromosome chromosome ) {
         return ( ubic.gemma.model.genome.Chromosome ) this.findOrCreate( TRANSFORM_NONE, queryString, chromosome );
@@ -201,7 +201,7 @@ public abstract class ChromosomeDaoBase extends org.springframework.orm.hibernat
     /**
      * @see ubic.gemma.model.genome.ChromosomeDao#loadAll()
      */
-    @SuppressWarnings( { "unchecked" })
+
     public java.util.Collection loadAll() {
         return this.loadAll( TRANSFORM_NONE );
     }
@@ -257,7 +257,7 @@ public abstract class ChromosomeDaoBase extends org.springframework.orm.hibernat
             throw new IllegalArgumentException( "Chromosome.update - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback() {
+                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {

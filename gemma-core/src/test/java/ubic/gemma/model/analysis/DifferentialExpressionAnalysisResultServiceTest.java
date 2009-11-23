@@ -18,17 +18,22 @@
  */
 package ubic.gemma.model.analysis;
 
+import static org.junit.Assert.assertEquals;
+
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 
+import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+
 import ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.ProbeAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultService;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
@@ -39,33 +44,19 @@ import ubic.gemma.testing.BaseSpringContextTest;
  * @version $Id$
  */
 public class DifferentialExpressionAnalysisResultServiceTest extends BaseSpringContextTest {
-
+    @Autowired
     private DifferentialExpressionResultService analysisResultService = null;
 
+    @Autowired
     private DifferentialExpressionAnalysisService analysisService = null;
 
+    @Autowired
     private ExpressionExperimentService expressionExperimentService = null;
-
-    /*
-     * (non-Javadoc)
-     * @see ubic.gemma.testing.BaseSpringContextTest#onSetUpInTransaction()
-     */
-    @Override
-    public void onSetUpInTransaction() throws Exception {
-        super.onSetUpInTransaction();
-
-        this.analysisResultService = ( DifferentialExpressionResultService ) getBean( "differentialExpressionResultService" );
-
-        this.analysisService = ( DifferentialExpressionAnalysisService ) getBean( "differentialExpressionAnalysisService" );
-
-        this.expressionExperimentService = ( ExpressionExperimentService ) getBean( "expressionExperimentService" );
-
-    }
 
     /**
      * Tests getting the collection of factors for the result.
-     */
-    @SuppressWarnings("unchecked")
+     */ 
+    @Test
     public void testGetExperimentalFactors() {
         String shortName = "GSE2018";
         ExpressionExperiment ee = expressionExperimentService.findByShortName( shortName );
@@ -98,8 +89,8 @@ public class DifferentialExpressionAnalysisResultServiceTest extends BaseSpringC
 
     /**
      * Tests getting the map of factors keyed by results
-     */
-    @SuppressWarnings("unchecked")
+     */ 
+    @Test
     public void testGetMapOfExperimentalFactors() {
         String shortName = "GSE2018";
         ExpressionExperiment ee = expressionExperimentService.findByShortName( shortName );

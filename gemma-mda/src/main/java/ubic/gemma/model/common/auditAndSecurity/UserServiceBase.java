@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.common.auditAndSecurity;
 
+import org.springframework.beans.factory.annotation.Autowired;
+
 /**
  * <p>
  * Spring Service base class for <code>ubic.gemma.model.common.auditAndSecurity.UserService</code>, provides access to
@@ -28,23 +30,11 @@ package ubic.gemma.model.common.auditAndSecurity;
  */
 public abstract class UserServiceBase implements ubic.gemma.model.common.auditAndSecurity.UserService {
 
+    @Autowired
     private ubic.gemma.model.common.auditAndSecurity.UserDao userDao;
 
-    private ubic.gemma.model.common.auditAndSecurity.UserRoleDao userRoleDao;
-
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.UserService#addRole(ubic.gemma.model.common.auditAndSecurity.User,
-     *      java.lang.String)
-     */
-    public void addRole( final ubic.gemma.model.common.auditAndSecurity.User user, final java.lang.String roleName ) {
-        try {
-            this.handleAddRole( user, roleName );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.common.auditAndSecurity.UserServiceException(
-                    "Error performing 'ubic.gemma.model.common.auditAndSecurity.UserService.addRole(ubic.gemma.model.common.auditAndSecurity.User user, java.lang.String roleName)' --> "
-                            + th, th );
-        }
-    }
+    @Autowired
+    private UserGroupDao userGroupDao;
 
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.UserService#create(ubic.gemma.model.common.auditAndSecurity.User)
@@ -59,19 +49,6 @@ public abstract class UserServiceBase implements ubic.gemma.model.common.auditAn
         } catch ( Throwable th ) {
             throw new ubic.gemma.model.common.auditAndSecurity.UserServiceException(
                     "Error performing 'ubic.gemma.model.common.auditAndSecurity.UserService.create(ubic.gemma.model.common.auditAndSecurity.User user)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.UserService#delete(java.lang.String)
-     */
-    public void delete( final java.lang.String userName ) {
-        try {
-            this.handleDelete( userName );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.common.auditAndSecurity.UserServiceException(
-                    "Error performing 'ubic.gemma.model.common.auditAndSecurity.UserService.delete(java.lang.String userName)' --> "
                             + th, th );
         }
     }
@@ -103,6 +80,13 @@ public abstract class UserServiceBase implements ubic.gemma.model.common.auditAn
     }
 
     /**
+     * @return the userGroupDao
+     */
+    public UserGroupDao getUserGroupDao() {
+        return userGroupDao;
+    }
+
+    /**
      * @see ubic.gemma.model.common.auditAndSecurity.UserService#load(java.lang.Long)
      */
     public ubic.gemma.model.common.auditAndSecurity.User load( final java.lang.Long id ) {
@@ -128,19 +112,6 @@ public abstract class UserServiceBase implements ubic.gemma.model.common.auditAn
     }
 
     /**
-     * @see ubic.gemma.model.common.auditAndSecurity.UserService#loadAllRoles()
-     */
-    public java.util.Collection<UserRole> loadAllRoles() {
-        try {
-            return this.handleLoadAllRoles();
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.common.auditAndSecurity.UserServiceException(
-                    "Error performing 'ubic.gemma.model.common.auditAndSecurity.UserService.loadAllRoles()' --> " + th,
-                    th );
-        }
-    }
-
-    /**
      * Sets the reference to <code>user</code>'s DAO.
      */
     public void setUserDao( ubic.gemma.model.common.auditAndSecurity.UserDao userDao ) {
@@ -148,10 +119,10 @@ public abstract class UserServiceBase implements ubic.gemma.model.common.auditAn
     }
 
     /**
-     * Sets the reference to <code>userRole</code>'s DAO.
+     * @param userGroupDao the userGroupDao to set
      */
-    public void setUserRoleDao( ubic.gemma.model.common.auditAndSecurity.UserRoleDao userRoleDao ) {
-        this.userRoleDao = userRoleDao;
+    public void setUserGroupDao( UserGroupDao userGroupDao ) {
+        this.userGroupDao = userGroupDao;
     }
 
     /**
@@ -175,28 +146,10 @@ public abstract class UserServiceBase implements ubic.gemma.model.common.auditAn
     }
 
     /**
-     * Gets the reference to <code>userRole</code>'s DAO.
-     */
-    protected ubic.gemma.model.common.auditAndSecurity.UserRoleDao getUserRoleDao() {
-        return this.userRoleDao;
-    }
-
-    /**
-     * Performs the core logic for {@link #addRole(ubic.gemma.model.common.auditAndSecurity.User, java.lang.String)}
-     */
-    protected abstract void handleAddRole( ubic.gemma.model.common.auditAndSecurity.User user, java.lang.String roleName )
-            throws java.lang.Exception;
-
-    /**
      * Performs the core logic for {@link #create(ubic.gemma.model.common.auditAndSecurity.User)}
      */
     protected abstract ubic.gemma.model.common.auditAndSecurity.User handleCreate(
             ubic.gemma.model.common.auditAndSecurity.User user ) throws java.lang.Exception;
-
-    /**
-     * Performs the core logic for {@link #delete(java.lang.String)}
-     */
-    protected abstract void handleDelete( java.lang.String userName ) throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #findByEmail(java.lang.String)}
@@ -220,11 +173,6 @@ public abstract class UserServiceBase implements ubic.gemma.model.common.auditAn
      * Performs the core logic for {@link #loadAll()}
      */
     protected abstract java.util.Collection<User> handleLoadAll() throws java.lang.Exception;
-
-    /**
-     * Performs the core logic for {@link #loadAllRoles()}
-     */
-    protected abstract java.util.Collection<UserRole> handleLoadAllRoles() throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #update(ubic.gemma.model.common.auditAndSecurity.User)}

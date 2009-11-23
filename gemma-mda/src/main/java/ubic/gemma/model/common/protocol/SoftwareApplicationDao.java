@@ -18,6 +18,7 @@
  */
 package ubic.gemma.model.common.protocol;
 
+
 /**
  * @see ubic.gemma.model.common.protocol.SoftwareApplication
  */

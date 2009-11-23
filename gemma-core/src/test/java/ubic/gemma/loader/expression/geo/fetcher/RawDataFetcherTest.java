@@ -35,24 +35,9 @@ import ubic.gemma.model.common.description.LocalFile;
 public class RawDataFetcherTest extends TestCase {
     private static Log log = LogFactory.getLog( RawDataFetcherTest.class.getName() );
 
-    /*
-     * @see TestCase#setUp()
-     */
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
-    }
-
-    /*
-     * @see TestCase#tearDown()
-     */
-    @Override
-    protected void tearDown() throws Exception {
-        super.tearDown();
-    }
-
-    /*
-     * Test method for 'ubic.gemma.loader.expression.geo.RawDataFetcher.fetch(String)'
+    /**
+     * Test method for 'ubic.gemma.loader.expression.geo.RawDataFetcher.fetch(String)'. This is kind of a slow test
+     * because the file is big.
      */
     public void testFetch() throws Exception {
         RawDataFetcher rdf = new RawDataFetcher();
@@ -94,6 +79,22 @@ public class RawDataFetcherTest extends TestCase {
             }
             throw e;
         }
+    }
+
+    /*
+     * @see TestCase#setUp()
+     */
+    @Override
+    protected void setUp() throws Exception {
+        super.setUp();
+    }
+
+    /*
+     * @see TestCase#tearDown()
+     */
+    @Override
+    protected void tearDown() throws Exception {
+        super.tearDown();
     }
 
 }

@@ -26,6 +26,8 @@ import java.util.Map;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import ubic.gemma.analysis.report.ArrayDesignReportService;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
@@ -44,14 +46,10 @@ import ubic.gemma.persistence.PersisterHelper;
  * <li>Store relationship with mergees
  * </ul>
  * 
- * @spring.bean id="arrayDesignMergeService"
- * @spring.property name="auditTrailService" ref="auditTrailService"
- * @spring.property name="arrayDesignService" ref="arrayDesignService"
- * @spring.property name="persisterHelper" ref="persisterHelper"
- * @spring.property name="arrayDesignReportService" ref="arrayDesignReportService"
  * @author paul
  * @version $Id$
  */
+@Service
 public class ArrayDesignMergeService {
 
     private static Log log = LogFactory.getLog( ArrayDesignMergeService.class.getName() );
@@ -65,10 +63,14 @@ public class ArrayDesignMergeService {
      */
     private static final String PROBE_NAME_DISAMBIGUATION_REGEX = PROBE_NAME_DISAMBIGUATION_SUFFIX_SEPARATOR
             + "(\\d )+$";
+    @Autowired
     AuditTrailService auditTrailService;
+    @Autowired
     ArrayDesignService arrayDesignService;
+    @Autowired
     PersisterHelper persisterHelper;
 
+    @Autowired
     ArrayDesignReportService arrayDesignReportService;
 
     /**
@@ -86,9 +88,9 @@ public class ArrayDesignMergeService {
         arrayDesignService.thawLite( arrayDesign );
 
         /*
-         * TODO: gracefully handle this situation. Bug 1681 
+         * TODO: gracefully handle this situation. Bug 1681
          */
-        
+
         if ( arrayDesign.getMergedInto() != null || arrayDesign.getMergees().size() > 0 ) {
             throw new IllegalArgumentException(
                     "Sorry, can't merge an array design that is already merged or is itself a merged design ("
@@ -101,7 +103,6 @@ public class ArrayDesignMergeService {
 
         for ( ArrayDesign otherArrayDesign : otherArrayDesigns ) {
             log.info( "Processing " + otherArrayDesign );
-            
 
             if ( otherArrayDesign.getMergedInto() != null || otherArrayDesign.getMergees().size() > 0 ) {
                 throw new IllegalArgumentException(

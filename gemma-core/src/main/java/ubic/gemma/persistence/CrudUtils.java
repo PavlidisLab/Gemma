@@ -29,23 +29,26 @@ import org.apache.commons.logging.LogFactory;
 import org.hibernate.SessionFactory;
 import org.hibernate.engine.CascadeStyle;
 import org.hibernate.engine.CascadingAction;
+import org.hibernate.metadata.ClassMetadata;
+import org.hibernate.metadata.CollectionMetadata;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 /**
  * Convenience methods needed to perform CRUD operations on entities.
  * 
  * @author pavlidis
  * @version $Id$
- * @spring.bean name="crudUtils"
- * @spring.property name="sessionFactory" ref="sessionFactory"
  */
+@Service
 public class CrudUtils implements InitializingBean {
 
-    private static Set<String> crudMethods;
-
     static Log log = LogFactory.getLog( CrudUtils.class.getName() );
+
+    private static Set<String> crudMethods;
 
     static {
         crudMethods = new HashSet<String>();
@@ -60,17 +63,99 @@ public class CrudUtils implements InitializingBean {
         crudMethods.add( "loadAll" );
     }
 
-    private Map metaData;
+    /**
+     * @param entity
+     * @return
+     */
+    public static boolean isTransient( Object entity ) {
+        if ( entity == null ) return true;
+        try {
+            return org.apache.commons.beanutils.BeanUtils.getSimpleProperty( entity, "id" ) == null;
+        } catch ( Exception e ) {
+            throw new RuntimeException( e );
+        }
+    }
 
+    /**
+     * Test whether a method creates objects
+     * 
+     * @param m
+     * @return
+     */
+    public static boolean methodIsCreate( Method m ) {
+        return methodIsCreate( m.getName() );
+    }
+
+    public static boolean methodIsCreate( String m ) {
+        return m.equals( "create" ) || m.equals( "save" ) || m.equals( "findOrCreate" );
+    }
+
+    /**
+     * Test whether a method is a CRUD method.
+     * 
+     * @param m
+     * @return
+     */
+    public static boolean methodIsCrud( Method m ) {
+        if ( log.isTraceEnabled() ) log.trace( "Testing " + m.getName() );
+        return crudMethods.contains( m.getName() );
+    }
+
+    /**
+     * Test whether a method deletes objects
+     * 
+     * @param m
+     * @return
+     */
+    public static boolean methodIsDelete( Method m ) {
+        return methodIsDelete( m.getName() );
+    }
+
+    public static boolean methodIsDelete( String s ) {
+        return s.equals( "remove" ) || s.equals( "delete" );
+    }
+
+    /**
+     * Test whether a method loads objects. Patterns accepted include "read", "find", "load*" (latter for load or
+     * loadAll)
+     * 
+     * @param m
+     * @return
+     */
+    public static boolean methodIsLoad( Method m ) {
+        return methodIsLoad( m.getName() );
+    }
+
+    public static boolean methodIsLoad( String m ) {
+        return m.equals( "read" ) || m.startsWith( "find" ) || m.startsWith( "load" );
+    }
+
+    /**
+     * Test whether a method updates objects
+     * 
+     * @param m
+     * @return
+     */
+    public static boolean methodIsUpdate( Method m ) {
+        return methodIsUpdate( m.getName() );
+    }
+
+    public static boolean methodIsUpdate( String s ) {
+        return s.equals( "update" );
+    }
+
+    private Map<String, CollectionMetadata> collectionMetaData;
+
+    private Map<String, ClassMetadata> metaData;
+
+    @Autowired
     private SessionFactory sessionFactory;
-
-    private Map collectionMetaData;
 
     /*
      * (non-Javadoc)
-     * 
      * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
      */
+    @SuppressWarnings("unchecked")
     public void afterPropertiesSet() throws Exception {
         metaData = sessionFactory.getAllClassMetadata();
         collectionMetaData = sessionFactory.getAllCollectionMetadata();
@@ -90,30 +175,27 @@ public class CrudUtils implements InitializingBean {
      */
     public EntityPersister getEntityPersister( Object object ) {
         String className = object.getClass().getName();
-        // hack to remove "$$EnhancerByCGLib...".
-        className = className.replaceAll( "\\$\\$.+$", "" );
+        // hack to remove "$$EnhancerByCGLib... or _$$_javaassist_
+        className = className.replaceAll( "(_)?\\$\\$.+$", "" );
+
         return ( ( EntityPersister ) metaData.get( className ) );
     }
 
     /**
-     * Determine if cascading an association is required.
-     * 
-     * @param cs
-     * @return
+     * @return the sessionFactory
      */
-    public boolean needCascade( CascadeStyle cs ) {
-        return cs.doCascade( CascadingAction.PERSIST ) || cs.doCascade( CascadingAction.SAVE_UPDATE )
-                || cs.doCascade( CascadingAction.SAVE_UPDATE_COPY );
+    public SessionFactory getSessionFactory() {
+        return this.sessionFactory;
     }
 
     /**
      * Determine if cascading an association is required.
      * 
-     * @param m
+     * @param m method name
      * @param cs
-     * @return
+     * @return true if the method would result in the action being taken on the associated entities.
      */
-    public boolean needCascade( Method m, CascadeStyle cs ) {
+    public boolean needCascade( String m, CascadeStyle cs ) {
 
         if ( methodIsDelete( m ) ) {
             return cs.doCascade( CascadingAction.DELETE );
@@ -181,9 +263,9 @@ public class CrudUtils implements InitializingBean {
     Method getMethodForNames( Object target, Object argument, String[] possibleNames ) {
         String argInterfaceName = StringUtils.chomp( argument.getClass().getName(), "Impl" );
 
-        Class[] argArray = null;
+        Class<?>[] argArray = null;
         try {
-            Class entityInterface = Class.forName( argInterfaceName );
+            Class<?> entityInterface = Class.forName( argInterfaceName );
             argArray = new Class[] { entityInterface };
         } catch ( Exception e ) {
             throw new RuntimeException( e );
@@ -210,74 +292,13 @@ public class CrudUtils implements InitializingBean {
     }
 
     /**
-     * @param entity
-     * @return
-     */
-    public static boolean isTransient( Object entity ) {
-        if ( entity == null ) return true;
-        try {
-            return org.apache.commons.beanutils.BeanUtils.getSimpleProperty( entity, "id" ) == null;
-        } catch ( Exception e ) {
-            throw new RuntimeException( e );
-        }
-    }
-
-    /**
-     * Test whether a method creates objects
+     * Determine if cascading an association is required.
      * 
-     * @param m
+     * @param cs
      * @return
      */
-    public static boolean methodIsCreate( Method m ) {
-        return m.getName().equals( "create" ) || m.getName().equals( "save" ) || m.getName().equals( "findOrCreate" );
-    }
-
-    /**
-     * Test whether a method is a CRUD method.
-     * 
-     * @param m
-     * @return
-     */
-    public static boolean methodIsCrud( Method m ) {
-        if ( log.isTraceEnabled() ) log.trace( "Testing " + m.getName() );
-        return crudMethods.contains( m.getName() );
-    }
-
-    /**
-     * Test whether a method deletes objects
-     * 
-     * @param m
-     * @return
-     */
-    public static boolean methodIsDelete( Method m ) {
-        return m.getName().equals( "remove" ) || m.getName().equals( "delete" );
-    }
-
-    /**
-     * Test whether a method loads objects. Patterns accepted include "read", "find", "load*" (latter for load or
-     * loadAll)
-     * 
-     * @param m
-     * @return
-     */
-    public static boolean methodIsLoad( Method m ) {
-        return m.getName().equals( "read" ) || m.getName().startsWith( "find" ) || m.getName().startsWith( "load" );
-    }
-
-    /**
-     * Test whether a method updates objects
-     * 
-     * @param m
-     * @return
-     */
-    public static boolean methodIsUpdate( Method m ) {
-        return m.getName().equals( "update" );
-    }
-
-    /**
-     * @return the sessionFactory
-     */
-    public SessionFactory getSessionFactory() {
-        return this.sessionFactory;
+    private boolean needCascade( CascadeStyle cs ) {
+        return cs.doCascade( CascadingAction.PERSIST ) || cs.doCascade( CascadingAction.SAVE_UPDATE )
+                || cs.doCascade( CascadingAction.SAVE_UPDATE_COPY );
     }
 }

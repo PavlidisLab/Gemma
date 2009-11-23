@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.expression.biomaterial;
 
+import org.springframework.beans.factory.annotation.Autowired;
+
 /**
  * <p>
  * Spring Service base class for <code>ubic.gemma.model.expression.biomaterial.TreatmentService</code>, provides access
@@ -26,9 +28,10 @@ package ubic.gemma.model.expression.biomaterial;
  * 
  * @see ubic.gemma.model.expression.biomaterial.TreatmentService
  */
-public abstract class TreatmentServiceBase extends ubic.gemma.model.common.AuditableServiceImpl implements
+public abstract class TreatmentServiceBase   implements
         ubic.gemma.model.expression.biomaterial.TreatmentService {
 
+    @Autowired
     private ubic.gemma.model.expression.biomaterial.TreatmentDao treatmentDao;
 
     /**

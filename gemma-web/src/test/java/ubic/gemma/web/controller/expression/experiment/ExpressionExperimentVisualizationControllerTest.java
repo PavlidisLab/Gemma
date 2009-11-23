@@ -18,12 +18,16 @@
  */
 package ubic.gemma.web.controller.expression.experiment;
 
+import static org.junit.Assert.assertEquals;
+
+import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.web.servlet.ModelAndView;
 
 import ubic.gemma.analysis.preprocess.ExpressionDataMatrixBuilder;
-import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
+import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.testing.BaseSpringWebTest;
@@ -36,24 +40,13 @@ import ubic.gemma.web.controller.visualization.ExpressionExperimentVisualization
  */
 public class ExpressionExperimentVisualizationControllerTest extends BaseSpringWebTest {
 
+    @Autowired
     private ExpressionExperimentVisualizationController expressionExperimentVisualizationController;
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.testing.BaseSpringWebTest#onSetUpInTransaction()
-     */
-    @Override
-    protected void onSetUpInTransaction() throws Exception {
-        super.onSetUpInTransaction();
-
-        expressionExperimentVisualizationController = ( ExpressionExperimentVisualizationController ) this
-                .getBean( "expressionExperimentVisualizationController" );
-    }
 
     /**
      * @throws Exception
      */
+    @Test
     public final void testSubmit() throws Exception {
         MockHttpServletResponse response = new MockHttpServletResponse();
         MockHttpServletRequest request = newGet( "/expressionExperiment/visualizeDataMatrix.html" );
@@ -71,7 +64,7 @@ public class ExpressionExperimentVisualizationControllerTest extends BaseSpringW
         }
 
         ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( ee.getRawExpressionDataVectors() );
-        ExpressionDataMatrix matrix = builder.getPreferredData();
+        ExpressionDataDoubleMatrix matrix = builder.getPreferredData();
 
         int i = 1;
 
@@ -81,7 +74,7 @@ public class ExpressionExperimentVisualizationControllerTest extends BaseSpringW
 
         request.setParameter( "type", "heatmap" );
 
-        ModelAndView mv = expressionExperimentVisualizationController.handleRequest( request, response );
+        ModelAndView mv = expressionExperimentVisualizationController.show( request, response );
         assertEquals( null, mv );
     }
 }

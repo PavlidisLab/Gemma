@@ -46,7 +46,6 @@ import ubic.gemma.web.view.JSONView;
  * @author keshav
  * @author Traces of Matt Raible
  * @version $Id$
- * @spring.bean id="fileUploadController"
  */
 public class FileUploadController extends AbstractController {
 
@@ -66,17 +65,16 @@ public class FileUploadController extends AbstractController {
 
     /*
      * (non-Javadoc)
-     * 
-     * @see org.springframework.web.servlet.mvc.AbstractController#handleRequestInternal(javax.servlet.http.HttpServletRequest ,
-     *      javax.servlet.http.HttpServletResponse)
+     * @see
+     * org.springframework.web.servlet.mvc.AbstractController#handleRequestInternal(javax.servlet.http.HttpServletRequest
+     * , javax.servlet.http.HttpServletResponse)
      */
-    @SuppressWarnings("unchecked")
     @Override
     protected ModelAndView handleRequestInternal( HttpServletRequest request, HttpServletResponse response )
             throws Exception {
 
         if ( !( request instanceof MultipartHttpServletRequest ) ) {
-            return super.handleRequest( request, response );
+            return null;
         }
 
         MultipartHttpServletRequest mrequest = ( MultipartHttpServletRequest ) request;
@@ -84,43 +82,37 @@ public class FileUploadController extends AbstractController {
 
         Map<String, Object> model = new HashMap<String, Object>();
 
-        try {
-
-            if ( fileMap.size() > 1 ) {
-                log.error( "Attempted to upload multiple files, returning error" );
-                model.put( "success", false );
-                model.put( "error", "Sorry, can't upload more than one file at a time yet" );
-            }
-
-            for ( String key : fileMap.keySet() ) {
-                MultipartFile multipartFile = fileMap.get( key );
-                File copiedFile = null;
-                try {
-                    copiedFile = FileUploadUtil.copyUploadedFile( multipartFile, request );
-                    log.info( "Uploaded file: " + copiedFile );
-                    model.put( "success", true );
-                    model.put( "localFile", StringEscapeUtils.escapeJava( copiedFile.getAbsolutePath() ) );
-                    model.put( "originalFile", multipartFile.getOriginalFilename() );
-                    model.put( "size", multipartFile.getSize() );
-
-                } catch ( Exception e ) {
-                    log.error( "Error in upload: " + e.getMessage() );
-                    model.put( "success", false );
-                    model.put( "error", e.getMessage() );
-                }
-
-                if ( copiedFile == null ) {
-                    log.error( "Error in upload: unknown problem getting file" );
-                    model.put( "success", false );
-                    model.put( "error", "unknown problem getting file" );
-                }
-
-            }
-
-        } catch ( Exception e ) {
-            throw new RuntimeException( e );
+        if ( fileMap.size() > 1 ) {
+            log.error( "Attempted to upload multiple files, returning error" );
+            model.put( "success", false );
+            model.put( "error", "Sorry, can't upload more than one file at a time yet" );
         }
-        
+
+        for ( String key : fileMap.keySet() ) {
+            MultipartFile multipartFile = fileMap.get( key );
+            File copiedFile = null;
+            try {
+                copiedFile = FileUploadUtil.copyUploadedFile( multipartFile, request );
+                log.info( "Uploaded file: " + copiedFile );
+                model.put( "success", true );
+                model.put( "localFile", StringEscapeUtils.escapeJava( copiedFile.getAbsolutePath() ) );
+                model.put( "originalFile", multipartFile.getOriginalFilename() );
+                model.put( "size", multipartFile.getSize() );
+
+            } catch ( Exception e ) {
+                log.error( "Error in upload: " + e.getMessage() );
+                model.put( "success", false );
+                model.put( "error", e.getMessage() );
+            }
+
+            if ( copiedFile == null ) {
+                log.error( "Error in upload: unknown problem getting file" );
+                model.put( "success", false );
+                model.put( "error", "unknown problem getting file" );
+            }
+
+        }
+
         return new ModelAndView( new JSONView( "text/html; charset=utf-8" ), model );
     }
 }

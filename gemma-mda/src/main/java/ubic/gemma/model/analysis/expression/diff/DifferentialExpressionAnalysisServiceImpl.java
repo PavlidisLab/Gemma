@@ -21,8 +21,10 @@ package ubic.gemma.model.analysis.expression.diff;
 import java.util.Collection;
 import java.util.Map;
 
+import org.springframework.stereotype.Service;
+
 import ubic.gemma.model.analysis.Investigation;
-import ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet; 
+import ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
@@ -33,8 +35,18 @@ import ubic.gemma.model.genome.Taxon;
  * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService
  * @version $Id$
  */
+@Service
 public class DifferentialExpressionAnalysisServiceImpl extends
         ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisServiceBase {
+
+    public long countProbesMeetingThreshold( ExpressionAnalysisResultSet ears, double threshold ) {
+        return this.getDifferentialExpressionAnalysisDao().countProbesMeetingThreshold( ears, threshold );
+
+    }
+
+    public java.util.Collection<ExpressionAnalysisResultSet> getResultSets( java.util.Collection<Long> resultSetIds ) {
+        return null;
+    }
 
     /**
      * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService#create(ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis)
@@ -54,24 +66,10 @@ public class DifferentialExpressionAnalysisServiceImpl extends
         this.getDifferentialExpressionAnalysisDao().remove( toDelete );
     }
 
-    /*
-     * (non-Javadoc)
-     * @see
-     * ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisServiceBase#handleDelete(java.lang.Long)
-     */
-    @Override
-    protected void handleDelete( Long idToDelete ) throws Exception {
-        this.getDifferentialExpressionAnalysisDao().remove( idToDelete );
-    }
-
     @Override
     protected Collection handleFind( Gene gene, ExpressionAnalysisResultSet resultSet, double threshold )
             throws Exception {
         return this.getDifferentialExpressionAnalysisDao().find( gene, resultSet, threshold );
-    }
-
-    public java.util.Collection<ExpressionAnalysisResultSet> getResultSets( java.util.Collection<Long> resultSetIds ) {
-        return null;
     }
 
     @Override
@@ -124,15 +122,14 @@ public class DifferentialExpressionAnalysisServiceImpl extends
     }
 
     @Override
-    protected Collection handleFindByTaxon( Taxon taxon ) throws Exception {
-        return this.getDifferentialExpressionAnalysisDao().findByTaxon( taxon );
-    }
-
-    @Override
     protected Collection handleFindByParentTaxon( Taxon taxon ) throws Exception {
         return this.getDifferentialExpressionAnalysisDao().findByParentTaxon( taxon );
     }
-    
+
+    @Override
+    protected Collection handleFindByTaxon( Taxon taxon ) throws Exception {
+        return this.getDifferentialExpressionAnalysisDao().findByTaxon( taxon );
+    }
 
     @SuppressWarnings("unchecked")
     @Override
@@ -212,8 +209,12 @@ public class DifferentialExpressionAnalysisServiceImpl extends
         this.getDifferentialExpressionAnalysisDao().thaw( differentialExpressionAnalysis );
     }
 
-    public long countProbesMeetingThreshold( ExpressionAnalysisResultSet ears, double threshold ) {
-        return this.getDifferentialExpressionAnalysisDao().countProbesMeetingThreshold( ears, threshold );
+    public void update( DifferentialExpressionAnalysis o ) {
+        this.getDifferentialExpressionAnalysisDao().update( o );
+    }
+
+    public void update( ExpressionAnalysisResultSet a ) {
+        this.getExpressionAnalysisResultSetDao().update( a );
 
     }
 

@@ -28,6 +28,8 @@ import java.util.Map;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
@@ -38,9 +40,8 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
  * 
  * @author pavlidis
  * @version $Id$
- * @spring.bean id="arrayDesignProbeRenamingService"
- * @spring.property name="arrayDesignService" ref="arrayDesignService"
  */
+@Service
 public class ArrayDesignProbeRenamingService {
 
     /**
@@ -51,11 +52,9 @@ public class ArrayDesignProbeRenamingService {
     public static final String DUPLICATE_PROBE_NAME_MUNGE_SEPARATOR = "___";
 
     private static Log log = LogFactory.getLog( ArrayDesignProbeRenamingService.class.getName() );
-    ArrayDesignService arrayDesignService;
 
-    public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
-        this.arrayDesignService = arrayDesignService;
-    }
+    @Autowired
+    ArrayDesignService arrayDesignService;
 
     /**
      * @param arrayDesign
@@ -93,6 +92,10 @@ public class ArrayDesignProbeRenamingService {
 
         arrayDesignService.update( arrayDesign );
 
+    }
+
+    public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
+        this.arrayDesignService = arrayDesignService;
     }
 
     /**

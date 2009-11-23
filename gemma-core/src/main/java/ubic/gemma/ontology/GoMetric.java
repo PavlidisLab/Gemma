@@ -28,6 +28,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.dataStructure.matrix.SparseDoubleMatrix;
@@ -37,13 +39,14 @@ import ubic.gemma.model.genome.Gene;
 
 /**
  * @author meeta
- * @spring.bean id="goMetric"
- * @spring.property name="gene2GOAssociationService" ref="gene2GOAssociationService"
- * @spring.property name="geneOntologyService" ref="geneOntologyService"
+ * @version $Id$
  */
+@Service
 public class GoMetric {
 
+    @Autowired
     private Gene2GOAssociationService gene2GOAssociationService;
+    @Autowired
     private GeneOntologyService geneOntologyService;
     private boolean partOf = true;
 

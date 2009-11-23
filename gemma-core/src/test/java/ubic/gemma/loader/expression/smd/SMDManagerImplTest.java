@@ -27,6 +27,13 @@ import junit.framework.TestCase;
 public class SMDManagerImplTest extends TestCase {
 
     /*
+     * Class under test for Set fetchSMDPublications()
+     */
+    public void testFetchSMDPublications() {
+        // TODO Implement testFetchSMDPublications().
+    }
+
+    /*
      * @see TestCase#setUp()
      */
     @Override
@@ -40,13 +47,6 @@ public class SMDManagerImplTest extends TestCase {
     @Override
     protected void tearDown() throws Exception {
         super.tearDown();
-    }
-
-    /*
-     * Class under test for Set fetchSMDPublications()
-     */
-    public void testFetchSMDPublications() {
-        // TODO Implement testFetchSMDPublications().
     }
 
 }

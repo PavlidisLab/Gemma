@@ -55,141 +55,6 @@ public class ProbeMapperTest extends TestCase {
     private boolean hasMousegp = true;
     private boolean hasHumangp = true;
 
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
-
-        tester = new ArrayList<Double>();
-        tester.add( new Double( 400 ) );
-        tester.add( new Double( 200 ) );
-        tester.add( new Double( 100 ) );
-        tester.add( new Double( 50 ) );
-
-        InputStream is = this.getClass().getResourceAsStream( "/data/loader/genome/col8a1.blatresults.txt" );
-        BlatResultParser brp = new BlatResultParser();
-        brp.parse( is );
-        blatres = brp.getResults();
-
-        assert blatres != null && blatres.size() > 0;
-
-        databaseHost = ConfigUtils.getString( "gemma.testdb.host" );
-        databaseUser = ConfigUtils.getString( "gemma.testdb.user" );
-        databasePassword = ConfigUtils.getString( "gemma.testdb.password" );
-
-        try {
-            mousegp = new GoldenPathSequenceAnalysis( 3306, "mm8", databaseHost, databaseUser, databasePassword );
-        } catch ( java.sql.SQLException e ) {
-            if ( e.getMessage().contains( "Unknown database" ) ) {
-                hasMousegp = false;
-            } else if ( e.getMessage().contains( "Access denied" ) ) {
-                hasMousegp = false;
-            }
-            throw e;
-        }
-        try {
-            humangp = new GoldenPathSequenceAnalysis( 3306, "hg18", databaseHost, databaseUser, databasePassword );
-        } catch ( java.sql.SQLException e ) {
-            if ( e.getMessage().contains( "Unknown database" ) ) {
-                hasHumangp = false;
-            } else if ( e.getMessage().contains( "Access denied" ) ) {
-                hasHumangp = false;
-            }
-            throw e;
-        }
-    }
-
-    @Override
-    protected void tearDown() throws Exception {
-        super.tearDown();
-    }
-
-    public void testProcessBlatResults() throws Exception {
-        if ( !hasMousegp ) {
-            log.warn( "Skipping test because mm8 could not be configured" );
-            return;
-        }
-        ProbeMapper pm = new ProbeMapper();
-        Map<String, Collection<BlatAssociation>> res = pm.processBlatResults( mousegp, blatres );
-
-        // This test will fail if the database changes :)
-        assertTrue( "No results", res.values().size() > 0 );
-        assertTrue( "No results", res.values().iterator().next().size() > 0 );
-        assertEquals( "Col8a1", res.values().iterator().next().iterator().next().getGeneProduct().getGene()
-                .getOfficialSymbol() );
-
-    }
-
-    /**
-     * Test based on U83843, should bring up CCT7 (NM_006429 and NM_001009570). Valid locations as of 1/2008.
-     * {@link http://genome.ucsc.edu/cgi-bin/hgTracks?hgsid=79741184&hgt.out1=1.5x&position=chr2%3A73320308-73331929}
-     */
-    public void testLocateGene() throws Exception {
-        if ( !hasHumangp ) {
-            log.warn( "Skipping test because hg18 could not be configured" );
-            return;
-        }
-        Collection<GeneProduct> products = humangp.findRefGenesByLocation( "2", new Long( 73320308 ), new Long(
-                73331929 ), "+" );
-        assertEquals( 2, products.size() );
-        GeneProduct gprod = products.iterator().next();
-        assertEquals( "CCT7", gprod.getGene().getOfficialSymbol() ); // okay as of 1/2008.
-    }
-
-    /**
-     * @throws Exception
-     */
-    public void testLocateMiRNA() throws Exception {
-        if ( !hasHumangp ) {
-            log.warn( "Skipping test because hg18 could not be configured" );
-            return;
-        }
-
-        Collection<GeneProduct> products = humangp.findMicroRNAGenesByLocation( "X", new Long( 133131074 ), new Long(
-                133131148 ), "-" );
-        assertEquals( 1, products.size() );
-        GeneProduct gprod = products.iterator().next();
-        assertEquals( "hsa-mir-363", gprod.getGene().getOfficialSymbol() ); // okay as of 1/2008.
-    }
-
-    public void testLocateAcembly() throws Exception {
-        if ( !hasHumangp ) {
-            log.warn( "Skipping test because hg18 could not be configured" );
-            return;
-        }
-
-        Collection<GeneProduct> products = humangp.findAcemblyGenesByLocation( "7", new Long( 80145000 ), new Long(
-                80146000 ), "+" );
-        assertTrue( products.size() > 0 ); // This is 2 as of Jan 2008.
-    }
-
-    public void testLocateNscan() throws Exception {
-        if ( !hasHumangp ) {
-            log.warn( "Skipping test because hg18 could not be configured" );
-            return;
-        }
-        Collection<GeneProduct> products = humangp.findNscanGenesByLocation( "3", new Long( 181237455 ), new Long(
-                181318731 ), "+" );
-        assertEquals( 1, products.size() );
-        GeneProduct gprod = products.iterator().next();
-        assertEquals( "chr3.182.002.a", gprod.getGene().getOfficialSymbol() ); // okay as of 1/2008.
-    }
-
-    /**
-     * Tests a sequence alignment that hits a gene, but the alignment is on the wrong strand; show that ignoring the
-     * strand works.
-     */
-    public void testLocateGeneOnWrongStrand() throws Exception {
-        if ( !hasHumangp ) {
-            log.warn( "Skipping test because hg18 could not be configured" );
-            return;
-        }
-        Collection<GeneProduct> products = humangp.findRefGenesByLocation( "6", new Long( 32916471 ), new Long(
-                32918445 ), null );
-        assertEquals( 2, products.size() );
-        GeneProduct gprod = products.iterator().next();
-        assertEquals( "PSMB8", gprod.getGene().getOfficialSymbol() );
-    }
-
     public void testComputeSpecificityA() throws Exception {
         Double actual = BlatAssociationScorer.computeSpecificity( tester, 400 );
         Double expected = 400 / 750.0;
@@ -212,6 +77,143 @@ public class ProbeMapperTest extends TestCase {
         Double actual = BlatAssociationScorer.computeSpecificity( tester, 395 );
         Double expected = 395 / 750.0;
         assertEquals( expected, actual, 0.0001 );
+    }
+
+    public void testLocateAcembly() throws Exception {
+        if ( !hasHumangp ) {
+            log.warn( "Skipping test because hg18 could not be configured" );
+            return;
+        }
+
+        Collection<GeneProduct> products = humangp.findAcemblyGenesByLocation( "7", new Long( 80145000 ), new Long(
+                80146000 ), "+" );
+        assertTrue( products.size() > 0 ); // This is 2 as of Jan 2008.
+    }
+
+    /**
+     * Test based on U83843, should bring up CCT7 (NM_006429 and NM_001009570). Valid locations as of 1/2008.
+     * {@link http://genome.ucsc.edu/cgi-bin/hgTracks?hgsid=79741184&hgt.out1=1.5x&position=chr2%3A73320308-73331929}
+     */
+    public void testLocateGene() throws Exception {
+        if ( !hasHumangp ) {
+            log.warn( "Skipping test because hg18 could not be configured" );
+            return;
+        }
+        Collection<GeneProduct> products = humangp.findRefGenesByLocation( "2", new Long( 73320308 ), new Long(
+                73331929 ), "+" );
+        assertEquals( 2, products.size() );
+        GeneProduct gprod = products.iterator().next();
+        assertEquals( "CCT7", gprod.getGene().getOfficialSymbol() ); // okay as of 1/2008.
+    }
+
+    /**
+     * Tests a sequence alignment that hits a gene, but the alignment is on the wrong strand; show that ignoring the
+     * strand works.
+     */
+    public void testLocateGeneOnWrongStrand() throws Exception {
+        if ( !hasHumangp ) {
+            log.warn( "Skipping test because hg18 could not be configured" );
+            return;
+        }
+        Collection<GeneProduct> products = humangp.findRefGenesByLocation( "6", new Long( 32916471 ), new Long(
+                32918445 ), null );
+        assertEquals( 2, products.size() );
+        GeneProduct gprod = products.iterator().next();
+        assertEquals( "PSMB8", gprod.getGene().getOfficialSymbol() );
+    }
+
+    /**
+     * @throws Exception
+     */
+    public void testLocateMiRNA() throws Exception {
+        if ( !hasHumangp ) {
+            log.warn( "Skipping test because hg18 could not be configured" );
+            return;
+        }
+
+        Collection<GeneProduct> products = humangp.findMicroRNAGenesByLocation( "X", new Long( 133131074 ), new Long(
+                133131148 ), "-" );
+        assertEquals( 1, products.size() );
+        GeneProduct gprod = products.iterator().next();
+        assertEquals( "hsa-mir-363", gprod.getGene().getOfficialSymbol() ); // okay as of 1/2008.
+    }
+
+    public void testLocateNscan() throws Exception {
+        if ( !hasHumangp ) {
+            log.warn( "Skipping test because hg18 could not be configured" );
+            return;
+        }
+        Collection<GeneProduct> products = humangp.findNscanGenesByLocation( "3", new Long( 181237455 ), new Long(
+                181318731 ), "+" );
+        assertEquals( 1, products.size() );
+        GeneProduct gprod = products.iterator().next();
+        assertEquals( "chr3.182.002.a", gprod.getGene().getOfficialSymbol() ); // okay as of 1/2008.
+    }
+
+    public void testProcessBlatResults() throws Exception {
+        if ( !hasMousegp ) {
+            log.warn( "Skipping test because mm could not be configured" );
+            return;
+        }
+        ProbeMapper pm = new ProbeMapper();
+        Map<String, Collection<BlatAssociation>> res = pm.processBlatResults( mousegp, blatres );
+
+        // This test will fail if the database changes :)
+        assertTrue( "No results", res.values().size() > 0 );
+        assertTrue( "No results", res.values().iterator().next().size() > 0 );
+        assertEquals( "2610528E23Rik", res.values().iterator().next().iterator().next().getGeneProduct().getGene()
+                .getOfficialSymbol() );
+
+    }
+
+    @Override
+    protected void setUp() throws Exception {
+        super.setUp();
+
+        tester = new ArrayList<Double>();
+        tester.add( new Double( 400 ) );
+        tester.add( new Double( 200 ) );
+        tester.add( new Double( 100 ) );
+        tester.add( new Double( 50 ) );
+
+        InputStream is = this.getClass().getResourceAsStream( "/data/loader/genome/col8a1.blatresults.txt" );
+        BlatResultParser brp = new BlatResultParser();
+        brp.parse( is );
+        blatres = brp.getResults();
+
+        assert blatres != null && blatres.size() > 0;
+
+        databaseHost = ConfigUtils.getString( "gemma.testdb.host" );
+        databaseUser = ConfigUtils.getString( "gemma.testdb.user" );
+        databasePassword = ConfigUtils.getString( "gemma.testdb.password" );
+
+        try {
+            mousegp = new GoldenPathSequenceAnalysis( 3306, ConfigUtils.getString( "gemma.goldenpath.db.mouse" ),
+                    databaseHost, databaseUser, databasePassword );
+        } catch ( java.sql.SQLException e ) {
+            if ( e.getMessage().contains( "Unknown database" ) ) {
+                hasMousegp = false;
+            } else if ( e.getMessage().contains( "Access denied" ) ) {
+                hasMousegp = false;
+            }
+            throw e;
+        }
+        try {
+            humangp = new GoldenPathSequenceAnalysis( 3306, ConfigUtils.getString( "gemma.goldenpath.db.human" ),
+                    databaseHost, databaseUser, databasePassword );
+        } catch ( java.sql.SQLException e ) {
+            if ( e.getMessage().contains( "Unknown database" ) ) {
+                hasHumangp = false;
+            } else if ( e.getMessage().contains( "Access denied" ) ) {
+                hasHumangp = false;
+            }
+            throw e;
+        }
+    }
+
+    @Override
+    protected void tearDown() throws Exception {
+        super.tearDown();
     }
 
 }

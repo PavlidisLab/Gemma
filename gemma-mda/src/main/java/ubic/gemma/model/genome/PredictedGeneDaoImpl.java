@@ -18,12 +18,22 @@
  */
 package ubic.gemma.model.genome;
 
+import org.hibernate.SessionFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
+
 import ubic.gemma.model.genome.gene.GeneValueObject;
 
 /**
  * @see ubic.gemma.model.genome.PredictedGene
  */
+@Repository
 public class PredictedGeneDaoImpl extends ubic.gemma.model.genome.PredictedGeneDaoBase {
+
+    @Autowired
+    public PredictedGeneDaoImpl( SessionFactory sessionFactory ) {
+        super.setSessionFactory( sessionFactory );
+    }
 
     /*
      * (non-Javadoc)

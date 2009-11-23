@@ -25,34 +25,43 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.biosequence.BioSequenceService;
-import ubic.gemma.web.controller.BaseMultiActionController;
+import ubic.gemma.web.controller.BaseController;
 
 /**
  * @author joseph
- * @version $Id $
- * @spring.bean id="bioSequenceController"
- * @spring.property name="bioSequenceService" ref="bioSequenceService"
- * @spring.property name="methodNameResolver" ref="bioSequenceActions"
+ * @version $Id$
  */
-public class BioSequenceController extends BaseMultiActionController {
+@Controller
+@RequestMapping("/genome/bioSequence")
+public class BioSequenceController extends BaseController {
+
+    @Autowired
     private BioSequenceService bioSequenceService = null;
 
     /**
-     * @return the bioSequenceService
+     * @param request
+     * @param response
+     * @param errors
+     * @return ModelAndView
      */
-    public BioSequenceService getBioSequenceService() {
-        return bioSequenceService;
-    }
-
-    /**
-     * @param bioSequenceService the bioSequenceService to set
-     */
-    public void setBioSequenceService( BioSequenceService bioSequenceService ) {
-        this.bioSequenceService = bioSequenceService;
+    @RequestMapping("/showBioSequence.html")
+    public ModelAndView show( HttpServletRequest request, HttpServletResponse response ) {
+        Long id = Long.parseLong( request.getParameter( "id" ) );
+        BioSequence bioSequence = bioSequenceService.load( id );
+        if ( bioSequence == null ) {
+            addMessage( request, "object.notfound", new Object[] { "Biosequence " + id } );
+            return new ModelAndView( "mainMenu.html" );
+        }
+        ModelAndView mav = new ModelAndView( "bioSequence.detail" );
+        mav.addObject( "bioSequence", bioSequence );
+        return mav;
     }
 
     /**
@@ -60,6 +69,7 @@ public class BioSequenceController extends BaseMultiActionController {
      * @param response
      * @return ModelAndView
      */
+    @RequestMapping("/showAllBioSequences.html")
     public ModelAndView showAll( HttpServletRequest request, HttpServletResponse response ) {
 
         String sId = request.getParameter( "id" );
@@ -84,24 +94,6 @@ public class BioSequenceController extends BaseMultiActionController {
         }
         return new ModelAndView( "bioSequences" ).addObject( "bioSequences", bioSequences );
 
-    }
-
-    /**
-     * @param request
-     * @param response
-     * @param errors
-     * @return ModelAndView
-     */
-    public ModelAndView show( HttpServletRequest request, HttpServletResponse response ) {
-        Long id = Long.parseLong( request.getParameter( "id" ) );
-        BioSequence bioSequence = bioSequenceService.load( id );
-        if ( bioSequence == null ) {
-            addMessage( request, "object.notfound", new Object[] { "Biosequence " + id } );
-            return new ModelAndView( "mainMenu.html" );
-        }
-        ModelAndView mav = new ModelAndView( "bioSequence.detail" );
-        mav.addObject( "bioSequence", bioSequence );
-        return mav;
     }
 
 }

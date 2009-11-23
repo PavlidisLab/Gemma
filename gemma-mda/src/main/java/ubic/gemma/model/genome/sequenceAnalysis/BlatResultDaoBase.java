@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.genome.sequenceAnalysis;
 
+import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
+
 /**
  * <p>
  * Base Spring DAO Class: is able to create, update, remove, load, and find objects of type
@@ -26,8 +28,7 @@ package ubic.gemma.model.genome.sequenceAnalysis;
  * 
  * @see ubic.gemma.model.genome.sequenceAnalysis.BlatResult
  */
-public abstract class BlatResultDaoBase extends
-        ubic.gemma.model.genome.sequenceAnalysis.SequenceSimilaritySearchResultDaoImpl implements
+public abstract class BlatResultDaoBase extends HibernateDaoSupport implements
         ubic.gemma.model.genome.sequenceAnalysis.BlatResultDao {
 
     /**
@@ -38,7 +39,7 @@ public abstract class BlatResultDaoBase extends
             throw new IllegalArgumentException( "BlatResult.create - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback() {
+                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
@@ -55,12 +56,12 @@ public abstract class BlatResultDaoBase extends
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlatResultDao#create(int transform,
      *      ubic.gemma.model.genome.sequenceAnalysis.BlatResult)
      */
-    public Object create( final int transform, final ubic.gemma.model.genome.sequenceAnalysis.BlatResult blatResult ) {
+    public BlatResult create( final int transform, final ubic.gemma.model.genome.sequenceAnalysis.BlatResult blatResult ) {
         if ( blatResult == null ) {
             throw new IllegalArgumentException( "BlatResult.create - 'blatResult' can not be null" );
         }
         this.getHibernateTemplate().save( blatResult );
-        return this.transformEntity( transform, blatResult );
+        return blatResult;
     }
 
     /**
@@ -74,9 +75,8 @@ public abstract class BlatResultDaoBase extends
     /**
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlatResultDao#create(ubic.gemma.model.genome.sequenceAnalysis.BlatResult)
      */
-    public ubic.gemma.model.genome.sequenceAnalysis.SequenceSimilaritySearchResult create(
-            ubic.gemma.model.genome.sequenceAnalysis.BlatResult blatResult ) {
-        return ( ubic.gemma.model.genome.sequenceAnalysis.BlatResult ) this.create( TRANSFORM_NONE, blatResult );
+    public BlatResult create( ubic.gemma.model.genome.sequenceAnalysis.BlatResult blatResult ) {
+        return this.create( TRANSFORM_NONE, blatResult );
     }
 
     /**
@@ -84,7 +84,7 @@ public abstract class BlatResultDaoBase extends
      *      ubic.gemma.model.genome.sequenceAnalysis.BlatResult)
      */
 
-    public Object find( final int transform, final java.lang.String queryString,
+    public BlatResult find( final int transform, final java.lang.String queryString,
             final ubic.gemma.model.genome.sequenceAnalysis.BlatResult blatResult ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
         java.util.List<Object> args = new java.util.ArrayList<Object>();
@@ -93,17 +93,16 @@ public abstract class BlatResultDaoBase extends
         java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
                 argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
         Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'ubic.gemma.model.genome.sequenceAnalysis.BlatResult"
-                                + "' was found when executing query --> '" + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
+
+        if ( results.size() > 1 ) {
+            throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                    "More than one instance of 'ubic.gemma.model.genome.sequenceAnalysis.BlatResult"
+                            + "' was found when executing query --> '" + queryString + "'" );
+        } else if ( results.size() == 1 ) {
+            result = results.iterator().next();
         }
-        result = transformEntity( transform, ( ubic.gemma.model.genome.sequenceAnalysis.BlatResult ) result );
-        return result;
+
+        return ( BlatResult ) result;
     }
 
     /**
@@ -126,8 +125,7 @@ public abstract class BlatResultDaoBase extends
 
     public ubic.gemma.model.genome.sequenceAnalysis.BlatResult find( final java.lang.String queryString,
             final ubic.gemma.model.genome.sequenceAnalysis.BlatResult blatResult ) {
-        return ( ubic.gemma.model.genome.sequenceAnalysis.BlatResult ) this.find( TRANSFORM_NONE, queryString,
-                blatResult );
+        return this.find( TRANSFORM_NONE, queryString, blatResult );
     }
 
     /**
@@ -197,15 +195,15 @@ public abstract class BlatResultDaoBase extends
         java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
                 argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
         Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'ubic.gemma.model.genome.sequenceAnalysis.BlatResult"
-                                + "' was found when executing query --> '" + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
+
+        if ( results.size() > 1 ) {
+            throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                    "More than one instance of 'ubic.gemma.model.genome.sequenceAnalysis.BlatResult"
+                            + "' was found when executing query --> '" + queryString + "'" );
+        } else if ( results.size() == 1 ) {
+            result = results.iterator().next();
         }
+
         result = transformEntity( transform, ( ubic.gemma.model.genome.sequenceAnalysis.BlatResult ) result );
         return result;
     }
@@ -246,7 +244,6 @@ public abstract class BlatResultDaoBase extends
     /**
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlatResultDao#load(int, java.lang.Long)
      */
-    @Override
     public Object load( final int transform, final java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "BlatResult.load - 'id' can not be null" );
@@ -259,8 +256,7 @@ public abstract class BlatResultDaoBase extends
     /**
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlatResultDao#load(java.lang.Long)
      */
-    @Override
-    public ubic.gemma.model.genome.sequenceAnalysis.SequenceSimilaritySearchResult load( java.lang.Long id ) {
+    public BlatResult load( java.lang.Long id ) {
         return ( ubic.gemma.model.genome.sequenceAnalysis.BlatResult ) this.load( TRANSFORM_NONE, id );
     }
 
@@ -280,7 +276,6 @@ public abstract class BlatResultDaoBase extends
     /**
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlatResultDao#loadAll()
      */
-    @Override
     public java.util.Collection loadAll() {
         return this.loadAll( TRANSFORM_NONE );
     }
@@ -288,7 +283,6 @@ public abstract class BlatResultDaoBase extends
     /**
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlatResultDao#loadAll(int)
      */
-    @Override
     public java.util.Collection loadAll( final int transform ) {
         final java.util.Collection results = this.getHibernateTemplate().loadAll(
                 ubic.gemma.model.genome.sequenceAnalysis.BlatResultImpl.class );
@@ -299,13 +293,11 @@ public abstract class BlatResultDaoBase extends
     /**
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlatResultDao#remove(java.lang.Long)
      */
-    @Override
     public void remove( java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "BlatResult.remove - 'id' can not be null" );
         }
-        ubic.gemma.model.genome.sequenceAnalysis.BlatResult entity = ( ubic.gemma.model.genome.sequenceAnalysis.BlatResult ) this
-                .load( id );
+        ubic.gemma.model.genome.sequenceAnalysis.BlatResult entity = this.load( id );
         if ( entity != null ) {
             this.remove( entity );
         }
@@ -314,7 +306,6 @@ public abstract class BlatResultDaoBase extends
     /**
      * @see ubic.gemma.model.genome.sequenceAnalysis.SequenceSimilaritySearchResultDao#remove(java.util.Collection)
      */
-    @Override
     public void remove( java.util.Collection entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "BlatResult.remove - 'entities' can not be null" );
@@ -335,13 +326,12 @@ public abstract class BlatResultDaoBase extends
     /**
      * @see ubic.gemma.model.genome.sequenceAnalysis.SequenceSimilaritySearchResultDao#update(java.util.Collection)
      */
-    @Override
     public void update( final java.util.Collection entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "BlatResult.update - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback() {
+                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
@@ -380,7 +370,6 @@ public abstract class BlatResultDaoBase extends
      * @return the same collection as the argument, but this time containing the transformed entities
      * @see #transformEntity(int,ubic.gemma.model.genome.sequenceAnalysis.BlatResult)
      */
-    @Override
     protected void transformEntities( final int transform, final java.util.Collection entities ) {
         switch ( transform ) {
             case TRANSFORM_NONE: // fall-through

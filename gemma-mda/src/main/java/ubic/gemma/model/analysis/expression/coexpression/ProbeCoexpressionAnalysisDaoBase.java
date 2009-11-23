@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.analysis.expression.coexpression;
 
+import java.util.Collection;
+
 /**
  * <p>
  * Base Spring DAO Class: is able to create, update, remove, load, and find objects of type
@@ -39,7 +41,7 @@ public abstract class ProbeCoexpressionAnalysisDaoBase extends
             throw new IllegalArgumentException( "ProbeCoexpressionAnalysis.create - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback() {
+                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
@@ -52,6 +54,12 @@ public abstract class ProbeCoexpressionAnalysisDaoBase extends
                     }
                 } );
         return entities;
+    }
+
+    
+    public Collection<? extends ProbeCoexpressionAnalysis> load( Collection<Long> ids ) {
+        return this.getHibernateTemplate().findByNamedParam( "from ProbeCoexpressionAnalysisImpl where id in (:ids)",
+                "ids", ids );
     }
 
     /**
@@ -71,7 +79,7 @@ public abstract class ProbeCoexpressionAnalysisDaoBase extends
     /**
      * @see ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisDao#create(java.util.Collection)
      */
-    @SuppressWarnings( { "unchecked" })
+    
     public java.util.Collection create( final java.util.Collection entities ) {
         return create( TRANSFORM_NONE, entities );
     }
@@ -91,7 +99,7 @@ public abstract class ProbeCoexpressionAnalysisDaoBase extends
      */
 
     @Override
-    @SuppressWarnings( { "unchecked" })
+    
     public java.util.Collection findByName( final int transform, final java.lang.String name ) {
         return this.findByName( transform, "select a from AnalysisImpl as a where a.name like :name", name );
     }
@@ -102,7 +110,7 @@ public abstract class ProbeCoexpressionAnalysisDaoBase extends
      */
 
     @Override
-    @SuppressWarnings( { "unchecked" })
+    
     public java.util.Collection findByName( final int transform, final java.lang.String queryString,
             final java.lang.String name ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -130,7 +138,7 @@ public abstract class ProbeCoexpressionAnalysisDaoBase extends
      */
 
     @Override
-    @SuppressWarnings( { "unchecked" })
+    
     public java.util.Collection findByName( final java.lang.String queryString, final java.lang.String name ) {
         return this.findByName( TRANSFORM_NONE, queryString, name );
     }
@@ -161,7 +169,7 @@ public abstract class ProbeCoexpressionAnalysisDaoBase extends
      * @see ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisDao#loadAll()
      */
 
-    @SuppressWarnings( { "unchecked" })
+    
     public java.util.Collection loadAll() {
         return this.loadAll( TRANSFORM_NONE );
     }
@@ -226,7 +234,7 @@ public abstract class ProbeCoexpressionAnalysisDaoBase extends
             throw new IllegalArgumentException( "ProbeCoexpressionAnalysis.update - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback() {
+                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {

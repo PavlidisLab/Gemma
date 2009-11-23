@@ -25,6 +25,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
 import ubic.gemma.analysis.report.ArrayDesignReportService;
 import ubic.gemma.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.loader.entrez.pubmed.PubMedXMLFetcher;
@@ -51,41 +54,23 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
  * 
  * @author pavlidis
  * @version $Id$
- * @spring.bean id="geoDatasetService"
- * @spring.property name="expressionExperimentService" ref="expressionExperimentService"
- * @spring.property name="bioAssayService" ref="bioAssayService"
- * @spring.property name="arrayDesignReportService" ref="arrayDesignReportService"
- * @spring.property name="expressionExperimentReportService" ref="expressionExperimentReportService"
  */
+@Service
 public class GeoDatasetService extends AbstractGeoService {
 
     private static final String GEO_DB_NAME = "GEO";
 
+    @Autowired
     private ArrayDesignReportService arrayDesignReportService;
-    private BioAssayService bioAssayService;
-    private ExpressionExperimentReportService expressionExperimentReportService;
-    private ExpressionExperimentService expressionExperimentService;
 
-    /**
-     * Given a GEO GSE or GDS (or GPL, but support might not be complete)
-     * <ol>
-     * <li>Check that it doesn't already exist in the system</li>
-     * <li>Download and parse GDS files and GSE file needed</li>
-     * <li>Convert the GDS and GSE into a ExpressionExperiment (or just the ArrayDesigns)
-     * <li>Load the resulting ExpressionExperiment and/or ArrayDesigns into Gemma</li>
-     * </ol>
-     * 
-     * @param geoDataSetAccession
-     * @deprecated Use {@link #fetchAndLoad(String,boolean,boolean,boolean,boolean,boolean)} instead
-     */
-    @Deprecated
-    @SuppressWarnings("unchecked")
-    @Override
-    public Collection fetchAndLoad( String geoAccession, boolean loadPlatformOnly, boolean doSampleMatching,
-            boolean aggressiveQuantitationTypeRemoval, boolean splitIncompatiblePlatforms ) {
-        return fetchAndLoad( geoAccession, loadPlatformOnly, doSampleMatching, aggressiveQuantitationTypeRemoval,
-                splitIncompatiblePlatforms, true );
-    }
+    @Autowired
+    private BioAssayService bioAssayService;
+
+    @Autowired
+    private ExpressionExperimentReportService expressionExperimentReportService;
+
+    @Autowired
+    private ExpressionExperimentService expressionExperimentService;
 
     /**
      * Given a GEO GSE or GDS (or GPL, but support might not be complete)
@@ -391,6 +376,16 @@ public class GeoDatasetService extends AbstractGeoService {
     private void getGemmaIDColumnNameInGEO( GeoPlatform rawGEOPlatform, ArrayDesign existing, String columnWithGeoNames ) {
 
         String columnWithGemmaNames = null;
+
+        /*
+         * This can happen if there is a corrupt version of the array design in the system -- can occur in tests for
+         * example.
+         */
+        if ( existing.getCompositeSequences().isEmpty() ) {
+            fillExistingProbeNameMap( rawGEOPlatform, columnWithGeoNames, columnWithGeoNames );
+            return;
+        }
+
         for ( CompositeSequence cs : existing.getCompositeSequences() ) {
             String gemmaProbeName = cs.getName();
             // search the other columns
@@ -635,9 +630,10 @@ public class GeoDatasetService extends AbstractGeoService {
         for ( Object entity : entities ) {
             if ( entity instanceof ExpressionExperiment ) {
                 ExpressionExperiment expressionExperiment = ( ExpressionExperiment ) entity;
+
                 this.expressionExperimentReportService.generateSummaryObject( expressionExperiment.getId() );
 
-                // this.expressionExperimentService.thawLite( expressionExperiment );
+                this.expressionExperimentService.thawLite( expressionExperiment );
 
                 for ( BioAssay ba : expressionExperiment.getBioAssays() ) {
                     adsToUpdate.add( ba.getArrayDesignUsed() );

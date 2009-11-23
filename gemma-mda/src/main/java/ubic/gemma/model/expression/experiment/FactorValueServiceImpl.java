@@ -22,13 +22,24 @@ package ubic.gemma.model.expression.experiment;
 
 import java.util.Collection;
 
+import org.springframework.stereotype.Service;
+
 /**
  * @author pavlidis
  * @author keshav
  * @version $Id$
  * @see ubic.gemma.model.expression.experiment.FactorValueService
  */
+@Service
 public class FactorValueServiceImpl extends ubic.gemma.model.expression.experiment.FactorValueServiceBase {
+
+    public Collection<FactorValue> create( Collection<FactorValue> fvs ) {
+        return this.getFactorValueDao().create( fvs );
+    }
+
+    public Collection<FactorValue> findByValue( String valuePrefix ) {
+        return this.getFactorValueDao().findByValue( valuePrefix );
+    }
 
     @Override
     protected FactorValue handleCreate( FactorValue factorValue ) throws Exception {
@@ -96,10 +107,6 @@ public class FactorValueServiceImpl extends ubic.gemma.model.expression.experime
     @Override
     protected void handleUpdate( FactorValue factorValue ) throws Exception {
         this.getFactorValueDao().update( factorValue );
-    }
-
-    public Collection<FactorValue> findByValue( String valuePrefix ) {
-        return this.getFactorValueDao().findByValue( valuePrefix );
     }
 
 }

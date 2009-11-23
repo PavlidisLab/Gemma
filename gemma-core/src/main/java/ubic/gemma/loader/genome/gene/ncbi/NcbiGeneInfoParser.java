@@ -29,11 +29,9 @@ import org.apache.commons.lang.StringUtils;
 
 import ubic.gemma.loader.genome.gene.ncbi.model.NCBIGeneInfo;
 import ubic.gemma.loader.genome.gene.ncbi.model.NCBIGeneInfo.NomenclatureStatus;
-import ubic.gemma.loader.genome.taxon.SupportedTaxa;
 import ubic.gemma.loader.util.QueuingParser;
 import ubic.gemma.loader.util.parser.BasicLineMapParser;
 import ubic.gemma.loader.util.parser.FileFormatException;
-import ubic.gemma.model.genome.Taxon;
 
 /**
  * Class to parse the gene_info file from NCBI Gene. See {@link ftp://ftp.ncbi.nlm.nih.gov/gene/DATA/README} for details
@@ -61,6 +59,9 @@ public class NcbiGeneInfoParser extends BasicLineMapParser<String, NCBIGeneInfo>
         this.filter = filter;
     }
 
+    /**
+     * @param ncbiTaxonIds Taxon IDs (NCBI, not Gemma ids) e.g. 9606 for H. sapiens
+     */
     public void setSupportedTaxa( Collection<Integer> ncbiTaxonIds ) {
         this.ncbiTaxonIds = ncbiTaxonIds;
     }
@@ -134,6 +135,7 @@ public class NcbiGeneInfoParser extends BasicLineMapParser<String, NCBIGeneInfo>
      * (non-Javadoc)
      * @see ubic.gemma.loader.loaderutils.BasicLineMapParser#getKey(java.lang.Object)
      */
+    @Override
     public String getKey( NCBIGeneInfo newItem ) {
         return newItem.getGeneId();
     }

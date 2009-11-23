@@ -41,10 +41,11 @@ import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import ubic.basecode.dataStructure.Link;
 import ubic.basecode.math.CorrelationStats;
-import ubic.basecode.math.MatrixStats;
 import ubic.gemma.analysis.preprocess.ExpressionDataSVD;
 import ubic.gemma.analysis.preprocess.InsufficientProbesException;
 import ubic.gemma.analysis.preprocess.filter.FilterConfig;
@@ -69,7 +70,6 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.LinkAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.TooSmallDatasetLinkAnalysisEvent;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeService;
-import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -90,18 +90,10 @@ import cern.colt.list.ObjectArrayList;
  * Running link analyses through the spring context; will persist the results if the configuration says so. See
  * LinkAnalysisCli for more instructions.
  * 
- * @spring.bean id="linkAnalysisService"
- * @spring.property name="eeService" ref="expressionExperimentService"
- * @spring.property name="ppService" ref="probe2ProbeCoexpressionService"
- * @spring.property name="csService" ref="compositeSequenceService"
- * @spring.property name="quantitationTypeService" ref="quantitationTypeService"
- * @spring.property name="expressionDataMatrixService" ref="expressionDataMatrixService"
- * @spring.property name="persisterHelper" ref="persisterHelper"
- * @spring.property name="auditTrailService" ref="auditTrailService"
- * @spring.property name="expressionExperimentReportService" ref="expressionExperimentReportService"
  * @author Paul
  * @version $Id$
  */
+@Service
 public class LinkAnalysisService {
 
     // a closure would be just the thing here.
@@ -147,13 +139,21 @@ public class LinkAnalysisService {
 
     private static Log log = LogFactory.getLog( LinkAnalysisService.class.getName() );
     private static final boolean useDB = true; // useful for debugging.
+    @Autowired
     private AuditTrailService auditTrailService;
+    @Autowired
     private CompositeSequenceService csService;
+    @Autowired
     private ExpressionExperimentService eeService;
+    @Autowired
     private ExpressionDataMatrixService expressionDataMatrixService = null;
+    @Autowired
     private ExpressionExperimentReportService expressionExperimentReportService;
+    @Autowired
     private PersisterHelper persisterHelper;
+    @Autowired
     private Probe2ProbeCoexpressionService ppService = null;
+    @Autowired
     private QuantitationTypeService quantitationTypeService;
 
     /**

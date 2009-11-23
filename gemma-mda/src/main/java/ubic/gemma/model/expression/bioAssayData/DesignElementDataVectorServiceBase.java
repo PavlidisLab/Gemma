@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.expression.bioAssayData;
 
+import org.springframework.beans.factory.annotation.Autowired;
+
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 
 /**
@@ -31,24 +33,11 @@ import ubic.gemma.model.common.quantitationtype.QuantitationType;
 public abstract class DesignElementDataVectorServiceBase implements
         ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService {
 
-    /**
-     * @return the processedExpressionDataVectorDao
-     */
-    public ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorDao getProcessedExpressionDataVectorDao() {
-        return processedExpressionDataVectorDao;
-    }
-
+    @Autowired
     private ubic.gemma.model.expression.bioAssayData.RawExpressionDataVectorDao rawExpressionDataVectorDao;
 
+    @Autowired
     private ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorDao processedExpressionDataVectorDao;
-
-    /**
-     * @param processedExpressionDataVectorDao the processedExpressionDataVectorDao to set
-     */
-    public void setProcessedExpressionDataVectorDao(
-            ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorDao processedExpressionDataVectorDao ) {
-        this.processedExpressionDataVectorDao = processedExpressionDataVectorDao;
-    }
 
     /**
      * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService#countAll()
@@ -122,6 +111,13 @@ public abstract class DesignElementDataVectorServiceBase implements
     }
 
     /**
+     * @return the processedExpressionDataVectorDao
+     */
+    public ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorDao getProcessedExpressionDataVectorDao() {
+        return processedExpressionDataVectorDao;
+    }
+
+    /**
      * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService#load(java.lang.Long)
      */
     public ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector load( final java.lang.Long id ) {
@@ -186,6 +182,14 @@ public abstract class DesignElementDataVectorServiceBase implements
                     "Error performing 'ubic.gemma.model.expression.bioAssayData.RawExpressionDataVectorService.removeDataForQuantitationType(ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType)' --> "
                             + th, th );
         }
+    }
+
+    /**
+     * @param processedExpressionDataVectorDao the processedExpressionDataVectorDao to set
+     */
+    public void setProcessedExpressionDataVectorDao(
+            ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorDao processedExpressionDataVectorDao ) {
+        this.processedExpressionDataVectorDao = processedExpressionDataVectorDao;
     }
 
     /**

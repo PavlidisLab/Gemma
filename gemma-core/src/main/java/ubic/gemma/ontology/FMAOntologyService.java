@@ -19,6 +19,8 @@
 
 package ubic.gemma.ontology;
 
+import org.springframework.stereotype.Service;
+
 import ubic.gemma.util.ConfigUtils;
 
 import com.hp.hpl.jena.ontology.OntModel;
@@ -27,17 +29,17 @@ import com.hp.hpl.jena.ontology.OntModel;
  * Holds a copy of the FMA Ontology on disk. This gets loaded on startup.
  * 
  * @author klc
- * @version $Id: FMAOntologyService.java
- * @spring.bean id="fmaOntologyService"
+ * @version $Id$
  */
-
+@Service
 public class FMAOntologyService extends AbstractOntologyService {
 
     private static final String FMA_ONTOLOGY_URL = "url.fmaOntology";
+
     @Override
     protected String getOntologyUrl() {
-        return ConfigUtils.getString( FMA_ONTOLOGY_URL );       
-   
+        return ConfigUtils.getString( FMA_ONTOLOGY_URL );
+
     }
 
     @Override
@@ -47,7 +49,6 @@ public class FMAOntologyService extends AbstractOntologyService {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.ontology.AbstractOntologyService#getOntologyName()
      */
     @Override

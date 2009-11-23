@@ -27,8 +27,8 @@ import java.util.concurrent.BlockingQueue;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
-import org.springframework.security.context.SecurityContext;
-import org.springframework.security.context.SecurityContextHolder;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import ubic.gemma.analysis.service.ExpressionDataFileService;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;

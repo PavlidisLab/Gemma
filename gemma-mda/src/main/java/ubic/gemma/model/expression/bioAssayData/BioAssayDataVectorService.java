@@ -18,20 +18,25 @@
  */
 package ubic.gemma.model.expression.bioAssayData;
 
+import org.springframework.security.access.annotation.Secured;
+
 /**
- * 
+ * @author kelsey
+ * @version $Id$
  */
 public interface BioAssayDataVectorService {
 
     /**
      * 
      */
+    @Secured( { "GROUP_USER" })
     public ubic.gemma.model.expression.bioAssayData.BioAssayDataVector findOrCreate(
             ubic.gemma.model.expression.bioAssayData.BioAssayDataVector bioAssayDataVector );
 
     /**
      * 
      */
+    @Secured( { "GROUP_USER" })
     public void remove( ubic.gemma.model.expression.bioAssayData.BioAssayDataVector bioAssayDataVector );
 
 }

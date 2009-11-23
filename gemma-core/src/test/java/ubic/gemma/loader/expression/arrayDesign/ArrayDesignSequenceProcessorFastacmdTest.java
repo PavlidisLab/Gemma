@@ -18,9 +18,13 @@
  */
 package ubic.gemma.loader.expression.arrayDesign;
 
+import static org.junit.Assert.assertTrue;
+
 import java.io.File;
 import java.util.Collection;
 import java.util.concurrent.ExecutionException;
+
+import org.junit.Test;
 
 import ubic.gemma.loader.genome.SimpleFastaCmd;
 import ubic.gemma.model.genome.biosequence.BioSequence;
@@ -32,22 +36,7 @@ import ubic.gemma.util.ConfigUtils;
  */
 public class ArrayDesignSequenceProcessorFastacmdTest extends AbstractArrayDesignProcessingTest {
 
-    // fixme duplicated from SimpleFastaCmdTest
-    private boolean fastaCmdExecutableExists() {
-        String fastacmdExe = ConfigUtils.getString( SimpleFastaCmd.FASTA_CMD_ENV_VAR );
-        if ( fastacmdExe == null ) {
-            log.warn( "No fastacmd executable is configured, skipping test" );
-            return false;
-        }
-
-        File fi = new File( fastacmdExe );
-        if ( !fi.canRead() ) {
-            log.warn( fastacmdExe + " not found, skipping test" );
-            return false;
-        }
-        return true;
-    }
-
+    @Test
     public void testProcessArrayDesignWithFastaCmdFetch() throws Exception {
 
         if ( !fastaCmdExecutableExists() ) {
@@ -99,5 +88,21 @@ public class ArrayDesignSequenceProcessorFastacmdTest extends AbstractArrayDesig
             throw e;
         }
 
+    }
+
+    // fixme duplicated from SimpleFastaCmdTest
+    private boolean fastaCmdExecutableExists() {
+        String fastacmdExe = ConfigUtils.getString( SimpleFastaCmd.FASTA_CMD_ENV_VAR );
+        if ( fastacmdExe == null ) {
+            log.warn( "No fastacmd executable is configured, skipping test" );
+            return false;
+        }
+
+        File fi = new File( fastacmdExe );
+        if ( !fi.canRead() ) {
+            log.warn( fastacmdExe + " not found, skipping test" );
+            return false;
+        }
+        return true;
     }
 }

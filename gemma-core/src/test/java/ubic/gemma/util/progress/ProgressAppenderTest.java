@@ -26,6 +26,9 @@ import org.apache.log4j.Appender;
 import org.apache.log4j.Level;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test; 
 
 import ubic.gemma.testing.BaseSpringContextTest;
 
@@ -50,13 +53,11 @@ public class ProgressAppenderTest extends BaseSpringContextTest {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.testing.BaseSpringContextTest#onSetUpInTransaction()
      */
     @SuppressWarnings("unchecked")
-    @Override
-    protected void onSetUpInTransaction() throws Exception {
-        super.onSetUpInTransaction();
+    @Before
+    public void setup() throws Exception {
 
         String loggerName = "ubic.gemma";
         log4jLogger = LogManager.exists( loggerName );
@@ -80,33 +81,32 @@ public class ProgressAppenderTest extends BaseSpringContextTest {
 
         log4jLogger.setLevel( Level.INFO );
 
-        job = ProgressManager.createProgressJob( TaskRunningService.generateTaskId(), "test", "testing" );
+        job = ProgressManager.createProgressJob( TaskRunningService.generateTaskId(), "testing" );
     }
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.testing.BaseSpringContextTest#onTearDownInTransaction()
      */
-    @Override
-    protected void onTearDownInTransaction() throws Exception {
-        super.onTearDownInTransaction();
+    @After
+    public void teardown() throws Exception {
         ProgressManager.destroyProgressJob( job );
         log4jLogger.setLevel( oldLevel );
     }
 
+    @Test
     public void testProgressLogging() throws Exception {
 
         String expectedValue = "la de da";
         log.info( expectedValue );
 
-        //assertEquals( expectedValue, job.getProgressData().getDescription() );
+        // assertEquals( expectedValue, job.getProgressData().getDescription() );
 
         log.debug( "pay no attention" ); // should not update the description.
-   //     assertEquals( expectedValue, job.getProgressData().getDescription() );
+        // assertEquals( expectedValue, job.getProgressData().getDescription() );
 
         log.warn( "listenToMe" );
-    //    assertEquals( "listenToMe", job.getProgressData().getDescription() );
+        // assertEquals( "listenToMe", job.getProgressData().getDescription() );
     }
 
 }

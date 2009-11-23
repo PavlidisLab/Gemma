@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.common.auditAndSecurity;
 
+import java.util.Collection;
+
 import ubic.gemma.persistence.BaseDao;
 
 /**
@@ -25,39 +27,20 @@ import ubic.gemma.persistence.BaseDao;
  */
 public interface UserGroupDao extends BaseDao<UserGroup> {
 
-    /**
-     * <p>
-     * Does the same thing as {@link #findByUserGroupName(java.lang.String)} with an additional flag called
-     * <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then finder results will
-     * <strong>NOT</strong> be transformed during retrieval. If this flag is any of the other constants defined here
-     * then finder results <strong>WILL BE</strong> passed through an operation which can optionally transform the
-     * entities (into value objects for example). By default, transformation does not occur.
-     * </p>
-     */
-    public Object findByUserGroupName( int transform, java.lang.String name );
+    public void addAuthority( UserGroup group, String authority );
 
     /**
-     * <p>
-     * Does the same thing as {@link #findByUserGroupName(boolean, java.lang.String)} with an additional argument called
-     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string defined
-     * in {@link #findByUserGroupName(int, java.lang.String name)}.
-     * </p>
+     * 
      */
-    public Object findByUserGroupName( int transform, String queryString, java.lang.String name );
+    public void addToGroup( UserGroup group, User user );
 
     /**
      * 
      */
     public ubic.gemma.model.common.auditAndSecurity.UserGroup findByUserGroupName( java.lang.String name );
 
-    /**
-     * <p>
-     * Does the same thing as {@link #findByUserGroupName(java.lang.String)} with an additional argument called
-     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string defined
-     * in {@link #findByUserGroupName(java.lang.String)}.
-     * </p>
-     */
-    public ubic.gemma.model.common.auditAndSecurity.UserGroup findByUserGroupName( String queryString,
-            java.lang.String name );
+    public Collection<UserGroup> findGroupsForUser( User user );
+
+    public void removeAuthority( UserGroup group, String authority );
 
 }

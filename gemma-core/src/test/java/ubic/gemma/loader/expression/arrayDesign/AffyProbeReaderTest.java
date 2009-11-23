@@ -42,50 +42,6 @@ public class AffyProbeReaderTest extends TestCase {
     InputStream is;
 
     /*
-     * @see TestCase#setUp()
-     */
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
-        apr = new AffyProbeReader();
-
-    }
-
-    /*
-     * @see TestCase#tearDown()
-     */
-    @Override
-    protected void tearDown() throws Exception {
-        super.tearDown();
-        apr = null;
-        if ( is != null ) is.close();
-    }
-
-    public final void testReadInputStreamNew() throws Exception {
-        is = AffyProbeReaderTest.class.getResourceAsStream( "/data/loader/affymetrix-newprobes-example.txt" );
-        apr.setSequenceField( 4 );
-        apr.parse( is );
-
-        String expectedValue = "AGCTCAGGTGGCCCCAGTTCAATCT"; // 4
-        CompositeSequence cs = apr.get( "1000_at" );
-
-        assertTrue( "CompositeSequence was null", cs != null );
-
-        boolean foundIt = false;
-        for ( Iterator<Reporter> iter = cs.getComponentReporters().iterator(); iter.hasNext(); ) {
-            Reporter element = iter.next();
-            if ( element.getName().equals( "1000_at:617:349" ) ) {
-                String actualValue = element.getImmobilizedCharacteristic().getSequence();
-
-                assertEquals( expectedValue, actualValue );
-                foundIt = true;
-                break;
-            }
-        }
-        assertTrue( "Didn't find the probe ", foundIt );
-    }
-
-    /*
      * Test of human exon array
      */
     @SuppressWarnings("null")
@@ -235,6 +191,50 @@ public class AffyProbeReaderTest extends TestCase {
             }
         }
         assertTrue( "Didn't find the probe ", foundIt );
+    }
+
+    public final void testReadInputStreamNew() throws Exception {
+        is = AffyProbeReaderTest.class.getResourceAsStream( "/data/loader/affymetrix-newprobes-example.txt" );
+        apr.setSequenceField( 4 );
+        apr.parse( is );
+
+        String expectedValue = "AGCTCAGGTGGCCCCAGTTCAATCT"; // 4
+        CompositeSequence cs = apr.get( "1000_at" );
+
+        assertTrue( "CompositeSequence was null", cs != null );
+
+        boolean foundIt = false;
+        for ( Iterator<Reporter> iter = cs.getComponentReporters().iterator(); iter.hasNext(); ) {
+            Reporter element = iter.next();
+            if ( element.getName().equals( "1000_at:617:349" ) ) {
+                String actualValue = element.getImmobilizedCharacteristic().getSequence();
+
+                assertEquals( expectedValue, actualValue );
+                foundIt = true;
+                break;
+            }
+        }
+        assertTrue( "Didn't find the probe ", foundIt );
+    }
+
+    /*
+     * @see TestCase#setUp()
+     */
+    @Override
+    protected void setUp() throws Exception {
+        super.setUp();
+        apr = new AffyProbeReader();
+
+    }
+
+    /*
+     * @see TestCase#tearDown()
+     */
+    @Override
+    protected void tearDown() throws Exception {
+        super.tearDown();
+        apr = null;
+        if ( is != null ) is.close();
     }
 
 }

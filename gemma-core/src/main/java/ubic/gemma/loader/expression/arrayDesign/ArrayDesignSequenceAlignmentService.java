@@ -28,6 +28,8 @@ import java.util.Map;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import ubic.basecode.util.StringUtil;
 import ubic.gemma.apps.Blat;
@@ -50,22 +52,22 @@ import ubic.gemma.util.SequenceBinUtils;
  * 
  * @author pavlidis
  * @version $Id$
- * @spring.bean name="arrayDesignSequenceAlignmentService"
- * @spring.property name="blatResultService" ref="blatResultService"
- * @spring.property name="persisterHelper" ref="persisterHelper"
- * @spring.property name="arrayDesignService" ref="arrayDesignService"
- * @spring.property name="bioSequenceService" ref="bioSequenceService"
  */
+@Service
 public class ArrayDesignSequenceAlignmentService {
 
     private static Log log = LogFactory.getLog( ArrayDesignSequenceAlignmentService.class.getName() );
 
+    @Autowired
     BlatResultService blatResultService;
 
+    @Autowired
     ArrayDesignService arrayDesignService;
 
+    @Autowired
     PersisterHelper persisterHelper;
 
+    @Autowired
     BioSequenceService bioSequenceService;
 
     /**

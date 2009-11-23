@@ -18,61 +18,72 @@
  */
 package ubic.gemma.model.expression.biomaterial;
 
+import org.springframework.security.access.annotation.Secured;
+
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+
 /**
- * 
+ * @author kelsey
+ * @version $Id$
  */
-public interface BioMaterialService extends ubic.gemma.model.common.AuditableService {
+public interface BioMaterialService {
 
     /**
-     * <p>
      * Copies a bioMaterial.
-     * </p>
      */
-    public ubic.gemma.model.expression.biomaterial.BioMaterial copy(
-            ubic.gemma.model.expression.biomaterial.BioMaterial bioMaterial );
+    @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    public BioMaterial copy( BioMaterial bioMaterial );
 
     /**
      * 
      */
-    public java.lang.Integer countAll();
+    public Integer countAll();
 
     /**
      * 
      */
-    public ubic.gemma.model.expression.biomaterial.BioMaterial create(
-            ubic.gemma.model.expression.biomaterial.BioMaterial bioMaterial );
+    @Secured( { "GROUP_USER" })
+    public BioMaterial create( BioMaterial bioMaterial );
 
     /**
      * 
      */
-    public ubic.gemma.model.expression.biomaterial.BioMaterial findOrCreate(
-            ubic.gemma.model.expression.biomaterial.BioMaterial bioMaterial );
+    @Secured( { "GROUP_USER", "AFTER_ACL_READ" })
+    public BioMaterial findOrCreate( BioMaterial bioMaterial );
 
     /**
      * 
      */
-    public ubic.gemma.model.expression.biomaterial.BioMaterial load( java.lang.Long id );
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    public BioMaterial load( Long id );
 
     /**
      * 
      */
+    @Secured( { "GROUP_USER", "AFTER_ACL_COLLECTION_READ" })
     public java.util.Collection<BioMaterial> loadAll();
 
     /**
      * 
      */
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public java.util.Collection<BioMaterial> loadMultiple( java.util.Collection<Long> ids );
 
     /**
      * 
      */
-    public void remove( ubic.gemma.model.expression.biomaterial.BioMaterial bioMaterial );
+    @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    public void remove( BioMaterial bioMaterial );
 
     /**
      * <p>
      * Updates the given biomaterial to the database.
      * </p>
      */
-    public void update( ubic.gemma.model.expression.biomaterial.BioMaterial bioMaterial );
+    @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    public void update( BioMaterial bioMaterial );
+
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    public ExpressionExperiment getExpressionExperiment( Long id );
 
 }

@@ -22,19 +22,18 @@ import java.util.Vector;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
-import ubic.gemma.util.grid.javaspaces.SpacesUtil;
+import ubic.gemma.grid.javaspaces.util.SpacesUtil;
 
 /**
  * This class exposes methods for AJAX calls.
  * 
- * @spring.bean id="progressStatusService"
- * @spring.property name="taskRunningService" ref="taskRunningService"
- * @spring.property name="progressManager" ref="progressManager"
- * @spring.property name="spacesUtil" ref="spacesUtil"
  * @author klc
  * @version $Id$
  */
+@Service
 public class ProgressStatusService {
 
     private ProgressStatusService() {
@@ -43,8 +42,11 @@ public class ProgressStatusService {
     private static Log log = LogFactory.getLog( ProgressStatusService.class.getName() );
     protected static final Log logger = LogFactory.getLog( ProgressStatusService.class );
 
+    @Autowired
     private TaskRunningService taskRunningService;
+    @Autowired
     private ProgressManager progressManager;
+    @Autowired
     private SpacesUtil spacesUtil;
 
     public void setProgressManager( ProgressManager progressManager ) {

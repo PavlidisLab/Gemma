@@ -18,6 +18,11 @@
  */
 package ubic.gemma.analysis.expression.diff;
 
+import static org.junit.Assert.assertTrue;
+
+import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+
 /**
  * Tests the {@link DifferentialExpessionAnalysis} tool.
  * 
@@ -26,19 +31,10 @@ package ubic.gemma.analysis.expression.diff;
  */
 public class DifferentialExpressionAnalyzerTest extends BaseAnalyzerConfigurationTest {
 
+    @Autowired
     DifferentialExpressionAnalyzer analysis = null;
 
-    /*
-     * (non-Javadoc)
-     * @see ubic.gemma.analysis.diff.BaseAnalyzerConfigurationTest#onSetUpInTransaction()
-     */
-    @Override
-    public void onSetUpInTransaction() throws Exception {
-        super.onSetUpInTransaction();
-
-        analysis = ( DifferentialExpressionAnalyzer ) this.getBean( "differentialExpressionAnalyzer" );
-
-    }
+    DifferentialExpressionAnalysisHelperService differentialExpressionAnalysisHelperService = new DifferentialExpressionAnalysisHelperService();
 
     /**
      * * Tests determineAnalysis.
@@ -53,6 +49,7 @@ public class DifferentialExpressionAnalyzerTest extends BaseAnalyzerConfiguratio
      * 
      * @throws Exception
      */
+    @Test
     public void testDetermineAnalysisA() throws Exception {
         configureMocks();
         AbstractAnalyzer analyzer = analysis.determineAnalysis( expressionExperiment );
@@ -72,6 +69,7 @@ public class DifferentialExpressionAnalyzerTest extends BaseAnalyzerConfiguratio
      * 
      * @throws Exception
      */
+    @Test
     public void testDetermineAnalysisB() throws Exception {
         super.configureTestDataForTwoWayAnovaWithoutInteractions();
         configureMocks();
@@ -87,11 +85,6 @@ public class DifferentialExpressionAnalyzerTest extends BaseAnalyzerConfiguratio
     protected void configureMocks() throws Exception {
 
         configureMockAnalysisServiceHelper( 2 );
-
-        DifferentialExpressionAnalysisHelperService analyzerHelper = ( DifferentialExpressionAnalysisHelperService ) this
-                .getBean( "differentialExpressionAnalysisHelperService" );
-
-        analysis.setDifferentialExpressionAnalysisHelperService( analyzerHelper );
 
     }
 

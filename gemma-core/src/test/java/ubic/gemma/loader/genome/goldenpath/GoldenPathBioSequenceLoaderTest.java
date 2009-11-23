@@ -20,8 +20,10 @@ package ubic.gemma.loader.genome.goldenpath;
 
 import java.io.InputStream;
 
+import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+
 import ubic.gemma.externalDb.GoldenPathDumper;
-import ubic.gemma.model.common.description.ExternalDatabaseService;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequenceService;
 import ubic.gemma.testing.BaseSpringContextTest;
@@ -32,15 +34,15 @@ import ubic.gemma.testing.BaseSpringContextTest;
  */
 public class GoldenPathBioSequenceLoaderTest extends BaseSpringContextTest {
 
+    @Autowired
+    BioSequenceService bioSequenceService;
+
+    @Test
     public void testGetTranscriptBioSequences() throws Exception {
 
         Taxon taxon = taxonService.findByCommonName( "mouse" );
 
         GoldenPathBioSequenceLoader gp = new GoldenPathBioSequenceLoader( taxon );
-
-        ExternalDatabaseService externalDatabaseService = ( ExternalDatabaseService ) this
-                .getBean( "externalDatabaseService" );
-        BioSequenceService bioSequenceService = ( BioSequenceService ) this.getBean( "bioSequenceService" );
 
         gp.setExternalDatabaseService( externalDatabaseService );
         gp.setBioSequenceService( bioSequenceService );
@@ -50,6 +52,7 @@ public class GoldenPathBioSequenceLoaderTest extends BaseSpringContextTest {
 
     }
 
+    @Test
     public void testGetTranscriptBioSequencesFromDatabase() throws Exception {
 
         Taxon taxon = taxonService.findByCommonName( "mouse" );
@@ -58,17 +61,12 @@ public class GoldenPathBioSequenceLoaderTest extends BaseSpringContextTest {
 
         GoldenPathDumper dumper = new GoldenPathDumper( taxon );
 
-        ExternalDatabaseService externalDatabaseService = ( ExternalDatabaseService ) this
-                .getBean( "externalDatabaseService" );
-
-        BioSequenceService bioSequenceService = ( BioSequenceService ) this.getBean( "bioSequenceService" );
-
         gp.setExternalDatabaseService( externalDatabaseService );
         gp.setBioSequenceService( bioSequenceService );
 
         gp.setLimit( 20 );
         gp.load( dumper );
-        
+
     }
 
 }

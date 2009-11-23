@@ -56,7 +56,7 @@ public abstract class BioSequenceDaoBase extends HibernateDaoSupport implements
             throw new IllegalArgumentException( "BioSequence.create - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback() {
+                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator<BioSequence> entityIterator = entities.iterator(); entityIterator
@@ -84,7 +84,7 @@ public abstract class BioSequenceDaoBase extends HibernateDaoSupport implements
     /**
      * @see ubic.gemma.model.genome.biosequence.BioSequenceDao#create(java.util.Collection)
      */
-    @SuppressWarnings( { "unchecked" })
+    
     public java.util.Collection<BioSequence> create( final java.util.Collection entities ) {
         return create( TRANSFORM_NONE, entities );
     }
@@ -100,7 +100,7 @@ public abstract class BioSequenceDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.genome.biosequence.BioSequenceDao#find(int, java.lang.String,
      *      ubic.gemma.model.genome.biosequence.BioSequence)
      */
-    @SuppressWarnings( { "unchecked" })
+    
     public BioSequence find( final int transform, final java.lang.String queryString,
             final ubic.gemma.model.genome.biosequence.BioSequence bioSequence ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -155,7 +155,7 @@ public abstract class BioSequenceDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.genome.biosequence.BioSequenceDao#findByAccession(int, java.lang.String,
      *      ubic.gemma.model.common.description.DatabaseEntry)
      */
-    @SuppressWarnings( { "unchecked" })
+    
     public BioSequence findByAccession( final int transform, final java.lang.String queryString,
             final ubic.gemma.model.common.description.DatabaseEntry accession ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -238,7 +238,7 @@ public abstract class BioSequenceDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.genome.biosequence.BioSequenceDao#findOrCreate(int, java.lang.String,
      *      ubic.gemma.model.genome.biosequence.BioSequence)
      */
-    @SuppressWarnings( { "unchecked" })
+    
     public BioSequence findOrCreate( final int transform, final java.lang.String queryString,
             final ubic.gemma.model.genome.biosequence.BioSequence bioSequence ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -354,7 +354,7 @@ public abstract class BioSequenceDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.genome.biosequence.BioSequenceDao#loadAll()
      */
 
-    public java.util.Collection<BioSequence> loadAll() {
+    public java.util.Collection<? extends BioSequence> loadAll() {
         return this.loadAll( TRANSFORM_NONE );
     }
 
@@ -362,9 +362,9 @@ public abstract class BioSequenceDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.genome.biosequence.BioSequenceDao#loadAll(int)
      */
 
-    @SuppressWarnings("unchecked")
-    public java.util.Collection<BioSequence> loadAll( final int transform ) {
-        final java.util.Collection<BioSequence> results = this.getHibernateTemplate().loadAll(
+    
+    public java.util.Collection<? extends BioSequence> loadAll( final int transform ) {
+        final java.util.Collection<? extends BioSequence> results = this.getHibernateTemplate().loadAll(
                 ubic.gemma.model.genome.biosequence.BioSequenceImpl.class );
         this.transformEntities( transform, results );
         return results;
@@ -388,7 +388,7 @@ public abstract class BioSequenceDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.common.SecurableDao#remove(java.util.Collection)
      */
 
-    public void remove( java.util.Collection<BioSequence> entities ) {
+    public void remove( java.util.Collection<? extends BioSequence> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "BioSequence.remove - 'entities' can not be null" );
         }
@@ -448,15 +448,15 @@ public abstract class BioSequenceDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.common.SecurableDao#update(java.util.Collection)
      */
 
-    public void update( final java.util.Collection<BioSequence> entities ) {
+    public void update( final java.util.Collection<? extends BioSequence> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "BioSequence.update - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback() {
+                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator<BioSequence> entityIterator = entities.iterator(); entityIterator
+                        for ( java.util.Iterator<? extends BioSequence> entityIterator = entities.iterator(); entityIterator
                                 .hasNext(); ) {
                             update( entityIterator.next() );
                         }
@@ -539,7 +539,7 @@ public abstract class BioSequenceDaoBase extends HibernateDaoSupport implements
      * @see #transformEntity(int,ubic.gemma.model.genome.biosequence.BioSequence)
      */
 
-    protected void transformEntities( final int transform, final java.util.Collection<BioSequence> entities ) {
+    protected void transformEntities( final int transform, final java.util.Collection<? extends BioSequence> entities ) {
         switch ( transform ) {
             case TRANSFORM_NONE: // fall-through
             default:

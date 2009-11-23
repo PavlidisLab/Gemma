@@ -18,14 +18,16 @@
  */
 package ubic.gemma.persistence;
 
+import java.util.Properties;
+
 import net.sf.ehcache.CacheManager;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.cache.Cache;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.CacheProvider;
 import org.hibernate.cache.Timestamper;
-import java.util.Properties;
 
 /**
  * Based on code by Les Hazlewood. http://www.leshazlewood.com/?p=37
@@ -36,16 +38,6 @@ import java.util.Properties;
 public class ExternalCacheProvider implements CacheProvider {
     protected transient final Log log = LogFactory.getLog( getClass() );
     private CacheManager cacheManager = null;
-
-    /**
-     * * This is the method that is called by an external framework (e.g. Spring) to set the * constructed CacheManager
-     * for all instances of this class. Therefore, when * Hibernate instantiates this class, the previously statically
-     * injected CacheManager * will be used for all hibernate calls to build caches. * @param cacheManager the
-     * CacheManager instance to use for a HibernateSession factory using * this class as its cache.provider_class.
-     */
-    public void setCacheManager( CacheManager cacheManager ) {
-        this.cacheManager = cacheManager;
-    }
 
     public Cache buildCache( String name, Properties properties ) throws CacheException {
         try {
@@ -66,8 +58,22 @@ public class ExternalCacheProvider implements CacheProvider {
         }
     }
 
+    public boolean isMinimalPutsEnabledByDefault() {
+        return false;
+    }
+
     public long nextTimestamp() {
         return Timestamper.next();
+    }
+
+    /**
+     * * This is the method that is called by an external framework (e.g. Spring) to set the * constructed CacheManager
+     * for all instances of this class. Therefore, when * Hibernate instantiates this class, the previously statically
+     * injected CacheManager * will be used for all hibernate calls to build caches. * @param cacheManager the
+     * CacheManager instance to use for a HibernateSession factory using * this class as its cache.provider_class.
+     */
+    public void setCacheManager( CacheManager cacheManager ) {
+        this.cacheManager = cacheManager;
     }
 
     public void start( Properties properties ) throws CacheException {
@@ -76,9 +82,5 @@ public class ExternalCacheProvider implements CacheProvider {
 
     public void stop() {
         // ignored, CacheManager lifecycle handled by the IoC container
-    }
-
-    public boolean isMinimalPutsEnabledByDefault() {
-        return false;
     }
 }

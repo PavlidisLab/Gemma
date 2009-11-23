@@ -29,13 +29,12 @@ import java.util.Vector;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.stereotype.Service;
 
 import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.biosequence.BioSequence;
-import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 
 /**
  * @author keshav
@@ -43,6 +42,7 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
  * @version $Id$
  * @see ubic.gemma.model.expression.designElement.CompositeSequenceService
  */
+@Service
 public class CompositeSequenceServiceImpl extends
         ubic.gemma.model.expression.designElement.CompositeSequenceServiceBase {
 
@@ -60,7 +60,7 @@ public class CompositeSequenceServiceImpl extends
     @Override
     @SuppressWarnings("unchecked")
     protected Collection<CompositeSequence> handleCreate( Collection compositeSequences ) throws Exception {
-        return this.getCompositeSequenceDao().create( compositeSequences );
+        return ( Collection<CompositeSequence> ) this.getCompositeSequenceDao().create( compositeSequences );
     }
 
     /*
@@ -71,7 +71,7 @@ public class CompositeSequenceServiceImpl extends
      */
     @Override
     protected CompositeSequence handleCreate( CompositeSequence compositeSequence ) throws Exception {
-        return ( CompositeSequence ) this.getCompositeSequenceDao().create( compositeSequence );
+        return this.getCompositeSequenceDao().create( compositeSequence );
     }
 
     @Override
@@ -216,7 +216,7 @@ public class CompositeSequenceServiceImpl extends
      */
     @Override
     protected CompositeSequence handleLoad( Long id ) throws Exception {
-        return ( CompositeSequence ) this.getCompositeSequenceDao().load( id );
+        return this.getCompositeSequenceDao().load( id );
     }
 
     /*

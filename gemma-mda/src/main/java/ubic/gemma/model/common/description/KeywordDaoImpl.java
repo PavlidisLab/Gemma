@@ -22,8 +22,18 @@
 //
 package ubic.gemma.model.common.description;
 
+import org.hibernate.SessionFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
+
 /**
  * @see ubic.gemma.model.common.description.Keyword
  */
+@Repository
 public class KeywordDaoImpl extends ubic.gemma.model.common.description.KeywordDaoBase {
+
+    @Autowired
+    public KeywordDaoImpl( SessionFactory sessionFactory ) {
+        super.setSessionFactory( sessionFactory );
+    }
 }

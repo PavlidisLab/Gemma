@@ -9,21 +9,21 @@
 </head>
 
 <body>
-	<security:authorize ifAnyGranted="admin,user">
+	<security:authorize ifAnyGranted="GROUP_ADMIN,GROUP_USER">
 		<div id="messages" style="margin: 10px; width: 400px"></div>
 		<div id="controls"></div>
 		<div id="eemanage"></div>
 		<div id="taskId" style="display: none;"></div>
 		<div id="progress-area" style="padding: 15px;"></div>
 	</security:authorize>
-	<security:authorize ifAnyGranted="admin">
+	<security:authorize ifAnyGranted="GROUP_ADMIN">
 		<div id="updateAllReports-area"></div>
 	</security:authorize>
 
-	<security:authorize ifAnyGranted="admin">
+	<security:authorize ifAnyGranted="GROUP_ADMIN">
 		<input type="hidden" name="hasAdmin" id="hasAdmin" value="true" />
 	</security:authorize>
-	<security:authorize ifNotGranted="admin">
+	<security:authorize ifNotGranted="GROUP_ADMIN">
 		<input type="hidden" name="hasAdmin" id="hasAdmin" value="" />
 	</security:authorize>
 

@@ -18,8 +18,18 @@
  */
 package ubic.gemma.model.common.description;
 
+import org.hibernate.SessionFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
+
 /**
  * @see ubic.gemma.model.common.description.Property
  */
+@Repository
 public class PropertyDaoImpl extends ubic.gemma.model.common.description.PropertyDaoBase {
+
+    @Autowired
+    public PropertyDaoImpl( SessionFactory sessionFactory ) {
+        super.setSessionFactory( sessionFactory );
+    }
 }

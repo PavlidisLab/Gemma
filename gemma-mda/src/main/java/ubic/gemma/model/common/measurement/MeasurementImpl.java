@@ -29,31 +29,6 @@ public class MeasurementImpl extends ubic.gemma.model.common.measurement.Measure
 
     /*
      * (non-Javadoc)
-     * @see java.lang.Object#hashCode()
-     */
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ( ( super.getId() == null ) ? 0 : super.getId().hashCode() );
-
-        if ( super.getId() == null ) {
-            result = prime * result + ( ( getValue() == null ) ? 0 : getValue().hashCode() );
-
-            result = prime * result + ( ( getRepresentation() == null ) ? 0 : getRepresentation().hashCode() );
-            result = prime * result + ( ( getUnit() == null ) ? 0 : getUnit().hashCode() );
-
-            result = prime * result + ( ( getType() == null ) ? 0 : getType().hashCode() );
-
-            result = prime * result + ( ( getKindCV() == null ) ? 0 : getKindCV().hashCode() );
-            result = prime * result + ( ( getOtherKind() == null ) ? 0 : getOtherKind().hashCode() );
-
-        }
-        return result;
-    }
-
-    /*
-     * (non-Javadoc)
      * @see java.lang.Object#equals(java.lang.Object)
      */
     @Override
@@ -91,6 +66,31 @@ public class MeasurementImpl extends ubic.gemma.model.common.measurement.Measure
         } else if ( !getRepresentation().equals( other.getRepresentation() ) ) return false;
 
         return true;
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see java.lang.Object#hashCode()
+     */
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ( ( super.getId() == null ) ? 0 : super.getId().hashCode() );
+
+        if ( super.getId() == null ) {
+            result = prime * result + ( ( getValue() == null ) ? 0 : getValue().hashCode() );
+
+            result = prime * result + ( ( getRepresentation() == null ) ? 0 : getRepresentation().hashCode() );
+            result = prime * result + ( ( getUnit() == null ) ? 0 : getUnit().hashCode() );
+
+            result = prime * result + ( ( getType() == null ) ? 0 : getType().hashCode() );
+
+            result = prime * result + ( ( getKindCV() == null ) ? 0 : getKindCV().hashCode() );
+            result = prime * result + ( ( getOtherKind() == null ) ? 0 : getOtherKind().hashCode() );
+
+        }
+        return result;
     }
 
     @Override

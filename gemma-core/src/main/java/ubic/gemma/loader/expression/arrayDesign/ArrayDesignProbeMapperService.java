@@ -31,11 +31,13 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.security.context.SecurityContext;
-import org.springframework.security.context.SecurityContextHolder;
 
 import ubic.gemma.analysis.sequence.ProbeMapper;
 import ubic.gemma.analysis.sequence.ProbeMapperConfig;
@@ -64,36 +66,36 @@ import ubic.gemma.persistence.PersisterHelper;
  * 
  * @author pavlidis
  * @version $Id$
- * @spring.bean name="arrayDesignProbeMapperService"
- * @spring.property name="blatResultService" ref="blatResultService"
- * @spring.property name="persisterHelper" ref="persisterHelper"
- * @spring.property name="arrayDesignService" ref="arrayDesignService"
- * @spring.property name="probeMapper" ref="probeMapper"
- * @spring.property name="geneService" ref="geneService"
- * @spring.property name="compositeSequenceService" ref="compositeSequenceService"
- * @spring.property name="bioSequenceService" ref="bioSequenceService"
- * @spring.property name="annotationAssociationService" ref="annotationAssociationService"
  */
+@Service
 public class ArrayDesignProbeMapperService {
 
     private static Log log = LogFactory.getLog( ArrayDesignProbeMapperService.class.getName() );
 
     private static final int QUEUE_SIZE = 20000;
 
+    @Autowired
     private AnnotationAssociationService annotationAssociationService;
 
+    @Autowired
     private ArrayDesignService arrayDesignService;
 
+    @Autowired
     private BioSequenceService bioSequenceService;
 
+    @Autowired
     private BlatResultService blatResultService;
 
+    @Autowired
     private CompositeSequenceService compositeSequenceService;
 
+    @Autowired
     private GeneService geneService;
 
+    @Autowired
     private PersisterHelper persisterHelper;
 
+    @Autowired
     private ProbeMapper probeMapper;
 
     /**
@@ -110,7 +112,6 @@ public class ArrayDesignProbeMapperService {
      * @param config
      * @param useDB if false, the results will not be written to the database, but printed to stdout instead.
      */
-    @SuppressWarnings("unchecked")
     public void processArrayDesign( ArrayDesign arrayDesign, ProbeMapperConfig config, boolean useDB ) {
 
         Collection<Taxon> taxa = arrayDesignService.getTaxa( arrayDesign.getId() );
@@ -275,8 +276,6 @@ public class ArrayDesignProbeMapperService {
             String probeId = fields[0];
             String seqName = fields[1];
             String geneSymbol = fields[2];
-            
-          
 
             CompositeSequence c = compositeSequenceService.findByName( arrayDesign, probeId );
 
@@ -285,32 +284,30 @@ public class ArrayDesignProbeMapperService {
                 numSkipped++;
                 continue;
             }
-                        
-            //a probe can have more than one gene associated with it if so they are piped |
+
+            // a probe can have more than one gene associated with it if so they are piped |
             Collection<Gene> geneListProbe = new HashSet<Gene>();
-            
-            //indicate multiple genes
-            Gene geneDetails =null;            
-            
-            StringTokenizer st = new StringTokenizer (geneSymbol, "|");
-                     
-            while (st.hasMoreTokens ()) {
+
+            // indicate multiple genes
+            Gene geneDetails = null;
+
+            StringTokenizer st = new StringTokenizer( geneSymbol, "|" );
+
+            while ( st.hasMoreTokens() ) {
                 String geneToken = st.nextToken();
                 geneDetails = geneService.findByOfficialSymbol( geneToken.trim(), taxon );
-                if(geneDetails!=null){
-                    geneListProbe.add(geneDetails);
-                }              
+                if ( geneDetails != null ) {
+                    geneListProbe.add( geneDetails );
+                }
             }
-          
-                                    
-            if ( geneListProbe == null || geneListProbe.size()==0) {
+
+            if ( geneListProbe.size() == 0 ) {
                 log.warn( "No gene found for '" + geneSymbol + "' in " + taxon + ", skipping" );
                 numSkipped++;
                 continue;
-            }else if(geneListProbe.size()>1){
-                log.warn( "More than one gene found for '" + geneSymbol + "' in " + taxon  );
+            } else if ( geneListProbe.size() > 1 ) {
+                log.warn( "More than one gene found for '" + geneSymbol + "' in " + taxon );
             }
-            
 
             BioSequence bs = c.getBiologicalCharacteristic();
 
@@ -346,7 +343,7 @@ public class ArrayDesignProbeMapperService {
             }
 
             assert bs.getId() != null;
-            for(Gene gene: geneListProbe){
+            for ( Gene gene : geneListProbe ) {
                 geneService.thaw( gene );
                 if ( gene.getProducts().size() == 0 ) {
                     log.warn( "There are no gene products for " + gene + ", it cannot be mapped to probes. Skipping" );
@@ -360,13 +357,13 @@ public class ArrayDesignProbeMapperService {
                     association.setSource( sourceDB );
                     annotationAssociationService.create( association );
                 }
-             }
-        }
 
+            }
+
+        }
         log.info( "Completed association processing for " + arrayDesign + ", " + numSkipped + " were skipped" );
 
     }
-    
 
     /**
      * @param annotationAssociationService the annotationAssociationService to set

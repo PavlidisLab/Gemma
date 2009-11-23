@@ -37,8 +37,7 @@ public class ExpressionExperimentAuditViewTag extends TagSupport {
     public int doEndTag() {
         return EVAL_PAGE;
     }
-
-    @SuppressWarnings("unchecked")
+ 
     @Override
     public int doStartTag() throws JspException {
         StringBuilder buf = new StringBuilder();

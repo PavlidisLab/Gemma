@@ -20,11 +20,12 @@ package ubic.gemma.loader.expression.arrayExpress;
 
 import java.util.Collection;
 
+import junit.framework.TestCase;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.model.common.description.LocalFile;
-import junit.framework.TestCase;
 
 /**
  * @author paul

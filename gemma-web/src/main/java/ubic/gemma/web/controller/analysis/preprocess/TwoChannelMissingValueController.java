@@ -22,15 +22,18 @@ import java.util.Collection;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+
 import ubic.gemma.analysis.preprocess.TwoChannelMissingValues;
 import ubic.gemma.grid.javaspaces.TaskCommand;
 import ubic.gemma.grid.javaspaces.TaskResult;
-import ubic.gemma.grid.javaspaces.analysis.preprocess.TwoChannelMissingValueTask;
-import ubic.gemma.grid.javaspaces.analysis.preprocess.TwoChannelMissingValueTaskCommand; 
+import ubic.gemma.grid.javaspaces.task.analysis.preprocess.TwoChannelMissingValueTask;
+import ubic.gemma.grid.javaspaces.task.analysis.preprocess.TwoChannelMissingValueTaskCommand;
+import ubic.gemma.grid.javaspaces.util.SpacesEnum;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.util.grid.javaspaces.SpacesEnum;
 import ubic.gemma.web.controller.BackgroundControllerJob;
 import ubic.gemma.web.controller.BaseControllerJob;
 import ubic.gemma.web.controller.grid.AbstractSpacesController;
@@ -38,12 +41,10 @@ import ubic.gemma.web.controller.grid.AbstractSpacesController;
 /**
  * Run misssing value computation via web request.
  * 
- * @spring.bean id="twoChannelMissingValueController"
- * @spring.property name = "expressionExperimentService" ref="expressionExperimentService"
- * @spring.property name="twoChannelMissingValues" ref="twoChannelMissingValues"
  * @author paul
  * @version $Id$
  */
+@Controller
 public class TwoChannelMissingValueController extends AbstractSpacesController<Boolean> {
 
     private class TwoChannelMissingValueJob extends BaseControllerJob<Boolean> {
@@ -118,8 +119,10 @@ public class TwoChannelMissingValueController extends AbstractSpacesController<B
 
     }
 
+    @Autowired
     private ExpressionExperimentService expressionExperimentService = null;
 
+    @Autowired
     private TwoChannelMissingValues twoChannelMissingValues = null;
 
     /**

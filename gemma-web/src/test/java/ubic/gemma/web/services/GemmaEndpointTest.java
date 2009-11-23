@@ -41,15 +41,14 @@ public class GemmaEndpointTest extends TestCase {
         try {
             TestEndpoint testEp = new TestEndpoint();
             Document doc = testEp.readTest();
-            if (doc == null)
-                assertTrue( false );
-            
+            if ( doc == null ) assertTrue( false );
+
             NodeList nl = doc.getElementsByTagName( "dedv" );
             int numActual = nl.getLength();
             assertEquals( 12625, numActual ); // used grep -o "<dedv>" DEDVforEE-159-test.xml | wc -l to verify
-        } catch ( Exception e ) {            
+        } catch ( Exception e ) {
             log.info( "Test Fail error is: " + e );
-            throw new RuntimeException(e);
+            throw new RuntimeException( e );
         }
     }
 }

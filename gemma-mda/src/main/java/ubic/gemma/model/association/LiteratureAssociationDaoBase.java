@@ -18,114 +18,82 @@
  */
 package ubic.gemma.model.association;
 
+import java.util.Collection;
+
+import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
+
 /**
- * <p>
  * Base Spring DAO Class: is able to create, update, remove, load, and find objects of type
  * <code>ubic.gemma.model.association.LiteratureAssociation</code>.
- * </p>
  * 
  * @see ubic.gemma.model.association.LiteratureAssociation
  */
-public abstract class LiteratureAssociationDaoBase extends ubic.gemma.model.association.Gene2GeneAssociationDaoImpl
-        implements ubic.gemma.model.association.LiteratureAssociationDao {
+public abstract class LiteratureAssociationDaoBase extends HibernateDaoSupport implements
+        ubic.gemma.model.association.LiteratureAssociationDao {
 
     /**
      * @see ubic.gemma.model.association.LiteratureAssociationDao#create(int, java.util.Collection)
      */
-    public java.util.Collection create( final int transform, final java.util.Collection entities ) {
+    public java.util.Collection create( final java.util.Collection entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "LiteratureAssociation.create - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback() {
+                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                            create( transform, ( ubic.gemma.model.association.LiteratureAssociation ) entityIterator
-                                    .next() );
+                            create( ( ubic.gemma.model.association.LiteratureAssociation ) entityIterator.next() );
                         }
                         return null;
                     }
                 } );
         return entities;
     }
+    
+    
+    public Collection<? extends LiteratureAssociation > load( Collection<Long> ids ) {
+        return this.getHibernateTemplate().findByNamedParam( "from LiteratureAssociationImpl where id in (:ids)", "ids", ids );
+    }
 
     /**
      * @see ubic.gemma.model.association.LiteratureAssociationDao#create(int transform,
      *      ubic.gemma.model.association.LiteratureAssociation)
      */
-    public Object create( final int transform,
-            final ubic.gemma.model.association.LiteratureAssociation literatureAssociation ) {
+    public LiteratureAssociation create( final ubic.gemma.model.association.LiteratureAssociation literatureAssociation ) {
         if ( literatureAssociation == null ) {
             throw new IllegalArgumentException(
                     "LiteratureAssociation.create - 'literatureAssociation' can not be null" );
         }
         this.getHibernateTemplate().save( literatureAssociation );
-        return this.transformEntity( transform, literatureAssociation );
-    }
-
-    /**
-     * @see ubic.gemma.model.association.LiteratureAssociationDao#create(java.util.Collection)
-     */
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Collection create( final java.util.Collection entities ) {
-        return create( TRANSFORM_NONE, entities );
-    }
-
-    /**
-     * @see ubic.gemma.model.association.LiteratureAssociationDao#create(ubic.gemma.model.association.LiteratureAssociation)
-     */
-    public ubic.gemma.model.association.Relationship create(
-            ubic.gemma.model.association.LiteratureAssociation literatureAssociation ) {
-        return ( ubic.gemma.model.association.LiteratureAssociation ) this.create( TRANSFORM_NONE,
-                literatureAssociation );
+        return literatureAssociation;
     }
 
     /**
      * @see ubic.gemma.model.association.LiteratureAssociationDao#load(int, java.lang.Long)
      */
-    @Override
-    public Object load( final int transform, final java.lang.Long id ) {
+    public LiteratureAssociation load( final java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "LiteratureAssociation.load - 'id' can not be null" );
         }
         final Object entity = this.getHibernateTemplate().get(
                 ubic.gemma.model.association.LiteratureAssociationImpl.class, id );
-        return transformEntity( transform, ( ubic.gemma.model.association.LiteratureAssociation ) entity );
-    }
-
-    /**
-     * @see ubic.gemma.model.association.LiteratureAssociationDao#load(java.lang.Long)
-     */
-    @Override
-    public ubic.gemma.model.association.Relationship load( java.lang.Long id ) {
-        return ( ubic.gemma.model.association.LiteratureAssociation ) this.load( TRANSFORM_NONE, id );
-    }
-
-    /**
-     * @see ubic.gemma.model.association.LiteratureAssociationDao#loadAll()
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Collection loadAll() {
-        return this.loadAll( TRANSFORM_NONE );
+        return ( ubic.gemma.model.association.LiteratureAssociation ) entity;
     }
 
     /**
      * @see ubic.gemma.model.association.LiteratureAssociationDao#loadAll(int)
      */
-    @Override
-    public java.util.Collection loadAll( final int transform ) {
+    public java.util.Collection loadAll() {
         final java.util.Collection results = this.getHibernateTemplate().loadAll(
                 ubic.gemma.model.association.LiteratureAssociationImpl.class );
-        this.transformEntities( transform, results );
+
         return results;
     }
 
     /**
      * @see ubic.gemma.model.association.LiteratureAssociationDao#remove(java.lang.Long)
      */
-    @Override
     public void remove( java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "LiteratureAssociation.remove - 'id' can not be null" );
@@ -140,7 +108,6 @@ public abstract class LiteratureAssociationDaoBase extends ubic.gemma.model.asso
     /**
      * @see ubic.gemma.model.association.RelationshipDao#remove(java.util.Collection)
      */
-    @Override
     public void remove( java.util.Collection entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "LiteratureAssociation.remove - 'entities' can not be null" );
@@ -162,13 +129,12 @@ public abstract class LiteratureAssociationDaoBase extends ubic.gemma.model.asso
     /**
      * @see ubic.gemma.model.association.RelationshipDao#update(java.util.Collection)
      */
-    @Override
     public void update( final java.util.Collection entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "LiteratureAssociation.update - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback() {
+                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
@@ -188,53 +154,6 @@ public abstract class LiteratureAssociationDaoBase extends ubic.gemma.model.asso
                     "LiteratureAssociation.update - 'literatureAssociation' can not be null" );
         }
         this.getHibernateTemplate().update( literatureAssociation );
-    }
-
-    /**
-     * Transforms a collection of entities using the
-     * {@link #transformEntity(int,ubic.gemma.model.association.LiteratureAssociation)} method. This method does not
-     * instantiate a new collection.
-     * <p/>
-     * This method is to be used internally only.
-     * 
-     * @param transform one of the constants declared in
-     *        <code>ubic.gemma.model.association.LiteratureAssociationDao</code>
-     * @param entities the collection of entities to transform
-     * @return the same collection as the argument, but this time containing the transformed entities
-     * @see #transformEntity(int,ubic.gemma.model.association.LiteratureAssociation)
-     */
-    @Override
-    protected void transformEntities( final int transform, final java.util.Collection entities ) {
-        switch ( transform ) {
-            case TRANSFORM_NONE: // fall-through
-            default:
-                // do nothing;
-        }
-    }
-
-    /**
-     * Allows transformation of entities into value objects (or something else for that matter), when the
-     * <code>transform</code> flag is set to one of the constants defined in
-     * <code>ubic.gemma.model.association.LiteratureAssociationDao</code>, please note that the {@link #TRANSFORM_NONE}
-     * constant denotes no transformation, so the entity itself will be returned. If the integer argument value is
-     * unknown {@link #TRANSFORM_NONE} is assumed.
-     * 
-     * @param transform one of the constants declared in {@link ubic.gemma.model.association.LiteratureAssociationDao}
-     * @param entity an entity that was found
-     * @return the transformed entity (i.e. new value object, etc)
-     * @see #transformEntities(int,java.util.Collection)
-     */
-    protected Object transformEntity( final int transform,
-            final ubic.gemma.model.association.LiteratureAssociation entity ) {
-        Object target = null;
-        if ( entity != null ) {
-            switch ( transform ) {
-                case TRANSFORM_NONE: // fall-through
-                default:
-                    target = entity;
-            }
-        }
-        return target;
     }
 
 }

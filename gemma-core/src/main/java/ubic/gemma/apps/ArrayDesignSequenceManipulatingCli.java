@@ -32,7 +32,7 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignAnalysisEve
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
-import ubic.gemma.security.principal.UserDetailsServiceImpl;
+import ubic.gemma.security.authentication.UserManager;
 import ubic.gemma.util.AbstractSpringAwareCLI;
 
 /**
@@ -46,6 +46,8 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractSpringA
 
     protected ArrayDesignService arrayDesignService;
     protected String arrayDesignName = null;
+    
+    protected UserManager userManager;
 
     protected ArrayDesignReportService arrayDesignReportService;
 
@@ -108,7 +110,7 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractSpringA
         }
         arrayDesignReportService = ( ArrayDesignReportService ) this.getBean( "arrayDesignReportService" );
         arrayDesignService = ( ArrayDesignService ) this.getBean( "arrayDesignService" );
-
+        userManager = ( UserManager ) this.getBean( "userManager" );
     }
 
     /**
@@ -119,7 +121,7 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractSpringA
         AuditEvent ae = AuditEvent.Factory.newInstance();
         ae.setNote( note );
         ae.setAction( AuditAction.UPDATE );
-        ae.setPerformer( UserDetailsServiceImpl.getCurrentUser() );
+        ae.setPerformer( userManager.getCurrentUser() );
         ad.getAuditTrail().addEvent( ae );
         arrayDesignService.update( ad );
     }

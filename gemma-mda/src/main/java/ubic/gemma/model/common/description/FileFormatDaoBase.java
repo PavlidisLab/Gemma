@@ -37,7 +37,7 @@ public abstract class FileFormatDaoBase extends org.springframework.orm.hibernat
             throw new IllegalArgumentException( "FileFormat.create - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback() {
+                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
@@ -64,7 +64,7 @@ public abstract class FileFormatDaoBase extends org.springframework.orm.hibernat
     /**
      * @see ubic.gemma.model.common.description.FileFormatDao#create(java.util.Collection)
      */
-    @SuppressWarnings( { "unchecked" })
+    
     public java.util.Collection create( final java.util.Collection entities ) {
         return create( TRANSFORM_NONE, entities );
     }
@@ -80,7 +80,7 @@ public abstract class FileFormatDaoBase extends org.springframework.orm.hibernat
     /**
      * @see ubic.gemma.model.common.description.FileFormatDao#findByFormatIdentifier(int, java.lang.String)
      */
-    @SuppressWarnings( { "unchecked" })
+    
     public Object findByFormatIdentifier( final int transform, final java.lang.String formatIdentifier ) {
         return this.findByFormatIdentifier( transform,
                 "from FileFormatImpl ff where ff.formatIdentifier=:formatIdentifier", formatIdentifier );
@@ -90,7 +90,7 @@ public abstract class FileFormatDaoBase extends org.springframework.orm.hibernat
      * @see ubic.gemma.model.common.description.FileFormatDao#findByFormatIdentifier(int, java.lang.String,
      *      java.lang.String)
      */
-    @SuppressWarnings( { "unchecked" })
+    
     public Object findByFormatIdentifier( final int transform, final java.lang.String queryString,
             final java.lang.String formatIdentifier ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -100,15 +100,15 @@ public abstract class FileFormatDaoBase extends org.springframework.orm.hibernat
         java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
                 argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
         Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'ubic.gemma.model.common.description.FileFormat"
-                                + "' was found when executing query --> '" + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
+
+        if ( results.size() > 1 ) {
+            throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                    "More than one instance of 'ubic.gemma.model.common.description.FileFormat"
+                            + "' was found when executing query --> '" + queryString + "'" );
+        } else if ( results.size() == 1 ) {
+            result = results.iterator().next();
         }
+
         result = transformEntity( transform, ( ubic.gemma.model.common.description.FileFormat ) result );
         return result;
     }
@@ -124,7 +124,7 @@ public abstract class FileFormatDaoBase extends org.springframework.orm.hibernat
     /**
      * @see ubic.gemma.model.common.description.FileFormatDao#findByFormatIdentifier(java.lang.String, java.lang.String)
      */
-    @SuppressWarnings( { "unchecked" })
+    
     public ubic.gemma.model.common.description.FileFormat findByFormatIdentifier( final java.lang.String queryString,
             final java.lang.String formatIdentifier ) {
         return ( ubic.gemma.model.common.description.FileFormat ) this.findByFormatIdentifier( TRANSFORM_NONE,
@@ -153,7 +153,7 @@ public abstract class FileFormatDaoBase extends org.springframework.orm.hibernat
     /**
      * @see ubic.gemma.model.common.description.FileFormatDao#loadAll()
      */
-    @SuppressWarnings( { "unchecked" })
+    
     public java.util.Collection loadAll() {
         return this.loadAll( TRANSFORM_NONE );
     }
@@ -209,7 +209,7 @@ public abstract class FileFormatDaoBase extends org.springframework.orm.hibernat
             throw new IllegalArgumentException( "FileFormat.update - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback() {
+                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {

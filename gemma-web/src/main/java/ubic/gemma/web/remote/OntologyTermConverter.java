@@ -43,6 +43,7 @@ public class OntologyTermConverter extends BeanConverter {
 
     private static Log log = LogFactory.getLog( OntologyTermConverter.class.getName() );
 
+    @Override
     public OutboundVariable convertOutbound( Object data, OutboundContext outctx ) throws MarshallException {
         // Where we collect out converted children
         Map<String, OutboundVariable> ovs = new TreeMap<String, OutboundVariable>();

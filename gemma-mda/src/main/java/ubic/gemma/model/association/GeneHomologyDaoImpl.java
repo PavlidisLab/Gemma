@@ -22,8 +22,18 @@
 //
 package ubic.gemma.model.association;
 
+import org.hibernate.SessionFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
+
 /**
  * @see ubic.gemma.model.association.GeneHomology
  */
+@Repository
 public class GeneHomologyDaoImpl extends ubic.gemma.model.association.GeneHomologyDaoBase {
+
+    @Autowired
+    public GeneHomologyDaoImpl( SessionFactory sessionFactory ) {
+        super.setSessionFactory( sessionFactory );
+    }
 }

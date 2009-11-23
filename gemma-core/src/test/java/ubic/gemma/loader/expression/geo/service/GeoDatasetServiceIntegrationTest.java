@@ -18,8 +18,15 @@
  */
 package ubic.gemma.loader.expression.geo.service;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
+
 import java.util.Collection;
-import java.util.HashSet;
+
+import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.gemma.analysis.preprocess.ExpressionDataMatrixBuilder;
@@ -27,8 +34,6 @@ import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.loader.util.AlreadyExistsInSystemException;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesignDao;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
@@ -43,56 +48,50 @@ import ubic.gemma.testing.AbstractGeoServiceTest;
 import ubic.gemma.util.ConfigUtils;
 
 /**
- * Test full procedure of loading GEO data, focus on corner cases.
+ * Test full procedure of loading GEO data, focus on corner cases. Tests deletion of data sets as well.
  * 
  * @author pavlidis
  * @version $Id$
  */
 public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
-    protected AbstractGeoService geoService;
+
+    @Autowired
+    protected GeoDatasetService geoService;
+
+    @Autowired
     ExpressionExperimentService eeService;
+
     ExpressionExperiment ee;
+
+    @Autowired
     ArrayDesignService adService;
-    Collection<ArrayDesign> ads;
+
+    @Autowired
     private DesignElementDataVectorService designElementDataVectorService;
-
-    /**
-     * problem case GDS22 - has lots of missing values and number format issues.
-     */
-    @SuppressWarnings("unchecked")
-    public void testFetchAndLoadGDS22() throws Exception {
-        String path = getTestFileBasePath();
-        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
-                + "gds22Short" ) );
-
-        Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad(
-                "GDS22", false, true, false, false, true );
-
-        ee = results.iterator().next();
-        eeService.thawLite( ee );
-        assertEquals( 80, ee.getBioAssays().size() );
-        assertEquals( 400, ee.getRawExpressionDataVectors().size() );
-        ArrayDesign ad = ee.getBioAssays().iterator().next().getArrayDesignUsed();
-        ads.add( ad );
-        int actualValue = ( ( ArrayDesignDao ) this.getBean( "arrayDesignDao" ) ).numCompositeSequences( ad.getId() );
-        assertEquals( 10, actualValue );
-    }
 
     /**
      * Has multiple species (mouse and human, one and two platforms respectively), also test publication entry.
      */
     @SuppressWarnings("unchecked")
+    @Test
     public void testFetchAndLoadGSE1133() throws Exception {
         String path = getTestFileBasePath();
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
                 + "gse1133Short" ) );
-        Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad(
-                "GSE1133", false, true, false, false, true );
+        Collection<ExpressionExperiment> results = geoService.fetchAndLoad( "GSE1133", false, true, false, false, true );
         ee = results.iterator().next(); // fixme, need to delete both.
         eeService.thawLite( ee );
+
+        /*
+         * Sometimes pubmed barfs on us..but this should be populated.
+         */
         assertNotNull( ee.getPrimaryPublication() );
         assertEquals( "6062-7", ee.getPrimaryPublication().getPages() );
         assertEquals( 2, results.size() );
+
+        eeService.delete( ee );
+
+        assertNull( eeService.load( ee.getId() ) );
 
     }
 
@@ -103,13 +102,14 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
      * @throws Exception
      */
     @SuppressWarnings("unchecked")
+    @Test
     public void testFetchAndLoadGSE5949() throws Exception {
         String path = ConfigUtils.getString( "gemma.home" );
         try {
             geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path
                     + AbstractGeoServiceTest.GEO_TEST_DATA_ROOT + "GSE5949short" ) );
-            Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad(
-                    "GSE5949", false, true, false, false, true );
+            Collection<ExpressionExperiment> results = geoService.fetchAndLoad( "GSE5949", false, true, false, false,
+                    true );
             ee = results.iterator().next();
         } catch ( AlreadyExistsInSystemException e ) {
             log.info( "Test skipped because GSE5949 was already loaded - clean the DB before running the test" );
@@ -118,9 +118,15 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
         eeService.thawLite( ee );
         Collection qts = eeService.getQuantitationTypes( ee );
         assertEquals( 3, qts.size() );
+
+        eeService.delete( ee );
+
+        assertNull( eeService.load( ee.getId() ) );
+
     }
 
     @SuppressWarnings("unchecked")
+    @Test
     public void testFetchAndLoadMultiChipPerSeriesShort() throws Exception {
         String path = getTestFileBasePath();
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
@@ -132,22 +138,16 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
          */
         ExpressionExperiment newee;
         try {
-            Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad(
-                    "GDS472", false, true, false, false, true );
+            Collection<ExpressionExperiment> results = geoService.fetchAndLoad( "GDS472", false, true, false, false,
+                    true );
             newee = results.iterator().next();
 
         } catch ( AlreadyExistsInSystemException e ) {
-            newee = ( ExpressionExperiment ) e.getData();
+            log.info( "Skipping test, data already exists in db" );
+            return;
         }
         assertNotNull( newee );
-        ExpressionExperimentService expressionExperimentService = ( ExpressionExperimentService ) this
-                .getBean( "expressionExperimentService" );
-        expressionExperimentService.thaw( newee );
-
-        // get the data back out.
-        ExpressionExperimentService ees = ( ExpressionExperimentService ) getBean( "expressionExperimentService" );
-
-        ee = ees.findByName( "Normal Muscle - Female , Effect of Age" );
+        eeService.thaw( newee );
 
         /*
          * Test for bug 468 (merging of subsets across GDS's)
@@ -155,12 +155,13 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
         ExperimentalFactor factor = newee.getExperimentalDesign().getExperimentalFactors().iterator().next();
         assertEquals( 2, factor.getFactorValues().size() ); // otherwise get 4.
 
-        Collection vectors = newee.getRawExpressionDataVectors();
+        Collection<RawExpressionDataVector> vectors = newee.getRawExpressionDataVectors();
+
         designElementDataVectorService.thaw( vectors );
 
         ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( vectors );
 
-        ExpressionDataMatrix matrix = builder.getPreferredData();
+        ExpressionDataMatrix<Double> matrix = builder.getPreferredData();
 
         assertNotNull( matrix );
 
@@ -173,40 +174,10 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
 
         // GSM10380 = C7-U133A
         testMatrixValue( newee, matrix, "1007_s_at", "GSM10380", 1272.0 );
-    }
 
-    /*
-     * (non-Javadoc)
-     * @see ubic.gemma.loader.expression.geo.service.AbstractGeoServiceTest#init()
-     */
-    @Override
-    protected void init() {
-        geoService = ( AbstractGeoService ) this.getBean( "geoDatasetService" );
-    }
+        eeService.delete( newee );
 
-    @Override
-    protected void onSetUp() throws Exception {
-        super.onSetUp();
-        ads = new HashSet<ArrayDesign>();
-
-        eeService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
-        adService = ( ArrayDesignService ) this.getBean( "arrayDesignService" );
-        designElementDataVectorService = ( DesignElementDataVectorService ) this
-                .getBean( "designElementDataVectorService" );
-        init();
-        endTransaction();
-    }
-
-    @Override
-    protected void onTearDown() throws Exception {
-        super.onTearDown();
-        try {
-            if ( ee != null ) {
-                // eeService.delete( ee );
-            }
-        } catch ( Exception e ) {
-            log.error( "Error while deleting test data: " + ee, e );
-        }
+        assertNull( eeService.load( newee.getId() ) );
 
     }
 
@@ -214,7 +185,6 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
      * Please leave this here, we use it to load data sets for chopping.
      */
     void fetchASeries( String accession ) throws Exception {
-        endTransaction();
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
         geoService.fetchAndLoad( accession, false, false, false, false, true );
     }
@@ -249,12 +219,12 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
      * @param sampleToTest
      * @param expectedValue
      */
-    private void testMatrixValue( ExpressionExperiment ee, ExpressionDataMatrix matrix, String probeToTest,
+    private void testMatrixValue( ExpressionExperiment exp, ExpressionDataMatrix<Double> matrix, String probeToTest,
             String sampleToTest, double expectedValue ) {
 
         DesignElement soughtDesignElement = null;
         BioAssay soughtBioAssay = null;
-        Collection<RawExpressionDataVector> vectors = ee.getRawExpressionDataVectors();
+        Collection<RawExpressionDataVector> vectors = exp.getRawExpressionDataVectors();
         for ( DesignElementDataVector vector : vectors ) {
             DesignElement de = vector.getDesignElement();
             if ( de.getName().equals( probeToTest ) ) {
@@ -271,7 +241,7 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
         }
         if ( soughtDesignElement == null || soughtBioAssay == null ) fail( "didn't find values for " + sampleToTest );
 
-        Double actualValue = ( Double ) matrix.get( soughtDesignElement, soughtBioAssay );
+        Double actualValue = matrix.get( soughtDesignElement, soughtBioAssay );
         assertNotNull( "No value for " + soughtBioAssay, actualValue );
         assertEquals( expectedValue, actualValue, 0.00001 );
 

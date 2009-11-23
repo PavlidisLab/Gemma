@@ -36,6 +36,7 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheException;
@@ -51,10 +52,14 @@ import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
 import ubic.gemma.analysis.report.ArrayDesignReportService;
+import ubic.gemma.analysis.report.ArrayDesignReportServiceImpl;
 import ubic.gemma.analysis.sequence.ArrayDesignMapResultService;
 import ubic.gemma.analysis.sequence.CompositeSequenceMapValueObject;
 import ubic.gemma.analysis.service.ArrayDesignAnnotationService;
@@ -85,51 +90,44 @@ import ubic.gemma.web.util.EntityNotFoundException;
 /**
  * @author keshav
  * @version $Id$
- * @spring.bean id="arrayDesignController" name="arrayDesignController"
- * @springproperty name="validator" ref="arrayDesignValidator"
- * @spring.property name = "arrayDesignService" ref="arrayDesignService"
- * @spring.property name = "compositeSequenceService" ref="compositeSequenceService"
- * @spring.property name = "arrayDesignReportService" ref="arrayDesignReportService"
- * @spring.property name = "arrayDesignMapResultService" ref="arrayDesignMapResultService"
- * @spring.property name="methodNameResolver" ref="arrayDesignActions"
- * @spring.property name="searchService" ref="searchService"
- * @spring.property name="auditTrailService" ref="auditTrailService"
  */
+@Controller
+@RequestMapping("/arrays")
 public class ArrayDesignController extends BackgroundProcessingMultiActionController implements InitializingBean {
 
     /**
-     * Inner class used for building array desing summary
+     * Inner class used for building array design summary
      */
     class GenerateSummary extends BackgroundControllerJob<ModelAndView> {
 
-        private Long id;
+        private Long arrayDesignId;
 
-        public GenerateSummary() {
-            super( getMessageUtil() );
-
-            id = null;
+        public GenerateSummary( HttpSession session ) {
+            super( getMessageUtil(), session );
+            arrayDesignId = null;
         }
 
         public GenerateSummary( Long id ) {
-            super( getMessageUtil() );
-            this.id = id;
+            this( null, id );
+        }
+
+        public GenerateSummary( HttpSession session, Long id ) {
+            super( getMessageUtil(), session );
+            this.arrayDesignId = id;
         }
 
         public ModelAndView call() throws Exception {
 
-            init();
+            ProgressJob job = init( "Generating ArrayDesign Report summary" );
 
-            ProgressJob job = ProgressManager.createProgressJob( this.getTaskId(), securityContext.getAuthentication()
-                    .getName(), "Generating ArrayDesign Report summary", false );
-
-            if ( id == null ) {
+            if ( arrayDesignId == null ) {
                 if ( this.getDoForward() ) saveMessage( "Generated summary for all platforms" );
                 job.updateProgress( "Generated summary for all platforms" );
                 arrayDesignReportService.generateArrayDesignReport();
             } else {
-                if ( this.getDoForward() ) saveMessage( "Generating summary for platform " + id );
+                if ( this.getDoForward() ) saveMessage( "Generating summary for platform " + arrayDesignId );
                 job.updateProgress( "Generating summary for specified platform" );
-                ArrayDesignValueObject report = arrayDesignReportService.generateArrayDesignReport( id );
+                ArrayDesignValueObject report = arrayDesignReportService.generateArrayDesignReport( arrayDesignId );
                 job.setPayload( report );
             }
 
@@ -147,16 +145,13 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
         private ArrayDesign ad;
 
         public RemoveArrayJob( ArrayDesign ad ) {
-            super( getMessageUtil() );
+            super();
             this.ad = ad;
         }
 
         public ModelAndView call() throws Exception {
 
-            init();
-
-            ProgressJob job = ProgressManager.createProgressJob( this.getTaskId(), securityContext.getAuthentication()
-                    .getName(), "Deleting Array: " + ad.getShortName() );
+            ProgressJob job = init( "Deleting Array: " + ad.getShortName() );
 
             arrayDesignService.remove( ad );
             saveMessage( "Array " + ad.getShortName() + " removed from Database." );
@@ -190,18 +185,29 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
      * Instead of showing all the probes for the array, we might only fetch some of them.
      */
     private static final int NUM_PROBES_TO_SHOW = 500;
+
+    @Autowired
     private ArrayDesignMapResultService arrayDesignMapResultService = null;
-    ArrayDesignReportService arrayDesignReportService = null;
-    ArrayDesignService arrayDesignService = null;
+
+    @Autowired
+    private ArrayDesignReportService arrayDesignReportService = null;
+
+    @Autowired
+    private ArrayDesignService arrayDesignService = null;
+
+    @Autowired
     private AuditTrailService auditTrailService;
+
     private Cache cache;
 
+    @Autowired
     private CompositeSequenceService compositeSequenceService = null;
 
     private final String identifierNotFound = "Must provide a valid Array Design identifier";
 
     private final String messageName = "Array design with name";
 
+    @Autowired
     private SearchService searchService;
 
     public String addAlternateName( Long arrayDesignId, String alternateName ) {
@@ -254,6 +260,7 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
      * @param response
      * @return
      */
+    @RequestMapping("/deleteArrayDesign.html")
     public ModelAndView delete( HttpServletRequest request, HttpServletResponse response ) {
         String stringId = request.getParameter( "id" );
 
@@ -295,6 +302,7 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
      * @param response
      * @return
      */
+    @RequestMapping("/downloadAnnotationFile.html")
     public ModelAndView downloadAnnotationFile( HttpServletRequest request, HttpServletResponse response ) {
 
         String arrayDesignIdStr = request.getParameter( "id" );
@@ -352,6 +360,7 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
      * @param response
      * @return
      */
+    @RequestMapping("/filterArrayDesigns.html")
     public ModelAndView filter( HttpServletRequest request, HttpServletResponse response ) {
 
         StopWatch overallWatch = new StopWatch();
@@ -362,7 +371,7 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
         // Validate the filtering search criteria.
         if ( StringUtils.isBlank( filter ) ) {
             this.saveMessage( request, "No search critera provided" );
-            return showAll( request, response );
+            return showAllArrayDesigns( request, response );
         }
 
         Collection<SearchResult> searchResults = searchService.search( SearchSettings.ArrayDesignSearch( filter ) )
@@ -372,7 +381,7 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
             this.saveMessage( request, "Your search yielded no results" );
             Long overallElapsed = overallWatch.getTime();
             log.info( "No results found. Search took: " + overallElapsed / 1000 + "s " );
-            return showAll( request, response );
+            return showAllArrayDesigns( request, response );
         }
 
         String list = "";
@@ -409,16 +418,17 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
      * @param response
      * @return
      */
+    @RequestMapping("/generateArrayDesignSummary.html")
     public ModelAndView generateSummary( HttpServletRequest request, HttpServletResponse response ) {
 
         String sId = request.getParameter( "id" );
 
         // if no IDs are specified, then load all expressionExperiments and show the summary (if available)
         if ( sId == null ) {
-            return startJob( new GenerateSummary() );
+            return startJob( new GenerateSummary( request.getSession() ) );
         }
         Long id = Long.parseLong( sId );
-        return startJob( new GenerateSummary( id ) );
+        return startJob( new GenerateSummary( request.getSession(), id ) );
     }
 
     /**
@@ -537,7 +547,7 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
     /**
      * @param arrayDesignReportService the arrayDesignReportService to set
      */
-    public void setArrayDesignReportService( ArrayDesignReportService arrayDesignReportService ) {
+    public void setArrayDesignReportService( ArrayDesignReportServiceImpl arrayDesignReportService ) {
         this.arrayDesignReportService = arrayDesignReportService;
     }
 
@@ -575,14 +585,15 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
      * @param errors
      * @return
      */
-    public ModelAndView show( HttpServletRequest request, HttpServletResponse response ) {
+    @RequestMapping("/showArrayDesign.html")
+    public ModelAndView showArrayDesign( HttpServletRequest request, HttpServletResponse response ) {
         String name = request.getParameter( "name" );
         String idStr = request.getParameter( "id" );
 
         if ( ( name == null ) && ( idStr == null ) ) {
             // should be a validation error, on 'submit'.
             this.saveMessage( request, "Must provide an array design name or id. Displaying all Arrays" );
-            return this.showAll( request, response );
+            return this.showAllArrayDesigns( request, response );
 
         }
         ArrayDesign arrayDesign = null;
@@ -596,7 +607,7 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
 
         if ( arrayDesign == null ) {
             this.saveMessage( request, "Unable to load Array Design with id: " + idStr + ". Displaying all Arrays" );
-            return this.showAll( request, response );
+            return this.showAllArrayDesigns( request, response );
 
         }
         long id = arrayDesign.getId();
@@ -652,56 +663,14 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
     }
 
     /**
-     * @param arrayDesign
-     * @param mav
-     */
-    private void getAnnotationFileLinks( ArrayDesign arrayDesign, ModelAndView mav ) {
-
-        ArrayDesign merger = arrayDesign.getMergedInto();
-        ArrayDesign annotationFileDesign;
-        if ( merger != null )
-            annotationFileDesign = merger;
-        else
-            annotationFileDesign = arrayDesign;
-
-        String mungedShortName = ArrayDesignAnnotationService.mungeFileName( annotationFileDesign.getShortName() );
-        File fnp = new File( ArrayDesignAnnotationService.ANNOT_DATA_DIR + mungedShortName
-                + ArrayDesignAnnotationService.NO_PARENTS_FILE_SUFFIX
-                + ArrayDesignAnnotationService.ANNOTATION_FILE_SUFFIX );
-
-        File fap = new File( ArrayDesignAnnotationService.ANNOT_DATA_DIR + mungedShortName
-                + ArrayDesignAnnotationService.STANDARD_FILE_SUFFIX
-                + ArrayDesignAnnotationService.ANNOTATION_FILE_SUFFIX );
-
-        File fbp = new File( ArrayDesignAnnotationService.ANNOT_DATA_DIR + mungedShortName
-                + ArrayDesignAnnotationService.BIO_PROCESS_FILE_SUFFIX
-                + ArrayDesignAnnotationService.ANNOTATION_FILE_SUFFIX );
-
-        // context here is Gemma/arrays
-        if ( fnp.exists() ) {
-            mav.addObject( "noParentsAnnotationLink", "downloadAnnotationFile.html?id=" + annotationFileDesign.getId()
-                    + "&fileType=noParents" );
-        }
-        if ( fap.exists() ) {
-            mav.addObject( "allParentsAnnotationLink", "downloadAnnotationFile.html?id=" + annotationFileDesign.getId()
-                    + "&fileType=allParents" );
-        }
-        if ( fbp.exists() ) {
-            mav.addObject( "bioProcessAnnotationLink", "downloadAnnotationFile.html?id=" + annotationFileDesign.getId()
-                    + "&fileType=bioProcess" );
-        }
-
-    }
-
-    /**
      * Show all array designs, or according to a list of IDs passed in.
      * 
      * @param request
      * @param response
      * @return
      */
-    @SuppressWarnings("unchecked")
-    public ModelAndView showAll( HttpServletRequest request, HttpServletResponse response ) {
+    @RequestMapping("/showAllArrayDesigns.html")
+    public ModelAndView showAllArrayDesigns( HttpServletRequest request, HttpServletResponse response ) {
 
         StopWatch overallWatch = new StopWatch();
         overallWatch.start();
@@ -719,7 +688,7 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
             this.saveMessage( request, "Displaying all Arrays" );
         }
 
-        Collection ids = new ArrayList<Long>();
+        Collection<Long> ids = new ArrayList<Long>();
         if ( sId != null ) {
             String[] idList = StringUtils.split( sId, ',' );
             for ( int i = 0; i < idList.length; i++ ) {
@@ -754,10 +723,10 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
      * Show (some of) the probes from an array.
      * 
      * @param request
-     * @param response
      * @return
      */
-    public ModelAndView showCompositeSequences( HttpServletRequest request, HttpServletResponse response ) {
+    @RequestMapping("/showCompositeSequenceSummary.html")
+    public ModelAndView showCompositeSequences( HttpServletRequest request ) {
 
         String arrayDesignIdStr = request.getParameter( "id" );
 
@@ -787,11 +756,11 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
      * shows a list of BioAssays for an expression experiment subset
      * 
      * @param request
-     * @param response
      * @param errors
      * @return ModelAndView
      */
-    public ModelAndView showExpressionExperiments( HttpServletRequest request, HttpServletResponse response ) {
+    @RequestMapping("/showExpressionExperiments.html")
+    public ModelAndView showExpressionExperiments( HttpServletRequest request ) {
         Long id = Long.parseLong( request.getParameter( "id" ) );
         if ( id == null ) {
             // should be a validation error, on 'submit'.
@@ -896,6 +865,48 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
             colorString = "Not specified";
         }
         return colorString;
+    }
+
+    /**
+     * @param arrayDesign
+     * @param mav
+     */
+    private void getAnnotationFileLinks( ArrayDesign arrayDesign, ModelAndView mav ) {
+
+        ArrayDesign merger = arrayDesign.getMergedInto();
+        ArrayDesign annotationFileDesign;
+        if ( merger != null )
+            annotationFileDesign = merger;
+        else
+            annotationFileDesign = arrayDesign;
+
+        String mungedShortName = ArrayDesignAnnotationService.mungeFileName( annotationFileDesign.getShortName() );
+        File fnp = new File( ArrayDesignAnnotationService.ANNOT_DATA_DIR + mungedShortName
+                + ArrayDesignAnnotationService.NO_PARENTS_FILE_SUFFIX
+                + ArrayDesignAnnotationService.ANNOTATION_FILE_SUFFIX );
+
+        File fap = new File( ArrayDesignAnnotationService.ANNOT_DATA_DIR + mungedShortName
+                + ArrayDesignAnnotationService.STANDARD_FILE_SUFFIX
+                + ArrayDesignAnnotationService.ANNOTATION_FILE_SUFFIX );
+
+        File fbp = new File( ArrayDesignAnnotationService.ANNOT_DATA_DIR + mungedShortName
+                + ArrayDesignAnnotationService.BIO_PROCESS_FILE_SUFFIX
+                + ArrayDesignAnnotationService.ANNOTATION_FILE_SUFFIX );
+
+        // context here is Gemma/arrays
+        if ( fnp.exists() ) {
+            mav.addObject( "noParentsAnnotationLink", "downloadAnnotationFile.html?id=" + annotationFileDesign.getId()
+                    + "&fileType=noParents" );
+        }
+        if ( fap.exists() ) {
+            mav.addObject( "allParentsAnnotationLink", "downloadAnnotationFile.html?id=" + annotationFileDesign.getId()
+                    + "&fileType=allParents" );
+        }
+        if ( fbp.exists() ) {
+            mav.addObject( "bioProcessAnnotationLink", "downloadAnnotationFile.html?id=" + annotationFileDesign.getId()
+                    + "&fileType=bioProcess" );
+        }
+
     }
 
     /**

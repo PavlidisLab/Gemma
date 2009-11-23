@@ -23,6 +23,8 @@ import java.util.Collection;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.basecode.math.Rank;
@@ -52,22 +54,22 @@ import cern.colt.list.DoubleArrayList;
  * @author pavlidis
  * @author raymond
  * @version $Id$
- * @spring.bean id="processedExpressionDataVectorCreateService"
- * @spring.property name="eeService" ref="expressionExperimentService"
- * @spring.property name="processedDataService" ref="processedExpressionDataVectorService"
- * @spring.property name="designElementDataVectorService" ref="designElementDataVectorService"
- * @spring.property name="auditTrailService" ref="auditTrailService"
  */
+@Service
 public class ProcessedExpressionDataVectorCreateService {
 
     private static Log log = LogFactory.getLog( ProcessedExpressionDataVectorCreateService.class.getName() );
 
+    @Autowired
     private AuditTrailService auditTrailService;
 
+    @Autowired
     private DesignElementDataVectorService designElementDataVectorService = null;
 
+    @Autowired
     private ExpressionExperimentService eeService = null;
 
+    @Autowired
     private ProcessedExpressionDataVectorService processedDataService = null;
 
     /**
@@ -75,11 +77,10 @@ public class ProcessedExpressionDataVectorCreateService {
      * @param method2
      * @return the vectors that were modified.
      */
-
     public Collection<ProcessedExpressionDataVector> computeProcessedExpressionData( ExpressionExperiment ee ) {
 
         // eeService.thawLite( ee );
-        
+
         Collection<ProcessedExpressionDataVector> processedVectors = processedDataService
                 .createProcessedDataVectors( ee );
 

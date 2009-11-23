@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.genome.sequenceAnalysis;
 
+import org.springframework.beans.factory.annotation.Autowired;
+
 /**
  * <p>
  * Spring Service base class for <code>ubic.gemma.model.genome.sequenceAnalysis.BlastResultService</code>, provides
@@ -28,6 +30,7 @@ package ubic.gemma.model.genome.sequenceAnalysis;
  */
 public abstract class BlastResultServiceBase implements ubic.gemma.model.genome.sequenceAnalysis.BlastResultService {
 
+    @Autowired
     private ubic.gemma.model.genome.sequenceAnalysis.BlastResultDao blastResultDao;
 
     /**

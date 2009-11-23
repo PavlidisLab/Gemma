@@ -23,11 +23,14 @@ package ubic.gemma.model.expression.biomaterial;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.stereotype.Service;
+
 /**
  * @author pavlidis
  * @version $Id$
  * @see ubic.gemma.model.expression.biomaterial.TreatmentService
  */
+@Service
 public class TreatmentServiceImpl extends ubic.gemma.model.expression.biomaterial.TreatmentServiceBase {
 
     /**
@@ -47,7 +50,7 @@ public class TreatmentServiceImpl extends ubic.gemma.model.expression.biomateria
     @Override
     protected Treatment handleSaveTreatment( ubic.gemma.model.expression.biomaterial.Treatment treatment )
             throws java.lang.Exception {
-        return ( Treatment ) this.getTreatmentDao().create( treatment );
+        return this.getTreatmentDao().create( treatment );
     }
 
 }

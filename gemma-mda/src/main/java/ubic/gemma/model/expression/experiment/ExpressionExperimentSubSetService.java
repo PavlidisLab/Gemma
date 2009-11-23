@@ -18,25 +18,31 @@
  */
 package ubic.gemma.model.expression.experiment;
 
+import org.springframework.security.access.annotation.Secured;
+
 /**
- * 
+ * @author kelsey
+ * @version $Id$
  */
 public interface ExpressionExperimentSubSetService {
 
     /**
      * 
      */
+    @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
     public ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet create(
             ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet expressionExperimentSubSet );
 
     /**
      * 
      */
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     public ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet load( java.lang.Long id );
 
     /**
      * 
      */
-    public java.util.Collection loadAll();
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    public java.util.Collection<ExpressionExperimentSubSet> loadAll();
 
 }

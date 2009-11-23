@@ -21,10 +21,8 @@ package ubic.gemma.model.common.description;
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 
 /**
- * <p>
  * Base Spring DAO Class: is able to create, update, remove, load, and find objects of type
  * <code>ubic.gemma.model.common.description.VocabCharacteristic</code>.
- * </p>
  * 
  * @see ubic.gemma.model.common.description.VocabCharacteristic
  */
@@ -35,17 +33,16 @@ public abstract class VocabCharacteristicDaoBase extends HibernateDaoSupport imp
      * @see ubic.gemma.model.common.description.VocabCharacteristicDao#create(int, java.util.Collection)
      */
 
-    public java.util.Collection create( final int transform, final java.util.Collection entities ) {
+    public java.util.Collection create( final java.util.Collection entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "VocabCharacteristic.create - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback() {
+                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                            create( transform,
-                                    ( ubic.gemma.model.common.description.VocabCharacteristic ) entityIterator.next() );
+                            create( ( ubic.gemma.model.common.description.VocabCharacteristic ) entityIterator.next() );
                         }
                         return null;
                     }
@@ -57,30 +54,12 @@ public abstract class VocabCharacteristicDaoBase extends HibernateDaoSupport imp
      * @see ubic.gemma.model.common.description.VocabCharacteristicDao#create(int transform,
      *      ubic.gemma.model.common.description.VocabCharacteristic)
      */
-    public Object create( final int transform,
-            final ubic.gemma.model.common.description.VocabCharacteristic vocabCharacteristic ) {
+    public VocabCharacteristic create( final ubic.gemma.model.common.description.VocabCharacteristic vocabCharacteristic ) {
         if ( vocabCharacteristic == null ) {
             throw new IllegalArgumentException( "VocabCharacteristic.create - 'vocabCharacteristic' can not be null" );
         }
         this.getHibernateTemplate().save( vocabCharacteristic );
-        return this.transformEntity( transform, vocabCharacteristic );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.VocabCharacteristicDao#create(java.util.Collection)
-     */
-
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Collection create( final java.util.Collection entities ) {
-        return create( TRANSFORM_NONE, entities );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.VocabCharacteristicDao#create(ubic.gemma.model.common.description.VocabCharacteristic)
-     */
-    public VocabCharacteristic create( ubic.gemma.model.common.description.VocabCharacteristic vocabCharacteristic ) {
-        return ( ubic.gemma.model.common.description.VocabCharacteristic ) this.create( TRANSFORM_NONE,
-                vocabCharacteristic );
+        return vocabCharacteristic;
     }
 
     /**
@@ -152,40 +131,22 @@ public abstract class VocabCharacteristicDaoBase extends HibernateDaoSupport imp
      * @see ubic.gemma.model.common.description.VocabCharacteristicDao#load(int, java.lang.Long)
      */
 
-    public Object load( final int transform, final java.lang.Long id ) {
+    public VocabCharacteristic load( final java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "VocabCharacteristic.load - 'id' can not be null" );
         }
         final Object entity = this.getHibernateTemplate().get(
                 ubic.gemma.model.common.description.VocabCharacteristicImpl.class, id );
-        return transformEntity( transform, ( ubic.gemma.model.common.description.VocabCharacteristic ) entity );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.VocabCharacteristicDao#load(java.lang.Long)
-     */
-
-    public VocabCharacteristic load( java.lang.Long id ) {
-        return ( ubic.gemma.model.common.description.VocabCharacteristic ) this.load( TRANSFORM_NONE, id );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.VocabCharacteristicDao#loadAll()
-     */
-
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Collection loadAll() {
-        return this.loadAll( TRANSFORM_NONE );
+        return ( ubic.gemma.model.common.description.VocabCharacteristic ) entity;
     }
 
     /**
      * @see ubic.gemma.model.common.description.VocabCharacteristicDao#loadAll(int)
      */
 
-    public java.util.Collection loadAll( final int transform ) {
+    public java.util.Collection loadAll() {
         final java.util.Collection results = this.getHibernateTemplate().loadAll(
                 ubic.gemma.model.common.description.VocabCharacteristicImpl.class );
-        this.transformEntities( transform, results );
         return results;
     }
 
@@ -233,7 +194,7 @@ public abstract class VocabCharacteristicDaoBase extends HibernateDaoSupport imp
             throw new IllegalArgumentException( "VocabCharacteristic.update - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback() {
+                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
@@ -279,53 +240,5 @@ public abstract class VocabCharacteristicDaoBase extends HibernateDaoSupport imp
      */
     protected abstract java.util.Map handleGetParents( java.lang.Class parentClass, java.util.Collection characteristics )
             throws java.lang.Exception;
-
-    /**
-     * Transforms a collection of entities using the
-     * {@link #transformEntity(int,ubic.gemma.model.common.description.VocabCharacteristic)} method. This method does
-     * not instantiate a new collection.
-     * <p/>
-     * This method is to be used internally only.
-     * 
-     * @param transform one of the constants declared in
-     *        <code>ubic.gemma.model.common.description.VocabCharacteristicDao</code>
-     * @param entities the collection of entities to transform
-     * @return the same collection as the argument, but this time containing the transformed entities
-     * @see #transformEntity(int,ubic.gemma.model.common.description.VocabCharacteristic)
-     */
-
-    protected void transformEntities( final int transform, final java.util.Collection entities ) {
-        switch ( transform ) {
-            case TRANSFORM_NONE: // fall-through
-            default:
-                // do nothing;
-        }
-    }
-
-    /**
-     * Allows transformation of entities into value objects (or something else for that matter), when the
-     * <code>transform</code> flag is set to one of the constants defined in
-     * <code>ubic.gemma.model.common.description.VocabCharacteristicDao</code>, please note that the
-     * {@link #TRANSFORM_NONE} constant denotes no transformation, so the entity itself will be returned. If the integer
-     * argument value is unknown {@link #TRANSFORM_NONE} is assumed.
-     * 
-     * @param transform one of the constants declared in
-     *        {@link ubic.gemma.model.common.description.VocabCharacteristicDao}
-     * @param entity an entity that was found
-     * @return the transformed entity (i.e. new value object, etc)
-     * @see #transformEntities(int,java.util.Collection)
-     */
-    protected Object transformEntity( final int transform,
-            final ubic.gemma.model.common.description.VocabCharacteristic entity ) {
-        Object target = null;
-        if ( entity != null ) {
-            switch ( transform ) {
-                case TRANSFORM_NONE: // fall-through
-                default:
-                    target = entity;
-            }
-        }
-        return target;
-    }
 
 }

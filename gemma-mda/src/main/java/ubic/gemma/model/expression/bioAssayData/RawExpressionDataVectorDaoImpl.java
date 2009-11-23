@@ -16,8 +16,11 @@ import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.hibernate.SessionFactory;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Restrictions;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
 
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -31,10 +34,16 @@ import ubic.gemma.util.BusinessKey;
  * @author paul
  * @version $Id$
  */
+@Repository
 public class RawExpressionDataVectorDaoImpl extends DesignElementDataVectorDaoImpl<RawExpressionDataVector> implements
         RawExpressionDataVectorDao {
 
     private static Log log = LogFactory.getLog( RawExpressionDataVectorDaoImpl.class.getName() );
+
+    @Autowired
+    public RawExpressionDataVectorDaoImpl( SessionFactory sessionFactory ) {
+        super.setSessionFactory( sessionFactory );
+    }
 
     /*
      * (non-Javadoc)
@@ -48,7 +57,7 @@ public class RawExpressionDataVectorDaoImpl extends DesignElementDataVectorDaoIm
                 + " inner join fetch dev.designElement de inner join fetch dev.quantitationType where dev.designElement in (:desEls) "
                 + "and dev.quantitationType = :quantitationType ";
         try {
-            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            org.hibernate.Query queryObject = super.getSession().createQuery( queryString );
             queryObject.setParameter( "quantitationType", quantitationType );
 
             Collection<DesignElement> batch = new HashSet<DesignElement>();
@@ -75,40 +84,30 @@ public class RawExpressionDataVectorDaoImpl extends DesignElementDataVectorDaoIm
         }
     }
 
-    @Override
-    protected Integer handleCountAll() throws Exception {
-        final String query = "select count(*) from RawExpressionDataVectorImpl";
+    @SuppressWarnings("unchecked")
+    public Collection<RawExpressionDataVector> find( Collection<QuantitationType> quantitationTypes ) {
+        final String queryString = "select dev from RawExpressionDataVectorImpl dev  where  "
+                + "  dev.quantitationType in ( :quantitationTypes) ";
         try {
-            org.hibernate.Query queryObject = super.getSession( false ).createQuery( query );
-
-            return ( Integer ) queryObject.iterate().next();
+            org.hibernate.Query queryObject = super.getSession().createQuery( queryString );
+            queryObject.setParameterList( "quantitationTypes", quantitationTypes );
+            return queryObject.list();
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }
     }
 
-    /**
-     * @param ees
-     * @param cs2gene
-     * @return
-     */
-    protected Map<RawExpressionDataVector, Collection<Gene>> getPreferredVectorsForProbes(
-            Collection<ExpressionExperiment> ees, Map<CompositeSequence, Collection<Gene>> cs2gene ) {
-
-        final String queryString;
-        if ( ees == null || ees.size() == 0 ) {
-            queryString = "select distinct dedv, dedv.designElement from RawExpressionDataVectorImpl dedv "
-                    + " inner join fetch dedv.bioAssayDimension bd "
-                    + " inner join dedv.designElement de inner join fetch dedv.quantitationType "
-                    + " where dedv.designElement in ( :cs ) and dedv.quantitationType.isPreferred = true";
-        } else {
-            queryString = "select distinct dedv, dedv.designElement from RawExpressionDataVectorImpl dedv"
-                    + " inner join fetch dedv.bioAssayDimension bd "
-                    + " inner join dedv.designElement de inner join fetch dedv.quantitationType "
-                    + " where dedv.designElement in (:cs ) and dedv.quantitationType.isPreferred = true"
-                    + " and dedv.expressionExperiment in ( :ees )";
+    @SuppressWarnings("unchecked")
+    public Collection<RawExpressionDataVector> find( QuantitationType quantitationType ) {
+        final String queryString = "select dev from RawExpressionDataVectorImpl dev   where  "
+                + "  dev.quantitationType = :quantitationType ";
+        try {
+            org.hibernate.Query queryObject = super.getSession().createQuery( queryString );
+            queryObject.setParameter( "quantitationType", quantitationType );
+            return queryObject.list();
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
         }
-        return getVectorsForProbesInExperiments( ees, cs2gene, queryString );
     }
 
     /*
@@ -159,17 +158,20 @@ public class RawExpressionDataVectorDaoImpl extends DesignElementDataVectorDaoIm
         if ( id == null ) {
             throw new IllegalArgumentException( "RawExpressionDataVector.load - 'id' can not be null" );
         }
-        return ( RawExpressionDataVectorImpl ) this.getHibernateTemplate().get( RawExpressionDataVectorImpl.class, id );
+        return this.getHibernateTemplate().get( RawExpressionDataVectorImpl.class, id );
 
     }
 
     /**
      * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDao#loadAll()
      */
-
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Collection<RawExpressionDataVector> loadAll() {
+    public java.util.Collection<? extends RawExpressionDataVector> loadAll() {
         return this.getHibernateTemplate().loadAll( RawExpressionDataVectorImpl.class );
+    }
+
+    @Override
+    public void remove( RawExpressionDataVector designElementDataVector ) {
+        this.getHibernateTemplate().delete( designElementDataVector );
     }
 
     /*
@@ -203,34 +205,40 @@ public class RawExpressionDataVectorDaoImpl extends DesignElementDataVectorDaoIm
         log.info( "Deleted " + deleted + " data vector elements" );
     }
 
-    @SuppressWarnings("unchecked")
-    public Collection<RawExpressionDataVector> find( Collection<QuantitationType> quantitationTypes ) {
-        final String queryString = "select dev from RawExpressionDataVectorImpl dev  where  "
-                + "  dev.quantitationType in ( :quantitationTypes) ";
+    /**
+     * @param ees
+     * @param cs2gene
+     * @return
+     */
+    protected Map<RawExpressionDataVector, Collection<Gene>> getPreferredVectorsForProbes(
+            Collection<ExpressionExperiment> ees, Map<CompositeSequence, Collection<Gene>> cs2gene ) {
+
+        final String queryString;
+        if ( ees == null || ees.size() == 0 ) {
+            queryString = "select distinct dedv, dedv.designElement from RawExpressionDataVectorImpl dedv "
+                    + " inner join fetch dedv.bioAssayDimension bd "
+                    + " inner join dedv.designElement de inner join fetch dedv.quantitationType "
+                    + " where dedv.designElement in ( :cs ) and dedv.quantitationType.isPreferred = true";
+        } else {
+            queryString = "select distinct dedv, dedv.designElement from RawExpressionDataVectorImpl dedv"
+                    + " inner join fetch dedv.bioAssayDimension bd "
+                    + " inner join dedv.designElement de inner join fetch dedv.quantitationType "
+                    + " where dedv.designElement in (:cs ) and dedv.quantitationType.isPreferred = true"
+                    + " and dedv.expressionExperiment in ( :ees )";
+        }
+        return getVectorsForProbesInExperiments( ees, cs2gene, queryString );
+    }
+
+    @Override
+    protected Integer handleCountAll() throws Exception {
+        final String query = "select count(*) from RawExpressionDataVectorImpl";
         try {
-            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
-            queryObject.setParameterList( "quantitationTypes", quantitationTypes );
-            return queryObject.list();
+            org.hibernate.Query queryObject = super.getSession().createQuery( query );
+
+            return ( Integer ) queryObject.iterate().next();
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }
-    }
-
-    @SuppressWarnings("unchecked")
-    public Collection<RawExpressionDataVector> find( QuantitationType quantitationType ) {
-        final String queryString = "select dev from RawExpressionDataVectorImpl dev   where  "
-                + "  dev.quantitationType = :quantitationType ";
-        try {
-            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
-            queryObject.setParameter( "quantitationType", quantitationType );
-            return queryObject.list();
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
-        }
-    }
-
-    public void remove( RawExpressionDataVector designElementDataVector ) {
-        this.getHibernateTemplate().delete( designElementDataVector );
     }
 
 }

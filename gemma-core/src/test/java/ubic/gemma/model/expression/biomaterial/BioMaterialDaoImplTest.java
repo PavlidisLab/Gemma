@@ -18,6 +18,12 @@
  */
 package ubic.gemma.model.expression.biomaterial;
 
+import static org.junit.Assert.assertTrue;
+
+import org.junit.Before;
+import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.testing.BaseSpringContextTest;
 
@@ -29,12 +35,12 @@ public class BioMaterialDaoImplTest extends BaseSpringContextTest {
 
     private String searchkeyName;
     private String searchkeyAcc;
+
+    @Autowired
     BioMaterialDao bioMaterialDao;
 
-    @Override
-    protected void onSetUpInTransaction() throws Exception {
-        super.onSetUpInTransaction();
-        bioMaterialDao = ( BioMaterialDao ) getBean( "bioMaterialDao" );
+    @Before
+    public void setup() throws Exception {
         BioMaterial testbm = this.getTestPersistentBioMaterial();
         searchkeyName = testbm.getName();
         searchkeyAcc = testbm.getExternalAccession().getAccession();
@@ -46,8 +52,10 @@ public class BioMaterialDaoImplTest extends BaseSpringContextTest {
 
     /**
      * Test method for
-     * {@link ubic.gemma.model.expression.biomaterial.BioMaterialDaoImpl#find(ubic.gemma.model.expression.biomaterial.BioMaterial)}.
+     * {@link ubic.gemma.model.expression.biomaterial.BioMaterialDaoImpl#find(ubic.gemma.model.expression.biomaterial.BioMaterial)}
+     * .
      */
+    @Test
     public final void testFindBioMaterial() {
         BioMaterial bm = BioMaterial.Factory.newInstance();
         bm.setName( searchkeyName );
@@ -57,6 +65,7 @@ public class BioMaterialDaoImplTest extends BaseSpringContextTest {
         assertTrue( found != null );
     }
 
+    @Test
     public final void testFindBioMaterialByAccessionOnly() {
         BioMaterial bm = BioMaterial.Factory.newInstance();
         bm.setExternalAccession( DatabaseEntry.Factory.newInstance() );
@@ -65,6 +74,7 @@ public class BioMaterialDaoImplTest extends BaseSpringContextTest {
         assertTrue( found != null );
     }
 
+    @Test
     public final void testFindBioMaterialByNameOnly() {
         BioMaterial bm = BioMaterial.Factory.newInstance();
         bm.setName( searchkeyName );

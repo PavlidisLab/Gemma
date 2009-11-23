@@ -18,30 +18,37 @@
  */
 package ubic.gemma.model.analysis.expression.diff;
 
+import org.springframework.security.access.annotation.Secured;
+
 import ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet;
-import ubic.gemma.model.analysis.expression.ProbeAnalysisResult;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
- * 
+ * @author kelsey
+ * @version $Id$
  */
 public interface DifferentialExpressionAnalysisService extends
         ubic.gemma.model.analysis.AnalysisService<DifferentialExpressionAnalysis> {
 
     /**
-     * 
+     * @param ExpressionAnalysisResultSet
+     * @param threshold (double)
+     * @return an integer count of all the probes that met the given threshold in the given expressionAnalysisResultSet
      */
-    public ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis create(
-            ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis analysis );
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    public long countProbesMeetingThreshold( ExpressionAnalysisResultSet ears, double threshold );
 
     /**
      * 
      */
-    public void delete( java.lang.Long idToDelete );
+
+    @Secured( { "GROUP_USER" })
+    public DifferentialExpressionAnalysis create( DifferentialExpressionAnalysis analysis );
 
     /**
      * 
      */
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public java.util.Collection<DifferentialExpressionAnalysis> find( ubic.gemma.model.genome.Gene gene,
             ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet resultSet, double threshold );
 
@@ -50,6 +57,7 @@ public interface DifferentialExpressionAnalysisService extends
      * Given a collection of ids, return a map of id -> differential expression analysis (one per id).
      * </p>
      */
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public java.util.Map<Long, DifferentialExpressionAnalysis> findByInvestigationIds(
             java.util.Collection<Long> investigationIds );
 
@@ -58,32 +66,39 @@ public interface DifferentialExpressionAnalysisService extends
      * Return a collection of experiments in which the given gene was analyzed.
      * </p>
      */
-    public java.util.Collection findExperimentsWithAnalyses( ubic.gemma.model.genome.Gene gene );
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    public java.util.Collection<ExpressionExperiment> findExperimentsWithAnalyses( ubic.gemma.model.genome.Gene gene );
 
     /**
-     * 
+     * @param resultSetIds
+     * @return
      */
-    public java.util.Collection getResultSets(
-            ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment );
-
     public java.util.Collection<ExpressionAnalysisResultSet> getResultSets( java.util.Collection<Long> resultSetIds );
 
     /**
      * 
      */
-    public void thaw( java.util.Collection expressionAnalyses );
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    public java.util.Collection<ExpressionAnalysisResultSet> getResultSets(
+            ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment );
 
     /**
      * 
      */
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ" })
+    public void thaw( java.util.Collection<DifferentialExpressionAnalysis> expressionAnalyses );
+
+    /**
+     * 
+     */
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     public void thaw(
             ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis differentialExpressionAnalysis );
 
-    /**
-     * @param ExpressionAnalysisResultSet
-     * @param threshold (double)
-     * @return an integer count of all the probes that met the given threshold in the given expressionAnalysisResultSet
-     */
-    public long countProbesMeetingThreshold( ExpressionAnalysisResultSet ears, double threshold );
+    @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    public void update( DifferentialExpressionAnalysis o );
+
+    @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    public void update( ExpressionAnalysisResultSet a );
 
 }

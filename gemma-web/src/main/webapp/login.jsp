@@ -1,21 +1,13 @@
-<?xml version="1.0" encoding="ISO-8859-1" ?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-
+<%@ include file="/common/taglibs.jsp"%>
 <%-- 
 author: keshav
 version: $Id$
 --%>
 
-<%@ include file="/common/taglibs.jsp"%>
-<%@ page import="org.springframework.security.context.SecurityContextHolder"%>
-<%@ page import="org.springframework.security.context.SecurityContext"%>
 
 <html>
 	<head>
 		<title>Login</title>
-	</head>
-	<body style="overflow: hidden">
-
 
 		<script>
 		
@@ -25,11 +17,13 @@ version: $Id$
 	Ext.onReady( function()
 	{
 		Ext.QuickTips.init();
+
+		var error = Ext.get('login_error_msg') ? Ext.get('login_error_msg').getValue() : "";
 		
 		var login = new Ext.Panel({frame :false, title :'Login', width : 350, items:[new Ext.FormPanel(
 		{
 			labelWidth :90,
-			url :'<%=request.getContextPath()%>/j_security_check',
+			url :'/Gemma/j_spring_security_check',
 			method :'POST',
 			id :'_loginForm',
 			standardSubmit :true,
@@ -46,7 +40,7 @@ version: $Id$
 			        {
 						var sb = Ext.getCmp('my-status');
 						sb.showBusy();
-						document.getElementsByTagName("form")[1].action = "<%=request.getContextPath()%>/j_security_check";
+						document.getElementsByTagName("form")[1].action = "/Gemma/j_spring_security_check";
 						document.getElementsByTagName("form")[1].submit();
 			        }
 				}
@@ -74,7 +68,7 @@ version: $Id$
 					allowBlank :false,
 					inputType :'password'
 				},{
-					fieldLabel : '<a href="<%=request.getContextPath()%>/passwordHint.html">Reset Password</a>',
+					fieldLabel : '<a href="/Gemma/passwordHint.html">Forgot your password?</a>',
 					name :'passwordHint',
 					id :'passwordHint',
 					labelSeparator:'',
@@ -82,7 +76,7 @@ version: $Id$
 				},{
 					fieldLabel: 'Remember Me',
 					boxLabel : 'rememberMe',
-					name : 'rememberMe',
+					name : '_spring_security_remember_me',
 					inputType: 'checkbox'
 				}
 					
@@ -98,7 +92,7 @@ version: $Id$
 			        		{
 								var sb = Ext.getCmp('my-status');
 								sb.showBusy();
-								document.getElementsByTagName("form")[1].action = "<%=request.getContextPath()%>/j_security_check";
+								document.getElementsByTagName("form")[1].action =  '/Gemma/j_spring_security_check';
 								document.getElementsByTagName("form")[1].submit();
 			        		}					
 						}
@@ -109,29 +103,28 @@ version: $Id$
 				id: 'my-status',
 			    text: '',
 			    iconCls: 'default-icon',
-			    busyText: 'Validating...'
-		<%
-			if (!(request.getParameter("login_error") == null))
-			{
-			    String errorMsg = request.getSession().getAttribute("SPRING_SECURITY_LAST_EXCEPTION").toString();
-			    errorMsg = errorMsg.substring(errorMsg.indexOf(':') + 1, errorMsg.length());
-		%>
-			    ,items:
-				[
-					'<div style=\'color: red; vertical-align: top; padding-right: 5px;\'><%=errorMsg%><br/></div>'
-				]
-		<%	} %>
-		    })
+			    busyText: 'Logging you in...',
+			    items:
+					[
+						'<div style="color: red; vertical-align: top; padding-right: 5px;">' +error + '<br/></div>'
+					]
+			})
 		});
 		login.render(document.getElementById('_login'));
 	});
 
 </script>
+	</head>
+	<body>
+		<c:if test='${not empty sessionScope["SPRING_SECURITY_LAST_EXCEPTION"]}'>
+			<input id="login_error_msg" type="hidden" value='Error: ${sessionScope["SPRING_SECURITY_LAST_EXCEPTION"].message}' />
+		</c:if>
+
 
 
 		<p style='margin-left: 200px; width: 500; padding: 10px'>
-			Users do not need to log on or register for many uses of Gemma. An account is only needed if you want to take advantage of
-			data upload or 'favorite search' and similar functionality.
+			Users do not need to log on or register for many uses of Gemma. An account is only needed if you want to take
+			advantage of data upload or 'favorite search' and similar functionality.
 			<strong>Need an account? <a href="<c:url  value='register.html' />">Register</a> </strong>
 		</p>
 

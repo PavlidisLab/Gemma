@@ -61,19 +61,18 @@ public abstract class BioMaterialDaoBase extends HibernateDaoSupport implements
     /**
      * @see ubic.gemma.model.expression.biomaterial.BioMaterialDao#create(int, java.util.Collection)
      */
-    public java.util.Collection<BioMaterial> create( final int transform,
-            final java.util.Collection<BioMaterial> entities ) {
+    public java.util.Collection<? extends BioMaterial> create( final int transform,
+            final java.util.Collection<? extends BioMaterial> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "BioMaterial.create - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback() {
+                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator<BioMaterial> entityIterator = entities.iterator(); entityIterator
+                        for ( java.util.Iterator<? extends BioMaterial> entityIterator = entities.iterator(); entityIterator
                                 .hasNext(); ) {
-                            create( transform, ( ubic.gemma.model.expression.biomaterial.BioMaterial ) entityIterator
-                                    .next() );
+                            create( transform, entityIterator.next() );
                         }
                         return null;
                     }
@@ -97,8 +96,9 @@ public abstract class BioMaterialDaoBase extends HibernateDaoSupport implements
     /**
      * @see ubic.gemma.model.expression.biomaterial.BioMaterialDao#create(java.util.Collection)
      */
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Collection<BioMaterial> create( final java.util.Collection<BioMaterial> entities ) {
+    
+    public java.util.Collection<? extends BioMaterial> create(
+            final java.util.Collection<? extends BioMaterial> entities ) {
         return create( TRANSFORM_NONE, entities );
     }
 
@@ -106,14 +106,14 @@ public abstract class BioMaterialDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.expression.biomaterial.BioMaterialDao#create(ubic.gemma.model.expression.biomaterial.BioMaterial)
      */
     public BioMaterial create( ubic.gemma.model.expression.biomaterial.BioMaterial bioMaterial ) {
-        return ( ubic.gemma.model.expression.biomaterial.BioMaterial ) this.create( TRANSFORM_NONE, bioMaterial );
+        return this.create( TRANSFORM_NONE, bioMaterial );
     }
 
     /**
      * @see ubic.gemma.model.expression.biomaterial.BioMaterialDao#find(int, java.lang.String,
      *      ubic.gemma.model.expression.biomaterial.BioMaterial)
      */
-    @SuppressWarnings( { "unchecked" })
+    
     public BioMaterial find( final int transform, final java.lang.String queryString,
             final ubic.gemma.model.expression.biomaterial.BioMaterial bioMaterial ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -154,8 +154,7 @@ public abstract class BioMaterialDaoBase extends HibernateDaoSupport implements
      */
     public ubic.gemma.model.expression.biomaterial.BioMaterial find( final java.lang.String queryString,
             final ubic.gemma.model.expression.biomaterial.BioMaterial bioMaterial ) {
-        return ( ubic.gemma.model.expression.biomaterial.BioMaterial ) this.find( TRANSFORM_NONE, queryString,
-                bioMaterial );
+        return this.find( TRANSFORM_NONE, queryString, bioMaterial );
     }
 
     /**
@@ -170,7 +169,7 @@ public abstract class BioMaterialDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.expression.biomaterial.BioMaterialDao#findOrCreate(int, java.lang.String,
      *      ubic.gemma.model.expression.biomaterial.BioMaterial)
      */
-    @SuppressWarnings( { "unchecked" })
+    
     public Object findOrCreate( final int transform, final java.lang.String queryString,
             final ubic.gemma.model.expression.biomaterial.BioMaterial bioMaterial ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -262,8 +261,8 @@ public abstract class BioMaterialDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.expression.biomaterial.BioMaterialDao#loadAll()
      */
 
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Collection<BioMaterial> loadAll() {
+    
+    public java.util.Collection<? extends BioMaterial> loadAll() {
         return this.loadAll( TRANSFORM_NONE );
     }
 
@@ -271,9 +270,9 @@ public abstract class BioMaterialDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.expression.biomaterial.BioMaterialDao#loadAll(int)
      */
 
-    @SuppressWarnings("unchecked")
-    public java.util.Collection<BioMaterial> loadAll( final int transform ) {
-        final java.util.Collection<BioMaterial> results = this.getHibernateTemplate().loadAll(
+    
+    public java.util.Collection<? extends BioMaterial> loadAll( final int transform ) {
+        final java.util.Collection<? extends BioMaterial> results = this.getHibernateTemplate().loadAll(
                 ubic.gemma.model.expression.biomaterial.BioMaterialImpl.class );
         this.transformEntities( transform, results );
         return results;
@@ -297,7 +296,7 @@ public abstract class BioMaterialDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.common.SecurableDao#remove(java.util.Collection)
      */
 
-    public void remove( java.util.Collection<BioMaterial> entities ) {
+    public void remove( java.util.Collection<? extends BioMaterial> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "BioMaterial.remove - 'entities' can not be null" );
         }
@@ -318,15 +317,15 @@ public abstract class BioMaterialDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.common.SecurableDao#update(java.util.Collection)
      */
 
-    public void update( final java.util.Collection<BioMaterial> entities ) {
+    public void update( final java.util.Collection<? extends BioMaterial> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "BioMaterial.update - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback() {
-                    public Object doInHibernate( org.hibernate.Session session )
+                new org.springframework.orm.hibernate3.HibernateCallback<BioMaterial>() {
+                    public BioMaterial doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator<BioMaterial> entityIterator = entities.iterator(); entityIterator
+                        for ( java.util.Iterator<? extends BioMaterial> entityIterator = entities.iterator(); entityIterator
                                 .hasNext(); ) {
                             update( entityIterator.next() );
                         }
@@ -376,7 +375,7 @@ public abstract class BioMaterialDaoBase extends HibernateDaoSupport implements
      * @see #transformEntity(int,ubic.gemma.model.expression.biomaterial.BioMaterial)
      */
 
-    protected void transformEntities( final int transform, final java.util.Collection<BioMaterial> entities ) {
+    protected void transformEntities( final int transform, final java.util.Collection<? extends BioMaterial> entities ) {
         switch ( transform ) {
             case TRANSFORM_NONE: // fall-through
             default:

@@ -37,7 +37,7 @@ public abstract class MedicalSubjectHeadingDaoBase extends ubic.gemma.model.comm
             throw new IllegalArgumentException( "MedicalSubjectHeading.create - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback() {
+                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
@@ -67,7 +67,7 @@ public abstract class MedicalSubjectHeadingDaoBase extends ubic.gemma.model.comm
     /**
      * @see ubic.gemma.model.common.description.MedicalSubjectHeadingDao#create(java.util.Collection)
      */
-    @SuppressWarnings( { "unchecked" })
+    
     public java.util.Collection create( final java.util.Collection entities ) {
         return create( TRANSFORM_NONE, entities );
     }
@@ -106,7 +106,7 @@ public abstract class MedicalSubjectHeadingDaoBase extends ubic.gemma.model.comm
      * @see ubic.gemma.model.common.description.MedicalSubjectHeadingDao#loadAll()
      */
     @Override
-    @SuppressWarnings( { "unchecked" })
+    
     public java.util.Collection loadAll() {
         return this.loadAll( TRANSFORM_NONE );
     }
@@ -168,7 +168,7 @@ public abstract class MedicalSubjectHeadingDaoBase extends ubic.gemma.model.comm
             throw new IllegalArgumentException( "MedicalSubjectHeading.update - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback() {
+                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {

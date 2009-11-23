@@ -30,13 +30,13 @@ import java.io.Serializable;
  */
 public class TaskResult implements Serializable {
     /**
-     * The task id
-     */
-    private Object taskID; // requestor
-    /**
      * The answer
      */
     private Object answer = null; // result
+    /**
+     * The task id
+     */
+    private Object taskID; // requestor
 
     /**
      * Constructor
@@ -52,12 +52,12 @@ public class TaskResult implements Serializable {
         return answer;
     }
 
-    public void setAnswer( Object answer ) {
-        this.answer = answer;
-    }
-
     public Object getTaskID() {
         return taskID;
+    }
+
+    public void setAnswer( Object answer ) {
+        this.answer = answer;
     }
 
     public void setTaskID( Object taskID ) {

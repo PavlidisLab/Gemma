@@ -18,9 +18,14 @@
  */
 package ubic.gemma.model.common.auditAndSecurity;
 
+import static org.junit.Assert.assertTrue;
+
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
+
+import org.junit.Before;
+import org.junit.Test;
 
 import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -33,9 +38,9 @@ import ubic.gemma.testing.BaseSpringContextTest;
  */
 public class AuditEventDaoImplTest extends BaseSpringContextTest {
 
-    @Override
-    protected void onSetUpInTransaction() throws Exception {
-        super.onSetUpInTransaction();
+    @Before
+    public void setup() throws Exception {
+
         ArrayDesignService ads = ( ArrayDesignService ) this.getBean( "arrayDesignService" );
         for ( int i = 0; i < 5; i++ ) {
             ArrayDesign ad = ArrayDesign.Factory.newInstance();
@@ -46,13 +51,13 @@ public class AuditEventDaoImplTest extends BaseSpringContextTest {
         }
     }
 
-    @SuppressWarnings("unchecked")
-    public void testHandleGetUpdatedSinceDate() {
+    @Test
+    public void testHandleGetNewSinceDate() {
         AuditEventDao aed = ( AuditEventDao ) this.getBean( "auditEventDao" );
         Calendar c = Calendar.getInstance();
         c.set( 2006, Calendar.DECEMBER, 1 );
         Date d = c.getTime();
-        Collection<Auditable> objs = aed.getUpdatedSinceDate( d );
+        Collection<Auditable> objs = aed.getNewSinceDate( d );
         assertTrue( objs.size() > 0 );
         // for ( Auditable auditable : objs ) {
         // if ( objs instanceof ArrayDesign ) {
@@ -60,13 +65,13 @@ public class AuditEventDaoImplTest extends BaseSpringContextTest {
         // }
     }
 
-    @SuppressWarnings("unchecked")
-    public void testHandleGetNewSinceDate() {
+    @Test
+    public void testHandleGetUpdatedSinceDate() {
         AuditEventDao aed = ( AuditEventDao ) this.getBean( "auditEventDao" );
         Calendar c = Calendar.getInstance();
         c.set( 2006, Calendar.DECEMBER, 1 );
         Date d = c.getTime();
-        Collection<Auditable> objs = aed.getNewSinceDate( d );
+        Collection<Auditable> objs = aed.getUpdatedSinceDate( d );
         assertTrue( objs.size() > 0 );
         // for ( Auditable auditable : objs ) {
         // if ( objs instanceof ArrayDesign ) {

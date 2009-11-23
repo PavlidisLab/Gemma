@@ -31,19 +31,6 @@ import java.util.Collection;
 public abstract class AnalysisServiceBase<T extends Analysis> implements ubic.gemma.model.analysis.AnalysisService<T> {
 
     /**
-     * @see ubic.gemma.model.analysis.AnalysisService#delete(java.lang.Long)
-     */
-    public void delete( final java.lang.Long idToDelete ) {
-        try {
-            this.handleDelete( idToDelete );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.analysis.AnalysisServiceException(
-                    "Error performing 'ubic.gemma.model.analysis.AnalysisService.delete(java.lang.Long idToDelete)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
      * @see ubic.gemma.model.analysis.AnalysisService#delete(ubic.gemma.model.analysis.Analysis)
      */
     public void delete( T toDelete ) {
@@ -98,12 +85,12 @@ public abstract class AnalysisServiceBase<T extends Analysis> implements ubic.ge
     /**
      * @see ubic.gemma.model.analysis.AnalysisService#findByTaxon(ubic.gemma.model.genome.Taxon)
      */
-    public java.util.Collection findByTaxon( final ubic.gemma.model.genome.Taxon taxon ) {
+    public java.util.Collection findByParentTaxon( final ubic.gemma.model.genome.Taxon taxon ) {
         try {
-            return this.handleFindByTaxon( taxon );
+            return this.handleFindByParentTaxon( taxon );
         } catch ( Throwable th ) {
             throw new ubic.gemma.model.analysis.AnalysisServiceException(
-                    "Error performing 'ubic.gemma.model.analysis.AnalysisService.findByTaxon(ubic.gemma.model.genome.Taxon taxon)' --> "
+                    "Error performing 'ubic.gemma.model.analysis.AnalysisService.findByParentTaxon(ubic.gemma.model.genome.Taxon taxon)' --> "
                             + th, th );
         }
     }
@@ -111,12 +98,12 @@ public abstract class AnalysisServiceBase<T extends Analysis> implements ubic.ge
     /**
      * @see ubic.gemma.model.analysis.AnalysisService#findByTaxon(ubic.gemma.model.genome.Taxon)
      */
-    public java.util.Collection findByParentTaxon( final ubic.gemma.model.genome.Taxon taxon ) {
+    public java.util.Collection findByTaxon( final ubic.gemma.model.genome.Taxon taxon ) {
         try {
-            return this.handleFindByParentTaxon( taxon );
+            return this.handleFindByTaxon( taxon );
         } catch ( Throwable th ) {
             throw new ubic.gemma.model.analysis.AnalysisServiceException(
-                    "Error performing 'ubic.gemma.model.analysis.AnalysisService.findByParentTaxon(ubic.gemma.model.genome.Taxon taxon)' --> "
+                    "Error performing 'ubic.gemma.model.analysis.AnalysisService.findByTaxon(ubic.gemma.model.genome.Taxon taxon)' --> "
                             + th, th );
         }
     }
@@ -160,11 +147,6 @@ public abstract class AnalysisServiceBase<T extends Analysis> implements ubic.ge
     }
 
     /**
-     * Performs the core logic for {@link #delete(java.lang.Long)}
-     */
-    protected abstract void handleDelete( java.lang.Long idToDelete ) throws java.lang.Exception;
-
-    /**
      * Performs the core logic for {@link #delete(ubic.gemma.model.analysis.Analysis)}
      */
     protected abstract void handleDelete( T toDelete ) throws java.lang.Exception;
@@ -187,15 +169,15 @@ public abstract class AnalysisServiceBase<T extends Analysis> implements ubic.ge
     protected abstract Collection handleFindByName( java.lang.String name ) throws java.lang.Exception;
 
     /**
-     * Performs the core logic for {@link #findByTaxon(ubic.gemma.model.genome.Taxon)}
-     */
-    protected abstract java.util.Collection handleFindByTaxon( ubic.gemma.model.genome.Taxon taxon )
-            throws java.lang.Exception;
-
-    /**
      * Performs the core logic for {@link #findByParentTaxon(ubic.gemma.model.genome.Taxon)}
      */
     protected abstract java.util.Collection handleFindByParentTaxon( ubic.gemma.model.genome.Taxon taxon )
+            throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #findByTaxon(ubic.gemma.model.genome.Taxon)}
+     */
+    protected abstract java.util.Collection handleFindByTaxon( ubic.gemma.model.genome.Taxon taxon )
             throws java.lang.Exception;
 
     /**

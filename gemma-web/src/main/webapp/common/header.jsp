@@ -1,7 +1,7 @@
 
 <!--  Default header for only the main gemma home page -->
 <%@ include file="/common/taglibs.jsp"%>
-<cache:cache key='head' scope="application">
+<cache:cache key='header' scope="application">
 	<c:if test="${pageContext.request.locale.language != 'en'}">
 		<div id="switchLocale">
 			<a href="<c:url value='/mainMenu.html?locale=en'/>"><fmt:message key="webapp.name" /> in English</a>

@@ -18,6 +18,12 @@
  */
 package ubic.gemma.loader.expression.simple;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.HashSet;
@@ -25,6 +31,10 @@ import java.util.HashSet;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.loader.expression.simple.model.SimpleExpressionExperimentMetaData;
 import ubic.gemma.model.common.description.VocabCharacteristic;
@@ -46,103 +56,38 @@ import ubic.gemma.testing.BaseSpringContextTest;
  * @version $Id$
  */
 public class ExperimentalDesignImporterTest extends BaseSpringContextTest {
+
     private static Log log = LogFactory.getLog( ExperimentalDesignImporterTest.class.getName() );
-    MgedOntologyService mos;
+
     ExpressionExperiment ee;
+
+    @Autowired
+    MgedOntologyService mos;
+
+    @Autowired
     ExpressionExperimentService eeService;
 
-    /**
-     * Test method for {@link ubic.gemma.loader.expression.simple.ExperimentalDesignImporter#parse(java.io.InputStream)}
-     * .
-     */
-    public final void testParse() throws Exception {
+    @Autowired
+    ExperimentalDesignImporter experimentalDesignImporter;
 
-        ExperimentalDesignImporter parser = ( ExperimentalDesignImporter ) this.getBean( "experimentalDesignImporter" );
+    @Autowired
+    SimpleExpressionDataLoaderService simpleExpressionDataLoaderService;
 
-        InputStream is = this.getClass().getResourceAsStream( "/data/loader/expression/experimentalDesignTest.txt" );
-
-        parser.importDesign( ee, is, false );
-
-        Collection<BioMaterial> bms = new HashSet<BioMaterial>();
-        for ( BioAssay ba : ee.getBioAssays() ) {
-            for ( BioMaterial bm : ba.getSamplesUsed() ) {
-                bms.add( bm );
-            }
-        }
-
-        checkResults( bms );
-    }
-
-    public final void testParseDryRun() throws Exception {
-
-        ExperimentalDesignImporter parser = ( ExperimentalDesignImporter ) this.getBean( "experimentalDesignImporter" );
-
-        InputStream is = this.getClass().getResourceAsStream( "/data/loader/expression/experimentalDesignTest.txt" );
-
-        parser.importDesign( ee, is, true );
-
-        // / confirm we didn't save anything.
-        assertEquals( 4, ee.getExperimentalDesign().getExperimentalFactors().size() );
-        for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
-            assertNull( ef.getId() );
+    @After
+    public void tearDown() {
+        if ( ee != null ) {
+            ee = eeService.load( ee.getId() );
+            eeService.delete( ee );
         }
     }
 
-    public final void testParseFailedDryRun() throws Exception {
-
-        ExperimentalDesignImporter parser = ( ExperimentalDesignImporter ) this.getBean( "experimentalDesignImporter" );
-
-        InputStream is = this.getClass().getResourceAsStream( "/data/loader/expression/experimentalDesignTestBad.txt" );
-
-        try {
-            parser.importDesign( ee, is, true );
-            fail( "Should have gotten an Exception" );
-        } catch ( Exception e ) {
-            // ok
-        }
-
-    }
-
-    /**
-     * test case where the design file has extra information not relevant to the current samples.
-     * 
-     * @throws Exception
-     */
-    public final void testParseWhereExtraValue() throws Exception {
-
-        ExperimentalDesignImporter parser = ( ExperimentalDesignImporter ) this.getBean( "experimentalDesignImporter" );
-
-        InputStream is = this.getClass()
-                .getResourceAsStream( "/data/loader/expression/experimentalDesignTestExtra.txt" );
-
-        parser.importDesign( ee, is, false );
-
-        Collection<BioMaterial> bms = new HashSet<BioMaterial>();
-        for ( BioAssay ba : ee.getBioAssays() ) {
-            for ( BioMaterial bm : ba.getSamplesUsed() ) {
-                bms.add( bm );
-            }
-        }
-
-        checkResults( bms );
-    }
-
-    @Override
-    protected void onSetUpInTransaction() throws Exception {
-        super.onSetUpInTransaction();
-        endTransaction();
-
-        SimpleExpressionDataLoaderService s = ( SimpleExpressionDataLoaderService ) this
-                .getBean( "simpleExpressionDataLoaderService" );
-
-        eeService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
+    @Before
+    public void setup() throws Exception {
 
         InputStream data = this.getClass().getResourceAsStream(
                 "/data/loader/expression/experimentalDesignTestData.txt" );
 
         SimpleExpressionExperimentMetaData metaData = new SimpleExpressionExperimentMetaData();
-
-        mos = ( MgedOntologyService ) this.getBean( "mgedOntologyService" );
         mos.init( true );
         while ( !mos.isOntologyLoaded() ) {
             Thread.sleep( 5000 );
@@ -165,8 +110,84 @@ public class ExperimentalDesignImporterTest extends BaseSpringContextTest {
 
         metaData.getArrayDesigns().add( ad );
 
-        ee = s.load( metaData, data );
+        ee = simpleExpressionDataLoaderService.load( metaData, data );
+
         eeService.thawLite( ee );
+    }
+
+    /**
+     * Test method for {@link ubic.gemma.loader.expression.simple.ExperimentalDesignImporter#parse(java.io.InputStream)}
+     * .
+     */
+    @Test
+    public final void testParse() throws Exception {
+
+        InputStream is = this.getClass().getResourceAsStream( "/data/loader/expression/experimentalDesignTest.txt" );
+
+        experimentalDesignImporter.importDesign( ee, is, false );
+
+        Collection<BioMaterial> bms = new HashSet<BioMaterial>();
+        for ( BioAssay ba : ee.getBioAssays() ) {
+            for ( BioMaterial bm : ba.getSamplesUsed() ) {
+                bms.add( bm );
+            }
+        }
+
+        checkResults( bms );
+
+    }
+
+    @Test
+    public final void testParseDryRun() throws Exception {
+
+        InputStream is = this.getClass().getResourceAsStream( "/data/loader/expression/experimentalDesignTest.txt" );
+
+        experimentalDesignImporter.importDesign( ee, is, true );
+
+        // / confirm we didn't save anything.
+        assertEquals( 4, ee.getExperimentalDesign().getExperimentalFactors().size() );
+        for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
+            assertNull( ef.getId() );
+        }
+    }
+
+    @Test
+    public final void testParseFailedDryRun() throws Exception {
+
+        InputStream is = this.getClass().getResourceAsStream( "/data/loader/expression/experimentalDesignTestBad.txt" );
+
+        try {
+            experimentalDesignImporter.importDesign( ee, is, true );
+            fail( "Should have gotten an Exception" );
+        } catch ( Exception e ) {
+            // ok
+        }
+
+    }
+
+    /**
+     * test case where the design file has extra information not relevant to the current samples.
+     * 
+     * @throws Exception
+     */
+    @Test
+    public final void testParseWhereExtraValue() throws Exception {
+
+        ExperimentalDesignImporter parser = ( ExperimentalDesignImporter ) this.getBean( "experimentalDesignImporter" );
+
+        InputStream is = this.getClass()
+                .getResourceAsStream( "/data/loader/expression/experimentalDesignTestExtra.txt" );
+
+        parser.importDesign( ee, is, false );
+
+        Collection<BioMaterial> bms = new HashSet<BioMaterial>();
+        for ( BioAssay ba : ee.getBioAssays() ) {
+            for ( BioMaterial bm : ba.getSamplesUsed() ) {
+                bms.add( bm );
+            }
+        }
+
+        checkResults( bms );
     }
 
     /**

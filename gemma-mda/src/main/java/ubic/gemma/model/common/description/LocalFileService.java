@@ -18,47 +18,59 @@
  */
 package ubic.gemma.model.common.description;
 
+import java.util.Collection;
+
+import org.springframework.security.access.annotation.Secured;
+
 /**
- * 
+ * @author kelsey
+ * @version $Id$
  */
 public interface LocalFileService {
 
     /**
      * 
      */
-    public ubic.gemma.model.common.description.LocalFile copyFile(
-            ubic.gemma.model.common.description.LocalFile sourceFile,
-            ubic.gemma.model.common.description.LocalFile targetFile );
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_EDIT" })
+    public LocalFile copyFile( LocalFile sourceFile, LocalFile targetFile );
 
     /**
      * 
      */
-    public void deleteFile( ubic.gemma.model.common.description.LocalFile localFile );
+    @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    public void deleteFile( LocalFile localFile );
 
     /**
      * 
      */
-    public ubic.gemma.model.common.description.LocalFile find( ubic.gemma.model.common.description.LocalFile localFile );
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    public LocalFile find( LocalFile localFile );
 
     /**
      * 
      */
-    public ubic.gemma.model.common.description.LocalFile findByPath( java.lang.String path );
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    public LocalFile findByPath( java.lang.String path );
 
     /**
      * 
      */
-    public ubic.gemma.model.common.description.LocalFile findOrCreate(
-            ubic.gemma.model.common.description.LocalFile localFile );
+    @Secured( { "GROUP_USER", "AFTER_ACL_READ" })
+    public LocalFile findOrCreate( LocalFile localFile );
 
     /**
      * 
      */
-    public ubic.gemma.model.common.description.LocalFile save( ubic.gemma.model.common.description.LocalFile localFile );
+    @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    public LocalFile save( LocalFile localFile );
 
     /**
      * 
      */
-    public void update( ubic.gemma.model.common.description.LocalFile localFile );
+    @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    public void update( LocalFile localFile );
+
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    public Collection<LocalFile> loadAll();
 
 }

@@ -3,7 +3,7 @@
 <script type='text/javascript' src='/Gemma/scripts/expandableObjects.js'></script>
 <!--  Summary of array design associations -->
 <%-- Admin only --%>
-<security:authorize ifAnyGranted="admin">
+<security:authorize ifAnyGranted="GROUP_ADMIN">
 	<c:if test="${summaryString != null }">
 ${summaryString}
 </c:if>
@@ -21,7 +21,7 @@ ${summaryString}
 	Platforms
 </h3>
 
-<security:authorize ifAnyGranted="admin">
+<security:authorize ifAnyGranted="GROUP_ADMIN">
 	<a href="<c:url value="/arrays/generateArrayDesignSummary.html"/>"
 		onclick="return confirm('Regenerate report for all platforms?');">
 		Regenerate this report</a>
@@ -41,7 +41,7 @@ ${summaryString}
 	<display:column property="expressionExperimentCountLink"
 		sortable="true" title="Expts" />
 	<display:column property="summaryTable" title="Probe Summary" />
-	<security:authorize ifAnyGranted="admin">
+	<security:authorize ifAnyGranted="GROUP_ADMIN">
 		<display:column property="lastSequenceUpdate" sortable="true"
 			title="Seq. Update" defaultorder="descending"/>
 		<display:column property="lastSequenceAnalysis" sortable="true"

@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.genome;
 
+import org.springframework.beans.factory.annotation.Autowired;
+
 /**
  * <p>
  * Spring Service base class for <code>ubic.gemma.model.genome.TaxonService</code>, provides access to all services and
@@ -28,6 +30,7 @@ package ubic.gemma.model.genome;
  */
 public abstract class TaxonServiceBase implements ubic.gemma.model.genome.TaxonService {
 
+    @Autowired
     private ubic.gemma.model.genome.TaxonDao taxonDao;
 
     /**
@@ -39,6 +42,19 @@ public abstract class TaxonServiceBase implements ubic.gemma.model.genome.TaxonS
         } catch ( Throwable th ) {
             throw new ubic.gemma.model.genome.TaxonServiceException(
                     "Error performing 'ubic.gemma.model.genome.TaxonService.find(ubic.gemma.model.genome.Taxon taxon)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.genome.TaxonService#findByAbbreviation(java.lang.String)
+     */
+    public ubic.gemma.model.genome.Taxon findByAbbreviation( final java.lang.String abbreviation ) {
+        try {
+            return this.handleFindByAbbreviation( abbreviation );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.genome.TaxonServiceException(
+                    "Error performing 'ubic.gemma.model.genome.TaxonService.findByAbbreviation(java.lang.String abbreviation)' --> "
                             + th, th );
         }
     }
@@ -65,19 +81,6 @@ public abstract class TaxonServiceBase implements ubic.gemma.model.genome.TaxonS
         } catch ( Throwable th ) {
             throw new ubic.gemma.model.genome.TaxonServiceException(
                     "Error performing 'ubic.gemma.model.genome.TaxonService.findByScientificName(java.lang.String scientificName)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.TaxonService#findByAbbreviation(java.lang.String)
-     */
-    public ubic.gemma.model.genome.Taxon findByAbbreviation( final java.lang.String abbreviation ) {
-        try {
-            return this.handleFindByAbbreviation( abbreviation );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.genome.TaxonServiceException(
-                    "Error performing 'ubic.gemma.model.genome.TaxonService.findByAbbreviation(java.lang.String abbreviation)' --> "
                             + th, th );
         }
     }
@@ -179,6 +182,12 @@ public abstract class TaxonServiceBase implements ubic.gemma.model.genome.TaxonS
             throws java.lang.Exception;
 
     /**
+     * Performs the core logic for {@link #findByScientificName(java.lang.String)}
+     */
+    protected abstract ubic.gemma.model.genome.Taxon handleFindByAbbreviation( java.lang.String abbreviation )
+            throws java.lang.Exception;
+
+    /**
      * Performs the core logic for {@link #findByCommonName(java.lang.String)}
      */
     protected abstract ubic.gemma.model.genome.Taxon handleFindByCommonName( java.lang.String commonName )
@@ -191,10 +200,10 @@ public abstract class TaxonServiceBase implements ubic.gemma.model.genome.TaxonS
             throws java.lang.Exception;
 
     /**
-     * Performs the core logic for {@link #findByScientificName(java.lang.String)}
+     * Performs the core logic for {@link #update(ubic.gemma.model.genome.Taxon)}
      */
-    protected abstract ubic.gemma.model.genome.Taxon handleFindByAbbreviation( java.lang.String abbreviation )
-            throws java.lang.Exception;
+    protected abstract java.util.Collection<ubic.gemma.model.genome.Taxon> handleFindChildTaxaByParent(
+            ubic.gemma.model.genome.Taxon taxon ) throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #findOrCreate(ubic.gemma.model.genome.Taxon)}
@@ -221,11 +230,5 @@ public abstract class TaxonServiceBase implements ubic.gemma.model.genome.TaxonS
      * Performs the core logic for {@link #update(ubic.gemma.model.genome.Taxon)}
      */
     protected abstract void handleUpdate( ubic.gemma.model.genome.Taxon taxon ) throws java.lang.Exception;
-
-    /**
-     * Performs the core logic for {@link #update(ubic.gemma.model.genome.Taxon)}
-     */
-    protected abstract java.util.Collection<ubic.gemma.model.genome.Taxon> handleFindChildTaxaByParent(
-            ubic.gemma.model.genome.Taxon taxon ) throws java.lang.Exception;
 
 }

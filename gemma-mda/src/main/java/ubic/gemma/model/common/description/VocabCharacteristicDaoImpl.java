@@ -23,15 +23,31 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
+import org.hibernate.SessionFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
+
 import ubic.gemma.model.association.Gene2GOAssociationImpl;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorImpl;
 
 /**
  * @see ubic.gemma.model.common.description.VocabCharacteristic
  */
+@Repository
 public class VocabCharacteristicDaoImpl extends ubic.gemma.model.common.description.VocabCharacteristicDaoBase {
 
     private static final int BATCH_SIZE = 1000;
+
+    @Autowired
+    public VocabCharacteristicDaoImpl( SessionFactory sessionFactory ) {
+        super.setSessionFactory( sessionFactory );
+    }
+
+    @SuppressWarnings("unchecked")
+    public Collection<? extends VocabCharacteristic> load( Collection<Long> ids ) {
+        return this.getHibernateTemplate().findByNamedParam( "from VocabCharacteristicImpl where id in (:ids)", "ids",
+                ids );
+    }
 
     /*
      * (non-Javadoc)

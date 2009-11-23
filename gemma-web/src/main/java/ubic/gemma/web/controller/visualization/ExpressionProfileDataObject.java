@@ -57,56 +57,56 @@ public class ExpressionProfileDataObject {
         return data;
     }
 
-    public void setData( double[] data ) {
-        this.data = data;
-    }
-
-    public Long getProbeId() {
-        return probeId;
-    }
-
-    public void setProbeId( Long probeId ) {
-        this.probeId = probeId;
-    }
-
-    public String getProbeName() {
-        return probeName;
-    }
-
-    public void setProbeName( String probeName ) {
-        this.probeName = probeName;
+    public Long getDedvId() {
+        return dedvId;
     }
 
     public Long getEeId() {
         return eeId;
     }
 
-    public void setEeId( Long eeId ) {
-        this.eeId = eeId;
-    }
-
     public Collection<Long> getGeneIds() {
         return geneIds;
     }
 
-    public void setGeneIds( Collection<Long> geneIds ) {
-        this.geneIds = geneIds;
+    public Long getProbeId() {
+        return probeId;
+    }
+
+    public String getProbeName() {
+        return probeName;
     }
 
     public boolean isNormalized() {
         return isNormalized;
     }
 
-    public void setNormalized( boolean isNormalized ) {
-        this.isNormalized = isNormalized;
-    }
-
-    public Long getDedvId() {
-        return dedvId;
+    public void setData( double[] data ) {
+        this.data = data;
     }
 
     public void setDedvId( Long dedvId ) {
         this.dedvId = dedvId;
+    }
+
+    public void setEeId( Long eeId ) {
+        this.eeId = eeId;
+    }
+
+    public void setGeneIds( Collection<Long> geneIds ) {
+        this.geneIds = geneIds;
+    }
+
+    public void setNormalized( boolean isNormalized ) {
+        this.isNormalized = isNormalized;
+    }
+
+    public void setProbeId( Long probeId ) {
+        this.probeId = probeId;
+    }
+
+    public void setProbeName( String probeName ) {
+        this.probeName = probeName;
     }
 
 }

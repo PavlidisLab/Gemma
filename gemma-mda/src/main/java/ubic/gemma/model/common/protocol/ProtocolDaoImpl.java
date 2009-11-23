@@ -21,21 +21,30 @@ package ubic.gemma.model.common.protocol;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
+import org.hibernate.SessionFactory;
 import org.hibernate.criterion.Restrictions;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
 
 /**
  * @author pavlidis
  * @version $Id$
  * @see ubic.gemma.model.common.protocol.Protocol
  */
+@Repository
 public class ProtocolDaoImpl extends ubic.gemma.model.common.protocol.ProtocolDaoBase {
 
     private static Log log = LogFactory.getLog( ProtocolDaoImpl.class.getName() );
 
+    @Autowired
+    public ProtocolDaoImpl( SessionFactory sessionFactory ) {
+        super.setSessionFactory( sessionFactory );
+    }
+
     @Override
     public Protocol find( Protocol protocol ) {
         try {
-            Criteria queryObject = super.getSession( false ).createCriteria( Protocol.class );
+            Criteria queryObject = super.getSession().createCriteria( Protocol.class );
             queryObject.add( Restrictions.eq( "name", protocol.getName() ) );
 
             if ( protocol.getDescription() != null )

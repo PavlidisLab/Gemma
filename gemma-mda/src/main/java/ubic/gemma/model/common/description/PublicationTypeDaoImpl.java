@@ -22,8 +22,18 @@
 //
 package ubic.gemma.model.common.description;
 
+import org.hibernate.SessionFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
+
 /**
  * @see ubic.gemma.model.common.description.PublicationType
  */
+@Repository
 public class PublicationTypeDaoImpl extends ubic.gemma.model.common.description.PublicationTypeDaoBase {
+
+    @Autowired
+    public PublicationTypeDaoImpl( SessionFactory sessionFactory ) {
+        super.setSessionFactory( sessionFactory );
+    }
 }

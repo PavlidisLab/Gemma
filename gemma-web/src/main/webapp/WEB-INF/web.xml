@@ -23,9 +23,9 @@
 	</context-param>
 
 	<!--
-			Name of Log4j config file relative to webapp root directory. This is done by the
-			org.springframework.web.util.Log4jWebConfigurer
-		-->
+		Name of Log4j config file relative to webapp root directory. This is done by the
+		org.springframework.web.util.Log4jWebConfigurer
+	-->
 	<context-param>
 		<param-name>log4jConfigLocation</param-name>
 		<param-value>/WEB-INF/classes/log4j.properties</param-value>
@@ -37,39 +37,17 @@
 		<param-value>classpath*:/ubic/gemma/applicationContext-*.xml,classpath*:/ubic/gemma/dataSource.xml</param-value>
 	</context-param>
 
-	<!-- Gemma Project Filters.  -->
+	<!-- Filters.  -->
 
 	<!--
-			Acegi. This filter maps to a bean defined in applicationContext-security.xml, which handles filtering of requests
-			through the security managers.
-		-->
+		Security.
+	-->
 	<filter>
-		<filter-name>securityFilter</filter-name>
+		<filter-name>springSecurityFilterChain</filter-name>
 		<filter-class>org.springframework.web.filter.DelegatingFilterProxy</filter-class>
-		<init-param>
-			<param-name>targetClass</param-name>
-			<param-value>org.springframework.security.util.FilterChainProxy</param-value>
-		</init-param>
-		<init-param>
-			<param-name>targetBeanName</param-name>
-			<param-value>filterChainProxy</param-value>
-		</init-param>
-
 	</filter>
 
-	<filter>
-		<filter-name>cacheFilter</filter-name>
-		<filter-class>com.opensymphony.oscache.web.filter.CacheFilter</filter-class>
-	</filter>
-
-	<!--  Filter that passes pages through sitemesh. Must come after acegi filter -->
-
-	<!--
-		<filter>
-			<filter-name>clickstreamFilter</filter-name>
-			<filter-class>com.opensymphony.clickstream.ClickstreamFilter</filter-class>
-		</filter>
--->
+	<!--  Filter that allows one to specify a character encoding for requests-->
 	<filter>
 		<filter-name>encodingFilter</filter-name>
 		<filter-class>org.springframework.web.filter.CharacterEncodingFilter</filter-class>
@@ -82,6 +60,8 @@
 			<param-value>true</param-value>
 		</init-param>
 	</filter>
+
+	<!-- URL rewriting -->
 	<filter>
 		<filter-name>rewriteFilter</filter-name>
 		<filter-class>org.tuckey.web.filters.urlrewrite.UrlRewriteFilter</filter-class>
@@ -90,26 +70,18 @@
 			<param-value>commons</param-value>
 		</init-param>
 	</filter>
+
+	<!-- Page decoration -->
 	<filter>
 		<filter-name>sitemesh</filter-name>
 		<filter-class>com.opensymphony.module.sitemesh.filter.PageFilter</filter-class>
 	</filter>
 
-	<filter>
-		<filter-name>exportFilter</filter-name>
-		<filter-class>org.displaytag.filter.ResponseOverrideFilter</filter-class>
-	</filter>
-	<!--
-			This caused big performance problems.	
-		<filter>
-			<filter-name>compressionFilter</filter-name>
-			<filter-class>ubic.gemma.web.filter.GZIPFilter</filter-class>
-		</filter>
--->
+	<!-- Filter mappings -->
 
 	<filter-mapping>
 		<filter-name>encodingFilter</filter-name>
-		<url-pattern>/j_security_check</url-pattern>
+		<url-pattern>/j_spring_security_check</url-pattern>
 	</filter-mapping>
 	<filter-mapping>
 		<filter-name>encodingFilter</filter-name>
@@ -124,68 +96,13 @@
 		<url-pattern>*.jsp</url-pattern>
 	</filter-mapping>
 
-	<!-- Acegi This filter causes and invalid xml parsing error on tomcat startup.  * not cool! -->
+	<!-- Security -->
 	<filter-mapping>
-		<filter-name>securityFilter</filter-name>
+		<filter-name>springSecurityFilterChain</filter-name>
 		<url-pattern>/*</url-pattern>
 	</filter-mapping>
-	<!--
-	<filter-mapping>
-			<filter-name>securityFilter</filter-name>
-			<url-pattern>/j_security_check</url-pattern>
-		</filter-mapping>
-		<filter-mapping>
-			<filter-name>securityFilter</filter-name>
-			<url-pattern>/dwr/*</url-pattern>
-		</filter-mapping>
-		<filter-mapping>
-			<filter-name>securityFilter</filter-name>
-			<url-pattern>*.html</url-pattern>
-		</filter-mapping>
 
-		<filter-mapping>
-			<filter-name>securityFilter</filter-name>
-			<url-pattern>*.jsp</url-pattern>
-		</filter-mapping>
--->
-	<!--
-			Comment this out while developing, to avoid seeing only cached stuff.
-		-->
-	<!--<filter-mapping>
-			<filter-name>cacheFilter</filter-name>
-			<url-pattern>*.jsp</url-pattern>
-		</filter-mapping>
-		<filter-mapping>
-			<filter-name>cacheFilter</filter-name>
-			<url-pattern>*.html</url-pattern>
-		</filter-mapping>-->
-	<filter-mapping>
-		<filter-name>cacheFilter</filter-name>
-		<url-pattern>*.png</url-pattern>
-	</filter-mapping>
-	<filter-mapping>
-		<filter-name>cacheFilter</filter-name>
-		<url-pattern>*.gif</url-pattern>
-	</filter-mapping>
-	
-	<!--
-		<filter-mapping>
-			<filter-name>clickstreamFilter</filter-name>
-			<url-pattern>*.html</url-pattern>
-		</filter-mapping>
-		-->
-
-	<filter-mapping>
-		<filter-name>exportFilter</filter-name>
-		<url-pattern>*.html</url-pattern>
-	</filter-mapping>
-	<!--
-
-			<filter-mapping> <filter-name>compressionFilter</filter-name> <url-pattern>*.css</url-pattern> </filter-mapping>
-			<filter-mapping> <filter-name>compressionFilter</filter-name> <url-pattern>*.jsp</url-pattern> </filter-mapping>
-			<filter-mapping> <filter-name>compressionFilter</filter-name> <url-pattern>*.js</url-pattern> </filter-mapping>
-			<filter-mapping> <filter-name>compressionFilter</filter-name> <url-pattern>*.html</url-pattern> </filter-mapping>
-		-->
+	<!-- URL rewriting (can we make this more restrictive?) -->
 	<filter-mapping>
 		<filter-name>rewriteFilter</filter-name>
 		<url-pattern>/*</url-pattern>
@@ -202,10 +119,8 @@
 	</filter-mapping>
 
 	<!--
-		<listener>
-			<listener-class>com.opensymphony.clickstream.ClickstreamListener</listener-class>
-		</listener>
-		-->
+		<listener> <listener-class>com.opensymphony.clickstream.ClickstreamListener</listener-class> </listener>
+	-->
 	<listener>
 		<listener-class>net.sf.navigator.menu.MenuContextListener</listener-class>
 	</listener>
@@ -222,7 +137,7 @@
 	<!-- Dispatch Servlet Configuration -->
 	<servlet>
 		<description>Everything from Gemma.</description>
-		<servlet-name>action</servlet-name>
+		<servlet-name>gemma</servlet-name>
 		<servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
 		<load-on-startup>2</load-on-startup>
 	</servlet>
@@ -244,6 +159,18 @@
 	</servlet>
 
 	<servlet>
+		<servlet-name>JawrImgServlet</servlet-name>
+		<servlet-class>net.jawr.web.servlet.JawrServlet</servlet-class>
+		<init-param>
+			<param-name>configLocation</param-name>
+			<param-value>/jawr.properties</param-value>
+		</init-param>
+		<!-- The Jawr Image servlet must start before the Jawr CSS Servlet -->
+		<load-on-startup>3</load-on-startup>
+	</servlet>
+
+
+	<servlet>
 		<servlet-name>JavascriptCompressServlet</servlet-name>
 		<servlet-class>net.jawr.web.servlet.JawrServlet</servlet-class>
 
@@ -252,7 +179,7 @@
 			<param-name>configLocation</param-name>
 			<param-value>/jawr.properties</param-value>
 		</init-param>
-		<load-on-startup>3</load-on-startup>
+		<load-on-startup>4</load-on-startup>
 	</servlet>
 
 	<servlet>
@@ -268,12 +195,12 @@
 			<param-name>type</param-name>
 			<param-value>css</param-value>
 		</init-param>
-		<load-on-startup>4</load-on-startup>
+		<load-on-startup>5</load-on-startup>
 	</servlet>
 
 	<!--  servlet mappings -->
 	<servlet-mapping>
-		<servlet-name>action</servlet-name>
+		<servlet-name>gemma</servlet-name>
 		<url-pattern>/</url-pattern>
 	</servlet-mapping>
 	<servlet-mapping>
@@ -282,10 +209,10 @@
 	</servlet-mapping>
 
 	<!--
-			<servlet-mapping> <servlet-name>default</servlet-name> <url-pattern>*.css</url-pattern> </servlet-mapping>
+		<servlet-mapping> <servlet-name>default</servlet-name> <url-pattern>*.css</url-pattern> </servlet-mapping>
 
-			<servlet-mapping> <servlet-name>default</servlet-name> <url-pattern>*.js</url-pattern> </servlet-mapping>
-		-->
+		<servlet-mapping> <servlet-name>default</servlet-name> <url-pattern>*.js</url-pattern> </servlet-mapping>
+	-->
 
 	<servlet-mapping>
 		<servlet-name>default</servlet-name>
@@ -313,16 +240,18 @@
 	</servlet-mapping>
 
 	<servlet-mapping>
-		<servlet-name>action</servlet-name>
+		<servlet-name>gemma</servlet-name>
 		<url-pattern>*.html</url-pattern>
 	</servlet-mapping>
 
 	<servlet-mapping>
-		<servlet-name>action</servlet-name>
+		<servlet-name>gemma</servlet-name>
 		<url-pattern>/dwr/*</url-pattern>
 	</servlet-mapping>
 
-	<!-- static content; the /s/ gets stripped from the url and we use a rewrite so the user doesn't see it. -->
+	<!--
+		static content; the /s/ gets stripped from the url and we use a rewrite so the user doesn't see it. See urlrewrite.xml
+	-->
 	<servlet-mapping>
 		<servlet-name>default</servlet-name>
 		<url-pattern>/s/*</url-pattern>
@@ -351,48 +280,33 @@
 	</session-config>
 
 	<welcome-file-list>
-		<welcome-file>index.jsp</welcome-file>
+		<welcome-file>/WEB-INF/pages/index.jsp</welcome-file>
 	</welcome-file-list>
 
 	<error-page>
 		<error-code>500</error-code>
-		<location>/error.jsp</location>
+		<location>/WEB-INF/pages/error.jsp</location>
+	</error-page>
+	<error-page>
+		<error-code>502</error-code>
+		<location>/WEB-INF/pages/error.jsp</location>
+	</error-page>
+	<error-page>
+		<error-code>503</error-code>
+		<location>/WEB-INF/pages/error.jsp</location>
 	</error-page>
 	<error-page>
 		<error-code>400</error-code>
-		<location>/index.jsp</location>
+		<location>/WEB-INF/pages/index.jsp</location>
 	</error-page>
 	<error-page>
 		<error-code>403</error-code>
-		<location>/403.jsp</location>
+		<location>/WEB-INF/pages/403.jsp</location>
 	</error-page>
 	<error-page>
 		<error-code>404</error-code>
-		<location>/404.jsp</location>
+		<location>/WEB-INF/pages/404.jsp</location>
 	</error-page>
-
-	<jsp-config>
-		<taglib>
-			<taglib-uri>/WEB-INF/Gemma.tld</taglib-uri>
-			<taglib-location>/WEB-INF/Gemma.tld</taglib-location>
-		</taglib>
-	</jsp-config>
-
-	<!--  AjaxAnywhere DEPRECATED - we are ceasing to use this. -->
-	<!--  This has to be last (or near it) in order for the filter 
-		to be triggered after the page has been processed -->
-	<!--<filter>
-			<filter-name>AjaxAnywhere</filter-name>
-			<filter-class>org.ajaxanywhere.AAFilter</filter-class>
-		</filter>
-
-		<filter-mapping>
-			<filter-name>AjaxAnywhere</filter-name>
-			<url-pattern>*.html</url-pattern>
-		</filter-mapping>-->
-	<!-- End AjaxAnywhere -->
-
-
 
 </web-app>
 

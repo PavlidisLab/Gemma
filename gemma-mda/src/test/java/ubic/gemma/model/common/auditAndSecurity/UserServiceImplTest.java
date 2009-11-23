@@ -22,41 +22,49 @@ import static org.easymock.EasyMock.createMock;
 import static org.easymock.EasyMock.expectLastCall;
 import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
-import junit.framework.TestCase;
+
+import java.util.Collection;
+import java.util.HashSet;
+
+import org.junit.Before;
+import org.junit.Test;
 
 /**
  * @author pavlidis
  * @version $Id$
  */
-public class UserServiceImplTest extends TestCase {
+public class UserServiceImplTest {
     private UserServiceImpl userService = new UserServiceImpl();
     private UserDao userDaoMock;
     private User testUser = User.Factory.newInstance();
+    private Collection<UserGroup> userGroups;
 
     /*
      * @see TestCase#setUp()
      */
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Before
+    public void setUp() throws Exception {
         userDaoMock = createMock( UserDao.class );
         userService.setUserDao( userDaoMock );
+
+        UserGroupDao userGroupDaoMock = createMock( UserGroupDao.class );
+        userService.setUserGroupDao( userGroupDaoMock );
         testUser.setEmail( "foo@bar" );
         testUser.setName( "Foo" );
         testUser.setLastName( "Bar" );
         testUser.setUserName( "foobar" );
         testUser.setPassword( "aija" );
         testUser.setPasswordHint( "I am an idiot" );
+
+        UserGroup group = UserGroup.Factory.newInstance();
+        group.setName( "users" );
+        group.getGroupMembers().add( testUser );
+        userGroups = new HashSet<UserGroup>();
+        userGroups.add( group );
+
     }
 
-    /*
-     * @see TestCase#tearDown()
-     */
-    @Override
-    protected void tearDown() throws Exception {
-        super.tearDown();
-    }
-
+    @Test
     public void testHandleGetUser() {
         userDaoMock.findByUserName( "foobar" );
         expectLastCall().andReturn( testUser );
@@ -65,9 +73,7 @@ public class UserServiceImplTest extends TestCase {
         verify( userDaoMock );
     }
 
-    public void testHandleGetUsers() {
-    }
-
+    @Test
     public void testHandleSaveUser() throws Exception {
         userDaoMock.findByUserName( "foobar" );
         expectLastCall().andReturn( null );
@@ -80,13 +86,15 @@ public class UserServiceImplTest extends TestCase {
         verify( userDaoMock );
     }
 
+    @Test
     public void testHandleRemoveUser() {
+
+        userDaoMock.loadGroups( testUser );
+        expectLastCall().andReturn( userGroups );
         userDaoMock.remove( testUser );
-        // setVoidCallable();
-        userDaoMock.findByUserName( "foobar" );
-        expectLastCall().andReturn( testUser ); // this should get called to find the user to remove.
+        expectLastCall().once();
         replay( userDaoMock );
-        userService.delete( "foobar" );
+        userService.delete( testUser );
         verify( userDaoMock );
     }
 

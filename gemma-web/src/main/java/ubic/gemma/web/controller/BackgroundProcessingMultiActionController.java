@@ -20,10 +20,10 @@ package ubic.gemma.web.controller;
 
 import java.util.concurrent.FutureTask;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
-import ubic.gemma.util.SecurityUtil;
 import ubic.gemma.util.progress.TaskRunningService;
 
 /**
@@ -32,15 +32,15 @@ import ubic.gemma.util.progress.TaskRunningService;
  * 
  * @author pavlidis
  * @version $Id$
- * @spring.property name="taskRunningService" ref="taskRunningService"
  */
-public abstract class BackgroundProcessingMultiActionController extends BaseMultiActionController {
+public abstract class BackgroundProcessingMultiActionController extends BaseController {
 
     /**
      * Use this to access the task id in the request.
      */
     public final static String JOB_ATTRIBUTE = "taskId";
 
+    @Autowired
     TaskRunningService taskRunningService;
 
     /**
@@ -48,21 +48,6 @@ public abstract class BackgroundProcessingMultiActionController extends BaseMult
      */
     public void setTaskRunningService( TaskRunningService taskRunningService ) {
         this.taskRunningService = taskRunningService;
-    }
-
-    /**
-     * @param BackgroundControllerJob<ModelAndView> job
-     * @return task id This allows the background controller job to be created outside and passed in effectively
-     *         allowing one controller to create more than 1 job
-     */
-    protected synchronized ModelAndView startJob( BackgroundControllerJob job ) {
-
-        SecurityUtil.passAuthenticationToChildThreads();
-
-        String taskId = run( job );
-        ModelAndView mnv = new ModelAndView( new RedirectView( "/Gemma/processProgress.html?taskId=" + taskId ) );
-        mnv.addObject( "taskId", taskId );
-        return mnv;
     }
 
     /**
@@ -79,6 +64,19 @@ public abstract class BackgroundProcessingMultiActionController extends BaseMult
 
         taskRunningService.submitTask( taskId, new FutureTask<ModelAndView>( job ) );
         return taskId;
+    }
+
+    /**
+     * @param BackgroundControllerJob<ModelAndView> job
+     * @return task id This allows the background controller job to be created outside and passed in effectively
+     *         allowing one controller to create more than 1 job
+     */
+    protected synchronized ModelAndView startJob( BackgroundControllerJob job ) {
+
+        String taskId = run( job );
+        ModelAndView mnv = new ModelAndView( new RedirectView( "/Gemma/processProgress.html?taskId=" + taskId ) );
+        mnv.addObject( "taskId", taskId );
+        return mnv;
     }
 
 }

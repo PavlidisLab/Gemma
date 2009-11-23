@@ -18,8 +18,11 @@
  */
 package ubic.gemma.model.expression.biomaterial;
 
+import org.springframework.security.access.annotation.Secured;
+
 /**
- * 
+ * @author kelsey
+ * @version $Id$
  */
 public interface CompoundService {
 
@@ -32,17 +35,20 @@ public interface CompoundService {
     /**
      * 
      */
+    @Secured( { "GROUP_USER" })
     public ubic.gemma.model.expression.biomaterial.Compound findOrCreate(
             ubic.gemma.model.expression.biomaterial.Compound compound );
 
     /**
      * 
      */
+    @Secured( { "GROUP_USER" })
     public void remove( ubic.gemma.model.expression.biomaterial.Compound compound );
 
     /**
      * 
      */
+    @Secured( { "GROUP_USER" })
     public void update( ubic.gemma.model.expression.biomaterial.Compound compound );
 
 }

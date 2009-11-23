@@ -21,7 +21,6 @@ package ubic.gemma.web.controller;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
@@ -32,16 +31,17 @@ import javax.servlet.http.HttpSession;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.propertyeditors.CustomNumberEditor;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.validation.BindException;
 import org.springframework.validation.ObjectError;
-import org.springframework.web.bind.ServletRequestDataBinder;
+import org.springframework.web.bind.WebDataBinder;
+import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.multipart.support.ByteArrayMultipartFileEditor;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.SimpleFormController;
 
-import ubic.gemma.Constants;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.UserService;
 import ubic.gemma.util.MailEngine;
@@ -52,47 +52,26 @@ import ubic.gemma.web.util.MessageUtil;
  * example, getting the current user and saving messages/errors. This class is intended to be a base class for all Form
  * controllers.
  * 
- * @author pavlidis
- * @author Matt Raible (original version)
+ * @author pavlidis (originally based on Appfuse code)
  * @version $Id$
- * @spring.property name="messageUtil" ref="messageUtil"
  */
 public abstract class BaseFormController extends SimpleFormController {
     protected static Log log = LogFactory.getLog( BaseFormController.class.getName() );
-    private MessageUtil messageUtil;
-    protected MailEngine mailEngine = null;
-    protected SimpleMailMessage mailMessage = null;
-    protected String templateName = null;
 
+    @Autowired
+    private MessageUtil messageUtil;
+
+    @Autowired
+    protected MailEngine mailEngine = null;
+
+    @Autowired
     protected UserService userService = null;
 
     /**
-     * Define a cancel view to use.
+     * @return the messageUtil
      */
-    protected String cancelView;
-
-    /**
-     * 
-     *
-     */
-    public BaseFormController() {
-        super();
-    }
-
-    /**
-     * Convenience method to get the Configuration HashMap from the servlet context.
-     * 
-     * @return the user's populated form from the session
-     */
-    @SuppressWarnings("unchecked")
-    public Map<String, Object> getConfiguration() {
-        Map<String, Object> config = ( Map<String, Object> ) getServletContext().getAttribute( Constants.CONFIG );
-
-        // so unit tests don't puke when nothing's been set
-        if ( config == null ) {
-            return new HashMap<String, Object>();
-        }
-        return config;
+    public MessageUtil getMessageUtil() {
+        return this.messageUtil;
     }
 
     /**
@@ -163,24 +142,10 @@ public abstract class BaseFormController extends SimpleFormController {
     }
 
     /**
-     * @param cancelView the cancelView to set
-     */
-    public void setCancelView( String cancelView ) {
-        this.cancelView = cancelView;
-    }
-
-    /**
      * @param mailEngine
      */
     public void setMailEngine( MailEngine mailEngine ) {
         this.mailEngine = mailEngine;
-    }
-
-    /**
-     * @param message
-     */
-    public void setMailMessage( SimpleMailMessage message ) {
-        this.mailMessage = message;
     }
 
     /**
@@ -191,131 +156,10 @@ public abstract class BaseFormController extends SimpleFormController {
     }
 
     /**
-     * @param templateName
-     */
-    public void setTemplateName( String templateName ) {
-        this.templateName = templateName;
-    }
-
-    /**
      * @param userService
      */
     public void setUserService( UserService userService ) {
         this.userService = userService;
-    }
-
-    /**
-     * Override this to control which cancelView is used. The default behavior is to go to the success view if there is
-     * no cancel view defined; otherwise, get the cancel view.
-     * 
-     * @param request can be used to control which cancel view to use. (This is not used in the default implementation)
-     * @return the name of the cancel view to use.
-     */
-    protected String getCancelViewName( HttpServletRequest request ) {
-        // Default to successView if cancelView is not defined
-        if ( StringUtils.isBlank( cancelView ) ) {
-            return getSuccessView();
-        }
-        return this.cancelView;
-    }
-
-    /**
-     * Convenience method to get the user object from the session
-     * 
-     * @param request the current request
-     * @return the user's populated object from the session
-     */
-    protected User getUser( HttpServletRequest request ) {
-        return ( User ) request.getSession().getAttribute( Constants.USER_KEY );
-    }
-
-    /**
-     * Set up a custom property editor for converting form inputs to real objects. Override this to add additional
-     * custom editors (call super.initBinder() in your implemenation)
-     */
-    @Override
-    protected void initBinder( HttpServletRequest request, ServletRequestDataBinder binder ) {
-        NumberFormat nf = NumberFormat.getNumberInstance();
-        binder.registerCustomEditor( Integer.class, null, new CustomNumberEditor( Integer.class, nf, true ) );
-        binder.registerCustomEditor( Long.class, null, new CustomNumberEditor( Long.class, nf, true ) );
-        binder.registerCustomEditor( byte[].class, new ByteArrayMultipartFileEditor() );
-    }
-
-    /**
-     * Default behavior for FormControllers - redirect to the successView when the cancel button has been pressed.
-     */
-    @Override
-    protected ModelAndView processFormSubmission( HttpServletRequest request, HttpServletResponse response,
-            Object command, BindException errors ) throws Exception {
-        if ( request.getParameter( "cancel" ) != null ) {
-            messageUtil.saveMessage( request, "errors.cancel", "Cancelled" );
-            return getCancelView( request );
-        }
-
-        return super.processFormSubmission( request, response, command, errors );
-    }
-
-    /**
-     * Override this to control which cancelView is used. The default behavior is to go to the success view if there is
-     * no cancel view defined; otherwise, get the cancel view.
-     * 
-     * @param request can be used to control which cancel view to use. (This is not used in the default implementation)
-     * @return the view to use.
-     */
-    protected ModelAndView getCancelView( HttpServletRequest request ) {
-        return new ModelAndView( getCancelViewName( request ) );
-    }
-
-    /**
-     * New errors are added if <tt>message</tt> is not empty (as per the definition of
-     * {@link org.apache.commons.lang.StringUtils#isEmpty}. If empty, a new error will not be added, but existing errors
-     * will still be processed.
-     * 
-     * @param request
-     * @param response
-     * @param command
-     * @param errors
-     * @param message - The error message to be displayed.
-     * @return ModelAndView
-     * @throws Exception
-     */
-
-    protected ModelAndView processErrors( HttpServletRequest request, HttpServletResponse response, Object command,
-            BindException errors, String message ) throws Exception {
-        if ( !StringUtils.isEmpty( message ) ) {
-            log.error( message );
-            if ( command == null ) {
-                errors.addError( new ObjectError( "nullCommand", null, null, message ) );
-            } else {
-                errors.addError( new ObjectError( command.toString(), null, null, message ) );
-            }
-        }
-
-        return this.processFormSubmission( request, response, command, errors );
-    }
-
-    /**
-     * Convenience message to send messages to users
-     * 
-     * @param user
-     * @param msg
-     */
-    protected void sendEmail( User user, String msg ) {
-        if ( StringUtils.isBlank( user.getEmail() ) ) {
-            log.warn( "Could not send email to " + user + ", no email address" );
-        }
-        log.debug( "sending e-mail to user [" + user.getEmail() + "]..." );
-        mailMessage.setTo( user.getFullName() + "<" + user.getEmail() + ">" );
-
-        mailEngine.send( mailMessage );
-    }
-
-    protected void sendEmail( User user, String templateName, Map model ) {
-        if ( StringUtils.isBlank( user.getEmail() ) ) {
-            log.warn( "Could not send email to " + user + ", no email address" );
-        }
-        mailMessage.setTo( user.getFullName() + "<" + user.getEmail() + ">" );
-        mailEngine.sendMessage( mailMessage, templateName, model );
     }
 
     /**
@@ -339,10 +183,94 @@ public abstract class BaseFormController extends SimpleFormController {
     }
 
     /**
-     * @return the messageUtil
+     * Override this to control which cancelView is used. The default behavior is to go to the success view if there is
+     * no cancel view defined; otherwise, get the cancel view.
+     * 
+     * @param request can be used to control which cancel view to use. (This is not used in the default implementation)
+     * @return the view to use.
      */
-    public MessageUtil getMessageUtil() {
-        return this.messageUtil;
+    protected ModelAndView getCancelView( HttpServletRequest request ) {
+        return new ModelAndView( "/mainMenu" );
+    }
+
+    /**
+     * Set up a custom property editor for converting form inputs to real objects. Override this to add additional
+     * custom editors (call super.initBinder() in your implemenation)
+     */
+    @InitBinder
+    protected void initBinder( WebDataBinder binder ) {
+        NumberFormat nf = NumberFormat.getNumberInstance();
+        binder.registerCustomEditor( Integer.class, null, new CustomNumberEditor( Integer.class, nf, true ) );
+        binder.registerCustomEditor( Long.class, null, new CustomNumberEditor( Long.class, nf, true ) );
+        binder.registerCustomEditor( byte[].class, new ByteArrayMultipartFileEditor() );
+    }
+
+    /**
+     * Convenience method to get the user object from the session
+     * 
+     * @param request the current request
+     * @return the user's populated object from the session
+     */
+
+    protected ModelAndView processErrors( HttpServletRequest request, HttpServletResponse response, Object command,
+            BindException errors, String message ) throws Exception {
+        if ( !StringUtils.isEmpty( message ) ) {
+            log.error( message );
+            if ( command == null ) {
+                errors.addError( new ObjectError( "nullCommand", null, null, message ) );
+            } else {
+                errors.addError( new ObjectError( command.toString(), null, null, message ) );
+            }
+        }
+
+        return this.processFormSubmission( request, response, command, errors );
+    }
+
+    /**
+     * Default behavior for FormControllers - redirect to the successView when the cancel button has been pressed.
+     */
+    @Override
+    protected ModelAndView processFormSubmission( HttpServletRequest request, HttpServletResponse response,
+            Object command, BindException errors ) throws Exception {
+        if ( request.getParameter( "cancel" ) != null ) {
+            messageUtil.saveMessage( request, "errors.cancel", "Cancelled" );
+            return getCancelView( request );
+        }
+
+        return super.processFormSubmission( request, response, command, errors );
+    }
+
+    /**
+     * Convenience message to send messages to users
+     * 
+     * @param user
+     * @param msg
+     */
+    protected void sendEmail( User user, String msg ) {
+        if ( StringUtils.isBlank( user.getEmail() ) ) {
+            log.warn( "Could not send email to " + user + ", no email address" );
+        }
+        log.debug( "sending e-mail to user [" + user.getEmail() + "]..." );
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo( user.getFullName() + "<" + user.getEmail() + ">" );
+
+        mailEngine.send( message );
+    }
+
+    /**
+     * Convenience message to send messages to users
+     * 
+     * @param user
+     * @param templateName
+     * @param model
+     */
+    protected void sendEmail( User user, String templateName, Map<String, Object> model ) {
+        if ( StringUtils.isBlank( user.getEmail() ) ) {
+            log.warn( "Could not send email to " + user + ", no email address" );
+        }
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo( user.getFullName() + "<" + user.getEmail() + ">" );
+        mailEngine.sendMessage( message, templateName, model );
     }
 
 }

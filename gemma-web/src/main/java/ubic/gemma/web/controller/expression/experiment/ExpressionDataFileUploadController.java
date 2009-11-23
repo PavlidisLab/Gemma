@@ -28,6 +28,8 @@ import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.lang.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.servlet.ModelAndView;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
@@ -42,38 +44,136 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.TaxonService;
+import ubic.gemma.util.progress.ProgressJob;
 import ubic.gemma.util.progress.ProgressManager;
 import ubic.gemma.web.controller.BackgroundControllerJob;
-
 import ubic.gemma.web.controller.grid.AbstractSpacesController;
 
 /**
  * Replaces SimpleExpressionExperimentLoadController
  * 
- * @spring.bean id="expressionDataFileUploadController"
- * @spring.property name="simpleExpressionDataLoaderService" ref="simpleExpressionDataLoaderService"
- * @spring.property name="arrayDesignService" ref="arrayDesignService"
- * @spring.property name="expressionExperimentService" ref="expressionExperimentService"
- * @spring.property name="taxonService" ref="taxonService"
- * @spring.property name="processedExpressionDataVectorCreateService" ref="processedExpressionDataVectorCreateService"
  * @author Paul
  * @version $Id$
  */
+@Controller
 public class ExpressionDataFileUploadController extends AbstractSpacesController {
 
+    class SimpleEELoadJob extends BackgroundControllerJob<Long> {
+
+        public SimpleEELoadJob( String taskId, Object commandObj ) {
+            super( taskId );
+            this.setCommand( commandObj );
+        }
+
+        @SuppressWarnings("synthetic-access")
+        public Long call() throws Exception {
+
+            SimpleExpressionExperimentLoadCommand commandObject = ( SimpleExpressionExperimentLoadCommand ) command;
+
+            File file = getFile( commandObject );
+
+            populateCommandObject( commandObject );
+
+            ProgressJob job = init( "Loading data from " + file.getName() );
+
+            InputStream stream = FileTools.getInputStreamFromPlainOrCompressedFile( file.getAbsolutePath() );
+
+            if ( stream == null ) {
+                throw new IllegalStateException( "Could not read from file " + file );
+            }
+
+            /*
+             * Main action here!
+             */
+            ExpressionExperiment result = simpleExpressionDataLoaderService.load( commandObject, stream );
+            stream.close();
+
+            log.info( "Preprocessing the data for analysis" );
+            processedExpressionDataVectorCreateService.computeProcessedExpressionData( result );
+
+            ProgressManager.destroyProgressJob( job );
+
+            // In theory we could do the link analysis right away. However, when a data set has new array designs, we
+            // won't be ready yet.
+
+            return result.getId();
+        }
+
+        /**
+         * @param commandObject
+         */
+        private void populateCommandObject( SimpleExpressionExperimentLoadCommand commandObject ) {
+            Collection<ArrayDesign> arrayDesigns = commandObject.getArrayDesigns();
+
+            // might have used instead of actual ADs.
+            Collection<Long> arrayDesignIds = commandObject.getArrayDesignIds();
+
+            if ( arrayDesignIds != null && arrayDesignIds.size() > 0 ) {
+                for ( Long adid : arrayDesignIds ) {
+                    arrayDesigns.add( arrayDesignService.load( adid ) );
+                }
+            } else if ( arrayDesigns == null || arrayDesigns.size() == 0 ) {
+                log.info( "Array design " + commandObject.getArrayDesignName() + " is new, will create from data." );
+                ArrayDesign arrayDesign = ArrayDesign.Factory.newInstance();
+                arrayDesign.setName( commandObject.getArrayDesignName() );
+                commandObject.getArrayDesigns().add( arrayDesign );
+            }
+
+            commandObject.setType( StandardQuantitationType.AMOUNT );
+            commandObject.setGeneralType( GeneralType.QUANTITATIVE );
+            commandObject.setIsMaskedPreferred( true );
+
+            Long taxonId = commandObject.getTaxonId();
+
+            if ( taxonId != null ) {
+                commandObject.setTaxon( taxonService.load( taxonId ) );
+            }
+        }
+    }
+
+    /**
+     *  
+     */
+    class SimpleEEValidateJob extends BackgroundControllerJob<SimpleExpressionExperimentCommandValidation> {
+
+        public SimpleEEValidateJob( String taskId, Object commandObj ) {
+            super( taskId );
+            this.setCommand( commandObj );
+        }
+
+        /*
+         * (non-Javadoc)
+         * @see java.util.concurrent.Callable#call()
+         */
+        public SimpleExpressionExperimentCommandValidation call() throws Exception {
+            ProgressJob job = init( "Validating" );
+
+            /*
+             * Check that 1) Data file is basically valid and parseable 2) The array design matches the data files.
+             */
+            SimpleExpressionExperimentCommandValidation result = doValidate( ( SimpleExpressionExperimentLoadCommand ) this.command );
+
+            ProgressManager.destroyProgressJob( job );
+
+            return result;
+
+        }
+    }
+
+    @Autowired
     private ArrayDesignService arrayDesignService;
 
+    @Autowired
     private SimpleExpressionDataLoaderService simpleExpressionDataLoaderService;
 
+    @Autowired
     private ExpressionExperimentService expressionExperimentService;
 
+    @Autowired
     private TaxonService taxonService;
 
+    @Autowired
     private ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService;
-
-    public void setTaxonService( TaxonService taxonService ) {
-        this.taxonService = taxonService;
-    }
 
     /**
      * AJAX
@@ -93,12 +193,59 @@ public class ExpressionDataFileUploadController extends AbstractSpacesController
         this.arrayDesignService = arrayDesignService;
     }
 
+    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
+        this.expressionExperimentService = expressionExperimentService;
+    }
+
+    public void setProcessedExpressionDataVectorCreateService(
+            ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService ) {
+        this.processedExpressionDataVectorCreateService = processedExpressionDataVectorCreateService;
+    }
+
     /**
      * @param simpleExpressionDataLoaderService the simpleExpressionDataLoaderService to set
      */
     public void setSimpleExpressionDataLoaderService(
             SimpleExpressionDataLoaderService simpleExpressionDataLoaderService ) {
         this.simpleExpressionDataLoaderService = simpleExpressionDataLoaderService;
+    }
+
+    public void setTaxonService( TaxonService taxonService ) {
+        this.taxonService = taxonService;
+    }
+
+    /**
+     * @param ed
+     * @return taskId
+     * @throws Exception
+     */
+    public String validate( SimpleExpressionExperimentLoadCommand ed ) throws Exception {
+        assert ed != null;
+        ed.setValidateOnly( true );
+        return this.run( ed );
+    }
+
+    @Override
+    protected BackgroundControllerJob getRunner( String jobId, Object command ) {
+        if ( ( ( SimpleExpressionExperimentLoadCommand ) command ).isValidateOnly() ) {
+            return new SimpleEEValidateJob( jobId, command );
+        }
+        return new SimpleEELoadJob( jobId, command );
+    }
+
+    @Override
+    protected BackgroundControllerJob<ModelAndView> getSpaceRunner( String jobId, Object command ) {
+        throw new UnsupportedOperationException( "Not implemented yet" );
+    }
+
+    /*
+     * (non-Javadoc)
+     * @seeorg.springframework.web.servlet.mvc.AbstractUrlViewController#getViewNameForRequest(javax.servlet.http.
+     * HttpServletRequest)
+     */
+    @Override
+    protected String getViewNameForRequest( HttpServletRequest request ) {
+        return "dataUpload";
     }
 
     /**
@@ -199,150 +346,6 @@ public class ExpressionDataFileUploadController extends AbstractSpacesController
         }
 
         return file;
-    }
-
-    /**
-     * @param ed
-     * @return taskId
-     * @throws Exception
-     */
-    public String validate( SimpleExpressionExperimentLoadCommand ed ) throws Exception {
-        assert ed != null;
-        ed.setValidateOnly( true );
-        return this.run( ed );
-    }
-
-    @Override
-    protected BackgroundControllerJob getRunner( String jobId, Object command ) {
-        if ( ( ( SimpleExpressionExperimentLoadCommand ) command ).isValidateOnly() ) {
-            return new SimpleEEValidateJob( jobId, command );
-        }
-        return new SimpleEELoadJob( jobId, command );
-    }
-
-    @Override
-    protected BackgroundControllerJob<ModelAndView> getSpaceRunner( String jobId, Object command ) {
-        throw new UnsupportedOperationException( "Not implemented yet" );
-    }
-
-    /*
-     * (non-Javadoc)
-     * @seeorg.springframework.web.servlet.mvc.AbstractUrlViewController#getViewNameForRequest(javax.servlet.http.
-     * HttpServletRequest)
-     */
-    @Override
-    protected String getViewNameForRequest( HttpServletRequest request ) {
-        return "dataUpload";
-    }
-
-    class SimpleEELoadJob extends BackgroundControllerJob<Long> {
-
-        public SimpleEELoadJob( String taskId, Object commandObj ) {
-            super( taskId, commandObj );
-        }
-
-        @SuppressWarnings("synthetic-access")
-        public Long call() throws Exception {
-            super.init();
-
-            SimpleExpressionExperimentLoadCommand commandObject = ( SimpleExpressionExperimentLoadCommand ) command;
-
-            File file = getFile( commandObject );
-
-            populateCommandObject( commandObject );
-
-            ProgressManager.createProgressJob( this.getTaskId(), securityContext.getAuthentication().getName(),
-                    "Loading data from " + file.getName() );
-
-            InputStream stream = FileTools.getInputStreamFromPlainOrCompressedFile( file.getAbsolutePath() );
-
-            if ( stream == null ) {
-                throw new IllegalStateException( "Could not read from file " + file );
-            }
-
-            /*
-             * Main action here!
-             */
-            ExpressionExperiment result = simpleExpressionDataLoaderService.load( commandObject, stream );
-            stream.close();
-
-            log.info( "Preprocessing the data for analysis" );
-            processedExpressionDataVectorCreateService.computeProcessedExpressionData( result );
-
-            // In theory we could do the link analysis right away. However, when a data set has new array designs, we
-            // won't be ready yet.
-
-            return result.getId();
-        }
-
-        /**
-         * @param commandObject
-         */
-        private void populateCommandObject( SimpleExpressionExperimentLoadCommand commandObject ) {
-            Collection<ArrayDesign> arrayDesigns = commandObject.getArrayDesigns();
-
-            // might have used instead of actual ADs.
-            Collection<Long> arrayDesignIds = commandObject.getArrayDesignIds();
-
-            if ( arrayDesignIds != null && arrayDesignIds.size() > 0 ) {
-                for ( Long adid : arrayDesignIds ) {
-                    arrayDesigns.add( arrayDesignService.load( adid ) );
-                }
-            } else if ( arrayDesigns == null || arrayDesigns.size() == 0 ) {
-                log.info( "Array design " + commandObject.getArrayDesignName() + " is new, will create from data." );
-                ArrayDesign arrayDesign = ArrayDesign.Factory.newInstance();
-                arrayDesign.setName( commandObject.getArrayDesignName() );
-                commandObject.getArrayDesigns().add( arrayDesign );
-            }
-
-            commandObject.setType( StandardQuantitationType.AMOUNT );
-            commandObject.setGeneralType( GeneralType.QUANTITATIVE );
-            commandObject.setIsMaskedPreferred( true );
-
-            Long taxonId = commandObject.getTaxonId();
-
-            if ( taxonId != null ) {
-                commandObject.setTaxon( taxonService.load( taxonId ) );
-            }
-        }
-    }
-
-    /**
-     *  
-     */
-    class SimpleEEValidateJob extends BackgroundControllerJob<SimpleExpressionExperimentCommandValidation> {
-
-        public SimpleEEValidateJob( String taskId, Object commandObj ) {
-            super( taskId, commandObj );
-        }
-
-        /*
-         * (non-Javadoc)
-         * @see java.util.concurrent.Callable#call()
-         */
-        public SimpleExpressionExperimentCommandValidation call() throws Exception {
-            super.init();
-
-            ProgressManager.createProgressJob( this.getTaskId(), securityContext.getAuthentication().getName(),
-                    "Validating" );
-
-            /*
-             * Check that 1) Data file is basically valid and parseable 2) The array design matches the data files.
-             */
-            SimpleExpressionExperimentCommandValidation result = doValidate( ( SimpleExpressionExperimentLoadCommand ) this.command );
-
-            return result;
-
-        }
-    }
-
-    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
-        this.expressionExperimentService = expressionExperimentService;
-    }
-
-    public void setProcessedExpressionDataVectorCreateService(
-            ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService ) {
-        this.processedExpressionDataVectorCreateService = processedExpressionDataVectorCreateService;
     }
 
 }

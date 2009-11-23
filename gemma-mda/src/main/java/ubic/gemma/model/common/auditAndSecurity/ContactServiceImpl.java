@@ -18,15 +18,15 @@
  */
 package ubic.gemma.model.common.auditAndSecurity;
 
+import org.springframework.stereotype.Service;
+
 /**
- * <hr>
- * <p>
- * 
  * @author keshav
  * @author pavlidis
  * @version $Id$
  * @see ubic.gemma.model.common.auditAndSecurity.ContactService
  */
+@Service
 public class ContactServiceImpl extends ubic.gemma.model.common.auditAndSecurity.ContactServiceBase {
 
     /**

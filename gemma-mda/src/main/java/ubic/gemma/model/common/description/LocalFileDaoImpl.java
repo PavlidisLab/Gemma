@@ -23,7 +23,10 @@ package ubic.gemma.model.common.description;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
+import org.hibernate.SessionFactory;
 import org.hibernate.criterion.Restrictions;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
 
 import ubic.gemma.util.BusinessKey;
 
@@ -31,9 +34,15 @@ import ubic.gemma.util.BusinessKey;
  * @author pavlidis
  * @version $Id$
  */
+@Repository
 public class LocalFileDaoImpl extends ubic.gemma.model.common.description.LocalFileDaoBase {
 
     private static Log log = LogFactory.getLog( LocalFileDaoImpl.class.getName() );
+
+    @Autowired
+    public LocalFileDaoImpl( SessionFactory sessionFactory ) {
+        super.setSessionFactory( sessionFactory );
+    }
 
     /**
      * 
@@ -42,7 +51,7 @@ public class LocalFileDaoImpl extends ubic.gemma.model.common.description.LocalF
     public LocalFile find( ubic.gemma.model.common.description.LocalFile localFile ) {
         try {
 
-            Criteria queryObject = super.getSession( false ).createCriteria( LocalFile.class );
+            Criteria queryObject = super.getSession().createCriteria( LocalFile.class );
 
             BusinessKey.checkValidKey( localFile );
 

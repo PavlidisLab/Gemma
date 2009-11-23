@@ -19,12 +19,20 @@
 
 package ubic.gemma.model.analysis;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
 
+import org.apache.commons.lang.RandomStringUtils;
+import org.junit.Before;
+import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
-import ubic.gemma.model.analysis.expression.ExpressionExperimentSetDao;
+import ubic.gemma.model.analysis.expression.ExpressionExperimentSetService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -38,8 +46,14 @@ import ubic.gemma.testing.BaseSpringContextTest;
  */
 public class DifferentialExpressionAnalysisServiceTest extends BaseSpringContextTest {
 
+    @Autowired
     private DifferentialExpressionAnalysisService analysisService;
+
+    @Autowired
     private ExpressionExperimentService expressionExperimentService;
+
+    @Autowired
+    private ExpressionExperimentSetService expressionExperimentSetService;
 
     // Test Data
     DifferentialExpressionAnalysis eAnalysis1;
@@ -51,102 +65,95 @@ public class DifferentialExpressionAnalysisServiceTest extends BaseSpringContext
     ExpressionExperiment e2;
     ExpressionExperiment e3;
 
-    @Override
-    public void onSetUpInTransaction() throws Exception {
-        super.onSetUpInTransaction();
+    private String testEESetName;
 
-        this.analysisService = ( DifferentialExpressionAnalysisService ) getBean( "differentialExpressionAnalysisService" );
-        Taxon mouse = this.getTaxon( "mouse" );
+    private String testAnalysisName;
 
-        ExpressionExperimentSetDao expressionExperimentSetDao = ( ExpressionExperimentSetDao ) getBean( "expressionExperimentSetDao" );
+    @Before
+    public void setup() throws Exception {
 
         e1 = ExpressionExperiment.Factory.newInstance();
-        e1.setName( "test e1" );
+        e1.setShortName( RandomStringUtils.randomAlphabetic( 6 ) );
         e1 = expressionExperimentService.create( e1 );
 
         e2 = ExpressionExperiment.Factory.newInstance();
-        e2.setName( "test e2" );
+        e2.setShortName( RandomStringUtils.randomAlphabetic( 6 ) );
         e2 = expressionExperimentService.create( e2 );
 
         e3 = ExpressionExperiment.Factory.newInstance();
-        e3.setName( "test e3" );
+        e3.setShortName( RandomStringUtils.randomAlphabetic( 6 ) );
         e3 = expressionExperimentService.create( e3 );
 
-        eAnalysis1 = DifferentialExpressionAnalysis.Factory.newInstance();
-        ExpressionExperimentSet eeSet = ExpressionExperimentSet.Factory.newInstance();
-        eeSet.setTaxon( mouse );
-        eeSet = expressionExperimentSetDao.create( eeSet );
-
+        ExpressionExperimentSet eeSet = initSet();
         eeSet.getExperiments().add( e1 );
+        expressionExperimentSetService.update( eeSet );
 
+        // //////////////////
+        eAnalysis1 = DifferentialExpressionAnalysis.Factory.newInstance();
         eAnalysis1.setExpressionExperimentSetAnalyzed( eeSet );
-        eAnalysis1.setName( "TestAnalysis1" );
+        eAnalysis1.setName( RandomStringUtils.randomAlphabetic( 6 ) );
         eAnalysis1.setDescription( "An analysis Test 1" );
         eAnalysis1 = analysisService.create( eAnalysis1 );
 
+        // ///////////////
         eAnalysis2 = DifferentialExpressionAnalysis.Factory.newInstance();
-        eeSet = ExpressionExperimentSet.Factory.newInstance();
-        eeSet.setTaxon( mouse );
-        eeSet = expressionExperimentSetDao.create( eeSet );
+        eeSet = initSet();
         eeSet.getExperiments().add( e1 );
         eeSet.getExperiments().add( e2 );
+        expressionExperimentSetService.update( eeSet );
 
         eAnalysis2.setExpressionExperimentSetAnalyzed( eeSet );
-        eAnalysis2.setName( "TestAnalysis2" );
+        eAnalysis2.setName( RandomStringUtils.randomAlphabetic( 6 ) );
         eAnalysis2.setDescription( "An analysis Test 2" );
         eAnalysis2 = analysisService.create( eAnalysis2 );
 
-        eAnalysis4 = DifferentialExpressionAnalysis.Factory.newInstance();
-        eeSet = ExpressionExperimentSet.Factory.newInstance();
-        eeSet.setTaxon( mouse );
-        eeSet = expressionExperimentSetDao.create( eeSet );
-        eeSet.getExperiments().add( e1 );
-        eeSet.getExperiments().add( e2 );
-        eeSet.getExperiments().add( e3 );
-
-        eAnalysis4.setExpressionExperimentSetAnalyzed( eeSet );
-        eAnalysis4.setName( "Test" );
-        eAnalysis4.setDescription( "An analysis Test 4" );
-        eAnalysis4 = analysisService.create( eAnalysis4 );
-
+        // /////////////
         eAnalysis3 = DifferentialExpressionAnalysis.Factory.newInstance();
-        eeSet = ExpressionExperimentSet.Factory.newInstance();
-        eeSet.setTaxon( mouse );
-        eeSet = expressionExperimentSetDao.create( eeSet );
+        eeSet = initSet();
         eeSet.getExperiments().add( e1 );
         eeSet.getExperiments().add( e2 );
         eeSet.getExperiments().add( e3 );
+        expressionExperimentSetService.update( eeSet );
 
         eAnalysis3.setExpressionExperimentSetAnalyzed( eeSet );
-        eAnalysis3.setName( "TestAnalysis3" );
+        this.testAnalysisName = RandomStringUtils.randomAlphabetic( 6 );
+        eAnalysis3.setName( testAnalysisName );
         eAnalysis3.setDescription( "An analysis Test 3" );
         eAnalysis3 = analysisService.create( eAnalysis3 );
 
+        // ////
+        eAnalysis4 = DifferentialExpressionAnalysis.Factory.newInstance();
+        eeSet = initSet();
+        eeSet.getExperiments().add( e1 );
+        eeSet.getExperiments().add( e2 );
+        eeSet.getExperiments().add( e3 );
+        expressionExperimentSetService.update( eeSet );
+
+        eAnalysis4.setExpressionExperimentSetAnalyzed( eeSet );
+        testEESetName = RandomStringUtils.randomAlphabetic( 6 );
+        eAnalysis4.setName( testEESetName );
+        eAnalysis4.setDescription( "An analysis Test 4" );
+        eAnalysis4 = analysisService.create( eAnalysis4 );
+
+    }
+
+    private ExpressionExperimentSet initSet() {
+        Taxon mouse = this.getTaxon( "mouse" );
+
+        ExpressionExperimentSet eeSet = ExpressionExperimentSet.Factory.newInstance();
+        eeSet.setTaxon( mouse );
+        eeSet.setName( RandomStringUtils.randomAlphabetic( 6 ) );
+        eeSet = expressionExperimentSetService.create( eeSet );
+        return eeSet;
     }
 
     /**
      * 
      */
-    @SuppressWarnings("unchecked")
-    public void testFindByInvestigations() {
-        Collection<ExpressionExperiment> investigations = new ArrayList<ExpressionExperiment>();
-        investigations.add( e1 );
-        investigations.add( e2 );
-
-        Map<ExpressionExperiment, Collection<DifferentialExpressionAnalysis>> results = analysisService
-                .findByInvestigations( investigations );
-        assertEquals( 2, results.keySet().size() );
-
-        assertEquals( 4, results.get( e1 ).size() );
-        assertEquals( 3, results.get( e2 ).size() );
-    }
-
-    /**
-     * 
-     */
+    @Test
     public void testFindByInvestigation() {
 
-        Collection results = analysisService.findByInvestigation( e1 );
+        Collection<DifferentialExpressionAnalysis> results = analysisService.findByInvestigation( e1 );
         assertEquals( 4, results.size() );
 
         results = analysisService.findByInvestigation( e2 );
@@ -160,35 +167,49 @@ public class DifferentialExpressionAnalysisServiceTest extends BaseSpringContext
     /**
      * 
      */
+    @Test
+    public void testFindByInvestigations() {
+        Collection<ExpressionExperiment> investigations = new ArrayList<ExpressionExperiment>();
+        investigations.add( e1 );
+        investigations.add( e2 );
+
+        Map<Investigation, Collection<DifferentialExpressionAnalysis>> results = analysisService
+                .findByInvestigations( investigations );
+        assertEquals( 2, results.keySet().size() );
+
+        assertEquals( 4, results.get( e1 ).size() );
+        assertEquals( 3, results.get( e2 ).size() );
+    }
+
+    @Test
+    public void testFindByNameExact() {
+
+        Collection<DifferentialExpressionAnalysis> result = analysisService.findByName( this.testEESetName );
+        assertNotNull( result );
+        assertEquals( 1, result.size() );
+        assertEquals( this.testEESetName, result.iterator().next().getName() );
+    }
+
+    @Test
+    public void testFindByNameRecent() {
+        Collection<DifferentialExpressionAnalysis> result = analysisService.findByName( this.testAnalysisName );
+        assertNotNull( result );
+        assertEquals( this.testAnalysisName, result.iterator().next().getName() );
+    }
+
+    /**
+     *  
+     */
+    @Test
     public void testFindByUniqueInvestigations() {
         Collection<Investigation> investigations = new ArrayList<Investigation>();
         investigations.add( e1 );
         investigations.add( e2 );
 
-        Analysis results = analysisService.findByUniqueInvestigations( investigations );
+        DifferentialExpressionAnalysis results = analysisService.findByUniqueInvestigations( investigations );
         assertNotNull( results );
         assertEquals( eAnalysis2.getId(), results.getId() );
 
-    }
-
-    public void testFindByNameExact() {
-
-        Collection<Analysis> result = analysisService.findByName( "Test" );
-        assertNotNull( result );
-        assertEquals( "Test", result.iterator().next().getName() );
-    }
-
-    public void testFindByNameRecent() {
-        Collection<Analysis> result = analysisService.findByName( "TestAnalysis3" );
-        assertNotNull( result );
-        assertEquals( "TestAnalysis3", result.iterator().next().getName() );
-    }
-
-    /**
-     * @param ees the expressionExperimentService to set
-     */
-    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
-        this.expressionExperimentService = expressionExperimentService;
     }
 
 }

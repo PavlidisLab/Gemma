@@ -24,6 +24,8 @@ import java.util.HashSet;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.lang.math.RandomUtils;
 import org.easymock.classextension.EasyMock;
+import org.junit.Before;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.util.RClient;
@@ -114,17 +116,86 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
     private RClient rc = null;
     protected boolean connected = false;
 
+    @Autowired
     protected ExpressionDataMatrixService expressionDataMatrixService = null;
 
+    @Autowired
     protected ProcessedExpressionDataVectorService processedExpressionDataVectorService = null;
+
+    /**
+     * Configure the test data for one way anova.
+     */
+    public void configureTestDataForOneWayAnova() {
+
+        /*
+         * TODO This really configures it for a t-test, which is just a one way anova if there are only 2 factor values.
+         * Rename this to configureTestDataForTTest and create a separate method with test data for one way anova with 3
+         * (or more factor value).
+         */
+        log.info( "Configuring test data for one way anova." );
+
+        Collection<BioMaterial> updatedBiomaterials = new HashSet<BioMaterial>();
+        for ( BioMaterial m : biomaterials ) {
+            Collection<FactorValue> fvs = m.getFactorValues();
+            Collection<FactorValue> updatedFactorValues = new HashSet<FactorValue>();
+            for ( FactorValue fv : fvs ) {
+                if ( fv.getExperimentalFactor().getName() != experimentalFactorB.getName() ) {
+                    continue;
+                }
+                updatedFactorValues.add( fv );
+
+                m.setFactorValues( updatedFactorValues );
+                updatedBiomaterials.add( m );
+            }
+        }
+
+        biomaterials = updatedBiomaterials;
+
+        configureVectors( biomaterials.size() );
+
+        experimentalFactors.remove( experimentalFactorA );
+        experimentalDesign.setExperimentalFactors( experimentalFactors );
+        expressionExperiment.setExperimentalDesign( experimentalDesign );
+    }
+
+    /**
+     * The default test data configuration.
+     */
+    public void configureTestDataForTwoWayAnovaWithInteractions() {
+
+        /* this is the default configuration */
+        log.info( "This is the default configuration of the test data." );
+    }
+
+    /**
+     * Configure the test data for two way anova without interactions.
+     * <p>
+     * Removes the replicates.
+     */
+    public void configureTestDataForTwoWayAnovaWithoutInteractions() {
+
+        log.info( "Configuring test data for two way anova without interactions." );
+
+        /* remove the "replicates" */
+        bioAssays.remove( bioAssay0b );
+        bioAssays.remove( bioAssay1b );
+        bioAssays.remove( bioAssay2b );
+        bioAssays.remove( bioAssay3b );
+
+        expressionExperiment.setBioAssays( bioAssays );
+
+        bioAssayDimension.setBioAssays( bioAssays );
+
+        configureVectors( NUM_BIOASSAYS / 2 );
+
+    }
 
     /*
      * (non-Javadoc)
      * @see ubic.gemma.testing.BaseSpringContextTest#onSetUpInTransaction()
      */
-    @Override
-    public void onSetUpInTransaction() throws Exception {
-        super.onSetUpInTransaction();
+    @Before
+    public void setup() throws Exception {
 
         /* Decide whether to skip test based on R connection. */
 
@@ -366,6 +437,40 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
     }
 
     /**
+     * Mocks the method getVectors in the {@link ExpressionDataMatrixService}.
+     * 
+     * @param numMethodCalls The number of times the mocked method will be called.
+     * @throws Exception
+     */
+    protected void configureMockAnalysisServiceHelper( int numMethodCalls ) throws Exception {
+        this.expressionDataMatrixService = EasyMock.createMock( ExpressionDataMatrixService.class );
+
+        org.easymock.EasyMock.expect(
+                expressionDataMatrixService.getProcessedExpressionDataMatrix( expressionExperiment ) ).andReturn(
+                new ExpressionDataDoubleMatrix( this.vectors ) ).times( numMethodCalls );
+        org.easymock.EasyMock.expect(
+                expressionDataMatrixService.getProcessedExpressionDataVectors( expressionExperiment ) ).andReturn(
+                this.vectors ).times( numMethodCalls );
+        EasyMock.replay( expressionDataMatrixService );
+    }
+
+    /**
+     * @throws Exception
+     */
+    protected abstract void configureMocks() throws Exception;
+
+    /**
+     * @param resultSet
+     */
+    protected void logResults( ExpressionAnalysisResultSet resultSet ) {
+
+        for ( DifferentialExpressionAnalysisResult r : resultSet.getResults() ) {
+            ProbeAnalysisResult probeAnalysisResult = ( ProbeAnalysisResult ) r;
+            log.debug( "probe: " + probeAnalysisResult.getProbe() + "; p-value: " + probeAnalysisResult.getPvalue() );
+        }
+    }
+
+    /**
      * @param numAssays
      */
     private void configureVectors( int numAssays ) {
@@ -399,104 +504,4 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
 
         arrayDesign.setCompositeSequences( compositeSequences );
     }
-
-    /**
-     * The default test data configuration.
-     */
-    public void configureTestDataForTwoWayAnovaWithInteractions() {
-
-        /* this is the default configuration */
-        log.info( "This is the default configuration of the test data." );
-    }
-
-    /**
-     * Configure the test data for two way anova without interactions.
-     * <p>
-     * Removes the replicates.
-     */
-    public void configureTestDataForTwoWayAnovaWithoutInteractions() {
-
-        log.info( "Configuring test data for two way anova without interactions." );
-
-        /* remove the "replicates" */
-        bioAssays.remove( bioAssay0b );
-        bioAssays.remove( bioAssay1b );
-        bioAssays.remove( bioAssay2b );
-        bioAssays.remove( bioAssay3b );
-
-        expressionExperiment.setBioAssays( bioAssays );
-
-        bioAssayDimension.setBioAssays( bioAssays );
-
-        configureVectors( NUM_BIOASSAYS / 2 );
-
-    }
-
-    /**
-     * Configure the test data for one way anova.
-     */
-    public void configureTestDataForOneWayAnova() {
-
-        /*
-         * TODO This really configures it for a t-test, which is just a one way anova if there are only 2 factor values.
-         * Rename this to configureTestDataForTTest and create a separate method with test data for one way anova with 3
-         * (or more factor value).
-         */
-        log.info( "Configuring test data for one way anova." );
-
-        Collection<BioMaterial> updatedBiomaterials = new HashSet<BioMaterial>();
-        for ( BioMaterial m : biomaterials ) {
-            Collection<FactorValue> fvs = m.getFactorValues();
-            Collection<FactorValue> updatedFactorValues = new HashSet<FactorValue>();
-            for ( FactorValue fv : fvs ) {
-                if ( fv.getExperimentalFactor().getName() != experimentalFactorB.getName() ) {
-                    continue;
-                }
-                updatedFactorValues.add( fv );
-
-                m.setFactorValues( updatedFactorValues );
-                updatedBiomaterials.add( m );
-            }
-        }
-
-        biomaterials = updatedBiomaterials;
-
-        configureVectors( biomaterials.size() );
-
-        experimentalFactors.remove( experimentalFactorA );
-        experimentalDesign.setExperimentalFactors( experimentalFactors );
-        expressionExperiment.setExperimentalDesign( experimentalDesign );
-    }
-
-    /**
-     * Mocks the method getVectors in the {@link ExpressionDataMatrixService}.
-     * 
-     * @param numMethodCalls The number of times the mocked method will be called.
-     * @throws Exception
-     */
-    protected void configureMockAnalysisServiceHelper( int numMethodCalls ) throws Exception {
-        this.expressionDataMatrixService = EasyMock.createMock( ExpressionDataMatrixService.class );
-
-        EasyMock.expect( expressionDataMatrixService.getProcessedExpressionDataMatrix( expressionExperiment ) )
-                .andReturn( new ExpressionDataDoubleMatrix( this.vectors ) ).times( numMethodCalls );
-        EasyMock.expect( expressionDataMatrixService.getProcessedExpressionDataVectors( expressionExperiment ) )
-                .andReturn( this.vectors ).times( numMethodCalls );
-        EasyMock.replay( expressionDataMatrixService );
-    }
-
-    /**
-     * @param resultSet
-     */
-    protected void logResults( ExpressionAnalysisResultSet resultSet ) {
-
-        for ( DifferentialExpressionAnalysisResult r : resultSet.getResults() ) {
-            ProbeAnalysisResult probeAnalysisResult = ( ProbeAnalysisResult ) r;
-            log.debug( "probe: " + probeAnalysisResult.getProbe() + "; p-value: " + probeAnalysisResult.getPvalue() );
-        }
-    }
-
-    /**
-     * @throws Exception
-     */
-    protected abstract void configureMocks() throws Exception;
 }

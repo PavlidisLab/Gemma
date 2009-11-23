@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.genome.gene;
 
+import java.util.Collection;
+
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 
 /**
@@ -40,7 +42,7 @@ public abstract class BibReferenceCandidateGeneDaoBase extends HibernateDaoSuppo
             throw new IllegalArgumentException( "BibReferenceCandidateGene.create - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback() {
+                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
@@ -71,9 +73,8 @@ public abstract class BibReferenceCandidateGeneDaoBase extends HibernateDaoSuppo
      * @see ubic.gemma.model.genome.gene.BibReferenceCandidateGeneDao#create(java.util.Collection)
      */
 
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Collection<BibReferenceCandidateGene> create(
-            final java.util.Collection<BibReferenceCandidateGene> entities ) {
+    public java.util.Collection<? extends BibReferenceCandidateGene> create(
+            final java.util.Collection<? extends BibReferenceCandidateGene> entities ) {
         return create( TRANSFORM_NONE, entities );
     }
 
@@ -83,6 +84,11 @@ public abstract class BibReferenceCandidateGeneDaoBase extends HibernateDaoSuppo
     public BibReferenceCandidateGene create(
             ubic.gemma.model.genome.gene.BibReferenceCandidateGene bibReferenceCandidateGene ) {
         return this.create( TRANSFORM_NONE, bibReferenceCandidateGene );
+    }
+
+    public Collection<? extends BibReferenceCandidateGene> load( Collection<Long> ids ) {
+        return this.getHibernateTemplate().findByNamedParam( "from BibReferenceCandidateGeneImpl where id in (:ids)",
+                "ids", ids );
     }
 
     /**
@@ -111,7 +117,7 @@ public abstract class BibReferenceCandidateGeneDaoBase extends HibernateDaoSuppo
      * @see ubic.gemma.model.genome.gene.BibReferenceCandidateGeneDao#loadAll()
      */
 
-    public java.util.Collection<BibReferenceCandidateGene> loadAll() {
+    public java.util.Collection<? extends BibReferenceCandidateGene> loadAll() {
         return this.loadAll( TRANSFORM_NONE );
     }
 
@@ -119,8 +125,8 @@ public abstract class BibReferenceCandidateGeneDaoBase extends HibernateDaoSuppo
      * @see ubic.gemma.model.genome.gene.BibReferenceCandidateGeneDao#loadAll(int)
      */
 
-    public java.util.Collection<BibReferenceCandidateGene> loadAll( final int transform ) {
-        final java.util.Collection<BibReferenceCandidateGene> results = this.getHibernateTemplate().loadAll(
+    public java.util.Collection<? extends BibReferenceCandidateGene> loadAll( final int transform ) {
+        final java.util.Collection<? extends BibReferenceCandidateGene> results = this.getHibernateTemplate().loadAll(
                 ubic.gemma.model.genome.gene.BibReferenceCandidateGeneImpl.class );
         this.transformEntities( transform, results );
         return results;
@@ -144,7 +150,7 @@ public abstract class BibReferenceCandidateGeneDaoBase extends HibernateDaoSuppo
      * @see ubic.gemma.model.common.SecurableDao#remove(java.util.Collection)
      */
 
-    public void remove( java.util.Collection<BibReferenceCandidateGene> entities ) {
+    public void remove( java.util.Collection<? extends BibReferenceCandidateGene> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "BibReferenceCandidateGene.remove - 'entities' can not be null" );
         }
@@ -166,12 +172,12 @@ public abstract class BibReferenceCandidateGeneDaoBase extends HibernateDaoSuppo
      * @see ubic.gemma.model.common.SecurableDao#update(java.util.Collection)
      */
 
-    public void update( final java.util.Collection<BibReferenceCandidateGene> entities ) {
+    public void update( final java.util.Collection<? extends BibReferenceCandidateGene> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "BibReferenceCandidateGene.update - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback() {
+                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
@@ -208,7 +214,7 @@ public abstract class BibReferenceCandidateGeneDaoBase extends HibernateDaoSuppo
      */
 
     protected void transformEntities( final int transform,
-            final java.util.Collection<BibReferenceCandidateGene> entities ) {
+            final java.util.Collection<? extends BibReferenceCandidateGene> entities ) {
         switch ( transform ) {
             case TRANSFORM_NONE: // fall-through
             default:

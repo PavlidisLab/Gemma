@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.expression.biomaterial;
 
+import java.util.Collection;
+
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 
 /**
@@ -34,23 +36,28 @@ public abstract class TreatmentDaoBase extends HibernateDaoSupport implements
     /**
      * @see ubic.gemma.model.expression.biomaterial.TreatmentDao#create(int, java.util.Collection)
      */
-    public java.util.Collection<Treatment> create( final int transform, final java.util.Collection<Treatment> entities ) {
+    public java.util.Collection<? extends Treatment> create( final int transform,
+            final java.util.Collection<? extends Treatment> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "Treatment.create - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback() {
+                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator<Treatment> entityIterator = entities.iterator(); entityIterator
+                        for ( java.util.Iterator<? extends Treatment> entityIterator = entities.iterator(); entityIterator
                                 .hasNext(); ) {
-                            create( transform, ( ubic.gemma.model.expression.biomaterial.Treatment ) entityIterator
-                                    .next() );
+                            create( transform, entityIterator.next() );
                         }
                         return null;
                     }
                 } );
         return entities;
+    }
+    
+    
+    public Collection<? extends Treatment > load( Collection<Long> ids ) {
+        return this.getHibernateTemplate().findByNamedParam( "from TreatmentImpl where id in (:ids)", "ids", ids );
     }
 
     /**
@@ -68,7 +75,7 @@ public abstract class TreatmentDaoBase extends HibernateDaoSupport implements
     /**
      * @see ubic.gemma.model.expression.biomaterial.TreatmentDao#create(java.util.Collection)
      */
-    public java.util.Collection<Treatment> create( final java.util.Collection<Treatment> entities ) {
+    public java.util.Collection<? extends Treatment> create( final java.util.Collection<? extends Treatment> entities ) {
         return create( TRANSFORM_NONE, entities );
     }
 
@@ -104,7 +111,7 @@ public abstract class TreatmentDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.expression.biomaterial.TreatmentDao#loadAll()
      */
 
-    @SuppressWarnings( { "unchecked" })
+    
     public java.util.Collection loadAll() {
         return this.loadAll( TRANSFORM_NONE );
     }
@@ -164,7 +171,7 @@ public abstract class TreatmentDaoBase extends HibernateDaoSupport implements
             throw new IllegalArgumentException( "Treatment.update - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback() {
+                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {

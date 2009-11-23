@@ -20,13 +20,12 @@ package ubic.gemma.grid.javaspaces.worker;
 
 import net.jini.space.JavaSpace;
 
-import org.springframework.security.context.SecurityContextHolder;
+import org.springframework.security.core.context.SecurityContextHolder;
 
-import ubic.gemma.analysis.report.ExpressionExperimentReportService;
+import ubic.gemma.analysis.report.ExpressionExperimentReportServiceImpl;
 import ubic.gemma.grid.javaspaces.AbstractSpacesWorkerCLI;
 import ubic.gemma.grid.javaspaces.CustomDelegatingWorker;
-import ubic.gemma.grid.javaspaces.expression.experiment.ExpressionExperimentReportTask;
-import ubic.gemma.util.SecurityUtil;
+import ubic.gemma.grid.javaspaces.task.expression.experiment.ExpressionExperimentReportTask; 
 
 /**
  * This command line interface is used to take {@link ExpressionExperimentReportService} tasks from the
@@ -76,8 +75,6 @@ public class ExpressionExperimentReportGenerationSpacesWorker extends AbstractSp
      */
     public static void main( String[] args ) {
         log.info( "Starting spaces worker to generate expression experiment reports ... \n" );
-
-        SecurityUtil.passAuthenticationToChildThreads();
 
         ExpressionExperimentReportGenerationSpacesWorker p = new ExpressionExperimentReportGenerationSpacesWorker();
         try {

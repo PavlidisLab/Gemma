@@ -22,10 +22,12 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.store.MemoryStoreEvictionPolicy;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.util.ConfigUtils;
 
 /**
@@ -39,6 +41,7 @@ import ubic.gemma.util.ConfigUtils;
  * @author paul
  * @version $Id$
  */
+@Component
 public class ProcessedDataVectorCache {
 
     private static final String PROBE2PROBE_COEXPRESSION_CACHE_NAME_BASE = "DataVectorCache";
@@ -54,14 +57,8 @@ public class ProcessedDataVectorCache {
      */
     private static final Map<Long /* EE id */, Cache> caches = new HashMap<Long, Cache>();
 
+    @Autowired
     private CacheManager cacheManager;
-
-    /**
-     * @param cacheManager the cacheManager to set
-     */
-    public void setCacheManager( CacheManager cacheManager ) {
-        this.cacheManager = cacheManager;
-    }
 
     /**
      * 
@@ -100,6 +97,13 @@ public class ProcessedDataVectorCache {
             initializeCache( eeid );
         }
         return caches.get( eeid );
+    }
+
+    /**
+     * @param cacheManager the cacheManager to set
+     */
+    public void setCacheManager( CacheManager cacheManager ) {
+        this.cacheManager = cacheManager;
     }
 
     private String getCacheName( Long eeid ) {

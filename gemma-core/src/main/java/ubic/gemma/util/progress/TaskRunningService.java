@@ -31,14 +31,15 @@ import java.util.concurrent.FutureTask;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.stereotype.Service;
 
 /**
  * Handles the execution of tasks in threads that can be check by clients later.
  * 
  * @author pavlidis
  * @version $Id$
- * @spring.bean id="taskRunningService"
  */
+@Service
 public class TaskRunningService {
 
     static Log log = LogFactory.getLog( TaskRunningService.class.getName() );
@@ -50,11 +51,11 @@ public class TaskRunningService {
      */
     public final static String JOB_ATTRIBUTE = "taskId";
 
-    final Map<Object, Future> submittedTasks = new ConcurrentHashMap<Object, Future>();
+    final Map<Object, Future<?>> submittedTasks = new ConcurrentHashMap<Object, Future<?>>();
 
     final Map<Object, Object> finishedTasks = new ConcurrentHashMap<Object, Object>();
 
-    final Map<Object, Future> cancelledTasks = new ConcurrentHashMap<Object, Future>();
+    final Map<Object, Future<?>> cancelledTasks = new ConcurrentHashMap<Object, Future<?>>();
 
     final Map<Object, Exception> failedTasks = new ConcurrentHashMap<Object, Exception>();
 
@@ -66,7 +67,7 @@ public class TaskRunningService {
     public synchronized void cancelTask( Object taskId ) {
         log.debug( "Cancelling " + taskId );
         if ( submittedTasks.containsKey( taskId ) ) {
-            Future toCancel = submittedTasks.get( taskId );
+            Future<?> toCancel = submittedTasks.get( taskId );
             boolean cancelled = toCancel.cancel( true );
             if ( cancelled ) {
                 /*
@@ -128,7 +129,7 @@ public class TaskRunningService {
      * @return
      */
     private Object clearCancelled( Object taskId ) throws Exception {
-        Future cancelled = cancelledTasks.get( taskId );
+        Future<?> cancelled = cancelledTasks.get( taskId );
         cancelledTasks.remove( taskId );
         try {
             return cancelled.get();
@@ -162,12 +163,12 @@ public class TaskRunningService {
      * @param taskId
      * @param task
      */
-    public synchronized void submitTask( final Object taskId, final FutureTask task ) {
+    public synchronized void submitTask( final Object taskId, final FutureTask<?> task ) {
         log.debug( "Submitting " + taskId );
 
         // Run the task in its own thread.
         ExecutorService service = Executors.newSingleThreadExecutor();
-        Future runningTask = service.submit( task );
+        Future<?> runningTask = service.submit( task );
         submittedTasks.put( taskId, runningTask );
 
         // Wait for the task to complete in this thread.
@@ -216,7 +217,7 @@ public class TaskRunningService {
      * @param taskId
      * @param toCancel
      */
-    void handleCancel( Object taskId, Future toCancel ) {
+    void handleCancel( Object taskId, Future<?> toCancel ) {
         cancelledTasks.put( taskId, toCancel );
         submittedTasks.remove( taskId );
         ProgressManager.signalCancelled( taskId );

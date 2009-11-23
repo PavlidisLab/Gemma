@@ -37,6 +37,8 @@ import java.util.zip.GZIPOutputStream;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import ubic.gemma.analysis.preprocess.ExpressionDataMatrixBuilder;
 import ubic.gemma.analysis.preprocess.filter.FilterConfig;
@@ -50,7 +52,7 @@ import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisR
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
-import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoImpl.ProbeLink;
+import ubic.gemma.model.association.coexpression.ProbeLink;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -73,17 +75,10 @@ import ubic.gemma.util.DifferentialExpressionAnalysisResultComparator;
  * FIXME there is a possibility of having stale data, if the data have been updated since the last file was generated.
  * This can be tested for. Also the gene annotations are (generally) read in from a file, which can also be stale.
  * 
- * @spring.bean id="expressionDataFileService"
- * @spring.property name = "designElementDataVectorService" ref="designElementDataVectorService"
- * @spring.property name="expressionDataMatrixService" ref="expressionDataMatrixService"
- * @spring.property name = "arrayDesignService" ref="arrayDesignService"
- * @spring.property name="expressionExperimentService" ref="expressionExperimentService"
- * @spring.property name="differentialExpressionResultService" ref="differentialExpressionResultService"
- * @spring.property name = "differentialExpressionAnalysisService" ref="differentialExpressionAnalysisService"
- * @spring.property name = "probe2ProbeCoexpressionService" ref="probe2ProbeCoexpressionService"
  * @author paul
  * @version $Id$
  */
+@Service
 public class ExpressionDataFileService {
 
     private static final String DECIMAL_FORMAT = "%.4g";
@@ -99,18 +94,25 @@ public class ExpressionDataFileService {
 
     private static Log log = LogFactory.getLog( ArrayDesignAnnotationService.class.getName() );
 
+    @Autowired
     ArrayDesignService arrayDesignService;
 
+    @Autowired
     private DesignElementDataVectorService designElementDataVectorService;
 
+    @Autowired
     private ExpressionDataMatrixService expressionDataMatrixService;
 
+    @Autowired
     private ExpressionExperimentService expressionExperimentService;
 
+    @Autowired
     private DifferentialExpressionResultService differentialExpressionResultService = null;
 
+    @Autowired
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService = null;
 
+    @Autowired
     private Probe2ProbeCoexpressionService probe2ProbeCoexpressionService = null;
 
     /**

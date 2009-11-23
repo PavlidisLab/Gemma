@@ -18,12 +18,20 @@
  */
 package ubic.gemma.web.controller.common.description;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Map;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.junit.Before;
+import org.junit.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.web.servlet.ModelAndView;
@@ -31,7 +39,7 @@ import org.springframework.web.servlet.ModelAndView;
 import ubic.gemma.loader.entrez.pubmed.PubMedXMLParser;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.BibliographicReferenceService;
-import ubic.gemma.testing.BaseSpringContextTest;
+import ubic.gemma.testing.BaseSpringWebTest;
 import ubic.gemma.web.controller.common.description.bibref.BibliographicReferenceController;
 
 /**
@@ -41,7 +49,7 @@ import ubic.gemma.web.controller.common.description.bibref.BibliographicReferenc
  * @author pavlidis
  * @version $Id$
  */
-public class BibRefControllerTest extends BaseSpringContextTest {
+public class BibRefControllerTest extends BaseSpringWebTest {
     private static Log log = LogFactory.getLog( BibRefControllerTest.class.getName() );
 
     private BibliographicReference br = null;
@@ -52,9 +60,8 @@ public class BibRefControllerTest extends BaseSpringContextTest {
     /**
      * Add a bibliographic reference to the database for testing purposes.
      */
-    @Override
-    public void onSetUpInTransaction() throws Exception {
-        super.onSetUpInTransaction();
+    @Before
+    public void setup() throws Exception {
 
         BibliographicReferenceService brs = ( BibliographicReferenceService ) getBean( "bibliographicReferenceService" );
 
@@ -94,6 +101,7 @@ public class BibRefControllerTest extends BaseSpringContextTest {
      * 
      * @throws Exception
      */
+    @Test
     public void testDelete() throws Exception {
         if ( !ready ) {
             log.error( "Test skipped due to failure to connect to NIH" );
@@ -106,36 +114,9 @@ public class BibRefControllerTest extends BaseSpringContextTest {
         req.addParameter( "_eventId", "delete" );
         req.addParameter( "acc", br.getPubAccession().getAccession() );
 
-        ModelAndView mav = brc.handleRequest( req, new MockHttpServletResponse() );
+        ModelAndView mav = brc.delete( req, new MockHttpServletResponse() );
         assertNotNull( mav );
         assertEquals( "bibRefView", mav.getViewName() );
-    }
-
-    /**
-     * Tests viewing
-     * 
-     * @throws Exception
-     */
-    public void testShow() throws Exception {
-        if ( !ready ) {
-            log.error( "Test skipped due to failure to connect to NIH" );
-            return;
-        }
-        BibliographicReferenceController brc = ( BibliographicReferenceController ) getBean( "bibliographicReferenceController" );
-        req = new MockHttpServletRequest( "POST", "/bibRef/bibRefView.html" );
-        req.addParameter( "accession", "" + 1294000 );
-
-        try {
-            ModelAndView mav = brc.handleRequest( req, new MockHttpServletResponse() );
-            assertNotNull( mav );
-            assertEquals( "bibRefView", mav.getViewName() );
-        } catch ( RuntimeException e ) {
-            if ( e.getCause() instanceof IOException && e.getMessage().contains( "503" ) ) {
-                log.warn( "503 error from NCBI, skipping test: ", e );
-            } else {
-                throw e;
-            }
-        }
     }
 
     /**
@@ -143,6 +124,7 @@ public class BibRefControllerTest extends BaseSpringContextTest {
      * 
      * @throws Exception
      */
+    @Test
     public void testDeleteOfNonExistingEntry() throws Exception {
         if ( !ready ) {
             log.error( "Test skipped due to failure to connect to NIH" );
@@ -154,7 +136,7 @@ public class BibRefControllerTest extends BaseSpringContextTest {
         req.addParameter( "acc", nonexistentpubmedid );
         BibliographicReferenceController brc = ( BibliographicReferenceController ) getBean( "bibliographicReferenceController" );
 
-        ModelAndView b = brc.handleRequest( req, new MockHttpServletResponse() );
+        ModelAndView b = brc.delete( req, new MockHttpServletResponse() );
         assert b != null; // ?
         assertEquals( "bibRefView", b.getViewName() );
         // in addition there should be a message "0000000 not found".
@@ -171,6 +153,7 @@ public class BibRefControllerTest extends BaseSpringContextTest {
      * 
      * @throws Exception
      */
+    @Test
     public void testGetAllBibliographicReferences() throws Exception {
         if ( !ready ) {
             log.error( "Test skipped due to failure to connect to NIH" );
@@ -180,11 +163,39 @@ public class BibRefControllerTest extends BaseSpringContextTest {
 
         req = new MockHttpServletRequest( "GET", "/bibRef/showAllEeBibRefs.html" );
 
-        ModelAndView mav = brc.handleRequest( req, new MockHttpServletResponse() );
+        ModelAndView mav = brc.showAllForExperiments( req, new MockHttpServletResponse() );
         assertNotNull( mav );
-        Map m = mav.getModel();
+        Map<String, Object> m = mav.getModel();
 
         assertNotNull( m.get( "bibliographicReferences" ) );
         assertEquals( "bibRefList", mav.getViewName() );
+    }
+
+    /**
+     * Tests viewing
+     * 
+     * @throws Exception
+     */
+    @Test
+    public void testShow() throws Exception {
+        if ( !ready ) {
+            log.error( "Test skipped due to failure to connect to NIH" );
+            return;
+        }
+        BibliographicReferenceController brc = ( BibliographicReferenceController ) getBean( "bibliographicReferenceController" );
+        req = new MockHttpServletRequest( "POST", "/bibRef/bibRefView.html" );
+        req.addParameter( "accession", "" + 1294000 );
+
+        try {
+            ModelAndView mav = brc.show( req, new MockHttpServletResponse() );
+            assertNotNull( mav );
+            assertEquals( "bibRefView", mav.getViewName() );
+        } catch ( RuntimeException e ) {
+            if ( e.getCause() instanceof IOException && e.getMessage().contains( "503" ) ) {
+                log.warn( "503 error from NCBI, skipping test: ", e );
+            } else {
+                throw e;
+            }
+        }
     }
 }

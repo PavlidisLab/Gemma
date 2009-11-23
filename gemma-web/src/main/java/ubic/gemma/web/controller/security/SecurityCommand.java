@@ -37,17 +37,17 @@ public class SecurityCommand implements Serializable {
     private String mask = null;
 
     /**
+     * @return the mask
+     */
+    public String getMask() {
+        return mask;
+    }
+
+    /**
      * @return the securableType
      */
     public String getSecurableType() {
         return securableType;
-    }
-
-    /**
-     * @param securableType the securableType to set
-     */
-    public void setSecurableType( String securableType ) {
-        this.securableType = securableType;
     }
 
     /**
@@ -58,24 +58,24 @@ public class SecurityCommand implements Serializable {
     }
 
     /**
-     * @param shortName the shortName to set
-     */
-    public void setShortName( String shortName ) {
-        this.shortName = shortName;
-    }
-
-    /**
-     * @return the mask
-     */
-    public String getMask() {
-        return mask;
-    }
-
-    /**
      * @param mask the mask to set
      */
     public void setMask( String mask ) {
         this.mask = mask;
+    }
+
+    /**
+     * @param securableType the securableType to set
+     */
+    public void setSecurableType( String securableType ) {
+        this.securableType = securableType;
+    }
+
+    /**
+     * @param shortName the shortName to set
+     */
+    public void setShortName( String shortName ) {
+        this.shortName = shortName;
     }
 
 }

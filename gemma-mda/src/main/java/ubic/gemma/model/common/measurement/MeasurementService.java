@@ -18,14 +18,18 @@
  */
 package ubic.gemma.model.common.measurement;
 
+import org.springframework.security.access.annotation.Secured;
+
 /**
- * 
+ * @author kelsey
+ * @version $Id$
  */
 public interface MeasurementService {
 
     /**
      * 
      */
+    @Secured( { "GROUP_USER" })
     public ubic.gemma.model.common.measurement.Measurement create(
             ubic.gemma.model.common.measurement.Measurement measurement );
 

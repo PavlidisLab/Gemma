@@ -18,7 +18,13 @@
  */
 package ubic.gemma.analysis.preprocess;
 
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 import java.util.Collection;
+
+import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.loader.expression.geo.service.GeoDatasetService;
@@ -33,26 +39,21 @@ import ubic.gemma.testing.AbstractGeoServiceTest;
  * @version $Id$
  */
 public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoServiceTest {
+
+    @Autowired
     ExpressionExperimentService eeService;
+
+    @Autowired
     GeoDatasetService geoService;
+
+    @Autowired
+    ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService;
+
     ExpressionExperiment ee = null;
 
-    protected void onSetUpInTransaction() throws Exception {
-        super.onSetUpInTransaction();
-        eeService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
-        init();
-    }
-
-    protected void onTearDownAfterTransaction() throws Exception {
-        super.onTearDownAfterTransaction();
-        if ( ee != null ) eeService.delete( ee );
-    }
-
     @SuppressWarnings("unchecked")
+    @Test
     public void testComputeDevRankForExpressionExperimentB() throws Exception {
-        endTransaction();
-        ProcessedExpressionDataVectorCreateService serv = ( ProcessedExpressionDataVectorCreateService ) this
-                .getBean( "processedExpressionDataVectorCreateService" );
 
         String path = getTestFileBasePath();
 
@@ -64,25 +65,24 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
             this.ee = results.iterator().next();
         } catch ( AlreadyExistsInSystemException e ) {
             this.ee = ( ExpressionExperiment ) e.getData();
-            eeService.thaw( ee );
-            eeService.delete( ee );
-            this.testComputeDevRankForExpressionExperimentB(); // a little risky, could get stuck...
         }
 
+        
+
         eeService.thawLite( ee );
-        Collection<ProcessedExpressionDataVector> preferredVectors = serv.computeProcessedExpressionData( ee );
+
+        
+
+        Collection<ProcessedExpressionDataVector> preferredVectors = processedExpressionDataVectorCreateService
+                .computeProcessedExpressionData( ee );
+
+        
 
         for ( ProcessedExpressionDataVector d : preferredVectors ) {
             assertTrue( d.getQuantitationType().getIsMaskedPreferred() );
             assertNotNull( d.getRankByMean() );
             assertNotNull( d.getRankByMax() );
         }
-    }
-
-    @Override
-    protected void init() {
-        geoService = ( GeoDatasetService ) this.getBean( "geoDatasetService" );
-
     }
 
 }

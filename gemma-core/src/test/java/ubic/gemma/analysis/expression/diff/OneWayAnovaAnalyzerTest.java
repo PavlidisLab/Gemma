@@ -18,13 +18,17 @@
  */
 package ubic.gemma.analysis.expression.diff;
 
+import static org.junit.Assert.assertEquals;
+
 import java.util.Collection;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 
-import ubic.gemma.model.analysis.expression.ExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 
 /**
  * Tests the one way anova analyzer.
@@ -49,22 +53,13 @@ public class OneWayAnovaAnalyzerTest extends BaseAnalyzerConfigurationTest {
 
     private Log log = LogFactory.getLog( this.getClass() );
 
-    OneWayAnovaAnalyzer analyzer = null;
-
-    /*
-     * (non-Javadoc)
-     * @see ubic.gemma.analysis.diff.BaseAnalyzerConfigurationTest#onSetUpInTransaction()
-     */
-    @Override
-    public void onSetUpInTransaction() throws Exception {
-        super.onSetUpInTransaction();
-        analyzer = ( OneWayAnovaAnalyzer ) this.getBean( "oneWayAnovaAnalyzer" );
-    }
+    @Autowired
+    private OneWayAnovaAnalyzer analyzer = null;
 
     /**
      * Tests the OneWayAnova method.
      */
-    @SuppressWarnings("unchecked")
+    @Test
     public void testOneWayAnova() throws Exception {
 
         if ( !connected ) {
@@ -77,7 +72,7 @@ public class OneWayAnovaAnalyzerTest extends BaseAnalyzerConfigurationTest {
 
         configureMocks();
 
-        ExpressionAnalysis expressionAnalysis = analyzer.run( expressionExperiment );
+        DifferentialExpressionAnalysis expressionAnalysis = analyzer.run( expressionExperiment );
 
         Collection<ExpressionAnalysisResultSet> resultSets = expressionAnalysis.getResultSets();
         ExpressionAnalysisResultSet resultSet = resultSets.iterator().next();

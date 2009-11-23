@@ -90,9 +90,9 @@ CharacteristicBrowserController.findCharacteristics = function(p0, callback) {
 	dwr.engine._execute(CharacteristicBrowserController._path, 'CharacteristicBrowserController',
 			'findCharacteristics', p0, callback);
 }
-CharacteristicBrowserController.findCharacteristics = function(p0, p1, p2, p3, p4, callback) {
+CharacteristicBrowserController.findCharacteristicsCustom = function(p0, p1, p2, p3, p4, p5, callback) {
 	dwr.engine._execute(CharacteristicBrowserController._path, 'CharacteristicBrowserController',
-			'findCharacteristics', p0, p1, p2, p3, p4, p5, callback);
+			'findCharacteristicsCustom', p0, p1, p2, p3, p4, p5, callback);
 }
 CharacteristicBrowserController.removeCharacteristics = function(p0, callback) {
 	dwr.engine._execute(CharacteristicBrowserController._path, 'CharacteristicBrowserController',
@@ -465,23 +465,23 @@ GeoBrowserService.toggleUsability = function(p0, callback) {
 	dwr.engine._execute(GeoBrowserService._path, 'GeoBrowserService', 'toggleUsability', p0, callback);
 }
 // ====================================================================================
-if (HibernateMonitorController == null)
-	var HibernateMonitorController = {};
-HibernateMonitorController._path = '/Gemma/dwr';
-HibernateMonitorController.getHibernateStatus = function(callback) {
-	dwr.engine._execute(HibernateMonitorController._path, 'HibernateMonitorController', 'getHibernateStatus', callback);
+if (SystemMonitorController == null)
+	var SystemMonitorController = {};
+SystemMonitorController._path = '/Gemma/dwr';
+SystemMonitorController.getHibernateStatus = function(callback) {
+	dwr.engine._execute(SystemMonitorController._path, 'SystemMonitorController', 'getHibernateStatus', callback);
 }
-HibernateMonitorController.getSpaceStatus = function(callback) {
-	dwr.engine._execute(HibernateMonitorController._path, 'HibernateMonitorController', 'getSpaceStatus', callback);
+SystemMonitorController.getSpaceStatus = function(callback) {
+	dwr.engine._execute(SystemMonitorController._path, 'SystemMonitorController', 'getSpaceStatus', callback);
 }
-HibernateMonitorController.getCacheStatus = function(callback) {
-	dwr.engine._execute(HibernateMonitorController._path, 'HibernateMonitorController', 'getCacheStatus', callback);
+SystemMonitorController.getCacheStatus = function(callback) {
+	dwr.engine._execute(SystemMonitorController._path, 'SystemMonitorController', 'getCacheStatus', callback);
 }
-HibernateMonitorController.flushCache = function(p0, callback) {
-	dwr.engine._execute(HibernateMonitorController._path, 'HibernateMonitorController', 'flushCache', p0, callback);
+SystemMonitorController.flushCache = function(p0, callback) {
+	dwr.engine._execute(SystemMonitorController._path, 'SystemMonitorController', 'flushCache', p0, callback);
 }
-HibernateMonitorController.flushAllCaches = function(callback) {
-	dwr.engine._execute(HibernateMonitorController._path, 'HibernateMonitorController', 'flushAllCaches', callback);
+SystemMonitorController.flushAllCaches = function(callback) {
+	dwr.engine._execute(SystemMonitorController._path, 'SystemMonitorController', 'flushAllCaches', callback);
 }
 // ====================================================================================
 if (LinkAnalysisController == null)

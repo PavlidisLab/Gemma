@@ -21,6 +21,8 @@ package ubic.gemma.model.expression.bioAssayData;
 import java.util.Collection;
 import java.util.Map;
 
+import org.springframework.security.access.annotation.Secured;
+
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorDao.RankMethod;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.DesignElement;
@@ -33,42 +35,32 @@ import ubic.gemma.model.genome.Gene;
  */
 public interface ProcessedExpressionDataVectorService {
 
-    
-    public void removeProcessedDataVectors( final ExpressionExperiment expressionExperiment );
-    
     /**
      * Populate the processed data for the given experiment. For two-channel studies, the missing value information
      * should already have been computed.
      * 
      * @param expressionExperiment
      */
+    @Secured( { "GROUP_USER" })
     public Collection<ProcessedExpressionDataVector> createProcessedDataVectors(
             ExpressionExperiment expressionExperiment );
 
     /**
      * @param expressionExperiments
-     * @param limit (null limit = default hibernate limit). 
-     * @param boolean fullMap true returns pars, predicted genes and known genes, false just returns known genes
-     * @return
-     */
-    public Collection<DoubleVectorValueObject> getProcessedDataArrays(
-            ExpressionExperiment ee, int limit, boolean fullMap );
-
-    /**
-     * @param expressionExperiments
      * @param genes
      * @return
      */
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ" })
     public Collection<DoubleVectorValueObject> getProcessedDataArrays(
             Collection<ExpressionExperiment> expressionExperiments, Collection<Gene> genes );
 
-    
     /**
      * @param expressionExperiments
      * @param genes
-     * @param fullMapping  if false only returns probe to known gene mappings, if true returns all (PARs, PGs, KGs), 
+     * @param fullMapping if false only returns probe to known gene mappings, if true returns all (PARs, PGs, KGs),
      * @return
      */
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ" })
     public Collection<DoubleVectorValueObject> getProcessedDataArrays(
             Collection<ExpressionExperiment> expressionExperiments, Collection<Gene> genes, Boolean fullMapping );
 
@@ -76,6 +68,7 @@ public interface ProcessedExpressionDataVectorService {
      * @param expressionExperiment
      * @return
      */
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     public Collection<DoubleVectorValueObject> getProcessedDataArrays( ExpressionExperiment expressionExperiment );
 
     /**
@@ -83,15 +76,47 @@ public interface ProcessedExpressionDataVectorService {
      * @param genes
      * @return
      */
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     public Collection<DoubleVectorValueObject> getProcessedDataArrays( ExpressionExperiment expressionExperiment,
             Collection<Gene> genes );
+
+    /**
+     * @param expressionExperiments
+     * @param limit (null limit = default hibernate limit).
+     * @param boolean fullMap true returns pars, predicted genes and known genes, false just returns known genes
+     * @return
+     */
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    public Collection<DoubleVectorValueObject> getProcessedDataArrays( ExpressionExperiment ee, int limit,
+            boolean fullMap );
+
+    /**
+     * Retireves DEDV's by probes and experiments
+     * 
+     * @param expressionExperiments
+     * @param compositeSequences
+     * @param fullMap
+     * @return DVVOs
+     */
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ" })
+    public Collection<DoubleVectorValueObject> getProcessedDataArraysByProbe(
+            Collection<ExpressionExperiment> expressionExperiments, Collection<CompositeSequence> compositeSequences,
+            boolean fullMap );
 
     /**
      * @param expressionExperiment
      * @return
      */
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     public Collection<ProcessedExpressionDataVector> getProcessedDataVectors( ExpressionExperiment expressionExperiment );
 
+    /**
+     * @param expressionExperiments
+     * @param genes
+     * @param method
+     * @return
+     */
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_AFTER_MAP_READ", "ACL_SECURABLE_COLLECTION_READ" })
     public Map<ExpressionExperiment, Map<Gene, Collection<Double>>> getRanks(
             Collection<ExpressionExperiment> expressionExperiments, Collection<Gene> genes, RankMethod method );
 
@@ -101,6 +126,7 @@ public interface ProcessedExpressionDataVectorService {
      * @param method
      * @return
      */
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     public Map<Gene, Collection<Double>> getRanks( ExpressionExperiment expressionExperiment, Collection<Gene> genes,
             RankMethod method );
 
@@ -109,7 +135,22 @@ public interface ProcessedExpressionDataVectorService {
      * @param method
      * @return
      */
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     public Map<DesignElement, Double> getRanks( ExpressionExperiment expressionExperiment, RankMethod method );
+
+    /**
+     * Retrieve expression level information for genes in experiments.
+     * 
+     * @param expressionExperiments
+     * @param genes
+     * @return A map of experiment -> gene -> probe -> array of doubles holding the 1) mean and 2) max expression rank.
+     */
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ" })
+    public Map<ExpressionExperiment, Map<Gene, Map<DesignElement, Double[]>>> getRanksByProbe(
+            Collection<ExpressionExperiment> eeCol, Collection<Gene> pars );
+
+    @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    public void removeProcessedDataVectors( final ExpressionExperiment expressionExperiment );
 
     /**
      * @param vectors
@@ -119,28 +160,7 @@ public interface ProcessedExpressionDataVectorService {
     /**
      * Updates a collection of ProcessedExpressionDataVectors
      */
+    @Secured( { "GROUP_USER" })
     public void update( java.util.Collection<ProcessedExpressionDataVector> dedvs );
-
-    /**
-     * Retrieve expression level information for genes in experiments.
-     * 
-     * @param expressionExperiments
-     * @param genes
-     * @return A map of experiment -> gene -> probe -> array of doubles holding the 1) mean and 2) max expression rank.
-     */
-    public Map<ExpressionExperiment, Map<Gene, Map<DesignElement, Double[]>>> getRanksByProbe(
-            Collection<ExpressionExperiment> eeCol, Collection<Gene> pars );
-
-    
-    /**
-     * Retireves DEDV's by probes and experiments
-     * 
-     * @param expressionExperiments
-     * @param compositeSequences
-     * @param fullMap
-     * @return DVVOs 
-     */
-    public Collection<DoubleVectorValueObject> getProcessedDataArraysByProbe(
-            Collection<ExpressionExperiment> expressionExperiments, Collection<CompositeSequence> compositeSequences, boolean fullMap );
 
 }

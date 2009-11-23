@@ -27,11 +27,14 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 import net.sf.ehcache.CacheException;
 import net.sf.ehcache.Element;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.hibernate.SessionFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
 
 import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis;
 import ubic.gemma.model.genome.Gene;
@@ -45,10 +48,13 @@ import ubic.gemma.util.TaxonUtility;
  * @author klc
  * @author paul
  */
-public class Gene2GeneCoexpressionDaoImpl extends
-        ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionDaoBase {
+@Repository
+public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
 
-    private static Log log = LogFactory.getLog( Gene2GeneCoexpressionDaoImpl.class );
+    @Autowired
+    public Gene2GeneCoexpressionDaoImpl( SessionFactory sessionFactory ) {
+        super.setSessionFactory( sessionFactory );
+    }
 
     /**
      * For storing information about gene results that are cached.
@@ -99,6 +105,8 @@ public class Gene2GeneCoexpressionDaoImpl extends
         }
     }
 
+    private static Log log = LogFactory.getLog( Gene2GeneCoexpressionDaoImpl.class );
+
     /**
      * Clear the cache of gene2gene objects. This should be run when gene2gene is updated. FIXME externalize this and
      * set it up so it can be done in a taxon-specific way?
@@ -115,7 +123,6 @@ public class Gene2GeneCoexpressionDaoImpl extends
      * .util.Collection, ubic.gemma.model.analysis.Analysis, int)
      */
     @SuppressWarnings("unchecked")
-    @Override
     protected java.util.Map<Gene, Collection<Gene2GeneCoexpression>> handleFindCoexpressionRelationships(
             Collection<Gene> genes, int stringency, int maxResults, GeneCoexpressionAnalysis sourceAnalysis ) {
 
@@ -203,7 +210,6 @@ public class Gene2GeneCoexpressionDaoImpl extends
      *      taxon, when reanalyses are in progress there can be more than one temporarily.
      *      <p>
      */
-    @Override
     protected java.util.Collection<Gene2GeneCoexpression> handleFindCoexpressionRelationships( Gene gene,
             int stringency, int maxResults, GeneCoexpressionAnalysis sourceAnalysis ) {
 

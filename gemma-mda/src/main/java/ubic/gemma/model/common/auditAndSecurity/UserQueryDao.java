@@ -38,7 +38,7 @@ public interface UserQueryDao {
 
     public UserQuery load( Long id );
 
-    public Collection<UserQuery> loadAll();
+    public Collection<? extends UserQuery> loadAll();
 
     public void remove( UserQuery userQuery );
 

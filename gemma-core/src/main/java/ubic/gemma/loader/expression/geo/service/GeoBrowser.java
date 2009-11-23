@@ -56,14 +56,15 @@ public class GeoBrowser {
     private String[] DATE_FORMATS = new String[] { "MMMM dd, yyyy" };
 
     /**
-     * For an example of the HTML used, see
-     * {@link http://www.ncbi.nlm.nih.gov/projects/geo/query/browse.cgi?mode=series&sorton=pub_date&sortdir=1&start=1&pgsize=10}
+     * For an example of the HTML used, see {@link http
+     * ://www.ncbi.nlm.nih.gov/projects/geo/query/browse.cgi?mode=series&sorton=pub_date&sortdir=1&start=1&pgsize=10}
      * 
      * @param startPoint how many records in to start from. For example, 100 means start from record 100.
      * @param numberToFetch how many, from the most recent, to fetch.
      * @return List of GeoRecords with data on the experiments, most recent first.
+     * @throws IOException
      */
-    public List<GeoRecord> getRecentGeoRecords( int startPoint, int numberToFetch ) {
+    public List<GeoRecord> getRecentGeoRecords( int startPoint, int numberToFetch ) throws IOException {
         Pattern pat = Pattern.compile( GEO_TABLE_CELL_REGEXP );
         Pattern simpleUrlPat = Pattern.compile( "<.+?>(.+?)</.+?>" );
         URL url = null;
@@ -81,6 +82,11 @@ public class GeoBrowser {
             GeoRecord geoRecord = null;
 
             while ( ( line = br.readLine() ) != null ) {
+
+                if ( line.contains( "GEO Error" ) ) {
+                    throw new IOException( "GEO returned an error while trying to get records." );
+                }
+
                 Matcher mat = pat.matcher( line );
                 if ( mat.find() ) {
                     String captured = mat.group( 2 );
@@ -99,12 +105,12 @@ public class GeoBrowser {
                             }
                             break;
                         case 1:
-                            geoRecord.setTitle( captured );
+                            if ( geoRecord != null ) geoRecord.setTitle( captured );
                             break;
                         case 2:
                             try {
                                 int numSamples = Integer.parseInt( captured );
-                                geoRecord.setNumSamples( numSamples );
+                                if ( geoRecord != null ) geoRecord.setNumSamples( numSamples );
                             } catch ( NumberFormatException e ) {
                                 //
                             }
@@ -117,7 +123,7 @@ public class GeoBrowser {
                                 if ( specCap.find() ) {
                                     String organism = specCap.group( 1 );
                                     log.debug( "Organism: " + organism );
-                                    geoRecord.getOrganisms().add( organism );
+                                    if ( geoRecord != null ) geoRecord.getOrganisms().add( organism );
                                 }
 
                             }
@@ -131,14 +137,14 @@ public class GeoBrowser {
                             Matcher specCap = simpleUrlPat.matcher( captured );
                             if ( !specCap.find() ) break;
                             String contact = specCap.group( 1 );
-                            geoRecord.setContactName( contact );
+                            if ( geoRecord != null ) geoRecord.setContactName( contact );
                             specCap.find();
                             break;
                         case 6:
                             try {
                                 Date d = DateUtils.parseDate( captured, DATE_FORMATS );
                                 log.debug( d );
-                                geoRecord.setReleaseDate( d );
+                                if ( geoRecord != null ) geoRecord.setReleaseDate( d );
                             } catch ( ParseException e ) {
                                 log.warn( "Could not parse date: " + captured );
                             }
@@ -159,13 +165,9 @@ public class GeoBrowser {
             is.close();
             return records;
         } catch ( MalformedURLException e ) {
-            log.error( e, e );
             throw new RuntimeException( "Invalid URL " + url, e );
-        } catch ( IOException e ) {
-            log.error( e, e );
-            throw new RuntimeException( "Could not get data from remote server", e );
+
         } catch ( NumberFormatException e ) {
-            log.error( e, e );
             throw new RuntimeException( "Could not parse sample count" );
         }
 

@@ -18,121 +18,27 @@
  */
 package ubic.gemma.model.common.auditAndSecurity;
 
+import java.util.Collection;
+import java.util.Map;
+
+import ubic.gemma.model.common.Auditable;
+import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
+import ubic.gemma.persistence.BaseDao;
+
 /**
  * @see ubic.gemma.model.common.auditAndSecurity.AuditEvent
  */
-public interface AuditEventDao {
-    /**
-     * This constant is used as a transformation flag; entities can be converted automatically into value objects or
-     * other types, different methods in a class implementing this interface support this feature: look for an
-     * <code>int</code> parameter called <code>transform</code>.
-     * <p/>
-     * This specific flag denotes no transformation will occur.
-     */
-    public final static int TRANSFORM_NONE = 0;
-
-    /**
-     * <p>
-     * Does the same thing as {@link #create(ubic.gemma.model.common.auditAndSecurity.AuditEvent)} with an additional
-     * flag called <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then the returned entity
-     * will <strong>NOT</strong> be transformed. If this flag is any of the other constants defined here then the result
-     * <strong>WILL BE</strong> passed through an operation which can optionally transform the entities (into value
-     * objects for example). By default, transformation does not occur.
-     * </p>
-     */
-    public java.util.Collection create( int transform, java.util.Collection entities );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #create(ubic.gemma.model.common.auditAndSecurity.AuditEvent)} with an additional
-     * flag called <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then the returned entity
-     * will <strong>NOT</strong> be transformed. If this flag is any of the other constants defined here then the result
-     * <strong>WILL BE</strong> passed through an operation which can optionally transform the entity (into a value
-     * object for example). By default, transformation does not occur.
-     * </p>
-     */
-    public Object create( int transform, ubic.gemma.model.common.auditAndSecurity.AuditEvent auditEvent );
-
-    /**
-     * Creates a new instance of ubic.gemma.model.common.auditAndSecurity.AuditEvent and adds from the passed in
-     * <code>entities</code> collection
-     * 
-     * @param entities the collection of ubic.gemma.model.common.auditAndSecurity.AuditEvent instances to create.
-     * @return the created instances.
-     */
-    public java.util.Collection create( java.util.Collection entities );
-
-    /**
-     * Creates an instance of ubic.gemma.model.common.auditAndSecurity.AuditEvent and adds it to the persistent store.
-     */
-    public ubic.gemma.model.common.auditAndSecurity.AuditEvent create(
-            ubic.gemma.model.common.auditAndSecurity.AuditEvent auditEvent );
+public interface AuditEventDao extends BaseDao<AuditEvent> {
 
     /**
      * 
      */
-    public java.util.Collection getNewSinceDate( java.util.Date date );
+    public java.util.Collection<Auditable> getNewSinceDate( java.util.Date date );
 
     /**
      * 
      */
-    public java.util.Collection getUpdatedSinceDate( java.util.Date date );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #load(java.lang.Long)} with an additional flag called <code>transform</code>. If
-     * this flag is set to <code>TRANSFORM_NONE</code> then the returned entity will <strong>NOT</strong> be
-     * transformed. If this flag is any of the other constants defined in this class then the result <strong>WILL
-     * BE</strong> passed through an operation which can optionally transform the entity (into a value object for
-     * example). By default, transformation does not occur.
-     * </p>
-     * 
-     * @param id the identifier of the entity to load.
-     * @return either the entity or the object transformed from the entity.
-     */
-    public Object load( int transform, java.lang.Long id );
-
-    /**
-     * Loads an instance of ubic.gemma.model.common.auditAndSecurity.AuditEvent from the persistent store.
-     */
-    public ubic.gemma.model.common.auditAndSecurity.AuditEvent load( java.lang.Long id );
-
-    /**
-     * Loads all entities of type {@link ubic.gemma.model.common.auditAndSecurity.AuditEvent}.
-     * 
-     * @return the loaded entities.
-     */
-    public java.util.Collection loadAll();
-
-    /**
-     * <p>
-     * Does the same thing as {@link #loadAll()} with an additional flag called <code>transform</code>. If this flag is
-     * set to <code>TRANSFORM_NONE</code> then the returned entity will <strong>NOT</strong> be transformed. If this
-     * flag is any of the other constants defined here then the result <strong>WILL BE</strong> passed through an
-     * operation which can optionally transform the entity (into a value object for example). By default, transformation
-     * does not occur.
-     * </p>
-     * 
-     * @param transform the flag indicating what transformation to use.
-     * @return the loaded entities.
-     */
-    public java.util.Collection loadAll( final int transform );
-
-    /**
-     * Removes the instance of ubic.gemma.model.common.auditAndSecurity.AuditEvent having the given
-     * <code>identifier</code> from the persistent store.
-     */
-    public void remove( java.lang.Long id );
-
-    /**
-     * Removes all entities in the given <code>entities<code> collection.
-     */
-    public void remove( java.util.Collection entities );
-
-    /**
-     * Removes the instance of ubic.gemma.model.common.auditAndSecurity.AuditEvent from the persistent store.
-     */
-    public void remove( ubic.gemma.model.common.auditAndSecurity.AuditEvent auditEvent );
+    public java.util.Collection<Auditable> getUpdatedSinceDate( java.util.Date date );
 
     /**
      * 
@@ -140,13 +46,29 @@ public interface AuditEventDao {
     public void thaw( ubic.gemma.model.common.auditAndSecurity.AuditEvent auditEvent );
 
     /**
-     * Updates all instances in the <code>entities</code> collection in the persistent store.
+     * 
      */
-    public void update( java.util.Collection entities );
+    public java.util.List<AuditEvent> getEvents( ubic.gemma.model.common.Auditable auditable );
 
     /**
-     * Updates the <code>auditEvent</code> instance in the persistent store.
+     * Return a map of Auditables to AuditEvents for the given AuditEventType.
      */
-    public void update( ubic.gemma.model.common.auditAndSecurity.AuditEvent auditEvent );
+    public Map<Auditable, AuditEvent> getLastEvent( java.util.Collection<? extends Auditable> auditables,
+            Class<? extends AuditEventType> type );
+
+    /**
+     * Returns the last AuditEvent of the specified type from the given auditable.
+     */
+    public ubic.gemma.model.common.auditAndSecurity.AuditEvent getLastEvent(
+            ubic.gemma.model.common.Auditable auditable, Class<? extends AuditEventType> type );
+
+    /**
+     * Get all of the most recent AuditEvents for the given auditables, where the events have types. Return value is a
+     * map of AuditEventType.classes -> Auditable -> AuditEven
+     */
+    public java.util.Map<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>> getLastTypedAuditEvents(
+            java.util.Collection<? extends Auditable> auditables );
+    
+    public AuditEvent getLastOutstandingTroubleEvent(Collection<AuditEvent> events);
 
 }

@@ -44,7 +44,8 @@ public interface QuantitationTypeDao extends BaseDao<QuantitationType> {
      * transform the entities (into value objects for example). By default, transformation does not occur.
      * </p>
      */
-    public QuantitationType find( int transform, ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType );
+    public QuantitationType find( int transform,
+            ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType );
 
     /**
      * <p>

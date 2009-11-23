@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.analysis.expression.coexpression;
 
+import java.util.Collection;
+
 /**
  * <p>
  * Base Spring DAO Class: is able to create, update, remove, load, and find objects of type
@@ -39,7 +41,7 @@ public abstract class GeneCoexpressionAnalysisDaoBase extends
             throw new IllegalArgumentException( "GeneCoexpressionAnalysis.create - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback() {
+                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
@@ -52,6 +54,12 @@ public abstract class GeneCoexpressionAnalysisDaoBase extends
                     }
                 } );
         return entities;
+    }
+
+    
+    public Collection<? extends GeneCoexpressionAnalysis> load( Collection<Long> ids ) {
+        return this.getHibernateTemplate().findByNamedParam( "from GeneCoexpressionAnalysisImpl where id in (:ids)",
+                "ids", ids );
     }
 
     /**
@@ -71,7 +79,7 @@ public abstract class GeneCoexpressionAnalysisDaoBase extends
     /**
      * @see ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisDao#create(java.util.Collection)
      */
-    @SuppressWarnings( { "unchecked" })
+    
     public java.util.Collection create( final java.util.Collection entities ) {
         return create( TRANSFORM_NONE, entities );
     }
@@ -91,7 +99,7 @@ public abstract class GeneCoexpressionAnalysisDaoBase extends
      */
 
     @Override
-    @SuppressWarnings( { "unchecked" })
+    
     public java.util.Collection findByName( final int transform, final java.lang.String name ) {
         return this.findByName( transform, "select a from AnalysisImpl as a where a.name like :name", name );
     }
@@ -102,7 +110,7 @@ public abstract class GeneCoexpressionAnalysisDaoBase extends
      */
 
     @Override
-    @SuppressWarnings( { "unchecked" })
+    
     public java.util.Collection findByName( final int transform, final java.lang.String queryString,
             final java.lang.String name ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -130,71 +138,9 @@ public abstract class GeneCoexpressionAnalysisDaoBase extends
      */
 
     @Override
-    @SuppressWarnings( { "unchecked" })
+    
     public java.util.Collection findByName( final java.lang.String queryString, final java.lang.String name ) {
         return this.findByName( TRANSFORM_NONE, queryString, name );
-    }
-
-    /**
-     * @see ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisDao#getAclObjectIdentityId(int,
-     *      java.lang.String, ubic.gemma.model.common.Securable)
-     */
-
-    @SuppressWarnings( { "unchecked" })
-    public Object getAclObjectIdentityId( final int transform, final java.lang.String queryString,
-            final ubic.gemma.model.common.Securable securable ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( securable );
-        argNames.add( "securable" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'java.lang.Long" + "' was found when executing query --> '"
-                                + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
-        }
-        result = transformEntity( transform,
-                ( ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis ) result );
-        return result;
-    }
-
-    /**
-     * @see ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisDao#getAclObjectIdentityId(int,
-     *      ubic.gemma.model.common.Securable)
-     */
-
-    @SuppressWarnings( { "unchecked" })
-    public Object getAclObjectIdentityId( final int transform, final ubic.gemma.model.common.Securable securable ) {
-        return this
-                .getAclObjectIdentityId(
-                        transform,
-                        "from ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis as geneCoexpressionAnalysis where geneCoexpressionAnalysis.securable = :securable",
-                        securable );
-    }
-
-    /**
-     * @see ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisDao#getAclObjectIdentityId(java.lang.String,
-     *      ubic.gemma.model.common.Securable)
-     */
-
-    @SuppressWarnings( { "unchecked" })
-    public java.lang.Long getAclObjectIdentityId( final java.lang.String queryString,
-            final ubic.gemma.model.common.Securable securable ) {
-        return ( java.lang.Long ) this.getAclObjectIdentityId( TRANSFORM_NONE, queryString, securable );
-    }
-
-    /**
-     * @see ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisDao#getAclObjectIdentityId(ubic.gemma.model.common.Securable)
-     */
-
-    public java.lang.Long getAclObjectIdentityId( ubic.gemma.model.common.Securable securable ) {
-        return ( java.lang.Long ) this.getAclObjectIdentityId( TRANSFORM_NONE, securable );
     }
 
     /**
@@ -213,12 +159,12 @@ public abstract class GeneCoexpressionAnalysisDaoBase extends
 
     /**
      * @see ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisDao#getMask(int, java.lang.String,
-     *      ubic.gemma.model.common.Securable)
+     *      ubic.gemma.model.common.auditAndSecurity.Securable)
      */
 
-    @SuppressWarnings( { "unchecked" })
+    
     public Object getMask( final int transform, final java.lang.String queryString,
-            final ubic.gemma.model.common.Securable securable ) {
+            final ubic.gemma.model.common.auditAndSecurity.Securable securable ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
         java.util.List<Object> args = new java.util.ArrayList<Object>();
         args.add( securable );
@@ -226,15 +172,15 @@ public abstract class GeneCoexpressionAnalysisDaoBase extends
         java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
                 argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
         Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'java.lang.Integer" + "' was found when executing query --> '"
-                                + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
+
+        if ( results.size() > 1 ) {
+            throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                    "More than one instance of 'java.lang.Integer" + "' was found when executing query --> '"
+                            + queryString + "'" );
+        } else if ( results.size() == 1 ) {
+            result = results.iterator().next();
         }
+
         result = transformEntity( transform,
                 ( ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis ) result );
         return result;
@@ -242,11 +188,11 @@ public abstract class GeneCoexpressionAnalysisDaoBase extends
 
     /**
      * @see ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisDao#getMask(int,
-     *      ubic.gemma.model.common.Securable)
+     *      ubic.gemma.model.common.auditAndSecurity.Securable)
      */
 
-    @SuppressWarnings( { "unchecked" })
-    public Object getMask( final int transform, final ubic.gemma.model.common.Securable securable ) {
+    
+    public Object getMask( final int transform, final ubic.gemma.model.common.auditAndSecurity.Securable securable ) {
         return this
                 .getMask(
                         transform,
@@ -256,20 +202,20 @@ public abstract class GeneCoexpressionAnalysisDaoBase extends
 
     /**
      * @see ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisDao#getMask(java.lang.String,
-     *      ubic.gemma.model.common.Securable)
+     *      ubic.gemma.model.common.auditAndSecurity.Securable)
      */
 
-    @SuppressWarnings( { "unchecked" })
+    
     public java.lang.Integer getMask( final java.lang.String queryString,
-            final ubic.gemma.model.common.Securable securable ) {
+            final ubic.gemma.model.common.auditAndSecurity.Securable securable ) {
         return ( java.lang.Integer ) this.getMask( TRANSFORM_NONE, queryString, securable );
     }
 
     /**
-     * @see ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisDao#getMask(ubic.gemma.model.common.Securable)
+     * @see ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisDao#getMask(ubic.gemma.model.common.auditAndSecurity.Securable)
      */
 
-    public java.lang.Integer getMask( ubic.gemma.model.common.Securable securable ) {
+    public java.lang.Integer getMask( ubic.gemma.model.common.auditAndSecurity.Securable securable ) {
         return ( java.lang.Integer ) this.getMask( TRANSFORM_NONE, securable );
     }
 
@@ -278,7 +224,7 @@ public abstract class GeneCoexpressionAnalysisDaoBase extends
      *      java.lang.String, java.util.Collection)
      */
 
-    @SuppressWarnings( { "unchecked" })
+    
     public Object getMasks( final int transform, final java.lang.String queryString,
             final java.util.Collection securables ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -288,15 +234,15 @@ public abstract class GeneCoexpressionAnalysisDaoBase extends
         java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
                 argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
         Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'java.util.Map" + "' was found when executing query --> '"
-                                + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
+
+        if ( results.size() > 1 ) {
+            throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                    "More than one instance of 'java.util.Map" + "' was found when executing query --> '" + queryString
+                            + "'" );
+        } else if ( results.size() == 1 ) {
+            result = results.iterator().next();
         }
+
         result = transformEntity( transform,
                 ( ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis ) result );
         return result;
@@ -307,7 +253,7 @@ public abstract class GeneCoexpressionAnalysisDaoBase extends
      *      java.util.Collection)
      */
 
-    @SuppressWarnings( { "unchecked" })
+    
     public Object getMasks( final int transform, final java.util.Collection securables ) {
         return this
                 .getMasks(
@@ -321,7 +267,7 @@ public abstract class GeneCoexpressionAnalysisDaoBase extends
      *      java.util.Collection)
      */
 
-    @SuppressWarnings( { "unchecked" })
+    
     public java.util.Map getMasks( final java.lang.String queryString, final java.util.Collection securables ) {
         return ( java.util.Map ) this.getMasks( TRANSFORM_NONE, queryString, securables );
     }
@@ -349,11 +295,68 @@ public abstract class GeneCoexpressionAnalysisDaoBase extends
     }
 
     /**
+     * @see ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisDao#getObjectIdentityId(int,
+     *      java.lang.String, ubic.gemma.model.common.auditAndSecurity.Securable)
+     */
+
+    
+    public Object getObjectIdentityId( final int transform, final java.lang.String queryString,
+            final ubic.gemma.model.common.auditAndSecurity.Securable securable ) {
+        java.util.List<String> argNames = new java.util.ArrayList<String>();
+        java.util.List<Object> args = new java.util.ArrayList<Object>();
+        args.add( securable );
+        argNames.add( "securable" );
+        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
+                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
+        Object result = null;
+
+        if ( results.size() > 1 ) {
+            throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                    "More than one instance of 'java.lang.Long" + "' was found when executing query --> '"
+                            + queryString + "'" );
+        } else if ( results.size() == 1 ) {
+            result = results.iterator().next();
+        }
+
+        result = transformEntity( transform,
+                ( ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis ) result );
+        return result;
+    }
+
+    /**
+     * @see ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisDao#getObjectIdentityId(int,
+     *      ubic.gemma.model.common.auditAndSecurity.Securable)
+     */
+    public Object getObjectIdentityId( final int transform,
+            final ubic.gemma.model.common.auditAndSecurity.Securable securable ) {
+        return this
+                .getObjectIdentityId(
+                        transform,
+                        "from ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis as geneCoexpressionAnalysis where geneCoexpressionAnalysis.securable = :securable",
+                        securable );
+    }
+
+    /**
+     * @see ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisDao#getObjectIdentityId(java.lang.String,
+     *      ubic.gemma.model.common.auditAndSecurity.Securable)
+     */
+    public java.lang.Long getObjectIdentityId( final java.lang.String queryString,
+            final ubic.gemma.model.common.auditAndSecurity.Securable securable ) {
+        return ( java.lang.Long ) this.getObjectIdentityId( TRANSFORM_NONE, queryString, securable );
+    }
+
+    /**
+     * @see ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisDao#getObjectIdentityId(ubic.gemma.model.common.auditAndSecurity.Securable)
+     */
+
+    public java.lang.Long getObjectIdentityId( ubic.gemma.model.common.auditAndSecurity.Securable securable ) {
+        return ( java.lang.Long ) this.getObjectIdentityId( TRANSFORM_NONE, securable );
+    }
+
+    /**
      * @see ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisDao#getRecipient(int,
      *      java.lang.Long)
      */
-
-    @SuppressWarnings( { "unchecked" })
     public Object getRecipient( final int transform, final java.lang.Long id ) {
         return this
                 .getRecipient(
@@ -367,7 +370,7 @@ public abstract class GeneCoexpressionAnalysisDaoBase extends
      *      java.lang.String, java.lang.Long)
      */
 
-    @SuppressWarnings( { "unchecked" })
+    
     public Object getRecipient( final int transform, final java.lang.String queryString, final java.lang.Long id ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
         java.util.List<Object> args = new java.util.ArrayList<Object>();
@@ -376,15 +379,15 @@ public abstract class GeneCoexpressionAnalysisDaoBase extends
         java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
                 argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
         Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'java.lang.String" + "' was found when executing query --> '"
-                                + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
+
+        if ( results.size() > 1 ) {
+            throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                    "More than one instance of 'java.lang.String" + "' was found when executing query --> '"
+                            + queryString + "'" );
+        } else if ( results.size() == 1 ) {
+            result = results.iterator().next();
         }
+
         result = transformEntity( transform,
                 ( ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis ) result );
         return result;
@@ -402,8 +405,6 @@ public abstract class GeneCoexpressionAnalysisDaoBase extends
      * @see ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisDao#getRecipient(java.lang.String,
      *      java.lang.Long)
      */
-
-    @SuppressWarnings( { "unchecked" })
     public java.lang.String getRecipient( final java.lang.String queryString, final java.lang.Long id ) {
         return ( java.lang.String ) this.getRecipient( TRANSFORM_NONE, queryString, id );
     }
@@ -433,7 +434,7 @@ public abstract class GeneCoexpressionAnalysisDaoBase extends
      * @see ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisDao#loadAll()
      */
 
-    @SuppressWarnings( { "unchecked" })
+    
     public java.util.Collection loadAll() {
         return this.loadAll( TRANSFORM_NONE );
     }
@@ -512,7 +513,7 @@ public abstract class GeneCoexpressionAnalysisDaoBase extends
             throw new IllegalArgumentException( "GeneCoexpressionAnalysis.update - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback() {
+                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {

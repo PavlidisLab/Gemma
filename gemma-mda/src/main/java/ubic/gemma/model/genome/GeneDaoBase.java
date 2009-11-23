@@ -77,12 +77,13 @@ public abstract class GeneDaoBase extends ubic.gemma.model.genome.ChromosomeFeat
     /**
      * @see ubic.gemma.model.genome.GeneDao#create(int, java.util.Collection)
      */
-    public java.util.Collection<Gene> create( final int transform, final java.util.Collection<Gene> entities ) {
+    public java.util.Collection<? extends Gene> create( final int transform,
+            final java.util.Collection<? extends Gene> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "Gene.create - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback() {
+                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
@@ -108,7 +109,7 @@ public abstract class GeneDaoBase extends ubic.gemma.model.genome.ChromosomeFeat
     /**
      * @see ubic.gemma.model.genome.GeneDao#create(java.util.Collection)
      */
-    public java.util.Collection<Gene> create( final java.util.Collection<Gene> entities ) {
+    public java.util.Collection<? extends Gene> create( final java.util.Collection<? extends Gene> entities ) {
         return create( TRANSFORM_NONE, entities );
     }
 
@@ -122,7 +123,7 @@ public abstract class GeneDaoBase extends ubic.gemma.model.genome.ChromosomeFeat
     /**
      * @see ubic.gemma.model.genome.GeneDao#find(int, java.lang.String, ubic.gemma.model.genome.Gene)
      */
-    @SuppressWarnings( { "unchecked" })
+
     public Gene find( final int transform, final java.lang.String queryString, final ubic.gemma.model.genome.Gene gene ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
         java.util.List<Object> args = new java.util.ArrayList<Object>();
@@ -204,7 +205,6 @@ public abstract class GeneDaoBase extends ubic.gemma.model.genome.ChromosomeFeat
      * @see ubic.gemma.model.genome.GeneDao#findByNcbiId(int, java.lang.String, java.lang.String)
      */
 
-    @SuppressWarnings( { "unchecked" })
     public java.util.Collection<Gene> findByNcbiId( final int transform, final java.lang.String queryString,
             final java.lang.String ncbiId ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -283,7 +283,7 @@ public abstract class GeneDaoBase extends ubic.gemma.model.genome.ChromosomeFeat
     /**
      * @see ubic.gemma.model.genome.GeneDao#findByOfficialName(int, java.lang.String, java.lang.String)
      */
-    @SuppressWarnings( { "unchecked" })
+
     public java.util.Collection<Gene> findByOfficialName( final int transform, final java.lang.String queryString,
             final java.lang.String officialName ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -372,7 +372,6 @@ public abstract class GeneDaoBase extends ubic.gemma.model.genome.ChromosomeFeat
      */
 
     @Override
-    @SuppressWarnings( { "unchecked" })
     public java.util.Collection<Gene> findByPhysicalLocation( final int transform, final java.lang.String queryString,
             final ubic.gemma.model.genome.PhysicalLocation location ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -419,7 +418,7 @@ public abstract class GeneDaoBase extends ubic.gemma.model.genome.ChromosomeFeat
     /**
      * @see ubic.gemma.model.genome.GeneDao#findOrCreate(int, java.lang.String, ubic.gemma.model.genome.Gene)
      */
-    @SuppressWarnings( { "unchecked" })
+
     public Object findOrCreate( final int transform, final java.lang.String queryString,
             final ubic.gemma.model.genome.Gene gene ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -807,7 +806,7 @@ public abstract class GeneDaoBase extends ubic.gemma.model.genome.ChromosomeFeat
             throw new IllegalArgumentException( "Gene.update - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback() {
+                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {

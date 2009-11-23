@@ -20,12 +20,15 @@ package ubic.gemma.model.genome.sequenceAnalysis;
 
 import java.util.Collection;
 
+import org.springframework.stereotype.Service;
+
 import ubic.gemma.model.genome.Gene;
 
 /**
  * @version $Id$
  * @see ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationService
  */
+@Service
 public class BlatAssociationServiceImpl extends ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationServiceBase {
 
     /**
@@ -34,7 +37,7 @@ public class BlatAssociationServiceImpl extends ubic.gemma.model.genome.sequence
     @Override
     protected ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation handleCreate(
             ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation blatAssociation ) throws java.lang.Exception {
-        return ( BlatAssociation ) this.getBlatAssociationDao().create( blatAssociation );
+        return this.getBlatAssociationDao().create( blatAssociation );
     }
 
     /*

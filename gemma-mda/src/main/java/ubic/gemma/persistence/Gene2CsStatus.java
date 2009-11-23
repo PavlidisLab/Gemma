@@ -30,9 +30,11 @@ import java.util.Date;
  */
 public class Gene2CsStatus implements Serializable {
 
-    Date lastUpdate;
+    private static final long serialVersionUID = 1956861185764899312L;
 
-    Exception error;
+    private Date lastUpdate;
+
+    private Exception error;
 
     private String annotation;
 

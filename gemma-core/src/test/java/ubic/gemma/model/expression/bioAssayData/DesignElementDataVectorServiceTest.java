@@ -18,13 +18,19 @@
  */
 package ubic.gemma.model.expression.bioAssayData;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
 import java.util.Collection;
 import java.util.HashSet;
 
 import org.apache.commons.lang.RandomStringUtils;
+import org.junit.Before;
+import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
-import ubic.gemma.loader.expression.geo.service.AbstractGeoService;
+import ubic.gemma.loader.expression.geo.service.GeoDatasetService;
 import ubic.gemma.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -48,36 +54,33 @@ import ubic.gemma.util.ConfigUtils;
  * @version $Id$
  */
 public class DesignElementDataVectorServiceTest extends BaseSpringContextTest {
+
+    @Autowired
     ExpressionExperimentService expressionExperimentService;
+    
     ExpressionExperiment newee = null;
+    
     DesignElementDataVector dedv;
-    protected AbstractGeoService geoService;
+    
+    @Autowired
+    protected GeoDatasetService geoService;
+    
+    @Autowired
     ArrayDesignService arrayDesignService;
+    
+    @Autowired
     TaxonService taxonService;
+    
+    @Autowired
     CompositeSequenceService compositeSequenceService;
 
-    @Override
-    protected void onSetUpInTransaction() throws Exception {
-        super.onSetUpInTransaction();
+    @Before
+    public void setup() throws Exception {
         dedv = RawExpressionDataVector.Factory.newInstance();
-        expressionExperimentService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
-        arrayDesignService = ( ArrayDesignService ) this.getBean( "arrayDesignService" );
-        geoService = ( AbstractGeoService ) this.getBean( "geoDatasetService" );
-        compositeSequenceService = ( CompositeSequenceService ) this.getBean( "compositeSequenceService" );
-        taxonService = ( TaxonService ) this.getBean( "taxonService" );
-    }
-
-    @Override
-    protected void onTearDownAfterTransaction() throws Exception {
-        super.onTearDownAfterTransaction();
-
-        if ( newee != null && newee.getId() != null ) {
-            // expressionExperimentService.delete( newee );
-        }
-
     }
 
     @SuppressWarnings("unchecked")
+    @Test
     public void testFindByQt() {
 
         try {
@@ -85,8 +88,8 @@ public class DesignElementDataVectorServiceTest extends BaseSpringContextTest {
             assert path != null;
             geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path
                     + AbstractGeoServiceTest.GEO_TEST_DATA_ROOT + "gse432Short" ) );
-            Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad(
-                    "GSE432", false, true, false, false, false );
+            Collection<ExpressionExperiment> results = geoService.fetchAndLoad( "GSE432", false, true, false, false,
+                    false );
             newee = results.iterator().next();
 
         } catch ( AlreadyExistsInSystemException e ) {
@@ -95,10 +98,6 @@ public class DesignElementDataVectorServiceTest extends BaseSpringContextTest {
 
         newee.setShortName( RandomStringUtils.randomAlphabetic( 12 ) );
         expressionExperimentService.update( newee );
-
-        setComplete();
-        endTransaction();
-        startNewTransaction();
 
         this.expressionExperimentService.thawLite( newee );
 

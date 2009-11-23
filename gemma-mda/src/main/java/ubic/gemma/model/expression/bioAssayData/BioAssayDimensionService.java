@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.expression.bioAssayData;
 
+import org.springframework.security.access.annotation.Secured;
+
 /**
  * @author Paul
  * @version $Id$
@@ -27,32 +29,22 @@ public interface BioAssayDimensionService {
     /**
      * 
      */
-    public ubic.gemma.model.expression.bioAssayData.BioAssayDimension create(
-            ubic.gemma.model.expression.bioAssayData.BioAssayDimension bioAssayDimension );
+    @Secured( { "GROUP_USER" })
+    public BioAssayDimension create( BioAssayDimension bioAssayDimension );
 
     /**
      * 
      */
-    public ubic.gemma.model.expression.bioAssayData.BioAssayDimension findOrCreate(
-            ubic.gemma.model.expression.bioAssayData.BioAssayDimension bioAssayDimension );
+    @Secured( { "GROUP_USER" })
+    public BioAssayDimension findOrCreate( BioAssayDimension bioAssayDimension );
 
     /**
      * 
      */
-    public ubic.gemma.model.expression.bioAssayData.BioAssayDimension load( java.lang.Long id );
+    @Secured( { "GROUP_USER" })
+    public void remove( BioAssayDimension bioAssayDimension );
 
     /**
-     * 
-     */
-    public void remove( ubic.gemma.model.expression.bioAssayData.BioAssayDimension bioAssayDimension );
-
-    /**
-     * 
-     */
-    public void update( ubic.gemma.model.expression.bioAssayData.BioAssayDimension bioAssayDimension );
-    
-    /**
-     * 
      * @param bioAssayDimension
      */
     public void thaw( BioAssayDimension bioAssayDimension );

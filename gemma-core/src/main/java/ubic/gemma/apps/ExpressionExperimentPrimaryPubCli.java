@@ -28,6 +28,12 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.PersisterHelper;
 import ubic.gemma.util.AbstractSpringAwareCLI;
 
+/**
+ * TODO Document Me
+ * 
+ * @author paul
+ * @version $Id$
+ */
 public class ExpressionExperimentPrimaryPubCli extends AbstractSpringAwareCLI {
 
     @Override
@@ -45,8 +51,7 @@ public class ExpressionExperimentPrimaryPubCli extends AbstractSpringAwareCLI {
             throw new RuntimeException( e );
         }
     }
-
-    @SuppressWarnings("unchecked")
+ 
     @Override
     protected Exception doWork( String[] args ) {
         Exception err = processCommandLine( "Expression experiment bibref finder ", args );

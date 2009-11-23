@@ -34,6 +34,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
  */
 public class ArrayDesignGroupingTag extends TagSupport {
 
+    private static final long serialVersionUID = -5646614364631502667L;
     private ArrayDesign subsumer;
     private Collection<ArrayDesign> subsumees;
 
@@ -73,10 +74,11 @@ public class ArrayDesignGroupingTag extends TagSupport {
             for ( ArrayDesign subsumee : subsumees ) {
                 buf.append( arrayDesignLink( subsumee ) );
                 Collection<ArrayDesign> m = subsumee.getSubsumedArrayDesigns();
-                if (m.size() > 0) {
-                   for (ArrayDesign ms : m) {
-                       buf.append(" &#187; subsumes " + arrayDesignShortLink(ms)); // FIXME, recurse to go down even further.
-                   }
+                if ( m.size() > 0 ) {
+                    for ( ArrayDesign ms : m ) {
+                        buf.append( " &#187; subsumes " + arrayDesignShortLink( ms ) ); // FIXME, recurse to go down
+                                                                                        // even further.
+                    }
                 }
                 buf.append( "<br />" );
             }
@@ -89,7 +91,7 @@ public class ArrayDesignGroupingTag extends TagSupport {
         }
         return SKIP_BODY;
     }
-    
+
     private String arrayDesignShortLink( ArrayDesign ad ) {
         return "<a href=\"/Gemma/arrays/showArrayDesign.html?id=" + ad.getId() + "\">" + ad.getShortName() + "</a>";
     }

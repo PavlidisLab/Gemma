@@ -18,6 +18,10 @@
  */
 package ubic.gemma.model.common.protocol;
 
+import java.util.Collection;
+
+import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
+
 /**
  * <p>
  * Base Spring DAO Class: is able to create, update, remove, load, and find objects of type
@@ -26,19 +30,20 @@ package ubic.gemma.model.common.protocol;
  * 
  * @see ubic.gemma.model.common.protocol.Software
  */
-public abstract class SoftwareDaoBase extends ubic.gemma.model.common.protocol.ParameterizableDaoImpl<Software>
-        implements ubic.gemma.model.common.protocol.SoftwareDao {
+public abstract class SoftwareDaoBase extends HibernateDaoSupport implements
+        ubic.gemma.model.common.protocol.SoftwareDao {
 
     /**
      * @see ubic.gemma.model.common.protocol.SoftwareDao#create(int, java.util.Collection)
      */
 
-    public java.util.Collection<Software> create( final int transform, final java.util.Collection<Software> entities ) {
+    public java.util.Collection<? extends Software> create( final int transform,
+            final java.util.Collection<? extends Software> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "Software.create - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback() {
+                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
@@ -48,6 +53,11 @@ public abstract class SoftwareDaoBase extends ubic.gemma.model.common.protocol.P
                     }
                 } );
         return entities;
+    }
+
+    
+    public Collection<? extends Software> load( Collection<Long> ids ) {
+        return this.getHibernateTemplate().findByNamedParam( "from SoftwareImpl where id in (:ids)", "ids", ids );
     }
 
     /**
@@ -66,7 +76,7 @@ public abstract class SoftwareDaoBase extends ubic.gemma.model.common.protocol.P
      * @see ubic.gemma.model.common.protocol.SoftwareDao#create(java.util.Collection)
      */
 
-    @SuppressWarnings( { "unchecked" })
+    
     public java.util.Collection create( final java.util.Collection entities ) {
         return create( TRANSFORM_NONE, entities );
     }
@@ -82,8 +92,8 @@ public abstract class SoftwareDaoBase extends ubic.gemma.model.common.protocol.P
      * @see ubic.gemma.model.common.protocol.SoftwareDao#find(int, java.lang.String,
      *      ubic.gemma.model.common.protocol.Software)
      */
-    @SuppressWarnings( { "unchecked" })
-    public Object find( final int transform, final java.lang.String queryString,
+    
+    public Software find( final int transform, final java.lang.String queryString,
             final ubic.gemma.model.common.protocol.Software software ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
         java.util.List<Object> args = new java.util.ArrayList<Object>();
@@ -92,23 +102,23 @@ public abstract class SoftwareDaoBase extends ubic.gemma.model.common.protocol.P
         java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
                 argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
         Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'ubic.gemma.model.common.protocol.Software"
-                                + "' was found when executing query --> '" + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
+
+        if ( results.size() > 1 ) {
+            throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                    "More than one instance of 'ubic.gemma.model.common.protocol.Software"
+                            + "' was found when executing query --> '" + queryString + "'" );
+        } else if ( results.size() == 1 ) {
+            result = results.iterator().next();
         }
+
         result = transformEntity( transform, ( ubic.gemma.model.common.protocol.Software ) result );
-        return result;
+        return ( Software ) result;
     }
 
     /**
      * @see ubic.gemma.model.common.protocol.SoftwareDao#find(int, ubic.gemma.model.common.protocol.Software)
      */
-    public Object find( final int transform, final ubic.gemma.model.common.protocol.Software software ) {
+    public Software find( final int transform, final ubic.gemma.model.common.protocol.Software software ) {
         return this.find( transform,
                 "from ubic.gemma.model.common.protocol.Software as software where software.software = :software",
                 software );
@@ -120,22 +130,22 @@ public abstract class SoftwareDaoBase extends ubic.gemma.model.common.protocol.P
      */
     public ubic.gemma.model.common.protocol.Software find( final java.lang.String queryString,
             final ubic.gemma.model.common.protocol.Software software ) {
-        return ( ubic.gemma.model.common.protocol.Software ) this.find( TRANSFORM_NONE, queryString, software );
+        return this.find( TRANSFORM_NONE, queryString, software );
     }
 
     /**
      * @see ubic.gemma.model.common.protocol.SoftwareDao#find(ubic.gemma.model.common.protocol.Software)
      */
     public ubic.gemma.model.common.protocol.Software find( ubic.gemma.model.common.protocol.Software software ) {
-        return ( ubic.gemma.model.common.protocol.Software ) this.find( TRANSFORM_NONE, software );
+        return this.find( TRANSFORM_NONE, software );
     }
 
     /**
      * @see ubic.gemma.model.common.protocol.SoftwareDao#findOrCreate(int, java.lang.String,
      *      ubic.gemma.model.common.protocol.Software)
      */
-    @SuppressWarnings( { "unchecked" })
-    public Object findOrCreate( final int transform, final java.lang.String queryString,
+    
+    public Software findOrCreate( final int transform, final java.lang.String queryString,
             final ubic.gemma.model.common.protocol.Software software ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
         java.util.List<Object> args = new java.util.ArrayList<Object>();
@@ -144,24 +154,24 @@ public abstract class SoftwareDaoBase extends ubic.gemma.model.common.protocol.P
         java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
                 argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
         Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'ubic.gemma.model.common.protocol.Software"
-                                + "' was found when executing query --> '" + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
+
+        if ( results.size() > 1 ) {
+            throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                    "More than one instance of 'ubic.gemma.model.common.protocol.Software"
+                            + "' was found when executing query --> '" + queryString + "'" );
+        } else if ( results.size() == 1 ) {
+            result = results.iterator().next();
         }
+
         result = transformEntity( transform, ( ubic.gemma.model.common.protocol.Software ) result );
-        return result;
+        return ( Software ) result;
     }
 
     /**
      * @see ubic.gemma.model.common.protocol.SoftwareDao#findOrCreate(int, ubic.gemma.model.common.protocol.Software)
      */
-    @SuppressWarnings( { "unchecked" })
-    public Object findOrCreate( final int transform, final ubic.gemma.model.common.protocol.Software software ) {
+    
+    public Software findOrCreate( final int transform, final ubic.gemma.model.common.protocol.Software software ) {
         return this.findOrCreate( transform,
                 "from ubic.gemma.model.common.protocol.Software as software where software.software = :software",
                 software );
@@ -171,29 +181,29 @@ public abstract class SoftwareDaoBase extends ubic.gemma.model.common.protocol.P
      * @see ubic.gemma.model.common.protocol.SoftwareDao#findOrCreate(java.lang.String,
      *      ubic.gemma.model.common.protocol.Software)
      */
-    @SuppressWarnings( { "unchecked" })
+    
     public ubic.gemma.model.common.protocol.Software findOrCreate( final java.lang.String queryString,
             final ubic.gemma.model.common.protocol.Software software ) {
-        return ( ubic.gemma.model.common.protocol.Software ) this.findOrCreate( TRANSFORM_NONE, queryString, software );
+        return this.findOrCreate( TRANSFORM_NONE, queryString, software );
     }
 
     /**
      * @see ubic.gemma.model.common.protocol.SoftwareDao#findOrCreate(ubic.gemma.model.common.protocol.Software)
      */
     public ubic.gemma.model.common.protocol.Software findOrCreate( ubic.gemma.model.common.protocol.Software software ) {
-        return ( ubic.gemma.model.common.protocol.Software ) this.findOrCreate( TRANSFORM_NONE, software );
+        return this.findOrCreate( TRANSFORM_NONE, software );
     }
 
     /**
      * @see ubic.gemma.model.common.protocol.SoftwareDao#load(int, java.lang.Long)
      */
 
-    public Object load( final int transform, final java.lang.Long id ) {
+    public Software load( final int transform, final java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "Software.load - 'id' can not be null" );
         }
         final Object entity = this.getHibernateTemplate().get( ubic.gemma.model.common.protocol.SoftwareImpl.class, id );
-        return transformEntity( transform, ( ubic.gemma.model.common.protocol.Software ) entity );
+        return ( Software ) transformEntity( transform, ( ubic.gemma.model.common.protocol.Software ) entity );
     }
 
     /**
@@ -201,15 +211,15 @@ public abstract class SoftwareDaoBase extends ubic.gemma.model.common.protocol.P
      */
 
     public Software load( java.lang.Long id ) {
-        return ( ubic.gemma.model.common.protocol.Software ) this.load( TRANSFORM_NONE, id );
+        return this.load( TRANSFORM_NONE, id );
     }
 
     /**
      * @see ubic.gemma.model.common.protocol.SoftwareDao#loadAll()
      */
 
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Collection loadAll() {
+    
+    public java.util.Collection<? extends Software> loadAll() {
         return this.loadAll( TRANSFORM_NONE );
     }
 
@@ -217,8 +227,8 @@ public abstract class SoftwareDaoBase extends ubic.gemma.model.common.protocol.P
      * @see ubic.gemma.model.common.protocol.SoftwareDao#loadAll(int)
      */
 
-    public java.util.Collection<Software> loadAll( final int transform ) {
-        final java.util.Collection<Software> results = this.getHibernateTemplate().loadAll(
+    public java.util.Collection<? extends Software> loadAll( final int transform ) {
+        final java.util.Collection<? extends Software> results = this.getHibernateTemplate().loadAll(
                 ubic.gemma.model.common.protocol.SoftwareImpl.class );
         this.transformEntities( transform, results );
         return results;
@@ -242,7 +252,7 @@ public abstract class SoftwareDaoBase extends ubic.gemma.model.common.protocol.P
      * @see ubic.gemma.model.common.SecurableDao#remove(java.util.Collection)
      */
 
-    public void remove( java.util.Collection<Software> entities ) {
+    public void remove( java.util.Collection<? extends Software> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "Software.remove - 'entities' can not be null" );
         }
@@ -263,12 +273,12 @@ public abstract class SoftwareDaoBase extends ubic.gemma.model.common.protocol.P
      * @see ubic.gemma.model.common.SecurableDao#update(java.util.Collection)
      */
 
-    public void update( final java.util.Collection<Software> entities ) {
+    public void update( final java.util.Collection<? extends Software> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "Software.update - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback() {
+                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
@@ -302,7 +312,7 @@ public abstract class SoftwareDaoBase extends ubic.gemma.model.common.protocol.P
      * @see #transformEntity(int,ubic.gemma.model.common.protocol.Software)
      */
 
-    protected void transformEntities( final int transform, final java.util.Collection<Software> entities ) {
+    protected void transformEntities( final int transform, final java.util.Collection<? extends Software> entities ) {
         switch ( transform ) {
             case TRANSFORM_NONE: // fall-through
             default:

@@ -56,7 +56,8 @@ public interface ExpressionQtlDao extends ubic.gemma.model.genome.BaseQtlDao {
     /**
      * Creates an instance of ubic.gemma.model.genome.ExpressionQtl and adds it to the persistent store.
      */
-    public ubic.gemma.model.common.Securable create( ubic.gemma.model.genome.ExpressionQtl expressionQtl );
+    public ubic.gemma.model.common.auditAndSecurity.Securable create(
+            ubic.gemma.model.genome.ExpressionQtl expressionQtl );
 
     /**
      * <p>
@@ -75,7 +76,7 @@ public interface ExpressionQtlDao extends ubic.gemma.model.genome.BaseQtlDao {
     /**
      * Loads an instance of ubic.gemma.model.genome.ExpressionQtl from the persistent store.
      */
-    public ubic.gemma.model.common.Securable load( java.lang.Long id );
+    public ubic.gemma.model.common.auditAndSecurity.Securable load( java.lang.Long id );
 
     /**
      * Loads all entities of type {@link ubic.gemma.model.genome.ExpressionQtl}.

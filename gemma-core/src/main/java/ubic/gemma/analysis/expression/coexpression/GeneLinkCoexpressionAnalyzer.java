@@ -29,6 +29,8 @@ import java.util.Map;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import ubic.basecode.dataStructure.BitUtil;
 import ubic.gemma.model.analysis.Analysis;
@@ -37,6 +39,7 @@ import ubic.gemma.model.analysis.expression.ExpressionExperimentSetService;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionCollectionValueObject;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionValueObject;
 import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis;
+import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisImpl;
 import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisService;
 import ubic.gemma.model.association.coexpression.Gene2GeneCoexpression;
 import ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionService;
@@ -59,17 +62,10 @@ import ubic.gemma.security.SecurityService;
  * only the datasets that the user included. The gene2gene analysis for each taxon must be updated periodically to
  * include new datasets.
  * 
- * @spring.bean id="geneLinkCoexpressionAnalyzer"
- * @spring.property name="protocolService" ref="protocolService"
- * @spring.property name="gene2GeneCoexpressionService" ref="gene2GeneCoexpressionService"
- * @spring.property name="geneCoexpressionAnalysisService" ref="geneCoexpressionAnalysisService"
- * @spring.property name="probeLinkCoexpressionAnalyzer" ref="probeLinkCoexpressionAnalyzer"
- * @spring.property name="persisterHelper" ref="persisterHelper"
- * @spring.property name="securityService" ref="securityService"
- * @spring.property name="expressionExperimentSetService" ref="expressionExperimentSetService"
  * @author paul
  * @version $Id$
  */
+@Service
 public class GeneLinkCoexpressionAnalyzer {
     private static final int BATCH_SIZE = 500;
 
@@ -141,18 +137,25 @@ public class GeneLinkCoexpressionAnalyzer {
         return ids;
     }
 
+    @Autowired
     private ExpressionExperimentSetService expressionExperimentSetService;
 
+    @Autowired
     private Gene2GeneCoexpressionService gene2GeneCoexpressionService;
 
+    @Autowired
     private GeneCoexpressionAnalysisService geneCoexpressionAnalysisService;
 
+    @Autowired
     private PersisterHelper persisterHelper;
 
+    @Autowired
     private ProbeLinkCoexpressionAnalyzer probeLinkCoexpressionAnalyzer;
 
+    @Autowired
     private ProtocolService protocolService;
 
+    @Autowired
     private SecurityService securityService;
 
     /**
@@ -441,24 +444,23 @@ public class GeneLinkCoexpressionAnalyzer {
         /*
          * Find the old analysis so we can disable it afterwards
          */
-        
-        Collection<? extends Analysis> analysis =null; 
-        if(!taxon.getIsSpecies()){
+
+        Collection<? extends Analysis> analysis = null;
+        if ( !taxon.getIsSpecies() ) {
             analysis = geneCoexpressionAnalysisService.findByTaxon( taxon );
-        }else{
+        } else {
             analysis = geneCoexpressionAnalysisService.findByParentTaxon( taxon );
         }
-        
+
         Collection<GeneCoexpressionAnalysis> oldAnalyses = new HashSet<GeneCoexpressionAnalysis>();
-        
-        for ( Analysis a : ( Collection<? extends Analysis> ) analysis) {
+
+        for ( Analysis a : ( Collection<? extends Analysis> ) analysis ) {
             assert a instanceof GeneCoexpressionAnalysis;
             oldAnalyses.add( ( GeneCoexpressionAnalysis ) a );
 
         }
         return oldAnalyses;
-        
-        
+
     }
 
     /**
@@ -524,7 +526,8 @@ public class GeneLinkCoexpressionAnalyzer {
      */
     private GeneCoexpressionAnalysis intializeNewAnalysis( Collection<BioAssaySet> expressionExperiments, Taxon taxon,
             Collection<Gene> toUseGenes, String analysisName, int stringency ) {
-        GeneCoexpressionAnalysis analysis = GeneCoexpressionAnalysis.Factory.newInstance();
+        GeneCoexpressionAnalysisImpl analysis = ( GeneCoexpressionAnalysisImpl ) GeneCoexpressionAnalysis.Factory
+                .newInstance();
 
         analysis.setDescription( "Coexpression analysis for " + taxon.getCommonName() + " using "
                 + expressionExperiments.size() + " expression experiments; stringency=" + stringency );
@@ -554,7 +557,7 @@ public class GeneLinkCoexpressionAnalyzer {
 
         analysis.setExpressionExperimentSetAnalyzed( eeSet );
 
-        analysis = ( GeneCoexpressionAnalysis ) persisterHelper.persist( analysis );
+        analysis = ( GeneCoexpressionAnalysisImpl ) persisterHelper.persist( analysis );
 
         securityService.makePrivate( analysis );
         log.info( "Done" );

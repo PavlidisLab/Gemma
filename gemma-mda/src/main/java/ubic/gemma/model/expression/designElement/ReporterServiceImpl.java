@@ -22,11 +22,14 @@ package ubic.gemma.model.expression.designElement;
 
 import java.util.Collection;
 
+import org.springframework.stereotype.Service;
+
 /**
  * @author pavlidis
  * @version $Id$
  * @see ubic.gemma.model.expression.designElement.ReporterService
  */
+@Service
 public class ReporterServiceImpl extends ubic.gemma.model.expression.designElement.ReporterServiceBase {
 
     /*
@@ -47,7 +50,7 @@ public class ReporterServiceImpl extends ubic.gemma.model.expression.designEleme
      */
     @Override
     protected Reporter handleCreate( Reporter reporter ) throws Exception {
-        return ( Reporter ) this.getReporterDao().create( reporter );
+        return this.getReporterDao().create( reporter );
     }
 
     /*

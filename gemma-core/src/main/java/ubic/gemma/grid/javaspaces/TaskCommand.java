@@ -21,7 +21,6 @@ package ubic.gemma.grid.javaspaces;
 import java.io.Serializable;
 
 import net.jini.space.JavaSpace;
-import ubic.gemma.grid.javaspaces.expression.experiment.ExpressionExperimentLoadTaskCommand;
 
 /**
  * This command class is used to allow communication of parameters for a task between a client and a compute server in a
@@ -47,17 +46,17 @@ public class TaskCommand implements Serializable {
     }
 
     /**
-     * @param taskId
-     */
-    public void setTaskId( String taskId ) {
-        this.taskId = taskId;
-    }
-
-    /**
      * @return
      */
     public String getTaskId() {
         return taskId;
+    }
+
+    /**
+     * @param taskId
+     */
+    public void setTaskId( String taskId ) {
+        this.taskId = taskId;
     }
 
 }

@@ -12,7 +12,7 @@
 <h2>
 	Bibliographic Reference record
 </h2>
-<security:authorize ifAnyGranted="admin">
+<security:authorize ifAnyGranted="GROUP_ADMIN">
 	<c:if test="${!requestScope.existsInSystem}">
 		<p>
 			This reference was obtained from PubMed; it is not in the Gemma system. You can add it to Gemma by clicking the
@@ -44,7 +44,7 @@
 <Gemma:bibref bibliographicReference="${bibliographicReference}" />
 
 <br />
-<security:authorize ifAnyGranted="admin">
+<security:authorize ifAnyGranted="GROUP_ADMIN">
 	<table>
 		<tr>
 			<td align="left">
@@ -79,7 +79,6 @@
 								value="${bibliographicReference.id}">
 						</form>
 					</div>
-				 
 			</c:if>
 		</td>
 		
@@ -92,11 +91,8 @@
 							<input type="submit"  
 										value="Delete" /></form>
 					</div>
-			
 			</c:if>
 		</td>
-
 	</tr>
- 
 </table>
 </security:authorize>

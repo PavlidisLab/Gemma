@@ -20,11 +20,14 @@ package ubic.gemma.model.analysis.expression.coexpression;
 
 import java.util.Collection;
 
+import org.springframework.security.access.annotation.Secured;
+
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
- * 
+ * @author kelsey
+ * @version $Id$
  */
 public interface ProbeCoexpressionAnalysisService extends
         ubic.gemma.model.analysis.AnalysisService<ProbeCoexpressionAnalysis> {
@@ -32,8 +35,8 @@ public interface ProbeCoexpressionAnalysisService extends
     /**
      * 
      */
-    public ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis create(
-            ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis probeCoexpressionAnalysis );
+    @Secured( { "GROUP_USER" })
+    public ProbeCoexpressionAnalysis create( ProbeCoexpressionAnalysis probeCoexpressionAnalysis );
 
     /**
      * Retrieve the list of probes used in the probe-level coexpression analysis for the given experiment. This assumes
@@ -44,5 +47,12 @@ public interface ProbeCoexpressionAnalysisService extends
      * @param experiment
      * @return
      */
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     public Collection<CompositeSequence> getAssayedProbes( ExpressionExperiment experiment );
+
+    /**
+     * @param o
+     */
+    @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    public void update( ProbeCoexpressionAnalysis o );
 }

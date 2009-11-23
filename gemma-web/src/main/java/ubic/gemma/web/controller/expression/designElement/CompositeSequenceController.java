@@ -29,7 +29,11 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang.StringUtils;
 import org.hibernate.proxy.HibernateProxy;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.ServletRequestDataBinder;
+import org.springframework.web.bind.annotation.InitBinder;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 
 import ubic.gemma.analysis.sequence.ArrayDesignMapResultService;
@@ -51,7 +55,7 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatResultService;
 import ubic.gemma.search.SearchResult;
 import ubic.gemma.search.SearchService;
 import ubic.gemma.search.SearchSettings;
-import ubic.gemma.web.controller.BaseMultiActionController;
+import ubic.gemma.web.controller.BaseController;
 import ubic.gemma.web.propertyeditor.SequenceTypePropertyEditor;
 import ubic.gemma.web.remote.EntityDelegator;
 
@@ -59,20 +63,20 @@ import ubic.gemma.web.remote.EntityDelegator;
  * @author joseph
  * @author paul
  * @version $Id$
- * @spring.bean id="compositeSequenceController"
- * @spring.property name="compositeSequenceService" ref="compositeSequenceService"
- * @spring.property name="blatResultService" ref="blatResultService"
- * @spring.property name="methodNameResolver" ref="compositeSequenceActions"
- * @spring.property name="arrayDesignMapResultService" ref="arrayDesignMapResultService"
- * @spring.property name="searchService" ref="searchService"
- * @spring.property name = "arrayDesignService" ref="arrayDesignService"
  */
-public class CompositeSequenceController extends BaseMultiActionController {
+@Controller
+@RequestMapping("/compositeSequence")
+public class CompositeSequenceController extends BaseController {
 
+    @Autowired
     private CompositeSequenceService compositeSequenceService = null;
+    @Autowired
     private BlatResultService blatResultService = null;
+    @Autowired
     private ArrayDesignMapResultService arrayDesignMapResultService = null;
+    @Autowired
     private SearchService searchService;
+    @Autowired
     private ArrayDesignService arrayDesignService = null;
 
     /**
@@ -82,6 +86,7 @@ public class CompositeSequenceController extends BaseMultiActionController {
      * @param response
      * @return
      */
+    @RequestMapping("/filter")
     public ModelAndView filter( HttpServletRequest request, HttpServletResponse response ) {
         String filter = request.getParameter( "filter" );
         String arid = request.getParameter( "arid" );
@@ -130,14 +135,13 @@ public class CompositeSequenceController extends BaseMultiActionController {
      * @param ids
      * @return
      */
-    @SuppressWarnings("unchecked")
     public Collection<CompositeSequenceMapValueObject> getCsSummaries( Collection<Long> ids ) {
 
         if ( ids == null || ids.size() == 0 ) {
             return new HashSet<CompositeSequenceMapValueObject>();
         }
 
-        Collection compositeSequences = compositeSequenceService.loadMultiple( ids );
+        Collection<CompositeSequence> compositeSequences = compositeSequenceService.loadMultiple( ids );
         Collection<Object[]> rawSummaries = compositeSequenceService.getRawSummary( compositeSequences, 0 );
         return arrayDesignMapResultService.getSummaryMapValueObjects( rawSummaries );
     }
@@ -173,35 +177,13 @@ public class CompositeSequenceController extends BaseMultiActionController {
         return getSummaries( css );
     }
 
-    public void setArrayDesignMapResultService( ArrayDesignMapResultService arrayDesignMapResultService ) {
-        this.arrayDesignMapResultService = arrayDesignMapResultService;
-    }
-
-    public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
-        this.arrayDesignService = arrayDesignService;
-    }
-
-    public void setBlatResultService( BlatResultService blatResultService ) {
-        this.blatResultService = blatResultService;
-    }
-
-    /**
-     * @param compositeSequenceService the compositeSequenceService to set
-     */
-    public void setCompositeSequenceService( CompositeSequenceService compositeSequenceService ) {
-        this.compositeSequenceService = compositeSequenceService;
-    }
-
-    public void setSearchService( SearchService searchService ) {
-        this.searchService = searchService;
-    }
-
     /**
      * @param request
      * @param response
      * @param errors
      * @return ModelAndView
      */
+    @RequestMapping("/show")
     public ModelAndView show( HttpServletRequest request, HttpServletResponse response ) {
         Long id = Long.parseLong( request.getParameter( "id" ) );
         CompositeSequence cs = compositeSequenceService.load( id );
@@ -224,7 +206,7 @@ public class CompositeSequenceController extends BaseMultiActionController {
      * @param response
      * @return ModelAndView
      */
-    @SuppressWarnings("unchecked")
+    @RequestMapping("/showAll")
     public ModelAndView showAll( HttpServletRequest request, HttpServletResponse response ) {
 
         String sId = request.getParameter( "id" );
@@ -237,7 +219,7 @@ public class CompositeSequenceController extends BaseMultiActionController {
         // if ids are specified, then display only those bioSequences
         else {
             String[] idList = StringUtils.split( sId, ',' );
-            Collection ids = new ArrayList<Long>();
+            Collection<Long> ids = new ArrayList<Long>();
 
             for ( int i = 0; i < idList.length; i++ ) {
                 Long id = Long.parseLong( idList[i] );
@@ -249,11 +231,15 @@ public class CompositeSequenceController extends BaseMultiActionController {
 
     }
 
+    @InitBinder
+    protected void initBinder( ServletRequestDataBinder binder ) throws Exception {
+        binder.registerCustomEditor( SequenceType.class, new SequenceTypePropertyEditor() );
+    }
+
     /**
      * @param cs
      * @param blatResults
      */
-    @SuppressWarnings("unchecked")
     private void addBlatResultsLackingGenes( CompositeSequence cs, Map<BlatResult, BlatResultGeneSummary> blatResults ) {
         /*
          * Pick up blat results that didn't map to genes.
@@ -284,9 +270,9 @@ public class CompositeSequenceController extends BaseMultiActionController {
 
         Collection<BioSequence2GeneProduct> bs2gps = cs.getBiologicalCharacteristic().getBioSequence2GeneProduct();
 
-        for ( BioSequence2GeneProduct bs2gp : bs2gps ) {          
-           
-            if (( bs2gp instanceof BlatAssociation ) ) {
+        for ( BioSequence2GeneProduct bs2gp : bs2gps ) {
+
+            if ( ( bs2gp instanceof BlatAssociation ) ) {
                 BlatAssociation blatAssociation = ( BlatAssociation ) bs2gp;
                 GeneProduct geneProduct = blatAssociation.getGeneProduct();
                 Gene gene = geneProduct.getGene();
@@ -298,7 +284,7 @@ public class CompositeSequenceController extends BaseMultiActionController {
                 }
 
                 blatResult.getQuerySequence().getTaxon(); // FIXME: Cruft or thaw attempt? Tested and apparently not
-                                                          // needed
+                // needed
                 // (PP)
 
                 if ( blatResults.containsKey( blatResult ) ) {
@@ -310,10 +296,9 @@ public class CompositeSequenceController extends BaseMultiActionController {
                     summary.setCompositeSequence( cs );
                     blatResults.put( blatResult, summary );
                 }
-
             }
-			//ugly doing this but this code needs refactor to take away emphasis on BLAT
-            if ( ( bs2gp instanceof AnnotationAssociation ) ) {
+            // ugly doing this but this code needs refactor to take away emphasis on BLAT
+            else if ( bs2gp instanceof AnnotationAssociation ) {
                 AnnotationAssociation blatAssociation = ( AnnotationAssociation ) bs2gp;
                 GeneProduct geneProduct = blatAssociation.getGeneProduct();
                 Gene gene = geneProduct.getGene();
@@ -347,7 +332,6 @@ public class CompositeSequenceController extends BaseMultiActionController {
      * @param compositeSequences
      * @return
      */
-    @SuppressWarnings("unchecked")
     private Collection<CompositeSequenceMapValueObject> getSummaries( Collection<CompositeSequence> compositeSequences ) {
         Collection<CompositeSequenceMapValueObject> compositeSequenceSummary = new HashSet<CompositeSequenceMapValueObject>();
         if ( compositeSequences.size() > 0 ) {
@@ -372,12 +356,6 @@ public class CompositeSequenceController extends BaseMultiActionController {
             }
         }
         return arrayDesign;
-    }
-
-    @Override
-    protected void initBinder( HttpServletRequest request, ServletRequestDataBinder binder ) throws Exception {
-        super.initBinder( request, binder );
-        binder.registerCustomEditor( SequenceType.class, new SequenceTypePropertyEditor() );
     }
 
 }

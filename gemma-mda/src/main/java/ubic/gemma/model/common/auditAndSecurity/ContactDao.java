@@ -27,47 +27,16 @@ public interface ContactDao extends BaseDao<Contact> {
     /**
      * 
      */
-    public ubic.gemma.model.common.auditAndSecurity.Contact find(
-            ubic.gemma.model.common.auditAndSecurity.Contact contact );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findByEmail(java.lang.String)} with an additional flag called
-     * <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then finder results will
-     * <strong>NOT</strong> be transformed during retrieval. If this flag is any of the other constants defined here
-     * then finder results <strong>WILL BE</strong> passed through an operation which can optionally transform the
-     * entities (into value objects for example). By default, transformation does not occur.
-     * </p>
-     */
-    public Object findByEmail( int transform, java.lang.String email );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findByEmail(boolean, java.lang.String)} with an additional argument called
-     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string defined
-     * in {@link #findByEmail(int, java.lang.String email)}.
-     * </p>
-     */
-    public Object findByEmail( int transform, String queryString, java.lang.String email );
+    public Contact find( Contact contact );
 
     /**
      * 
      */
-    public ubic.gemma.model.common.auditAndSecurity.Contact findByEmail( java.lang.String email );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findByEmail(java.lang.String)} with an additional argument called
-     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string defined
-     * in {@link #findByEmail(java.lang.String)}.
-     * </p>
-     */
-    public ubic.gemma.model.common.auditAndSecurity.Contact findByEmail( String queryString, java.lang.String email );
+    public Contact findByEmail( java.lang.String email );
 
     /**
      * 
      */
-    public ubic.gemma.model.common.auditAndSecurity.Contact findOrCreate(
-            ubic.gemma.model.common.auditAndSecurity.Contact contact );
+    public Contact findOrCreate( Contact contact );
 
 }

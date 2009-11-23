@@ -18,35 +18,32 @@
  */
 package ubic.gemma.util.progress;
 
-import junit.framework.TestCase;
+import static org.junit.Assert.assertEquals;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 /**
  * @author klc
  * @version $Id$
  */
-public class ProgressDataTest extends TestCase {
+public class ProgressDataTest {
 
     protected ProgressData pd;
 
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Before
+    public void setUp() throws Exception {
+
         pd = new ProgressData( 1, "test", false );
-
-    }
-
-    @Override
-    protected void tearDown() throws Exception {
-        super.tearDown();
-        pd = null;
 
     }
 
     /*
      * Test method for 'ubic.gemma.web.util.progress.ProgressData.ProgressData(int, String, boolean)'
      */
+    @Test
     public void testProgressData() {
-
         assertEquals( pd.getPercent(), 1 );
         assertEquals( pd.getDescription(), "test" );
         assertEquals( pd.isDone(), false );
@@ -54,28 +51,36 @@ public class ProgressDataTest extends TestCase {
     }
 
     /*
-     * Test method for 'ubic.gemma.web.util.progress.ProgressData.setDone(boolean)'
-     */
-    public void testSetDone() {
-        pd.setDone( true );
-        assert ( pd.isDone() );
-    }
-
-    /*
      * Test method for 'ubic.gemma.web.util.progress.ProgressData.setDescription(String)'
      */
+    @Test
     public void testSetDescription() {
         pd.setDescription( "testDescription" );
         assertEquals( "testDescription", pd.getDescription() );
     }
 
     /*
+     * Test method for 'ubic.gemma.web.util.progress.ProgressData.setDone(boolean)'
+     */
+    @Test
+    public void testSetDone() {
+        pd.setDone( true );
+        assert ( pd.isDone() );
+    }
+
+    /*
      * Test method for 'ubic.gemma.web.util.progress.ProgressData.setPercent(int)'
      */
+    @Test
     public void testSetPercent() {
         pd.setPercent( 88 );
         assertEquals( pd.getPercent(), 88 );
 
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        pd = null;
     }
 
 }

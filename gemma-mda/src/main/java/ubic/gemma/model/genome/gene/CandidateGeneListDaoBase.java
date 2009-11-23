@@ -18,13 +18,13 @@
  */
 package ubic.gemma.model.genome.gene;
 
+import java.util.Collection;
+
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 
 /**
- * <p>
  * Base Spring DAO Class: is able to create, update, remove, load, and find objects of type
  * <code>ubic.gemma.model.genome.gene.CandidateGeneList</code>.
- * </p>
  * 
  * @see ubic.gemma.model.genome.gene.CandidateGeneList
  */
@@ -41,7 +41,7 @@ public abstract class CandidateGeneListDaoBase extends HibernateDaoSupport imple
             throw new IllegalArgumentException( "CandidateGeneList.create - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback() {
+                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
@@ -68,7 +68,7 @@ public abstract class CandidateGeneListDaoBase extends HibernateDaoSupport imple
     /**
      * @see ubic.gemma.model.genome.gene.CandidateGeneListDao#create(java.util.Collection)
      */
-    @SuppressWarnings( { "unchecked" })
+
     public java.util.Collection create( final java.util.Collection entities ) {
         return create( TRANSFORM_NONE, entities );
     }
@@ -84,7 +84,7 @@ public abstract class CandidateGeneListDaoBase extends HibernateDaoSupport imple
      * @see ubic.gemma.model.genome.gene.CandidateGeneListDao#findByContributer(int, java.lang.String,
      *      ubic.gemma.model.common.auditAndSecurity.Person)
      */
-    @SuppressWarnings( { "unchecked" })
+
     public java.util.Collection findByContributer( final int transform, final java.lang.String queryString,
             final ubic.gemma.model.common.auditAndSecurity.Person owner ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -101,7 +101,7 @@ public abstract class CandidateGeneListDaoBase extends HibernateDaoSupport imple
      * @see ubic.gemma.model.genome.gene.CandidateGeneListDao#findByContributer(int,
      *      ubic.gemma.model.common.auditAndSecurity.Person)
      */
-    @SuppressWarnings( { "unchecked" })
+
     public java.util.Collection findByContributer( final int transform,
             final ubic.gemma.model.common.auditAndSecurity.Person owner ) {
         return this
@@ -115,7 +115,7 @@ public abstract class CandidateGeneListDaoBase extends HibernateDaoSupport imple
      * @see ubic.gemma.model.genome.gene.CandidateGeneListDao#findByContributer(java.lang.String,
      *      ubic.gemma.model.common.auditAndSecurity.Person)
      */
-    @SuppressWarnings( { "unchecked" })
+
     public java.util.Collection findByContributer( final java.lang.String queryString,
             final ubic.gemma.model.common.auditAndSecurity.Person owner ) {
         return this.findByContributer( TRANSFORM_NONE, queryString, owner );
@@ -131,7 +131,7 @@ public abstract class CandidateGeneListDaoBase extends HibernateDaoSupport imple
     /**
      * @see ubic.gemma.model.genome.gene.CandidateGeneListDao#findByGeneOfficialName(int, java.lang.String)
      */
-    @SuppressWarnings( { "unchecked" })
+
     public java.util.Collection findByGeneOfficialName( final int transform, final java.lang.String officialName ) {
         return this
                 .findByGeneOfficialName(
@@ -144,7 +144,7 @@ public abstract class CandidateGeneListDaoBase extends HibernateDaoSupport imple
      * @see ubic.gemma.model.genome.gene.CandidateGeneListDao#findByGeneOfficialName(int, java.lang.String,
      *      java.lang.String)
      */
-    @SuppressWarnings( { "unchecked" })
+
     public java.util.Collection findByGeneOfficialName( final int transform, final java.lang.String queryString,
             final java.lang.String officialName ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -167,7 +167,7 @@ public abstract class CandidateGeneListDaoBase extends HibernateDaoSupport imple
     /**
      * @see ubic.gemma.model.genome.gene.CandidateGeneListDao#findByGeneOfficialName(java.lang.String, java.lang.String)
      */
-    @SuppressWarnings( { "unchecked" })
+
     public java.util.Collection findByGeneOfficialName( final java.lang.String queryString,
             final java.lang.String officialName ) {
         return this.findByGeneOfficialName( TRANSFORM_NONE, queryString, officialName );
@@ -176,7 +176,7 @@ public abstract class CandidateGeneListDaoBase extends HibernateDaoSupport imple
     /**
      * @see ubic.gemma.model.genome.gene.CandidateGeneListDao#findByID(int, java.lang.Long)
      */
-    @SuppressWarnings( { "unchecked" })
+
     public Object findByID( final int transform, final java.lang.Long id ) {
         return this.findByID( transform,
                 "from edu.columbia.gemma.genome.gene.CandidateGeneListImpl list where list.id=:id order by list.name",
@@ -186,7 +186,7 @@ public abstract class CandidateGeneListDaoBase extends HibernateDaoSupport imple
     /**
      * @see ubic.gemma.model.genome.gene.CandidateGeneListDao#findByID(int, java.lang.String, java.lang.Long)
      */
-    @SuppressWarnings( { "unchecked" })
+
     public Object findByID( final int transform, final java.lang.String queryString, final java.lang.Long id ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
         java.util.List<Object> args = new java.util.ArrayList<Object>();
@@ -195,15 +195,15 @@ public abstract class CandidateGeneListDaoBase extends HibernateDaoSupport imple
         java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
                 argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
         Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'ubic.gemma.model.genome.gene.CandidateGeneList"
-                                + "' was found when executing query --> '" + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
+
+        if ( results.size() > 1 ) {
+            throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                    "More than one instance of 'ubic.gemma.model.genome.gene.CandidateGeneList"
+                            + "' was found when executing query --> '" + queryString + "'" );
+        } else if ( results.size() == 1 ) {
+            result = results.iterator().next();
         }
+
         result = transformEntity( transform, ( ubic.gemma.model.genome.gene.CandidateGeneList ) result );
         return result;
     }
@@ -218,7 +218,6 @@ public abstract class CandidateGeneListDaoBase extends HibernateDaoSupport imple
     /**
      * @see ubic.gemma.model.genome.gene.CandidateGeneListDao#findByID(java.lang.String, java.lang.Long)
      */
-    @SuppressWarnings( { "unchecked" })
     public ubic.gemma.model.genome.gene.CandidateGeneList findByID( final java.lang.String queryString,
             final java.lang.Long id ) {
         return ( ubic.gemma.model.genome.gene.CandidateGeneList ) this.findByID( TRANSFORM_NONE, queryString, id );
@@ -228,7 +227,7 @@ public abstract class CandidateGeneListDaoBase extends HibernateDaoSupport imple
      * @see ubic.gemma.model.genome.gene.CandidateGeneListDao#findByListOwner(int, java.lang.String,
      *      ubic.gemma.model.common.auditAndSecurity.Person)
      */
-    @SuppressWarnings( { "unchecked" })
+
     public java.util.Collection findByListOwner( final int transform, final java.lang.String queryString,
             final ubic.gemma.model.common.auditAndSecurity.Person owner ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -245,7 +244,7 @@ public abstract class CandidateGeneListDaoBase extends HibernateDaoSupport imple
      * @see ubic.gemma.model.genome.gene.CandidateGeneListDao#findByListOwner(int,
      *      ubic.gemma.model.common.auditAndSecurity.Person)
      */
-    @SuppressWarnings( { "unchecked" })
+
     public java.util.Collection findByListOwner( final int transform,
             final ubic.gemma.model.common.auditAndSecurity.Person owner ) {
         return this
@@ -259,7 +258,7 @@ public abstract class CandidateGeneListDaoBase extends HibernateDaoSupport imple
      * @see ubic.gemma.model.genome.gene.CandidateGeneListDao#findByListOwner(java.lang.String,
      *      ubic.gemma.model.common.auditAndSecurity.Person)
      */
-    @SuppressWarnings( { "unchecked" })
+
     public java.util.Collection findByListOwner( final java.lang.String queryString,
             final ubic.gemma.model.common.auditAndSecurity.Person owner ) {
         return this.findByListOwner( TRANSFORM_NONE, queryString, owner );
@@ -270,6 +269,11 @@ public abstract class CandidateGeneListDaoBase extends HibernateDaoSupport imple
      */
     public java.util.Collection findByListOwner( ubic.gemma.model.common.auditAndSecurity.Person owner ) {
         return this.findByListOwner( TRANSFORM_NONE, owner );
+    }
+
+    public Collection<? extends CandidateGeneList> load( Collection<Long> ids ) {
+        return this.getHibernateTemplate().findByNamedParam( "from CandidateGeneListImpl where id in (:ids)", "ids",
+                ids );
     }
 
     /**
@@ -297,7 +301,6 @@ public abstract class CandidateGeneListDaoBase extends HibernateDaoSupport imple
      * @see ubic.gemma.model.genome.gene.CandidateGeneListDao#loadAll()
      */
 
-    @SuppressWarnings( { "unchecked" })
     public java.util.Collection loadAll() {
         return this.loadAll( TRANSFORM_NONE );
     }
@@ -364,7 +367,7 @@ public abstract class CandidateGeneListDaoBase extends HibernateDaoSupport imple
             throw new IllegalArgumentException( "CandidateGeneList.update - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback() {
+                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {

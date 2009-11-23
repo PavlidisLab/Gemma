@@ -24,15 +24,15 @@ import net.jini.core.lease.Lease;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.web.servlet.mvc.AbstractUrlViewController;
 import org.springmodules.javaspaces.gigaspaces.GigaSpacesTemplate;
 
-import ubic.gemma.grid.javaspaces.SpacesHelper;
-import ubic.gemma.util.grid.javaspaces.SpacesEnum;
-import ubic.gemma.util.grid.javaspaces.SpacesJobObserver;
-import ubic.gemma.util.grid.javaspaces.SpacesUtil;
-import ubic.gemma.util.grid.javaspaces.entry.SpacesProgressEntry;
+import ubic.gemma.grid.javaspaces.util.SpacesEnum;
+import ubic.gemma.grid.javaspaces.util.SpacesJobObserver;
+import ubic.gemma.grid.javaspaces.util.SpacesUtil;
+import ubic.gemma.grid.javaspaces.util.entry.SpacesProgressEntry;
 import ubic.gemma.util.progress.TaskRunningService;
 import ubic.gemma.web.controller.BackgroundControllerJob;
 import ubic.gemma.web.controller.BaseControllerJob;
@@ -42,18 +42,33 @@ import com.j_spaces.core.client.NotifyModifiers;
 /**
  * Subclasses implement getRunner() and getSpaceRunner()
  * 
- * @spring.property name="spacesUtil" ref="spacesUtil"
- * @spring.property name="taskRunningService" ref="taskRunningService"
  * @author Paul
  * @version $Id$
  * @see BackgroundControllerJob
  */
 public abstract class AbstractSpacesController<T> extends AbstractUrlViewController {
+
+    @Autowired
     protected TaskRunningService taskRunningService;
+
+    @Autowired
     protected SpacesUtil spacesUtil = null;
+
     protected ApplicationContext updatedContext = null;
 
     private static Log log = LogFactory.getLog( AbstractSpacesController.class.getName() );
+
+    /**
+     * @return ApplicationContext
+     */
+    public ApplicationContext addGemmaSpacesToApplicationContext() {
+        if ( spacesUtil == null ) spacesUtil = new SpacesUtil();
+
+        if ( SpacesUtil.isSpaceRunning( SpacesEnum.DEFAULT_SPACE.getSpaceUrl() ) ) {
+            return spacesUtil.addGemmaSpacesToApplicationContext( SpacesEnum.DEFAULT_SPACE.getSpaceUrl() );
+        }
+        return null;
+    }
 
     /**
      * This method can be exposed via AJAX to allow asynchronous calls. The method returns the task id immediately after
@@ -93,18 +108,6 @@ public abstract class AbstractSpacesController<T> extends AbstractUrlViewControl
     }
 
     /**
-     * @return ApplicationContext
-     */
-    public ApplicationContext addGemmaSpacesToApplicationContext() {
-        if ( spacesUtil == null ) spacesUtil = new SpacesUtil();
-
-        if ( SpacesUtil.isSpaceRunning( SpacesEnum.DEFAULT_SPACE.getSpaceUrl() ) ) {
-            return spacesUtil.addGemmaSpacesToApplicationContext( SpacesEnum.DEFAULT_SPACE.getSpaceUrl() );
-        }
-        return null;
-    }
-
-    /**
      * For use in AJAX-driven runs.
      * 
      * @param command
@@ -122,7 +125,7 @@ public abstract class AbstractSpacesController<T> extends AbstractUrlViewControl
         if ( updatedContext != null && updatedContext.containsBean( "gigaspacesTemplate" )
                 && spacesUtil.canServiceTask( taskName, spaceUrl ) ) {
 
-            taskId = SpacesHelper.getTaskIdFromTask( updatedContext, taskName );
+            taskId = SpacesUtil.getTaskIdFromTask( updatedContext, taskName );
 
             /* register this "spaces client" to receive notifications */
             SpacesJobObserver javaSpacesJobObserver = new SpacesJobObserver( taskId );

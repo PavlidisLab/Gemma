@@ -21,7 +21,6 @@ package ubic.gemma.loader.expression.mage;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -50,7 +49,6 @@ import ubic.gemma.model.expression.experiment.FactorValue;
  * 
  * @author pavlidis
  * @version $Id$
- * @spring.bean id="mageMLConverter" singleton="false"
  */
 public class MageMLConverter extends AbstractMageTool implements Converter<Object, Object> {
 
@@ -70,18 +68,17 @@ public class MageMLConverter extends AbstractMageTool implements Converter<Objec
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.loader.loaderutils.Converter#convert(java.util.Collection)
      */
     public Collection<Object> convert( Collection<Object> objects ) {
         Package[] allPackages = Package.getPackages();
-        
+
         Arrays.sort( allPackages, new Comparator<Package>() {
             public int compare( Package o1, Package o2 ) {
                 return o1.getName().compareTo( o2.getName() );
             }
         } );
-        
+
         if ( convertedResult == null ) {
             convertedResult = new ArrayList<Object>();
             this.mageConverterHelper = new MageMLConverterHelper();
@@ -92,14 +89,10 @@ public class MageMLConverter extends AbstractMageTool implements Converter<Objec
 
         Class<?>[] preConvert = new Class<?>[] { BioAssayMap.class, Array.class, DerivedBioAssay.class,
                 MeasuredBioAssay.class, PhysicalBioAssay.class };
-        List<Class<?>> preConvertL = Arrays.asList( preConvert );        
+        List<Class<?>> preConvertL = Arrays.asList( preConvert );
         for ( Class<? extends Object> clazz : preConvertL ) {
-            processMGEDClass( objects, clazz );                
+            processMGEDClass( objects, clazz );
         }
-        
-     
-        
-        
 
         // this is a little inefficient because it tries every possible package and class. - fix is to get just
         // the mage
@@ -137,7 +130,6 @@ public class MageMLConverter extends AbstractMageTool implements Converter<Objec
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.loader.loaderutils.Converter#convert(java.lang.Object)
      */
     public Object convert( Object mageObject ) {
@@ -147,8 +139,9 @@ public class MageMLConverter extends AbstractMageTool implements Converter<Objec
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.loader.expression.mage.MageMLConverter#getBioAssayQuantitationTypeDimension(org.biomage.BioAssay.BioAssay )
+     * @see
+     * ubic.gemma.loader.expression.mage.MageMLConverter#getBioAssayQuantitationTypeDimension(org.biomage.BioAssay.BioAssay
+     * )
      */
     public List<ubic.gemma.model.common.quantitationtype.QuantitationType> getBioAssayQuantitationTypeDimension(
             BioAssay bioAssay ) {

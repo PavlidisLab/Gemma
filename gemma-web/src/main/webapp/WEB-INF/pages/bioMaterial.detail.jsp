@@ -1,16 +1,16 @@
 <%@ include file="/common/taglibs.jsp"%>
 <jsp:useBean id="bioMaterial" scope="request" class="ubic.gemma.model.expression.biomaterial.BioMaterialImpl" />
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 
 <head>
-	<title><fmt:message key="bioMaterial.details" /></title>
+	<title><fmt:message key="bioMaterial.details" />
+	</title>
 	<jwr:script src='/scripts/ajax/ext/data/DwrProxy.js' />
 	<jwr:script src='/scripts/app/bmFactorValues.js' />
 
 
 	<script type='text/javascript'>
 		Ext.namespace('Gemma');
-	Ext.onReady(function() {
+		Ext.onReady(function() {
 		Ext.QuickTips.init();
 	
 	var bmId = dwr.util.getValue("bmId");
@@ -35,48 +35,28 @@
 
 </head>
 
-<security:authorize ifAnyGranted="admin">
+<security:authorize ifAnyGranted="GROUP_ADMIN">
 	<input type="hidden" name="hasAdmin" id="hasAdmin" value="true" />
 </security:authorize>
-<security:authorize ifNotGranted="admin">
-	<input type="hidden" name="hasAdmin" id="hasAdmin" value="" />
+<security:authorize ifNotGranted="GROUP_ADMIN">
+	<input type="hidden" name="hasAdmin" id="hasAdmin" value="false" />
 </security:authorize>
 
 <h2>
-	<fmt:message key="bioMaterial.details" />
+	BioMaterial: ${bioMaterial.name} from
+	<a title="${expressionExperiment.name}" href="/Gemma/expressionExperiment/showExpressionExperiment.html?id=${expressionExperiment.id}">${expressionExperiment.shortName}</a>
 </h2>
 <table width="50%" cellspacing="5">
-	<tr>
-		<td valign="top">
-			<b> <fmt:message key="bioMaterial.name" /> </b>
-		</td>
-		<td>
-			<%
-			if ( bioMaterial.getName() != null ) {
-			%>
-			<jsp:getProperty name="bioMaterial" property="name" />
-			<%
-			                } else {
-			                out.print( "No name available" );
-			            }
-			%>
-		</td>
-	</tr>
 
 	<tr>
 		<td valign="top">
 			<b> <fmt:message key="bioMaterial.description" /> </b>
 		</td>
 		<td>
-			<%
-			if ( bioMaterial.getDescription() != null ) {
-			%>
-			<jsp:getProperty name="bioMaterial" property="description" />
-			<%
-			                } else {
-			                out.print( "Description unavailable" );
-			            }
-			%>
+			<c:choose>
+				<c:when test="${not empty bioMaterial.description}">${bioMaterial.description}</c:when>
+				<c:otherwise>Description not available</c:otherwise>
+			</c:choose>
 		</td>
 	</tr>
 
@@ -85,13 +65,10 @@
 			<b> <fmt:message key="taxon.title" /> </b>
 		</td>
 		<td>
-			<%
-			                if ( bioMaterial.getSourceTaxon() != null ) {
-			                out.print( bioMaterial.getSourceTaxon().getScientificName() );
-			            } else {
-			                out.print( "Taxon unavailable" );
-			            }
-			%>
+			<c:choose>
+				<c:when test="${not empty bioMaterial.sourceTaxon}">${bioMaterial.sourceTaxon.scientificName}</c:when>
+				<c:otherwise>Taxon not available</c:otherwise>
+			</c:choose>
 		</td>
 	</tr>
 
@@ -99,17 +76,31 @@
 		<td valign="top">
 			<b> <fmt:message key="databaseEntry.title" /> </b>
 		</td>
+
 		<td>
-			<%
-			                if ( bioMaterial.getExternalAccession() != null ) {
-			                out.print( bioMaterial.getExternalAccession().getAccession() + "."
-			                        + bioMaterial.getExternalAccession().getAccessionVersion() );
-			            } else {
-			                out.print( "No accession" );
-			            }
-			%>
+			<c:choose>
+				<c:when test="${not empty bioMaterial.externalAccession}">${bioMaterial.externalAccession.accession}</c:when>
+				<c:otherwise>No external identifier</c:otherwise>
+			</c:choose>
 		</td>
 	</tr>
+
+	<tr>
+		<td valign="top">
+			<b>Assays used in</b>
+		</td>
+		<td>
+			<ul>
+
+				<c:forEach items="${bioMaterial.bioAssaysUsedIn}" var="assay">
+					<li>
+						<a href="/Gemma/bioAssay/showBioAssay.html?id=${assay.id}">${assay.name}</a>
+					</li>
+				</c:forEach>
+			</ul>
+		</td>
+	</tr>
+
 
 </table>
 
@@ -144,16 +135,17 @@
 	<tr>
 		<td COLSPAN="2">
 			<DIV align="left">
-				<input type="button" onclick="location.href='/Gemma/expressionExperiment/showAllExpressionExperiments.html'" value="Back">
+				<input type="button" onclick="location.href='/Gemma/expressionExperiment/showAllExpressionExperiments.html'"
+					value="Back">
 			</DIV>
 		</TD>
-		<security:acl domainObject="${bioMaterial}" hasPermission="1,6">
+		<security:accesscontrollist domainObject="${bioMaterial}" hasPermission="1,6">
 			<TD COLSPAN="2">
 				<DIV align="left">
-					<input type="button" onclick="location.href='/Gemma/bioMaterial/editBioMaterial.html?id=<%=bioMaterial.getId()%>'"
+					<input type="button" onclick="location.href='/Gemma/bioMaterial/editBioMaterial.html?id=${bioMaterial.id}"
 						value="Edit">
 				</DIV>
 			</td>
-		</security:acl>
+		</security:accesscontrollist>
 	</tr>
 </table>

@@ -69,4 +69,13 @@ public class LocalFileImpl extends ubic.gemma.model.common.description.LocalFile
         return this.asFile().canWrite();
     }
 
+    /*
+     * (non-Javadoc)
+     * @see java.lang.Object#toString()
+     */
+    @Override
+    public String toString() {
+        return this.asFile() == null ? super.toString() : this.asFile().toString();
+    }
+
 }

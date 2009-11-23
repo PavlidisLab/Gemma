@@ -27,6 +27,7 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.stereotype.Controller;
 
 import ubic.gemma.util.ConfigUtils;
 
@@ -38,10 +39,10 @@ import com.sun.syndication.fetcher.impl.HashMapFeedInfoCache;
 import com.sun.syndication.fetcher.impl.HttpURLFeedFetcher;
 
 /**
- * @spring.bean id="feedReader"
  * @author paul
  * @version $Id$
  */
+@Controller
 public class FeedReader implements InitializingBean {
 
     private static final String GEMMA_HOME_FEEDURL_CONFIG_PARAM = "gemma.home.feedurl";

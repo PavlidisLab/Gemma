@@ -18,7 +18,10 @@
  */
 package ubic.gemma.analysis.expression.coexpression.links;
 
-import junit.framework.TestCase;
+import static org.junit.Assert.assertEquals;
+
+import org.junit.Test;
+
 import ubic.basecode.math.Rank;
 import cern.colt.list.DoubleArrayList;
 
@@ -26,7 +29,7 @@ import cern.colt.list.DoubleArrayList;
  * @author paul
  * @version $Id$
  */
-public class SpearmanMetricsTest extends TestCase {
+public class SpearmanMetricsTest {
 
     /**
      * Value from R; this has ties.
@@ -38,6 +41,7 @@ public class SpearmanMetricsTest extends TestCase {
      * [1] 0.9977247
      * </pre>
      */
+    @Test
     public void testCorrel() {
 
         // note the nominal tie in one (20)
@@ -65,6 +69,7 @@ public class SpearmanMetricsTest extends TestCase {
     /**
      * This tests the same values as testCorrelWithMissing, different method than testCorrelC
      */
+    @Test
     public void testCorrelB() {
         boolean[] usedA = new boolean[] { true, true, true, true, true, true, true, true, true };
         boolean[] usedB = new boolean[] { true, true, true, true, true, true, true, true, true };
@@ -87,6 +92,7 @@ public class SpearmanMetricsTest extends TestCase {
     /**
      * Without missing values, fast method (same data as testCorrelB)
      */
+    @Test
     public void testCorrelC() {
         double[] a = new double[] { 400, 310, 20, 20, 688, 498, 533, 1409, 1500 };
         double[] b = new double[] { 1545, 2072, 1113, 676, 2648, 2478, 2574, 5155, 1624 };
@@ -102,9 +108,29 @@ public class SpearmanMetricsTest extends TestCase {
         assertEquals( expectedValue, actualValue, 0.0001 );
     }
 
+    @Test
+    public void testCorrelFromRanks() {
+
+        double[] a = new double[] { 4.0, 3.0, 6.0, 1.5, 1.5, 9.0, 7.0, 8.0, 10.0, 11.0, 5.0 };
+        double[] b = new double[] { 4.0, 3.0, 6.0, 2, 1, 9, 7, 8, 10, 11, 5 };
+
+        boolean[] usedA = new boolean[] { true, true, true, true, true, true, true, true, true, true, true, true, true,
+                true, true, true };
+        boolean[] usedB = new boolean[] { true, true, true, true, true, true, true, true, true, true, true, true, true,
+                true, true, true };
+
+        SpearmanMetrics test = new SpearmanMetrics( 10 );
+
+        double actualValue = test.spearman( a, b, usedA, usedB, 0, 1 );
+        double expectedValue = 0.9977247;
+        assertEquals( expectedValue, actualValue, 0.00001 );
+
+    }
+
     /**
      * See testCorrelB for the same numbers tested a different way (with no missing values)
      */
+    @Test
     public void testCorrelWithMissing() {
 
         // note the nominal tie in one (20)
@@ -125,24 +151,6 @@ public class SpearmanMetricsTest extends TestCase {
         double actualValue = test.spearman( ranksIA.elements(), ranksIB.elements(), usedA, usedB, 0, 1 );
         double expectedValue = 0.7113033;
         assertEquals( expectedValue, actualValue, 0.0001 );
-
-    }
-
-    public void testCorrelFromRanks() {
-
-        double[] a = new double[] { 4.0, 3.0, 6.0, 1.5, 1.5, 9.0, 7.0, 8.0, 10.0, 11.0, 5.0 };
-        double[] b = new double[] { 4.0, 3.0, 6.0, 2, 1, 9, 7, 8, 10, 11, 5 };
-
-        boolean[] usedA = new boolean[] { true, true, true, true, true, true, true, true, true, true, true, true, true,
-                true, true, true };
-        boolean[] usedB = new boolean[] { true, true, true, true, true, true, true, true, true, true, true, true, true,
-                true, true, true };
-
-        SpearmanMetrics test = new SpearmanMetrics( 10 );
-
-        double actualValue = test.spearman( a, b, usedA, usedB, 0, 1 );
-        double expectedValue = 0.9977247;
-        assertEquals( expectedValue, actualValue, 0.00001 );
 
     }
 }

@@ -51,7 +51,7 @@ public abstract class ChromosomeLocationDaoBase extends org.springframework.orm.
     /**
      * @see ubic.gemma.model.genome.ChromosomeLocationDao#loadAll()
      */
-    @SuppressWarnings( { "unchecked" })
+
     public java.util.Collection loadAll() {
         return this.loadAll( TRANSFORM_NONE );
     }
@@ -107,7 +107,7 @@ public abstract class ChromosomeLocationDaoBase extends org.springframework.orm.
             throw new IllegalArgumentException( "ChromosomeLocation.update - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback() {
+                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {

@@ -1,124 +1,67 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE beans PUBLIC
-    "-//SPRING//DTD BEAN//EN"
-    "http://www.springframework.org/dtd/spring-beans.dtd">
-<!-- 
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:util="http://www.springframework.org/schema/util" xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans 
+          http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+          http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-3.0.xsd
+          http://www.springframework.org/schema/context 
+          http://www.springframework.org/schema/context/spring-context-3.0.xsd">
+	<!-- 
 	author: keshav   
 	$Id$ 
 -->
-<!-- Service for search. -->
-<beans>
-	<bean id="indexService" class="org.springframework.aop.framework.ProxyFactoryBean">
-		<property name="target">
-			<bean class="ubic.gemma.search.IndexService">
-				<property name="expressionGps">
-					<ref bean="expressionGps" />
-				</property>
-				<property name="geneGps">
-					<ref bean="geneGps" />
-				</property>
-				<property name="arrayGps">
-					<ref bean="arrayGps" />
-				</property>
-				<property name="probeGps">
-					<ref bean="probeGps" />
-				</property>
-				<property name="bibliographicGps">
-					<ref bean="bibliographicGps" />
-				</property>
-				<property name="biosequenceGps">
-					<ref bean="biosequenceGps" />
-				</property>
-				<property name="compassExpression">
-					<ref bean="compassExpression" />
-				</property>
-				<property name="compassArray">
-					<ref bean="compassArray" />
-				</property>
-				<property name="compassProbe">
-					<ref bean="compassProbe" />
-				</property>
-				<property name="compassGene">
-					<ref bean="compassGene" />
-				</property>
-				<property name="compassBiosequence">
-					<ref bean="compassBiosequence" />
-				</property>
-				<property name="compassBibliographic">
-					<ref bean="compassBibliographic" />
-				</property>
-				<property name="spacesUtil">
-					<ref bean="spacesUtil" />
-				</property>
-				<property name="taskRunningService">
-					<ref bean="taskRunningService" />
-				</property>
-			</bean>
+	<!-- Service for search. -->
+
+	<context:component-scan base-package="ubic.gemma.grid" name-generator="ubic.gemma.util.BeanNameGenerator" />
+
+	<bean id="indexService" class="ubic.gemma.search.IndexServiceImpl">
+		<property name="expressionGps">
+			<ref bean="expressionGps" />
 		</property>
-		<property name="interceptorNames">
-			<list>
-				<value>serviceSecurityInterceptor</value>
-			</list>
+		<property name="geneGps">
+			<ref bean="geneGps" />
 		</property>
-	</bean>
-	<bean id="searchService" class="ubic.gemma.search.SearchService">
-		<property name="geneService">
-			<ref bean="geneService" />
+		<property name="arrayGps">
+			<ref bean="arrayGps" />
 		</property>
-		<property name="geneProductService">
-			<ref bean="geneProductService" />
+		<property name="probeGps">
+			<ref bean="probeGps" />
 		</property>
-		<property name="gene2GOAssociationService">
-			<ref bean="gene2GOAssociationService" />
+		<property name="bibliographicGps">
+			<ref bean="bibliographicGps" />
 		</property>
-		<property name="bioSequenceService">
-			<ref bean="bioSequenceService" />
+		<property name="biosequenceGps">
+			<ref bean="biosequenceGps" />
 		</property>
-		<property name="compositeSequenceService">
-			<ref bean="compositeSequenceService" />
-		</property>
-		<property name="expressionExperimentService">
-			<ref bean="expressionExperimentService" />
-		</property>
-		<property name="arrayDesignService">
-			<ref bean="arrayDesignService" />
-		</property>
-		<property name="bibliographicReferenceService">
-			<ref bean="bibliographicReferenceService" />
-		</property>
-		<property name="geneBean">
-			<ref bean="compassGene" />
-		</property>
-		<property name="eeBean">
+		<property name="compassExpression">
 			<ref bean="compassExpression" />
 		</property>
-		<property name="arrayBean">
+		<property name="compassArray">
 			<ref bean="compassArray" />
 		</property>
-		<property name="bibliographicReferenceBean">
-			<ref bean="compassBibliographic" />
-		</property>
-		<property name="probeBean">
+		<property name="compassProbe">
 			<ref bean="compassProbe" />
 		</property>
-		<property name="biosequenceBean">
+		<property name="compassGene">
+			<ref bean="compassGene" />
+		</property>
+		<property name="compassBiosequence">
 			<ref bean="compassBiosequence" />
 		</property>
-		<property name="ontologyService">
-			<ref bean="ontologyService" />
+		<property name="compassBibliographic">
+			<ref bean="compassBibliographic" />
 		</property>
-		<property name="characteristicService">
-			<ref bean="characteristicService" />
+		<property name="spacesUtil">
+			<ref bean="spacesUtil" />
 		</property>
-		<property name="taxonService">
-			<ref bean="taxonService" />
-		</property>
-		<property name="cacheManager">
-			<ref bean="cacheManager"/>
+		<property name="taskRunningService">
+			<ref bean="taskRunningService" />
 		</property>
 	</bean>
+
+
 	<!-- Generic compass configuration beans  -->
-	<bean id="hibernateGpsDevice" class="org.compass.gps.device.hibernate.HibernateGpsDevice" singleton="false">
+	<bean id="hibernateGpsDevice" class="org.compass.gps.device.hibernate.HibernateGpsDevice" scope="prototype">
 		<property name="name" value="hibernateGpsDevice" />
 		<property name="sessionFactory" ref="sessionFactory" />
 		<property name="nativeExtractor">
@@ -135,101 +78,95 @@
 			<value>false</value>
 		</property>
 	</bean>
+
 	<bean id="expressionGps" class="org.compass.gps.impl.SingleCompassGps" init-method="start" destroy-method="stop">
 		<property name="compass">
 			<ref bean="compassExpression" />
 		</property>
 		<property name="gpsDevices">
 			<list>
-				<bean class="org.compass.spring.device.SpringSyncTransactionGpsDeviceWrapper">
-					<property name="gpsDevice" ref="hibernateGpsDevice" />
-				</bean>
+				<ref local="hibernateGpsDevice" />
 			</list>
 		</property>
 	</bean>
+
 	<bean id="geneGps" class="org.compass.gps.impl.SingleCompassGps" init-method="start" destroy-method="stop">
 		<property name="compass">
 			<ref bean="compassGene" />
 		</property>
 		<property name="gpsDevices">
 			<list>
-				<bean class="org.compass.spring.device.SpringSyncTransactionGpsDeviceWrapper">
-					<property name="gpsDevice" ref="hibernateGpsDevice" />
-				</bean>
+				<ref local="hibernateGpsDevice" />
 			</list>
 		</property>
 	</bean>
+
 	<bean id="arrayGps" class="org.compass.gps.impl.SingleCompassGps" init-method="start" destroy-method="stop">
 		<property name="compass">
 			<ref bean="compassArray" />
 		</property>
 		<property name="gpsDevices">
 			<list>
-				<bean class="org.compass.spring.device.SpringSyncTransactionGpsDeviceWrapper">
-					<property name="gpsDevice" ref="hibernateGpsDevice" />
-				</bean>
+				<ref local="hibernateGpsDevice" />
 			</list>
 		</property>
 	</bean>
-	<bean id="bibliographicGps" class="org.compass.gps.impl.SingleCompassGps" init-method="start"
-		destroy-method="stop">
+
+	<bean id="bibliographicGps" class="org.compass.gps.impl.SingleCompassGps" init-method="start" destroy-method="stop">
 		<property name="compass">
 			<ref bean="compassBibliographic" />
 		</property>
 		<property name="gpsDevices">
 			<list>
-				<bean class="org.compass.spring.device.SpringSyncTransactionGpsDeviceWrapper">
-					<property name="gpsDevice" ref="hibernateGpsDevice" />
-				</bean>
+				<ref local="hibernateGpsDevice" />
 			</list>
 		</property>
 	</bean>
+
 	<bean id="probeGps" class="org.compass.gps.impl.SingleCompassGps" init-method="start" destroy-method="stop">
 		<property name="compass">
 			<ref bean="compassProbe" />
 		</property>
 		<property name="gpsDevices">
 			<list>
-				<bean class="org.compass.spring.device.SpringSyncTransactionGpsDeviceWrapper">
-					<property name="gpsDevice" ref="hibernateGpsDevice" />
-				</bean>
+				<ref local="hibernateGpsDevice" />
 			</list>
 		</property>
 	</bean>
+
 	<bean id="biosequenceGps" class="org.compass.gps.impl.SingleCompassGps" init-method="start" destroy-method="stop">
 		<property name="compass">
 			<ref bean="compassBiosequence" />
 		</property>
 		<property name="gpsDevices">
 			<list>
-				<bean class="org.compass.spring.device.SpringSyncTransactionGpsDeviceWrapper">
-					<property name="gpsDevice" ref="hibernateGpsDevice" />
-				</bean>
+				<ref local="hibernateGpsDevice" />
 			</list>
 		</property>
 	</bean>
+
 	<!-- Details of how indexing is done -->
 	<bean id="compassExpression" class="org.compass.spring.LocalCompassBean">
 		<property name="resourceLocations">
 			<list>
-				<value>classpath:ubic/gemma/compass/expression_mappings.cpm.xml</value>
+				<value>classpath:ubic/gemma/compass/expression_mappings.cpm.xml
+				</value>
 			</list>
 		</property>
 		<property name="compassSettings">
 			<props>
-				<prop key="compass.engine.connection">file://${gemma.compass.dir}/compass/gemma/expression</prop>
+				<prop key="compass.engine.connection">file://${gemma.compass.dir}/compass/gemma/expression
+				</prop>
 				<prop key="compass.engine.lockFile">
 					file://${gemma.compass.dir}/compass/gemma/expression/expression.lock
-				</prop>
-				<prop key="compass.transaction.factory">
-					org.compass.spring.transaction.SpringSyncTransactionFactory
 				</prop>
 				<prop key="compass.transaction.lockTimeout">20</prop>
 				<prop key="compass.engine.analyzer.default.type">Snowball</prop>
 				<prop key="compass.engine.analyzer.default.name">English</prop>
 				<prop key="compass.engine.optimizer.schedule">false</prop>
-				<prop key="compass.engine.optimizer.type">org.compass.core.lucene.engine.optimizer.AggressiveOptimizer</prop>
-				<prop key="compass.engine.optimizer.aggressive.mergeFactor">5</prop> 				
+				<prop key="compass.engine.optimizer.type">org.compass.core.lucene.engine.optimizer.DefaultLuceneSearchEngineOptimizer
+				</prop>
+				<prop key="compass.engine.optimizer.aggressive.mergeFactor">5</prop>
 				<prop key="compass.engine.indexManagerScheduleInterval">-1</prop>
 				<prop key="compass.engine.mergeFactor">50</prop>
 				<prop key="compass.engine.maxBufferedDocs">50</prop>
@@ -240,6 +177,7 @@
 			<ref bean="transactionManager" />
 		</property>
 	</bean>
+
 	<bean id="compassGene" class="org.compass.spring.LocalCompassBean">
 		<property name="resourceLocations">
 			<list>
@@ -249,17 +187,16 @@
 		<property name="compassSettings">
 			<props>
 				<prop key="compass.engine.connection">file://${gemma.compass.dir}/compass/gemma/gene</prop>
-				<prop key="compass.engine.lockFile">file://${gemma.compass.dir}/compass/gemma/gene/gene.lock</prop>
-				<prop key="compass.transaction.factory">
-					org.compass.spring.transaction.SpringSyncTransactionFactory
+				<prop key="compass.engine.lockFile">file://${gemma.compass.dir}/compass/gemma/gene/gene.lock
 				</prop>
 				<prop key="compass.transaction.lockTimeout">20</prop>
 				<prop key="compass.engine.analyzer.default.type">Snowball</prop>
 				<prop key="compass.engine.analyzer.default.stopwords">+gene</prop>
 				<prop key="compass.engine.analyzer.default.name">English</prop>
 				<prop key="compass.engine.optimizer.schedule">false</prop>
-				<prop key="compass.engine.optimizer.type">org.compass.core.lucene.engine.optimizer.AggressiveOptimizer</prop>
-				<prop key="compass.engine.optimizer.aggressive.mergeFactor">5</prop> 				
+				<prop key="compass.engine.optimizer.type">org.compass.core.lucene.engine.optimizer.DefaultLuceneSearchEngineOptimizer
+				</prop>
+				<prop key="compass.engine.optimizer.aggressive.mergeFactor">5</prop>
 				<prop key="compass.engine.indexManagerScheduleInterval">-1</prop>
 				<prop key="compass.engine.mergeFactor">100</prop>
 				<prop key="compass.engine.maxBufferedDocs">100</prop>
@@ -270,25 +207,26 @@
 			<ref bean="transactionManager" />
 		</property>
 	</bean>
+
 	<bean id="compassArray" class="org.compass.spring.LocalCompassBean">
 		<property name="resourceLocations">
 			<list>
-				<value>classpath:ubic/gemma/compass/array_mappings.cpm.xml</value>
+				<value>classpath:ubic/gemma/compass/array_mappings.cpm.xml
+				</value>
 			</list>
 		</property>
 		<property name="compassSettings">
 			<props>
 				<prop key="compass.engine.connection">file://${gemma.compass.dir}/compass/gemma/array</prop>
-				<prop key="compass.engine.lockFile">file://${gemma.compass.dir}/compass/gemma/array/array.lock</prop>
-				<prop key="compass.transaction.factory">
-					org.compass.spring.transaction.SpringSyncTransactionFactory
+				<prop key="compass.engine.lockFile">file://${gemma.compass.dir}/compass/gemma/array/array.lock
 				</prop>
 				<prop key="compass.transaction.lockTimeout">20</prop>
 				<prop key="compass.engine.analyzer.default.type">Snowball</prop>
 				<prop key="compass.engine.analyzer.default.name">English</prop>
 				<prop key="compass.engine.optimizer.schedule">false</prop>
-				<prop key="compass.engine.optimizer.type">org.compass.core.lucene.engine.optimizer.AggressiveOptimizer</prop>
-				<prop key="compass.engine.optimizer.aggressive.mergeFactor">5</prop> 			
+				<prop key="compass.engine.optimizer.type">org.compass.core.lucene.engine.optimizer.DefaultLuceneSearchEngineOptimizer
+				</prop>
+				<prop key="compass.engine.optimizer.aggressive.mergeFactor">5</prop>
 				<prop key="compass.engine.indexManagerScheduleInterval">-1</prop>
 				<prop key="compass.engine.mergeFactor">50</prop>
 				<prop key="compass.engine.maxBufferedDocs">50</prop>
@@ -299,25 +237,26 @@
 			<ref bean="transactionManager" />
 		</property>
 	</bean>
+
 	<bean id="compassProbe" class="org.compass.spring.LocalCompassBean">
 		<property name="resourceLocations">
 			<list>
-				<value>classpath:ubic/gemma/compass/probe_mappings.cpm.xml</value>
+				<value>classpath:ubic/gemma/compass/probe_mappings.cpm.xml
+				</value>
 			</list>
 		</property>
 		<property name="compassSettings">
 			<props>
 				<prop key="compass.engine.connection">file://${gemma.compass.dir}/compass/gemma/probe</prop>
-				<prop key="compass.engine.lockFile">file://${gemma.compass.dir}/compass/gemma/probe/probe.lock</prop>
-				<prop key="compass.transaction.factory">
-					org.compass.spring.transaction.SpringSyncTransactionFactory
+				<prop key="compass.engine.lockFile">file://${gemma.compass.dir}/compass/gemma/probe/probe.lock
 				</prop>
 				<prop key="compass.transaction.lockTimeout">20</prop>
 				<prop key="compass.engine.analyzer.default.type">Snowball</prop>
 				<prop key="compass.engine.analyzer.default.name">English</prop>
 				<prop key="compass.engine.optimizer.schedule">false</prop>
-				<prop key="compass.engine.optimizer.type">org.compass.core.lucene.engine.optimizer.AggressiveOptimizer</prop>
-				<prop key="compass.engine.optimizer.aggressive.mergeFactor">5</prop> 				
+				<prop key="compass.engine.optimizer.type">org.compass.core.lucene.engine.optimizer.DefaultLuceneSearchEngineOptimizer
+				</prop>
+				<prop key="compass.engine.optimizer.aggressive.mergeFactor">5</prop>
 				<prop key="compass.engine.indexManagerScheduleInterval">-1</prop>
 				<prop key="compass.engine.mergeFactor">100</prop>
 				<prop key="compass.engine.maxBufferedDocs">100</prop>
@@ -328,27 +267,28 @@
 			<ref bean="transactionManager" />
 		</property>
 	</bean>
+
 	<bean id="compassBiosequence" class="org.compass.spring.LocalCompassBean">
 		<property name="resourceLocations">
 			<list>
-				<value>classpath:ubic/gemma/compass/biosequence_mappings.cpm.xml</value>
+				<value>classpath:ubic/gemma/compass/biosequence_mappings.cpm.xml
+				</value>
 			</list>
 		</property>
 		<property name="compassSettings">
 			<props>
-				<prop key="compass.engine.connection">file://${gemma.compass.dir}/compass/gemma/biosequence</prop>
+				<prop key="compass.engine.connection">file://${gemma.compass.dir}/compass/gemma/biosequence
+				</prop>
 				<prop key="compass.engine.lockFile">
 					file://${gemma.compass.dir}/compass/gemma/biosequence/biosequence.lock
-				</prop>
-				<prop key="compass.transaction.factory">
-					org.compass.spring.transaction.SpringSyncTransactionFactory
 				</prop>
 				<prop key="compass.transaction.lockTimeout">20</prop>
 				<prop key="compass.engine.analyzer.default.type">Snowball</prop>
 				<prop key="compass.engine.analyzer.default.name">English</prop>
 				<prop key="compass.engine.optimizer.schedule">false</prop>
-				<prop key="compass.engine.optimizer.type">org.compass.core.lucene.engine.optimizer.AggressiveOptimizer</prop>
-				<prop key="compass.engine.optimizer.aggressive.mergeFactor">5</prop> 				
+				<prop key="compass.engine.optimizer.type">org.compass.core.lucene.engine.optimizer.DefaultLuceneSearchEngineOptimizer
+				</prop>
+				<prop key="compass.engine.optimizer.aggressive.mergeFactor">5</prop>
 				<prop key="compass.engine.indexManagerScheduleInterval">-1</prop>
 				<prop key="compass.engine.mergeFactor">100</prop>
 				<prop key="compass.engine.maxBufferedDocs">100</prop>
@@ -359,28 +299,29 @@
 			<ref bean="transactionManager" />
 		</property>
 	</bean>
+
 	<bean id="compassBibliographic" class="org.compass.spring.LocalCompassBean">
 		<property name="resourceLocations">
 			<list>
-				<value>classpath:ubic/gemma/compass/bibliographic_mappings.cpm.xml</value>
+				<value>classpath:ubic/gemma/compass/bibliographic_mappings.cpm.xml
+				</value>
 			</list>
 		</property>
 		<property name="compassSettings">
 			<props>
-				<prop key="compass.engine.connection">file://${gemma.compass.dir}/compass/gemma/bibliographic</prop>
+				<prop key="compass.engine.connection">file://${gemma.compass.dir}/compass/gemma/bibliographic
+				</prop>
 				<prop key="compass.engine.lockFile">
 					file://${gemma.compass.dir}/compass/gemma/bibliographic/bibliographic.lock
-				</prop>
-				<prop key="compass.transaction.factory">
-					org.compass.spring.transaction.SpringSyncTransactionFactory
 				</prop>
 				<prop key="compass.transaction.lockTimeout">20</prop>
 				<prop key="compass.engine.analyzer.default.type">Snowball</prop>
 				<prop key="compass.engine.analyzer.default.stopwords">+Root</prop>
 				<prop key="compass.engine.analyzer.default.name">English</prop>
 				<prop key="compass.engine.optimizer.schedule">false</prop>
-				<prop key="compass.engine.optimizer.type">org.compass.core.lucene.engine.optimizer.AggressiveOptimizer</prop>
-				<prop key="compass.engine.optimizer.aggressive.mergeFactor">5</prop> 				
+				<prop key="compass.engine.optimizer.type">org.compass.core.lucene.engine.optimizer.DefaultLuceneSearchEngineOptimizer
+				</prop>
+				<prop key="compass.engine.optimizer.aggressive.mergeFactor">5</prop>
 				<prop key="compass.engine.indexManagerScheduleInterval">-1</prop>
 				<prop key="compass.engine.queryParser.default.defaultOperator">${gemma.search.defaultOperator}</prop>
 			</props>

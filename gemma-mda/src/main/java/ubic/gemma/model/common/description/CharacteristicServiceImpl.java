@@ -23,6 +23,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.springframework.stereotype.Service;
+
 import ubic.gemma.model.association.Gene2GOAssociationImpl;
 import ubic.gemma.model.expression.biomaterial.BioMaterialImpl;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorImpl;
@@ -34,6 +36,7 @@ import ubic.gemma.model.expression.experiment.FactorValueImpl;
  * @author Luke
  * @version $Id$
  */
+@Service
 public class CharacteristicServiceImpl extends ubic.gemma.model.common.description.CharacteristicServiceBase {
 
     private static final Class[] CLASSES_WITH_CHARACTERISTICS = new Class[] { ExpressionExperimentImpl.class,

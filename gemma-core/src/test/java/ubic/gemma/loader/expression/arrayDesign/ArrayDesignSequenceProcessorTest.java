@@ -18,15 +18,21 @@
  */
 package ubic.gemma.loader.expression.arrayDesign;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.io.File;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.zip.ZipInputStream;
 
 import org.apache.commons.lang.RandomStringUtils;
+import org.junit.Before;
+import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 
-import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.loader.expression.geo.service.AbstractGeoService;
 import ubic.gemma.loader.genome.SimpleFastaCmd;
@@ -53,46 +59,33 @@ public class ArrayDesignSequenceProcessorTest extends BaseSpringContextTest {
     InputStream probeFile;
     InputStream designElementStream;
     ArrayDesign result;
+
+    @Autowired
     ArrayDesignSequenceProcessingService app;
+
+    @Autowired
     ArrayDesignService arrayDesignService;
     Taxon taxon;
+
+    @Autowired
     BioSequenceService bss;
 
-    @Override
-    protected void onSetUpInTransaction() throws Exception {
-        super.onSetUpInTransaction();
-        endTransaction();
+    @Before
+    public void setup() throws Exception {
 
         taxon = taxonService.findByCommonName( "mouse" );
 
         // note that the name MG-U74A is not used by the result. this defines genbank ids etc.
         designElementStream = this.getClass().getResourceAsStream( "/data/loader/expression/arrayDesign/MG-U74A.txt" );
 
-        //
-        app = ( ArrayDesignSequenceProcessingService ) getBean( "arrayDesignSequenceProcessingService" );
-
         // Target sequences
         seqFile = this.getClass().getResourceAsStream( "/data/loader/expression/arrayDesign/MG-U74A_target" );
 
         probeFile = this.getClass().getResourceAsStream( "/data/loader/expression/arrayDesign/MG-U74A_probe" );
 
-        arrayDesignService = ( ArrayDesignService ) this.getBean( "arrayDesignService" );
-        bss = ( BioSequenceService ) this.getBean( "bioSequenceService" );
-
     }
 
-    @Override
-    protected void onTearDownInTransaction() throws Exception {
-        if ( result != null ) {
-            arrayDesignService.thawLite( result );
-            BioSequenceService bss = ( BioSequenceService ) this.getBean( "bioSequenceService" );
-            for ( CompositeSequence cs : result.getCompositeSequences() ) {
-                bss.remove( cs.getBiologicalCharacteristic() );
-            }
-            arrayDesignService.remove( result );
-        }
-    }
-
+    @Test
     public void testAssignSequencesToDesignElements() throws Exception {
         app.assignSequencesToDesignElements( designElements, seqFile );
         CompositeSequenceParser parser = new CompositeSequenceParser();
@@ -103,6 +96,7 @@ public class ArrayDesignSequenceProcessorTest extends BaseSpringContextTest {
         }
     }
 
+    @Test
     public void testAssignSequencesToDesignElementsMissingSequence() throws Exception {
 
         CompositeSequenceParser parser = new CompositeSequenceParser();
@@ -139,16 +133,71 @@ public class ArrayDesignSequenceProcessorTest extends BaseSpringContextTest {
 
     }
 
-    public void testProcessAffymetrixDesign() throws Exception {
-        result = app.processAffymetrixDesign( RandomStringUtils.randomAlphabetic( 10 ) + "_arraydesign", taxon,
-                designElementStream, probeFile );
+    // @SuppressWarnings("unchecked")
+    // @Test
+    // public void testBig() throws Exception {
+    // // first load the GPL88 - small
+    // AbstractGeoService geoService = ( AbstractGeoService ) this.getBean( "geoDatasetService" );
+    // geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
+    // final Collection<ArrayDesign> ads = ( Collection<ArrayDesign> ) geoService.fetchAndLoad( "GPL88", true, true,
+    // false, false, true );
+    // result = ads.iterator().next();
+    //
+    // 
+    //
+    // arrayDesignService.thawLite( result );
+    //
+    // // now do the sequences.
+    // ZipInputStream z = new ZipInputStream( this.getClass().getResourceAsStream(
+    // "/data/loader/expression/arrayDesign/RN-U34_probe_tab.zip" ) );
+    //
+    // z.getNextEntry();
+    // // tests validation of taxon
+    // Collection<BioSequence> res = app.processArrayDesign( result, z, SequenceType.AFFY_PROBE );
+    // assertEquals( 1322, res.size() );
+    // }
 
-        assertEquals( "composite sequence count", 33, result.getCompositeSequences().size() );
-        assertTrue( result.getCompositeSequences().iterator().next().getArrayDesign() == result );
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testFetchAndLoadWithIdentifiers() throws Exception {
+        String fastacmdExe = ConfigUtils.getString( SimpleFastaCmd.FASTA_CMD_ENV_VAR );
+        if ( fastacmdExe == null ) {
+            log.warn( "No fastacmd executable is configured, skipping test" );
+            return;
+        }
 
+        File fi = new File( fastacmdExe );
+        if ( !fi.canRead() ) {
+            log.warn( fastacmdExe + " not found, skipping test" );
+            return;
+        }
+
+        String path = ConfigUtils.getString( "gemma.home" );
+        AbstractGeoService geoService = ( AbstractGeoService ) this.getBean( "geoDatasetService" );
+        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path
+                + AbstractGeoServiceTest.GEO_TEST_DATA_ROOT ) );
+
+        final Collection<ArrayDesign> ads = ( Collection<ArrayDesign> ) geoService.fetchAndLoad( "GPL226", true, true,
+                false, false, true );
+        
+        result = ads.iterator().next();
+        arrayDesignService.thawLite( result );
+        // have to specify taxon as this has two taxons in it
+        InputStream f = this.getClass().getResourceAsStream( "/data/loader/expression/arrayDesign/identifierTest.txt" );
+        Collection<BioSequence> res = app.processArrayDesign( result, f, new String[] { "testblastdb",
+                "testblastdbPartTwo" }, ConfigUtils.getString( "gemma.home" )
+                + "/gemma-core/src/test/resources/data/loader/genome/blast", taxon, true );
+        assertNotNull( res );
+        for ( BioSequence sequence : res ) {
+            assertNotNull( sequence.getSequence() );
+        }
+        for ( CompositeSequence cs : result.getCompositeSequences() ) {
+            assert cs.getBiologicalCharacteristic() != null;
+        }
     }
 
     @SuppressWarnings("unchecked")
+    @Test
     public void testFetchAndLoadWithSequences() throws Exception {
 
         String path = ConfigUtils.getString( "gemma.home" );
@@ -158,6 +207,7 @@ public class ArrayDesignSequenceProcessorTest extends BaseSpringContextTest {
         final Collection<ArrayDesign> ads = ( Collection<ArrayDesign> ) geoService.fetchAndLoad( "GPL226", true, true,
                 false, false, true );
         result = ads.iterator().next();
+        
         arrayDesignService.thawLite( result );
         try {
             Collection<BioSequence> res = app.processArrayDesign( result, new String[] { "testblastdb",
@@ -176,64 +226,37 @@ public class ArrayDesignSequenceProcessorTest extends BaseSpringContextTest {
 
     }
 
-    @SuppressWarnings("unchecked")
-    public void testFetchAndLoadWithIdentifiers() throws Exception {
-        endTransaction();
-        String fastacmdExe = ConfigUtils.getString( SimpleFastaCmd.FASTA_CMD_ENV_VAR );
-        if ( fastacmdExe == null ) {
-            log.warn( "No fastacmd executable is configured, skipping test" );
-            return;
+    @Test
+    public void testMultiTaxonArray() throws Exception {
+        // This array design has not taxon so unless taxon provided will throw an exception
+        ArrayDesign ad = testHelper.getTestPersistentArrayDesign( 10, false, false );
+        
+        // as taxon provided do not check array design
+        try {
+            app.validateTaxon( taxon, ad );
+        } catch ( IllegalArgumentException e ) {
+            fail();
+        }
+        try {
+            app.validateTaxon( null, ad );
+            fail();
+        } catch ( IllegalArgumentException e ) {
+            assertTrue( e.getMessage().contains( "please specifiy which taxon to run" ) );
         }
 
-        File fi = new File( fastacmdExe );
-        if ( !fi.canRead() ) {
-            log.warn( fastacmdExe + " not found, skipping test" );
-            return;
-        }
-     
-        String path = ConfigUtils.getString( "gemma.home" );
-        AbstractGeoService geoService = ( AbstractGeoService ) this.getBean( "geoDatasetService" );
-        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path
-                + AbstractGeoServiceTest.GEO_TEST_DATA_ROOT ) );
-
-        final Collection<ArrayDesign> ads = ( Collection<ArrayDesign> ) geoService.fetchAndLoad( "GPL226", true, true,
-                false, false, true );
-        result = ads.iterator().next();
-        arrayDesignService.thawLite( result );
-        // have to specify taxon as this has two taxons in it
-        InputStream f = this.getClass().getResourceAsStream( "/data/loader/expression/arrayDesign/identifierTest.txt" );
-        Collection<BioSequence> res = app.processArrayDesign( result, f,
-                new String[] { "testblastdb", "testblastdbPartTwo" }, ConfigUtils.getString( "gemma.home" )
-                        + "/gemma-core/src/test/resources/data/loader/genome/blast", taxon, true );
-        assertNotNull( res );
-        for ( BioSequence sequence : res ) {
-            assertNotNull( sequence.getSequence() );
-        }
-        for ( CompositeSequence cs : result.getCompositeSequences() ) {
-            assert cs.getBiologicalCharacteristic() != null;
-        }
     }
 
-    @SuppressWarnings("unchecked")
-    public void testBig() throws Exception {
-        // first load the GPL88 - small
-        AbstractGeoService geoService = ( AbstractGeoService ) this.getBean( "geoDatasetService" );
-        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
-        final Collection<ArrayDesign> ads = ( Collection<ArrayDesign> ) geoService.fetchAndLoad( "GPL88", true, true,
-                false, false, true );
-        result = ads.iterator().next();
-        arrayDesignService.thawLite( result );
+    @Test
+    public void testProcessAffymetrixDesign() throws Exception {
+        result = app.processAffymetrixDesign( RandomStringUtils.randomAlphabetic( 10 ) + "_arraydesign", taxon,
+                designElementStream, probeFile );
 
-        // now do the sequences.
-        ZipInputStream z = new ZipInputStream( this.getClass().getResourceAsStream(
-                "/data/loader/expression/arrayDesign/RN-U34_probe_tab.zip" ) );
+        assertEquals( "composite sequence count", 33, result.getCompositeSequences().size() );
+        assertTrue( result.getCompositeSequences().iterator().next().getArrayDesign() == result );
 
-        z.getNextEntry();
-        //tests validation of taxon
-        Collection<BioSequence> res = app.processArrayDesign( result, z, SequenceType.AFFY_PROBE );
-        assertEquals( 1322, res.size() );
     }
 
+    @Test
     public void testProcessNonAffyDesign() throws Exception {
         result = app.processAffymetrixDesign( RandomStringUtils.randomAlphabetic( 10 ) + "_arraydesign", taxon,
                 designElementStream, probeFile );
@@ -248,24 +271,5 @@ public class ArrayDesignSequenceProcessorTest extends BaseSpringContextTest {
         // .getComponentReporters().size() );
         assertTrue( result.getCompositeSequences().iterator().next().getArrayDesign() == result );
     }
-    
-    public void testMultiTaxonArray() throws Exception {
-        //This array design has not taxon so unless taxon provided will throw an exception
-        ArrayDesign ad = testHelper.getTestPersistentArrayDesign(10, false,false);
-        //as taxon provided do not check array design
-        try {
-            app.validateTaxon( taxon, ad );
-        } catch ( IllegalArgumentException e ) {
-            fail();
-        }
-        try {
-            app.validateTaxon( null, ad );
-            fail();
-        } catch ( IllegalArgumentException e ) {
-              assertTrue(e.getMessage().contains( "please specifiy which taxon to run" ));
-        }
-
-    }
-    
 
 }

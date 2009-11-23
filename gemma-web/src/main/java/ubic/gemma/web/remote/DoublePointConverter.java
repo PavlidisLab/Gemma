@@ -22,8 +22,6 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.TreeMap;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.directwebremoting.convert.BeanConverter;
 import org.directwebremoting.dwrp.ObjectOutboundVariable;
 import org.directwebremoting.extend.MarshallException;
@@ -34,17 +32,15 @@ import org.directwebremoting.extend.Property;
 import ubic.basecode.dataStructure.DoublePoint;
 
 /**
- * Ther 8 decimal percission of a double is just a waste of bandwidth in most cases. This converter just trunks the
- * percission to 3 when the double gets converted to a string.
+ * Ther 8 decimal percission of a double is just a waste of bandwidth in most cases. This converter just truncs the
+ * precision to 3 when the double gets converted to a string.
  * 
  * @author kelsey
  * @version $Id$
  */
 public class DoublePointConverter extends BeanConverter {
 
-    private static Log log = LogFactory.getLog( DoublePointConverter.class.getName() );
-    private static int PERCISSION = 4;
-
+    @Override
     public OutboundVariable convertOutbound( Object data, OutboundContext outctx ) throws MarshallException {
 
         if ( !( data instanceof DoublePoint ) ) return super.convertOutbound( data, outctx );

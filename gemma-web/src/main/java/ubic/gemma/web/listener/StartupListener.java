@@ -25,9 +25,7 @@ import java.util.Collection;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map;
-import java.util.Set;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
@@ -38,23 +36,17 @@ import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.quartz.impl.StdScheduler;
-import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.context.ApplicationContext;
-import org.springframework.security.providers.AuthenticationProvider;
-import org.springframework.security.providers.ProviderManager;
-import org.springframework.security.providers.rememberme.RememberMeAuthenticationProvider;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.context.ContextLoaderListener;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 
 import ubic.gemma.Constants;
 import ubic.gemma.loader.genome.gene.ncbi.homology.HomologeneService;
-import ubic.gemma.model.common.auditAndSecurity.UserRole;
-import ubic.gemma.model.common.auditAndSecurity.UserService;
 import ubic.gemma.ontology.AbstractOntologyService;
 import ubic.gemma.ontology.GeneOntologyService;
 import ubic.gemma.util.CompassUtils;
 import ubic.gemma.util.ConfigUtils;
-import ubic.gemma.util.LabelValue;
 import ubic.gemma.util.QuartzUtils;
 
 /**
@@ -63,34 +55,18 @@ import ubic.gemma.util.QuartzUtils;
  * <ul>
  * <li>Theme (for styling pages)
  * <li>The version number of the application
- * <li>Whether 'remember me' functionality is enabled
- * <li>Whether and how to encrypt passwords
- * <li>Static information used to populate drop-downs, e.g., the list of user roles
+ * <li>Ontologies that need to be preloaded.
+ * <li>Google analytics tracking
  * </ul>
+ * It also performs some initial setup needed to allow the compute grid to work, making sure the jar files are all
+ * available.
  * 
  * @author keshav
  * @author pavlidis
- * @author <a href="mailto:matt@raibledesigns.com">Matt Raible</a> (original version)
+ * @author Matt Raible (original version)
  * @version $Id$
  */
 public class StartupListener extends ContextLoaderListener {
-
-    /**
-     * Configuration parameter for lib directory. FIXME: move to ConfigUtil
-     */
-    private static final String GEMMA_LIB_DIR = "gemma.lib.dir";
-
-    /**
-     * Key for the tracker ID in your configuration file. Tracker id for Google is something like 'UA-12441-1'. In your
-     * Gemma.properties file add a line like:
-     * 
-     * <pre>
-     * ga.tracker = UA_123456_1
-     * </pre>
-     * 
-     * FIXME: move to ConfigUtils
-     */
-    private static final String ANALYTICS_TRACKER_PROPERTY = "ga.tracker";
 
     /**
      * The style to be used if one is not defined in web.xml.
@@ -100,36 +76,6 @@ public class StartupListener extends ContextLoaderListener {
     private static final Log log = LogFactory.getLog( StartupListener.class );
 
     private static final String[] modules = new String[] { "core", "mda", "util" };
-
-    /**
-     * This is used to get information from the system that does not change and which can be reused throughout -
-     * typically used in drop-down menus.
-     * 
-     * @param context
-     */
-    public static void populateDropDowns( ServletContext context ) {
-        log.debug( "Populating drop-downs..." );
-        ApplicationContext ctx = WebApplicationContextUtils.getRequiredWebApplicationContext( context );
-
-        // mimic the functionality of the LookupManager in Appfuse.
-        UserService mgr = ( UserService ) ctx.getBean( "userService" );
-        Set<LabelValue> roleList = new HashSet<LabelValue>();
-
-        // get list of possible roles, used to populate admin tool where roles can be altered.
-        Collection<UserRole> roles = mgr.loadAllRoles();
-        for ( UserRole role : roles ) {
-            roleList.add( new LabelValue( role.getName(), role.getName() ) );
-        }
-
-        context.setAttribute( Constants.AVAILABLE_ROLES, roleList );
-
-        if ( log.isDebugEnabled() ) {
-            log.debug( "Drop-down initialization complete [OK]" );
-        }
-
-        assert ( context.getAttribute( Constants.AVAILABLE_ROLES ) != null );
-
-    }
 
     /*
      * (non-Javadoc)
@@ -145,6 +91,7 @@ public class StartupListener extends ContextLoaderListener {
         // all the context files specified in web.xml
         super.contextInitialized( event );
 
+        // /
         ServletContext servletContext = event.getServletContext();
 
         Map<String, Object> config = initializeConfiguration( servletContext );
@@ -156,14 +103,12 @@ public class StartupListener extends ContextLoaderListener {
         loadTrackerInformation( config );
 
         ApplicationContext ctx = WebApplicationContextUtils.getRequiredWebApplicationContext( servletContext );
+        
+        SecurityContextHolder.setStrategyName( SecurityContextHolder.MODE_INHERITABLETHREADLOCAL );
 
         CompassUtils.deleteCompassLocks();
 
-        loadRememberMeStatus( config, ctx );
-
         servletContext.setAttribute( Constants.CONFIG, config );
-
-        populateDropDowns( servletContext );
 
         if ( ConfigUtils.isGridEnabled() ) copyWorkerJars( servletContext );
 
@@ -180,14 +125,37 @@ public class StartupListener extends ContextLoaderListener {
     }
 
     /**
+     * Remove old jars from the dir.
+     * 
+     * @param targetLibdir
+     */
+    private void clearOldJars( File targetLibdir ) {
+        File[] oldJars = targetLibdir.listFiles( new FilenameFilter() {
+            public boolean accept( File dir, String name ) {
+                if ( name.endsWith( ".jar" ) ) {
+                    return true;
+                }
+                return false;
+            }
+        } );
+        for ( File jar : oldJars ) {
+            if ( !jar.delete() ) {
+                log.warn( "Unable to delete: " + jar );
+            }
+        }
+    }
+
+    /**
      * @param ctx
      */
     private void configureScheduler( ApplicationContext ctx ) {
         if ( !ConfigUtils.isSchedulerEnabled() ) {
             QuartzUtils.disableQuartzScheduler( ( StdScheduler ) ctx.getBean( "schedulerFactoryBean" ) );
             log.info( "Quartz scheduling disabled.  Set quartzOn=true in Gemma.properties to enable" );
-        } else
+        } else {
             log.info( "Quartz scheduling enableded.  Set quartzOn=false in Gemma.properties to disable" );
+        }
+
     }
 
     /**
@@ -202,7 +170,7 @@ public class StartupListener extends ContextLoaderListener {
         String version = appConfig.get( "version" );
 
         File targetLibdir = null;
-        String libpath = ConfigUtils.getString( GEMMA_LIB_DIR );
+        String libpath = ConfigUtils.getLibDirectoryPath();
         if ( StringUtils.isNotBlank( libpath ) ) {
             targetLibdir = new File( libpath );
             if ( !targetLibdir.exists() ) {
@@ -332,27 +300,6 @@ public class StartupListener extends ContextLoaderListener {
     }
 
     /**
-     * Remove old jars from the dir.
-     * 
-     * @param targetLibdir
-     */
-    private void clearOldJars( File targetLibdir ) {
-        File[] oldJars = targetLibdir.listFiles( new FilenameFilter() {
-            public boolean accept( File dir, String name ) {
-                if ( name.endsWith( ".jar" ) ) {
-                    return true;
-                }
-                return false;
-            }
-        } );
-        for ( File jar : oldJars ) {
-            if ( !jar.delete() ) {
-                log.warn( "Unable to delete: " + jar );
-            }
-        }
-    }
-
-    /**
      * @param context
      * @return
      */
@@ -369,6 +316,15 @@ public class StartupListener extends ContextLoaderListener {
     }
 
     /**
+     * @param ctx
+     */
+    private void initializeHomologene( ApplicationContext ctx ) {
+        HomologeneService ho = ( HomologeneService ) ctx.getBean( "homologeneService" );
+        ho.init( false );
+
+    }
+
+    /**
      * Intialize ontologies as configured by the user's configuration file (Gemma.properties).
      * <p>
      * FIXME make this smarter so it can figure this out without hard-coding ontology names.
@@ -380,41 +336,13 @@ public class StartupListener extends ContextLoaderListener {
         GeneOntologyService go = ( GeneOntologyService ) ctx.getBean( "geneOntologyService" );
         go.init( false );
 
-        String[] otherOntologies = new String[] { "mged", "disease", "fma", "birnLex", "chebi" };
+        String[] otherOntologies = new String[] { "mged", "disease", "fMA", "birnLex", "chebi" };
 
         for ( String ont : otherOntologies ) {
             AbstractOntologyService os = ( AbstractOntologyService ) ctx.getBean( ont + "OntologyService" );
             os.init( false );
         }
 
-    }
-
-    private void initializeHomologene( ApplicationContext ctx ) {
-        HomologeneService ho = ( HomologeneService ) ctx.getBean( "homologeneService" );
-        ho.init( false );
-
-    }
-
-    /**
-     * @param config
-     * @param ctx
-     */
-    @SuppressWarnings("unchecked")
-    private void loadRememberMeStatus( Map<String, Object> config, ApplicationContext ctx ) {
-        try {
-            ProviderManager provider = ( ProviderManager ) ctx.getBean( "authenticationManager" );
-            for ( Iterator<AuthenticationProvider> it = provider.getProviders().iterator(); it.hasNext(); ) {
-                AuthenticationProvider p = it.next();
-                if ( p instanceof RememberMeAuthenticationProvider ) {
-                    config.put( "rememberMeEnabled", Boolean.TRUE );
-                    log.debug( "Remember Me is enabled" );
-                    break;
-                }
-            }
-
-        } catch ( NoSuchBeanDefinitionException n ) {
-            // ignore, should only happen when testing
-        }
     }
 
     /**
@@ -439,7 +367,7 @@ public class StartupListener extends ContextLoaderListener {
      * @param config
      */
     private void loadTrackerInformation( Map<String, Object> config ) {
-        String gaTrackerKey = ConfigUtils.getString( ANALYTICS_TRACKER_PROPERTY );
+        String gaTrackerKey = ConfigUtils.getAnalyticsKey();
         if ( StringUtils.isNotBlank( gaTrackerKey ) ) {
             log.debug( "Tracker is " + gaTrackerKey );
             config.put( "ga.tracker", gaTrackerKey );

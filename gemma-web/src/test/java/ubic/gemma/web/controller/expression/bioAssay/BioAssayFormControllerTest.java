@@ -18,22 +18,27 @@
  */
 package ubic.gemma.web.controller.expression.bioAssay;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.junit.Before;
+import org.junit.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.web.servlet.ModelAndView;
 
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.model.expression.bioAssay.BioAssayService;
-import ubic.gemma.testing.BaseSpringContextTest;
+import ubic.gemma.model.expression.bioAssay.BioAssayService; 
+import ubic.gemma.testing.BaseSpringWebTest;
 
 /**
  * @author keshav
  * @version $Id$
  */
-public class BioAssayFormControllerTest extends BaseSpringContextTest {
+public class BioAssayFormControllerTest extends BaseSpringWebTest {
 
     private Log log = LogFactory.getLog( this.getClass() );
     private MockHttpServletRequest request = null;
@@ -45,11 +50,9 @@ public class BioAssayFormControllerTest extends BaseSpringContextTest {
      * 
      * @throws Exception
      */
-    @SuppressWarnings("unchecked")
-    @Override
-    public void onSetUpInTransaction() throws Exception {
-        super.onSetUpInTransaction();
-        endTransaction();
+    @Before
+    public void setup() throws Exception {
+
         ArrayDesign ad = this.getTestPersistentArrayDesign( 10, true, false, true ); // readonly.
         ba = this.getTestPersistentBioAssay( ad );
         BioAssayService bas = ( BioAssayService ) getBean( "bioAssayService" );
@@ -59,25 +62,8 @@ public class BioAssayFormControllerTest extends BaseSpringContextTest {
     /**
      * @throws Exception
      */
-    public void testFormBackingObject() throws Exception {
-        endTransaction();
-        log.debug( "testing formBackingObject" );
-        BioAssayFormController c = ( BioAssayFormController ) getBean( "bioAssayFormController" );
-
-        request = new MockHttpServletRequest( "GET", "/bioAssay/editBioAssay.html" );
-        request.addParameter( "id", ba.getId().toString() );
-
-        BioAssay b = ( BioAssay ) c.formBackingObject( request );
-
-        assertNotNull( b );
-
-    }
-
-    /**
-     * @throws Exception
-     */
+    @Test
     public void testEdit() throws Exception {
-        endTransaction();
         log.debug( "testing edit" );
 
         BioAssayFormController c = ( BioAssayFormController ) getBean( "bioAssayFormController" );
@@ -89,6 +75,23 @@ public class BioAssayFormControllerTest extends BaseSpringContextTest {
 
         assertEquals( "bioAssay.edit", mav.getViewName() );
 
-        // setComplete();
+        // 
+    }
+
+    /**
+     * @throws Exception
+     */
+    @Test
+    public void testFormBackingObject() throws Exception {
+        log.debug( "testing formBackingObject" );
+        BioAssayFormController c = ( BioAssayFormController ) getBean( "bioAssayFormController" );
+
+        request = new MockHttpServletRequest( "GET", "/bioAssay/editBioAssay.html" );
+        request.addParameter( "id", ba.getId().toString() );
+
+        BioAssay b = ( BioAssay ) c.formBackingObject( request );
+
+        assertNotNull( b );
+
     }
 }

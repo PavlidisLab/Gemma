@@ -18,60 +18,35 @@
  */
 package ubic.gemma.model.genome;
 
+import org.springframework.security.access.annotation.Secured;
+
 /**
- * 
+ * @author kelsey
+ * @version $Id$
  */
 public interface TaxonService {
 
-    /**
-     * 
-     */
     public ubic.gemma.model.genome.Taxon find( ubic.gemma.model.genome.Taxon taxon );
 
-    /**
-     * 
-     */
+    public ubic.gemma.model.genome.Taxon findByAbbreviation( java.lang.String abbreviation );
+
     public ubic.gemma.model.genome.Taxon findByCommonName( java.lang.String commonName );
 
-    /**
-     * 
-     */
-    public ubic.gemma.model.genome.Taxon findByAbbreviation( java.lang.String abbreviation );
-    
-    
-    /**
-     * 
-     */
     public ubic.gemma.model.genome.Taxon findByScientificName( java.lang.String scientificName );
 
-    /**
-     * 
-     */
+    public java.util.Collection<Taxon> findChildTaxaByParent( Taxon parentTaxon );
+
+    @Secured( { "GROUP_USER" })
     public ubic.gemma.model.genome.Taxon findOrCreate( ubic.gemma.model.genome.Taxon taxon );
 
-    /**
-     * 
-     */
     public ubic.gemma.model.genome.Taxon load( java.lang.Long id );
 
-    /**
-     * 
-     */
-    public java.util.Collection loadAll();
+    public java.util.Collection<Taxon> loadAll();
 
-    /**
-     * 
-     */
+    @Secured( { "GROUP_USER" })
     public void remove( ubic.gemma.model.genome.Taxon taxon );
 
-    /**
-     * 
-     */
+    @Secured( { "GROUP_USER" })
     public void update( ubic.gemma.model.genome.Taxon taxon );
 
-    /**
-     * 
-     */
-    public java.util.Collection<Taxon> findChildTaxaByParent(Taxon parentTaxon);
-    
 }

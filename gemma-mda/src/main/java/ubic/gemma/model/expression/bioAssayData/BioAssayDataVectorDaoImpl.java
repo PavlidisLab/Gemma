@@ -18,12 +18,22 @@
  */
 package ubic.gemma.model.expression.bioAssayData;
 
+import org.hibernate.SessionFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
+
 /**
  * @author pavlidis
  * @version $Id$
  * @see ubic.gemma.model.expression.bioAssayData.BioAssayDataVector
  */
+@Repository
 public class BioAssayDataVectorDaoImpl extends ubic.gemma.model.expression.bioAssayData.BioAssayDataVectorDaoBase {
+
+    @Autowired
+    public BioAssayDataVectorDaoImpl( SessionFactory sessionFactory ) {
+        super.setSessionFactory( sessionFactory );
+    }
 
     /*
      * (non-Javadoc)

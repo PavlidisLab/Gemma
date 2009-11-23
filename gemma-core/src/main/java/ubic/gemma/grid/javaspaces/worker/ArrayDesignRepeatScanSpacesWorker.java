@@ -18,12 +18,11 @@
  */
 package ubic.gemma.grid.javaspaces.worker;
 
-import org.springframework.security.context.SecurityContextHolder;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import ubic.gemma.grid.javaspaces.AbstractSpacesWorkerCLI;
 import ubic.gemma.grid.javaspaces.CustomDelegatingWorker;
-import ubic.gemma.grid.javaspaces.analysis.sequence.ArrayDesignRepeatScanTask;
-import ubic.gemma.util.SecurityUtil;
+import ubic.gemma.grid.javaspaces.task.analysis.sequence.ArrayDesignRepeatScanTask; 
 
 /**
  * @author keshav
@@ -71,8 +70,6 @@ public class ArrayDesignRepeatScanSpacesWorker extends AbstractSpacesWorkerCLI {
      */
     public static void main( String[] args ) {
         log.info( "Starting spaces worker to run array design repeat scan ... \n" );
-
-        SecurityUtil.passAuthenticationToChildThreads();
 
         ArrayDesignRepeatScanSpacesWorker p = new ArrayDesignRepeatScanSpacesWorker();
         try {

@@ -24,6 +24,8 @@ import java.util.Collection;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.springframework.stereotype.Service;
+
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 
@@ -34,7 +36,16 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
  * @version $Id$
  * @see ubic.gemma.model.expression.bioAssay.BioAssayService
  */
+@Service
 public class BioAssayServiceImpl extends ubic.gemma.model.expression.bioAssay.BioAssayServiceBase {
+
+    /*
+     * (non-Javadoc)
+     * @see ubic.gemma.model.expression.bioAssay.BioAssayService#create(ubic.gemma.model.expression.bioAssay.BioAssay)
+     */
+    public BioAssay create( BioAssay bioAssay ) {
+        return this.getBioAssayDao().create( bioAssay );
+    }
 
     /*
      * (non-Javadoc)
@@ -102,7 +113,7 @@ public class BioAssayServiceImpl extends ubic.gemma.model.expression.bioAssay.Bi
      */
     @Override
     protected Collection<BioAssay> handleLoadAll() throws Exception {
-        return this.getBioAssayDao().loadAll();
+        return ( Collection<BioAssay> ) this.getBioAssayDao().loadAll();
     }
 
     /**
@@ -165,14 +176,6 @@ public class BioAssayServiceImpl extends ubic.gemma.model.expression.bioAssay.Bi
     @Override
     protected void handleUpdate( BioAssay bioAssay ) throws Exception {
         this.getBioAssayDao().update( bioAssay );
-    }
-
-    /*
-     * (non-Javadoc)
-     * @see ubic.gemma.model.expression.bioAssay.BioAssayService#create(ubic.gemma.model.expression.bioAssay.BioAssay)
-     */
-    public BioAssay create( BioAssay bioAssay ) {
-        return this.getBioAssayDao().create( bioAssay );
     }
 
 }

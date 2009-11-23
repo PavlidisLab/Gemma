@@ -38,26 +38,6 @@ public class FastaParserTest extends TestCase {
     InputStream f;
     InputStream g;
 
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
-        f = FastaParserTest.class.getResourceAsStream( "/data/loader/genome/testsequence.fa" );
-        g = FastaParserTest.class.getResourceAsStream( "/data/loader/genome/testsequence.fa" );
-    }
-
-    public void testParseNIA() throws Exception {
-        InputStream n = FastaParserTest.class.getResourceAsStream( "/data/loader/genome/nia15k.sample.fa" );
-        FastaParser p = new FastaParser();
-        p.parse( n );
-        Collection<BioSequence> actualResult = p.getResults();
-        assertNotNull( actualResult );
-        assertEquals( 2, actualResult.size() );
-        for ( Object object : actualResult ) {
-            BioSequence b = ( BioSequence ) object;
-            log.debug( "NAME=" + b.getName() + " DESC=" + b.getDescription() + " SEQ=" + b.getSequence() );
-        }
-    }
-
     public void testParsecodelink() throws Exception {
         InputStream n = FastaParserTest.class.getResourceAsStream( "/data/loader/genome/codelink.testsequence.txt" );
         FastaParser p = new FastaParser();
@@ -127,6 +107,26 @@ public class FastaParserTest extends TestCase {
             BioSequence b = ( BioSequence ) object;
             log.debug( "NAME=" + b.getName() + " DESC=" + b.getDescription() + " SEQ=" + b.getSequence() );
         }
+    }
+
+    public void testParseNIA() throws Exception {
+        InputStream n = FastaParserTest.class.getResourceAsStream( "/data/loader/genome/nia15k.sample.fa" );
+        FastaParser p = new FastaParser();
+        p.parse( n );
+        Collection<BioSequence> actualResult = p.getResults();
+        assertNotNull( actualResult );
+        assertEquals( 2, actualResult.size() );
+        for ( Object object : actualResult ) {
+            BioSequence b = ( BioSequence ) object;
+            log.debug( "NAME=" + b.getName() + " DESC=" + b.getDescription() + " SEQ=" + b.getSequence() );
+        }
+    }
+
+    @Override
+    protected void setUp() throws Exception {
+        super.setUp();
+        f = FastaParserTest.class.getResourceAsStream( "/data/loader/genome/testsequence.fa" );
+        g = FastaParserTest.class.getResourceAsStream( "/data/loader/genome/testsequence.fa" );
     }
 
 }

@@ -20,6 +20,7 @@ package ubic.gemma.analysis.expression.diff;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.basecode.util.RClient;
 import ubic.basecode.util.RConnectionFactory;
@@ -28,7 +29,6 @@ import ubic.gemma.analysis.service.ExpressionDataMatrixService;
 /**
  * An abstract analyzer to be extended by analyzers which will make use of R.
  * 
- * @spring.property name="expressionDataMatrixService" ref="expressionDataMatrixService"
  * @author keshav
  * @version $Id$
  */
@@ -38,6 +38,7 @@ public abstract class AbstractAnalyzer {
 
     protected RClient rc = null;
 
+    @Autowired
     protected ExpressionDataMatrixService expressionDataMatrixService = null;
 
     /**

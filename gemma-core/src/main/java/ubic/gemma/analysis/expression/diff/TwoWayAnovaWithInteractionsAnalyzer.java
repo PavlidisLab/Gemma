@@ -27,6 +27,8 @@ import java.util.List;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Service;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.util.TwoWayAnovaResult;
@@ -52,11 +54,12 @@ import ubic.gemma.model.expression.experiment.FactorValue;
  * <p>
  * qvalue(pvals)$qvalues
  * 
- * @spring.bean id="twoWayAnovaWithInteractionsAnalyzer"
  * @author keshav
  * @version $Id$
  * @see AbstractTwoWayAnovaAnalyzer
  */
+@Service
+@Scope(value="prototype")
 public class TwoWayAnovaWithInteractionsAnalyzer extends AbstractTwoWayAnovaAnalyzer {
 
     private Log log = LogFactory.getLog( this.getClass() );
@@ -158,6 +161,7 @@ public class TwoWayAnovaWithInteractionsAnalyzer extends AbstractTwoWayAnovaAnal
         effects.add( experimentalFactorB );
         writePValuesHistogram( anovaResult.getPvalues(), expressionExperiment, effects );
 
+        disconnectR();
         log.info( "R analysis done" );
         return createExpressionAnalysis( dmatrix, mainEffectAPvalues, mainEffectBPvalues, interactionEffectPvalues,
                 anovaResult.getStatistics(), NUM_RESULTS_FROM_R, experimentalFactorA, experimentalFactorB,
@@ -167,9 +171,9 @@ public class TwoWayAnovaWithInteractionsAnalyzer extends AbstractTwoWayAnovaAnal
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.analysis.expression.diff.AbstractDifferentialExpressionAnalyzer#generateHistograms(java.lang.String,
-     *      java.util.ArrayList, int, int, int, double[])
+     * @see
+     * ubic.gemma.analysis.expression.diff.AbstractDifferentialExpressionAnalyzer#generateHistograms(java.lang.String,
+     * java.util.ArrayList, int, int, int, double[])
      */
     @Override
     protected Collection<Histogram> generateHistograms( String histFileName, ArrayList<ExperimentalFactor> effects,

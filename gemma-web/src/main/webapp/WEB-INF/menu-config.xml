@@ -27,7 +27,7 @@
 			<Item name="Platforms in Gemma" description="View the list of expression platforms" title="menu.arrays"
 				page="/arrays/showAllArrayDesigns.html" />
 		</Menu>
-		<Menu name="UserMenu" title="My Gemma" roles="admin,user">
+		<Menu name="UserMenu" title="My Gemma" roles="GROUP_ADMIN,GROUP_USER">
 			<Item name="EeCurate" title="Manage data" page="/expressionExperiment/showAllExpressionExperimentLinkSummaries.html" />
 			<Item name="Upload data" description="Upload your expression data" title="menu.uploaddata" page="/expressionExperiment/upload.html" />
 			<Item name="UserMenu" title="menu.user" description="User Menu" page="/userProfile.html" />
@@ -40,17 +40,13 @@
 				location="http://www.chibi.ubc.ca/Gemma/resources/downloads.html" />
 			<Item name="For developers" description="About the Gemma framework" title="resourcesMenu.software"
 				location="http://www.chibi.ubc.ca/Gemma/resources/" />
-			<Item name="Credits" description="Credits and more" title="resourcesMenu.credits"
-				location="http://www.chibi.ubc.ca/Gemma/resources/thanks.html" />
+			<Item name="Credits" description="Credits and more" title="resourcesMenu.credits" location="http://www.chibi.ubc.ca/Gemma/resources/thanks.html" />
 		</Menu>
-		<Menu name="AdminMenu" title="menu.admin" description="Admin Menu" roles="admin">
-			<Item name="LoadData" title="Add data" description="Import from GEO or ArrayExpress" page="/loadExpressionExperiment.html" />
-			<Item name="BrowseGeo" title="Browse GEO" page="/geoBrowser/showBatch.html" />
+		<Menu name="AdminMenu" title="menu.admin" description="Admin Menu" roles="GROUP_ADMIN">
+			<Item name="LoadData" title="Add data" description="Import from GEO or ArrayExpress" page="/admin/loadExpressionExperiment.html" />
+			<Item name="BrowseGeo" title="Browse GEO" page="/admin/geoBrowser/showBatch.html" />
 			<Item name="CharBrowse" title="Search annotations" page="/characteristicBrowser.html" />
-			<Item name="ViewUsers" title="menu.admin.users" page="/userManager.html" />
-			<Item name="ReloadContext" title="menu.admin.reload" page="/reload.html" />
-			<Item name="FlushCache" title="menu.flushCache" page="/flushCache.html" />
-<!--			<Item name="Clickstream" title="menu.clickstream" page="/clickstreams.jsp" /> -->
+			<Item name="ViewUsers" title="menu.admin.users" page="/admin/userManager.html" /> 
 		</Menu>
 	</Menus>
 </MenuConfig>

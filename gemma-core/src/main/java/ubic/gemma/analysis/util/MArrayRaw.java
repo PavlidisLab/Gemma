@@ -58,8 +58,7 @@ public class MArrayRaw extends RCommander {
      * @param greenBg Matrix of green background intensities, can be null
      * @param weights Optional matrix of weights
      * @return The name of the variable in the R context.
-     */
-    @SuppressWarnings("unchecked")
+     */ 
     public String makeMArrayRaw( DoubleMatrix<String, String> red, DoubleMatrix<String, String> green,
             DoubleMatrix<String, String> redBg, DoubleMatrix<String, String> greenBg,
             DoubleMatrix<String, String> weights ) {

@@ -21,6 +21,9 @@ package ubic.gemma.loader.expression.arrayDesign;
 import java.io.FileNotFoundException;
 import java.util.Collection;
 
+import org.junit.Before;
+import org.springframework.beans.factory.annotation.Autowired;
+
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.loader.expression.geo.service.AbstractGeoService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -36,20 +39,23 @@ import ubic.gemma.testing.BaseSpringContextTest;
 public abstract class AbstractArrayDesignProcessingTest extends BaseSpringContextTest {
 
     static ArrayDesign ad;
+
+    @Autowired
     ArrayDesignService arrayDesignService;
+
     final static String ACCESSION = "GPL140";
+
+    public ArrayDesign getAd() {
+        return ad;
+    }
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.testing.BaseSpringContextTest#onSetUp()
      */
-    @Override
     @SuppressWarnings("unchecked")
-    protected void onSetUpInTransaction() throws Exception {
-        super.onSetUpInTransaction();
-        endTransaction();
-        arrayDesignService = ( ArrayDesignService ) this.getBean( "arrayDesignService" );
+    @Before
+    public void setupArrayDesign() throws Exception {
         ad = arrayDesignService.findByShortName( ACCESSION );
 
         if ( ad == null ) {
@@ -61,9 +67,10 @@ public abstract class AbstractArrayDesignProcessingTest extends BaseSpringContex
             try {
                 final Collection<ArrayDesign> ads = ( Collection<ArrayDesign> ) geoService.fetchAndLoad( ACCESSION,
                         true, true, false, false, true );
-
+                
                 ad = ads.iterator().next();
                 arrayDesignService.thawLite( ad );
+                
             } catch ( Exception e ) {
                 if ( e.getCause() instanceof FileNotFoundException ) {
                     log.warn( "problem with initializing array design for test: " + e.getCause().getMessage() );
@@ -73,10 +80,6 @@ public abstract class AbstractArrayDesignProcessingTest extends BaseSpringContex
             }
         }
 
-    }
-
-    public ArrayDesign getAd() {
-        return ad;
     }
 
 }

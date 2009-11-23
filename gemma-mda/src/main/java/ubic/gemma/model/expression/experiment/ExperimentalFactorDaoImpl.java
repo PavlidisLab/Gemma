@@ -21,15 +21,24 @@ package ubic.gemma.model.expression.experiment;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
+import org.hibernate.SessionFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
 
 import ubic.gemma.util.BusinessKey;
 
 /**
  * @see ubic.gemma.model.expression.experiment.ExperimentalFactor
  */
+@Repository
 public class ExperimentalFactorDaoImpl extends ubic.gemma.model.expression.experiment.ExperimentalFactorDaoBase {
 
     private static Log log = LogFactory.getLog( ExperimentalFactorDaoImpl.class.getName() );
+
+    @Autowired
+    public ExperimentalFactorDaoImpl( SessionFactory sessionFactory ) {
+        super.setSessionFactory( sessionFactory );
+    }
 
     /*
      * (non-Javadoc)
@@ -37,12 +46,13 @@ public class ExperimentalFactorDaoImpl extends ubic.gemma.model.expression.exper
      * ubic.gemma.model.expression.experiment.ExperimentalFactorDaoBase#find(ubic.gemma.model.expression.experiment.
      * ExperimentalFactor)
      */
+    @SuppressWarnings("unchecked")
     @Override
     public ExperimentalFactor find( ExperimentalFactor experimentalFactor ) {
         try {
 
             BusinessKey.checkValidKey( experimentalFactor );
-            Criteria queryObject = super.getSession( false ).createCriteria( ExperimentalFactor.class );
+            Criteria queryObject = super.getSession().createCriteria( ExperimentalFactor.class );
             BusinessKey.addRestrictions( queryObject, experimentalFactor );
 
             java.util.List results = queryObject.list();
@@ -77,6 +87,6 @@ public class ExperimentalFactorDaoImpl extends ubic.gemma.model.expression.exper
             return existing;
         }
         log.debug( "Creating new arrayDesign: " + experimentalFactor.getName() );
-        return ( ExperimentalFactor ) create( experimentalFactor );
+        return create( experimentalFactor );
     }
 }

@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.expression.experiment;
 
+import org.springframework.beans.factory.annotation.Autowired;
+
 /**
  * <p>
  * Spring Service base class for <code>ubic.gemma.model.expression.experiment.ExperimentalFactorService</code>, provides
@@ -26,9 +28,10 @@ package ubic.gemma.model.expression.experiment;
  * 
  * @see ubic.gemma.model.expression.experiment.ExperimentalFactorService
  */
-public abstract class ExperimentalFactorServiceBase extends ubic.gemma.model.common.AuditableServiceImpl implements
+public abstract class ExperimentalFactorServiceBase implements
         ubic.gemma.model.expression.experiment.ExperimentalFactorService {
 
+    @Autowired
     private ubic.gemma.model.expression.experiment.ExperimentalFactorDao experimentalFactorDao;
 
     /**

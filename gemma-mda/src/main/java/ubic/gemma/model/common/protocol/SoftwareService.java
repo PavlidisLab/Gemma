@@ -18,8 +18,11 @@
  */
 package ubic.gemma.model.common.protocol;
 
+import org.springframework.security.access.annotation.Secured;
+
 /**
- * 
+ * @author kelsey
+ * @version $Id$
  */
 public interface SoftwareService {
 
@@ -31,16 +34,19 @@ public interface SoftwareService {
     /**
      * 
      */
+    @Secured( { "GROUP_USER" })
     public ubic.gemma.model.common.protocol.Software findOrCreate( ubic.gemma.model.common.protocol.Software software );
 
     /**
      * 
      */
+    @Secured( { "GROUP_USER" })
     public void remove( ubic.gemma.model.common.protocol.Software software );
 
     /**
      * 
      */
+    @Secured( { "GROUP_USER" })
     public void update( ubic.gemma.model.common.protocol.Software software );
 
 }

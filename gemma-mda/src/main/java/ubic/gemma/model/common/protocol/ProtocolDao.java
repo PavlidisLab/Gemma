@@ -18,75 +18,20 @@
  */
 package ubic.gemma.model.common.protocol;
 
+import org.springframework.stereotype.Repository;
+
+import ubic.gemma.persistence.BaseDao;
+
 /**
  * @see ubic.gemma.model.common.protocol.Protocol
  */
-public interface ProtocolDao extends ubic.gemma.model.common.protocol.ParameterizableDao<Protocol> {
-    /**
-     * <p>
-     * Does the same thing as {@link #find(boolean, ubic.gemma.model.common.protocol.Protocol)} with an additional
-     * argument called <code>queryString</code>. This <code>queryString</code> argument allows you to override the query
-     * string defined in {@link #find(int, ubic.gemma.model.common.protocol.Protocol protocol)}.
-     * </p>
-     */
-    public Protocol find( int transform, String queryString, ubic.gemma.model.common.protocol.Protocol protocol );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #find(ubic.gemma.model.common.protocol.Protocol)} with an additional flag called
-     * <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then finder results will
-     * <strong>NOT</strong> be transformed during retrieval. If this flag is any of the other constants defined here
-     * then finder results <strong>WILL BE</strong> passed through an operation which can optionally transform the
-     * entities (into value objects for example). By default, transformation does not occur.
-     * </p>
-     */
-    public Protocol find( int transform, ubic.gemma.model.common.protocol.Protocol protocol );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #find(ubic.gemma.model.common.protocol.Protocol)} with an additional argument
-     * called <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string
-     * defined in {@link #find(ubic.gemma.model.common.protocol.Protocol)}.
-     * </p>
-     */
-    public ubic.gemma.model.common.protocol.Protocol find( String queryString,
-            ubic.gemma.model.common.protocol.Protocol protocol );
+@Repository
+public interface ProtocolDao extends BaseDao<Protocol> {
 
     /**
      * 
      */
     public ubic.gemma.model.common.protocol.Protocol find( ubic.gemma.model.common.protocol.Protocol protocol );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findOrCreate(boolean, ubic.gemma.model.common.protocol.Protocol)} with an
-     * additional argument called <code>queryString</code>. This <code>queryString</code> argument allows you to
-     * override the query string defined in {@link #findOrCreate(int, ubic.gemma.model.common.protocol.Protocol
-     * protocol)}.
-     * </p>
-     */
-    public Protocol findOrCreate( int transform, String queryString, ubic.gemma.model.common.protocol.Protocol protocol );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findOrCreate(ubic.gemma.model.common.protocol.Protocol)} with an additional flag
-     * called <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then finder results will
-     * <strong>NOT</strong> be transformed during retrieval. If this flag is any of the other constants defined here
-     * then finder results <strong>WILL BE</strong> passed through an operation which can optionally transform the
-     * entities (into value objects for example). By default, transformation does not occur.
-     * </p>
-     */
-    public Protocol findOrCreate( int transform, ubic.gemma.model.common.protocol.Protocol protocol );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findOrCreate(ubic.gemma.model.common.protocol.Protocol)} with an additional
-     * argument called <code>queryString</code>. This <code>queryString</code> argument allows you to override the query
-     * string defined in {@link #findOrCreate(ubic.gemma.model.common.protocol.Protocol)}.
-     * </p>
-     */
-    public ubic.gemma.model.common.protocol.Protocol findOrCreate( String queryString,
-            ubic.gemma.model.common.protocol.Protocol protocol );
 
     /**
      * 

@@ -18,9 +18,13 @@
  */
 package ubic.gemma.loader.expression.arrayDesign;
 
+import static org.junit.Assert.assertEquals;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
+
+import org.junit.Test;
 
 import ubic.gemma.apps.Blat;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
@@ -40,6 +44,7 @@ public class ArrayDesignSequenceAlignmentServiceIntegrationTest extends Abstract
      * {@link ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceAlignmentService#processArrayDesign(ubic.gemma.model.expression.arrayDesign.ArrayDesign, ubic.gemma.model.genome.Taxon)}
      * .
      */
+    @Test
     public final void testProcessArrayDesign() throws Exception {
         if ( ad == null ) return;
         String gfClientExe = ConfigUtils.getString( "gfClient.exe" );
@@ -79,10 +84,10 @@ public class ArrayDesignSequenceAlignmentServiceIntegrationTest extends Abstract
                 // blat presumably isn't running.
                 log.warn( "Blat server not available? Skipping test" );
                 return;
-            } else {
-                throw e;
             }
+            throw e;
         }
+
     }
 
 }

@@ -32,7 +32,6 @@ import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 /**
  * Base class for persisters, provides session management.
  * 
- * @spring.property name="sessionFactory" ref="sessionFactory"
  * @author pavlidis
  * @version $Id$
  */
@@ -55,10 +54,9 @@ public abstract class AbstractPersister extends HibernateDaoSupport implements P
      */
     public static final int MINIMUM_COLLECTION_SIZE_FOR_NOTFICATIONS = 500;
 
-    /**
-     * This is here only to allow optimization of hibernate.
-     */
-    protected SessionFactory sessionFactory;
+    public AbstractPersister( SessionFactory sessionFactory ) {
+        super.setSessionFactory( sessionFactory );
+    }
 
     /*
      * @see ubic.gemma.model.loader.loaderutils.Loader#create(java.util.Collection)
@@ -139,7 +137,7 @@ public abstract class AbstractPersister extends HibernateDaoSupport implements P
         return count;
     }
 
-    protected int numElementsPerUpdate( Collection col ) {
+    protected int numElementsPerUpdate( Collection<?> col ) {
         if ( col == null || col.size() < COLLECTION_INFO_FREQUENCY ) return Integer.MAX_VALUE;
         return Math.max( ( int ) Math.ceil( col.size() / ( double ) COLLECTION_INFO_FREQUENCY ), 20 );
     }
@@ -152,7 +150,7 @@ public abstract class AbstractPersister extends HibernateDaoSupport implements P
      * @param collection
      * @return
      */
-    protected void persistCollectionElements( Collection collection ) {
+    protected void persistCollectionElements( Collection<?> collection ) {
         if ( collection == null ) return;
         if ( collection.size() == 0 ) return;
 
@@ -183,7 +181,7 @@ public abstract class AbstractPersister extends HibernateDaoSupport implements P
      * @param collection
      * @return
      */
-    protected void persistOrUpdateCollectionElements( Collection collection ) {
+    protected void persistOrUpdateCollectionElements( Collection<?> collection ) {
         if ( collection == null ) return;
         if ( collection.size() == 0 ) return;
 

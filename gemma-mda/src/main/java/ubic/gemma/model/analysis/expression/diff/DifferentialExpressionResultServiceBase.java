@@ -20,6 +20,8 @@ package ubic.gemma.model.analysis.expression.diff;
 
 import java.util.Collection;
 
+import org.springframework.beans.factory.annotation.Autowired;
+
 import ubic.gemma.model.analysis.expression.ProbeAnalysisResult;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 
@@ -35,8 +37,10 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 public abstract class DifferentialExpressionResultServiceBase implements
         ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultService {
 
+    @Autowired
     private ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultDao differentialExpressionAnalysisResultDao;
 
+    @Autowired
     private ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSetDao expressionAnalysisResultSetDao;
 
     /**

@@ -18,14 +18,15 @@
  */
 package ubic.gemma.model.common.protocol;
 
+import org.springframework.stereotype.Service;
+
 /**
- * <hr>
- * 
  * @author keshav
  * @author pavlidis
  * @version $Id$
  * @see ubic.gemma.model.common.protocol.SoftwareService
  */
+@Service
 public class SoftwareServiceImpl extends ubic.gemma.model.common.protocol.SoftwareServiceBase {
 
     /**

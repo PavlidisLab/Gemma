@@ -40,7 +40,6 @@ public class AuditTrailImpl extends ubic.gemma.model.common.auditAndSecurity.Aud
      * @see ubic.gemma.model.common.auditAndSecurity.AuditTrail#addEvent(ubic.gemma.model.common.auditAndSecurity.AuditEvent)
      */
     @Override
-    @SuppressWarnings("unchecked")
     public void addEvent( AuditEvent event ) {
         if ( event == null ) throw new IllegalArgumentException( "AuditEvent cannot be null" );
         assert this.getEvents() != null;
@@ -56,7 +55,11 @@ public class AuditTrailImpl extends ubic.gemma.model.common.auditAndSecurity.Aud
         if ( this.getEvents().size() == 0 ) {
             return null;
         }
-        return ( ( List<AuditEvent> ) this.getEvents() ).get( 0 );
+        AuditEvent auditEvent = ( ( List<AuditEvent> ) this.getEvents() ).get( 0 );
+
+        assert auditEvent.getAction().equals( AuditAction.CREATE );
+
+        return auditEvent;
     }
 
     /**

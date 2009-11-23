@@ -39,6 +39,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.validation.BindException;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.ServletRequestDataBinder;
+import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
@@ -75,34 +76,47 @@ import ubic.gemma.web.util.ConfigurationCookie;
  * 
  * @author keshav
  * @version $Id$
- * @spring.bean id="expressionExperimentVisualizationFormController"
- * @spring.property name = "commandName" value="expressionExperimentVisualizationCommand"
- * @spring.property name = "commandClass"
- *                  value="ubic.gemma.web.controller.visualization.ExpressionExperimentVisualizationCommand"
- * @spring.property name = "formView" value="expressionExperimentVisualizationForm"
- * @spring.property name = "successView" value="showExpressionExperimentVisualization"
- * @spring.property name = "expressionExperimentService" ref="expressionExperimentService"
- * @spring.property name = "compositeSequenceService" ref="compositeSequenceService"
- * @spring.property name = "designElementDataVectorService" ref="designElementDataVectorService"
- * @spring.property name = "compositeSequenceGeneMapperService" ref="compositeSequenceGeneMapperService"
- * @spring.property name="bioAssayService" ref="bioAssayService"
- * @spring.property name = "validator" ref="genericBeanValidator"
  */
+@Deprecated
 public class ExpressionExperimentVisualizationFormController extends BaseFormController {
+
+    /**
+     * @author keshav
+     */
+    class ExpressionExperimentVisualizationCookie extends ConfigurationCookie {
+
+        public ExpressionExperimentVisualizationCookie( ExpressionExperimentVisualizationCommand command ) {
+
+            super( COOKIE_NAME );
+
+            log.debug( "creating cookie" );
+
+            this.setProperty( "searchString", command.getSearchString() );
+            this.setProperty( "viewSampling", command.isViewSampling() );
+            this.setProperty( "maskMissing", command.isMaskMissing() );
+            this.setProperty( SEARCH_CRITERIA, command.getSearchCriteria() );
+            this.setProperty( "quantitationTypeName", command.getQuantitationType().getName() );
+
+            /* set cookie to expire after 2 days. */
+            this.setMaxAge( 172800 );
+            this.setComment( "User selections for visualization form" );
+        }
+
+    }
 
     private static final String SEARCH_CRITERIA = "searchCriteria";
 
     private static Log log = LogFactory.getLog( ExpressionExperimentVisualizationFormController.class.getName() );
-
     public static final String SEARCH_BY_PROBE = "probe set id";
     public static final String SEARCH_BY_GENE = "gene symbol";
     private static final String COOKIE_NAME = "expressionExperimentVisualizationCookie";
-    private static final int MAX_ELEMENTS_TO_VISUALIZE = 200;
 
+    private static final int MAX_ELEMENTS_TO_VISUALIZE = 200;
     protected ExpressionExperimentService expressionExperimentService = null;
     protected CompositeSequenceService compositeSequenceService = null;
     protected DesignElementDataVectorService designElementDataVectorService;
     protected CompositeSequenceGeneMapperService compositeSequenceGeneMapperService = null;
+
     protected BioAssayService bioAssayService = null;
 
     public ExpressionExperimentVisualizationFormController() {
@@ -114,172 +128,12 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
 
     /**
      * @param request
-     * @return Object
-     * @throws ServletException
-     */
-    @Override
-    protected Object formBackingObject( HttpServletRequest request ) {
-
-        Long id = null;
-        try {
-            id = Long.parseLong( request.getParameter( "id" ) );
-        } catch ( NumberFormatException e ) {
-            throw new RuntimeException( "Id was not valid Long integer", e );
-        }
-
-        ExpressionExperiment ee = null;
-        ExpressionExperimentVisualizationCommand eevc = new ExpressionExperimentVisualizationCommand();
-
-        if ( id != null && StringUtils.isNotBlank( id.toString() ) ) {
-            ee = expressionExperimentService.load( id );
-        } else {
-            ee = ExpressionExperiment.Factory.newInstance();
-        }
-
-        eevc.setExpressionExperimentId( ee.getId() );
-        eevc.setName( ee.getName() );
-
-        if ( StringUtils.isBlank( request.getParameter( SEARCH_CRITERIA ) ) ) {
-            eevc = loadCookie( request, eevc );
-        }
-
-        return eevc;
-
-    }
-
-    /**
-     * A cookie to store the user preferences.
-     * 
-     * @param request
-     * @param eevc
-     * @return ExpressionExperimentVisualizationCommand
-     */
-    private ExpressionExperimentVisualizationCommand loadCookie( HttpServletRequest request,
-            ExpressionExperimentVisualizationCommand eevc ) {
-
-        Collection<QuantitationType> quantitationTypes = getContinuousQuantitationTypes( request );
-
-        /*
-         * If we don't have any cookies, just return. We probably won't get this situation as we'll always have at least
-         * one cookie (the one with the JSESSION ID).
-         */
-        if ( request == null || request.getCookies() == null ) {
-            return null;
-        }
-
-        for ( Cookie cook : request.getCookies() ) {
-            if ( cook.getName().equals( COOKIE_NAME ) ) {
-                try {
-                    ConfigurationCookie cookie = new ConfigurationCookie( cook );
-                    eevc.setSearchString( cookie.getString( "searchString" ) );
-                    eevc.setSearchCriteria( cookie.getString( SEARCH_CRITERIA ) );
-                    eevc.setViewSampling( cookie.getBoolean( "viewSampling" ) );
-                    eevc.setMaskMissing( cookie.getBoolean( "maskMissing" ) );
-
-                    /* determine which quantitation type was previously selected */
-                    String qtName = cookie.getString( "quantitationTypeName" );
-                    for ( QuantitationType qt : quantitationTypes ) {
-                        if ( StringUtils.equals( qtName, qt.getName() ) ) {
-                            eevc.setQuantitationType( qt );
-                            return eevc;
-                        }
-                    }
-                } catch ( Exception e ) {
-                    log.warn( "Cookie could not be loaded: " + e.getMessage() );
-                    // that's okay, we just don't get a cookie.
-                }
-            }
-        }
-
-        /* If we've come this far, we have a cookie but not one that matches COOKIE_NAME. Provide friendly defaults. */
-        if ( quantitationTypes.size() > 0 ) {
-            QuantitationType qt = quantitationTypes.iterator().next();
-            eevc.setQuantitationType( qt );
-        } else {
-            throw new RuntimeException( "No continuous-valued quantitation types" );
-        }
-
-        eevc.setSearchString( "gene symbol 1, gene symbol 2" );
-
-        eevc.setViewSampling( true );
-        return eevc;
-    }
-
-    /**
-     * 
-     */
-    @Override
-    protected void initBinder( HttpServletRequest request, ServletRequestDataBinder binder ) {
-        super.initBinder( request, binder );
-        binder.registerCustomEditor( QuantitationType.class, new QuantitationTypePropertyEditor(
-                getContinuousQuantitationTypes( request ) ) );
-    }
-
-    /**
-     * Populates drop downs.
-     * 
-     * @param request
-     * @return Map
-     */
-    @Override
-    protected Map referenceData( HttpServletRequest request ) {
-
-        Map<String, List<? extends Object>> searchByMap = new HashMap<String, List<? extends Object>>();
-        List<String> searchCategories = new ArrayList<String>();
-        searchCategories.add( SEARCH_BY_GENE );
-        searchCategories.add( SEARCH_BY_PROBE );
-        searchByMap.put( "searchCategories", searchCategories );
-
-        Collection<QuantitationType> types = getContinuousQuantitationTypes( request );
-        List<QuantitationType> listedTypes = new ArrayList<QuantitationType>();
-        listedTypes.addAll( types );
-
-        searchByMap.put( "quantitationTypes", listedTypes );
-
-        return searchByMap;
-    }
-
-    /**
-     * @param request
      * @param response
      * @param command
      * @param errors
      * @return ModelAndView
      * @throws Exception
-     */
-    @SuppressWarnings("unchecked")
-    @Override
-    public ModelAndView processFormSubmission( HttpServletRequest request, HttpServletResponse response,
-            Object command, BindException errors ) throws Exception {
-
-        ExpressionExperimentVisualizationCommand eevc = ( ( ExpressionExperimentVisualizationCommand ) command );
-        Long id = eevc.getExpressionExperimentId();
-
-        if ( request.getParameter( "cancel" ) != null ) {
-            log.info( "Cancelled" );
-
-            if ( id != null ) {
-                return new ModelAndView( new RedirectView(
-                        "/Gemma/expressionExperiment/showExpressionExperiment.html?id=" + id ) );
-            }
-
-            log.warn( "Cannot find details view due to null id.  Redirecting to overview" );
-            return new ModelAndView( new RedirectView( "/Gemma/expressionExperiment/showAllExpressionExperiments.html" ) );
-
-        }
-
-        return super.processFormSubmission( request, response, command, errors );
-    }
-
-    /**
-     * @param request
-     * @param response
-     * @param command
-     * @param errors
-     * @return ModelAndView
-     * @throws Exception
-     */
-    @SuppressWarnings( { "unused", "unchecked" })
+     */ 
     @Override
     public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
             BindException errors ) throws Exception {
@@ -355,17 +209,103 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
     }
 
     /**
-     * @param expressionDataMatrix
-     * @return
+     * @param request
+     * @param response
+     * @param command
+     * @param errors
+     * @return ModelAndView
+     * @throws Exception
      */
     @SuppressWarnings("unchecked")
-    private Map<CompositeSequence, Collection<Gene>> getGenes( ExpressionDataDoubleMatrix expressionDataMatrix ) {
-        Collection<CompositeSequence> css = new HashSet<CompositeSequence>();
-        for ( ExpressionDataMatrixRowElement el : expressionDataMatrix.getRowElements() ) {
-            CompositeSequence cs = ( CompositeSequence ) el.getDesignElement();
-            css.add( cs );
+    @Override
+    public ModelAndView processFormSubmission( HttpServletRequest request, HttpServletResponse response,
+            Object command, BindException errors ) throws Exception {
+
+        ExpressionExperimentVisualizationCommand eevc = ( ( ExpressionExperimentVisualizationCommand ) command );
+        Long id = eevc.getExpressionExperimentId();
+
+        if ( request.getParameter( "cancel" ) != null ) {
+            log.info( "Cancelled" );
+
+            if ( id != null ) {
+                return new ModelAndView( new RedirectView(
+                        "/Gemma/expressionExperiment/showExpressionExperiment.html?id=" + id ) );
+            }
+
+            log.warn( "Cannot find details view due to null id.  Redirecting to overview" );
+            return new ModelAndView( new RedirectView( "/Gemma/expressionExperiment/showAllExpressionExperiments.html" ) );
+
         }
-        return compositeSequenceService.getGenes( css );
+
+        return super.processFormSubmission( request, response, command, errors );
+    }
+
+    public void setBioAssayService( BioAssayService bioAssayService ) {
+        this.bioAssayService = bioAssayService;
+    }
+
+    /**
+     * @param compositeSequenceGeneMapperService The compositeSequenceGeneMapperService to set.
+     */
+    public void setCompositeSequenceGeneMapperService(
+            CompositeSequenceGeneMapperService compositeSequenceGeneMapperService ) {
+        this.compositeSequenceGeneMapperService = compositeSequenceGeneMapperService;
+    }
+
+    /**
+     * @param compositeSequenceService
+     */
+    public void setCompositeSequenceService( CompositeSequenceService compositeSequenceService ) {
+        this.compositeSequenceService = compositeSequenceService;
+    }
+
+    /**
+     * @param designElementDataVectorService
+     */
+    public void setDesignElementDataVectorService( DesignElementDataVectorService designElementDataVectorService ) {
+        this.designElementDataVectorService = designElementDataVectorService;
+    }
+
+    /**
+     * @param expressionExperimentService
+     */
+    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
+        this.expressionExperimentService = expressionExperimentService;
+    }
+
+    /**
+     * @param request
+     * @return Object
+     * @throws ServletException
+     */
+    @Override
+    protected Object formBackingObject( HttpServletRequest request ) {
+
+        Long id = null;
+        try {
+            id = Long.parseLong( request.getParameter( "id" ) );
+        } catch ( NumberFormatException e ) {
+            throw new RuntimeException( "Id was not valid Long integer", e );
+        }
+
+        ExpressionExperiment ee = null;
+        ExpressionExperimentVisualizationCommand eevc = new ExpressionExperimentVisualizationCommand();
+
+        if ( id != null && StringUtils.isNotBlank( id.toString() ) ) {
+            ee = expressionExperimentService.load( id );
+        } else {
+            ee = ExpressionExperiment.Factory.newInstance();
+        }
+
+        eevc.setExpressionExperimentId( ee.getId() );
+        eevc.setName( ee.getName() );
+
+        if ( StringUtils.isBlank( request.getParameter( SEARCH_CRITERIA ) ) ) {
+            eevc = loadCookie( request, eevc );
+        }
+
+        return eevc;
+
     }
 
     /**
@@ -445,23 +385,38 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
     }
 
     /**
-     * @param arrayDesigns
-     * @param searchIdsAsList
-     * @return
+     * 
      */
-    private Collection<CompositeSequence> getProbesByGeneSymbols( Collection<ArrayDesign> arrayDesigns,
-            List<String> searchIdsAsList ) {
-        Collection<CompositeSequence> compositeSequences;
-        Map<Gene, Collection<CompositeSequence>> genes2Probes = compositeSequenceGeneMapperService
-                .getGene2ProbeMapByOfficialSymbols( searchIdsAsList, arrayDesigns );
+    @Override
+    @InitBinder
+    protected void initBinder( HttpServletRequest request, ServletRequestDataBinder binder ) {
+        super.initBinder( binder );
+        binder.registerCustomEditor( QuantitationType.class, new QuantitationTypePropertyEditor(
+                getContinuousQuantitationTypes( request ) ) );
+    }
 
-        compositeSequences = new HashSet<CompositeSequence>();
-        for ( Gene g : genes2Probes.keySet() ) {
-            compositeSequences.addAll( genes2Probes.get( g ) );
-            log.debug( "gene official symbol: " + g.getOfficialSymbol() + " has " + compositeSequences.size()
-                    + " composite sequences associated with it." );
-        }
-        return compositeSequences;
+    /**
+     * Populates drop downs.
+     * 
+     * @param request
+     * @return Map
+     */
+    @Override
+    protected Map referenceData( HttpServletRequest request ) {
+
+        Map<String, List<? extends Object>> searchByMap = new HashMap<String, List<? extends Object>>();
+        List<String> searchCategories = new ArrayList<String>();
+        searchCategories.add( SEARCH_BY_GENE );
+        searchCategories.add( SEARCH_BY_PROBE );
+        searchByMap.put( "searchCategories", searchCategories );
+
+        Collection<QuantitationType> types = getContinuousQuantitationTypes( request );
+        List<QuantitationType> listedTypes = new ArrayList<QuantitationType>();
+        listedTypes.addAll( types );
+
+        searchByMap.put( "quantitationTypes", listedTypes );
+
+        return searchByMap;
     }
 
     /**
@@ -489,60 +444,95 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
     }
 
     /**
-     * @param compositeSequenceService
+     * @param expressionDataMatrix
+     * @return
      */
-    public void setCompositeSequenceService( CompositeSequenceService compositeSequenceService ) {
-        this.compositeSequenceService = compositeSequenceService;
+    @SuppressWarnings("unchecked")
+    private Map<CompositeSequence, Collection<Gene>> getGenes( ExpressionDataDoubleMatrix expressionDataMatrix ) {
+        Collection<CompositeSequence> css = new HashSet<CompositeSequence>();
+        for ( ExpressionDataMatrixRowElement el : expressionDataMatrix.getRowElements() ) {
+            CompositeSequence cs = ( CompositeSequence ) el.getDesignElement();
+            css.add( cs );
+        }
+        return compositeSequenceService.getGenes( css );
     }
 
     /**
-     * @param designElementDataVectorService
+     * @param arrayDesigns
+     * @param searchIdsAsList
+     * @return
      */
-    public void setDesignElementDataVectorService( DesignElementDataVectorService designElementDataVectorService ) {
-        this.designElementDataVectorService = designElementDataVectorService;
+    private Collection<CompositeSequence> getProbesByGeneSymbols( Collection<ArrayDesign> arrayDesigns,
+            List<String> searchIdsAsList ) {
+        Collection<CompositeSequence> compositeSequences;
+        Map<Gene, Collection<CompositeSequence>> genes2Probes = compositeSequenceGeneMapperService
+                .getGene2ProbeMapByOfficialSymbols( searchIdsAsList, arrayDesigns );
+
+        compositeSequences = new HashSet<CompositeSequence>();
+        for ( Gene g : genes2Probes.keySet() ) {
+            compositeSequences.addAll( genes2Probes.get( g ) );
+            log.debug( "gene official symbol: " + g.getOfficialSymbol() + " has " + compositeSequences.size()
+                    + " composite sequences associated with it." );
+        }
+        return compositeSequences;
     }
 
     /**
-     * @param expressionExperimentService
+     * A cookie to store the user preferences.
+     * 
+     * @param request
+     * @param eevc
+     * @return ExpressionExperimentVisualizationCommand
      */
-    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
-        this.expressionExperimentService = expressionExperimentService;
-    }
+    private ExpressionExperimentVisualizationCommand loadCookie( HttpServletRequest request,
+            ExpressionExperimentVisualizationCommand eevc ) {
 
-    /**
-     * @param compositeSequenceGeneMapperService The compositeSequenceGeneMapperService to set.
-     */
-    public void setCompositeSequenceGeneMapperService(
-            CompositeSequenceGeneMapperService compositeSequenceGeneMapperService ) {
-        this.compositeSequenceGeneMapperService = compositeSequenceGeneMapperService;
-    }
+        Collection<QuantitationType> quantitationTypes = getContinuousQuantitationTypes( request );
 
-    /**
-     * @author keshav
-     */
-    class ExpressionExperimentVisualizationCookie extends ConfigurationCookie {
-
-        public ExpressionExperimentVisualizationCookie( ExpressionExperimentVisualizationCommand command ) {
-
-            super( COOKIE_NAME );
-
-            log.debug( "creating cookie" );
-
-            this.setProperty( "searchString", command.getSearchString() );
-            this.setProperty( "viewSampling", command.isViewSampling() );
-            this.setProperty( "maskMissing", command.isMaskMissing() );
-            this.setProperty( SEARCH_CRITERIA, command.getSearchCriteria() );
-            this.setProperty( "quantitationTypeName", command.getQuantitationType().getName() );
-
-            /* set cookie to expire after 2 days. */
-            this.setMaxAge( 172800 );
-            this.setComment( "User selections for visualization form" );
+        /*
+         * If we don't have any cookies, just return. We probably won't get this situation as we'll always have at least
+         * one cookie (the one with the JSESSION ID).
+         */
+        if ( request == null || request.getCookies() == null ) {
+            return null;
         }
 
-    }
+        for ( Cookie cook : request.getCookies() ) {
+            if ( cook.getName().equals( COOKIE_NAME ) ) {
+                try {
+                    ConfigurationCookie cookie = new ConfigurationCookie( cook );
+                    eevc.setSearchString( cookie.getString( "searchString" ) );
+                    eevc.setSearchCriteria( cookie.getString( SEARCH_CRITERIA ) );
+                    eevc.setViewSampling( cookie.getBoolean( "viewSampling" ) );
+                    eevc.setMaskMissing( cookie.getBoolean( "maskMissing" ) );
 
-    public void setBioAssayService( BioAssayService bioAssayService ) {
-        this.bioAssayService = bioAssayService;
+                    /* determine which quantitation type was previously selected */
+                    String qtName = cookie.getString( "quantitationTypeName" );
+                    for ( QuantitationType qt : quantitationTypes ) {
+                        if ( StringUtils.equals( qtName, qt.getName() ) ) {
+                            eevc.setQuantitationType( qt );
+                            return eevc;
+                        }
+                    }
+                } catch ( Exception e ) {
+                    log.warn( "Cookie could not be loaded: " + e.getMessage() );
+                    // that's okay, we just don't get a cookie.
+                }
+            }
+        }
+
+        /* If we've come this far, we have a cookie but not one that matches COOKIE_NAME. Provide friendly defaults. */
+        if ( quantitationTypes.size() > 0 ) {
+            QuantitationType qt = quantitationTypes.iterator().next();
+            eevc.setQuantitationType( qt );
+        } else {
+            throw new RuntimeException( "No continuous-valued quantitation types" );
+        }
+
+        eevc.setSearchString( "gene symbol 1, gene symbol 2" );
+
+        eevc.setViewSampling( true );
+        return eevc;
     }
 }
 

@@ -20,10 +20,10 @@
 package ubic.gemma.model.association.coexpression;
 
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Map;
 
-import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoImpl.ProbeLink;
+import org.springframework.stereotype.Service;
+
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
@@ -33,112 +33,36 @@ import ubic.gemma.model.genome.Gene;
  * @versio n$Id$
  * @author paul
  */
+@Service
 public class Probe2ProbeCoexpressionServiceImpl extends
         ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionServiceBase {
 
-    /**
-     * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService#create(ubic.gemma.model.association.coexpression.Probe2ProbeCoexpression)
-     */
+    public java.util.Collection<ProbeLink> getProbeCoExpression(
+            ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment, java.lang.String taxon ) {
+        return this.getProbe2ProbeCoexpressionDao().getProbeCoExpression( expressionExperiment, taxon, false );
+    }
+
+    public Collection<ProbeLink> getTopCoexpressedLinks( ExpressionExperiment ee, double threshold, Integer limit ) {
+        return this.getProbe2ProbeCoexpressionDao().getTopCoexpressedLinks( ee, threshold, limit );
+    }
+
+    public Collection<Long> validateProbesInCoexpression( Collection<Long> queryProbeIds,
+            Collection<Long> coexpressedProbeIds, ExpressionExperiment ee, String taxon ) {
+        return this.getProbe2ProbeCoexpressionDao().validateProbesInCoexpression( queryProbeIds, coexpressedProbeIds,
+                ee, taxon );
+    }
+
     @Override
-    protected ubic.gemma.model.association.coexpression.Probe2ProbeCoexpression handleCreate(
-            ubic.gemma.model.association.coexpression.Probe2ProbeCoexpression p2pCoexpression )
-            throws java.lang.Exception {
-
-        if ( p2pCoexpression instanceof RatProbeCoExpression )
-            return ( RatProbeCoExpression ) this.getRatProbeCoExpressionDao().create(
-                    ( RatProbeCoExpression ) p2pCoexpression );
-        else if ( p2pCoexpression instanceof MouseProbeCoExpression )
-            return ( MouseProbeCoExpression ) this.getMouseProbeCoExpressionDao().create(
-                    ( MouseProbeCoExpression ) p2pCoexpression );
-        else if ( p2pCoexpression instanceof HumanProbeCoExpression )
-            return ( HumanProbeCoExpression ) this.getHumanProbeCoExpressionDao().create(
-                    ( HumanProbeCoExpression ) p2pCoexpression );
-        else if ( p2pCoexpression instanceof OtherProbeCoExpression )
-            return ( OtherProbeCoExpression ) this.getOtherProbeCoExpressionDao().create(
-                    ( OtherProbeCoExpression ) p2pCoexpression );
-        else
-            throw new java.lang.Exception( "p2pCoexpression isn't of a known type. don't know how to create."
-                    + p2pCoexpression );
-
+    protected Integer handleCountLinks( ExpressionExperiment expressionExperiment ) throws Exception {
+        return this.getProbe2ProbeCoexpressionDao().countLinks( expressionExperiment );
     }
 
     /**
      * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionServiceBase#handleCreate(java.util.Collection)
      */
     @Override
-    protected java.util.List handleCreate( java.util.List p2pExpressions ) throws java.lang.Exception {
+    protected Collection handleCreate( Collection p2pExpressions ) throws java.lang.Exception {
         return this.getProbe2ProbeCoexpressionDao().create( p2pExpressions );
-    }
-
-    /**
-     * Performs the core logic for {@link #delete(ubic.gemma.model.association.coexpression.Probe2ProbeCoexpression)}
-     */
-    @Override
-    protected void handleDelete( ubic.gemma.model.association.coexpression.Probe2ProbeCoexpression toDelete )
-            throws java.lang.Exception {
-
-        if ( toDelete instanceof RatProbeCoExpression )
-            this.getRatProbeCoExpressionDao().remove( ( RatProbeCoExpression ) toDelete );
-        else if ( toDelete instanceof MouseProbeCoExpression )
-            this.getMouseProbeCoExpressionDao().remove( ( MouseProbeCoExpression ) toDelete );
-        else if ( toDelete instanceof HumanProbeCoExpression )
-            this.getHumanProbeCoExpressionDao().remove( ( HumanProbeCoExpression ) toDelete );
-        else if ( toDelete instanceof OtherProbeCoExpression )
-            this.getOtherProbeCoExpressionDao().remove( ( OtherProbeCoExpression ) toDelete );
-        else
-            throw new IllegalArgumentException( "Collection contains objects that it can't persist:"
-                    + toDelete.getClass() + " no service method for persisting." );
-
-        return;
-
-    }
-
-    /**
-     * Performs the core logic for {@link #delete(java.util.Collection)}
-     */
-    @Override
-    protected void handleDelete( java.util.Collection deletes ) throws java.lang.Exception {
-
-        if ( !this.validCollection( deletes ) ) return;
-
-        Object check = deletes.iterator().next();
-
-        if ( check instanceof RatProbeCoExpression )
-            this.getRatProbeCoExpressionDao().remove( deletes );
-        else if ( check instanceof MouseProbeCoExpression )
-            this.getMouseProbeCoExpressionDao().remove( deletes );
-        else if ( check instanceof HumanProbeCoExpression )
-            this.getHumanProbeCoExpressionDao().remove( deletes );
-        else if ( check instanceof OtherProbeCoExpression )
-            this.getOtherProbeCoExpressionDao().remove( deletes );
-        else
-            throw new IllegalArgumentException( "Collection contains objects that it can't persist:" + check.getClass()
-                    + " no service method for persisting." );
-
-        return;
-
-    }
-
-    private Boolean validCollection( java.util.Collection p2pExpressions ) throws IllegalArgumentException {
-        // sanity check.
-        if ( ( p2pExpressions == null ) || ( p2pExpressions.size() == 0 ) ) return false;
-
-        // Make sure that the collections passed in is all of the same Class
-
-        Object last = p2pExpressions.iterator().next();
-
-        for ( Object next : p2pExpressions ) {
-
-            if ( last.getClass() != next.getClass() ) {
-                throw new IllegalArgumentException(
-                        "Given collection doesn't contain objects of uniform type. Contains an object of type "
-                                + last.getClass() + " and another of type " + next.getClass() );
-            }
-
-            last = next;
-        }
-
-        return true;
     }
 
     /*
@@ -154,26 +78,10 @@ public class Probe2ProbeCoexpressionServiceImpl extends
     }
 
     @Override
-    protected Integer handleCountLinks( ExpressionExperiment expressionExperiment ) throws Exception {
-        return this.getProbe2ProbeCoexpressionDao().countLinks( expressionExperiment );
-    }
-
-    @Override
-    protected Collection handleGetProbeCoExpression( ExpressionExperiment expressionExperiment, String taxon,
-            boolean cleaned ) throws Exception {
-        // cleaned: a temporary table is created.s
-        return this.getProbe2ProbeCoexpressionDao().getProbeCoExpression( expressionExperiment, taxon, cleaned );
-    }
-    
-    public java.util.Collection<ProbeLink> getProbeCoExpression(
-            ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment, java.lang.String taxon){
-        return this.getProbe2ProbeCoexpressionDao().getProbeCoExpression( expressionExperiment, taxon, false );
-    }
-
-    @Override
-    protected void handlePrepareForShuffling( Collection ees, String taxon, boolean filterNonSpecific )
-            throws Exception {
-        this.getProbe2ProbeCoexpressionDao().prepareForShuffling( ees, taxon, filterNonSpecific );
+    protected Collection handleGetExpressionExperimentsLinkTestedIn( Gene gene, Collection expressionExperiments,
+            boolean filterNonSpecific ) throws Exception {
+        return this.getProbe2ProbeCoexpressionDao().getExpressionExperimentsLinkTestedIn( gene, expressionExperiments,
+                filterNonSpecific );
     }
 
     @Override
@@ -191,15 +99,16 @@ public class Probe2ProbeCoexpressionServiceImpl extends
     }
 
     @Override
-    protected Collection handleGetExpressionExperimentsLinkTestedIn( Gene gene, Collection expressionExperiments,
-            boolean filterNonSpecific ) throws Exception {
-        return this.getProbe2ProbeCoexpressionDao().getExpressionExperimentsLinkTestedIn( gene, expressionExperiments,
-                filterNonSpecific );
+    protected Collection<Long> handleGetGenesTestedBy( BioAssaySet bioAssaySet, boolean filterNonSpecific )
+            throws Exception {
+        return this.getProbe2ProbeCoexpressionDao().getGenesTestedBy( bioAssaySet, filterNonSpecific );
     }
 
     @Override
-    protected Collection handleGetVectorsForLinks( Gene gene, Collection ees ) throws Exception {
-        return this.getProbe2ProbeCoexpressionDao().getVectorsForLinks( gene, ees );
+    protected Collection handleGetProbeCoExpression( ExpressionExperiment expressionExperiment, String taxon,
+            boolean cleaned ) throws Exception {
+        // cleaned: a temporary table is created.s
+        return this.getProbe2ProbeCoexpressionDao().getProbeCoExpression( expressionExperiment, taxon, cleaned );
     }
 
     @Override
@@ -208,19 +117,26 @@ public class Probe2ProbeCoexpressionServiceImpl extends
     }
 
     @Override
-    protected Collection handleGetGenesTestedBy( BioAssaySet bioAssaySet, boolean filterNonSpecific ) throws Exception {
-        return this.getProbe2ProbeCoexpressionDao().getGenesTestedBy( bioAssaySet, filterNonSpecific );
-    }
-    
-    public Collection<Long> validateProbesInCoexpression( Collection<Long> queryProbeIds,
-            Collection<Long> coexpressedProbeIds, ExpressionExperiment ee, String taxon ) {
-        return this.getProbe2ProbeCoexpressionDao().validateProbesInCoexpression(queryProbeIds,coexpressedProbeIds,ee, taxon);
+    protected Collection handleGetVectorsForLinks( Gene gene, Collection ees ) throws Exception {
+        return this.getProbe2ProbeCoexpressionDao().getVectorsForLinks( gene, ees );
     }
 
-    
-    public Collection<ProbeLink> getTopCoexpressedLinks( ExpressionExperiment ee, double threshold, Integer limit ){        
-        return this.getProbe2ProbeCoexpressionDao().getTopCoexpressedLinks( ee, threshold, limit );
+    @Override
+    protected void handlePrepareForShuffling( Collection ees, String taxon, boolean filterNonSpecific )
+            throws Exception {
+        this.getProbe2ProbeCoexpressionDao().prepareForShuffling( ees, taxon, filterNonSpecific );
     }
 
-    
+    @Override
+    protected void handleRemove( Collection links ) {
+        this.getProbe2ProbeCoexpressionDao().remove( links );
+
+    }
+
+    @Override
+    protected void handleRemove( Probe2ProbeCoexpression link ) {
+        this.getProbe2ProbeCoexpressionDao().remove( link );
+
+    }
+
 }

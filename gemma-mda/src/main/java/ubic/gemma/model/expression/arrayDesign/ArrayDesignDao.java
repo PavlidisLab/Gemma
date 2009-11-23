@@ -20,6 +20,8 @@ package ubic.gemma.model.expression.arrayDesign;
 
 import java.util.Collection;
 
+import org.springframework.stereotype.Repository;
+
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -29,40 +31,8 @@ import ubic.gemma.persistence.BaseDao;
 /**
  * @see ubic.gemma.model.expression.arrayDesign.ArrayDesign
  */
+@Repository
 public interface ArrayDesignDao extends BaseDao<ArrayDesign> {
-    /**
-     * This constant is used as a transformation flag; entities can be converted automatically into value objects or
-     * other types, different methods in a class implementing this interface support this feature: look for an
-     * <code>int</code> parameter called <code>transform</code>.
-     * <p/>
-     * This specific flag denotes entities must be transformed into objects of type
-     * {@link ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject}.
-     */
-    public final static int TRANSFORM_ARRAYDESIGNVALUEOBJECT = 1;
-
-    /**
-     * Converts an instance of type {@link ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject} to this DAO's
-     * entity.
-     */
-    public ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesignValueObjectToEntity(
-            ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject arrayDesignValueObject );
-
-    /**
-     * Copies the fields of {@link ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject} to the specified
-     * entity.
-     * 
-     * @param copyIfNull If FALSE, the value object's field will not be copied to the entity if the value is NULL. If
-     *        TRUE, it will be copied regardless of its value.
-     */
-    public void arrayDesignValueObjectToEntity(
-            ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject sourceVO,
-            ubic.gemma.model.expression.arrayDesign.ArrayDesign targetEntity, boolean copyIfNull );
-
-    /**
-     * Converts a Collection of instances of type {@link ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject}
-     * to this DAO's entity.
-     */
-    public void arrayDesignValueObjectToEntityCollection( java.util.Collection<ArrayDesignValueObject> instances );
 
     /**
      * <p>
@@ -106,38 +76,6 @@ public interface ArrayDesignDao extends BaseDao<ArrayDesign> {
     public void deleteGeneProductAssociations( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
 
     /**
-     * <p>
-     * Does the same thing as {@link #find(boolean, ubic.gemma.model.expression.arrayDesign.ArrayDesign)} with an
-     * additional argument called <code>queryString</code>. This <code>queryString</code> argument allows you to
-     * override the query string defined in {@link #find(int, ubic.gemma.model.expression.arrayDesign.ArrayDesign
-     * arrayDesign)}.
-     * </p>
-     */
-    public Object find( int transform, String queryString,
-            ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #find(ubic.gemma.model.expression.arrayDesign.ArrayDesign)} with an additional flag
-     * called <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then finder results will
-     * <strong>NOT</strong> be transformed during retrieval. If this flag is any of the other constants defined here
-     * then finder results <strong>WILL BE</strong> passed through an operation which can optionally transform the
-     * entities (into value objects for example). By default, transformation does not occur.
-     * </p>
-     */
-    public Object find( int transform, ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #find(ubic.gemma.model.expression.arrayDesign.ArrayDesign)} with an additional
-     * argument called <code>queryString</code>. This <code>queryString</code> argument allows you to override the query
-     * string defined in {@link #find(ubic.gemma.model.expression.arrayDesign.ArrayDesign)}.
-     * </p>
-     */
-    public ubic.gemma.model.expression.arrayDesign.ArrayDesign find( String queryString,
-            ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
-
-    /**
      * 
      */
     public ubic.gemma.model.expression.arrayDesign.ArrayDesign find(
@@ -149,105 +87,14 @@ public interface ArrayDesignDao extends BaseDao<ArrayDesign> {
     public java.util.Collection<ArrayDesign> findByAlternateName( java.lang.String queryString );
 
     /**
-     * <p>
-     * Does the same thing as {@link #findByName(java.lang.String)} with an additional flag called
-     * <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then finder results will
-     * <strong>NOT</strong> be transformed during retrieval. If this flag is any of the other constants defined here
-     * then finder results <strong>WILL BE</strong> passed through an operation which can optionally transform the
-     * entities (into value objects for example). By default, transformation does not occur.
-     * </p>
-     */
-    public Object findByName( int transform, java.lang.String name );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findByName(boolean, java.lang.String)} with an additional argument called
-     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string defined
-     * in {@link #findByName(int, java.lang.String name)}.
-     * </p>
-     */
-    public Object findByName( int transform, String queryString, java.lang.String name );
-
-    /**
      * 
      */
     public ubic.gemma.model.expression.arrayDesign.ArrayDesign findByName( java.lang.String name );
 
     /**
-     * <p>
-     * Does the same thing as {@link #findByName(java.lang.String)} with an additional argument called
-     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string defined
-     * in {@link #findByName(java.lang.String)}.
-     * </p>
-     */
-    public ubic.gemma.model.expression.arrayDesign.ArrayDesign findByName( String queryString, java.lang.String name );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findByShortName(java.lang.String)} with an additional flag called
-     * <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then finder results will
-     * <strong>NOT</strong> be transformed during retrieval. If this flag is any of the other constants defined here
-     * then finder results <strong>WILL BE</strong> passed through an operation which can optionally transform the
-     * entities (into value objects for example). By default, transformation does not occur.
-     * </p>
-     */
-    public Object findByShortName( int transform, java.lang.String shortName );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findByShortName(boolean, java.lang.String)} with an additional argument called
-     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string defined
-     * in {@link #findByShortName(int, java.lang.String shortName)}.
-     * </p>
-     */
-    public Object findByShortName( int transform, String queryString, java.lang.String shortName );
-
-    /**
      * 
      */
     public ubic.gemma.model.expression.arrayDesign.ArrayDesign findByShortName( java.lang.String shortName );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findByShortName(java.lang.String)} with an additional argument called
-     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string defined
-     * in {@link #findByShortName(java.lang.String)}.
-     * </p>
-     */
-    public ubic.gemma.model.expression.arrayDesign.ArrayDesign findByShortName( String queryString,
-            java.lang.String shortName );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findOrCreate(boolean, ubic.gemma.model.expression.arrayDesign.ArrayDesign)} with
-     * an additional argument called <code>queryString</code>. This <code>queryString</code> argument allows you to
-     * override the query string defined in {@link #findOrCreate(int,
-     * ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign)}.
-     * </p>
-     */
-    public Object findOrCreate( int transform, String queryString,
-            ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findOrCreate(ubic.gemma.model.expression.arrayDesign.ArrayDesign)} with an
-     * additional flag called <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then finder
-     * results will <strong>NOT</strong> be transformed during retrieval. If this flag is any of the other constants
-     * defined here then finder results <strong>WILL BE</strong> passed through an operation which can optionally
-     * transform the entities (into value objects for example). By default, transformation does not occur.
-     * </p>
-     */
-    public Object findOrCreate( int transform, ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findOrCreate(ubic.gemma.model.expression.arrayDesign.ArrayDesign)} with an
-     * additional argument called <code>queryString</code>. This <code>queryString</code> argument allows you to
-     * override the query string defined in {@link #findOrCreate(ubic.gemma.model.expression.arrayDesign.ArrayDesign)}.
-     * </p>
-     */
-    public ubic.gemma.model.expression.arrayDesign.ArrayDesign findOrCreate( String queryString,
-            ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
 
     /**
      * 
@@ -274,16 +121,16 @@ public interface ArrayDesignDao extends BaseDao<ArrayDesign> {
             ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
 
     /**
-     * @deprecated Use getTaxa as array designs can have more than one associated taxon. This method will return only the first taxon found.
-     */
-    public ubic.gemma.model.genome.Taxon getTaxon( java.lang.Long id );
-    
-    
-    /**
      * 
      */
     public java.util.Collection<ubic.gemma.model.genome.Taxon> getTaxa( java.lang.Long id );
-    
+
+    /**
+     * @deprecated Use getTaxa as array designs can have more than one associated taxon. This method will return only
+     *             the first taxon found.
+     */
+    @Deprecated
+    public ubic.gemma.model.genome.Taxon getTaxon( java.lang.Long id );
 
     /**
      * 
@@ -307,6 +154,13 @@ public interface ArrayDesignDao extends BaseDao<ArrayDesign> {
 
     /**
      * <p>
+     * Given a list of AD ids (longs) returns a collection of ArrayDesign Objects
+     * </p>
+     */
+    public java.util.Collection<ArrayDesign> load( java.util.Collection<Long> ids );
+
+    /**
+     * <p>
      * loads all Array designs as value objects.
      * </p>
      */
@@ -325,13 +179,6 @@ public interface ArrayDesignDao extends BaseDao<ArrayDesign> {
      * </p>
      */
     public ubic.gemma.model.expression.arrayDesign.ArrayDesign loadFully( java.lang.Long id );
-
-    /**
-     * <p>
-     * Given a list of AD ids (longs) returns a collection of ArrayDesign Objects
-     * </p>
-     */
-    public java.util.Collection<ArrayDesign> load( java.util.Collection<Long> ids );
 
     /**
      * <p>
@@ -490,27 +337,6 @@ public interface ArrayDesignDao extends BaseDao<ArrayDesign> {
      * </p>
      */
     public void thawLite( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
-
-    /**
-     * Converts this DAO's entity to an object of type
-     * {@link ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject}.
-     */
-    public ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject toArrayDesignValueObject(
-            ubic.gemma.model.expression.arrayDesign.ArrayDesign entity );
-
-    /**
-     * Copies the fields of the specified entity to the target value object. This method is similar to
-     * toArrayDesignValueObject(), but it does not handle any attributes in the target value object that are "read-only"
-     * (as those do not have setter methods exposed).
-     */
-    public void toArrayDesignValueObject( ubic.gemma.model.expression.arrayDesign.ArrayDesign sourceEntity,
-            ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject targetVO );
-
-    /**
-     * Converts this DAO's entity to a Collection of instances of type
-     * {@link ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject}.
-     */
-    public void toArrayDesignValueObjectCollection( java.util.Collection<ArrayDesign> entities );
 
     /**
      * <p>

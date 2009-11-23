@@ -20,48 +20,69 @@ package ubic.gemma.model.expression.experiment;
 
 import java.util.Collection;
 
+import org.springframework.security.access.annotation.Secured;
+
 /**
- * 
+ * @author kelsey
+ * @version $Id$
  */
 public interface FactorValueService {
 
+    @Secured( { "GROUP_USER" })
+    public Collection<FactorValue> create( Collection<FactorValue> factors );
+
     /**
-     * 
+     * @param factorValue
+     * @return
      */
+    @Secured( { "GROUP_USER" })
     public ubic.gemma.model.expression.experiment.FactorValue create(
             ubic.gemma.model.expression.experiment.FactorValue factorValue );
 
     /**
-     * 
+     * @param factorValue
      */
+    @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
     public void delete( ubic.gemma.model.expression.experiment.FactorValue factorValue );
 
     /**
-     * 
+     * @param valuePrefix
+     * @return
      */
-    public ubic.gemma.model.expression.experiment.FactorValue findOrCreate(
-            ubic.gemma.model.expression.experiment.FactorValue factorValue );
-
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public Collection<FactorValue> findByValue( String valuePrefix );
 
     /**
-     * 
+     * @param factorValue
+     * @return
      */
+    @Secured( { "GROUP_USER", "AFTER_ACL_READ" })
+    public ubic.gemma.model.expression.experiment.FactorValue findOrCreate(
+            ubic.gemma.model.expression.experiment.FactorValue factorValue );
+
+    /**
+     * @param id
+     * @return
+     */
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     public ubic.gemma.model.expression.experiment.FactorValue load( java.lang.Long id );
 
     /**
-     * 
+     * @return
      */
-    public java.util.Collection loadAll();
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    public java.util.Collection<FactorValue> loadAll();
 
     /**
-     * 
+     * @param factorValues
      */
-    public void update( java.util.Collection factorValues );
+    @Secured( { "GROUP_USER", "ACL_SECURABLE_COLLECTION_EDIT" })
+    public void update( java.util.Collection<FactorValue> factorValues );
 
     /**
-     * 
+     * @param factorValue
      */
+    @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
     public void update( ubic.gemma.model.expression.experiment.FactorValue factorValue );
 
 }

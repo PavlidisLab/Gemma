@@ -54,16 +54,6 @@ import ubic.gemma.web.view.TextView;
  * 
  * @author keshav
  * @version $Id$ *
- * @spring.bean id="differentialExpressionSearchController"
- * @spring.property name = "commandName" value="diffExpressionSearchCommand"
- * @spring.property name = "commandClass" value="ubic.gemma.web.controller.diff.DiffExpressionSearchCommand"
- * @spring.property name = "formView" value="diffExpressionSearchForm"
- * @spring.property name = "successView" value="diffExpressionResultsByExperiment"
- * @spring.property name = "differentialExpressionAnalysisService" ref="differentialExpressionAnalysisService"
- * @spring.property name = "geneDifferentialExpressionService" ref="geneDifferentialExpressionService"
- * @spring.property name = "geneService" ref="geneService"
- * @spring.property name = "expressionExperimentService" ref="expressionExperimentService"
- * @spring.property name = "expressionExperimentSetService" ref="expressionExperimentSetService"
  */
 public class DifferentialExpressionSearchController extends BaseFormController {
 
@@ -85,6 +75,64 @@ public class DifferentialExpressionSearchController extends BaseFormController {
          * if true, reuses the same command object across the edit-submit-process (get-post-process).
          */
         setSessionForm( true );
+    }
+
+    /**
+     * AJAX entry which returns results on a non-meta analysis basis. That is, the differential expression results for
+     * the gene with the id, geneId, are returned.
+     * 
+     * @param geneId
+     * @param threshold
+     * @return
+     */
+    public Collection<DifferentialExpressionValueObject> getDifferentialExpression( Long geneId, double threshold ) {
+
+        return this.getDifferentialExpression( geneId, threshold, null );
+    }
+
+    /**
+     * AJAX entry which returns results on a non-meta analysis basis. That is, the differential expression results for
+     * the gene with the id, geneId, are returned.
+     * 
+     * @param geneId
+     * @param threshold
+     * @return
+     */
+    public Collection<DifferentialExpressionValueObject> getDifferentialExpression( Long geneId, double threshold,
+            Integer limit ) {
+
+        Gene g = geneService.load( geneId );
+
+        if ( g == null ) {
+            return new ArrayList<DifferentialExpressionValueObject>();
+        }
+
+        return geneDifferentialExpressionService.getDifferentialExpression( g, threshold, limit );
+    }
+
+    /**
+     * AJAX entry which returns differential expression results for the gene with the given id, in the selected factors,
+     * at the given significance threshold.
+     * 
+     * @param geneId
+     * @param threshold corrected pvalue threshold (normally this means FDR)
+     * @param factorMap
+     * @deprecated as far as I can tell this is not used.
+     * @return
+     */
+    @Deprecated
+    public Collection<DifferentialExpressionValueObject> getDifferentialExpressionForFactors( Long geneId,
+            double threshold, Collection<DiffExpressionSelectedFactorCommand> factorMap ) {
+
+        if ( factorMap.isEmpty() || geneId == null ) {
+            return null;
+        }
+
+        Gene g = geneService.load( geneId );
+        Collection<DifferentialExpressionValueObject> result = geneDifferentialExpressionService
+                .getDifferentialExpression( g, threshold, factorMap );
+
+        return result;
     }
 
     /**
@@ -142,110 +190,8 @@ public class DifferentialExpressionSearchController extends BaseFormController {
         return mavos;
     }
 
-    /**
-     * Returns the results of the meta-analysis.
-     * 
-     * @param geneId
-     * @param eeIds
-     * @param threshold
-     * @return
-     */
-    @SuppressWarnings("unchecked")
-    private DifferentialExpressionMetaAnalysisValueObject getDifferentialExpressionMetaAnalysis( Long geneId,
-            Collection<DiffExpressionSelectedFactorCommand> selectedFactors, double threshold ) {
-
-        Gene g = geneService.load( geneId );
-
-        if ( g == null ) {
-            log.warn( "No Gene with id=" + geneId );
-            return null;
-        }
-
-        /* find experiments that have had the diff cli run on it and have the gene g (analyzed) */
-        Collection<ExpressionExperiment> experimentsAnalyzed = differentialExpressionAnalysisService
-                .findExperimentsWithAnalyses( g );
-
-        /* the 'chosen' factors (and their associated experiments) */
-        Map<Long, Long> eeFactorsMap = new HashMap<Long, Long>();
-        for ( DiffExpressionSelectedFactorCommand selectedFactor : selectedFactors ) {
-            eeFactorsMap.put( selectedFactor.getEeId(), selectedFactor.getEfId() );
-            log.debug( selectedFactor.getEeId() + " --> " + selectedFactor.getEfId() );
-        }
-
-        /* filter experiments that had the diff cli run on it and are in the scope of eeFactorsMap eeIds (active) */
-        Collection<ExpressionExperiment> activeExperiments = null;
-        if ( eeFactorsMap.keySet() == null || eeFactorsMap.isEmpty() ) {
-            activeExperiments = experimentsAnalyzed;
-        } else {
-            activeExperiments = new ArrayList<ExpressionExperiment>();
-            for ( ExpressionExperiment ee : experimentsAnalyzed ) {
-                if ( eeFactorsMap.keySet().contains( ee.getId() ) ) {
-                    activeExperiments.add( ee );
-                }
-            }
-        }
-
-        DifferentialExpressionMetaAnalysisValueObject mavo = geneDifferentialExpressionService
-                .getDifferentialExpressionMetaAnalysis( threshold, g, eeFactorsMap, activeExperiments );
-
-        return mavo;
-    }
-
-    /**
-     * AJAX entry which returns results on a non-meta analysis basis. That is, the differential expression results for
-     * the gene with the id, geneId, are returned.
-     * 
-     * @param geneId
-     * @param threshold
-     * @return
-     */
-    public Collection<DifferentialExpressionValueObject> getDifferentialExpression( Long geneId, double threshold,
-            Integer limit ) {
-
-        Gene g = geneService.load( geneId );
-
-        if ( g == null ) {
-            return new ArrayList<DifferentialExpressionValueObject>();
-        }
-
-        return geneDifferentialExpressionService.getDifferentialExpression( g, threshold, limit );
-    }
-
-    /**
-     * AJAX entry which returns results on a non-meta analysis basis. That is, the differential expression results for
-     * the gene with the id, geneId, are returned.
-     * 
-     * @param geneId
-     * @param threshold
-     * @return
-     */
-    public Collection<DifferentialExpressionValueObject> getDifferentialExpression( Long geneId, double threshold ) {
-
-        return this.getDifferentialExpression( geneId, threshold, null );
-    }
-
-    /**
-     * AJAX entry which returns differential expression results for the gene with the given id, in the selected factors,
-     * at the given significance threshold.
-     * 
-     * @param geneId
-     * @param threshold corrected pvalue threshold (normally this means FDR)
-     * @param factorMap
-     * @deprecated as far as I can tell this is not used.
-     * @return
-     */
-    public Collection<DifferentialExpressionValueObject> getDifferentialExpressionForFactors( Long geneId,
-            double threshold, Collection<DiffExpressionSelectedFactorCommand> factorMap ) {
-
-        if ( factorMap.isEmpty() || geneId == null ) {
-            return null;
-        }
-
-        Gene g = geneService.load( geneId );
-        Collection<DifferentialExpressionValueObject> result = geneDifferentialExpressionService
-                .getDifferentialExpression( g, threshold, factorMap );
-
-        return result;
+    public ExpressionExperimentSetService getExpressionExperimentSetService() {
+        return expressionExperimentSetService;
     }
 
     /**
@@ -311,20 +257,37 @@ public class DifferentialExpressionSearchController extends BaseFormController {
     }
 
     /**
-     * @param ids
-     * @return
+     * @param differentialExpressionAnalyzerService
      */
-    private Collection<Long> securityFilterExpressionExperimentIds( Collection<Long> ids ) {
-        /*
-         * Because this method returns the results, we have to screen.
-         */
-        Collection<ExpressionExperiment> securityScreened = expressionExperimentService.loadMultiple( ids );
+    public void setDifferentialExpressionAnalysisService(
+            DifferentialExpressionAnalysisService differentialExpressionAnalysisService ) {
+        this.differentialExpressionAnalysisService = differentialExpressionAnalysisService;
+    }
 
-        Collection<Long> filteredIds = new HashSet<Long>();
-        for ( ExpressionExperiment ee : securityScreened ) {
-            filteredIds.add( ee.getId() );
-        }
-        return filteredIds;
+    /**
+     * @param expressionExperimentService
+     */
+    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
+        this.expressionExperimentService = expressionExperimentService;
+    }
+
+    public void setExpressionExperimentSetService( ExpressionExperimentSetService expressionExperimentSetService ) {
+        this.expressionExperimentSetService = expressionExperimentSetService;
+    }
+
+    /**
+     * @param geneDifferentialExpressionService
+     */
+    public void setGeneDifferentialExpressionService(
+            GeneDifferentialExpressionService geneDifferentialExpressionService ) {
+        this.geneDifferentialExpressionService = geneDifferentialExpressionService;
+    }
+
+    /**
+     * @param geneService
+     */
+    public void setGeneService( GeneService geneService ) {
+        this.geneService = geneService;
     }
 
     /*
@@ -413,41 +376,69 @@ public class DifferentialExpressionSearchController extends BaseFormController {
     }
 
     /**
-     * @param differentialExpressionAnalyzerService
+     * Returns the results of the meta-analysis.
+     * 
+     * @param geneId
+     * @param eeIds
+     * @param threshold
+     * @return
      */
-    public void setDifferentialExpressionAnalysisService(
-            DifferentialExpressionAnalysisService differentialExpressionAnalysisService ) {
-        this.differentialExpressionAnalysisService = differentialExpressionAnalysisService;
+    @SuppressWarnings("unchecked")
+    private DifferentialExpressionMetaAnalysisValueObject getDifferentialExpressionMetaAnalysis( Long geneId,
+            Collection<DiffExpressionSelectedFactorCommand> selectedFactors, double threshold ) {
+
+        Gene g = geneService.load( geneId );
+
+        if ( g == null ) {
+            log.warn( "No Gene with id=" + geneId );
+            return null;
+        }
+
+        /* find experiments that have had the diff cli run on it and have the gene g (analyzed) */
+        Collection<ExpressionExperiment> experimentsAnalyzed = differentialExpressionAnalysisService
+                .findExperimentsWithAnalyses( g );
+
+        /* the 'chosen' factors (and their associated experiments) */
+        Map<Long, Long> eeFactorsMap = new HashMap<Long, Long>();
+        for ( DiffExpressionSelectedFactorCommand selectedFactor : selectedFactors ) {
+            eeFactorsMap.put( selectedFactor.getEeId(), selectedFactor.getEfId() );
+            log.debug( selectedFactor.getEeId() + " --> " + selectedFactor.getEfId() );
+        }
+
+        /* filter experiments that had the diff cli run on it and are in the scope of eeFactorsMap eeIds (active) */
+        Collection<ExpressionExperiment> activeExperiments = null;
+        if ( eeFactorsMap.keySet() == null || eeFactorsMap.isEmpty() ) {
+            activeExperiments = experimentsAnalyzed;
+        } else {
+            activeExperiments = new ArrayList<ExpressionExperiment>();
+            for ( ExpressionExperiment ee : experimentsAnalyzed ) {
+                if ( eeFactorsMap.keySet().contains( ee.getId() ) ) {
+                    activeExperiments.add( ee );
+                }
+            }
+        }
+
+        DifferentialExpressionMetaAnalysisValueObject mavo = geneDifferentialExpressionService
+                .getDifferentialExpressionMetaAnalysis( threshold, g, eeFactorsMap, activeExperiments );
+
+        return mavo;
     }
 
     /**
-     * @param geneService
+     * @param ids
+     * @return
      */
-    public void setGeneService( GeneService geneService ) {
-        this.geneService = geneService;
-    }
+    private Collection<Long> securityFilterExpressionExperimentIds( Collection<Long> ids ) {
+        /*
+         * Because this method returns the results, we have to screen.
+         */
+        Collection<ExpressionExperiment> securityScreened = expressionExperimentService.loadMultiple( ids );
 
-    /**
-     * @param expressionExperimentService
-     */
-    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
-        this.expressionExperimentService = expressionExperimentService;
-    }
-
-    /**
-     * @param geneDifferentialExpressionService
-     */
-    public void setGeneDifferentialExpressionService(
-            GeneDifferentialExpressionService geneDifferentialExpressionService ) {
-        this.geneDifferentialExpressionService = geneDifferentialExpressionService;
-    }
-
-    public ExpressionExperimentSetService getExpressionExperimentSetService() {
-        return expressionExperimentSetService;
-    }
-
-    public void setExpressionExperimentSetService( ExpressionExperimentSetService expressionExperimentSetService ) {
-        this.expressionExperimentSetService = expressionExperimentSetService;
+        Collection<Long> filteredIds = new HashSet<Long>();
+        for ( ExpressionExperiment ee : securityScreened ) {
+            filteredIds.add( ee.getId() );
+        }
+        return filteredIds;
     }
 
 }

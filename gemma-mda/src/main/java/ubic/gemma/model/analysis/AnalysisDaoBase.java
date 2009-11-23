@@ -60,7 +60,7 @@ public abstract class AnalysisDaoBase<T extends Analysis> extends HibernateDaoSu
     /**
      * @see ubic.gemma.model.analysis.AnalysisDao#findByName(int, java.lang.String)
      */
-    @SuppressWarnings( { "unchecked" })
+    
     public java.util.Collection<T> findByName( final int transform, final java.lang.String name ) {
         return this.findByName( transform, "select a from AnalysisImpl as a where a.name like :name", name );
     }
@@ -68,7 +68,7 @@ public abstract class AnalysisDaoBase<T extends Analysis> extends HibernateDaoSu
     /**
      * @see ubic.gemma.model.analysis.AnalysisDao#findByName(int, java.lang.String, java.lang.String)
      */
-    @SuppressWarnings( { "unchecked" })
+    
     public java.util.Collection<T> findByName( final int transform, final java.lang.String queryString,
             final java.lang.String name ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -96,19 +96,6 @@ public abstract class AnalysisDaoBase<T extends Analysis> extends HibernateDaoSu
     }
 
     /**
-     * @see ubic.gemma.model.analysis.AnalysisDao#findByTaxon(ubic.gemma.model.genome.Taxon)
-     */
-    public java.util.Collection<T> findByTaxon( final ubic.gemma.model.genome.Taxon taxon ) {
-        try {
-            return this.handleFindByTaxon( taxon );
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.analysis.AnalysisDao.findByTaxon(ubic.gemma.model.genome.Taxon taxon)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
      * @see ubic.gemma.model.analysis.AnalysisDao#findByParentTaxon(ubic.gemma.model.genome.Taxon)
      */
     public java.util.Collection<T> findByParentTaxon( final ubic.gemma.model.genome.Taxon taxon ) {
@@ -120,7 +107,19 @@ public abstract class AnalysisDaoBase<T extends Analysis> extends HibernateDaoSu
                             + th, th );
         }
     }
-    
+
+    /**
+     * @see ubic.gemma.model.analysis.AnalysisDao#findByTaxon(ubic.gemma.model.genome.Taxon)
+     */
+    public java.util.Collection<T> findByTaxon( final ubic.gemma.model.genome.Taxon taxon ) {
+        try {
+            return this.handleFindByTaxon( taxon );
+        } catch ( Throwable th ) {
+            throw new java.lang.RuntimeException(
+                    "Error performing 'ubic.gemma.model.analysis.AnalysisDao.findByTaxon(ubic.gemma.model.genome.Taxon taxon)' --> "
+                            + th, th );
+        }
+    }
 
     /**
      * Performs the core logic for {@link #findByInvestigation(ubic.gemma.model.analysis.Investigation)}
@@ -135,17 +134,17 @@ public abstract class AnalysisDaoBase<T extends Analysis> extends HibernateDaoSu
             throws java.lang.Exception;
 
     /**
+     * Performs the core logic for {@link #findByParentTaxon(ubic.gemma.model.genome.Taxon)}
+     */
+    protected abstract java.util.Collection<T> handleFindByParentTaxon( ubic.gemma.model.genome.Taxon taxon )
+            throws java.lang.Exception;
+
+    /**
      * Performs the core logic for {@link #findByTaxon(ubic.gemma.model.genome.Taxon)}
      */
     protected abstract java.util.Collection<T> handleFindByTaxon( ubic.gemma.model.genome.Taxon taxon )
             throws java.lang.Exception;
 
-    /**
-     * Performs the core logic for {@link #findByParentTaxon(ubic.gemma.model.genome.Taxon)}
-     */
-    protected abstract java.util.Collection<T> handleFindByParentTaxon( ubic.gemma.model.genome.Taxon taxon )
-            throws java.lang.Exception;
-    
     /**
      * Transforms a collection of entities using the {@link #transformEntity(int,ubic.gemma.model.analysis.Analysis)}
      * method. This method does not instantiate a new collection.

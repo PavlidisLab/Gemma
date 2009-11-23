@@ -18,32 +18,49 @@
  */
 package ubic.gemma.model.association.coexpression;
 
+import java.util.Collection;
+
+import org.springframework.security.access.annotation.Secured;
+
 import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis;
 import ubic.gemma.model.genome.Gene;
 
 /**
- * <p>
- * A service for caching gene coexpression results
- * </p>
+ * A service for CRUDding gene coexpression results
+ * 
+ * @author Gemma
+ * @version $Id$
  */
 public interface Gene2GeneCoexpressionService {
 
     /**
-     * 
+     * @param gene2geneCoexpression A collection of Gene2GeneCoexpression object to create
      */
-    public ubic.gemma.model.association.coexpression.Gene2GeneCoexpression create(
-            ubic.gemma.model.association.coexpression.Gene2GeneCoexpression gene2gene );
 
-    /**
-     * 
-     */
+    @Secured( { "GROUP_ADMIN" })
     public java.util.Collection<Gene2GeneCoexpression> create(
             java.util.Collection<Gene2GeneCoexpression> gene2geneCoexpressions );
 
     /**
-     * 
+     * @param Create the given gene2geneCoexpression object
      */
+    @Secured( { "GROUP_ADMIN" })
+    public ubic.gemma.model.association.coexpression.Gene2GeneCoexpression create(
+            ubic.gemma.model.association.coexpression.Gene2GeneCoexpression gene2gene );
+
+    /**
+     * @param the gene2geneCoexpression object to remove from the DB
+     */
+    @Secured( { "GROUP_ADMIN" })
     public void delete( ubic.gemma.model.association.coexpression.Gene2GeneCoexpression toDelete );
+
+    /**
+     * <p>
+     * Returns a map of genes to coexpression results.
+     * </p>
+     */
+    public java.util.Map<Gene, Collection<Gene2GeneCoexpression>> findCoexpressionRelationships(
+            java.util.Collection<Gene> genes, int stringency, int maxResults, GeneCoexpressionAnalysis sourceAnalysis );
 
     /**
      * 
@@ -53,18 +70,10 @@ public interface Gene2GeneCoexpressionService {
 
     /**
      * <p>
-     * Returns a map of genes to coexpression results.
-     * </p>
-     */
-    public java.util.Map findCoexpressionRelationships( java.util.Collection<Gene> genes, int stringency,
-            int maxResults, GeneCoexpressionAnalysis sourceAnalysis );
-
-    /**
-     * <p>
      * Return coexpression relationships among the given genes, in a map of query gene to coexpression objects.
      * </p>
      */
-    public java.util.Map findInterCoexpressionRelationship( java.util.Collection<Gene> genes, int stringency,
-            GeneCoexpressionAnalysis sourceAnalysis );
+    public java.util.Map<Gene, Collection<Gene2GeneCoexpression>> findInterCoexpressionRelationship(
+            java.util.Collection<Gene> genes, int stringency, GeneCoexpressionAnalysis sourceAnalysis );
 
 }

@@ -24,6 +24,8 @@ import java.util.HashSet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.AbstractController;
 
@@ -44,14 +46,17 @@ import ubic.gemma.web.view.TextView;
  * 
  * @author pavlidis
  * @version $Id$
- * @spring.bean id="blatResultTrackController"
- * @spring.property name="blatResultService" ref="blatResultService"
  */
+@Controller
 public class BlatResultTrackController extends AbstractController {
 
+    @Autowired
     BlatResultService blatResultService;
 
-    @SuppressWarnings("unchecked")
+    public void setBlatResultService( BlatResultService blatResultService ) {
+        this.blatResultService = blatResultService;
+    }
+
     @Override
     protected ModelAndView handleRequestInternal( HttpServletRequest request, HttpServletResponse response )
             throws Exception {
@@ -79,10 +84,6 @@ public class BlatResultTrackController extends AbstractController {
 
         return new ModelAndView( new TextView(), "text", val );
 
-    }
-
-    public void setBlatResultService( BlatResultService blatResultService ) {
-        this.blatResultService = blatResultService;
     }
 
 }

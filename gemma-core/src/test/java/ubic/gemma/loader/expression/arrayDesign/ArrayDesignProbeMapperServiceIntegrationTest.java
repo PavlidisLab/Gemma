@@ -23,6 +23,8 @@ import java.io.IOException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.junit.Before;
+import org.junit.Test;
 
 import ubic.gemma.apps.Blat;
 import ubic.gemma.loader.genome.SimpleFastaCmd;
@@ -37,28 +39,20 @@ public class ArrayDesignProbeMapperServiceIntegrationTest extends AbstractArrayD
 
     Blat blat;
 
-    private boolean fastaCmdExecutableExists() {
-        String fastacmdExe = ConfigUtils.getString( SimpleFastaCmd.FASTA_CMD_ENV_VAR );
-        if ( fastacmdExe == null ) {
-            log.warn( "No fastacmd executable is configured, skipping test" );
-            return false;
-        }
-
-        File fi = new File( fastacmdExe );
-        if ( !fi.canRead() ) {
-            log.warn( fastacmdExe + " not found, skipping test" );
-            return false;
-        }
-        return true;
+    @Before
+    public void setup() throws Exception {
+        blat = new Blat();
     }
 
     /**
      * Test method for
-     * {@link ubic.gemma.loader.expression.arrayDesign.ArrayDesignProbeMapperService#processArrayDesign(ubic.gemma.model.expression.arrayDesign.ArrayDesign, ubic.gemma.model.genome.Taxon)}.
+     * {@link ubic.gemma.loader.expression.arrayDesign.ArrayDesignProbeMapperService#processArrayDesign(ubic.gemma.model.expression.arrayDesign.ArrayDesign, ubic.gemma.model.genome.Taxon)}
+     * .
      */
+    @Test
     public final void testProcessArrayDesign() throws Exception {
         if ( !fastaCmdExecutableExists() ) return;
-        if (ad == null) return;
+        if ( ad == null ) return;
         ArrayDesignSequenceProcessingService app = ( ArrayDesignSequenceProcessingService ) getBean( "arrayDesignSequenceProcessingService" );
 
         try {
@@ -93,9 +87,18 @@ public class ArrayDesignProbeMapperServiceIntegrationTest extends AbstractArrayD
 
     }
 
-    @Override
-    protected void onSetUpInTransaction() throws Exception {
-        super.onSetUpInTransaction();
-        blat = new Blat();
+    private boolean fastaCmdExecutableExists() {
+        String fastacmdExe = ConfigUtils.getString( SimpleFastaCmd.FASTA_CMD_ENV_VAR );
+        if ( fastacmdExe == null ) {
+            log.warn( "No fastacmd executable is configured, skipping test" );
+            return false;
+        }
+
+        File fi = new File( fastacmdExe );
+        if ( !fi.canRead() ) {
+            log.warn( fastacmdExe + " not found, skipping test" );
+            return false;
+        }
+        return true;
     }
 }

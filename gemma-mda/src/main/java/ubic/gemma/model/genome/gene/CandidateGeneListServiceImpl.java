@@ -24,6 +24,8 @@ package ubic.gemma.model.genome.gene;
 import java.util.Collection;
 import java.util.Date;
 
+import org.springframework.stereotype.Service;
+
 import ubic.gemma.model.common.auditAndSecurity.AuditAction;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
@@ -31,13 +33,10 @@ import ubic.gemma.model.common.auditAndSecurity.Person;
 import ubic.gemma.model.common.auditAndSecurity.User;
 
 /**
- * <hr>
- * <p>
- * Copyright (c) 2004, 2006 University of British Columbia
- * 
  * @author daq2101
  * @version $Id$
  */
+@Service
 public class CandidateGeneListServiceImpl extends ubic.gemma.model.genome.gene.CandidateGeneListServiceBase {
 
     User actor = null;
@@ -48,12 +47,12 @@ public class CandidateGeneListServiceImpl extends ubic.gemma.model.genome.gene.C
     }
 
     @Override
-    public Collection handleFindByContributer( Person person ) {
+    public Collection<CandidateGeneList> handleFindByContributer( Person person ) {
         return this.getCandidateGeneListDao().findByContributer( person );
     }
 
     @Override
-    public Collection handleFindByGeneOfficialName( String officialName ) {
+    public Collection<CandidateGeneList> handleFindByGeneOfficialName( String officialName ) {
         return this.getCandidateGeneListDao().findByGeneOfficialName( officialName );
     }
 
@@ -63,7 +62,7 @@ public class CandidateGeneListServiceImpl extends ubic.gemma.model.genome.gene.C
     }
 
     @Override
-    public Collection handleFindByListOwner( Person owner ) {
+    public Collection<CandidateGeneList> handleFindByListOwner( Person owner ) {
         return this.getCandidateGeneListDao().findByListOwner( owner );
     }
 

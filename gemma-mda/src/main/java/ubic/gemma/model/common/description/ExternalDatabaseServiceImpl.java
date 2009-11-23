@@ -20,11 +20,14 @@ package ubic.gemma.model.common.description;
 
 import java.util.Collection;
 
+import org.springframework.stereotype.Service;
+
 /**
  * @author pavlidis
  * @version $Id$
  * @see ubic.gemma.model.common.description.ExternalDatabaseService
  */
+@Service
 public class ExternalDatabaseServiceImpl extends ubic.gemma.model.common.description.ExternalDatabaseServiceBase {
 
     /**

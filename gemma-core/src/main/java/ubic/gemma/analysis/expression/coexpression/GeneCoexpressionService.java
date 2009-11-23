@@ -32,6 +32,9 @@ import org.apache.commons.collections.Predicate;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.stereotype.Service;
 
 import ubic.gemma.model.analysis.Analysis;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
@@ -43,7 +46,6 @@ import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysi
 import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisService;
 import ubic.gemma.model.association.coexpression.Gene2GeneCoexpression;
 import ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionService;
-import ubic.gemma.model.common.Securable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -63,15 +65,9 @@ import ubic.gemma.util.CountingMap;
  * 
  * @author paul
  * @version $Id$
- * @spring.bean id="geneCoexpressionService"
- * @spring.property name="geneService" ref="geneService"
- * @spring.property name="gene2GeneCoexpressionService" ref="gene2GeneCoexpressionService"
- * @spring.property name = "geneOntologyService" ref="geneOntologyService"
- * @spring.property name = "expressionExperimentService" ref="expressionExperimentService"
- * @spring.property name = "probeLinkCoexpressionAnalyzer" ref="probeLinkCoexpressionAnalyzer"
- * @spring.property name="expressionExperimentSetService" ref="expressionExperimentSetService"
- * @spring.property name="geneCoexpressionAnalysisService" ref="geneCoexpressionAnalysisService"
  */
+@Service
+@Lazy
 public class GeneCoexpressionService {
 
     /*
@@ -93,18 +89,31 @@ public class GeneCoexpressionService {
     }
 
     private static Log log = LogFactory.getLog( GeneCoexpressionService.class.getName() );
+
     /**
      * How many genes to fill in the "go overlap" info for.
      */
     private static final int NUM_GENES_TO_DETAIL = 25;
 
+    @Autowired
     private ExpressionExperimentService expressionExperimentService;
+
+    @Autowired
     private ExpressionExperimentSetService expressionExperimentSetService;
+
+    @Autowired
     private Gene2GeneCoexpressionService gene2GeneCoexpressionService;
+
+    @Autowired
     private GeneCoexpressionAnalysisService geneCoexpressionAnalysisService;
+
+    @Autowired
     private GeneOntologyService geneOntologyService;
+
+    @Autowired
     private GeneService geneService;
 
+    @Autowired
     private ProbeLinkCoexpressionAnalyzer probeLinkCoexpressionAnalyzer;
 
     /**
@@ -497,7 +506,7 @@ public class GeneCoexpressionService {
             ecdvo.setQueryGene( queryGene.getOfficialSymbol() );
             ecdvo.setCoexpressionLinkCount( coexp.getLinkCountForEE( coexpEevo.getId() ) );
             ecdvo.setRawCoexpressionLinkCount( coexp.getRawLinkCountForEE( coexpEevo.getId() ) );
-            
+
             // NOTE should be accurate (probe-level query) but we won't show it. See bug 1564
             ecdvo.setProbeSpecificForQueryGene( coexpEevo.getHasProbeSpecificForQueryGene() );
             ecdvo.setArrayDesignCount( eevo.getArrayDesignCount() );
@@ -518,15 +527,16 @@ public class GeneCoexpressionService {
         Gene g = queryGenes.iterator().next();
         // note: we assume they all come from one taxon.
         Taxon t = g.getTaxon();
-        Collection<? extends Analysis> analyses =null;
-        //check if the taxon is a species if it is not then it is a parent taxon and need to get child taxa coexpression analyses.
-        if(!t.getIsSpecies()){
+        Collection<? extends Analysis> analyses = null;
+        // check if the taxon is a species if it is not then it is a parent taxon and need to get child taxa
+        // coexpression analyses.
+        if ( !t.getIsSpecies() ) {
             analyses = geneCoexpressionAnalysisService.findByParentTaxon( t );
-        }else{
+        } else {
             analyses = geneCoexpressionAnalysisService.findByTaxon( t );
         }
-               
-       // Collection<? extends Analysis> analyses = geneCoexpressionAnalysisService.findByTaxon( t );
+
+        // Collection<? extends Analysis> analyses = geneCoexpressionAnalysisService.findByTaxon( t );
         if ( analyses.size() == 0 ) {
             throw new IllegalStateException( "No gene coexpression analysis is available for " + t.getScientificName() );
         } else if ( analyses.size() == 1 ) {
@@ -891,7 +901,7 @@ public class GeneCoexpressionService {
      */
     private List<Long> getIds( ExpressionExperimentSet expressionExperimentSet ) {
         List<Long> ids = new ArrayList<Long>( expressionExperimentSet.getExperiments().size() );
-        for ( Securable dataset : expressionExperimentSet.getExperiments() ) {
+        for ( BioAssaySet dataset : expressionExperimentSet.getExperiments() ) {
             ids.add( dataset.getId() );
         }
         return ids;
@@ -939,7 +949,6 @@ public class GeneCoexpressionService {
      * @param queryGenesOnly
      * @return
      */
-    @SuppressWarnings("unchecked")
     private Map<Gene, Collection<Gene2GeneCoexpression>> getRawCoexpression( Collection<Gene> queryGenes,
             int stringency, int maxResults, boolean queryGenesOnly ) {
         Map<Gene, Collection<Gene2GeneCoexpression>> gg2gs = new HashMap<Gene, Collection<Gene2GeneCoexpression>>();
@@ -1079,7 +1088,6 @@ public class GeneCoexpressionService {
      * 
      * @param ees
      */
-    @SuppressWarnings("unchecked")
     private void removeTroubledEes( Collection<Long> ees ) {
 
         if ( ees == null || ees.size() == 0 ) {

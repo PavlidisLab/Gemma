@@ -32,12 +32,6 @@ public class TaxonParserTest extends TestCase {
 
     InputStream is;
 
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
-        is = this.getClass().getResourceAsStream( "/data/loader/genome/taxon.names.dmp.sample.txt" );
-    }
-
     public void testParseInputStream() throws Exception {
         TaxonParser tp = new TaxonParser();
         tp.parse( is );
@@ -45,7 +39,13 @@ public class TaxonParserTest extends TestCase {
         assertEquals( 75, results.size() );
         // for ( Taxon taxon : results ) {
         // assertTrue( "Taxon " + taxon, taxon.getNcbiId() != 2 ); // "Bacteria"
-        //        }
+        // }
+    }
+
+    @Override
+    protected void setUp() throws Exception {
+        super.setUp();
+        is = this.getClass().getResourceAsStream( "/data/loader/genome/taxon.names.dmp.sample.txt" );
     }
 
     @Override

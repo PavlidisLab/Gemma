@@ -18,8 +18,10 @@
  */
 package ubic.gemma.testing;
 
+import org.junit.Before;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.test.context.ContextConfiguration;
 
 /**
  * Class to extend for tests of controllers et al that need a spring context. Provides convenience methods for dealing
@@ -30,6 +32,8 @@ import org.springframework.mock.web.MockHttpServletRequest;
  * @version $Id$
  * @see com.dumbster.smtp.SimpleSmtpServer
  */
+@ContextConfiguration(loader = WebContextLoader.class, locations = { "classpath*:WEB-INF/gemma-servlet.xml",
+        "classpath*:ubic/gemma/applicationContext-validation.xml" }, inheritLocations = true)
 public abstract class BaseSpringWebTest extends BaseSpringContextTest {
 
     /**
@@ -50,13 +54,10 @@ public abstract class BaseSpringWebTest extends BaseSpringContextTest {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.testing.BaseTransactionalSpringContextTest#onSetUpInTransaction()
      */
-    @Override
-    protected void onSetUpInTransaction() throws Exception {
-        super.onSetUpInTransaction();
-
+    @Before
+    public final void setupWebTest() throws Exception {
         // change the port on the mailSender so it doesn't conflict with an
         // existing SMTP server on localhost
         JavaMailSenderImpl mailSender = ( JavaMailSenderImpl ) getBean( "mailSender" );

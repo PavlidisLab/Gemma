@@ -25,6 +25,9 @@ import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.hibernate.SessionFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
 
 import ubic.gemma.model.analysis.Investigation;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -34,10 +37,31 @@ import ubic.gemma.model.genome.Taxon;
 /**
  * @see ubic.gemma.model.analysis.ProbeCoexpressionAnalysis
  */
+@Repository
 public class ProbeCoexpressionAnalysisDaoImpl extends
         ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisDaoBase {
 
     private static Log log = LogFactory.getLog( ProbeCoexpressionAnalysisDaoImpl.class.getName() );
+
+    @Autowired
+    public ProbeCoexpressionAnalysisDaoImpl( SessionFactory sessionFactory ) {
+        super.setSessionFactory( sessionFactory );
+    }
+
+    @SuppressWarnings("unchecked")
+    public Collection<CompositeSequence> getAssayedProbes( ExpressionExperiment experiment ) {
+        Collection<ProbeCoexpressionAnalysis> analyses = this.findByInvestigation( experiment );
+
+        if ( analyses.size() == 0 ) {
+            log.warn( "No analyses available for " + experiment );
+            return new HashSet<CompositeSequence>();
+        }
+
+        final String queryString = "select distinct c from  ProbeCoexpressionAnalysisImpl poa inner join poa.probesUsed c where poa in (:analyses)";
+
+        return this.getHibernateTemplate().findByNamedParam( queryString, "analyses", analyses );
+
+    }
 
     @Override
     protected Collection handleFindByInvestigation( Investigation investigation ) throws Exception {
@@ -57,15 +81,6 @@ public class ProbeCoexpressionAnalysisDaoImpl extends
     }
 
     @Override
-    protected Collection handleFindByTaxon( Taxon taxon ) {
-        final String queryString = "select distinct poa from ProbeCoexpressionAnalysisImpl as"
-                + " poa inner join poa.expressionExperimentSetAnalyzed s inner join s.experiments  as ee "
-                + "inner join ee.bioAssays as ba "
-                + "inner join ba.samplesUsed as sample where sample.sourceTaxon = :taxon ";
-        return this.getHibernateTemplate().findByNamedParam( queryString, "taxon", taxon );
-    }
-
-    @Override
     protected Collection handleFindByParentTaxon( Taxon taxon ) {
         final String queryString = "select distinct poa from ProbeCoexpressionAnalysisImpl as"
                 + " poa inner join poa.expressionExperimentSetAnalyzed s inner join s.experiments  as ee "
@@ -74,18 +89,12 @@ public class ProbeCoexpressionAnalysisDaoImpl extends
         return this.getHibernateTemplate().findByNamedParam( queryString, "taxon", taxon );
     }
 
-    @SuppressWarnings("unchecked")
-    public Collection<CompositeSequence> getAssayedProbes( ExpressionExperiment experiment ) {
-        Collection<ProbeCoexpressionAnalysis> analyses = this.findByInvestigation( experiment );
-
-        if ( analyses.size() == 0 ) {
-            log.warn( "No analyses available for " + experiment );
-            return new HashSet<CompositeSequence>();
-        }
-
-        final String queryString = "select distinct c from  ProbeCoexpressionAnalysisImpl poa inner join poa.probesUsed c where poa in (:analyses)";
-
-        return this.getHibernateTemplate().findByNamedParam( queryString, "analyses", analyses );
-
+    @Override
+    protected Collection handleFindByTaxon( Taxon taxon ) {
+        final String queryString = "select distinct poa from ProbeCoexpressionAnalysisImpl as"
+                + " poa inner join poa.expressionExperimentSetAnalyzed s inner join s.experiments  as ee "
+                + "inner join ee.bioAssays as ba "
+                + "inner join ba.samplesUsed as sample where sample.sourceTaxon = :taxon ";
+        return this.getHibernateTemplate().findByNamedParam( queryString, "taxon", taxon );
     }
 }

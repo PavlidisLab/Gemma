@@ -50,13 +50,6 @@ public class ArrayDesignAddCommand {
     }
 
     /**
-     * @param arrayDesign the arrayDesign to set
-     */
-    public void setArrayDesign( ArrayDesign arrayDesign ) {
-        this.arrayDesign = arrayDesign;
-    }
-
-    /**
      * @return the sequenceFile
      */
     public FileUpload getFile() {
@@ -64,17 +57,24 @@ public class ArrayDesignAddCommand {
     }
 
     /**
-     * @param sequenceFile the sequenceFile to set
-     */
-    public void setFile( FileUpload file ) {
-        this.file = file;
-    }
-
-    /**
      * @return the taxon
      */
     public Taxon getTaxon() {
         return this.taxon;
+    }
+
+    /**
+     * @param arrayDesign the arrayDesign to set
+     */
+    public void setArrayDesign( ArrayDesign arrayDesign ) {
+        this.arrayDesign = arrayDesign;
+    }
+
+    /**
+     * @param sequenceFile the sequenceFile to set
+     */
+    public void setFile( FileUpload file ) {
+        this.file = file;
     }
 
     /**

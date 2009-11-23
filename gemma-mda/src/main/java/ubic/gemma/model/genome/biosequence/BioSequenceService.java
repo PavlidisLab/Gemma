@@ -18,8 +18,16 @@
  */
 package ubic.gemma.model.genome.biosequence;
 
+import java.util.Collection;
+import java.util.Map;
+
+import org.springframework.security.access.annotation.Secured;
+
+import ubic.gemma.model.genome.Gene;
+
 /**
- * 
+ * @author kelsey
+ * @version $Id$
  */
 public interface BioSequenceService {
 
@@ -31,11 +39,13 @@ public interface BioSequenceService {
     /**
      * 
      */
+    @Secured( { "GROUP_USER" })
     public java.util.Collection<BioSequence> create( java.util.Collection<BioSequence> bioSequences );
 
     /**
      * 
      */
+    @Secured( { "GROUP_USER" })
     public ubic.gemma.model.genome.biosequence.BioSequence create(
             ubic.gemma.model.genome.biosequence.BioSequence bioSequence );
 
@@ -53,11 +63,11 @@ public interface BioSequenceService {
 
     /**
      * <p>
-     * Returns matching biosequences for the given genes in a Map (gene to biosequences). Genes which had no associated
+     * Returns matching biosequences for the given genes in a Map (gene to a collection of biosequences). Genes which had no associated
      * sequences are not included in the result.
      * </p>
      */
-    public java.util.Map findByGenes( java.util.Collection genes );
+    public  Map<Gene, Collection<BioSequence>> findByGenes( java.util.Collection<Gene> genes );
 
     /**
      * <p>
@@ -70,23 +80,25 @@ public interface BioSequenceService {
     /**
      * 
      */
+    @Secured( { "GROUP_USER" })
     public java.util.Collection<BioSequence> findOrCreate( java.util.Collection<BioSequence> bioSequences );
 
     /**
      * 
      */
+    @Secured( { "GROUP_USER" })
     public ubic.gemma.model.genome.biosequence.BioSequence findOrCreate(
             ubic.gemma.model.genome.biosequence.BioSequence bioSequence );
 
     /**
      * 
      */
-    public java.util.Collection getGenesByAccession( java.lang.String search );
+    public java.util.Collection<Gene> getGenesByAccession( java.lang.String search );
 
     /**
      * 
      */
-    public java.util.Collection getGenesByName( java.lang.String search );
+    public java.util.Collection<Gene> getGenesByName( java.lang.String search );
 
     /**
      * 
@@ -103,6 +115,7 @@ public interface BioSequenceService {
     /**
      * 
      */
+    @Secured( { "GROUP_USER" })
     public void remove( ubic.gemma.model.genome.biosequence.BioSequence bioSequence );
 
     /**
@@ -125,11 +138,13 @@ public interface BioSequenceService {
     /**
      * 
      */
+    @Secured( { "GROUP_USER" })
     public void update( java.util.Collection<BioSequence> bioSequences );
 
     /**
      * 
      */
+    @Secured( { "GROUP_USER" })
     public void update( ubic.gemma.model.genome.biosequence.BioSequence bioSequence );
 
 }

@@ -170,7 +170,6 @@ public class SpringContextUtil {
         paths.add( "classpath*:ubic/gemma/applicationContext-hibernate.xml" );
         paths.add( "classpath*:ubic/gemma/applicationContext-serviceBeans.xml" );
         paths.add( "classpath*:ubic/gemma/applicationContext-schedule.xml" );
-        paths.add( "classpath*:ubic/gemma/applicationContext-persisterBeans.xml" );
 
         /*
          * When using a web application, we get the config locations from the web.xml files --- not using this class.
@@ -179,7 +178,7 @@ public class SpringContextUtil {
         File f = new File( getGemmaHomeProperty() );
         try {
             if ( isWebapp ) {
-                paths.add( f.toURI().toURL() + "gemma-web/target/Gemma/WEB-INF/" + "action-servlet.xml" );
+                paths.add( f.toURI().toURL() + "gemma-web/target/Gemma/WEB-INF/gemma-servlet.xml" );
                 paths.add( "classpath*:ubic/gemma/applicationContext-validation.xml" );
             }
         } catch ( MalformedURLException e ) {

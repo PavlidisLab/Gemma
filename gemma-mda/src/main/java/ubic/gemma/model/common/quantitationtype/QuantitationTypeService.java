@@ -18,33 +18,35 @@
  */
 package ubic.gemma.model.common.quantitationtype;
 
+import org.springframework.security.access.annotation.Secured;
+
 /**
- * 
+ * @author kelsey
+ * @version $Id$
  */
 public interface QuantitationTypeService {
 
     /**
      * 
      */
-    public ubic.gemma.model.common.quantitationtype.QuantitationType create(
-            ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType );
+    @Secured( { "GROUP_USER" })
+    public QuantitationType create( QuantitationType quantitationType );
 
     /**
      * 
      */
-    public ubic.gemma.model.common.quantitationtype.QuantitationType find(
-            ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType );
+    public QuantitationType find( QuantitationType quantitationType );
 
     /**
      * 
      */
-    public ubic.gemma.model.common.quantitationtype.QuantitationType findOrCreate(
-            ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType );
+    @Secured( { "GROUP_USER" })
+    public QuantitationType findOrCreate( QuantitationType quantitationType );
 
     /**
      * 
      */
-    public ubic.gemma.model.common.quantitationtype.QuantitationType load( java.lang.Long id );
+    public QuantitationType load( java.lang.Long id );
 
     /**
      * 
@@ -54,11 +56,13 @@ public interface QuantitationTypeService {
     /**
      * 
      */
-    public void remove( ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType );
+    @Secured( { "GROUP_USER" })
+    public void remove( QuantitationType quantitationType );
 
     /**
      * 
      */
-    public void update( ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType );
+    @Secured( { "GROUP_USER" })
+    public void update( QuantitationType quantitationType );
 
 }

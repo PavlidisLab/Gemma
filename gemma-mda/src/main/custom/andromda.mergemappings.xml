@@ -9,7 +9,7 @@
 /*
  * The Gemma project.
  * 
- * Copyright (c) 2006-2007 University of British Columbia
+ * Copyright (c) 2006-2010 University of British Columbia
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,33 +24,6 @@
  * limitations under the License.
  *
  */
-]]>
-		</to>
-	</mapping>
-	<mapping>
-		<from>
-			<![CDATA[<!-- beanRefFactory merge-point -->]]>
-		</from>
-		<to>
-			<![CDATA[
-<value>classpath*:/ubic/gemma/applicationContext-security.xml</value>
-<value>classpath*:/ubic/gemma/applicationContext-serviceBeans.xml</value>
-<value>classpath*:/ubic/gemma/applicationContext-persisterBeans.xml</value>
-<value>classpath*:/ubic/gemma/compass.xml</value>
-]]>
-		</to>
-	</mapping>
-	<mapping>
-		<from>
-			<![CDATA[<!-- applicationContext hibernateProperties merge-point -->]]>
-		</from>
-		<to>
-			<![CDATA[
-<prop key="hibernate.cache.use_query_cache">true</prop>
-<prop key="hibernate.generate_statistics">true</prop>
-<prop key="hibernate.cache.use_structured_entries">true</prop>
-<prop key="hibernate.format_sql">true</prop>
-<prop key="hibernate.use_sql_comments">true</prop>
 ]]>
 		</to>
 	</mapping>

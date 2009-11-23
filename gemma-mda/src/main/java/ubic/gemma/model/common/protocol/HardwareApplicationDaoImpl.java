@@ -18,8 +18,18 @@
  */
 package ubic.gemma.model.common.protocol;
 
+import org.hibernate.SessionFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
+
 /**
  * @see ubic.gemma.model.common.protocol.HardwareApplication
  */
+@Repository
 public class HardwareApplicationDaoImpl extends ubic.gemma.model.common.protocol.HardwareApplicationDaoBase {
+
+    @Autowired
+    public HardwareApplicationDaoImpl( SessionFactory sessionFactory ) {
+        super.setSessionFactory( sessionFactory );
+    }
 }

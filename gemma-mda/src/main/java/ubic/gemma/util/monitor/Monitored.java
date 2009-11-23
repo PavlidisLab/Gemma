@@ -29,7 +29,7 @@ import java.lang.annotation.Target;
  * @author paul
  * @version $Id$
  */
-@Target( { ElementType.CONSTRUCTOR, ElementType.METHOD })
+@Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Monitored {
 

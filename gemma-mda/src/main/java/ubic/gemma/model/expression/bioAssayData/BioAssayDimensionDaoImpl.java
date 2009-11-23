@@ -20,7 +20,7 @@ package ubic.gemma.model.expression.bioAssayData;
 
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Iterator; 
+import java.util.Iterator;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
@@ -28,7 +28,10 @@ import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 import org.hibernate.Hibernate;
 import org.hibernate.LockMode;
+import org.hibernate.SessionFactory;
 import org.hibernate.criterion.Restrictions;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
 
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -38,9 +41,20 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
  * @version $Id$
  * @see ubic.gemma.model.expression.bioAssayData.BioAssayDimension
  */
+@Repository
 public class BioAssayDimensionDaoImpl extends ubic.gemma.model.expression.bioAssayData.BioAssayDimensionDaoBase {
 
     private static Log log = LogFactory.getLog( BioAssayDimensionDaoImpl.class.getName() );
+
+    @Autowired
+    public BioAssayDimensionDaoImpl( SessionFactory sessionFactory ) {
+        super.setSessionFactory( sessionFactory );
+    }
+    
+    @SuppressWarnings("unchecked")
+    public Collection<? extends BioAssayDimension > load( Collection<Long> ids ) {
+        return this.getHibernateTemplate().findByNamedParam( "from BioAssayDimensionImpl where id in (:ids)", "ids", ids );
+    }
 
     /*
      * (non-Javadoc)
@@ -51,7 +65,7 @@ public class BioAssayDimensionDaoImpl extends ubic.gemma.model.expression.bioAss
     @Override
     public BioAssayDimension find( BioAssayDimension bioAssayDimension ) {
         try {
-            Criteria queryObject = super.getSession( false ).createCriteria( BioAssayDimension.class );
+            Criteria queryObject = super.getSession(   ).createCriteria( BioAssayDimension.class );
 
             if ( StringUtils.isNotBlank( bioAssayDimension.getName() ) ) {
                 queryObject.add( Restrictions.eq( "name", bioAssayDimension.getName() ) );
@@ -119,7 +133,7 @@ public class BioAssayDimensionDaoImpl extends ubic.gemma.model.expression.bioAss
      * BioAssayDimension)
      */
     public void thaw( final BioAssayDimension bioAssayDimension ) {
-        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
                 session.lock( bioAssayDimension, LockMode.NONE );
                 Hibernate.initialize( bioAssayDimension );

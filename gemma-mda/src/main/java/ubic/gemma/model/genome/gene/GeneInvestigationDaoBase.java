@@ -18,6 +18,7 @@
  */
 package ubic.gemma.model.genome.gene;
 
+import java.util.Collection;
 
 /**
  * <p>
@@ -39,7 +40,7 @@ public abstract class GeneInvestigationDaoBase extends
             throw new IllegalArgumentException( "GeneInvestigation.create - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback() {
+                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
@@ -66,7 +67,7 @@ public abstract class GeneInvestigationDaoBase extends
     /**
      * @see ubic.gemma.model.genome.gene.GeneInvestigationDao#create(java.util.Collection)
      */
-    @SuppressWarnings( { "unchecked" })
+
     public java.util.Collection create( final java.util.Collection entities ) {
         return create( TRANSFORM_NONE, entities );
     }
@@ -83,7 +84,6 @@ public abstract class GeneInvestigationDaoBase extends
      *      ubic.gemma.model.common.auditAndSecurity.Contact)
      */
 
-    @SuppressWarnings( { "unchecked" })
     public java.util.Collection findByInvestigator( final int transform, final java.lang.String queryString,
             final ubic.gemma.model.common.auditAndSecurity.Contact investigator ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -101,7 +101,6 @@ public abstract class GeneInvestigationDaoBase extends
      *      ubic.gemma.model.common.auditAndSecurity.Contact)
      */
 
-    @SuppressWarnings( { "unchecked" })
     public java.util.Collection findByInvestigator( final int transform,
             final ubic.gemma.model.common.auditAndSecurity.Contact investigator ) {
         return this
@@ -116,7 +115,6 @@ public abstract class GeneInvestigationDaoBase extends
      *      ubic.gemma.model.common.auditAndSecurity.Contact)
      */
 
-    @SuppressWarnings( { "unchecked" })
     public java.util.Collection findByInvestigator( final java.lang.String queryString,
             final ubic.gemma.model.common.auditAndSecurity.Contact investigator ) {
         return this.findByInvestigator( TRANSFORM_NONE, queryString, investigator );
@@ -128,6 +126,11 @@ public abstract class GeneInvestigationDaoBase extends
 
     public java.util.Collection findByInvestigator( ubic.gemma.model.common.auditAndSecurity.Contact investigator ) {
         return this.findByInvestigator( TRANSFORM_NONE, investigator );
+    }
+
+    public Collection<? extends GeneInvestigation> load( Collection<Long> ids ) {
+        return this.getHibernateTemplate().findByNamedParam( "from GeneInvestigationImpl where id in (:ids)", "ids",
+                ids );
     }
 
     /**
@@ -156,7 +159,6 @@ public abstract class GeneInvestigationDaoBase extends
      * @see ubic.gemma.model.genome.gene.GeneInvestigationDao#loadAll()
      */
 
-    @SuppressWarnings( { "unchecked" })
     public java.util.Collection loadAll() {
         return this.loadAll( TRANSFORM_NONE );
     }
@@ -216,7 +218,7 @@ public abstract class GeneInvestigationDaoBase extends
             throw new IllegalArgumentException( "GeneInvestigation.update - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback() {
+                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {

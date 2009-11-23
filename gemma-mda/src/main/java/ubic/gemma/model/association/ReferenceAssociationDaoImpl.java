@@ -22,8 +22,18 @@
 //
 package ubic.gemma.model.association;
 
+import org.hibernate.SessionFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
+
 /**
  * @see ubic.gemma.model.association.ReferenceAssociation
  */
+@Repository
 public class ReferenceAssociationDaoImpl extends ubic.gemma.model.association.ReferenceAssociationDaoBase {
+
+    @Autowired
+    public ReferenceAssociationDaoImpl( SessionFactory sessionFactory ) {
+        super.setSessionFactory( sessionFactory );
+    }
 }

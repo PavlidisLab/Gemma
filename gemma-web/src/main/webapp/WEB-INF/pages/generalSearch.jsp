@@ -20,10 +20,10 @@
 <h1>
 	General search tool for Gemma
 </h1>
-<security:authorize ifAnyGranted="admin">
+<security:authorize ifAnyGranted="GROUP_ADMIN">
 	<input type="hidden" name="hasAdmin" id="hasAdmin" value="true" />
 </security:authorize>
-<security:authorize ifNotGranted="admin">
+<security:authorize ifNotGranted="GROUP_ADMIN">
 	<input type="hidden" name="hasAdmin" id="hasAdmin" value="" />
 </security:authorize>
 

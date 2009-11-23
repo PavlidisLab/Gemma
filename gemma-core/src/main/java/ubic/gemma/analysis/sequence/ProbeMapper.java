@@ -27,6 +27,8 @@ import java.util.Map;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import ubic.gemma.apps.Blat;
 import ubic.gemma.externalDb.GoldenPathSequenceAnalysis;
@@ -50,20 +52,20 @@ import ubic.gemma.util.SequenceBinUtils;
  * Provides methods for mapping sequences to genes and gene products. Some methods accept a configuration object that
  * allows threshold etc. to be modified.
  * 
- * @spring.bean name="probeMapper"
- * @spring.property name="probeAlignedRegionService" ref="probeAlignedRegionService"
- * @spring.property name="chromosomeService" ref="chromosomeService"
- * @spring.property name="taxonService" ref="taxonService"
  * @author pavlidis
  * @version $Id$
  */
+@Service
 public class ProbeMapper {
 
     private Log log = LogFactory.getLog( ProbeMapper.class.getName() );
     private ThreePrimeDistanceMethod threeprimeMethod = ThreePrimeDistanceMethod.RIGHT;
 
+    @Autowired
     private ProbeAlignedRegionService probeAlignedRegionService;
+    @Autowired
     private ChromosomeService chromosomeService;
+    @Autowired
     private TaxonService taxonService;
 
     /**
@@ -495,7 +497,6 @@ public class ProbeMapper {
      * @param ignoreStrand
      * @return
      */
-    @SuppressWarnings("unchecked")
     private Collection<BlatAssociation> findProbeAlignedRegionAssociations( BlatResult blatResult, boolean ignoreStrand ) {
 
         PhysicalLocation pl = makePhysicalLocation( blatResult, ignoreStrand );

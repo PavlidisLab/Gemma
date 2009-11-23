@@ -14,8 +14,7 @@
 
 <script type="text/javascript">
 	/*<![CDATA[*/
-	var navItems = document.getElementById("primary-nav").getElementsByTagName(
-			"li");
+	var navItems = document.getElementById("primary-nav").getElementsByTagName("li");
 
 	for ( var i = 0; i < navItems.length; i++) {
 		if (navItems[i].className == "menubar") {

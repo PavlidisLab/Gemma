@@ -18,10 +18,18 @@
  */
 package ubic.gemma.security.authentication;
 
-import org.springframework.security.BadCredentialsException;
+import static org.junit.Assert.fail;
+
+import java.util.Date;
+
+import org.junit.Before;
+import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.encoding.PasswordEncoder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
 import ubic.gemma.testing.BaseSpringContextTest;
-import ubic.gemma.util.ConfigUtils;
 
 /**
  * @author pavlidis
@@ -29,44 +37,63 @@ import ubic.gemma.util.ConfigUtils;
  */
 public class ManualAuthenticationProcessingTest extends BaseSpringContextTest {
 
-    public void testAttemptAuthentication() throws Exception {
-        ManualAuthenticationProcessing manager = ( ManualAuthenticationProcessing ) this
-                .getBean( "manualAuthenticationProcessing" );
-        assertNotNull( manager );
-        try {
-            manager.attemptAuthentication( ConfigUtils.getString( "gemma.regular.user" ), ConfigUtils
-                    .getString( "gemma.regular.password" ) );
+    private String pwd;
 
+    private String username;
+
+    @Autowired
+    ManualAuthenticationService manualAuthenticationService;
+
+    @Autowired
+    UserManager userManager;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @Before
+    public void before() {
+
+        pwd = randomName();
+        username = randomName();
+
+        try {
+            userManager.loadUserByUsername( username );
+        } catch ( UsernameNotFoundException e ) {
+            String encodedPassword = passwordEncoder.encodePassword( pwd, username );
+            UserDetailsImpl u = new UserDetailsImpl( encodedPassword, username, true, null, null, null, new Date() );
+            userManager.createUser( u ); 
+        }
+    }
+
+    @Test
+    public void testAttemptAuthentication() throws Exception {
+        try {
+            manualAuthenticationService.attemptAuthentication( username, pwd );
         } catch ( BadCredentialsException expected ) {
             fail( "Should not have gotten a BadCredentialsException" );
         }
 
     }
 
-    public void testAttemptAuthenticationWrongPassword() throws Exception {
-        ManualAuthenticationProcessing manager = ( ManualAuthenticationProcessing ) this
-                .getBean( "manualAuthenticationProcessing" );
-        assertNotNull( manager );
-
+    @Test
+    public void testAttemptAuthenticationNonexistentUser() throws Exception {
         try {
-            manager.attemptAuthentication( ConfigUtils.getString( "gemma.regular.user" ), "wrong" );
+            manualAuthenticationService.attemptAuthentication( "I don't exist", "wrong" );
             fail( "Should have gotten a BadCredentialsException" );
         } catch ( BadCredentialsException expected ) {
             // expected.
         }
-
     }
 
-    public void testAttemptAuthenticationNonexistentUser() throws Exception {
-        ManualAuthenticationProcessing manager = ( ManualAuthenticationProcessing ) this
-                .getBean( "manualAuthenticationProcessing" );
-        assertNotNull( manager );
+    @Test
+    public void testAttemptAuthenticationWrongPassword() throws Exception {
         try {
-            manager.attemptAuthentication( "I don't exist", "wrong" );
+            manualAuthenticationService.attemptAuthentication( username, "wrong" );
             fail( "Should have gotten a BadCredentialsException" );
         } catch ( BadCredentialsException expected ) {
             // expected.
         }
+
     }
 
 }

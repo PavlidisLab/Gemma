@@ -18,7 +18,11 @@
  */
 package ubic.gemma.ontology;
 
+import static org.junit.Assert.assertEquals;
+
 import java.util.Collection;
+
+import org.junit.Test;
 
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.testing.BaseSpringContextTest;
@@ -29,24 +33,11 @@ import ubic.gemma.testing.BaseSpringContextTest;
  */
 public class OntologyServiceTest extends BaseSpringContextTest {
 
-    @Override
-    protected void onSetUpInTransaction() throws Exception {
-        super.onSetUpInTransaction();
-    }
-
-    private void loadOntology( String ontology ) throws Exception {
-        AbstractOntologyService os = ( AbstractOntologyService ) this.getBean( ontology );
-        if ( !os.isOntologyLoaded() ) os.init( true ); // force load.
-        while ( !os.isOntologyLoaded() ) {
-            Thread.sleep( 1000 );
-            log.info( "Waiting for Ontology to load" );
-        }
-    }
-
     /**
      * This test can fail if the db isn't initialized public void testListAvailableOntologies() throws Exception {
      * Collection<Ontology> name = OntologyService.listAvailableOntologies(); assertTrue( name.size() > 0 ); }
      */
+    @Test
     public final void testFindExactMatch() throws Exception {
         loadOntology( "mgedOntologyService" );
         OntologyService os = ( OntologyService ) this.getBean( "ontologyService" );
@@ -63,6 +54,7 @@ public class OntologyServiceTest extends BaseSpringContextTest {
      * 
      * @throws Exception
      */
+    @Test
     public final void testFindTerm() throws Exception {
         loadOntology( "birnLexOntologyService" );
         OntologyService os = ( OntologyService ) this.getBean( "ontologyService" );
@@ -74,6 +66,15 @@ public class OntologyServiceTest extends BaseSpringContextTest {
         // assertTrue( false );
         // }
         // }
+    }
+
+    private void loadOntology( String ontology ) throws Exception {
+        AbstractOntologyService os = ( AbstractOntologyService ) this.getBean( ontology );
+        if ( !os.isOntologyLoaded() ) os.init( true ); // force load.
+        while ( !os.isOntologyLoaded() ) {
+            Thread.sleep( 1000 );
+            log.info( "Waiting for Ontology to load" );
+        }
     }
 
 }

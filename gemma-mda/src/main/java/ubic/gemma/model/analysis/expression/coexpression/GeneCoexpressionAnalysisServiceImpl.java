@@ -21,6 +21,8 @@ package ubic.gemma.model.analysis.expression.coexpression;
 import java.util.Collection;
 import java.util.Map;
 
+import org.springframework.stereotype.Service;
+
 import ubic.gemma.model.analysis.Investigation;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
@@ -30,6 +32,7 @@ import ubic.gemma.model.genome.Taxon;
  * @author paul
  * @version $Id$
  */
+@Service
 public class GeneCoexpressionAnalysisServiceImpl extends
         ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisServiceBase {
 
@@ -51,11 +54,6 @@ public class GeneCoexpressionAnalysisServiceImpl extends
     }
 
     @Override
-    protected void handleDelete( Long idToDelete ) throws Exception {
-        this.getGeneCoexpressionAnalysisDao().remove( idToDelete );
-    }
-
-    @Override
     protected Collection handleFindByInvestigation( Investigation investigation ) throws Exception {
         return this.getGeneCoexpressionAnalysisDao().findByInvestigation( investigation );
     }
@@ -73,23 +71,23 @@ public class GeneCoexpressionAnalysisServiceImpl extends
     /*
      * (non-Javadoc)
      * @see
+     * ubic.gemma.model.analysis.GeneCoexpressionAnalysisServiceBase#handleFindByParentTaxon(ubic.gemma.model.genome
+     * .Taxon)
+     */
+    @Override
+    protected Collection handleFindByParentTaxon( Taxon taxon ) throws Exception {
+        return this.getGeneCoexpressionAnalysisDao().findByParentTaxon( taxon );
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see
      * ubic.gemma.model.analysis.GeneCoexpressionAnalysisServiceBase#handleFindByTaxon(ubic.gemma.model.genome.Taxon)
      */
     @Override
     protected Collection handleFindByTaxon( Taxon taxon ) throws Exception {
         return this.getGeneCoexpressionAnalysisDao().findByTaxon( taxon );
     }
-
-    /*
-     * (non-Javadoc)
-     * @see
-     * ubic.gemma.model.analysis.GeneCoexpressionAnalysisServiceBase#handleFindByParentTaxon(ubic.gemma.model.genome.Taxon)
-     */
-    @Override
-    protected Collection handleFindByParentTaxon( Taxon taxon ) throws Exception {
-        return this.getGeneCoexpressionAnalysisDao().findByParentTaxon( taxon );
-    }
-    
 
     @SuppressWarnings("unchecked")
     @Override

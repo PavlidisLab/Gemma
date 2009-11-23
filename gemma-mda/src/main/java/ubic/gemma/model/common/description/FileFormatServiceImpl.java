@@ -18,10 +18,13 @@
  */
 package ubic.gemma.model.common.description;
 
+import org.springframework.stereotype.Service;
+
 /**
  * @author pavlidis
  * @version $Id$
  */
+@Service
 public class FileFormatServiceImpl extends ubic.gemma.model.common.description.FileFormatServiceBase {
 
     /**

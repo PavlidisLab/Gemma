@@ -15,8 +15,6 @@ import org.apache.commons.lang.StringUtils;
 
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.VocabCharacteristic;
-import ubic.gemma.model.expression.experiment.ExperimentalFactor;
-import ubic.gemma.model.expression.experiment.FactorValue;
 
 /**
  * Each factorvalue can be associated with multiple characteristics (or with a measurement). However, for flattening out
@@ -51,77 +49,40 @@ public class FactorValueValueObject implements Serializable {
      */
     private Long charId;
 
-    public Long getCharId() {
-        return charId;
-    }
-
-    public void setCharId( Long charId ) {
-        this.charId = charId;
-    }
-
-    public String getValueUri() {
-        return valueUri;
-    }
-
-    public void setValueUri( String valueUri ) {
-        this.valueUri = valueUri;
-    }
-
-    public String getValue() {
-        return value;
-    }
-
-    public void setValue( String value ) {
-        this.value = value;
-    }
-
-    public String getCategoryUri() {
-        return categoryUri;
-    }
-
-    public void setCategoryUri( String categoryUri ) {
-        this.categoryUri = categoryUri;
-    }
-
-    public boolean isMeasurement() {
-        return measurement;
-    }
-
-    public void setMeasurement( boolean measurement ) {
-        this.measurement = measurement;
-    }
-
-    /**
-     * @return the category
-     */
-    public String getCategory() {
-        return category;
-    }
-
-    /**
-     * @param category the category to set
-     */
-    public void setCategory( String category ) {
-        this.category = category;
-    }
-
-    /**
-     * @return the id
-     */
-    public long getId() {
-        return id;
-    }
-
-    /**
-     * @param id the id to set
-     */
-    public void setId( long id ) {
-        this.id = id;
-    }
-
     public FactorValueValueObject() {
         super();
 
+    }
+
+    public FactorValueValueObject( ExperimentalFactor ef ) {
+
+        /*
+         * FIXME this constructor is messed up. We should not be using the Factor, this is for FactorValues!
+         */
+        this.description = ef.getDescription();
+        this.factor = ef.getName();
+        this.id = ef.getId();
+
+        Characteristic c = ef.getCategory();
+        if ( c == null )
+            this.category = "none";
+        else if ( c instanceof VocabCharacteristic ) {
+            VocabCharacteristic vc = ( VocabCharacteristic ) c;
+            this.category = vc.getCategory();
+        } else
+            this.category = c.getCategory();
+    }
+
+    /**
+     * @param fv
+     */
+    public FactorValueValueObject( FactorValue fv ) {
+        super();
+        if ( fv.getCharacteristics() != null && fv.getCharacteristics().size() == 1 ) {
+            init( fv, fv.getCharacteristics().iterator().next() );
+        } else {
+            init( fv, null );
+        }
     }
 
     /**
@@ -133,6 +94,128 @@ public class FactorValueValueObject implements Serializable {
     public FactorValueValueObject( FactorValue value, Characteristic c ) {
         super();
         init( value, c );
+    }
+
+    /**
+     * @return the category
+     */
+    public String getCategory() {
+        return category;
+    }
+
+    public String getCategoryUri() {
+        return categoryUri;
+    }
+
+    public Long getCharId() {
+        return charId;
+    }
+
+    /**
+     * @return the description
+     */
+    public String getDescription() {
+        return description;
+    }
+
+    public Long getFactorId() {
+        return factorId;
+    }
+
+    public String getFactorValue() {
+
+        return factor;
+    }
+
+    /**
+     * @return the id
+     */
+    public long getId() {
+        return id;
+    }
+
+    public String getValue() {
+        return value;
+    }
+
+    public String getValueUri() {
+        return valueUri;
+    }
+
+    public boolean isMeasurement() {
+        return measurement;
+    }
+
+    /**
+     * @param category the category to set
+     */
+    public void setCategory( String category ) {
+        this.category = category;
+    }
+
+    public void setCategoryUri( String categoryUri ) {
+        this.categoryUri = categoryUri;
+    }
+
+    public void setCharId( Long charId ) {
+        this.charId = charId;
+    }
+
+    /**
+     * @param description the description to set
+     */
+    public void setDescription( String description ) {
+        this.description = description;
+    }
+
+    public void setFactorId( Long factorId ) {
+        this.factorId = factorId;
+    }
+
+    public void setFactorValue( String value ) {
+
+        this.factor = value;
+    }
+
+    /**
+     * @param id the id to set
+     */
+    public void setId( long id ) {
+        this.id = id;
+    }
+
+    public void setMeasurement( boolean measurement ) {
+        this.measurement = measurement;
+    }
+
+    public void setValue( String value ) {
+        this.value = value;
+    }
+
+    public void setValueUri( String valueUri ) {
+        this.valueUri = valueUri;
+    }
+
+    /**
+     * @param fv
+     * @return
+     */
+    private String getSummaryString( FactorValue fv ) {
+        StringBuffer buf = new StringBuffer();
+        if ( fv.getCharacteristics().size() > 0 ) {
+            for ( Iterator<Characteristic> iter = fv.getCharacteristics().iterator(); iter.hasNext(); ) {
+                Characteristic c = iter.next();
+                buf.append( c.getValue() == null ? "[Unassigned]" : c.getValue() );
+                if ( iter.hasNext() ) buf.append( ", " );
+            }
+        } else if ( fv.getMeasurement() != null ) {
+            buf.append( fv.getMeasurement().getValue() );
+        } else if ( StringUtils.isNotBlank( fv.getValue() ) ) {
+            buf.append( fv.getValue() );
+        } else {
+            buf.append( "?" );
+        }
+        return buf.toString();
     }
 
     /**
@@ -177,91 +260,6 @@ public class FactorValueValueObject implements Serializable {
             }
 
         }
-    }
-
-    public void setFactorId( Long factorId ) {
-        this.factorId = factorId;
-    }
-
-    public Long getFactorId() {
-        return factorId;
-    }
-
-    /**
-     * @param fv
-     */
-    public FactorValueValueObject( FactorValue fv ) {
-        super();
-        if ( fv.getCharacteristics() != null && fv.getCharacteristics().size() == 1 ) {
-            init( fv, fv.getCharacteristics().iterator().next() );
-        } else {
-            init( fv, null );
-        }
-    }
-
-    public FactorValueValueObject( ExperimentalFactor ef ) {
-
-        /*
-         * FIXME this constructor is messed up. We should not be using the Factor, this is for FactorValues!
-         */
-        this.description = ef.getDescription();
-        this.factor = ef.getName();
-        this.id = ef.getId();
-
-        Characteristic c = ef.getCategory();
-        if ( c == null )
-            this.category = "none";
-        else if ( c instanceof VocabCharacteristic ) {
-            VocabCharacteristic vc = ( VocabCharacteristic ) c;
-            this.category = vc.getCategory();
-        } else
-            this.category = c.getCategory();
-    }
-
-    public String getFactorValue() {
-
-        return factor;
-    }
-
-    public void setFactorValue( String value ) {
-
-        this.factor = value;
-    }
-
-    /**
-     * @return the description
-     */
-    public String getDescription() {
-        return description;
-    }
-
-    /**
-     * @param description the description to set
-     */
-    public void setDescription( String description ) {
-        this.description = description;
-    }
-
-    /**
-     * @param fv
-     * @return
-     */
-    private String getSummaryString( FactorValue fv ) {
-        StringBuffer buf = new StringBuffer();
-        if ( fv.getCharacteristics().size() > 0 ) {
-            for ( Iterator<Characteristic> iter = fv.getCharacteristics().iterator(); iter.hasNext(); ) {
-                Characteristic c = iter.next();
-                buf.append( c.getValue() == null ? "[Unassigned]" : c.getValue() );
-                if ( iter.hasNext() ) buf.append( ", " );
-            }
-        } else if ( fv.getMeasurement() != null ) {
-            buf.append( fv.getMeasurement().getValue() );
-        } else if ( StringUtils.isNotBlank( fv.getValue() ) ) {
-            buf.append( fv.getValue() );
-        } else {
-            buf.append( "?" );
-        }
-        return buf.toString();
     }
 
 }

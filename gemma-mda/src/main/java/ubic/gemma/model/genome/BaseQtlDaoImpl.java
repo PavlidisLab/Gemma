@@ -2,6 +2,13 @@ package ubic.gemma.model.genome;
 
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 
+/**
+ * TODO Document Me
+ * 
+ * @author paul
+ * @version $Id$
+ * @param <T>
+ */
 public abstract class BaseQtlDaoImpl<T extends Qtl> extends HibernateDaoSupport implements BaseQtlDao<T> {
 
     /**

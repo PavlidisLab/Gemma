@@ -18,13 +18,17 @@
  */
 package ubic.gemma.util.grid;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
+import org.junit.Test;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.context.ApplicationContext;
 
+import ubic.gemma.grid.javaspaces.util.SpacesEnum;
+import ubic.gemma.grid.javaspaces.util.SpacesUtil;
 import ubic.gemma.testing.BaseSpringContextTest;
 import ubic.gemma.util.SpringContextUtil;
-import ubic.gemma.util.grid.javaspaces.SpacesEnum;
-import ubic.gemma.util.grid.javaspaces.SpacesUtil;
 
 /**
  * A test class for {@link SpacesUtil}.
@@ -35,23 +39,9 @@ import ubic.gemma.util.grid.javaspaces.SpacesUtil;
 public class SpacesUtilTest extends BaseSpringContextTest {
 
     /**
-     * Tests if space is running.
-     */
-    public void testIsSpaceRunning() {
-
-        boolean isRunning = SpacesUtil.isSpaceRunning( SpacesEnum.DEFAULT_SPACE.getSpaceUrl() );
-
-        if ( isRunning ) {
-            assertTrue( isRunning );
-        } else {
-            assertFalse( isRunning );
-        }
-
-    }
-
-    /**
      * Tests gigaspaces beans to the {@link org.springframework.beans.factory.BeanFactory}
      */
+    @Test
     public void testAddGigaspacesToBeanFactory() {
 
         ApplicationContext withoutGigaspacesCtx = ( ApplicationContext ) SpringContextUtil.getApplicationContext( true,
@@ -76,22 +66,41 @@ public class SpacesUtilTest extends BaseSpringContextTest {
     }
 
     /**
-     * Test logging space statistics.
-     */
-    public void testLogSpaceStatistics() {
-        SpacesUtil.logSpaceStatistics( SpacesEnum.DEFAULT_SPACE.getSpaceUrl() );
-    }
-
-    /**
      * Tests logging the configuration report.
      */
+    @Test
     public void testGetSpaceContainerAdmin() {
         SpacesUtil.logRuntimeConfigurationReport();
     }
 
     /**
+     * Tests if space is running.
+     */
+    @Test
+    public void testIsSpaceRunning() {
+
+        boolean isRunning = SpacesUtil.isSpaceRunning( SpacesEnum.DEFAULT_SPACE.getSpaceUrl() );
+
+        if ( isRunning ) {
+            assertTrue( isRunning );
+        } else {
+            assertFalse( isRunning );
+        }
+
+    }
+
+    /**
+     * Test logging space statistics.
+     */
+    @Test
+    public void testLogSpaceStatistics() {
+        SpacesUtil.logSpaceStatistics( SpacesEnum.DEFAULT_SPACE.getSpaceUrl() );
+    }
+
+    /**
      * Tests the number of idle workers.
      */
+    @Test
     public void testNumIdle() {
         SpacesUtil gigaspacesUtil = ( SpacesUtil ) this.getBean( "spacesUtil" );
         gigaspacesUtil.addGemmaSpacesToApplicationContext( SpacesEnum.DEFAULT_SPACE.getSpaceUrl() );

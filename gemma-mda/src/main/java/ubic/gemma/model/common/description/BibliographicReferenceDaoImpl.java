@@ -21,12 +21,19 @@
 package ubic.gemma.model.common.description;
 
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
+import org.hibernate.SessionFactory;
 import org.hibernate.criterion.Restrictions;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
 
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.util.BusinessKey;
 
 /**
@@ -34,9 +41,15 @@ import ubic.gemma.util.BusinessKey;
  * @version $Id$
  * @see ubic.gemma.model.common.description.BibliographicReference
  */
+@Repository
 public class BibliographicReferenceDaoImpl extends ubic.gemma.model.common.description.BibliographicReferenceDaoBase {
 
     private static Log log = LogFactory.getLog( BibliographicReferenceDaoImpl.class.getName() );
+
+    @Autowired
+    public BibliographicReferenceDaoImpl( SessionFactory sessionFactory ) {
+        super.setSessionFactory( sessionFactory );
+    }
 
     /*
      * (non-Javadoc)
@@ -47,7 +60,7 @@ public class BibliographicReferenceDaoImpl extends ubic.gemma.model.common.descr
     public BibliographicReference find( BibliographicReference bibliographicReference ) {
         try {
             BusinessKey.checkKey( bibliographicReference );
-            Criteria queryObject = super.getSession( false ).createCriteria( BibliographicReference.class );
+            Criteria queryObject = super.getSession( true ).createCriteria( BibliographicReference.class );
 
             /*
              * This syntax allows you to look at an association.
@@ -99,9 +112,14 @@ public class BibliographicReferenceDaoImpl extends ubic.gemma.model.common.descr
 
     @Override
     @SuppressWarnings("unchecked")
-    public Collection<BibliographicReference> handleGetAllExperimentLinkedReferences() {
-        final String query = "select distinct e.primaryPublication from ExpressionExperimentImpl e ";
-        return this.getHibernateTemplate().find( query );
+    public Map<ExpressionExperiment, BibliographicReference> handleGetAllExperimentLinkedReferences() {
+        final String query = "select distinct e, e.primaryPublication from ExpressionExperimentImpl e ";
+        Map<ExpressionExperiment, BibliographicReference> result = new HashMap<ExpressionExperiment, BibliographicReference>();
+        List<Object[]> os = this.getHibernateTemplate().find( query );
+        for ( Object[] o : os ) {
+            result.put( ( ExpressionExperiment ) o[0], ( BibliographicReference ) o[1] );
+        }
+        return result;
     }
 
     // Note that almost the same method is also available from the EEservice

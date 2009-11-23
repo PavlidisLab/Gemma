@@ -18,16 +18,22 @@
  */
 package ubic.gemma.analysis.preprocess;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
+
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.List;
 import java.util.zip.GZIPInputStream;
 
+import org.junit.Before;
+import org.junit.Test;
+
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.util.RegressionTesting;
-import ubic.gemma.analysis.preprocess.filter.ExpressionExperimentFilter;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
-import ubic.gemma.datastructure.matrix.TestExpressionDataDoubleMatrix;
+import ubic.gemma.datastructure.matrix.ExpressioDataTestMatrix;
 import ubic.gemma.loader.expression.geo.DatasetCombiner;
 import ubic.gemma.loader.expression.geo.GeoConverter;
 import ubic.gemma.loader.expression.geo.GeoFamilyParser;
@@ -36,32 +42,31 @@ import ubic.gemma.loader.expression.geo.GeoSampleCorrespondence;
 import ubic.gemma.loader.expression.geo.model.GeoSeries;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import junit.framework.TestCase;
 
 /**
  * @author paul
  * @version $Id$
  */
-public class ExpressionDataSVDTest extends TestCase {
+public class ExpressionDataSVDTest {
 
     ExpressionDataDoubleMatrix testData = null;
     ExpressionDataSVD svd = null;
 
     /*
      * (non-Javadoc)
-     * 
      * @see junit.framework.TestCase#setUp()
      */
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Before
+    public void setUp() throws Exception {
 
-        testData = new TestExpressionDataDoubleMatrix();
+        testData = new ExpressioDataTestMatrix();
         svd = new ExpressionDataSVD( testData, false );
     }
 
     /**
      * Test method for {@link ubic.gemma.analysis.preprocess.ExpressionDataSVD#getS()}.
      */
+    @Test
     public void testGetS() {
         DoubleMatrix<Integer, Integer> s = svd.getS();
         assertNotNull( s );
@@ -71,19 +76,23 @@ public class ExpressionDataSVDTest extends TestCase {
         }
     }
 
-    public void testUMatrixAsExpressionDataUnnormalized() throws Exception {
-        try {
-            svd.uMatrixAsExpressionData();
-            fail( "Should have gotten an exception" );
-        } catch ( IllegalStateException e ) {
-            //
-        }
+    /**
+     * Test method for {@link ubic.gemma.analysis.preprocess.ExpressionDataSVD#getU()}.
+     */
+    @Test
+    public void testGetU() {
+        DoubleMatrix<DesignElement, Integer> u = svd.getU();
+        assertNotNull( u );
     }
 
-    public void testUMatrixAsExpressionData() throws Exception {
-        svd = new ExpressionDataSVD( testData, true );
-        ExpressionDataDoubleMatrix matrixAsExpressionData = svd.uMatrixAsExpressionData();
-        assertNotNull( matrixAsExpressionData );
+    /**
+     * Test method for {@link ubic.gemma.analysis.preprocess.ExpressionDataSVD#svdNormalize()}.
+     */
+    @Test
+    public void testMatrixReconstruct() {
+        ExpressionDataDoubleMatrix svdNormalize = svd.removeHighestComponents( 0 );
+        assertNotNull( svdNormalize );
+        RegressionTesting.closeEnough( testData.getMatrix(), svdNormalize.getMatrix(), 0.001 );
     }
 
     /**
@@ -92,6 +101,7 @@ public class ExpressionDataSVDTest extends TestCase {
      * @throws Exception
      */
     @SuppressWarnings("unchecked")
+    @Test
     public void testMatrixReconstructB() throws Exception {
         GeoConverter gc = new GeoConverter();
         InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
@@ -116,26 +126,27 @@ public class ExpressionDataSVDTest extends TestCase {
         assertNotNull( svdNormalize );
     }
 
+    @Test
+    public void testUMatrixAsExpressionData() throws Exception {
+        svd = new ExpressionDataSVD( testData, true );
+        ExpressionDataDoubleMatrix matrixAsExpressionData = svd.uMatrixAsExpressionData();
+        assertNotNull( matrixAsExpressionData );
+    }
+
+    @Test
+    public void testUMatrixAsExpressionDataUnnormalized() throws Exception {
+        try {
+            svd.uMatrixAsExpressionData();
+            fail( "Should have gotten an exception" );
+        } catch ( IllegalStateException e ) {
+            //
+        }
+    }
+
+    @Test
     public void testWinnow() throws Exception {
         ExpressionDataDoubleMatrix winnow = svd.winnow( 0.5 );
         assertEquals( 100, winnow.rows() );
-    }
-
-    /**
-     * Test method for {@link ubic.gemma.analysis.preprocess.ExpressionDataSVD#getU()}.
-     */
-    public void testGetU() {
-        DoubleMatrix<DesignElement, Integer> u = svd.getU();
-        assertNotNull( u );
-    }
-
-    /**
-     * Test method for {@link ubic.gemma.analysis.preprocess.ExpressionDataSVD#svdNormalize()}.
-     */
-    public void testMatrixReconstruct() {
-        ExpressionDataDoubleMatrix svdNormalize = svd.removeHighestComponents( 0 );
-        assertNotNull( svdNormalize );
-        RegressionTesting.closeEnough( testData.getMatrix(), svdNormalize.getMatrix(), 0.001 );
     }
 
 }

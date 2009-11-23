@@ -36,6 +36,8 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import ubic.gemma.analysis.sequence.SequenceManipulation;
 import ubic.gemma.loader.genome.FastaCmd;
@@ -65,12 +67,8 @@ import ubic.gemma.util.progress.ProgressManager;
  * 
  * @author pavlidis
  * @version $Id$
- * @spring.bean id="arrayDesignSequenceProcessingService"
- * @spring.property name="persisterHelper" ref="persisterHelper"
- * @spring.property name="arrayDesignService" ref="arrayDesignService"
- * @spring.property name="bioSequenceService" ref="bioSequenceService"
- * @spring.property name="externalDatabaseService" ref="externalDatabaseService"
  */
+@Service
 public class ArrayDesignSequenceProcessingService {
 
     /**
@@ -88,12 +86,16 @@ public class ArrayDesignSequenceProcessingService {
 
     private static Log log = LogFactory.getLog( ArrayDesignSequenceProcessingService.class.getName() );
 
+    @Autowired
     private ArrayDesignService arrayDesignService;
 
+    @Autowired
     private PersisterHelper persisterHelper;
 
+    @Autowired
     private BioSequenceService bioSequenceService;
 
+    @Autowired
     private ExternalDatabaseService externalDatabaseService;
 
     /**
@@ -481,6 +483,11 @@ public class ArrayDesignSequenceProcessingService {
      * @throws IllegalArgumentException Thrown when there is not exactly 1 taxon.
      */
     protected Taxon validateTaxon( Taxon taxon, ArrayDesign arrayDesign ) throws IllegalArgumentException {
+
+        if ( arrayDesign == null ) {
+            throw new IllegalArgumentException( "Array design cannot be null" );
+        }
+
         if ( taxon == null ) {
             Collection<Taxon> taxaOnArray = arrayDesignService.getTaxa( arrayDesign.getId() );
 

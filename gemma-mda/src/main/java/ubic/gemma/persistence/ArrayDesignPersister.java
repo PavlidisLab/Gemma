@@ -25,6 +25,8 @@ import java.util.Map;
 import org.apache.commons.lang.StringUtils;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.orm.hibernate3.HibernateCallback;
 
 import ubic.basecode.util.CancellationException;
@@ -48,9 +50,6 @@ import ubic.gemma.model.genome.biosequence.BioSequenceImpl;
  * the arraydesign. However, designelements have associations with biosequence, which have their own lifecycle, in
  * general.
  * 
- * @spring.property name="arrayDesignService" ref="arrayDesignService"
- * @spring.property name="compositeSequenceService" ref="compositeSequenceService"
- * @spring.property name="reporterService" ref="reporterService"
  * @author pavlidis
  * @version $Id$
  */
@@ -58,16 +57,24 @@ abstract public class ArrayDesignPersister extends GenomePersister {
 
     protected static final String DESIGN_ELEMENT_KEY_SEPARATOR = ":::";
 
+    @Autowired
     protected ArrayDesignService arrayDesignService;
 
+    @Autowired
     protected CompositeSequenceService compositeSequenceService;
 
+    @Autowired
     protected ReporterService reporterService;
 
     private Map<String, ArrayDesign> arrayDesignCache = new HashMap<String, ArrayDesign>();
 
-    private Map<String, CompositeSequence> designElementCache = new HashMap<String, CompositeSequence>();
-    private Map<String, CompositeSequence> designElementSequenceCache = new HashMap<String, CompositeSequence>();
+    Map<String, CompositeSequence> designElementCache = new HashMap<String, CompositeSequence>();
+
+    Map<String, CompositeSequence> designElementSequenceCache = new HashMap<String, CompositeSequence>();
+
+    public ArrayDesignPersister( SessionFactory sessionFactory ) {
+        super( sessionFactory );
+    }
 
     public Map<String, CompositeSequence> getDesignElementCache() {
         return designElementCache;
@@ -148,8 +155,9 @@ abstract public class ArrayDesignPersister extends GenomePersister {
         }
         designElement = compositeSequenceService.create( designElement );
 
-        this.getHibernateTemplate().flush();
         arrayDesign.getCompositeSequences().add( designElement );
+
+        this.arrayDesignService.update( arrayDesign );
 
         return designElement;
 
@@ -170,7 +178,7 @@ abstract public class ArrayDesignPersister extends GenomePersister {
         log.info( "Caching array design elements for " + arrayDesign );
 
         int startCacheSize = designElementCache.keySet().size();
-        this.getHibernateTemplate().executeWithNativeSession( new HibernateCallback() {
+        this.getHibernateTemplate().executeWithNativeSession( new HibernateCallback<Object>() {
 
             // We need to do this in hibernate to thaw the biosequences.
             public Object doInHibernate( Session session ) throws HibernateException {

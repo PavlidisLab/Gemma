@@ -18,23 +18,26 @@
  */
 package ubic.gemma.testing;
 
-import java.util.ResourceBundle;
+import javax.sql.DataSource;
 
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.hibernate.FlushMode;
+import org.apache.commons.logging.LogFactory; 
 import org.hibernate.SessionFactory;
+import org.junit.Before;
 import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
-import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.mock.web.MockServletContext;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.support.EncodedResource;
+import org.springframework.dao.DataAccessException;
+import org.springframework.jdbc.core.simple.SimpleJdbcTemplate;
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
-import org.springframework.test.AbstractTransactionalSpringContextTests;
-import org.springframework.web.context.support.XmlWebApplicationContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
+import org.springframework.test.jdbc.SimpleJdbcTestUtils;
 
 import ubic.gemma.model.common.auditAndSecurity.Contact;
-import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
@@ -52,79 +55,49 @@ import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.persistence.PersisterHelper;
 import ubic.gemma.util.CompassUtils;
-import ubic.gemma.util.ConfigUtils;
-import ubic.gemma.util.SpringContextUtil;
-import org.directwebremoting.spring.SpringCreator;
 
 /**
- * Override this test class for tests that need the container and use the database and you want to leave the database
- * unchanged. Note that if you call flush in your transaction the database will still be modified.
- * <p>
- * In your test class, define any dependencies you have on beans "as usual" for setter injection - by defining the field
- * and making a public setter. This base class also provides a PersisterHelper, which is often needed by tests.
- * <p>
- * If your setup requires putting data in the database, override onSetUpInTransaction() instead of putting such code in
- * setUp(). Be sure to call super.onSetUpInTransaction() to make the authority available to your subclass.
- * <p>
- * Any changes you make to the database will be undone at the end of the test, so no cleanup code is needed. If you
- * don't want this behavior, call setComplete() in your test.
+ * subclass for tests that need the container and use the database
  * 
- * @see org.springframework.test.AbstractTransactionalSpringContextTests
  * @author pavlidis
  * @version $Id$
  */
-abstract public class BaseSpringContextTest extends AbstractTransactionalSpringContextTests {
+@ContextConfiguration(locations = { "classpath*:ubic/gemma/localTestDataSource.xml",
+        "classpath*:ubic/gemma/applicationContext-security.xml", "classpath*:ubic/gemma/applicationContext-search.xml",
+        "classpath*:ubic/gemma/applicationContext-hibernate.xml",
+        "classpath*:ubic/gemma/applicationContext-serviceBeans.xml",
+        "classpath*:ubic/gemma/applicationContext-schedule.xml" })
+public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextTests {
 
     protected static final int RANDOM_STRING_LENGTH = 10;
     protected static final int TEST_ELEMENT_COLLECTION_SIZE = 5;
 
-    private boolean testEnvDisabled;
-    protected ResourceBundle resourceBundle;
+    private static ArrayDesign readOnlyad = null;
+
+    private static ExpressionExperiment readOnlyee = null;
+
+    @Autowired
+    protected ExternalDatabaseService externalDatabaseService;
+
+    protected HibernateDaoSupport hibernateSupport = new HibernateDaoSupport() {
+    };
 
     protected Log log = LogFactory.getLog( getClass() );
 
-    protected TestPersistentObjectHelper testHelper;
+    @Autowired
     protected PersisterHelper persisterHelper;
+
+    /**
+     * The SimpleJdbcTemplate that this base class manages, available to subclasses. (Datasource; autowired at setteer)
+     */
+    protected SimpleJdbcTemplate simpleJdbcTemplate;
+
+    @Autowired
     protected TaxonService taxonService;
 
-    HibernateDaoSupport hibernateSupport = new HibernateDaoSupport() {
-    };
+    protected TestPersistentObjectHelper testHelper;
 
-    private ConfigurableApplicationContext context;
-    private static ExpressionExperiment readOnlyee = null;
-    private static ArrayDesign readOnlyad = null;
-
-    /**
-     * 
-     * 
-     */
-    public BaseSpringContextTest() {
-        super();
-        setAutowireMode( AutowireCapableBeanFactory.AUTOWIRE_BY_NAME );
-    }
-
-    /**
-     * Force the hibernate session to flush and clear.
-     */
-    public void flushAndClearSession() {
-        flushSession();
-        hibernateSupport.getHibernateTemplate().clear();
-    }
-
-    public void deleteSingleObject( Object entity ) {
-        hibernateSupport.getHibernateTemplate().delete( entity );
-    }
-
-    public void thawSingleObject( Object entity ) {
-        hibernateSupport.getHibernateTemplate().update( entity );
-    }
-
-    /**
-     * Force the hibernate session to flush.
-     */
-    public void flushSession() {
-        hibernateSupport.getHibernateTemplate().flush();
-    }
+    private String sqlScriptEncoding;
 
     /**
      * @param commonName e.g. mouse,human,rat
@@ -135,19 +108,50 @@ abstract public class BaseSpringContextTest extends AbstractTransactionalSpringC
     }
 
     /**
-     * @return
+     * @throws Exception
      */
-    public boolean isTestEnvDisabled() {
-        return testEnvDisabled;
+    @Before
+    public final void init() throws Exception {
+        SecurityContextHolder.setStrategyName( SecurityContextHolder.MODE_INHERITABLETHREADLOCAL );
+        hibernateSupport.setSessionFactory( ( SessionFactory ) this.getBean( "sessionFactory" ) );
+
+        CompassUtils.deleteCompassLocks();
+
+        runAsAdmin();
+
+        this.testHelper = new TestPersistentObjectHelper();
+        testHelper.setPersisterHelper( persisterHelper );
+        testHelper.setExternalDatabaseService( externalDatabaseService );
+
+        /*
+         * TODO: delete the log files.
+         */
+
     }
 
     /**
-     * Option to override use of the test environment.
+     * Run as a regular user.
      * 
-     * @param disableTestEnv
+     * @param userName
      */
-    public void setDisableTestEnv( boolean testEnvDisabled ) {
-        this.testEnvDisabled = testEnvDisabled;
+    public void runAsUser( String userName ) {
+        AuthenticationTestingUtil.switchToUser( this.applicationContext, userName );
+    }
+
+    /**
+     * Elevate to administrative privileges (tests normally run this way, this can be used to set it back if you called
+     * runAsUser). This gets called before each test, no need to run it yourself otherwise.
+     */
+    protected void runAsAdmin() {
+        AuthenticationTestingUtil.grantAdminAuthority( this.applicationContext );
+    }
+
+    /**
+     * Set the DataSource, typically provided via Dependency Injection.
+     */
+    @Autowired
+    public void setDataSource( DataSource dataSource ) {
+        this.simpleJdbcTemplate = new SimpleJdbcTemplate( dataSource );
     }
 
     /**
@@ -158,24 +162,66 @@ abstract public class BaseSpringContextTest extends AbstractTransactionalSpringC
     }
 
     /**
-     * Use these locations when overriding the test config locations.
+     * Specify the encoding for SQL scripts, if different from the platform encoding.
      * 
-     * @return
+     * @see #executeSqlScript
      */
-    private Object getStandardLocations() {
-        return SpringContextUtil.getConfigLocations( false, false, false, this.isWebapp() );
+    public void setSqlScriptEncoding( String sqlScriptEncoding ) {
+        this.sqlScriptEncoding = sqlScriptEncoding;
+    }
+
+    public void setTaxonService( TaxonService taxonService ) {
+        this.taxonService = taxonService;
     }
 
     /**
-     * Guess if this is a test that needs the action-servlet.xml
-     * <p>
-     * Implementation note: this words on the assumption the class under test in in the ubic.gemma.web package
-     * hierarchy.
+     * Convenience shortcut for RandomStringUtils.randomAlphabetic( 10 ) (or something similar to that)
      * 
      * @return
      */
-    private boolean isWebapp() {
-        return this.getClass().getPackage().getName().contains( ".web." );
+    public String randomName() {
+        return RandomStringUtils.randomAlphabetic( 10 );
+    }
+
+    protected void addTestAnalyses( ExpressionExperiment ee ) {
+        testHelper.addTestAnalyses( ee );
+    }
+
+    /**
+     * Count the rows in the given table.
+     * 
+     * @param tableName table name to count rows in
+     * @return the number of rows in the table
+     */
+    protected int countRowsInTable( String tableName ) {
+        return SimpleJdbcTestUtils.countRowsInTable( this.simpleJdbcTemplate, tableName );
+    }
+
+    /**
+     * Convenience method for deleting all rows from the specified tables. Use with caution outside of a transaction!
+     * 
+     * @param names the names of the tables from which to delete
+     * @return the total number of rows deleted from all specified tables
+     */
+    protected int deleteFromTables( String... names ) {
+        return SimpleJdbcTestUtils.deleteFromTables( this.simpleJdbcTemplate, names );
+    }
+
+    /**
+     * Execute the given SQL script. Use with caution outside of a transaction!
+     * <p>
+     * The script will normally be loaded by classpath. There should be one statement per line. Any semicolons will be
+     * removed. <b>Do not use this method to execute DDL if you expect rollback.</b>
+     * 
+     * @param sqlResourcePath the Spring resource path for the SQL script
+     * @param continueOnError whether or not to continue without throwing an exception in the event of an error
+     * @throws DataAccessException if there is an error executing a statement and continueOnError was <code>false</code>
+     */
+    protected void executeSqlScript( String sqlResourcePath, boolean continueOnError ) throws DataAccessException {
+
+        Resource resource = this.applicationContext.getResource( sqlResourcePath );
+        SimpleJdbcTestUtils.executeSqlScript( this.simpleJdbcTemplate, new EncodedResource( resource,
+                this.sqlScriptEncoding ), continueOnError );
     }
 
     /**
@@ -187,18 +233,12 @@ abstract public class BaseSpringContextTest extends AbstractTransactionalSpringC
      */
     protected Object getBean( String name ) {
         try {
-            if ( isTestEnvDisabled() ) return getContext( getStandardLocations() ).getBean( name );
-            return getContext( getConfigLocations() ).getBean( name );
+            return this.applicationContext.getBean( name );
         } catch ( BeansException e ) {
             throw new RuntimeException( e );
         } catch ( Exception e ) {
             throw new RuntimeException( e );
         }
-    }
-
-    @Override
-    protected String[] getConfigLocations() {
-        return SpringContextUtil.getConfigLocations( true, true, false, this.isWebapp() );
     }
 
     /**
@@ -240,6 +280,13 @@ abstract public class BaseSpringContextTest extends AbstractTransactionalSpringC
             return readOnlyad;
         }
         return testHelper.getTestPersistentArrayDesign( numCompositeSequences, randomNames, doSequence );
+    }
+
+    /**
+     * @return EE with no data; just bioassays, biomaterials, quantitation types and (minimal) array designs.
+     */
+    protected ExpressionExperiment getTestPersistentBasicExpressionExperiment() {
+        return testHelper.getTestPersistentBasicExpressionExperiment();
     }
 
     protected BibliographicReference getTestPersistentBibliographicReference( String accession ) {
@@ -294,17 +341,6 @@ abstract public class BaseSpringContextTest extends AbstractTransactionalSpringC
         ExpressionExperiment ee = testHelper.getTestExpressionExperimentWithAllDependencies();
 
         return ee;
-    }
-
-    protected void addTestAnalyses( ExpressionExperiment ee ) {
-        testHelper.addTestAnalyses( ee );
-    }
-
-    /**
-     * @return EE with no data; just bioassays, biomaterials, quantitation types and (minimal) array designs.
-     */
-    protected ExpressionExperiment getTestPersistentBasicExpressionExperiment() {
-        return testHelper.getTestPersistentBasicExpressionExperiment();
     }
 
     /**
@@ -389,129 +425,6 @@ abstract public class BaseSpringContextTest extends AbstractTransactionalSpringC
      */
     protected QuantitationType getTestPersistentQuantitationType() {
         return testHelper.getTestPersistentQuantitationType();
-    }
-
-    protected User getTestPersistentUser() {
-        return getTestPersistentUser( RandomStringUtils.randomAlphabetic( 6 ), ConfigUtils
-                .getString( "gemma.admin.password" ) );
-    }
-
-    /**
-     * @return
-     */
-    protected User getTestPersistentUser( String username, String password ) {
-        return testHelper.getTestPersistentUser( username, password );
-
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.springframework.test.AbstractDependencyInjectionSpringContextTests#loadContextLocations(java.lang.String[])
-     */
-    @Override
-    protected ConfigurableApplicationContext loadContextLocations( String[] locations ) {
-
-        if ( log.isDebugEnabled() ) {
-            for ( int i = 0; i < locations.length; i++ ) {
-                String string = locations[i];
-                log.debug( "Location: " + string );
-            }
-        }
-
-        ConfigurableApplicationContext ctx = new XmlWebApplicationContext();
-
-        /*
-         * Needed for DWR support only. When running in a web container this is taken care of by
-         * org.springframework.web.context.ContextLoaderListener
-         */
-        SpringCreator.setOverrideBeanFactory( ctx );
-
-        /*
-         * Start up the spring context.
-         */
-        ( ( XmlWebApplicationContext ) ctx ).setConfigLocations( locations );
-        ( ( XmlWebApplicationContext ) ctx ).setServletContext( new MockServletContext( "" ) );
-        ( ( XmlWebApplicationContext ) ctx ).refresh();
-
-        this.context = ctx;
-
-        return ctx;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.springframework.test.AbstractTransactionalSpringContextTests#onSetUpInTransaction()
-     */
-    @Override
-    protected void onSetUpInTransaction() throws Exception {
-        super.onSetUpInTransaction();
-
-        hibernateSupport.setSessionFactory( ( SessionFactory ) this.getBean( "sessionFactory" ) );
-        CompassUtils.deleteCompassLocks();
-        SpringTestUtil.grantAuthority( this.getContext( this.getConfigLocations() ) );
-        this.testHelper = new TestPersistentObjectHelper();
-
-        ExternalDatabaseService externalDatabaseService = ( ExternalDatabaseService ) getBean( "externalDatabaseService" );
-        persisterHelper = ( PersisterHelper ) getBean( "persisterHelper" ); // beans not injected yet, have to do
-        // explicitly?
-        testHelper.setPersisterHelper( persisterHelper );
-        testHelper.setExternalDatabaseService( externalDatabaseService ); 
-    }
-
-    /**
-     * The test user does not have admin privileges.
-     * 
-     * @param username - Allows you to create different users, each with user (not admin privileges).
-     * @throws Exception
-     */
-    protected void onSetUpInTransactionGrantingUserAuthority( String username ) throws Exception {
-        super.onSetUpInTransaction();
-        hibernateSupport.setSessionFactory( ( SessionFactory ) this.getBean( "sessionFactory" ) );
-        CompassUtils.deleteCompassLocks();
-        SpringTestUtil.grantUserAuthority( this.getContext( this.getConfigLocations() ), username );
-        this.testHelper = new TestPersistentObjectHelper();
-
-        ExternalDatabaseService externalDatabaseService = ( ExternalDatabaseService ) getBean( "externalDatabaseService" );
-        persisterHelper = ( PersisterHelper ) getBean( "persisterHelper" ); // beans not injected yet, have to do
-        // explicitly?
-        testHelper.setPersisterHelper( persisterHelper );
-        testHelper.setExternalDatabaseService( externalDatabaseService );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.springframework.test.AbstractTransactionalSpringContextTests#onTearDownInTransaction()
-     */
-    @Override
-    protected void onTearDownInTransaction() throws Exception {
-        super.onTearDownInTransaction();
-    }
-
-    /**
-     * Call this method near the start of your test to avoid "Stale data" errors ("Cannot synchronize session with
-     * persistent store..."). FlushMode.COMMIT means that the cache will never be flushed before queries, only at the
-     * end of the transaction. If you are getting errors when "find" methods are used, this could help.
-     * <p>
-     * It can also improve performance during tests, at the possible cost of a big hit at the end.
-     * <p>
-     * Use this carefully -- if your test is going to 'find' data that hasn't been flushed yet, you'll have problems.
-     */
-    protected void setFlushModeCommit() {
-        ( ( SessionFactory ) this.getBean( "sessionFactory" ) ).getCurrentSession().setFlushMode( FlushMode.COMMIT );
-    }
-
-    /**
-     * @return the context
-     */
-    public ConfigurableApplicationContext getContext() {
-        return this.context;
-    }
-
-    public void setTaxonService( TaxonService taxonService ) {
-        this.taxonService = taxonService;
     }
 
 }

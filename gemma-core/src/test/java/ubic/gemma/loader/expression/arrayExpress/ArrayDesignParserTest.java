@@ -21,11 +21,12 @@ package ubic.gemma.loader.expression.arrayExpress;
 import java.io.InputStream;
 import java.util.Collection;
 
+import junit.framework.TestCase;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import junit.framework.TestCase;
 
 /**
  * Test of ArrayExpress array design parsing.

@@ -21,6 +21,8 @@ package ubic.gemma.model.association;
 
 import java.util.Collection;
 
+import org.springframework.stereotype.Service;
+
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 
@@ -29,6 +31,7 @@ import ubic.gemma.model.genome.Taxon;
  * @author klc
  * @version $Id$
  */
+@Service
 public class Gene2GOAssociationServiceImpl extends ubic.gemma.model.association.Gene2GOAssociationServiceBase {
 
     /**

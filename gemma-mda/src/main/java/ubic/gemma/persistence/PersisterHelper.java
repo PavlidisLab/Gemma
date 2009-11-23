@@ -18,6 +18,10 @@
  */
 package ubic.gemma.persistence;
 
+import org.hibernate.SessionFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
 import ubic.gemma.model.common.Auditable;
 
 /**
@@ -28,16 +32,20 @@ import ubic.gemma.model.common.Auditable;
  * @author pavlidis
  * @author keshav
  * @version $Id$
- * @spring.bean id="persisterHelper"
  */
+@Service
 public class PersisterHelper extends RelationshipPersister {
+
+    @Autowired
+    public PersisterHelper( SessionFactory sessionFactory ) {
+        super( sessionFactory );
+    }
 
     /*
      * (non-Javadoc)
      * @see ubic.gemma.model.loader.loaderutils.Loader#create(ubic.gemma.model.genome.Gene)
      */
     @Override
-    @SuppressWarnings("unchecked")
     public Object persist( Object entity ) {
 
         if ( entity instanceof Auditable ) {

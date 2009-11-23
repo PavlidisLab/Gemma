@@ -72,7 +72,7 @@ public abstract class GeneProductDaoBase extends ubic.gemma.model.genome.Chromos
             throw new IllegalArgumentException( "GeneProduct.create - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback() {
+                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
@@ -98,7 +98,7 @@ public abstract class GeneProductDaoBase extends ubic.gemma.model.genome.Chromos
     /**
      * @see ubic.gemma.model.genome.gene.GeneProductDao#create(java.util.Collection)
      */
-    @SuppressWarnings( { "unchecked" })
+
     public java.util.Collection create( final java.util.Collection entities ) {
         return create( TRANSFORM_NONE, entities );
     }
@@ -114,7 +114,7 @@ public abstract class GeneProductDaoBase extends ubic.gemma.model.genome.Chromos
      * @see ubic.gemma.model.genome.gene.GeneProductDao#find(int, java.lang.String,
      *      ubic.gemma.model.genome.gene.GeneProduct)
      */
-    @SuppressWarnings( { "unchecked" })
+
     public Object find( final int transform, final java.lang.String queryString,
             final ubic.gemma.model.genome.gene.GeneProduct geneProduct ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -124,14 +124,12 @@ public abstract class GeneProductDaoBase extends ubic.gemma.model.genome.Chromos
         java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
                 argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
         Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'ubic.gemma.model.genome.gene.GeneProduct"
-                                + "' was found when executing query --> '" + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
+        if ( results.size() > 1 ) {
+            throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                    "More than one instance of 'ubic.gemma.model.genome.gene.GeneProduct"
+                            + "' was found when executing query --> '" + queryString + "'" );
+        } else if ( results.size() == 1 ) {
+            result = results.iterator().next();
         }
         result = transformEntity( transform, ( ubic.gemma.model.genome.gene.GeneProduct ) result );
         return result;
@@ -140,7 +138,7 @@ public abstract class GeneProductDaoBase extends ubic.gemma.model.genome.Chromos
     /**
      * @see ubic.gemma.model.genome.gene.GeneProductDao#find(int, ubic.gemma.model.genome.gene.GeneProduct)
      */
-    @SuppressWarnings( { "unchecked" })
+
     public Object find( final int transform, final ubic.gemma.model.genome.gene.GeneProduct geneProduct ) {
         return this
                 .find(
@@ -152,7 +150,7 @@ public abstract class GeneProductDaoBase extends ubic.gemma.model.genome.Chromos
     /**
      * @see ubic.gemma.model.genome.gene.GeneProductDao#find(java.lang.String, ubic.gemma.model.genome.gene.GeneProduct)
      */
-    @SuppressWarnings( { "unchecked" })
+
     public ubic.gemma.model.genome.gene.GeneProduct find( final java.lang.String queryString,
             final ubic.gemma.model.genome.gene.GeneProduct geneProduct ) {
         return ( ubic.gemma.model.genome.gene.GeneProduct ) this.find( TRANSFORM_NONE, queryString, geneProduct );
@@ -169,7 +167,6 @@ public abstract class GeneProductDaoBase extends ubic.gemma.model.genome.Chromos
      * @see ubic.gemma.model.genome.gene.GeneProductDao#findByNcbiId(int, java.lang.String)
      */
 
-    @SuppressWarnings( { "unchecked" })
     public java.util.Collection findByNcbiId( final int transform, final java.lang.String ncbiId ) {
         return this.findByNcbiId( transform, "from GeneImpl g where g.ncbiId = :ncbiId", ncbiId );
     }
@@ -178,7 +175,6 @@ public abstract class GeneProductDaoBase extends ubic.gemma.model.genome.Chromos
      * @see ubic.gemma.model.genome.gene.GeneProductDao#findByNcbiId(int, java.lang.String, java.lang.String)
      */
 
-    @SuppressWarnings( { "unchecked" })
     public java.util.Collection findByNcbiId( final int transform, final java.lang.String queryString,
             final java.lang.String ncbiId ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -204,7 +200,6 @@ public abstract class GeneProductDaoBase extends ubic.gemma.model.genome.Chromos
      */
 
     @Override
-    @SuppressWarnings( { "unchecked" })
     public java.util.Collection findByNcbiId( final java.lang.String queryString, final java.lang.String ncbiId ) {
         return this.findByNcbiId( TRANSFORM_NONE, queryString, ncbiId );
     }
@@ -215,7 +210,6 @@ public abstract class GeneProductDaoBase extends ubic.gemma.model.genome.Chromos
      */
 
     @Override
-    @SuppressWarnings( { "unchecked" })
     public java.util.Collection findByPhysicalLocation( final int transform, final java.lang.String queryString,
             final ubic.gemma.model.genome.PhysicalLocation location ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -234,7 +228,6 @@ public abstract class GeneProductDaoBase extends ubic.gemma.model.genome.Chromos
      */
 
     @Override
-    @SuppressWarnings( { "unchecked" })
     public java.util.Collection findByPhysicalLocation( final int transform,
             final ubic.gemma.model.genome.PhysicalLocation location ) {
         return this.findByPhysicalLocation( transform,
@@ -248,7 +241,6 @@ public abstract class GeneProductDaoBase extends ubic.gemma.model.genome.Chromos
      */
 
     @Override
-    @SuppressWarnings( { "unchecked" })
     public java.util.Collection findByPhysicalLocation( final java.lang.String queryString,
             final ubic.gemma.model.genome.PhysicalLocation location ) {
         return this.findByPhysicalLocation( TRANSFORM_NONE, queryString, location );
@@ -267,7 +259,7 @@ public abstract class GeneProductDaoBase extends ubic.gemma.model.genome.Chromos
      * @see ubic.gemma.model.genome.gene.GeneProductDao#findOrCreate(int, java.lang.String,
      *      ubic.gemma.model.genome.gene.GeneProduct)
      */
-    @SuppressWarnings( { "unchecked" })
+
     public Object findOrCreate( final int transform, final java.lang.String queryString,
             final ubic.gemma.model.genome.gene.GeneProduct geneProduct ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -277,14 +269,12 @@ public abstract class GeneProductDaoBase extends ubic.gemma.model.genome.Chromos
         java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
                 argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
         Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'ubic.gemma.model.genome.gene.GeneProduct"
-                                + "' was found when executing query --> '" + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
+        if ( results.size() > 1 ) {
+            throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                    "More than one instance of 'ubic.gemma.model.genome.gene.GeneProduct"
+                            + "' was found when executing query --> '" + queryString + "'" );
+        } else if ( results.size() == 1 ) {
+            result = results.iterator().next();
         }
         result = transformEntity( transform, ( ubic.gemma.model.genome.gene.GeneProduct ) result );
         return result;
@@ -293,7 +283,7 @@ public abstract class GeneProductDaoBase extends ubic.gemma.model.genome.Chromos
     /**
      * @see ubic.gemma.model.genome.gene.GeneProductDao#findOrCreate(int, ubic.gemma.model.genome.gene.GeneProduct)
      */
-    @SuppressWarnings( { "unchecked" })
+
     public Object findOrCreate( final int transform, final ubic.gemma.model.genome.gene.GeneProduct geneProduct ) {
         return this
                 .findOrCreate(
@@ -306,7 +296,7 @@ public abstract class GeneProductDaoBase extends ubic.gemma.model.genome.Chromos
      * @see ubic.gemma.model.genome.gene.GeneProductDao#findOrCreate(java.lang.String,
      *      ubic.gemma.model.genome.gene.GeneProduct)
      */
-    @SuppressWarnings( { "unchecked" })
+
     public ubic.gemma.model.genome.gene.GeneProduct findOrCreate( final java.lang.String queryString,
             final ubic.gemma.model.genome.gene.GeneProduct geneProduct ) {
         return ( ubic.gemma.model.genome.gene.GeneProduct ) this
@@ -415,7 +405,6 @@ public abstract class GeneProductDaoBase extends ubic.gemma.model.genome.Chromos
      * @see ubic.gemma.model.genome.gene.GeneProductDao#loadAll()
      */
 
-    @SuppressWarnings( { "unchecked" })
     public java.util.Collection loadAll() {
         return this.loadAll( TRANSFORM_NONE );
     }
@@ -507,7 +496,7 @@ public abstract class GeneProductDaoBase extends ubic.gemma.model.genome.Chromos
             throw new IllegalArgumentException( "GeneProduct.update - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback() {
+                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {

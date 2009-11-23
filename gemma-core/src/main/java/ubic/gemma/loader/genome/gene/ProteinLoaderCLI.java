@@ -34,7 +34,7 @@ import org.springframework.beans.factory.BeanFactory;
 
 import ubic.gemma.model.genome.GeneDao;
 import ubic.gemma.model.genome.gene.GeneProductDao;
-import ubic.gemma.security.authentication.ManualAuthenticationProcessing;
+import ubic.gemma.security.authentication.ManualAuthenticationService;
 import ubic.gemma.util.SpringContextUtil;
 
 /**
@@ -50,7 +50,7 @@ public class ProteinLoaderCLI {
     // TODO extend AbstractCLI
 
     protected static final Log log = LogFactory.getLog( ProteinLoaderCLI.class );
-    protected static ManualAuthenticationProcessing manAuthentication = null;
+    protected static ManualAuthenticationService manAuthentication = null;
     protected static BeanFactory ctx = null;
 
     private static final String USAGE = "[-h] [-u <username>] [-p <password>]  [-t <true|false>] [-x <file>] [-l <file>] [-r] ";
@@ -145,7 +145,7 @@ public class ProteinLoaderCLI {
                 if ( cl.hasOption( 'p' ) ) {
                     username = cl.getOptionValue( 'u' );
                     password = cl.getOptionValue( 'p' );
-                    manAuthentication = ( ManualAuthenticationProcessing ) ctx
+                    manAuthentication = ( ManualAuthenticationService ) ctx
                             .getBean( "manualAuthenticationProcessing" );
                     manAuthentication.validateRequest( username, password );
                 }

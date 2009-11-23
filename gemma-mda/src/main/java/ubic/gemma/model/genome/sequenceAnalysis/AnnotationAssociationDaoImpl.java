@@ -1,3 +1,23 @@
+/*
+ * The Gemma project.
+ * 
+ * Copyright (c) 2006 University of British Columbia
+ * 
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ *
+ */
 package ubic.gemma.model.genome.sequenceAnalysis;
 
 import java.util.Collection;
@@ -5,16 +25,29 @@ import java.util.HashSet;
 
 import org.apache.commons.lang.StringUtils;
 import org.hibernate.Criteria;
+import org.hibernate.SessionFactory;
 import org.hibernate.criterion.Restrictions;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.orm.hibernate3.HibernateTemplate;
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
+import org.springframework.stereotype.Repository;
 
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.util.BusinessKey;
 
+/**
+ * @author paul
+ * @version $Id$
+ */
+@Repository
 public class AnnotationAssociationDaoImpl extends HibernateDaoSupport implements AnnotationAssociationDao {
+
+    @Autowired
+    public AnnotationAssociationDaoImpl( SessionFactory sessionFactory ) {
+        super.setSessionFactory( sessionFactory );
+    }
 
     /*
      * (non-Javadoc)
@@ -41,7 +74,7 @@ public class AnnotationAssociationDaoImpl extends HibernateDaoSupport implements
             throw new IllegalArgumentException( "AnnotationAssociation.create - 'anCollection' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback() {
+                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator<AnnotationAssociation> entityIterator = anCollection.iterator(); entityIterator
@@ -64,7 +97,7 @@ public class AnnotationAssociationDaoImpl extends HibernateDaoSupport implements
     public Collection<AnnotationAssociation> find( BioSequence bioSequence ) {
         BusinessKey.checkValidKey( bioSequence );
 
-        Criteria queryObject = super.getSession( false ).createCriteria( AnnotationAssociation.class );
+        Criteria queryObject = super.getSession().createCriteria( AnnotationAssociation.class );
 
         BusinessKey.attachCriteria( queryObject, bioSequence, "bioSequence" );
 
@@ -87,7 +120,7 @@ public class AnnotationAssociationDaoImpl extends HibernateDaoSupport implements
 
             BusinessKey.checkValidKey( geneProduct );
 
-            Criteria queryObject = super.getSession( false ).createCriteria( AnnotationAssociation.class );
+            Criteria queryObject = super.getSession().createCriteria( AnnotationAssociation.class );
             Criteria innerQuery = queryObject.createCriteria( "geneProduct" );
 
             if ( StringUtils.isNotBlank( geneProduct.getNcbiId() ) ) {
@@ -183,7 +216,7 @@ public class AnnotationAssociationDaoImpl extends HibernateDaoSupport implements
         if ( annotationAssociation == null ) return;
         if ( annotationAssociation.getId() == null ) return;
         HibernateTemplate templ = this.getHibernateTemplate();
-        templ.executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback() {
+        templ.executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
                 thawAssociation( session, annotationAssociation );
                 return null;
@@ -199,7 +232,7 @@ public class AnnotationAssociationDaoImpl extends HibernateDaoSupport implements
     public void thaw( final Collection<AnnotationAssociation> anCollection ) {
         if ( anCollection == null ) return;
         HibernateTemplate templ = this.getHibernateTemplate();
-        templ.executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback() {
+        templ.executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
                 for ( Object object : anCollection ) {
                     AnnotationAssociation blatAssociation = ( AnnotationAssociation ) object;
@@ -238,7 +271,7 @@ public class AnnotationAssociationDaoImpl extends HibernateDaoSupport implements
             throw new IllegalArgumentException( "AnnotationAssociation.update - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback() {
+                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator<AnnotationAssociation> entityIterator = anCollection.iterator(); entityIterator

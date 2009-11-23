@@ -18,17 +18,21 @@
  */
 package ubic.gemma.model.association;
 
+import org.springframework.security.access.annotation.Secured;
+
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.genome.Gene;
 
 /**
- * 
+ * @author kelsey
+ * @version $Id$
  */
 public interface Gene2GOAssociationService {
 
     /**
      * 
      */
+    @Secured( { "GROUP_ADMIN" })
     public ubic.gemma.model.association.Gene2GOAssociation create(
             ubic.gemma.model.association.Gene2GOAssociation gene2GOAssociation );
 
@@ -39,11 +43,9 @@ public interface Gene2GOAssociationService {
             ubic.gemma.model.association.Gene2GOAssociation gene2GOAssociation );
 
     /**
-     * <p>
      * Returns all the Gene2GoAssociation's for the given Gene
-     * </p>
      */
-    public java.util.Collection findAssociationByGene( ubic.gemma.model.genome.Gene gene );
+    public java.util.Collection<Gene2GOAssociation> findAssociationByGene( ubic.gemma.model.genome.Gene gene );
 
     /**
      * 
@@ -60,6 +62,7 @@ public interface Gene2GOAssociationService {
     /**
      * 
      */
+    @Secured( { "GROUP_ADMIN" })
     public ubic.gemma.model.association.Gene2GOAssociation findOrCreate(
             ubic.gemma.model.association.Gene2GOAssociation gene2GOAssociation );
 
@@ -68,6 +71,7 @@ public interface Gene2GOAssociationService {
      * Delete all Gene2GO associations from the system (done prior to an update
      * </p>
      */
+    @Secured( { "GROUP_ADMIN" })
     public void removeAll();
 
 }

@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.common.measurement;
 
+import java.util.Collection;
+
 /**
  * <p>
  * Base Spring DAO Class: is able to create, update, remove, load, and find objects of type
@@ -32,15 +34,17 @@ public abstract class UnitDaoBase extends org.springframework.orm.hibernate3.sup
     /**
      * @see ubic.gemma.model.common.measurement.UnitDao#create(int, java.util.Collection)
      */
-    public java.util.Collection<Unit> create( final int transform, final java.util.Collection<Unit> entities ) {
+    public java.util.Collection<? extends Unit> create( final int transform,
+            final java.util.Collection<? extends Unit> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "Unit.create - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback() {
+                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator<Unit> entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                        for ( java.util.Iterator<? extends Unit> entityIterator = entities.iterator(); entityIterator
+                                .hasNext(); ) {
                             create( transform, entityIterator.next() );
                         }
                         return null;
@@ -49,6 +53,11 @@ public abstract class UnitDaoBase extends org.springframework.orm.hibernate3.sup
         return entities;
     }
 
+    
+    public Collection<? extends Unit > load( Collection<Long> ids ) {
+        return this.getHibernateTemplate().findByNamedParam( "from UnitImpl where id in (:ids)", "ids", ids );
+    }
+    
     /**
      * @see ubic.gemma.model.common.measurement.UnitDao#create(int transform, ubic.gemma.model.common.measurement.Unit)
      */
@@ -63,8 +72,8 @@ public abstract class UnitDaoBase extends org.springframework.orm.hibernate3.sup
     /**
      * @see ubic.gemma.model.common.measurement.UnitDao#create(java.util.Collection)
      */
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Collection<Unit> create( final java.util.Collection entities ) {
+    
+    public java.util.Collection<? extends Unit> create( final java.util.Collection entities ) {
         return create( TRANSFORM_NONE, entities );
     }
 
@@ -96,16 +105,15 @@ public abstract class UnitDaoBase extends org.springframework.orm.hibernate3.sup
     /**
      * @see ubic.gemma.model.common.measurement.UnitDao#loadAll()
      */
-    public java.util.Collection<Unit> loadAll() {
+    public java.util.Collection<? extends Unit> loadAll() {
         return this.loadAll( TRANSFORM_NONE );
     }
 
     /**
      * @see ubic.gemma.model.common.measurement.UnitDao#loadAll(int)
      */
-    @SuppressWarnings("unchecked")
-    public java.util.Collection<Unit> loadAll( final int transform ) {
-        final java.util.Collection<Unit> results = this.getHibernateTemplate().loadAll(
+    public java.util.Collection<? extends Unit> loadAll( final int transform ) {
+        final java.util.Collection<? extends Unit> results = this.getHibernateTemplate().loadAll(
                 ubic.gemma.model.common.measurement.UnitImpl.class );
         this.transformEntities( transform, results );
         return results;
@@ -127,7 +135,7 @@ public abstract class UnitDaoBase extends org.springframework.orm.hibernate3.sup
     /**
      * @see ubic.gemma.model.common.measurement.UnitDao#remove(java.util.Collection)
      */
-    public void remove( java.util.Collection<Unit> entities ) {
+    public void remove( java.util.Collection<? extends Unit> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "Unit.remove - 'entities' can not be null" );
         }
@@ -147,15 +155,16 @@ public abstract class UnitDaoBase extends org.springframework.orm.hibernate3.sup
     /**
      * @see ubic.gemma.model.common.measurement.UnitDao#update(java.util.Collection)
      */
-    public void update( final java.util.Collection<Unit> entities ) {
+    public void update( final java.util.Collection<? extends Unit> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "Unit.update - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback() {
+                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator<Unit> entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                        for ( java.util.Iterator<? extends Unit> entityIterator = entities.iterator(); entityIterator
+                                .hasNext(); ) {
                             update( entityIterator.next() );
                         }
                         return null;
@@ -185,7 +194,7 @@ public abstract class UnitDaoBase extends org.springframework.orm.hibernate3.sup
      * @return the same collection as the argument, but this time containing the transformed entities
      * @see #transformEntity(int,ubic.gemma.model.common.measurement.Unit)
      */
-    protected void transformEntities( final int transform, final java.util.Collection<Unit> entities ) {
+    protected void transformEntities( final int transform, final java.util.Collection<? extends Unit> entities ) {
         switch ( transform ) {
             case TRANSFORM_NONE: // fall-through
             default:

@@ -22,44 +22,12 @@ import ubic.gemma.persistence.BaseDao;
 
 /**
  * @see ubic.gemma.model.analysis.Investigation
+ * @version $Id$
  */
 public interface InvestigationDao<T extends Investigation> extends BaseDao<T> {
-    /**
-     * <p>
-     * Does the same thing as {@link #findByInvestigator(boolean, ubic.gemma.model.common.auditAndSecurity.Contact)}
-     * with an additional argument called <code>queryString</code>. This <code>queryString</code> argument allows you to
-     * override the query string defined in {@link #findByInvestigator(int,
-     * ubic.gemma.model.common.auditAndSecurity.Contact investigator)}.
-     * </p>
-     */
-    public java.util.Collection<T> findByInvestigator( int transform, String queryString,
-            ubic.gemma.model.common.auditAndSecurity.Contact investigator );
 
     /**
-     * <p>
-     * Does the same thing as {@link #findByInvestigator(ubic.gemma.model.common.auditAndSecurity.Contact)} with an
-     * additional flag called <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then finder
-     * results will <strong>NOT</strong> be transformed during retrieval. If this flag is any of the other constants
-     * defined here then finder results <strong>WILL BE</strong> passed through an operation which can optionally
-     * transform the entities (into value objects for example). By default, transformation does not occur.
-     * </p>
-     */
-    public java.util.Collection<T> findByInvestigator( int transform,
-            ubic.gemma.model.common.auditAndSecurity.Contact investigator );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findByInvestigator(ubic.gemma.model.common.auditAndSecurity.Contact)} with an
-     * additional argument called <code>queryString</code>. This <code>queryString</code> argument allows you to
-     * override the query string defined in
-     * {@link #findByInvestigator(ubic.gemma.model.common.auditAndSecurity.Contact)}.
-     * </p>
-     */
-    public java.util.Collection<T> findByInvestigator( String queryString,
-            ubic.gemma.model.common.auditAndSecurity.Contact investigator );
-
-    /**
-     * 
+     * Returns collection of investigations associated with the given Contact.
      */
     public java.util.Collection<T> findByInvestigator( ubic.gemma.model.common.auditAndSecurity.Contact investigator );
 

@@ -32,6 +32,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.lang.StringUtils;
 import org.quartz.impl.StdScheduler;
 import org.springframework.beans.factory.BeanFactory;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
@@ -41,7 +42,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.PersisterHelper;
-import ubic.gemma.security.authentication.ManualAuthenticationProcessing;
+import ubic.gemma.security.authentication.ManualAuthenticationService;
 
 /**
  * Subclass this to create command line interface (CLI) tools that need a Spring context. A standard set of CLI options
@@ -55,7 +56,7 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
     private static final String GIGASPACES_ON = "gigaspacesOn";
 
     protected BeanFactory ctx = null;
-    protected PersisterHelper ph = null;
+    protected PersisterHelper persisterHelper = null;
     protected AuditTrailService auditTrailService;
     protected Collection<Exception> exceptionCache = new ArrayList<Exception>();
 
@@ -119,8 +120,8 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
      * @return
      */
     protected PersisterHelper getPersisterHelper() {
-        if ( ph != null ) {
-            return ph;
+        if ( persisterHelper != null ) {
+            return persisterHelper;
         }
         assert ctx != null : "Spring context was not initialized";
         return ( PersisterHelper ) ctx.getBean( "persisterHelper" );
@@ -185,8 +186,14 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
 
     /** check username and password. */
     void authenticate() {
-        ManualAuthenticationProcessing manAuthentication = ( ManualAuthenticationProcessing ) ctx
-                .getBean( "manualAuthenticationProcessing" );
+
+        /*
+         * Allow security settings (authorization etc) in a given context to be passed into spawned threads
+         */
+        SecurityContextHolder.setStrategyName( SecurityContextHolder.MODE_INHERITABLETHREADLOCAL );
+
+        ManualAuthenticationService manAuthentication = ( ManualAuthenticationService ) ctx
+                .getBean( "manualAuthenticationService" );
         if ( hasOption( 'u' ) && hasOption( 'p' ) ) {
             username = getOptionValue( 'u' );
             password = getOptionValue( 'p' );
@@ -212,7 +219,7 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
             }
         } else {
             log.info( "Logging in as anonymous guest with limited privileges" );
-            manAuthentication.anonymousAuthentication();
+            manAuthentication.authenticateAnonymously();
         }
 
     }
@@ -227,6 +234,11 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
 
         /* disable the scheduler */
         QuartzUtils.disableQuartzScheduler( ( StdScheduler ) this.getBean( "schedulerFactoryBean" ) );
+
+        /*
+         * Guarantee that the security settings are uniform throughout the application (all threads).
+         */
+        SecurityContextHolder.setStrategyName( SecurityContextHolder.MODE_GLOBAL );
 
     }
 

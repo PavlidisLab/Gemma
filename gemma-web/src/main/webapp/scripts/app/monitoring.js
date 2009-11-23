@@ -8,9 +8,9 @@ Ext.onReady(function() {
 		});
 
 function task() {
-	HibernateMonitorController.getHibernateStatus(handleSuccess);
-	HibernateMonitorController.getCacheStatus(handleCacheData);
-	HibernateMonitorController.getSpaceStatus(handleSpaceStatus);
+	SystemMonitorController.getHibernateStatus(handleSuccess);
+	SystemMonitorController.getCacheStatus(handleCacheData);
+	SystemMonitorController.getSpaceStatus(handleSpaceStatus);
 }
 
 function handleSuccess(data) {
@@ -50,12 +50,12 @@ function flushCache(name) {
 
 function processFlushCacheResult(btn, text, opt) {
 	if (btn == 'yes') {
-		HibernateMonitorController.flushCache(opt.cacheName);
+		SystemMonitorController.flushCache(opt.cacheName);
 	}
 }
 
 function processFlushAllCachesResult(btn, text, opt) {
 	if (btn == 'yes') {
-		HibernateMonitorController.flushAllCaches();
+		SystemMonitorController.flushAllCaches();
 	}
 }

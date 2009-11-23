@@ -52,40 +52,6 @@ public class MatrixConversionTest extends TestCase {
     private static final int NUM_BIOMATERIALS = 40;
     private static final int NUM_CS = 200;
 
-    public final void testColumnMapping() {
-        Collection<QuantitationType> quantTypes = new HashSet<QuantitationType>();
-        for ( int quantitationTypeNum = 0; quantitationTypeNum < 2; quantitationTypeNum++ ) {
-            QuantitationType quantType = TestPersistentObjectHelper.getTestNonPersistentQuantitationType();
-            quantType.setId( ( long ) quantitationTypeNum );
-            quantTypes.add( quantType );
-            break;
-        }
-
-        Collection<DesignElementDataVector> vectors = getDesignElementDataVectors( quantTypes );
-        ExpressionDataDoubleMatrix mat = new ExpressionDataDoubleMatrix( vectors );
-        log.debug( vectors.size() + " vectors" );
-
-        assertEquals( NUM_CS, mat.rows() );
-        assertEquals( NUM_BIOMATERIALS, mat.columns() );
-
-        // System.err.print( "--" );
-        // for ( int i = 0; i < mat.columns(); i++ ) {
-        // System.err.print( "\t" + mat.getBioMaterialForColumn( i ) );
-        // }
-        // System.err.print( "\n" );
-        for ( int j = 0; j < mat.rows(); j++ ) {
-            // System.err.print( mat.getRowElement( j ) );
-            for ( int i = 0; i < mat.columns(); i++ ) {
-                Double r = mat.get( j, i );
-                assertNotNull( "No value for at index " + i, r );
-                assertTrue( "Expected " + i + ", got " + r, i == r.intValue() || r.equals( Double.NaN ) );
-                // System.err.print( "\t" + r );
-            }
-            // System.err.print( "\n" );
-        }
-
-    }
-
     /**
      * Creates an ugly (but not unusual) situation where there are two bioassay dimensions with different sizes,
      * referring to the same set of biomaterials.
@@ -171,6 +137,40 @@ public class MatrixConversionTest extends TestCase {
             }
         }
         return vectors;
+    }
+
+    public final void testColumnMapping() {
+        Collection<QuantitationType> quantTypes = new HashSet<QuantitationType>();
+        for ( int quantitationTypeNum = 0; quantitationTypeNum < 2; quantitationTypeNum++ ) {
+            QuantitationType quantType = TestPersistentObjectHelper.getTestNonPersistentQuantitationType();
+            quantType.setId( ( long ) quantitationTypeNum );
+            quantTypes.add( quantType );
+            break;
+        }
+
+        Collection<DesignElementDataVector> vectors = getDesignElementDataVectors( quantTypes );
+        ExpressionDataDoubleMatrix mat = new ExpressionDataDoubleMatrix( vectors );
+        log.debug( vectors.size() + " vectors" );
+
+        assertEquals( NUM_CS, mat.rows() );
+        assertEquals( NUM_BIOMATERIALS, mat.columns() );
+
+        // System.err.print( "--" );
+        // for ( int i = 0; i < mat.columns(); i++ ) {
+        // System.err.print( "\t" + mat.getBioMaterialForColumn( i ) );
+        // }
+        // System.err.print( "\n" );
+        for ( int j = 0; j < mat.rows(); j++ ) {
+            // System.err.print( mat.getRowElement( j ) );
+            for ( int i = 0; i < mat.columns(); i++ ) {
+                Double r = mat.get( j, i );
+                assertNotNull( "No value for at index " + i, r );
+                assertTrue( "Expected " + i + ", got " + r, i == r.intValue() || r.equals( Double.NaN ) );
+                // System.err.print( "\t" + r );
+            }
+            // System.err.print( "\n" );
+        }
+
     }
 
     private List<BioMaterial> getBioMaterials() {

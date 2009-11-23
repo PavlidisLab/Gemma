@@ -22,7 +22,10 @@ import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.orm.hibernate3.HibernateCallback;
+import org.springframework.stereotype.Repository;
 
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
@@ -32,15 +35,37 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
  * @versio n$Id$
  * @author Paul
  */
+@Repository
 public class ExpressionAnalysisResultSetDaoImpl extends
         ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSetDaoBase {
+
+    @Autowired
+    public ExpressionAnalysisResultSetDaoImpl( SessionFactory sessionFactory ) {
+        super.setSessionFactory( sessionFactory );
+    }
+
+    public void thawLite( final ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet resultSet ) {
+
+        this.getHibernateTemplate().executeWithNativeSession( new HibernateCallback<Object>() {
+            public Object doInHibernate( Session session ) throws HibernateException {
+                session.lock( resultSet, LockMode.NONE );
+                for ( ExperimentalFactor factor : resultSet.getExperimentalFactor() ) {
+                    Hibernate.initialize( factor );
+                }
+
+                return null;
+            }
+        } );
+
+    }
+
     /**
      * @see ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSetDao#thaw(ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet)
      */
     @Override
     protected void handleThaw( final ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet resultSet ) {
 
-        this.getHibernateTemplate().executeWithNativeSession( new HibernateCallback() {
+        this.getHibernateTemplate().executeWithNativeSession( new HibernateCallback<Object>() {
             public Object doInHibernate( Session session ) throws HibernateException {
                 session.lock( resultSet, LockMode.NONE );
                 for ( ExperimentalFactor factor : resultSet.getExperimentalFactor() ) {
@@ -58,23 +83,5 @@ public class ExpressionAnalysisResultSetDaoImpl extends
         } );
 
     }
-    
-  
-    
-    public void thawLite( final ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet resultSet ) {
-
-        this.getHibernateTemplate().executeWithNativeSession( new HibernateCallback() {
-            public Object doInHibernate( Session session ) throws HibernateException {
-                session.lock( resultSet, LockMode.NONE );
-                for ( ExperimentalFactor factor : resultSet.getExperimentalFactor() ) {
-                    Hibernate.initialize( factor );
-                }
-                
-                return null;
-            }
-        } );
-
-    }
-    
 
 }

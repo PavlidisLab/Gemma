@@ -36,10 +36,13 @@
  */
 package ubic.gemma.analysis.preprocess;
 
-import junit.framework.TestCase;
+import static org.junit.Assert.assertEquals;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.io.reader.DoubleMatrixReader;
@@ -48,7 +51,7 @@ import ubic.basecode.io.reader.DoubleMatrixReader;
  * @author pavlidis
  * @version $Id$
  */
-public class QuantileNormalizerTest extends TestCase {
+public class QuantileNormalizerTest {
     private static Log log = LogFactory.getLog( QuantileNormalizerTest.class.getName() );
 
     DoubleMatrix<String, String> tester;
@@ -56,7 +59,7 @@ public class QuantileNormalizerTest extends TestCase {
 
     private boolean connected = false;
 
-    @Override
+    @Before
     public void setUp() throws Exception {
         DoubleMatrixReader reader = new DoubleMatrixReader();
         tester = reader.read( this.getClass().getResourceAsStream( "/data/testdata.txt" ) );
@@ -73,9 +76,9 @@ public class QuantileNormalizerTest extends TestCase {
         log.debug( "Setup done" );
     }
 
-    @Override
+    @After
     public void tearDown() throws Exception {
-        super.tearDown();
+
         tester = null;
         if ( connected ) qn.cleanup();
     }
@@ -83,6 +86,7 @@ public class QuantileNormalizerTest extends TestCase {
     /*
      * Test method for 'ubic.gemma.analysis.preprocess.QuantileNormalizer.normalize(DenseDoubleMatrix2DNamed)'
      */
+    @Test
     public void testNormalize() {
         if ( !connected ) {
             log.warn( "Could not access R, skipping test." );

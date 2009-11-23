@@ -20,23 +20,22 @@ package ubic.gemma.model.analysis;
 
 import java.util.Collection;
 
+import org.springframework.security.access.annotation.Secured;
+
 /**
- * <p>
  * Provides basic services for dealing with analysis
- * </p>
+ * 
+ * @author Gemma
+ * @version $Id$
  */
 public interface AnalysisService<T extends Analysis> {
-
-    /**
-     * 
-     */
-    public void delete( java.lang.Long idToDelete );
 
     /**
      * <p>
      * deletes the given analysis from the system
      * </p>
      */
+    @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
     public void delete( T toDelete );
 
     /**
@@ -44,7 +43,8 @@ public interface AnalysisService<T extends Analysis> {
      * find all the analyses that involved the given investigation
      * </p>
      */
-    public java.util.Collection findByInvestigation( ubic.gemma.model.analysis.Investigation investigation );
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    public java.util.Collection<T> findByInvestigation( ubic.gemma.model.analysis.Investigation investigation );
 
     /**
      * <p>
@@ -55,23 +55,26 @@ public interface AnalysisService<T extends Analysis> {
      * one of the investigations for that analysis was in the given collection started with
      * </p>
      */
-    public java.util.Map findByInvestigations( java.util.Collection investigations );
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_MAP_READ" })
+    public java.util.Map<Investigation, Collection<T>> findByInvestigations(
+            java.util.Collection<? extends Investigation> investigations );
 
     /**
      */
-    public Collection findByName( java.lang.String name );
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    public Collection<T> findByName( java.lang.String name );
 
     /**
      * 
      */
-    public java.util.Collection<T> findByTaxon( ubic.gemma.model.genome.Taxon taxon );
-
-    
-    /**
-     * 
-     */
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public java.util.Collection<T> findByParentTaxon( ubic.gemma.model.genome.Taxon taxon );
 
+    /**
+     * 
+     */
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    public java.util.Collection<T> findByTaxon( ubic.gemma.model.genome.Taxon taxon );
 
     /**
      * <p>
@@ -79,13 +82,15 @@ public interface AnalysisService<T extends Analysis> {
      * investigations given exacly matches other wise returns null
      * </p>
      */
-    public T findByUniqueInvestigations( java.util.Collection investigations );
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    public T findByUniqueInvestigations( java.util.Collection<? extends Investigation> investigations );
 
     /**
      * <p>
      * Returns the analysis with the specified ID
      * </p>
      */
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     public T load( java.lang.Long id );
 
     /**
@@ -93,6 +98,7 @@ public interface AnalysisService<T extends Analysis> {
      * Returns all of the analysis objects
      * </p>
      */
-    public java.util.Collection loadAll();
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    public java.util.Collection<T> loadAll();
 
 }

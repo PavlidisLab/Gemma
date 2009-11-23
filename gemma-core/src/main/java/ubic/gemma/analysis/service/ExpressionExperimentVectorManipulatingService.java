@@ -21,6 +21,8 @@ package ubic.gemma.analysis.service;
 import java.util.Collection;
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Autowired;
+
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -29,16 +31,16 @@ import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService;
 
-/**
- * @spring.property name="designElementDataVectorService" ref="designElementDataVectorService"
- * @spring.property name="processedExpressionDataVectorService" ref="processedExpressionDataVectorService"
+/** 
  * @author pavlidis
  * @version $Id$
  */
 public abstract class ExpressionExperimentVectorManipulatingService {
 
+    @Autowired
     protected DesignElementDataVectorService designElementDataVectorService;
 
+    @Autowired
     protected ProcessedExpressionDataVectorService processedExpressionDataVectorService;
 
     /**

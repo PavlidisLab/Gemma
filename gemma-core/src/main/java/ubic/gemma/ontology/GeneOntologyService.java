@@ -34,6 +34,8 @@ import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import ubic.gemma.model.association.Gene2GOAssociationService;
 import ubic.gemma.model.common.description.Characteristic;
@@ -58,11 +60,8 @@ import com.hp.hpl.jena.rdf.model.Resource;
  * 
  * @author pavlidis
  * @version $Id$
- * @spring.bean id="geneOntologyService"
- * @spring.property name="gene2GOAssociationService" ref="gene2GOAssociationService"
- * @spring.property name="cacheManager" ref="cacheManager"
- * @spring.property name="geneService" ref="geneService"
  */
+@Service
 public class GeneOntologyService implements InitializingBean {
 
     public static final String BASE_GO_URI = "http://purl.org/obo/owl/GO#";
@@ -90,7 +89,7 @@ public class GeneOntologyService implements InitializingBean {
     private static final AtomicBoolean running = new AtomicBoolean( false );
 
     // map of uris to terms
-    private static Map<String, OntologyTerm> terms;
+    private static Map<String, OntologyTerm> uri2Term;
 
     /**
      * @param term
@@ -133,16 +132,16 @@ public class GeneOntologyService implements InitializingBean {
      * @return null if not found
      */
     public static OntologyTerm getTermForId( String goId ) {
-        if ( terms == null ) return null;
-        return terms.get( toUri( goId ) );
+        if ( uri2Term == null ) return null;
+        return uri2Term.get( toUri( goId ) );
     }
 
     /*
      * @param goURI e.g. GO:0001312 @return null if not found
      */
     public static OntologyTerm getTermForURI( String uri ) {
-        if ( terms == null ) return null;
-        return terms.get( uri );
+        if ( uri2Term == null ) return null;
+        return uri2Term.get( uri );
     }
 
     public static boolean isEnabled() {
@@ -176,6 +175,7 @@ public class GeneOntologyService implements InitializingBean {
     }
 
     @SuppressWarnings("unused")
+    @Autowired
     private CacheManager cacheManager;
 
     /**
@@ -184,8 +184,10 @@ public class GeneOntologyService implements InitializingBean {
     private Map<String, Collection<OntologyTerm>> childrenCache = Collections
             .synchronizedMap( new HashMap<String, Collection<OntologyTerm>>() );
 
+    @Autowired
     private Gene2GOAssociationService gene2GOAssociationService;
 
+    @Autowired
     private GeneService geneService;
 
     /**
@@ -317,7 +319,7 @@ public class GeneOntologyService implements InitializingBean {
      */
     public Collection<String> getAllGOTermIds() {
 
-        Collection<String> goTermIds = terms.keySet();
+        Collection<String> goTermIds = uri2Term.keySet();
         goTermIds.remove( BASE_GO_URI + "GO_0008150" );
         goTermIds.remove( BASE_GO_URI + "GO_0003674" );
         goTermIds.remove( BASE_GO_URI + "GO_0005575" );
@@ -391,7 +393,6 @@ public class GeneOntologyService implements InitializingBean {
      * @return Collection of all genes in the given taxon that are annotated with the given id, including its child
      *         terms in the hierarchy.
      */
-    @SuppressWarnings("unchecked")
     public Collection<Gene> getGenes( String goId, Taxon taxon ) {
         OntologyTerm t = getTermForId( goId );
         if ( t == null ) return null;
@@ -420,7 +421,6 @@ public class GeneOntologyService implements InitializingBean {
      * @param includePartOf
      * @return
      */
-    @SuppressWarnings("unchecked")
     public Collection<OntologyTerm> getGOTerms( Gene gene, boolean includePartOf ) {
         Collection<OntologyTerm> cachedTerms = goTerms.get( gene );
         if ( log.isTraceEnabled() && cachedTerms != null ) {
@@ -432,11 +432,11 @@ public class GeneOntologyService implements InitializingBean {
 
             Collection<VocabCharacteristic> annotations = gene2GOAssociationService.findByGene( gene );
             for ( VocabCharacteristic c : annotations ) {
-                if ( !terms.containsKey( c.getValueUri() ) ) {
+                if ( !uri2Term.containsKey( c.getValueUri() ) ) {
                     log.warn( "Term " + c.getValueUri() + " not found in term list cant add to results" );
                     continue;
                 }
-                allGOTermSet.add( terms.get( c.getValueUri() ) );
+                allGOTermSet.add( uri2Term.get( c.getValueUri() ) );
             }
 
             allGOTermSet.addAll( getAllParents( allGOTermSet, includePartOf ) );
@@ -603,7 +603,14 @@ public class GeneOntologyService implements InitializingBean {
     }
 
     public Collection<OntologyTerm> listTerms() {
-        return terms.values();
+        return uri2Term.values();
+    }
+
+    /**
+     * @param cacheManager the cacheManager to set
+     */
+    public void setCacheManager( CacheManager cacheManager ) {
+        this.cacheManager = cacheManager;
     }
 
     /**
@@ -649,23 +656,16 @@ public class GeneOntologyService implements InitializingBean {
         addTerms( terms );
     }
 
-    /**
-     * @param cacheManager the cacheManager to set
-     */
-    public void setCacheManager( CacheManager cacheManager ) {
-        this.cacheManager = cacheManager;
-    }
-
     private void addTerms( Collection<OntologyResource> newTerms ) {
-        if ( terms == null ) terms = new HashMap<String, OntologyTerm>();
+        if ( uri2Term == null ) uri2Term = new HashMap<String, OntologyTerm>();
         for ( OntologyResource term : newTerms ) {
             if ( term.getUri() == null ) continue;
             if ( term instanceof OntologyTerm ) {
                 OntologyTerm ontTerm = ( OntologyTerm ) term;
-                terms.put( term.getUri(), ontTerm );
+                uri2Term.put( term.getUri(), ontTerm );
                 for ( String alternativeID : ontTerm.getAlternativeIds() ) {
                     log.debug( toUri( alternativeID ) );
-                    terms.put( toUri( alternativeID ), ontTerm );
+                    uri2Term.put( toUri( alternativeID ), ontTerm );
                 }
             }
         }
@@ -738,8 +738,8 @@ public class GeneOntologyService implements InitializingBean {
                 Resource x = soln.getResource( "x" );
                 if ( x.isAnon() ) continue; // some reasoners will return these.
                 String uri = x.getURI();
-                if ( log.isDebugEnabled() ) log.debug( entry + " is part of " + terms.get( uri ) );
-                r.add( terms.get( uri ) );
+                if ( log.isDebugEnabled() ) log.debug( entry + " is part of " + uri2Term.get( uri ) );
+                r.add( uri2Term.get( uri ) );
             }
         } finally {
             qexec.close();
@@ -768,8 +768,8 @@ public class GeneOntologyService implements InitializingBean {
                 Resource x = soln.getResource( "x" );
                 String uri = x.getURI();
                 if ( x.isAnon() ) continue; // some reasoners will return these.
-                if ( log.isDebugEnabled() ) log.debug( terms.get( uri ) + " is part of " + entry );
-                r.add( terms.get( uri ) );
+                if ( log.isDebugEnabled() ) log.debug( uri2Term.get( uri ) + " is part of " + entry );
+                r.add( uri2Term.get( uri ) );
             }
         } finally {
             qexec.close();
@@ -782,22 +782,22 @@ public class GeneOntologyService implements InitializingBean {
         Thread loadThread = new Thread( new Runnable() {
             public void run() {
                 running.set( true );
-                terms = new HashMap<String, OntologyTerm>();
+                uri2Term = new HashMap<String, OntologyTerm>();
                 log.info( "Loading Gene Ontology..." );
                 StopWatch loadTime = new StopWatch();
                 loadTime.start();
                 //
                 try {
                     loadTermsInNameSpace( MF_URL );
-                    log.info( "Gene Ontology Molecular Function loaded, total of " + terms.size() + " items in "
+                    log.info( "Gene Ontology Molecular Function loaded, total of " + uri2Term.size() + " items in "
                             + loadTime.getTime() / 1000 + "s" );
 
                     loadTermsInNameSpace( BP_URL );
-                    log.info( "Gene Ontology Biological Process loaded, total of " + terms.size() + " items in "
+                    log.info( "Gene Ontology Biological Process loaded, total of " + uri2Term.size() + " items in "
                             + loadTime.getTime() / 1000 + "s" );
 
                     loadTermsInNameSpace( CC_URL );
-                    log.info( "Gene Ontology Cellular Component loaded, total of " + terms.size() + " items in "
+                    log.info( "Gene Ontology Cellular Component loaded, total of " + uri2Term.size() + " items in "
                             + loadTime.getTime() / 1000 + "s" );
 
                     ready.set( true );

@@ -19,17 +19,13 @@
 package ubic.gemma.model.association;
 
 /**
- * <p>
  * Spring Service base class for <code>ubic.gemma.model.association.BioSequence2GeneProductService</code>, provides
  * access to all services and entities referenced by this service.
- * </p>
  * 
  * @see ubic.gemma.model.association.BioSequence2GeneProductService
  */
 public abstract class BioSequence2GeneProductServiceBase implements
         ubic.gemma.model.association.BioSequence2GeneProductService {
-
-    private ubic.gemma.model.association.BioSequence2GeneProductDao bioSequence2GeneProductDao;
 
     /**
      * @see ubic.gemma.model.association.BioSequence2GeneProductService#create(ubic.gemma.model.association.BioSequence2GeneProduct)
@@ -43,21 +39,6 @@ public abstract class BioSequence2GeneProductServiceBase implements
                     "Error performing 'ubic.gemma.model.association.BioSequence2GeneProductService.create(ubic.gemma.model.association.BioSequence2GeneProduct bioSequence2GeneProduct)' --> "
                             + th, th );
         }
-    }
-
-    /**
-     * Sets the reference to <code>bioSequence2GeneProduct</code>'s DAO.
-     */
-    public void setBioSequence2GeneProductDao(
-            ubic.gemma.model.association.BioSequence2GeneProductDao bioSequence2GeneProductDao ) {
-        this.bioSequence2GeneProductDao = bioSequence2GeneProductDao;
-    }
-
-    /**
-     * Gets the reference to <code>bioSequence2GeneProduct</code>'s DAO.
-     */
-    protected ubic.gemma.model.association.BioSequence2GeneProductDao getBioSequence2GeneProductDao() {
-        return this.bioSequence2GeneProductDao;
     }
 
     /**

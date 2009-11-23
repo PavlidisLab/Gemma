@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.common.protocol;
 
+import org.springframework.beans.factory.annotation.Autowired;
+
 /**
  * <p>
  * Spring Service base class for <code>ubic.gemma.model.common.protocol.HardwareService</code>, provides access to all
@@ -28,6 +30,7 @@ package ubic.gemma.model.common.protocol;
  */
 public abstract class HardwareServiceBase implements ubic.gemma.model.common.protocol.HardwareService {
 
+    @Autowired
     private ubic.gemma.model.common.protocol.HardwareDao hardwareDao;
 
     /**

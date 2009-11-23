@@ -18,115 +18,37 @@
  */
 package ubic.gemma.loader.genome.gene.ncbi;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 import java.util.ArrayList;
 import java.util.Collection;
+
+import org.junit.Test;
+
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.gene.GeneService;
-import ubic.gemma.testing.BaseSpringContextTest;
+import ubic.gemma.testing.BaseSpringWebTest;
 import ubic.gemma.util.ConfigUtils;
 
 /**
  * @author pavlidis
  * @version $Id$
  */
-public class NCBIGeneIntegrationTest extends BaseSpringContextTest {
-
-    // /**
-    // * @throws Exception
-    // */
-    // public void testGeneDomainObjectLoad() throws Exception {
-    // NcbiGeneDomainObjectGenerator sdog = new NcbiGeneDomainObjectGenerator();
-    //
-    // String geneInfoTestFile = "/gemma-core/src/test/resources/data/loader/genome/gene/gene_info.sample.gz";
-    // String gene2AccTestFile = "/gemma-core/src/test/resources/data/loader/genome/gene/gene2accession.sample.gz";
-    // String geneHistoryFile = "/gemma-core/src/test/resources/data/loader/genome/gene/geneHistory.sample.gz";
-    //
-    // String basePath = ConfigUtils.getString( "gemma.home" );
-    // final BlockingQueue<NcbiGeneData> queue = new ArrayBlockingQueue<NcbiGeneData>( 100 );
-    // sdog.generateLocal( basePath + geneInfoTestFile, basePath + gene2AccTestFile, basePath + geneHistoryFile,
-    // queue, false );
-    //
-    // // wait until the producer is done.
-    // while ( !sdog.isProducerDone() ) {
-    // Thread.sleep( 100 );
-    // }
-    //
-    // // producer is done.
-    // log.debug( "Producer done with number of elements: " + queue.size() );
-    // assertTrue( queue.size() == 99 );
-    // }
-
-    // /**
-    // * @throws Exception
-    // */
-    // public void testGeneConverter() throws Exception {
-    // NcbiGeneDomainObjectGenerator sdog = new NcbiGeneDomainObjectGenerator();
-    // NcbiGeneConverter converter = new NcbiGeneConverter();
-    // // set flags
-    // AtomicBoolean generatorDone = new AtomicBoolean( false );
-    // AtomicBoolean converterDone = new AtomicBoolean( false );
-    //
-    // sdog.setProducerDoneFlag( generatorDone );
-    // converter.setSourceDoneFlag( generatorDone );
-    // converter.setProducerDoneFlag( converterDone );
-    //
-    // String geneInfoTestFile = "/gemma-core/src/test/resources/data/loader/genome/gene/gene_info.sample.gz";
-    // String gene2AccTestFile = "/gemma-core/src/test/resources/data/loader/genome/gene/gene2accession.sample.gz";
-    // String geneHistoryFile = "/gemma-core/src/test/resources/data/loader/genome/gene/geneHistory.sample.gz";
-    //
-    // String basePath = ConfigUtils.getString( "gemma.home" );
-    // final BlockingQueue<NcbiGeneData> queue = new ArrayBlockingQueue<NcbiGeneData>( 100 );
-    // final BlockingQueue<Gene> geneQueue = new ArrayBlockingQueue<Gene>( 100 );
-    //
-    // sdog.generateLocal( basePath + geneInfoTestFile, basePath + gene2AccTestFile, basePath + geneHistoryFile,
-    // queue, false );
-    //
-    // converter.convert( queue, geneQueue );
-    //
-    // // wait until the producer is done.
-    // while ( !converter.isProducerDone() ) {
-    // Thread.sleep( 100 );
-    // }
-    //
-    // // producer is done.
-    // log.debug( "Converter done with number of elements: " + geneQueue.size() );
-    // assertTrue( geneQueue.size() == 99 );
-    // }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.springframework.test.AbstractTransactionalSpringContextTests#onSetUp()
-     */
-    @Override
-    protected void onSetUp() throws Exception {
-        super.onSetUp();
-        this.endTransaction();
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.springframework.test.AbstractTransactionalSpringContextTests#onTearDown()
-     */
-    @Override
-    protected void onTearDown() throws Exception {
-        super.onTearDown();
-     //   GeneService geneService = ( GeneService ) getBean( "geneService" );
-     //   geneService.remove( geneService.loadAll() );
-    }
+public class NCBIGeneIntegrationTest extends BaseSpringWebTest {
 
     /**
      * @throws Exception
      */
+    @Test
     public void testGeneLoader() throws Exception {
         GeneService geneService = ( GeneService ) getBean( "geneService" );
         NcbiGeneLoader loader = new NcbiGeneLoader( persisterHelper );
-        loader.setTaxonService(( TaxonService ) getBean( "taxonService" ));
+        loader.setTaxonService( ( TaxonService ) getBean( "taxonService" ) );
         String geneInfoTestFile = "/gemma-core/src/test/resources/data/loader/genome/gene/gene_info.sample.gz";
         String gene2AccTestFile = "/gemma-core/src/test/resources/data/loader/genome/gene/gene2accession.sample.gz";
         String geneHistoryFile = "/gemma-core/src/test/resources/data/loader/genome/gene/geneHistory.sample.gz";

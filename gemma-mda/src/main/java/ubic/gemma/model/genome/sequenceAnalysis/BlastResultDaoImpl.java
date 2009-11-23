@@ -18,10 +18,20 @@
  */
 package ubic.gemma.model.genome.sequenceAnalysis;
 
+import org.hibernate.SessionFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
+
 /**
  * @see ubic.gemma.model.genome.sequenceAnalysis.BlastResult
  */
+@Repository
 public class BlastResultDaoImpl extends ubic.gemma.model.genome.sequenceAnalysis.BlastResultDaoBase {
+
+    @Autowired
+    public BlastResultDaoImpl( SessionFactory sessionFactory ) {
+        super.setSessionFactory( sessionFactory );
+    }
 
     @Override
     public ubic.gemma.model.genome.sequenceAnalysis.BlastResult findOrCreate(
@@ -33,7 +43,7 @@ public class BlastResultDaoImpl extends ubic.gemma.model.genome.sequenceAnalysis
         if ( result != null ) return result;
 
         logger.debug( "Creating new BlatResult: " + toFindOrCreate.toString() );
-        result = ( BlastResult ) create( toFindOrCreate );
+        result = create( toFindOrCreate );
         return result;
     }
 }

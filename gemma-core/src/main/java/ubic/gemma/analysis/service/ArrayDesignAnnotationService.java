@@ -44,6 +44,8 @@ import org.apache.commons.collections.iterators.TransformIterator;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import ubic.basecode.util.FileTools;
 import ubic.gemma.model.association.BioSequence2GeneProduct;
@@ -51,7 +53,7 @@ import ubic.gemma.model.association.Gene2GOAssociationService;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.genome.Gene; 
+import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.PredictedGene;
 import ubic.gemma.model.genome.ProbeAlignedRegion;
 import ubic.gemma.ontology.GeneOntologyService;
@@ -77,12 +79,10 @@ import ubic.gemma.util.DateUtil;
  * Note that for backwards compatibility, GO terms are not segregated by gene cluster.
  * </p>
  * 
- * @spring.bean id="arrayDesignAnnotationService"
- * @spring.property name="gene2GOAssociationService" ref="gene2GOAssociationService"
- * @spring.property name="goService" ref="geneOntologyService"
  * @author paul
  * @version $Id$
  */
+@Service
 public class ArrayDesignAnnotationService {
 
     public static final String ANNOTATION_FILE_SUFFIX = ".an.txt.gz";
@@ -282,8 +282,10 @@ public class ArrayDesignAnnotationService {
         }
     }
 
+    @Autowired
     private Gene2GOAssociationService gene2GOAssociationService;
 
+    @Autowired
     private GeneOntologyService goService;
 
     Transformer officialSymbolExtractor = new Transformer() {
@@ -351,14 +353,14 @@ public class ArrayDesignAnnotationService {
                 Collection<OntologyTerm> clusterGoTerms = new HashSet<OntologyTerm>();
 
                 Gene g = bioSequence2GeneProduct.getGeneProduct().getGene();
-                    if ( knownGenesOnly && ( g instanceof PredictedGene || g instanceof ProbeAlignedRegion ) ) {
-                        continue;
-                    }
+                if ( knownGenesOnly && ( g instanceof PredictedGene || g instanceof ProbeAlignedRegion ) ) {
+                    continue;
+                }
 
-                    if ( log.isDebugEnabled() )
-                        log.debug( "Adding gene: " + g.getOfficialSymbol() + " of type: " + g.getClass() );
+                if ( log.isDebugEnabled() )
+                    log.debug( "Adding gene: " + g.getOfficialSymbol() + " of type: " + g.getClass() );
 
-                    retained.add( g );
+                retained.add( g );
 
                 if ( retained.size() == 0 ) continue;
 
@@ -497,7 +499,7 @@ public class ArrayDesignAnnotationService {
      * @param ty Configures which GO terms to return: With all parents, biological process only, or direct annotations
      *        only.
      * @return the goTerms for a given gene, as configured
-     */ 
+     */
     private Collection<OntologyTerm> getGoTerms( Gene gene, OutputType ty ) {
 
         Collection<VocabCharacteristic> ontos = new HashSet<VocabCharacteristic>( gene2GOAssociationService

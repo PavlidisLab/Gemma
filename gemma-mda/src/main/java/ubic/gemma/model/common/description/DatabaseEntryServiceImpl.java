@@ -19,11 +19,14 @@
 
 package ubic.gemma.model.common.description;
 
+import org.springframework.stereotype.Service;
+
 /**
  * @author keshav
  * @version $Id$
  * @see ubic.gemma.model.common.description.DatabaseEntryService
  */
+@Service
 public class DatabaseEntryServiceImpl extends ubic.gemma.model.common.description.DatabaseEntryServiceBase {
 
     @Override

@@ -18,11 +18,14 @@
  */
 package ubic.gemma.model.common.measurement;
 
+import org.springframework.stereotype.Service;
+
 /**
  * @author pavlidis
  * @version $Id$
  * @see ubic.gemma.model.common.measurement.MeasurementService
  */
+@Service
 public class MeasurementServiceImpl extends ubic.gemma.model.common.measurement.MeasurementServiceBase {
 
     /**

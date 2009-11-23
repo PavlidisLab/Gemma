@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.expression.bioAssayData;
 
+import org.springframework.beans.factory.annotation.Autowired;
+
 /**
  * <p>
  * Spring Service base class for <code>ubic.gemma.model.expression.bioAssayData.DesignElementDimensionService</code>,
@@ -29,6 +31,7 @@ package ubic.gemma.model.expression.bioAssayData;
 public abstract class DesignElementDimensionServiceBase implements
         ubic.gemma.model.expression.bioAssayData.DesignElementDimensionService {
 
+    @Autowired
     private ubic.gemma.model.expression.bioAssayData.DesignElementDimensionDao designElementDimensionDao;
 
     /**

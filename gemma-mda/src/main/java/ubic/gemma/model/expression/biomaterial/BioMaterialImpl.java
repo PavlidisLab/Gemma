@@ -20,6 +20,8 @@
  */
 package ubic.gemma.model.expression.biomaterial;
 
+import ubic.gemma.model.common.auditAndSecurity.Securable;
+
 /**
  * @see ubic.gemma.model.expression.biomaterial.BioMaterial
  * @author pavlidis

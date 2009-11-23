@@ -18,13 +18,16 @@
  */
 package ubic.gemma.loader.association;
 
+import static org.junit.Assert.assertEquals;
+
 import java.io.InputStream;
 import java.util.zip.GZIPInputStream;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.junit.Before;
+import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 
-import ubic.gemma.persistence.PersisterHelper;
+import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
@@ -34,16 +37,29 @@ import ubic.gemma.testing.BaseSpringContextTest;
  * @version $Id$
  */
 public class NCBIGene2GOAssociationParserTest extends BaseSpringContextTest {
-    protected Log log = LogFactory.getLog( NCBIGene2GOAssociationParserTest.class );
-
-    NCBIGene2GOAssociationParser gene2GOAssParser = null;
 
     NCBIGene2GOAssociationLoader gene2GOAssLoader = null;
+
+    @Autowired
+    TaxonService taxonService;
+
+    /**
+     * Configure parser and loader. Provide "tomcat-esque" functionality by injecting the parser and loader with their
+     * dependencies.
+     */
+    @Before
+    public void setup() throws Exception {
+
+        gene2GOAssLoader = new NCBIGene2GOAssociationLoader();
+        gene2GOAssLoader.setParser( new NCBIGene2GOAssociationParser( taxonService.loadAll() ) );
+        gene2GOAssLoader.setPersisterHelper( this.persisterHelper );
+    }
 
     /**
      * Tests both the parser and the loader. This is more of an integration test, but since its dependencies are
      * localized to the Gemma project it has been added to the test suite.
      */
+    @Test
     public void testParseAndLoad() throws Exception {
 
         InputStream is = this.getClass().getResourceAsStream( "/data/loader/association/gene2go.gz" );
@@ -55,22 +71,9 @@ public class NCBIGene2GOAssociationParserTest extends BaseSpringContextTest {
         gZipIs.close();
         is.close();
         int count = gene2GOAssLoader.getCount();
-     
+
         assertEquals( 61, count );
 
-    }
-
-    /**
-     * Configure parser and loader. Provide "tomcat-esque" functionality by injecting the parser and loader with their
-     * dependencies.
-     */
-    @Override
-    protected void onSetUpInTransaction() throws Exception {
-        super.onSetUpInTransaction();
-       // gene2GOAssParser = new NCBIGene2GOAssociationParser();
-        gene2GOAssLoader = new NCBIGene2GOAssociationLoader();
-        gene2GOAssLoader.setPersisterHelper( persisterHelper );      
-        gene2GOAssLoader.setParser(( NCBIGene2GOAssociationParser ) getBean( "gene2GOAssociationParser" ));
     }
 
 }

@@ -42,6 +42,44 @@ public class SimpleExpressionExperimentLoadCommand extends SimpleExpressionExper
 
     boolean validateOnly;
 
+    public SimpleExpressionExperimentLoadCommand() {
+
+        this.setArrayDesigns( new HashSet<ArrayDesign>() );
+        this.setTaxon( Taxon.Factory.newInstance() );
+    }
+
+    public String getArrayDesignName() {
+        return this.arrayDesignName;
+    }
+
+    public String getOriginalFileName() {
+        return originalFileName;
+    }
+
+    public String getServerFilePath() {
+        return serverFilePath;
+    }
+
+    public String getTaxonName() {
+        return this.taxonName;
+    }
+
+    public void setArrayDesignName( String arrayDesign ) {
+        this.arrayDesignName = arrayDesign;
+    }
+
+    public void setOriginalFileName( String originalFileName ) {
+        this.originalFileName = originalFileName;
+    }
+
+    public void setServerFilePath( String serverFilePath ) {
+        this.serverFilePath = serverFilePath;
+    }
+
+    public void setTaxonName( String taxonName ) {
+        this.taxonName = taxonName;
+    }
+
     /**
      * Whether the command object should be validated or actually processed.
      * 
@@ -53,44 +91,6 @@ public class SimpleExpressionExperimentLoadCommand extends SimpleExpressionExper
 
     protected void setValidateOnly( boolean validateOnly ) {
         this.validateOnly = validateOnly;
-    }
-
-    public SimpleExpressionExperimentLoadCommand() {
-
-        this.setArrayDesigns( new HashSet<ArrayDesign>() );
-        this.setTaxon( Taxon.Factory.newInstance() );
-    }
-
-    public void setServerFilePath( String serverFilePath ) {
-        this.serverFilePath = serverFilePath;
-    }
-
-    public void setOriginalFileName( String originalFileName ) {
-        this.originalFileName = originalFileName;
-    }
-
-    public String getArrayDesignName() {
-        return this.arrayDesignName;
-    }
-
-    public String getTaxonName() {
-        return this.taxonName;
-    }
-
-    public void setArrayDesignName( String arrayDesign ) {
-        this.arrayDesignName = arrayDesign;
-    }
-
-    public void setTaxonName( String taxonName ) {
-        this.taxonName = taxonName;
-    }
-
-    public String getServerFilePath() {
-        return serverFilePath;
-    }
-
-    public String getOriginalFileName() {
-        return originalFileName;
     }
 
 }

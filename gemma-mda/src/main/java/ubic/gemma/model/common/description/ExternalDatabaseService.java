@@ -18,10 +18,13 @@
  */
 package ubic.gemma.model.common.description;
 
+import org.springframework.security.access.annotation.Secured;
+
 /**
- * 
+ * @version $Id$
+ * @author Gemma
  */
-public interface ExternalDatabaseService extends ubic.gemma.model.common.AuditableService {
+public interface ExternalDatabaseService {
 
     /**
      * 
@@ -31,17 +34,19 @@ public interface ExternalDatabaseService extends ubic.gemma.model.common.Auditab
     /**
      * 
      */
+    @Secured( { "GROUP_USER" })
     public ubic.gemma.model.common.description.ExternalDatabase findOrCreate(
             ubic.gemma.model.common.description.ExternalDatabase externalDatabase );
 
     /**
      * 
      */
-    public java.util.Collection loadAll();
+    public java.util.Collection<ExternalDatabase> loadAll();
 
     /**
      * 
      */
+    @Secured( { "GROUP_USER" })
     public void remove( ubic.gemma.model.common.description.ExternalDatabase externalDatabase );
 
 }

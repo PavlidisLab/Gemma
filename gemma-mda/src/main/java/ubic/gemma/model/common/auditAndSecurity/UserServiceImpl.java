@@ -21,47 +21,78 @@
 package ubic.gemma.model.common.auditAndSecurity;
 
 import java.util.Collection;
-import java.util.HashSet;
 
 import org.springframework.dao.DataIntegrityViolationException;
-
-import ubic.gemma.util.UserConstants;
+import org.springframework.stereotype.Service;
 
 /**
  * @see ubic.gemma.model.common.auditAndSecurity.UserService
  * @author pavlidis
  * @version $Id$
  */
+@Service
 public class UserServiceImpl extends ubic.gemma.model.common.auditAndSecurity.UserServiceBase {
 
-    /*
-     * (non-Javadoc)
-     * @see ubic.gemma.model.common.auditAndSecurity.UserService#handleLoadAllRoles()
-     */
-    @Override
-    public Collection<UserRole> handleLoadAllRoles() {
-        return this.getUserRoleDao().loadAll();
+    public void addGroupAuthority( UserGroup group, String authority ) {
+        this.getUserGroupDao().addAuthority( group, authority );
+
+    }
+
+    public void addUserToGroup( User user, UserGroup group ) {
+        group.getGroupMembers().add( user );
+        this.getUserGroupDao().update( group );
+    }
+
+    public UserGroup create( UserGroup group ) {
+        return this.getUserGroupDao().create( group );
+    }
+
+    public void delete( User user ) {
+
+        for ( UserGroup group : this.getUserDao().loadGroups( user ) ) {
+            group.getGroupMembers().remove( user );
+            this.getUserGroupDao().update( group );
+        }
+
+        this.getUserDao().remove( user );
+    }
+
+    public void delete( UserGroup group ) {
+        this.getUserGroupDao().remove( group );
+    }
+
+    public UserGroup findGroupByName( String name ) {
+        return this.getUserGroupDao().findByUserGroupName( name );
+    }
+
+    public Collection<UserGroup> findGroupsForUser( User user ) {
+        return this.getUserGroupDao().findGroupsForUser( user );
     }
 
     @SuppressWarnings("unchecked")
-    @Override
-    protected void handleAddRole( User user, String role ) throws Exception {
-        if ( role == null ) throw new IllegalArgumentException( "Got passed null role!" );
-        if ( user == null ) throw new IllegalArgumentException( "Got passed null user" );
+    public Collection<UserGroup> listAvailableGroups() {
+        return ( Collection<UserGroup> ) this.getUserGroupDao().loadAll();
+    }
 
-        if ( !role.equals( UserConstants.ADMIN_ROLE ) && !role.equals( UserConstants.USER_ROLE ) ) {
-            throw new IllegalArgumentException( role + " is not a recognized role" );
-        }
+    public Collection<GroupAuthority> loadGroupAuthorities( User u ) {
+        return this.getUserDao().loadGroupAuthorities( u );
+    }
 
-        UserRole newRole = UserRole.Factory.newInstance();
-        newRole.setName( role );
-        newRole.setUserName( user.getUserName() );
-        newRole = this.getUserRoleDao().create( newRole ); // should cascade anyway.
-        if ( user.getRoles() == null ) user.setRoles( new HashSet() );
-        Collection<UserRole> roles = user.getRoles();
-        roles.add( newRole );
-        user.setRoles( roles );
-        this.getUserDao().update( user );
+    public void removeGroupAuthority( UserGroup group, String authority ) {
+        this.getUserGroupDao().removeAuthority( group, authority );
+    }
+
+    public void removeUserFromGroup( User user, UserGroup group ) {
+        group.getGroupMembers().remove( user );
+        this.getUserGroupDao().update( group );
+
+        /*
+         * TODO: if the group is empty, should we delete it? Not if it is GROUP_USER or ADMIN, but perhaps otherwise.
+         */
+    }
+
+    public void update( UserGroup group ) {
+        this.getUserGroupDao().update( group );
     }
 
     /**
@@ -72,11 +103,6 @@ public class UserServiceImpl extends ubic.gemma.model.common.auditAndSecurity.Us
 
         if ( user.getUserName() == null ) {
             throw new IllegalArgumentException( "UserName cannot be null" );
-        }
-
-        // defensive programming...
-        for ( UserRole role : user.getRoles() ) {
-            role.setUserName( user.getUserName() );
         }
 
         if ( this.getUserDao().findByUserName( user.getUserName() ) != null ) {
@@ -96,15 +122,6 @@ public class UserServiceImpl extends ubic.gemma.model.common.auditAndSecurity.Us
             throw new UserExistsException( "User '" + user.getUserName() + "' already exists!" );
         }
 
-    }
-
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.UserService#removeUser(java.lang.String)
-     */
-    @Override
-    protected void handleDelete( java.lang.String userName ) throws java.lang.Exception {
-
-        this.getUserDao().remove( this.getUserDao().findByUserName( userName ) );
     }
 
     /*
@@ -136,9 +153,10 @@ public class UserServiceImpl extends ubic.gemma.model.common.auditAndSecurity.Us
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.UserService#getUsers(ubic.gemma.model.common.auditAndSecurity.User)
      */
+    @SuppressWarnings("unchecked")
     @Override
     protected java.util.Collection<User> handleLoadAll() throws java.lang.Exception {
-        return this.getUserDao().loadAll();
+        return ( Collection<User> ) this.getUserDao().loadAll();
     }
 
     /*

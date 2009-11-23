@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.common.measurement;
 
+import org.springframework.beans.factory.annotation.Autowired;
+
 /**
  * <p>
  * Spring Service base class for <code>ubic.gemma.model.common.measurement.MeasurementService</code>, provides access to
@@ -28,6 +30,7 @@ package ubic.gemma.model.common.measurement;
  */
 public abstract class MeasurementServiceBase implements ubic.gemma.model.common.measurement.MeasurementService {
 
+    @Autowired
     private ubic.gemma.model.common.measurement.MeasurementDao measurementDao;
 
     /**

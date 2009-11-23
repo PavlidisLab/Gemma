@@ -26,30 +26,31 @@ import java.util.Map;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.hibernate.CacheMode;
-import org.hibernate.FlushMode;
 import org.hibernate.Hibernate;
 import org.hibernate.LockMode;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
-import org.springframework.orm.hibernate3.HibernateTemplate;
+import org.springframework.stereotype.Repository;
 
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayImpl;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.expression.biomaterial.BioMaterialImpl;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.biosequence.BioSequence;
+import ubic.gemma.util.EntityUtils;
 
 /**
  * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVector
  * @author pavlidis
  * @version $Id$
  */
+@Repository
 public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementDataVector> extends
         ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDaoBase<T> {
 
@@ -64,7 +65,7 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
     @SuppressWarnings("unchecked")
     protected Map<T, Collection<Gene>> getVectorsForProbesInExperiments( Collection<ExpressionExperiment> ees,
             Map<CompositeSequence, Collection<Gene>> cs2gene, final String queryString ) {
-        Session session = super.getSession( false );
+        Session session = super.getSession();
         org.hibernate.Query queryObject = session.createQuery( queryString );
         Map<T, Collection<Gene>> dedv2genes = new HashMap<T, Collection<Gene>>();
         StopWatch timer = new StopWatch();
@@ -109,14 +110,14 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
      */
     @SuppressWarnings("unchecked")
     @Override
-    protected void handleThaw( final Collection<T> designElementDataVectors ) throws Exception {
+    protected void handleThaw( Collection designElementDataVectors ) throws Exception {
 
         if ( designElementDataVectors == null ) return;
 
-        Session session = this.getSessionFactory().openSession();
+        Session session = this.getSessionFactory().getCurrentSession();
 
-        session.setCacheMode( CacheMode.GET ); // Don't populate the secondary cache (??)
-        session.setFlushMode( FlushMode.MANUAL ); // We're READ-ONLY so this is okay.
+        Hibernate.initialize( designElementDataVectors );
+
         int count = 0;
         StopWatch timer = new StopWatch();
         timer.start();
@@ -160,13 +161,15 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
         for ( BioAssayDimension bad : dims ) {
             Hibernate.initialize( bad );
             for ( BioAssay ba : bad.getBioAssays() ) {
+
                 session.lock( ba, LockMode.NONE );
+
                 Hibernate.initialize( ba );
                 Hibernate.initialize( ba.getSamplesUsed() );
 
                 Collection<BioAssay> bioAssaysUsedIn = null;
                 for ( BioMaterial bm : ba.getSamplesUsed() ) {
-                    // session.lock( bm, LockMode.NONE );
+                    EntityUtils.attach( session, bm, BioMaterialImpl.class, bm.getId() );
                     Hibernate.initialize( bm );
                     bioAssaysUsedIn = bm.getBioAssaysUsedIn();
                     Hibernate.initialize( bioAssaysUsedIn );
@@ -176,6 +179,7 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
 
                 Hibernate.initialize( ba.getArrayDesignUsed() );
                 Hibernate.initialize( ba.getDerivedDataFiles() );
+
                 /*
                  * We have to do it this way, or we risk having the bioassay in the session already.
                  */
@@ -184,7 +188,7 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
                         session.evict( baui );
                     }
                 }
-                // don't do this.
+                // don't do this -- see above.
                 // session.evict( ba );
             }
         }
@@ -220,20 +224,15 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
         if ( designElementDataVectors.size() >= 2000 || timer.getTime() > 200 ) {
             log.info( "Thaw phase 4 " + cs.size() + " vector-associated probes thawed in " + timer.getTime() + "ms" );
         }
-        session.close();
 
     }
 
     @Override
-    protected void handleThaw( final T designElementDataVector ) throws Exception {
-        HibernateTemplate templ = this.getHibernateTemplate();
-        templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                thaw( session, designElementDataVector );
-                return null;
-            }
-        } );
+    protected void handleThaw( T designElementDataVector ) throws Exception {
 
+        Session session = this.getHibernateTemplate().getSessionFactory().getCurrentSession();
+
+        this.thaw( session, designElementDataVector );
     }
 
     /**

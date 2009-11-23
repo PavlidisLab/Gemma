@@ -18,9 +18,12 @@
  */
 package ubic.gemma.model.expression.bioAssayData;
 
+import org.springframework.stereotype.Repository;
+
 /**
  * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVector
  */
+@Repository
 public interface DesignElementDataVectorDao<T extends DesignElementDataVector> {
 
     /**
@@ -54,7 +57,7 @@ public interface DesignElementDataVectorDao<T extends DesignElementDataVector> {
      * 
      * @return the loaded entities.
      */
-    public java.util.Collection<T> loadAll();
+    public java.util.Collection<? extends T> loadAll();
 
     /**
      * Removes the instance of ubic.gemma.model.expression.bioAssayData.DesignElementDataVector having the given
@@ -76,7 +79,7 @@ public interface DesignElementDataVectorDao<T extends DesignElementDataVector> {
     /**
      * 
      */
-    public void thaw( java.util.Collection<T> designElementDataVectors );
+    public void thaw( java.util.Collection<? extends DesignElementDataVector> designElementDataVectors );
 
     /**
      * <p>

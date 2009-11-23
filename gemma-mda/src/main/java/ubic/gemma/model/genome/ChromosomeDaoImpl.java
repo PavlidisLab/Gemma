@@ -22,6 +22,9 @@ import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
 import org.hibernate.Criteria;
+import org.hibernate.SessionFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
 
 import ubic.gemma.util.BusinessKey;
 
@@ -29,7 +32,13 @@ import ubic.gemma.util.BusinessKey;
  * @author pavlidis
  * @version $Id$
  */
+@Repository
 public class ChromosomeDaoImpl extends ubic.gemma.model.genome.ChromosomeDaoBase {
+
+    @Autowired
+    public ChromosomeDaoImpl( SessionFactory sessionFactory ) {
+        super.setSessionFactory( sessionFactory );
+    }
 
     /*
      * (non-Javadoc)
@@ -40,7 +49,7 @@ public class ChromosomeDaoImpl extends ubic.gemma.model.genome.ChromosomeDaoBase
         try {
 
             BusinessKey.checkValidKey( chromosome );
-            Criteria queryObject = super.getSession( false ).createCriteria( Chromosome.class );
+            Criteria queryObject = super.getSession().createCriteria( Chromosome.class );
             BusinessKey.addRestrictions( queryObject, chromosome );
 
             java.util.List results = queryObject.list();

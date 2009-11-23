@@ -22,8 +22,18 @@
 //
 package ubic.gemma.model.analysis;
 
+import org.hibernate.SessionFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
+
 /**
  * @see ubic.gemma.model.analysis.AnalysisResultSet
  */
+@Repository
 public class AnalysisResultSetDaoImpl extends ubic.gemma.model.analysis.AnalysisResultSetDaoBase {
+
+    @Autowired
+    public AnalysisResultSetDaoImpl( SessionFactory sessionFactory ) {
+        super.setSessionFactory( sessionFactory );
+    }
 }

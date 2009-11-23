@@ -33,7 +33,12 @@ import org.hibernate.Criteria;
 import org.hibernate.FlushMode;
 import org.hibernate.Hibernate;
 import org.hibernate.LockMode;
+import org.hibernate.NonUniqueObjectException;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.orm.hibernate3.HibernateTemplate;
+import org.springframework.stereotype.Repository;
 
 import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.common.description.DatabaseEntry;
@@ -47,9 +52,15 @@ import ubic.gemma.util.EntityUtils;
  * @version $Id$
  * @see ubic.gemma.model.genome.biosequence.BioSequence
  */
+@Repository
 public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioSequenceDaoBase {
 
     private static Log log = LogFactory.getLog( BioSequenceDaoImpl.class.getName() );
+
+    @Autowired
+    public BioSequenceDaoImpl( SessionFactory sessionFactory ) {
+        super.setSessionFactory( sessionFactory );
+    }
 
     /*
      * (non-Javadoc)
@@ -226,7 +237,7 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
         final String queryString = "select distinct gene from GeneImpl as gene inner join gene.products gp,  BioSequence2GeneProductImpl as bs2gp where gp=bs2gp.geneProduct "
                 + " and bs2gp.bioSequence.name like :search ";
         try {
-            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            org.hibernate.Query queryObject = super.getSession().createQuery( queryString );
             queryObject.setString( "search", search );
             genes = queryObject.list();
 
@@ -256,44 +267,47 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
     protected void handleThaw( final BioSequence bioSequence ) throws Exception {
         if ( bioSequence == null ) return;
         if ( bioSequence.getId() == null ) return;
-        HibernateTemplate templ = this.getHibernateTemplate();
-        templ.executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                session.lock( bioSequence, LockMode.NONE );
-                Hibernate.initialize( bioSequence );
-                Hibernate.initialize( bioSequence.getBioSequence2GeneProduct() );
 
-                if ( bioSequence.getTaxon() != null && bioSequence.getTaxon().getId() != null ) {
-                    Hibernate.initialize( bioSequence.getTaxon() );
-                }
+        Session session = this.getSession();
 
-                DatabaseEntry dbEntry = bioSequence.getSequenceDatabaseEntry();
+        EntityUtils.attach( session, bioSequence, BioSequenceImpl.class, bioSequence.getId() );
+        Hibernate.initialize( bioSequence );
+        Hibernate.initialize( bioSequence.getBioSequence2GeneProduct() );
 
-                if ( dbEntry != null ) {
-                    Hibernate.initialize( dbEntry );
-                    Hibernate.initialize( dbEntry.getExternalDatabase() );
-                    session.evict( dbEntry );
-                }
+        if ( bioSequence.getTaxon() != null && bioSequence.getTaxon().getId() != null ) {
+            Hibernate.initialize( bioSequence.getTaxon() );
+        }
 
-                for ( BioSequence2GeneProduct bs2gp : bioSequence.getBioSequence2GeneProduct() ) {
-                    GeneProduct geneProduct = bs2gp.getGeneProduct();
-                    session.lock( geneProduct, LockMode.NONE );
-                    Hibernate.initialize( geneProduct );
-                    Gene g = geneProduct.getGene();
-                    if ( g != null ) {
-                        Hibernate.initialize( g );
-                        Hibernate.initialize( g.getAliases() );
-                        session.evict( g );
-                    }
-                    session.evict( geneProduct );
+        DatabaseEntry dbEntry = bioSequence.getSequenceDatabaseEntry();
 
-                }
+        if ( dbEntry != null ) {
+            Hibernate.initialize( dbEntry );
+            Hibernate.initialize( dbEntry.getExternalDatabase() );
+            session.evict( dbEntry );
+        }
 
-                session.evict( bioSequence );
+        for ( BioSequence2GeneProduct bs2gp : bioSequence.getBioSequence2GeneProduct() ) {
+            GeneProduct geneProduct = bs2gp.getGeneProduct();
 
-                return null;
+            try {
+                session.lock( geneProduct, LockMode.NONE );
+            } catch ( NonUniqueObjectException e ) {
+
             }
-        } );
+
+            Hibernate.initialize( geneProduct );
+            Gene g = geneProduct.getGene();
+            if ( g != null ) {
+                Hibernate.initialize( g );
+                Hibernate.initialize( g.getAliases() );
+                session.evict( g );
+            }
+            session.evict( geneProduct );
+
+        }
+
+        session.evict( bioSequence );
+
     }
 
     /*
@@ -351,7 +365,7 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
         HibernateTemplate templ = this.getHibernateTemplate();
         final StopWatch timer = new StopWatch();
         timer.start();
-        templ.executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback() {
+        templ.executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
                 FlushMode oldFlushMode = session.getFlushMode();
                 CacheMode oldCacheMode = session.getCacheMode();
@@ -390,7 +404,6 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
                         }
                         session.clear();
                     }
-                    EntityUtils.unProxy( bioSequence );
                 }
 
                 session.clear();

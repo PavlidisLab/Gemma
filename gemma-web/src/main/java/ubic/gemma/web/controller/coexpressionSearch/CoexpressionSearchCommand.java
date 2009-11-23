@@ -32,8 +32,8 @@ public class CoexpressionSearchCommand {
      */
     private boolean dirty = false;
 
-    private boolean quick = false;  //if set to true will do a quick coexpression search 
-    
+    private boolean quick = false; // if set to true will do a quick coexpression search
+
     private Collection<Long> eeIds;
 
     /*
@@ -101,6 +101,10 @@ public class CoexpressionSearchCommand {
         return forceProbeLevelSearch;
     }
 
+    public boolean isQuick() {
+        return quick;
+    }
+
     public boolean isUseMyDatasets() {
         return this.useMyDatasets;
     }
@@ -129,16 +133,16 @@ public class CoexpressionSearchCommand {
         this.forceProbeLevelSearch = forceProbeLevelSearch;
     }
 
-    public void setUseMyDatasets( boolean useMyDatasets ) {
-        this.useMyDatasets = useMyDatasets;
-    }
-
     public void setGeneIds( Collection<Long> geneIds ) {
         this.geneIds = geneIds;
     }
 
     public void setQueryGenesOnly( boolean queryGenesOnly ) {
         this.queryGenesOnly = queryGenesOnly;
+    }
+
+    public void setQuick( boolean quick ) {
+        this.quick = quick;
     }
 
     public void setStringency( Integer stringency ) {
@@ -149,20 +153,16 @@ public class CoexpressionSearchCommand {
         this.taxonId = taxonId;
     }
 
+    public void setUseMyDatasets( boolean useMyDatasets ) {
+        this.useMyDatasets = useMyDatasets;
+    }
+
     @Override
     public String toString() {
         return "Genes=" + StringUtils.join( getGeneIds(), "," ) + " EESet=" + this.getEeSetId() + " ForceProbeLevel="
                 + this.forceProbeLevelSearch + " QueryGenesOnly=" + this.getQueryGenesOnly() + " tax=" + getTaxonId()
                 + " Stringency=" + stringency + " ees="
                 + StringUtils.abbreviate( StringUtils.join( getEeIds(), "," ), 100 );
-    }
-
-    public boolean isQuick() {
-        return quick;
-    }
-
-    public void setQuick( boolean quick ) {
-        this.quick = quick;
     }
 
 }

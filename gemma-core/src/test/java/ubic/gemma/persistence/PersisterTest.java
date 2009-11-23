@@ -18,47 +18,28 @@
  */
 package ubic.gemma.persistence;
 
+import static org.junit.Assert.assertNotNull;
+
+import org.junit.Test;
+import org.springframework.transaction.annotation.Transactional;
+
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.testing.BaseSpringContextTest;
-import ubic.gemma.testing.TestPersistentObjectHelper;
 
 /**
  * @author pavlidis
  * @version $Id$
  */
 public class PersisterTest extends BaseSpringContextTest {
-    ArrayDesign ad;
-    TestPersistentObjectHelper helper;
-    PersisterHelper persisterHelper;
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.testing.BaseSpringContextTest#onSetUp()
-     */
-    @Override
-    protected void onSetUpInTransaction() throws Exception {
-        endTransaction();
-        persisterHelper = ( PersisterHelper ) this.getBean( "persisterHelper" );
-        helper = new TestPersistentObjectHelper();
-        helper.setPersisterHelper( persisterHelper );
-    }
 
     /**
      *  
      */
+    @Test
+    @Transactional
     public void testPersistNewArrayDesign() throws Exception {
-        ad = helper.getTestPersistentArrayDesign( 20, true, false );
+        ArrayDesign ad = super.getTestPersistentArrayDesign( 20, true, false, true );
         assertNotNull( ad.getId() );
-    }
-
-    @Override
-    protected void onTearDownInTransaction() throws Exception {
-        if ( ad != null && ad.getId() != null ) {
-            ArrayDesignService ads = ( ArrayDesignService ) this.getBean( "arrayDesignService" );
-            ads.remove( ad );
-        }
     }
 
 }

@@ -52,13 +52,6 @@ public class ArrayDesignSequenceAddCommand {
     }
 
     /**
-     * @param arrayDesign the arrayDesign to set
-     */
-    public void setArrayDesign( ArrayDesign arrayDesign ) {
-        this.arrayDesign = arrayDesign;
-    }
-
-    /**
      * @return the sequenceFile
      */
     public FileUpload getSequenceFile() {
@@ -66,17 +59,24 @@ public class ArrayDesignSequenceAddCommand {
     }
 
     /**
-     * @param sequenceFile the sequenceFile to set
-     */
-    public void setSequenceFile( FileUpload sequenceFile ) {
-        this.sequenceFile = sequenceFile;
-    }
-
-    /**
      * @return the sequenceType
      */
     public SequenceType getSequenceType() {
         return this.sequenceType;
+    }
+
+    /**
+     * @param arrayDesign the arrayDesign to set
+     */
+    public void setArrayDesign( ArrayDesign arrayDesign ) {
+        this.arrayDesign = arrayDesign;
+    }
+
+    /**
+     * @param sequenceFile the sequenceFile to set
+     */
+    public void setSequenceFile( FileUpload sequenceFile ) {
+        this.sequenceFile = sequenceFile;
     }
 
     /**

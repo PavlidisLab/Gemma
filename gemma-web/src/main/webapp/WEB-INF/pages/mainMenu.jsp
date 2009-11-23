@@ -88,7 +88,7 @@
 	</div>
 
 
-	<security:authorize ifAnyGranted="admin">
+	<security:authorize ifAnyGranted="GROUP_ADMIN">
 		<div id="adminFunctions" class="roundedcornr_box_777249" style="margin-bottom: 15px;">
 			<div class="roundedcornr_top_777249">
 				<div></div>
@@ -97,19 +97,19 @@
 				<strong> More administrative functions </strong>
 				<ul class="compactList" style="padding-left: 4px;">
 					<li>
-						<a href='<c:url value="/systemStats.html"/>'> System monitoring </a>
+						<a href='<c:url value="/admin/systemStats.html"/>'> System monitoring </a>
 					</li>
 					<li>
-						<a href='<c:url value="/indexer.html"/>'> <fmt:message key="menu.compassIndexer" /> </a>
+						<a href='<c:url value="/admin/indexer.html"/>'> <fmt:message key="menu.compassIndexer" /> </a>
 					</li>
 					<li>
-						<a href='<c:url value="/securityManager.html"/>'> <fmt:message key="menu.securityManager" /> </a>
+						<a href='<c:url value="/admin/securityManager.html"/>'> <fmt:message key="menu.securityManager" /> </a>
 					</li>
 					<li>
 						<a href='<c:url value="/expressionExperimentSetManager.html" />'>Manage experiment sets</a>
 					</li>
 					<li>
-						<a href='<c:url value="/maintenanceMode.html" />'>Manage maintenance mode</a>
+						<a href='<c:url value="/admin/maintenanceMode.html" />'>Manage maintenance mode</a>
 					</li>
 					<li>
 						<a href='<c:url value="/whatsnew/generateCache.html" />'>Regenerate What's New Cache</a>
@@ -118,9 +118,6 @@
 				</ul>
 				<strong> Inactive, deprecated, or not ready for prime time </strong>
 				<ul class="compactList" style="padding-left: 3px;">
-					<li>
-						<a href='<c:url value="/uploadFile.html"/>'> <fmt:message key="menu.selectFile" /> </a>
-					</li>
 					<li>
 						<a href='<c:url value="/bibRefSearch.html"/>'> <fmt:message key="menu.flow.PubMedSearch" /> </a>
 					</li>
@@ -153,7 +150,7 @@
 
 	<div id="sampleQueries" style="padding: 4px; width: 300px; margin-bottom: 6px;">
 		Examples:
-		<a href='<c:url value="/gene/showGene.html?id=938103"/>'>Grin1</a> (Rat)
-		<a href='<c:url value="gene/showGene.html?id=772080" />'>Dsp</a> (Mouse)
+		<a href='<c:url value="/gene/showGene.html?ncbiid=14810"/>'>Grin1</a> (Mouse)
+		<a href='<c:url value="gene/showGene.html?ncbiid=50689" />'>Mapk3</a> (Rat)
 	</div>
 </div>

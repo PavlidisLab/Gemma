@@ -18,12 +18,17 @@
  */
 package ubic.gemma.analysis.service;
 
+import static org.junit.Assert.assertNotNull;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.zip.GZIPInputStream;
+
+import org.junit.Before;
+import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.apps.Blat;
 import ubic.gemma.loader.expression.arrayDesign.ArrayDesignProbeMapperService;
@@ -56,19 +61,23 @@ import ubic.gemma.util.ConfigUtils;
  */
 public class CompositeSequenceGeneMapperServiceIntegrationTest extends AbstractGeoServiceTest {
 
-    CompositeSequenceGeneMapperService compositeSequenceGeneMapperService = null;
-
+    @Autowired
     CompositeSequenceService compositeSequenceService = null;
 
+    @Autowired
     GeneService geneService = null;
 
+    @Autowired
     ArrayDesignService arrayDesignService = null;
 
+    @Autowired
     ExpressionExperimentService expressionExperimentService = null;
 
+    @Autowired
     AbstractGeoService geoService = null;
-    
-    TaxonService taxonService= null;
+
+    @Autowired
+    TaxonService taxonService = null;
 
     static ArrayDesign ad = null;
 
@@ -88,24 +97,8 @@ public class CompositeSequenceGeneMapperServiceIntegrationTest extends AbstractG
      *
      */
     @SuppressWarnings("unchecked")
-    @Override
-    protected void onSetUpInTransaction() throws Exception {
-        super.onSetUpInTransaction();
-        endTransaction();
-        compositeSequenceGeneMapperService = ( CompositeSequenceGeneMapperService ) this
-                .getBean( "compositeSequenceGeneMapperService" );
-
-        expressionExperimentService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
-
-        compositeSequenceService = ( CompositeSequenceService ) this.getBean( "compositeSequenceService" );
-
-        geneService = ( GeneService ) this.getBean( "geneService" );
-        
-        taxonService= (TaxonService)this.getBean( "taxonService" );
-
-        arrayDesignService = ( ArrayDesignService ) this.getBean( "arrayDesignService" );
-
-        geoService = ( AbstractGeoService ) this.getBean( "geoDatasetService" );
+    @Before
+    public void setup() throws Exception {
 
         String path = getTestFileBasePath();
 
@@ -128,11 +121,70 @@ public class CompositeSequenceGeneMapperServiceIntegrationTest extends AbstractG
     }
 
     /**
-     *
+     * Tests finding the composite sequences for a given gene id.
+     * 
+     * @throws Exception
      */
-    @Override
-    protected void onTearDownInTransaction() throws Exception {
-        super.onTearDownInTransaction();
+    @Test
+    public void testGetCompositeSequencesByGeneId() throws Exception {
+
+        Collection<Gene> genes = geneService.findByOfficialSymbol( geneOfficialSymbol );
+
+        if ( genes == null || genes.isEmpty() ) return;
+
+        Gene g = genes.iterator().next();
+
+        Collection<CompositeSequence> compositeSequences = geneService.getCompositeSequencesById( g.getId() );
+
+        log.info( "Found " + compositeSequences.size() + " composite sequence(s) for gene " + g.getOfficialSymbol()
+                + " ... " );
+
+        assertNotNull( compositeSequences );
+        // assertEquals( compositeSequences.size(), 1 );
+        // assertEquals( ( compositeSequences.iterator().next() ).getName(), csName );
+    }
+
+    /**
+     * Tests finding all genes for a given composite sequence.
+     * 
+     * @throws Exception
+     */
+    @Test
+    public void testGetGenesForCompositeSequence() throws Exception {
+
+        CompositeSequence cs = compositeSequenceService.findByName( ad, csName );
+
+        if ( cs == null ) return;
+
+        Collection<Gene> genes = compositeSequenceService.getGenes( cs );
+
+        log.info( "Found " + genes.size() + " gene(s) for " + cs.getName() );
+
+        assertNotNull( genes );
+        // assertEquals( genes.size(), 1 );
+        // assertEquals( genes.iterator().next().getName(), geneOfficialSymbol );
+    }
+
+    /**
+     * @throws IOException
+     */
+    private void blatCollapsedSequences() throws IOException {
+
+        Taxon taxon = taxonService.findByScientificName( "Homo sapiens" );
+
+        ArrayDesignSequenceAlignmentService aligner = ( ArrayDesignSequenceAlignmentService ) getBean( "arrayDesignSequenceAlignmentService" );
+
+        InputStream blatResultInputStream = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/genome/gpl140.blatresults.psl.gz" ) ); // TODO create the correct blat results file
+
+        Collection<BlatResult> results = blat.processPsl( blatResultInputStream, taxon );
+
+        aligner.processArrayDesign( ad, taxon, results );
+
+        // real stuff.
+        ArrayDesignProbeMapperService arrayDesignProbeMapperService = ( ArrayDesignProbeMapperService ) this
+                .getBean( "arrayDesignProbeMapperService" );
+        arrayDesignProbeMapperService.processArrayDesign( ad );
     }
 
     /**
@@ -159,7 +211,7 @@ public class CompositeSequenceGeneMapperServiceIntegrationTest extends AbstractG
      */
     private void loadGeneData() {
         NcbiGeneLoader loader = new NcbiGeneLoader();
-        loader.setTaxonService(taxonService);
+        loader.setTaxonService( taxonService );
         loader.setPersisterHelper( ( PersisterHelper ) this.getBean( "persisterHelper" ) );
         String filePath = ConfigUtils.getString( "gemma.home" ) + File.separatorChar;
         filePath = filePath + "gemma-core/src/test/resources/data/loader/genome/gene";
@@ -181,75 +233,4 @@ public class CompositeSequenceGeneMapperServiceIntegrationTest extends AbstractG
 
     }
 
-    /**
-     * @throws IOException
-     */
-    private void blatCollapsedSequences() throws IOException {
-
-        Taxon taxon = taxonService.findByScientificName( "Homo sapiens" );
-
-        ArrayDesignSequenceAlignmentService aligner = ( ArrayDesignSequenceAlignmentService ) getBean( "arrayDesignSequenceAlignmentService" );
-
-        InputStream blatResultInputStream = new GZIPInputStream( this.getClass().getResourceAsStream(
-                "/data/loader/genome/gpl140.blatresults.psl.gz" ) ); // TODO create the correct blat results file
-
-        Collection<BlatResult> results = blat.processPsl( blatResultInputStream, taxon );
-
-        aligner.processArrayDesign( ad, taxon, results );
-
-        // real stuff.
-        ArrayDesignProbeMapperService arrayDesignProbeMapperService = ( ArrayDesignProbeMapperService ) this
-                .getBean( "arrayDesignProbeMapperService" );
-        arrayDesignProbeMapperService.processArrayDesign( ad );
-    }
-
-    /**
-     * Tests finding all genes for a given composite sequence.
-     * 
-     * @throws Exception
-     */
-    public void testGetGenesForCompositeSequence() throws Exception {
-
-        CompositeSequence cs = compositeSequenceService.findByName( ad, csName );
-
-        if ( cs == null ) return;
-
-        Collection<Gene> genes = compositeSequenceService.getGenes( cs );
-
-        log.info( "Found " + genes.size() + " gene(s) for " + cs.getName() );
-
-        assertNotNull( genes );
-        // assertEquals( genes.size(), 1 );
-        // assertEquals( genes.iterator().next().getName(), geneOfficialSymbol );
-    }
-
-    /**
-     * Tests finding the composite sequences for a given gene id.
-     * 
-     * @throws Exception
-     */
-    @SuppressWarnings("unchecked")
-    public void testGetCompositeSequencesByGeneId() throws Exception {
-
-        Collection<Gene> genes = geneService.findByOfficialSymbol( geneOfficialSymbol );
-
-        if ( genes == null || genes.isEmpty() ) return;
-
-        Iterator iter = genes.iterator();
-        Gene g = ( Gene ) iter.next();
-
-        Collection<CompositeSequence> compositeSequences = geneService.getCompositeSequencesById( g.getId() );
-
-        log.info( "Found " + compositeSequences.size() + " composite sequence(s) for gene " + g.getOfficialSymbol()
-                + " ... " );
-
-        assertNotNull( compositeSequences );
-        // assertEquals( compositeSequences.size(), 1 );
-        // assertEquals( ( compositeSequences.iterator().next() ).getName(), csName );
-    }
-
-    @Override
-    protected void init() {
-        log.info( "nothing to do in init." );
-    }
 }

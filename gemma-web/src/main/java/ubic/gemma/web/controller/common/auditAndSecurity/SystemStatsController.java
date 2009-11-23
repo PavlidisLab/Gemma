@@ -20,15 +20,16 @@ package ubic.gemma.web.controller.common.auditAndSecurity;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.springframework.stereotype.Controller;
 import org.springframework.web.servlet.mvc.AbstractUrlViewController;
 
 /**
  * System statistics
  * 
- * @spring.bean id="systemStatsController"
  * @author pavlidis
  * @version $Id$
  */
+@Controller
 public class SystemStatsController extends AbstractUrlViewController {
 
     @Override

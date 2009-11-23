@@ -21,6 +21,8 @@ package ubic.gemma.ontology;
 
 import java.util.Collection;
 
+import org.springframework.stereotype.Service;
+
 import ubic.gemma.util.ConfigUtils;
 
 import com.hp.hpl.jena.ontology.OntModel;
@@ -31,16 +33,14 @@ import com.hp.hpl.jena.ontology.OntModel;
  * 
  * @author klc
  * @version $Id: BirnLexOntologyService.java
- * @spring.bean id="birnLexOntologyService"
  */
-
+@Service
 public class BirnLexOntologyService extends AbstractOntologyService {
 
     private static final String BIRNLEX_ONTOLOGY_URL = "url.birnlexOntology";
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.ontology.AbstractOntologyService#getOntologyName()
      */
     @Override

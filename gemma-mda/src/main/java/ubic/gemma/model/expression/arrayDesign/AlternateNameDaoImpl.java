@@ -22,8 +22,18 @@
 //
 package ubic.gemma.model.expression.arrayDesign;
 
+import org.hibernate.SessionFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
+
 /**
  * @see ubic.gemma.model.expression.arrayDesign.AlternateName
  */
+@Repository
 public class AlternateNameDaoImpl extends ubic.gemma.model.expression.arrayDesign.AlternateNameDaoBase {
+
+    @Autowired
+    public AlternateNameDaoImpl( SessionFactory sessionFactory ) {
+        super.setSessionFactory( sessionFactory );
+    }
 }

@@ -18,8 +18,11 @@
  */
 package ubic.gemma.web.controller.expression.experiment;
 
+import org.directwebremoting.annotations.RemoteProxy;
+
 /**
  * @author luke
+ * @version $Id$
  */
 public class AnnotationValueObject {
 
@@ -38,61 +41,11 @@ public class AnnotationValueObject {
     private String evidenceCode;
     private String objectClass;
 
-    public String getObjectClass() {
-        return objectClass;
-    }
-
-    public void setObjectClass( String objectClass ) {
-        this.objectClass = objectClass;
-    }
-
     public AnnotationValueObject() {
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription( String description ) {
-        this.description = description;
-    }
-
-    public String getEvidenceCode() {
-        return evidenceCode;
-    }
-
-    public void setEvidenceCode( String evidenceCode ) {
-        this.evidenceCode = evidenceCode;
     }
 
     public String getClassName() {
         return className;
-    }
-
-    public void setClassName( String ontologyClass ) {
-        this.className = ontologyClass;
-    }
-
-    public String getTermName() {
-        return termName;
-    }
-
-    public void setTermName( String ontologyTerm ) {
-        this.termName = ontologyTerm;
-    }
-
-    /**
-     * @return the id
-     */
-    public Long getId() {
-        return id;
-    }
-
-    /**
-     * @param id the id to set
-     */
-    public void setId( Long id ) {
-        this.id = id;
     }
 
     /**
@@ -102,39 +55,23 @@ public class AnnotationValueObject {
         return classUri;
     }
 
-    /**
-     * @param classUri the classUri to set
-     */
-    public void setClassUri( String classUri ) {
-        this.classUri = classUri;
+    public String getDescription() {
+        return description;
+    }
+
+    public String getEvidenceCode() {
+        return evidenceCode;
     }
 
     /**
-     * @return the termUri
+     * @return the id
      */
-    public String getTermUri() {
-        return termUri;
+    public Long getId() {
+        return id;
     }
 
-    /**
-     * @param termUri the termUri to set
-     */
-    public void setTermUri( String termUri ) {
-        this.termUri = termUri;
-    }
-
-    /**
-     * @return the parentName
-     */
-    public String getParentName() {
-        return parentName;
-    }
-
-    /**
-     * @param parentDescription the parentDescription to set
-     */
-    public void setParentName( String parentName ) {
-        this.parentName = parentName;
+    public String getObjectClass() {
+        return objectClass;
     }
 
     /**
@@ -145,13 +82,6 @@ public class AnnotationValueObject {
     }
 
     /**
-     * @param parentDescription the parentDescription to set
-     */
-    public void setParentDescription( String parentDescription ) {
-        this.parentDescription = parentDescription;
-    }
-
-    /**
      * @return the parentLink
      */
     public String getParentLink() {
@@ -159,24 +89,10 @@ public class AnnotationValueObject {
     }
 
     /**
-     * @param parentLink the parentLink to set
+     * @return the parentName
      */
-    public void setParentLink( String parentLink ) {
-        this.parentLink = parentLink;
-    }
-
-    /**
-     * @return the parentOfParentName
-     */
-    public String getParentOfParentName() {
-        return parentOfParentName;
-    }
-
-    /**
-     * @param parentOfParentName the parentOfParentName to set
-     */
-    public void setParentOfParentName( String parentOfParentName ) {
-        this.parentOfParentName = parentOfParentName;
+    public String getParentName() {
+        return parentName;
     }
 
     /**
@@ -187,13 +103,6 @@ public class AnnotationValueObject {
     }
 
     /**
-     * @param parentOfParentDescription the parentOfParentDescription to set
-     */
-    public void setParentOfParentDescription( String parentOfParentDescription ) {
-        this.parentOfParentDescription = parentOfParentDescription;
-    }
-
-    /**
      * @return the parentOfParentLink
      */
     public String getParentOfParentLink() {
@@ -201,9 +110,103 @@ public class AnnotationValueObject {
     }
 
     /**
+     * @return the parentOfParentName
+     */
+    public String getParentOfParentName() {
+        return parentOfParentName;
+    }
+
+    public String getTermName() {
+        return termName;
+    }
+
+    /**
+     * @return the termUri
+     */
+    public String getTermUri() {
+        return termUri;
+    }
+
+    public void setClassName( String ontologyClass ) {
+        this.className = ontologyClass;
+    }
+
+    /**
+     * @param classUri the classUri to set
+     */
+    public void setClassUri( String classUri ) {
+        this.classUri = classUri;
+    }
+
+    public void setDescription( String description ) {
+        this.description = description;
+    }
+
+    public void setEvidenceCode( String evidenceCode ) {
+        this.evidenceCode = evidenceCode;
+    }
+
+    /**
+     * @param id the id to set
+     */
+    public void setId( Long id ) {
+        this.id = id;
+    }
+
+    public void setObjectClass( String objectClass ) {
+        this.objectClass = objectClass;
+    }
+
+    /**
+     * @param parentDescription the parentDescription to set
+     */
+    public void setParentDescription( String parentDescription ) {
+        this.parentDescription = parentDescription;
+    }
+
+    /**
+     * @param parentLink the parentLink to set
+     */
+    public void setParentLink( String parentLink ) {
+        this.parentLink = parentLink;
+    }
+
+    /**
+     * @param parentDescription the parentDescription to set
+     */
+    public void setParentName( String parentName ) {
+        this.parentName = parentName;
+    }
+
+    /**
+     * @param parentOfParentDescription the parentOfParentDescription to set
+     */
+    public void setParentOfParentDescription( String parentOfParentDescription ) {
+        this.parentOfParentDescription = parentOfParentDescription;
+    }
+
+    /**
      * @param parentOfParentLink the parentOfParentLink to set
      */
     public void setParentOfParentLink( String parentOfParentLink ) {
         this.parentOfParentLink = parentOfParentLink;
+    }
+
+    /**
+     * @param parentOfParentName the parentOfParentName to set
+     */
+    public void setParentOfParentName( String parentOfParentName ) {
+        this.parentOfParentName = parentOfParentName;
+    }
+
+    public void setTermName( String ontologyTerm ) {
+        this.termName = ontologyTerm;
+    }
+
+    /**
+     * @param termUri the termUri to set
+     */
+    public void setTermUri( String termUri ) {
+        this.termUri = termUri;
     }
 }

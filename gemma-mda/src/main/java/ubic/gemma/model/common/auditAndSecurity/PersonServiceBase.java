@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.common.auditAndSecurity;
 
+import org.springframework.beans.factory.annotation.Autowired;
+
 /**
  * <p>
  * Spring Service base class for <code>ubic.gemma.model.common.auditAndSecurity.PersonService</code>, provides access to
@@ -28,6 +30,7 @@ package ubic.gemma.model.common.auditAndSecurity;
  */
 public abstract class PersonServiceBase implements ubic.gemma.model.common.auditAndSecurity.PersonService {
 
+    @Autowired
     private ubic.gemma.model.common.auditAndSecurity.PersonDao personDao;
 
     /**

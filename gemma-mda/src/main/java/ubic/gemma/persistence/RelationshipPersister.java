@@ -18,6 +18,9 @@
  */
 package ubic.gemma.persistence;
 
+import org.hibernate.SessionFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSetService;
 import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis;
@@ -34,23 +37,27 @@ import ubic.gemma.model.association.Gene2GOAssociationService;
  * 
  * @author pavlidis
  * @version $Id$
- * @spring.property name="gene2GOAssociationService" ref="gene2GOAssociationService"
- * @spring.property name="probeCoexpressionAnalysisService" ref="probeCoexpressionAnalysisService"
- * @spring.property name="differentialExpressionAnalysisService" ref="differentialExpressionAnalysisService"
- * @spring.property name="geneCoexpressionAnalysisService" ref="geneCoexpressionAnalysisService"
- * @spring.property name="expressionExperimentSetService" ref="expressionExperimentSetService"
  */
-public class RelationshipPersister extends ExpressionPersister {
+public abstract class RelationshipPersister extends ExpressionPersister {
 
-    private Gene2GOAssociationService gene2GOAssociationService;
+    @Autowired
+    private Gene2GOAssociationService gene2GoAssociationService;
 
+    @Autowired
     private ProbeCoexpressionAnalysisService probeCoexpressionAnalysisService;
 
+    @Autowired
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
 
+    @Autowired
     private GeneCoexpressionAnalysisService geneCoexpressionAnalysisService;
 
+    @Autowired
     private ExpressionExperimentSetService expressionExperimentSetService;
+
+    public RelationshipPersister( SessionFactory sessionFactory ) {
+        super( sessionFactory );
+    }
 
     /*
      * (non-Javadoc)
@@ -95,10 +102,10 @@ public class RelationshipPersister extends ExpressionPersister {
     }
 
     /**
-     * @param gene2GOAssociationService the gene2GOAssociationService to set
+     * @param gene2GoAssociationService the gene2GoAssociationService to set
      */
-    public void setGene2GOAssociationService( Gene2GOAssociationService gene2GOAssociationService ) {
-        this.gene2GOAssociationService = gene2GOAssociationService;
+    public void setGene2GoAssociationService( Gene2GOAssociationService gene2GoAssociationService ) {
+        this.gene2GoAssociationService = gene2GoAssociationService;
     }
 
     public void setGeneCoexpressionAnalysisService( GeneCoexpressionAnalysisService geneCoexpressionAnalysisService ) {
@@ -140,7 +147,7 @@ public class RelationshipPersister extends ExpressionPersister {
         if ( !isTransient( association ) ) return association;
 
         association.setGene( persistGene( association.getGene() ) );
-        return gene2GOAssociationService.findOrCreate( association );
+        return gene2GoAssociationService.findOrCreate( association );
     }
 
     /**

@@ -37,15 +37,6 @@ import ubic.gemma.web.controller.BaseFormController;
 /**
  * Supports editing of bibliographic references.
  * 
- * @spring.bean id="bibliographicReferenceEditFormController"
- * @spring.property name="commandClass" value="ubic.gemma.model.common.description.BibliographicReference"
- * @spring.property name="commandName" value="bibliographicReference"
- * @spring.property name="formView" value="bibRefEdit"
- * @spring.property name="successView" value="bibRefView"
- * @spring.property name="validator" ref="bibliographicReferenceValidator"
- * @spring.property name="bibliographicReferenceService" ref="bibliographicReferenceService"
- * @spring.property name="externalDatabaseService" ref="externalDatabaseService"
- * @spring.property name="localFileService" ref="localFileService"
  * @author pavlidis
  * @version $Id$
  */
@@ -56,10 +47,16 @@ public class BibliographicReferenceEditFormController extends BaseFormController
     private ExternalDatabaseService externalDatabaseService;
 
     /**
-     * @param externalDatabaseService the externalDatabaseService to set
+     * 
      */
-    public void setExternalDatabaseService( ExternalDatabaseService externalDatabaseService ) {
-        this.externalDatabaseService = externalDatabaseService;
+    @Override
+    public ModelAndView processFormSubmission( HttpServletRequest request, HttpServletResponse response,
+            Object command, BindException errors ) throws Exception {
+        if ( request.getParameter( "cancel" ) != null ) {
+            return new ModelAndView( new RedirectView( "mainMenu.html" ) );
+        }
+
+        return super.processFormSubmission( request, response, command, errors );
     }
 
     /**
@@ -67,6 +64,13 @@ public class BibliographicReferenceEditFormController extends BaseFormController
      */
     public void setBibliographicReferenceService( BibliographicReferenceService bibliographicReferenceService ) {
         this.bibliographicReferenceService = bibliographicReferenceService;
+    }
+
+    /**
+     * @param externalDatabaseService the externalDatabaseService to set
+     */
+    public void setExternalDatabaseService( ExternalDatabaseService externalDatabaseService ) {
+        this.externalDatabaseService = externalDatabaseService;
     }
 
     /**
@@ -78,9 +82,28 @@ public class BibliographicReferenceEditFormController extends BaseFormController
 
     /*
      * (non-Javadoc)
-     * 
+     * @see
+     * org.springframework.web.servlet.mvc.AbstractFormController#formBackingObject(javax.servlet.http.HttpServletRequest
+     * )
+     */
+    @Override
+    protected Object formBackingObject( HttpServletRequest request ) throws Exception {
+        BibliographicReference bibRef = null;
+        String ids = request.getParameter( "id" );
+        if ( ids != null ) {
+            Long id = Long.parseLong( ids );
+            bibRef = bibliographicReferenceService.load( id );
+            if ( bibRef == null ) {
+                bibRef = BibliographicReference.Factory.newInstance();
+            }
+        }
+        return bibRef;
+    }
+
+    /*
+     * (non-Javadoc)
      * @see org.springframework.web.servlet.mvc.SimpleFormController#onSubmit(javax.servlet.http.HttpServletRequest,
-     *      javax.servlet.http.HttpServletResponse, java.lang.Object, org.springframework.validation.BindException)
+     * javax.servlet.http.HttpServletResponse, java.lang.Object, org.springframework.validation.BindException)
      */
     @Override
     protected ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
@@ -180,37 +203,5 @@ public class BibliographicReferenceEditFormController extends BaseFormController
         // context.getRequestScope().setAttribute( "bibliographicReference", bibRef );
         // addMessage( context, "bibliographicReference.updated", new Object[] { bibRef.getPubAccession().getAccession()
         // } );
-    }
-
-    /**
-     * 
-     */
-    @Override
-    public ModelAndView processFormSubmission( HttpServletRequest request, HttpServletResponse response,
-            Object command, BindException errors ) throws Exception {
-        if ( request.getParameter( "cancel" ) != null ) {
-            return new ModelAndView( new RedirectView( "mainMenu.html" ) );
-        }
-
-        return super.processFormSubmission( request, response, command, errors );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.springframework.web.servlet.mvc.AbstractFormController#formBackingObject(javax.servlet.http.HttpServletRequest)
-     */
-    @Override
-    protected Object formBackingObject( HttpServletRequest request ) throws Exception {
-        BibliographicReference bibRef = null;
-        String ids = request.getParameter( "id" );
-        if ( ids != null ) {
-            Long id = Long.parseLong( ids );
-            bibRef = bibliographicReferenceService.load( id );
-            if ( bibRef == null ) {
-                bibRef = BibliographicReference.Factory.newInstance();
-            }
-        }
-        return bibRef;
     }
 }

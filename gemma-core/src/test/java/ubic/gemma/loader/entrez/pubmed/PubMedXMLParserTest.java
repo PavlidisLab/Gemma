@@ -44,21 +44,6 @@ public class PubMedXMLParserTest extends TestCase {
     InputStream testStream;
     PubMedXMLParser testParser;
 
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
-        testStream = PubMedXMLParserTest.class.getResourceAsStream( "/data/pubmed-test.xml" );
-        testParser = new PubMedXMLParser();
-    }
-
-    @Override
-    protected void tearDown() throws Exception {
-        super.tearDown();
-        testStream.close();
-        testParser = null;
-        testStream = null;
-    }
-
     public void testParse() throws Exception {
         try {
             Collection<BibliographicReference> brl = testParser.parse( testStream );
@@ -156,5 +141,20 @@ public class PubMedXMLParserTest extends TestCase {
                 throw ( e );
             }
         }
+    }
+
+    @Override
+    protected void setUp() throws Exception {
+        super.setUp();
+        testStream = PubMedXMLParserTest.class.getResourceAsStream( "/data/pubmed-test.xml" );
+        testParser = new PubMedXMLParser();
+    }
+
+    @Override
+    protected void tearDown() throws Exception {
+        super.tearDown();
+        testStream.close();
+        testParser = null;
+        testStream = null;
     }
 }

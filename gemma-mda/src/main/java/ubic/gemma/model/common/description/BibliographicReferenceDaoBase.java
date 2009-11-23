@@ -20,6 +20,8 @@ package ubic.gemma.model.common.description;
 
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+
 /**
  * <p>
  * Base Spring DAO Class: is able to create, update, remove, load, and find objects of type
@@ -40,7 +42,7 @@ public abstract class BibliographicReferenceDaoBase extends HibernateDaoSupport 
             throw new IllegalArgumentException( "BibliographicReference.create - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback() {
+                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
@@ -71,7 +73,7 @@ public abstract class BibliographicReferenceDaoBase extends HibernateDaoSupport 
     /**
      * @see ubic.gemma.model.common.description.BibliographicReferenceDao#create(java.util.Collection)
      */
-    @SuppressWarnings( { "unchecked" })
+
     public java.util.Collection create( final java.util.Collection entities ) {
         return create( TRANSFORM_NONE, entities );
     }
@@ -88,7 +90,7 @@ public abstract class BibliographicReferenceDaoBase extends HibernateDaoSupport 
      * @see ubic.gemma.model.common.description.BibliographicReferenceDao#find(int, java.lang.String,
      *      ubic.gemma.model.common.description.BibliographicReference)
      */
-    @SuppressWarnings( { "unchecked" })
+
     public Object find( final int transform, final java.lang.String queryString,
             final ubic.gemma.model.common.description.BibliographicReference bibliographicReference ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -158,7 +160,7 @@ public abstract class BibliographicReferenceDaoBase extends HibernateDaoSupport 
      * @see ubic.gemma.model.common.description.BibliographicReferenceDao#findByExternalId(int, java.lang.String,
      *      java.lang.String, java.lang.String)
      */
-    @SuppressWarnings( { "unchecked" })
+
     public Object findByExternalId( final int transform, final java.lang.String queryString, final java.lang.String id,
             final java.lang.String databaseName ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -186,7 +188,7 @@ public abstract class BibliographicReferenceDaoBase extends HibernateDaoSupport 
      * @see ubic.gemma.model.common.description.BibliographicReferenceDao#findByExternalId(int, java.lang.String,
      *      ubic.gemma.model.common.description.DatabaseEntry)
      */
-    @SuppressWarnings( { "unchecked" })
+
     public Object findByExternalId( final int transform, final java.lang.String queryString,
             final ubic.gemma.model.common.description.DatabaseEntry externalId ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -272,7 +274,7 @@ public abstract class BibliographicReferenceDaoBase extends HibernateDaoSupport 
      * @see ubic.gemma.model.common.description.BibliographicReferenceDao#findByTitle(int, java.lang.String,
      *      java.lang.String)
      */
-    @SuppressWarnings( { "unchecked" })
+
     public BibliographicReference findByTitle( final int transform, final java.lang.String queryString,
             final java.lang.String title ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -314,7 +316,7 @@ public abstract class BibliographicReferenceDaoBase extends HibernateDaoSupport 
      * @see ubic.gemma.model.common.description.BibliographicReferenceDao#findOrCreate(int, java.lang.String,
      *      ubic.gemma.model.common.description.BibliographicReference)
      */
-    @SuppressWarnings( { "unchecked" })
+
     public BibliographicReference findOrCreate( final int transform, final java.lang.String queryString,
             final ubic.gemma.model.common.description.BibliographicReference bibliographicReference ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -368,7 +370,7 @@ public abstract class BibliographicReferenceDaoBase extends HibernateDaoSupport 
     /**
      * @see ubic.gemma.model.common.description.BibliographicReferenceDao#getAllExperimentLinkedReferences()
      */
-    public java.util.Collection getAllExperimentLinkedReferences() {
+    public java.util.Map getAllExperimentLinkedReferences() {
         try {
             return this.handleGetAllExperimentLinkedReferences();
         } catch ( Throwable th ) {
@@ -430,7 +432,6 @@ public abstract class BibliographicReferenceDaoBase extends HibernateDaoSupport 
      * @see ubic.gemma.model.common.description.BibliographicReferenceDao#loadAll()
      */
 
-    @SuppressWarnings( { "unchecked" })
     public java.util.Collection loadAll() {
         return this.loadAll( TRANSFORM_NONE );
     }
@@ -464,7 +465,7 @@ public abstract class BibliographicReferenceDaoBase extends HibernateDaoSupport 
      * @see ubic.gemma.model.common.SecurableDao#remove(java.util.Collection)
      */
 
-    public void remove( java.util.Collection<BibliographicReference> entities ) {
+    public void remove( java.util.Collection<? extends BibliographicReference> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "BibliographicReference.remove - 'entities' can not be null" );
         }
@@ -486,12 +487,12 @@ public abstract class BibliographicReferenceDaoBase extends HibernateDaoSupport 
      * @see ubic.gemma.model.common.SecurableDao#update(java.util.Collection)
      */
 
-    public void update( final java.util.Collection<BibliographicReference> entities ) {
+    public void update( final java.util.Collection<? extends BibliographicReference> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "BibliographicReference.update - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback() {
+                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
@@ -517,7 +518,7 @@ public abstract class BibliographicReferenceDaoBase extends HibernateDaoSupport 
     /**
      * Performs the core logic for {@link #getAllExperimentLinkedReferences()}
      */
-    protected abstract java.util.Collection<BibliographicReference> handleGetAllExperimentLinkedReferences()
+    protected abstract java.util.Map<ExpressionExperiment, BibliographicReference> handleGetAllExperimentLinkedReferences()
             throws java.lang.Exception;
 
     /**

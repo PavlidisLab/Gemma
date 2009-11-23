@@ -41,7 +41,9 @@ import ubic.gemma.model.common.auditAndSecurity.UserRoleImpl;
  * 
  * @author keshav
  * @version $Id$
+ * @deprecated since we don't use Roles, we instead use the Group concept
  */
+@Deprecated
 public class UserRolesPropertyEditor extends PropertyEditorSupport {
 
     private static final String COMMA_DELIM = ",";
@@ -52,9 +54,9 @@ public class UserRolesPropertyEditor extends PropertyEditorSupport {
 
     /*
      * (non-Javadoc)
-     * 
      * @see java.beans.PropertyEditorSupport#setAsText(java.lang.String)
      */
+    @Override
     public void setAsText( String text ) throws IllegalArgumentException {
         if ( !StringUtils.hasText( text ) ) {
             setValue( null );
@@ -83,9 +85,9 @@ public class UserRolesPropertyEditor extends PropertyEditorSupport {
 
     /*
      * (non-Javadoc)
-     * 
      * @see java.beans.PropertyEditorSupport#getAsText()
      */
+    @Override
     public String getAsText() {
         Object value = getValue();
 
@@ -108,5 +110,4 @@ public class UserRolesPropertyEditor extends PropertyEditorSupport {
 
         return roleNames;
     }
-
 }

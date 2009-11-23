@@ -27,6 +27,8 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 public interface DifferentialExpressionAnalysisDao extends
         ubic.gemma.model.analysis.expression.ExpressionAnalysisDao<DifferentialExpressionAnalysis> {
 
+    public long countProbesMeetingThreshold( ExpressionAnalysisResultSet ears, double threshold );
+
     public java.util.Collection<DifferentialExpressionAnalysis> find( ubic.gemma.model.genome.Gene gene,
             ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet resultSet, double threshold );
 
@@ -57,7 +59,5 @@ public interface DifferentialExpressionAnalysisDao extends
      */
     public void thaw(
             ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis differentialExpressionAnalysis );
-
-    public long countProbesMeetingThreshold( ExpressionAnalysisResultSet ears, double threshold );
 
 }

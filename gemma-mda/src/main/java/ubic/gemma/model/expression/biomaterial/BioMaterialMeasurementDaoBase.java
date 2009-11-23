@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.expression.biomaterial;
 
+import java.util.Collection;
+
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 
 /**
@@ -39,7 +41,7 @@ public abstract class BioMaterialMeasurementDaoBase extends HibernateDaoSupport 
             throw new IllegalArgumentException( "BioMaterialMeasurement.create - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback() {
+                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
@@ -51,6 +53,11 @@ public abstract class BioMaterialMeasurementDaoBase extends HibernateDaoSupport 
                     }
                 } );
         return entities;
+    }
+    
+    
+    public Collection<? extends BioMaterialMeasurement > load( Collection<Long> ids ) {
+        return this.getHibernateTemplate().findByNamedParam( "from BioMaterialMeasurementImpl where id in (:ids)", "ids", ids );
     }
 
     /**
@@ -70,7 +77,7 @@ public abstract class BioMaterialMeasurementDaoBase extends HibernateDaoSupport 
     /**
      * @see ubic.gemma.model.expression.biomaterial.BioMaterialMeasurementDao#create(java.util.Collection)
      */
-    @SuppressWarnings( { "unchecked" })
+    
     public java.util.Collection create( final java.util.Collection entities ) {
         return create( TRANSFORM_NONE, entities );
     }
@@ -109,7 +116,7 @@ public abstract class BioMaterialMeasurementDaoBase extends HibernateDaoSupport 
      * @see ubic.gemma.model.expression.biomaterial.BioMaterialMeasurementDao#loadAll()
      */
 
-    @SuppressWarnings( { "unchecked" })
+    
     public java.util.Collection loadAll() {
         return this.loadAll( TRANSFORM_NONE );
     }
@@ -170,7 +177,7 @@ public abstract class BioMaterialMeasurementDaoBase extends HibernateDaoSupport 
             throw new IllegalArgumentException( "BioMaterialMeasurement.update - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback() {
+                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {

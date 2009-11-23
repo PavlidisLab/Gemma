@@ -67,7 +67,6 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.loader.loaderutils.Converter#convert(java.util.Collection)
      */
     public Collection<Object> convert( Collection<Object> sourceDomainObjects ) {
@@ -80,7 +79,6 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.loader.loaderutils.Converter#convert(java.lang.Object)
      */
     public Gene convert( NCBIGeneInfo info ) {
@@ -106,6 +104,8 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
 
         Taxon t = Taxon.Factory.newInstance();
         t.setNcbiId( new Integer( info.getTaxId() ) );
+        t.setIsGenesUsable( false );
+        t.setIsSpecies( true );
         gene.setTaxon( t );
 
         PhysicalLocation pl = PhysicalLocation.Factory.newInstance();
@@ -143,7 +143,6 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.loader.loaderutils.Converter#convert(java.lang.Object)
      */
     @SuppressWarnings("unchecked")

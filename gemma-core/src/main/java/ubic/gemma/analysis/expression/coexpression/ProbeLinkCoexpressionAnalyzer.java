@@ -29,6 +29,8 @@ import java.util.Map;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressedGenesDetails;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionCollectionValueObject;
@@ -45,23 +47,26 @@ import ubic.gemma.ontology.OntologyTerm;
 /**
  * Perform gene-to-gene coexpression link analysis ("TMM-style"), based on stored probe-probe coexpression.
  * 
- * @spring.bean id="probeLinkCoexpressionAnalyzer"
- * @spring.property name="geneService" ref="geneService"
- * @spring.property name="probe2ProbeCoexpressionService" ref="probe2ProbeCoexpressionService"
- * @spring.property name="geneOntologyService" ref="geneOntologyService"
- * @spring.property name="expressionExperimentService" ref="expressionExperimentService"
  * @author paul
  * @version $Id$
  */
+@Service
 public class ProbeLinkCoexpressionAnalyzer {
 
     private static Log log = LogFactory.getLog( ProbeLinkCoexpressionAnalyzer.class.getName() );
     private static final int MAX_GENES_TO_COMPUTE_GOOVERLAP = 25;
     private static final int MAX_GENES_TO_COMPUTE_EESTESTEDIN = 200;
 
+    @Autowired
     private GeneService geneService;
+
+    @Autowired
     private Probe2ProbeCoexpressionService probe2ProbeCoexpressionService;
+
+    @Autowired
     private GeneOntologyService geneOntologyService;
+
+    @Autowired
     private ExpressionExperimentService expressionExperimentService;
 
     /**

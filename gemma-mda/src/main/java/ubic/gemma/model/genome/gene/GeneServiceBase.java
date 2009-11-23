@@ -21,6 +21,8 @@ package ubic.gemma.model.genome.gene;
 import java.util.Collection;
 import java.util.Map;
 
+import org.springframework.beans.factory.annotation.Autowired;
+
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionCollectionValueObject;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
@@ -36,11 +38,12 @@ import ubic.gemma.model.genome.Qtl;
  * 
  * @see ubic.gemma.model.genome.gene.GeneService
  */
-public abstract class GeneServiceBase extends ubic.gemma.model.common.AuditableServiceImpl implements
-        ubic.gemma.model.genome.gene.GeneService {
+public abstract class GeneServiceBase implements ubic.gemma.model.genome.gene.GeneService {
 
+    @Autowired
     private ubic.gemma.model.genome.GeneDao geneDao;
 
+    @Autowired
     private ubic.gemma.model.genome.BaseQtlDao qtlDao;
 
     /**
@@ -410,9 +413,9 @@ public abstract class GeneServiceBase extends ubic.gemma.model.common.AuditableS
     /**
      * @see ubic.gemma.model.genome.gene.GeneService#remove(java.lang.String)
      */
-    public void remove( final java.lang.String officialName ) {
+    public void remove( Gene gene ) {
         try {
-            this.handleRemove( officialName );
+            this.handleRemove( gene );
         } catch ( Throwable th ) {
             throw new ubic.gemma.model.genome.gene.GeneServiceException(
                     "Error performing 'ubic.gemma.model.genome.gene.GeneService.remove(java.lang.String officialName)' --> "
@@ -667,9 +670,8 @@ public abstract class GeneServiceBase extends ubic.gemma.model.common.AuditableS
             ubic.gemma.model.genome.Taxon taxon ) throws java.lang.Exception;
 
     /**
-     * Performs the core logic for {@link #remove(java.lang.String)}
      */
-    protected abstract void handleRemove( java.lang.String officialName ) throws java.lang.Exception;
+    protected abstract void handleRemove( Gene gene ) throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #remove(java.util.Collection)}

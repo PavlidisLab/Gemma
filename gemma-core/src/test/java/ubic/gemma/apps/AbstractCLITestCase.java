@@ -33,7 +33,7 @@ import ubic.gemma.util.ConfigUtils;
  * @author pavlidis
  * @version $Id$
  */
-public class AbstractCLITestCase extends TestCase {
+public abstract class AbstractCLITestCase extends TestCase {
 
     protected static Log log = LogFactory.getLog( AbstractCLITestCase.class.getName() );
 
@@ -50,14 +50,6 @@ public class AbstractCLITestCase extends TestCase {
             throw new IOException( "You must define the 'gemma.home' variable in your build.properties file" );
         }
         return path;
-    }
-
-    /**
-     * Here to keep auto-test-runners happy (e.g. Eclipse)
-     */
-    public final void testDummy() {
-        assertTrue( true );
-        return;
     }
 
 }

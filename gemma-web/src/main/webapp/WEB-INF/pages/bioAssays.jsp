@@ -23,7 +23,7 @@
 	<display:column property="nameLink" sortable="true" titleKey="bioAssay.name" maxWords="20" />
 	<display:column property="description" sortable="true" titleKey="bioAssay.description" maxWords="100" />
 
-	<security:authorize ifAnyGranted="admin">
+	<security:authorize ifAnyGranted="GROUP_ADMIN">
 		<display:column property="delete" sortable="false" title="QC" />
 	</security:authorize>
 

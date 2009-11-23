@@ -26,6 +26,8 @@ import java.util.Collection;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import ubic.basecode.util.FileTools;
 import ubic.gemma.model.common.description.BibliographicReference;
@@ -35,15 +37,15 @@ import ubic.gemma.persistence.PersisterHelper;
  * Manage the loading of large numbers of pubmed entries into the database. Assumes that the XML files are locally
  * available.
  * 
- * @spring.bean id="pubMedService"
- * @spring.property name="persisterHelper" ref="persisterHelper"
  * @author pavlidis
  * @version $Id$
  */
+@Service
 public class PubMedService {
 
     private static Log log = LogFactory.getLog( PubMedService.class.getName() );
 
+    @Autowired
     private PersisterHelper persisterHelper;
 
     public void setPersisterHelper( PersisterHelper persisterHelper ) {

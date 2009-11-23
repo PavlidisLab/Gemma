@@ -32,17 +32,17 @@ public class ImageCumulativePlatesParserTest extends TestCase {
 
     InputStream is;
 
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
-        is = this.getClass().getResourceAsStream( "/data/loader/genome/cumulative.plates.test.txt" );
-    }
-
     public void testParseInputStream() throws Exception {
         ImageCumulativePlatesParser parser = new ImageCumulativePlatesParser();
         parser.parse( is );
         Collection<BioSequence> bs = parser.getResults();
         assertEquals( 418, bs.size() );
+    }
+
+    @Override
+    protected void setUp() throws Exception {
+        super.setUp();
+        is = this.getClass().getResourceAsStream( "/data/loader/genome/cumulative.plates.test.txt" );
     }
 
     @Override

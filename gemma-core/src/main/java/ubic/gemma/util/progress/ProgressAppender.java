@@ -47,6 +47,7 @@ public class ProgressAppender extends AppenderSkeleton {
      * 
      * @see org.apache.log4j.Appender#close()
      */
+    @Override
     public void close() {
         // no-op
     }
@@ -56,6 +57,7 @@ public class ProgressAppender extends AppenderSkeleton {
      * 
      * @see org.apache.log4j.Appender#requiresLayout()
      */
+    @Override
     public boolean requiresLayout() {
         return true;
     }

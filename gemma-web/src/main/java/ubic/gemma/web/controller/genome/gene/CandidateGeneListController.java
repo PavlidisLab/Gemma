@@ -24,6 +24,8 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.BaseCommandController;
 import org.springframework.web.servlet.view.RedirectView;
@@ -40,16 +42,17 @@ import ubic.gemma.model.genome.gene.GeneService;
 /**
  * @author daq2101
  * @version $Id$
- * @spring.bean id="candidateGeneListController"
- * @spring.property name="candidateGeneListService" ref="candidateGeneListService"
- * @spring.property name="geneService" ref="geneService"
- * @spring.property name="userService" ref="userService"
  */
+@Controller
 public class CandidateGeneListController extends BaseCommandController {
+    
+    @Autowired
     private CandidateGeneListService candidateGeneListService = null;
 
+    @Autowired
     private GeneService geneService = null;
 
+    @Autowired
     private UserService userService = null;
 
     /**
@@ -60,13 +63,6 @@ public class CandidateGeneListController extends BaseCommandController {
     }
 
     /**
-     * @param candidateGeneListService The candidateGeneListService to set.
-     */
-    public void setCandidateGeneListService( CandidateGeneListService candidateGeneListService ) {
-        this.candidateGeneListService = candidateGeneListService;
-    }
-
-    /**
      * @return Returns the geneService.
      */
     public GeneService getGeneService() {
@@ -74,24 +70,10 @@ public class CandidateGeneListController extends BaseCommandController {
     }
 
     /**
-     * @param candidateGeneListService The candidateGeneListService to set.
-     */
-    public void setGeneService( GeneService geneService ) {
-        this.geneService = geneService;
-    }
-
-    /**
      * @param UserService The UserService to set.
      */
     public UserService getUserService() {
         return userService;
-    }
-
-    /**
-     * @param userService The UserService to set.
-     */
-    public void setUserService( UserService userService ) {
-        this.userService = userService;
     }
 
     @Override
@@ -233,6 +215,27 @@ public class CandidateGeneListController extends BaseCommandController {
 
         }
         return new ModelAndView( view, "model", candidateGeneListModel );
+    }
+
+    /**
+     * @param candidateGeneListService The candidateGeneListService to set.
+     */
+    public void setCandidateGeneListService( CandidateGeneListService candidateGeneListService ) {
+        this.candidateGeneListService = candidateGeneListService;
+    }
+
+    /**
+     * @param candidateGeneListService The candidateGeneListService to set.
+     */
+    public void setGeneService( GeneService geneService ) {
+        this.geneService = geneService;
+    }
+
+    /**
+     * @param userService The UserService to set.
+     */
+    public void setUserService( UserService userService ) {
+        this.userService = userService;
     }
 
     /**

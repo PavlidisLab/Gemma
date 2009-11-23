@@ -18,10 +18,12 @@
  */
 package ubic.gemma.util.monitor;
 
-import org.aopalliance.intercept.MethodInvocation;
 import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.aspectj.lang.ProceedingJoinPoint;
 import org.hibernate.SessionFactory;
-import org.springframework.aop.interceptor.PerformanceMonitorInterceptor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import org.springframework.util.StopWatch;
 
 /**
@@ -30,52 +32,48 @@ import org.springframework.util.StopWatch;
  * @author paul
  * @version $Id$
  */
-public class MonitorAdvice extends PerformanceMonitorInterceptor {
+@Component
+public class MonitorAdvice {
 
-    /**
-     * 
-     */
-    private static final long serialVersionUID = 1L;
+    private static Log log = LogFactory.getLog( MonitorAdvice.class );
 
-    private static final int DEFAULT_THRESHOLD = 1000;
-
-    private int threshold = DEFAULT_THRESHOLD;
-
+    @Autowired
     private SessionFactory sessionFactory;
 
-    public void setSessionFactory( SessionFactory sessionFactory ) {
-        this.sessionFactory = sessionFactory;
-    }
-
-    public void setThreshold( int threshold ) {
-        this.threshold = threshold;
-    }
-
-    @Override
-    protected Object invokeUnderTrace( MethodInvocation invocation, Log logger ) throws Throwable {
-        String name = createInvocationTraceName( invocation );
-        StopWatch stopWatch = new StopWatch( name );
+    /**
+     * Entry point.
+     * 
+     * @param pjp
+     * @param monitored
+     * @return
+     * @throws Throwable
+     */
+    public Object profile( ProceedingJoinPoint pjp ) throws Throwable {
         long cacheHitsBefore = sessionFactory.getStatistics().getQueryCacheHitCount();
-        stopWatch.start( name );
+
+        StopWatch stopWatch = new StopWatch();
         try {
-            return invocation.proceed();
+            stopWatch.start( pjp.getSignature().getName() );
+            return pjp.proceed();
         } finally {
             stopWatch.stop();
-            if ( stopWatch.getTotalTimeMillis() > threshold ) {
-                long cacheHitsAfter = sessionFactory.getStatistics().getQueryCacheHitCount();
-                long cacheHits = cacheHitsAfter - cacheHitsBefore;
-                String chs = "";
-                if ( cacheHits > 0 ) {
-                    chs = " - cache hit";
-                }
-                logger.info( stopWatch.shortSummary() + chs );
+            // if ( stopWatch.getTotalTimeMillis() > monitored.minTimeToReport() ) {
+            long cacheHitsAfter = sessionFactory.getStatistics().getQueryCacheHitCount();
+            long cacheHits = cacheHitsAfter - cacheHitsBefore;
+            String chs = "";
+            if ( cacheHits > 0 ) {
+                chs = " - query cache hit"; // this hit could have been from another thread...
             }
+            log.warn( stopWatch.shortSummary() + chs );
+            // }
         }
     }
 
-    @Override
-    protected boolean isLogEnabled( Log logger ) {
-        return logger.isInfoEnabled();
+    /**
+     * @param sessionFactory the sessionFactory to set
+     */
+    public void setSessionFactory( SessionFactory sessionFactory ) {
+        this.sessionFactory = sessionFactory;
     }
 
 }

@@ -21,6 +21,8 @@ package ubic.gemma.model.common.auditAndSecurity;
 import java.sql.Date;
 import java.util.Collection;
 
+import org.springframework.security.access.annotation.Secured;
+
 /**
  * TODO Document Me
  * 
@@ -29,20 +31,29 @@ import java.util.Collection;
  */
 public interface UserQueryService {
 
+    
+    @Secured( { "GROUP_USER" })
     public UserQuery create( UserQuery userQuery );
 
+    @Secured( { "GROUP_USER","ACL_SECURABLE_READ"  })
     public Collection<UserQuery> findByUser( User user );
 
+    @Secured( { "GROUP_USER", "ACL_SECURABLE_READ" })
     public UserQuery findMostRecentForUser( User user );
-
+    
+    @Secured( { "GROUP_USER" })
     public UserQuery load( Long id );
 
+    @Secured( { "GROUP_USER" })
     public Collection<UserQuery> loadAll();
 
+    @Secured( { "GROUP_USER" })
     public void remove( UserQuery userQuery );
 
+    @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
     public void removeAllForUser( User user );
 
+    @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
     public void removeOldForUser( User user, Date staleDate );
 
 }

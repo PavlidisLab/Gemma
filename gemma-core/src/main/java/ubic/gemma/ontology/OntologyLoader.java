@@ -76,7 +76,6 @@ public class OntologyLoader {
     public static String asString( RDFNode object ) {
         return ( String ) object.visitWith( new RDFVisitor() {
 
-            @SuppressWarnings("unused")
             public Object visitBlank( Resource r, AnonId id ) {
                 return r.getLocalName();
             }
@@ -85,7 +84,6 @@ public class OntologyLoader {
                 return l.toString().replaceAll( "\\^\\^.+", "" );
             }
 
-            @SuppressWarnings("unused")
             public Object visitURI( Resource r, String uri ) {
                 return r.getLocalName();
             }

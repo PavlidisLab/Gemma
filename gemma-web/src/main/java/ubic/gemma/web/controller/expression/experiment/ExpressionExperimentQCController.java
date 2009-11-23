@@ -41,6 +41,9 @@ import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionFileUtils;
@@ -48,20 +51,151 @@ import ubic.gemma.analysis.stats.ExpressionDataSampleCorrelation;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.util.ConfigUtils;
-import ubic.gemma.web.controller.BaseMultiActionController;
+import ubic.gemma.web.controller.BaseController;
 
 /**
- * @spring.bean id="expressionExperimentQCController"
- * @spring.property name="methodNameResolver" ref="expressionExperimentQCActions"
- * @spring.property ref="expressionExperimentService" name="expressionExperimentService"
  * @author paul
  * @version $Id$
  */
-public class ExpressionExperimentQCController extends BaseMultiActionController {
+@Controller
+public class ExpressionExperimentQCController extends BaseController {
 
     private static final String DEFAULT_CONTENT_TYPE = "image/png";
     private static final int HISTOGRAM_IMAGE_SIZE = 200;
-    private static ExpressionExperimentService expressionExperimentService;
+
+    @Autowired
+    private ExpressionExperimentService expressionExperimentService;
+
+    public void setExpressionExperimentService( ExpressionExperimentService ees ) {
+        expressionExperimentService = ees;
+    }
+
+    /**
+     * @param request
+     * @param response
+     * @return
+     */
+    @RequestMapping("/expressionExperiment/visualizeCorrMat.html")
+    public ModelAndView visualizeCorrMat( HttpServletRequest request, HttpServletResponse response ) throws Exception {
+        String id = request.getParameter( "id" );
+        String size = request.getParameter( "size" ); // okay if null
+        String contrast = request.getParameter( "contr" ); // okay if null, default is 'hi'
+        String text = request.getParameter( "text" );
+
+        if ( id == null ) {
+            log.warn( "No id!" );
+            return null;
+        }
+
+        String contrVal = "hi";
+        if ( StringUtils.isNotBlank( contrast ) ) {
+            contrVal = contrast;
+        }
+
+        Long idl;
+        try {
+            idl = Long.parseLong( id );
+        } catch ( NumberFormatException e ) {
+            log.warn( "Invalid id: " + id );
+            return null;
+        }
+        assert idl != null;
+
+        ExpressionExperiment ee = expressionExperimentService.load( idl );
+        if ( ee == null ) {
+            log.warn( "No such experiment with id " + idl );
+            return null;
+        }
+        boolean ok = false;
+        if ( StringUtils.isNotBlank( text ) ) {
+            ok = writeCorrData( response, ee );
+        } else {
+            ok = writeCorrMatImage( response, ee, size, contrVal );
+        }
+
+        if ( !ok ) {
+            // TODO
+        }
+
+        return null; // nothing to return;
+    }
+
+    /**
+     * @param request
+     * @param response
+     * @return
+     */
+    @RequestMapping("/expressionExperiment/visualizeProbeCorrDist.html")
+    public ModelAndView visualizeProbeCorrDist( HttpServletRequest request, HttpServletResponse response )
+            throws Exception {
+        String id = request.getParameter( "id" );
+
+        if ( id == null ) {
+            log.warn( "No id!" );
+            return null;
+        }
+        Long idl;
+        try {
+            idl = Long.parseLong( id );
+        } catch ( NumberFormatException e ) {
+            log.warn( "Invalid id: " + id );
+            return null;
+        }
+        assert idl != null;
+
+        ExpressionExperiment ee = expressionExperimentService.load( idl );
+        if ( ee == null ) {
+            log.warn( "No such experiment with id " + idl );
+            return null;
+        }
+
+        boolean ok = writeProbeCorrHistImage( response, ee );
+
+        if ( !ok ) {
+            // TODO
+        }
+
+        return null; // nothing to return;
+    }
+
+    /**
+     * @param request
+     * @param response
+     * @return
+     * @throws Exception
+     */
+    @RequestMapping("/expressionExperiment/visualizePvalueDist.html")
+    public ModelAndView visualizePvalueDist( HttpServletRequest request, HttpServletResponse response )
+            throws Exception {
+        String id = request.getParameter( "id" );
+
+        if ( id == null ) {
+            log.warn( "No id!" );
+            return null;
+        }
+        Long idl;
+        try {
+            idl = Long.parseLong( id );
+        } catch ( NumberFormatException e ) {
+            log.warn( "Invalid id: " + id );
+            return null;
+        }
+        assert idl != null;
+
+        ExpressionExperiment ee = expressionExperimentService.load( idl );
+        if ( ee == null ) {
+            log.warn( "No such experiment with id " + idl );
+            return null;
+        }
+
+        boolean ok = this.writePValueHistImages( response, ee );
+
+        if ( !ok ) {
+            // TODO
+        }
+
+        return null; // nothing to return;
+    }
 
     /**
      * @param ee
@@ -175,60 +309,6 @@ public class ExpressionExperimentQCController extends BaseMultiActionController 
         return f;
     }
 
-    public static boolean hasPvalueDistFiles( Long id ) {
-
-        ExpressionExperiment ee = expressionExperimentService.load( id );
-
-        if ( ee == null ) return false;
-
-        String shortName = ee.getShortName();
-
-        File directory = DifferentialExpressionFileUtils.getBaseDifferentialDirectory( shortName );
-        if ( !directory.exists() ) {
-            return false;
-        }
-
-        String[] fileNames = directory.list();
-        String suffix = DifferentialExpressionFileUtils.PVALUE_DIST_SUFFIX;
-        for ( String fileName : fileNames ) {
-            if ( fileName.endsWith( suffix ) ) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    /**
-     * @param ee
-     * @return
-     */
-    public static boolean hasCorrDistFile( Long id ) {
-        ExpressionExperiment ee = expressionExperimentService.load( id );
-
-        if ( ee == null ) return false;
-        String shortName = ee.getShortName();
-        String analysisStoragePath = ConfigUtils.getAnalysisStoragePath();
-        String suffix = ".correlDist.txt";
-        File f = new File( analysisStoragePath + File.separatorChar + shortName + suffix );
-        return f.exists() && f.canRead();
-    }
-
-    /**
-     * @param ee
-     * @return
-     */
-    public static boolean hasCorrMatFile( Long id ) {
-        ExpressionExperiment ee = expressionExperimentService.load( id );
-
-        if ( ee == null ) return false;
-        String shortName = ee.getShortName();
-        String analysisStoragePath = ConfigUtils.getAnalysisStoragePath() + File.separatorChar
-                + ExpressionDataSampleCorrelation.CORRMAT_DIR_NAME;
-        File f = new File( analysisStoragePath + File.separatorChar + shortName + "_corrmat" + ".txt" );
-        return f.exists() && f.canRead();
-    }
-
     /**
      * @param ee
      * @return
@@ -253,132 +333,6 @@ public class ExpressionExperimentQCController extends BaseMultiActionController 
         }
 
         return files;
-    }
-
-    public void setExpressionExperimentService( ExpressionExperimentService ees ) {
-        expressionExperimentService = ees;
-    }
-
-    /**
-     * @param request
-     * @param response
-     * @return
-     */
-    public ModelAndView showCorrMat( HttpServletRequest request, HttpServletResponse response ) throws Exception {
-        String id = request.getParameter( "id" );
-        String size = request.getParameter( "size" ); // okay if null
-        String contrast = request.getParameter( "contr" ); // okay if null, default is 'hi'
-        String text = request.getParameter( "text" );
-
-        if ( id == null ) {
-            log.warn( "No id!" );
-            return null;
-        }
-
-        String contrVal = "hi";
-        if ( StringUtils.isNotBlank( contrast ) ) {
-            contrVal = contrast;
-        }
-
-        Long idl;
-        try {
-            idl = Long.parseLong( id );
-        } catch ( NumberFormatException e ) {
-            log.warn( "Invalid id: " + id );
-            return null;
-        }
-        assert idl != null;
-
-        ExpressionExperiment ee = expressionExperimentService.load( idl );
-        if ( ee == null ) {
-            log.warn( "No such experiment with id " + idl );
-            return null;
-        }
-        boolean ok = false;
-        if ( StringUtils.isNotBlank( text ) ) {
-            ok = writeCorrData( response, ee );
-        } else {
-            ok = writeCorrMatImage( response, ee, size, contrVal );
-        }
-
-        if ( !ok ) {
-            // TODO
-        }
-
-        return null; // nothing to return;
-    }
-
-    /**
-     * @param request
-     * @param response
-     * @return
-     */
-    public ModelAndView showProbeCorrDist( HttpServletRequest request, HttpServletResponse response ) throws Exception {
-        String id = request.getParameter( "id" );
-
-        if ( id == null ) {
-            log.warn( "No id!" );
-            return null;
-        }
-        Long idl;
-        try {
-            idl = Long.parseLong( id );
-        } catch ( NumberFormatException e ) {
-            log.warn( "Invalid id: " + id );
-            return null;
-        }
-        assert idl != null;
-
-        ExpressionExperiment ee = expressionExperimentService.load( idl );
-        if ( ee == null ) {
-            log.warn( "No such experiment with id " + idl );
-            return null;
-        }
-
-        boolean ok = writeProbeCorrHistImage( response, ee );
-
-        if ( !ok ) {
-            // TODO
-        }
-
-        return null; // nothing to return;
-    }
-
-    /**
-     * @param request
-     * @param response
-     * @return
-     * @throws Exception
-     */
-    public ModelAndView showPvalueDist( HttpServletRequest request, HttpServletResponse response ) throws Exception {
-        String id = request.getParameter( "id" );
-
-        if ( id == null ) {
-            log.warn( "No id!" );
-            return null;
-        }
-        Long idl;
-        try {
-            idl = Long.parseLong( id );
-        } catch ( NumberFormatException e ) {
-            log.warn( "Invalid id: " + id );
-            return null;
-        }
-        assert idl != null;
-
-        ExpressionExperiment ee = expressionExperimentService.load( idl );
-        if ( ee == null ) {
-            log.warn( "No such experiment with id " + idl );
-            return null;
-        }
-
-        boolean ok = this.writePValueHistImages( response, ee );
-
-        if ( !ok ) {
-            // TODO
-        }
-
-        return null; // nothing to return;
     }
 
     private boolean writeCorrData( HttpServletResponse response, ExpressionExperiment ee ) {

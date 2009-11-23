@@ -18,12 +18,11 @@
  */
 package ubic.gemma.grid.javaspaces.worker;
 
-import org.springframework.security.context.SecurityContextHolder;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import ubic.gemma.grid.javaspaces.AbstractSpacesWorkerCLI;
 import ubic.gemma.grid.javaspaces.CustomDelegatingWorker;
-import ubic.gemma.grid.javaspaces.analysis.preprocess.TwoChannelMissingValueTask;
-import ubic.gemma.util.SecurityUtil;
+import ubic.gemma.grid.javaspaces.task.analysis.preprocess.TwoChannelMissingValueTask;
 
 /**
  * CLI for two channel missing value computation.
@@ -73,8 +72,6 @@ public class TwoChannelMissingValueSpaceWorker extends AbstractSpacesWorkerCLI {
      */
     public static void main( String[] args ) {
         log.info( "Starting spaces worker to run missing data computation... \n" );
-
-        SecurityUtil.passAuthenticationToChildThreads();
 
         TwoChannelMissingValueSpaceWorker p = new TwoChannelMissingValueSpaceWorker();
         try {

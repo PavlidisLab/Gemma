@@ -19,6 +19,9 @@
 package ubic.gemma.model.analysis.expression.diff;
 
 import java.util.Collection;
+import java.util.Map;
+
+import org.springframework.security.access.annotation.Secured;
 
 import ubic.gemma.model.analysis.AnalysisResultSet;
 import ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet;
@@ -27,37 +30,32 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
- * 
+ * @author kelsey
+ * @version $Id$
  */
 public interface DifferentialExpressionResultService {
 
     /**
+     * Given a list of experiments and a threshold value finds all the probes that met the cut off in the given
+     * experiments
      * 
+     * @param experimentsAnalyzed
+     * @param threshold
+     * @return
      */
-    public java.util.Map<ProbeAnalysisResult, Collection<ExperimentalFactor>> getExperimentalFactors(
-            java.util.Collection<ProbeAnalysisResult> differentialExpressionAnalysisResults );
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_MAP_READ" })
+    public Map<ExpressionExperiment, Collection<ProbeAnalysisResult>> find(
+            Collection<ExpressionExperiment> experimentsAnalyzed, double threshold, Integer limit );
 
     /**
+     * Returns a map of a collection of {@link ProbeAnalysisResult}s keyed by {@link ExpressionExperiment}.
      * 
+     * @param gene
+     * @return Map<ExpressionExperiment, Collection<ProbeAnalysisResult>>
      */
-    public java.util.Collection<ExperimentalFactor> getExperimentalFactors(
-            ProbeAnalysisResult differentialExpressionAnalysisResult );
 
-    /**
-     * 
-     */
-    public void thaw( ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet resultSet );
-
-    /**
-     * Does not thaw the collection of probes (just the factor information)
-     * 
-     * @param resultSet
-     */
-    public void thawLite( ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet resultSet );
-
-    public void thaw( final ProbeAnalysisResult result ) throws Exception;
-
-    public AnalysisResultSet loadAnalysisResult( Long analysisResultId );
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_MAP_READ" })
+    public Map<ExpressionExperiment, Collection<ProbeAnalysisResult>> find( ubic.gemma.model.genome.Gene gene );
 
     /**
      * Returns a map of a collection of {@link ProbeAnalysisResult}s keyed by {@link ExpressionExperiment}.
@@ -66,29 +64,9 @@ public interface DifferentialExpressionResultService {
      * @param experimentsAnalyzed
      * @return Map<ExpressionExperiment, Collection<ProbeAnalysisResult>>
      */
-    public java.util.Map<ubic.gemma.model.expression.experiment.ExpressionExperiment, java.util.Collection<ProbeAnalysisResult>> find(
-            ubic.gemma.model.genome.Gene gene,
-            java.util.Collection<ubic.gemma.model.expression.experiment.ExpressionExperiment> experimentsAnalyzed );
-
-    /**
-     * Returns a map of a collection of {@link ProbeAnalysisResult}s keyed by {@link ExpressionExperiment}.
-     * 
-     * @param gene
-     * @return Map<ExpressionExperiment, Collection<ProbeAnalysisResult>>
-     */
-    public java.util.Map<ubic.gemma.model.expression.experiment.ExpressionExperiment, java.util.Collection<ProbeAnalysisResult>> find(
-            ubic.gemma.model.genome.Gene gene );
-
-    /**
-     * Find differential expression for a gene, exceeding a given significance level (using the corrected pvalue field)
-     * 
-     * @param gene
-     * @param threshold
-     * @param limit
-     * @return
-     */
-    java.util.Map<ubic.gemma.model.expression.experiment.ExpressionExperiment, java.util.Collection<ProbeAnalysisResult>> find(
-            ubic.gemma.model.genome.Gene gene, double threshold, Integer limit );
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_MAP_READ" })
+    public Map<ExpressionExperiment, Collection<ProbeAnalysisResult>> find( ubic.gemma.model.genome.Gene gene,
+            Collection<ExpressionExperiment> experimentsAnalyzed );
 
     /**
      * Find differential expression for a gene in given data sets, exceeding a given significance level (using the
@@ -99,22 +77,9 @@ public interface DifferentialExpressionResultService {
      * @param threshold
      * @return
      */
-    public java.util.Map<ubic.gemma.model.expression.experiment.ExpressionExperiment, java.util.Collection<ProbeAnalysisResult>> find(
-            ubic.gemma.model.genome.Gene gene,
-            java.util.Collection<ubic.gemma.model.expression.experiment.ExpressionExperiment> experimentsAnalyzed,
-            double threshold, Integer limit );
-
-    /**
-     * Given a list of experiments and a threshold value finds all the probes that met the cut off in the given
-     * experiments
-     * 
-     * @param experimentsAnalyzed
-     * @param threshold
-     * @return
-     */
-    public java.util.Map<ubic.gemma.model.expression.experiment.ExpressionExperiment, java.util.Collection<ProbeAnalysisResult>> find(
-            java.util.Collection<ubic.gemma.model.expression.experiment.ExpressionExperiment> experimentsAnalyzed,
-            double threshold, Integer limit );
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_MAP_READ" })
+    public Map<ExpressionExperiment, Collection<ProbeAnalysisResult>> find( ubic.gemma.model.genome.Gene gene,
+            Collection<ExpressionExperiment> experimentsAnalyzed, double threshold, Integer limit );
 
     /**
      * Given a list of result sets finds the diff expression results that met the given threshold
@@ -123,7 +88,52 @@ public interface DifferentialExpressionResultService {
      * @param threshold
      * @return
      */
-    public java.util.Map<ExpressionAnalysisResultSet, java.util.Collection<ProbeAnalysisResult>> findInResultSets(
-            java.util.Collection<ExpressionAnalysisResultSet> resultsAnalyzed, double threshold, Integer limit );
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_MAP_READ" })
+    public Map<ExpressionAnalysisResultSet, Collection<ProbeAnalysisResult>> findInResultSets(
+            Collection<ExpressionAnalysisResultSet> resultsAnalyzed, double threshold, Integer limit );
+
+    /**
+     * 
+     */
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY" })
+    public Map<ProbeAnalysisResult, Collection<ExperimentalFactor>> getExperimentalFactors(
+            Collection<ProbeAnalysisResult> differentialExpressionAnalysisResults );
+
+    /**
+     * 
+     */
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    public Collection<ExperimentalFactor> getExperimentalFactors(
+            ProbeAnalysisResult differentialExpressionAnalysisResult );
+
+    public AnalysisResultSet loadAnalysisResult( Long analysisResultId );
+
+    public void thaw( final ProbeAnalysisResult result ) throws Exception;
+
+    /**
+     * 
+     */
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    public void thaw( ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet resultSet );
+
+    /**
+     * Does not thaw the collection of probes (just the factor information)
+     * 
+     * @param resultSet
+     */
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    public void thawLite( ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet resultSet );
+
+    /**
+     * Find differential expression for a gene, exceeding a given significance level (using the corrected pvalue field)
+     * 
+     * @param gene
+     * @param threshold
+     * @param limit
+     * @return
+     */
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_MAP_READ" })
+    Map<ExpressionExperiment, Collection<ProbeAnalysisResult>> find( ubic.gemma.model.genome.Gene gene,
+            double threshold, Integer limit );
 
 }

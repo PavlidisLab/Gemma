@@ -35,8 +35,6 @@ import ubic.gemma.web.controller.BaseFormController;
  * Performs actions required when we wish to indicate that the system is undergoing maintenance and many not behave
  * normally.
  * 
- * @spring.bean id="maintenanceModeController"
- * @spring.property name="formView" value="maintenanceMode"
  * @author pavlidis
  * @version $Id$
  */

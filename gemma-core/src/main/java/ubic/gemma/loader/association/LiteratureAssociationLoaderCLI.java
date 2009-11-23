@@ -16,7 +16,7 @@ import org.springframework.beans.factory.BeanFactory;
 import ubic.gemma.model.association.LiteratureAssociationDao;
 import ubic.gemma.model.common.description.ExternalDatabaseDao;
 import ubic.gemma.model.genome.GeneDao;
-import ubic.gemma.security.authentication.ManualAuthenticationProcessing;
+import ubic.gemma.security.authentication.ManualAuthenticationService;
 import ubic.gemma.util.SpringContextUtil;
 
 /**
@@ -31,7 +31,7 @@ public class LiteratureAssociationLoaderCLI {
 
     protected static final Log log = LogFactory.getLog( LiteratureAssociationLoaderCLI.class );
     protected static BeanFactory ctx = null;
-    protected static ManualAuthenticationProcessing manAuthentication = null;
+    protected static ManualAuthenticationService manAuthentication = null;
 
     private static final String USAGE = "[-h] [-u <username>] [-p <password>]  [-t <true|false>] [-l <file>] [-r] ";
     private static final String HEADER = "The Gemma project, Copyright (c) 2006 University of British Columbia";
@@ -118,7 +118,7 @@ public class LiteratureAssociationLoaderCLI {
                 if ( cl.hasOption( 'p' ) ) {
                     username = cl.getOptionValue( 'u' );
                     password = cl.getOptionValue( 'p' );
-                    manAuthentication = ( ManualAuthenticationProcessing ) ctx
+                    manAuthentication = ( ManualAuthenticationService ) ctx
                             .getBean( "manualAuthenticationProcessing" );
                     manAuthentication.validateRequest( username, password );
                 }

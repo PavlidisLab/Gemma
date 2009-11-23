@@ -48,8 +48,6 @@ import ubic.gemma.util.ConfigUtils;
  */
 public class HttpFetcher extends AbstractFetcher {
 
-    private static final int INFO_UPDATE_INTERVAL = 3000;
-
     /**
      * @pram url
      * @see ubic.gemma.loader.loaderutils.Fetcher#fetch(java.lang.String)
@@ -184,7 +182,7 @@ public class HttpFetcher extends AbstractFetcher {
     protected Collection<LocalFile> listFiles( String seekFile, String outputFileName ) throws IOException {
         Collection<LocalFile> result = new HashSet<LocalFile>();
         File file = new File( outputFileName );
-        log.info( "Downloaded: " + file.getCanonicalPath() );
+        log.info( "Downloaded: " + file );
         LocalFile newFile = LocalFile.Factory.newInstance();
         newFile.setLocalURL( file.toURI().toURL() );
         newFile.setRemoteURL( new URL( seekFile ) );

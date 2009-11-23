@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.expression.experiment;
 
+import java.util.Collection;
+
 /**
  * <p>
  * Base Spring DAO Class: is able to create, update, remove, load, and find objects of type
@@ -33,12 +35,13 @@ public abstract class ExpressionExperimentSubSetDaoBase extends
     /**
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetDao#create(int, java.util.Collection)
      */
-    public java.util.Collection create( final int transform, final java.util.Collection entities ) {
+    public java.util.Collection<ExpressionExperimentSubSet> create( final int transform,
+            final java.util.Collection<ExpressionExperimentSubSet> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "ExpressionExperimentSubSet.create - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback() {
+                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
@@ -70,8 +73,8 @@ public abstract class ExpressionExperimentSubSetDaoBase extends
     /**
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetDao#create(java.util.Collection)
      */
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Collection create( final java.util.Collection entities ) {
+
+    public java.util.Collection<ExpressionExperimentSubSet> create( final java.util.Collection entities ) {
         return create( TRANSFORM_NONE, entities );
     }
 
@@ -89,7 +92,6 @@ public abstract class ExpressionExperimentSubSetDaoBase extends
      *      java.lang.String, ubic.gemma.model.common.auditAndSecurity.Contact)
      */
 
-    @SuppressWarnings( { "unchecked" })
     public java.util.Collection findByInvestigator( final int transform, final java.lang.String queryString,
             final ubic.gemma.model.common.auditAndSecurity.Contact investigator ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -107,7 +109,6 @@ public abstract class ExpressionExperimentSubSetDaoBase extends
      *      ubic.gemma.model.common.auditAndSecurity.Contact)
      */
 
-    @SuppressWarnings( { "unchecked" })
     public java.util.Collection findByInvestigator( final int transform,
             final ubic.gemma.model.common.auditAndSecurity.Contact investigator ) {
         return this
@@ -122,7 +123,6 @@ public abstract class ExpressionExperimentSubSetDaoBase extends
      *      ubic.gemma.model.common.auditAndSecurity.Contact)
      */
 
-    @SuppressWarnings( { "unchecked" })
     public java.util.Collection findByInvestigator( final java.lang.String queryString,
             final ubic.gemma.model.common.auditAndSecurity.Contact investigator ) {
         return this.findByInvestigator( TRANSFORM_NONE, queryString, investigator );
@@ -134,6 +134,11 @@ public abstract class ExpressionExperimentSubSetDaoBase extends
 
     public java.util.Collection findByInvestigator( ubic.gemma.model.common.auditAndSecurity.Contact investigator ) {
         return this.findByInvestigator( TRANSFORM_NONE, investigator );
+    }
+
+    public Collection<? extends ExpressionExperimentSubSet> load( Collection<Long> ids ) {
+        return this.getHibernateTemplate().findByNamedParam( "from ExpressionExperimentSubSetImpl where id in (:ids)",
+                "ids", ids );
     }
 
     /**
@@ -155,15 +160,14 @@ public abstract class ExpressionExperimentSubSetDaoBase extends
      */
 
     public ExpressionExperimentSubSet load( java.lang.Long id ) {
-        return ( ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet ) this.load( TRANSFORM_NONE, id );
+        return this.load( TRANSFORM_NONE, id );
     }
 
     /**
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetDao#loadAll()
      */
 
-    @SuppressWarnings( { "unchecked" })
-    public java.util.Collection loadAll() {
+    public java.util.Collection<ExpressionExperimentSubSet> loadAll() {
         return this.loadAll( TRANSFORM_NONE );
     }
 
@@ -171,7 +175,7 @@ public abstract class ExpressionExperimentSubSetDaoBase extends
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetDao#loadAll(int)
      */
 
-    public java.util.Collection loadAll( final int transform ) {
+    public java.util.Collection<ExpressionExperimentSubSet> loadAll( final int transform ) {
         final java.util.Collection results = this.getHibernateTemplate().loadAll(
                 ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetImpl.class );
         this.transformEntities( transform, results );
@@ -186,8 +190,7 @@ public abstract class ExpressionExperimentSubSetDaoBase extends
         if ( id == null ) {
             throw new IllegalArgumentException( "ExpressionExperimentSubSet.remove - 'id' can not be null" );
         }
-        ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet entity = ( ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet ) this
-                .load( id );
+        ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet entity = this.load( id );
         if ( entity != null ) {
             this.remove( entity );
         }
@@ -224,7 +227,7 @@ public abstract class ExpressionExperimentSubSetDaoBase extends
             throw new IllegalArgumentException( "ExpressionExperimentSubSet.update - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback() {
+                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {

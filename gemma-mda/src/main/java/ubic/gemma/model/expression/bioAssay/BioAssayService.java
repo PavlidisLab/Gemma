@@ -18,73 +18,83 @@
  */
 package ubic.gemma.model.expression.bioAssay;
 
+import org.springframework.security.access.annotation.Secured;
+
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
 
 /**
- * 
+ * @author kelsey
+ * @version $Id$
  */
-public interface BioAssayService extends ubic.gemma.model.common.AuditableService {
+public interface BioAssayService {
 
     /**
      * <p>
      * Associates a bioMaterial with a specified bioAssay.
      * </p>
      */
-    public void addBioMaterialAssociation( ubic.gemma.model.expression.bioAssay.BioAssay bioAssay,
-            ubic.gemma.model.expression.biomaterial.BioMaterial bioMaterial );
+    @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    public void addBioMaterialAssociation( BioAssay bioAssay, BioMaterial bioMaterial );
 
     /**
      * 
      */
     public java.lang.Integer countAll();
 
+    @Secured( { "GROUP_USER" })
+    public BioAssay create( BioAssay bioAssay );
+
     /**
      * <p>
      * Locate all BioAssayDimensions in which the selected BioAssay occurs
      * </p>
      */
-    public java.util.Collection<BioAssayDimension> findBioAssayDimensions(
-            ubic.gemma.model.expression.bioAssay.BioAssay bioAssay );
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    public java.util.Collection<BioAssayDimension> findBioAssayDimensions( BioAssay bioAssay );
 
     /**
      * 
      */
-    public ubic.gemma.model.expression.bioAssay.BioAssay findOrCreate(
-            ubic.gemma.model.expression.bioAssay.BioAssay bioAssay );
-
-    public BioAssay create( BioAssay bioAssay );
+    @Secured( { "GROUP_USER", "AFTER_ACL_READ" })
+    public BioAssay findOrCreate( BioAssay bioAssay );
 
     /**
      * 
      */
-    public ubic.gemma.model.expression.bioAssay.BioAssay load( java.lang.Long id );
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    public BioAssay load( java.lang.Long id );
 
     /**
      * 
      */
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public java.util.Collection<BioAssay> loadAll();
 
     /**
      * 
      */
-    public void remove( ubic.gemma.model.expression.bioAssay.BioAssay bioAssay );
+    @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    public void remove( BioAssay bioAssay );
 
     /**
      * <p>
      * Removes the association between a specific bioMaterial and a bioAssay.
      * </p>
      */
-    public void removeBioMaterialAssociation( ubic.gemma.model.expression.bioAssay.BioAssay bioAssay,
-            ubic.gemma.model.expression.biomaterial.BioMaterial bioMaterial );
+    @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    public void removeBioMaterialAssociation( BioAssay bioAssay, BioMaterial bioMaterial );
 
     /**
      * 
      */
-    public void thaw( ubic.gemma.model.expression.bioAssay.BioAssay bioAssay );
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    public void thaw( BioAssay bioAssay );
 
     /**
      * 
      */
-    public void update( ubic.gemma.model.expression.bioAssay.BioAssay bioAssay );
+    @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    public void update( BioAssay bioAssay );
 
 }

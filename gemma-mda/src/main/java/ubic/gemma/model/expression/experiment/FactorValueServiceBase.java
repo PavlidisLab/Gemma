@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.expression.experiment;
 
+import org.springframework.beans.factory.annotation.Autowired;
+
 /**
  * <p>
  * Spring Service base class for <code>ubic.gemma.model.expression.experiment.FactorValueService</code>, provides access
@@ -28,6 +30,7 @@ package ubic.gemma.model.expression.experiment;
  */
 public abstract class FactorValueServiceBase implements ubic.gemma.model.expression.experiment.FactorValueService {
 
+    @Autowired
     private ubic.gemma.model.expression.experiment.FactorValueDao factorValueDao;
 
     /**

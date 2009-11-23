@@ -20,11 +20,10 @@ package ubic.gemma.grid.javaspaces.worker;
 
 import net.jini.space.JavaSpace;
 
-import org.springframework.security.context.SecurityContextHolder;
+import org.springframework.security.core.context.SecurityContextHolder;
 import ubic.gemma.grid.javaspaces.AbstractSpacesWorkerCLI;
 import ubic.gemma.grid.javaspaces.CustomDelegatingWorker;
-import ubic.gemma.grid.javaspaces.expression.experiment.ExpressionExperimentLoadTask;
-import ubic.gemma.util.SecurityUtil;
+import ubic.gemma.grid.javaspaces.task.expression.experiment.ExpressionExperimentLoadTask; 
 
 /**
  * This command line interface is used to take {@link ExpressionExperimentLoadTask} tasks from the {@link JavaSpace} and
@@ -76,8 +75,6 @@ public class ExpressionExperimentLoadSpacesWorker extends AbstractSpacesWorkerCL
      */
     public static void main( String[] args ) {
         log.info( "Starting GemmaSpaces worker to load expression experiments ... \n" );
-
-        SecurityUtil.passAuthenticationToChildThreads();
 
         ExpressionExperimentLoadSpacesWorker p = new ExpressionExperimentLoadSpacesWorker();
         try {

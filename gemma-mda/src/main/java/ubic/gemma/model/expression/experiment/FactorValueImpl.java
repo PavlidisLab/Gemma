@@ -51,6 +51,44 @@ public class FactorValueImpl extends ubic.gemma.model.expression.experiment.Fact
 
     }
 
+    @Override
+    public int hashCode() {
+        HashCodeBuilder builder = new HashCodeBuilder( 17, 7 ).append( this.getId() ).append(
+                this.getExperimentalFactor() ).append( this.getMeasurement() );
+        if ( this.getCharacteristics() != null ) {
+            for ( Characteristic c : this.getCharacteristics() ) {
+                if ( c instanceof VocabCharacteristic )
+                    builder.append( ( ( VocabCharacteristic ) c ).hashCode() );
+                else
+                    builder.append( c.hashCode() );
+            }
+        }
+        return builder.toHashCode();
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.experiment.FactorValue#toString()
+     */
+    @Override
+    public java.lang.String toString() {
+        StringBuilder buf = new StringBuilder();
+        // this can be null in tests or with half-setup transient objects
+        buf.append( "FactorValue: " );
+
+        if ( this.getExperimentalFactor() != null ) buf.append( this.getExperimentalFactor().getName() + ":" );
+        if ( this.getCharacteristics().size() > 0 ) {
+            for ( Characteristic c : this.getCharacteristics() ) {
+                buf.append( c.getValue() );
+                if ( this.getCharacteristics().size() > 1 ) buf.append( " | " );
+            }
+        } else if ( this.getMeasurement() != null ) {
+            buf.append( this.getMeasurement().getValue() );
+        } else if ( StringUtils.isNotBlank( this.getValue() ) ) {
+            buf.append( this.getValue() );
+        }
+        return buf.toString();
+    }
+
     private boolean checkGuts( FactorValue that ) {
         if ( this.getValue() != null ) {
             if ( that.getValue() == null ) return false;
@@ -83,41 +121,5 @@ public class FactorValueImpl extends ubic.gemma.model.expression.experiment.Fact
 
         // everything is empy...
         return true;
-    }
-
-    @Override
-    public int hashCode() {
-        HashCodeBuilder builder = new HashCodeBuilder( 17, 7 ).append( this.getId() ).append(
-                this.getExperimentalFactor() ).append( this.getMeasurement() );
-        if ( this.getCharacteristics() != null ) {
-            for ( Characteristic c : this.getCharacteristics() ) {
-                if ( c instanceof VocabCharacteristic )
-                    builder.append( ( ( VocabCharacteristic ) c ).hashCode() );
-                else
-                    builder.append( c.hashCode() );
-            }
-        }
-        return builder.toHashCode();
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.experiment.FactorValue#toString()
-     */
-    @Override
-    public java.lang.String toString() {
-        StringBuilder buf = new StringBuilder();
-        // this can be null in tests or with half-setup transient objects
-        if ( this.getExperimentalFactor() != null ) buf.append( this.getExperimentalFactor().getName() + ":" );
-        if ( this.getCharacteristics().size() > 0 ) {
-            for ( Characteristic c : this.getCharacteristics() ) {
-                buf.append( c.getValue() );
-                if ( this.getCharacteristics().size() > 1 ) buf.append( " | " );
-            }
-        } else if ( this.getMeasurement() != null ) {
-            buf.append( this.getMeasurement().getValue() );
-        } else if ( StringUtils.isNotBlank( this.getValue() ) ) {
-            buf.append( this.getValue() );
-        }
-        return buf.toString();
     }
 }

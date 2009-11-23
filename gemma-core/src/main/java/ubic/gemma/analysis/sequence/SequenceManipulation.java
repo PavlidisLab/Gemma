@@ -18,7 +18,6 @@
  */
 package ubic.gemma.analysis.sequence;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 
@@ -223,7 +222,6 @@ public class SequenceManipulation {
              * it's not expected
              */
             if ( ProbeAlignedRegion.class.isAssignableFrom( geneProduct.getGene().getClass() ) ) {
-                if ( exons == null ) exons = new ArrayList<PhysicalLocation>();
                 exons.add( gpPhysicalLocation );
             } else {
                 log.warn( "No exons for " + geneProduct );

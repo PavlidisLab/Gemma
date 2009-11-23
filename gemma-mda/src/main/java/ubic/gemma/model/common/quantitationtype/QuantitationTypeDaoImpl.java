@@ -23,20 +23,29 @@ import java.util.Collection;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
+import org.hibernate.SessionFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
 
 import ubic.gemma.util.BusinessKey;
 
 /**
  * @see ubic.gemma.model.common.quantitationtype.QuantitationType
  */
+@Repository
 public class QuantitationTypeDaoImpl extends ubic.gemma.model.common.quantitationtype.QuantitationTypeDaoBase {
 
     private static Log log = LogFactory.getLog( QuantitationTypeDaoImpl.class.getName() );
 
+    @Autowired
+    public QuantitationTypeDaoImpl( SessionFactory sessionFactory ) {
+        super.setSessionFactory( sessionFactory );
+    }
+
     @Override
     public QuantitationType find( QuantitationType quantitationType ) {
         try {
-            Criteria queryObject = super.getSession( false ).createCriteria( QuantitationType.class );
+            Criteria queryObject = super.getSession().createCriteria( QuantitationType.class );
 
             BusinessKey.addRestrictions( queryObject, quantitationType );
 
@@ -71,7 +80,7 @@ public class QuantitationTypeDaoImpl extends ubic.gemma.model.common.quantitatio
             return newQuantitationType;
         }
         if ( log.isDebugEnabled() ) log.debug( "Creating new quantitationType: " + quantitationType );
-        return ( QuantitationType ) create( quantitationType );
+        return create( quantitationType );
     }
 
     /**

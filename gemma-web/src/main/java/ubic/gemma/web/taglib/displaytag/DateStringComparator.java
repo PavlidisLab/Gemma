@@ -34,7 +34,7 @@ import org.apache.commons.logging.LogFactory;
  * @author pavlidis
  * @version $Id$
  */
-public class DateStringComparator implements Comparator {
+public class DateStringComparator implements Comparator<Object> {
 
     /**
      * This is what the decorators will send for sorting.

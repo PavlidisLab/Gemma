@@ -10,6 +10,7 @@ package ubic.gemma.web.util.monitor;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.scheduling.annotation.Scheduled;
 
 import com.opensymphony.oscache.base.Cache;
 import com.opensymphony.oscache.base.events.*;
@@ -83,23 +84,29 @@ public class PageCacheListener implements CacheMapAccessEventListener, CacheEntr
         // Handles a hit event
         if ( type == CacheMapAccessEventType.HIT ) {
             hitCount++;
+
             result = "HIT";
+            log.debug( "ACCESS : " + result + ": " + event.getCacheEntryKey() );
         }
         // Handles a stale hit event
         else if ( type == CacheMapAccessEventType.STALE_HIT ) {
             staleHitCount++;
+
             result = "STALE HIT";
+            log.debug( "ACCESS : " + result + ": " + event.getCacheEntryKey() );
         }
+
         // Handles a miss event
         else if ( type == CacheMapAccessEventType.MISS ) {
             missCount++;
             result = "MISS";
         }
 
-        if ( log.isDebugEnabled() ) {
-            log.debug( "ACCESS : " + result + ": " + event.getCacheEntryKey() );
-            log.debug( "STATISTIC : Hit = " + hitCount + ", stale hit =" + staleHitCount + ", miss = " + missCount );
-        }
+    }
+
+    @Scheduled(fixedDelay = 10000)
+    public void cacheStats() {
+        log.debug( "Page Cache Stats : Hit = " + hitCount + ", stale hit =" + staleHitCount + ", miss = " + missCount );
     }
 
     /**

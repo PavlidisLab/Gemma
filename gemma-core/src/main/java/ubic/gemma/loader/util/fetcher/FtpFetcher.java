@@ -66,7 +66,6 @@ public abstract class FtpFetcher extends AbstractFetcher {
      */
     protected FutureTask<Boolean> defineTask( final String outputFileName, final String seekFile ) {
         FutureTask<Boolean> future = new FutureTask<Boolean>( new Callable<Boolean>() {
-            @SuppressWarnings("synthetic-access")
             public Boolean call() throws FileNotFoundException, IOException {
                 log.info( "Fetching " + seekFile + " to " + outputFileName );
                 boolean status = NetUtils.ftpDownloadFile( ftpClient, seekFile, outputFileName, force );

@@ -18,12 +18,11 @@
  */
 package ubic.gemma.grid.javaspaces.worker;
 
-import org.springframework.security.context.SecurityContextHolder;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import ubic.gemma.grid.javaspaces.AbstractSpacesWorkerCLI;
 import ubic.gemma.grid.javaspaces.CustomDelegatingWorker;
-import ubic.gemma.grid.javaspaces.analysis.preprocess.ProcessedExpressionDataVectorCreateTask;
-import ubic.gemma.util.SecurityUtil;
+import ubic.gemma.grid.javaspaces.task.analysis.preprocess.ProcessedExpressionDataVectorCreateTask; 
 
 /**
  * @author keshav
@@ -71,8 +70,6 @@ public class ProcessedExpressionDataVectorCreateSpacesWorker extends AbstractSpa
      */
     public static void main( String[] args ) {
         log.info( "Starting spaces worker to run processed expression data vector creation ... \n" );
-
-        SecurityUtil.passAuthenticationToChildThreads();
 
         ProcessedExpressionDataVectorCreateSpacesWorker p = new ProcessedExpressionDataVectorCreateSpacesWorker();
         try {

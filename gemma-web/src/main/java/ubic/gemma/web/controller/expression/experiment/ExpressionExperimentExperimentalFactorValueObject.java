@@ -36,14 +36,6 @@ public class ExpressionExperimentExperimentalFactorValueObject {
 
     private int numFactors;
 
-    public int getNumFactors() {
-        return numFactors;
-    }
-
-    public void setNumFactors( int numFactors ) {
-        this.numFactors = numFactors;
-    }
-
     public ExpressionExperimentExperimentalFactorValueObject() {
         experimentalFactors = new HashSet<ExperimentalFactorValueObject>();
     }
@@ -56,8 +48,16 @@ public class ExpressionExperimentExperimentalFactorValueObject {
         return expressionExperiment;
     }
 
+    public int getNumFactors() {
+        return numFactors;
+    }
+
     public void setExpressionExperiment( ExpressionExperimentValueObject expressionExperiment ) {
         this.expressionExperiment = expressionExperiment;
+    }
+
+    public void setNumFactors( int numFactors ) {
+        this.numFactors = numFactors;
     }
 
 }

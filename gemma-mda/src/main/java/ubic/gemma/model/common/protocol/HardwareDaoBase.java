@@ -18,6 +18,10 @@
  */
 package ubic.gemma.model.common.protocol;
 
+import java.util.Collection;
+
+import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
+
 /**
  * <p>
  * Base Spring DAO Class: is able to create, update, remove, load, and find objects of type
@@ -26,22 +30,23 @@ package ubic.gemma.model.common.protocol;
  * 
  * @see ubic.gemma.model.common.protocol.Hardware
  */
-public abstract class HardwareDaoBase extends ubic.gemma.model.common.protocol.ParameterizableDaoImpl<Hardware>
-        implements ubic.gemma.model.common.protocol.HardwareDao {
+public abstract class HardwareDaoBase extends HibernateDaoSupport implements
+        ubic.gemma.model.common.protocol.HardwareDao {
 
     /**
      * @see ubic.gemma.model.common.protocol.HardwareDao#create(int, java.util.Collection)
      */
 
-    public java.util.Collection<Hardware> create( final int transform, final java.util.Collection<Hardware> entities ) {
+    public java.util.Collection<? extends Hardware> create( final int transform,
+            final java.util.Collection<? extends Hardware> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "Hardware.create - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback() {
+                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator<Hardware> entityIterator = entities.iterator(); entityIterator
+                        for ( java.util.Iterator<? extends Hardware> entityIterator = entities.iterator(); entityIterator
                                 .hasNext(); ) {
                             create( transform, entityIterator.next() );
                         }
@@ -49,6 +54,11 @@ public abstract class HardwareDaoBase extends ubic.gemma.model.common.protocol.P
                     }
                 } );
         return entities;
+    }
+    
+    
+    public Collection<? extends Hardware > load( Collection<Long> ids ) {
+        return this.getHibernateTemplate().findByNamedParam( "from HardwareImpl where id in (:ids)", "ids", ids );
     }
 
     /**
@@ -67,7 +77,7 @@ public abstract class HardwareDaoBase extends ubic.gemma.model.common.protocol.P
      * @see ubic.gemma.model.common.protocol.HardwareDao#create(java.util.Collection)
      */
 
-    public java.util.Collection<Hardware> create( final java.util.Collection<Hardware> entities ) {
+    public java.util.Collection<? extends Hardware> create( final java.util.Collection<? extends Hardware> entities ) {
         return create( TRANSFORM_NONE, entities );
     }
 
@@ -82,7 +92,7 @@ public abstract class HardwareDaoBase extends ubic.gemma.model.common.protocol.P
      * @see ubic.gemma.model.common.protocol.HardwareDao#find(int, java.lang.String,
      *      ubic.gemma.model.common.protocol.Hardware)
      */
-    @SuppressWarnings( { "unchecked" })
+    
     public Hardware find( final int transform, final java.lang.String queryString,
             final ubic.gemma.model.common.protocol.Hardware hardware ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -133,7 +143,7 @@ public abstract class HardwareDaoBase extends ubic.gemma.model.common.protocol.P
      * @see ubic.gemma.model.common.protocol.HardwareDao#findOrCreate(int, java.lang.String,
      *      ubic.gemma.model.common.protocol.Hardware)
      */
-    @SuppressWarnings("unchecked")
+    
     public Hardware findOrCreate( final int transform, final java.lang.String queryString,
             final ubic.gemma.model.common.protocol.Hardware hardware ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -204,7 +214,7 @@ public abstract class HardwareDaoBase extends ubic.gemma.model.common.protocol.P
     /**
      * @see ubic.gemma.model.common.protocol.HardwareDao#loadAll()
      */
-    public java.util.Collection<Hardware> loadAll() {
+    public java.util.Collection<? extends Hardware> loadAll() {
         return this.loadAll( TRANSFORM_NONE );
     }
 
@@ -212,9 +222,9 @@ public abstract class HardwareDaoBase extends ubic.gemma.model.common.protocol.P
      * @see ubic.gemma.model.common.protocol.HardwareDao#loadAll(int)
      */
 
-    @SuppressWarnings("unchecked")
-    public java.util.Collection<Hardware> loadAll( final int transform ) {
-        final java.util.Collection<Hardware> results = this.getHibernateTemplate().loadAll(
+    
+    public java.util.Collection<? extends Hardware> loadAll( final int transform ) {
+        final java.util.Collection<? extends Hardware> results = this.getHibernateTemplate().loadAll(
                 ubic.gemma.model.common.protocol.HardwareImpl.class );
         this.transformEntities( transform, results );
         return results;
@@ -238,7 +248,7 @@ public abstract class HardwareDaoBase extends ubic.gemma.model.common.protocol.P
      * @see ubic.gemma.model.common.SecurableDao#remove(java.util.Collection)
      */
 
-    public void remove( java.util.Collection<Hardware> entities ) {
+    public void remove( java.util.Collection<? extends Hardware> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "Hardware.remove - 'entities' can not be null" );
         }
@@ -259,15 +269,15 @@ public abstract class HardwareDaoBase extends ubic.gemma.model.common.protocol.P
      * @see ubic.gemma.model.common.SecurableDao#update(java.util.Collection)
      */
 
-    public void update( final java.util.Collection<Hardware> entities ) {
+    public void update( final java.util.Collection<? extends Hardware> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "Hardware.update - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback() {
+                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator<Hardware> entityIterator = entities.iterator(); entityIterator
+                        for ( java.util.Iterator<? extends Hardware> entityIterator = entities.iterator(); entityIterator
                                 .hasNext(); ) {
                             update( entityIterator.next() );
                         }
@@ -299,7 +309,7 @@ public abstract class HardwareDaoBase extends ubic.gemma.model.common.protocol.P
      * @see #transformEntity(int,ubic.gemma.model.common.protocol.Hardware)
      */
 
-    protected void transformEntities( final int transform, final java.util.Collection<Hardware> entities ) {
+    protected void transformEntities( final int transform, final java.util.Collection<? extends Hardware> entities ) {
         switch ( transform ) {
             case TRANSFORM_NONE: // fall-through
             default:

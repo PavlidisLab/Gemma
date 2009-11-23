@@ -18,7 +18,10 @@
  */
 package ubic.gemma.model.expression.arrayDesign;
 
+import org.springframework.beans.factory.annotation.Autowired;
+
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.model.common.auditAndSecurity.AuditEventDao;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -31,10 +34,13 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * 
  * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService
  */
-public abstract class ArrayDesignServiceBase extends ubic.gemma.model.common.AuditableServiceImpl implements
-        ubic.gemma.model.expression.arrayDesign.ArrayDesignService {
+public abstract class ArrayDesignServiceBase implements ubic.gemma.model.expression.arrayDesign.ArrayDesignService {
 
+    @Autowired
     private ubic.gemma.model.expression.arrayDesign.ArrayDesignDao arrayDesignDao;
+
+    @Autowired
+    private AuditEventDao auditEventDao;
 
     /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#compositeSequenceWithoutBioSequences(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
@@ -212,6 +218,13 @@ public abstract class ArrayDesignServiceBase extends ubic.gemma.model.common.Aud
     }
 
     /**
+     * @return the auditEventDao
+     */
+    public AuditEventDao getAuditEventDao() {
+        return auditEventDao;
+    }
+
+    /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#getCompositeSequenceCount(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
     public java.lang.Integer getCompositeSequenceCount(
@@ -344,19 +357,6 @@ public abstract class ArrayDesignServiceBase extends ubic.gemma.model.common.Aud
     }
 
     /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#getTaxon(java.lang.Long)
-     */
-    public ubic.gemma.model.genome.Taxon getTaxon( final java.lang.Long id ) {
-        try {
-            return this.handleGetTaxon( id );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
-                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.getTaxon(java.lang.Long id)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#getTaxa(java.lang.Long)
      */
     public java.util.Collection<ubic.gemma.model.genome.Taxon> getTaxa( final java.lang.Long id ) {
@@ -365,6 +365,19 @@ public abstract class ArrayDesignServiceBase extends ubic.gemma.model.common.Aud
         } catch ( Throwable th ) {
             throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
                     "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.getTaxons(java.lang.Long id)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#getTaxon(java.lang.Long)
+     */
+    public ubic.gemma.model.genome.Taxon getTaxon( final java.lang.Long id ) {
+        try {
+            return this.handleGetTaxon( id );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
+                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.getTaxon(java.lang.Long id)' --> "
                             + th, th );
         }
     }
@@ -759,6 +772,13 @@ public abstract class ArrayDesignServiceBase extends ubic.gemma.model.common.Aud
     }
 
     /**
+     * @param auditEventDao the auditEventDao to set
+     */
+    public void setAuditEventDao( AuditEventDao auditEventDao ) {
+        this.auditEventDao = auditEventDao;
+    }
+
+    /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#thaw(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
     public void thaw( final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
@@ -964,16 +984,17 @@ public abstract class ArrayDesignServiceBase extends ubic.gemma.model.common.Aud
             ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) throws java.lang.Exception;
 
     /**
+     * Performs the core logic for {@link #getTaxa(java.lang.Long)} Lmd 29/07/09 Fishmanomics provide support multi
+     * taxon arrays
+     */
+    protected abstract java.util.Collection<ubic.gemma.model.genome.Taxon> handleGetTaxa( java.lang.Long id )
+            throws java.lang.Exception;
+
+    /**
      * Performs the core logic for {@link #getTaxon(java.lang.Long)}
      */
     protected abstract ubic.gemma.model.genome.Taxon handleGetTaxon( java.lang.Long id ) throws java.lang.Exception;
 
-    /**
-     * Performs the core logic for {@link #getTaxa(java.lang.Long)}
-     * Lmd 29/07/09 Fishmanomics provide support multi taxon arrays
-     */
-    protected abstract java.util.Collection<ubic.gemma.model.genome.Taxon> handleGetTaxa( java.lang.Long id ) throws java.lang.Exception;
-    
     /**
      * Performs the core logic for {@link #isMerged(java.util.Collection)}
      */

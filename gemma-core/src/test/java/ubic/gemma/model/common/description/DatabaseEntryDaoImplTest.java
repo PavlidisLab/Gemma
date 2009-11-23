@@ -18,6 +18,11 @@
  */
 package ubic.gemma.model.common.description;
 
+import static org.junit.Assert.assertEquals;
+
+import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+
 import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
@@ -26,23 +31,10 @@ import ubic.gemma.testing.BaseSpringContextTest;
  */
 public class DatabaseEntryDaoImplTest extends BaseSpringContextTest {
 
+    @Autowired
     DatabaseEntryDao databaseEntryDao;
 
-    /**
-     * @param databaseEntryDao the databaseEntryDao to set
-     */
-    public void setDatabaseEntryDao( DatabaseEntryDao databaseEntryDao ) {
-        this.databaseEntryDao = databaseEntryDao;
-    }
-
-    /*
-     * @see TestCase#setUp()
-     */
-    @Override
-    protected void onSetUpInTransaction() throws Exception {
-        super.onSetUpInTransaction();
-    }
-
+    @Test
     public void testCreateDatabaseEntry() {
         DatabaseEntry de = this.getTestPersistentDatabaseEntry();
         DatabaseEntry actualReturn = databaseEntryDao.create( de );
@@ -53,6 +45,7 @@ public class DatabaseEntryDaoImplTest extends BaseSpringContextTest {
      * Class under test for ubic.gemma.model.common.description.DatabaseEntry
      * find(ubic.gemma.model.common.description.DatabaseEntry)
      */
+    @Test
     public void testFindDatabaseEntry() {
         DatabaseEntry de = this.getTestPersistentDatabaseEntry();
         databaseEntryDao.create( de );

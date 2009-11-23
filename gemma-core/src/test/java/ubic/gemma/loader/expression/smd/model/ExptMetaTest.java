@@ -35,6 +35,16 @@ public class ExptMetaTest extends TestCase {
     SMDExperiment emtest;
 
     /*
+     * Class under test for void read(InputStream)
+     */
+    public void testReadInputStreamName() throws IOException, SAXException {
+        emtest.read( testStream );
+        String expectedReturn = "Unfolded Protein Response";
+        String actualReturn = emtest.getName();
+        assertEquals( expectedReturn, actualReturn );
+    }
+
+    /*
      * @see TestCase#setUp()
      */
     @Override
@@ -50,16 +60,6 @@ public class ExptMetaTest extends TestCase {
     @Override
     protected void tearDown() throws Exception {
         super.tearDown();
-    }
-
-    /*
-     * Class under test for void read(InputStream)
-     */
-    public void testReadInputStreamName() throws IOException, SAXException {
-        emtest.read( testStream );
-        String expectedReturn = "Unfolded Protein Response";
-        String actualReturn = emtest.getName();
-        assertEquals( expectedReturn, actualReturn );
     }
 
 }

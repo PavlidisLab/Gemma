@@ -22,8 +22,18 @@
 //
 package ubic.gemma.model.common.auditAndSecurity;
 
+import org.hibernate.SessionFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
+
 /**
  * @see ubic.gemma.model.common.auditAndSecurity.JobInfo
  */
+@Repository
 public class JobInfoDaoImpl extends ubic.gemma.model.common.auditAndSecurity.JobInfoDaoBase {
+
+    @Autowired
+    public JobInfoDaoImpl( SessionFactory sessionFactory ) {
+        super.setSessionFactory( sessionFactory );
+    }
 }

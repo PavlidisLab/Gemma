@@ -18,16 +18,21 @@
  */
 package ubic.gemma.web.validation;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.validator.Validator;
 import org.apache.commons.validator.ValidatorException;
-import org.springframework.security.providers.encoding.ShaPasswordEncoder;
+import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.encoding.ShaPasswordEncoder;
 import org.springframework.validation.BindException;
 import org.springframework.validation.Errors;
 import org.springmodules.validation.commons.DefaultValidatorFactory;
 
-import ubic.gemma.model.common.auditAndSecurity.User;
-import ubic.gemma.testing.BaseSpringContextTest;
+import ubic.gemma.model.common.auditAndSecurity.User; 
+import ubic.gemma.testing.BaseSpringWebTest;
 import ubic.gemma.util.ConfigUtils;
 import ubic.gemma.web.controller.common.auditAndSecurity.UserUpdateCommand;
 
@@ -35,50 +40,12 @@ import ubic.gemma.web.controller.common.auditAndSecurity.UserUpdateCommand;
  * @author pavlidis
  * @version $Id$
  */
-public class ValidationTest extends BaseSpringContextTest {
+public class ValidationTest extends BaseSpringWebTest {
 
-    public final void testUserValidation() throws Exception {
-        UserUpdateCommand c = getBasicValidUser();
-        Errors e = validate( c, "user" );
-        assertEquals( e.toString(), 0, e.getErrorCount() );
-    }
+    @Autowired
+    DefaultValidatorFactory validatorFactory;
 
-    public final void testUserValidationBadEmail() throws Exception {
-        UserUpdateCommand c = getBasicValidUser();
-        c.setEmail( "@@@@@.com" );
-
-        Errors e = validate( c, "user" );
-        assertEquals( e.toString(), 1, e.getErrorCount() );
-        assertNotNull( e.getFieldError( "email" ) );
-    }
-
-    public final void testUserValidationNoEmail() throws Exception {
-        UserUpdateCommand c = getBasicValidUser();
-        c.setEmail( null );
-
-        Errors e = validate( c, "user" );
-        assertEquals( e.toString(), 1, e.getErrorCount() );
-        assertNotNull( e.getFieldError( "email" ) );
-    }
-
-    public final void testUserNameTooShort() throws Exception {
-        UserUpdateCommand c = getBasicValidUser();
-        c.setUserName( "a" );
-
-        Errors e = validate( c, "user" );
-        assertEquals( e.toString(), 1, e.getErrorCount() );
-        assertNotNull( e.getFieldError( "userName" ) );
-    }
-
-    public final void testUserNameTooLong() throws Exception {
-        UserUpdateCommand c = getBasicValidUser();
-        c.setUserName( "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" );
-
-        Errors e = validate( c, "user" );
-        assertEquals( e.toString(), 1, e.getErrorCount() );
-        assertNotNull( e.getFieldError( "userName" ) );
-    }
-
+    @Test
     public final void testUserNameMissing() throws Exception {
         UserUpdateCommand c = getBasicValidUser();
         c.setUserName( null );
@@ -88,39 +55,65 @@ public class ValidationTest extends BaseSpringContextTest {
         assertNotNull( e.getFieldError( "userName" ) );
     }
 
-    public final void testUserValidationPasswordMismatch() throws Exception {
+    @Test
+    public final void testUserNameTooLong() throws Exception {
         UserUpdateCommand c = getBasicValidUser();
-
-        c.setNewPassword( "onepwd" );
-        c.setConfirmNewPassword( "other" );
-
-        Errors e = validate( c, "user" );
-        assertEquals( e.toString(), 2, e.getErrorCount() );
-        assertNotNull( e.getFieldError( "confirmNewPassword" ) );
-    }
-
-    public final void testUserValidationPasswordTooShort() throws Exception {
-        UserUpdateCommand c = getBasicValidUser();
-
-        c.setNewPassword( "a" );
-        c.setConfirmNewPassword( "a" );
+        c.setUserName( "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" );
 
         Errors e = validate( c, "user" );
         assertEquals( e.toString(), 1, e.getErrorCount() );
-        assertNotNull( e.getFieldError( "newPassword" ) );
+        assertNotNull( e.getFieldError( "userName" ) );
     }
 
-    public final void testUserValidationPasswordNewMissing() throws Exception {
+    @Test
+    public final void testUserNameTooShort() throws Exception {
+        UserUpdateCommand c = getBasicValidUser();
+        c.setUserName( "a" );
+
+        Errors e = validate( c, "user" );
+        assertEquals( e.toString(), 1, e.getErrorCount() );
+        assertNotNull( e.getFieldError( "userName" ) );
+    }
+
+    @Test
+    public final void testUserValidation() throws Exception {
+        UserUpdateCommand c = getBasicValidUser();
+        Errors e = validate( c, "user" );
+        assertEquals( e.toString(), 0, e.getErrorCount() );
+    }
+
+    @Test
+    public final void testUserValidationBadEmail() throws Exception {
+        UserUpdateCommand c = getBasicValidUser();
+        c.setEmail( "@@@@@.com" );
+
+        Errors e = validate( c, "user" );
+        assertEquals( e.toString(), 1, e.getErrorCount() );
+        assertNotNull( e.getFieldError( "email" ) );
+    }
+
+    @Test
+    public final void testUserValidationNoEmail() throws Exception {
+        UserUpdateCommand c = getBasicValidUser();
+        c.setEmail( null );
+
+        Errors e = validate( c, "user" );
+        assertEquals( e.toString(), 1, e.getErrorCount() );
+        assertNotNull( e.getFieldError( "email" ) );
+    }
+
+    @Test
+    public final void testUserValidationNoPasswordsOK() throws Exception {
         UserUpdateCommand c = getBasicValidUser();
 
         c.setConfirmNewPassword( null );
+        c.setNewPassword( null );
 
         Errors e = validate( c, "user" );
-        assertEquals( e.toString(), 2, e.getErrorCount() );
-        assertNotNull( e.getFieldError( "newPassword" ) );
-        assertNotNull( e.getFieldError( "confirmNewPassword" ) );
+        assertEquals( e.toString(), 0, e.getErrorCount() );
     }
 
+    @Test
     public final void testUserValidationPasswordConfirmMissing() throws Exception {
         UserUpdateCommand c = getBasicValidUser();
 
@@ -132,30 +125,40 @@ public class ValidationTest extends BaseSpringContextTest {
         assertNotNull( e.getFieldError( "newPassword" ) );
     }
 
-    public final void testUserValidationNoPasswordsOK() throws Exception {
+    @Test
+    public final void testUserValidationPasswordMismatch() throws Exception {
+        UserUpdateCommand c = getBasicValidUser();
+
+        c.setNewPassword( "onepwd" );
+        c.setConfirmNewPassword( "other" );
+
+        Errors e = validate( c, "user" );
+        assertEquals( e.toString(), 2, e.getErrorCount() );
+        assertNotNull( e.getFieldError( "confirmNewPassword" ) );
+    }
+
+    @Test
+    public final void testUserValidationPasswordNewMissing() throws Exception {
         UserUpdateCommand c = getBasicValidUser();
 
         c.setConfirmNewPassword( null );
-        c.setNewPassword( null );
 
         Errors e = validate( c, "user" );
-        assertEquals( e.toString(), 0, e.getErrorCount() );
+        assertEquals( e.toString(), 2, e.getErrorCount() );
+        assertNotNull( e.getFieldError( "newPassword" ) );
+        assertNotNull( e.getFieldError( "confirmNewPassword" ) );
     }
 
-    /**
-     * @param factory
-     * @param c
-     * @return
-     * @throws ValidatorException
-     */
-    private Errors validate( Object c, String validator ) throws ValidatorException {
-        org.springmodules.validation.commons.DefaultValidatorFactory factory = ( DefaultValidatorFactory ) getBean( "validatorFactory" );
-        assert factory != null;
-        Errors e = new BindException( c, validator );
-        Validator v = factory.getValidator( validator, c, e );
+    @Test
+    public final void testUserValidationPasswordTooShort() throws Exception {
+        UserUpdateCommand c = getBasicValidUser();
 
-        v.validate();
-        return e;
+        c.setNewPassword( "a" );
+        c.setConfirmNewPassword( "a" );
+
+        Errors e = validate( c, "user" );
+        assertEquals( e.toString(), 1, e.getErrorCount() );
+        assertNotNull( e.getFieldError( "newPassword" ) );
     }
 
     /**
@@ -182,6 +185,20 @@ public class ValidationTest extends BaseSpringContextTest {
         c.setConfirmNewPassword( "apassword" );
 
         return c;
+    }
+
+    /**
+     * @param factory
+     * @param c
+     * @return
+     * @throws ValidatorException
+     */
+    private Errors validate( Object c, String validator ) throws ValidatorException {
+        Errors e = new BindException( c, validator );
+        Validator v = validatorFactory.getValidator( validator, c, e );
+
+        v.validate();
+        return e;
     }
 
 }

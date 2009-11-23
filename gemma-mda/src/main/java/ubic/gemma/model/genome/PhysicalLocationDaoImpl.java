@@ -24,18 +24,27 @@ package ubic.gemma.model.genome;
 
 import org.hibernate.Hibernate;
 import org.hibernate.LockMode;
+import org.hibernate.SessionFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.orm.hibernate3.HibernateTemplate;
+import org.springframework.stereotype.Repository;
 
 /**
  * @see ubic.gemma.model.genome.PhysicalLocation
  */
+@Repository
 public class PhysicalLocationDaoImpl extends ubic.gemma.model.genome.PhysicalLocationDaoBase {
+
+    @Autowired
+    public PhysicalLocationDaoImpl( SessionFactory sessionFactory ) {
+        super.setSessionFactory( sessionFactory );
+    }
 
     public void thaw( final PhysicalLocation physicalLocation ) {
         if ( physicalLocation == null ) return;
         if ( physicalLocation.getId() == null ) return;
         HibernateTemplate templ = this.getHibernateTemplate();
-        templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+        templ.execute( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
                 session.lock( physicalLocation, LockMode.NONE );
                 Hibernate.initialize( physicalLocation );

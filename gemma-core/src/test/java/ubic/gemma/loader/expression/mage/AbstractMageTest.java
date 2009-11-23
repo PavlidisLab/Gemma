@@ -32,15 +32,19 @@ public abstract class AbstractMageTest extends BaseSpringContextTest {
 
     protected static final String MAGE_DATA_RESOURCE_PATH = "/data/loader/expression/mage/";
 
-    /*
-     * (non-Javadoc)
+    /**
+     * XSL-transform the mage document. This is only needed for testing. In production, this is done as part of the
+     * parsing.
      * 
-     * @see ubic.gemma.testing.BaseSpringContextTest#onSetUpInTransaction()
+     * @param mlp
+     * @param resourceName
+     * @throws IOException
      */
-    @Override
-    protected void onSetUpInTransaction() throws Exception {
-        super.onSetUpInTransaction();
-        endTransaction();
+    protected void xslSetup( MageMLParser mlp, String resourceName ) throws IOException {
+        InputStream istMageExamples = MageMLParserTest.class.getResourceAsStream( resourceName );
+        assert istMageExamples != null;
+        // mlp.createSimplifiedXml( istMageExamples );
+        istMageExamples.close();
     }
 
     /**
@@ -54,21 +58,6 @@ public abstract class AbstractMageTest extends BaseSpringContextTest {
     protected void zipXslSetup( MageMLParser mlp, String resourceName ) throws IOException {
         ZipInputStream istMageExamples = new ZipInputStream( MageMLParserTest.class.getResourceAsStream( resourceName ) );
         istMageExamples.getNextEntry();
-        // mlp.createSimplifiedXml( istMageExamples );
-        istMageExamples.close();
-    }
-
-    /**
-     * XSL-transform the mage document. This is only needed for testing. In production, this is done as part of the
-     * parsing.
-     * 
-     * @param mlp
-     * @param resourceName
-     * @throws IOException
-     */
-    protected void xslSetup( MageMLParser mlp, String resourceName ) throws IOException {
-        InputStream istMageExamples = MageMLParserTest.class.getResourceAsStream( resourceName );
-        assert istMageExamples != null;
         // mlp.createSimplifiedXml( istMageExamples );
         istMageExamples.close();
     }

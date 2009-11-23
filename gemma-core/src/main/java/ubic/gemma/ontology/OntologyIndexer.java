@@ -85,10 +85,9 @@ public class OntologyIndexer {
 
         // -- Create an index based on existing statements
         // TODO: this needs to be refactored.
-        log.info( "making selector" );
         larqSubjectBuilder.indexStatements( model.listStatements( new IndexerSelector() ) );
         // -- Finish indexing
-        larqSubjectBuilder.closeForWriting();
+        larqSubjectBuilder.closeWriter();
         // -- Create the access index
         IndexLARQ index = larqSubjectBuilder.getIndex();
 
@@ -107,9 +106,9 @@ public class OntologyIndexer {
             if ( IndexReader.indexExists( directory ) ) {
                 IndexReader reader = IndexReader.open( directory );
                 return new IndexLARQ( reader );
-            } else {
-                throw new IllegalArgumentException( "No index with name " + name );
             }
+            throw new IllegalArgumentException( "No index with name " + name );
+
         } catch ( IOException e ) {
             throw new RuntimeException( e );
         }

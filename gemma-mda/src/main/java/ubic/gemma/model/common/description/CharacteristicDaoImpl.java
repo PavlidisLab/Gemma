@@ -23,6 +23,10 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
+import org.hibernate.SessionFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
+
 import ubic.gemma.model.association.Gene2GOAssociationImpl;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorImpl;
 
@@ -32,9 +36,15 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactorImpl;
  * @see ubic.gemma.model.common.description.Characteristic
  * @version $Id$
  */
+@Repository
 public class CharacteristicDaoImpl extends ubic.gemma.model.common.description.CharacteristicDaoBase {
 
     private static final int BATCH_SIZE = 1000;
+
+    @Autowired
+    public CharacteristicDaoImpl( SessionFactory sessionFactory ) {
+        super.setSessionFactory( sessionFactory );
+    }
 
     /*
      * (non-Javadoc)

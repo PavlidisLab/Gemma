@@ -31,40 +31,6 @@ public class Probe2ProbeCoexpressionServiceException extends java.lang.RuntimeEx
     private static final long serialVersionUID = 3290097527202152557L;
 
     /**
-     * The default constructor for <code>Probe2ProbeCoexpressionServiceException</code>.
-     */
-    public Probe2ProbeCoexpressionServiceException() {
-    }
-
-    /**
-     * Constructs a new instance of <code>Probe2ProbeCoexpressionServiceException</code>.
-     * 
-     * @param throwable the parent Throwable
-     */
-    public Probe2ProbeCoexpressionServiceException( Throwable throwable ) {
-        super( findRootCause( throwable ) );
-    }
-
-    /**
-     * Constructs a new instance of <code>Probe2ProbeCoexpressionServiceException</code>.
-     * 
-     * @param message the throwable message.
-     */
-    public Probe2ProbeCoexpressionServiceException( String message ) {
-        super( message );
-    }
-
-    /**
-     * Constructs a new instance of <code>Probe2ProbeCoexpressionServiceException</code>.
-     * 
-     * @param message the throwable message.
-     * @param throwable the parent of this Throwable.
-     */
-    public Probe2ProbeCoexpressionServiceException( String message, Throwable throwable ) {
-        super( message, findRootCause( throwable ) );
-    }
-
-    /**
      * Finds the root cause of the parent exception by traveling up the exception tree
      */
     private static Throwable findRootCause( Throwable th ) {
@@ -98,5 +64,39 @@ public class Probe2ProbeCoexpressionServiceException extends java.lang.RuntimeEx
             }
         }
         return th;
+    }
+
+    /**
+     * The default constructor for <code>Probe2ProbeCoexpressionServiceException</code>.
+     */
+    public Probe2ProbeCoexpressionServiceException() {
+    }
+
+    /**
+     * Constructs a new instance of <code>Probe2ProbeCoexpressionServiceException</code>.
+     * 
+     * @param message the throwable message.
+     */
+    public Probe2ProbeCoexpressionServiceException( String message ) {
+        super( message );
+    }
+
+    /**
+     * Constructs a new instance of <code>Probe2ProbeCoexpressionServiceException</code>.
+     * 
+     * @param message the throwable message.
+     * @param throwable the parent of this Throwable.
+     */
+    public Probe2ProbeCoexpressionServiceException( String message, Throwable throwable ) {
+        super( message, findRootCause( throwable ) );
+    }
+
+    /**
+     * Constructs a new instance of <code>Probe2ProbeCoexpressionServiceException</code>.
+     * 
+     * @param throwable the parent Throwable
+     */
+    public Probe2ProbeCoexpressionServiceException( Throwable throwable ) {
+        super( findRootCause( throwable ) );
     }
 }

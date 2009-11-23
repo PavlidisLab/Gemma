@@ -18,8 +18,11 @@
  */
 package ubic.gemma.model.common.description;
 
+import org.springframework.security.access.annotation.Secured;
+
 /**
- * 
+ * @author kelsey
+ * @version $Id$
  */
 public interface FileFormatService {
 

@@ -426,7 +426,7 @@ public class ExpressionExperimentWrapper extends TableDecorator {
      * @return View for key of the quantitation type counts.
      */
     public String getQtName() {
-        Map.Entry entry = ( Map.Entry ) getCurrentRowObject();
+        Map.Entry<?, ?> entry = ( Map.Entry<?, ?> ) getCurrentRowObject();
         return ( ( QuantitationType ) entry.getKey() ).getName();
     }
 
@@ -434,7 +434,7 @@ public class ExpressionExperimentWrapper extends TableDecorator {
      * @return View for status of the QTs
      */
     public String getQtPreferredStatus() {
-        Map.Entry entry = ( Map.Entry ) getCurrentRowObject();
+        Map.Entry<?, ?> entry = ( Map.Entry<?, ?> ) getCurrentRowObject();
         if ( ( ( QuantitationType ) entry.getKey() ).getIsPreferred() ) {
             return "<input type=checkbox checked disabled></input>";
         }
@@ -445,7 +445,7 @@ public class ExpressionExperimentWrapper extends TableDecorator {
      * @return View for background status of the QTs
      */
     public String getQtBackground() {
-        Map.Entry entry = ( Map.Entry ) getCurrentRowObject();
+        Map.Entry<?, ?> entry = ( Map.Entry<?, ?> ) getCurrentRowObject();
         if ( ( ( QuantitationType ) entry.getKey() ).getIsBackground() ) {
             return "<input type=checkbox checked disabled></input>";
         }
@@ -456,7 +456,7 @@ public class ExpressionExperimentWrapper extends TableDecorator {
      * @return View for background subtracted status of the QTs
      */
     public String getQtBackgroundSubtracted() {
-        Map.Entry entry = ( Map.Entry ) getCurrentRowObject();
+        Map.Entry<?, ?> entry = ( Map.Entry<?, ?> ) getCurrentRowObject();
         if ( ( ( QuantitationType ) entry.getKey() ).getIsBackgroundSubtracted() ) {
             return "<input type=checkbox checked disabled></input>";
         }
@@ -467,7 +467,7 @@ public class ExpressionExperimentWrapper extends TableDecorator {
      * @return View for normalized status of the QTs
      */
     public String getQtNormalized() {
-        Map.Entry entry = ( Map.Entry ) getCurrentRowObject();
+        Map.Entry<?, ?> entry = ( Map.Entry<?, ?> ) getCurrentRowObject();
         if ( ( ( QuantitationType ) entry.getKey() ).getIsNormalized() ) {
             return "<input type=checkbox checked disabled></input>";
         }
@@ -478,7 +478,7 @@ public class ExpressionExperimentWrapper extends TableDecorator {
      * @return View for value of the quantitation type counts.
      */
     public Integer getQtValue() {
-        Map.Entry entry = ( Map.Entry ) getCurrentRowObject();
+        Map.Entry<?, ?> entry = ( Map.Entry<?, ?> ) getCurrentRowObject();
         return ( Integer ) entry.getValue();
     }
 

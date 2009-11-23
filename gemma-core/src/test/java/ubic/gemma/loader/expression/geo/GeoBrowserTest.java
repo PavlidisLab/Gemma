@@ -18,9 +18,15 @@
  */
 package ubic.gemma.loader.expression.geo;
 
+import static org.junit.Assert.assertTrue;
+
+import java.io.IOException;
 import java.util.Collection;
 
-import junit.framework.TestCase;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.junit.Test;
+
 import ubic.gemma.loader.expression.geo.model.GeoRecord;
 import ubic.gemma.loader.expression.geo.service.GeoBrowser;
 
@@ -28,12 +34,23 @@ import ubic.gemma.loader.expression.geo.service.GeoBrowser;
  * @author pavlidis
  * @version $Id$
  */
-public class GeoBrowserTest extends TestCase {
+public class GeoBrowserTest {
 
-    public void testGetRecentGeoRecords() {
+    private static Log log = LogFactory.getLog( GeoBrowserTest.class );
+
+    @Test
+    public void testGetRecentGeoRecords() throws Exception {
         GeoBrowser b = new GeoBrowser();
-        Collection<GeoRecord> res = b.getRecentGeoRecords( 10, 10 );
-        assertEquals( 10, res.size() );
-    }
 
+        try {
+            Collection<GeoRecord> res = b.getRecentGeoRecords( 10, 10 );
+            assertTrue( res.size() > 0 );
+        } catch ( IOException e ) {
+            if ( e.getMessage().contains( "GEO returned an error" ) ) {
+                log.warn( "GEO returned an error, skipping test." );
+                return;
+            }
+            throw e;
+        }
+    }
 }

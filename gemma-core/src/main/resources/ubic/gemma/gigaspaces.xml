@@ -182,38 +182,38 @@
 		<property name="proxyInterfaces">
 			<list>
 				<value>
-					ubic.gemma.grid.javaspaces.expression.experiment.ExpressionExperimentLoadTask
+					ubic.gemma.grid.javaspaces.task.expression.experiment.ExpressionExperimentLoadTask
 				</value>
 				<value>
-					ubic.gemma.grid.javaspaces.expression.experiment.ExpressionExperimentReportTask
+					ubic.gemma.grid.javaspaces.task.expression.experiment.ExpressionExperimentReportTask
 				</value>
 				<value>
-					ubic.gemma.grid.javaspaces.index.IndexerTask
+					ubic.gemma.grid.javaspaces.task.index.IndexerTask
 				</value>
 				<value>
-					ubic.gemma.grid.javaspaces.diff.DifferentialExpressionAnalysisTask
+					ubic.gemma.grid.javaspaces.task.diff.DifferentialExpressionAnalysisTask
 				</value>
 				<value>
-					ubic.gemma.grid.javaspaces.analysis.preprocess.ProcessedExpressionDataVectorCreateTask
+					ubic.gemma.grid.javaspaces.task.analysis.preprocess.ProcessedExpressionDataVectorCreateTask
 				</value>
 				<value>
-					ubic.gemma.grid.javaspaces.analysis.preprocess.TwoChannelMissingValueTask
+					ubic.gemma.grid.javaspaces.task.analysis.preprocess.TwoChannelMissingValueTask
 				</value>
 				<value>
-					ubic.gemma.grid.javaspaces.analysis.coexpression.links.LinkAnalysisTask
+					ubic.gemma.grid.javaspaces.task.analysis.coexpression.links.LinkAnalysisTask
 				</value>
 				<value>
-					ubic.gemma.grid.javaspaces.expression.arrayDesign.ArrayDesignProbeMapperTask
+					ubic.gemma.grid.javaspaces.task.expression.arrayDesign.ArrayDesignProbeMapperTask
 				</value>
 				<value>
-					ubic.gemma.grid.javaspaces.analysis.sequence.ArrayDesignRepeatScanTask
+					ubic.gemma.grid.javaspaces.task.analysis.sequence.ArrayDesignRepeatScanTask
 				</value>
 			</list>
 		</property>
 	</bean>
 
 	<!-- Add task impls here -->
-	<bean id="taskBean" class="ubic.gemma.grid.javaspaces.expression.experiment.ExpressionExperimentLoadTaskImpl">
+	<bean id="taskBean" class="ubic.gemma.grid.javaspaces.task.expression.experiment.ExpressionExperimentLoadTaskImpl">
 		<property name="geoDatasetService">
 			<ref bean="geoDatasetService" />
 		</property>
@@ -234,7 +234,7 @@
 		</property>
 	</bean>
 
-	<bean id="differentialExpressionAnalysisTask" class="ubic.gemma.grid.javaspaces.diff.DifferentialExpressionAnalysisTaskImpl">
+	<bean id="differentialExpressionAnalysisTask" class="ubic.gemma.grid.javaspaces.task.diff.DifferentialExpressionAnalysisTaskImpl">
 		<property name="differentialExpressionAnalyzerService">
 			<ref bean="differentialExpressionAnalyzerService" />
 		</property>
@@ -243,7 +243,7 @@
 		</property>
 	</bean>
 
-	<bean id="processedExpressionDataVectorCreateTask" class="ubic.gemma.grid.javaspaces.analysis.preprocess.ProcessedExpressionDataVectorCreateTaskImpl">
+	<bean id="processedExpressionDataVectorCreateTask" class="ubic.gemma.grid.javaspaces.task.analysis.preprocess.ProcessedExpressionDataVectorCreateTaskImpl">
 		<property name="processedExpressionDataVectorCreateService">
 			<ref bean="processedExpressionDataVectorCreateService" />
 		</property>
@@ -252,7 +252,7 @@
 		</property>
 	</bean>
 
-	<bean id="expressionExperimentReportTask" class="ubic.gemma.grid.javaspaces.expression.experiment.ExpressionExperimentReportTaskImpl">
+	<bean id="expressionExperimentReportTask" class="ubic.gemma.grid.javaspaces.task.expression.experiment.ExpressionExperimentReportTaskImpl">
 		<property name="expressionExperimentReportService">
 			<ref bean="expressionExperimentReportService" />
 		</property>
@@ -261,7 +261,7 @@
 		</property>
 	</bean>
 
-	<bean id="twoChannelMissingValueTask" class="ubic.gemma.grid.javaspaces.analysis.preprocess.TwoChannelMissingValueTaskImpl">
+	<bean id="twoChannelMissingValueTask" class="ubic.gemma.grid.javaspaces.task.analysis.preprocess.TwoChannelMissingValueTaskImpl">
 		<property name="twoChannelMissingValues">
 			<ref bean="twoChannelMissingValues" />
 		</property>
@@ -270,7 +270,7 @@
 		</property>
 	</bean>
 
-	<bean id="linkAnalysisTask" class="ubic.gemma.grid.javaspaces.analysis.coexpression.links.LinkAnalysisTaskImpl">
+	<bean id="linkAnalysisTask" class="ubic.gemma.grid.javaspaces.task.analysis.coexpression.links.LinkAnalysisTaskImpl">
 		<property name="linkAnalysisService">
 			<ref bean="linkAnalysisService" />
 		</property>
@@ -279,7 +279,7 @@
 		</property>
 	</bean>
 
-	<bean id="arrayDesignProbeMapperTask" class="ubic.gemma.grid.javaspaces.expression.arrayDesign.ArrayDesignProbeMapperTaskImpl">
+	<bean id="arrayDesignProbeMapperTask" class="ubic.gemma.grid.javaspaces.task.expression.arrayDesign.ArrayDesignProbeMapperTaskImpl">
 		<property name="arrayDesignProbeMapperService">
 			<ref bean="arrayDesignProbeMapperService" />
 		</property>
@@ -288,13 +288,13 @@
 		</property>
 	</bean>
 
-	<bean id="arrayDesignRepeatScanTask" class="ubic.gemma.grid.javaspaces.analysis.sequence.ArrayDesignRepeatScanTaskImpl">
+	<bean id="arrayDesignRepeatScanTask" class="ubic.gemma.grid.javaspaces.task.analysis.sequence.ArrayDesignRepeatScanTaskImpl">
 		<property name="gigaSpacesTemplate">
 			<ref bean="gigaspacesTemplate" />
 		</property>
 	</bean>
 
-	<bean id="indexTask" class="ubic.gemma.grid.javaspaces.index.IndexerTaskImpl">
+	<bean id="indexTask" class="ubic.gemma.grid.javaspaces.task.index.IndexerTaskImpl">
 
 		<property name="geneGps">
 			<ref bean="geneGps" />

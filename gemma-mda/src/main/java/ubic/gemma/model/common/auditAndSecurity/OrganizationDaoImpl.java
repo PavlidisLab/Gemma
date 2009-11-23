@@ -18,8 +18,18 @@
  */
 package ubic.gemma.model.common.auditAndSecurity;
 
+import org.hibernate.SessionFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
+
 /**
  * @see ubic.gemma.model.common.auditAndSecurity.Organization
  */
+@Repository
 public class OrganizationDaoImpl extends ubic.gemma.model.common.auditAndSecurity.OrganizationDaoBase {
+
+    @Autowired
+    public OrganizationDaoImpl( SessionFactory sessionFactory ) {
+        super.setSessionFactory( sessionFactory );
+    }
 }

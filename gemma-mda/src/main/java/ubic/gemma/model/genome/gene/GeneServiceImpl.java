@@ -20,11 +20,11 @@
 package ubic.gemma.model.genome.gene;
 
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.stereotype.Service;
 
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionCollectionValueObject;
 import ubic.gemma.model.common.description.ExternalDatabase;
@@ -41,6 +41,7 @@ import ubic.gemma.model.genome.Taxon;
  * @version $Id$
  * @see ubic.gemma.model.genome.gene.GeneService
  */
+@Service
 public class GeneServiceImpl extends ubic.gemma.model.genome.gene.GeneServiceBase {
 
     private static Log log = LogFactory.getLog( GeneServiceImpl.class.getName() );
@@ -79,7 +80,7 @@ public class GeneServiceImpl extends ubic.gemma.model.genome.gene.GeneServiceBas
      */
     @Override
     protected Collection<Gene> handleCreate( Collection<Gene> genes ) throws Exception {
-        return this.getGeneDao().create( genes );
+        return ( Collection<Gene> ) this.getGeneDao().create( genes );
 
     }
 
@@ -241,7 +242,7 @@ public class GeneServiceImpl extends ubic.gemma.model.genome.gene.GeneServiceBas
      */
     @Override
     protected Collection<Gene> handleLoadAll() throws Exception {
-        return this.getGeneDao().loadAll();
+        return ( Collection<Gene> ) this.getGeneDao().loadAll();
     }
 
     @Override
@@ -273,19 +274,14 @@ public class GeneServiceImpl extends ubic.gemma.model.genome.gene.GeneServiceBas
      * @see ubic.gemma.model.genome.gene.GeneServiceBase#handleRemove(java.util.Collection)
      */
     @Override
-    protected void handleRemove( Collection genes ) throws Exception {
+    protected void handleRemove( Collection<Gene> genes ) throws Exception {
         this.getGeneDao().remove( genes );
 
     }
 
     @Override
-    protected void handleRemove( String officialName ) throws Exception {
-        java.util.Collection col = this.getGeneDao().findByOfficialName( officialName );
-        Iterator iter = col.iterator();
-        while ( iter.hasNext() ) {
-            Gene g = ( Gene ) iter.next();
-            this.getGeneDao().remove( g );
-        }
+    protected void handleRemove( Gene gene ) throws Exception {
+        this.getGeneDao().remove( gene );
     }
 
     /**

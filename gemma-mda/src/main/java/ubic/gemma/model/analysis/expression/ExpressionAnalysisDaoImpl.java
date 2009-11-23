@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.analysis.expression;
 
+import org.springframework.stereotype.Repository;
+
 /**
  * @see ubic.gemma.model.expression.analysis.ExpressionAnalysis
  */

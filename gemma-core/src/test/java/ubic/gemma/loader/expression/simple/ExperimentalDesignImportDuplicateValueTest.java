@@ -18,15 +18,20 @@
  */
 package ubic.gemma.loader.expression.simple;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
+
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.HashSet;
 
-import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.junit.Before;
+import org.junit.Test;
 
-import ubic.gemma.loader.expression.simple.model.SimpleExpressionExperimentMetaData; 
+import ubic.gemma.loader.expression.simple.model.SimpleExpressionExperimentMetaData;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -36,7 +41,7 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.FactorValue;
-import ubic.gemma.model.genome.Taxon; 
+import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.ontology.MgedOntologyService;
 import ubic.gemma.testing.BaseSpringContextTest;
 
@@ -52,6 +57,50 @@ public class ExperimentalDesignImportDuplicateValueTest extends BaseSpringContex
     ExpressionExperiment ee;
     ExpressionExperimentService eeService;
 
+    @Before
+    public void setup() throws Exception {
+
+        SimpleExpressionDataLoaderService s = ( SimpleExpressionDataLoaderService ) this
+                .getBean( "simpleExpressionDataLoaderService" );
+
+        eeService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
+
+        InputStream data = this.getClass().getResourceAsStream(
+                "/data/loader/expression/expdesign.import.testfull.data.txt" );
+
+        SimpleExpressionExperimentMetaData metaData = new SimpleExpressionExperimentMetaData();
+
+        mos = ( MgedOntologyService ) this.getBean( "mgedOntologyService" );
+        mos.init( true );
+        while ( !mos.isOntologyLoaded() ) {
+            Thread.sleep( 5000 );
+            log.info( "Waiting for mgedontology to load" );
+        }
+
+        Taxon human = taxonService.findByCommonName( "human" );
+
+        metaData.setShortName( randomName() );
+        metaData.setDescription( "bar" );
+        metaData.setIsRatio( false );
+        metaData.setTaxon( human );
+        metaData.setQuantitationTypeName( "rma" );
+        metaData.setScale( ScaleType.LOG2 );
+        metaData.setType( StandardQuantitationType.AMOUNT );
+
+        ArrayDesign ad = ArrayDesign.Factory.newInstance();
+        ad.setShortName( "gfoobly_" + randomName() );
+        ad.setName( "foobly doo loo" );
+
+        metaData.getArrayDesigns().add( ad );
+
+        ee = s.load( metaData, data );
+        eeService.thawLite( ee );
+    }
+
+    /**
+     * Note that this test will fail if you run it again on a dirty DB. Sorry!
+     */
+    @Test
     public final void testParse() throws Exception {
 
         ExperimentalDesignImporter parser = ( ExperimentalDesignImporter ) this.getBean( "experimentalDesignImporter" );
@@ -69,48 +118,6 @@ public class ExperimentalDesignImportDuplicateValueTest extends BaseSpringContex
         }
 
         checkResults( bms );
-    }
-
-    @Override
-    protected void onSetUpInTransaction() throws Exception {
-        super.onSetUpInTransaction();
-        endTransaction();
-
-        SimpleExpressionDataLoaderService s = ( SimpleExpressionDataLoaderService ) this
-                .getBean( "simpleExpressionDataLoaderService" );
-
-        eeService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" ); 
-
-        InputStream data = this.getClass().getResourceAsStream(
-                "/data/loader/expression/expdesign.import.testfull.data.txt" );
-
-        SimpleExpressionExperimentMetaData metaData = new SimpleExpressionExperimentMetaData();
-
-        mos = ( MgedOntologyService ) this.getBean( "mgedOntologyService" );
-        mos.init( true );
-        while ( !mos.isOntologyLoaded() ) {
-            Thread.sleep( 5000 );
-            log.info( "Waiting for mgedontology to load" );
-        }
-
-        Taxon human = taxonService.findByCommonName( "human" );
-
-        metaData.setShortName( RandomStringUtils.randomAlphabetic( 10 ) );
-        metaData.setDescription( "bar" );
-        metaData.setIsRatio( false );
-        metaData.setTaxon( human );
-        metaData.setQuantitationTypeName( "rma" );
-        metaData.setScale( ScaleType.LOG2 );
-        metaData.setType( StandardQuantitationType.AMOUNT );
-
-        ArrayDesign ad = ArrayDesign.Factory.newInstance();
-        ad.setShortName( "gfoobly" );
-        ad.setName( "foobly doo loo" );
-
-        metaData.getArrayDesigns().add( ad );
-
-        ee = s.load( metaData, data );
-        eeService.thawLite( ee );
     }
 
     /**

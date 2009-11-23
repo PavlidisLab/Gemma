@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.common.quantitationtype;
 
+import java.util.Collection;
+
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 
 /**
@@ -34,22 +36,28 @@ public abstract class QuantitationTypeDaoBase extends HibernateDaoSupport implem
     /**
      * @see ubic.gemma.model.common.quantitationtype.QuantitationTypeDao#create(int, java.util.Collection)
      */
-    public java.util.Collection<QuantitationType> create( final int transform, final java.util.Collection<QuantitationType> entities ) {
+    public java.util.Collection<? extends QuantitationType> create( final int transform,
+            final java.util.Collection<? extends QuantitationType> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "QuantitationType.create - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback() {
+                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator<QuantitationType> entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                            create( transform,
-                                    entityIterator.next() );
+                        for ( java.util.Iterator<? extends QuantitationType> entityIterator = entities.iterator(); entityIterator
+                                .hasNext(); ) {
+                            create( transform, entityIterator.next() );
                         }
                         return null;
                     }
                 } );
         return entities;
+    }
+    
+    
+    public Collection<? extends QuantitationType > load( Collection<Long> ids ) {
+        return this.getHibernateTemplate().findByNamedParam( "from QuantitationTypeImpl where id in (:ids)", "ids", ids );
     }
 
     /**
@@ -68,7 +76,7 @@ public abstract class QuantitationTypeDaoBase extends HibernateDaoSupport implem
     /**
      * @see ubic.gemma.model.common.quantitationtype.QuantitationTypeDao#create(java.util.Collection)
      */
-    @SuppressWarnings( { "unchecked" })
+    
     public java.util.Collection create( final java.util.Collection entities ) {
         return create( TRANSFORM_NONE, entities );
     }
@@ -77,15 +85,14 @@ public abstract class QuantitationTypeDaoBase extends HibernateDaoSupport implem
      * @see ubic.gemma.model.common.quantitationtype.QuantitationTypeDao#create(ubic.gemma.model.common.quantitationtype.QuantitationType)
      */
     public QuantitationType create( ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType ) {
-        return this.create( TRANSFORM_NONE,
-                quantitationType );
+        return this.create( TRANSFORM_NONE, quantitationType );
     }
 
     /**
      * @see ubic.gemma.model.common.quantitationtype.QuantitationTypeDao#find(int, java.lang.String,
      *      ubic.gemma.model.common.quantitationtype.QuantitationType)
      */
-    @SuppressWarnings( { "unchecked" })
+    
     public QuantitationType find( final int transform, final java.lang.String queryString,
             final ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -94,15 +101,15 @@ public abstract class QuantitationTypeDaoBase extends HibernateDaoSupport implem
         argNames.add( "quantitationType" );
         java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
                 argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null; 
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'ubic.gemma.model.common.quantitationtype.QuantitationType"
-                                + "' was found when executing query --> '" + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
-         
+        Object result = null;
+        if ( results.size() > 1 ) {
+            throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                    "More than one instance of 'ubic.gemma.model.common.quantitationtype.QuantitationType"
+                            + "' was found when executing query --> '" + queryString + "'" );
+        } else if ( results.size() == 1 ) {
+            result = results.iterator().next();
+        }
+
         result = transformEntity( transform, ( ubic.gemma.model.common.quantitationtype.QuantitationType ) result );
         return ( QuantitationType ) result;
     }
@@ -110,7 +117,7 @@ public abstract class QuantitationTypeDaoBase extends HibernateDaoSupport implem
     /**
      * @see ubic.gemma.model.common.quantitationtype.QuantitationTypeDao#find(int,
      *      ubic.gemma.model.common.quantitationtype.QuantitationType)
-     */ 
+     */
     public QuantitationType find( final int transform,
             final ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType ) {
         return this
@@ -123,11 +130,10 @@ public abstract class QuantitationTypeDaoBase extends HibernateDaoSupport implem
     /**
      * @see ubic.gemma.model.common.quantitationtype.QuantitationTypeDao#find(java.lang.String,
      *      ubic.gemma.model.common.quantitationtype.QuantitationType)
-     */ 
+     */
     public ubic.gemma.model.common.quantitationtype.QuantitationType find( final java.lang.String queryString,
             final ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType ) {
-        return this.find( TRANSFORM_NONE, queryString,
-                quantitationType );
+        return this.find( TRANSFORM_NONE, queryString, quantitationType );
     }
 
     /**
@@ -135,15 +141,14 @@ public abstract class QuantitationTypeDaoBase extends HibernateDaoSupport implem
      */
     public ubic.gemma.model.common.quantitationtype.QuantitationType find(
             ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType ) {
-        return this.find( TRANSFORM_NONE,
-                quantitationType );
+        return this.find( TRANSFORM_NONE, quantitationType );
     }
 
     /**
      * @see ubic.gemma.model.common.quantitationtype.QuantitationTypeDao#findOrCreate(int, java.lang.String,
      *      ubic.gemma.model.common.quantitationtype.QuantitationType)
      */
-    @SuppressWarnings( { "unchecked" })
+    
     public QuantitationType findOrCreate( final int transform, final java.lang.String queryString,
             final ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -152,15 +157,15 @@ public abstract class QuantitationTypeDaoBase extends HibernateDaoSupport implem
         argNames.add( "quantitationType" );
         java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
                 argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null; 
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of 'ubic.gemma.model.common.quantitationtype.QuantitationType"
-                                + "' was found when executing query --> '" + queryString + "'" );
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
-      
+        Object result = null;
+        if ( results.size() > 1 ) {
+            throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                    "More than one instance of 'ubic.gemma.model.common.quantitationtype.QuantitationType"
+                            + "' was found when executing query --> '" + queryString + "'" );
+        } else if ( results.size() == 1 ) {
+            result = results.iterator().next();
+        }
+
         result = transformEntity( transform, ( ubic.gemma.model.common.quantitationtype.QuantitationType ) result );
         return ( QuantitationType ) result;
     }
@@ -168,7 +173,7 @@ public abstract class QuantitationTypeDaoBase extends HibernateDaoSupport implem
     /**
      * @see ubic.gemma.model.common.quantitationtype.QuantitationTypeDao#findOrCreate(int,
      *      ubic.gemma.model.common.quantitationtype.QuantitationType)
-     */ 
+     */
     public QuantitationType findOrCreate( final int transform,
             final ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType ) {
         return this
@@ -181,11 +186,10 @@ public abstract class QuantitationTypeDaoBase extends HibernateDaoSupport implem
     /**
      * @see ubic.gemma.model.common.quantitationtype.QuantitationTypeDao#findOrCreate(java.lang.String,
      *      ubic.gemma.model.common.quantitationtype.QuantitationType)
-     */ 
+     */
     public ubic.gemma.model.common.quantitationtype.QuantitationType findOrCreate( final java.lang.String queryString,
             final ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType ) {
-        return this.findOrCreate( TRANSFORM_NONE,
-                queryString, quantitationType );
+        return this.findOrCreate( TRANSFORM_NONE, queryString, quantitationType );
     }
 
     /**
@@ -193,8 +197,7 @@ public abstract class QuantitationTypeDaoBase extends HibernateDaoSupport implem
      */
     public ubic.gemma.model.common.quantitationtype.QuantitationType findOrCreate(
             ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType ) {
-        return this.findOrCreate( TRANSFORM_NONE,
-                quantitationType );
+        return this.findOrCreate( TRANSFORM_NONE, quantitationType );
     }
 
     /**
@@ -220,8 +223,8 @@ public abstract class QuantitationTypeDaoBase extends HibernateDaoSupport implem
 
     /**
      * @see ubic.gemma.model.common.quantitationtype.QuantitationTypeDao#loadAll()
-     */ 
-    public java.util.Collection<QuantitationType> loadAll() {
+     */
+    public java.util.Collection<? extends QuantitationType> loadAll() {
         return this.loadAll( TRANSFORM_NONE );
     }
 
@@ -229,9 +232,9 @@ public abstract class QuantitationTypeDaoBase extends HibernateDaoSupport implem
      * @see ubic.gemma.model.common.quantitationtype.QuantitationTypeDao#loadAll(int)
      */
 
-    @SuppressWarnings("unchecked")
-    public java.util.Collection<QuantitationType> loadAll( final int transform ) {
-        final java.util.Collection<QuantitationType> results = this.getHibernateTemplate().loadAll(
+    
+    public java.util.Collection<? extends QuantitationType> loadAll( final int transform ) {
+        final java.util.Collection<? extends QuantitationType> results = this.getHibernateTemplate().loadAll(
                 ubic.gemma.model.common.quantitationtype.QuantitationTypeImpl.class );
         this.transformEntities( transform, results );
         return results;
@@ -245,8 +248,7 @@ public abstract class QuantitationTypeDaoBase extends HibernateDaoSupport implem
         if ( id == null ) {
             throw new IllegalArgumentException( "QuantitationType.remove - 'id' can not be null" );
         }
-        ubic.gemma.model.common.quantitationtype.QuantitationType entity = this
-                .load( id );
+        ubic.gemma.model.common.quantitationtype.QuantitationType entity = this.load( id );
         if ( entity != null ) {
             this.remove( entity );
         }
@@ -256,7 +258,7 @@ public abstract class QuantitationTypeDaoBase extends HibernateDaoSupport implem
      * @see ubic.gemma.model.common.SecurableDao#remove(java.util.Collection)
      */
 
-    public void remove( java.util.Collection<QuantitationType> entities ) {
+    public void remove( java.util.Collection<? extends QuantitationType> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "QuantitationType.remove - 'entities' can not be null" );
         }
@@ -277,15 +279,16 @@ public abstract class QuantitationTypeDaoBase extends HibernateDaoSupport implem
      * @see ubic.gemma.model.common.SecurableDao#update(java.util.Collection)
      */
 
-    public void update( final java.util.Collection<QuantitationType> entities ) {
+    public void update( final java.util.Collection<? extends QuantitationType> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "QuantitationType.update - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback() {
+                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator<QuantitationType> entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                        for ( java.util.Iterator<? extends QuantitationType> entityIterator = entities.iterator(); entityIterator
+                                .hasNext(); ) {
                             update( entityIterator.next() );
                         }
                         return null;
@@ -317,7 +320,8 @@ public abstract class QuantitationTypeDaoBase extends HibernateDaoSupport implem
      * @see #transformEntity(int,ubic.gemma.model.common.quantitationtype.QuantitationType)
      */
 
-    protected void transformEntities( final int transform, final java.util.Collection<QuantitationType> entities ) {
+    protected void transformEntities( final int transform,
+            final java.util.Collection<? extends QuantitationType> entities ) {
         switch ( transform ) {
             case TRANSFORM_NONE: // fall-through
             default:

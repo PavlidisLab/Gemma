@@ -18,11 +18,14 @@
  */
 package ubic.gemma.model.common.description;
 
+import org.springframework.stereotype.Service;
+
 /**
  * @author pavlidis
  * @version $Id$
  * @see ubic.gemma.model.common.description.NotedReferenceListService
  */
+@Service
 public class NotedReferenceListServiceImpl extends ubic.gemma.model.common.description.NotedReferenceListServiceBase {
 
     /**

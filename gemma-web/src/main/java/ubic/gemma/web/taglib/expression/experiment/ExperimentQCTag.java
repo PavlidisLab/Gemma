@@ -20,11 +20,10 @@ package ubic.gemma.web.taglib.expression.experiment;
 
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.tagext.TagSupport;
+
 import ubic.gemma.analysis.stats.ExpressionDataSampleCorrelation;
-import ubic.gemma.web.controller.expression.experiment.ExpressionExperimentQCController;
 
 /**
- * @jsp.tag name="expressionQC" body-content="empty"
  * @author paul
  * @version $Id$
  */
@@ -34,12 +33,21 @@ public class ExperimentQCTag extends TagSupport {
     Long eeid;
     Size size = Size.small;
 
+    private boolean hasCorrMatFile = false;
+
+    private boolean hasCorrDistFile = false;
+
+    private boolean hasPCAFile = false;
+
+    private boolean hasPvalueDistFile = false;
+
     enum Size {
         small, large
     };
 
     /**
-     * @jsp.attribute description="The id of the EE to display QC info" required="true" rtexprvalue="true"
+     * The id of the EE to display QC info required="true" rtexprvalue="true"
+     * 
      * @param id
      */
     public void setEe( Long id ) {
@@ -47,7 +55,36 @@ public class ExperimentQCTag extends TagSupport {
     }
 
     /**
-     * @jsp.attribute description="Size of the image {small, large}" required="false" rtexprvalue="true"
+     * @param value
+     */
+    public void setHasCorrMatFile( boolean value ) {
+        this.hasCorrMatFile = value;
+    }
+
+    /**
+     * @param value
+     */
+    public void setHasCorrDistFile( boolean value ) {
+        this.hasCorrDistFile = value;
+    }
+
+    /**
+     * @param value
+     */
+    public void setHasPCAFile( boolean value ) {
+        this.hasPCAFile = value;
+    }
+
+    /**
+     * @param value
+     */
+    public void setHasPvalueDistFile( boolean value ) {
+        this.hasPvalueDistFile = value;
+    }
+
+    /**
+     * Size of the image {small, large} required="false" rtexprvalue="true"
+     * 
      * @param size
      */
     public void setSize( String size ) {
@@ -66,11 +103,11 @@ public class ExperimentQCTag extends TagSupport {
         StringBuilder buf = new StringBuilder();
 
         /*
-         * check if the files are available...if not, show something intelligent. Currently we show a broken box etc.
+         * check if the files are available...if not, show something intelligent.
          */
 
         buf.append( "<div class=\"eeqc\" id=\"eeqc\">" );
-        buf.append( "<table border=\"0\" cellspacing=\"8\"  ><tr>" );
+        buf.append( "<table border=\"0\" cellspacing=\"8\"  >" );
 
         buf
                 .append( "<tr><th valign=\"top\" align=\"center\"><strong>Sample correlation (black &le; "
@@ -79,7 +116,7 @@ public class ExperimentQCTag extends TagSupport {
 
         buf.append( "<tr>" );
 
-        if ( ExpressionExperimentQCController.hasCorrMatFile( this.eeid ) ) {
+        if ( hasCorrMatFile ) {
 
             buf
                     .append( "<a target=\"_blank\" title=\"Click for larger version (opens in new window)\" href=\"visualizeCorrMat.html?id="
@@ -104,14 +141,14 @@ public class ExperimentQCTag extends TagSupport {
             buf.append( "<td>Not available</td>" );
         }
 
-        if ( ExpressionExperimentQCController.hasCorrDistFile( this.eeid ) ) {
+        if ( hasCorrDistFile ) {
             buf.append( " <img alt='Image unavailable' src=\"visualizeProbeCorrDist.html?id=" + this.eeid
                     + "\" /></td>" );
         } else {
             buf.append( "<td>Not available</td>" );
         }
 
-        if ( ExpressionExperimentQCController.hasPvalueDistFiles( this.eeid ) ) {
+        if ( hasPvalueDistFile ) {
             buf.append( " <img alt='Image unavailable' src=\"visualizePvalueDist.html?id=" + this.eeid + "\" /></td>" );
         } else {
             buf.append( "<td>Not available</td>" );

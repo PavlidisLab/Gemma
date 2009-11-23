@@ -18,10 +18,13 @@
  */
 package ubic.gemma.model.association.coexpression;
 
-import ubic.gemma.util.ConfigUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.store.MemoryStoreEvictionPolicy;
+import ubic.gemma.util.ConfigUtils;
 
 /**
  * Configures the cache for gene2gene coexpression.
@@ -29,29 +32,20 @@ import net.sf.ehcache.store.MemoryStoreEvictionPolicy;
  * @author paul
  * @version $Id$
  */
+@Component
 public class Gene2GeneCoexpressionCache {
 
+    @Autowired
     private CacheManager cacheManager;
 
-    /**
-     * @param cacheManager the cacheManager to set
-     */
-    public void setCacheManager( CacheManager cacheManager ) {
-        this.cacheManager = cacheManager;
-    }
-
     private static final String GENE_COEXPRESSION_CACHE_NAME = "Gene2GeneCoexpressionCache";
+
     private static final int GENE_COEXPRESSION_CACHE_DEFAULT_MAX_ELEMENTS = 100000;
     private static final int GENE_COEXPRESSION_CACHE_DEFAULT_TIME_TO_LIVE = 10000;
     private static final int GENE_COEXPRESSION_CACHE_DEFAULT_TIME_TO_IDLE = 10000;
     private static final boolean GENE_COEXPRESSION_CACHE_DEFAULT_ETERNAL = true;
     private static final boolean GENE_COEXPRESSION_CACHE_DEFAULT_OVERFLOW_TO_DISK = true;
-
     private static Cache cache;
-
-    public Cache getCache() {
-        return cache;
-    }
 
     /**
      * Remove all elements from the cache.
@@ -61,8 +55,12 @@ public class Gene2GeneCoexpressionCache {
         manager.getCache( GENE_COEXPRESSION_CACHE_NAME ).removeAll();
     }
 
+    public Cache getCache() {
+        return cache;
+    }
+
     /**
-     * Initialize the vector cache; if it already exists it will not be recreated.
+     * Initialize the cache; if it already exists it will not be recreated.
      * 
      * @return
      */
@@ -92,5 +90,12 @@ public class Gene2GeneCoexpressionCache {
 
         cacheManager.addCache( cache );
         return cacheManager.getCache( GENE_COEXPRESSION_CACHE_NAME );
+    }
+
+    /**
+     * @param cacheManager the cacheManager to set
+     */
+    public void setCacheManager( CacheManager cacheManager ) {
+        this.cacheManager = cacheManager;
     }
 }

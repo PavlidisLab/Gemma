@@ -30,8 +30,8 @@ import java.util.concurrent.BlockingQueue;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang.StringUtils;
-import org.springframework.security.context.SecurityContext;
-import org.springframework.security.context.SecurityContextHolder;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceAlignmentService;
 import ubic.gemma.loader.genome.BlatResultParser;

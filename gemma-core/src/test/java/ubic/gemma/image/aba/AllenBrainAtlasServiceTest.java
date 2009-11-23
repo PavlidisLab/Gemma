@@ -18,17 +18,17 @@
  */
 package ubic.gemma.image.aba;
 
+import static org.junit.Assert.assertNotNull;
+
 import java.io.IOException;
 import java.util.Collection;
 import java.util.HashSet;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 
-import ubic.gemma.image.aba.AbaGene;
-import ubic.gemma.image.aba.AllenBrainAtlasService;
-import ubic.gemma.image.aba.Image;
-import ubic.gemma.image.aba.ImageSeries;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
@@ -39,13 +39,16 @@ import ubic.gemma.testing.BaseSpringContextTest;
  */
 public class AllenBrainAtlasServiceTest extends BaseSpringContextTest {
 
+    @Autowired
     private AllenBrainAtlasService abaService = null;
+
     private static Log log = LogFactory.getLog( AllenBrainAtlasServiceTest.class.getName() );
 
     /**
      * @throws Exception
      */
     @SuppressWarnings("null")
+    @Test
     public void testGetGene() throws Exception {
         AbaGene grin1 = null;
 
@@ -83,13 +86,7 @@ public class AllenBrainAtlasServiceTest extends BaseSpringContextTest {
         }
         grin1.setImageSeries( representativeSaggitalImages );
 
-        log.info( grin1 );
-    }
-
-    @Override
-    protected void onSetUpInTransaction() throws Exception {
-        super.onSetUpInTransaction();
-        abaService = ( AllenBrainAtlasService ) getBean( "allenBrainAtlasService" );
+        // log.info( grin1 );
     }
 
 }

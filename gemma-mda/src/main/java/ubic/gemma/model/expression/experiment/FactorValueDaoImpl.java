@@ -27,6 +27,9 @@ import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
 import org.hibernate.Query;
 import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
 
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.util.BusinessKey;
@@ -35,9 +38,15 @@ import ubic.gemma.util.BusinessKey;
  * @author pavlidis
  * @version $Id$
  */
+@Repository
 public class FactorValueDaoImpl extends ubic.gemma.model.expression.experiment.FactorValueDaoBase {
 
     private Log log = LogFactory.getLog( getClass().getName() );
+
+    @Autowired
+    public FactorValueDaoImpl( SessionFactory sessionFactory ) {
+        super.setSessionFactory( sessionFactory );
+    }
 
     /*
      * (non-Javadoc)
@@ -49,7 +58,7 @@ public class FactorValueDaoImpl extends ubic.gemma.model.expression.experiment.F
     @Override
     public FactorValue find( FactorValue factorValue ) {
         try {
-            Criteria queryObject = super.getSession( false ).createCriteria( FactorValue.class );
+            Criteria queryObject = super.getSession().createCriteria( FactorValue.class );
 
             BusinessKey.checkKey( factorValue );
 
@@ -72,6 +81,11 @@ public class FactorValueDaoImpl extends ubic.gemma.model.expression.experiment.F
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    public Collection<FactorValue> findByValue( String valuePrefix ) {
+        return this.getHibernateTemplate().find( "from FactorValueImpl where value like ?", valuePrefix + "%" );
     }
 
     /*
@@ -101,7 +115,7 @@ public class FactorValueDaoImpl extends ubic.gemma.model.expression.experiment.F
         final FactorValue toDelete = factorValue;
 
         this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback() {
+                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
                     @SuppressWarnings("unchecked")
                     public Object doInHibernate( Session session ) throws HibernateException {
 
@@ -144,9 +158,5 @@ public class FactorValueDaoImpl extends ubic.gemma.model.expression.experiment.F
             sb.append( object + "\n" );
         }
         log.error( sb.toString() );
-    }
-
-    public Collection<FactorValue> findByValue( String valuePrefix ) {
-        return this.getHibernateTemplate().find( "from FactorValueImpl where value like ?", valuePrefix + "%" );
     }
 }

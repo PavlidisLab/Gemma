@@ -38,15 +38,13 @@ import ubic.gemma.util.progress.TaskRunningService;
  * 
  * @author pavlidis
  * @version $Id$
- * @spring.bean id="testDataAddingController"
- * @spring.property name="persisterHelper" ref="persisterHelper"
- * @spring.property name="externalDatabaseService" ref="externalDatabaseService"
- * @spring.property name="formView" value="testDataInsert"
- * @spring.property name="successView" value="expressionExperiment.detail"
+ * @deprecated This isn't useful any more -- it's easy to load real data or user minigemma.
  */
+@Deprecated
 public class TestDataAddingController extends SimpleFormController {
 
     private PersisterHelper persisterHelper;
+
     private ExternalDatabaseService externalDatabaseService;
 
     /**
@@ -54,31 +52,6 @@ public class TestDataAddingController extends SimpleFormController {
      */
     public void setExternalDatabaseService( ExternalDatabaseService externalDatabaseService ) {
         this.externalDatabaseService = externalDatabaseService;
-    }
-
-    /*
-     * (non-Javadoc)
-     * @see
-     * org.springframework.web.servlet.mvc.AbstractController#handleRequestInternal(javax.servlet.http.HttpServletRequest
-     * , javax.servlet.http.HttpServletResponse)
-     */
-    @Override
-    protected ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
-            BindException error ) throws Exception {
-        TestPersistentObjectHelper helper = new TestPersistentObjectHelper();
-        helper.setPersisterHelper( this.persisterHelper );
-        helper.setExternalDatabaseService( externalDatabaseService );
-
-        ProgressJob job = ProgressManager.createProgressJob( TaskRunningService.generateTaskId(), request
-                .getRemoteUser(), "Test data adding to the database" );
-        ExpressionExperiment ee = helper.getTestExpressionExperimentWithAllDependencies( false ); // no sequences.
-        // This is just a
-        // test.
-        ProgressManager.destroyProgressJob( job );
-
-        ModelAndView mav = new ModelAndView( getSuccessView() );
-        mav.addObject( "expressionExperiment", ee );
-        return mav;
     }
 
     /**
@@ -99,4 +72,31 @@ public class TestDataAddingController extends SimpleFormController {
         return ExpressionExperiment.Factory.newInstance();
     }
 
+    /*
+     * (non-Javadoc)
+     * @see
+     * org.springframework.web.servlet.mvc.AbstractController#handleRequestInternal(javax.servlet.http.HttpServletRequest
+     * , javax.servlet.http.HttpServletResponse)
+     */
+    @Override
+    protected ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
+            BindException error ) throws Exception {
+        TestPersistentObjectHelper helper = new TestPersistentObjectHelper();
+        helper.setPersisterHelper( this.persisterHelper );
+        helper.setExternalDatabaseService( externalDatabaseService );
+
+        String remoteUser = request.getRemoteUser();
+
+        if ( remoteUser == null ) remoteUser = "foo"; // FIXME - during tests?
+
+        ProgressJob job = ProgressManager.createProgressJob( TaskRunningService.generateTaskId(), "Test data adding to the database" );
+        ExpressionExperiment ee = helper.getTestExpressionExperimentWithAllDependencies( false ); // no sequences.
+        // This is just a
+        // test.
+        ProgressManager.destroyProgressJob( job );
+
+        ModelAndView mav = new ModelAndView( getSuccessView() );
+        mav.addObject( "expressionExperiment", ee );
+        return mav;
+    }
 }

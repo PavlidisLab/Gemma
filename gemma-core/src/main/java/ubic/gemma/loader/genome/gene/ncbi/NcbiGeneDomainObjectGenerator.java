@@ -54,17 +54,18 @@ public class NcbiGeneDomainObjectGenerator {
     static Log log = LogFactory.getLog( NcbiGeneDomainObjectGenerator.class.getName() );
     AtomicBoolean producerDone = new AtomicBoolean( false );
     AtomicBoolean infoProducerDone = new AtomicBoolean( false );
-    private Collection<Taxon> supportedTaxa = null;
+    private Map<Integer, Taxon> supportedTaxa = null;
     private Collection<Taxon> supportedTaxaWithNCBIGenes = null;
-   
-    
-    public NcbiGeneDomainObjectGenerator() {
-        super();
-    }
 
     public NcbiGeneDomainObjectGenerator( Collection<Taxon> supportedTaxa ) {
-        this();
-        this.supportedTaxa=supportedTaxa;
+        this.supportedTaxa = new HashMap<Integer, Taxon>();
+        for ( Taxon t : supportedTaxa ) {
+            if ( t.getNcbiId() == null ) {
+                log.warn( "Can't support NCBI genes for " + t + ", it lacks an NCBI id" );
+                continue;
+            }
+            this.supportedTaxa.put( t.getNcbiId(), t );
+        }
     }
 
     /**
@@ -142,8 +143,8 @@ public class NcbiGeneDomainObjectGenerator {
 
         final NcbiGeneInfoParser infoParser = new NcbiGeneInfoParser();
         infoParser.setFilter( filter );
-        Map<Integer, Taxon> supportedTaxa= this.getSupportedTaxaKeyedByNcbiIds();
-        infoParser.setSupportedTaxa( supportedTaxa.keySet());
+
+        infoParser.setSupportedTaxa( supportedTaxa.keySet() );
 
         final NcbiGene2AccessionParser accParser = new NcbiGene2AccessionParser();
         final File gene2accessionFileHandle = gene2AccessionFile.asFile();
@@ -168,8 +169,8 @@ public class NcbiGeneDomainObjectGenerator {
 
         // put into HashMap
         final Map<String, NCBIGeneInfo> geneInfoMap = new HashMap<String, NCBIGeneInfo>();
-        Map<Integer, Integer> taxaCount  = new HashMap<Integer, Integer>();
-        
+        Map<Integer, Integer> taxaCount = new HashMap<Integer, Integer>();
+
         for ( NCBIGeneInfo geneInfo : geneInfoList ) {
 
             NcbiGeneHistory history = historyParser.get( geneInfo.getGeneId() );
@@ -183,10 +184,13 @@ public class NcbiGeneDomainObjectGenerator {
         }
         supportedTaxaWithNCBIGenes = new HashSet<Taxon>();
         for ( Integer taxId : taxaCount.keySet() ) {
-            log.debug( "Taxon " + taxId + ": " + taxaCount.get( taxId ) + " genes" );
-            supportedTaxaWithNCBIGenes.add(supportedTaxa.get( taxId ));
+
+            if ( taxaCount.get( taxId ) > 0 ) {
+                log.debug( "Taxon " + taxId + ": " + taxaCount.get( taxId ) + " genes" );
+                supportedTaxaWithNCBIGenes.add( supportedTaxa.get( taxId ) );
+            }
         }
-        
+
         // 1) use a producer-consumer model for Gene2Accession conversion
         // 1a) Parse Gene2Accession until the gene id changes. This means that
         // all accessions for the gene are done.
@@ -223,30 +227,14 @@ public class NcbiGeneDomainObjectGenerator {
     public Collection<?> generate( String accession ) {
         throw new UnsupportedOperationException();
     }
-    
-    /**
-     * Creates a map of taxon objects that are supported by GEMMA keyed on NCBI.
-     * @return Map of taxon objects supported by the system keyed on NCBI id.
-     */
-    public Map<Integer, Taxon> getSupportedTaxaKeyedByNcbiIds() {
-        Map<Integer, Taxon> supportedTaxaKeyedByNcbiIds = new HashMap<Integer, Taxon>();
-        if ( supportedTaxa != null && !supportedTaxa.isEmpty() ) {
-            for ( Taxon taxon : supportedTaxa ) {
-                supportedTaxaKeyedByNcbiIds.put( taxon.getNcbiId(), taxon );
-            }
-        } else {
-            throw new IllegalArgumentException( "There are no supported Taxon held in Gemma for gene loading" );
-        }
-        return supportedTaxaKeyedByNcbiIds;
-    }
-    
+
     /**
      * Those taxa that are supported by GEMMA and have genes in NCBI.
+     * 
      * @return Collection of taxa that are supported by the GEMMA and have genes held by NCBI.
      */
-    public Collection<Taxon> getSupportedTaxaWithNCBIGenes(){
+    public Collection<Taxon> getSupportedTaxaWithNCBIGenes() {
         return supportedTaxaWithNCBIGenes;
     }
-    
-    
+
 }

@@ -38,15 +38,6 @@ public class NCBIGeneParserTest extends TestCase {
 
     protected static final Log log = LogFactory.getLog( NCBIGeneParserTest.class );
 
-    public void testParseGeneInfo() throws Exception {
-        InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
-                "/data/loader/genome/gene/gene_info.sample.gz" ) );
-        NcbiGeneInfoParser ngip = new NcbiGeneInfoParser();
-        ngip.setFilter( false );
-        ngip.parse( is );
-        assertEquals( 99, ngip.getResults().size() );
-    }
-
     public void testParseGene2Accession() throws Exception {
         InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
                 "/data/loader/genome/gene/gene2accession.sample.gz" ) );
@@ -54,6 +45,15 @@ public class NCBIGeneParserTest extends TestCase {
         ngip.geneInfo = new HashMap<String, NCBIGeneInfo>();
         ngip.parse( is, new ArrayBlockingQueue( 10 ) );
         assertEquals( 100, ngip.getCount() );
+    }
+
+    public void testParseGeneInfo() throws Exception {
+        InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/genome/gene/gene_info.sample.gz" ) );
+        NcbiGeneInfoParser ngip = new NcbiGeneInfoParser();
+        ngip.setFilter( false );
+        ngip.parse( is );
+        assertEquals( 99, ngip.getResults().size() );
     }
 
     @Override

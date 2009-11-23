@@ -44,8 +44,8 @@ public class NativeQueryUtils {
      * @return a single object
      */
     public static List find( HibernateTemplate hibernateTemplate, final String queryString ) {
-        return ( List ) hibernateTemplate.execute( new HibernateCallback() {
-            public Object doInHibernate( Session session ) throws HibernateException {
+        return hibernateTemplate.execute( new HibernateCallback<List<?>>() {
+            public List<?> doInHibernate( Session session ) throws HibernateException {
                 SQLQuery queryObject = session.createSQLQuery( queryString );
                 queryObject.setReadOnly( true );
                 return queryObject.list();
@@ -65,8 +65,8 @@ public class NativeQueryUtils {
      */
     public static List findByNamedParam( HibernateTemplate hibernateTemplate, final String queryString,
             final String paramName, final Object param ) {
-        return ( List ) hibernateTemplate.execute( new HibernateCallback() {
-            public Object doInHibernate( Session session ) throws HibernateException {
+        return hibernateTemplate.execute( new HibernateCallback<List<?>>() {
+            public List<?> doInHibernate( Session session ) throws HibernateException {
                 SQLQuery queryObject = session.createSQLQuery( queryString );
                 queryObject.setReadOnly( true );
                 queryObject.setParameter( paramName, param );
@@ -86,8 +86,8 @@ public class NativeQueryUtils {
      */
     public static List findByNamedParams( HibernateTemplate hibernateTemplate, final String queryString,
             final String[] paramNames, final Object[] params ) {
-        return ( List ) hibernateTemplate.execute( new HibernateCallback() {
-            public Object doInHibernate( Session session ) throws HibernateException {
+        return hibernateTemplate.execute( new HibernateCallback<List<?>>() {
+            public List<?> doInHibernate( Session session ) throws HibernateException {
                 SQLQuery queryObject = session.createSQLQuery( queryString );
                 queryObject.setReadOnly( true );
                 for ( int i = 0; i < paramNames.length; i++ ) {

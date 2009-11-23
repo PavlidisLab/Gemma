@@ -158,6 +158,20 @@ public class DesignMatrixRowValueObject implements Serializable {
     }
 
     /**
+     * @param factorValues
+     * @return
+     */
+    private String getFactorValueString( Collection<FactorValue> factorValues ) {
+        StringBuffer buf = new StringBuffer();
+        for ( Iterator<FactorValue> i = factorValues.iterator(); i.hasNext(); ) {
+            FactorValue fv = i.next();
+            buf.append( getFactorValueString( fv ) );
+            if ( i.hasNext() ) buf.append( ", " );
+        }
+        return buf.toString();
+    }
+
+    /**
      * @param factorValue
      * @return
      */
@@ -181,20 +195,6 @@ public class DesignMatrixRowValueObject implements Serializable {
             buf.append( factorValue.getValue() );
         } else if ( factorValue.getMeasurement() != null ) {
             buf.append( factorValue.getMeasurement().getValue() );
-        }
-        return buf.toString();
-    }
-
-    /**
-     * @param factorValues
-     * @return
-     */
-    private String getFactorValueString( Collection<FactorValue> factorValues ) {
-        StringBuffer buf = new StringBuffer();
-        for ( Iterator<FactorValue> i = factorValues.iterator(); i.hasNext(); ) {
-            FactorValue fv = i.next();
-            buf.append( getFactorValueString( fv ) );
-            if ( i.hasNext() ) buf.append( ", " );
         }
         return buf.toString();
     }

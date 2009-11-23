@@ -22,7 +22,10 @@ import java.util.Collection;
 
 import org.hibernate.Hibernate;
 import org.hibernate.LockMode;
+import org.hibernate.SessionFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.orm.hibernate3.HibernateTemplate;
+import org.springframework.stereotype.Repository;
 
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
@@ -33,7 +36,13 @@ import ubic.gemma.util.SequenceBinUtils;
  * @author paul
  * @version $Id$
  */
+@Repository
 public class ProbeAlignedRegionDaoImpl extends ubic.gemma.model.genome.ProbeAlignedRegionDaoBase {
+
+    @Autowired
+    public ProbeAlignedRegionDaoImpl( SessionFactory sessionFactory ) {
+        super.setSessionFactory( sessionFactory );
+    }
 
     // private Log log = LogFactory.getLog( ProbeAlignedRegionDaoImpl.class.getName() );
 
@@ -49,35 +58,6 @@ public class ProbeAlignedRegionDaoImpl extends ubic.gemma.model.genome.ProbeAlig
         final String strand = blatResult.getStrand();
         return findByPosition( chrom, targetStart, targetEnd, strand );
 
-    }
-
-    /**
-     * 
-     */
-    public void thaw( final ProbeAlignedRegion par ) {
-        if ( par == null || par.getId() == null ) return;
-        HibernateTemplate templ = this.getHibernateTemplate();
-        templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                session.lock( par, LockMode.NONE );
-                Hibernate.initialize( par );
-                Hibernate.initialize( par.getProducts() );
-                for ( ubic.gemma.model.genome.gene.GeneProduct gp : par.getProducts() ) {
-                    Hibernate.initialize( gp.getExons() );
-                    if ( gp.getPhysicalLocation() != null ) {
-                        Hibernate.initialize( gp.getPhysicalLocation().getChromosome() );
-                        Hibernate.initialize( gp.getPhysicalLocation().getChromosome().getTaxon() );
-                    }
-                }
-                Taxon t = ( Taxon ) session.get( TaxonImpl.class, par.getTaxon().getId() );
-                Hibernate.initialize( t );
-                if ( t.getExternalDatabase() != null ) {
-                    Hibernate.initialize( t.getExternalDatabase() );
-                }
-                session.evict( par );
-                return null;
-            }
-        } );
     }
 
     /*
@@ -103,6 +83,35 @@ public class ProbeAlignedRegionDaoImpl extends ubic.gemma.model.genome.ProbeAlig
     @Override
     public ProbeAlignedRegion geneValueObjectToEntity( GeneValueObject geneValueObject ) {
         return this.load( geneValueObject.getId() );
+    }
+
+    /**
+     * 
+     */
+    public void thaw( final ProbeAlignedRegion par ) {
+        if ( par == null || par.getId() == null ) return;
+        HibernateTemplate templ = this.getHibernateTemplate();
+        templ.execute( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
+            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                session.lock( par, LockMode.NONE );
+                Hibernate.initialize( par );
+                Hibernate.initialize( par.getProducts() );
+                for ( ubic.gemma.model.genome.gene.GeneProduct gp : par.getProducts() ) {
+                    Hibernate.initialize( gp.getExons() );
+                    if ( gp.getPhysicalLocation() != null ) {
+                        Hibernate.initialize( gp.getPhysicalLocation().getChromosome() );
+                        Hibernate.initialize( gp.getPhysicalLocation().getChromosome().getTaxon() );
+                    }
+                }
+                Taxon t = ( Taxon ) session.get( TaxonImpl.class, par.getTaxon().getId() );
+                Hibernate.initialize( t );
+                if ( t.getExternalDatabase() != null ) {
+                    Hibernate.initialize( t.getExternalDatabase() );
+                }
+                session.evict( par );
+                return null;
+            }
+        } );
     }
 
     @SuppressWarnings( { "unchecked" })

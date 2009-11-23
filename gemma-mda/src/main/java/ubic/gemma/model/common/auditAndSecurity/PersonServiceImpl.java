@@ -22,12 +22,15 @@ package ubic.gemma.model.common.auditAndSecurity;
 
 import java.util.Collection;
 
+import org.springframework.stereotype.Service;
+
 /**
  * @author pavlidis
  * @author keshav
  * @version $Id$
  * @see ubic.gemma.model.common.auditAndSecurity.PersonService
  */
+@Service
 public class PersonServiceImpl extends ubic.gemma.model.common.auditAndSecurity.PersonServiceBase {
 
     /*
@@ -74,13 +77,6 @@ public class PersonServiceImpl extends ubic.gemma.model.common.auditAndSecurity.
         return this.getPersonDao().findOrCreate( person );
     }
 
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.PersonService#getAllPersons()
-     */
-    protected java.util.Collection handleGetAllPersons() throws java.lang.Exception {
-        return this.getPersonDao().loadAll();
-    }
-
     /*
      * (non-Javadoc)
      * @see ubic.gemma.model.common.auditAndSecurity.PersonServiceBase#handleLoadAll()
@@ -88,7 +84,7 @@ public class PersonServiceImpl extends ubic.gemma.model.common.auditAndSecurity.
     @SuppressWarnings("unchecked")
     @Override
     protected Collection<Person> handleLoadAll() throws Exception {
-        return this.getPersonDao().loadAll();
+        return ( Collection<Person> ) this.getPersonDao().loadAll();
     }
 
     /*
@@ -116,12 +112,13 @@ public class PersonServiceImpl extends ubic.gemma.model.common.auditAndSecurity.
         this.getPersonDao().remove( person );
     }
 
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.PersonService#savePerson(ubic.gemma.model.common.auditAndSecurity.Person)
-     */
-    protected Person handleSavePerson( ubic.gemma.model.common.auditAndSecurity.Person person )
-            throws java.lang.Exception {
-        return this.getPersonDao().create( person );
+    public Person load( Long id ) {
+        return this.getPersonDao().load( id );
+    }
+
+    public void update( Person p ) {
+        this.getPersonDao().update( p );
+
     }
 
 }

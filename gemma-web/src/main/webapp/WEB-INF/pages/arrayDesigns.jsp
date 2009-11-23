@@ -7,14 +7,14 @@
 
 <!--  Summary of array design associations -->
 <%-- Admin only --%>
-<security:authorize ifAnyGranted="admin">
+<security:authorize ifAnyGranted="GROUP_ADMIN">
 	<c:if test="${summary != null }">
 		<table class='datasummary'>
 			<tr>
-				<td colspan=2 align=center>
+				<td colspan="2" align="center">
 				</td>
 			</tr>
-			<security:authorize ifAnyGranted="admin">
+			<security:authorize ifAnyGranted="GROUP_ADMIN">
 				<tr>
 					<td>
 						Probes with sequences
@@ -92,7 +92,7 @@
 	</c:choose>
 </p>
 
-<security:authorize ifAnyGranted="admin">
+<security:authorize ifAnyGranted="GROUP_ADMIN">
 	<a href="<c:url value="/arrays/generateArrayDesignSummary.html"/>"
 		onclick="return confirm('Regenerate report for all platforms?');"> Regenerate this report</a>
 </security:authorize>
@@ -102,7 +102,7 @@
 	decorator="ubic.gemma.web.taglib.displaytag.expression.arrayDesign.ArrayDesignWrapper">
 	<display:column property="name" sortable="true" comparator="ubic.gemma.web.taglib.displaytag.StringComparator"
 		href="showArrayDesign.html" paramId="id" paramProperty="id" titleKey="arrayDesign.name" />
-	<security:authorize ifAnyGranted="admin">
+	<security:authorize ifAnyGranted="GROUP_ADMIN">
 		<display:column property="status" sortable="true" titleKey="arrayDesign.status"
 			style="text-align:center; vertical-align:middle;" comparator="ubic.gemma.web.taglib.displaytag.StringComparator"
 			defaultorder="descending" />
@@ -113,7 +113,7 @@
 	<display:column property="expressionExperimentCountLink" sortable="true" title="Expts"
 		comparator="ubic.gemma.web.taglib.displaytag.NumberComparator" />
 	<display:column property="summaryTable" title="Probe Summary" />
-	<security:authorize ifAnyGranted="admin">
+	<security:authorize ifAnyGranted="GROUP_ADMIN">
 		<display:column property="lastSequenceUpdateDate" sortable="true"
 			comparator="ubic.gemma.web.taglib.displaytag.DateStringComparator" title="Seq. Update" defaultorder="descending" />
 		<display:column property="lastRepeatMaskDate" sortable="true"

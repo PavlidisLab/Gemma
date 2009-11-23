@@ -40,10 +40,13 @@ import org.hibernate.Query;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
+import org.hibernate.SessionFactory;
 import org.hibernate.type.DoubleType;
 import org.hibernate.type.LongType;
 import org.hibernate.type.StringType;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.orm.hibernate3.HibernateTemplate;
+import org.springframework.stereotype.Repository;
 
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressedGenesDetails;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionCollectionValueObject;
@@ -64,6 +67,7 @@ import ubic.gemma.util.TaxonUtility;
  * @version $Id$
  * @see ubic.gemma.model.genome.Gene
  */
+@Repository
 public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
     private static Log log = LogFactory.getLog( GeneDaoImpl.class.getName() );
@@ -78,6 +82,11 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
      */
     private HashMap<Long, Collection<Long>> gene2CsCache = new HashMap<Long, Collection<Long>>();
 
+    @Autowired
+    public GeneDaoImpl( SessionFactory sessionFactory ) {
+        super.setSessionFactory( sessionFactory );
+    }
+
     /*
      * (non-Javadoc)
      * @see ubic.gemma.model.genome.GeneDaoBase#find(ubic.gemma.model.genome.Gene)
@@ -87,7 +96,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
     public Gene find( Gene gene ) {
 
         try {
-            Criteria queryObject = super.getSession( false ).createCriteria( Gene.class );
+            Criteria queryObject = super.getSession().createCriteria( Gene.class );
 
             BusinessKey.checkKey( gene );
 
@@ -310,7 +319,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
     public void thawLite( final Gene gene ) {
         HibernateTemplate templ = this.getHibernateTemplate();
-        templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
+        templ.execute( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
 
                 // FIXME: (klc) This was using session.lock before but was getting a Non-Unique Entity Error
@@ -581,7 +590,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
                 + " and gene = :gene and cs.arrayDesign = :arrayDesign ";
 
         try {
-            org.hibernate.Query queryObject = super.getSession( false ).createQuery( queryString );
+            org.hibernate.Query queryObject = super.getSession().createQuery( queryString );
             queryObject.setParameter( "arrayDesign", arrayDesign );
             queryObject.setParameter( "gene", gene );
             compSeq = queryObject.list();
@@ -614,11 +623,11 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
     @SuppressWarnings("unchecked")
     @Override
     protected Collection handleGetGenesByTaxon( Taxon taxon ) throws Exception {
-        
-        if (taxon == null) {
-            throw new IllegalArgumentException("Must provide taxon");
+
+        if ( taxon == null ) {
+            throw new IllegalArgumentException( "Must provide taxon" );
         }
-        
+
         final String queryString = "select gene from GeneImpl as gene where gene.taxon = :taxon ";
         return getHibernateTemplate().findByNamedParam( queryString, "taxon", taxon );
     }
@@ -630,11 +639,11 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
     @SuppressWarnings("unchecked")
     @Override
     protected Collection<Gene> handleGetMicroRnaByTaxon( Taxon taxon ) throws Exception {
-        
-        if (taxon == null) {
-            throw new IllegalArgumentException("Must provide taxon");
+
+        if ( taxon == null ) {
+            throw new IllegalArgumentException( "Must provide taxon" );
         }
-        
+
         final String queryString = "select gene from GeneImpl as gene where gene.taxon = :taxon"
                 + " and (gene.description like '%micro RNA or sno RNA' OR gene.description = 'miRNA')";
         return getHibernateTemplate().findByNamedParam( queryString, "taxon", taxon );
@@ -647,11 +656,11 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
     @SuppressWarnings("unchecked")
     @Override
     protected Collection<Gene> handleLoadKnownGenes( Taxon taxon ) throws Exception {
-        
-        if (taxon == null) {
-            throw new IllegalArgumentException("Must provide taxon");
+
+        if ( taxon == null ) {
+            throw new IllegalArgumentException( "Must provide taxon" );
         }
-        
+
         final String queryString = "select gene from GeneImpl as gene fetch all properties where gene.taxon = :taxon"
                 + " and gene.class = " + CoexpressionCollectionValueObject.GENE_IMPL;
 
@@ -726,59 +735,51 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
     @Override
     protected void handleThaw( final Gene gene ) throws Exception {
         if ( gene.getId() == null ) return;
-        HibernateTemplate templ = this.getHibernateTemplate();
-        templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                session.lock( gene, LockMode.NONE );
-                Hibernate.initialize( gene );
-                Hibernate.initialize( gene.getProducts() );
-                for ( ubic.gemma.model.genome.gene.GeneProduct gp : gene.getProducts() ) {
-                    Hibernate.initialize( gp.getAccessions() );
-                    if ( gp.getPhysicalLocation() != null ) {
-                        Hibernate.initialize( gp.getPhysicalLocation().getChromosome() );
-                        Hibernate.initialize( gp.getPhysicalLocation().getChromosome().getTaxon() );
-                    }
-                }
-                Hibernate.initialize( gene.getAliases() );
-                Hibernate.initialize( gene.getAccessions() );
-                Taxon t = ( Taxon ) session.get( TaxonImpl.class, gene.getTaxon().getId() );
-                Hibernate.initialize( t );
-                if ( t.getExternalDatabase() != null ) {
-                    Hibernate.initialize( t.getExternalDatabase() );
-                }
-                session.evict( gene );
-                return null;
+
+        Session session = this.getSession();
+
+        session.lock( gene, LockMode.NONE );
+        Hibernate.initialize( gene );
+        Hibernate.initialize( gene.getProducts() );
+        for ( ubic.gemma.model.genome.gene.GeneProduct gp : gene.getProducts() ) {
+            Hibernate.initialize( gp.getAccessions() );
+            if ( gp.getPhysicalLocation() != null ) {
+                Hibernate.initialize( gp.getPhysicalLocation().getChromosome() );
+                Hibernate.initialize( gp.getPhysicalLocation().getChromosome().getTaxon() );
             }
-        } );
+        }
+        Hibernate.initialize( gene.getAliases() );
+        Hibernate.initialize( gene.getAccessions() );
+        Taxon t = ( Taxon ) session.get( TaxonImpl.class, gene.getTaxon().getId() );
+        Hibernate.initialize( t );
+        if ( t.getExternalDatabase() != null ) {
+            Hibernate.initialize( t.getExternalDatabase() );
+        }
+        session.evict( gene );
     }
 
     @Override
     @SuppressWarnings("unchecked")
     protected void handleThawLite( final Collection genes ) throws Exception {
-        HibernateTemplate templ = this.getHibernateTemplate();
-        templ.execute( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( Gene gene : ( Collection<Gene> ) genes ) {
+        Session session = this.getSession();
+        for ( Gene gene : ( Collection<Gene> ) genes ) {
 
-                    if ( gene.getId() == null ) continue;
+            if ( gene.getId() == null ) continue;
 
-                    // FIXME: (klc) This was using session.lock before but was getting a Non-Unique Entity Error
-                    // using session.get fixes but might not be correct for cases where g != gene but gene.id==g.id
-                    // (different object in memory but actually same gene; ie same id)
+            // FIXME: (klc) This was using session.lock before but was getting a Non-Unique Entity Error
+            // using session.get fixes but might not be correct for cases where g != gene but gene.id==g.id
+            // (different object in memory but actually same gene; ie same id)
 
-                    Gene g = ( Gene ) session.get( GeneImpl.class, gene.getId() );
-                    Hibernate.initialize( g );
-                    Taxon t = ( Taxon ) session.get( TaxonImpl.class, g.getTaxon().getId() );
-                    Hibernate.initialize( t );
+            Gene g = ( Gene ) session.get( GeneImpl.class, gene.getId() );
+            Hibernate.initialize( g );
+            Taxon t = ( Taxon ) session.get( TaxonImpl.class, g.getTaxon().getId() );
+            Hibernate.initialize( t );
 
-                    if ( t.getExternalDatabase() != null ) {
-                        Hibernate.initialize( t.getExternalDatabase() );
-                    }
-                    session.evict( gene );
-                }
-                return null;
+            if ( t.getExternalDatabase() != null ) {
+                Hibernate.initialize( t.getExternalDatabase() );
             }
-        } );
+            session.evict( gene );
+        }
     }
 
     /**

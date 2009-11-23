@@ -18,8 +18,14 @@
  */
 package ubic.gemma.web.controller;
 
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.util.List;
 
+import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.web.servlet.ModelAndView;
@@ -30,6 +36,7 @@ import ubic.gemma.testing.BaseSpringWebTest;
 import ubic.gemma.util.progress.ProgressData;
 import ubic.gemma.util.progress.ProgressStatusService;
 import ubic.gemma.util.progress.TaskRunningService;
+import ubic.gemma.web.util.MockLongJobController;
 
 /**
  * Test of long job control.
@@ -37,38 +44,32 @@ import ubic.gemma.util.progress.TaskRunningService;
  * @author pavlidis
  * @version $Id$
  */
+@SuppressWarnings("null")
 public class TaskRunningTest extends BaseSpringWebTest {
 
     AbstractController controller;
+
+    @Autowired
     TaskCompletionController taskCheckController;
+
+    @Autowired
     ProgressStatusService progressStatusService;
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.testing.BaseSpringWebTest#onSetUpInTransaction()
-     */
-    @Override
-    protected void onSetUpInTransaction() throws Exception {
-        super.onSetUpInTransaction();
-
-        controller = ( AbstractController ) this.getBean( "mockController" );
-
-        taskCheckController = ( TaskCompletionController ) this.getBean( "taskCompletionController" );
-
-        progressStatusService = ( ProgressStatusService ) this.getBean( "progressStatusService" );
-    }
+    @Autowired
+    MockLongJobController mockLongJobController;
 
     /**
      * @throws Exception
      */
-    public final void testSuccessfulRun() throws Exception {
+    @Test
+    public final void testCancelledRun() throws Exception {
 
         MockHttpServletResponse response = new MockHttpServletResponse();
         MockHttpServletRequest request = newPost( "/mock.html" );
+        request.setAttribute( "cancel", "true" );
 
         // goes to the progress page...
-        ModelAndView mv = controller.handleRequest( request, response );
+        ModelAndView mv = mockLongJobController.handleRequest( request, response );
         assertTrue( mv.getView() instanceof RedirectView );
         assertTrue( "Got " + ( ( RedirectView ) mv.getView() ).getUrl(), ( ( RedirectView ) mv.getView() ).getUrl()
                 .startsWith( "/Gemma/processProgress.html?taskid=" ) );
@@ -76,30 +77,19 @@ public class TaskRunningTest extends BaseSpringWebTest {
         Object taskId = mv.getModel().get( TaskRunningService.JOB_ATTRIBUTE );
         assertNotNull( taskId );
 
-        // wait for job to run
-        long timeout = 5000;
-        ProgressData lastResult = null;
-        long startTime = System.currentTimeMillis();
-        wait: while ( true ) {
-            Thread.sleep( 500 );
-            List<ProgressData> result = progressStatusService.getProgressStatus( ( String ) taskId );
-            if ( result.size() > 1 ) {
-                for ( ProgressData lr : result ) {
-                    lastResult = lr;
-                    if ( lr.isDone() ) break wait;
-                }
-            }
-            log.info( "Waiting .." );
+        // let it go a little while
+        Thread.sleep( 100 );
 
-            if ( System.currentTimeMillis() - startTime > timeout ) fail( "Test timed out" );
-        }
-        assertNotNull( lastResult );
-        assertTrue( !lastResult.isFailed() );
+        // cancel it.
+        boolean cancelJob = progressStatusService.cancelJob( ( String ) taskId );
+         assertTrue( cancelJob );
+
     }
 
     /**
      * @throws Exception
      */
+    @Test
     public final void testFailedRun() throws Exception {
 
         MockHttpServletResponse response = new MockHttpServletResponse();
@@ -107,7 +97,7 @@ public class TaskRunningTest extends BaseSpringWebTest {
         request.setAttribute( "throw", "true" );
 
         // goes to the progress page...
-        ModelAndView mv = controller.handleRequest( request, response );
+        ModelAndView mv = mockLongJobController.handleRequest( request, response );
         assertTrue( mv.getView() instanceof RedirectView );
         assertTrue( "Got " + ( ( RedirectView ) mv.getView() ).getUrl(), ( ( RedirectView ) mv.getView() ).getUrl()
                 .startsWith( "/Gemma/processProgress.html?taskid=" ) );
@@ -145,14 +135,14 @@ public class TaskRunningTest extends BaseSpringWebTest {
     /**
      * @throws Exception
      */
-    public final void testCancelledRun() throws Exception {
+    @Test
+    public final void testSuccessfulRun() throws Exception {
 
         MockHttpServletResponse response = new MockHttpServletResponse();
         MockHttpServletRequest request = newPost( "/mock.html" );
-        request.setAttribute( "cancel", "true" );
 
         // goes to the progress page...
-        ModelAndView mv = controller.handleRequest( request, response );
+        ModelAndView mv = mockLongJobController.handleRequest( request, response );
         assertTrue( mv.getView() instanceof RedirectView );
         assertTrue( "Got " + ( ( RedirectView ) mv.getView() ).getUrl(), ( ( RedirectView ) mv.getView() ).getUrl()
                 .startsWith( "/Gemma/processProgress.html?taskid=" ) );
@@ -160,13 +150,25 @@ public class TaskRunningTest extends BaseSpringWebTest {
         Object taskId = mv.getModel().get( TaskRunningService.JOB_ATTRIBUTE );
         assertNotNull( taskId );
 
-        // let it go a little while
-        Thread.sleep( 100 );
+        // wait for job to run
+        long timeout = 5000;
+        ProgressData lastResult = null;
+        long startTime = System.currentTimeMillis();
+        wait: while ( true ) {
+            Thread.sleep( 500 );
+            List<ProgressData> result = progressStatusService.getProgressStatus( ( String ) taskId );
+            if ( result.size() > 1 ) {
+                for ( ProgressData lr : result ) {
+                    lastResult = lr;
+                    if ( lr.isDone() ) break wait;
+                }
+            }
+            log.info( "Waiting .." );
 
-        // cancel it.
-        boolean cancelJob = progressStatusService.cancelJob( ( String ) taskId );
-   //     assertTrue( cancelJob );
-
+            if ( System.currentTimeMillis() - startTime > timeout ) fail( "Test timed out" );
+        }
+        assertNotNull( lastResult );
+        assertTrue( !lastResult.isFailed() );
     }
 
 }

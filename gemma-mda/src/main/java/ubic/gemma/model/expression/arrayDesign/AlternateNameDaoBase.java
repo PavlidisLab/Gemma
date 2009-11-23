@@ -37,7 +37,7 @@ public abstract class AlternateNameDaoBase extends org.springframework.orm.hiber
             throw new IllegalArgumentException( "AlternateName.create - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback() {
+                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
@@ -65,7 +65,7 @@ public abstract class AlternateNameDaoBase extends org.springframework.orm.hiber
     /**
      * @see ubic.gemma.model.expression.arrayDesign.AlternateNameDao#create(java.util.Collection)
      */
-    @SuppressWarnings( { "unchecked" })
+    
     public java.util.Collection create( final java.util.Collection entities ) {
         return create( TRANSFORM_NONE, entities );
     }
@@ -100,7 +100,7 @@ public abstract class AlternateNameDaoBase extends org.springframework.orm.hiber
     /**
      * @see ubic.gemma.model.expression.arrayDesign.AlternateNameDao#loadAll()
      */
-    @SuppressWarnings( { "unchecked" })
+    
     public java.util.Collection loadAll() {
         return this.loadAll( TRANSFORM_NONE );
     }
@@ -156,7 +156,7 @@ public abstract class AlternateNameDaoBase extends org.springframework.orm.hiber
             throw new IllegalArgumentException( "AlternateName.update - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback() {
+                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {

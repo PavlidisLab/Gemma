@@ -64,8 +64,7 @@ public class ArrayDesignParser extends BasicLineParser<CompositeSequence> {
     public void setUseReporterId( boolean useReporterId ) {
         this.useReporterId = useReporterId;
     }
-
-    @SuppressWarnings("null")
+ 
     public CompositeSequence parseOneLine( String line ) {
 
         String[] fields = StringUtils.splitPreserveAllTokens( line, '\t' );

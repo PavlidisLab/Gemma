@@ -21,6 +21,7 @@ package ubic.gemma.loader.expression.geo.service;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.Collection;
@@ -34,6 +35,8 @@ import java.util.regex.Pattern;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import ubic.gemma.loader.entrez.EutilFetch;
 import ubic.gemma.loader.expression.geo.model.GeoRecord;
@@ -54,23 +57,23 @@ import ubic.gemma.util.ConfigUtils;
 /**
  * @author pavlidis
  * @version $Id$
- * @spring.bean id="geoBrowserService"
- * @spring.property name="expressionExperimentService" ref="expressionExperimentService"
- * @spring.property name="taxonService" ref="taxonService"
- * @spring.property name="externalDatabaseService" ref="externalDatabaseService"
- * @spring.property name="arrayDesignService" ref="arrayDesignService"
- * @spring.property name="bioAssayService" ref="bioAssayService"
- * @spring.property name="auditTrailService" ref="auditTrailService"
  */
+@Service
 public class GeoBrowserService implements InitializingBean {
     private static final int MIN_SAMPLES = 5;
     private static final String GEO_DATA_STORE_FILE_NAME = "GEODataStore";
+    @Autowired
     ExpressionExperimentService expressionExperimentService;
+    @Autowired
     TaxonService taxonService;
+    @Autowired
     ExternalDatabaseService externalDatabaseService;
+    @Autowired
     ArrayDesignService arrayDesignService;
+    @Autowired
     AuditTrailService auditTrailService;
 
+    @Autowired
     BioAssayService bioAssayService;
 
     Map<String, GeoRecord> localInfo;
@@ -206,8 +209,9 @@ public class GeoBrowserService implements InitializingBean {
      * @param start
      * @param count
      * @return
+     * @throws IOException
      */
-    public List<GeoRecord> getRecentGeoRecords( int start, int count ) {
+    public List<GeoRecord> getRecentGeoRecords( int start, int count ) throws IOException {
         GeoBrowser browser = new GeoBrowser();
         List<GeoRecord> records = browser.getRecentGeoRecords( start, count );
         ExternalDatabase geo = externalDatabaseService.find( "GEO" );

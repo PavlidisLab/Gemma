@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.common.description;
 
+import org.springframework.security.access.annotation.Secured;
+
 /**
  * @author paul
  * @version $Id$
@@ -27,17 +29,20 @@ public interface CharacteristicService {
     /**
      * 
      */
+    @Secured( { "GROUP_USER" })
     public ubic.gemma.model.common.description.Characteristic create(
             ubic.gemma.model.common.description.Characteristic c );
 
     /**
      * 
      */
+    @Secured( { "GROUP_USER" })
     public void delete( java.lang.Long id );
 
     /**
      * 
      */
+    @Secured( { "GROUP_USER" })
     public void delete( ubic.gemma.model.common.description.Characteristic c );
 
     /**
@@ -79,6 +84,7 @@ public interface CharacteristicService {
      * Returns the parent object of the specified Characteristic.
      * </p>
      */
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     public java.lang.Object getParent( ubic.gemma.model.common.description.Characteristic characteristic );
 
     /**
@@ -96,6 +102,7 @@ public interface CharacteristicService {
     /**
      * 
      */
+    @Secured( { "GROUP_USER" })
     public void update( ubic.gemma.model.common.description.Characteristic c );
 
 }

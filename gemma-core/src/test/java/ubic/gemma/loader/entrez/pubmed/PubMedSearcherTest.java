@@ -27,22 +27,12 @@ import ubic.gemma.apps.AbstractCLITestCase;
 public class PubMedSearcherTest extends AbstractCLITestCase {
     PubMedSearcher p = new PubMedSearcher();
 
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
-    }
-
-    @Override
-    protected void tearDown() throws Exception {
-        super.tearDown();
-    }
-
     /**
      * Test method for {@link ubic.gemma.loader.entrez.pubmed.PubMedSearcher#main(java.lang.String[])}.
      */
     public final void testMain() throws Exception {
         try {
-            Exception result = p.doWork( new String[] { "-v", "3", "hippocampus", "diazepam", "juvenile" } );
+            Exception result = p.doWork( new String[] {"-testing", "-v", "3", "hippocampus", "diazepam", "juvenile" } );
             if ( result != null ) {
                 if ( result instanceof java.net.UnknownHostException ) {
                     log.warn( "Test skipped because of UnknownHostException" );
@@ -61,4 +51,5 @@ public class PubMedSearcherTest extends AbstractCLITestCase {
             throw e;
         }
     }
+
 }

@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.common.auditAndSecurity;
 
+import java.util.Collection;
+
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 
 /**
@@ -35,21 +37,28 @@ public abstract class PersonDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.common.auditAndSecurity.PersonDao#create(int, java.util.Collection)
      */
 
-    public java.util.Collection<Person> create( final int transform, final java.util.Collection<Person> entities ) {
+    public java.util.Collection<? extends Person> create( final int transform,
+            final java.util.Collection<? extends Person> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "Person.create - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback() {
+                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator<Person> entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                        for ( java.util.Iterator<? extends Person> entityIterator = entities.iterator(); entityIterator
+                                .hasNext(); ) {
                             create( transform, entityIterator.next() );
                         }
                         return null;
                     }
                 } );
         return entities;
+    }
+    
+    
+    public Collection<? extends Person > load( Collection<Long> ids ) {
+        return this.getHibernateTemplate().findByNamedParam( "from PersonImpl where id in (:ids)", "ids", ids );
     }
 
     /**
@@ -68,7 +77,7 @@ public abstract class PersonDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.common.auditAndSecurity.PersonDao#create(java.util.Collection)
      */
 
-    public java.util.Collection<Person> create( final java.util.Collection<Person> entities ) {
+    public java.util.Collection<? extends Person> create( final java.util.Collection<? extends Person> entities ) {
         return create( TRANSFORM_NONE, entities );
     }
 
@@ -96,7 +105,7 @@ public abstract class PersonDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.common.auditAndSecurity.PersonDao#findByFirstAndLastName(int, java.lang.String,
      *      java.lang.String, java.lang.String)
      */
-    @SuppressWarnings( { "unchecked" })
+    
     public java.util.Collection<Person> findByFirstAndLastName( final int transform,
             final java.lang.String queryString, final java.lang.String name, final java.lang.String secondName ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -142,7 +151,7 @@ public abstract class PersonDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.common.auditAndSecurity.PersonDao#findByFullName(int, java.lang.String, java.lang.String,
      *      java.lang.String)
      */
-    @SuppressWarnings( { "unchecked" })
+    
     public java.util.Collection<Person> findByFullName( final int transform, final java.lang.String queryString,
             final java.lang.String name, final java.lang.String secondName ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -185,7 +194,7 @@ public abstract class PersonDaoBase extends HibernateDaoSupport implements
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.PersonDao#findByLastName(int, java.lang.String, java.lang.String)
      */
-    @SuppressWarnings( { "unchecked" })
+    
     public java.util.Collection<Person> findByLastName( final int transform, final java.lang.String queryString,
             final java.lang.String lastName ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -221,7 +230,7 @@ public abstract class PersonDaoBase extends HibernateDaoSupport implements
         if ( id == null ) {
             throw new IllegalArgumentException( "Person.load - 'id' can not be null" );
         }
-        final Person entity = ( Person ) this.getHibernateTemplate().get(
+        final Person entity = this.getHibernateTemplate().get(
                 ubic.gemma.model.common.auditAndSecurity.PersonImpl.class, id );
         return ( Person ) transformEntity( transform, entity );
     }
@@ -237,7 +246,7 @@ public abstract class PersonDaoBase extends HibernateDaoSupport implements
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.PersonDao#loadAll()
      */
-    public java.util.Collection<Person> loadAll() {
+    public java.util.Collection<? extends Person> loadAll() {
         return this.loadAll( TRANSFORM_NONE );
     }
 
@@ -245,9 +254,9 @@ public abstract class PersonDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.common.auditAndSecurity.PersonDao#loadAll(int)
      */
 
-    @SuppressWarnings("unchecked")
-    public java.util.Collection<Person> loadAll( final int transform ) {
-        final java.util.Collection<Person> results = this.getHibernateTemplate().loadAll(
+    
+    public java.util.Collection<? extends Person> loadAll( final int transform ) {
+        final java.util.Collection<? extends Person> results = this.getHibernateTemplate().loadAll(
                 ubic.gemma.model.common.auditAndSecurity.PersonImpl.class );
         this.transformEntities( transform, results );
         return results;
@@ -271,7 +280,7 @@ public abstract class PersonDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.common.SecurableDao#remove(java.util.Collection)
      */
 
-    public void remove( java.util.Collection<Person> entities ) {
+    public void remove( java.util.Collection<? extends Person> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "Person.remove - 'entities' can not be null" );
         }
@@ -292,15 +301,16 @@ public abstract class PersonDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.common.SecurableDao#update(java.util.Collection)
      */
 
-    public void update( final java.util.Collection<Person> entities ) {
+    public void update( final java.util.Collection<? extends Person> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "Person.update - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback() {
+                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator<Person> entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                        for ( java.util.Iterator<? extends Person> entityIterator = entities.iterator(); entityIterator
+                                .hasNext(); ) {
                             update( entityIterator.next() );
                         }
                         return null;
@@ -331,7 +341,7 @@ public abstract class PersonDaoBase extends HibernateDaoSupport implements
      * @see #transformEntity(int,ubic.gemma.model.common.auditAndSecurity.Person)
      */
 
-    protected void transformEntities( final int transform, final java.util.Collection<Person> entities ) {
+    protected void transformEntities( final int transform, final java.util.Collection<? extends Person> entities ) {
         switch ( transform ) {
             case TRANSFORM_NONE: // fall-through
             default:

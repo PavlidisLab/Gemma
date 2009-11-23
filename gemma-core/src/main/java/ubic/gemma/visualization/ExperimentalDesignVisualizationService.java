@@ -34,6 +34,8 @@ import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrixFactory;
@@ -57,36 +59,125 @@ import ubic.gemma.model.expression.experiment.FactorValue;
  * Tools for visualizing experimental designs. The idea is to generate a overview of the design that can be put over
  * heatmaps or line graphs.
  * 
- * @spring.bean id="experimentalDesignVisualizationService"
- * @spring.property name="expressionExperimentService" ref="expressionExperimentService"
- * @spring.property name="bioAssayDimensionService" ref="bioAssayDimensionService"
  * @author paul
  * @version $Id$
  */
+@Service
 public class ExperimentalDesignVisualizationService {
 
     protected Log log = LogFactory.getLog( getClass().getName() );
-    private BioAssayDimensionService bioAssayDimensionService;
-
-    /**
-     * @param bioAssayDimensionService the bioAssayDimensionService to set
-     */
-    public void setBioAssayDimensionService( BioAssayDimensionService bioAssayDimensionService ) {
-        this.bioAssayDimensionService = bioAssayDimensionService;
-    }
+    @Autowired
+    ExpressionExperimentService expressionExperimentService;
 
     /**
      * Cache. TODO: use ehcache so we can manage this.
      */
     Map<ExpressionExperiment, LinkedHashMap<BioAssay, Map<ExperimentalFactor, Double>>> layouts = new HashMap<ExpressionExperiment, LinkedHashMap<BioAssay, Map<ExperimentalFactor, Double>>>();
 
-    ExpressionExperimentService expressionExperimentService;
+    @Autowired
+    private BioAssayDimensionService bioAssayDimensionService;
 
     /**
-     * @param expressionExperimentService the expressionExperimentService to set
+     * For an experiment, spit out
+     * 
+     * @param e, experiment; should be lightly thawed.
+     * @return Map of bioassays to factors to values for plotting. If there are no Factors, a dummy value is returned.
      */
-    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
-        this.expressionExperimentService = expressionExperimentService;
+    public LinkedHashMap<BioAssay, Map<ExperimentalFactor, Double>> getExperimentalDesignLayout( ExpressionExperiment e ) {
+
+        if ( layouts.containsKey( e ) ) {
+            return layouts.get( e );
+        }
+
+        Collection<BioAssayDimension> bds = expressionExperimentService.getBioAssayDimensions( e );
+
+        /*
+         * FIXME if there are multiple bioassay dimensions...they had better match up. This should be the case, but
+         * mightF tnot be if curation is incomplete.
+         */
+
+        BioAssayDimension bd = bds.iterator().next();
+
+        assert bd != null;
+        LinkedHashMap<BioAssay, Map<ExperimentalFactor, Double>> result = getExperimentalDesignLayout( e, bd );
+
+        layouts.put( e, result );
+
+        return result;
+    }
+
+    /**
+     * @param experiment
+     * @param bd
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    public LinkedHashMap<BioAssay, Map<ExperimentalFactor, Double>> getExperimentalDesignLayout(
+            ExpressionExperiment experiment, BioAssayDimension bd ) {
+        LinkedHashMap<BioAssay, Map<ExperimentalFactor, Double>> result = new LinkedHashMap<BioAssay, Map<ExperimentalFactor, Double>>();
+
+        ExpressionDataMatrix mat = new EmptyExpressionMatrix( bd );
+
+        List<BioMaterial> bms = ExpressionDataMatrixColumnSort.orderByExperimentalDesign( mat );
+
+        Map<FactorValue, Double> fvV = new HashMap<FactorValue, Double>();
+
+        if ( experiment.getExperimentalDesign().getExperimentalFactors().size() == 0 ) {
+
+            ExperimentalFactor dummyFactor = ExperimentalFactor.Factory.newInstance();
+            dummyFactor.setName( "No factors" );
+            for ( BioMaterial bm : bms ) {
+                int j = mat.getColumnIndex( bm );
+
+                Collection<BioAssay> bas = mat.getBioAssaysForColumn( j );
+
+                for ( BioAssay ba : bas ) {
+                    result.put( ba, new HashMap<ExperimentalFactor, Double>() );
+                    result.get( ba ).put( dummyFactor, 0.0 );
+                }
+
+            }
+
+            return result;
+        }
+
+        for ( ExperimentalFactor ef : experiment.getExperimentalDesign().getExperimentalFactors() ) {
+            Double i = 0.0;
+            for ( FactorValue fv : ef.getFactorValues() ) {
+                i = i + 1.0;
+                fvV.put( fv, i ); // just for now
+            }
+        }
+
+        for ( BioMaterial bm : bms ) {
+            int j = mat.getColumnIndex( bm );
+
+            Collection<BioAssay> bas = mat.getBioAssaysForColumn( j );
+
+            Collection<FactorValue> fvs = bm.getFactorValues();
+
+            for ( BioAssay ba : bas ) {
+                result.put( ba, new HashMap<ExperimentalFactor, Double>() );
+                for ( FactorValue fv : fvs ) {
+                    ExperimentalFactor ef = fv.getExperimentalFactor();
+
+                    Double value;
+                    if ( fv.getMeasurement() != null ) {
+                        try {
+                            value = Double.parseDouble( fv.getMeasurement().getValue() );
+                        } catch ( NumberFormatException e ) {
+                            value = fvV.get( fv );
+                        }
+                    } else {
+                        value = fvV.get( fv );
+                    }
+                    result.get( ba ).put( ef, value );
+
+                }
+            }
+
+        }
+        return result;
     }
 
     /**
@@ -137,45 +228,17 @@ public class ExperimentalDesignVisualizationService {
     }
 
     /**
-     * @param matrix
-     * @param location
-     * @param fileName
-     * @throws IOException
+     * @param bioAssayDimensionService the bioAssayDimensionService to set
      */
-    private void writeImage( ColorMatrix<String, String> matrix, File outputfile ) throws IOException {
-        log.info( outputfile );
-        MatrixDisplay writer = new MatrixDisplay( matrix );
-        writer.setCellSize( new Dimension( 18, 18 ) );
-        writer.saveImage( matrix, outputfile.getAbsolutePath(), true, true );
+    public void setBioAssayDimensionService( BioAssayDimensionService bioAssayDimensionService ) {
+        this.bioAssayDimensionService = bioAssayDimensionService;
     }
 
     /**
-     * For an experiment, spit out
-     * 
-     * @param e, experiment; should be lightly thawed.
-     * @return Map of bioassays to factors to values for plotting. If there are no Factors, a dummy value is returned.
+     * @param expressionExperimentService the expressionExperimentService to set
      */
-    public LinkedHashMap<BioAssay, Map<ExperimentalFactor, Double>> getExperimentalDesignLayout( ExpressionExperiment e ) {
-
-        if ( layouts.containsKey( e ) ) {
-            return layouts.get( e );
-        }
-
-        Collection<BioAssayDimension> bds = expressionExperimentService.getBioAssayDimensions( e );
-
-        /*
-         * FIXME if there are multiple bioassay dimensions...they had better match up. This should be the case, but
-         * mightF tnot be if curation is incomplete.
-         */
-
-        BioAssayDimension bd = bds.iterator().next();
-
-        assert bd != null;
-        LinkedHashMap<BioAssay, Map<ExperimentalFactor, Double>> result = getExperimentalDesignLayout( e, bd );
-
-        layouts.put( e, result );
-
-        return result;
+    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
+        this.expressionExperimentService = expressionExperimentService;
     }
 
     /**
@@ -304,76 +367,15 @@ public class ExperimentalDesignVisualizationService {
     }
 
     /**
-     * @param experiment
-     * @param bd
-     * @return
+     * @param matrix
+     * @param location
+     * @param fileName
+     * @throws IOException
      */
-    @SuppressWarnings("unchecked")
-    public LinkedHashMap<BioAssay, Map<ExperimentalFactor, Double>> getExperimentalDesignLayout(
-            ExpressionExperiment experiment, BioAssayDimension bd ) {
-        LinkedHashMap<BioAssay, Map<ExperimentalFactor, Double>> result = new LinkedHashMap<BioAssay, Map<ExperimentalFactor, Double>>();
-
-        ExpressionDataMatrix mat = new EmptyExpressionMatrix( bd );
-
-        List<BioMaterial> bms = ExpressionDataMatrixColumnSort.orderByExperimentalDesign( mat );
-
-        Map<FactorValue, Double> fvV = new HashMap<FactorValue, Double>();
-
-        if ( experiment.getExperimentalDesign().getExperimentalFactors().size() == 0 ) {
-
-            ExperimentalFactor dummyFactor = ExperimentalFactor.Factory.newInstance();
-            dummyFactor.setName( "No factors" );
-            for ( BioMaterial bm : bms ) {
-                int j = mat.getColumnIndex( bm );
-
-                Collection<BioAssay> bas = mat.getBioAssaysForColumn( j );
-
-                for ( BioAssay ba : bas ) {
-                    result.put( ba, new HashMap<ExperimentalFactor, Double>() );
-                    result.get( ba ).put( dummyFactor, 0.0 );
-                }
-
-            }
-
-            return result;
-        }
-
-        for ( ExperimentalFactor ef : experiment.getExperimentalDesign().getExperimentalFactors() ) {
-            Double i = 0.0;
-            for ( FactorValue fv : ef.getFactorValues() ) {
-                i = i + 1.0;
-                fvV.put( fv, i ); // just for now
-            }
-        }
-
-        for ( BioMaterial bm : bms ) {
-            int j = mat.getColumnIndex( bm );
-
-            Collection<BioAssay> bas = mat.getBioAssaysForColumn( j );
-
-            Collection<FactorValue> fvs = bm.getFactorValues();
-
-            for ( BioAssay ba : bas ) {
-                result.put( ba, new HashMap<ExperimentalFactor, Double>() );
-                for ( FactorValue fv : fvs ) {
-                    ExperimentalFactor ef = fv.getExperimentalFactor();
-
-                    Double value;
-                    if ( fv.getMeasurement() != null ) {
-                        try {
-                            value = Double.parseDouble( fv.getMeasurement().getValue() );
-                        } catch ( NumberFormatException e ) {
-                            value = fvV.get( fv );
-                        }
-                    } else {
-                        value = fvV.get( fv );
-                    }
-                    result.get( ba ).put( ef, value );
-
-                }
-            }
-
-        }
-        return result;
+    private void writeImage( ColorMatrix<String, String> matrix, File outputfile ) throws IOException {
+        log.info( outputfile );
+        MatrixDisplay writer = new MatrixDisplay( matrix );
+        writer.setCellSize( new Dimension( 18, 18 ) );
+        writer.saveImage( matrix, outputfile.getAbsolutePath(), true, true );
     }
 }

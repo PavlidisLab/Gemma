@@ -12,7 +12,7 @@
 	<jwr:script src='/scripts/app/arrayDesign.js' />
 
 
-	<security:authorize ifAnyGranted="admin">
+	<security:authorize ifAnyGranted="GROUP_ADMIN">
 		<script type="text/javascript">
 	Ext.namespace('Gemma');
 	Ext.onReady( function() {
@@ -159,7 +159,7 @@
 	</c:if>
 	<tr>
 		<td colspan="2">
-			<security:authorize ifAnyGranted="admin">
+			<security:authorize ifAnyGranted="GROUP_ADMIN">
 				<input type="button" value="Refresh report" onClick="updateReport(${arrayDesign.id })" />
 			</security:authorize>
 		</td>
@@ -186,7 +186,7 @@
 		</td>
 		<td>
 			<span id="alternate-names">${alternateNames}</span>
-			<security:authorize ifAnyGranted="admin">&nbsp;
+			<security:authorize ifAnyGranted="GROUP_ADMIN">&nbsp;
 			<a href="#" title="Add a new alternate name for this design" onClick="getAlternateName(${arrayDesign.id })"><img
 						src="/Gemma/images/icons/add.png" /> </a>
 			</security:authorize>
@@ -385,7 +385,7 @@
 </table>
 
 
-<security:authorize ifAnyGranted="admin">
+<security:authorize ifAnyGranted="GROUP_ADMIN">
 	<div id="auditTrail"></div>
 	<input type="hidden" name="auditableId" id="auditableId" value="${arrayDesign.id}" />
 	<input type="hidden" name="auditableClass" id="auditableClass" value="${arrayDesign.class.name}" />
@@ -405,7 +405,7 @@
 					<input type="button" onclick="location.href='showAllArrayDesigns.html'" value="Show all array designs">
 				</div>
 			</td>
-			<security:authorize ifAnyGranted="admin">
+			<security:authorize ifAnyGranted="GROUP_ADMIN">
 				<td colspan="2">
 					<div align="left">
 						<input type="button" onclick="location.href='/Gemma/arrayDesign/editArrayDesign.html?id=${id}'" value="Edit">

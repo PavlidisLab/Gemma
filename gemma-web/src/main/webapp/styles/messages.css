@@ -1,13 +1,11 @@
 /* This is the style for the informational messages presented to the user */
 
 div.error, div.message, li.error {
-    background: #ffffcc;
-    border: 1px solid #000;
-    color: #000000;
-    font-family: Arial, Helvetica, sans-serif;
+/*    background: #ffffcc; */
+/*    border: 1px solid #000; */
     font-weight: normal;
-    margin: 10px auto;
-    padding: 3px;
+    margin: 2px auto;
+    padding: 1px;
     text-align: left;
     vertical-align: bottom;
 }

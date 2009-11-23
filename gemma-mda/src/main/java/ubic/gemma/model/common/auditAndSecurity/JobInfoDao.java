@@ -18,6 +18,7 @@
  */
 package ubic.gemma.model.common.auditAndSecurity;
 
+
 /**
  * @see ubic.gemma.model.common.auditAndSecurity.JobInfo
  */

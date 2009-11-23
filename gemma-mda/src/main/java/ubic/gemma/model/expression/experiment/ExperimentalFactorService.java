@@ -18,48 +18,63 @@
  */
 package ubic.gemma.model.expression.experiment;
 
+import java.util.Collection;
+
+import org.springframework.security.access.annotation.Secured;
+
 /**
  * @author paul
  * @version $Id$
  */
-public interface ExperimentalFactorService extends ubic.gemma.model.common.AuditableService {
+public interface ExperimentalFactorService {
+
+    /**
+     * @param factors
+     * @return
+     */
+    @Secured( { "GROUP_USER" })
+    public Collection<ExperimentalFactor> create( Collection<ExperimentalFactor> factors );
 
     /**
      * 
      */
-    public ubic.gemma.model.expression.experiment.ExperimentalFactor create(
-            ubic.gemma.model.expression.experiment.ExperimentalFactor experimentalFactor );
+    @Secured( { "GROUP_USER" })
+    public ExperimentalFactor create( ExperimentalFactor experimentalFactor );
 
     /**
      * 
      */
-    public void delete( ubic.gemma.model.expression.experiment.ExperimentalFactor experimentalFactor );
+    @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    public void delete( ExperimentalFactor experimentalFactor );
 
     /**
      * 
      */
-    public ubic.gemma.model.expression.experiment.ExperimentalFactor find(
-            ubic.gemma.model.expression.experiment.ExperimentalFactor experimentalFactor );
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    public ExperimentalFactor find( ExperimentalFactor experimentalFactor );
 
     /**
      * 
      */
-    public ubic.gemma.model.expression.experiment.ExperimentalFactor findOrCreate(
-            ubic.gemma.model.expression.experiment.ExperimentalFactor experimentalFactor );
+    @Secured( { "GROUP_USER", "AFTER_ACL_READ" })
+    public ExperimentalFactor findOrCreate( ExperimentalFactor experimentalFactor );
 
     /**
      * 
      */
-    public ubic.gemma.model.expression.experiment.ExperimentalFactor load( java.lang.Long id );
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    public ExperimentalFactor load( java.lang.Long id );
 
     /**
      * 
      */
-    public java.util.Collection<ExperimentalFactor> loadAll();
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    public Collection<ExperimentalFactor> loadAll();
 
     /**
      * 
      */
-    public void update( ubic.gemma.model.expression.experiment.ExperimentalFactor experimentalFactor );
+    @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    public void update( ExperimentalFactor experimentalFactor );
 
 }

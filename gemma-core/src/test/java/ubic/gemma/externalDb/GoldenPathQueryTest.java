@@ -40,24 +40,6 @@ public class GoldenPathQueryTest extends TestCase {
     GoldenPathQuery queryer;
     private boolean hasDb = true;;
 
-    @Override
-    protected void setUp() throws Exception {
-        Taxon t = Taxon.Factory.newInstance();
-        t.setCommonName( "human" );
-        t.setIsGenesUsable( true );
-        t.setIsSpecies(true);       
-        try {
-            queryer = new GoldenPathQuery( t );
-        } catch ( java.sql.SQLException e ) {
-            if ( e.getMessage().contains( "Unknown database" ) ) {
-                hasDb = false;
-            } else if ( e.getMessage().contains( "Access denied" ) ) {
-                hasDb = false;
-            }
-            throw e;
-        }
-    }
-
     public final void testQueryEst() throws Exception {
         if ( !hasDb ) {
             log.warn( "Skipping test because hg18 could not be configured" );
@@ -73,8 +55,8 @@ public class GoldenPathQueryTest extends TestCase {
             return;
         }
         Collection<BlatResult> actualValue = queryer.findAlignments( "AK095183" );
-      //  assertEquals( 3, actualValue.size() );
-        assertTrue(actualValue.size() > 0); // value used to be 3, now 2; this should be safer.
+        // assertEquals( 3, actualValue.size() );
+        assertTrue( actualValue.size() > 0 ); // value used to be 3, now 2; this should be safer.
         BlatResult r = actualValue.iterator().next();
         assertEquals( "AK095183", ( r.getQuerySequence().getName() ) );
     }
@@ -86,6 +68,24 @@ public class GoldenPathQueryTest extends TestCase {
         }
         Collection<BlatResult> actualValue = queryer.findAlignments( "YYYYYUUYUYUYUY" );
         assertEquals( 0, actualValue.size() );
+    }
+
+    @Override
+    protected void setUp() throws Exception {
+        Taxon t = Taxon.Factory.newInstance();
+        t.setCommonName( "human" );
+        t.setIsGenesUsable( true );
+        t.setIsSpecies( true );
+        try {
+            queryer = new GoldenPathQuery( t );
+        } catch ( java.sql.SQLException e ) {
+            if ( e.getMessage().contains( "Unknown database" ) ) {
+                hasDb = false;
+            } else if ( e.getMessage().contains( "Access denied" ) ) {
+                hasDb = false;
+            }
+            throw e;
+        }
     }
 
 }

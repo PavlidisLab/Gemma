@@ -18,31 +18,38 @@
  */
 package ubic.gemma.model.common.auditAndSecurity;
 
+import org.springframework.security.access.annotation.Secured;
+
 /**
- * 
+ * @author kelsey
+ * @version $Id$
  */
 public interface ContactService {
 
     /**
      * 
      */
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY" })
     public ubic.gemma.model.common.auditAndSecurity.Contact find(
             ubic.gemma.model.common.auditAndSecurity.Contact contact );
 
     /**
      * 
      */
+    @Secured( { "GROUP_USER" })
     public ubic.gemma.model.common.auditAndSecurity.Contact findOrCreate(
             ubic.gemma.model.common.auditAndSecurity.Contact contact );
 
     /**
      * 
      */
+    @Secured( { "GROUP_USER" })
     public void remove( ubic.gemma.model.common.auditAndSecurity.Contact contact );
 
     /**
      * 
      */
+    @Secured( { "GROUP_USER" })
     public void update( ubic.gemma.model.common.auditAndSecurity.Contact contact );
 
 }

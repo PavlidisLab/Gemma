@@ -19,13 +19,12 @@
 
 package ubic.gemma.util.progress;
 
-
 import java.util.concurrent.Callable;
 
 import javax.servlet.http.HttpSession;
 
-import org.springframework.security.context.SecurityContext;
-import org.springframework.security.context.SecurityContextHolder;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.directwebremoting.WebContext;
@@ -56,11 +55,11 @@ public abstract class BackgroundProgressJob<T> implements Callable<T> {
     public void setErrors( BindException errors ) {
         this.errors = errors;
     }
-    
-    public void setDoForward(boolean doForward) {
+
+    public void setDoForward( boolean doForward ) {
         this.doForward = doForward;
     }
-    
+
     public boolean getDoForward() {
         return this.doForward;
     }
@@ -81,8 +80,8 @@ public abstract class BackgroundProgressJob<T> implements Callable<T> {
      * @param command
      * @param jobDescription
      */
-    public BackgroundProgressJob( String taskId, SecurityContext parentSecurityContext, Object commandObj ) {
-        this( );
+    public BackgroundProgressJob( String taskId, Object commandObj ) {
+        this();
         this.taskId = taskId;
         this.command = commandObj;
 
@@ -93,7 +92,7 @@ public abstract class BackgroundProgressJob<T> implements Callable<T> {
      * 
      * @param msgUtil
      */
-    public BackgroundProgressJob( ) {
+    public BackgroundProgressJob() {
         super();
         this.securityContext = SecurityContextHolder.getContext();
         WebContext ctx = WebContextFactory.get();
@@ -115,18 +114,13 @@ public abstract class BackgroundProgressJob<T> implements Callable<T> {
         this.session = session;
     }
 
-    public BackgroundProgressJob( String taskId, SecurityContext parentSecurityContext, Object commandObj,
-    		BindException errors ) {
-        this( taskId, parentSecurityContext, commandObj );
-        this.errors = errors;
-    }
-
-
     /**
      * This should be called in the first line of the implementation of the call method.
+     * 
+     * @deprecated This _shouldn't_ be needed since we configure SecurityContextHolder.MODE_INHERITABLETHREADLOCAL
      */
+    @Deprecated
     protected void init() {
         SecurityContextHolder.setContext( securityContext );
     }
 }
-

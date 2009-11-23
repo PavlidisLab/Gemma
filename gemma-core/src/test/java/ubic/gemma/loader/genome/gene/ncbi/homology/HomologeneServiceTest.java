@@ -23,16 +23,28 @@ import java.util.Collection;
 
 import junit.framework.TestCase;
 
-import ubic.gemma.loader.genome.gene.ncbi.homology.HomologeneService;
-
 /**
  * Tests the homologeneService but only access methods that don't require a DB connection (using the gemma db).
+ * 
  * @author klc
  * @version $Id: HomologeneServiceTest.java
  */
 public class HomologeneServiceTest extends TestCase {
-    
+
     private HomologeneService hgs;
+
+    public final void testGetHomologues() throws Exception {
+        long id = 34;
+        Collection<Long> homologenes = hgs.getHomologues( id );
+        assertNotNull( homologenes );
+        assertEquals( 11, homologenes.size() );
+    }
+
+    public final void testGetHomologues2() {
+        Collection<Long> homologenes = hgs.getNCBIGeneIdsInGroup( 3 );
+        assertNotNull( homologenes );
+        assertEquals( 12, homologenes.size() );
+    }
 
     // note: no spring context.
     @Override
@@ -40,22 +52,7 @@ public class HomologeneServiceTest extends TestCase {
         hgs = new HomologeneService();
         InputStream is = this.getClass().getResourceAsStream( "/data/loader/genome/homologene/homologene.testdata.txt" );
         assert is != null;
-        hgs.parseHomologGeneFile( is ); 
-    }
-    
-
-    public final void testGetHomologues() throws Exception {
-        long id = 34;
-        Collection<Long> homologenes = hgs.getHomologues( id );        
-        assertNotNull( homologenes );
-        assertEquals(11, homologenes.size() );
-    }
-    
-    public final void testGetHomologues2(){
-       Collection<Long> homologenes = hgs.getNCBIGeneIdsInGroup(3);
-       assertNotNull( homologenes );
-       assertEquals(12, homologenes.size());
+        hgs.parseHomologGeneFile( is );
     }
 
 }
-

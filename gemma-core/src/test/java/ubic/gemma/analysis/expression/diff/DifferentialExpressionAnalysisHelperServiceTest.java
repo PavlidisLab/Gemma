@@ -18,6 +18,10 @@
  */
 package ubic.gemma.analysis.expression.diff;
 
+import static org.junit.Assert.*;
+import org.junit.Before;
+import org.junit.Test;
+
 /**
  * Tests the {@link DifferentialExpressionAnalysisHelperService}.
  * 
@@ -26,20 +30,17 @@ package ubic.gemma.analysis.expression.diff;
  */
 public class DifferentialExpressionAnalysisHelperServiceTest extends BaseAnalyzerConfigurationTest {
 
-    private DifferentialExpressionAnalysisHelperService differentialExpressionAnalysisHelperService = null;
+    private DifferentialExpressionAnalysisHelperService differentialExpressionAnalysisHelperService = new DifferentialExpressionAnalysisHelperService();
 
     /*
      * (non-Javadoc)
-     * @see ubic.gemma.analysis.diff.BaseAnalyzerConfigurationTest#onSetUpInTransaction()
+     * @see ubic.gemma.analysis.diff.BaseAnalyzerConfigurationTest#configureMocks()
      */
     @Override
-    public void onSetUpInTransaction() throws Exception {
-        super.onSetUpInTransaction();
+    @Before
+    public void configureMocks() throws Exception {
 
-        this.differentialExpressionAnalysisHelperService = ( DifferentialExpressionAnalysisHelperService ) this
-                .getBean( "differentialExpressionAnalysisHelperService" );
-
-        configureMocks();
+        configureMockAnalysisServiceHelper( 1 );
 
     }
 
@@ -48,10 +49,11 @@ public class DifferentialExpressionAnalysisHelperServiceTest extends BaseAnalyze
      * <p>
      * Expected result: null exception
      */
+    @Test
     public void testCheckBiologicalReplicates() throws Exception {
         boolean result = differentialExpressionAnalysisHelperService.checkBiologicalReplicates( expressionExperiment,
                 expressionExperiment.getExperimentalDesign().getExperimentalFactors() );
-
+        assertTrue( result );
     }
 
     /**
@@ -59,19 +61,10 @@ public class DifferentialExpressionAnalysisHelperServiceTest extends BaseAnalyze
      * <p>
      * Expected result: null exception
      */
+    @Test
     public void testCheckBlockDesign() throws Exception {
         boolean result = differentialExpressionAnalysisHelperService.checkBlockDesign( expressionExperiment );
-    }
-
-    /*
-     * (non-Javadoc)
-     * @see ubic.gemma.analysis.diff.BaseAnalyzerConfigurationTest#configureMocks()
-     */
-    @Override
-    public void configureMocks() throws Exception {
-
-        configureMockAnalysisServiceHelper( 1 );
-
+        assertTrue( result );
     }
 
 }

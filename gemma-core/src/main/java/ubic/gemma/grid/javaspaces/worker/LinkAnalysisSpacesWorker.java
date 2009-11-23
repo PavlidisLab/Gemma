@@ -18,12 +18,11 @@
  */
 package ubic.gemma.grid.javaspaces.worker;
 
-import org.springframework.security.context.SecurityContextHolder;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import ubic.gemma.grid.javaspaces.AbstractSpacesWorkerCLI;
 import ubic.gemma.grid.javaspaces.CustomDelegatingWorker;
-import ubic.gemma.grid.javaspaces.analysis.coexpression.links.LinkAnalysisTask;
-import ubic.gemma.util.SecurityUtil;
+import ubic.gemma.grid.javaspaces.task.analysis.coexpression.links.LinkAnalysisTask;  
 
 /**
  * @author keshav
@@ -71,8 +70,6 @@ public class LinkAnalysisSpacesWorker extends AbstractSpacesWorkerCLI {
      */
     public static void main( String[] args ) {
         log.info( "Starting spaces worker to run link analysis ... \n" );
-
-        SecurityUtil.passAuthenticationToChildThreads();
 
         LinkAnalysisSpacesWorker p = new LinkAnalysisSpacesWorker();
         try {

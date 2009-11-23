@@ -22,6 +22,8 @@ import java.util.Arrays;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
@@ -34,10 +36,12 @@ import net.sf.ehcache.config.CacheConfiguration;
  * @author paul
  * @version $Id$
  */
+@Component
 public class CacheMonitor {
 
     private static Log log = LogFactory.getLog( CacheMonitor.class );
 
+    @Autowired
     private CacheManager cacheManager;
 
     /**

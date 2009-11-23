@@ -18,10 +18,15 @@
  */
 package ubic.gemma.web.controller.expression.arrayDesign;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
 import java.util.Collection;
 
 import javax.servlet.http.HttpServletResponse;
 
+import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.web.servlet.ModelAndView;
 
@@ -37,22 +42,23 @@ public class ArrayDesignControllerTest extends BaseSpringWebTest {
 
     private MockHttpServletRequest request;
 
+    @Autowired
     ArrayDesignController arrayDesignController;
 
     ArrayDesign testArrayDesign;
 
+    @Autowired
     ArrayDesignService arrayDesignService;
 
     /**
      * @throws Exception
      */
-    @SuppressWarnings("unchecked")
+    @Test
     public void testShowAllArrayDesigns() throws Exception {
-        ArrayDesignController controller = ( ArrayDesignController ) getBean( "arrayDesignController" );
         request = newPost( "Gemma/arrayDesign/showAllArrayDesigns.html" );
 
-        ModelAndView mav = controller.showAll( request, ( HttpServletResponse ) null );
-        Collection<ArrayDesign> c = ( mav.getModel() ).values();
+        ModelAndView mav = arrayDesignController.showAllArrayDesigns( request, ( HttpServletResponse ) null );
+        Collection<Object> c = mav.getModel().values();
         assertNotNull( c );
         assertEquals( "arrayDesigns", mav.getViewName() );
     }

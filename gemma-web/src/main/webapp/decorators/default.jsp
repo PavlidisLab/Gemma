@@ -7,15 +7,9 @@
 	<head>
 		<%-- Include common set of meta tags for each layout --%>
 		<%@ include file="/common/meta.jsp"%>
-		<title><decorator:title /> | <fmt:message key="webapp.name" />
-		</title>
+		<title><decorator:title /> | <fmt:message key="webapp.name" /></title>
 
 		<jwr:style src="/bundles/gemma-all.css" />
-
-
-
-
-
 		<script type='text/javascript' src='/Gemma/dwr/engine.js'></script>
 		<script type='text/javascript' src='/Gemma/dwr/util.js'></script>
 
@@ -51,19 +45,6 @@
 					<decorator:body />
 				</div>
 
-
-				<c:set var="currentMenu" scope="request">
-					<decorator:getProperty property="meta.menu" />
-				</c:set>
-				<c:if test="${currentMenu == 'AdminMenu'}">
-					<div id="sub">
-						<menu:useMenuDisplayer name="Velocity" config="WEB-INF/classes/cssVerticalMenu.vm" permissions="rolesAdapter">
-							<menu:displayMenu name="AdminMenu" />
-						</menu:useMenuDisplayer>
-					</div>
-				</c:if>
-
-
 				<div id="nav">
 					<div class="wrapper">
 						<h2 class="accessibility">
@@ -81,7 +62,6 @@
 				<jsp:include page="/common/footer.jsp" />
 			</div>
 		</div>
-
 
 	</body>
 </html>

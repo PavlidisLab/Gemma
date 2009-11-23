@@ -35,7 +35,7 @@ import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSetService;
 import ubic.gemma.model.analysis.expression.ProbeAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultService;
-import ubic.gemma.model.common.Securable;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Gene;
@@ -240,7 +240,7 @@ public class DifferentialExpressionProbeResultEndpoint extends AbstractGemmaEndp
 
     private Collection<ExpressionExperiment> getEEIds( ExpressionExperimentSet expressionExperimentSet ) {
         List<Long> ids = new ArrayList<Long>( expressionExperimentSet.getExperiments().size() );
-        for ( Securable dataset : expressionExperimentSet.getExperiments() ) {
+        for ( BioAssaySet dataset : expressionExperimentSet.getExperiments() ) {
             ids.add( dataset.getId() );
         }
         return expressionExperimentService.loadMultiple( ids );

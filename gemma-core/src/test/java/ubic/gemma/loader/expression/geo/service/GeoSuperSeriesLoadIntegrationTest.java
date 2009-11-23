@@ -18,10 +18,16 @@
  */
 package ubic.gemma.loader.expression.geo.service;
 
+import static org.junit.Assert.assertEquals;
+
 import java.util.Collection;
 
-import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
+import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.transaction.AfterTransaction;
+
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
+import ubic.gemma.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.testing.AbstractGeoServiceTest;
 
@@ -30,27 +36,26 @@ import ubic.gemma.testing.AbstractGeoServiceTest;
  * @version $Id$
  */
 public class GeoSuperSeriesLoadIntegrationTest extends AbstractGeoServiceTest {
-    protected AbstractGeoService geoService;
+
+    @Autowired
+    protected GeoDatasetService geoService;
 
     @SuppressWarnings("unchecked")
+    @Test
+    @AfterTransaction
     public void testFetchAndLoadSuperSeries() throws Exception {
         String path = getTestFileBasePath();
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
                 + "GSE11897SuperSeriesShort" ) );
-        Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad(
-                "GSE11897", false, true, false, false, true );
-        assertEquals( 1, results.size() );
+        try {
+            Collection<ExpressionExperiment> results = geoService
+                    .fetchAndLoad( "GSE11897", false, true, false, false, true );
+            assertEquals( 1, results.size() );
+        } catch ( AlreadyExistsInSystemException e ) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
 
-    }
-
-    protected void onSetUp() throws Exception {
-        super.onSetUp();
-        init();
-    }
-
-    @Override
-    protected void init() {
-        geoService = ( AbstractGeoService ) this.getBean( "geoDatasetService" );
     }
 
 }

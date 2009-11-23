@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.genome.sequenceAnalysis;
 
+import org.springframework.beans.factory.annotation.Autowired;
+
 /**
  * <p>
  * Spring Service base class for <code>ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationService</code>, provides
@@ -29,6 +31,7 @@ package ubic.gemma.model.genome.sequenceAnalysis;
 public abstract class BlatAssociationServiceBase implements
         ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationService {
 
+    @Autowired
     private ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationDao blatAssociationDao;
 
     /**

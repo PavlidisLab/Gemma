@@ -18,6 +18,10 @@
  */
 package ubic.gemma.model.analysis.expression.diff;
 
+import org.springframework.beans.factory.annotation.Autowired;
+
+import ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSetDao;
+
 /**
  * <p>
  * Spring Service base class for
@@ -31,6 +35,10 @@ public abstract class DifferentialExpressionAnalysisServiceBase extends
         ubic.gemma.model.analysis.AnalysisServiceImpl<DifferentialExpressionAnalysis> implements
         ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService {
 
+    @Autowired
+    ExpressionAnalysisResultSetDao expressionAnalysisResultSetDao;
+
+    @Autowired
     private ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao differentialExpressionAnalysisDao;
 
     /**
@@ -43,20 +51,6 @@ public abstract class DifferentialExpressionAnalysisServiceBase extends
         } catch ( Throwable th ) {
             throw new ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisServiceException(
                     "Error performing 'ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService.create(ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis analysis)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService#delete(java.lang.Long)
-     */
-    @Override
-    public void delete( final java.lang.Long idToDelete ) {
-        try {
-            this.handleDelete( idToDelete );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisServiceException(
-                    "Error performing 'ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService.delete(java.lang.Long idToDelete)' --> "
                             + th, th );
         }
     }
@@ -103,6 +97,13 @@ public abstract class DifferentialExpressionAnalysisServiceBase extends
     }
 
     /**
+     * @return the expressionAnalysisResultSetDao
+     */
+    public ExpressionAnalysisResultSetDao getExpressionAnalysisResultSetDao() {
+        return expressionAnalysisResultSetDao;
+    }
+
+    /**
      * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService#getResultSets(ubic.gemma.model.expression.experiment.ExpressionExperiment)
      */
     public java.util.Collection getResultSets(
@@ -122,6 +123,13 @@ public abstract class DifferentialExpressionAnalysisServiceBase extends
     public void setDifferentialExpressionAnalysisDao(
             ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao differentialExpressionAnalysisDao ) {
         this.differentialExpressionAnalysisDao = differentialExpressionAnalysisDao;
+    }
+
+    /**
+     * @param expressionAnalysisResultSetDao the expressionAnalysisResultSetDao to set
+     */
+    public void setExpressionAnalysisResultSetDao( ExpressionAnalysisResultSetDao expressionAnalysisResultSetDao ) {
+        this.expressionAnalysisResultSetDao = expressionAnalysisResultSetDao;
     }
 
     /**
@@ -168,12 +176,6 @@ public abstract class DifferentialExpressionAnalysisServiceBase extends
 
     @Override
     protected abstract void handleDelete( DifferentialExpressionAnalysis toDelete ) throws Exception;
-
-    /**
-     * Performs the core logic for {@link #delete(java.lang.Long)}
-     */
-    @Override
-    protected abstract void handleDelete( java.lang.Long idToDelete ) throws java.lang.Exception;
 
     /**
      * Performs the core logic for

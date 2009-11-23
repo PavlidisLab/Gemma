@@ -20,10 +20,20 @@ package ubic.gemma.model.genome;
 
 import java.util.Collection;
 
+import org.hibernate.SessionFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
+
 /**
  * @see ubic.gemma.model.genome.PhysicalMarker
  */
+@Repository
 public class PhysicalMarkerDaoImpl extends ubic.gemma.model.genome.PhysicalMarkerDaoBase {
+
+    @Autowired
+    public PhysicalMarkerDaoImpl( SessionFactory sessionFactory ) {
+        super.setSessionFactory( sessionFactory );
+    }
 
     @Override
     protected Collection<PhysicalMarker> handleLoad( Collection<Long> ids ) {

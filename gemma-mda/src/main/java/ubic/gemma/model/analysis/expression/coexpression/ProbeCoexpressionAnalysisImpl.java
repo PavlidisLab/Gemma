@@ -18,9 +18,6 @@
  */
 package ubic.gemma.model.analysis.expression.coexpression;
 
-import java.util.Collection;
-import java.util.HashSet;
-
 /**
  * @see ubic.gemma.model.analysis.ProbeCoexpressionAnalysis
  */
@@ -30,10 +27,5 @@ public class ProbeCoexpressionAnalysisImpl extends
      * The serial version UID of this class. Needed for serialization.
      */
     private static final long serialVersionUID = -1673631890179355697L;
-
-    @Override
-    public Collection getResultSets() {
-        return new HashSet();
-    }
 
 }

@@ -19,8 +19,6 @@
 package ubic.gemma.model.analysis.expression.coexpression;
 
 /**
- * Note that due to limitations in Andromda we cannot make this class abstract.
- * 
  * @see ubic.gemma.model.analysis.CoexpressionAnalysis
  */
 public abstract class CoexpressionAnalysisDaoImpl<T extends CoexpressionAnalysis> extends

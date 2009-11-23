@@ -30,6 +30,8 @@ import java.util.Map;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrixFactory;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
@@ -60,19 +62,19 @@ import ubic.gemma.persistence.PersisterHelper;
  * 
  * @author pavlidis
  * @version $Id$
- * @spring.bean id="simpleExpressionDataLoaderService"
- * @spring.property name="persisterHelper" ref="persisterHelper"
- * @spring.property name="arrayDesignService" ref="arrayDesignService"
- * @spring.property name="taxonService" ref="taxonService"
  */
+@Service
 public class SimpleExpressionDataLoaderService {
 
     private static Log log = LogFactory.getLog( SimpleExpressionDataLoaderService.class.getName() );
 
+    @Autowired
     PersisterHelper persisterHelper;
 
+    @Autowired
     ArrayDesignService arrayDesignService;
 
+    @Autowired
     TaxonService taxonService;
 
     /**
@@ -219,6 +221,18 @@ public class SimpleExpressionDataLoaderService {
 
         DoubleMatrix<String, String> matrix = parse( data );
 
+        return load( metaData, matrix );
+    }
+
+    /**
+     * For use in tests.
+     * 
+     * @param metaData
+     * @param matrix
+     * @return
+     */
+    protected ExpressionExperiment load( SimpleExpressionExperimentMetaData metaData,
+            DoubleMatrix<String, String> matrix ) {
         ExpressionExperiment experiment = convert( metaData, matrix );
 
         return ( ExpressionExperiment ) persisterHelper.persist( experiment );
@@ -252,7 +266,8 @@ public class SimpleExpressionDataLoaderService {
         for ( ArrayDesign design : arrayDesigns ) {
             ArrayDesign existing = null;
             if ( arrayDesignService != null ) {
-                arrayDesignService.thawLite( design );
+                // not sure why we need a thaw here, if it's not persistent...must check first anyway to avoid errors.
+                if ( design.getId() != null ) arrayDesignService.thawLite( design );
                 existing = arrayDesignService.find( design );
             }
             if ( existing != null ) {
@@ -354,7 +369,7 @@ public class SimpleExpressionDataLoaderService {
      * @return BioAssayDimension
      */
     private BioAssayDimension convertBioAssayDimension( ExpressionExperiment ee, ArrayDesign arrayDesign, Taxon taxon,
-            DoubleMatrix matrix ) {
+            DoubleMatrix<String, String> matrix ) {
 
         BioAssayDimension bad = BioAssayDimension.Factory.newInstance();
         bad.setName( "For " + ee.getShortName() );
@@ -390,7 +405,7 @@ public class SimpleExpressionDataLoaderService {
      */
     private Collection<RawExpressionDataVector> convertDesignElementDataVectors(
             ExpressionExperiment expressionExperiment, BioAssayDimension bioAssayDimension, ArrayDesign arrayDesign,
-            QuantitationType quantitationType, DoubleMatrix matrix ) {
+            QuantitationType quantitationType, DoubleMatrix<String, String> matrix ) {
         ByteArrayConverter bArrayConverter = new ByteArrayConverter();
 
         Collection<RawExpressionDataVector> vectors = new HashSet<RawExpressionDataVector>();

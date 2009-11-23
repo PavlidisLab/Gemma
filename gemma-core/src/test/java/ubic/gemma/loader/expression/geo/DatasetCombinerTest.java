@@ -1,7 +1,7 @@
 /*
  * The Gemma project
  * 
- * Copyright (c) 2006 University of British Columbia
+ * Copyright (c) 2006-2010 University of British Columbia
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,9 @@
  */
 package ubic.gemma.loader.expression.geo;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.HashSet;
@@ -25,10 +28,9 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.zip.GZIPInputStream;
 
-import junit.framework.TestCase;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.junit.Test;
 
 import ubic.gemma.loader.expression.geo.model.GeoDataset;
 import ubic.gemma.loader.expression.geo.model.GeoSeries;
@@ -37,30 +39,15 @@ import ubic.gemma.loader.expression.geo.model.GeoSeries;
  * @author pavlidis
  * @version $Id$
  */
-public class DatasetCombinerTest extends TestCase {
+public class DatasetCombinerTest {
 
     private static Log log = LogFactory.getLog( DatasetCombinerTest.class.getName() );
     Collection<GeoDataset> gds;
 
     /*
-     * @see TestCase#setUp()
-     */
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
-    }
-
-    /*
-     * @see TestCase#tearDown()
-     */
-    @Override
-    protected void tearDown() throws Exception {
-        super.tearDown();
-    }
-
-    /*
      * Test method for 'ubic.gemma.loader.expression.geo.DatsetCombiner.findGDSGrouping(String)'
      */
+    @Test
     public void testFindGDSGrouping() throws Exception {
         try {
             Collection<String> result = DatasetCombiner.findGDSforGSE( "GSE674" );
@@ -77,11 +64,303 @@ public class DatasetCombinerTest extends TestCase {
         }
     }
 
+    /**
+     * @throws Exception
+     */
+    @Test
+    public void testFindGSE13() throws Exception {
+        GeoFamilyParser parser = new GeoFamilyParser();
+
+        InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/GSE13Short/GDS44.soft.gz" ) );
+        parser.parse( is );
+        is.close();
+
+        is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/GSE13Short/GSE13_family.soft.gz" ) );
+        parser.parse( is );
+        is.close();
+
+        is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/GSE13Short/GDS52.soft.gz" ) );
+        parser.parse( is );
+        is.close();
+
+        GeoParseResult parseResult = ( ( GeoParseResult ) parser.getResults().iterator().next() );
+        gds = parseResult.getDatasets().values();
+        assertEquals( 2, gds.size() );
+
+        DatasetCombiner datasetCombiner = new DatasetCombiner();
+        GeoSampleCorrespondence result = datasetCombiner.findGSECorrespondence( gds );
+
+        log.debug( result );
+
+        Iterator<Set<String>> it = result.iterator();
+        int numBioMaterials = 0;
+        while ( it.hasNext() ) {
+            Collection<String> c = it.next();
+            assertTrue( c.size() == 1 || c.size() == 2 );
+            numBioMaterials++;
+        }
+
+        assertTrue( result.getCorrespondingSamples( "GSM623" ).contains( "GSM650" ) );
+        assertTrue( result.getCorrespondingSamples( "GSM612" ).contains( "GSM638" ) );
+        assertEquals( 1, result.getCorrespondingSamples( "GSM618" ).size() );
+        assertEquals( 33, numBioMaterials ); // used to be 28
+    }
+
+    /**
+     * Has multiple platforms, but no GES's are defined.
+     * 
+     * @throws Exception
+     */
+    @Test
+    public void testFindGSE3193() throws Exception {
+        GeoFamilyParser parser = new GeoFamilyParser();
+
+        InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/GSE3193Short/GSE3193_family.soft.gz" ) );
+        parser.parse( is );
+        is.close();
+
+        GeoParseResult parseResult = ( ( GeoParseResult ) parser.getResults().iterator().next() );
+        // GeoDataset gd = parseResult.getDatasets().values().iterator().next();
+        GeoSeries gse = parseResult.getSeries().values().iterator().next();
+
+        DatasetCombiner datasetCombiner = new DatasetCombiner();
+        GeoSampleCorrespondence result = datasetCombiner.findGSECorrespondence( gse );
+
+        log.debug( result );
+
+        Iterator<Set<String>> it = result.iterator();
+        int numBioMaterials = 0;
+        while ( it.hasNext() ) {
+            it.next();
+            // assertTrue( c.size() == 1 );
+            numBioMaterials++;
+        }
+        assertEquals( 57, numBioMaterials ); // note, i'm not at all sure these are right! this used to be 60.
+    }
+
     // todo: add test of findGSECorrespondence( GeoSeries series ) when there is no dataset.
+
+    /**
+     * @throws Exception
+     */
+    @Test
+    public void testFindGSE469() throws Exception {
+        GeoFamilyParser parser = new GeoFamilyParser();
+
+        InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/GSE469Short/GDS233.soft.gz" ) );
+        parser.parse( is );
+        is.close();
+
+        is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/GSE469Short/GSE469_family.soft.gz" ) );
+        parser.parse( is );
+        is.close();
+
+        is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/GSE469Short/GDS234.soft.gz" ) );
+        parser.parse( is );
+        is.close();
+
+        GeoParseResult parseResult = ( ( GeoParseResult ) parser.getResults().iterator().next() );
+        gds = parseResult.getDatasets().values();
+        assertEquals( 2, gds.size() );
+
+        DatasetCombiner datasetCombiner = new DatasetCombiner();
+        GeoSampleCorrespondence result = datasetCombiner.findGSECorrespondence( gds );
+
+        log.debug( result );
+
+        Iterator<Set<String>> it = result.iterator();
+        int numBioMaterials = 0;
+        while ( it.hasNext() ) {
+            Collection<String> c = it.next();
+            assertTrue( c.size() == 1 || c.size() == 2 );
+            numBioMaterials++;
+        }
+        // there are some questionable matches, but I can't really tell!
+        assertEquals( 54, numBioMaterials );
+        assertEquals( 1, result.getCorrespondingSamples( "GSM4301" ).size() );
+    }
+
+    @Test
+    public void testFindGSE493() throws Exception {
+        GeoFamilyParser parser = new GeoFamilyParser();
+
+        InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/GSE493Short/GDS215.soft.gz" ) );
+        parser.parse( is );
+        is.close();
+
+        is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/GSE493Short/GSE493_family.soft.gz" ) );
+        parser.parse( is );
+        is.close();
+
+        is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/GSE493Short/GDS258.soft.gz" ) );
+        parser.parse( is );
+        is.close();
+
+        GeoParseResult parseResult = ( ( GeoParseResult ) parser.getResults().iterator().next() );
+        gds = parseResult.getDatasets().values();
+        assertEquals( 2, gds.size() );
+
+        DatasetCombiner datasetCombiner = new DatasetCombiner();
+        GeoSampleCorrespondence result = datasetCombiner.findGSECorrespondence( gds );
+
+        log.debug( result );
+
+        Iterator<Set<String>> it = result.iterator();
+        int numBioMaterials = 0;
+        while ( it.hasNext() ) {
+            Collection<String> c = it.next();
+            assertTrue( c.size() == 1 || c.size() == 2 );
+            numBioMaterials++;
+        } // there are some questionable matches, but I can't really tell!
+        assertEquals( 10, numBioMaterials );
+        assertTrue( result.getCorrespondingSamples( "GSM4362" ).contains( "GSM4363" ) );
+        assertTrue( result.getCorrespondingSamples( "GSM4366" ).contains( "GSM4368" ) );
+        assertEquals( 1, result.getCorrespondingSamples( "GSM4371" ).size() );
+    }
+
+    /**
+     * Fairly hard case; twelve samples, 3 array design each sample run on each array design
+     * 
+     * @throws Exception
+     */
+    @Test
+    public void testFindGSE611() throws Exception {
+        GeoFamilyParser parser = new GeoFamilyParser();
+
+        InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/GSE611Short/GDS428.soft.gz" ) );
+        parser.parse( is );
+        is.close();
+
+        is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/GSE611Short/GSE611_family.soft.gz" ) );
+        parser.parse( is );
+        is.close();
+
+        is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/GSE611Short/GDS429.soft.gz" ) );
+        parser.parse( is );
+        is.close();
+
+        is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/GSE611Short/GDS430.soft.gz" ) );
+        parser.parse( is );
+        is.close();
+        GeoParseResult parseResult = ( ( GeoParseResult ) parser.getResults().iterator().next() );
+        gds = parseResult.getDatasets().values();
+        assertEquals( 3, gds.size() );
+
+        DatasetCombiner datasetCombiner = new DatasetCombiner();
+        GeoSampleCorrespondence result = datasetCombiner.findGSECorrespondence( gds );
+
+        Iterator<Set<String>> it = result.iterator();
+        int numBioMaterials = 0;
+        while ( it.hasNext() ) {
+            Collection<String> c = it.next();
+            assertEquals( 3, c.size() );
+            numBioMaterials++;
+        }
+        assertEquals( 4, numBioMaterials );
+
+        log.debug( result );
+    }
+
+    @Test
+    public void testFindGSE88() throws Exception {
+        GeoFamilyParser parser = new GeoFamilyParser();
+
+        InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/GSE88Short/GDS184.soft.gz" ) );
+        parser.parse( is );
+        is.close();
+
+        is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/GSE88Short/GSE88_family.soft.gz" ) );
+        parser.parse( is );
+        is.close();
+
+        GeoParseResult parseResult = ( ( GeoParseResult ) parser.getResults().iterator().next() );
+        GeoDataset gd = parseResult.getDatasets().values().iterator().next();
+        GeoSeries gse = parseResult.getSeries().values().iterator().next();
+        gd.getSeries().add( gse );
+        gds = new HashSet<GeoDataset>();
+        gds.add( gd );
+
+        DatasetCombiner datasetCombiner = new DatasetCombiner();
+        GeoSampleCorrespondence result = datasetCombiner.findGSECorrespondence( gds );
+
+        log.debug( result );
+
+        Iterator<Set<String>> it = result.iterator();
+        int numBioMaterials = 0;
+        while ( it.hasNext() ) {
+            Collection<String> c = it.next();
+            assertTrue( c.size() == 1 );
+            numBioMaterials++;
+        }
+        assertEquals( 31, numBioMaterials );
+
+    }
+
+    /**
+     * @throws Exception
+     */
+    @Test
+    public void testFindGSE91() throws Exception {
+        GeoFamilyParser parser = new GeoFamilyParser();
+
+        InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/GSE91Short/GDS168.soft.gz" ) );
+        parser.parse( is );
+        is.close();
+
+        is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/GSE91Short/GSE91_family.soft.gz" ) );
+        parser.parse( is );
+        is.close();
+
+        is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/GSE91Short/GDS169.soft.gz" ) );
+        parser.parse( is );
+        is.close();
+
+        GeoParseResult parseResult = ( ( GeoParseResult ) parser.getResults().iterator().next() );
+        gds = parseResult.getDatasets().values();
+        assertEquals( 2, gds.size() );
+
+        DatasetCombiner datasetCombiner = new DatasetCombiner();
+        GeoSampleCorrespondence result = datasetCombiner.findGSECorrespondence( gds );
+
+        log.debug( result );
+
+        Iterator<Set<String>> it = result.iterator();
+        int numBioMaterials = 0;
+        while ( it.hasNext() ) {
+            Collection<String> c = it.next();
+            assertTrue( c.size() == 1 || c.size() == 2 );
+            numBioMaterials++;
+        }
+        assertEquals( 9, numBioMaterials );
+        assertTrue( result.getCorrespondingSamples( "GSM2560" ).contains( "GSM2561" ) );
+        assertTrue( result.getCorrespondingSamples( "GSM2573" ).contains( "GSM2574" ) );
+        assertEquals( 1, result.getCorrespondingSamples( "GSM2564" ).size() );
+
+    }
 
     /*
      * Test method for 'ubic.gemma.loader.expression.geo.DatsetCombiner.findGSECorrespondence(Collection<GeoDataset>)'
      */
+    @Test
     public void testFindGSECorrespondence() throws Exception {
         GeoFamilyParser parser = new GeoFamilyParser();
         InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
@@ -125,75 +404,30 @@ public class DatasetCombinerTest extends TestCase {
     }
 
     /**
-     * Fairly hard case; twelve samples, 3 array design each sample run on each array design
+     * This has just a single data set but results in a "no platform assigned" error.
      * 
      * @throws Exception
      */
-    public void testFindGSE611() throws Exception {
+    @Test
+    public void testGDS186() throws Exception {
         GeoFamilyParser parser = new GeoFamilyParser();
 
         InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
-                "/data/loader/expression/geo/GSE611Short/GDS428.soft.gz" ) );
+                "/data/loader/expression/geo/gse106Short/GDS186.soft.gz" ) );
         parser.parse( is );
         is.close();
 
         is = new GZIPInputStream( this.getClass().getResourceAsStream(
-                "/data/loader/expression/geo/GSE611Short/GSE611_family.soft.gz" ) );
-        parser.parse( is );
-        is.close();
-
-        is = new GZIPInputStream( this.getClass().getResourceAsStream(
-                "/data/loader/expression/geo/GSE611Short/GDS429.soft.gz" ) );
-        parser.parse( is );
-        is.close();
-
-        is = new GZIPInputStream( this.getClass().getResourceAsStream(
-                "/data/loader/expression/geo/GSE611Short/GDS430.soft.gz" ) );
-        parser.parse( is );
-        is.close();
-        GeoParseResult parseResult = ( ( GeoParseResult ) parser.getResults().iterator().next() );
-        gds = parseResult.getDatasets().values();
-        assertEquals( 3, gds.size() );
-
-        DatasetCombiner datasetCombiner = new DatasetCombiner();
-        GeoSampleCorrespondence result = datasetCombiner.findGSECorrespondence( gds );
-
-        Iterator<Set<String>> it = result.iterator();
-        int numBioMaterials = 0;
-        while ( it.hasNext() ) {
-            Collection c = it.next();
-            assertEquals( 3, c.size() );
-            numBioMaterials++;
-        }
-        assertEquals( 4, numBioMaterials );
-
-        log.debug( result );
-    }
-
-    /**
-     * @throws Exception
-     */
-    public void testFindGSE91() throws Exception {
-        GeoFamilyParser parser = new GeoFamilyParser();
-
-        InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
-                "/data/loader/expression/geo/GSE91Short/GDS168.soft.gz" ) );
-        parser.parse( is );
-        is.close();
-
-        is = new GZIPInputStream( this.getClass().getResourceAsStream(
-                "/data/loader/expression/geo/GSE91Short/GSE91_family.soft.gz" ) );
-        parser.parse( is );
-        is.close();
-
-        is = new GZIPInputStream( this.getClass().getResourceAsStream(
-                "/data/loader/expression/geo/GSE91Short/GDS169.soft.gz" ) );
+                "/data/loader/expression/geo/gse106Short/GSE106.soft.gz" ) );
         parser.parse( is );
         is.close();
 
         GeoParseResult parseResult = ( ( GeoParseResult ) parser.getResults().iterator().next() );
-        gds = parseResult.getDatasets().values();
-        assertEquals( 2, gds.size() );
+        GeoDataset gd = parseResult.getDatasets().values().iterator().next();
+        GeoSeries gse = parseResult.getSeries().values().iterator().next();
+        gd.getSeries().add( gse );
+        gds = new HashSet<GeoDataset>();
+        gds.add( gd );
 
         DatasetCombiner datasetCombiner = new DatasetCombiner();
         GeoSampleCorrespondence result = datasetCombiner.findGSECorrespondence( gds );
@@ -203,101 +437,11 @@ public class DatasetCombinerTest extends TestCase {
         Iterator<Set<String>> it = result.iterator();
         int numBioMaterials = 0;
         while ( it.hasNext() ) {
-            Collection c = it.next();
-            assertTrue( c.size() == 1 || c.size() == 2 );
+            Collection<String> c = it.next();
+            assertTrue( c.size() == 1 );
             numBioMaterials++;
         }
-        assertEquals( 9, numBioMaterials );
-        assertTrue( result.getCorrespondingSamples( "GSM2560" ).contains( "GSM2561" ) );
-        assertTrue( result.getCorrespondingSamples( "GSM2573" ).contains( "GSM2574" ) );
-        assertEquals( 1, result.getCorrespondingSamples( "GSM2564" ).size() );
-
-    }
-
-    /**
-     * @throws Exception
-     */
-    public void testFindGSE13() throws Exception {
-        GeoFamilyParser parser = new GeoFamilyParser();
-
-        InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
-                "/data/loader/expression/geo/GSE13Short/GDS44.soft.gz" ) );
-        parser.parse( is );
-        is.close();
-
-        is = new GZIPInputStream( this.getClass().getResourceAsStream(
-                "/data/loader/expression/geo/GSE13Short/GSE13_family.soft.gz" ) );
-        parser.parse( is );
-        is.close();
-
-        is = new GZIPInputStream( this.getClass().getResourceAsStream(
-                "/data/loader/expression/geo/GSE13Short/GDS52.soft.gz" ) );
-        parser.parse( is );
-        is.close();
-
-        GeoParseResult parseResult = ( ( GeoParseResult ) parser.getResults().iterator().next() );
-        gds = parseResult.getDatasets().values();
-        assertEquals( 2, gds.size() );
-
-        DatasetCombiner datasetCombiner = new DatasetCombiner();
-        GeoSampleCorrespondence result = datasetCombiner.findGSECorrespondence( gds );
-
-        log.debug( result );
-
-        Iterator<Set<String>> it = result.iterator();
-        int numBioMaterials = 0;
-        while ( it.hasNext() ) {
-            Collection c = it.next();
-            assertTrue( c.size() == 1 || c.size() == 2 );
-            numBioMaterials++;
-        }
-
-        assertTrue( result.getCorrespondingSamples( "GSM623" ).contains( "GSM650" ) );
-        assertTrue( result.getCorrespondingSamples( "GSM612" ).contains( "GSM638" ) );
-        assertEquals( 1, result.getCorrespondingSamples( "GSM618" ).size() );
-        assertEquals( 33, numBioMaterials ); // used to be 28
-    }
-
-    /**
-     * @throws Exception
-     */
-    public void testFindGSE469() throws Exception {
-        GeoFamilyParser parser = new GeoFamilyParser();
-
-        InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
-                "/data/loader/expression/geo/GSE469Short/GDS233.soft.gz" ) );
-        parser.parse( is );
-        is.close();
-
-        is = new GZIPInputStream( this.getClass().getResourceAsStream(
-                "/data/loader/expression/geo/GSE469Short/GSE469_family.soft.gz" ) );
-        parser.parse( is );
-        is.close();
-
-        is = new GZIPInputStream( this.getClass().getResourceAsStream(
-                "/data/loader/expression/geo/GSE469Short/GDS234.soft.gz" ) );
-        parser.parse( is );
-        is.close();
-
-        GeoParseResult parseResult = ( ( GeoParseResult ) parser.getResults().iterator().next() );
-        gds = parseResult.getDatasets().values();
-        assertEquals( 2, gds.size() );
-
-        DatasetCombiner datasetCombiner = new DatasetCombiner();
-        GeoSampleCorrespondence result = datasetCombiner.findGSECorrespondence( gds );
-
-        log.debug( result );
-
-        Iterator<Set<String>> it = result.iterator();
-        int numBioMaterials = 0;
-        while ( it.hasNext() ) {
-            Collection c = it.next();
-            assertTrue( c.size() == 1 || c.size() == 2 );
-            numBioMaterials++;
-        }
-        // there are some questionable matches, but I can't really tell!
-        assertEquals( 54, numBioMaterials );
-        assertEquals( 1, result.getCorrespondingSamples( "GSM4301" ).size() );
+        assertEquals( 11, numBioMaterials );
     }
 
     /**
@@ -305,6 +449,7 @@ public class DatasetCombinerTest extends TestCase {
      * 
      * @throws Exception
      */
+    @Test
     public void testGSE465() throws Exception {
         GeoFamilyParser parser = new GeoFamilyParser();
 
@@ -355,161 +500,13 @@ public class DatasetCombinerTest extends TestCase {
         Iterator<Set<String>> it = result.iterator();
         int numBioMaterials = 0;
         while ( it.hasNext() ) {
-            Collection c = it.next();
+            Collection<String> c = it.next();
             assertTrue( "Unexpected group size: " + c.size(), c.size() == 1 || c.size() == 2 || c.size() == 6
                     || c.size() == 5 );
             numBioMaterials++;
         }
         assertEquals( 30, numBioMaterials );
 
-    }
-
-    public void testFindGSE493() throws Exception {
-        GeoFamilyParser parser = new GeoFamilyParser();
-
-        InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
-                "/data/loader/expression/geo/GSE493Short/GDS215.soft.gz" ) );
-        parser.parse( is );
-        is.close();
-
-        is = new GZIPInputStream( this.getClass().getResourceAsStream(
-                "/data/loader/expression/geo/GSE493Short/GSE493_family.soft.gz" ) );
-        parser.parse( is );
-        is.close();
-
-        is = new GZIPInputStream( this.getClass().getResourceAsStream(
-                "/data/loader/expression/geo/GSE493Short/GDS258.soft.gz" ) );
-        parser.parse( is );
-        is.close();
-
-        GeoParseResult parseResult = ( ( GeoParseResult ) parser.getResults().iterator().next() );
-        gds = parseResult.getDatasets().values();
-        assertEquals( 2, gds.size() );
-
-        DatasetCombiner datasetCombiner = new DatasetCombiner();
-        GeoSampleCorrespondence result = datasetCombiner.findGSECorrespondence( gds );
-
-        log.debug( result );
-
-        Iterator<Set<String>> it = result.iterator();
-        int numBioMaterials = 0;
-        while ( it.hasNext() ) {
-            Collection c = it.next();
-            assertTrue( c.size() == 1 || c.size() == 2 );
-            numBioMaterials++;
-        } // there are some questionable matches, but I can't really tell!
-        assertEquals( 10, numBioMaterials );
-        assertTrue( result.getCorrespondingSamples( "GSM4362" ).contains( "GSM4363" ) );
-        assertTrue( result.getCorrespondingSamples( "GSM4366" ).contains( "GSM4368" ) );
-        assertEquals( 1, result.getCorrespondingSamples( "GSM4371" ).size() );
-    }
-
-    public void testFindGSE88() throws Exception {
-        GeoFamilyParser parser = new GeoFamilyParser();
-
-        InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
-                "/data/loader/expression/geo/GSE88Short/GDS184.soft.gz" ) );
-        parser.parse( is );
-        is.close();
-
-        is = new GZIPInputStream( this.getClass().getResourceAsStream(
-                "/data/loader/expression/geo/GSE88Short/GSE88_family.soft.gz" ) );
-        parser.parse( is );
-        is.close();
-
-        GeoParseResult parseResult = ( ( GeoParseResult ) parser.getResults().iterator().next() );
-        GeoDataset gd = parseResult.getDatasets().values().iterator().next();
-        GeoSeries gse = parseResult.getSeries().values().iterator().next();
-        gd.getSeries().add( gse );
-        gds = new HashSet<GeoDataset>();
-        gds.add( gd );
-
-        DatasetCombiner datasetCombiner = new DatasetCombiner();
-        GeoSampleCorrespondence result = datasetCombiner.findGSECorrespondence( gds );
-
-        log.debug( result );
-
-        Iterator<Set<String>> it = result.iterator();
-        int numBioMaterials = 0;
-        while ( it.hasNext() ) {
-            Collection c = it.next();
-            assertTrue( c.size() == 1 );
-            numBioMaterials++;
-        }
-        assertEquals( 31, numBioMaterials );
-
-    }
-
-    /**
-     * Has multiple platforms, but no GES's are defined.
-     * 
-     * @throws Exception
-     */
-    public void testFindGSE3193() throws Exception {
-        GeoFamilyParser parser = new GeoFamilyParser();
-
-        InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
-                "/data/loader/expression/geo/GSE3193Short/GSE3193_family.soft.gz" ) );
-        parser.parse( is );
-        is.close();
-
-        GeoParseResult parseResult = ( ( GeoParseResult ) parser.getResults().iterator().next() );
-        // GeoDataset gd = parseResult.getDatasets().values().iterator().next();
-        GeoSeries gse = parseResult.getSeries().values().iterator().next();
-
-        DatasetCombiner datasetCombiner = new DatasetCombiner();
-        GeoSampleCorrespondence result = datasetCombiner.findGSECorrespondence( gse );
-
-        log.debug( result );
-
-        Iterator<Set<String>> it = result.iterator();
-        int numBioMaterials = 0;
-        while ( it.hasNext() ) {
-            it.next();
-            // assertTrue( c.size() == 1 );
-            numBioMaterials++;
-        }
-        assertEquals( 57, numBioMaterials ); // note, i'm not at all sure these are right! this used to be 60.
-    }
-
-    /**
-     * This has just a single data set but results in a "no platform assigned" error.
-     * 
-     * @throws Exception
-     */
-    public void testGDS186() throws Exception {
-        GeoFamilyParser parser = new GeoFamilyParser();
-
-        InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
-                "/data/loader/expression/geo/gse106Short/GDS186.soft.gz" ) );
-        parser.parse( is );
-        is.close();
-
-        is = new GZIPInputStream( this.getClass().getResourceAsStream(
-                "/data/loader/expression/geo/gse106Short/GSE106.soft.gz" ) );
-        parser.parse( is );
-        is.close();
-
-        GeoParseResult parseResult = ( ( GeoParseResult ) parser.getResults().iterator().next() );
-        GeoDataset gd = parseResult.getDatasets().values().iterator().next();
-        GeoSeries gse = parseResult.getSeries().values().iterator().next();
-        gd.getSeries().add( gse );
-        gds = new HashSet<GeoDataset>();
-        gds.add( gd );
-
-        DatasetCombiner datasetCombiner = new DatasetCombiner();
-        GeoSampleCorrespondence result = datasetCombiner.findGSECorrespondence( gds );
-
-        log.debug( result );
-
-        Iterator<Set<String>> it = result.iterator();
-        int numBioMaterials = 0;
-        while ( it.hasNext() ) {
-            Collection c = it.next();
-            assertTrue( c.size() == 1 );
-            numBioMaterials++;
-        }
-        assertEquals( 11, numBioMaterials );
     }
 
 }

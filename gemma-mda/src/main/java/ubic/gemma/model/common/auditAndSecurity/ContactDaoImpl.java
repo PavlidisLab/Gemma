@@ -19,6 +19,9 @@
 package ubic.gemma.model.common.auditAndSecurity;
 
 import org.hibernate.Criteria;
+import org.hibernate.SessionFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
 
 import ubic.gemma.util.BusinessKey;
 
@@ -27,7 +30,13 @@ import ubic.gemma.util.BusinessKey;
  * @version $Id$
  * @see ubic.gemma.model.common.auditAndSecurity.Contact
  */
+@Repository
 public class ContactDaoImpl extends ubic.gemma.model.common.auditAndSecurity.ContactDaoBase {
+
+    @Autowired
+    public ContactDaoImpl( SessionFactory sessionFactory ) {
+        super.setSessionFactory( sessionFactory );
+    }
 
     /*
      * (non-Javadoc)
@@ -39,7 +48,7 @@ public class ContactDaoImpl extends ubic.gemma.model.common.auditAndSecurity.Con
         try {
 
             BusinessKey.checkKey( contact );
-            Criteria queryObject = super.getSession( false ).createCriteria( Contact.class );
+            Criteria queryObject = super.getSession().createCriteria( Contact.class );
 
             BusinessKey.addRestrictions( queryObject, contact );
 

@@ -8,8 +8,7 @@
 	<head>
 		<%-- Include common set of meta tags for each layout --%>
 		<%@ include file="/common/meta.jsp"%>
-		<title><decorator:title /> | <fmt:message key="webapp.name" />
-		</title>
+		<title><decorator:title /> | <fmt:message key="webapp.name" /></title>
 
 		<script type='text/javascript' src='/Gemma/dwr/engine.js'></script>
 		<script type='text/javascript' src='/Gemma/dwr/util.js'></script>
@@ -33,10 +32,6 @@
 
 				<div id="main" class="home">
 					<%@ include file="/common/messages.jsp"%>
-					<!-- 
-					<h1>
-						<decorator:getProperty property="page.heading" />
-					</h1>-->
 					<decorator:body />
 				</div>
 
@@ -45,14 +40,6 @@
 				</div>
 
 
-				<c:set var="currentMenu" scope="request">
-					<decorator:getProperty property="meta.menu" />
-				</c:set>
-				<c:if test="${currentMenu == 'AdminMenu'}">
-					<menu:useMenuDisplayer name="Velocity" config="WEB-INF/classes/cssVerticalMenu.vm" permissions="rolesAdapter">
-						<menu:displayMenu name="AdminMenu" />
-					</menu:useMenuDisplayer>
-				</c:if>
 				<div id="nav">
 					<div class="wrapper">
 						<h2 class="accessibility">

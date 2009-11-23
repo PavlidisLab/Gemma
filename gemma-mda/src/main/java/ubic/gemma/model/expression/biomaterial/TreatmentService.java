@@ -18,19 +18,23 @@
  */
 package ubic.gemma.model.expression.biomaterial;
 
+import org.springframework.security.access.annotation.Secured;
+
 /**
- * 
+ * @author kelsey
+ * @version $Id$
  */
-public interface TreatmentService extends ubic.gemma.model.common.AuditableService {
+public interface TreatmentService  {
 
     /**
      * 
      */
-    public java.util.Collection getTreatments();
+    public java.util.Collection<Treatment> getTreatments();
 
     /**
      * 
      */
+    @Secured( { "GROUP_USER" })
     public ubic.gemma.model.expression.biomaterial.Treatment saveTreatment(
             ubic.gemma.model.expression.biomaterial.Treatment treatment );
 

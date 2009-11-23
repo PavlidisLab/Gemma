@@ -18,8 +18,18 @@
  */
 package ubic.gemma.model.genome.gene;
 
+import org.hibernate.SessionFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
+
 /**
  * @see ubic.gemma.model.genome.gene.CandidateGeneList
  */
+@Repository
 public class CandidateGeneListDaoImpl extends ubic.gemma.model.genome.gene.CandidateGeneListDaoBase {
+
+    @Autowired
+    public CandidateGeneListDaoImpl( SessionFactory sessionFactory ) {
+        super.setSessionFactory( sessionFactory );
+    }
 }

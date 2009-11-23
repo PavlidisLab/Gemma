@@ -18,9 +18,12 @@
  */
 package ubic.gemma.model.genome.gene;
 
+import org.springframework.stereotype.Repository;
+
 /**
  * @see ubic.gemma.model.genome.gene.GeneAlias
  */
+@Repository
 public interface GeneAliasDao {
     /**
      * This constant is used as a transformation flag; entities can be converted automatically into value objects or

@@ -18,9 +18,19 @@
  */
 package ubic.gemma.model.expression.biomaterial;
 
+import org.hibernate.SessionFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
+
 /**
  * @see ubic.gemma.model.expression.biomaterial.BioMaterialMeasurement
  */
+@Repository
 public class BioMaterialMeasurementDaoImpl extends
         ubic.gemma.model.expression.biomaterial.BioMaterialMeasurementDaoBase {
+
+    @Autowired
+    public BioMaterialMeasurementDaoImpl( SessionFactory sessionFactory ) {
+        super.setSessionFactory( sessionFactory );
+    }
 }

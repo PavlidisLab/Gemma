@@ -6,7 +6,7 @@
 	<jwr:script src='/scripts/ajax/ext/data/DwrProxy.js' />
 	<jwr:script src='/scripts/app/gene.detail.js' />
 
-	<security:authorize ifAnyGranted="admin">
+	<security:authorize ifAnyGranted="GROUP_ADMIN">
 		<script type="text/javascript">
 	Ext.namespace('Gemma');
 	Ext.onReady(function() {
@@ -28,13 +28,9 @@
 
 	<title><c:if test="${not empty gene.officialSymbol}">
 			<jsp:getProperty name="gene" property="officialSymbol" />
-		</c:if> <fmt:message key="gene.details" />
-	</title>
+		</c:if> <fmt:message key="gene.details" /></title>
 </head>
 <body>
-
-
-
 
 	<input type="hidden" name="gene" id="gene" value="${gene.id}" />
 	<input type="hidden" name="geneName" id="geneName" value="${gene.name}" />
@@ -47,8 +43,8 @@
 		</c:if>
 			<c:if test="${not empty gene.taxon}">
 			[${gene.taxon.scientificName}]
-			<input type="hidden" id="taxonScientificName" value="${gene.taxon.scientificName}" />			
-		</c:if>
+			 <input type="hidden" id="taxonScientificName" value="${gene.taxon.scientificName}" />
+			</c:if>
 
 		</c:if>
 	</h3>
@@ -56,7 +52,7 @@
 	<table cellspacing="6">
 		<tr>
 			<td align="right" valign="top">
-				<b> <fmt:message key="gene.aliases" /> </b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;
+				<b> <fmt:message key="gene.aliases" /> </b>
 			</td>
 			<td valign="top">
 				<%
@@ -74,19 +70,13 @@
 			    }
 			%>
 
-				<%
-			    if ( gene.getNcbiId() != null ) {
-
-			         
-			%>
+				<c:if test="${not empty gene.ncbiId}">
 				&nbsp;&nbsp;
 				<a title="NCBI Gene link"
-					href="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gene&cmd=Retrieve&dopt=full_report&list_uids=${gene.ncbiId}">
-					<img alt="NCBI Gene Link" src="<c:url value='/images/logo/ncbi.gif'/>" /> </a>
-				<%
-			    }
-			%>
+						href="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gene&cmd=Retrieve&dopt=full_report&list_uids=${gene.ncbiId}">
+						<img alt="NCBI Gene Link" src="<c:url value='/images/logo/ncbi.gif'/>" /> </a>
 
+				</c:if>
 
 
 			</td>
@@ -158,14 +148,14 @@
 
 
 		<c:if test="${not empty gene.taxon && gene.taxon.id != 2}">
-			<div style="width: 350px; font-size: smaller; margin: 3px; padding: 5px; background-color: #DDDDDD">
-				Note: Images are from the homologous mouse gene, ${homologousMouseGene.officialSymbol}.
-			</div>
+			<p>
+				Images are for mouse gene ${gene.officialSymbol}.
+			</p>
 		</c:if>
 		<div style="valign: top" class="clearfix">
 			<c:forEach var="img" items="${representativeImages}">
-				<div style="cursor:pointer;float: left; padding: 8px">
-					<a title='Allen Brain Atlas Image for <c:out value="${gene.officialSymbol}"/>, click to enlarge ' 
+				<div style="cursor: pointer; float: left; padding: 8px">
+					<a title='Allen Brain Atlas Image for <c:out value="${gene.officialSymbol}"/>, click to enlarge '
 						onClick="Gemma.geneLinkOutPopUp( &#34; ${img.downloadExpressionPath} &#34; )"> <img
 							src="${img.expressionThumbnailUrl}" /> </a>
 				</div>
@@ -201,7 +191,7 @@
 	</c:if>
 
 
-	<security:authorize ifAnyGranted="admin">
+	<security:authorize ifAnyGranted="GROUP_ADMIN">
 		<div id="auditTrail"></div>
 		<input type="hidden" name="auditableId" id="auditableId" value="${gene.id}" />
 		<input type="hidden" name="auditableClass" id="auditableClass" value="${gene.class.name}" />

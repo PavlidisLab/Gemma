@@ -20,12 +20,19 @@ package ubic.gemma.model.genome;
 
 import java.util.Collection;
 
+import org.springframework.stereotype.Service;
+
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 
 /**
  * @see ubic.gemma.model.genome.ProbeAlignedRegionService
  */
+@Service
 public class ProbeAlignedRegionServiceImpl extends ubic.gemma.model.genome.ProbeAlignedRegionServiceBase {
+
+    public void thaw( ProbeAlignedRegion par ) {
+        this.getProbeAlignedRegionDao().thaw( par );
+    }
 
     @SuppressWarnings("unchecked")
     @Override
@@ -40,10 +47,6 @@ public class ProbeAlignedRegionServiceImpl extends ubic.gemma.model.genome.Probe
     protected java.util.Collection<ProbeAlignedRegion> handleFindAssociations(
             ubic.gemma.model.genome.PhysicalLocation physicalLocation ) throws java.lang.Exception {
         return this.getProbeAlignedRegionDao().findByPhysicalLocation( physicalLocation );
-    }
-
-    public void thaw( ProbeAlignedRegion par ) {
-        this.getProbeAlignedRegionDao().thaw( par );
     }
 
 }

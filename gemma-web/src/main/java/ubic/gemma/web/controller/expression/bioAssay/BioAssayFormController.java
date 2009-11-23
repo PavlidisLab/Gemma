@@ -42,13 +42,6 @@ import ubic.gemma.web.controller.BaseFormController;
 /**
  * @author keshav
  * @version $Id$
- * @spring.bean id="bioAssayFormController"
- * @spring.property name = "commandName" value="bioAssayImpl"
- * @spring.property name = "formView" value="bioAssay.edit"
- * @spring.property name = "successView" value="redirect:/expressionExperiment/showAllExpressionExperiments.html"
- * @spring.property name = "bioAssayService" ref="bioAssayService"
- * @spring.property name = "externalDatabaseService" ref="externalDatabaseService"
- * @spring.property name = "validator" ref="bioAssayValidator"
  */
 public class BioAssayFormController extends BaseFormController {
 
@@ -70,39 +63,24 @@ public class BioAssayFormController extends BaseFormController {
 
     /**
      * @param request
-     * @return Object
-     * @throws ServletException
-     * @see org.springframework.web.servlet.mvc.AbstractFormController#formBackingObject(javax.servlet.http.HttpServletRequest)
+     * @param response
+     * @param command
+     * @param errors
+     * @return ModelAndView
+     * @throws Exception
      */
     @Override
-    protected Object formBackingObject( HttpServletRequest request ) {
-        BioAssay ba = null;
+    public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
+            BindException errors ) throws Exception {
 
-        log.debug( "entering formBackingObject" );
+        log.debug( "entering onSubmit" );
 
-        String id_param = ServletRequestUtils.getStringParameter( request, "id", "" );
+        BioAssay ba = ( BioAssay ) command;
+        bioAssayService.update( ba );
 
-        Long id = Long.parseLong( id_param );
+        saveMessage( request, "object.saved", new Object[] { ba.getClass().getSimpleName(), ba.getId() }, "Saved" );
 
-        if ( !id.equals( null ) )
-            ba = bioAssayService.load( id );
-        else
-            ba = BioAssay.Factory.newInstance();
-
-        return ba;
-    }
-
-    /**
-     * @param request
-     * @return Map
-     */
-    @Override
-    @SuppressWarnings( { "unchecked", "unused" })
-    protected Map<String, Collection<ExternalDatabase>> referenceData( HttpServletRequest request ) {
-        Collection<ExternalDatabase> edCol = externalDatabaseService.loadAll();
-        Map<String, Collection<ExternalDatabase>> edMap = new HashMap<String, Collection<ExternalDatabase>>();
-        edMap.put( "externalDatabases", edCol );
-        return edMap;
+        return new ModelAndView( getSuccessView() );
     }
 
     /**
@@ -147,28 +125,6 @@ public class BioAssayFormController extends BaseFormController {
     }
 
     /**
-     * @param request
-     * @param response
-     * @param command
-     * @param errors
-     * @return ModelAndView
-     * @throws Exception
-     */
-    @Override
-    public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
-            BindException errors ) throws Exception {
-
-        log.debug( "entering onSubmit" );
-
-        BioAssay ba = ( BioAssay ) command;
-        bioAssayService.update( ba );
-
-        saveMessage( request, "object.saved", new Object[] { ba.getClass().getSimpleName(), ba.getId() }, "Saved" );
-
-        return new ModelAndView( getSuccessView() );
-    }
-
-    /**
      * @param bioAssayService
      */
     public void setBioAssayService( BioAssayService bioAssayService ) {
@@ -180,6 +136,43 @@ public class BioAssayFormController extends BaseFormController {
      */
     public void setExternalDatabaseService( ExternalDatabaseService externalDatabaseService ) {
         this.externalDatabaseService = externalDatabaseService;
+    }
+
+    /**
+     * @param request
+     * @return Object
+     * @throws ServletException
+     * @see org.springframework.web.servlet.mvc.AbstractFormController#formBackingObject(javax.servlet.http.HttpServletRequest)
+     */
+    @Override
+    protected Object formBackingObject( HttpServletRequest request ) {
+        BioAssay ba = null;
+
+        log.debug( "entering formBackingObject" );
+
+        String id_param = ServletRequestUtils.getStringParameter( request, "id", "" );
+
+        Long id = Long.parseLong( id_param );
+
+        if ( !id.equals( null ) )
+            ba = bioAssayService.load( id );
+        else
+            ba = BioAssay.Factory.newInstance();
+
+        return ba;
+    }
+
+    /**
+     * @param request
+     * @return Map
+     */
+    @Override
+    @SuppressWarnings( { "unchecked", "unused" })
+    protected Map<String, Collection<ExternalDatabase>> referenceData( HttpServletRequest request ) {
+        Collection<ExternalDatabase> edCol = externalDatabaseService.loadAll();
+        Map<String, Collection<ExternalDatabase>> edMap = new HashMap<String, Collection<ExternalDatabase>>();
+        edMap.put( "externalDatabases", edCol );
+        return edMap;
     }
 
 }

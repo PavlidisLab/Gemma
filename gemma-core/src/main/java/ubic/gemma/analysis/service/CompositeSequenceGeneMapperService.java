@@ -25,6 +25,8 @@ import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -35,17 +37,17 @@ import ubic.gemma.model.genome.gene.GeneService;
 /**
  * @author keshav
  * @version $Id$
- * @spring.bean id="compositeSequenceGeneMapperService"
- * @spring.property name="geneService" ref="geneService"
- * @spring.property name="compositeSequenceService" ref="compositeSequenceService"
  * @deprecated Methods here can be done other ways, or added to the CompositeSequenceService if need be.
  */
 @Deprecated
+@Service
 public class CompositeSequenceGeneMapperService {
     private Log log = LogFactory.getLog( this.getClass() );
 
+    @Autowired
     GeneService geneService;
 
+    @Autowired
     CompositeSequenceService compositeSequenceService;
 
     /**
@@ -53,7 +55,6 @@ public class CompositeSequenceGeneMapperService {
      * @param arrayDesigns to look in
      * @return LinkedHashMap<Gene, Collection<CompositeSequence>>
      */
-    @SuppressWarnings("unchecked")
     public LinkedHashMap<Gene, Collection<CompositeSequence>> getGene2ProbeMapByOfficialSymbols(
             Collection<String> officialSymbols, Collection<ArrayDesign> arrayDesigns ) {
 
@@ -87,7 +88,6 @@ public class CompositeSequenceGeneMapperService {
      * @param officialSymbols
      * @return LinkedHashMap
      */
-    @SuppressWarnings("unchecked")
     protected LinkedHashMap<String, Collection<Gene>> findGenesByOfficialSymbols( Collection<String> officialSymbols ) {
 
         LinkedHashMap<String, Collection<Gene>> geneMap = new LinkedHashMap<String, Collection<Gene>>();

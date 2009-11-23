@@ -20,15 +20,48 @@
  */
 package ubic.gemma.model.common.auditAndSecurity;
 
+import java.util.Collection;
+
 import org.hibernate.Criteria;
+import org.hibernate.SessionFactory;
 import org.hibernate.criterion.Restrictions;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
 
 import ubic.gemma.util.BusinessKey;
 
 /**
  * @see ubic.gemma.model.common.auditAndSecurity.User
  */
+@Repository
 public class UserDaoImpl extends ubic.gemma.model.common.auditAndSecurity.UserDaoBase {
+
+    @Autowired
+    public UserDaoImpl( SessionFactory sessionFactory ) {
+        super.setSessionFactory( sessionFactory );
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see ubic.gemma.model.common.auditAndSecurity.UserDao#addAuthority(ubic.gemma.model.common.auditAndSecurity.User,
+     * java.lang.String)
+     */
+    public void addAuthority( User user, String roleName ) {
+        throw new UnsupportedOperationException( "User group-based authority instead" );
+
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see
+     * ubic.gemma.model.common.auditAndSecurity.UserDao#changePassword(ubic.gemma.model.common.auditAndSecurity.User,
+     * java.lang.String)
+     */
+    public void changePassword( User user, String password ) {
+        user.setPassword( password );
+        this.getHibernateTemplate().update( user );
+
+    }
 
     /*
      * (non-Javadoc)
@@ -40,7 +73,7 @@ public class UserDaoImpl extends ubic.gemma.model.common.auditAndSecurity.UserDa
 
             BusinessKey.checkKey( user );
 
-            Criteria queryObject = super.getSession( false ).createCriteria( User.class );
+            Criteria queryObject = super.getSession().createCriteria( User.class );
 
             queryObject.add( Restrictions.eq( "userName", user.getUserName() ) );
 
@@ -63,4 +96,26 @@ public class UserDaoImpl extends ubic.gemma.model.common.auditAndSecurity.UserDa
 
         }
     }
+
+    /*
+     * (non-Javadoc)
+     * @see
+     * ubic.gemma.model.common.auditAndSecurity.UserDao#loadGroupAuthorities(ubic.gemma.model.common.auditAndSecurity
+     * .User)
+     */
+    @SuppressWarnings("unchecked")
+    public Collection<GroupAuthority> loadGroupAuthorities( User u ) {
+
+        return this.getHibernateTemplate().findByNamedParam(
+                "select gr.authorities from UserGroupImpl gr inner join gr.groupMembers m where m = :user ",
+                "user", u );
+
+    }
+
+    @SuppressWarnings("unchecked")
+    public Collection<UserGroup> loadGroups( User user ) {
+        return this.getHibernateTemplate().findByNamedParam(
+                "select gr from UserGroupImpl gr inner join gr.groupMembers m where m = :user ", "user", user );
+    }
+
 }

@@ -18,14 +18,15 @@
  */
 package ubic.gemma.model.expression.biomaterial;
 
+import org.springframework.stereotype.Service;
+
 /**
- * <hr>
- * 
  * @author keshav
  * @author pavlidis
  * @version $Id$
  * @see ubic.gemma.model.expression.biomaterial.CompoundService
  */
+@Service
 public class CompoundServiceImpl extends ubic.gemma.model.expression.biomaterial.CompoundServiceBase {
 
     /**
@@ -33,7 +34,7 @@ public class CompoundServiceImpl extends ubic.gemma.model.expression.biomaterial
      */
     protected ubic.gemma.model.expression.biomaterial.Compound handleCreate(
             ubic.gemma.model.expression.biomaterial.Compound compound ) throws java.lang.Exception {
-        return ( Compound ) this.getCompoundDao().create( compound );
+        return this.getCompoundDao().create( compound );
     }
 
     /**

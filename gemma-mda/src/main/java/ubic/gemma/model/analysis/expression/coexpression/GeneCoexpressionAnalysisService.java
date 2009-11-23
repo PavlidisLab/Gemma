@@ -18,8 +18,12 @@
  */
 package ubic.gemma.model.analysis.expression.coexpression;
 
+import org.springframework.security.access.annotation.Secured;
+
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+
 /**
- * 
+ * @version $Id$
  */
 public interface GeneCoexpressionAnalysisService extends
         ubic.gemma.model.analysis.AnalysisService<GeneCoexpressionAnalysis> {
@@ -27,6 +31,7 @@ public interface GeneCoexpressionAnalysisService extends
     /**
      * 
      */
+    @Secured( { "GROUP_ADMIN" })
     public ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis create(
             ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis analysis );
 
@@ -35,13 +40,12 @@ public interface GeneCoexpressionAnalysisService extends
      * This is required only to allow security filtering of the expression experiment collections.
      * </p>
      */
-    public java.util.Collection getDatasetsAnalyzed(
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    public java.util.Collection<ExpressionExperiment> getDatasetsAnalyzed(
             ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis analysis );
 
     /**
-     * <p>
      * Get the number of data sets analyzed .
-     * </p>
      */
     public int getNumDatasetsAnalyzed(
             ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis analysis );
@@ -55,6 +59,7 @@ public interface GeneCoexpressionAnalysisService extends
     /**
      * 
      */
+    @Secured( { "GROUP_ADMIN" })
     public void update(
             ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis geneCoExpressionAnalysis );
 

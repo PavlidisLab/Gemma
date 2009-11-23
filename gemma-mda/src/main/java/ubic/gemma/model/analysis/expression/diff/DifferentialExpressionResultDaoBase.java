@@ -39,15 +39,16 @@ public abstract class DifferentialExpressionResultDaoBase extends HibernateDaoSu
     /**
      * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultDao#create(int, java.util.Collection)
      */
-    public java.util.Collection<ProbeAnalysisResult> create( final java.util.Collection<ProbeAnalysisResult> entities ) {
+    public java.util.Collection<? extends ProbeAnalysisResult> create(
+            final java.util.Collection<? extends ProbeAnalysisResult> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "ProbeAnalysisResult.create - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback() {
+                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator<ProbeAnalysisResult> entityIterator = entities.iterator(); entityIterator
+                        for ( java.util.Iterator<? extends ProbeAnalysisResult> entityIterator = entities.iterator(); entityIterator
                                 .hasNext(); ) {
                             create( entityIterator.next() );
                         }
@@ -57,16 +58,23 @@ public abstract class DifferentialExpressionResultDaoBase extends HibernateDaoSu
         return entities;
     }
 
+    
+    public Collection<? extends ProbeAnalysisResult> load( Collection<Long> ids ) {
+        return this.getHibernateTemplate().findByNamedParam( "from ProbeAnalysisResultImpl where id in (:ids)", "ids",
+                ids );
+    }
+
     /**
      * @see ubic.gemma.model.analysis.expression.diff.ProbeAnalysisResultDao#create(int transform,
      *      ubic.gemma.model.analysis.expression.diff.ProbeAnalysisResult)
      */
     public ProbeAnalysisResult create(
-            final ubic.gemma.model.analysis.expression.ProbeAnalysisResult ProbeAnalysisResult ) {
-        if ( ProbeAnalysisResult == null ) {
+            final ubic.gemma.model.analysis.expression.ProbeAnalysisResult probeAnalysisResult ) {
+        if ( probeAnalysisResult == null ) {
             throw new IllegalArgumentException( "ProbeAnalysisResult.create - 'ProbeAnalysisResult' can not be null" );
         }
-        return ( ProbeAnalysisResult ) this.getHibernateTemplate().save( ProbeAnalysisResult );
+        this.getHibernateTemplate().save( probeAnalysisResult );
+        return probeAnalysisResult;
     }
 
     /**
@@ -104,8 +112,7 @@ public abstract class DifferentialExpressionResultDaoBase extends HibernateDaoSu
         if ( id == null ) {
             throw new IllegalArgumentException( "ProbeAnalysisResult.load - 'id' can not be null" );
         }
-        return ( ProbeAnalysisResult ) this.getHibernateTemplate().get(
-                ubic.gemma.model.analysis.expression.ProbeAnalysisResultImpl.class, id );
+        return this.getHibernateTemplate().get( ubic.gemma.model.analysis.expression.ProbeAnalysisResultImpl.class, id );
     }
 
     /**
@@ -124,7 +131,7 @@ public abstract class DifferentialExpressionResultDaoBase extends HibernateDaoSu
     /**
      * @see ubic.gemma.model.analysis.AnalysisResultDao#remove(java.util.Collection)
      */
-    public void remove( java.util.Collection<ProbeAnalysisResult> entities ) {
+    public void remove( java.util.Collection<? extends ProbeAnalysisResult> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "ProbeAnalysisResult.remove - 'entities' can not be null" );
         }
@@ -144,15 +151,15 @@ public abstract class DifferentialExpressionResultDaoBase extends HibernateDaoSu
     /**
      * @see ubic.gemma.model.analysis.AnalysisResultDao#update(java.util.Collection)
      */
-    public void update( final java.util.Collection<ProbeAnalysisResult> entities ) {
+    public void update( final java.util.Collection<? extends ProbeAnalysisResult> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "ProbeAnalysisResult.update - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback() {
+                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator<ProbeAnalysisResult> entityIterator = entities.iterator(); entityIterator
+                        for ( java.util.Iterator<? extends ProbeAnalysisResult> entityIterator = entities.iterator(); entityIterator
                                 .hasNext(); ) {
                             update( entityIterator.next() );
                         }

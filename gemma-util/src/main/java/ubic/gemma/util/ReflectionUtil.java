@@ -1,7 +1,7 @@
 /*
  * The Gemma project
  * 
- * Copyright (c) 2006 University of British Columbia
+ * Copyright (c) 2006-2010 University of British Columbia
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,8 +24,6 @@ import java.lang.reflect.Method;
 
 /**
  * Various methods useful for manipulating Gemma objects using Reflection.
- * <hr>
- * <p>
  * 
  * @author pavlidis
  * @version $Id$
@@ -52,7 +50,7 @@ public class ReflectionUtil {
      * @param obj
      * @return base object for Impl; for example, for a FooImpl instance it returns Foo.class.
      */
-    public static Class getBaseForImpl( Object obj ) {
+    public static Class<? extends Object> getBaseForImpl( Object obj ) {
         return getBaseForImpl( obj.getClass() );
     }
 
@@ -60,7 +58,7 @@ public class ReflectionUtil {
      * @param cls
      * @return base object for Impl; for example, for a FooImpl.class it returns Foo.class.
      */
-    public static Class getBaseForImpl( Class cls ) {
+    public static Class<? extends Object> getBaseForImpl( Class<? extends Object> cls ) {
         if ( cls.getName().endsWith( "Impl" ) ) {
             return cls.getSuperclass();
         }

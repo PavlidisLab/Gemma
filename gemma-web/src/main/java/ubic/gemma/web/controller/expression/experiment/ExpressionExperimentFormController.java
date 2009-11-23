@@ -45,7 +45,7 @@ import ubic.gemma.loader.entrez.pubmed.PubMedSearch;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.auditAndSecurity.ContactService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
-import ubic.gemma.model.common.auditAndSecurity.eventType.BioMaterialMappingUpdate; 
+import ubic.gemma.model.common.auditAndSecurity.eventType.BioMaterialMappingUpdate;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.BibliographicReferenceService;
 import ubic.gemma.model.common.description.DatabaseEntry;
@@ -81,22 +81,6 @@ import com.sdicons.json.parser.JSONParser;
  * 
  * @author keshav
  * @version $Id$
- * @spring.bean id="expressionExperimentFormController"
- * @spring.property name = "commandName" value="expressionExperiment"
- * @spring.property name="commandClass"
- *                  value="ubic.gemma.web.controller.expression.experiment.ExpressionExperimentEditCommand"
- * @spring.property name = "formView" value="expressionExperiment.edit"
- * @spring.property name = "successView" value="redirect:/expressionExperiment/showAllExpressionExperiments.html"
- * @spring.property name = "expressionExperimentService" ref="expressionExperimentService"
- * @spring.property name = "bioAssayService" ref="bioAssayService"
- * @spring.property name = "bioMaterialService" ref="bioMaterialService"
- * @spring.property name = "contactService" ref="contactService"
- * @spring.property name = "externalDatabaseService" ref="externalDatabaseService"
- * @spring.property name = "bibliographicReferenceService" ref="bibliographicReferenceService"
- * @spring.property name = "persisterHelper" ref="persisterHelper"
- * @spring.property name = "validator" ref="expressionExperimentValidator"
- * @spring.property name = "quantitationTypeService" ref="quantitationTypeService"
- * @spring.property name="auditTrailService" ref="auditTrailService"
  */
 public class ExpressionExperimentFormController extends BaseFormController {
 
@@ -109,32 +93,7 @@ public class ExpressionExperimentFormController extends BaseFormController {
     QuantitationTypeService quantitationTypeService;
     AuditTrailService auditTrailService;
 
-    /**
-     * @param auditTrailService the auditTrailService to set
-     */
-    public void setAuditTrailService( AuditTrailService auditTrailService ) {
-        this.auditTrailService = auditTrailService;
-    }
-
     private ExternalDatabaseService externalDatabaseService = null;
-
-    public void setExternalDatabaseService( ExternalDatabaseService externalDatabaseService ) {
-        this.externalDatabaseService = externalDatabaseService;
-    }
-
-    /**
-     * @param persisterHelper the persisterHelper to set
-     */
-    public void setPersisterHelper( PersisterHelper persisterHelper ) {
-        this.persisterHelper = persisterHelper;
-    }
-
-    /**
-     * @param bibliographicReferenceService the bibliographicReferenceService to set
-     */
-    public void setBibliographicReferenceService( BibliographicReferenceService bibliographicReferenceService ) {
-        this.bibliographicReferenceService = bibliographicReferenceService;
-    }
 
     public ExpressionExperimentFormController() {
         /*
@@ -142,81 +101,6 @@ public class ExpressionExperimentFormController extends BaseFormController {
          */
         setSessionForm( true );
         setCommandClass( ExpressionExperiment.class );
-    }
-
-    /**
-     * @param request
-     * @return Object
-     * @throws ServletException
-     */
-    @Override
-    protected Object formBackingObject( HttpServletRequest request ) {
-        Long id = null;
-        try {
-            id = Long.parseLong( request.getParameter( "id" ) );
-        } catch ( NumberFormatException e ) {
-            saveMessage( request, "Id was not a number " + id );
-            throw new IllegalArgumentException( "Id was not a number " + id );
-        }
-
-        ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
-        List<QuantitationType> qts = new ArrayList<QuantitationType>();
-        log.debug( id );
-        ExpressionExperimentEditCommand obj;
-        if ( id != null ) {
-            ee = expressionExperimentService.load( id );
-            qts.addAll( expressionExperimentService.getQuantitationTypes( ee ) );
-            obj = new ExpressionExperimentEditCommand( ee, qts );
-        } else {
-            obj = new ExpressionExperimentEditCommand( ee, qts );
-        }
-
-        if ( ee.getId() != null ) {
-            this.saveMessage( request, "Editing dataset" );
-        }
-
-        return obj;
-    }
-
-    /**
-     * @param request
-     * @param response
-     * @param command
-     * @param errors
-     * @return ModelAndView
-     * @throws Exception
-     */
-    @Override
-    public ModelAndView processFormSubmission( HttpServletRequest request, HttpServletResponse response,
-            Object command, BindException errors ) throws Exception {
-
-        log.debug( "entering processFormSubmission" );
-
-        Long id = ( ( ExpressionExperimentEditCommand ) command ).getId();
-
-        if ( request.getParameter( "cancel" ) != null ) {
-            if ( id != null ) {
-                return new ModelAndView( new RedirectView( "http://" + request.getServerName() + ":"
-                        + request.getServerPort() + request.getContextPath()
-                        + "/expressionExperiment/showExpressionExperiment.html?id=" + id ) );
-            }
-
-            log.warn( "Cannot find details view due to null id.  Redirecting to overview" );
-            return new ModelAndView( new RedirectView( "http://" + request.getServerName() + ":"
-                    + request.getServerPort() + request.getContextPath()
-                    + "/expressionExperiment/showAllExpressionExperiments.html" ) );
-        }
-
-        ModelAndView mav = super.processFormSubmission( request, response, command, errors );
-
-        Set<Entry<QuantitationType, Long>> s = expressionExperimentService.getQuantitationTypeCountById( id )
-                .entrySet();
-        mav.addObject( "qtCountSet", s );
-
-        // add count of designElementDataVectors
-        mav.addObject( "designElementDataVectorCount", new Long( expressionExperimentService
-                .getDesignElementDataVectorCountById( id ) ) );
-        return mav;
     }
 
     /**
@@ -266,6 +150,165 @@ public class ExpressionExperimentFormController extends BaseFormController {
         return new ModelAndView( new RedirectView( "http://" + request.getServerName() + ":" + request.getServerPort()
                 + request.getContextPath() + "/expressionExperiment/showExpressionExperiment.html?id="
                 + eeCommand.getId() ) );
+    }
+
+    /**
+     * @param request
+     * @param response
+     * @param command
+     * @param errors
+     * @return ModelAndView
+     * @throws Exception
+     */
+    @Override
+    public ModelAndView processFormSubmission( HttpServletRequest request, HttpServletResponse response,
+            Object command, BindException errors ) throws Exception {
+
+        log.debug( "entering processFormSubmission" );
+
+        Long id = ( ( ExpressionExperimentEditCommand ) command ).getId();
+
+        if ( request.getParameter( "cancel" ) != null ) {
+            if ( id != null ) {
+                return new ModelAndView( new RedirectView( "http://" + request.getServerName() + ":"
+                        + request.getServerPort() + request.getContextPath()
+                        + "/expressionExperiment/showExpressionExperiment.html?id=" + id ) );
+            }
+
+            log.warn( "Cannot find details view due to null id.  Redirecting to overview" );
+            return new ModelAndView( new RedirectView( "http://" + request.getServerName() + ":"
+                    + request.getServerPort() + request.getContextPath()
+                    + "/expressionExperiment/showAllExpressionExperiments.html" ) );
+        }
+
+        ModelAndView mav = super.processFormSubmission( request, response, command, errors );
+
+        Set<Entry<QuantitationType, Long>> s = expressionExperimentService.getQuantitationTypeCountById( id )
+                .entrySet();
+        mav.addObject( "qtCountSet", s );
+
+        // add count of designElementDataVectors
+        mav.addObject( "designElementDataVectorCount", new Long( expressionExperimentService
+                .getDesignElementDataVectorCountById( id ) ) );
+        return mav;
+    }
+
+    /**
+     * @param auditTrailService the auditTrailService to set
+     */
+    public void setAuditTrailService( AuditTrailService auditTrailService ) {
+        this.auditTrailService = auditTrailService;
+    }
+
+    /**
+     * @param bibliographicReferenceService the bibliographicReferenceService to set
+     */
+    public void setBibliographicReferenceService( BibliographicReferenceService bibliographicReferenceService ) {
+        this.bibliographicReferenceService = bibliographicReferenceService;
+    }
+
+    /**
+     * @param bioAssayService the bioAssayService to set
+     */
+    public void setBioAssayService( BioAssayService bioAssayService ) {
+        this.bioAssayService = bioAssayService;
+    }
+
+    /**
+     * @param bioMaterialService the bioMaterialService to set
+     */
+    public void setBioMaterialService( BioMaterialService bioMaterialService ) {
+        this.bioMaterialService = bioMaterialService;
+    }
+
+    /**
+     * @param contactService
+     */
+    public void setContactService( ContactService contactService ) {
+        this.contactService = contactService;
+    }
+
+    /**
+     * @param expressionExperimentService
+     */
+    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
+        this.expressionExperimentService = expressionExperimentService;
+    }
+
+    public void setExternalDatabaseService( ExternalDatabaseService externalDatabaseService ) {
+        this.externalDatabaseService = externalDatabaseService;
+    }
+
+    /**
+     * @param persisterHelper the persisterHelper to set
+     */
+    public void setPersisterHelper( PersisterHelper persisterHelper ) {
+        this.persisterHelper = persisterHelper;
+    }
+
+    public void setQuantitationTypeService( QuantitationTypeService quantitationTypeService ) {
+        this.quantitationTypeService = quantitationTypeService;
+    }
+
+    /**
+     * @param request
+     * @return Object
+     * @throws ServletException
+     */
+    @Override
+    protected Object formBackingObject( HttpServletRequest request ) {
+        Long id = null;
+        try {
+            id = Long.parseLong( request.getParameter( "id" ) );
+        } catch ( NumberFormatException e ) {
+            saveMessage( request, "Id was not a number " + id );
+            throw new IllegalArgumentException( "Id was not a number " + id );
+        }
+
+        ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
+        List<QuantitationType> qts = new ArrayList<QuantitationType>();
+        log.debug( id );
+        ExpressionExperimentEditCommand obj;
+        if ( id != null ) {
+            ee = expressionExperimentService.load( id );
+            qts.addAll( expressionExperimentService.getQuantitationTypes( ee ) );
+            obj = new ExpressionExperimentEditCommand( ee, qts );
+        } else {
+            obj = new ExpressionExperimentEditCommand( ee, qts );
+        }
+
+        if ( ee.getId() != null ) {
+            this.saveMessage( request, "Editing dataset" );
+        }
+
+        return obj;
+    }
+
+    /**
+     * @param request
+     * @return Map
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    protected Map referenceData( HttpServletRequest request ) {
+        Map<Object, Object> referenceData = new HashMap<Object, Object>();
+        Collection<ExternalDatabase> edCol = externalDatabaseService.loadAll();
+
+        Collection<ExternalDatabase> keepers = new HashSet<ExternalDatabase>();
+        for ( ExternalDatabase database : edCol ) {
+            if ( database.getType() == null ) continue;
+            if ( database.getType().equals( DatabaseType.EXPRESSION ) ) {
+                keepers.add( database );
+            }
+        }
+
+        referenceData.put( "externalDatabases", keepers );
+
+        referenceData.put( "standardQuantitationTypes", new ArrayList<String>( StandardQuantitationType.literals() ) );
+        referenceData.put( "scaleTypes", new ArrayList<String>( ScaleType.literals() ) );
+        referenceData.put( "generalQuantitationTypes", new ArrayList<String>( GeneralType.literals() ) );
+        referenceData.put( "representations", new ArrayList<String>( PrimitiveType.literals() ) );
+        return referenceData;
     }
 
     /**
@@ -405,6 +448,59 @@ public class ExpressionExperimentFormController extends BaseFormController {
     }
 
     /**
+     * @param request
+     * @param command
+     * @throws IOException
+     * @throws SAXException
+     * @throws ParserConfigurationException
+     */
+    private void updatePubMed( HttpServletRequest request, ExpressionExperiment command ) throws IOException,
+            SAXException, ParserConfigurationException {
+        String pubMedId = request.getParameter( "expressionExperiment.PubMedId" );
+        if ( StringUtils.isBlank( pubMedId ) ) {
+            return;
+        }
+        // first, search for the pubMedId in the database
+        // if it is in the database, then just point the EE to that
+        // if it doesn't, then grab the BibliographicReference from PubMed and persist. Then point EE to the new
+        // entry.
+        BibliographicReference publication = bibliographicReferenceService.findByExternalId( pubMedId );
+        if ( publication != null ) {
+            command.setPrimaryPublication( publication );
+        } else {
+            // search for pubmedId
+            PubMedSearch pms = new PubMedSearch();
+            Collection<String> searchTerms = new ArrayList<String>();
+            searchTerms.add( pubMedId );
+            Collection<BibliographicReference> publications = pms.searchAndRetrieveIdByHTTP( searchTerms );
+            // check to see if there are publications found
+            // if there are none, or more than one, add an error message and do nothing
+            if ( publications.size() == 0 ) {
+                this.saveMessage( request, "Cannot find PubMed ID " + pubMedId );
+            } else if ( publications.size() > 1 ) {
+                this.saveMessage( request, "PubMed ID " + pubMedId + "" );
+            } else {
+                publication = publications.iterator().next();
+
+                DatabaseEntry pubAccession = DatabaseEntry.Factory.newInstance();
+                pubAccession.setAccession( pubMedId );
+                ExternalDatabase ed = ExternalDatabase.Factory.newInstance();
+                ed.setName( "PubMed" );
+                pubAccession.setExternalDatabase( ed );
+
+                publication.setPubAccession( pubAccession );
+
+                // persist new publication
+                publication = ( BibliographicReference ) persisterHelper.persist( publication );
+                // publication = bibliographicReferenceService.findOrCreate( publication );
+                // assign to expressionExperiment
+                command.setPrimaryPublication( publication );
+            }
+        }
+
+    }
+
+    /**
      * Check old vs. new quantitation types, and update any affected data vectors.
      * 
      * @param request
@@ -529,117 +625,5 @@ public class ExpressionExperimentFormController extends BaseFormController {
                 quantitationTypeService.update( qType );
             }
         }
-    }
-
-    /**
-     * @param request
-     * @param command
-     * @throws IOException
-     * @throws SAXException
-     * @throws ParserConfigurationException
-     */
-    private void updatePubMed( HttpServletRequest request, ExpressionExperiment command ) throws IOException,
-            SAXException, ParserConfigurationException {
-        String pubMedId = request.getParameter( "expressionExperiment.PubMedId" );
-        if ( StringUtils.isBlank( pubMedId ) ) {
-            return;
-        }
-        // first, search for the pubMedId in the database
-        // if it is in the database, then just point the EE to that
-        // if it doesn't, then grab the BibliographicReference from PubMed and persist. Then point EE to the new
-        // entry.
-        BibliographicReference publication = bibliographicReferenceService.findByExternalId( pubMedId );
-        if ( publication != null ) {
-            command.setPrimaryPublication( publication );
-        } else {
-            // search for pubmedId
-            PubMedSearch pms = new PubMedSearch();
-            Collection<String> searchTerms = new ArrayList<String>();
-            searchTerms.add( pubMedId );
-            Collection<BibliographicReference> publications = pms.searchAndRetrieveIdByHTTP( searchTerms );
-            // check to see if there are publications found
-            // if there are none, or more than one, add an error message and do nothing
-            if ( publications.size() == 0 ) {
-                this.saveMessage( request, "Cannot find PubMed ID " + pubMedId );
-            } else if ( publications.size() > 1 ) {
-                this.saveMessage( request, "PubMed ID " + pubMedId + "" );
-            } else {
-                publication = publications.iterator().next();
-
-                DatabaseEntry pubAccession = DatabaseEntry.Factory.newInstance();
-                pubAccession.setAccession( pubMedId );
-                ExternalDatabase ed = ExternalDatabase.Factory.newInstance();
-                ed.setName( "PubMed" );
-                pubAccession.setExternalDatabase( ed );
-
-                publication.setPubAccession( pubAccession );
-
-                // persist new publication
-                publication = ( BibliographicReference ) persisterHelper.persist( publication );
-                // publication = bibliographicReferenceService.findOrCreate( publication );
-                // assign to expressionExperiment
-                command.setPrimaryPublication( publication );
-            }
-        }
-
-    }
-
-    /**
-     * @param request
-     * @return Map
-     */
-    @SuppressWarnings("unchecked")
-    @Override
-    protected Map referenceData( HttpServletRequest request ) {
-        Map<Object, Object> referenceData = new HashMap<Object, Object>();
-        Collection<ExternalDatabase> edCol = externalDatabaseService.loadAll();
-
-        Collection<ExternalDatabase> keepers = new HashSet<ExternalDatabase>();
-        for ( ExternalDatabase database : edCol ) {
-            if ( database.getType() == null ) continue;
-            if ( database.getType().equals( DatabaseType.EXPRESSION ) ) {
-                keepers.add( database );
-            }
-        }
-
-        referenceData.put( "externalDatabases", keepers );
-
-        referenceData.put( "standardQuantitationTypes", new ArrayList<String>( StandardQuantitationType.literals() ) );
-        referenceData.put( "scaleTypes", new ArrayList<String>( ScaleType.literals() ) );
-        referenceData.put( "generalQuantitationTypes", new ArrayList<String>( GeneralType.literals() ) );
-        referenceData.put( "representations", new ArrayList<String>( PrimitiveType.literals() ) );
-        return referenceData;
-    }
-
-    /**
-     * @param expressionExperimentService
-     */
-    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
-        this.expressionExperimentService = expressionExperimentService;
-    }
-
-    /**
-     * @param contactService
-     */
-    public void setContactService( ContactService contactService ) {
-        this.contactService = contactService;
-    }
-
-    /**
-     * @param bioAssayService the bioAssayService to set
-     */
-    public void setBioAssayService( BioAssayService bioAssayService ) {
-        this.bioAssayService = bioAssayService;
-    }
-
-    /**
-     * @param bioMaterialService the bioMaterialService to set
-     */
-    public void setBioMaterialService( BioMaterialService bioMaterialService ) {
-        this.bioMaterialService = bioMaterialService;
-    }
-
-    public void setQuantitationTypeService( QuantitationTypeService quantitationTypeService ) {
-        this.quantitationTypeService = quantitationTypeService;
     }
 }

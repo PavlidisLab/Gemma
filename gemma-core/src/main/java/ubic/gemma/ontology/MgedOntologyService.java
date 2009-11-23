@@ -35,6 +35,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.stereotype.Service;
 
 import ubic.gemma.util.ConfigUtils;
 
@@ -46,15 +47,13 @@ import com.hp.hpl.jena.ontology.OntModel;
  * 
  * @author klc
  * @version $Id: MgedOntologyService.java
- * @spring.bean id="mgedOntologyService"
  */
-
+@Service
 public class MgedOntologyService extends AbstractOntologyService {
 
     public static final String MGED_ONTOLOGY_URL = "url.mgedOntology";
-    
-    public static final String MGED_ONTO_BASE_URL = ConfigUtils.getString( MgedOntologyService.MGED_ONTOLOGY_URL );
 
+    public static final String MGED_ONTO_BASE_URL = ConfigUtils.getString( MgedOntologyService.MGED_ONTOLOGY_URL );
 
     private static final Collection<String> TermsToRemove = Collections.synchronizedList( Arrays.asList( new String[] {
             "BioMaterialPackage", "BioMaterialCharacteristics", "BioMaterial", "BiologicalProperty",
@@ -63,7 +62,6 @@ public class MgedOntologyService extends AbstractOntologyService {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.ontology.AbstractOntologyService#getOntologyName()
      */
     @Override
@@ -120,7 +118,7 @@ public class MgedOntologyService extends AbstractOntologyService {
 
         term = terms.get( ontology_URL + "#MeasurementPackage" );
         results.addAll( getAllTerms( term ) );
-        
+
         term = terms.get( ontology_URL + "#MGEDExtendedOntology" );
         results.addAll( getAllTerms( term ) );
 
@@ -168,10 +166,10 @@ public class MgedOntologyService extends AbstractOntologyService {
                         wantedTerms.add( StringUtils.strip( line ) );
                     }
                     reader.close();
-                    
-                     for ( OntologyTerm term : getUsefulMgedTerms() ) {
-                         if ( wantedTerms.contains( term.getTerm() ) ) terms.add( term );
-                     }
+
+                    for ( OntologyTerm term : getUsefulMgedTerms() ) {
+                        if ( wantedTerms.contains( term.getTerm() ) ) terms.add( term );
+                    }
                 } catch ( IOException ioe ) {
                     log.error( "Error reading from term list '" + termListUrl + "'; returning general term list", ioe );
                     terms = getUsefulMgedTerms();

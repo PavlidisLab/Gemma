@@ -35,9 +35,9 @@ import org.springmodules.javaspaces.JavaSpaceTemplate;
 import org.springmodules.javaspaces.entry.AbstractMethodCallEntry;
 import org.springmodules.javaspaces.entry.MethodResultEntry;
 
-import ubic.gemma.util.grid.javaspaces.SpacesUtil;
-import ubic.gemma.util.grid.javaspaces.entry.SpacesBusyEntry;
-import ubic.gemma.util.grid.javaspaces.entry.SpacesRegistrationEntry;
+import ubic.gemma.grid.javaspaces.util.SpacesUtil;
+import ubic.gemma.grid.javaspaces.util.entry.SpacesBusyEntry;
+import ubic.gemma.grid.javaspaces.util.entry.SpacesRegistrationEntry;
 
 /**
  * The {@link DelegatingWorker} was customized to allow interrogation of the task for the taskId.
@@ -57,35 +57,28 @@ public class CustomDelegatingWorker implements Runnable {
 
     private static final Log log = LogFactory.getLog( CustomDelegatingWorker.class );
 
-    private long waitMillis = 500;
+    private Class<? extends Object> businessInterface;
 
     private Object delegate;
 
     private JavaSpaceTemplate jsTemplate;
-
-    private boolean running = true;
-
-    private Object taskId = null;
-
-    private SpacesRegistrationEntry spacesRegistrationEntry = null;
-
-    private SpacesBusyEntry spacesBusyEntry = null;
 
     /**
      * Candidate that will match only this interface
      */
     private Entry methodCallEntryTemplate;
 
-    public CustomDelegatingWorker() {
-    }
-    
-    private Class<? extends Object> businessInterface;
+    private boolean running = true;
 
-    public void setBusinessInterface( Class<? extends Object> intf ) {
-        if ( !intf.isInterface() ) {
-            throw new IllegalArgumentException( intf + " must be an interface" );
-        }
-        this.businessInterface = intf;
+    private SpacesBusyEntry spacesBusyEntry = null;
+
+    private SpacesRegistrationEntry spacesRegistrationEntry = null;
+
+    private Object taskId = null;
+
+    private long waitMillis = 500;
+    
+    public CustomDelegatingWorker() {
     }
 
     /**
@@ -95,26 +88,15 @@ public class CustomDelegatingWorker implements Runnable {
         return businessInterface;
     }
 
-    /**
-     * Set a delegate if we are using the "service seeking" approach. For RunnableMethodCallEntries, there is no need
-     * for a service to be hosted.
-     * 
-     * @param delegate
-     */
-    public void setDelegate( Object delegate ) {
-        this.delegate = delegate;
-    }
-
     public Object getDelegate() {
         return delegate;
     }
 
-    public void setJavaSpaceTemplate( JavaSpaceTemplate jsTemplate ) {
-        this.jsTemplate = jsTemplate;
-    }
-
-    public void stop() {
-        this.running = false;
+    /**
+     * @return
+     */
+    public Object getTaskId() {
+        return taskId;
     }
 
     public void run() {
@@ -195,6 +177,42 @@ public class CustomDelegatingWorker implements Runnable {
         if ( debug ) log.debug( "Worker " + this + " terminating" );
     }
 
+    public void setBusinessInterface( Class<? extends Object> intf ) {
+        if ( !intf.isInterface() ) {
+            throw new IllegalArgumentException( intf + " must be an interface" );
+        }
+        this.businessInterface = intf;
+    }
+
+    /**
+     * Set a delegate if we are using the "service seeking" approach. For RunnableMethodCallEntries, there is no need
+     * for a service to be hosted.
+     * 
+     * @param delegate
+     */
+    public void setDelegate( Object delegate ) {
+        this.delegate = delegate;
+    }
+
+    public void setGemmaSpacesBusyEntry( SpacesBusyEntry spacesBusyEntry ) {
+        this.spacesBusyEntry = spacesBusyEntry;
+    }
+
+    /**
+     * @param spacesRegistrationEntry
+     */
+    public void setGemmaSpacesRegistrationEntry( SpacesRegistrationEntry spacesRegistrationEntry ) {
+        this.spacesRegistrationEntry = spacesRegistrationEntry;
+    }
+
+    public void setJavaSpaceTemplate( JavaSpaceTemplate jsTemplate ) {
+        this.jsTemplate = jsTemplate;
+    }
+
+    public void stop() {
+        this.running = false;
+    }
+
     /**
      * Invoke the method on the delegate object in order to get the MethodResultEntry. Subclasses can extend the method
      * and add custom behavior (ex: security propagation).
@@ -209,23 +227,5 @@ public class CustomDelegatingWorker implements Runnable {
 
         if ( log.isDebugEnabled() ) log.debug( "Got result " + result.result );
         return result;
-    }
-
-    /**
-     * @return
-     */
-    public Object getTaskId() {
-        return taskId;
-    }
-
-    /**
-     * @param spacesRegistrationEntry
-     */
-    public void setGemmaSpacesRegistrationEntry( SpacesRegistrationEntry spacesRegistrationEntry ) {
-        this.spacesRegistrationEntry = spacesRegistrationEntry;
-    }
-
-    public void setGemmaSpacesBusyEntry( SpacesBusyEntry spacesBusyEntry ) {
-        this.spacesBusyEntry = spacesBusyEntry;
     }
 }

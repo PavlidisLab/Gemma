@@ -19,14 +19,18 @@
 package ubic.gemma.model.common.auditAndSecurity;
 
 import java.util.Calendar;
+import java.util.Collection;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Hibernate;
 import org.hibernate.LockMode;
+import org.hibernate.SessionFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.orm.hibernate3.HibernateTemplate;
-import org.springframework.security.context.SecurityContextHolder;
-import org.springframework.security.userdetails.UserDetails;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.stereotype.Repository;
 
 import ubic.gemma.model.common.Auditable;
 
@@ -35,9 +39,20 @@ import ubic.gemma.model.common.Auditable;
  * @author pavlidis
  * @version $Id$
  */
+@Repository
 public class AuditTrailDaoImpl extends ubic.gemma.model.common.auditAndSecurity.AuditTrailDaoBase {
 
     private static Log log = LogFactory.getLog( AuditTrailDaoImpl.class.getName() );
+
+    @Autowired
+    public AuditTrailDaoImpl( SessionFactory sessionFactory ) {
+        super.setSessionFactory( sessionFactory );
+    }
+
+    @SuppressWarnings("unchecked")
+    public Collection<? extends AuditTrail> load( Collection<Long> ids ) {
+        return this.getHibernateTemplate().findByNamedParam( "from  AuditTrailImpl where id in (:ids)", "ids", ids );
+    }
 
     /**
      * 
@@ -59,15 +74,21 @@ public class AuditTrailDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
         }
 
         HibernateTemplate templ = this.getHibernateTemplate();
-        templ.executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback() {
+        templ.executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                // session.lock( auditable, LockMode.NONE );
                 session.update( auditable );
                 if ( !Hibernate.isInitialized( auditable ) ) Hibernate.initialize( auditable );
-                session.persist( auditEvent );
+
+                /*
+                 * Note: this should be done by the AuditAdvice, we just do it here in case we have turned that off for
+                 * some reason.
+                 */
+                if ( auditable.getAuditTrail() == null ) {
+                    auditable.setAuditTrail( AuditTrail.Factory.newInstance() );
+                }
+
                 auditable.getAuditTrail().addEvent( auditEvent );
                 session.flush();
-                session.evict( auditable );
                 return null;
             }
         } );
@@ -84,7 +105,7 @@ public class AuditTrailDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
     protected void handleThaw( final Auditable auditable ) {
         if ( auditable == null ) return;
         HibernateTemplate templ = this.getHibernateTemplate();
-        templ.executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback() {
+        templ.executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
                 session.update( auditable );
                 if ( auditable.getAuditTrail() == null ) return null;
@@ -103,8 +124,8 @@ public class AuditTrailDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
     @Override
     protected void handleThaw( final ubic.gemma.model.common.auditAndSecurity.AuditTrail auditTrail ) {
         HibernateTemplate templ = this.getHibernateTemplate();
-        templ.executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+        templ.executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback<AuditTrail>() {
+            public AuditTrail doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
                 session.lock( auditTrail, LockMode.NONE );
                 Hibernate.initialize( auditTrail );
                 if ( auditTrail.getEvents() == null ) return null;
@@ -115,7 +136,10 @@ public class AuditTrailDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
                         Hibernate.initialize( performer );
                         session.evict( performer );
                     } else {
-                        log.warn( "No performer for audit event: id=" + ae.getId() );
+                        /*
+                         * This can happen if was the result of an anonymous user's actions.
+                         */
+                        log.debug( "No performer for audit event: id=" + ae.getId() + " - anonymous?");
                     }
                 }
                 session.evict( auditTrail );

@@ -18,11 +18,14 @@
  */
 package ubic.gemma.model.analysis;
 
+import org.springframework.stereotype.Repository;
+
 /**
  * Note that due to limitations in Andromda we cannot make this class abstract.
  * 
  * @see ubic.gemma.model.analysis.Analysis
  */
+@Repository
 public abstract class AnalysisDaoImpl<T extends Analysis> extends ubic.gemma.model.analysis.AnalysisDaoBase<T> {
 
 }

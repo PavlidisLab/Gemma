@@ -20,12 +20,15 @@
  */
 package ubic.gemma.model.expression.bioAssayData;
 
+import org.springframework.stereotype.Service;
+
 /**
  * @author pavlidis
  * @author keshav
  * @version $Id$
  * @see ubic.gemma.model.expression.bioAssayData.BioAssayDataVectorService
  */
+@Service
 public class BioAssayDataVectorServiceImpl extends
         ubic.gemma.model.expression.bioAssayData.BioAssayDataVectorServiceBase {
 

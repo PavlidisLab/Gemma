@@ -50,11 +50,12 @@ public class ExpressionExperimentEditCommand extends ExpressionExperimentImpl {
         this.setSource( ee.getSource() );
         this.setInvestigators( ee.getInvestigators() );
         this.setId( ee.getId() );
-        this.setAccession( ee.getAccession() ); 
+        this.setAccession( ee.getAccession() );
         this.setOwner( ee.getOwner() );
         this.setRawDataFile( ee.getRawDataFile() );
     }
 
+    @Override
     public List<QuantitationType> getQuantitationTypes() {
         return quantitationTypes;
     }
@@ -80,7 +81,7 @@ public class ExpressionExperimentEditCommand extends ExpressionExperimentImpl {
         expressionExperiment.setSource( this.getSource() );
         expressionExperiment.setInvestigators( this.getInvestigators() );
         expressionExperiment.setId( this.getId() ); // maybe not...
-        expressionExperiment.setAccession( this.getAccession() ); 
+        expressionExperiment.setAccession( this.getAccession() );
         expressionExperiment.setOwner( this.getOwner() );
         expressionExperiment.setBioAssayDataVectors( this.getBioAssayDataVectors() );
         expressionExperiment.setRawExpressionDataVectors( this.getRawExpressionDataVectors() );

@@ -30,12 +30,6 @@ public abstract class AbstractGeoServiceTest extends BaseSpringContextTest {
 
     public static final String GEO_TEST_DATA_ROOT = "/gemma-core/src/test/resources/data/loader/expression/geo/";
 
-    /**
-     * 
-     *
-     */
-    protected abstract void init();
-
     protected String getTestFileBasePath() throws IOException {
         String path = ConfigUtils.getString( "gemma.home" );
         if ( path == null ) {

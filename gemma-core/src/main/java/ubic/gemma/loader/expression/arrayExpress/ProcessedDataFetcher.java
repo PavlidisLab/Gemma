@@ -37,6 +37,12 @@ import ubic.gemma.util.ConfigUtils;
  */
 public class ProcessedDataFetcher extends FtpArchiveFetcher {
 
+    /*
+     * Note: Nov 2009. ArrayExpression changed the way they name files. The .1 is added. Probably there is .2
+     * sometimes...
+     */
+    private static final String PROCESSED_DATA_SUFFIX = ".processed.1.zip";
+
     public ProcessedDataFetcher() {
         super();
         initArchiveHandler( "zip" );
@@ -63,7 +69,8 @@ public class ProcessedDataFetcher extends FtpArchiveFetcher {
 
     @Override
     protected String formLocalFilePath( String identifier, File newDir ) {
-        String outputFileName = newDir + System.getProperty( "file.separator" ) + identifier + ".processed.zip";
+
+        String outputFileName = newDir + System.getProperty( "file.separator" ) + identifier + PROCESSED_DATA_SUFFIX;
         return outputFileName;
     }
 
@@ -75,7 +82,7 @@ public class ProcessedDataFetcher extends FtpArchiveFetcher {
     public String formRemoteFilePath( String identifier ) {
         String dirName = identifier.replaceFirst( "-\\d+", "" );
         dirName = dirName.replace( "E-", "" );
-        String seekFile = remoteBaseDir + "/" + dirName + "/" + identifier + "/" + identifier + ".processed.zip";
+        String seekFile = remoteBaseDir + "/" + dirName + "/" + identifier + "/" + identifier + PROCESSED_DATA_SUFFIX;
         return seekFile;
     }
 

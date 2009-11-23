@@ -83,7 +83,7 @@ public class OntologySearch {
         NodeIterator iterator = runSearch( model, index, queryString );
 
         while ( iterator.hasNext() ) {
-            RDFNode r = ( RDFNode ) iterator.next();
+            RDFNode r = iterator.next();
             r = r.inModel( model );
             if ( log.isDebugEnabled() ) log.debug( "Search results: " + r );
             if ( r.isURIResource() ) {
@@ -96,7 +96,7 @@ public class OntologySearch {
                         continue;
                     }
 
-                    OntClass cl = ( OntClass ) r.as( OntClass.class );
+                    OntClass cl = r.as( OntClass.class );
                     OntologyTermImpl impl2 = new OntologyTermImpl( cl, null );
                     results.add( impl2 );
                     if ( log.isDebugEnabled() ) log.debug( impl2 );
@@ -140,7 +140,7 @@ public class OntologySearch {
         NodeIterator iterator = runSearch( model, index, queryString );
 
         while ( iterator.hasNext() ) {
-            RDFNode r = ( RDFNode ) iterator.next();
+            RDFNode r = iterator.next();
             r = r.inModel( model );
             if ( log.isDebugEnabled() ) log.debug( "Search results: " + r );
             if ( r.isResource() ) {
@@ -153,7 +153,7 @@ public class OntologySearch {
                         continue;
                     }
 
-                    Individual cl = ( Individual ) r.as( Individual.class );
+                    Individual cl = r.as( Individual.class );
                     OntologyIndividual impl2 = new OntologyIndividualImpl( cl, null );
                     results.add( impl2 );
                     if ( log.isDebugEnabled() ) log.debug( impl2 );
@@ -172,7 +172,7 @@ public class OntologySearch {
                     log.error( "Trying again: " + je, je );
 
                     try {
-                        Individual cl = ( Individual ) r.as( Individual.class );
+                        Individual cl = r.as( Individual.class );
                         OntologyIndividual impl2 = new OntologyIndividualImpl( cl, null );
                         results.add( impl2 );
 
@@ -204,7 +204,7 @@ public class OntologySearch {
         NodeIterator iterator = runSearch( model, index, queryString );
 
         while ( iterator.hasNext() ) {
-            RDFNode r = ( RDFNode ) iterator.next();
+            RDFNode r = iterator.next();
             r = r.inModel( model );
             if ( log.isDebugEnabled() ) log.debug( "Search results: " + r );
             if ( r.isURIResource() ) {
@@ -217,7 +217,7 @@ public class OntologySearch {
                         continue;
                     }
 
-                    OntClass cl = ( OntClass ) r.as( OntClass.class );
+                    OntClass cl = r.as( OntClass.class );
                     OntologyTermImpl impl2 = new OntologyTermImpl( cl, null );
                     results.add( impl2 );
                     if ( log.isDebugEnabled() ) log.debug( impl2 );
@@ -236,7 +236,7 @@ public class OntologySearch {
                         continue;
                     }
 
-                    Individual cl = ( Individual ) r.as( Individual.class );
+                    Individual cl = r.as( Individual.class );
                     OntologyIndividual impl2 = new OntologyIndividualImpl( cl, null );
                     results.add( impl2 );
                     if ( log.isDebugEnabled() ) log.debug( impl2 );

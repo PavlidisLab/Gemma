@@ -20,11 +20,13 @@ package ubic.gemma.web.controller.expression.experiment;
 
 import java.io.File;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
@@ -43,79 +45,57 @@ import ubic.gemma.web.view.DownloadBinaryFileView;
  * For the download of data files from the browser. We can send the 'raw' data for any one quantitation type, with gene
  * annotations, OR the 'filtered masked' matrix for the expression experiment.
  * 
- * @spring.bean id="expressionExperimentDataFetchController"
- * @spring.property name="quantitationTypeService" ref="quantitationTypeService"
- * @spring.property name="methodNameResolver" ref="expressionDataFileFetchActions"
- * @spring.property name = "expressionDataFileService" ref="expressionDataFileService"
- * @spring.property name="expressionExperimentService" ref="expressionExperimentService"
  * @author pavlidis
  * @version $Id$
  */
+@Controller
 public class ExpressionExperimentDataFetchController extends BackgroundProcessingMultiActionController {
 
-    private ExpressionExperimentService expressionExperimentService;
-    private ExpressionDataFileService expressionDataFileService;
-    private QuantitationTypeService quantitationTypeService;
+    // ==========================================================
+    class CoExpressionDataWriterJob extends BackgroundControllerJob<ModelAndView> {
 
-    /**
-     * AJAX Method - kicks off a job to start generating (if need be) the text based tab delimited experiment design data file
-     * @param command
-     * @return
-     */
-    public String getDataFile( ExpressionExperimentDataFetchCommand command ) {
-        DataWriterJob runner = new DataWriterJob( command );
-        runner.setDoForward( false );
-        return ( String ) super.startJob( runner ).getModel().get( "taskId" );
-    }
+        public CoExpressionDataWriterJob( Long eeId ) {
+            super();
+            this.command = eeId;
+        }
 
-    /**
-     * AJAX Method - kicks off a job to start generating (if need be) the text based tab delimited differential expression data file
-     * @param eeId
-     * @return
-     */
-    public String getDiffExpressionDataFile( Long eeId ) {
-        DiffExpressionDataWriterJob runner = new DiffExpressionDataWriterJob( eeId );
-        runner.setDoForward( false );
-        return ( String ) super.startJob( runner ).getModel().get( "taskId" );
-    }
-    
-    /**
-     * AJAX Method -  kicks off a job to start generating (if need be) the text based tab delimited co-expression data file
-     * @param eeId
-     * @return
-     */
-    public String getCoExpressionDataFile( Long eeId ) {
-        CoExpressionDataWriterJob runner = new CoExpressionDataWriterJob( eeId );
-        runner.setDoForward( false );
-        return ( String ) super.startJob( runner ).getModel().get( "taskId" );
-    }
-    
-    public void setExpressionDataFileService( ExpressionDataFileService expressionDataFileService ) {
-        this.expressionDataFileService = expressionDataFileService;
-    }
+        /*
+         * (non-Javadoc)
+         * @see java.util.concurrent.Callable#call()
+         */
+        public ModelAndView call() throws Exception {
 
-    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
-        this.expressionExperimentService = expressionExperimentService;
-    }
+            ProgressJob job = init( "Fetching coexpression data" );
 
-    public void setQuantitationTypeService( QuantitationTypeService quantitationTypeService ) {
-        this.quantitationTypeService = quantitationTypeService;
-    }
+            /* start time */
+            StopWatch watch = new StopWatch();
+            watch.start();
 
-    /**
-     * Regular spring MVC request to fetch a file that already has been generated. It is assumed that the file is in the
-     * DATA_DIR.
-     * 
-     * @param request
-     * @param response
-     * @return
-     */
-    public ModelAndView downloadFile( HttpServletRequest request, HttpServletResponse response ) {
-        String file = request.getParameter( "file" );
-        ModelAndView mav = new ModelAndView( new DownloadBinaryFileView() );
-        String fullFilePath = ExpressionDataFileService.DATA_DIR + file;
-        mav.addObject( DownloadBinaryFileView.PATH_PARAM, fullFilePath );
-        return mav;
+            /* 'do yer thang' */
+            assert this.command != null;
+            Long eeId = ( Long ) this.command;
+            ExpressionExperiment ee = expressionExperimentService.load( eeId );
+
+            if ( ee == null ) {
+                throw new RuntimeException(
+                        "No data available (either due to lack of authorization, or use of an invalid entity identifier)" );
+            }
+
+            File f = expressionDataFileService.writeOrLocateCoexpressionDataFile( ee, false );
+
+            ProgressManager.destroyProgressJob( job );
+            watch.stop();
+            log.debug( "Finished writing and downloading co-expression file; done in " + watch.getTime()
+                    + " milliseconds" );
+
+            String url = "/Gemma/getData.html?file=" + f.getName();
+
+            ModelAndView mav = new ModelAndView( new RedirectView( url ) );
+
+            return mav;
+
+        }
+
     }
 
     /**
@@ -124,7 +104,7 @@ public class ExpressionExperimentDataFetchController extends BackgroundProcessin
     class DataWriterJob extends BackgroundControllerJob<ModelAndView> {
 
         public DataWriterJob( ExpressionExperimentDataFetchCommand command ) {
-            super( getMessageUtil() );
+            super();
             this.command = command;
         }
 
@@ -134,10 +114,7 @@ public class ExpressionExperimentDataFetchController extends BackgroundProcessin
          */
         public ModelAndView call() throws Exception {
 
-            init();
-
-            ProgressJob job = ProgressManager.createProgressJob( this.getTaskId(), securityContext.getAuthentication()
-                    .getName(), "" );
+            ProgressJob job = init( "Fetching data" );
 
             /* start time */
             StopWatch watch = new StopWatch();
@@ -198,6 +175,8 @@ public class ExpressionExperimentDataFetchController extends BackgroundProcessin
                         "No data available (either due to lack of authorization, or use of an invalid entity identifier)" );
             }
 
+            expressionExperimentService.thawLite( ee );
+
             File f = null;
 
             /* write out the file using text format */
@@ -231,6 +210,8 @@ public class ExpressionExperimentDataFetchController extends BackgroundProcessin
                 }
             }
 
+            assert f != null;
+
             // 'done ma thang'
             ProgressManager.destroyProgressJob( job );
             watch.stop();
@@ -245,12 +226,12 @@ public class ExpressionExperimentDataFetchController extends BackgroundProcessin
         }
 
     }
-    
-    //==========================================================
+
+    // ==========================================================
     class DiffExpressionDataWriterJob extends BackgroundControllerJob<ModelAndView> {
 
         public DiffExpressionDataWriterJob( Long eeId ) {
-            super( getMessageUtil() );
+            super();
             this.command = eeId;
         }
 
@@ -260,10 +241,7 @@ public class ExpressionExperimentDataFetchController extends BackgroundProcessin
          */
         public ModelAndView call() throws Exception {
 
-            init();
-
-            ProgressJob job = ProgressManager.createProgressJob( this.getTaskId(), securityContext.getAuthentication()
-                    .getName(), "" );
+            ProgressJob job = init( "Fetching diff ex data" );
 
             /* start time */
             StopWatch watch = new StopWatch();
@@ -278,11 +256,12 @@ public class ExpressionExperimentDataFetchController extends BackgroundProcessin
                         "No data available (either due to lack of authorization, or use of an invalid entity identifier)" );
             }
 
-            File f = expressionDataFileService.writeOrLocateDiffExpressionDataFile( ee, false ); 
-   
+            File f = expressionDataFileService.writeOrLocateDiffExpressionDataFile( ee, false );
+
             ProgressManager.destroyProgressJob( job );
             watch.stop();
-            log.debug( "Finished writing and downloading differential expression file; done in " + watch.getTime() + " milliseconds" );
+            log.debug( "Finished writing and downloading differential expression file; done in " + watch.getTime()
+                    + " milliseconds" );
 
             String url = "/Gemma/getData.html?file=" + f.getName();
 
@@ -293,56 +272,84 @@ public class ExpressionExperimentDataFetchController extends BackgroundProcessin
         }
 
     }
-    
-    //========================================================
-    
-    //==========================================================
-    class CoExpressionDataWriterJob extends BackgroundControllerJob<ModelAndView> {
 
-        public CoExpressionDataWriterJob( Long eeId ) {
-            super( getMessageUtil() );
-            this.command = eeId;
-        }
+    @Autowired
+    private ExpressionExperimentService expressionExperimentService;
 
-        /*
-         * (non-Javadoc)
-         * @see java.util.concurrent.Callable#call()
-         */
-        public ModelAndView call() throws Exception {
+    @Autowired
+    private ExpressionDataFileService expressionDataFileService;
 
-            init();
+    @Autowired
+    private QuantitationTypeService quantitationTypeService;
 
-            ProgressJob job = ProgressManager.createProgressJob( this.getTaskId(), securityContext.getAuthentication()
-                    .getName(), "" );
-
-            /* start time */
-            StopWatch watch = new StopWatch();
-            watch.start();
-
-            /* 'do yer thang' */
-            assert this.command != null;
-            Long eeId = ( Long ) this.command;
-            ExpressionExperiment ee = expressionExperimentService.load( eeId );
-
-            if ( ee == null ) {
-                throw new RuntimeException(
-                        "No data available (either due to lack of authorization, or use of an invalid entity identifier)" );
-            }
-
-            File f = expressionDataFileService.writeOrLocateCoexpressionDataFile( ee, false ); 
-   
-            ProgressManager.destroyProgressJob( job );
-            watch.stop();
-            log.debug( "Finished writing and downloading co-expression file; done in " + watch.getTime() + " milliseconds" );
-
-            String url = "/Gemma/getData.html?file=" + f.getName();
-
-            ModelAndView mav = new ModelAndView( new RedirectView( url ) );
-
-            return mav;
-
-        }
-
+    /**
+     * Regular spring MVC request to fetch a file that already has been generated. It is assumed that the file is in the
+     * DATA_DIR.
+     * 
+     * @param request
+     * @param response
+     * @return
+     */
+    @RequestMapping(value = "/getData.html", method = RequestMethod.GET)
+    public ModelAndView downloadFile( String file ) {
+        ModelAndView mav = new ModelAndView( new DownloadBinaryFileView() );
+        String fullFilePath = ExpressionDataFileService.DATA_DIR + file;
+        mav.addObject( DownloadBinaryFileView.PATH_PARAM, fullFilePath );
+        return mav;
     }
-    
+
+    /**
+     * AJAX Method - kicks off a job to start generating (if need be) the text based tab delimited co-expression data
+     * file
+     * 
+     * @param eeId
+     * @return
+     */
+    public String getCoExpressionDataFile( Long eeId ) {
+        CoExpressionDataWriterJob runner = new CoExpressionDataWriterJob( eeId );
+        runner.setDoForward( false );
+        return ( String ) super.startJob( runner ).getModel().get( JOB_ATTRIBUTE );
+    }
+
+    /**
+     * AJAX Method - kicks off a job to start generating (if need be) the text based tab delimited experiment design
+     * data file
+     * 
+     * @param command
+     * @return
+     * @throws InterruptedException
+     */
+    public String getDataFile( ExpressionExperimentDataFetchCommand command ) throws InterruptedException {
+        DataWriterJob runner = new DataWriterJob( command );
+        runner.setDoForward( false );
+        return ( String ) super.startJob( runner ).getModel().get( JOB_ATTRIBUTE );
+    }
+
+    /**
+     * AJAX Method - kicks off a job to start generating (if need be) the text based tab delimited differential
+     * expression data file
+     * 
+     * @param eeId
+     * @return
+     */
+    public String getDiffExpressionDataFile( Long eeId ) {
+        DiffExpressionDataWriterJob runner = new DiffExpressionDataWriterJob( eeId );
+        runner.setDoForward( false );
+        return ( String ) super.startJob( runner ).getModel().get( JOB_ATTRIBUTE );
+    }
+
+    public void setExpressionDataFileService( ExpressionDataFileService expressionDataFileService ) {
+        this.expressionDataFileService = expressionDataFileService;
+    }
+
+    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
+        this.expressionExperimentService = expressionExperimentService;
+    }
+
+    // ========================================================
+
+    public void setQuantitationTypeService( QuantitationTypeService quantitationTypeService ) {
+        this.quantitationTypeService = quantitationTypeService;
+    }
+
 }

@@ -19,8 +19,13 @@
 
 package ubic.gemma.model.expression.experiment;
 
+import static org.junit.Assert.assertNull;
+
 import java.util.ArrayList;
 import java.util.List;
+
+import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayService;
@@ -32,10 +37,13 @@ import ubic.gemma.testing.BaseSpringContextTest;
  */
 public class ExpressionExperimentDeleteTest extends BaseSpringContextTest {
 
+    @Autowired
     private ExpressionExperimentService svc;
 
+    @Test
     public final void testRemove() throws Exception {
-        endTransaction();
+
+        super.init();
         ExpressionExperiment ee = getTestPersistentCompleteExpressionExperiment( false );
         BioAssayService bas = ( BioAssayService ) this.getBean( "bioAssayService" );
         List<Long> ids = new ArrayList<Long>();
@@ -54,10 +62,4 @@ public class ExpressionExperimentDeleteTest extends BaseSpringContextTest {
         }
     }
 
-    /**
-     * @param expressionExperimentService
-     */
-    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
-        this.svc = expressionExperimentService;
-    }
 }

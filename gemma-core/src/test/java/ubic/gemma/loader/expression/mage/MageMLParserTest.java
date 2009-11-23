@@ -24,6 +24,8 @@ import java.util.zip.ZipInputStream;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.junit.Before;
+import org.junit.Test;
 
 /**
  * @author pavlidis
@@ -61,12 +63,12 @@ public class MageMLParserTest extends AbstractMageTest {
 
     ZipInputStream istAffyGiantBioSequencePackage;
 
-    @Override
-    protected void onSetUpInTransaction() throws Exception {
-        super.onSetUpInTransaction();
+    @Before
+    public void setup() throws Exception {
         mlp = new MageMLParser();
     }
 
+    @Test
     public void testParseCollectionRealA() throws Exception {
         log.debug( "Parsing MAGE from ArrayExpress (AFMX)" );
 
@@ -76,10 +78,11 @@ public class MageMLParserTest extends AbstractMageTest {
                 + "E-AFMX-13/E-AFMX-13.xml" );
         mlp.parse( istMageExamples );
 
-        log.info( "Tally:\n" + mlp );
+        // log.info( "Tally:\n" + mlp );
         istMageExamples.close();
     }
 
+    @Test
     public void testParseCollectionRealB() throws Exception {
         log.debug( "Parsing MAGE from ArrayExpress (WMIT)" );
 
@@ -89,7 +92,7 @@ public class MageMLParserTest extends AbstractMageTest {
                 + "E-WMIT-4.xml" );
         mlp.parse( istMageExamples );
 
-        log.info( "Tally:\n" + mlp );
+        // log.info( "Tally:\n" + mlp );
         istMageExamples.close();
     }
 

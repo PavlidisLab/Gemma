@@ -18,8 +18,11 @@
  */
 package ubic.gemma.model.genome;
 
+import org.springframework.security.access.annotation.Secured;
+
 /**
- * 
+ * @author kelsey
+ * @version $Id$
  */
 public interface ChromosomeService {
 
@@ -39,6 +42,7 @@ public interface ChromosomeService {
     /**
      * 
      */
+    @Secured( { "GROUP_USER" })
     public ubic.gemma.model.genome.Chromosome findOrCreate( ubic.gemma.model.genome.Chromosome chromosome );
 
 }

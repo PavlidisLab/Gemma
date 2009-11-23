@@ -24,6 +24,8 @@ import java.util.HashSet;
 import java.util.Map;
 
 import org.apache.commons.lang.ArrayUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import cern.colt.list.DoubleArrayList;
 import cern.jet.stat.Descriptive;
@@ -45,22 +47,22 @@ import ubic.gemma.model.genome.Gene;
 /**
  * Tools for easily getting data matrices for analysis in a consistent way.
  * 
- * @spring.bean id="expressionDataMatrixService"
- * @spring.property name="expressionExperimentService" ref="expressionExperimentService"
- * @spring.property name="processedExpressionDataVectorService" ref="processedExpressionDataVectorService"
- * @spring.property name="dedvService" ref="designElementDataVectorService"
- * @spring.property name="arrayDesignService" ref="arrayDesignService"
  * @author keshav
  * @version $Id$
  */
+@Service
 public class ExpressionDataMatrixService {
 
+    @Autowired
     ExpressionExperimentService expressionExperimentService;
 
+    @Autowired
     ProcessedExpressionDataVectorService processedExpressionDataVectorService;
 
+    @Autowired
     DesignElementDataVectorService dedvService;
 
+    @Autowired
     ArrayDesignService arrayDesignService;
 
     /**

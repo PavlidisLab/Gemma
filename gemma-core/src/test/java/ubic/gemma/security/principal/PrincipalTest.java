@@ -18,13 +18,25 @@
  */
 package ubic.gemma.security.principal;
 
-import org.springframework.security.Authentication;
-import org.springframework.security.BadCredentialsException;
-import org.springframework.security.providers.ProviderManager;
-import org.springframework.security.providers.UsernamePasswordAuthenticationToken;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
+import java.util.Date;
+
+import org.junit.Before;
+import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.ProviderManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.authentication.encoding.PasswordEncoder;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+
+import ubic.gemma.security.authentication.UserDetailsImpl;
+import ubic.gemma.security.authentication.UserManager;
 import ubic.gemma.testing.BaseSpringContextTest;
-import ubic.gemma.util.ConfigUtils;
 
 /**
  * Test that we can log users in
@@ -34,38 +46,63 @@ import ubic.gemma.util.ConfigUtils;
  */
 public class PrincipalTest extends BaseSpringContextTest {
 
+    String pwd;
+
+    String username;
+
+    @Autowired
+    UserManager userManager;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private AuthenticationManager authenticationManager;
+
+    @Before
+    public void before() {
+
+        pwd = randomName();
+        username = randomName();
+
+        try {
+            userManager.loadUserByUsername( username );
+        } catch ( UsernameNotFoundException e ) {
+            String encodedPassword = passwordEncoder.encodePassword( pwd, username );
+            UserDetailsImpl u = new UserDetailsImpl( encodedPassword, username, true, null, null, null, new Date() );
+            userManager.createUser( u );
+        }
+    }
+
     /**
      * @throws Exception
      */
+    @Test
     public final void testLogin() throws Exception {
-        Authentication auth = new UsernamePasswordAuthenticationToken( ConfigUtils.getString( "gemma.admin.user" ),
-                ConfigUtils.getString( "gemma.admin.password" ) );
+        Authentication auth = new UsernamePasswordAuthenticationToken( username, pwd );
 
-        ProviderManager providerManager = ( ProviderManager ) this.getBean( "authenticationManager" );
-        Authentication authentication = providerManager.doAuthentication( auth );
+        Authentication authentication = ( ( ProviderManager ) authenticationManager ).doAuthentication( auth );
         assertTrue( authentication.isAuthenticated() );
     }
 
-    public final void testLoginWrongPassword() throws Exception {
-        Authentication auth = new UsernamePasswordAuthenticationToken( ConfigUtils.getString( "gemma.admin.user" ),
-                "wrong password" );
+    @Test
+    public final void testLoginNonexistentUser() throws Exception {
+        Authentication auth = new UsernamePasswordAuthenticationToken( "bad user", "wrong password" );
 
-        ProviderManager providerManager = ( ProviderManager ) this.getBean( "authenticationManager" );
         try {
-            providerManager.doAuthentication( auth );
+            ( ( ProviderManager ) authenticationManager ).doAuthentication( auth );
             fail( "Should have gotten a bad credentials exception" );
         } catch ( BadCredentialsException e ) {
             //
         }
     }
 
-    public final void testLoginNonexistentUser() throws Exception {
-        Authentication auth = new UsernamePasswordAuthenticationToken( "bad user", "wrong password" );
-
-        ProviderManager providerManager = ( ProviderManager ) this.getBean( "authenticationManager" );
+    @Test
+    public final void testLoginWrongPassword() throws Exception {
+        Authentication auth = new UsernamePasswordAuthenticationToken( username, "wrong password" );
 
         try {
-            providerManager.doAuthentication( auth );
+            ( ( ProviderManager ) authenticationManager ).doAuthentication( auth );
             fail( "Should have gotten a bad credentials exception" );
         } catch ( BadCredentialsException e ) {
             //

@@ -25,6 +25,8 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.View;
 import org.springframework.web.servlet.view.RedirectView;
@@ -36,26 +38,19 @@ import ubic.gemma.util.progress.TaskRunningService;
  * 
  * @author pavlidis
  * @version $Id$
- * @spring.bean id="taskCompletionController"
- * @spring.property name="taskRunningService" ref="taskRunningService"
  */
+@Controller
 public class TaskCompletionController extends BaseFormController {
 
     private static Log log = LogFactory.getLog( TaskCompletionController.class.getName() );
 
+    @Autowired
     TaskRunningService taskRunningService;
 
     /**
      * If this has a value in the request, the job given will be cancelled (instead of checked).
      */
     public static final String CANCEL_ATTRIBUTE = "cancel";
-
-    /**
-     * @param taskRunningService the taskRunningService to set
-     */
-    public void setTaskRunningService( TaskRunningService taskRunningService ) {
-        this.taskRunningService = taskRunningService;
-    }
 
     /**
      * AJAX
@@ -72,10 +67,17 @@ public class TaskCompletionController extends BaseFormController {
             View view = ( ( ModelAndView ) result ).getView();
             if ( view instanceof RedirectView ) {
                 return ( ( RedirectView ) view ).getUrl();
-             }
+            }
             return null;
         }
         return result;
+    }
+
+    /**
+     * @param taskRunningService the taskRunningService to set
+     */
+    public void setTaskRunningService( TaskRunningService taskRunningService ) {
+        this.taskRunningService = taskRunningService;
     }
 
     /*

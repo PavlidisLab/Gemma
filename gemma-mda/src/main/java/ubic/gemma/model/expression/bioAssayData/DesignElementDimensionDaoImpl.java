@@ -18,6 +18,10 @@
  */
 package ubic.gemma.model.expression.bioAssayData;
 
+import org.hibernate.SessionFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
+
 /**
  * TODO - DOCUMENT ME
  * 
@@ -25,8 +29,14 @@ package ubic.gemma.model.expression.bioAssayData;
  * @version $Id$@see
  *          ubic.gemma.model.expression.bioAssayData.DesignElementDimension
  */
+@Repository
 public class DesignElementDimensionDaoImpl extends
         ubic.gemma.model.expression.bioAssayData.DesignElementDimensionDaoBase {
+
+    @Autowired
+    public DesignElementDimensionDaoImpl( SessionFactory sessionFactory ) {
+        super.setSessionFactory( sessionFactory );
+    }
 
     /*
      * (non-Javadoc)
@@ -36,7 +46,7 @@ public class DesignElementDimensionDaoImpl extends
      */
     @Override
     public DesignElementDimension find( DesignElementDimension designElementDimension ) {
-        // TODO Auto-generated method stub
+        // TODO
         throw new UnsupportedOperationException();
     }
 

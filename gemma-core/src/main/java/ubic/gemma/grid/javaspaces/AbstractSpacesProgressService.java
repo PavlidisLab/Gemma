@@ -24,18 +24,17 @@ import java.util.concurrent.FutureTask;
 import net.jini.core.lease.Lease;
 import net.jini.space.JavaSpace;
 
-import org.springframework.security.context.SecurityContext;
-import org.springframework.security.context.SecurityContextHolder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 import org.springmodules.javaspaces.gigaspaces.GigaSpacesTemplate;
-import ubic.gemma.util.grid.javaspaces.SpacesEnum;
-import ubic.gemma.util.grid.javaspaces.SpacesJobObserver;
-import ubic.gemma.util.grid.javaspaces.SpacesUtil;
-import ubic.gemma.util.grid.javaspaces.entry.SpacesProgressEntry;
+
+import ubic.gemma.grid.javaspaces.util.SpacesEnum;
+import ubic.gemma.grid.javaspaces.util.SpacesJobObserver;
+import ubic.gemma.grid.javaspaces.util.SpacesUtil;
+import ubic.gemma.grid.javaspaces.util.entry.SpacesProgressEntry;
 import ubic.gemma.util.progress.BackgroundProgressJob;
 import ubic.gemma.util.progress.TaskRunningService;
 
@@ -43,39 +42,16 @@ import com.j_spaces.core.client.NotifyModifiers;
 
 /**
  * @author klc
- * @spring.property name="taskRunningService" ref="taskRunningService"
- * @spring.property name="spacesUtil" ref="spacesUtil"
+ * @version $Id$
  */
-
 public abstract class AbstractSpacesProgressService {
 
     protected static Log log = LogFactory.getLog( AbstractSpacesProgressService.class.getName() );
-
-    private SpacesUtil spacesUtil = null;
+    protected TaskRunningService taskRunningService;
 
     protected ApplicationContext updatedContext = null;
 
-    protected TaskRunningService taskRunningService;
-
-    /**
-     * Runs the job in a {@link JavaSpace}.
-     * 
-     * @param jobId
-     * @param securityContext
-     * @param request
-     * @param command
-     * @param messenger
-     * @return BackgroundControllerJob<ModelAndView>
-     */
-    abstract protected BackgroundProgressJob<ModelAndView> getSpaceRunner( String jobId,
-            SecurityContext securityContex, Object command );
-
-    abstract protected BackgroundProgressJob<ModelAndView> getRunner( String jobId, SecurityContext securityContex,
-            Object command );
-
-    public void setSpacesUtil( SpacesUtil spacesUtil ) {
-        this.spacesUtil = spacesUtil;
-    }
+    private SpacesUtil spacesUtil = null;
 
     /**
      * @return ApplicationContext
@@ -84,25 +60,6 @@ public abstract class AbstractSpacesProgressService {
         if ( spacesUtil == null ) spacesUtil = new SpacesUtil();
 
         return spacesUtil.addGemmaSpacesToApplicationContext( SpacesEnum.DEFAULT_SPACE.getSpaceUrl() );
-    }
-
-    /**
-     * Starts the job on a compute server resource if the space is running and the task can be serviced. If runInWebapp
-     * is true, the task will be run in the webapp virtual machine. If false the task will only be run if the space is
-     * started and workers that can service the task exist.
-     * 
-     * @param command
-     * @param spaceUrl
-     * @param taskName
-     * @param runInWebapp
-     * @return {@link ModelAndView}
-     */
-    protected synchronized ModelAndView startJob( Object command, String spaceUrl, String taskName, boolean runInWebapp ) {
-        String taskId = run( command, spaceUrl, taskName, runInWebapp );
-
-        ModelAndView mnv = new ModelAndView( new RedirectView( "/Gemma/processProgress.html?taskid=" + taskId ) );
-        mnv.addObject( TaskRunningService.JOB_ATTRIBUTE, taskId );
-        return mnv;
     }
 
     /**
@@ -115,18 +72,13 @@ public abstract class AbstractSpacesProgressService {
      * @return
      */
     public String run( Object command, String spaceUrl, String taskName, boolean runInWebapp ) {
-        /*
-         * all new threads need this to acccess protected resources (like services)
-         */
-        SecurityContext context = SecurityContextHolder.getContext();
-
         String taskId = null;
 
         updatedContext = addGemmaSpacesToApplicationContext();
         BackgroundProgressJob<ModelAndView> job = null;
         if ( updatedContext.containsBean( "gigaspacesTemplate" ) ) {
 
-            taskId = SpacesHelper.getTaskIdFromTask( updatedContext, taskName );
+            taskId = SpacesUtil.getTaskIdFromTask( updatedContext, taskName );
 
             if ( !spacesUtil.canServiceTask( taskName, spaceUrl ) ) {
                 // TODO Add sending of email to user.
@@ -157,13 +109,13 @@ public abstract class AbstractSpacesProgressService {
             template.addNotifyDelegatorListener( javaSpacesJobObserver, new SpacesProgressEntry(), null, true,
                     Lease.FOREVER, NotifyModifiers.NOTIFY_ALL );
 
-            job = getSpaceRunner( taskId, context, command );
+            job = getSpaceRunner( taskId, command );
         } else if ( !updatedContext.containsBean( "gigaspacesTemplate" ) && !runInWebapp ) {
             throw new RuntimeException(
                     "This task must be run on the compute server, but the space is not running. Please try again later" );
         } else {
             taskId = TaskRunningService.generateTaskId();
-            job = getRunner( taskId, context, command );
+            job = getRunner( taskId, command );
         }
 
         assert taskId != null;
@@ -171,6 +123,31 @@ public abstract class AbstractSpacesProgressService {
         taskRunningService.submitTask( taskId, new FutureTask<ModelAndView>( job ) );
         return taskId;
     }
+
+    public void setSpacesUtil( SpacesUtil spacesUtil ) {
+        this.spacesUtil = spacesUtil;
+    }
+
+    /**
+     * @param taskRunningService the taskRunningService to set
+     */
+    public void setTaskRunningService( TaskRunningService taskRunningService ) {
+        this.taskRunningService = taskRunningService;
+    }
+
+    abstract protected BackgroundProgressJob<ModelAndView> getRunner( String jobId, Object command );
+
+    /**
+     * Runs the job in a {@link JavaSpace}.
+     * 
+     * @param jobId
+     * @param securityContext
+     * @param request
+     * @param command
+     * @param messenger
+     * @return BackgroundControllerJob<ModelAndView>
+     */
+    abstract protected BackgroundProgressJob<ModelAndView> getSpaceRunner( String jobId, Object command );
 
     /**
      * @param spacesUtil
@@ -180,10 +157,22 @@ public abstract class AbstractSpacesProgressService {
     }
 
     /**
-     * @param taskRunningService the taskRunningService to set
+     * Starts the job on a compute server resource if the space is running and the task can be serviced. If runInWebapp
+     * is true, the task will be run in the webapp virtual machine. If false the task will only be run if the space is
+     * started and workers that can service the task exist.
+     * 
+     * @param command
+     * @param spaceUrl
+     * @param taskName
+     * @param runInWebapp
+     * @return {@link ModelAndView}
      */
-    public void setTaskRunningService( TaskRunningService taskRunningService ) {
-        this.taskRunningService = taskRunningService;
+    protected synchronized ModelAndView startJob( Object command, String spaceUrl, String taskName, boolean runInWebapp ) {
+        String taskId = run( command, spaceUrl, taskName, runInWebapp );
+
+        ModelAndView mnv = new ModelAndView( new RedirectView( "/Gemma/processProgress.html?taskid=" + taskId ) );
+        mnv.addObject( TaskRunningService.JOB_ATTRIBUTE, taskId );
+        return mnv;
     }
 
 }

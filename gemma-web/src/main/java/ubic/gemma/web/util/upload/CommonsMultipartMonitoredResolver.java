@@ -37,6 +37,8 @@ import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.core.io.Resource;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.util.StringUtils;
 import org.springframework.web.context.ServletContextAware;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
@@ -99,7 +101,7 @@ public class CommonsMultipartMonitoredResolver implements MultipartResolver, Ser
         upload.setHeaderEncoding( enc );
 
         try {
-            Map multipartFiles = new HashMap();
+            MultiValueMap<String, MultipartFile> multipartFiles = new LinkedMultiValueMap<String, MultipartFile>();
             Map multipartParams = new HashMap();
 
             // Extract multipart files and multipart parameters.
@@ -131,7 +133,7 @@ public class CommonsMultipartMonitoredResolver implements MultipartResolver, Ser
                 } else {
                     // multipart file field
                     MultipartFile file = new CommonsMultipartFile( fileItem );
-                    multipartFiles.put( file.getName(), file );
+                    multipartFiles.set( file.getName(), file );
 //                    multipartParams.put( "size", new String[] { ( new Long( file.getSize() ) ).toString() } );
 //                    multipartParams.put( "file", new String[] { file.getOriginalFilename() } );
                     if ( logger.isDebugEnabled() ) {

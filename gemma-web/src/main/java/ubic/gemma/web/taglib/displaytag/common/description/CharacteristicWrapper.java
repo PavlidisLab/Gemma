@@ -22,8 +22,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.displaytag.decorator.TableDecorator;
 
 import ubic.gemma.model.common.description.Characteristic;
@@ -35,37 +33,36 @@ import ubic.gemma.model.common.description.VocabCharacteristic;
  * 
  * @author luke
  * @version $Id$
+ * @deprecated we aren't usinig displaytag for Characteristics
  */
+@Deprecated
 public class CharacteristicWrapper extends TableDecorator {
-    
-    private Log log = LogFactory.getLog( this.getClass() );
 
-    private Pattern humanReadableUriPortionPattern =
-        Pattern.compile( ".*#(.*)" );
-    
+    private Pattern humanReadableUriPortionPattern = Pattern.compile( ".*#(.*)" );
+
     public String getDescriptionString() {
-        return getDescriptionString( (Characteristic)getCurrentRowObject() );
+        return getDescriptionString( ( Characteristic ) getCurrentRowObject() );
     }
-    
+
     // to facilitate testing
     public Pattern getHumanReadableUriPortionPattern() {
         return humanReadableUriPortionPattern;
     }
-    public String getDescriptionString(Characteristic c) {
+
+    public String getDescriptionString( Characteristic c ) {
         StringBuilder buf = new StringBuilder();
         if ( !StringUtils.isEmpty( c.getName() ) ) {
             buf.append( c.getName() );
             buf.append( ": " );
         }
-        if (c instanceof VocabCharacteristic) {
-            VocabCharacteristic vc = (VocabCharacteristic)c;
+        if ( c instanceof VocabCharacteristic ) {
+            VocabCharacteristic vc = ( VocabCharacteristic ) c;
             if ( StringUtils.isEmpty( vc.getCategoryUri() ) ) {
                 buf.append( "unknown class" );
             } else {
-                Matcher classMatcher =
-                    humanReadableUriPortionPattern.matcher( vc.getCategoryUri() );
+                Matcher classMatcher = humanReadableUriPortionPattern.matcher( vc.getCategoryUri() );
                 if ( classMatcher.matches() ) {
-                    buf.append( classMatcher.group(1) );
+                    buf.append( classMatcher.group( 1 ) );
                 } else {
                     buf.append( vc.getCategoryUri() );
                 }
@@ -74,10 +71,10 @@ public class CharacteristicWrapper extends TableDecorator {
                 buf.append( " : " );
                 Matcher termMatcher = humanReadableUriPortionPattern.matcher( vc.getValueUri() );
                 if ( termMatcher.matches() ) {
-                    buf.append( termMatcher.group(1) );
+                    buf.append( termMatcher.group( 1 ) );
                 } else {
                     buf.append( vc.getValueUri() );
-                }      
+                }
             } else if ( !StringUtils.isEmpty( vc.getValue() ) ) {
                 buf.append( " : " );
                 buf.append( vc.getValue() );
@@ -89,5 +86,5 @@ public class CharacteristicWrapper extends TableDecorator {
         }
         return buf.toString();
     }
-    
+
 }

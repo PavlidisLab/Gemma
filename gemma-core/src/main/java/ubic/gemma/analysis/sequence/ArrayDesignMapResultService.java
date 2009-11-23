@@ -26,6 +26,8 @@ import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
@@ -42,21 +44,24 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatResultService;
 /**
  * Supports obtaining detailed information about the sequence analysis of probes on microarrays.
  * 
- * @spring.bean id="arrayDesignMapResultService"
- * @spring.property name="blatAssociationService" ref="blatAssociationService"
- * @spring.property name="arrayDesignService" ref ="arrayDesignService"
- * @spring.property name="compositeSequenceService" ref="compositeSequenceService"
- * @spring.property name="blatResultService" ref="blatResultService"
  * @author Paul
  * @version $Id$
  */
+@Service
 public class ArrayDesignMapResultService {
 
     private static Log log = LogFactory.getLog( ArrayDesignMapResultService.class.getName() );
 
+    @Autowired
     private BlatResultService blatResultService;
+
+    @Autowired
     private BlatAssociationService blatAssociationService;
+
+    @Autowired
     private ArrayDesignService arrayDesignService;
+
+    @Autowired
     private CompositeSequenceService compositeSequenceService;
 
     /**
@@ -88,7 +93,6 @@ public class ArrayDesignMapResultService {
      * @param arrayDesign
      * @return
      */
-    @SuppressWarnings("unchecked")
     public Collection<CompositeSequenceMapValueObject> getSummaryMapValueObjects( ArrayDesign arrayDesign ) {
         Collection<Object[]> sequenceData = compositeSequenceService.getRawSummary( arrayDesign, null );
         return getSummaryMapValueObjects( sequenceData );
@@ -126,7 +130,7 @@ public class ArrayDesignMapResultService {
             Object geneId = row[5];
 
             String geneName = ( String ) row[6];
-            
+
             vo.setCompositeSequenceId( csId.toString() );
             vo.setCompositeSequenceName( csName );
 
@@ -164,7 +168,8 @@ public class ArrayDesignMapResultService {
      * @param vo
      * @param blatId
      */
-    private void countBlatHits( Map<Long, HashSet<Long>> blatResultCount, Long csId, CompositeSequenceMapValueObject vo, Object blatId ) {
+    private void countBlatHits( Map<Long, HashSet<Long>> blatResultCount, Long csId,
+            CompositeSequenceMapValueObject vo, Object blatId ) {
         // count the number of blat hits
         if ( blatId != null ) {
             Long blatIdObj = ( ( BigInteger ) blatId ).longValue();
@@ -252,7 +257,6 @@ public class ArrayDesignMapResultService {
 
             countBlatHits( blatResultCount, csId, vo, blatId );
 
-
             // fill in value object for geneProducts
             if ( geneProductId != null ) {
                 Map<String, GeneProductValueObject> geneProductSet = vo.getGeneProducts();
@@ -295,7 +299,6 @@ public class ArrayDesignMapResultService {
      * @param compositeSequences
      * @return
      */
-    @SuppressWarnings("unchecked")
     public Collection<CompositeSequenceMapSummary> summarizeMapResults( Collection<CompositeSequence> compositeSequences ) {
         Collection<CompositeSequenceMapSummary> result = new HashSet<CompositeSequenceMapSummary>();
 

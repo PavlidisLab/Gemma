@@ -18,14 +18,16 @@
  */
 package ubic.gemma.ontology;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
+
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.zip.GZIPInputStream;
 
-import junit.framework.TestCase;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.junit.Test;
 
 import com.hp.hpl.jena.ontology.OntModel;
 import com.hp.hpl.jena.ontology.OntModelSpec;
@@ -35,23 +37,12 @@ import com.hp.hpl.jena.query.larq.IndexLARQ;
  * @author pavlidis
  * @version $Id$
  */
-public class OntologyIndexerTest extends TestCase {
+public class OntologyIndexerTest {
 
     private static final String ONTNAME_FOR_TESTS = "mgedtest";
     private static Log log = LogFactory.getLog( OntologyIndexerTest.class.getName() );
 
-    public final void testIndexing() throws Exception {
-        InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream( "/data/loader/ontology/mged.owl.gz" ) );
-        OntModel model = OntologyLoader.loadMemoryModel( is, "owl-test", OntModelSpec.OWL_MEM_TRANS_INF );
-
-        IndexLARQ index = OntologyIndexer.indexOntology( ONTNAME_FOR_TESTS, model );
-
-        Collection<OntologyTerm> name = OntologySearch.matchClasses( model, index, "Bedding" );
-
-        assertEquals( 1, name.size() );
-        index.close();
-    }
-
+    @Test
     public final void testCellListings() throws Exception {
         InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream( "/data/loader/ontology/mged.owl.gz" ) );
         OntModel model = OntologyLoader.loadMemoryModel( is, "owl-test", OntModelSpec.OWL_MEM_TRANS_INF );
@@ -64,15 +55,20 @@ public class OntologyIndexerTest extends TestCase {
         index.close();
     }
 
-    public final void testPersistanceFail() throws Exception {
-        OntologyIndexer.eraseIndex( ONTNAME_FOR_TESTS );
-        try {
-            OntologyIndexer.getSubjectIndex( ONTNAME_FOR_TESTS );
-            fail( "Should have gotten an exception" );
-        } catch ( Exception e ) {
-        }
+    @Test
+    public final void testIndexing() throws Exception {
+        InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream( "/data/loader/ontology/mged.owl.gz" ) );
+        OntModel model = OntologyLoader.loadMemoryModel( is, "owl-test", OntModelSpec.OWL_MEM_TRANS_INF );
+
+        IndexLARQ index = OntologyIndexer.indexOntology( ONTNAME_FOR_TESTS, model );
+
+        Collection<OntologyTerm> name = OntologySearch.matchClasses( model, index, "Bedding" );
+
+        assertEquals( 1, name.size() );
+        index.close();
     }
 
+    @Test
     public final void testPersistance() throws Exception {
         InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream( "/data/loader/ontology/mged.owl.gz" ) );
         OntModel model = OntologyLoader.loadMemoryModel( is, "owl-test", OntModelSpec.OWL_MEM_TRANS_INF );
@@ -87,6 +83,16 @@ public class OntologyIndexerTest extends TestCase {
         log.info( name.toString() );
         assertEquals( 1, name.size() );
         index.close();
+    }
+
+    @Test
+    public final void testPersistanceFail() throws Exception {
+        OntologyIndexer.eraseIndex( ONTNAME_FOR_TESTS );
+        try {
+            OntologyIndexer.getSubjectIndex( ONTNAME_FOR_TESTS );
+            fail( "Should have gotten an exception" );
+        } catch ( Exception e ) {
+        }
     }
 
 }

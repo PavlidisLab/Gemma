@@ -23,13 +23,6 @@ import ubic.gemma.web.controller.BaseFormController;
 /**
  * @author paul
  * @version $Id$
- * @spring.bean id="bioMaterialFormController"
- * @spring.property name = "commandName" value="bioMaterial"
- * @spring.property name = "formView" value="bioMaterial.edit"
- * @spring.property name = "successView" value="redirect:/expressionExperiment/showAllExpressionExperiments.html"
- * @spring.property name = "bioMaterialService" ref="bioMaterialService"
- * @spring.property name = "externalDatabaseService" ref="externalDatabaseService"
- * @spring.property name = "validator" ref="bioMaterialValidator"
  */
 public class BioMaterialFormController extends BaseFormController {
 
@@ -51,39 +44,24 @@ public class BioMaterialFormController extends BaseFormController {
 
     /**
      * @param request
-     * @return Object
-     * @throws ServletException
-     * @see org.springframework.web.servlet.mvc.AbstractFormController#formBackingObject(javax.servlet.http.HttpServletRequest)
+     * @param response
+     * @param command
+     * @param errors
+     * @return ModelAndView
+     * @throws Exception
      */
     @Override
-    protected Object formBackingObject( HttpServletRequest request ) {
-        BioMaterial ba = null;
+    public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
+            BindException errors ) throws Exception {
 
-        log.debug( "entering formBackingObject" );
+        log.debug( "entering onSubmit" );
 
-        String id_param = ServletRequestUtils.getStringParameter( request, "id", "" );
+        BioMaterial ba = ( BioMaterial ) command;
+        bioMaterialService.update( ba );
 
-        Long id = Long.parseLong( id_param );
+        saveMessage( request, "object.saved", new Object[] { ba.getClass().getSimpleName(), ba.getId() }, "Saved" );
 
-        if ( !id.equals( null ) )
-            ba = bioMaterialService.load( id );
-        else
-            ba = BioMaterial.Factory.newInstance();
-
-        return ba;
-    }
-
-    /**
-     * @param request
-     * @return Map
-     */
-    @Override
-    @SuppressWarnings( { "unchecked" })
-    protected Map<String, Collection<ExternalDatabase>> referenceData( HttpServletRequest request ) {
-        Collection<ExternalDatabase> edCol = externalDatabaseService.loadAll();
-        Map<String, Collection<ExternalDatabase>> edMap = new HashMap<String, Collection<ExternalDatabase>>();
-        edMap.put( "externalDatabases", edCol );
-        return edMap;
+        return new ModelAndView( getSuccessView() );
     }
 
     /**
@@ -128,28 +106,6 @@ public class BioMaterialFormController extends BaseFormController {
     }
 
     /**
-     * @param request
-     * @param response
-     * @param command
-     * @param errors
-     * @return ModelAndView
-     * @throws Exception
-     */
-    @Override
-    public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
-            BindException errors ) throws Exception {
-
-        log.debug( "entering onSubmit" );
-
-        BioMaterial ba = ( BioMaterial ) command;
-        bioMaterialService.update( ba );
-
-        saveMessage( request, "object.saved", new Object[] { ba.getClass().getSimpleName(), ba.getId() }, "Saved" );
-
-        return new ModelAndView( getSuccessView() );
-    }
-
-    /**
      * @param bioMaterialService
      */
     public void setBioMaterialService( BioMaterialService bioMaterialService ) {
@@ -161,6 +117,43 @@ public class BioMaterialFormController extends BaseFormController {
      */
     public void setExternalDatabaseService( ExternalDatabaseService externalDatabaseService ) {
         this.externalDatabaseService = externalDatabaseService;
+    }
+
+    /**
+     * @param request
+     * @return Object
+     * @throws ServletException
+     * @see org.springframework.web.servlet.mvc.AbstractFormController#formBackingObject(javax.servlet.http.HttpServletRequest)
+     */
+    @Override
+    protected Object formBackingObject( HttpServletRequest request ) {
+        BioMaterial ba = null;
+
+        log.debug( "entering formBackingObject" );
+
+        String id_param = ServletRequestUtils.getStringParameter( request, "id", "" );
+
+        Long id = Long.parseLong( id_param );
+
+        if ( !id.equals( null ) )
+            ba = bioMaterialService.load( id );
+        else
+            ba = BioMaterial.Factory.newInstance();
+
+        return ba;
+    }
+
+    /**
+     * @param request
+     * @return Map
+     */
+    @Override
+    @SuppressWarnings( { "unchecked" })
+    protected Map<String, Collection<ExternalDatabase>> referenceData( HttpServletRequest request ) {
+        Collection<ExternalDatabase> edCol = externalDatabaseService.loadAll();
+        Map<String, Collection<ExternalDatabase>> edMap = new HashMap<String, Collection<ExternalDatabase>>();
+        edMap.put( "externalDatabases", edCol );
+        return edMap;
     }
 
 }

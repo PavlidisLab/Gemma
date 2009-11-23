@@ -20,12 +20,21 @@
  */
 package ubic.gemma.model.expression.experiment;
 
+import java.util.Collection;
+
+import org.springframework.stereotype.Service;
+
 /**
  * @author pavlidis
  * @version $Id$
  * @see ubic.gemma.model.expression.experiment.ExperimentalFactorService
  */
+@Service
 public class ExperimentalFactorServiceImpl extends ubic.gemma.model.expression.experiment.ExperimentalFactorServiceBase {
+
+    public Collection<ExperimentalFactor> create( Collection<ExperimentalFactor> factors ) {
+        return ( Collection<ExperimentalFactor> ) this.getExperimentalFactorDao().create( factors );
+    }
 
     /*
      * (non-Javadoc)
@@ -35,7 +44,7 @@ public class ExperimentalFactorServiceImpl extends ubic.gemma.model.expression.e
      */
     @Override
     protected ExperimentalFactor handleCreate( ExperimentalFactor experimentalFactor ) throws Exception {
-        return ( ExperimentalFactor ) this.getExperimentalFactorDao().create( experimentalFactor );
+        return this.getExperimentalFactorDao().create( experimentalFactor );
     }
 
     @Override
@@ -71,7 +80,7 @@ public class ExperimentalFactorServiceImpl extends ubic.gemma.model.expression.e
      */
     @Override
     protected ExperimentalFactor handleLoad( Long id ) throws Exception {
-        return ( ExperimentalFactor ) this.getExperimentalFactorDao().load( id );
+        return this.getExperimentalFactorDao().load( id );
     }
 
     /**
@@ -79,7 +88,7 @@ public class ExperimentalFactorServiceImpl extends ubic.gemma.model.expression.e
      */
     @Override
     protected java.util.Collection<ExperimentalFactor> handleLoadAll() throws java.lang.Exception {
-        return this.getExperimentalFactorDao().loadAll();
+        return ( Collection<ExperimentalFactor> ) this.getExperimentalFactorDao().loadAll();
     }
 
     @Override

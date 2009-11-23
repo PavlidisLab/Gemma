@@ -18,10 +18,15 @@
  */
 package ubic.gemma.datastructure.matrix;
 
+import static org.junit.Assert.assertFalse;
+
 import java.io.PrintWriter;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.junit.Before;
+import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
@@ -34,6 +39,7 @@ import ubic.gemma.testing.BaseSpringContextTest;
 public class ExperimentalDesignWriterTest extends BaseSpringContextTest {
     private Log log = LogFactory.getLog( this.getClass() );
 
+    @Autowired
     ExpressionExperimentService eeService = null;
 
     ExpressionExperiment ee = null;
@@ -42,22 +48,17 @@ public class ExperimentalDesignWriterTest extends BaseSpringContextTest {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.testing.BaseSpringContextTest#onSetUpInTransaction()
      */
-    @Override
-    protected void onSetUpInTransaction() throws Exception {
-
-        super.onSetUpInTransaction();
-
-        eeService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
-
+    @Before
+    public void setup() throws Exception {
         ee = eeService.findByShortName( shortName );
     }
 
     /**
      * Tests writing out the experimental design
      */
+    @Test
     public void testWrite() {
         if ( ee == null ) {
             log.error( "Could not find experiment " + shortName + ".  Skipping test ..." );

@@ -39,8 +39,8 @@ public class XmlView extends AbstractView {
     public static final String XML_PARAM = "xml";
 
     @Override
-    protected void renderMergedOutputModel( Map model, HttpServletRequest request, HttpServletResponse response )
-            throws Exception {
+    protected void renderMergedOutputModel( Map<String, Object> model, HttpServletRequest request,
+            HttpServletResponse response ) throws Exception {
         String textToRender = ( String ) model.get( XML_PARAM );
         response.setContentType( "text/xml" );
         response.setContentLength( textToRender.getBytes().length );

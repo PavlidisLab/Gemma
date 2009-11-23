@@ -22,12 +22,13 @@ package ubic.gemma.model.common.auditAndSecurity;
 import java.sql.Date;
 import java.util.Collection;
 
+import org.springframework.stereotype.Service;
+
 /**
- * TODO Document Me
- * 
  * @author Paul
  * @version $Id$
  */
+@Service
 public class UserQueryServiceImpl implements UserQueryService {
 
     UserQueryDao userQueryDao;
@@ -49,7 +50,7 @@ public class UserQueryServiceImpl implements UserQueryService {
     }
 
     public Collection<UserQuery> loadAll() {
-        return userQueryDao.loadAll();
+        return ( Collection<UserQuery> ) userQueryDao.loadAll();
     }
 
     public void remove( UserQuery userQuery ) {

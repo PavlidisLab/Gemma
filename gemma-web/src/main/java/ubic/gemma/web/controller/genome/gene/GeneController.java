@@ -28,26 +28,26 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
 
-import ubic.gemma.analysis.sequence.ArrayDesignMapResultService;
-import ubic.gemma.analysis.sequence.CompositeSequenceMapValueObject;
 import ubic.gemma.image.aba.AllenBrainAtlasService;
 import ubic.gemma.image.aba.Image;
 import ubic.gemma.image.aba.ImageSeries;
 import ubic.gemma.loader.genome.gene.ncbi.homology.HomologeneService;
 import ubic.gemma.model.association.Gene2GOAssociation;
 import ubic.gemma.model.association.Gene2GOAssociationService;
-import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.ontology.GeneOntologyService;
-import ubic.gemma.web.controller.BaseMultiActionController;
+import ubic.gemma.web.controller.BaseController;
 import ubic.gemma.web.controller.expression.experiment.AnnotationValueObject;
 
 /**
@@ -55,31 +55,27 @@ import ubic.gemma.web.controller.expression.experiment.AnnotationValueObject;
  * @author pavlidis
  * @author joseph
  * @version $Id$
- * @spring.bean id="geneController"
- * @spring.property name="geneService" ref="geneService"
- * @spring.property name="geneOntologyService" ref="geneOntologyService"
- * @spring.property name="gene2GOAssociationService" ref="gene2GOAssociationService"
- * @spring.property name="compositeSequenceService" ref="compositeSequenceService"
- * @spring.property name="arrayDesignMapResultService" ref="arrayDesignMapResultService"
- * @spring.property name="allenBrainAtlasService" ref="allenBrainAtlasService"
- * @spring.property name="homologeneService" ref="homologeneService"
- * @spring.property name="taxonService" ref="taxonService"
- * @spring.property name="methodNameResolver" ref="geneActions"
  */
-public class GeneController extends BaseMultiActionController {
-    /**
-     * Informs submit methods not to populate model with data that is going to be fetched with AJAX call. We'll
-     * configure this externally, so this is temporary.
-     */
-    private static final boolean AJAX = true;
+@Controller
+@RequestMapping("/gene")
+public class GeneController extends BaseController {
+
+    @Autowired
     private AllenBrainAtlasService allenBrainAtlasService = null;
-    private ArrayDesignMapResultService arrayDesignMapResultService = null;
-    private CompositeSequenceService compositeSequenceService = null;
+
+    @Autowired
     private Gene2GOAssociationService gene2GOAssociationService = null;
+
+    @Autowired
     private GeneOntologyService geneOntologyService;
+
+    @Autowired
     private HomologeneService homologeneService = null;
+
+    @Autowired
     private TaxonService taxonService = null;
 
+    @Autowired
     private GeneService geneService = null;
 
     /**
@@ -87,9 +83,7 @@ public class GeneController extends BaseMultiActionController {
      * 
      * @param geneDelegator
      * @return
-     * @spring.webremote include="true"
      */
-    @SuppressWarnings("unchecked")
     public Collection<AnnotationValueObject> findGOTerms( Long geneId ) {
         if ( geneId == null ) throw new IllegalArgumentException( "Null id for gene" );
         Collection<AnnotationValueObject> ontos = new HashSet<AnnotationValueObject>();
@@ -126,7 +120,6 @@ public class GeneController extends BaseMultiActionController {
      * 
      * @param geneDelegator
      * @return
-     * @spring.webremote include="true"
      */
     public Collection<GeneProduct> getProducts( Long geneId ) {
         if ( geneId == null ) throw new IllegalArgumentException( "Null id for gene" );
@@ -137,18 +130,8 @@ public class GeneController extends BaseMultiActionController {
         return gene.getProducts();
     }
 
-    /**
-     * @param arrayDesignMapResultService the arrayDesignMapResultService to set
-     */
-    public void setArrayDesignMapResultService( ArrayDesignMapResultService arrayDesignMapResultService ) {
-        this.arrayDesignMapResultService = arrayDesignMapResultService;
-    }
-
-    /**
-     * @param compositeSequenceService the compositeSequenceService to set
-     */
-    public void setCompositeSequenceService( CompositeSequenceService compositeSequenceService ) {
-        this.compositeSequenceService = compositeSequenceService;
+    public void setAllenBrainAtlasService( AllenBrainAtlasService allenBrainAtlasService ) {
+        this.allenBrainAtlasService = allenBrainAtlasService;
     }
 
     /**
@@ -169,10 +152,6 @@ public class GeneController extends BaseMultiActionController {
         this.geneService = geneService;
     }
 
-    public void setAllenBrainAtlasService( AllenBrainAtlasService allenBrainAtlasService ) {
-        this.allenBrainAtlasService = allenBrainAtlasService;
-    }
-
     public void setHomologeneService( HomologeneService homologeneService ) {
         this.homologeneService = homologeneService;
     }
@@ -187,35 +166,45 @@ public class GeneController extends BaseMultiActionController {
      * @param errors
      * @return ModelAndView
      */
+    @RequestMapping(value = "/showGene.html", method = RequestMethod.GET)
     public ModelAndView show( HttpServletRequest request, HttpServletResponse response ) {
 
         Long id = null;
 
+        String ncbiId = null;
+
+        Gene gene = null;
+
         try {
             id = Long.parseLong( request.getParameter( "id" ) );
+            gene = geneService.load( id );
+
+            if ( gene == null ) {
+                addMessage( request, "object.notfound", new Object[] { "Gene " + id } );
+                return new ModelAndView( "index" );
+            }
         } catch ( NumberFormatException e ) {
-            addMessage( request, "object.notfound", new Object[] { "Gene " + id } );
-            return new ModelAndView( "mainMenu.html" );
+            ncbiId = request.getParameter( "ncbiid" );
+
+            if ( StringUtils.isNotBlank( ncbiId ) ) {
+                gene = geneService.findByNCBIId( ncbiId );
+            } else {
+                addMessage( request, "object.notfound", new Object[] { "Gene" } );
+                return new ModelAndView( "index" );
+            }
         }
 
-        Gene gene = geneService.load( id );
         if ( gene == null ) {
             addMessage( request, "object.notfound", new Object[] { "Gene " + id } );
-            return new ModelAndView( "mainMenu.html" );
+            return new ModelAndView( "index" );
         }
+
+        id = gene.getId();
+
+        assert id != null;
 
         ModelAndView mav = new ModelAndView( "gene.detail" );
         mav.addObject( "gene", gene );
-
-        if ( !AJAX ) {
-            Collection<VocabCharacteristic> ontos = gene2GOAssociationService.findByGene( gene );
-            if ( ontos.size() != 0 ) {
-                fillInTermNames( ontos );
-                cleanupVcs( ontos );
-                mav.addObject( "ontologyEntries", ontos );
-            }
-            mav.addObject( "numOntologyEntries", ontos.size() );
-        }
 
         // Get the composite sequences
         Long compositeSequenceCount = geneService.getCompositeSequenceCountById( id );
@@ -230,6 +219,105 @@ public class GeneController extends BaseMultiActionController {
         }
 
         return mav;
+    }
+
+    /**
+     * @param request
+     * @param response
+     * @return ModelAndView
+     */
+    @RequestMapping(value = "/showGenes.html", method = RequestMethod.GET)
+    public ModelAndView showMultiple( HttpServletRequest request, HttpServletResponse response ) {
+
+        String sId = request.getParameter( "id" );
+        Collection<Gene> genes = new ArrayList<Gene>();
+        // if no IDs are specified, then show an error message
+        if ( sId == null ) {
+            addMessage( request, "object.notfound", new Object[] { "All genes cannot be listed. Genes " } );
+        }
+
+        // if ids are specified, then display only those genes
+        else {
+            String[] idList = StringUtils.split( sId, ',' );
+
+            for ( int i = 0; i < idList.length; i++ ) {
+                Long id = Long.parseLong( idList[i] );
+                Gene gene = geneService.load( id );
+                if ( gene == null ) {
+                    addMessage( request, "object.notfound", new Object[] { "Gene " + id } );
+                }
+                genes.add( gene );
+            }
+        }
+        /*
+         * FIXME this view doesn't exist!
+         */
+        return new ModelAndView( "genes" ).addObject( "genes", genes );
+
+    }
+
+    /**
+     * @param request
+     * @param response
+     * @return ModelAndView
+     */
+    @RequestMapping("/showCompositeSequences.html")
+    public ModelAndView showCompositeSequences( HttpServletRequest request, HttpServletResponse response ) {
+
+        /*
+         * FIXME is this used?
+         */
+
+        // gene id.
+        Long id = Long.parseLong( request.getParameter( "id" ) );
+        Gene gene = geneService.load( id );
+        if ( gene == null ) {
+            addMessage( request, "object.notfound", new Object[] { "Gene " + id } );
+            StringBuffer requestURL = request.getRequestURL();
+            log.info( requestURL );
+            return new ModelAndView( "mainMenu.html" );
+        }
+        Collection<CompositeSequence> compositeSequences = geneService.getCompositeSequencesById( id );
+
+        ModelAndView mav = new ModelAndView( "compositeSequences.geneMap" );
+        mav.addObject( "numCompositeSequences", compositeSequences.size() );
+
+        // fill in by ajax instead.
+        // Collection<Object[]> rawSummaries = compositeSequenceService.getRawSummary( compositeSequences, 0 );
+        // Collection<CompositeSequenceMapValueObject> summaries = arrayDesignMapResultService
+        // .getSummaryMapValueObjects( rawSummaries );
+        //
+        // if ( summaries == null || summaries.size() == 0 ) {
+        // // / FIXME, return error or do something else intelligent.
+        // }
+        // mav.addObject( "sequenceData", summaries );
+
+        StringBuilder buf = new StringBuilder();
+        for ( CompositeSequence sequence : compositeSequences ) {
+            buf.append( sequence.getId() );
+            buf.append( "," );
+        }
+        mav.addObject( "compositeSequenceIdList", buf.toString().replaceAll( ",$", "" ) );
+
+        mav.addObject( "gene", gene );
+
+        return mav;
+    }
+
+    /**
+     * Remove root terms.
+     * 
+     * @param associations
+     */
+    private void cleanup( Collection<AnnotationValueObject> associations ) {
+        for ( Iterator<AnnotationValueObject> it = associations.iterator(); it.hasNext(); ) {
+            String term = it.next().getTermName();
+            if ( term == null ) continue;
+            if ( term.equals( "molecular_function" ) || term.equals( "biological_process" )
+                    || term.equals( "cellular_component" ) ) {
+                it.remove();
+            }
+        }
     }
 
     /**
@@ -262,125 +350,6 @@ public class GeneController extends BaseMultiActionController {
                 log.warn( "Could not get ABA data: " + e );
             }
 
-        }
-    }
-
-    /**
-     * @param request
-     * @param response
-     * @return ModelAndView
-     */
-    public ModelAndView showAll( HttpServletRequest request, HttpServletResponse response ) {
-
-        String sId = request.getParameter( "id" );
-        Collection<Gene> genes = new ArrayList<Gene>();
-        // if no IDs are specified, then show an error message
-        if ( sId == null ) {
-            addMessage( request, "object.notfound", new Object[] { "All genes cannot be listed. Genes " } );
-        }
-
-        // if ids are specified, then display only those genes
-        else {
-            String[] idList = StringUtils.split( sId, ',' );
-
-            for ( int i = 0; i < idList.length; i++ ) {
-                Long id = Long.parseLong( idList[i] );
-                Gene gene = geneService.load( id );
-                if ( gene == null ) {
-                    addMessage( request, "object.notfound", new Object[] { "Gene " + id } );
-                }
-                genes.add( gene );
-            }
-        }
-        return new ModelAndView( "genes" ).addObject( "genes", genes );
-
-    }
-
-    /**
-     * @param request
-     * @param response
-     * @return ModelAndView
-     */
-    public ModelAndView showCompositeSequences( HttpServletRequest request, HttpServletResponse response ) {
-
-        // gene id.
-        Long id = Long.parseLong( request.getParameter( "id" ) );
-        Gene gene = geneService.load( id );
-        if ( gene == null ) {
-            addMessage( request, "object.notfound", new Object[] { "Gene " + id } );
-            StringBuffer requestURL = request.getRequestURL();
-            log.info( requestURL );
-            return new ModelAndView( "mainMenu.html" );
-        }
-        Collection<CompositeSequence> compositeSequences = geneService.getCompositeSequencesById( id );
-
-        ModelAndView mav = new ModelAndView( "compositeSequences.geneMap" );
-        mav.addObject( "numCompositeSequences", compositeSequences.size() );
-
-        if ( !AJAX ) {
-            Collection<Object[]> rawSummaries = compositeSequenceService.getRawSummary( compositeSequences, 0 );
-            Collection<CompositeSequenceMapValueObject> summaries = arrayDesignMapResultService
-                    .getSummaryMapValueObjects( rawSummaries );
-
-            if ( summaries == null || summaries.size() == 0 ) {
-                // / FIXME, return error or do something else intelligent.
-            }
-            mav.addObject( "sequenceData", summaries );
-
-        } else {
-            StringBuilder buf = new StringBuilder();
-            for ( CompositeSequence sequence : compositeSequences ) {
-                buf.append( sequence.getId() );
-                buf.append( "," );
-            }
-            mav.addObject( "compositeSequenceIdList", buf.toString().replaceAll( ",$", "" ) );
-        }
-        mav.addObject( "gene", gene );
-
-        return mav;
-    }
-
-    /**
-     * Remove root terms.
-     * 
-     * @param associations
-     */
-    private void cleanup( Collection<AnnotationValueObject> associations ) {
-        for ( Iterator<AnnotationValueObject> it = associations.iterator(); it.hasNext(); ) {
-            String term = it.next().getTermName();
-            if ( term == null ) continue;
-            if ( term.equals( "molecular_function" ) || term.equals( "biological_process" )
-                    || term.equals( "cellular_component" ) ) {
-                it.remove();
-            }
-        }
-    }
-
-    /**
-     * Remove root terms.
-     * 
-     * @param ontos
-     */
-    private void cleanupVcs( Collection<VocabCharacteristic> ontos ) {
-        for ( Iterator<VocabCharacteristic> it = ontos.iterator(); it.hasNext(); ) {
-            VocabCharacteristic v = it.next();
-            String term = v.getDescription();
-            if ( term.equals( "molecular_function" ) || term.equals( "biological_process" )
-                    || term.equals( "cellular_component" ) ) {
-                it.remove();
-            }
-        }
-    }
-
-    /**
-     * Provide the human-readable text for each GO term.
-     * 
-     * @param ontos
-     */
-    private void fillInTermNames( Collection<VocabCharacteristic> ontos ) {
-        for ( VocabCharacteristic v : ontos ) {
-            String desc = geneOntologyService.getTermName( v.getValue() );
-            v.setDescription( desc ); // we're just using this as a convenient spot.
         }
     }
 

@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.expression.bioAssay;
 
+import org.springframework.beans.factory.annotation.Autowired;
+
 /**
  * <p>
  * Spring Service base class for <code>ubic.gemma.model.expression.bioAssay.BioAssayService</code>, provides access to
@@ -26,11 +28,13 @@ package ubic.gemma.model.expression.bioAssay;
  * 
  * @see ubic.gemma.model.expression.bioAssay.BioAssayService
  */
-public abstract class BioAssayServiceBase extends ubic.gemma.model.common.AuditableServiceImpl implements
+public abstract class BioAssayServiceBase  implements
         ubic.gemma.model.expression.bioAssay.BioAssayService {
 
+    @Autowired
     private ubic.gemma.model.expression.biomaterial.BioMaterialService bioMaterialService;
 
+    @Autowired
     private ubic.gemma.model.expression.bioAssay.BioAssayDao bioAssayDao;
 
     /**

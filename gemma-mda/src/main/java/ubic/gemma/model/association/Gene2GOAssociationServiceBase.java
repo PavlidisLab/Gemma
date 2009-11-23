@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.association;
 
+import org.springframework.beans.factory.annotation.Autowired;
+
 /**
  * <p>
  * Spring Service base class for <code>ubic.gemma.model.association.Gene2GOAssociationService</code>, provides access to
@@ -28,8 +30,10 @@ package ubic.gemma.model.association;
  */
 public abstract class Gene2GOAssociationServiceBase implements ubic.gemma.model.association.Gene2GOAssociationService {
 
+    @Autowired
     private ubic.gemma.model.association.Gene2GOAssociationDao gene2GOAssociationDao;
 
+    @Autowired
     private ubic.gemma.model.common.description.VocabCharacteristicDao vocabCharacteristicDao;
 
     /**

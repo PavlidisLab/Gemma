@@ -28,6 +28,8 @@ import java.util.HashSet;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import ubic.basecode.util.FileTools;
 import ubic.gemma.model.analysis.expression.ExpressionAnalysis;
@@ -49,28 +51,31 @@ import ubic.gemma.persistence.PersisterHelper;
  * A spring loaded differential expression service to run the differential expression analysis (and persist the results
  * using the appropriate data access objects).
  * 
- * @spring.bean id="differentialExpressionAnalyzerService"
- * @spring.property name="expressionExperimentService" ref="expressionExperimentService"
- * @spring.property name="differentialExpressionAnalysisService" ref="differentialExpressionAnalysisService"
- * @spring.property name="differentialExpressionResultService" ref="differentialExpressionResultService"
- * @spring.property name="differentialExpressionAnalyzer" ref="differentialExpressionAnalyzer"
- * @spring.property name="persisterHelper" ref="persisterHelper"
- * @spring.property name="auditTrailService" ref="auditTrailService"
  * @author keshav
  * @version $Id$
  */
+@Service
 public class DifferentialExpressionAnalyzerService {
 
     public enum AnalysisType {
         OWA, TTEST, TWA, TWIA
     }
 
+    @Autowired
     private AuditTrailService auditTrailService = null;
+
+    @Autowired
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService = null;
-    private DifferentialExpressionAnalyzer differentialExpressionAnalyzer = null;
+
+    @Autowired
     private DifferentialExpressionResultService differentialExpressionResultService = null;
+
+    @Autowired
     private ExpressionExperimentService expressionExperimentService = null;
+
     private Log log = LogFactory.getLog( this.getClass() );
+
+    @Autowired
     private PersisterHelper persisterHelper = null;
 
     /**
@@ -93,7 +98,6 @@ public class DifferentialExpressionAnalyzerService {
      * 
      * @param expressionExperiment
      */
-    @SuppressWarnings("unchecked")
     public void deleteOldAnalyses( ExpressionExperiment expressionExperiment ) {
         Collection<DifferentialExpressionAnalysis> diffAnalysis = differentialExpressionAnalysisService
                 .findByInvestigation( expressionExperiment );
@@ -104,19 +108,10 @@ public class DifferentialExpressionAnalyzerService {
         }
 
         for ( DifferentialExpressionAnalysis de : diffAnalysis ) {
-            Long toDelete = de.getId();
-
             log.info( "Deleting old differential expression analysis for experiment "
                     + expressionExperiment.getShortName() );
-            differentialExpressionAnalysisService.delete( toDelete );
+            differentialExpressionAnalysisService.delete( de );
         }
-    }
-
-    /**
-     * Disconnect from R.
-     */
-    public void disconnectR() {
-        differentialExpressionAnalyzer.disconnectR();
     }
 
     /**
@@ -125,6 +120,7 @@ public class DifferentialExpressionAnalyzerService {
      * @param expressionExperiment
      */
     public DifferentialExpressionAnalysis doDifferentialExpressionAnalysis( ExpressionExperiment expressionExperiment ) {
+        DifferentialExpressionAnalyzer differentialExpressionAnalyzer = new DifferentialExpressionAnalyzer();
         return differentialExpressionAnalyzer.analyze( expressionExperiment );
     }
 
@@ -137,6 +133,7 @@ public class DifferentialExpressionAnalyzerService {
      */
     public DifferentialExpressionAnalysis doDifferentialExpressionAnalysis( ExpressionExperiment expressionExperiment,
             Collection<ExperimentalFactor> factors ) {
+        DifferentialExpressionAnalyzer differentialExpressionAnalyzer = new DifferentialExpressionAnalyzer();
         return differentialExpressionAnalyzer.analyze( expressionExperiment, factors );
     }
 
@@ -150,6 +147,7 @@ public class DifferentialExpressionAnalyzerService {
      */
     public DifferentialExpressionAnalysis doDifferentialExpressionAnalysis( ExpressionExperiment expressionExperiment,
             Collection<ExperimentalFactor> factors, AnalysisType type ) {
+        DifferentialExpressionAnalyzer differentialExpressionAnalyzer = new DifferentialExpressionAnalyzer();
         return differentialExpressionAnalyzer.analyze( expressionExperiment, factors, type );
     }
 
@@ -158,7 +156,6 @@ public class DifferentialExpressionAnalyzerService {
      * @return
      * @throws Exception
      */
-    @SuppressWarnings("unchecked")
     public Collection<ExpressionAnalysisResultSet> getResultSets( ExpressionExperiment expressionExperiment ) {
         return differentialExpressionAnalysisService.getResultSets( expressionExperiment );
     }
@@ -227,13 +224,6 @@ public class DifferentialExpressionAnalyzerService {
     }
 
     /**
-     * @param differentialExpressionAnalysis
-     */
-    public void setDifferentialExpressionAnalyzer( DifferentialExpressionAnalyzer differentialExpressionAnalyzer ) {
-        this.differentialExpressionAnalyzer = differentialExpressionAnalyzer;
-    }
-
-    /**
      * @param differentialExpressionResultService the differentialExpressionResultService to set
      */
     public void setDifferentialExpressionResultService(
@@ -261,12 +251,11 @@ public class DifferentialExpressionAnalyzerService {
      * @param ee
      * @return
      */
-    @SuppressWarnings("unchecked")
     public boolean wasDifferentialAnalysisRun( ExpressionExperiment ee ) {
 
         boolean wasRun = false;
 
-        Collection<ExpressionAnalysis> expressionAnalyses = differentialExpressionAnalysisService
+        Collection<DifferentialExpressionAnalysis> expressionAnalyses = differentialExpressionAnalysisService
                 .findByInvestigation( ee );
 
         for ( ExpressionAnalysis ea : expressionAnalyses ) {
@@ -392,4 +381,5 @@ public class DifferentialExpressionAnalyzerService {
                 .newInstance(), diffExpressionAnalysis.getDescription() );
         return diffExpressionAnalysis;
     }
+
 }

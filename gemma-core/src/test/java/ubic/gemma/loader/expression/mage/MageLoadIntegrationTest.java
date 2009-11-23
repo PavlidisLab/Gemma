@@ -18,6 +18,9 @@
  */
 package ubic.gemma.loader.expression.mage;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
 import java.io.File;
 import java.io.InputStream;
 import java.util.Collection;
@@ -25,12 +28,13 @@ import java.util.Collection;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.junit.After;
+import org.junit.Test;
 
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.persistence.PersisterHelper;
 import ubic.gemma.util.ConfigUtils;
 
 /**
@@ -40,30 +44,15 @@ import ubic.gemma.util.ConfigUtils;
 public class MageLoadIntegrationTest extends AbstractMageTest {
 
     private static Log log = LogFactory.getLog( MageLoadIntegrationTest.class.getName() );
-    MageMLConverter mageMLConverter = null;
-    PersisterHelper persisterHelper;
+
     ExpressionExperiment ee;
 
     /*
      * (non-Javadoc)
-     * 
-     * @see junit.framework.TestCase#setUp()
-     */
-    @Override
-    protected void onSetUpInTransaction() throws Exception {
-        super.onSetUpInTransaction();
-        persisterHelper = ( PersisterHelper ) this.getBean( "persisterHelper" );
-        this.setMageMLConverter( ( MageMLConverter ) getBean( "mageMLConverter" ) );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
      * @see org.springframework.test.AbstractDependencyInjectionSpringContextTests#onTearDown()
      */
-    @Override
-    protected void onTearDownInTransaction() throws Exception {
-        super.onTearDownInTransaction();
+    @After
+    public void teardown() throws Exception {
         ExpressionExperimentService service = ( ExpressionExperimentService ) this
                 .getBean( "expressionExperimentService" );
         if ( ee != null && ee.getId() != null ) {
@@ -77,6 +66,7 @@ public class MageLoadIntegrationTest extends AbstractMageTest {
      * 
      * @throws Exception
      */
+    @Test
     public void testCreateCollectionReal() throws Exception {
         log.info( "Parsing MAGE from ArrayExpress (WMIT)" );
 
@@ -86,6 +76,7 @@ public class MageLoadIntegrationTest extends AbstractMageTest {
         InputStream istMageExamples = MageMLParserTest.class.getResourceAsStream( MAGE_DATA_RESOURCE_PATH
                 + "E-WMIT-4.xml" );
 
+        MageMLConverter mageMLConverter = new MageMLConverter();
         mageMLConverter.addLocalExternalDataPath( ConfigUtils.getString( "gemma.home" ) + File.separatorChar
                 + "gemma-core/src/test/resources" + MAGE_DATA_RESOURCE_PATH + "E-WMIT-4" );
 
@@ -94,7 +85,7 @@ public class MageLoadIntegrationTest extends AbstractMageTest {
 
         // getMageMLConverter().setSimplifiedXml( mlp.getSimplifiedXml() );
 
-        Collection<Object> result = getMageMLConverter().convert( parseResult );
+        Collection<Object> result = mageMLConverter.convert( parseResult );
         log.info( result.size() + " Objects parsed from the MAGE file." );
         if ( log.isDebugEnabled() ) log.debug( "Tally:\n" + mlp );
         istMageExamples.close();
@@ -118,20 +109,6 @@ public class MageLoadIntegrationTest extends AbstractMageTest {
             }
         }
 
-    }
-
-    /**
-     * @return Returns the mageMLConverter.
-     */
-    public MageMLConverter getMageMLConverter() {
-        return mageMLConverter;
-    }
-
-    /**
-     * @param mageMLConverter The mageMLConverter to set.
-     */
-    public void setMageMLConverter( MageMLConverter mageMLConverter ) {
-        this.mageMLConverter = mageMLConverter;
     }
 
 }

@@ -33,6 +33,7 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
  * @author keshav
  * @version $Id$
  */
+@Deprecated
 public class ExperimentalDesignWrapper extends TableDecorator {
 
     Log log = LogFactory.getLog( this.getClass() );

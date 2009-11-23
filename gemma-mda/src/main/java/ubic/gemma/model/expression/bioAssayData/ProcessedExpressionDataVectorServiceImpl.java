@@ -6,6 +6,9 @@ package ubic.gemma.model.expression.bioAssayData;
 import java.util.Collection;
 import java.util.Map;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorDao.RankMethod;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.DesignElement;
@@ -16,8 +19,10 @@ import ubic.gemma.model.genome.Gene;
  * @author Paul
  * @version $Id$
  */
+@Service
 public class ProcessedExpressionDataVectorServiceImpl implements ProcessedExpressionDataVectorService {
 
+    @Autowired
     private ProcessedExpressionDataVectorDao processedExpressionDataVectorDao;
 
     /*
@@ -31,20 +36,14 @@ public class ProcessedExpressionDataVectorServiceImpl implements ProcessedExpres
         return this.getProcessedExpressionDataVectorDao().createProcessedDataVectors( expressionExperiment );
     }
 
-    /*
-     * (non-Javadoc)
-     * @see
-     * ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService#getProcessedDataMatrices(java.util
-     * .Collection)
-     */
-    public Collection<DoubleVectorValueObject> getProcessedDataArrays( ExpressionExperiment ee, int limit,
-            boolean fullMap ) {
-        return this.getProcessedExpressionDataVectorDao().getProcessedDataArrays( ee, limit, fullMap );
-    }
-
     public Collection<DoubleVectorValueObject> getProcessedDataArrays(
             Collection<ExpressionExperiment> expressionExperiments, Collection<Gene> genes ) {
         return processedExpressionDataVectorDao.getProcessedDataArrays( expressionExperiments, genes );
+    }
+
+    public Collection<DoubleVectorValueObject> getProcessedDataArrays(
+            Collection<ExpressionExperiment> expressionExperiments, Collection<Gene> genes, Boolean fullMapping ) {
+        return processedExpressionDataVectorDao.getProcessedDataArrays( expressionExperiments, genes, fullMapping );
     }
 
     /*
@@ -62,9 +61,23 @@ public class ProcessedExpressionDataVectorServiceImpl implements ProcessedExpres
         return processedExpressionDataVectorDao.getProcessedDataArrays( expressionExperiment, genes );
     }
 
-    public Collection<DoubleVectorValueObject> getProcessedDataArrays(
-            Collection<ExpressionExperiment> expressionExperiments, Collection<Gene> genes, Boolean fullMapping ) {
-        return processedExpressionDataVectorDao.getProcessedDataArrays( expressionExperiments, genes, fullMapping );
+    /*
+     * (non-Javadoc)
+     * @see
+     * ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService#getProcessedDataMatrices(java.util
+     * .Collection)
+     */
+    public Collection<DoubleVectorValueObject> getProcessedDataArrays( ExpressionExperiment ee, int limit,
+            boolean fullMap ) {
+        return this.getProcessedExpressionDataVectorDao().getProcessedDataArrays( ee, limit, fullMap );
+    }
+
+    public Collection<DoubleVectorValueObject> getProcessedDataArraysByProbe(
+            Collection<ExpressionExperiment> expressionExperiments, Collection<CompositeSequence> compositeSequences,
+            boolean fullMap ) {
+
+        return this.getProcessedExpressionDataVectorDao().getProcessedDataArraysByProbe( expressionExperiments,
+                compositeSequences, fullMap );
     }
 
     /*
@@ -100,6 +113,16 @@ public class ProcessedExpressionDataVectorServiceImpl implements ProcessedExpres
         return processedExpressionDataVectorDao.getRanks( expressionExperiment, method );
     }
 
+    public Map<ExpressionExperiment, Map<Gene, Map<DesignElement, Double[]>>> getRanksByProbe(
+            Collection<ExpressionExperiment> eeCol, Collection<Gene> genes ) {
+        return this.getProcessedExpressionDataVectorDao().getRanksByProbe( eeCol, genes );
+    }
+
+    public void removeProcessedDataVectors( ExpressionExperiment expressionExperiment ) {
+        this.getProcessedExpressionDataVectorDao().removeProcessedDataVectors( expressionExperiment );
+
+    }
+
     public void setProcessedExpressionDataVectorDao( ProcessedExpressionDataVectorDao processedExpressionDataVectorDao ) {
         this.processedExpressionDataVectorDao = processedExpressionDataVectorDao;
     }
@@ -119,24 +142,6 @@ public class ProcessedExpressionDataVectorServiceImpl implements ProcessedExpres
      */
     public void update( Collection<ProcessedExpressionDataVector> dedvs ) {
         this.getProcessedExpressionDataVectorDao().update( dedvs );
-
-    }
-
-    public Map<ExpressionExperiment, Map<Gene, Map<DesignElement, Double[]>>> getRanksByProbe(
-            Collection<ExpressionExperiment> eeCol, Collection<Gene> genes ) {
-        return this.getProcessedExpressionDataVectorDao().getRanksByProbe( eeCol, genes );
-    }
-
-    public Collection<DoubleVectorValueObject> getProcessedDataArraysByProbe(
-            Collection<ExpressionExperiment> expressionExperiments, Collection<CompositeSequence> compositeSequences,
-            boolean fullMap ) {
-
-        return this.getProcessedExpressionDataVectorDao().getProcessedDataArraysByProbe( expressionExperiments,
-                compositeSequences, fullMap );
-    }
-
-    public void removeProcessedDataVectors( ExpressionExperiment expressionExperiment ) {
-        this.getProcessedExpressionDataVectorDao().removeProcessedDataVectors( expressionExperiment );
 
     }
 

@@ -19,16 +19,26 @@
  *
  */
 package ubic.gemma.model.common.auditAndSecurity;
-
+ 
 import org.hibernate.Criteria;
-import org.hibernate.criterion.Restrictions;
+import org.hibernate.SessionFactory; 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
+
+import ubic.gemma.util.BusinessKey;
 
 /**
  * @author pavlidis
  * @version $Id$
  * @see ubic.gemma.model.common.auditAndSecurity.Person
  */
+@Repository
 public class PersonDaoImpl extends ubic.gemma.model.common.auditAndSecurity.PersonDaoBase {
+
+    @Autowired
+    public PersonDaoImpl( SessionFactory sessionFactory ) {
+        super.setSessionFactory( sessionFactory );
+    }
 
     /*
      * (non-Javadoc)
@@ -37,19 +47,9 @@ public class PersonDaoImpl extends ubic.gemma.model.common.auditAndSecurity.Pers
     @SuppressWarnings("unchecked")
     public Person find( Person person ) {
         try {
-            Criteria queryObject = super.getSession( false ).createCriteria( Person.class );
-
-            if ( person.getEmail() != null ) {
-                queryObject.add( Restrictions.eq( "email", person.getEmail() ) );
-            } else {
-                if ( person.getName() != null ) queryObject.add( Restrictions.eq( "name", person.getName() ) );
-                if ( person.getLastName() != null )
-                    queryObject.add( Restrictions.eq( "lastName", person.getLastName() ) );
-                if ( person.getPhone() != null ) queryObject.add( Restrictions.eq( "phone", person.getPhone() ) );
-                if ( person.getAddress() != null )
-                    queryObject.add( Restrictions.eq( "address", person.getAddress() ) );
-                if ( person.getName() != null ) queryObject.add( Restrictions.eq( "name", person.getName() ) );
-            }
+            Criteria queryObject = super.getSession().createCriteria( Person.class );
+ 
+            BusinessKey.addRestrictions( queryObject, person );
 
             java.util.List results = queryObject.list();
             Object result = null;

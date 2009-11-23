@@ -24,7 +24,10 @@ import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.hibernate.SessionFactory;
 import org.hibernate.criterion.DetachedCriteria;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
 
 import ubic.gemma.util.BusinessKey;
 
@@ -33,9 +36,15 @@ import ubic.gemma.util.BusinessKey;
  * @version $Id$
  * @see ubic.gemma.model.common.description.DatabaseEntry
  */
+@Repository
 public class DatabaseEntryDaoImpl extends ubic.gemma.model.common.description.DatabaseEntryDaoBase {
 
     private static Log log = LogFactory.getLog( DatabaseEntryDaoImpl.class.getName() );
+
+    @Autowired
+    public DatabaseEntryDaoImpl( SessionFactory sessionFactory ) {
+        super.setSessionFactory( sessionFactory );
+    }
 
     @Override
     public DatabaseEntry find( DatabaseEntry databaseEntry ) {
@@ -63,7 +72,7 @@ public class DatabaseEntryDaoImpl extends ubic.gemma.model.common.description.Da
     protected Integer handleCountAll() throws Exception {
         final String query = "select count(*) from DatabaseEntryImpl";
         try {
-            org.hibernate.Query queryObject = super.getSession( false ).createQuery( query );
+            org.hibernate.Query queryObject = super.getSession().createQuery( query );
 
             return ( Integer ) queryObject.iterate().next();
         } catch ( org.hibernate.HibernateException ex ) {
