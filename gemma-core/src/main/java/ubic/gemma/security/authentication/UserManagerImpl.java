@@ -161,6 +161,47 @@ public class UserManagerImpl implements UserManager {
 
     /*
      * (non-Javadoc)
+     * @see ubic.gemma.security.authentication.UserManager#changePasswordForUser(java.lang.String, java.lang.String)
+     */
+    @Transactional
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "RUN_AS_ADMIN" })
+    public String changePasswordForUser( String email, String username, String newPassword )
+            throws AuthenticationException {
+        Authentication currentAuthentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if ( currentAuthentication == null ) {
+            // This would indicate bad coding somewhere
+            throw new AccessDeniedException( "Can't change password as no Authentication object found in context "
+                    + "for current user." );
+        }
+
+        User u = userService.findByEmail( email );
+
+        if ( u == null ) {
+            throw new UsernameNotFoundException( "No user found for that email address." );
+        }
+
+        String foundUsername = u.getUserName();
+
+        if ( !foundUsername.equals( username ) ) {
+            throw new AccessDeniedException( "The wrong user name was provided for the email address." );
+        }
+
+        logger.debug( "Changing password for user '" + username + "'" );
+
+        u.setPassword( newPassword );
+        u.setEnabled( false );
+        u.setSignupToken( generateSignupToken( username ) );
+        u.setSignupTokenDatestamp( new Date() );
+        userService.update( u );
+
+        userCache.removeUserFromCache( username );
+
+        return u.getSignupToken();
+    }
+
+    /*
+     * (non-Javadoc)
      * @see ubic.gemma.security.authentication.UserManagerI#createGroup(java.lang.String, java.util.List)
      */
     @Transactional

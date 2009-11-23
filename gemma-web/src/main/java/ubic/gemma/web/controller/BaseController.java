@@ -105,6 +105,16 @@ public abstract class BaseController {
     }
 
     /**
+     * @param msgKey
+     * @param args
+     * @param locale
+     * @return
+     */
+    protected String getText( String msgKey, Object[] args, Locale locale ) {
+        return this.messageUtil.getText( msgKey, args, locale );
+    }
+
+    /**
      * @param request
      * @param msg
      */

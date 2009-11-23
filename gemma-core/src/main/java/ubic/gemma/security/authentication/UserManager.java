@@ -74,4 +74,12 @@ public interface UserManager extends UserDetailsManager, GroupManager {
      */
     public boolean validateSignupToken( String username, String key );
 
+    /**
+     * @param email
+     * @param username
+     * @param newPassword - encoded
+     * @return the confirmation token they will need to use.
+     */
+    public String changePasswordForUser( String email, String username, String newPassword );
+
 }

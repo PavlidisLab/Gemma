@@ -19,6 +19,8 @@
 package ubic.gemma.web.controller.common.auditAndSecurity;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -26,7 +28,6 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.support.MessageSourceAccessor;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.security.authentication.encoding.PasswordEncoder;
 import org.springframework.security.core.Authentication;
@@ -214,8 +215,6 @@ public class UserFormMultiActionController extends BaseController {
             log.debug( "entering 'resetPassword' method..." );
         }
 
-        MessageSourceAccessor text = new MessageSourceAccessor( messageSource, request.getLocale() );
-
         String email = request.getParameter( "email" );
         String username = request.getParameter( "username" );
 
@@ -233,46 +232,14 @@ public class UserFormMultiActionController extends BaseController {
                 throw new RuntimeException( txt );
             }
 
-            User user = userService.findByEmail( email );
-
-            /* make sure user exists with email */
-            if ( user == null ) {
-                txt = "User with email " + email + " not found.";
-                log.warn( txt );
-                throw new RuntimeException( txt );
-            }
-
-            /* check the username matches that of the user */
-            if ( !StringUtils.equals( user.getUserName(), username ) ) {
-                txt = "User with username " + username + " not found.";
-                log.warn( txt );
-                throw new RuntimeException( txt );
-            }
-
             /* Change the password. */
             String pwd = RandomStringUtils.randomAlphanumeric( UserFormMultiActionController.MIN_PASSWORD_LENGTH )
                     .toLowerCase();
 
-            user.setPassword( passwordEncoder.encodePassword( pwd, user.getUserName() ) );
+            String token = userManager.changePasswordForUser( email, username, passwordEncoder.encodePassword( pwd,
+                    username ) );
 
-            userService.update( user );
-
-            StringBuffer body = new StringBuffer();
-            body.append( "Your password is: " + pwd );
-
-            body.append( "\n\nLogin at: http://www.chibi.ubc.ca/Gemma/login.jsp" );
-
-            SimpleMailMessage mailMessage = new SimpleMailMessage();
-            mailMessage.setFrom( ConfigUtils.getAdminEmailAddress() );
-
-            mailMessage.setTo( user.getUserName() + "<" + user.getEmail() + ">" );
-            String subject = text.getMessage( "webapp.prefix" ) + text.getMessage( "user.passwordReset" );
-            mailMessage.setSubject( subject );
-            mailMessage.setText( body.toString() );
-            mailEngine.send( mailMessage );
-
-            saveMessage( request, text.getMessage( "login.passwordReset", new Object[] { user.getUserName(),
-                    user.getEmail() } ) );
+            sendResetConfirmationEmail( request, token, username, pwd, email );
 
             jsonText = "{success:true}";
 
@@ -286,6 +253,47 @@ public class UserFormMultiActionController extends BaseController {
                 e.printStackTrace();
             }
         }
+    }
+
+    /**
+     * Send an email to request signup confirmation. FIXME this is very similar to code in SignupController.
+     * 
+     * @param request
+     * @param u
+     */
+    private void sendResetConfirmationEmail( HttpServletRequest request, String token, String username,
+            String password, String email ) {
+
+        // Send an account information e-mail
+        SimpleMailMessage mailMessage = new SimpleMailMessage();
+        mailMessage.setFrom( ConfigUtils.getAdminEmailAddress() );
+        mailMessage.setSubject( getText( "signup.email.subject", request.getLocale() ) );
+        try {
+            Map<String, Object> model = new HashMap<String, Object>();
+            model.put( "username", username );
+
+            model.put( "password", password );
+
+            /*
+             * FIXME: make this url configurable.
+             */
+            String host = "www.chibi.ubc.ca";
+
+            model.put( "confirmLink", "http://" + host + "/Gemma/confirmRegistration.html?key=" + token + "&username="
+                    + username );
+            model.put( "message", getText( "login.passwordReset.emailMessage", request.getLocale() ) );
+
+            /*
+             * FIXME: make the template name configurable.
+             */
+            String templateName = "passwordReset.vm";
+            sendEmail( username, email, "Password reset for Gemma", templateName, model );
+            saveMessage( request,
+                    getText( "login.passwordReset", new Object[] { username, email }, request.getLocale() ) );
+        } catch ( Exception e ) {
+            log.error( "Couldn't send email to " + email, e );
+        }
+
     }
 
 }
