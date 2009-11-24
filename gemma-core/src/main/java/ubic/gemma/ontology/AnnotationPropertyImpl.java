@@ -62,25 +62,6 @@ public class AnnotationPropertyImpl implements AnnotationProperty {
 
     }
 
-    public String getProperty() {
-        if ( property.getLabel( null ) != null ) {
-            return property.getLabel( null );
-        } else if ( property.getLocalName() != null ) {
-            return property.getLocalName();
-        } else {
-            return property.toString();
-        }
-    }
-
-    @Override
-    public int hashCode() {
-        final int PRIME = 31;
-        int result = 1;
-        result = PRIME * result + ( ( contents == null ) ? 0 : contents.hashCode() );
-        result = PRIME * result + ( ( property == null ) ? 0 : property.hashCode() );
-        return result;
-    }
-
     @Override
     public boolean equals( Object obj ) {
         if ( this == obj ) return true;
@@ -96,17 +77,36 @@ public class AnnotationPropertyImpl implements AnnotationProperty {
         return true;
     }
 
-    @Override
-    public String toString() {
-        return property.getLocalName() + " " + contents;
+    public String getContents() {
+        return contents;
+    }
+
+    public String getProperty() {
+        if ( property.getLabel( null ) != null ) {
+            return property.getLabel( null );
+        } else if ( property.getLocalName() != null ) {
+            return property.getLocalName();
+        } else {
+            return property.toString();
+        }
     }
 
     public ExternalDatabase getSourceOntology() {
         return sourceOntology;
     }
 
-    public String getContents() {
-        return contents;
+    @Override
+    public int hashCode() {
+        final int PRIME = 31;
+        int result = 1;
+        result = PRIME * result + ( ( contents == null ) ? 0 : contents.hashCode() );
+        result = PRIME * result + ( ( property == null ) ? 0 : property.hashCode() );
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return property.getLocalName() + " " + contents;
     }
 
 }

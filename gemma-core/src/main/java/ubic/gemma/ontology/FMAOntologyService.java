@@ -36,6 +36,15 @@ public class FMAOntologyService extends AbstractOntologyService {
 
     private static final String FMA_ONTOLOGY_URL = "url.fmaOntology";
 
+    /*
+     * (non-Javadoc)
+     * @see ubic.gemma.ontology.AbstractOntologyService#getOntologyName()
+     */
+    @Override
+    protected String getOntologyName() {
+        return "fmaOntology";
+    }
+
     @Override
     protected String getOntologyUrl() {
         return ConfigUtils.getString( FMA_ONTOLOGY_URL );
@@ -45,15 +54,6 @@ public class FMAOntologyService extends AbstractOntologyService {
     @Override
     protected OntModel loadModel( String url ) {
         return OntologyLoader.loadMemoryModel( url );
-    }
-
-    /*
-     * (non-Javadoc)
-     * @see ubic.gemma.ontology.AbstractOntologyService#getOntologyName()
-     */
-    @Override
-    protected String getOntologyName() {
-        return "fmaOntology";
     }
 
 }

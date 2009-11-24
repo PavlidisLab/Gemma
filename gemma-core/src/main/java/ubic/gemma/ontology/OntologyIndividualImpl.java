@@ -33,38 +33,15 @@ import com.hp.hpl.jena.rdf.model.Resource;
  */
 public class OntologyIndividualImpl extends AbstractOntologyResource implements OntologyIndividual {
 
-        private static final long serialVersionUID = -6164561945940667693L;
-    
+    private static final long serialVersionUID = -6164561945940667693L;
+
     private Individual ind;
-    private ExternalDatabase sourceOntology;
     private String uri;
 
     public OntologyIndividualImpl( Individual ind, ExternalDatabase sourceOntology ) {
         this.ind = ind;
         this.sourceOntology = sourceOntology;
         this.uri = ind.getURI();
-    }
-
-    @Override
-    public ExternalDatabase getSourceOntology() {
-        return sourceOntology;
-    }
-
-    @Override
-    public String getUri() {
-        return uri;
-    }
-
-    public String getLabel() {
-        return this.toString();
-    }
-
-    @Override
-    public String toString() {
-        String label = ind.getLabel( null );
-        if ( label == null ) label = ind.getLocalName();
-        if ( label == null ) label = ind.getURI();
-        return label;
     }
 
     public OntologyTerm getInstanceOf() {
@@ -79,5 +56,22 @@ public class OntologyIndividualImpl extends AbstractOntologyResource implements 
         }
 
         return new OntologyTermImpl( cl, sourceOntology );
+    }
+
+    public String getLabel() {
+        return this.toString();
+    }
+
+    @Override
+    public String getUri() {
+        return uri;
+    }
+
+    @Override
+    public String toString() {
+        String label = ind.getLabel( null );
+        if ( label == null ) label = ind.getLocalName();
+        if ( label == null ) label = ind.getURI();
+        return label;
     }
 }

@@ -39,25 +39,6 @@ public class BirnLexOntologyService extends AbstractOntologyService {
 
     private static final String BIRNLEX_ONTOLOGY_URL = "url.birnlexOntology";
 
-    /*
-     * (non-Javadoc)
-     * @see ubic.gemma.ontology.AbstractOntologyService#getOntologyName()
-     */
-    @Override
-    protected String getOntologyName() {
-        return "birnlexOntology";
-    }
-
-    @Override
-    protected OntModel loadModel( String url ) {
-        return OntologyLoader.loadMemoryModel( url );
-    }
-
-    @Override
-    protected String getOntologyUrl() {
-        return ConfigUtils.getString( BIRNLEX_ONTOLOGY_URL );
-    }
-
     // FIXME: This is a hack to fix a problem with the birnlex ontology returning Organ as a child of liver.
     // See BUG: http://www.chibi.ubc.ca/faculty/pavlidis/bugs/show_bug.cgi?id=1550
     // Might be better to remove organ from all search results
@@ -78,5 +59,24 @@ public class BirnLexOntologyService extends AbstractOntologyService {
 
         return results;
 
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see ubic.gemma.ontology.AbstractOntologyService#getOntologyName()
+     */
+    @Override
+    protected String getOntologyName() {
+        return "birnlexOntology";
+    }
+
+    @Override
+    protected String getOntologyUrl() {
+        return ConfigUtils.getString( BIRNLEX_ONTOLOGY_URL );
+    }
+
+    @Override
+    protected OntModel loadModel( String url ) {
+        return OntologyLoader.loadMemoryModel( url );
     }
 }

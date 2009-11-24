@@ -125,8 +125,6 @@ public class NCBIGene2GOAssociationLoader {
         log.debug( "Entering 'load' " );
 
         long millis = System.currentTimeMillis();
-
-        int count = 0;
         int cpt = 0;
         double secspt = 0.0;
 
@@ -174,7 +172,6 @@ public class NCBIGene2GOAssociationLoader {
     }
 
     protected int load( Collection<Gene2GOAssociation> g2GoCol ) {
-        int count = 0;
 
         for ( Gene2GOAssociation association : g2GoCol ) {
             if ( ++count % 1000 == 0 ) {

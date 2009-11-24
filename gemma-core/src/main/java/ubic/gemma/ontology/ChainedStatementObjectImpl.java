@@ -33,16 +33,16 @@ public class ChainedStatementObjectImpl implements ChainedStatementObject {
 
     Collection<CharacteristicStatement> statements;
 
+    public ChainedStatementObjectImpl( OntologyTerm subject ) {
+        this.subject = subject;
+        this.statements = new HashSet<CharacteristicStatement>();
+    }
+
     public void addStatement( CharacteristicStatement s ) {
         if ( !subject.equals( s.getSubject() ) ) {
             throw new IllegalArgumentException( "Statement must have same subject as all others" );
         }
         this.statements.add( s );
-    }
-
-    public ChainedStatementObjectImpl( OntologyTerm subject ) {
-        this.subject = subject;
-        this.statements = new HashSet<CharacteristicStatement>();
     }
 
     public VocabCharacteristic toVocabCharacteristic() {

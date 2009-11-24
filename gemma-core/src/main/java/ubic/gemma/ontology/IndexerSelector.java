@@ -46,10 +46,6 @@ public class IndexerSelector implements Selector {
         badPredicates.add( RDFS.isDefinedBy );
     }
 
-    public boolean test( Statement s ) {
-        return !( badPredicates.contains( s.getPredicate() ) );
-    }
-
     public RDFNode getObject() {
         return null;
     }
@@ -64,6 +60,10 @@ public class IndexerSelector implements Selector {
 
     public boolean isSimple() {
         return false;
+    }
+
+    public boolean test( Statement s ) {
+        return !( badPredicates.contains( s.getPredicate() ) );
     }
 
 }

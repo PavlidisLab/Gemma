@@ -955,7 +955,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         Map<Taxon, Long> taxonCount = new HashMap<Taxon, Long>();
         final String queryString = "select t, count(distinct ee) from ExpressionExperimentImpl "
                 + "ee inner join ee.bioAssays as ba inner join ba.samplesUsed su "
-                + "inner join su.sourceTaxon t where ee.publiclyViewable=true group by t";
+                + "inner join su.sourceTaxon t group by t"; // where ee.publiclyViewable=true
 
         try {
             // it is important to cache this, as it gets called on the home page.
@@ -1396,6 +1396,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                 try {
                     Hibernate.initialize( bm.getBioAssaysUsedIn() );
                     Hibernate.initialize( bm.getFactorValues() );
+                    Hibernate.initialize( bm.getTreatments() );
                 } catch ( HibernateException e ) {
                     log.warn( "Could not initialize a biomaterial association: " + e.getMessage() );
                 }

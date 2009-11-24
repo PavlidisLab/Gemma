@@ -28,13 +28,13 @@ import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
 
+import ubic.basecode.dataStructure.CountingMap;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
-import ubic.gemma.util.CountingMap;
 import ubic.gemma.util.FactorValueVector;
 
 /**

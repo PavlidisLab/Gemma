@@ -58,7 +58,7 @@ public class SearchResult implements Comparable<SearchResult> {
 
     boolean indexSearch;
 
-    Class resultClass;
+    Class<?> resultClass;
 
     Long objectId;
 
@@ -68,7 +68,7 @@ public class SearchResult implements Comparable<SearchResult> {
 
     private Object resultObject;
 
-    public Class getResultClass() {
+    public Class<?> getResultClass() {
         return resultClass;
     }
 

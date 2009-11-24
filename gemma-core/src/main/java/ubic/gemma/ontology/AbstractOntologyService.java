@@ -42,49 +42,61 @@ import com.hp.hpl.jena.query.larq.IndexLARQ;
  */
 public abstract class AbstractOntologyService {
 
-    protected static final Log log = LogFactory.getLog( AbstractOntologyService.class );
+    private class KeepAliveThread extends Thread {
+        @Override
+        public void run() {
+            for ( ;; ) {
+                try {
+                    Thread.sleep( KEEPALIVE_PING_DELAY );
+                } catch ( InterruptedException e ) {
+                }
+                if ( isOntologyLoaded() ) {
+                    log.info( "sending keep-alive query to " + getOntologyName() );
+                    try {
+                        findResources( KEEPALIVE_SEARCH_TERM );
+                    } catch ( Exception e ) {
+                        log.error( "error sending keep-alive query to " + getOntologyName(), e );
+                    }
+                }
+            }
+        }
+    }
 
+    protected static final Log log = LogFactory.getLog( AbstractOntologyService.class );
     protected Map<String, OntologyTerm> terms;
+
     protected Map<String, OntologyIndividual> individuals;
 
     private boolean enabled = false;
 
     protected AtomicBoolean ready = new AtomicBoolean( false );
-
     protected AtomicBoolean modelReady = new AtomicBoolean( false );
     protected AtomicBoolean indexReady = new AtomicBoolean( false );
-    protected AtomicBoolean cacheReady = new AtomicBoolean( false );
 
+    protected AtomicBoolean cacheReady = new AtomicBoolean( false );
     protected AtomicBoolean running = new AtomicBoolean( false );
     protected String ontology_URL;
     protected String ontologyName;
     protected OntModel model;
+
     protected IndexLARQ index;
 
-    /**
-     * Delegates the call as to load the model into memory or leave it on disk. Simply delegates to either
-     * OntologyLoader.loadMemoryModel( url ); OR OntologyLoader.loadPersistentModel( url, spec );
-     * 
-     * @param url
-     * @return
-     * @throws IOException
+    /*
+     * a collection of the keep-alive threads for each concrete subclass; a single variable here wouldn't work because
+     * all of the subclasses would be using the same variable.
      */
-    protected abstract OntModel loadModel( String url );
+    private static Map<Class, Thread> keepAliveThreads = Collections.synchronizedMap( new HashMap<Class, Thread>() );
 
-    /**
-     * Defines the location of the ontology eg: http://mged.sourceforge.net/ontologies/MGEDOntology.owl
-     * 
-     * @return
+    /*
+     * the number of milliseconds between keep-alive queries; this should be less than or equal to MySQL wait_timeout
+     * server variable. Currently 4 hours. (half of wait_timeout)
      */
-    protected abstract String getOntologyUrl();
+    private static final int KEEPALIVE_PING_DELAY = 14400 * 1000;
 
-    /**
-     * The simple name of the ontology. Used for indexing purposes. (ie this will determine the name of the underlying
-     * index for searching the ontology)
-     * 
-     * @return
+    /*
+     * a term to search for; matters not at all...
      */
-    protected abstract String getOntologyName();
+    private static final String KEEPALIVE_SEARCH_TERM = "dummy";
 
     public AbstractOntologyService() {
         super();
@@ -93,18 +105,55 @@ public abstract class AbstractOntologyService {
     }
 
     /**
-     * Looks for a OntologyTerm that has the matchine URI given
+     * Looks for any OntologyIndividuals that match the given search string
      * 
-     * @param uri
+     * @param search
      * @return
      */
-    public OntologyTerm getTerm( String uri ) {
+    public Collection<OntologyIndividual> findIndividuals( String search ) {
 
-        if ( ( uri == null ) || ( !ready.get() ) ) return null;
+        if ( !isOntologyLoaded() ) return null;
 
-        OntologyTerm term = terms.get( uri );
+        assert index != null : "attempt to search " + this.getOntologyName() + " when index is null";
+        // if ( index == null ) index = OntologyIndexer.indexOntology( ontology_name, model );
 
-        return term;
+        Collection<OntologyIndividual> indis = OntologySearch.matchIndividuals( model, index, search );
+
+        return indis;
+    }
+
+    /**
+     * Looks for any OntologyIndividuals or ontologyTerms that match the given search string
+     * 
+     * @param search
+     * @return results, or an empty collection if the results are empty OR the ontology is not available to be searched.
+     */
+    public Collection<OntologyResource> findResources( String search ) {
+
+        if ( !isOntologyLoaded() ) return new HashSet<OntologyResource>();
+
+        assert index != null : "attempt to search " + this.getOntologyName() + " when index is null";
+
+        Collection<OntologyResource> res = OntologySearch.matchResources( model, index, search.trim() + "*" );
+
+        return res;
+    }
+
+    /**
+     * Looks for any ontologyTerms that match the given search string
+     * 
+     * @param search
+     * @return
+     */
+    public Collection<OntologyTerm> findTerm( String search ) {
+
+        if ( !isOntologyLoaded() ) return null;
+
+        log.debug( "Searching " + this.getOntologyName() + " for '" + search + "'" );
+
+        assert index != null : "attempt to search " + this.getOntologyName() + " when index is null";
+        Collection<OntologyTerm> matches = OntologySearch.matchClasses( model, index, search );
+        return matches;
     }
 
     /**
@@ -123,6 +172,21 @@ public abstract class AbstractOntologyService {
         if ( resource == null ) resource = individuals.get( uri );
 
         return resource;
+    }
+
+    /**
+     * Looks for a OntologyTerm that has the matchine URI given
+     * 
+     * @param uri
+     * @return
+     */
+    public OntologyTerm getTerm( String uri ) {
+
+        if ( ( uri == null ) || ( !ready.get() ) ) return null;
+
+        OntologyTerm term = terms.get( uri );
+
+        return term;
     }
 
     /**
@@ -148,58 +212,6 @@ public abstract class AbstractOntologyService {
         }
         return term.getIndividuals( true );
 
-    }
-
-    /**
-     * Looks for any ontologyTerms that match the given search string
-     * 
-     * @param search
-     * @return
-     */
-    public Collection<OntologyTerm> findTerm( String search ) {
-
-        if ( !isOntologyLoaded() ) return null;
-
-        log.debug( "Searching " + this.getOntologyName() + " for '" + search + "'" );
-
-        assert index != null : "attempt to search " + this.getOntologyName() + " when index is null";
-        Collection<OntologyTerm> matches = OntologySearch.matchClasses( model, index, search );
-        return matches;
-    }
-
-    /**
-     * Looks for any OntologyIndividuals or ontologyTerms that match the given search string
-     * 
-     * @param search
-     * @return results, or an empty collection if the results are empty OR the ontology is not available to be searched.
-     */
-    public Collection<OntologyResource> findResources( String search ) {
-
-        if ( !isOntologyLoaded() ) return new HashSet<OntologyResource>();
-
-        assert index != null : "attempt to search " + this.getOntologyName() + " when index is null";
-
-        Collection<OntologyResource> res = OntologySearch.matchResources( model, index, search.trim() + "*" );
-
-        return res;
-    }
-
-    /**
-     * Looks for any OntologyIndividuals that match the given search string
-     * 
-     * @param search
-     * @return
-     */
-    public Collection<OntologyIndividual> findIndividuals( String search ) {
-
-        if ( !isOntologyLoaded() ) return null;
-
-        assert index != null : "attempt to search " + this.getOntologyName() + " when index is null";
-        // if ( index == null ) index = OntologyIndexer.indexOntology( ontology_name, model );
-
-        Collection<OntologyIndividual> indis = OntologySearch.matchIndividuals( model, index, search );
-
-        return indis;
     }
 
     public synchronized void init( boolean force ) {
@@ -305,6 +317,54 @@ public abstract class AbstractOntologyService {
         startKeepAliveThread();
     }
 
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    /**
+     * Used for determining if the Gene Ontology has finished loading into memory yet Although calls like getParents,
+     * getChildren will still work (its much faster once the ontologies have been preloaded into memory.)
+     * 
+     * @returns boolean
+     */
+    public synchronized boolean isOntologyLoaded() {
+        return ready.get();
+    }
+
+    /**
+     * Use this to turn this ontology on or off.
+     * 
+     * @param enabled If false, the ontology will not be loaded.
+     */
+    public void setEnabled( boolean enabled ) {
+        this.enabled = enabled;
+    }
+
+    /**
+     * The simple name of the ontology. Used for indexing purposes. (ie this will determine the name of the underlying
+     * index for searching the ontology)
+     * 
+     * @return
+     */
+    protected abstract String getOntologyName();
+
+    /**
+     * Defines the location of the ontology eg: http://mged.sourceforge.net/ontologies/MGEDOntology.owl
+     * 
+     * @return
+     */
+    protected abstract String getOntologyUrl();
+
+    /**
+     * Delegates the call as to load the model into memory or leave it on disk. Simply delegates to either
+     * OntologyLoader.loadMemoryModel( url ); OR OntologyLoader.loadPersistentModel( url, spec );
+     * 
+     * @param url
+     * @return
+     * @throws IOException
+     */
+    protected abstract OntModel loadModel( String url );
+
     /**
      * @param url
      * @throws IOException
@@ -328,33 +388,6 @@ public abstract class AbstractOntologyService {
         }
     }
 
-    /**
-     * Used for determining if the Gene Ontology has finished loading into memory yet Although calls like getParents,
-     * getChildren will still work (its much faster once the ontologies have been preloaded into memory.)
-     * 
-     * @returns boolean
-     */
-    public synchronized boolean isOntologyLoaded() {
-        return ready.get();
-    }
-
-    /*
-     * a collection of the keep-alive threads for each concrete subclass; a single variable here wouldn't work because
-     * all of the subclasses would be using the same variable.
-     */
-    private static Map<Class, Thread> keepAliveThreads = Collections.synchronizedMap( new HashMap<Class, Thread>() );
-
-    /*
-     * the number of milliseconds between keep-alive queries; this should be less than or equal to MySQL wait_timeout
-     * server variable. Currently 4 hours. (half of wait_timeout)
-     */
-    private static final int KEEPALIVE_PING_DELAY = 14400 * 1000;
-
-    /*
-     * a term to search for; matters not at all...
-     */
-    private static final String KEEPALIVE_SEARCH_TERM = "dummy";
-
     private synchronized void startKeepAliveThread() {
 
         if ( keepAliveThreads.containsKey( this.getClass() ) ) {
@@ -366,37 +399,5 @@ public abstract class AbstractOntologyService {
         keepAliveThread.setDaemon( true ); // needed or else won't shut down cleanly
         keepAliveThread.start();
         keepAliveThreads.put( this.getClass(), keepAliveThread );
-    }
-
-    private class KeepAliveThread extends Thread {
-        public void run() {
-            for ( ;; ) {
-                try {
-                    Thread.sleep( KEEPALIVE_PING_DELAY );
-                } catch ( InterruptedException e ) {
-                }
-                if ( isOntologyLoaded() ) {
-                    log.info( "sending keep-alive query to " + getOntologyName() );
-                    try {
-                        findResources( KEEPALIVE_SEARCH_TERM );
-                    } catch ( Exception e ) {
-                        log.error( "error sending keep-alive query to " + getOntologyName(), e );
-                    }
-                }
-            }
-        }
-    }
-
-    public boolean isEnabled() {
-        return enabled;
-    }
-
-    /**
-     * Use this to turn this ontology on or off.
-     * 
-     * @param enabled If false, the ontology will not be loaded.
-     */
-    public void setEnabled( boolean enabled ) {
-        this.enabled = enabled;
     }
 }

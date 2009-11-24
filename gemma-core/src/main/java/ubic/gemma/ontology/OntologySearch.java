@@ -49,27 +49,6 @@ public class OntologySearch {
     private final static char[] INVALID_CHARS = { ':', '(', ')', '?', '^', '[', ']', '{', '}', '!', '~' };
 
     /**
-     * Will remove characters that jena is unable to parse. Will also escape and remove leading and trailing white space
-     * (which also causes jena to die)
-     * 
-     * @param toStrip the string to clean
-     * @return
-     */
-    public static String stripInvalidCharacters( String toStrip ) {
-        String result = StringUtils.strip( toStrip );
-        for ( char badChar : INVALID_CHARS ) {
-            result = StringUtils.remove( result, badChar );
-        }
-        /*
-         * Queries cannot start with '*' or ?
-         */
-        result = result.replaceAll( "^\\**", "" );
-        result = result.replaceAll( "^\\?*", "" );
-
-        return StringEscapeUtils.escapeJava( result ).trim();
-    }
-
-    /**
      * Find classes that match the query string
      * 
      * @param model that goes with the index
@@ -109,21 +88,6 @@ public class OntologySearch {
 
         }
         return results;
-    }
-
-    /**
-     * @param model
-     * @param index
-     * @param queryString
-     * @return
-     */
-    private static NodeIterator runSearch( OntModel model, IndexLARQ index, String queryString ) {
-        String strippedQuery = StringUtils.strip( queryString );
-        if ( StringUtils.isBlank( strippedQuery ) ) {
-            throw new IllegalArgumentException( "Query cannot be blank" );
-        }
-        NodeIterator iterator = index.searchModelByIndex( model, strippedQuery );
-        return iterator;
     }
 
     /**
@@ -250,5 +214,41 @@ public class OntologySearch {
         }
         return results;
 
+    }
+
+    /**
+     * Will remove characters that jena is unable to parse. Will also escape and remove leading and trailing white space
+     * (which also causes jena to die)
+     * 
+     * @param toStrip the string to clean
+     * @return
+     */
+    public static String stripInvalidCharacters( String toStrip ) {
+        String result = StringUtils.strip( toStrip );
+        for ( char badChar : INVALID_CHARS ) {
+            result = StringUtils.remove( result, badChar );
+        }
+        /*
+         * Queries cannot start with '*' or ?
+         */
+        result = result.replaceAll( "^\\**", "" );
+        result = result.replaceAll( "^\\?*", "" );
+
+        return StringEscapeUtils.escapeJava( result ).trim();
+    }
+
+    /**
+     * @param model
+     * @param index
+     * @param queryString
+     * @return
+     */
+    private static NodeIterator runSearch( OntModel model, IndexLARQ index, String queryString ) {
+        String strippedQuery = StringUtils.strip( queryString );
+        if ( StringUtils.isBlank( strippedQuery ) ) {
+            throw new IllegalArgumentException( "Query cannot be blank" );
+        }
+        NodeIterator iterator = index.searchModelByIndex( model, strippedQuery );
+        return iterator;
     }
 }

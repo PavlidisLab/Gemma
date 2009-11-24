@@ -125,6 +125,8 @@ public abstract class BackgroundControllerJob<T> implements Callable<T> {
     }
 
     protected ProgressJob init( String jobDescription ) {
+        assert this.securityContext != null;
+
         SecurityContextHolder.setContext( this.securityContext );
 
         ProgressJob job = ProgressManager.createProgressJob( this.getTaskId(), jobDescription );

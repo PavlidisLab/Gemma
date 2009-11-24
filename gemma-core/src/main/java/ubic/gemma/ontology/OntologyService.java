@@ -106,9 +106,9 @@ public class OntologyService {
 
         Collection<ubic.gemma.ontology.Ontology> ontologies = new HashSet<ubic.gemma.ontology.Ontology>();
         ModelMaker maker = OntologyLoader.getRDBMaker();
-        ExtendedIterator iterator = maker.listModels();
+        ExtendedIterator<String> iterator = maker.listModels();
         while ( iterator.hasNext() ) {
-            String name = ( String ) iterator.next();
+            String name = iterator.next();
             ExternalDatabase database = OntologyLoader.ontologyAsExternalDatabase( name );
             ubic.gemma.ontology.Ontology o = new ubic.gemma.ontology.Ontology( database );
             ontologies.add( o );
@@ -236,58 +236,6 @@ public class OntologyService {
 
         return sortedResults;
 
-    }
-
-    /**
-     * @param queryString
-     * @param categoryUri
-     * @param searchResults
-     */
-    private void searchForGenes( String queryString, String categoryUri, List<Characteristic> searchResults ) {
-        log.info( queryString );
-        if ( categoryUri != null
-                && ( categoryUri.equals( "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#GeneticModification" )
-                        || categoryUri
-                                .equals( "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#IndividualGeneticCharacteristics" ) || categoryUri
-                        .equals( "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#Genotype" ) ) ) {
-
-            /*
-             * Kick into a special search for genes. The user will have to deal with choosing one from the right taxon.
-             */
-            SearchSettings ss = new SearchSettings();
-            ss.setQuery( queryString );
-            ss.noSearches();
-            ss.setSearchGenes( true );
-            Map<Class<?>, List<SearchResult>> geneResults = this.searchService.search( ss, true );
-
-            if ( geneResults.containsKey( Gene.class ) ) {
-                for ( SearchResult sr : geneResults.get( Gene.class ) ) {
-
-                    Gene g = ( Gene ) sr.getResultObject();
-                    log.info( g );
-                    searchResults.add( gene2Characteristic( g ) );
-                }
-            }
-        }
-    }
-
-    /**
-     * Allow us to store gene information as a characteristic associated with our entities. This doesn't work so well
-     * for non-ncbi genes.
-     * 
-     * @param g
-     * @return
-     */
-    private Characteristic gene2Characteristic( Gene g ) {
-        VocabCharacteristic vc = VocabCharacteristic.Factory.newInstance();
-        vc.setCategory( "gene" );
-        vc.setCategoryUri( "http://purl.org/commons/hcls/gene" );
-        vc.setValue( g.getOfficialSymbol() + " [" + g.getTaxon().getCommonName() + "]" + " " + g.getOfficialName() );
-        vc.setDescription( g.toString() );
-        if ( g.getNcbiId() != null ) {
-            vc.setValueUri( "http://purl.org/commons/record/ncbi_gene/" + g.getNcbiId() );
-        }
-        return vc;
     }
 
     /**
@@ -613,18 +561,18 @@ public class OntologyService {
     }
 
     /**
-     * @param searchService the searchService to set
-     */
-    public void setSearchService( SearchService searchService ) {
-        this.searchService = searchService;
-    }
-
-    /**
      * @param mgedDiseaseOntologyService the mgedDiseaseOntologyService to set
      */
     public void setMgedOntologyService( MgedOntologyService mgedOntologyService ) {
         this.mgedOntologyService = mgedOntologyService;
         ontologyServices.add( mgedOntologyService );
+    }
+
+    /**
+     * @param searchService the searchService to set
+     */
+    public void setSearchService( SearchService searchService ) {
+        this.searchService = searchService;
     }
 
     /**
@@ -713,6 +661,58 @@ public class OntologyService {
         StringBuffer buf = new StringBuffer( c.getValue() );
         if ( c instanceof VocabCharacteristic ) buf.append( ( ( VocabCharacteristic ) c ).getValueUri() );
         return buf.toString();
+    }
+
+    /**
+     * Allow us to store gene information as a characteristic associated with our entities. This doesn't work so well
+     * for non-ncbi genes.
+     * 
+     * @param g
+     * @return
+     */
+    private Characteristic gene2Characteristic( Gene g ) {
+        VocabCharacteristic vc = VocabCharacteristic.Factory.newInstance();
+        vc.setCategory( "gene" );
+        vc.setCategoryUri( "http://purl.org/commons/hcls/gene" );
+        vc.setValue( g.getOfficialSymbol() + " [" + g.getTaxon().getCommonName() + "]" + " " + g.getOfficialName() );
+        vc.setDescription( g.toString() );
+        if ( g.getNcbiId() != null ) {
+            vc.setValueUri( "http://purl.org/commons/record/ncbi_gene/" + g.getNcbiId() );
+        }
+        return vc;
+    }
+
+    /**
+     * @param queryString
+     * @param categoryUri
+     * @param searchResults
+     */
+    private void searchForGenes( String queryString, String categoryUri, List<Characteristic> searchResults ) {
+        log.info( queryString );
+        if ( categoryUri != null
+                && ( categoryUri.equals( "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#GeneticModification" )
+                        || categoryUri
+                                .equals( "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#IndividualGeneticCharacteristics" ) || categoryUri
+                        .equals( "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#Genotype" ) ) ) {
+
+            /*
+             * Kick into a special search for genes. The user will have to deal with choosing one from the right taxon.
+             */
+            SearchSettings ss = new SearchSettings();
+            ss.setQuery( queryString );
+            ss.noSearches();
+            ss.setSearchGenes( true );
+            Map<Class<?>, List<SearchResult>> geneResults = this.searchService.search( ss, true );
+
+            if ( geneResults.containsKey( Gene.class ) ) {
+                for ( SearchResult sr : geneResults.get( Gene.class ) ) {
+
+                    Gene g = ( Gene ) sr.getResultObject();
+                    log.info( g );
+                    searchResults.add( gene2Characteristic( g ) );
+                }
+            }
+        }
     }
 
     /**

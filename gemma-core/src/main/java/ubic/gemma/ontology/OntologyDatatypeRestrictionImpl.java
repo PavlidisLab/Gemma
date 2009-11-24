@@ -29,13 +29,13 @@ import com.hp.hpl.jena.ontology.Restriction;
  */
 public class OntologyDatatypeRestrictionImpl extends OntologyRestrictionImpl implements OntologyDatatypeRestriction {
 
+    PrimitiveType type;
+
     public OntologyDatatypeRestrictionImpl( Restriction resource, ExternalDatabase source ) {
         super( resource, source );
         assert restrictionOn != null;
         this.type = PropertyFactory.convertType( resource.getOnProperty().asDatatypeProperty() );
     }
-
-    PrimitiveType type;
 
     public PrimitiveType getRestrictedTo() {
         return type;

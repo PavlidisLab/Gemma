@@ -42,23 +42,8 @@ public class ObjectPropertyImpl extends OntologyPropertyImpl implements ubic.gem
         this.sourceOntology = source;
     }
 
-    @Override
-    public String toString() {
-        String label = resource.getLabel( null );
-        if ( label == null ) label = resource.getLocalName();
-        if ( label == null ) label = resource.getURI();
-        if ( label == null ) label = resource.toString();
-        if ( label == null ) label = "[no string version available!]";
-        return label;
-    }
-
     public String getLabel() {
         return this.toString();
-    }
-
-    @Override
-    public String getUri() {
-        return resource.getURI();
     }
 
     public Collection<OntologyTerm> getRange() {
@@ -74,5 +59,20 @@ public class ObjectPropertyImpl extends OntologyPropertyImpl implements ubic.gem
             }
         }
         return result;
+    }
+
+    @Override
+    public String getUri() {
+        return resource.getURI();
+    }
+
+    @Override
+    public String toString() {
+        String label = resource.getLabel( null );
+        if ( label == null ) label = resource.getLocalName();
+        if ( label == null ) label = resource.getURI();
+        if ( label == null ) label = resource.toString();
+        if ( label == null ) label = "[no string version available!]";
+        return label;
     }
 }

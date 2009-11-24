@@ -57,8 +57,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import ubic.gemma.model.common.auditAndSecurity.Securable;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.security.authentication.UserManager;
 import ubic.gemma.util.AuthorityConstants;
 
@@ -136,9 +134,6 @@ public class SecurityService {
 
     @Autowired
     private MutableAclService aclService;
-
-    @Autowired
-    private ExpressionExperimentService expressionExperimentService;
 
     @Autowired
     private SidRetrievalStrategy sidRetrievalStrategy;
@@ -347,10 +342,6 @@ public class SecurityService {
             throw new IllegalStateException( "Failed to make object private: " + object );
         }
 
-        if ( ExpressionExperiment.class.isAssignableFrom( object.getClass() ) ) {
-            ( ( ExpressionExperiment ) object ).setPubliclyViewable( false );
-            expressionExperimentService.update( ( ExpressionExperiment ) object );
-        }
     }
 
     /**
@@ -398,10 +389,6 @@ public class SecurityService {
             throw new IllegalStateException( "Failed to make object public: " + object );
         }
 
-        if ( ExpressionExperiment.class.isAssignableFrom( object.getClass() ) ) {
-            ( ( ExpressionExperiment ) object ).setPubliclyViewable( true );
-            expressionExperimentService.update( ( ExpressionExperiment ) object );
-        }
 
     }
 

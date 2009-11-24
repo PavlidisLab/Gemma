@@ -45,6 +45,33 @@ public class OntologyIndexer {
 
     private static Log log = LogFactory.getLog( OntologyIndexer.class.getName() );
 
+    public static void eraseIndex( String name ) {
+        File indexdir = getIndexPath( name );
+        for ( File f : indexdir.listFiles() ) {
+            f.delete();
+        }
+    }
+
+    /**
+     * @param name
+     * @return
+     */
+    public static IndexLARQ getSubjectIndex( String name ) {
+        log.info( "Loading index: " + name );
+        File indexdir = getIndexPath( name );
+        try {
+            FSDirectory directory = FSDirectory.getDirectory( indexdir );
+            if ( IndexReader.indexExists( directory ) ) {
+                IndexReader reader = IndexReader.open( directory );
+                return new IndexLARQ( reader );
+            }
+            throw new IllegalArgumentException( "No index with name " + name );
+
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
+        }
+    }
+
     /**
      * Loads or creates an index from an existing OntModel. Any existing index will loaded.
      * 
@@ -62,11 +89,16 @@ public class OntologyIndexer {
         }
     }
 
-    public static void eraseIndex( String name ) {
-        File indexdir = getIndexPath( name );
-        for ( File f : indexdir.listFiles() ) {
-            f.delete();
-        }
+    /**
+     * @param name
+     * @return
+     */
+    private static File getIndexPath( String name ) {
+        String path = ConfigUtils.getString( "gemma.appdata.home" ) + File.separator + INDEX_DIR + File.separator
+                + "gemma" + File.separator + "ontology" + File.separator + name;
+
+        File indexdir = new File( path );
+        return indexdir;
     }
 
     /**
@@ -92,38 +124,6 @@ public class OntologyIndexer {
         IndexLARQ index = larqSubjectBuilder.getIndex();
 
         return index;
-    }
-
-    /**
-     * @param name
-     * @return
-     */
-    public static IndexLARQ getSubjectIndex( String name ) {
-        log.info( "Loading index: " + name );
-        File indexdir = getIndexPath( name );
-        try {
-            FSDirectory directory = FSDirectory.getDirectory( indexdir );
-            if ( IndexReader.indexExists( directory ) ) {
-                IndexReader reader = IndexReader.open( directory );
-                return new IndexLARQ( reader );
-            }
-            throw new IllegalArgumentException( "No index with name " + name );
-
-        } catch ( IOException e ) {
-            throw new RuntimeException( e );
-        }
-    }
-
-    /**
-     * @param name
-     * @return
-     */
-    private static File getIndexPath( String name ) {
-        String path = ConfigUtils.getString( "gemma.appdata.home" ) + File.separator + INDEX_DIR + File.separator
-                + "gemma" + File.separator + "ontology" + File.separator + name;
-
-        File indexdir = new File( path );
-        return indexdir;
     }
 
 }

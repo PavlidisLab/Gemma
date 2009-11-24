@@ -32,9 +32,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.apache.commons.lang.StringUtils; 
 import org.springframework.stereotype.Service;
 
 import ubic.gemma.util.ConfigUtils;
@@ -60,34 +58,23 @@ public class MgedOntologyService extends AbstractOntologyService {
             "ExperimentalDesign", "ExperimentalFactor", "ExperimentalFactorCategory", "Experiment",
             "NormalizationDescriptionType", "NormalizationDescription", "QualityControlDescriptionType" } ) );
 
-    /*
-     * (non-Javadoc)
-     * @see ubic.gemma.ontology.AbstractOntologyService#getOntologyName()
-     */
-    @Override
-    protected String getOntologyName() {
-        return "mgedOntology";
+     protected String ontology_startingPoint;
+
+    private static Map<String, URL> keyToTermListUrl;
+
+    private static Map<String, Collection<OntologyTerm>> keyToTermListCache = new HashMap<String, Collection<OntologyTerm>>();
+
+    static {
+        keyToTermListUrl = new HashMap<String, URL>();
+        keyToTermListUrl.put( "design", MgedOntologyService.class.getResource( "MO.design.categories.txt" ) );
+        keyToTermListUrl.put( "experiment", MgedOntologyService.class.getResource( "MO.experiment.categories.txt" ) );
+        keyToTermListUrl.put( "factor", MgedOntologyService.class.getResource( "MO.factor.categories.txt" ) );
+        keyToTermListUrl.put( "factorvalue", MgedOntologyService.class.getResource( "MO.factorvalue.categories.txt" ) );
     }
-
-    protected static final Log log = LogFactory.getLog( MgedOntologyService.class );
-
-    protected String ontology_startingPoint;
 
     public MgedOntologyService() {
         super();
         ontology_startingPoint = getOntologyStartingPoint();
-    }
-
-    public Collection<OntologyTreeNode> getBioMaterialTreeNodeTerms() {
-
-        if ( !ready.get() ) return null;
-
-        Collection<OntologyTreeNode> nodes = new ArrayList<OntologyTreeNode>();
-
-        OntologyTerm term = terms.get( ontology_startingPoint );
-
-        nodes.add( buildTreeNode( term ) );
-        return nodes;
     }
 
     public Collection<OntologyTerm> getBioMaterialTerms() {
@@ -102,47 +89,17 @@ public class MgedOntologyService extends AbstractOntologyService {
 
     }
 
-    /**
-     * @return Returns the Mged Ontology Terms that are usefull for annotating Gemma. Basically the terms in the
-     *         bioMaterial package plus some special cases.
-     */
-    public Collection<OntologyTerm> getUsefulMgedTerms() {
+    public Collection<OntologyTreeNode> getBioMaterialTreeNodeTerms() {
+
         if ( !ready.get() ) return null;
 
-        Collection<OntologyTerm> results = getBioMaterialTerms();
-        results = Collections.synchronizedCollection( results );
+        Collection<OntologyTreeNode> nodes = new ArrayList<OntologyTreeNode>();
 
-        // A bunch of terms not in the biomaterial package that we need. (special cases)
-        OntologyTerm term = terms.get( ontology_URL + "#ExperimentPackage" );
-        results.addAll( getAllTerms( term ) );
+        OntologyTerm term = terms.get( ontology_startingPoint );
 
-        term = terms.get( ontology_URL + "#MeasurementPackage" );
-        results.addAll( getAllTerms( term ) );
-
-        term = terms.get( ontology_URL + "#MGEDExtendedOntology" );
-        results.addAll( getAllTerms( term ) );
-
-        // trim some terms out:
-        Collection<OntologyTerm> trimmed = Collections.synchronizedSet( new HashSet<OntologyTerm>() );
-        for ( OntologyTerm mgedTerm : results ) {
-            if ( !TermsToRemove.contains( mgedTerm.getTerm() ) ) {
-                trimmed.add( mgedTerm );
-            }
-        }
-
-        return trimmed;
-
+        nodes.add( buildTreeNode( term ) );
+        return nodes;
     }
-
-    private static Map<String, URL> keyToTermListUrl;
-    static {
-        keyToTermListUrl = new HashMap<String, URL>();
-        keyToTermListUrl.put( "design", MgedOntologyService.class.getResource( "MO.design.categories.txt" ) );
-        keyToTermListUrl.put( "experiment", MgedOntologyService.class.getResource( "MO.experiment.categories.txt" ) );
-        keyToTermListUrl.put( "factor", MgedOntologyService.class.getResource( "MO.factor.categories.txt" ) );
-        keyToTermListUrl.put( "factorvalue", MgedOntologyService.class.getResource( "MO.factorvalue.categories.txt" ) );
-    }
-    private static Map<String, Collection<OntologyTerm>> keyToTermListCache = new HashMap<String, Collection<OntologyTerm>>();
 
     /**
      * @param key
@@ -182,6 +139,38 @@ public class MgedOntologyService extends AbstractOntologyService {
     }
 
     /**
+     * @return Returns the Mged Ontology Terms that are usefull for annotating Gemma. Basically the terms in the
+     *         bioMaterial package plus some special cases.
+     */
+    public Collection<OntologyTerm> getUsefulMgedTerms() {
+        if ( !ready.get() ) return null;
+
+        Collection<OntologyTerm> results = getBioMaterialTerms();
+        results = Collections.synchronizedCollection( results );
+
+        // A bunch of terms not in the biomaterial package that we need. (special cases)
+        OntologyTerm term = terms.get( ontology_URL + "#ExperimentPackage" );
+        results.addAll( getAllTerms( term ) );
+
+        term = terms.get( ontology_URL + "#MeasurementPackage" );
+        results.addAll( getAllTerms( term ) );
+
+        term = terms.get( ontology_URL + "#MGEDExtendedOntology" );
+        results.addAll( getAllTerms( term ) );
+
+        // trim some terms out:
+        Collection<OntologyTerm> trimmed = Collections.synchronizedSet( new HashSet<OntologyTerm>() );
+        for ( OntologyTerm mgedTerm : results ) {
+            if ( !TermsToRemove.contains( mgedTerm.getTerm() ) ) {
+                trimmed.add( mgedTerm );
+            }
+        }
+
+        return trimmed;
+
+    }
+
+    /**
      * Will attempt to load a different ontology into the MGED ontology service
      * 
      * @param ontologyURL
@@ -198,22 +187,6 @@ public class MgedOntologyService extends AbstractOntologyService {
         running = new AtomicBoolean( false );
 
         init( true );
-
-    }
-
-    protected Collection<OntologyTerm> getAllTerms( OntologyTerm term ) {
-
-        Collection<OntologyTerm> children = term.getChildren( true );
-
-        if ( ( children == null ) || ( children.isEmpty() ) ) return new HashSet<OntologyTerm>();
-
-        Collection<OntologyTerm> grandChildren = new HashSet<OntologyTerm>();
-        for ( OntologyTerm child : children ) {
-            grandChildren.addAll( getAllTerms( child ) );
-        }
-
-        children.addAll( grandChildren );
-        return children;
 
     }
 
@@ -240,9 +213,29 @@ public class MgedOntologyService extends AbstractOntologyService {
 
     }
 
+    protected Collection<OntologyTerm> getAllTerms( OntologyTerm term ) {
+
+        Collection<OntologyTerm> children = term.getChildren( true );
+
+        if ( ( children == null ) || ( children.isEmpty() ) ) return new HashSet<OntologyTerm>();
+
+        Collection<OntologyTerm> grandChildren = new HashSet<OntologyTerm>();
+        for ( OntologyTerm child : children ) {
+            grandChildren.addAll( getAllTerms( child ) );
+        }
+
+        children.addAll( grandChildren );
+        return children;
+
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see ubic.gemma.ontology.AbstractOntologyService#getOntologyName()
+     */
     @Override
-    protected OntModel loadModel( String url ) {
-        return OntologyLoader.loadMemoryModel( url );
+    protected String getOntologyName() {
+        return "mgedOntology";
     }
 
     protected String getOntologyStartingPoint() {
@@ -252,6 +245,11 @@ public class MgedOntologyService extends AbstractOntologyService {
     @Override
     protected String getOntologyUrl() {
         return ConfigUtils.getString( MGED_ONTOLOGY_URL );
+    }
+
+    @Override
+    protected OntModel loadModel( String url ) {
+        return OntologyLoader.loadMemoryModel( url );
     }
 
 }

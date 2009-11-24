@@ -24,7 +24,6 @@ package ubic.gemma.ontology;
  */
 public abstract class OntologyPropertyImpl extends AbstractOntologyResource implements OntologyProperty {
 
-   
     protected boolean isFunctional;
 
     public boolean isFunctional() {

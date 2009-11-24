@@ -50,9 +50,9 @@ import ubic.gemma.model.common.description.PublicationType;
 import ubic.gemma.model.expression.biomaterial.Compound;
 
 /**
- * Simple class to parse XML in the format defined by
- * {@link http://www.ncbi.nlm.nih.gov/entrez/query/DTD/pubmed_041101.dtd}. The resulting BibliographicReference object
- * is associated with (transient) DatabaseEntry, in turn to a (transient) ExternalDatabase and MESH.
+ * Simple class to parse XML in the format defined by {@link http
+ * ://www.ncbi.nlm.nih.gov/entrez/query/DTD/pubmed_041101.dtd}. The resulting BibliographicReference object is
+ * associated with (transient) DatabaseEntry, in turn to a (transient) ExternalDatabase and MESH.
  * 
  * @author pavlidis
  * @version $Id$
@@ -91,8 +91,6 @@ public class PubMedXMLParser {
         } catch ( ParserConfigurationException e ) {
             throw new RuntimeException( e );
         } catch ( SAXException e ) {
-            throw new RuntimeException( e );
-        } catch ( TransformerException e ) {
             throw new RuntimeException( e );
         }
     }
@@ -142,8 +140,7 @@ public class PubMedXMLParser {
      * @return
      * @throws IOException
      */
-    private Collection<BibliographicReference> extractBibRefs( Document document ) throws IOException,
-            TransformerException {
+    private Collection<BibliographicReference> extractBibRefs( Document document ) throws IOException {
 
         // Was there an error? (not found)
         if ( document.getElementsByTagName( ERROR_TAG ).getLength() > 0 ) {
@@ -244,7 +241,7 @@ public class PubMedXMLParser {
         return article;
     }
 
-    private Node processArticle( BibliographicReference bibRef, Node article ) throws IOException, TransformerException {
+    private Node processArticle( BibliographicReference bibRef, Node article ) throws IOException {
         NodeList childNodes = article.getChildNodes();
         Node journal = null;
         for ( int j = 0; j < childNodes.getLength(); j++ ) {

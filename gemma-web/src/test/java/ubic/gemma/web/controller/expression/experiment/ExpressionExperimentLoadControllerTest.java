@@ -43,7 +43,7 @@ public class ExpressionExperimentLoadControllerTest extends BaseSpringWebTest {
         MockHttpServletRequest request = newGet( "/admin/loadExpressionExperiment.html" );
 
         ModelAndView mv = controller.handleRequest( request, response );
-        assertEquals( "Returned incorrect view name", "loadExpressionExperimentForm", mv.getViewName() );
+        assertEquals( "Returned incorrect view name", "/admin/loadExpressionExperimentForm", mv.getViewName() );
 
     }
 

@@ -18,11 +18,22 @@
 		<property name="jobInfoDao" ref="jobInfoDao" />
 	</bean>
 
-	<!-- Pointcut for monitoring methods. See ubic.gemma.util.monitor.MonitorAdvice and Monitored-->
+	<!-- Pointcut for monitoring methods. See ubic.gemma.util.monitor.MonitorAdvice and Monitored (annotations not working here) -->
 	<aop:config>
 		<aop:aspect id="monitorAspect" ref="monitorAdvice">
 			<aop:around method="profile" pointcut="execution(@ubic.gemma.util.monitor.Monitored * *(..))" />
 		</aop:aspect>
+	</aop:config>
+
+
+
+	<!--
+		see
+		http://static.springsource.org/spring/docs/3.0.x/spring-framework-reference/html/ch10s05.html#transaction-declarative-txadvice-settings
+	-->
+	<aop:config>
+		<aop:pointcut id="serviceMethod" expression="ubic.gemma.util.SystemArchitectureAspect.serviceMethod()" />
+		<aop:advisor advice-ref="txAdvice" pointcut-ref="serviceMethod" />
 	</aop:config>
 
 

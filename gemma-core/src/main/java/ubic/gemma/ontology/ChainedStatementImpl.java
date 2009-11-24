@@ -28,35 +28,35 @@ public class ChainedStatementImpl extends AbstractStatement implements ChainedSt
 
     private ChainedStatementObject object;
 
-    public ChainedStatementImpl( OntologyTerm term, OntologyProperty property, ChainedStatementObject chained ) {
-        super( property, term );
-        this.object = chained;
+    public ChainedStatementImpl( OntologyTerm term ) {
+        super( term );
     }
 
     public ChainedStatementImpl( OntologyTerm term, OntologyProperty property ) {
         super( property, term );
     }
 
-    public ChainedStatementImpl( OntologyTerm term ) {
-        super( term );
+    public ChainedStatementImpl( OntologyTerm term, OntologyProperty property, ChainedStatementObject chained ) {
+        super( property, term );
+        this.object = chained;
     }
 
-    @Override
-    protected Property makeProperty() {
-        
-        Property p = Property.Factory.newInstance();
-        p.setValue( this.getProperty().getLabel() );
-        p.setValueUri( this.getProperty().getUri() );
-        p.setObject( object.toVocabCharacteristic() );
-        return p;
+    public ChainedStatementObject getObject() {
+        return object;
     }
 
     public void setObject( ChainedStatementObject object ) {
         this.object = object;
     }
 
-    public ChainedStatementObject getObject() {
-        return object;
+    @Override
+    protected Property makeProperty() {
+
+        Property p = Property.Factory.newInstance();
+        p.setValue( this.getProperty().getLabel() );
+        p.setValueUri( this.getProperty().getUri() );
+        p.setObject( object.toVocabCharacteristic() );
+        return p;
     }
 
 }

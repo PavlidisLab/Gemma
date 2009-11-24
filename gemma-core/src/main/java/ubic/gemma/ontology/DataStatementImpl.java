@@ -29,13 +29,13 @@ public class DataStatementImpl extends AbstractStatement implements DataStatemen
 
     private String data;
 
-    public String getObject() {
-        return data;
-    }
-
     public DataStatementImpl( OntologyTerm term, DatatypeProperty property, String data ) {
         super( property, term );
         this.data = data;
+    }
+
+    public String getObject() {
+        return data;
     }
 
     @Override

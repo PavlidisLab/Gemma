@@ -26,7 +26,7 @@ import ubic.gemma.model.common.description.VocabCharacteristic;
  */
 public class VocabCharacteristicBuilder {
 
-    public static VocabCharacteristic addStatement( VocabCharacteristic toAddTo, CharacteristicStatement s ) {
+    public static VocabCharacteristic addStatement( VocabCharacteristic toAddTo, CharacteristicStatement<?> s ) {
         s.addToCharacteristic( toAddTo );
         return toAddTo;
     }

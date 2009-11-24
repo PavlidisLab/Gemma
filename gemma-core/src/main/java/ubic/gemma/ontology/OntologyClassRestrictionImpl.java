@@ -72,14 +72,11 @@ public class OntologyClassRestrictionImpl extends OntologyRestrictionImpl implem
     public OntologyTerm getRestrictedTo() {
         return restrictedTo;
     }
-//
-//    public RDFNode getRestrictedToValue() {
-//        return value;
-//    }
 
-    private void convertProperty( OntProperty restrictionOnProperty, ExternalDatabase source ) {
-        this.restrictionOn = PropertyFactory.asProperty( restrictionOnProperty, source );
-    }
+    //
+    // public RDFNode getRestrictedToValue() {
+    // return value;
+    // }
 
     @Override
     public String toString() {
@@ -91,6 +88,10 @@ public class OntologyClassRestrictionImpl extends OntologyRestrictionImpl implem
         } else {
             throw new IllegalStateException( "Value or restriction class must be non-null" );
         }
+    }
+
+    private void convertProperty( OntProperty restrictionOnProperty, ExternalDatabase source ) {
+        this.restrictionOn = PropertyFactory.asProperty( restrictionOnProperty, source );
     }
 
 }

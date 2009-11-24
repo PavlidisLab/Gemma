@@ -38,9 +38,9 @@ public class RestrictionFactory {
         } else if ( onProperty.isObjectProperty() ) {
             if ( restriction.isCardinalityRestriction() ) {
                 return new OntologyCardinalityRestrictionImpl( restriction, source );
-            } else {
-                return new OntologyClassRestrictionImpl( restriction, source );
             }
+            return new OntologyClassRestrictionImpl( restriction, source );
+
         } else {
             throw new UnsupportedOperationException( "Sorry, can't convert "
                     + restriction.getOnProperty().getClass().getName() );

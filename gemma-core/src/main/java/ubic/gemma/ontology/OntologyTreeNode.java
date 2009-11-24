@@ -28,7 +28,6 @@ import java.util.List;
 
 /**
  * @author klc
- *
  */
 public class OntologyTreeNode {
 
@@ -44,8 +43,7 @@ public class OntologyTreeNode {
     private List<OntologyTreeNode> children;
     private String uiProvider;
 
- 
-    public OntologyTreeNode( ) {
+    public OntologyTreeNode() {
         super();
         this.expanded = false;
         this.isTarget = false;
@@ -59,23 +57,22 @@ public class OntologyTreeNode {
         children = new ArrayList<OntologyTreeNode>();
 
     }
-    
-    public OntologyTreeNode(String id) { 
+
+    /**
+     * @param term Doesn't fill in the child assocations
+     */
+    public OntologyTreeNode( OntologyTerm term ) {
+        this();
+
+        this.id = term.getUri();
+        this.text = term.getTerm();
+
+    }
+
+    public OntologyTreeNode( String id ) {
         this();
         this.id = id;
 
-    }
-    
-    /**
-     * @param term
-     * Doesn't fill in the child assocations
-     */
-    public OntologyTreeNode(OntologyTerm term){
-        this();
-        
-        this.id = term.getUri();
-        this.text = term.getTerm(); 
-       
     }
 
     public void appendChild( OntologyTreeNode child ) {
@@ -90,8 +87,15 @@ public class OntologyTreeNode {
         return id;
     }
 
-    public void setId( String id ) {
-        this.id = id;
+    /**
+     * @return the text
+     */
+    public String getText() {
+        return text;
+    }
+
+    public String getUiProvider() {
+        return uiProvider;
     }
 
     /**
@@ -102,24 +106,10 @@ public class OntologyTreeNode {
     }
 
     /**
-     * @param allowChildren the allowChildren to set
-     */
-    public void setAllowChildren( boolean allowChildren ) {
-        this.allowChildren = allowChildren;
-    }
-
-    /**
      * @return the allowDrag
      */
     public boolean isAllowDrag() {
         return allowDrag;
-    }
-
-    /**
-     * @param allowDrag the allowDrag to set
-     */
-    public void setAllowDrag( boolean allowDrag ) {
-        this.allowDrag = allowDrag;
     }
 
     /**
@@ -130,24 +120,10 @@ public class OntologyTreeNode {
     }
 
     /**
-     * @param allowDrop the allowDrop to set
-     */
-    public void setAllowDrop( boolean allowDrop ) {
-        this.allowDrop = allowDrop;
-    }
-
-    /**
      * @return the draggable
      */
     public boolean isDraggable() {
         return draggable;
-    }
-
-    /**
-     * @param draggable the draggable to set
-     */
-    public void setDraggable( boolean draggable ) {
-        this.draggable = draggable;
     }
 
     /**
@@ -158,10 +134,10 @@ public class OntologyTreeNode {
     }
 
     /**
-     * @param expanded the expanded to set
+     * @return the leaf
      */
-    public void setExpanded( boolean expanded ) {
-        this.expanded = expanded;
+    public boolean isLeaf() {
+        return leaf;
     }
 
     /**
@@ -172,17 +148,42 @@ public class OntologyTreeNode {
     }
 
     /**
-     * @param isTarget the isTarget to set
+     * @param allowChildren the allowChildren to set
      */
-    public void setTarget( boolean isTarget ) {
-        this.isTarget = isTarget;
+    public void setAllowChildren( boolean allowChildren ) {
+        this.allowChildren = allowChildren;
     }
 
     /**
-     * @return the leaf
+     * @param allowDrag the allowDrag to set
      */
-    public boolean isLeaf() {
-        return leaf;
+    public void setAllowDrag( boolean allowDrag ) {
+        this.allowDrag = allowDrag;
+    }
+
+    /**
+     * @param allowDrop the allowDrop to set
+     */
+    public void setAllowDrop( boolean allowDrop ) {
+        this.allowDrop = allowDrop;
+    }
+
+    /**
+     * @param draggable the draggable to set
+     */
+    public void setDraggable( boolean draggable ) {
+        this.draggable = draggable;
+    }
+
+    /**
+     * @param expanded the expanded to set
+     */
+    public void setExpanded( boolean expanded ) {
+        this.expanded = expanded;
+    }
+
+    public void setId( String id ) {
+        this.id = id;
     }
 
     /**
@@ -193,10 +194,10 @@ public class OntologyTreeNode {
     }
 
     /**
-     * @return the text
+     * @param isTarget the isTarget to set
      */
-    public String getText() {
-        return text;
+    public void setTarget( boolean isTarget ) {
+        this.isTarget = isTarget;
     }
 
     /**
@@ -204,10 +205,6 @@ public class OntologyTreeNode {
      */
     public void setText( String text ) {
         this.text = text;
-    }
-
-    public String getUiProvider() {
-        return uiProvider;
     }
 
     public void setUiProvider( String uiProvider ) {

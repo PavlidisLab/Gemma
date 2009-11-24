@@ -47,11 +47,10 @@ public class OntologyData implements Serializable {
         id = 1;
         term = NA;
         comment = NA;
-        
 
     }
 
-    public OntologyData( int id, String term, String comment) {
+    public OntologyData( int id, String term, String comment ) {
         this();
         this.id = id;
         this.term = term;
@@ -66,13 +65,6 @@ public class OntologyData implements Serializable {
     }
 
     /**
-     * @param comment the comment to set
-     */
-    public void setComment( String comment ) {
-        this.comment = comment;
-    }
-
-    /**
      * @return the id
      */
     public int getId() {
@@ -80,17 +72,24 @@ public class OntologyData implements Serializable {
     }
 
     /**
-     * @param id the id to set
-     */
-    public void setId( int id ) {
-        this.id = id;
-    }
-
-    /**
      * @return the term
      */
     public String getTerm() {
         return term;
+    }
+
+    /**
+     * @param comment the comment to set
+     */
+    public void setComment( String comment ) {
+        this.comment = comment;
+    }
+
+    /**
+     * @param id the id to set
+     */
+    public void setId( int id ) {
+        this.id = id;
     }
 
     /**

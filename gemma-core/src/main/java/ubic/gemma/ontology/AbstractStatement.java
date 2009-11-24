@@ -30,14 +30,6 @@ public abstract class AbstractStatement implements CharacteristicStatement {
     private OntologyProperty property;
     private OntologyTerm term;
 
-    public OntologyProperty getProperty() {
-        return property;
-    }
-
-    public OntologyTerm getSubject() {
-        return term;
-    }
-
     public AbstractStatement( OntologyProperty property, OntologyTerm term ) {
         super();
         this.property = property;
@@ -48,22 +40,6 @@ public abstract class AbstractStatement implements CharacteristicStatement {
         this.term = term;
     }
 
-    public final VocabCharacteristic toCharacteristic() {
-        if ( this.getProperty() == null ) throw new IllegalStateException( "Must set property first" );
-        VocabCharacteristic v = initVocabCharacteristic();
-        CharacteristicProperty p = makeProperty();
-        v.getProperties().add( p );
-        return v;
-    }
-
-    private VocabCharacteristic initVocabCharacteristic() {
-        VocabCharacteristic v = VocabCharacteristic.Factory.newInstance();
-
-        v.setValueUri( this.getSubject().getUri() );
-        v.setValue( this.getSubject().getTerm() );
-        return v;
-    }
-
     public void addToCharacteristic( VocabCharacteristic v ) {
         if ( !v.getValueUri().equals( this.getSubject().getUri() ) ) {
             throw new IllegalArgumentException( "Cannot add " + this.getSubject() + " statement to " + v );
@@ -72,11 +48,35 @@ public abstract class AbstractStatement implements CharacteristicStatement {
         v.getProperties().add( p );
     }
 
-    protected abstract CharacteristicProperty makeProperty();
+    public OntologyProperty getProperty() {
+        return property;
+    }
+
+    public OntologyTerm getSubject() {
+        return term;
+    }
+
+    public final VocabCharacteristic toCharacteristic() {
+        if ( this.getProperty() == null ) throw new IllegalStateException( "Must set property first" );
+        VocabCharacteristic v = initVocabCharacteristic();
+        CharacteristicProperty p = makeProperty();
+        v.getProperties().add( p );
+        return v;
+    }
 
     @Override
     public String toString() {
         return this.getSubject() + " " + this.getProperty() + " " + this.getObject();
+    }
+
+    protected abstract CharacteristicProperty makeProperty();
+
+    private VocabCharacteristic initVocabCharacteristic() {
+        VocabCharacteristic v = VocabCharacteristic.Factory.newInstance();
+
+        v.setValueUri( this.getSubject().getUri() );
+        v.setValue( this.getSubject().getTerm() );
+        return v;
     }
 
 }

@@ -29,28 +29,16 @@ import ubic.gemma.model.common.description.ExternalDatabase;
  */
 public abstract class AbstractOntologyResource implements OntologyResource {
 
+    private static final long serialVersionUID = 1L;
+
     protected static Log log = LogFactory.getLog( OntologyPropertyImpl.class.getName() );
 
     protected ExternalDatabase sourceOntology;
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.analysis.ontology.OntologyTerm#getSourceOntology()
-     */
-    public ExternalDatabase getSourceOntology() {
-        return sourceOntology;
-    }
+    public int compareTo( Object other ) {
+        OntologyResource r = ( OntologyResource ) other;
+        return this.getUri().compareTo( r.getUri() );
 
-    public abstract String getUri();
-
-    @Override
-    public int hashCode() {
-        final int PRIME = 31;
-        int result = 1;
-        result = PRIME * result + ( ( getLabel() == null ) ? 0 : getLabel().hashCode() );
-        result = PRIME * result + ( ( getUri() == null ) ? 0 : getUri().hashCode() );
-        return result;
     }
 
     @Override
@@ -68,10 +56,23 @@ public abstract class AbstractOntologyResource implements OntologyResource {
         return true;
     }
 
-    public int compareTo( Object other ) {
-        OntologyResource r = ( OntologyResource ) other;
-        return this.getUri().compareTo( r.getUri() );
+    /*
+     * (non-Javadoc)
+     * @see ubic.gemma.analysis.ontology.OntologyTerm#getSourceOntology()
+     */
+    public ExternalDatabase getSourceOntology() {
+        return sourceOntology;
+    }
 
+    public abstract String getUri();
+
+    @Override
+    public int hashCode() {
+        final int PRIME = 31;
+        int result = 1;
+        result = PRIME * result + ( ( getLabel() == null ) ? 0 : getLabel().hashCode() );
+        result = PRIME * result + ( ( getUri() == null ) ? 0 : getUri().hashCode() );
+        return result;
     }
 
 }

@@ -29,22 +29,12 @@ public class PersistentOntology {
 
     /**
      * @param maker
-     * @param source
+     * @return
      */
-    public OntModel loadDB( ModelMaker maker, String source ) {
-        // use the model maker to get the base model as a persistent model
-        // strict=false, so we get an existing model by that name if it exists
-        // or create a new one
-        Model base = maker.createModel( source, false );
-
-        // now we plug that base model into an ontology model that also uses
-        // the given model maker to create storage for imported models
-        OntModel m = ModelFactory.createOntologyModel( getModelSpec( maker ), base );
-
-        // now load the source document, which will also load any imports
-        m.read( source );
-
-        return m;
+    public OntModelSpec getModelSpec( ModelMaker maker ) {
+        OntModelSpec spec = new OntModelSpec( OntModelSpec.OWL_MEM_RDFS_INF );
+        spec.setImportModelMaker( maker );
+        return spec;
     }
 
     /**
@@ -75,12 +65,22 @@ public class PersistentOntology {
 
     /**
      * @param maker
-     * @return
+     * @param source
      */
-    public OntModelSpec getModelSpec( ModelMaker maker ) {
-        OntModelSpec spec = new OntModelSpec( OntModelSpec.OWL_MEM_RDFS_INF );
-        spec.setImportModelMaker( maker );
-        return spec;
+    public OntModel loadDB( ModelMaker maker, String source ) {
+        // use the model maker to get the base model as a persistent model
+        // strict=false, so we get an existing model by that name if it exists
+        // or create a new one
+        Model base = maker.createModel( source, false );
+
+        // now we plug that base model into an ontology model that also uses
+        // the given model maker to create storage for imported models
+        OntModel m = ModelFactory.createOntologyModel( getModelSpec( maker ), base );
+
+        // now load the source document, which will also load any imports
+        m.read( source );
+
+        return m;
     }
 
 }

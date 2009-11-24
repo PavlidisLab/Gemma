@@ -10,10 +10,16 @@ public class OntologyDataList implements Serializable {
     private static final long serialVersionUID = -2232618638114399153L;
     private Object[] data;
     private int totalSize;
-    
-    
+
     public Object[] getData() {
         return data;
+    }
+
+    /**
+     * @return the totalSize
+     */
+    public int getTotalSize() {
+        return totalSize;
     }
 
     /**
@@ -21,13 +27,6 @@ public class OntologyDataList implements Serializable {
      */
     public void setData( Object[] data ) {
         this.data = data;
-    }
-    
-    /**
-     * @return the totalSize
-     */
-    public int getTotalSize() {
-        return totalSize;
     }
 
     /**

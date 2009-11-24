@@ -26,6 +26,7 @@ import org.apache.commons.logging.LogFactory;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.Signature;
 import org.hibernate.Hibernate;
+import org.hibernate.LazyInitializationException;
 import org.hibernate.LockMode;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -76,7 +77,8 @@ import ubic.gemma.util.ReflectionUtil;
 
 /**
  * Adds security controls to newly created objects, and removes them for objects that are deleted. Methods in this
- * interceptor are run for all new objects (to add security if needed) and when objects are deleted.
+ * interceptor are run for all new objects (to add security if needed) and when objects are deleted. This is not used to
+ * modify permissions on existing objects.
  * <p>
  * Implementation Note: For permissions modification to be triggered, the method name must match certain patterns, which
  * include "create", or "remove". These patterns are defined in the {@link AclPointcut}. Other methods that would
@@ -679,12 +681,19 @@ public class AclAdvice extends HibernateDaoSupport {
             if ( associatedObject instanceof Collection ) {
                 Collection<Object> associatedObjects = ( Collection<Object> ) associatedObject;
 
-                for ( Object object2 : associatedObjects ) {
+                try {
+                    for ( Object object2 : associatedObjects ) {
 
-                    if ( Securable.class.isAssignableFrom( object2.getClass() ) ) {
-                        addOrUpdateAcl( ( Securable ) object2, parentAcl );
+                        if ( Securable.class.isAssignableFrom( object2.getClass() ) ) {
+                            addOrUpdateAcl( ( Securable ) object2, parentAcl );
+                        }
+                        processAssociations( methodName, object2, parentAcl );
                     }
-                    processAssociations( methodName, object2, parentAcl );
+                } catch ( LazyInitializationException ok ) {
+                    /*
+                     * This is not a problem. If this was reached via a create, the associated objects must not be new
+                     * so they should already have acls.
+                     */
                 }
 
             } else {
@@ -742,8 +751,8 @@ public class AclAdvice extends HibernateDaoSupport {
     }
 
     /**
-     * Kick off an update. This is executed when we call fooService.update(s). The basic issue is to update the
-     * permissions on any <em>new</em> associated objects.
+     * Kick off an update. This is executed when we call fooService.update(s). The basic issue is to add permissions for
+     * any <em>new</em> associated objects.
      * 
      * @param m the update method
      * @param s the securable being updated.

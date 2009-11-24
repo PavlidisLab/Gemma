@@ -36,6 +36,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
+import ubic.basecode.dataStructure.CountingMap;
 import ubic.gemma.model.analysis.Analysis;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSetService;
@@ -57,7 +58,6 @@ import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.ontology.GeneOntologyService;
 import ubic.gemma.ontology.OntologyTerm;
 import ubic.gemma.util.AnchorTagUtil;
-import ubic.gemma.util.CountingMap;
 
 /**
  * Provides access to Gene2Gene and Probe2Probe links. The use of this service provides 'high-level' access to

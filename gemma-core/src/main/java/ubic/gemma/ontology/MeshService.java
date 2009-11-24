@@ -74,43 +74,6 @@ public class MeshService {
         return null;
     }
 
-    private static String munge( String plainText ) {
-        String[] fields = plainText.split( "," );
-        if ( fields.length == 1 ) {
-            return plainText.toLowerCase().trim().replaceAll( " ", "_" );
-        } else if ( fields.length == 2 ) {
-            // swap them around
-            return fields[1].toLowerCase().trim().replaceAll( " ", "_" ) + "_"
-                    + fields[0].toLowerCase().trim().replaceAll( " ", "_" );
-        } else {
-            return plainText.toLowerCase().trim().replaceAll( "[, ]", "_" );
-        }
-    }
-
-    /**
-     * @return the has_qualifier ObjectProperty that can be used to form statements about MESH term instances.
-     */
-    public static ubic.gemma.ontology.ObjectProperty hasQualifier() {
-        Property property = model.createProperty( "http://purl.org/obo/owl/MESH#hasQualifier" );
-        RDFNode node = property.inModel( model );
-        model.setStrictMode( false ); // FIXME this probably isn't such a good idea, but allows the conversion to
-        // proceed.
-        return new ObjectPropertyImpl( ( com.hp.hpl.jena.ontology.ObjectProperty ) node
-                .as( com.hp.hpl.jena.ontology.ObjectProperty.class ), meshdb );
-    }
-
-    /**
-     * @return the isMajorHeading ObjectProperty that can be used to form statements about MESH term instances.
-     */
-    public static ubic.gemma.ontology.DatatypeProperty isMajorHeading() {
-        Property property = model.createProperty( "http://purl.org/obo/owl/MESH#isMajorHeading" );
-        RDFNode node = property.inModel( model );
-        model.setStrictMode( false ); // FIXME this probably isn't such a good idea, but allows the conversion to
-        // proceed.
-        return new ubic.gemma.ontology.DatatypePropertyImpl( ( com.hp.hpl.jena.ontology.DatatypeProperty ) node
-                .as( com.hp.hpl.jena.ontology.DatatypeProperty.class ), meshdb );
-    }
-
     /**
      * Convert a term to a Characteristic
      * 
@@ -147,6 +110,42 @@ public class MeshService {
             cs = new ClassStatementImpl( term, MeshService.hasQualifier(), qualTerm );
         }
         return cs;
+    }
+
+    /**
+     * @return the has_qualifier ObjectProperty that can be used to form statements about MESH term instances.
+     */
+    public static ubic.gemma.ontology.ObjectProperty hasQualifier() {
+        Property property = model.createProperty( "http://purl.org/obo/owl/MESH#hasQualifier" );
+        RDFNode node = property.inModel( model );
+        model.setStrictMode( false ); // FIXME this probably isn't such a good idea, but allows the conversion to
+        // proceed.
+        return new ObjectPropertyImpl( node.as( com.hp.hpl.jena.ontology.ObjectProperty.class ), meshdb );
+    }
+
+    /**
+     * @return the isMajorHeading ObjectProperty that can be used to form statements about MESH term instances.
+     */
+    public static ubic.gemma.ontology.DatatypeProperty isMajorHeading() {
+        Property property = model.createProperty( "http://purl.org/obo/owl/MESH#isMajorHeading" );
+        RDFNode node = property.inModel( model );
+        model.setStrictMode( false ); // FIXME this probably isn't such a good idea, but allows the conversion to
+        // proceed.
+        return new ubic.gemma.ontology.DatatypePropertyImpl(
+                node.as( com.hp.hpl.jena.ontology.DatatypeProperty.class ), meshdb );
+    }
+
+    private static String munge( String plainText ) {
+        String[] fields = plainText.split( "," );
+        if ( fields.length == 1 ) {
+            return plainText.toLowerCase().trim().replaceAll( " ", "_" );
+        } else if ( fields.length == 2 ) {
+            // swap them around
+            return fields[1].toLowerCase().trim().replaceAll( " ", "_" ) + "_"
+                    + fields[0].toLowerCase().trim().replaceAll( " ", "_" );
+        } else {
+            return plainText.toLowerCase().trim().replaceAll( "[, ]", "_" );
+        }
     }
 
 }

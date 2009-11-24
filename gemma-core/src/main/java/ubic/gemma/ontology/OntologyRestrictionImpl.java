@@ -30,12 +30,12 @@ import com.hp.hpl.jena.ontology.Restriction;
  */
 public abstract class OntologyRestrictionImpl extends OntologyTermImpl implements OntologyRestriction {
 
+    protected OntologyProperty restrictionOn = null;
+
     public OntologyRestrictionImpl( Restriction resource, ExternalDatabase source ) {
         super( resource, source );
         this.restrictionOn = PropertyFactory.asProperty( resource.getOnProperty(), source );
     }
-
-    protected OntologyProperty restrictionOn = null;
 
     public OntologyProperty getRestrictionOn() {
         return restrictionOn;

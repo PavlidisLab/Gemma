@@ -29,25 +29,15 @@ public class DatatypePropertyImpl extends OntologyPropertyImpl implements ubic.g
 
     private com.hp.hpl.jena.ontology.DatatypeProperty resource;
 
+    PrimitiveType type;
+
+    boolean isFunctional = false;
+
     public DatatypePropertyImpl( com.hp.hpl.jena.ontology.DatatypeProperty resource, ExternalDatabase source ) {
         this.resource = resource;
         this.sourceOntology = source;
         this.type = PropertyFactory.convertType( resource );
         this.isFunctional = resource.isFunctionalProperty();
-    }
-
-    @Override
-    public String toString() {
-        String label = resource.getLabel( null );
-        if ( label == null ) label = resource.getLocalName();
-        return label + " (" + type.toString() + ")";
-    }
-
-    PrimitiveType type;
-    boolean isFunctional = false;
-
-    public PrimitiveType getType() {
-        return type;
     }
 
     public String getLabel() {
@@ -56,9 +46,20 @@ public class DatatypePropertyImpl extends OntologyPropertyImpl implements ubic.g
         return label;
     }
 
+    public PrimitiveType getType() {
+        return type;
+    }
+
     @Override
     public String getUri() {
         return resource.getURI();
+    }
+
+    @Override
+    public String toString() {
+        String label = resource.getLabel( null );
+        if ( label == null ) label = resource.getLocalName();
+        return label + " (" + type.toString() + ")";
     }
 
 }
