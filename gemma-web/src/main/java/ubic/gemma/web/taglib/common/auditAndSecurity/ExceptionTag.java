@@ -22,6 +22,8 @@ import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.tagext.TagSupport;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * @jsp.tag name="exception" body-content="empty"
@@ -29,6 +31,8 @@ import org.apache.commons.lang.exception.ExceptionUtils;
  * @version $Id$
  */
 public class ExceptionTag extends TagSupport {
+
+    protected static Log log = LogFactory.getLog( ExceptionTag.class.getName() );
 
     /**
      * 
@@ -69,6 +73,8 @@ public class ExceptionTag extends TagSupport {
                     }
                     buf.append( "</div>" );
                 }
+                //To make sure error doesn't get swallowed.                
+                log.error( this.exception );
             }
 
             pageContext.getOut().print( buf.toString() );
