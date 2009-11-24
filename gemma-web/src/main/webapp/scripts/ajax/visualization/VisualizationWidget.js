@@ -18,7 +18,6 @@ Ext.namespace('Gemma');
 Gemma.ZOOM_PLOT_SIZE = 400;
 Gemma.DIFFEXVIS_QVALUE_THRESHOLD = 0.05;
 
-
 // Multiply the line thickness by this factor when it is
 // selected in the legend
 Gemma.SELECTED = 2;
@@ -581,6 +580,10 @@ Gemma.VisualizationWithThumbsWindow = Ext.extend(Ext.Window, {
 
 	loadcallback : function(records, options, success) {
 		if (!success || records.length === 0) {
+			Ext.Msg.alert("No data", "Sorry, no data were available", function() {
+						this.close();
+						this.destroy();
+					}.createDelegate(this));
 			return;
 		}
 		this.zoom(records[0], this.body.id);
@@ -766,7 +769,7 @@ Gemma.VisualizationWithThumbsWindow = Ext.extend(Ext.Window, {
 
 		this.dv.store.load({
 					params : params,
-					callback : this.loadcallback,
+					callback : this.loadcallback.createDelegate(this),
 					scope : this
 				});
 
@@ -906,6 +909,13 @@ Gemma.VisualizationWithThumbsWindow = Ext.extend(Ext.Window, {
 
 				}, this);
 
+		this.dv.getStore().on('loadexception', function() {
+					Ext.Msg.alert("No data", "Sorry, no data were available", function() {
+								this.close();
+								this.destroy();
+							}.createDelegate(this));
+				}, this);
+
 		this.dv.on('selectionchange', function(dv, selections) {
 					if (selections.length > 0) {
 						var record = dv.getRecord(selections[0]);
@@ -1010,6 +1020,8 @@ Gemma.VisualizationStore = function(config) {
 			}, this.record);
 
 	Gemma.VisualizationStore.superclass.constructor.call(this, config);
+
+	this.relayEvents(this.proxy, ['loadexception']);
 
 };
 
