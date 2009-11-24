@@ -930,6 +930,10 @@ public class DEDVController {
                 result.put( e, new HashMap<Gene, Collection<DoubleVectorValueObject>>() );
             }
             Map<Gene, Collection<DoubleVectorValueObject>> innerMap = result.get( e );
+            
+            if (v.getGenes() == null || v.getGenes().isEmpty())
+                continue;
+            
             for ( Gene g : v.getGenes() ) {
                 if ( !innerMap.containsKey( g ) ) {
                     innerMap.put( g, new HashSet<DoubleVectorValueObject>() );
