@@ -30,6 +30,7 @@
 				<ref local="expressionExperimentReportTrigger" />
 				<ref local="whatsNewTrigger" />
 				<ref local="gene2CsUpdateTrigger" />
+				<ref local="viewTrigger" />
 			</list>
 		</property>
 	</bean>
@@ -82,6 +83,15 @@
 			<value>0 40 0 ? * *</value><!-- daily at 00:40 (should only update if it needs to) -->
 		</property>
 	</bean>
+	
+	<bean id="viewTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
+		<property name="jobDetail">
+			<ref bean="viewJobDetail" />
+		</property>
+		<property name="cronExpression">
+			<value>0 15 1 ? * MON</value><!-- Every Saturday at 1:15 am -->
+		</property>
+	</bean>
 
 
 	<!-- Job details -->
@@ -129,6 +139,15 @@
 		<property name="concurrent" value="false" />
 		<property name="targetMethod">
 			<value>updateGene2CsEntries</value>
+		</property>
+	</bean>
+	<bean id="viewJobDetail" class="ubic.gemma.security.authentication.SecureMethodInvokingJobDetailFactoryBean">
+		<property name="targetObject">
+			<ref bean="databaseViewGenerator" />
+		</property>
+		<property name="concurrent" value="false" />
+		<property name="targetMethod">
+			<value>runAll</value>
 		</property>
 	</bean>
 </beans>

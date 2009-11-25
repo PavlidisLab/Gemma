@@ -1389,7 +1389,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
             Hibernate.initialize( ba );
             Hibernate.initialize( ba.getSamplesUsed() );
             for ( BioMaterial bm : ba.getSamplesUsed() ) {
-                session.lock( bm, LockMode.NONE );
+                // session.lock( bm, LockMode.NONE );
                 Hibernate.initialize( bm );
                 // FIXME this often causes a "collection is not associated with any session" error ... but if we don't
                 // thaw it we get lazy exceptions later.
