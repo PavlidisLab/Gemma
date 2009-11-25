@@ -190,7 +190,7 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
         /*
          * Allow security settings (authorization etc) in a given context to be passed into spawned threads
          */
-        SecurityContextHolder.setStrategyName( SecurityContextHolder.MODE_INHERITABLETHREADLOCAL );
+        SecurityContextHolder.setStrategyName( SecurityContextHolder.MODE_GLOBAL );
 
         ManualAuthenticationService manAuthentication = ( ManualAuthenticationService ) ctx
                 .getBean( "manualAuthenticationService" );
