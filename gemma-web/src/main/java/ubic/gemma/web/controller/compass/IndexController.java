@@ -18,6 +18,7 @@
  */
 package ubic.gemma.web.controller.compass;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import ubic.gemma.grid.javaspaces.task.index.IndexerTask;
 import ubic.gemma.grid.javaspaces.task.index.IndexerTaskCommand;
@@ -37,6 +38,7 @@ import ubic.gemma.search.IndexService;
 @Controller
 public class IndexController {
 
+    @Autowired
     private IndexService indexService;
 
     /**
