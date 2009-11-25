@@ -197,6 +197,8 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
         if ( hasOption( 'u' ) && hasOption( 'p' ) ) {
             username = getOptionValue( 'u' );
             password = getOptionValue( 'p' );
+            
+            log.info("Trying to athenticate with username = " + username + "    and password = " + password );
 
             if ( StringUtils.isBlank( username ) ) {
                 System.err.println( "Not authenticated. Username was blank" );
