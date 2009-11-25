@@ -38,7 +38,7 @@
 		</property>
 		<property name="businessInterface">
 			<value>
-				ubic.gemma.grid.javaspaces.expression.experiment.ExpressionExperimentLoadTask
+				ubic.gemma.grid.javaspaces.task.expression.experiment.ExpressionExperimentLoadTask
 			</value>
 		</property>
 	</bean>
@@ -50,7 +50,7 @@
 		</property>
 		<property name="businessInterface">
 			<value>
-				ubic.gemma.grid.javaspaces.index.IndexerTask
+				ubic.gemma.grid.javaspaces.task.index.IndexerTask
 			</value>
 		</property>
 	</bean>
@@ -64,7 +64,7 @@
 		</property>
 		<property name="businessInterface">
 			<value>
-				ubic.gemma.grid.javaspaces.expression.experiment.ExpressionExperimentReportTask
+				ubic.gemma.grid.javaspaces.task.expression.experiment.ExpressionExperimentReportTask
 			</value>
 		</property>
 	</bean>
@@ -77,7 +77,7 @@
 		</property>
 		<property name="businessInterface">
 			<value>
-				ubic.gemma.grid.javaspaces.diff.DifferentialExpressionAnalysisTask
+				ubic.gemma.grid.javaspaces.task.diff.DifferentialExpressionAnalysisTask
 			</value>
 		</property>
 	</bean>
@@ -90,7 +90,7 @@
 		</property>
 		<property name="businessInterface">
 			<value>
-				ubic.gemma.grid.javaspaces.analysis.preprocess.ProcessedExpressionDataVectorCreateTask
+				ubic.gemma.grid.javaspaces.task.analysis.preprocess.ProcessedExpressionDataVectorCreateTask
 			</value>
 		</property>
 	</bean>
@@ -102,7 +102,7 @@
 		</property>
 		<property name="businessInterface">
 			<value>
-				ubic.gemma.grid.javaspaces.analysis.preprocess.TwoChannelMissingValueTask
+				ubic.gemma.grid.javaspaces.task.analysis.preprocess.TwoChannelMissingValueTask
 			</value>
 		</property>
 	</bean>
@@ -114,7 +114,7 @@
 		</property>
 		<property name="businessInterface">
 			<value>
-				ubic.gemma.grid.javaspaces.analysis.coexpression.links.LinkAnalysisTask
+				ubic.gemma.grid.javaspaces.task.analysis.coexpression.links.LinkAnalysisTask
 			</value>
 		</property>
 	</bean>
@@ -126,7 +126,7 @@
 		</property>
 		<property name="businessInterface">
 			<value>
-				ubic.gemma.grid.javaspaces.expression.arrayDesign.ArrayDesignProbeMapperTask
+				ubic.gemma.grid.javaspaces.task.expression.arrayDesign.ArrayDesignProbeMapperTask
 			</value>
 		</property>
 	</bean>
@@ -138,7 +138,7 @@
 		</property>
 		<property name="businessInterface">
 			<value>
-				ubic.gemma.grid.javaspaces.analysis.sequence.ArrayDesignRepeatScanTask
+				ubic.gemma.grid.javaspaces.task.analysis.sequence.ArrayDesignRepeatScanTask
 			</value>
 		</property>
 	</bean>
