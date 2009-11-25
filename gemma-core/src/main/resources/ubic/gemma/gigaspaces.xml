@@ -119,6 +119,7 @@
 		</property>
 	</bean>
 
+
 	<bean id="arrayDesignProbeMapperWorker" class="ubic.gemma.grid.javaspaces.CustomDelegatingWorker" singleton="false">
 		<property name="javaSpaceTemplate" ref="gigaspacesTemplate" />
 		<property name="delegate">
