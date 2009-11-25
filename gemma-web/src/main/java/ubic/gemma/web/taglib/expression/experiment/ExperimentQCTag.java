@@ -119,7 +119,7 @@ public class ExperimentQCTag extends TagSupport {
         if ( hasCorrMatFile ) {
 
             buf
-                    .append( "<a target=\"_blank\" title=\"Click for larger version (opens in new window)\" href=\"visualizeCorrMat.html?id="
+                    .append( "<td valign='top'><a target=\"_blank\" title=\"Click for larger version (opens in new window)\" href=\"visualizeCorrMat.html?id="
                             + this.eeid
                             + "&size=large\"><img src=\"visualizeCorrMat.html?id="
                             + this.eeid
@@ -138,20 +138,20 @@ public class ExperimentQCTag extends TagSupport {
 
             buf.append( "</ul></td>" );
         } else {
-            buf.append( "<td>Not available</td>" );
+            buf.append( "<td align='center' valign='top'>Not available</td>" );
         }
 
         if ( hasCorrDistFile ) {
-            buf.append( " <img alt='Image unavailable' src=\"visualizeProbeCorrDist.html?id=" + this.eeid
+            buf.append( " <td valign='top'><img alt='Correlation distribution' src=\"visualizeProbeCorrDist.html?id=" + this.eeid
                     + "\" /></td>" );
         } else {
-            buf.append( "<td>Not available</td>" );
+            buf.append( "<td align='center' valign='top'>Not available</td>" );
         }
 
         if ( hasPvalueDistFile ) {
-            buf.append( " <img alt='Image unavailable' src=\"visualizePvalueDist.html?id=" + this.eeid + "\" /></td>" );
+            buf.append( "<td><img alt='Pvalue ditribution' src=\"visualizePvalueDist.html?id=" + this.eeid + "\" /></td>" );
         } else {
-            buf.append( "<td>Not available</td>" );
+            buf.append( "<td align='center' valign='top'>Not available</td>" );
         }
 
         buf.append( "</tr></table></div>" );
