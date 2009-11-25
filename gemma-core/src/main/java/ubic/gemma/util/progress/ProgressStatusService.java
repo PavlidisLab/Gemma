@@ -79,7 +79,7 @@ public class ProgressStatusService {
                     statusObjects.add( data );
                 }
             } catch ( InterruptedException e ) {
-
+                  log.error (e);
             }
             return statusObjects;
         }
