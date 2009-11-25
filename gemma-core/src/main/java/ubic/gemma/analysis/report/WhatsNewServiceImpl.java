@@ -40,6 +40,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import ubic.basecode.util.FileTools;
@@ -241,7 +242,13 @@ public class WhatsNewServiceImpl implements InitializingBean, WhatsNewService {
             if ( element != null ) {
                 auditable = ( Auditable ) element.getValue();
             } else {
-                auditable = arrayDesignService.load( object.getId() );
+
+                try {
+                    auditable = arrayDesignService.load( object.getId() );
+                } catch ( AccessDeniedException e ) {
+                    return null;
+                }
+
                 whatsNewCache.put( new Element( object, auditable ) );
             }
 
@@ -250,19 +257,15 @@ public class WhatsNewServiceImpl implements InitializingBean, WhatsNewService {
                 auditable = ( Auditable ) element.getValue();
             } else {
                 // this is slower than loading them all at once but the cache saves even more time.
-                auditable = expressionExperimentService.load( object.getId() );
 
-                if ( auditable == null ) {
+                try {
+                    auditable = expressionExperimentService.load( object.getId() );
+                } catch ( AccessDeniedException e ) {
                     return null;
                 }
 
-                if ( Securable.class.isAssignableFrom( auditable.getClass() ) ) {
-                    boolean isPrivate = securityService.isPrivate( ( Securable ) auditable );
-
-                    /*
-                     * Don't list private experiments is being new.
-                     */
-                    if ( isPrivate ) return null;
+                if ( auditable == null ) {
+                    return null;
                 }
 
                 whatsNewCache.put( new Element( object, auditable ) );
