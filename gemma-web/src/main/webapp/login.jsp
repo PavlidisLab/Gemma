@@ -128,6 +128,12 @@ version: $Id$
 			<strong>Need an account? <a href="<c:url  value='register.html' />">Register</a> </strong>
 		</p>
 
+		<p style='margin-left: 200px; width: 500; padding: 10px'>
+			<strong>Trouble logging in?</strong> Gemma recently underwent some upgrades that required a password rest. You will
+			need to request a new password by clicking on the "
+			<a href="<c:url  value='passwordHint.html' />">Forgot your password</a>" link.
+		</p>
+
 		<div id="login-mask" style=""></div>
 		<div align="center" id="login">
 
