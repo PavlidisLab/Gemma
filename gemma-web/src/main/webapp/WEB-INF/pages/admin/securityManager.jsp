@@ -18,7 +18,7 @@
 	</c:if>
 </spring:bind>
 
-<form method="post" action="<c:url value="/securityManager.html"/>">
+<form method="post" action="<c:url value="/admin/securityManager.html"/>">
 
 	<table>
 
@@ -52,7 +52,7 @@
 			</td>
 			<td>
 				<spring:bind path="securityCommand.shortName">
-					<input type="text" size=10
+					<input type="text" size="100" 
 						name="<c:out value="${status.expression}"/>"
 						value="<c:out value="${status.value}"/>" />
 				</spring:bind>
