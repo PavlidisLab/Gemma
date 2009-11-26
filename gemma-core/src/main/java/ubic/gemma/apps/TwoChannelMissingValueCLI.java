@@ -182,25 +182,6 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
 
     }
 
-    private boolean processForMissingValues( ExpressionExperiment ee ) {
-        Collection<ArrayDesign> arrayDesignsUsed = eeService.getArrayDesignsUsed( ee );
-
-        boolean wasProcessed = false;
-        for ( ArrayDesign design : arrayDesignsUsed ) {
-            TechnologyType tt = design.getTechnologyType();
-            if ( tt == TechnologyType.TWOCOLOR || tt == TechnologyType.DUALMODE ) {
-                log.info( ee + " uses a two-color array design, processing..." );
-                if ( arrayDesignsUsed.size() == 1 ) {
-                    wasProcessed = processExperiment( ee, null ); // save the slower query.
-                } else {
-                    wasProcessed = processExperiment( ee, design );
-                }
-
-            }
-        }
-        return wasProcessed;
-    }
-
     /**
      * @param ee
      * @param ad
@@ -251,5 +232,24 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
         pedvs.computeProcessedExpressionData( ee );
 
         return true;
+    }
+
+    private boolean processForMissingValues( ExpressionExperiment ee ) {
+        Collection<ArrayDesign> arrayDesignsUsed = eeService.getArrayDesignsUsed( ee );
+
+        boolean wasProcessed = false;
+        for ( ArrayDesign design : arrayDesignsUsed ) {
+            TechnologyType tt = design.getTechnologyType();
+            if ( tt == TechnologyType.TWOCOLOR || tt == TechnologyType.DUALMODE ) {
+                log.info( ee + " uses a two-color array design, processing..." );
+                if ( arrayDesignsUsed.size() == 1 ) {
+                    wasProcessed = processExperiment( ee, null ); // save the slower query.
+                } else {
+                    wasProcessed = processExperiment( ee, design );
+                }
+
+            }
+        }
+        return wasProcessed;
     }
 }

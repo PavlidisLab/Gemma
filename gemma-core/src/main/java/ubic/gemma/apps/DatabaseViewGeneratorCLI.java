@@ -30,9 +30,12 @@ import ubic.gemma.util.AbstractSpringAwareCLI;
  */
 public class DatabaseViewGeneratorCLI extends AbstractSpringAwareCLI {
 
-    @Override
-    protected void buildOptions() {
-        super.buildStandardOptions();
+    /**
+     * @param args
+     */
+    public static void main( String[] args ) {
+        DatabaseViewGeneratorCLI o = new DatabaseViewGeneratorCLI();
+        o.doWork( args );
     }
 
     /*
@@ -45,6 +48,11 @@ public class DatabaseViewGeneratorCLI extends AbstractSpringAwareCLI {
     }
 
     @Override
+    protected void buildOptions() {
+        super.buildStandardOptions();
+    }
+
+    @Override
     protected Exception doWork( String[] args ) {
         super.processCommandLine( "DatabaseViewGeneratorCLI", args );
 
@@ -52,14 +60,6 @@ public class DatabaseViewGeneratorCLI extends AbstractSpringAwareCLI {
         v.runAll();
 
         return null;
-    }
-
-    /**
-     * @param args
-     */
-    public static void main( String[] args ) {
-        DatabaseViewGeneratorCLI o = new DatabaseViewGeneratorCLI();
-        o.doWork( args );
     }
 
 }

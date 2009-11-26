@@ -39,8 +39,8 @@ public interface UserService {
      * @param user
      * @param group
      */
-    @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    public void addUserToGroup( User user, UserGroup group );
+    @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" /* this applies to the first arg only! */})
+    public void addUserToGroup( UserGroup group, User user );
 
     /**
      * @param user
@@ -93,6 +93,9 @@ public interface UserService {
      */
     @Secured( { "GROUP_USER", "AFTER_ACL_READ" })
     public UserGroup findGroupByName( String name );
+
+    @Secured("GROUP_USER")
+    public boolean groupExists( String name );
 
     /**
      * @param usernName

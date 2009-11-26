@@ -44,9 +44,13 @@ public class OwlOntologyLoadCli extends AbstractCLI {
     private File file;
     private boolean force;
 
+    @Override
+    public String getShortDesc() {
+        return "Load an Ontology into the persistent store";
+    }
+
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.util.AbstractCLI#buildOptions()
      */
     @SuppressWarnings("static-access")
@@ -64,7 +68,6 @@ public class OwlOntologyLoadCli extends AbstractCLI {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.util.AbstractCLI#doWork(java.lang.String[])
      */
     @Override
@@ -110,7 +113,6 @@ public class OwlOntologyLoadCli extends AbstractCLI {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.util.AbstractCLI#processOptions()
      */
     @Override
@@ -119,11 +121,6 @@ public class OwlOntologyLoadCli extends AbstractCLI {
         this.force = this.hasOption( 'f' );
 
         if ( this.getOptionValue( 'l' ) != null ) this.file = new File( this.getOptionValue( 'l' ) );
-    }
-
-    @Override
-    public String getShortDesc() {
-        return "Load an Ontology into the persistent store";
     }
 
 }

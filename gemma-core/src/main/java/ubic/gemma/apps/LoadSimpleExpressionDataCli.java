@@ -79,9 +79,28 @@ public class LoadSimpleExpressionDataCli extends AbstractSpringAwareCLI {
     // final static int IMAGECLONEI = QSCALEI + 1;
     final static int TOTALFIELDS = TECHNOLOGYTYPEI + 1;
 
+    /**
+     * @param args
+     */
+    public static void main( String[] args ) {
+        LoadSimpleExpressionDataCli p = new LoadSimpleExpressionDataCli();
+        StopWatch watch = new StopWatch();
+        watch.start();
+        try {
+            Exception ex = p.doWork( args );
+            if ( ex != null ) {
+                ex.printStackTrace();
+            }
+            watch.stop();
+            log.info( watch.getTime() );
+        } catch ( Exception e ) {
+            log.fatal( e, e );
+            throw new RuntimeException( e );
+        }
+    }
+
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.util.AbstractCLI#buildOptions()
      */
     @SuppressWarnings("static-access")
@@ -97,6 +116,55 @@ public class LoadSimpleExpressionDataCli extends AbstractSpringAwareCLI {
 
     }
 
+    /*
+     * (non-Javadoc)
+     * @see ubic.gemma.util.AbstractCLI#doWork(java.lang.String[])
+     */
+    @Override
+    protected Exception doWork( String[] args ) {
+        Exception err = processCommandLine( "Expression Data loader", args );
+        if ( err != null ) {
+            return err;
+        }
+        try {
+            this.eeLoaderService = ( SimpleExpressionDataLoaderService ) this
+                    .getBean( "simpleExpressionDataLoaderService" );
+            this.eeService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
+            this.adService = ( ArrayDesignService ) this.getBean( "arrayDesignService" );
+            this.taxonService = ( TaxonService ) this.getBean( "taxonService" );
+            if ( this.fileName != null ) {
+                log.info( "Loading experiments from " + this.fileName );
+                InputStream is = new FileInputStream( new File( this.dirName, this.fileName ) );
+                BufferedReader br = new BufferedReader( new InputStreamReader( is ) );
+                String conf = null;
+                while ( ( conf = br.readLine() ) != null ) {
+
+                    if ( StringUtils.isBlank( conf ) ) {
+                        continue;
+                    }
+
+                    /* Comments in the list file */
+                    if ( conf.startsWith( "#" ) ) continue;
+
+                    String expName = conf.split( SPLITCHAR )[0];
+
+                    try {
+                        this.loadExperiment( conf );
+                        log.info( "Successfully Loaded " + expName );
+                        successObjects.add( expName );
+                    } catch ( Exception e ) {
+                        errorObjects.add( expName + ": " + e.getMessage() );
+                        log.error( "Failure loading " + expName, e );
+                    }
+                }
+                summarizeProcessing();
+            }
+        } catch ( IOException e ) {
+            return e;
+        }
+        return null;
+    }
+
     @Override
     protected void processOptions() {
         super.processOptions();
@@ -110,69 +178,12 @@ public class LoadSimpleExpressionDataCli extends AbstractSpringAwareCLI {
     }
 
     /**
-     * @param configurationLine
-     * @return
-     * @throws Exception
-     */
-    private void loadExperiment( String configurationLine ) throws Exception {
-        int i = 0;
-        String fields[] = configurationLine.split( SPLITCHAR );
-        if ( fields.length != TOTALFIELDS ) {
-            throw new IllegalArgumentException( "Field Missing Got[" + fields.length + "]: " + configurationLine );
-        }
-        for ( i = 0; i < fields.length; i++ )
-            fields[i] = StringUtils.trim( fields[i] );
-
-        SimpleExpressionExperimentMetaData metaData = new SimpleExpressionExperimentMetaData();
-
-        String shortName = fields[SHORTNAMEI];
-
-        ExpressionExperiment existing = eeService.findByShortName( shortName );
-
-        if ( existing != null ) {
-            throw new IllegalArgumentException( "There is already an experiment with short name " + shortName
-                    + "; please choose something unique." );
-        }
-
-        metaData.setName( fields[NAMEI] );
-
-        metaData.setShortName( shortName );
-        metaData.setDescription( fields[DESCRIPTIONI] );
-
-        configureArrayDesigns( fields, metaData );
-
-        configureTaxon( fields, metaData );
-
-        InputStream data = new FileInputStream( new File( this.dirName, fields[DATAFILEI] ) );
-
-        metaData.setSourceUrl( fields[SOURCEI] );
-
-        String pubMedId = fields[PUBMEDI];
-        if ( StringUtils.isNotBlank( pubMedId ) ) {
-            metaData.setPubMedId( Integer.parseInt( pubMedId ) );
-        }
-
-        configureQuantitationType( fields, metaData );
-
-        ExpressionExperiment ee = eeLoaderService.load( metaData, data );
-
-        eeService.thawLite( ee );
-
-    }
-
-    /**
      * @param fields
-     * @param metaData
      */
-    private void configureTaxon( String[] fields, SimpleExpressionExperimentMetaData metaData ) {
-        Taxon taxon = Taxon.Factory.newInstance();
-        taxon.setScientificName( fields[SPECIESI] );
-        Taxon existing = taxonService.find( taxon );
-        if ( existing == null ) {
-            throw new IllegalArgumentException( "There is no taxon with scientific name " + fields[SPECIESI]
-                    + " in the system; please add it first before loading data." );
+    private void checkForArrayDesignName( String[] fields ) {
+        if ( StringUtils.isBlank( fields[ARRAYDESIGNNAMEI] ) ) {
+            throw new IllegalArgumentException( "Array design must be given if array design is new." );
         }
-        metaData.setTaxon( taxon );
     }
 
     /**
@@ -230,27 +241,6 @@ public class LoadSimpleExpressionDataCli extends AbstractSpringAwareCLI {
 
     /**
      * @param fields
-     * @return
-     */
-    private ArrayDesign getNewArrayDesignFromName( String[] fields ) {
-        checkForArrayDesignName( fields );
-        ArrayDesign ad = ArrayDesign.Factory.newInstance();
-        ad.setName( fields[ARRAYDESIGNNAMEI] );
-        ad.setShortName( ad.getName() );
-        return ad;
-    }
-
-    /**
-     * @param fields
-     */
-    private void checkForArrayDesignName( String[] fields ) {
-        if ( StringUtils.isBlank( fields[ARRAYDESIGNNAMEI] ) ) {
-            throw new IllegalArgumentException( "Array design must be given if array design is new." );
-        }
-    }
-
-    /**
-     * @param fields
      * @param metaData
      */
     private void configureQuantitationType( String[] fields, SimpleExpressionExperimentMetaData metaData ) {
@@ -265,74 +255,82 @@ public class LoadSimpleExpressionDataCli extends AbstractSpringAwareCLI {
         metaData.setScale( sType );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.util.AbstractCLI#doWork(java.lang.String[])
+    /**
+     * @param fields
+     * @param metaData
      */
-    @Override
-    protected Exception doWork( String[] args ) {
-        Exception err = processCommandLine( "Expression Data loader", args );
-        if ( err != null ) {
-            return err;
+    private void configureTaxon( String[] fields, SimpleExpressionExperimentMetaData metaData ) {
+        Taxon taxon = Taxon.Factory.newInstance();
+        taxon.setScientificName( fields[SPECIESI] );
+        Taxon existing = taxonService.find( taxon );
+        if ( existing == null ) {
+            throw new IllegalArgumentException( "There is no taxon with scientific name " + fields[SPECIESI]
+                    + " in the system; please add it first before loading data." );
         }
-        try {
-            this.eeLoaderService = ( SimpleExpressionDataLoaderService ) this
-                    .getBean( "simpleExpressionDataLoaderService" );
-            this.eeService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
-            this.adService = ( ArrayDesignService ) this.getBean( "arrayDesignService" );
-            this.taxonService = ( TaxonService ) this.getBean( "taxonService" );
-            if ( this.fileName != null ) {
-                log.info( "Loading experiments from " + this.fileName );
-                InputStream is = new FileInputStream( new File( this.dirName, this.fileName ) );
-                BufferedReader br = new BufferedReader( new InputStreamReader( is ) );
-                String conf = null;
-                while ( ( conf = br.readLine() ) != null ) {
-
-                    if ( StringUtils.isBlank( conf ) ) {
-                        continue;
-                    }
-
-                    /* Comments in the list file */
-                    if ( conf.startsWith( "#" ) ) continue;
-
-                    String expName = conf.split( SPLITCHAR )[0];
-
-                    try {
-                        this.loadExperiment( conf );
-                        log.info( "Successfully Loaded " + expName );
-                        successObjects.add( expName );
-                    } catch ( Exception e ) {
-                        errorObjects.add( expName + ": " + e.getMessage() );
-                        log.error( "Failure loading " + expName, e );
-                    }
-                }
-                summarizeProcessing();
-            }
-        } catch ( IOException e ) {
-            return e;
-        }
-        return null;
+        metaData.setTaxon( taxon );
     }
 
     /**
-     * @param args
+     * @param fields
+     * @return
      */
-    public static void main( String[] args ) {
-        LoadSimpleExpressionDataCli p = new LoadSimpleExpressionDataCli();
-        StopWatch watch = new StopWatch();
-        watch.start();
-        try {
-            Exception ex = p.doWork( args );
-            if ( ex != null ) {
-                ex.printStackTrace();
-            }
-            watch.stop();
-            log.info( watch.getTime() );
-        } catch ( Exception e ) {
-            log.fatal( e, e );
-            throw new RuntimeException( e );
+    private ArrayDesign getNewArrayDesignFromName( String[] fields ) {
+        checkForArrayDesignName( fields );
+        ArrayDesign ad = ArrayDesign.Factory.newInstance();
+        ad.setName( fields[ARRAYDESIGNNAMEI] );
+        ad.setShortName( ad.getName() );
+        return ad;
+    }
+
+    /**
+     * @param configurationLine
+     * @return
+     * @throws Exception
+     */
+    private void loadExperiment( String configurationLine ) throws Exception {
+        int i = 0;
+        String fields[] = configurationLine.split( SPLITCHAR );
+        if ( fields.length != TOTALFIELDS ) {
+            throw new IllegalArgumentException( "Field Missing Got[" + fields.length + "]: " + configurationLine );
         }
+        for ( i = 0; i < fields.length; i++ )
+            fields[i] = StringUtils.trim( fields[i] );
+
+        SimpleExpressionExperimentMetaData metaData = new SimpleExpressionExperimentMetaData();
+
+        String shortName = fields[SHORTNAMEI];
+
+        ExpressionExperiment existing = eeService.findByShortName( shortName );
+
+        if ( existing != null ) {
+            throw new IllegalArgumentException( "There is already an experiment with short name " + shortName
+                    + "; please choose something unique." );
+        }
+
+        metaData.setName( fields[NAMEI] );
+
+        metaData.setShortName( shortName );
+        metaData.setDescription( fields[DESCRIPTIONI] );
+
+        configureArrayDesigns( fields, metaData );
+
+        configureTaxon( fields, metaData );
+
+        InputStream data = new FileInputStream( new File( this.dirName, fields[DATAFILEI] ) );
+
+        metaData.setSourceUrl( fields[SOURCEI] );
+
+        String pubMedId = fields[PUBMEDI];
+        if ( StringUtils.isNotBlank( pubMedId ) ) {
+            metaData.setPubMedId( Integer.parseInt( pubMedId ) );
+        }
+
+        configureQuantitationType( fields, metaData );
+
+        ExpressionExperiment ee = eeLoaderService.load( metaData, data );
+
+        eeService.thawLite( ee );
+
     }
 
 }

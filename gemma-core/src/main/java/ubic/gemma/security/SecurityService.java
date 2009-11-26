@@ -26,16 +26,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.Vector;
 
+import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.access.vote.AuthenticatedVoter;
 import org.springframework.security.acls.domain.BasePermission;
 import org.springframework.security.acls.domain.GrantedAuthoritySid;
 import org.springframework.security.acls.domain.ObjectIdentityImpl;
 import org.springframework.security.acls.domain.ObjectIdentityRetrievalStrategyImpl;
+import org.springframework.security.acls.domain.PrincipalSid;
 import org.springframework.security.acls.model.AccessControlEntry;
 import org.springframework.security.acls.model.Acl;
 import org.springframework.security.acls.model.MutableAcl;
@@ -55,6 +58,7 @@ import org.springframework.security.core.authority.GrantedAuthorityImpl;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.security.authentication.UserManager;
@@ -62,6 +66,12 @@ import ubic.gemma.util.AuthorityConstants;
 
 /**
  * @author keshav
+ * @author paul
+ * @version $Id$
+ */
+/**
+ * TODO Document Me
+ * 
  * @author paul
  * @version $Id$
  */
@@ -128,12 +138,12 @@ public class SecurityService {
         return authentication;
     }
 
+    @Autowired
+    private MutableAclService aclService;
+
     private Log log = LogFactory.getLog( SecurityService.class );
 
     private ObjectIdentityRetrievalStrategy objectIdentityRetrievalStrategy = new ObjectIdentityRetrievalStrategyImpl();
-
-    @Autowired
-    private MutableAclService aclService;
 
     @Autowired
     private SidRetrievalStrategy sidRetrievalStrategy;
@@ -152,6 +162,43 @@ public class SecurityService {
             result.put( s, p );
         }
         return result;
+    }
+
+    /**
+     * If the group already exists, an exception will be thrown.
+     * 
+     * @param groupName
+     */
+    @Transactional
+    public void createGroup( String groupName ) {
+
+        /*
+         * Nice if we can get around this uniqueness constraint...but I guess it's not easy.
+         */
+        if ( userManager.groupExists( groupName ) ) {
+            throw new IllegalArgumentException( "A group already exists with that name" );
+        }
+
+        /*
+         * We do make the groupAuthority unique.
+         */
+        String groupAuthority = groupName.toUpperCase() + "_"
+                + RandomStringUtils.randomAlphanumeric( 32 ).toUpperCase();
+
+        List<GrantedAuthority> auths = new ArrayList<GrantedAuthority>();
+        auths.add( new GrantedAuthorityImpl( groupAuthority ) );
+
+        this.userManager.createGroup( groupName, auths );
+        addUserToGroup( userManager.getCurrentUsername(), groupName );
+
+    }
+
+    /**
+     * @param userName
+     * @param groupName
+     */
+    public void addUserToGroup( String userName, String groupName ) {
+        this.userManager.addUserToGroup( userName, groupName );
     }
 
     /**
@@ -202,12 +249,17 @@ public class SecurityService {
     /**
      * @param s
      * @param userName
-     * @return
+     * @return true if the user has WRITE permissions or ADMIN
      */
     @Secured("ACL_SECURABLE_READ")
     public boolean isEditableByUser( Securable s, String userName ) {
         List<Permission> requiredPermissions = new ArrayList<Permission>();
         requiredPermissions.add( BasePermission.WRITE );
+        if ( hasPermission( s, requiredPermissions, userName ) ) {
+            return true;
+        }
+
+        requiredPermissions.clear();
         requiredPermissions.add( BasePermission.ADMINISTRATION );
         return hasPermission( s, requiredPermissions, userName );
     }
@@ -269,12 +321,17 @@ public class SecurityService {
     /**
      * @param s
      * @param userName
-     * @return true if the given user can read the securable, false otherwise.
+     * @return true if the given user can read the securable, false otherwise. (READ or ADMINISTRATION required)
      */
     @Secured( { "ACL_SECURABLE_READ" })
     public boolean isViewableByUser( Securable s, String userName ) {
         List<Permission> requiredPermissions = new ArrayList<Permission>();
         requiredPermissions.add( BasePermission.READ );
+        if ( hasPermission( s, requiredPermissions, userName ) ) {
+            return true;
+        }
+
+        requiredPermissions.clear();
         requiredPermissions.add( BasePermission.ADMINISTRATION );
         return hasPermission( s, requiredPermissions, userName );
     }
@@ -294,6 +351,7 @@ public class SecurityService {
      * @param object
      */
     @Secured("ACL_SECURABLE_EDIT")
+    @Transactional
     public void makePrivate( Securable object ) {
         if ( object == null ) {
             return;
@@ -307,36 +365,9 @@ public class SecurityService {
         /*
          * Remove ACE for IS_AUTHENTICATED_ANOYMOUSLY, if it's there.
          */
+        String authorityToRemove = AuthorityConstants.IS_AUTHENTICATED_ANONYMOUSLY;
 
-        MutableAcl acl = getAcl( object );
-
-        if ( acl == null ) {
-            throw new IllegalArgumentException( "makePrivate is only valid for objects that have an ACL" );
-        }
-
-        List<Integer> toremove = new Vector<Integer>();
-        for ( int i = 0; i < acl.getEntries().size(); i++ ) {
-            AccessControlEntry entry = acl.getEntries().get( i );
-
-            Sid sid = entry.getSid();
-            if ( sid instanceof GrantedAuthoritySid ) {
-                if ( ( ( GrantedAuthoritySid ) sid ).getGrantedAuthority().equals(
-                        AuthorityConstants.IS_AUTHENTICATED_ANONYMOUSLY ) ) {
-                    toremove.add( i );
-                }
-            }
-        }
-
-        if ( toremove.size() > 1 ) {
-            // problem is that as you delete them, the list changes size... so the indexes don't match...
-            throw new UnsupportedOperationException( "Can't deal with case of more than one anonymous ACE to remove" );
-        }
-
-        for ( Integer j : toremove ) {
-            acl.deleteAce( j );
-        }
-
-        aclService.updateAcl( acl );
+        removeGrantedAuthority( object, BasePermission.READ, authorityToRemove );
 
         if ( isPublic( object ) ) {
             throw new IllegalStateException( "Failed to make object private: " + object );
@@ -347,6 +378,7 @@ public class SecurityService {
     /**
      * @param objs
      */
+    @Transactional
     public void makePublic( Collection<? extends Securable> objs ) {
         for ( Securable s : objs ) {
             makePublic( s );
@@ -359,6 +391,7 @@ public class SecurityService {
      * @param object
      */
     @Secured("ACL_SECURABLE_EDIT")
+    @Transactional
     public void makePublic( Securable object ) {
 
         if ( object == null ) {
@@ -389,26 +422,205 @@ public class SecurityService {
             throw new IllegalStateException( "Failed to make object public: " + object );
         }
 
+    }
 
+    /**
+     * Administrative method to allow a user to get access to an object. This is useful for cases where a data set is
+     * loaded by admin but we need to hand it off to a user.
+     * 
+     * @param s
+     * @param userName
+     */
+    @Secured("GROUP_ADMIN")
+    @Transactional
+    public void makeOwnedByUser( Securable s, String userName ) {
+        MutableAcl acl = getAcl( s );
+        acl.setOwner( new PrincipalSid( userName ) );
+        aclService.updateAcl( acl );
+
+        /*
+         * FIXME: I don't know if these are necessary if you are the owner.
+         */
+        addPrincipalAuthority( s, BasePermission.WRITE, userName );
+        addPrincipalAuthority( s, BasePermission.READ, userName );
+    }
+
+    /**
+     * Adds read permission.
+     * 
+     * @param s
+     * @param groupName
+     * @throws AccessDeniedException
+     */
+    @Secured("ACL_SECURABLE_EDIT")
+    @Transactional
+    public void makeReadableByGroup( Securable s, String groupName ) throws AccessDeniedException {
+        Collection<String> groups = checkForGroupAccessByCurrentuser( groupName );
+
+        if ( !groups.contains( groupName ) ) {
+            throw new AccessDeniedException( "User doesn't have access to that group" );
+        }
+
+        addGroupAuthority( s, BasePermission.READ, groupName );
+
+    }
+
+    /**
+     * Remove read permissions; also removes write permissions.
+     * 
+     * @param s
+     * @param groupName, with or without GROUP_
+     * @throws AccessDeniedException
+     */
+    @Secured("ACL_SECURABLE_EDIT")
+    @Transactional
+    public void makeUnreadableByGroup( Securable s, String groupName ) throws AccessDeniedException {
+
+        Collection<String> groups = checkForGroupAccessByCurrentuser( groupName );
+
+        if ( !groups.contains( groupName ) ) {
+            throw new AccessDeniedException( "User doesn't have access to that group" );
+        }
+
+        List<GrantedAuthority> groupAuthorities = userManager.findGroupAuthorities( groupName );
+
+        if ( groupAuthorities == null || groupAuthorities.isEmpty() ) {
+            throw new IllegalStateException( "Group has no authorities" );
+        }
+
+        if ( groupAuthorities.size() > 1 ) {
+            throw new UnsupportedOperationException( "Sorry, groups can only have a single authority" );
+        }
+
+        GrantedAuthority ga = groupAuthorities.get( 0 );
+
+        String authority = ga.getAuthority();
+
+        removeGrantedAuthority( s, BasePermission.READ, userManager.getRolePrefix() + authority );
+        removeGrantedAuthority( s, BasePermission.WRITE, userManager.getRolePrefix() + authority );
+    }
+
+    /**
+     * Remove write permissions. Leaves read permissions, if present.
+     * 
+     * @param s
+     * @param groupName
+     * @throws AccessDeniedException
+     */
+    @Secured("ACL_SECURABLE_EDIT")
+    @Transactional
+    public void makeUnwriteableByGroup( Securable s, String groupName ) throws AccessDeniedException {
+
+        Collection<String> groups = checkForGroupAccessByCurrentuser( groupName );
+
+        if ( !groups.contains( groupName ) ) {
+            throw new AccessDeniedException( "User doesn't have access to that group" );
+        }
+
+        removeGrantedAuthority( s, BasePermission.WRITE, groupName );
+    }
+
+    /**
+     * Adds write (and read) permissions.
+     * 
+     * @param s
+     * @param groupName
+     * @throws AccessDeniedException
+     */
+    @Secured("ACL_SECURABLE_EDIT")
+    @Transactional
+    public void makeWriteableByGroup( Securable s, String groupName ) throws AccessDeniedException {
+        Collection<String> groups = checkForGroupAccessByCurrentuser( groupName );
+
+        if ( !groups.contains( groupName ) ) {
+            throw new AccessDeniedException( "User doesn't have access to that group" );
+        }
+
+        addGroupAuthority( s, BasePermission.WRITE, groupName );
+        addGroupAuthority( s, BasePermission.READ, groupName );
     }
 
     /**
      * @param s
      * @return list of userNames of users who can read the given securable.
      */
-    @Secured( { "ACL_SECURABLE_READ" })
+    @Secured("ACL_SECURABLE_EDIT")
     public Collection<String> readableBy( Securable s ) {
         Collection<String> allUsers = userManager.findAllUsers();
 
         Collection<String> result = new HashSet<String>();
 
         for ( String u : allUsers ) {
-            if ( isEditableByUser( s, u ) ) {
+            if ( isViewableByUser( s, u ) ) {
                 result.add( u );
             }
         }
 
         return result;
+    }
+
+    /**
+     * Provide permission to the given group on the given securable.
+     * 
+     * @param s
+     * @param permission
+     * @param groupName e.g. "GROUP_JOESLAB"
+     */
+    private void addGroupAuthority( Securable s, Permission permission, String groupName ) {
+        MutableAcl acl = getAcl( s );
+
+        List<GrantedAuthority> groupAuthorities = userManager.findGroupAuthorities( groupName );
+
+        if ( groupAuthorities == null || groupAuthorities.isEmpty() ) {
+            throw new IllegalStateException( "Group has no authorities" );
+        }
+
+        if ( groupAuthorities.size() > 1 ) {
+            throw new UnsupportedOperationException( "Sorry, groups can only have a single authority" );
+        }
+
+        GrantedAuthority ga = groupAuthorities.get( 0 );
+
+        acl.insertAce( acl.getEntries().size(), permission,
+                new GrantedAuthoritySid( userManager.getRolePrefix() + ga ), true );
+        aclService.updateAcl( acl );
+    }
+
+    /**
+     * @param s
+     * @param permission
+     * @param principal i.e. username
+     */
+    private void addPrincipalAuthority( Securable s, Permission permission, String principal ) {
+        MutableAcl acl = getAcl( s );
+        acl.insertAce( acl.getEntries().size(), permission, new PrincipalSid( principal ), true );
+        aclService.updateAcl( acl );
+    }
+
+    /**
+     * @param groupName
+     * @return
+     */
+    private Collection<String> checkForGroupAccessByCurrentuser( String groupName ) {
+        if ( groupName.equals( AuthorityConstants.ADMIN_GROUP ) ) {
+            throw new AccessDeniedException( "Attempt to mess with ADMIN privileges denied" );
+        }
+        Collection<String> groups = userManager.findGroupsForUser( userManager.getCurrentUsername() );
+        return groups;
+    }
+
+    /**
+     * @param s
+     * @return
+     */
+    private MutableAcl getAcl( Securable s ) {
+        ObjectIdentity oi = objectIdentityRetrievalStrategy.getObjectIdentity( s );
+
+        try {
+            return ( MutableAcl ) aclService.readAclById( oi );
+        } catch ( NotFoundException e ) {
+            return null;
+        }
     }
 
     /*
@@ -474,13 +686,50 @@ public class SecurityService {
 
     }
 
-    private MutableAcl getAcl( Securable s ) {
-        ObjectIdentity oi = objectIdentityRetrievalStrategy.getObjectIdentity( s );
+    /**
+     * @param s
+     * @param permission
+     * @param authority e.g. "GROUP_JOESLAB"
+     */
+    private void removeGrantedAuthority( Securable object, Permission permission, String authority ) {
+        MutableAcl acl = getAcl( object );
 
-        try {
-            return ( MutableAcl ) aclService.readAclById( oi );
-        } catch ( NotFoundException e ) {
-            return null;
+        if ( acl == null ) {
+            throw new IllegalArgumentException( "makePrivate is only valid for objects that have an ACL" );
+        }
+
+        List<Integer> toremove = new Vector<Integer>();
+        for ( int i = 0; i < acl.getEntries().size(); i++ ) {
+            AccessControlEntry entry = acl.getEntries().get( i );
+
+            if ( !entry.getPermission().equals( permission ) ) {
+                continue;
+            }
+
+            Sid sid = entry.getSid();
+            if ( sid instanceof GrantedAuthoritySid ) {
+
+                if ( ( ( GrantedAuthoritySid ) sid ).getGrantedAuthority().equals( authority ) ) {
+                    toremove.add( i );
+                }
+            }
+        }
+
+        if ( toremove.size() > 1 ) {
+            // problem is that as you delete them, the list changes size... so the indexes don't match...have to update
+            // first.
+            throw new UnsupportedOperationException( "Can't deal with case of more than one ACE to remove" );
+        }
+
+        if ( toremove.isEmpty() ) {
+            log.warn( "No changes, didn't remove: " + authority );
+        } else {
+
+            for ( Integer j : toremove ) {
+                acl.deleteAce( j );
+            }
+
+            aclService.updateAcl( acl );
         }
     }
 

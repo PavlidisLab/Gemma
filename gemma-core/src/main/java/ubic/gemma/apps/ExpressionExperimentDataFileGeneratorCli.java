@@ -39,13 +39,28 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 public class ExpressionExperimentDataFileGeneratorCli extends ExpressionExperimentManipulatingCLI {
 
+    /**
+     * @param args
+     */
+    public static void main( String[] args ) {
+        ExpressionExperimentDataFileGeneratorCli p = new ExpressionExperimentDataFileGeneratorCli();
+        Exception e = p.doWork( args );
+        if ( e != null ) {
+            log.fatal( e, e );
+        }
+    }
+
     private boolean force_write = false;
 
     ExpressionDataFileService expressionDataFileService;
 
     private String DESCRIPTION = "Generate Flat data files (diff expression, co-expression) for a given set of experiments";
 
-    
+    @Override
+    public String getShortDesc() {
+        return DESCRIPTION;
+    }
+
     /*
      * (non-Javadoc)
      * @see ubic.gemma.util.AbstractCLI#buildOptions()
@@ -56,16 +71,12 @@ public class ExpressionExperimentDataFileGeneratorCli extends ExpressionExperime
         super.buildOptions();
 
         Option forceWriteOption = OptionBuilder.hasArg().withArgName( "ForceWrite" ).withDescription(
-                "Overwrites exsiting files if this option is set" )
-                .withLongOpt( "forceWrite" ).create( 'w' );
-
-
+                "Overwrites exsiting files if this option is set" ).withLongOpt( "forceWrite" ).create( 'w' );
 
         addThreadsOption();
         addOption( forceWriteOption );
     }
-    
-    
+
     @Override
     protected Exception doWork( String[] args ) {
 
@@ -80,7 +91,7 @@ public class ExpressionExperimentDataFileGeneratorCli extends ExpressionExperime
         for ( BioAssaySet ee : expressionExperiments ) {
             if ( ee instanceof ExpressionExperiment ) {
                 try {
-                    queue.put( ( ExpressionExperiment ) ee );
+                    queue.put( ee );
                 } catch ( InterruptedException ie ) {
                     log.info( ie );
                 }
@@ -100,6 +111,7 @@ public class ExpressionExperimentDataFileGeneratorCli extends ExpressionExperime
                 this.q = q;
             }
 
+            @Override
             public void run() {
 
                 SecurityContextHolder.setContext( this.context );
@@ -136,6 +148,21 @@ public class ExpressionExperimentDataFileGeneratorCli extends ExpressionExperime
 
     }
 
+    @Override
+    protected void processOptions() {
+        super.processOptions();
+
+        if ( hasOption( THREADS_OPTION ) ) {
+            this.numThreads = this.getIntegerOptionValue( "threads" );
+        }
+
+        if ( hasOption( 'w' ) ) {
+            this.force_write = true;
+        }
+
+        expressionDataFileService = ( ExpressionDataFileService ) this.getBean( "expressionDataFileService" );
+    }
+
     private void processExperiment( ExpressionExperiment ee ) {
 
         try {
@@ -155,37 +182,6 @@ public class ExpressionExperimentDataFileGeneratorCli extends ExpressionExperime
             super.errorObjects.add( "FAILED: for ee: " + ee.getShortName() + " ID= " + ee.getId() + " Error: "
                     + e.getMessage() );
         }
-    }
-
-    /**
-     * @param args
-     */
-    public static void main( String[] args ) {
-        ExpressionExperimentDataFileGeneratorCli p = new ExpressionExperimentDataFileGeneratorCli();
-        Exception e = p.doWork( args );
-        if ( e != null ) {
-            log.fatal( e, e );
-        }
-    }
-
-    @Override
-    protected void processOptions() {
-        super.processOptions();
-
-        if ( hasOption( THREADS_OPTION ) ) {
-            this.numThreads = this.getIntegerOptionValue( "threads" );
-        }
-
-        if ( hasOption( 'w' ) ) {
-            this.force_write = true;
-        }
-        
-        expressionDataFileService = ( ExpressionDataFileService ) this.getBean( "expressionDataFileService" );
-    }
-
-    @Override
-    public String getShortDesc() {
-        return DESCRIPTION;
     }
 
 }

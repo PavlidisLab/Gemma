@@ -41,8 +41,21 @@ import ubic.gemma.util.AbstractSpringAwareCLI;
  */
 public class MirBaseLoader extends AbstractSpringAwareCLI {
 
+    public static void main( String[] args ) {
+        MirBaseLoader p = new MirBaseLoader();
+        try {
+            Exception ex = p.doWork( args );
+            if ( ex != null ) {
+                ex.printStackTrace();
+            }
+        } catch ( Exception e ) {
+            throw new RuntimeException( e );
+        }
+    }
+
     private PersisterHelper persisterHelper;
     private String fileName;
+
     private TaxonService taxonService;
 
     private GeneService geneService;
@@ -61,18 +74,6 @@ public class MirBaseLoader extends AbstractSpringAwareCLI {
 
         addOption( taxonOption );
 
-    }
-
-    public static void main( String[] args ) {
-        MirBaseLoader p = new MirBaseLoader();
-        try {
-            Exception ex = p.doWork( args );
-            if ( ex != null ) {
-                ex.printStackTrace();
-            }
-        } catch ( Exception e ) {
-            throw new RuntimeException( e );
-        }
     }
 
     @Override

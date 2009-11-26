@@ -46,7 +46,6 @@ public class TaxonLoaderCli extends AbstractSpringAwareCLI {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.util.AbstractCLI#buildOptions()
      */
     @Override
@@ -56,7 +55,6 @@ public class TaxonLoaderCli extends AbstractSpringAwareCLI {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.util.AbstractCLI#doWork(java.lang.String[])
      */
     @Override

@@ -37,29 +37,29 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  */
 public class ExpressionDataCorrMatCli extends ExpressionExperimentManipulatingCLI {
 
-    private FilterConfig filterConfig = new FilterConfig();
-    private ExpressionDataMatrixService analysisHelperService = null;
-
-    /**
-     * @param arrayDesign
-     */
-    private void audit( ExpressionExperiment ee, String note, AuditEventType eventType ) {
-        auditTrailService.addUpdateEvent( ee, eventType, "Generated correlation matrix images" );
-        successObjects.add( ee.toString() );
+    public static void main( String[] args ) {
+        try {
+            ExpressionDataCorrMatCli e = new ExpressionDataCorrMatCli();
+            Exception ex = e.doWork( args );
+            log.info( ex, ex );
+        } catch ( Exception e ) {
+            log.info( e, e );
+        }
     }
 
-    /**
-     * @param ee
-     */
-    private void processExperiment( ExpressionExperiment ee ) {
-        if ( !needToRun( ee, null ) ) {
-            return;
-        }
-        ExpressionDataDoubleMatrix matrix = analysisHelperService.getFilteredMatrix( ee, filterConfig );
-        log.info( filterConfig );
-        ExpressionDataSampleCorrelation.process( matrix, ee );
-        audit( ee, "", null );
+    private FilterConfig filterConfig = new FilterConfig();
 
+    private ExpressionDataMatrixService analysisHelperService = null;
+
+    @Override
+    public String getShortDesc() {
+        return "Create visualizations of the sample correlation matrices for expression experiments";
+    }
+
+    @Override
+    protected void buildOptions() {
+        super.buildOptions();
+        this.buildFilterConfigOptions();
     }
 
     @Override
@@ -84,22 +84,6 @@ public class ExpressionDataCorrMatCli extends ExpressionExperimentManipulatingCL
         return null;
     }
 
-    public static void main( String[] args ) {
-        try {
-            ExpressionDataCorrMatCli e = new ExpressionDataCorrMatCli();
-            Exception ex = e.doWork( args );
-            log.info( ex, ex );
-        } catch ( Exception e ) {
-            log.info( e, e );
-        }
-    }
-
-    @Override
-    protected void buildOptions() {
-        super.buildOptions();
-        this.buildFilterConfigOptions();
-    }
-
     @Override
     protected void processOptions() {
         super.processOptions();
@@ -107,16 +91,12 @@ public class ExpressionDataCorrMatCli extends ExpressionExperimentManipulatingCL
         analysisHelperService = ( ExpressionDataMatrixService ) this.getBean( "expressionDataMatrixService" );
     }
 
-    private void getFilterConfigOptions() {
-        if ( hasOption( 'm' ) ) {
-            filterConfig.setMinPresentFraction( Double.parseDouble( getOptionValue( 'm' ) ) );
-        }
-        if ( hasOption( 'l' ) ) {
-            filterConfig.setLowExpressionCut( Double.parseDouble( getOptionValue( 'l' ) ) );
-        }
-        if ( hasOption( "lv" ) ) {
-            filterConfig.setLowVarianceCut( Double.parseDouble( getOptionValue( "lv" ) ) );
-        }
+    /**
+     * @param arrayDesign
+     */
+    private void audit( ExpressionExperiment ee, String note, AuditEventType eventType ) {
+        auditTrailService.addUpdateEvent( ee, eventType, "Generated correlation matrix images" );
+        successObjects.add( ee.toString() );
     }
 
     @SuppressWarnings("static-access")
@@ -137,9 +117,30 @@ public class ExpressionDataCorrMatCli extends ExpressionExperimentManipulatingCL
         addOption( lowVarianceCut );
     }
 
-    @Override
-    public String getShortDesc() {
-        return "Create visualizations of the sample correlation matrices for expression experiments";
+    private void getFilterConfigOptions() {
+        if ( hasOption( 'm' ) ) {
+            filterConfig.setMinPresentFraction( Double.parseDouble( getOptionValue( 'm' ) ) );
+        }
+        if ( hasOption( 'l' ) ) {
+            filterConfig.setLowExpressionCut( Double.parseDouble( getOptionValue( 'l' ) ) );
+        }
+        if ( hasOption( "lv" ) ) {
+            filterConfig.setLowVarianceCut( Double.parseDouble( getOptionValue( "lv" ) ) );
+        }
+    }
+
+    /**
+     * @param ee
+     */
+    private void processExperiment( ExpressionExperiment ee ) {
+        if ( !needToRun( ee, null ) ) {
+            return;
+        }
+        ExpressionDataDoubleMatrix matrix = analysisHelperService.getFilteredMatrix( ee, filterConfig );
+        log.info( filterConfig );
+        ExpressionDataSampleCorrelation.process( matrix, ee );
+        audit( ee, "", null );
+
     }
 
 }

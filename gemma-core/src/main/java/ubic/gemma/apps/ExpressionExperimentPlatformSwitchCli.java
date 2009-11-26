@@ -38,9 +38,38 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  */
 public class ExpressionExperimentPlatformSwitchCli extends ExpressionExperimentManipulatingCLI {
 
+    /**
+     * @param args
+     */
+    public static void main( String[] args ) {
+        ExpressionExperimentPlatformSwitchCli p = new ExpressionExperimentPlatformSwitchCli();
+        Exception e = p.doWork( args );
+        if ( e != null ) {
+            log.fatal( e, e );
+        }
+    }
+
     ArrayDesignService arrayDesignService;
     String arrayDesignName = null;
+
     ExpressionExperimentPlatformSwitchService serv;
+
+    @Override
+    public String getShortDesc() {
+        return "Switch an experiment to a different array design (usually a merged one)";
+    }
+
+    @Override
+    @SuppressWarnings("static-access")
+    protected void buildOptions() {
+        super.buildOptions();
+        Option arrayDesignOption = OptionBuilder.hasArg().withArgName( "Array design" ).withDescription(
+                "Array design name (or short name) - no need to specifiy if the platforms used by the EE are merged" )
+                .withLongOpt( "array" ).create( 'a' );
+
+        addOption( arrayDesignOption );
+        this.addForceOption();
+    }
 
     @Override
     protected Exception doWork( String[] args ) {
@@ -65,16 +94,34 @@ public class ExpressionExperimentPlatformSwitchCli extends ExpressionExperimentM
 
     }
 
-    @Override
-    @SuppressWarnings("static-access")
-    protected void buildOptions() {
-        super.buildOptions();
-        Option arrayDesignOption = OptionBuilder.hasArg().withArgName( "Array design" ).withDescription(
-                "Array design name (or short name) - no need to specifiy if the platforms used by the EE are merged" )
-                .withLongOpt( "array" ).create( 'a' );
+    /**
+     * code copied from
+     * 
+     * @param name of the array design to find.
+     * @return
+     */
+    protected ArrayDesign locateArrayDesign( String name ) {
 
-        addOption( arrayDesignOption );
-        this.addForceOption();
+        ArrayDesign arrayDesign = arrayDesignService.findByName( name.trim().toUpperCase() );
+
+        if ( arrayDesign == null ) {
+            arrayDesign = arrayDesignService.findByShortName( name );
+        }
+
+        if ( arrayDesign == null ) {
+            log.error( "No arrayDesign " + name + " found" );
+            bail( ErrorCode.INVALID_OPTION );
+        }
+        return arrayDesign;
+    }
+
+    @Override
+    protected void processOptions() {
+        super.processOptions();
+        if ( this.hasOption( 'a' ) ) {
+            this.arrayDesignName = this.getOptionValue( 'a' );
+        }
+        arrayDesignService = ( ArrayDesignService ) this.getBean( "arrayDesignService" );
     }
 
     private void processExperiment( ExpressionExperiment ee ) {
@@ -105,51 +152,5 @@ public class ExpressionExperimentPlatformSwitchCli extends ExpressionExperimentM
             log.error( e, e );
             super.errorObjects.add( ee + ": " + e.getMessage() );
         }
-    }
-
-    /**
-     * @param args
-     */
-    public static void main( String[] args ) {
-        ExpressionExperimentPlatformSwitchCli p = new ExpressionExperimentPlatformSwitchCli();
-        Exception e = p.doWork( args );
-        if ( e != null ) {
-            log.fatal( e, e );
-        }
-    }
-
-    @Override
-    protected void processOptions() {
-        super.processOptions();
-        if ( this.hasOption( 'a' ) ) {
-            this.arrayDesignName = this.getOptionValue( 'a' );
-        }
-        arrayDesignService = ( ArrayDesignService ) this.getBean( "arrayDesignService" );
-    }
-
-    /**
-     * code copied from
-     * 
-     * @param name of the array design to find.
-     * @return
-     */
-    protected ArrayDesign locateArrayDesign( String name ) {
-
-        ArrayDesign arrayDesign = arrayDesignService.findByName( name.trim().toUpperCase() );
-
-        if ( arrayDesign == null ) {
-            arrayDesign = arrayDesignService.findByShortName( name );
-        }
-
-        if ( arrayDesign == null ) {
-            log.error( "No arrayDesign " + name + " found" );
-            bail( ErrorCode.INVALID_OPTION );
-        }
-        return arrayDesign;
-    }
-
-    @Override
-    public String getShortDesc() {
-        return "Switch an experiment to a different array design (usually a merged one)";
     }
 }

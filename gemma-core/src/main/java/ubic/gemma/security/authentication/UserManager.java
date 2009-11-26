@@ -39,10 +39,21 @@ public interface UserManager extends UserDetailsManager, GroupManager {
     public String getCurrentUsername();
 
     /**
+     * @return the prefix use on roles (groups, actually) e.g. "GROUP_"
+     */
+    public String getRolePrefix();
+
+    /**
      * @param username
      * @return names of groups the user is in.
      */
     public Collection<String> findGroupsForUser( String username );
+
+    /**
+     * @param name
+     * @return
+     */
+    public boolean groupExists( String name );
 
     /**
      * Sign in the user identified

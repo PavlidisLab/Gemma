@@ -40,13 +40,25 @@ import ubic.gemma.util.AbstractSpringAwareCLI;
  */
 public class ExperimentalDesignImportCli extends AbstractSpringAwareCLI {
 
+    /**
+     * @param args
+     */
+    public static void main( String[] args ) {
+        ExperimentalDesignImportCli e = new ExperimentalDesignImportCli();
+        Exception ex = e.doWork( args );
+        if ( ex != null ) {
+            log.fatal( ex, ex );
+        }
+        System.exit( 0 );
+    }
+
     private ExpressionExperiment expressionExperiment;
     private InputStream inputStream;
+
     private boolean dryRun = false;
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.util.AbstractCLI#buildOptions()
      */
     @SuppressWarnings("static-access")
@@ -74,7 +86,6 @@ public class ExperimentalDesignImportCli extends AbstractSpringAwareCLI {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.util.AbstractCLI#doWork(java.lang.String[])
      */
     @Override
@@ -106,15 +117,24 @@ public class ExperimentalDesignImportCli extends AbstractSpringAwareCLI {
     }
 
     /**
-     * @param args
+     * @param short name of the experiment to find.
+     * @return
      */
-    public static void main( String[] args ) {
-        ExperimentalDesignImportCli e = new ExperimentalDesignImportCli();
-        Exception ex = e.doWork( args );
-        if ( ex != null ) {
-            log.fatal( ex, ex );
+    protected ExpressionExperiment locateExpressionExperiment( String name ) {
+
+        if ( name == null ) {
+            errorObjects.add( "Expression experiment short name must be provided" );
+            return null;
         }
-        System.exit( 0 );
+        ExpressionExperimentService eeService = ( ExpressionExperimentService ) this
+                .getBean( "expressionExperimentService" );
+        ExpressionExperiment experiment = eeService.findByShortName( name );
+
+        if ( experiment == null ) {
+            log.error( "No experiment " + name + " found" );
+            bail( ErrorCode.INVALID_OPTION );
+        }
+        return experiment;
     }
 
     @SuppressWarnings("unchecked")
@@ -143,27 +163,6 @@ public class ExperimentalDesignImportCli extends AbstractSpringAwareCLI {
             this.dryRun = true;
         }
 
-    }
-
-    /**
-     * @param short name of the experiment to find.
-     * @return
-     */
-    protected ExpressionExperiment locateExpressionExperiment( String name ) {
-
-        if ( name == null ) {
-            errorObjects.add( "Expression experiment short name must be provided" );
-            return null;
-        }
-        ExpressionExperimentService eeService = ( ExpressionExperimentService ) this
-                .getBean( "expressionExperimentService" );
-        ExpressionExperiment experiment = eeService.findByShortName( name );
-
-        if ( experiment == null ) {
-            log.error( "No experiment " + name + " found" );
-            bail( ErrorCode.INVALID_OPTION );
-        }
-        return experiment;
     }
 
 }

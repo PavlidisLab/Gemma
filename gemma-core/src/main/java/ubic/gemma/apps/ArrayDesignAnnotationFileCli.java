@@ -43,11 +43,9 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.gene.GeneService;
-import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.ontology.GeneOntologyService;
 
 /**
@@ -63,6 +61,20 @@ import ubic.gemma.ontology.GeneOntologyService;
 public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatingCli {
 
     private static final String GENENAME_LISTFILE_OPTION = "genefile";
+
+    public static void main( String[] args ) {
+        ArrayDesignAnnotationFileCli p = new ArrayDesignAnnotationFileCli();
+        try {
+
+            Exception ex = p.doWork( args );
+            if ( ex != null ) {
+                ex.printStackTrace();
+            }
+            System.exit( 0 );
+        } catch ( Exception e ) {
+            throw new RuntimeException( e );
+        }
+    }
 
     ArrayDesignAnnotationService arrayDesignAnnotationService;
 
@@ -158,20 +170,6 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
 
     }
 
-    public static void main( String[] args ) {
-        ArrayDesignAnnotationFileCli p = new ArrayDesignAnnotationFileCli();
-        try {
-
-            Exception ex = p.doWork( args );
-            if ( ex != null ) {
-                ex.printStackTrace();
-            }
-            System.exit( 0 );
-        } catch ( Exception e ) {
-            throw new RuntimeException( e );
-        }
-    }
-
     /*
      * (non-Javadoc)
      * @see ubic.gemma.util.AbstractCLI#doWork(java.lang.String[])
@@ -215,18 +213,28 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
     }
 
     /**
-     * @param n
-     * @throws InterruptedException
+     * @param outputType
+     * @throws IOException
      */
-    private void waitForGeneOntologyReady() throws InterruptedException {
-        int n = 0;
-        log.info( "Waiting for Gene Ontology to load" );
-        while ( !goService.isReady() ) {
-            Thread.sleep( 500 );
-            if ( ++n % 100 == 0 ) {
-                log.info( "Waiting ..." );
-            }
-        }
+    protected boolean processAD( ArrayDesign arrayDesign, String fileBaseName, OutputType outputType )
+            throws IOException {
+
+        log.info( "Loading gene information for " + arrayDesign );
+
+        /*
+         * FIXME: first Check if file exists.
+         */
+
+        unlazifyArrayDesign( arrayDesign );
+
+        Collection<CompositeSequence> compositeSequences = arrayDesign.getCompositeSequences();
+
+        Map<CompositeSequence, Collection<BioSequence2GeneProduct>> genesWithSpecificity = compositeSequenceService
+                .getGenesWithSpecificity( compositeSequences );
+
+        log.info( "Preparing file" );
+        return processCompositeSequences( arrayDesign, fileBaseName, outputType, genesWithSpecificity );
+
     }
 
     /**
@@ -257,7 +265,7 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
             /*
              * If using taxon, check it.
              */
-            if ( taxon != null &&   !adTaxa.contains( taxon )   ) {
+            if ( taxon != null && !adTaxa.contains( taxon ) ) {
                 continue;
             }
 
@@ -276,178 +284,6 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
 
         }
 
-    }
-
-    private void processOneAD( ArrayDesign ad ) throws IOException {
-        log.info( "Processing AD: " + ad.getName() );
-
-        String shortFileBaseName = ad.getShortName() + ArrayDesignAnnotationService.NO_PARENTS_FILE_SUFFIX;
-        File sf = ArrayDesignAnnotationService.getFileName( shortFileBaseName );
-        String biocFileBaseName = ad.getShortName() + ArrayDesignAnnotationService.BIO_PROCESS_FILE_SUFFIX;
-        File bf = ArrayDesignAnnotationService.getFileName( biocFileBaseName );
-        String allparFileBaseName = ad.getShortName() + ArrayDesignAnnotationService.STANDARD_FILE_SUFFIX;
-        File af = ArrayDesignAnnotationService.getFileName( allparFileBaseName );
-
-        if ( !overWrite && sf.exists() && bf.exists() && af.exists() ) {
-            log.info( "Files exist already, will not overwrite (use --overwrite option to override)" );
-            return;
-        }
-
-        unlazifyArrayDesign( ad );
-        Collection<CompositeSequence> compositeSequences = ad.getCompositeSequences();
-        log.info("Starting genes specificity");
-        
-        //lmd test
-        
-       Map <CompositeSequence, Collection<BioSequence2GeneProduct>> genesWithSpecificity = compositeSequenceService
-                .getGenesWithSpecificity( compositeSequences );
-        
-        log.info("Ending genes specificity");
-        
-
-        if ( overWrite || !sf.exists() ) {
-            processCompositeSequences( ad, shortFileBaseName, OutputType.SHORT, genesWithSpecificity );
-        } else {
-            log.info( sf + " exists, will not overwrite" );
-        }
-
-        if ( overWrite || !bf.exists() ) {
-            processCompositeSequences( ad, biocFileBaseName, OutputType.BIOPROCESS, genesWithSpecificity );
-        } else {
-            log.info( bf + " exists, will not overwrite" );
-        }
-
-        if ( overWrite || !af.exists() ) {
-            processCompositeSequences( ad, allparFileBaseName, OutputType.LONG, genesWithSpecificity );
-        } else {
-            log.info( af + " exists, will not overwrite" );
-        }
-    }
-
-    /**
-     * @param outputType
-     * @throws IOException
-     */
-    protected boolean processAD( ArrayDesign arrayDesign, String fileBaseName, OutputType outputType )
-            throws IOException {
-
-        log.info( "Loading gene information for " + arrayDesign );
-
-        /*
-         * FIXME: first Check if file exists.
-         */
-
-        unlazifyArrayDesign( arrayDesign );
-
-        Collection<CompositeSequence> compositeSequences = arrayDesign.getCompositeSequences();
-
-        Map<CompositeSequence, Collection<BioSequence2GeneProduct>> genesWithSpecificity = compositeSequenceService
-                .getGenesWithSpecificity( compositeSequences );
-
-        log.info( "Preparing file" );
-        return processCompositeSequences( arrayDesign, fileBaseName, outputType, genesWithSpecificity );
-
-    }
-
-    /**
-     * @param arrayDesign
-     * @param fileBaseName
-     * @param outputType
-     * @param writer
-     * @param genesWithSpecificity
-     * @return true if the file was made.
-     * @throws IOException
-     */
-    private boolean processCompositeSequences( ArrayDesign arrayDesign, String fileBaseName, OutputType outputType,
-            Map <CompositeSequence, Collection<BioSequence2GeneProduct>> genesWithSpecificity )
-            throws IOException {
-
-        if ( genesWithSpecificity.size() == 0 ) {
-            log.info( "No sequence information for " + arrayDesign + ", skipping" );
-            return false;
-        }
-
-        Writer writer = arrayDesignAnnotationService.initOutputFile( fileBaseName, this.overWrite );
-
-        // if no writer then we should abort (this could happen in case where we don't want to overwrite files)
-        if ( writer == null ) {
-            log.info( arrayDesign.getName() + " annotation file already exits.  Skipping. " );
-            return false;
-        }
-
-        log.info( arrayDesign.getName() + " has " + genesWithSpecificity.size() + " composite sequences" );
-
-        int numProcessed = arrayDesignAnnotationService.generateAnnotationFile( writer, genesWithSpecificity,
-                outputType, !this.includePredictedGenes );
-
-        log.info( "Finished processing platform: " + arrayDesign.getName() );
-
-        successObjects.add( String.format( "%s (%s)", arrayDesign.getName(), arrayDesign.getShortName() ) );
-
-        if ( StringUtils.isBlank( fileBaseName ) ) {
-            log.info( "Processed " + numProcessed + " composite sequences" );
-            audit( arrayDesign, "Processed " + numProcessed + " composite sequences" );
-        } else {
-            String filename = fileBaseName + ArrayDesignAnnotationService.ANNOTATION_FILE_SUFFIX;
-            log.info( "Created file:  " + filename + " with " + numProcessed + " values" );
-            audit( arrayDesign, "Created file: " + filename + " with " + numProcessed + " values" );
-        }
-        return true;
-    }
-
-    /**
-     * @param arrayDesign
-     */
-    private void audit( ArrayDesign arrayDesign, String note ) {
-        AuditEventType eventType = ArrayDesignAnnotationFileEvent.Factory.newInstance();
-        auditTrailService.addUpdateEvent( arrayDesign, eventType, note );
-    }
-
-    private void processGenesForTaxon() {
-        GeneService geneService = ( GeneService ) getBean( "geneService" );
-        TaxonService taxonService = ( TaxonService ) getBean( "taxonService" );
-        Taxon taxon = taxonService.findByCommonName( taxonName );
-        if ( taxon == null ) {
-            throw new IllegalArgumentException( "Unknown taxon: " + taxonName );
-        }
-        Collection<Gene> genes = geneService.loadKnownGenes( taxon );
-        log.info( "Taxon has " + genes.size() + " 'known' genes" );
-        int numProcessed = arrayDesignAnnotationService.generateAnnotationFile( new PrintWriter( System.out ), genes,
-                OutputType.SHORT );
-        log.info( "Processed " + numProcessed + " genes that were found" );
-    }
-
-    private void processGeneList() throws IOException {
-        log.info( "Loading genes to annotate from " + geneFileName );
-        InputStream is = new FileInputStream( geneFileName );
-        BufferedReader br = new BufferedReader( new InputStreamReader( is ) );
-        String line = null;
-        int lineNumber = 0;
-        GeneService geneService = ( GeneService ) getBean( "geneService" );
-        TaxonService taxonService = ( TaxonService ) getBean( "taxonService" );
-        Taxon taxon = taxonService.findByCommonName( taxonName );
-        if ( taxon == null ) {
-            throw new IllegalArgumentException( "Unknown taxon: " + taxonName );
-        }
-        Collection<Gene> genes = new HashSet<Gene>();
-        while ( ( line = br.readLine() ) != null ) {
-            lineNumber++;
-            if ( StringUtils.isBlank( line ) ) {
-                continue;
-            }
-            String[] arguments = StringUtils.split( line, '\t' );
-            String gene = arguments[0];
-            Gene g = geneService.findByOfficialSymbol( gene, taxon );
-            if ( g == null ) {
-                log.info( "Gene: " + gene + " not found." );
-                continue;
-            }
-            genes.add( g );
-        }
-        log.info( "File contained " + genes.size() + " potential gene symbols" );
-        int numProcessed = arrayDesignAnnotationService.generateAnnotationFile( new PrintWriter( System.out ), genes,
-                OutputType.SHORT );
-        log.info( "Processed " + numProcessed + " genes that were found" );
     }
 
     /**
@@ -514,16 +350,6 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
 
     }
 
-    /**
-     * @param genesToInclude
-     */
-    private void processGenesIncluded( String genesToInclude ) {
-        includePredictedGenes = false;
-
-        if ( genesToInclude.equalsIgnoreCase( "all" ) ) includePredictedGenes = true;
-
-    }
-
     @Override
     protected void processOptions() {
 
@@ -572,5 +398,175 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
         this.arrayDesignAnnotationService = ( ArrayDesignAnnotationService ) getBean( "arrayDesignAnnotationService" );
         this.goService = ( GeneOntologyService ) getBean( "geneOntologyService" );
         this.compositeSequenceService = ( CompositeSequenceService ) getBean( "compositeSequenceService" );
+    }
+
+    /**
+     * @param arrayDesign
+     */
+    private void audit( ArrayDesign arrayDesign, String note ) {
+        AuditEventType eventType = ArrayDesignAnnotationFileEvent.Factory.newInstance();
+        auditTrailService.addUpdateEvent( arrayDesign, eventType, note );
+    }
+
+    /**
+     * @param arrayDesign
+     * @param fileBaseName
+     * @param outputType
+     * @param writer
+     * @param genesWithSpecificity
+     * @return true if the file was made.
+     * @throws IOException
+     */
+    private boolean processCompositeSequences( ArrayDesign arrayDesign, String fileBaseName, OutputType outputType,
+            Map<CompositeSequence, Collection<BioSequence2GeneProduct>> genesWithSpecificity ) throws IOException {
+
+        if ( genesWithSpecificity.size() == 0 ) {
+            log.info( "No sequence information for " + arrayDesign + ", skipping" );
+            return false;
+        }
+
+        Writer writer = arrayDesignAnnotationService.initOutputFile( fileBaseName, this.overWrite );
+
+        // if no writer then we should abort (this could happen in case where we don't want to overwrite files)
+        if ( writer == null ) {
+            log.info( arrayDesign.getName() + " annotation file already exits.  Skipping. " );
+            return false;
+        }
+
+        log.info( arrayDesign.getName() + " has " + genesWithSpecificity.size() + " composite sequences" );
+
+        int numProcessed = arrayDesignAnnotationService.generateAnnotationFile( writer, genesWithSpecificity,
+                outputType, !this.includePredictedGenes );
+
+        log.info( "Finished processing platform: " + arrayDesign.getName() );
+
+        successObjects.add( String.format( "%s (%s)", arrayDesign.getName(), arrayDesign.getShortName() ) );
+
+        if ( StringUtils.isBlank( fileBaseName ) ) {
+            log.info( "Processed " + numProcessed + " composite sequences" );
+            audit( arrayDesign, "Processed " + numProcessed + " composite sequences" );
+        } else {
+            String filename = fileBaseName + ArrayDesignAnnotationService.ANNOTATION_FILE_SUFFIX;
+            log.info( "Created file:  " + filename + " with " + numProcessed + " values" );
+            audit( arrayDesign, "Created file: " + filename + " with " + numProcessed + " values" );
+        }
+        return true;
+    }
+
+    private void processGeneList() throws IOException {
+        log.info( "Loading genes to annotate from " + geneFileName );
+        InputStream is = new FileInputStream( geneFileName );
+        BufferedReader br = new BufferedReader( new InputStreamReader( is ) );
+        String line = null;
+        int lineNumber = 0;
+        GeneService geneService = ( GeneService ) getBean( "geneService" );
+        TaxonService taxonService = ( TaxonService ) getBean( "taxonService" );
+        Taxon taxon = taxonService.findByCommonName( taxonName );
+        if ( taxon == null ) {
+            throw new IllegalArgumentException( "Unknown taxon: " + taxonName );
+        }
+        Collection<Gene> genes = new HashSet<Gene>();
+        while ( ( line = br.readLine() ) != null ) {
+            lineNumber++;
+            if ( StringUtils.isBlank( line ) ) {
+                continue;
+            }
+            String[] arguments = StringUtils.split( line, '\t' );
+            String gene = arguments[0];
+            Gene g = geneService.findByOfficialSymbol( gene, taxon );
+            if ( g == null ) {
+                log.info( "Gene: " + gene + " not found." );
+                continue;
+            }
+            genes.add( g );
+        }
+        log.info( "File contained " + genes.size() + " potential gene symbols" );
+        int numProcessed = arrayDesignAnnotationService.generateAnnotationFile( new PrintWriter( System.out ), genes,
+                OutputType.SHORT );
+        log.info( "Processed " + numProcessed + " genes that were found" );
+    }
+
+    private void processGenesForTaxon() {
+        GeneService geneService = ( GeneService ) getBean( "geneService" );
+        TaxonService taxonService = ( TaxonService ) getBean( "taxonService" );
+        Taxon taxon = taxonService.findByCommonName( taxonName );
+        if ( taxon == null ) {
+            throw new IllegalArgumentException( "Unknown taxon: " + taxonName );
+        }
+        Collection<Gene> genes = geneService.loadKnownGenes( taxon );
+        log.info( "Taxon has " + genes.size() + " 'known' genes" );
+        int numProcessed = arrayDesignAnnotationService.generateAnnotationFile( new PrintWriter( System.out ), genes,
+                OutputType.SHORT );
+        log.info( "Processed " + numProcessed + " genes that were found" );
+    }
+
+    /**
+     * @param genesToInclude
+     */
+    private void processGenesIncluded( String genesToInclude ) {
+        includePredictedGenes = false;
+
+        if ( genesToInclude.equalsIgnoreCase( "all" ) ) includePredictedGenes = true;
+
+    }
+
+    private void processOneAD( ArrayDesign ad ) throws IOException {
+        log.info( "Processing AD: " + ad.getName() );
+
+        String shortFileBaseName = ad.getShortName() + ArrayDesignAnnotationService.NO_PARENTS_FILE_SUFFIX;
+        File sf = ArrayDesignAnnotationService.getFileName( shortFileBaseName );
+        String biocFileBaseName = ad.getShortName() + ArrayDesignAnnotationService.BIO_PROCESS_FILE_SUFFIX;
+        File bf = ArrayDesignAnnotationService.getFileName( biocFileBaseName );
+        String allparFileBaseName = ad.getShortName() + ArrayDesignAnnotationService.STANDARD_FILE_SUFFIX;
+        File af = ArrayDesignAnnotationService.getFileName( allparFileBaseName );
+
+        if ( !overWrite && sf.exists() && bf.exists() && af.exists() ) {
+            log.info( "Files exist already, will not overwrite (use --overwrite option to override)" );
+            return;
+        }
+
+        unlazifyArrayDesign( ad );
+        Collection<CompositeSequence> compositeSequences = ad.getCompositeSequences();
+        log.info( "Starting genes specificity" );
+
+        // lmd test
+
+        Map<CompositeSequence, Collection<BioSequence2GeneProduct>> genesWithSpecificity = compositeSequenceService
+                .getGenesWithSpecificity( compositeSequences );
+
+        log.info( "Ending genes specificity" );
+
+        if ( overWrite || !sf.exists() ) {
+            processCompositeSequences( ad, shortFileBaseName, OutputType.SHORT, genesWithSpecificity );
+        } else {
+            log.info( sf + " exists, will not overwrite" );
+        }
+
+        if ( overWrite || !bf.exists() ) {
+            processCompositeSequences( ad, biocFileBaseName, OutputType.BIOPROCESS, genesWithSpecificity );
+        } else {
+            log.info( bf + " exists, will not overwrite" );
+        }
+
+        if ( overWrite || !af.exists() ) {
+            processCompositeSequences( ad, allparFileBaseName, OutputType.LONG, genesWithSpecificity );
+        } else {
+            log.info( af + " exists, will not overwrite" );
+        }
+    }
+
+    /**
+     * @param n
+     * @throws InterruptedException
+     */
+    private void waitForGeneOntologyReady() throws InterruptedException {
+        int n = 0;
+        log.info( "Waiting for Gene Ontology to load" );
+        while ( !goService.isReady() ) {
+            Thread.sleep( 500 );
+            if ( ++n % 100 == 0 ) {
+                log.info( "Waiting ..." );
+            }
+        }
     }
 }

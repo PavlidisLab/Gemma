@@ -41,31 +41,6 @@ import ubic.gemma.model.genome.biosequence.BioSequenceService;
  */
 public class ArrayDesignRepeatScanCli extends ArrayDesignSequenceManipulatingCli {
 
-    @Override
-    public String getShortDesc() {
-        return "Run RepeatMasker on sequences for an Array design";
-    }
-
-    BioSequenceService bsService;
-    private String inputFileName;
-
-    @Override
-    protected void processOptions() {
-        super.processOptions();
-        if ( this.hasOption( 'f' ) ) {
-            this.inputFileName = this.getOptionValue( 'f' );
-        }
-    }
-
-    @SuppressWarnings("static-access")
-    @Override
-    protected void buildOptions() {
-        super.buildOptions();
-        Option fileOption = OptionBuilder.hasArg().withArgName( ".out file" ).withDescription(
-                "Repeatscan file to use as input" ).withLongOpt( "file" ).create( 'f' );
-        addOption( fileOption );
-    }
-
     /**
      * @param args
      */
@@ -82,12 +57,21 @@ public class ArrayDesignRepeatScanCli extends ArrayDesignSequenceManipulatingCli
 
     }
 
-    /**
-     * @param arrayDesign
-     */
-    private void audit( ArrayDesign arrayDesign, String note ) {
-        AuditEventType eventType = ArrayDesignRepeatAnalysisEvent.Factory.newInstance();
-        auditTrailService.addUpdateEvent( arrayDesign, eventType, note );
+    BioSequenceService bsService;
+    private String inputFileName;
+
+    @Override
+    public String getShortDesc() {
+        return "Run RepeatMasker on sequences for an Array design";
+    }
+
+    @SuppressWarnings("static-access")
+    @Override
+    protected void buildOptions() {
+        super.buildOptions();
+        Option fileOption = OptionBuilder.hasArg().withArgName( ".out file" ).withDescription(
+                "Repeatscan file to use as input" ).withLongOpt( "file" ).create( 'f' );
+        addOption( fileOption );
     }
 
     @Override
@@ -153,6 +137,22 @@ public class ArrayDesignRepeatScanCli extends ArrayDesignSequenceManipulatingCli
         }
 
         return null;
+    }
+
+    @Override
+    protected void processOptions() {
+        super.processOptions();
+        if ( this.hasOption( 'f' ) ) {
+            this.inputFileName = this.getOptionValue( 'f' );
+        }
+    }
+
+    /**
+     * @param arrayDesign
+     */
+    private void audit( ArrayDesign arrayDesign, String note ) {
+        AuditEventType eventType = ArrayDesignRepeatAnalysisEvent.Factory.newInstance();
+        auditTrailService.addUpdateEvent( arrayDesign, eventType, note );
     }
 
     private void processArrayDesign( ArrayDesign design ) {

@@ -102,11 +102,6 @@ public class ArrayDesignSubsumptionTesterCli extends ArrayDesignSequenceManipula
         return null;
     }
 
-    private void audit( ArrayDesign arrayDesign, String note ) {
-        AuditEventType eventType = ArrayDesignSubsumeCheckEvent.Factory.newInstance();
-        auditTrailService.addUpdateEvent( arrayDesign, eventType, note );
-    }
-
     @Override
     protected void processOptions() {
         super.processOptions();
@@ -118,6 +113,11 @@ public class ArrayDesignSubsumptionTesterCli extends ArrayDesignSequenceManipula
                 this.otherArrayDesignNames.add( string );
             }
         }
+    }
+
+    private void audit( ArrayDesign arrayDesign, String note ) {
+        AuditEventType eventType = ArrayDesignSubsumeCheckEvent.Factory.newInstance();
+        auditTrailService.addUpdateEvent( arrayDesign, eventType, note );
     }
 
 }

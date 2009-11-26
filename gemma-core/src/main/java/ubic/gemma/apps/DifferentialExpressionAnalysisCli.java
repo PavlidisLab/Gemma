@@ -47,14 +47,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  */
 public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManipulatingCLI {
 
-    private DifferentialExpressionAnalyzerService differentialExpressionAnalyzerService = null;
-
-    private AnalysisType type = null;
-
-    private List<Long> factorIds = new ArrayList<Long>();
-
-    private List<String> factorNames = new ArrayList<String>();
-
     /**
      * @param args
      */
@@ -72,6 +64,63 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
         } catch ( Exception e ) {
             throw new RuntimeException( e );
         }
+    }
+
+    private DifferentialExpressionAnalyzerService differentialExpressionAnalyzerService = null;
+
+    private AnalysisType type = null;
+
+    private List<Long> factorIds = new ArrayList<Long>();
+
+    private List<String> factorNames = new ArrayList<String>();
+
+    /*
+     * (non-Javadoc)
+     * @see ubic.gemma.util.AbstractSpringAwareCLI#getShortDesc()
+     */
+    @Override
+    public String getShortDesc() {
+        return "Analyze expression data sets for differentially expressed genes.";
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see ubic.gemma.apps.AbstractGeneExpressionExperimentManipulatingCLI#buildOptions()
+     */
+    @SuppressWarnings("static-access")
+    @Override
+    protected void buildOptions() {
+
+        /*
+         * These options from the super class support: running on one or more data sets from the command line, running
+         * on list of data sets from a file, running on all data sets.
+         */
+        super.buildOptions();
+
+        /* Supports: running on all data sets that have not been run since a given date. */
+        super.addDateOption();
+
+        Option topOpt = OptionBuilder.withLongOpt( "top" ).hasArg( true ).withDescription(
+                "The top (most significant) results to display." ).create();
+        super.addOption( topOpt );
+
+        // Option forceAnalysisOpt = OptionBuilder.hasArg( false ).withDescription( "Force the run." ).create( 'r' );
+        // super.addOption( forceAnalysisOpt );
+
+        Option factors = OptionBuilder.hasArg().withDescription(
+                "ID numbers or names of the factor(s) to use, comma-delimited" ).create( "factors" );
+
+        super.addOption( factors );
+
+        Option analysisType = OptionBuilder
+                .hasArg()
+                .withDescription(
+                        "Type of analysis to perform. If omitted, the system will try to guess based on the experimental design. "
+                                + "Choices are : TWA (two-way anova), TWIA (two-way ANOVA with interactions), OWA (one-way ANOVA), TTEST" )
+                .create( "type" );
+
+        super.addOption( analysisType );
+
     }
 
     /*
@@ -102,6 +151,59 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
         summarizeProcessing();
 
         return null;
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see ubic.gemma.apps.AbstractGeneExpressionExperimentManipulatingCLI#processOptions()
+     */
+    @Override
+    protected void processOptions() {
+        super.processOptions();
+
+        if ( hasOption( "type" ) ) {
+            if ( !hasOption( "factors" ) ) {
+                throw new IllegalArgumentException( "Please specify the factor(s) when specifying the analysis type." );
+            }
+            this.type = AnalysisType.valueOf( getOptionValue( "type" ) );
+        }
+
+        if ( hasOption( "factors" ) ) {
+            String rawfactors = getOptionValue( "factors" );
+            String[] factorIDst = StringUtils.split( rawfactors, "," );
+            if ( factorIDst != null && factorIDst.length > 0 ) {
+                for ( String string : factorIDst ) {
+                    try {
+                        Long factorId = Long.parseLong( string );
+                        this.factorIds.add( factorId );
+                    } catch ( NumberFormatException e ) {
+                        this.factorNames.add( string );
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * @param expressionAnalysis
+     */
+    private void logProcessing( DifferentialExpressionAnalysis expressionAnalysis ) {
+
+        log.debug( "Summarizing results for expression analysis of type: " + expressionAnalysis.getName() );
+        Collection<ExpressionAnalysisResultSet> resultSets = expressionAnalysis.getResultSets();
+
+        log.debug( resultSets.size() + " result set(s) to process." );
+        for ( ExpressionAnalysisResultSet resultSet : resultSets ) {
+            log.debug( "*** Result set ***" );
+            Collection<DifferentialExpressionAnalysisResult> results = resultSet.getResults();
+
+            for ( DifferentialExpressionAnalysisResult result : results ) {
+                ProbeAnalysisResult probeResult = ( ProbeAnalysisResult ) result;
+                log.debug( "probe: " + probeResult.getProbe().getName() + ", p-value: " + probeResult.getPvalue()
+                        + ", score: " + probeResult.getScore() );
+            }
+            log.debug( "Result set processed with " + results.size() + " results." );
+        }
     }
 
     /**
@@ -172,108 +274,6 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
             log.error( e, e );
             errorObjects.add( ee + ": " + e.getMessage() );
         }
-    }
-
-    /*
-     * (non-Javadoc)
-     * @see ubic.gemma.apps.AbstractGeneExpressionExperimentManipulatingCLI#buildOptions()
-     */
-    @SuppressWarnings("static-access")
-    @Override
-    protected void buildOptions() {
-
-        /*
-         * These options from the super class support: running on one or more data sets from the command line, running
-         * on list of data sets from a file, running on all data sets.
-         */
-        super.buildOptions();
-
-        /* Supports: running on all data sets that have not been run since a given date. */
-        super.addDateOption();
-
-        Option topOpt = OptionBuilder.withLongOpt( "top" ).hasArg( true ).withDescription(
-                "The top (most significant) results to display." ).create();
-        super.addOption( topOpt );
-
-        // Option forceAnalysisOpt = OptionBuilder.hasArg( false ).withDescription( "Force the run." ).create( 'r' );
-        // super.addOption( forceAnalysisOpt );
-
-        Option factors = OptionBuilder.hasArg().withDescription(
-                "ID numbers or names of the factor(s) to use, comma-delimited" ).create( "factors" );
-
-        super.addOption( factors );
-
-        Option analysisType = OptionBuilder
-                .hasArg()
-                .withDescription(
-                        "Type of analysis to perform. If omitted, the system will try to guess based on the experimental design. "
-                                + "Choices are : TWA (two-way anova), TWIA (two-way ANOVA with interactions), OWA (one-way ANOVA), TTEST" )
-                .create( "type" );
-
-        super.addOption( analysisType );
-
-    }
-
-    /*
-     * (non-Javadoc)
-     * @see ubic.gemma.apps.AbstractGeneExpressionExperimentManipulatingCLI#processOptions()
-     */
-    @Override
-    protected void processOptions() {
-        super.processOptions();
-
-        if ( hasOption( "type" ) ) {
-            if ( !hasOption( "factors" ) ) {
-                throw new IllegalArgumentException( "Please specify the factor(s) when specifying the analysis type." );
-            }
-            this.type = AnalysisType.valueOf( getOptionValue( "type" ) );
-        }
-
-        if ( hasOption( "factors" ) ) {
-            String rawfactors = getOptionValue( "factors" );
-            String[] factorIDst = StringUtils.split( rawfactors, "," );
-            if ( factorIDst != null && factorIDst.length > 0 ) {
-                for ( String string : factorIDst ) {
-                    try {
-                        Long factorId = Long.parseLong( string );
-                        this.factorIds.add( factorId );
-                    } catch ( NumberFormatException e ) {
-                        this.factorNames.add( string );
-                    }
-                }
-            }
-        }
-    }
-
-    /**
-     * @param expressionAnalysis
-     */
-    private void logProcessing( DifferentialExpressionAnalysis expressionAnalysis ) {
-
-        log.debug( "Summarizing results for expression analysis of type: " + expressionAnalysis.getName() );
-        Collection<ExpressionAnalysisResultSet> resultSets = expressionAnalysis.getResultSets();
-
-        log.debug( resultSets.size() + " result set(s) to process." );
-        for ( ExpressionAnalysisResultSet resultSet : resultSets ) {
-            log.debug( "*** Result set ***" );
-            Collection<DifferentialExpressionAnalysisResult> results = resultSet.getResults();
-
-            for ( DifferentialExpressionAnalysisResult result : results ) {
-                ProbeAnalysisResult probeResult = ( ProbeAnalysisResult ) result;
-                log.debug( "probe: " + probeResult.getProbe().getName() + ", p-value: " + probeResult.getPvalue()
-                        + ", score: " + probeResult.getScore() );
-            }
-            log.debug( "Result set processed with " + results.size() + " results." );
-        }
-    }
-
-    /*
-     * (non-Javadoc)
-     * @see ubic.gemma.util.AbstractSpringAwareCLI#getShortDesc()
-     */
-    @Override
-    public String getShortDesc() {
-        return "Analyze expression data sets for differentially expressed genes.";
     }
 
 }

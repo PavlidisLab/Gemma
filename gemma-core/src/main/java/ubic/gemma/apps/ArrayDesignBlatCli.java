@@ -51,6 +51,18 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
  */
 public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
 
+    public static void main( String[] args ) {
+        ArrayDesignBlatCli p = new ArrayDesignBlatCli();
+        try {
+            Exception ex = p.doWork( args );
+            if ( ex != null ) {
+                ex.printStackTrace();
+            }
+        } catch ( Exception e ) {
+            throw new RuntimeException( e );
+        }
+    }
+
     private ArrayDesignSequenceAlignmentService arrayDesignSequenceAlignmentService;
 
     private String blatResultFile = null;
@@ -101,18 +113,6 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
         addThreadsOption();
         addOption( blatScoreThresholdOption );
         addOption( blatResultOption );
-    }
-
-    public static void main( String[] args ) {
-        ArrayDesignBlatCli p = new ArrayDesignBlatCli();
-        try {
-            Exception ex = p.doWork( args );
-            if ( ex != null ) {
-                ex.printStackTrace();
-            }
-        } catch ( Exception e ) {
-            throw new RuntimeException( e );
-        }
     }
 
     /*
@@ -236,73 +236,6 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
         return null;
     }
 
-    /**
-     * @param skipIfLastRunLaterThan
-     * @param design
-     */
-    void processArrayDesign( Date skipIfLastRunLaterThan, ArrayDesign design ) {
-        if ( !needToRun( skipIfLastRunLaterThan, design, ArrayDesignSequenceAnalysisEvent.class ) ) {
-            log.warn( design + " was last run more recently than " + skipIfLastRunLaterThan );
-            // not really an error, but nice to get notification.
-            errorObjects.add( design + ": " + "Skipped because it was last run after " + skipIfLastRunLaterThan );
-            return;
-        }
-
-        if ( isSubsumedOrMerged( design ) ) {
-            log.warn( design + " is subsumed or merged into another design, it will not be run." );
-            // not really an error, but nice to get notification.
-            errorObjects.add( design + ": " + "Skipped because it is subsumed by or merged into another design." );
-            return;
-        }
-
-        log.info( "============== Start processing: " + design + " ==================" );
-        try {
-            arrayDesignService.thawLite( design );
-            arrayDesignSequenceAlignmentService.processArrayDesign( design, true );
-            successObjects.add( design.getName() );
-            audit( design, "Part of a batch job; BLAT score threshold was " + this.blatScoreThreshold );
-        } catch ( Exception e ) {
-            errorObjects.add( design + ": " + e.getMessage() );
-            log.error( "**** Exception while processing " + design + ": " + e.getMessage() + " ****" );
-            log.error( e, e );
-        }
-    }
-
-    /**
-     * Process blat file which must be for one taxon.
-     * 
-     * @param arrayDesign
-     * @return
-     * @throws IOException
-     */
-    private Collection<BlatResult> getBlatResultsFromFile( ArrayDesign arrayDesign ) throws IOException {
-        Taxon arrayDesignTaxon = null;
-        File f = new File( blatResultFile );
-        if ( !f.canRead() ) {
-            log.error( "Cannot read from " + blatResultFile );
-            bail( ErrorCode.INVALID_OPTION );
-        }
-        // check being running for just one taxon
-        arrayDesignTaxon = arrayDesignSequenceAlignmentService.validateTaxaForBlatFile( arrayDesign, taxon );
-
-        log.info( "Reading blat results in from " + f.getAbsolutePath() );
-        BlatResultParser parser = new BlatResultParser();
-        parser.setScoreThreshold( this.blatScoreThreshold );
-        parser.setTaxon( arrayDesignTaxon );
-        parser.parse( f );
-        Collection<BlatResult> blatResults = parser.getResults();
-        return blatResults;
-    }
-
-    /**
-     * @param arrayDesign
-     */
-    private void audit( ArrayDesign arrayDesign, String note ) {
-        arrayDesignReportService.generateArrayDesignReport( arrayDesign.getId() );
-        AuditEventType eventType = ArrayDesignSequenceAnalysisEvent.Factory.newInstance();
-        auditTrailService.addUpdateEvent( arrayDesign, eventType, note );
-    }
-
     @Override
     protected void processOptions() {
         super.processOptions();
@@ -336,6 +269,73 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
         arrayDesignSequenceAlignmentService = ( ArrayDesignSequenceAlignmentService ) this
                 .getBean( "arrayDesignSequenceAlignmentService" );
 
+    }
+
+    /**
+     * @param skipIfLastRunLaterThan
+     * @param design
+     */
+    void processArrayDesign( Date skipIfLastRunLaterThan, ArrayDesign design ) {
+        if ( !needToRun( skipIfLastRunLaterThan, design, ArrayDesignSequenceAnalysisEvent.class ) ) {
+            log.warn( design + " was last run more recently than " + skipIfLastRunLaterThan );
+            // not really an error, but nice to get notification.
+            errorObjects.add( design + ": " + "Skipped because it was last run after " + skipIfLastRunLaterThan );
+            return;
+        }
+
+        if ( isSubsumedOrMerged( design ) ) {
+            log.warn( design + " is subsumed or merged into another design, it will not be run." );
+            // not really an error, but nice to get notification.
+            errorObjects.add( design + ": " + "Skipped because it is subsumed by or merged into another design." );
+            return;
+        }
+
+        log.info( "============== Start processing: " + design + " ==================" );
+        try {
+            arrayDesignService.thawLite( design );
+            arrayDesignSequenceAlignmentService.processArrayDesign( design, true );
+            successObjects.add( design.getName() );
+            audit( design, "Part of a batch job; BLAT score threshold was " + this.blatScoreThreshold );
+        } catch ( Exception e ) {
+            errorObjects.add( design + ": " + e.getMessage() );
+            log.error( "**** Exception while processing " + design + ": " + e.getMessage() + " ****" );
+            log.error( e, e );
+        }
+    }
+
+    /**
+     * @param arrayDesign
+     */
+    private void audit( ArrayDesign arrayDesign, String note ) {
+        arrayDesignReportService.generateArrayDesignReport( arrayDesign.getId() );
+        AuditEventType eventType = ArrayDesignSequenceAnalysisEvent.Factory.newInstance();
+        auditTrailService.addUpdateEvent( arrayDesign, eventType, note );
+    }
+
+    /**
+     * Process blat file which must be for one taxon.
+     * 
+     * @param arrayDesign
+     * @return
+     * @throws IOException
+     */
+    private Collection<BlatResult> getBlatResultsFromFile( ArrayDesign arrayDesign ) throws IOException {
+        Taxon arrayDesignTaxon = null;
+        File f = new File( blatResultFile );
+        if ( !f.canRead() ) {
+            log.error( "Cannot read from " + blatResultFile );
+            bail( ErrorCode.INVALID_OPTION );
+        }
+        // check being running for just one taxon
+        arrayDesignTaxon = arrayDesignSequenceAlignmentService.validateTaxaForBlatFile( arrayDesign, taxon );
+
+        log.info( "Reading blat results in from " + f.getAbsolutePath() );
+        BlatResultParser parser = new BlatResultParser();
+        parser.setScoreThreshold( this.blatScoreThreshold );
+        parser.setTaxon( arrayDesignTaxon );
+        parser.parse( f );
+        Collection<BlatResult> blatResults = parser.getResults();
+        return blatResults;
     }
 
 }

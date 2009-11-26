@@ -42,9 +42,16 @@ import ubic.gemma.model.genome.biosequence.SequenceType;
  */
 public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipulatingCli {
 
-    @Override
-    public String getShortDesc() {
-        return "Attach sequences to array design, from a file or fetching from BLAST database.";
+    public static void main( String[] args ) {
+        ArrayDesignSequenceAssociationCli p = new ArrayDesignSequenceAssociationCli();
+        try {
+            Exception ex = p.doWork( args );
+            if ( ex != null ) {
+                ex.printStackTrace();
+            }
+        } catch ( Exception e ) {
+            throw new RuntimeException( e );
+        }
     }
 
     ArrayDesignSequenceProcessingService arrayDesignSequenceProcessingService;
@@ -59,16 +66,9 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
 
     private String sequenceId = null;
 
-    public static void main( String[] args ) {
-        ArrayDesignSequenceAssociationCli p = new ArrayDesignSequenceAssociationCli();
-        try {
-            Exception ex = p.doWork( args );
-            if ( ex != null ) {
-                ex.printStackTrace();
-            }
-        } catch ( Exception e ) {
-            throw new RuntimeException( e );
-        }
+    @Override
+    public String getShortDesc() {
+        return "Attach sequences to array design, from a file or fetching from BLAST database.";
     }
 
     @SuppressWarnings("static-access")
@@ -116,39 +116,6 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
                 't' );
 
         addOption( taxonOption );
-
-    }
-
-    @Override
-    protected void processOptions() {
-        super.processOptions();
-        arrayDesignSequenceProcessingService = ( ArrayDesignSequenceProcessingService ) this
-                .getBean( "arrayDesignSequenceProcessingService" );
-        this.taxonService = ( TaxonService ) this.getBean( "taxonService" );
-
-        if ( this.hasOption( 'y' ) ) {
-            sequenceType = this.getOptionValue( 'y' );
-        }
-
-        if ( this.hasOption( 'f' ) ) {
-            this.sequenceFile = this.getOptionValue( 'f' );
-        }
-
-        if ( this.hasOption( 's' ) ) {
-            this.sequenceId = this.getOptionValue( 's' );
-        }
-
-        if ( this.hasOption( 't' ) ) {
-            this.taxonName = this.getOptionValue( 't' );
-        }
-
-        if ( this.hasOption( 'i' ) ) {
-            this.idFile = this.getOptionValue( 'i' );
-        }
-
-        if ( this.hasOption( "force" ) ) {
-            this.force = true;
-        }
 
     }
 
@@ -243,6 +210,39 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
             return e;
         }
         return null;
+    }
+
+    @Override
+    protected void processOptions() {
+        super.processOptions();
+        arrayDesignSequenceProcessingService = ( ArrayDesignSequenceProcessingService ) this
+                .getBean( "arrayDesignSequenceProcessingService" );
+        this.taxonService = ( TaxonService ) this.getBean( "taxonService" );
+
+        if ( this.hasOption( 'y' ) ) {
+            sequenceType = this.getOptionValue( 'y' );
+        }
+
+        if ( this.hasOption( 'f' ) ) {
+            this.sequenceFile = this.getOptionValue( 'f' );
+        }
+
+        if ( this.hasOption( 's' ) ) {
+            this.sequenceId = this.getOptionValue( 's' );
+        }
+
+        if ( this.hasOption( 't' ) ) {
+            this.taxonName = this.getOptionValue( 't' );
+        }
+
+        if ( this.hasOption( 'i' ) ) {
+            this.idFile = this.getOptionValue( 'i' );
+        }
+
+        if ( this.hasOption( "force" ) ) {
+            this.force = true;
+        }
+
     }
 
     /**

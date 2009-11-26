@@ -22,6 +22,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashSet;
 
 import org.apache.commons.lang.RandomStringUtils;
@@ -35,6 +36,7 @@ import org.springframework.security.acls.model.MutableAcl;
 import org.springframework.security.acls.model.NotFoundException;
 import org.springframework.security.acls.model.ObjectIdentity;
 import org.springframework.security.acls.model.ObjectIdentityRetrievalStrategy;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
 import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -42,7 +44,10 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.security.SecurityService; 
+import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.security.SecurityService;
+import ubic.gemma.security.authentication.UserDetailsImpl;
+import ubic.gemma.security.authentication.UserManager;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
@@ -66,6 +71,12 @@ public class SecurityServiceTest extends BaseSpringContextTest {
 
     @Autowired
     private AclService aclService;
+
+    @Autowired
+    private UserManager userManager;
+
+    @Autowired
+    ExpressionExperimentService expressionExperimentService;
 
     private ObjectIdentityRetrievalStrategy objectIdentityRetrievalStrategy = new ObjectIdentityRetrievalStrategyImpl();
 
@@ -144,6 +155,72 @@ public class SecurityServiceTest extends BaseSpringContextTest {
 
         for ( BioAssay ba : ee.getBioAssays() ) {
             assertTrue( "BioAssay not public, acl was: " + getAcl( ba ), securityService.isPublic( ba ) );
+        }
+
+    }
+
+    private void makeUser( String username ) {
+        try {
+            userManager.loadUserByUsername( username );
+        } catch ( UsernameNotFoundException e ) {
+            userManager.createUser( new UserDetailsImpl( "foo", username, true, null, RandomStringUtils
+                    .randomAlphabetic( 10 )
+                    + "@gmail.com", "key", new Date() ) );
+        }
+    }
+
+    @Test
+    public void testMakeEEGroupReadWrite() throws Exception {
+
+        ArrayDesign ee = super.getTestPersistentArrayDesign( 2, true );
+        securityService.makePrivate( ee );
+
+        String username = "first_" + randomName();
+        String usertwo = "second_" + randomName();
+        makeUser( username );
+        makeUser( usertwo );
+
+        securityService.makeOwnedByUser( ee, username );
+
+        assertTrue( securityService.isEditableByUser( ee, username ) );
+
+        this.runAsUser( username );
+
+        /*
+         * Create a group, do stuff...
+         */
+        String groupName = randomName();
+        securityService.createGroup( groupName );
+        securityService.makeWriteableByGroup( ee, groupName );
+
+        /*
+         * Add another user to the group.
+         */
+
+        securityService.addUserToGroup( usertwo, groupName );
+
+        /*
+         * Now, log in as another user.
+         */
+        this.runAsUser( usertwo );
+
+        ee = arrayDesignService.load( ee.getId() );
+        ee.setDescription( "woohoo, I can edit" );
+        arrayDesignService.update( ee );
+        // no exception == happy.
+
+        this.runAsUser( username );
+        securityService.makeUnreadableByGroup( ee, groupName );
+        // should still work.
+        ee = arrayDesignService.load( ee.getId() );
+
+        this.runAsUser( usertwo );
+        // should be locked out.
+        try {
+            ee = arrayDesignService.load( ee.getId() );
+            fail( "Should have gotten 'access denied'" );
+        } catch ( AccessDeniedException ok ) {
+
         }
 
     }

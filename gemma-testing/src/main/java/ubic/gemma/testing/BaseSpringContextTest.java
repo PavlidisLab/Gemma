@@ -22,7 +22,7 @@ import javax.sql.DataSource;
 
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory; 
+import org.apache.commons.logging.LogFactory;
 import org.hibernate.SessionFactory;
 import org.junit.Before;
 import org.springframework.beans.BeansException;
@@ -95,6 +95,9 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
     @Autowired
     protected TaxonService taxonService;
 
+    @Autowired
+    private AuthenticationTestingUtil authenticationTestingUtil;
+
     protected TestPersistentObjectHelper testHelper;
 
     private String sqlScriptEncoding;
@@ -135,7 +138,7 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
      * @param userName
      */
     public void runAsUser( String userName ) {
-        AuthenticationTestingUtil.switchToUser( this.applicationContext, userName );
+        authenticationTestingUtil.switchToUser( this.applicationContext, userName );
     }
 
     /**
@@ -143,7 +146,7 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
      * runAsUser). This gets called before each test, no need to run it yourself otherwise.
      */
     protected void runAsAdmin() {
-        AuthenticationTestingUtil.grantAdminAuthority( this.applicationContext );
+        authenticationTestingUtil.grantAdminAuthority( this.applicationContext );
     }
 
     /**

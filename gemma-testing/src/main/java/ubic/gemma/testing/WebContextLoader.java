@@ -22,7 +22,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.context.ApplicationContext;
-import org.springframework.context.annotation.AnnotationConfigUtils; 
+import org.springframework.context.annotation.AnnotationConfigUtils;
 import org.springframework.mock.web.MockServletContext;
 import org.springframework.test.context.support.AbstractContextLoader;
 import org.springframework.util.StringUtils;
@@ -31,10 +31,11 @@ import org.springframework.web.context.support.XmlWebApplicationContext;
 
 /**
  * See {@link http://jira.springframework.org/browse/SPR-5243} and {@link http
- * ://dhruba.name/2008/10/25/using-mockservletcontext-and-contextloader-with-spring-25-testcontext-framework/}
+ * ://dhruba.name/2008/10/25/using-mockservletcontext-and-contextloader-with-spring-25-testcontext-framework/}.
  * 
  * @author paul
  * @version $Id$
+ * @see BaseSpringWebTest
  */
 public class WebContextLoader extends AbstractContextLoader {
     protected static final Log logger = LogFactory.getLog( WebContextLoader.class );

@@ -63,11 +63,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  */
 public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
 
-    @Override
-    public String getShortDesc() {
-        return "Analyze expression data sets for coexpressed genes";
-    }
-
     /**
      * @param args
      */
@@ -96,6 +91,11 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
     private String dataFileName = null;
 
     private String analysisTaxon = null;
+
+    @Override
+    public String getShortDesc() {
+        return "Analyze expression data sets for coexpressed genes";
+    }
 
     /*
      * (non-Javadoc)
@@ -287,78 +287,6 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
         return null;
     }
 
-    /**
-     * @return
-     */
-    private QuantitationType makeQuantitationType() {
-        QuantitationType qtype = QuantitationType.Factory.newInstance();
-        qtype.setName( "Dummy" );
-        qtype.setGeneralType( GeneralType.QUANTITATIVE );
-        qtype.setRepresentation( PrimitiveType.DOUBLE ); // no choice here
-        qtype.setIsPreferred( Boolean.TRUE );
-        qtype.setIsNormalized( Boolean.TRUE );
-        qtype.setIsBackgroundSubtracted( Boolean.TRUE );
-        qtype.setIsBackground( false );
-        qtype.setType( StandardQuantitationType.AMOUNT );// this shouldn't get used, just filled in to keep everybody
-        // happy.
-        qtype.setIsMaskedPreferred( true );
-
-        qtype.setScale( ScaleType.OTHER );// this shouldn't get used, just filled in to keep everybody happy.
-        qtype.setIsRatio( false ); // this shouldn't get used, just filled in to keep everybody happy.
-        return qtype;
-    }
-
-    /**
-     * @param arrayDesign
-     * @param matrix
-     * @return
-     */
-    private BioAssayDimension makeBioAssayDimension( ArrayDesign arrayDesign, DoubleMatrix<String, String> matrix ) {
-        BioAssayDimension bad = BioAssayDimension.Factory.newInstance();
-        bad.setName( "For " + this.dataFileName );
-        bad.setDescription( "Generated from flat file" );
-        for ( int i = 0; i < matrix.columns(); i++ ) {
-            Object columnName = matrix.getColName( i );
-
-            BioMaterial bioMaterial = BioMaterial.Factory.newInstance();
-            bioMaterial.setName( columnName.toString() );
-            bioMaterial.setSourceTaxon( taxon );
-            Collection<BioMaterial> bioMaterials = new HashSet<BioMaterial>();
-            bioMaterials.add( bioMaterial );
-
-            BioAssay assay = BioAssay.Factory.newInstance();
-            assay.setName( columnName.toString() );
-            assay.setArrayDesignUsed( arrayDesign );
-            assay.setSamplesUsed( bioMaterials );
-            bad.getBioAssays().add( assay );
-        }
-        return bad;
-    }
-
-    /**
-     * @param ee
-     */
-    private void processExperiment( ExpressionExperiment ee ) {
-        eeService.thawLite( ee );
-
-        if ( !force && !needToRun( ee, LinkAnalysisEvent.class ) ) {
-            log.info( "Can't or Don't need to run " + ee );
-            return;
-        }
-
-        /*
-         * Note that auditing is handled by the service.
-         */
-        try {
-            linkAnalysisService.process( ee, filterConfig, linkAnalysisConfig );
-            successObjects.add( ee.toString() );
-        } catch ( Exception e ) {
-            errorObjects.add( ee + ": " + e.getMessage() );
-            log.error( "**** Exception while processing " + ee + ": " + e.getMessage() + " ********" );
-            log.error( e, e );
-        }
-    }
-
     @Override
     protected void processOptions() {
         super.processOptions();
@@ -495,6 +423,78 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
         }
         if ( hasOption( "lv" ) ) {
             filterConfig.setLowVarianceCut( Double.parseDouble( getOptionValue( "lv" ) ) );
+        }
+    }
+
+    /**
+     * @param arrayDesign
+     * @param matrix
+     * @return
+     */
+    private BioAssayDimension makeBioAssayDimension( ArrayDesign arrayDesign, DoubleMatrix<String, String> matrix ) {
+        BioAssayDimension bad = BioAssayDimension.Factory.newInstance();
+        bad.setName( "For " + this.dataFileName );
+        bad.setDescription( "Generated from flat file" );
+        for ( int i = 0; i < matrix.columns(); i++ ) {
+            Object columnName = matrix.getColName( i );
+
+            BioMaterial bioMaterial = BioMaterial.Factory.newInstance();
+            bioMaterial.setName( columnName.toString() );
+            bioMaterial.setSourceTaxon( taxon );
+            Collection<BioMaterial> bioMaterials = new HashSet<BioMaterial>();
+            bioMaterials.add( bioMaterial );
+
+            BioAssay assay = BioAssay.Factory.newInstance();
+            assay.setName( columnName.toString() );
+            assay.setArrayDesignUsed( arrayDesign );
+            assay.setSamplesUsed( bioMaterials );
+            bad.getBioAssays().add( assay );
+        }
+        return bad;
+    }
+
+    /**
+     * @return
+     */
+    private QuantitationType makeQuantitationType() {
+        QuantitationType qtype = QuantitationType.Factory.newInstance();
+        qtype.setName( "Dummy" );
+        qtype.setGeneralType( GeneralType.QUANTITATIVE );
+        qtype.setRepresentation( PrimitiveType.DOUBLE ); // no choice here
+        qtype.setIsPreferred( Boolean.TRUE );
+        qtype.setIsNormalized( Boolean.TRUE );
+        qtype.setIsBackgroundSubtracted( Boolean.TRUE );
+        qtype.setIsBackground( false );
+        qtype.setType( StandardQuantitationType.AMOUNT );// this shouldn't get used, just filled in to keep everybody
+        // happy.
+        qtype.setIsMaskedPreferred( true );
+
+        qtype.setScale( ScaleType.OTHER );// this shouldn't get used, just filled in to keep everybody happy.
+        qtype.setIsRatio( false ); // this shouldn't get used, just filled in to keep everybody happy.
+        return qtype;
+    }
+
+    /**
+     * @param ee
+     */
+    private void processExperiment( ExpressionExperiment ee ) {
+        eeService.thawLite( ee );
+
+        if ( !force && !needToRun( ee, LinkAnalysisEvent.class ) ) {
+            log.info( "Can't or Don't need to run " + ee );
+            return;
+        }
+
+        /*
+         * Note that auditing is handled by the service.
+         */
+        try {
+            linkAnalysisService.process( ee, filterConfig, linkAnalysisConfig );
+            successObjects.add( ee.toString() );
+        } catch ( Exception e ) {
+            errorObjects.add( ee + ": " + e.getMessage() );
+            log.error( "**** Exception while processing " + ee + ": " + e.getMessage() + " ********" );
+            log.error( e, e );
         }
     }
 

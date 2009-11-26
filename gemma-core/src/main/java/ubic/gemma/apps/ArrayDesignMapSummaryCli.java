@@ -32,19 +32,22 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
  */
 public class ArrayDesignMapSummaryCli extends ArrayDesignSequenceManipulatingCli {
 
-    ArrayDesignMapResultService arrayDesignMapResultService;
-
-    
-    
-    @Override
-    protected void processOptions() {
-        super.processOptions();
-        // FIXME: add HTML output option.
+    public static void main( String[] args ) {
+        ArrayDesignMapSummaryCli p = new ArrayDesignMapSummaryCli();
+        try {
+            Exception ex = p.doWork( args );
+            if ( ex != null ) {
+                ex.printStackTrace();
+            }
+        } catch ( Exception e ) {
+            throw new RuntimeException( e );
+        }
     }
+
+    ArrayDesignMapResultService arrayDesignMapResultService;
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.util.AbstractCLI#doWork(java.lang.String[])
      */
     @Override
@@ -67,16 +70,10 @@ public class ArrayDesignMapSummaryCli extends ArrayDesignSequenceManipulatingCli
         return null;
     }
 
-    public static void main( String[] args ) {
-        ArrayDesignMapSummaryCli p = new ArrayDesignMapSummaryCli();
-        try {
-            Exception ex = p.doWork( args );
-            if ( ex != null ) {
-                ex.printStackTrace();
-            }
-        } catch ( Exception e ) {
-            throw new RuntimeException( e );
-        }
+    @Override
+    protected void processOptions() {
+        super.processOptions();
+        // FIXME: add HTML output option.
     }
 
 }

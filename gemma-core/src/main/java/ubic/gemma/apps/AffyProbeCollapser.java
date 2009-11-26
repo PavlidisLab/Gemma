@@ -43,22 +43,6 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 @Deprecated
 public class AffyProbeCollapser {
 
-    public void collapse( String arrayName, InputStream is, Writer writer ) throws IOException {
-        AffyProbeReader apr = new AffyProbeReader();
-        apr.setSequenceField( 4 );
-        apr.parse( is );
-
-        Collection<CompositeSequence> results = apr.getResults();
-
-        for ( Iterator<CompositeSequence> iter = results.iterator(); iter.hasNext(); ) {
-
-            CompositeSequence apset = iter.next();
-
-            BioSequence m = SequenceManipulation.collapse( apset );
-            writer.write( ">target:" + arrayName + ":" + apset.getName() + ";\n" + m.getSequence() + "\n" );
-        }
-    }
-
     public static void main( String[] args ) throws IOException {
         String arrayName = args[0]; // Array Name, just used to label the sequences
         String filename = args[1]; // Input File Name.
@@ -74,5 +58,21 @@ public class AffyProbeCollapser {
         apc.collapse( arrayName, FileTools.getInputStreamFromPlainOrCompressedFile( filename ), new BufferedWriter(
                 new FileWriter( o ) ) );
 
+    }
+
+    public void collapse( String arrayName, InputStream is, Writer writer ) throws IOException {
+        AffyProbeReader apr = new AffyProbeReader();
+        apr.setSequenceField( 4 );
+        apr.parse( is );
+
+        Collection<CompositeSequence> results = apr.getResults();
+
+        for ( Iterator<CompositeSequence> iter = results.iterator(); iter.hasNext(); ) {
+
+            CompositeSequence apset = iter.next();
+
+            BioSequence m = SequenceManipulation.collapse( apset );
+            writer.write( ">target:" + arrayName + ":" + apset.getName() + ";\n" + m.getSequence() + "\n" );
+        }
     }
 }

@@ -57,9 +57,23 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
         AE, GEO
     };
 
-    @Override
-    public String getShortDesc() {
-        return "Load data from GEO or ArrayExpress";
+    /**
+     * @param args
+     */
+    public static void main( String[] args ) {
+        LoadExpressionDataCli p = new LoadExpressionDataCli();
+        StopWatch watch = new StopWatch();
+        watch.start();
+        try {
+            Exception ex = p.doWork( args );
+            if ( ex != null ) {
+                ex.printStackTrace();
+            }
+            watch.stop();
+            log.info( watch.getTime() );
+        } catch ( Exception e ) {
+            throw new RuntimeException( e );
+        }
     }
 
     // Command line Options
@@ -81,6 +95,11 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
     private boolean splitIncompatiblePlatforms = false;
     private boolean allowSuperSeriesLoad = true;
     private boolean suppressPostProcessing = false;
+
+    @Override
+    public String getShortDesc() {
+        return "Load data from GEO or ArrayExpress";
+    }
 
     /*
      * (non-Javadoc)
@@ -135,25 +154,6 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
 
         addOption( OptionBuilder.withDescription( "Suppress postprocessing steps" ).create( "nopost" ) );
 
-    }
-
-    /**
-     * @param args
-     */
-    public static void main( String[] args ) {
-        LoadExpressionDataCli p = new LoadExpressionDataCli();
-        StopWatch watch = new StopWatch();
-        watch.start();
-        try {
-            Exception ex = p.doWork( args );
-            if ( ex != null ) {
-                ex.printStackTrace();
-            }
-            watch.stop();
-            log.info( watch.getTime() );
-        } catch ( Exception e ) {
-            throw new RuntimeException( e );
-        }
     }
 
     /*
@@ -257,25 +257,6 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
         return null;
     }
 
-    /**
-     * @param aeService
-     * @param accession
-     */
-    protected void processAEAccession( ArrayExpressLoadService aeService, String accession ) {
-
-        try {
-            ExpressionExperiment aeExperiment = aeService.load( accession, adName, false );
-            successObjects.add( ( ( Describable ) aeExperiment ).getName() + " (" + ( aeExperiment ).getShortName()
-                    + ")" );
-
-        } catch ( Exception e ) {
-            errorObjects.add( accession + ": " + e.getMessage() );
-            log.error( "**** Exception while processing " + accession + ": " + e.getMessage() + " ********" );
-            log.error( e, e );
-
-        }
-    }
-
     @SuppressWarnings("unchecked")
     protected void processAccession( GeoDatasetService geoService, String accession ) {
         try {
@@ -304,61 +285,21 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
     }
 
     /**
-     * Do missing value and processed vector creation steps.
-     * 
-     * @param ees
-     */
-    private void postProcess( Collection<ExpressionExperiment> ees ) {
-        log.info( "Postprocessing ..." );
-        for ( ExpressionExperiment ee : ees ) {
-
-            Collection<ArrayDesign> arrayDesignsUsed = eeService.getArrayDesignsUsed( ee );
-            if ( arrayDesignsUsed.size() > 1 ) {
-                log.warn( "Skipping postprocessing because experiment uses "
-                        + "multiple array types. Please check valid entry and run postprocessing separately." );
-            }
-
-            ArrayDesign arrayDesignUsed = arrayDesignsUsed.iterator().next();
-            processForMissingValues( ee, arrayDesignUsed );
-            processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
-        }
-    }
-
-    /**
-     * @param ee
-     * @return
-     */
-    private boolean processForMissingValues( ExpressionExperiment ee, ArrayDesign design ) {
-
-        boolean wasProcessed = false;
-
-        TechnologyType tt = design.getTechnologyType();
-        if ( tt == TechnologyType.TWOCOLOR || tt == TechnologyType.DUALMODE ) {
-            log.info( ee + " uses a two-color array design, processing for missing values ..." );
-            eeService.thawLite( ee );
-            tcmv.computeMissingValues( ee );
-            wasProcessed = true;
-        }
-
-        return wasProcessed;
-    }
-
-    /**
-     * Delete previous version of the experiment.
-     * 
+     * @param aeService
      * @param accession
      */
-    protected void removeIfExists( String accession ) {
-        DatabaseEntry acDbe = DatabaseEntry.Factory.newInstance();
-        acDbe.setAccession( accession );
-        ExternalDatabase geo = ExternalDatabase.Factory.newInstance();
-        geo.setName( "GEO" );
-        acDbe.setExternalDatabase( geo );
-        ExpressionExperiment existing = eeService.findByAccession( acDbe );
+    protected void processAEAccession( ArrayExpressLoadService aeService, String accession ) {
 
-        if ( existing != null ) {
-            log.info( "Deleting existing version of " + accession );
-            eeService.delete( existing );
+        try {
+            ExpressionExperiment aeExperiment = aeService.load( accession, adName, false );
+            successObjects.add( ( ( Describable ) aeExperiment ).getName() + " (" + ( aeExperiment ).getShortName()
+                    + ")" );
+
+        } catch ( Exception e ) {
+            errorObjects.add( accession + ": " + e.getMessage() );
+            log.error( "**** Exception while processing " + accession + ": " + e.getMessage() + " ********" );
+            log.error( e, e );
+
         }
     }
 
@@ -410,6 +351,65 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
         this.adService = ( ArrayDesignService ) getBean( "arrayDesignService" );
         this.processedExpressionDataVectorCreateService = ( ProcessedExpressionDataVectorCreateService ) getBean( "processedExpressionDataVectorCreateService" );
         this.tcmv = ( TwoChannelMissingValues ) this.getBean( "twoChannelMissingValues" );
+    }
+
+    /**
+     * Delete previous version of the experiment.
+     * 
+     * @param accession
+     */
+    protected void removeIfExists( String accession ) {
+        DatabaseEntry acDbe = DatabaseEntry.Factory.newInstance();
+        acDbe.setAccession( accession );
+        ExternalDatabase geo = ExternalDatabase.Factory.newInstance();
+        geo.setName( "GEO" );
+        acDbe.setExternalDatabase( geo );
+        ExpressionExperiment existing = eeService.findByAccession( acDbe );
+
+        if ( existing != null ) {
+            log.info( "Deleting existing version of " + accession );
+            eeService.delete( existing );
+        }
+    }
+
+    /**
+     * Do missing value and processed vector creation steps.
+     * 
+     * @param ees
+     */
+    private void postProcess( Collection<ExpressionExperiment> ees ) {
+        log.info( "Postprocessing ..." );
+        for ( ExpressionExperiment ee : ees ) {
+
+            Collection<ArrayDesign> arrayDesignsUsed = eeService.getArrayDesignsUsed( ee );
+            if ( arrayDesignsUsed.size() > 1 ) {
+                log.warn( "Skipping postprocessing because experiment uses "
+                        + "multiple array types. Please check valid entry and run postprocessing separately." );
+            }
+
+            ArrayDesign arrayDesignUsed = arrayDesignsUsed.iterator().next();
+            processForMissingValues( ee, arrayDesignUsed );
+            processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
+        }
+    }
+
+    /**
+     * @param ee
+     * @return
+     */
+    private boolean processForMissingValues( ExpressionExperiment ee, ArrayDesign design ) {
+
+        boolean wasProcessed = false;
+
+        TechnologyType tt = design.getTechnologyType();
+        if ( tt == TechnologyType.TWOCOLOR || tt == TechnologyType.DUALMODE ) {
+            log.info( ee + " uses a two-color array design, processing for missing values ..." );
+            eeService.thawLite( ee );
+            tcmv.computeMissingValues( ee );
+            wasProcessed = true;
+        }
+
+        return wasProcessed;
     }
 
 }

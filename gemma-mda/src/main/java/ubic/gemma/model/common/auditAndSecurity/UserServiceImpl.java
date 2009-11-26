@@ -38,7 +38,7 @@ public class UserServiceImpl extends ubic.gemma.model.common.auditAndSecurity.Us
 
     }
 
-    public void addUserToGroup( User user, UserGroup group ) {
+    public void addUserToGroup( UserGroup group, User user) {
         group.getGroupMembers().add( user );
         this.getUserGroupDao().update( group );
     }
@@ -168,6 +168,10 @@ public class UserServiceImpl extends ubic.gemma.model.common.auditAndSecurity.Us
     @Override
     protected void handleUpdate( User user ) throws Exception {
         this.getUserDao().update( user );
+    }
+
+    public boolean groupExists( String name ) {
+        return this.getUserGroupDao().findByUserGroupName( name ) != null;
     }
 
 }

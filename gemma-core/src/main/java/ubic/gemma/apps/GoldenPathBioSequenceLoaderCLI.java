@@ -41,12 +41,63 @@ import ubic.gemma.util.AbstractSpringAwareCLI;
  */
 public class GoldenPathBioSequenceLoaderCLI extends AbstractSpringAwareCLI {
 
+    public static void main( String[] args ) {
+        GoldenPathBioSequenceLoaderCLI p = new GoldenPathBioSequenceLoaderCLI();
+        try {
+            Exception ex = p.doWork( args );
+            if ( ex != null ) {
+                ex.printStackTrace();
+            }
+        } catch ( Exception e ) {
+            throw new RuntimeException( e );
+        }
+    }
+
     private ExternalDatabaseService externalDatabaseService;
     private BioSequenceService bioSequenceService;
     private TaxonService taxonService;
     private String taxonName;
     private String fileArg;
+
     private int limitArg = -1;
+
+    public void load( String taxonCommonName, int limit ) {
+
+        Taxon taxon = taxonService.findByCommonName( taxonCommonName );
+        if ( taxon == null ) {
+            throw new IllegalArgumentException( "No such taxon in system: " + taxonCommonName );
+        }
+        doLoad( taxon, limit );
+    }
+
+    /**
+     * Load BioSequences (ESTs and mRNAs) for given taxon from a dump from GoldenPath.
+     * 
+     * @param taxonCommonName e.g., "rat", "human", "mouse".
+     * @param file
+     * @throws IOException
+     */
+    @SuppressWarnings("unchecked")
+    public void load( String taxonCommonName, String file, int limit ) throws IOException {
+        Taxon taxon = taxonService.findByCommonName( taxonCommonName );
+        if ( taxon == null ) {
+            throw new IllegalArgumentException( "No such taxon in system: " + taxonCommonName );
+        }
+        doLoad( file, taxon, limit );
+    }
+
+    /**
+     * Load BioSequences (ESTs and mRNAs) for given taxon.
+     * 
+     * @param taxon
+     * @param file
+     * @param limit
+     * @throws IOException
+     */
+    @SuppressWarnings("unchecked")
+    public void load( Taxon taxon, String file, int limit ) throws IOException {
+        doLoad( file, taxon, limit );
+    }
 
     @SuppressWarnings("static-access")
     @Override
@@ -69,18 +120,6 @@ public class GoldenPathBioSequenceLoaderCLI extends AbstractSpringAwareCLI {
 
     }
 
-    public static void main( String[] args ) {
-        GoldenPathBioSequenceLoaderCLI p = new GoldenPathBioSequenceLoaderCLI();
-        try {
-            Exception ex = p.doWork( args );
-            if ( ex != null ) {
-                ex.printStackTrace();
-            }
-        } catch ( Exception e ) {
-            throw new RuntimeException( e );
-        }
-    }
-
     @Override
     protected Exception doWork( String[] args ) {
         try {
@@ -100,29 +139,24 @@ public class GoldenPathBioSequenceLoaderCLI extends AbstractSpringAwareCLI {
         return null;
     }
 
-    /**
-     * Load BioSequences (ESTs and mRNAs) for given taxon from a dump from GoldenPath.
-     * 
-     * @param taxonCommonName e.g., "rat", "human", "mouse".
-     * @param file
-     * @throws IOException
-     */
-    @SuppressWarnings("unchecked")
-    public void load( String taxonCommonName, String file, int limit ) throws IOException {
-        Taxon taxon = taxonService.findByCommonName( taxonCommonName );
-        if ( taxon == null ) {
-            throw new IllegalArgumentException( "No such taxon in system: " + taxonCommonName );
+    @Override
+    protected void processOptions() {
+        super.processOptions();
+        if ( hasOption( 't' ) ) { // um, required.
+            taxonName = getOptionValue( 't' );
         }
-        doLoad( file, taxon, limit );
-    }
 
-    public void load( String taxonCommonName, int limit ) {
-
-        Taxon taxon = taxonService.findByCommonName( taxonCommonName );
-        if ( taxon == null ) {
-            throw new IllegalArgumentException( "No such taxon in system: " + taxonCommonName );
+        if ( hasOption( 'f' ) ) {
+            fileArg = getOptionValue( 'f' );
         }
-        doLoad( taxon, limit );
+
+        if ( hasOption( 'L' ) ) {
+            limitArg = getIntegerOptionValue( 'L' );
+        }
+        // MethodSecurityInterceptor msi = ( MethodSecurityInterceptor ) getBean( "methodSecurityInterceptor" );
+        this.bioSequenceService = ( BioSequenceService ) getBean( "bioSequenceService" );
+        this.externalDatabaseService = ( ExternalDatabaseService ) getBean( "externalDatabaseService" );
+        this.taxonService = ( TaxonService ) getBean( "taxonService" );
     }
 
     private void doLoad( String file, Taxon taxon, int limit ) throws IOException {
@@ -150,39 +184,6 @@ public class GoldenPathBioSequenceLoaderCLI extends AbstractSpringAwareCLI {
             throw new RuntimeException( e );
         }
 
-    }
-
-    /**
-     * Load BioSequences (ESTs and mRNAs) for given taxon.
-     * 
-     * @param taxon
-     * @param file
-     * @param limit
-     * @throws IOException
-     */
-    @SuppressWarnings("unchecked")
-    public void load( Taxon taxon, String file, int limit ) throws IOException {
-        doLoad( file, taxon, limit );
-    }
-
-    @Override
-    protected void processOptions() {
-        super.processOptions();
-        if ( hasOption( 't' ) ) { // um, required.
-            taxonName = getOptionValue( 't' );
-        }
-
-        if ( hasOption( 'f' ) ) {
-            fileArg = getOptionValue( 'f' );
-        }
-
-        if ( hasOption( 'L' ) ) {
-            limitArg = getIntegerOptionValue( 'L' );
-        }
-        // MethodSecurityInterceptor msi = ( MethodSecurityInterceptor ) getBean( "methodSecurityInterceptor" );
-        this.bioSequenceService = ( BioSequenceService ) getBean( "bioSequenceService" );
-        this.externalDatabaseService = ( ExternalDatabaseService ) getBean( "externalDatabaseService" );
-        this.taxonService = ( TaxonService ) getBean( "taxonService" );
     }
 
 }

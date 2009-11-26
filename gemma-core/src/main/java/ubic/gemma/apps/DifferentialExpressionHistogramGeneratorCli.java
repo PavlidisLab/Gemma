@@ -33,8 +33,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  */
 public class DifferentialExpressionHistogramGeneratorCli extends ExpressionExperimentManipulatingCLI {
 
-    private DifferentialExpressionAnalyzerService differentialExpressionAnalyzerService = null;
-
     /**
      * @param args
      */
@@ -54,9 +52,38 @@ public class DifferentialExpressionHistogramGeneratorCli extends ExpressionExper
         }
     }
 
+    private DifferentialExpressionAnalyzerService differentialExpressionAnalyzerService = null;
+
     /*
      * (non-Javadoc)
-     * 
+     * @see ubic.gemma.util.AbstractSpringAwareCLI#getShortDesc()
+     */
+    @Override
+    public String getShortDesc() {
+        return "Generates histograms for datasets that have had differential expression run on them.";
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see ubic.gemma.apps.AbstractGeneExpressionExperimentManipulatingCLI#buildOptions()
+     */
+    @SuppressWarnings("static-access")
+    @Override
+    protected void buildOptions() {
+
+        /*
+         * These options from the super class support: running on one or more data sets from the command line, running
+         * on list of data sets from a file, running on all data sets.
+         */
+        super.buildOptions();
+
+        /* Supports: running on all data sets that have not been run since a given date. */
+        super.addDateOption();
+
+    }
+
+    /*
+     * (non-Javadoc)
      * @see ubic.gemma.util.AbstractCLI#doWork(java.lang.String[])
      */
     @Override
@@ -82,6 +109,15 @@ public class DifferentialExpressionHistogramGeneratorCli extends ExpressionExper
         return null;
     }
 
+    /*
+     * (non-Javadoc)
+     * @see ubic.gemma.apps.AbstractGeneExpressionExperimentManipulatingCLI#processOptions()
+     */
+    @Override
+    protected void processOptions() {
+        super.processOptions();
+    }
+
     /**
      * @param ee
      */
@@ -95,46 +131,6 @@ public class DifferentialExpressionHistogramGeneratorCli extends ExpressionExper
             e.printStackTrace();
             errorObjects.add( ee + ": " + e.getMessage() );
         }
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.apps.AbstractGeneExpressionExperimentManipulatingCLI#buildOptions()
-     */
-    @SuppressWarnings("static-access")
-    @Override
-    protected void buildOptions() {
-
-        /*
-         * These options from the super class support: running on one or more data sets from the command line, running
-         * on list of data sets from a file, running on all data sets.
-         */
-        super.buildOptions();
-
-        /* Supports: running on all data sets that have not been run since a given date. */
-        super.addDateOption();
-
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.apps.AbstractGeneExpressionExperimentManipulatingCLI#processOptions()
-     */
-    @Override
-    protected void processOptions() {
-        super.processOptions();
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.util.AbstractSpringAwareCLI#getShortDesc()
-     */
-    @Override
-    public String getShortDesc() {
-        return "Generates histograms for datasets that have had differential expression run on them.";
     }
 
 }

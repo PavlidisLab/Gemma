@@ -46,10 +46,22 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractSpringA
 
     protected ArrayDesignService arrayDesignService;
     protected String arrayDesignName = null;
-    
+
     protected UserManager userManager;
 
     protected ArrayDesignReportService arrayDesignReportService;
+
+    public String getArrayDesignName() {
+        return arrayDesignName;
+    }
+
+    public ArrayDesignReportService getArrayDesignReportService() {
+        return arrayDesignReportService;
+    }
+
+    public ArrayDesignService getArrayDesignService() {
+        return arrayDesignService;
+    }
 
     @Override
     @SuppressWarnings("static-access")
@@ -65,8 +77,23 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractSpringA
 
     }
 
-    protected void unlazifyArrayDesign( ArrayDesign arrayDesign ) {
-        arrayDesignService.thawLite( arrayDesign );
+    /**
+     * @param arrayDesign
+     * @return true if the sequences on the given array design would be equivalently treated by analyzing another array
+     *         design. In the case of subsumption, this only works if the array design has been either analyzed for
+     *         subsuming status. (the analysis is not done as part of this call).
+     */
+    protected boolean isSubsumedOrMerged( ArrayDesign arrayDesign ) {
+        if ( arrayDesign.getSubsumingArrayDesign() != null ) {
+            log.info( arrayDesign + " is subsumed by " + arrayDesign.getSubsumingArrayDesign() );
+            return true;
+        }
+
+        if ( arrayDesign.getMergedInto() != null ) {
+            log.info( arrayDesign + " is merged into " + arrayDesign.getMergedInto() );
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -86,44 +113,6 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractSpringA
             bail( ErrorCode.INVALID_OPTION );
         }
         return arrayDesign;
-    }
-
-    @Override
-    protected void processOptions() {
-        super.processOptions();
-        if ( this.hasOption( 'a' ) ) {
-            this.arrayDesignName = this.getOptionValue( 'a' );
-        }
-
-        if ( hasOption( "mdate" ) ) {
-            super.mDate = this.getOptionValue( "mdate" );
-            if ( hasOption( AUTO_OPTION_NAME ) ) {
-                throw new IllegalArgumentException( "Please only select one of 'mdate' OR 'auto'" );
-            }
-        }
-
-        if ( hasOption( AUTO_OPTION_NAME ) ) {
-            this.autoSeek = true;
-            if ( hasOption( "mdate" ) ) {
-                throw new IllegalArgumentException( "Please only select one of 'mdate' OR 'auto'" );
-            }
-        }
-        arrayDesignReportService = ( ArrayDesignReportService ) this.getBean( "arrayDesignReportService" );
-        arrayDesignService = ( ArrayDesignService ) this.getBean( "arrayDesignService" );
-        userManager = ( UserManager ) this.getBean( "userManager" );
-    }
-
-    /**
-     * @param note
-     */
-    protected void updateAudit( String note ) {
-        ArrayDesign ad = this.locateArrayDesign( arrayDesignName );
-        AuditEvent ae = AuditEvent.Factory.newInstance();
-        ae.setNote( note );
-        ae.setAction( AuditAction.UPDATE );
-        ae.setPerformer( userManager.getCurrentUser() );
-        ad.getAuditTrail().addEvent( ae );
-        arrayDesignService.update( ad );
     }
 
     /**
@@ -165,6 +154,66 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractSpringA
         AuditEvent lastEvent = events.get( events.size() - 1 );
         return lastEvent.getDate().before( skipIfLastRunLaterThan );
 
+    }
+
+    @Override
+    protected void processOptions() {
+        super.processOptions();
+        if ( this.hasOption( 'a' ) ) {
+            this.arrayDesignName = this.getOptionValue( 'a' );
+        }
+
+        if ( hasOption( "mdate" ) ) {
+            super.mDate = this.getOptionValue( "mdate" );
+            if ( hasOption( AUTO_OPTION_NAME ) ) {
+                throw new IllegalArgumentException( "Please only select one of 'mdate' OR 'auto'" );
+            }
+        }
+
+        if ( hasOption( AUTO_OPTION_NAME ) ) {
+            this.autoSeek = true;
+            if ( hasOption( "mdate" ) ) {
+                throw new IllegalArgumentException( "Please only select one of 'mdate' OR 'auto'" );
+            }
+        }
+        arrayDesignReportService = ( ArrayDesignReportService ) this.getBean( "arrayDesignReportService" );
+        arrayDesignService = ( ArrayDesignService ) this.getBean( "arrayDesignService" );
+        userManager = ( UserManager ) this.getBean( "userManager" );
+    }
+
+    protected void unlazifyArrayDesign( ArrayDesign arrayDesign ) {
+        arrayDesignService.thawLite( arrayDesign );
+    }
+
+    /**
+     * @param note
+     */
+    protected void updateAudit( String note ) {
+        ArrayDesign ad = this.locateArrayDesign( arrayDesignName );
+        AuditEvent ae = AuditEvent.Factory.newInstance();
+        ae.setNote( note );
+        ae.setAction( AuditAction.UPDATE );
+        ae.setPerformer( userManager.getCurrentUser() );
+        ad.getAuditTrail().addEvent( ae );
+        arrayDesignService.update( ad );
+    }
+
+    /**
+     * @param arrayDesign
+     * @param eventClass if null, then all events are added.
+     * @return
+     */
+    private List<AuditEvent> getEvents( ArrayDesign arrayDesign, Class<? extends ArrayDesignAnalysisEvent> eventClass ) {
+        List<AuditEvent> events = new ArrayList<AuditEvent>();
+
+        for ( AuditEvent event : arrayDesign.getAuditTrail().getEvents() ) {
+            if ( event == null ) continue;
+            if ( eventClass == null
+                    || ( event.getEventType() != null && eventClass.isAssignableFrom( event.getEventType().getClass() ) ) ) {
+                events.add( event );
+            }
+        }
+        return events;
     }
 
     /**
@@ -227,55 +276,6 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractSpringA
         }
         log.info( arrayDesign + " does not need an update" );
         return false;
-    }
-
-    /**
-     * @param arrayDesign
-     * @return true if the sequences on the given array design would be equivalently treated by analyzing another array
-     *         design. In the case of subsumption, this only works if the array design has been either analyzed for
-     *         subsuming status. (the analysis is not done as part of this call).
-     */
-    protected boolean isSubsumedOrMerged( ArrayDesign arrayDesign ) {
-        if ( arrayDesign.getSubsumingArrayDesign() != null ) {
-            log.info( arrayDesign + " is subsumed by " + arrayDesign.getSubsumingArrayDesign() );
-            return true;
-        }
-
-        if ( arrayDesign.getMergedInto() != null ) {
-            log.info( arrayDesign + " is merged into " + arrayDesign.getMergedInto() );
-            return true;
-        }
-        return false;
-    }
-
-    /**
-     * @param arrayDesign
-     * @param eventClass if null, then all events are added.
-     * @return
-     */
-    private List<AuditEvent> getEvents( ArrayDesign arrayDesign, Class<? extends ArrayDesignAnalysisEvent> eventClass ) {
-        List<AuditEvent> events = new ArrayList<AuditEvent>();
-
-        for ( AuditEvent event : arrayDesign.getAuditTrail().getEvents() ) {
-            if ( event == null ) continue;
-            if ( eventClass == null
-                    || ( event.getEventType() != null && eventClass.isAssignableFrom( event.getEventType().getClass() ) ) ) {
-                events.add( event );
-            }
-        }
-        return events;
-    }
-
-    public ArrayDesignService getArrayDesignService() {
-        return arrayDesignService;
-    }
-
-    public String getArrayDesignName() {
-        return arrayDesignName;
-    }
-
-    public ArrayDesignReportService getArrayDesignReportService() {
-        return arrayDesignReportService;
     }
 
 }

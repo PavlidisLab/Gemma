@@ -36,10 +36,6 @@ import ubic.gemma.util.AbstractSpringAwareCLI;
  */
 public class ExpressionExperimentPrimaryPubCli extends AbstractSpringAwareCLI {
 
-    @Override
-    protected void buildOptions() {
-    }
-
     public static void main( String[] args ) {
         ExpressionExperimentPrimaryPubCli p = new ExpressionExperimentPrimaryPubCli();
         try {
@@ -51,7 +47,11 @@ public class ExpressionExperimentPrimaryPubCli extends AbstractSpringAwareCLI {
             throw new RuntimeException( e );
         }
     }
- 
+
+    @Override
+    protected void buildOptions() {
+    }
+
     @Override
     protected Exception doWork( String[] args ) {
         Exception err = processCommandLine( "Expression experiment bibref finder ", args );

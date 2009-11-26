@@ -94,6 +94,14 @@ public class ArrayDesignProbeRenamerCli extends ArrayDesignSequenceManipulatingC
         return null;
     }
 
+    @Override
+    protected void processOptions() {
+        super.processOptions();
+
+        this.fileName = getOptionValue( 'f' );
+
+    }
+
     /**
      * @param arrayDesign
      */
@@ -101,14 +109,6 @@ public class ArrayDesignProbeRenamerCli extends ArrayDesignSequenceManipulatingC
         super.arrayDesignReportService.generateArrayDesignReport( arrayDesign.getId() );
         AuditEventType eventType = ArrayDesignProbeRenamingEvent.Factory.newInstance();
         auditTrailService.addUpdateEvent( arrayDesign, eventType, note );
-    }
-
-    @Override
-    protected void processOptions() {
-        super.processOptions();
-
-        this.fileName = getOptionValue( 'f' );
-
     }
 
 }

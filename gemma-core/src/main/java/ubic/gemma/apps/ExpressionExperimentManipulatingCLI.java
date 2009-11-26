@@ -59,8 +59,8 @@ import ubic.gemma.util.AbstractSpringAwareCLI;
  * <li>A comma-delimited list of one or more EEs identified by short name given on the command line
  * <li>From a file, with one short name per line.
  * <li>EEs matching a query string (e.g., 'brain')
- * <li>(Optional) 'Auto' mode, in which experiments to analyze are selected automatically based on their workflow
- * state. This can be enabled and modified by subclasses who override the "needToRun" method.
+ * <li>(Optional) 'Auto' mode, in which experiments to analyze are selected automatically based on their workflow state.
+ * This can be enabled and modified by subclasses who override the "needToRun" method.
  * <li>All EEs that were last processed after a given date, similar to 'auto' otherwise.
  * </ul>
  * Some of these options can be (or should be) combined, and modified by a (optional) "force" option, and will have
@@ -230,10 +230,10 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractSpring
             log.info( "Processing all experiments that match query " + getOptionValue( 'q' ) );
             this.expressionExperiments = this.findExpressionExperimentsByQuery( getOptionValue( 'q' ), taxon );
         } else if ( taxon != null ) {
-                log.info( "Processing all experiments for " + taxon.getCommonName() );
-                this.expressionExperiments = new HashSet( eeService.findByTaxon( taxon ) );
+            log.info( "Processing all experiments for " + taxon.getCommonName() );
+            this.expressionExperiments = new HashSet( eeService.findByTaxon( taxon ) );
         } else {
-            if(!hasOption("dataFile")){ 
+            if ( !hasOption( "dataFile" ) ) {
                 log.info( "Processing all experiments (futher filtering may modify)" );
                 this.expressionExperiments = new HashSet( eeService.loadAll() );
             }
@@ -260,33 +260,12 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractSpring
             log.info( "Final list: " + this.expressionExperiments.size()
                     + " expressionExperiments (futher filtering may modify)" );
         } else if ( expressionExperiments.size() == 0 ) {
-            if(hasOption("dataFile")){
+            if ( hasOption( "dataFile" ) ) {
                 log.info( "Expression matrix from data file selected" );
-            }
-            else{
+            } else {
                 log.info( "No experiments selected" );
             }
         }
-
-    }
-
-    private void experimentsFromEeSet( String optionValue ) {
-
-        if ( StringUtils.isBlank( optionValue ) ) {
-            throw new IllegalArgumentException( "Please provide an eeset name" );
-        }
-
-        ExpressionExperimentSetService expressionExperimentSetService = ( ExpressionExperimentSetService ) this
-                .getBean( "expressionExperimentSetService" );
-        Collection<ExpressionExperimentSet> sets = expressionExperimentSetService.findByName( optionValue );
-        if ( sets.size() > 1 ) {
-            throw new IllegalArgumentException( "More than on EE set has name '" + optionValue + "'" );
-        } else if ( sets.size() == 0 ) {
-            throw new IllegalArgumentException( "No EE set has name '" + optionValue + "'" );
-        }
-        ExpressionExperimentSet set = sets.iterator().next();
-        this.expressionExperimentSet = set;
-        this.expressionExperiments = new HashSet<BioAssaySet>( set.getExperiments() );
 
     }
 
@@ -354,6 +333,26 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractSpring
         }
     }
 
+    private void experimentsFromEeSet( String optionValue ) {
+
+        if ( StringUtils.isBlank( optionValue ) ) {
+            throw new IllegalArgumentException( "Please provide an eeset name" );
+        }
+
+        ExpressionExperimentSetService expressionExperimentSetService = ( ExpressionExperimentSetService ) this
+                .getBean( "expressionExperimentSetService" );
+        Collection<ExpressionExperimentSet> sets = expressionExperimentSetService.findByName( optionValue );
+        if ( sets.size() > 1 ) {
+            throw new IllegalArgumentException( "More than on EE set has name '" + optionValue + "'" );
+        } else if ( sets.size() == 0 ) {
+            throw new IllegalArgumentException( "No EE set has name '" + optionValue + "'" );
+        }
+        ExpressionExperimentSet set = sets.iterator().next();
+        this.expressionExperimentSet = set;
+        this.expressionExperiments = new HashSet<BioAssaySet>( set.getExperiments() );
+
+    }
+
     /**
      * Use the search engine to locate expression experiments.
      * 
@@ -418,6 +417,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractSpring
 
     /**
      * TODO: replace with call to AuditableUtil.removeTroubledEes.
+     * 
      * @param ees
      */
     @SuppressWarnings("unchecked")

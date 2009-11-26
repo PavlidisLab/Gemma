@@ -126,7 +126,7 @@ public class UserManagerImpl implements UserManager {
     public void addUserToGroup( String username, String groupName ) {
         User u = loadUser( username );
         UserGroup g = loadGroup( groupName );
-        userService.addUserToGroup( u, g );
+        userService.addUserToGroup( g, u );
     }
 
     /*
@@ -209,9 +209,16 @@ public class UserManagerImpl implements UserManager {
 
         UserGroup g = UserGroup.Factory.newInstance();
         g.setName( groupName );
+        for ( GrantedAuthority ga : authorities ) {
+            g.getAuthorities().add( GroupAuthority.Factory.newInstance( ga.getAuthority() ) );
+        }
 
         g = userService.create( g );
 
+    }
+
+    public boolean groupExists( String groupName ) {
+        return userService.groupExists( groupName );
     }
 
     /*
@@ -246,7 +253,7 @@ public class UserManagerImpl implements UserManager {
 
         // Add the user to the default user group.
         UserGroup g = loadGroup( USER_GROUP_NAME );
-        userService.addUserToGroup( u, g );
+        userService.addUserToGroup( g, u );
 
         user = new UserDetailsImpl( u );
         //
@@ -317,7 +324,13 @@ public class UserManagerImpl implements UserManager {
      */
     @Transactional(readOnly = true)
     public List<GrantedAuthority> findGroupAuthorities( String groupName ) {
-        UserGroup group = loadGroup( groupName );
+
+        String groupToSearch = groupName;
+        if ( groupName.startsWith( rolePrefix ) ) {
+            groupToSearch = groupToSearch.replaceFirst( rolePrefix, "" );
+        }
+
+        UserGroup group = loadGroup( groupToSearch );
 
         List<GrantedAuthority> result = new ArrayList<GrantedAuthority>();
         for ( GroupAuthority ga : group.getAuthorities() ) {
@@ -398,10 +411,6 @@ public class UserManagerImpl implements UserManager {
         return auth.getPrincipal().toString();
     }
 
-    /*
-     * (non-Javadoc)
-     * @see ubic.gemma.security.authentication.UserManagerI#getRolePrefix()
-     */
     public String getRolePrefix() {
         return rolePrefix;
     }

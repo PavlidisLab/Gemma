@@ -18,7 +18,9 @@
  */
 package ubic.gemma.testing;
 
-import org.springframework.security.access.annotation.Secured;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.TestingAuthenticationProvider;
@@ -26,22 +28,31 @@ import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.GrantedAuthorityImpl;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 
+import ubic.gemma.security.authentication.UserManager;
+
 /**
- * Convenience methods used by multiple test abstractions
+ * Convenience methods used by multiple test abstractions. It is important that this not be used for anything other than tests!
  * 
  * @author pavlidis
  * @version $Id$
  * @see ubic.gemma.security.authentication.AuthenticationUtils
  */
+@Component
 public class AuthenticationTestingUtil {
+
+    @Autowired
+    UserManager userManager;
 
     /**
      * Grant authority to a test user, with admin privileges, and put the token in the context. This means your tests
      * will be authorized to do anything an administrator would be able to do.
      */
-    public static void grantAdminAuthority( ApplicationContext ctx ) {
+    public void grantAdminAuthority( ApplicationContext ctx ) {
         ProviderManager providerManager = ( ProviderManager ) ctx.getBean( "authenticationManager" );
         providerManager.getProviders().add( new TestingAuthenticationProvider() );
 
@@ -56,15 +67,18 @@ public class AuthenticationTestingUtil {
 
     /**
      * Grant authority to a test user, with regular user privileges, and put the token in the context. This means your
-     * tests will be authorized to do anything a user would be able to do, but lacks administrative privileges.
+     * tests will be authorized to do anything that user could do
      */
-    @Secured("GROUP_ADMIN")
-    public static void switchToUser( ApplicationContext ctx, String username ) {
+    public void switchToUser( ApplicationContext ctx, String username ) {
+
+        UserDetails user = userManager.loadUserByUsername( username );
+
+        List<GrantedAuthority> authrs = new ArrayList<GrantedAuthority>( user.getAuthorities() );
+
         ProviderManager providerManager = ( ProviderManager ) ctx.getBean( "authenticationManager" );
         providerManager.getProviders().add( new TestingAuthenticationProvider() );
 
-        TestingAuthenticationToken token = new TestingAuthenticationToken( username, "testing",
-                new GrantedAuthority[] { new GrantedAuthorityImpl( "GROUP_USER" ) } );
+        TestingAuthenticationToken token = new TestingAuthenticationToken( username, "testing", authrs );
         token.setAuthenticated( true );
 
         putTokenInContext( token );

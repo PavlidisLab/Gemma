@@ -35,68 +35,6 @@ import ubic.gemma.util.CompassUtils;
  */
 public class IndexGemmaCLI extends AbstractSpringAwareCLI {
 
-    private boolean indexEE = false;
-    private boolean indexAD = false;
-    private boolean indexG = false;
-    private boolean indexB = false;
-    private boolean indexP = false;
-    private boolean indexQ = false;
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.util.AbstractCLI#buildOptions()
-     */
-    @SuppressWarnings("static-access")
-    @Override
-    protected void buildOptions() {
-        Option geneOption = OptionBuilder.withDescription( "Index genes" ).withLongOpt( "genes" )
-                .create( 'g' );
-        addOption( geneOption );
-
-        Option eeOption = OptionBuilder.withDescription( "Index Expression Experiments" )
-                .withLongOpt( "ExpressionExperiments" ).create( 'e' );
-        addOption( eeOption );
-
-        Option adOption = OptionBuilder.withDescription( "Index Array Designs" ).withLongOpt(
-                "ArrayDesigns" ).create( 'a' );
-        addOption( adOption );
-
-
-        Option bibliographicOption = OptionBuilder.withDescription(
-                "Index Bibliographic References" ).withLongOpt( "Bibliographic" ).create( 'b' );
-        addOption( bibliographicOption );
-
-        Option probeOption = OptionBuilder.withDescription( "Index probes" ).withLongOpt(
-                "probes" ).create( 's' );
-        addOption( probeOption );
-
-        Option sequenceOption = OptionBuilder.withDescription( "Index sequences" ).withLongOpt(
-                "sequences" ).create( 'q' );
-        addOption( sequenceOption );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.util.AbstractSpringAwareCLI#processOptions()
-     */
-    @Override
-    protected void processOptions() {
-        super.processOptions();
-        if ( hasOption( 'e' ) ) indexEE = true;
-
-        if ( hasOption( 'a' ) ) indexAD = true;
-
-        if ( hasOption( 'g' ) ) indexG = true;
-
-        if ( hasOption( 'b' ) ) indexB = true;
-
-        if ( hasOption( 's' ) ) indexP = true;
-
-        if ( hasOption( 'q' ) ) indexQ = true;
-    }
-
     /**
      * @param args
      */
@@ -104,7 +42,7 @@ public class IndexGemmaCLI extends AbstractSpringAwareCLI {
         IndexGemmaCLI p = new IndexGemmaCLI();
         StopWatch watch = new StopWatch();
         watch.start();
-        try { 
+        try {
             Exception ex = p.doWork( args );
             if ( ex != null ) {
                 ex.printStackTrace();
@@ -116,11 +54,53 @@ public class IndexGemmaCLI extends AbstractSpringAwareCLI {
         }
     }
 
+    private boolean indexEE = false;
+    private boolean indexAD = false;
+    private boolean indexG = false;
+    private boolean indexB = false;
+    private boolean indexP = false;
+
+    private boolean indexQ = false;
+
+    @Override
+    public String getShortDesc() {
+        return "Create or update the searchable indexes for a Gemma production system";
+    }
+
     /*
      * (non-Javadoc)
-     * 
+     * @see ubic.gemma.util.AbstractCLI#buildOptions()
+     */
+    @SuppressWarnings("static-access")
+    @Override
+    protected void buildOptions() {
+        Option geneOption = OptionBuilder.withDescription( "Index genes" ).withLongOpt( "genes" ).create( 'g' );
+        addOption( geneOption );
+
+        Option eeOption = OptionBuilder.withDescription( "Index Expression Experiments" ).withLongOpt(
+                "ExpressionExperiments" ).create( 'e' );
+        addOption( eeOption );
+
+        Option adOption = OptionBuilder.withDescription( "Index Array Designs" ).withLongOpt( "ArrayDesigns" ).create(
+                'a' );
+        addOption( adOption );
+
+        Option bibliographicOption = OptionBuilder.withDescription( "Index Bibliographic References" ).withLongOpt(
+                "Bibliographic" ).create( 'b' );
+        addOption( bibliographicOption );
+
+        Option probeOption = OptionBuilder.withDescription( "Index probes" ).withLongOpt( "probes" ).create( 's' );
+        addOption( probeOption );
+
+        Option sequenceOption = OptionBuilder.withDescription( "Index sequences" ).withLongOpt( "sequences" ).create(
+                'q' );
+        addOption( sequenceOption );
+    }
+
+    /*
+     * (non-Javadoc)
      * @see ubic.gemma.util.AbstractCLI#doWork(java.lang.String[])
-     */ 
+     */
     @Override
     protected Exception doWork( String[] args ) {
         Exception err = processCommandLine( "Index Gemma", args );
@@ -155,6 +135,26 @@ public class IndexGemmaCLI extends AbstractSpringAwareCLI {
         return null;
     }
 
+    /*
+     * (non-Javadoc)
+     * @see ubic.gemma.util.AbstractSpringAwareCLI#processOptions()
+     */
+    @Override
+    protected void processOptions() {
+        super.processOptions();
+        if ( hasOption( 'e' ) ) indexEE = true;
+
+        if ( hasOption( 'a' ) ) indexAD = true;
+
+        if ( hasOption( 'g' ) ) indexG = true;
+
+        if ( hasOption( 'b' ) ) indexB = true;
+
+        if ( hasOption( 's' ) ) indexP = true;
+
+        if ( hasOption( 'q' ) ) indexQ = true;
+    }
+
     /**
      * @param device
      * @param whatIndexingMsg
@@ -173,10 +173,5 @@ public class IndexGemmaCLI extends AbstractSpringAwareCLI {
         log.info( "Finished rebuilding " + whatIndexingMsg + ".  Took (ms): " + time );
         log.info( " \n " );
 
-    }
-
-    @Override
-    public String getShortDesc() {
-        return "Create or update the searchable indexes for a Gemma production system";
     }
 }

@@ -62,6 +62,10 @@ import ubic.gemma.util.concurrent.GenericStreamConsumer;
  */
 public class Blat {
 
+    public static enum BlattableGenome {
+        HUMAN, MOUSE, RAT
+    }
+
     /**
      * Minimum alignment length for retention.
      */
@@ -140,16 +144,17 @@ public class Blat {
 
     private double blatScoreThreshold = DEFAULT_BLAT_SCORE_THRESHOLD;
     private boolean doShutdown = true;
+
     // typical values.
     private String gfClientExe = "/cygdrive/c/cygwin/usr/local/bin/gfClient.exe";
-
     private String gfServerExe = "/cygdrive/c/cygwin/usr/local/bin/gfServer.exe";
     private String host = "localhost";
     private String seqDir = "/";
-    private String humanSeqFiles;
 
+    private String humanSeqFiles;
     private String ratSeqFiles;
     private String mouseSeqFiles;
+
     private Process serverProcess;
 
     private int humanServerPort;
@@ -162,13 +167,13 @@ public class Blat {
 
     private int mouseSensitiveServerPort;
 
-    private int ratSensitiveServerPort;
-
     // private String humanServerHost;
     //
     // private String mouseServerHost;
     //
     // private String ratServerHost;
+
+    private int ratSensitiveServerPort;
 
     /**
      * Create a blat object with settings read from the config file.
@@ -246,11 +251,6 @@ public class Blat {
 
     }
 
-    public Map<BioSequence, Collection<BlatResult>> blatQuery( Collection<BioSequence> sequences, Taxon taxon )
-            throws IOException {
-        return blatQuery( sequences, false, taxon );
-    }
-
     /**
      * @param sequences
      * @param taxon The taxon whose database will be searched.
@@ -296,6 +296,11 @@ public class Blat {
         }
         querySequenceFile.delete();
         return results;
+    }
+
+    public Map<BioSequence, Collection<BlatResult>> blatQuery( Collection<BioSequence> sequences, Taxon taxon )
+            throws IOException {
+        return blatQuery( sequences, false, taxon );
     }
 
     /**
@@ -371,24 +376,6 @@ public class Blat {
         }
     }
 
-    /**
-     * @param inputStream to the Blat output file in psl format
-     * @return processed results.
-     */
-    public Collection<BlatResult> processPsl( InputStream inputStream, Taxon taxon ) throws IOException {
-
-        if ( inputStream.available() == 0 ) {
-            throw new IOException( "No data from the blat output file. Make sure the gfServer is running" );
-        }
-
-        log.debug( "Processing " + inputStream );
-        BlatResultParser brp = new BlatResultParser();
-        brp.setTaxon( taxon );
-        brp.setScoreThreshold( this.blatScoreThreshold );
-        brp.parse( inputStream );
-        return brp.getResults();
-    }
-
     // /**
     // * @param future
     // * @return
@@ -408,6 +395,24 @@ public class Blat {
     // br.close();
     // return buf;
     // }
+
+    /**
+     * @param inputStream to the Blat output file in psl format
+     * @return processed results.
+     */
+    public Collection<BlatResult> processPsl( InputStream inputStream, Taxon taxon ) throws IOException {
+
+        if ( inputStream.available() == 0 ) {
+            throw new IOException( "No data from the blat output file. Make sure the gfServer is running" );
+        }
+
+        log.debug( "Processing " + inputStream );
+        BlatResultParser brp = new BlatResultParser();
+        brp.setTaxon( taxon );
+        brp.setScoreThreshold( this.blatScoreThreshold );
+        brp.parse( inputStream );
+        return brp.getResults();
+    }
 
     /**
      * @param blatScoreThreshold the blatScoreThreshold to set
@@ -722,10 +727,6 @@ public class Blat {
         brp.setScoreThreshold( this.blatScoreThreshold );
         brp.parse( filePath );
         return brp.getResults();
-    }
-
-    public static enum BlattableGenome {
-        HUMAN, MOUSE, RAT
     }
 
 }

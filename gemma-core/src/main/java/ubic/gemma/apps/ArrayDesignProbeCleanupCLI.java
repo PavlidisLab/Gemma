@@ -43,13 +43,25 @@ import ubic.gemma.model.expression.designElement.CompositeSequenceService;
  */
 public class ArrayDesignProbeCleanupCLI extends ArrayDesignSequenceManipulatingCli {
 
+    public static void main( String[] args ) {
+        ArrayDesignProbeCleanupCLI p = new ArrayDesignProbeCleanupCLI();
+        try {
+            Exception ex = p.doWork( args );
+            if ( ex != null ) {
+                ex.printStackTrace();
+            }
+        } catch ( Exception e ) {
+            throw new RuntimeException( e );
+        }
+    }
+
     private String file;
     private CompositeSequenceService compositeSequenceService;
+
     private DesignElementDataVectorService designElementDataVectorService;
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.util.AbstractCLI#buildOptions()
      */
     @Override
@@ -65,7 +77,6 @@ public class ArrayDesignProbeCleanupCLI extends ArrayDesignSequenceManipulatingC
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.util.AbstractCLI#doWork(java.lang.String[])
      */
     @Override
@@ -110,18 +121,6 @@ public class ArrayDesignProbeCleanupCLI extends ArrayDesignSequenceManipulatingC
         }
 
         return null;
-    }
-
-    public static void main( String[] args ) {
-        ArrayDesignProbeCleanupCLI p = new ArrayDesignProbeCleanupCLI();
-        try {
-            Exception ex = p.doWork( args );
-            if ( ex != null ) {
-                ex.printStackTrace();
-            }
-        } catch ( Exception e ) {
-            throw new RuntimeException( e );
-        }
     }
 
     @Override

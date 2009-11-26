@@ -34,6 +34,18 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
  */
 public class ArrayDesignBioSequenceDetachCli extends ArrayDesignSequenceManipulatingCli {
 
+    public static void main( String[] args ) {
+        ArrayDesignBioSequenceDetachCli p = new ArrayDesignBioSequenceDetachCli();
+        try {
+            Exception ex = p.doWork( args );
+            if ( ex != null ) {
+                ex.printStackTrace();
+            }
+        } catch ( Exception e ) {
+            throw new RuntimeException( e );
+        }
+    }
+
     @Override
     protected Exception doWork( String[] args ) {
 
@@ -53,18 +65,6 @@ public class ArrayDesignBioSequenceDetachCli extends ArrayDesignSequenceManipula
         super.getArrayDesignReportService().generateArrayDesignReport( arrayDesign.getId() );
         AuditEventType eventType = ArrayDesignSequenceRemoveEvent.Factory.newInstance();
         auditTrailService.addUpdateEvent( arrayDesign, eventType, note );
-    }
-
-    public static void main( String[] args ) {
-        ArrayDesignBioSequenceDetachCli p = new ArrayDesignBioSequenceDetachCli();
-        try {
-            Exception ex = p.doWork( args );
-            if ( ex != null ) {
-                ex.printStackTrace();
-            }
-        } catch ( Exception e ) {
-            throw new RuntimeException( e );
-        }
     }
 
 }

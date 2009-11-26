@@ -51,6 +51,15 @@ import ubic.gemma.util.AbstractSpringAwareCLI;
  */
 public class TouchAclCli extends AbstractSpringAwareCLI {
 
+    /**
+     * @param args
+     */
+    public static void main( String[] args ) {
+        TouchAclCli c = new TouchAclCli();
+        c.doWork( args );
+
+    }
+
     /*
      * (non-Javadoc)
      * @see ubic.gemma.util.AbstractCLI#buildOptions()
@@ -149,15 +158,6 @@ public class TouchAclCli extends AbstractSpringAwareCLI {
         }
 
         return null;
-    }
-
-    /**
-     * @param args
-     */
-    public static void main( String[] args ) {
-        TouchAclCli c = new TouchAclCli();
-        c.doWork( args );
-
     }
 
 }

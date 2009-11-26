@@ -29,7 +29,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 
 /**
  * <ul>
- * <li> make new array design based on others
+ * <li>make new array design based on others
  * <li>Keep map of relation between new design elements and old ones
  * <li>Store relationship with mergees
  * </ul>

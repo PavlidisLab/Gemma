@@ -49,22 +49,6 @@ import ubic.gemma.util.AbstractSpringAwareCLI;
  */
 public class ImageCloneLoaderCli extends AbstractSpringAwareCLI {
 
-    private String dateString;
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.util.AbstractCLI#buildOptions()
-     */
-    @SuppressWarnings("static-access")
-    @Override
-    protected void buildOptions() {
-        Option dateOption = OptionBuilder.hasArg().isRequired().withArgName( "Date on file" ).withDescription(
-                "Date in the clone file, such as 20060901" ).withLongOpt( "date" ).create( 'd' );
-
-        addOption( dateOption );
-    }
-
     public static void main( String[] args ) {
         ImageCloneLoaderCli p = new ImageCloneLoaderCli();
         try {
@@ -77,9 +61,23 @@ public class ImageCloneLoaderCli extends AbstractSpringAwareCLI {
         }
     }
 
+    private String dateString;
+
     /*
      * (non-Javadoc)
-     * 
+     * @see ubic.gemma.util.AbstractCLI#buildOptions()
+     */
+    @SuppressWarnings("static-access")
+    @Override
+    protected void buildOptions() {
+        Option dateOption = OptionBuilder.hasArg().isRequired().withArgName( "Date on file" ).withDescription(
+                "Date in the clone file, such as 20060901" ).withLongOpt( "date" ).create( 'd' );
+
+        addOption( dateOption );
+    }
+
+    /*
+     * (non-Javadoc)
      * @see ubic.gemma.util.AbstractCLI#doWork(java.lang.String[])
      */
     @Override
