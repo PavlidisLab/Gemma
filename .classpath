@@ -229,7 +229,6 @@
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="var" path="M2_REPO/net/sf/jsr107cache/jsr107cache/1.0/jsr107cache-1.0.jar"/>
-	<classpathentry kind="var" path="M2_REPO/opensymphony/oscache/2.4/oscache-2.4.jar"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/baseCode"/>
 	<classpathentry kind="var" path="M2_REPO/org/springframework/security/spring-security-acl/3.0.0.CI-SNAPSHOT/spring-security-acl-3.0.0.CI-SNAPSHOT.jar" sourcepath="/JAR_SRC/spring-security-3.0.0.RC1/src/spring-security-acl-3.0.0.RC1-sources.jar">
 		<attributes>

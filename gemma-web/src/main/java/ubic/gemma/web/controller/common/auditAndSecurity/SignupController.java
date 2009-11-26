@@ -34,6 +34,7 @@ import org.springframework.mail.SimpleMailMessage;
 import org.springframework.security.authentication.encoding.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 
 import ubic.gemma.security.authentication.UserDetailsImpl;
 import ubic.gemma.security.authentication.UserManager;
@@ -107,7 +108,7 @@ public class SignupController extends BaseController {
      * @param response
      * @throws Exception
      */
-    @RequestMapping("/signup.html")
+    @RequestMapping(value = "/signup.html", method = RequestMethod.POST)
     public void signup( HttpServletRequest request, HttpServletResponse response ) throws Exception {
 
         JSONUtil jsonUtil = new JSONUtil( request, response );
@@ -180,6 +181,11 @@ public class SignupController extends BaseController {
         } finally {
             jsonUtil.writeToResponse( jsonText );
         }
+    }
+
+    @RequestMapping(value = "/signup.html", method = RequestMethod.GET)
+    public String signupForm() {
+        return "register";
     }
 
     /**
