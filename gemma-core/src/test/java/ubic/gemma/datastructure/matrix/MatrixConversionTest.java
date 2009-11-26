@@ -40,7 +40,7 @@ import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.Reporter;
-import ubic.gemma.testing.TestPersistentObjectHelper;
+import ubic.gemma.testing.PersistentDummyObjectHelper;
 
 /**
  * @author pavlidis
@@ -142,7 +142,7 @@ public class MatrixConversionTest extends TestCase {
     public final void testColumnMapping() {
         Collection<QuantitationType> quantTypes = new HashSet<QuantitationType>();
         for ( int quantitationTypeNum = 0; quantitationTypeNum < 2; quantitationTypeNum++ ) {
-            QuantitationType quantType = TestPersistentObjectHelper.getTestNonPersistentQuantitationType();
+            QuantitationType quantType = PersistentDummyObjectHelper.getTestNonPersistentQuantitationType();
             quantType.setId( ( long ) quantitationTypeNum );
             quantTypes.add( quantType );
             break;

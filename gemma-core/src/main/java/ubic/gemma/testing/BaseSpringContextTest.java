@@ -98,7 +98,7 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
     @Autowired
     private AuthenticationTestingUtil authenticationTestingUtil;
 
-    protected TestPersistentObjectHelper testHelper;
+    protected PersistentDummyObjectHelper testHelper;
 
     private String sqlScriptEncoding;
 
@@ -122,7 +122,7 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
 
         runAsAdmin();
 
-        this.testHelper = new TestPersistentObjectHelper();
+        this.testHelper = new PersistentDummyObjectHelper();
         testHelper.setPersisterHelper( persisterHelper );
         testHelper.setExternalDatabaseService( externalDatabaseService );
 

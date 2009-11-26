@@ -75,7 +75,7 @@ import ubic.gemma.persistence.PersisterHelper;
  * @author pavlidis
  * @version $Id$
  */
-public class TestPersistentObjectHelper {
+public class PersistentDummyObjectHelper {
 
     public static final int NUM_FACTOR_VALUES = 2;
     public static final int NUM_EXPERIMENTAL_FACTORS = 2;

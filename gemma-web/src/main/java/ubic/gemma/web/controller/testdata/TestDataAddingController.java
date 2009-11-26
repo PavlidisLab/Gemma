@@ -28,7 +28,7 @@ import org.springframework.web.servlet.mvc.SimpleFormController;
 import ubic.gemma.model.common.description.ExternalDatabaseService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.PersisterHelper;
-import ubic.gemma.testing.TestPersistentObjectHelper;
+import ubic.gemma.testing.PersistentDummyObjectHelper;
 import ubic.gemma.util.progress.ProgressJob;
 import ubic.gemma.util.progress.ProgressManager;
 import ubic.gemma.util.progress.TaskRunningService;
@@ -81,7 +81,7 @@ public class TestDataAddingController extends SimpleFormController {
     @Override
     protected ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
             BindException error ) throws Exception {
-        TestPersistentObjectHelper helper = new TestPersistentObjectHelper();
+        PersistentDummyObjectHelper helper = new PersistentDummyObjectHelper();
         helper.setPersisterHelper( this.persisterHelper );
         helper.setExternalDatabaseService( externalDatabaseService );
 
