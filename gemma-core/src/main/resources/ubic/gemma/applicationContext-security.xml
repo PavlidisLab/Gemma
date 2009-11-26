@@ -13,16 +13,8 @@
           http://www.springframework.org/schema/context 
           http://www.springframework.org/schema/context/spring-context-3.0.xsd
            http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.0.xsd">
+
 	<bean id="authenticationLoggerListener" class="org.springframework.security.authentication.event.LoggerListener" />
-
-	<bean id="securityExpressionHandler" class="org.springframework.security.access.expression.method.DefaultMethodSecurityExpressionHandler">
-		<property name="permissionEvaluator" ref="permissionEvaluator" />
-	</bean>
-
-	<bean id="runasManager" class="org.springframework.security.access.intercept.RunAsManagerImpl">
-		<property name="rolePrefix" value="GROUP_" />
-		<property name="key" value="${gemma.runas.password}" />
-	</bean>
 
 	<!--
 		Notes. 1) The auto-config doesn't do much since we customize most things. 2) We provide a custom accessDecisionManager
@@ -32,8 +24,8 @@
 
 		<s:http-basic />
 
-		<s:anonymous granted-authority="GROUP_ANONYMOUS" /> 
-		
+		<s:anonymous granted-authority="GROUP_ANONYMOUS" />
+
 		<s:intercept-url pattern="/admin/**" access="GROUP_ADMIN" />
 		<s:intercept-url pattern="/expressionExperiment/showAllExpressionExperimentLinkSummaries.html" access="GROUP_USER" />
 		<s:intercept-url pattern="/whatsnew/generateCache.html" access="GROUP_ADMIN" />
@@ -78,6 +70,14 @@
 		<s:authentication-provider ref="runAsAuthenticationProvider" />
 	</s:authentication-manager>
 
+
+	<bean id="runasManager" class="org.springframework.security.access.intercept.RunAsManagerImpl">
+		<property name="rolePrefix" value="GROUP_" />
+		<property name="key" value="${gemma.runas.password}" />
+	</bean>
+
+
+
 	<bean id="runAsAuthenticationProvider" class="org.springframework.security.access.intercept.RunAsImplAuthenticationProvider">
 		<property name="key" value="${gemma.runas.password}" />
 	</bean>
@@ -100,7 +100,7 @@
 	<!--- global method security configuration -->
 
 	<s:global-method-security run-as-manager-ref="runasManager" secured-annotations="enabled"
-		access-decision-manager-ref="accessDecisionManager">
+		pre-post-annotations="enabled" access-decision-manager-ref="accessDecisionManager">
 		<s:expression-handler ref="securityExpressionHandler" />
 
 		<!-- these filters are declared below -->
@@ -110,8 +110,23 @@
 		<s:after-invocation-provider ref="afterAclDataVectorCollectionRead" />
 		<s:after-invocation-provider ref="afterAclMyDataRead" />
 		<s:after-invocation-provider ref="afterAclMapRead" />
+		<s:after-invocation-provider ref="postInvocationAdviceProvider" /><!-- for @Post... -->
 
 	</s:global-method-security>
+
+
+	<!-- needed for the use of @Pre... and @Post...-->
+	<bean id="securityExpressionHandler" class="org.springframework.security.access.expression.method.DefaultMethodSecurityExpressionHandler">
+		<property name="roleHierarchy" ref="roleHierarchy" />
+		<property name="permissionEvaluator">
+			<bean class="org.springframework.security.acls.AclPermissionEvaluator">
+				<constructor-arg>
+					<ref local="aclService" />
+				</constructor-arg>
+				<property name="sidRetrievalStrategy" ref="sidRetrievalStrategy" />
+			</bean>
+		</property>
+	</bean>
 
 	<!-- ===================== VOTING ==================== -->
 
@@ -125,6 +140,14 @@
 				<ref local="securableReadVoter" />
 				<ref local="roleHierarchyVoter" />
 				<bean class="org.springframework.security.access.vote.AuthenticatedVoter" />
+				<!-- needed for the use of @Pre..-->
+				<bean class="org.springframework.security.access.prepost.PreInvocationAuthorizationAdviceVoter">
+					<constructor-arg>
+						<bean class="org.springframework.security.access.expression.method.ExpressionBasedPreInvocationAdvice">
+							<property name="expressionHandler" ref="securityExpressionHandler" />
+						</bean>
+					</constructor-arg>
+				</bean>
 				<ref local="securableCollectionReadVoter" />
 			</list>
 		</property>
@@ -240,11 +263,6 @@
 		</constructor-arg>
 	</bean>
 
-	<bean id="permissionEvaluator" class="org.springframework.security.acls.AclPermissionEvaluator">
-		<constructor-arg ref="aclService" />
-		<property name="sidRetrievalStrategy" ref="sidRetrievalStrategy" />
-	</bean>
-
 	<!-- Service that handles CRUD operations on ACLs.  -->
 	<bean id="aclService" class="org.springframework.security.acls.jdbc.JdbcMutableAclService">
 		<constructor-arg ref="dataSource" />
@@ -349,6 +367,14 @@
 		<property name="sidRetrievalStrategy" ref="sidRetrievalStrategy" />
 	</bean>
 
+	<!-- needed for the use of @Post..-->
+	<bean id="postInvocationAdviceProvider" class="org.springframework.security.access.prepost.PostInvocationAdviceProvider">
+		<constructor-arg>
+			<bean class="org.springframework.security.access.expression.method.ExpressionBasedPostInvocationAdvice">
+				<constructor-arg ref="securityExpressionHandler" />
+			</bean>
+		</constructor-arg>
+	</bean>
 
 
 </beans>

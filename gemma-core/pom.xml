@@ -88,13 +88,7 @@
 			<groupId>gemma</groupId>
 			<artifactId>gemma-util</artifactId>
 			<version>${project.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>gemma</groupId>
-			<artifactId>gemma-testing</artifactId>
-			<version>${project.version}</version>
-			<scope>test</scope>
-		</dependency>
+		</dependency> 
 		<dependency>
 			<groupId>gemma</groupId>
 			<artifactId>gemma-mda</artifactId>

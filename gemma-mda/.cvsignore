@@ -1,5 +1,6 @@
 target
 *.log
-andromda*.exc 
+andromda*.exc
 cobertura.ser
 spring*.exc
+hibernate*.exc

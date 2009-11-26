@@ -102,12 +102,7 @@
 			<groupId>gemma</groupId>
 			<artifactId>gemma-util</artifactId>
 			<version>${project.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>gemma</groupId>
-			<artifactId>gemma-testing</artifactId>
-			<version>${project.version}</version>
-		</dependency>
+		</dependency> 
 		<dependency>
 			<groupId>commons-beanutils</groupId>
 			<artifactId>commons-beanutils</artifactId>

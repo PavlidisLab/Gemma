@@ -21,10 +21,10 @@ package ubic.gemma.loader.expression.geo.service;
 import org.junit.Before;
 import org.junit.Test;
 
+import ubic.gemma.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.loader.expression.geo.GeoConverter;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.persistence.PersisterHelper;
-import ubic.gemma.testing.AbstractGeoServiceTest;
 
 /**
  * Tests of GeoPlatformService

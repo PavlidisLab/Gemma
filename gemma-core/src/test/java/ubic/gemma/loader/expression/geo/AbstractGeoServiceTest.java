@@ -16,10 +16,11 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.testing;
+package ubic.gemma.loader.expression.geo;
 
 import java.io.IOException;
 
+import ubic.gemma.testing.BaseSpringContextTest;
 import ubic.gemma.util.ConfigUtils;
 
 /**

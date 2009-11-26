@@ -30,9 +30,9 @@ import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.access.vote.AuthenticatedVoter;
 import org.springframework.security.acls.domain.BasePermission;
 import org.springframework.security.acls.domain.GrantedAuthoritySid;
@@ -65,18 +65,13 @@ import ubic.gemma.security.authentication.UserManager;
 import ubic.gemma.util.AuthorityConstants;
 
 /**
+ * Methods for changing security on objects, creating and modifying groups, checking security on objects.
+ * 
  * @author keshav
  * @author paul
  * @version $Id$
  */
-/**
- * TODO Document Me
- * 
- * @author paul
- * @version $Id$
- */
 @Service
-@Lazy
 public class SecurityService {
 
     /**
@@ -527,7 +522,7 @@ public class SecurityService {
      * @param groupName
      * @throws AccessDeniedException
      */
-    @Secured("ACL_SECURABLE_EDIT")
+    @PreAuthorize("hasPermission(#s, write)")
     @Transactional
     public void makeWriteableByGroup( Securable s, String groupName ) throws AccessDeniedException {
         Collection<String> groups = checkForGroupAccessByCurrentuser( groupName );

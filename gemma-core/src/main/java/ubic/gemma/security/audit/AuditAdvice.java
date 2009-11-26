@@ -243,7 +243,12 @@ public class AuditAdvice extends HibernateDaoSupport {
      * @return
      */
     private User getCurrentUser() {
-        return userManager.getCurrentUser();
+        try {
+            return userManager.getCurrentUser();
+        } catch ( UsernameNotFoundException e ) {
+            /* probably anonymous */
+            return null;
+        }
     }
 
     /**

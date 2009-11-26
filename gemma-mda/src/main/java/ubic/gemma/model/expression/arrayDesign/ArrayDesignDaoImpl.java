@@ -976,38 +976,36 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
      */
     @SuppressWarnings("unchecked")
     private Map<Long, String> getArrayToTaxonMap() {
+
+        final String csString = "select distinct taxon, ad from ArrayDesignImpl "
+                + "as ad inner join ad.compositeSequences as cs inner join cs.biologicalCharacteristic as bioC inner join bioC.taxon as taxon";
+        org.hibernate.Query csQueryObject = super.getSession().createQuery( csString );
+        csQueryObject.setCacheable( true );
+        csQueryObject.setCacheRegion( "arrayDesignQuery" );
+
+        List csList = csQueryObject.list();
+
+        Map<ArrayDesign, Collection<String>> raw = new HashMap<ArrayDesign, Collection<String>>();
+        Taxon t = null;
+        for ( Object object : csList ) {
+            Object[] oa = ( Object[] ) object;
+            t = ( Taxon ) oa[0];
+            ArrayDesign ad = ( ArrayDesign ) oa[1];
+
+            if ( !raw.containsKey( ad ) ) {
+                raw.put( ad, new TreeSet<String>() );
+            }
+
+            if ( t.getCommonName() != null ) {
+                raw.get( ad ).add( t.getCommonName() );
+            }
+
+        }
+
         Map<Long, String> arrayToTaxon = new HashMap<Long, String>();
-        Collection<? extends ArrayDesign> arrayDesigns = this.loadAll();
-
-        // Warning: this can run very slowly, so cacheing it is crucial.
-        for ( ArrayDesign ad : arrayDesigns ) {
-
-            final String csString = "select distinct taxon from ArrayDesignImpl "
-                    + "as ad inner join ad.compositeSequences as cs inner join cs.biologicalCharacteristic as bioC inner join bioC.taxon as taxon"
-                    + " where ad = :ad";
-            org.hibernate.Query csQueryObject = super.getSession().createQuery( csString );
-            csQueryObject.setParameter( "ad", ad );
-            csQueryObject.setCacheable( true );
-            // csQueryObject.setMaxResults( 1 );
-            // the name of the cache region is configured in ehcache.xml
-            csQueryObject.setCacheRegion( null );
-
-            List csList = csQueryObject.list();
-
-            if ( csList.size() == 0 ) {
-                continue;
-            }
-            Collection<String> taxonSet = new TreeSet();
-            Taxon t = null;
-            for ( Object object : csList ) {
-                t = ( Taxon ) object;
-                if ( t.getCommonName() != null ) {
-                    taxonSet.add( t.getCommonName() );
-                }
-            }
-            String taxonListString = StringUtils.join( taxonSet, "; " );
+        for ( ArrayDesign ad : raw.keySet() ) {
+            String taxonListString = StringUtils.join( raw.get( ad ), "; " );
             arrayToTaxon.put( ad.getId(), taxonListString );
-
         }
 
         return arrayToTaxon;

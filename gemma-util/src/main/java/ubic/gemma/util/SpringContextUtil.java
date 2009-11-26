@@ -214,7 +214,7 @@ public class SpringContextUtil {
      */
     private static String[] getTestConfigLocations( boolean compassOn, boolean isWebapp ) {
         List<String> paths = new ArrayList<String>();
-        paths.add( "classpath*:ubic/gemma/localTestDataSource.xml" );
+        paths.add( "classpath*:ubic/gemma/testDataSource.xml" );
 
         if ( compassOn ) {
             CompassUtils.turnOnCompass( true, paths );

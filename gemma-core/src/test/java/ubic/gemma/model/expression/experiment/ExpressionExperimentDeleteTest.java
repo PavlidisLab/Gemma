@@ -42,8 +42,6 @@ public class ExpressionExperimentDeleteTest extends BaseSpringContextTest {
 
     @Test
     public final void testRemove() throws Exception {
-
-        super.init();
         ExpressionExperiment ee = getTestPersistentCompleteExpressionExperiment( false );
         BioAssayService bas = ( BioAssayService ) this.getBean( "bioAssayService" );
         List<Long> ids = new ArrayList<Long>();
