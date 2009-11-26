@@ -25,9 +25,11 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
@@ -952,10 +954,10 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
     @Override
     protected Map<Taxon, Long> handleGetPerTaxonCount() throws Exception {
 
-        Map<Taxon, Long> taxonCount = new HashMap<Taxon, Long>();
+        Map<Taxon, Long> taxonCount = new LinkedHashMap<Taxon, Long>();
         final String queryString = "select t, count(distinct ee) from ExpressionExperimentImpl "
                 + "ee inner join ee.bioAssays as ba inner join ba.samplesUsed su "
-                + "inner join su.sourceTaxon t group by t"; // where ee.publiclyViewable=true
+                + "inner join su.sourceTaxon t group by t order by t.scientificName "; // where ee.publiclyViewable=true
 
         try {
             // it is important to cache this, as it gets called on the home page.
