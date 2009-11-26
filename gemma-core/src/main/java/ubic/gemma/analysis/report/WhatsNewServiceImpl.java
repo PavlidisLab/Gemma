@@ -44,7 +44,6 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import ubic.basecode.util.FileTools;
-import ubic.gemma.datastructure.AuditableObject;
 import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventService; 
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;

@@ -458,8 +458,7 @@ public class ExpressionDataFileService {
      * @param file
      * @param ee
      * @throws IOException
-     */
-    @SuppressWarnings("unchecked")
+     */ 
     private void writeDiffExpressionData( File file, ExpressionExperiment ee ) throws IOException {
 
         Collection<ExpressionAnalysisResultSet> results = differentialExpressionAnalysisService.getResultSets( ee );

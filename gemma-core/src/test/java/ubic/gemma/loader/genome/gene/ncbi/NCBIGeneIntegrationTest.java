@@ -32,14 +32,14 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.gene.GeneService;
-import ubic.gemma.testing.BaseSpringWebTest;
+import ubic.gemma.testing.BaseSpringContextTest; 
 import ubic.gemma.util.ConfigUtils;
 
 /**
  * @author pavlidis
  * @version $Id$
  */
-public class NCBIGeneIntegrationTest extends BaseSpringWebTest {
+public class NCBIGeneIntegrationTest extends BaseSpringContextTest {
 
     /**
      * @throws Exception

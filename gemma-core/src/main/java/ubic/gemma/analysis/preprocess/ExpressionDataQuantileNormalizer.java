@@ -42,8 +42,8 @@ public class ExpressionDataQuantileNormalizer {
         DoubleMatrix<DesignElement, Integer> rawMatrix = matrix.getMatrix();
 
         try {
-            QuantileNormalizer normalizer = new QuantileNormalizer();
-            DoubleMatrix normalized = normalizer.normalize( rawMatrix );
+            QuantileNormalizer<DesignElement, Integer> normalizer = new QuantileNormalizer<DesignElement, Integer>();
+            DoubleMatrix<DesignElement, Integer> normalized = normalizer.normalize( rawMatrix );
 
             for ( int i = 0; i < normalized.rows(); i++ ) {
                 matrix.setRow( i, ArrayUtils.toObject( normalized.getRow( i ) ) );

@@ -127,7 +127,7 @@ public class SecurityServiceTest extends BaseSpringContextTest {
     public void testUserCanRead() {
         Collection<String> us = securityService.readableBy( arrayDesign );
         assertTrue( us.contains( "administrator" ) );
-        assertTrue( !us.contains( "gemmaAgent" ) );
+        assertTrue( us.contains( "gemmaAgent" ) );
 
         assertTrue( securityService.isViewableByUser( arrayDesign, "administrator" ) );
         assertTrue( securityService.isViewableByUser( arrayDesign, "gemmaAgent" ) );
@@ -233,7 +233,7 @@ public class SecurityServiceTest extends BaseSpringContextTest {
      */
     @Test
     public void testMakePrivateWithoutPermission() throws Exception {
-
+        makeUser( "unauthorizedTestUser" );
         this.runAsUser( "unauthorizedTestUser" ); // test setup.
 
         ArrayDesign ad = arrayDesignService.findByName( arrayDesignName );

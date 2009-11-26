@@ -16,7 +16,7 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.datastructure;
+package ubic.gemma.analysis.report;
 
 import java.io.Serializable;
 import java.util.Date;
