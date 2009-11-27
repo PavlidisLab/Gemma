@@ -54,11 +54,6 @@ public abstract class TreatmentDaoBase extends HibernateDaoSupport implements
                 } );
         return entities;
     }
-    
-    
-    public Collection<? extends Treatment > load( Collection<Long> ids ) {
-        return this.getHibernateTemplate().findByNamedParam( "from TreatmentImpl where id in (:ids)", "ids", ids );
-    }
 
     /**
      * @see ubic.gemma.model.expression.biomaterial.TreatmentDao#create(int transform,
@@ -86,6 +81,10 @@ public abstract class TreatmentDaoBase extends HibernateDaoSupport implements
         return ( ubic.gemma.model.expression.biomaterial.Treatment ) this.create( TRANSFORM_NONE, treatment );
     }
 
+    public Collection<? extends Treatment> load( Collection<Long> ids ) {
+        return this.getHibernateTemplate().findByNamedParam( "from TreatmentImpl where id in (:ids)", "ids", ids );
+    }
+
     /**
      * @see ubic.gemma.model.expression.biomaterial.TreatmentDao#load(int, java.lang.Long)
      */
@@ -111,7 +110,6 @@ public abstract class TreatmentDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.expression.biomaterial.TreatmentDao#loadAll()
      */
 
-    
     public java.util.Collection loadAll() {
         return this.loadAll( TRANSFORM_NONE );
     }

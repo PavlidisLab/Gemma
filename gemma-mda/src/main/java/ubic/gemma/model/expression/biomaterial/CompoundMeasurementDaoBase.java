@@ -67,7 +67,7 @@ public abstract class CompoundMeasurementDaoBase extends org.springframework.orm
     /**
      * @see ubic.gemma.model.expression.biomaterial.CompoundMeasurementDao#create(java.util.Collection)
      */
-    
+
     public java.util.Collection create( final java.util.Collection entities ) {
         return create( TRANSFORM_NONE, entities );
     }
@@ -103,7 +103,7 @@ public abstract class CompoundMeasurementDaoBase extends org.springframework.orm
     /**
      * @see ubic.gemma.model.expression.biomaterial.CompoundMeasurementDao#loadAll()
      */
-    
+
     public java.util.Collection loadAll() {
         return this.loadAll( TRANSFORM_NONE );
     }

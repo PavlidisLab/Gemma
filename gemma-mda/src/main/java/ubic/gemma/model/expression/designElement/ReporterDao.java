@@ -18,7 +18,6 @@
  */
 package ubic.gemma.model.expression.designElement;
 
-
 /**
  * @see ubic.gemma.model.expression.designElement.Reporter
  */

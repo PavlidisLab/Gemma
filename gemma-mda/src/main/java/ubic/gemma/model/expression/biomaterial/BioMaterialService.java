@@ -51,6 +51,9 @@ public interface BioMaterialService {
     @Secured( { "GROUP_USER", "AFTER_ACL_READ" })
     public BioMaterial findOrCreate( BioMaterial bioMaterial );
 
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    public ExpressionExperiment getExpressionExperiment( Long id );
+
     /**
      * 
      */
@@ -82,8 +85,5 @@ public interface BioMaterialService {
      */
     @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
     public void update( BioMaterial bioMaterial );
-
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    public ExpressionExperiment getExpressionExperiment( Long id );
 
 }

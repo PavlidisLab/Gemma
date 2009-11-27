@@ -96,7 +96,7 @@ public abstract class BioMaterialDaoBase extends HibernateDaoSupport implements
     /**
      * @see ubic.gemma.model.expression.biomaterial.BioMaterialDao#create(java.util.Collection)
      */
-    
+
     public java.util.Collection<? extends BioMaterial> create(
             final java.util.Collection<? extends BioMaterial> entities ) {
         return create( TRANSFORM_NONE, entities );
@@ -113,7 +113,7 @@ public abstract class BioMaterialDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.expression.biomaterial.BioMaterialDao#find(int, java.lang.String,
      *      ubic.gemma.model.expression.biomaterial.BioMaterial)
      */
-    
+
     public BioMaterial find( final int transform, final java.lang.String queryString,
             final ubic.gemma.model.expression.biomaterial.BioMaterial bioMaterial ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -169,7 +169,7 @@ public abstract class BioMaterialDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.expression.biomaterial.BioMaterialDao#findOrCreate(int, java.lang.String,
      *      ubic.gemma.model.expression.biomaterial.BioMaterial)
      */
-    
+
     public Object findOrCreate( final int transform, final java.lang.String queryString,
             final ubic.gemma.model.expression.biomaterial.BioMaterial bioMaterial ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -261,7 +261,6 @@ public abstract class BioMaterialDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.expression.biomaterial.BioMaterialDao#loadAll()
      */
 
-    
     public java.util.Collection<? extends BioMaterial> loadAll() {
         return this.loadAll( TRANSFORM_NONE );
     }
@@ -270,7 +269,6 @@ public abstract class BioMaterialDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.expression.biomaterial.BioMaterialDao#loadAll(int)
      */
 
-    
     public java.util.Collection<? extends BioMaterial> loadAll( final int transform ) {
         final java.util.Collection<? extends BioMaterial> results = this.getHibernateTemplate().loadAll(
                 ubic.gemma.model.expression.biomaterial.BioMaterialImpl.class );

@@ -38,13 +38,11 @@ public class ReporterDaoImpl extends ubic.gemma.model.expression.designElement.R
 
     private static Log log = LogFactory.getLog( ReporterDaoImpl.class.getName() );
 
-    
-
     @Autowired
     public ReporterDaoImpl( SessionFactory sessionFactory ) {
         super.setSessionFactory( sessionFactory );
     }
-    
+
     /*
      * (non-Javadoc)
      * @see

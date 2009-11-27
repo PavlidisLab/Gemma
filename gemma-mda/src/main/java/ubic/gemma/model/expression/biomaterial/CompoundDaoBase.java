@@ -54,11 +54,6 @@ public abstract class CompoundDaoBase extends HibernateDaoSupport implements
         return entities;
     }
 
-    
-    public Collection<? extends Compound > load( Collection<Long> ids ) {
-        return this.getHibernateTemplate().findByNamedParam( "from CompoundImpl where id in (:ids)", "ids", ids );
-    }
-    
     /**
      * @see ubic.gemma.model.expression.biomaterial.CompoundDao#create(int transform,
      *      ubic.gemma.model.expression.biomaterial.Compound)
@@ -74,7 +69,7 @@ public abstract class CompoundDaoBase extends HibernateDaoSupport implements
     /**
      * @see ubic.gemma.model.expression.biomaterial.CompoundDao#create(java.util.Collection)
      */
-    
+
     public java.util.Collection create( final java.util.Collection entities ) {
         return create( TRANSFORM_NONE, entities );
     }
@@ -90,7 +85,7 @@ public abstract class CompoundDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.expression.biomaterial.CompoundDao#find(int, java.lang.String,
      *      ubic.gemma.model.expression.biomaterial.Compound)
      */
-    
+
     public Compound find( final int transform, final java.lang.String queryString,
             final ubic.gemma.model.expression.biomaterial.Compound compound ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -144,7 +139,7 @@ public abstract class CompoundDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.expression.biomaterial.CompoundDao#findOrCreate(int, java.lang.String,
      *      ubic.gemma.model.expression.biomaterial.Compound)
      */
-    
+
     public Compound findOrCreate( final int transform, final java.lang.String queryString,
             final ubic.gemma.model.expression.biomaterial.Compound compound ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -195,6 +190,10 @@ public abstract class CompoundDaoBase extends HibernateDaoSupport implements
         return this.findOrCreate( TRANSFORM_NONE, compound );
     }
 
+    public Collection<? extends Compound> load( Collection<Long> ids ) {
+        return this.getHibernateTemplate().findByNamedParam( "from CompoundImpl where id in (:ids)", "ids", ids );
+    }
+
     /**
      * @see ubic.gemma.model.expression.biomaterial.CompoundDao#load(int, java.lang.Long)
      */
@@ -228,7 +227,6 @@ public abstract class CompoundDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.expression.biomaterial.CompoundDao#loadAll(int)
      */
 
-    
     public java.util.Collection<Compound> loadAll( final int transform ) {
         final java.util.Collection results = this.getHibernateTemplate().loadAll(
                 ubic.gemma.model.expression.biomaterial.CompoundImpl.class );

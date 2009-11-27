@@ -27,8 +27,6 @@ import org.springframework.stereotype.Repository;
  */
 @Repository
 public class TreatmentDaoImpl extends ubic.gemma.model.expression.biomaterial.TreatmentDaoBase {
-    
-    
 
     @Autowired
     public TreatmentDaoImpl( SessionFactory sessionFactory ) {

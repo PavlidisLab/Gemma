@@ -65,7 +65,7 @@ public abstract class ReporterDaoBase extends ubic.gemma.model.expression.design
     /**
      * @see ubic.gemma.model.expression.designElement.ReporterDao#create(java.util.Collection)
      */
-    
+
     public java.util.Collection create( final java.util.Collection entities ) {
         return create( TRANSFORM_NONE, entities );
     }
@@ -81,7 +81,7 @@ public abstract class ReporterDaoBase extends ubic.gemma.model.expression.design
      * @see ubic.gemma.model.expression.designElement.ReporterDao#find(int, java.lang.String,
      *      ubic.gemma.model.expression.designElement.Reporter)
      */
-    
+
     public Object find( final int transform, final java.lang.String queryString,
             final ubic.gemma.model.expression.designElement.Reporter reporter ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -108,7 +108,7 @@ public abstract class ReporterDaoBase extends ubic.gemma.model.expression.design
      * @see ubic.gemma.model.expression.designElement.ReporterDao#find(int,
      *      ubic.gemma.model.expression.designElement.Reporter)
      */
-    
+
     public Object find( final int transform, final ubic.gemma.model.expression.designElement.Reporter reporter ) {
         return this
                 .find(
@@ -121,7 +121,7 @@ public abstract class ReporterDaoBase extends ubic.gemma.model.expression.design
      * @see ubic.gemma.model.expression.designElement.ReporterDao#find(java.lang.String,
      *      ubic.gemma.model.expression.designElement.Reporter)
      */
-    
+
     public ubic.gemma.model.expression.designElement.Reporter find( final java.lang.String queryString,
             final ubic.gemma.model.expression.designElement.Reporter reporter ) {
         return ( ubic.gemma.model.expression.designElement.Reporter ) this.find( TRANSFORM_NONE, queryString, reporter );
@@ -139,7 +139,7 @@ public abstract class ReporterDaoBase extends ubic.gemma.model.expression.design
      * @see ubic.gemma.model.expression.designElement.ReporterDao#findOrCreate(int, java.lang.String,
      *      ubic.gemma.model.expression.designElement.Reporter)
      */
-    
+
     public Object findOrCreate( final int transform, final java.lang.String queryString,
             final ubic.gemma.model.expression.designElement.Reporter reporter ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -166,7 +166,7 @@ public abstract class ReporterDaoBase extends ubic.gemma.model.expression.design
      * @see ubic.gemma.model.expression.designElement.ReporterDao#findOrCreate(int,
      *      ubic.gemma.model.expression.designElement.Reporter)
      */
-    
+
     public Object findOrCreate( final int transform, final ubic.gemma.model.expression.designElement.Reporter reporter ) {
         return this
                 .findOrCreate(
@@ -179,7 +179,7 @@ public abstract class ReporterDaoBase extends ubic.gemma.model.expression.design
      * @see ubic.gemma.model.expression.designElement.ReporterDao#findOrCreate(java.lang.String,
      *      ubic.gemma.model.expression.designElement.Reporter)
      */
-    
+
     public ubic.gemma.model.expression.designElement.Reporter findOrCreate( final java.lang.String queryString,
             final ubic.gemma.model.expression.designElement.Reporter reporter ) {
         return ( ubic.gemma.model.expression.designElement.Reporter ) this.findOrCreate( TRANSFORM_NONE, queryString,
@@ -219,7 +219,6 @@ public abstract class ReporterDaoBase extends ubic.gemma.model.expression.design
      * @see ubic.gemma.model.expression.designElement.ReporterDao#loadAll()
      */
 
-    
     public java.util.Collection loadAll() {
         return this.loadAll( TRANSFORM_NONE );
     }

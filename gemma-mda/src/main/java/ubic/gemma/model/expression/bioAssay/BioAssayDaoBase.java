@@ -69,10 +69,6 @@ public abstract class BioAssayDaoBase extends HibernateDaoSupport implements
         return ( Collection<BioAssay> ) entities;
     }
 
-    public Collection<? extends BioAssay> load( Collection<Long> ids ) {
-        return this.getHibernateTemplate().findByNamedParam( "from BioAssayImpl where id in (:ids)", "ids", ids );
-    }
-
     /**
      * @see ubic.gemma.model.expression.bioAssay.BioAssayDao#create(int transform,
      *      ubic.gemma.model.expression.bioAssay.BioAssay)
@@ -242,6 +238,10 @@ public abstract class BioAssayDaoBase extends HibernateDaoSupport implements
     public ubic.gemma.model.expression.bioAssay.BioAssay findOrCreate(
             ubic.gemma.model.expression.bioAssay.BioAssay bioAssay ) {
         return this.findOrCreate( TRANSFORM_NONE, bioAssay );
+    }
+
+    public Collection<? extends BioAssay> load( Collection<Long> ids ) {
+        return this.getHibernateTemplate().findByNamedParam( "from BioAssayImpl where id in (:ids)", "ids", ids );
     }
 
     /**

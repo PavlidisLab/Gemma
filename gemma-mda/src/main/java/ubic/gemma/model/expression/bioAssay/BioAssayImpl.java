@@ -20,7 +20,6 @@
  */
 package ubic.gemma.model.expression.bioAssay;
 
-import ubic.gemma.model.common.auditAndSecurity.Securable;
 
 /**
  * @see ubic.gemma.model.expression.bioAssay.BioAssay

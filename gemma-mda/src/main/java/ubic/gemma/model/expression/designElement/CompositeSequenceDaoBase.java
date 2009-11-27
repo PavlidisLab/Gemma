@@ -102,7 +102,7 @@ public abstract class CompositeSequenceDaoBase extends
      * @see ubic.gemma.model.expression.designElement.CompositeSequenceDao#find(int, java.lang.String,
      *      ubic.gemma.model.expression.designElement.CompositeSequence)
      */
-    
+
     public CompositeSequence find( final int transform, final java.lang.String queryString,
             final ubic.gemma.model.expression.designElement.CompositeSequence compositeSequence ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -185,7 +185,7 @@ public abstract class CompositeSequenceDaoBase extends
      * @see ubic.gemma.model.expression.designElement.CompositeSequenceDao#findByGene(int, java.lang.String,
      *      ubic.gemma.model.genome.Gene)
      */
-    
+
     public java.util.Collection<CompositeSequence> findByGene( final int transform, final java.lang.String queryString,
             final ubic.gemma.model.genome.Gene gene ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -202,7 +202,7 @@ public abstract class CompositeSequenceDaoBase extends
      * @see ubic.gemma.model.expression.designElement.CompositeSequenceDao#findByGene(int, java.lang.String,
      *      ubic.gemma.model.genome.Gene, ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
-    
+
     public java.util.Collection<CompositeSequence> findByGene( final int transform, final java.lang.String queryString,
             final ubic.gemma.model.genome.Gene gene,
             final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
@@ -294,7 +294,7 @@ public abstract class CompositeSequenceDaoBase extends
      * @see ubic.gemma.model.expression.designElement.CompositeSequenceDao#findByName(int, java.lang.String,
      *      java.lang.String)
      */
-    
+
     public java.util.Collection<CompositeSequence> findByName( final int transform, final java.lang.String queryString,
             final java.lang.String name ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -311,7 +311,7 @@ public abstract class CompositeSequenceDaoBase extends
      * @see ubic.gemma.model.expression.designElement.CompositeSequenceDao#findByName(int, java.lang.String,
      *      ubic.gemma.model.expression.arrayDesign.ArrayDesign, java.lang.String)
      */
-    
+
     public CompositeSequence findByName( final int transform, final java.lang.String queryString,
             final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign, final java.lang.String name ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -388,7 +388,7 @@ public abstract class CompositeSequenceDaoBase extends
      * @see ubic.gemma.model.expression.designElement.CompositeSequenceDao#findOrCreate(int, java.lang.String,
      *      ubic.gemma.model.expression.designElement.CompositeSequence)
      */
-    
+
     public CompositeSequence findOrCreate( final int transform, final java.lang.String queryString,
             final ubic.gemma.model.expression.designElement.CompositeSequence compositeSequence ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -576,7 +576,6 @@ public abstract class CompositeSequenceDaoBase extends
      * @see ubic.gemma.model.expression.designElement.CompositeSequenceDao#loadAll(int)
      */
 
-    
     public java.util.Collection<CompositeSequence> loadAll( final int transform ) {
         final java.util.Collection results = this.getHibernateTemplate().loadAll(
                 ubic.gemma.model.expression.designElement.CompositeSequenceImpl.class );

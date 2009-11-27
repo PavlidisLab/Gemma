@@ -18,8 +18,6 @@
  */
 package ubic.gemma.model.expression.bioAssay;
 
-import java.util.Collection;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
@@ -46,13 +44,12 @@ public class BioAssayDaoImpl extends ubic.gemma.model.expression.bioAssay.BioAss
     public BioAssayDaoImpl( SessionFactory sessionFactory ) {
         super.setSessionFactory( sessionFactory );
     }
-   
 
     @SuppressWarnings("unchecked")
     @Override
     public BioAssay find( BioAssay bioAssay ) {
         try {
-            Criteria queryObject = BusinessKey.createQueryObject( super.getSession(   ), bioAssay );
+            Criteria queryObject = BusinessKey.createQueryObject( super.getSession(), bioAssay );
 
             java.util.List results = queryObject.list();
             Object result = null;

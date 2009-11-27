@@ -24,7 +24,7 @@ import org.springframework.security.access.annotation.Secured;
  * @author kelsey
  * @version $Id$
  */
-public interface TreatmentService  {
+public interface TreatmentService {
 
     /**
      * 

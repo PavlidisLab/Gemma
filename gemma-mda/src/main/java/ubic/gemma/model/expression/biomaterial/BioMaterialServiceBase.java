@@ -28,8 +28,7 @@ import org.springframework.beans.factory.annotation.Autowired;
  * 
  * @see ubic.gemma.model.expression.biomaterial.BioMaterialService
  */
-public abstract class BioMaterialServiceBase implements
-        ubic.gemma.model.expression.biomaterial.BioMaterialService {
+public abstract class BioMaterialServiceBase implements ubic.gemma.model.expression.biomaterial.BioMaterialService {
 
     @Autowired
     private ubic.gemma.model.expression.biomaterial.BioMaterialDao bioMaterialDao;

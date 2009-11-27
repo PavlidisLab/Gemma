@@ -106,6 +106,24 @@ public class BioMaterialDaoImpl extends ubic.gemma.model.expression.biomaterial.
 
     /*
      * (non-Javadoc)
+     * @see ubic.gemma.model.expression.biomaterial.BioMaterialDao#getExpressionExperiment(java.lang.Long)
+     */
+    public ExpressionExperiment getExpressionExperiment( Long bioMaterialId ) {
+        List<?> result = getHibernateTemplate()
+                .findByNamedParam(
+                        "select distinct e from ExpressionExperimentImpl e inner join e.bioAssays ba inner join ba.samplesUsed bm where bm.id =:bmid ",
+                        "bmid", bioMaterialId );
+
+        if ( result.size() > 1 )
+            throw new IllegalStateException( "MOre than one EE for biomaterial with id=" + bioMaterialId );
+
+        if ( result.size() > 0 ) return ( ExpressionExperiment ) result.iterator().next();
+
+        return null;
+    }
+
+    /*
+     * (non-Javadoc)
      * @see
      * ubic.gemma.model.expression.biomaterial.BioMaterialDaoBase#handleCopy(ubic.gemma.model.expression.biomaterial
      * .BioMaterial)
@@ -166,23 +184,5 @@ public class BioMaterialDaoImpl extends ubic.gemma.model.expression.biomaterial.
             throw super.convertHibernateAccessException( ex );
         }
         return bs;
-    }
-
-    /*
-     * (non-Javadoc)
-     * @see ubic.gemma.model.expression.biomaterial.BioMaterialDao#getExpressionExperiment(java.lang.Long)
-     */
-    public ExpressionExperiment getExpressionExperiment( Long bioMaterialId ) {
-        List<?> result = getHibernateTemplate()
-                .findByNamedParam(
-                        "select distinct e from ExpressionExperimentImpl e inner join e.bioAssays ba inner join ba.samplesUsed bm where bm.id =:bmid ",
-                        "bmid", bioMaterialId );
-
-        if ( result.size() > 1 )
-            throw new IllegalStateException( "MOre than one EE for biomaterial with id=" + bioMaterialId );
-
-        if ( result.size() > 0 ) return ( ExpressionExperiment ) result.iterator().next();
-
-        return null;
     }
 }

@@ -54,11 +54,6 @@ public abstract class BioMaterialMeasurementDaoBase extends HibernateDaoSupport 
                 } );
         return entities;
     }
-    
-    
-    public Collection<? extends BioMaterialMeasurement > load( Collection<Long> ids ) {
-        return this.getHibernateTemplate().findByNamedParam( "from BioMaterialMeasurementImpl where id in (:ids)", "ids", ids );
-    }
 
     /**
      * @see ubic.gemma.model.expression.biomaterial.BioMaterialMeasurementDao#create(int transform,
@@ -77,7 +72,7 @@ public abstract class BioMaterialMeasurementDaoBase extends HibernateDaoSupport 
     /**
      * @see ubic.gemma.model.expression.biomaterial.BioMaterialMeasurementDao#create(java.util.Collection)
      */
-    
+
     public java.util.Collection create( final java.util.Collection entities ) {
         return create( TRANSFORM_NONE, entities );
     }
@@ -89,6 +84,11 @@ public abstract class BioMaterialMeasurementDaoBase extends HibernateDaoSupport 
             ubic.gemma.model.expression.biomaterial.BioMaterialMeasurement bioMaterialMeasurement ) {
         return ( ubic.gemma.model.expression.biomaterial.BioMaterialMeasurement ) this.create( TRANSFORM_NONE,
                 bioMaterialMeasurement );
+    }
+
+    public Collection<? extends BioMaterialMeasurement> load( Collection<Long> ids ) {
+        return this.getHibernateTemplate().findByNamedParam( "from BioMaterialMeasurementImpl where id in (:ids)",
+                "ids", ids );
     }
 
     /**
@@ -116,7 +116,6 @@ public abstract class BioMaterialMeasurementDaoBase extends HibernateDaoSupport 
      * @see ubic.gemma.model.expression.biomaterial.BioMaterialMeasurementDao#loadAll()
      */
 
-    
     public java.util.Collection loadAll() {
         return this.loadAll( TRANSFORM_NONE );
     }

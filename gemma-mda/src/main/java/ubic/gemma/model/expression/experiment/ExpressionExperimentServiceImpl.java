@@ -208,7 +208,8 @@ public class ExpressionExperimentServiceImpl extends
     }
 
     @Override
-    protected Collection<ExpressionExperiment> handleFindByBioMaterials( Collection<BioMaterial> bioMaterials ) throws Exception {
+    protected Collection<ExpressionExperiment> handleFindByBioMaterials( Collection<BioMaterial> bioMaterials )
+            throws Exception {
         return this.getExpressionExperimentDao().findByBioMaterials( bioMaterials );
     }
 

@@ -48,17 +48,17 @@ public interface BioMaterialDao extends BaseDao<BioMaterial> {
     public BioMaterial findOrCreate( BioMaterial bioMaterial );
 
     /**
-     * @param ids
-     * @return
-     */
-    public Collection<BioMaterial> load( Collection<Long> ids );
-
-    /**
      * Return the experiment the biomaterial appears in
      * 
      * @param bioMaterialId
      * @return
      */
     public ExpressionExperiment getExpressionExperiment( Long bioMaterialId );
+
+    /**
+     * @param ids
+     * @return
+     */
+    public Collection<BioMaterial> load( Collection<Long> ids );
 
 }

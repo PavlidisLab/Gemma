@@ -35,6 +35,10 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 @Service
 public class BioMaterialServiceImpl extends ubic.gemma.model.expression.biomaterial.BioMaterialServiceBase {
 
+    public ExpressionExperiment getExpressionExperiment( Long id ) {
+        return this.getBioMaterialDao().getExpressionExperiment( id );
+    }
+
     /*
      * (non-Javadoc)
      * @see
@@ -120,10 +124,6 @@ public class BioMaterialServiceImpl extends ubic.gemma.model.expression.biomater
     @Override
     protected void handleUpdate( BioMaterial bioMaterial ) throws Exception {
         this.getBioMaterialDao().update( bioMaterial );
-    }
-
-    public ExpressionExperiment getExpressionExperiment( Long id ) {
-        return this.getBioMaterialDao().getExpressionExperiment( id );
     }
 
 }
