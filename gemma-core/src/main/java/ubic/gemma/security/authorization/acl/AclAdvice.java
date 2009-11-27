@@ -71,7 +71,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.CrudUtils;
 import ubic.gemma.security.SecurityService;
 import ubic.gemma.security.audit.AuditAdvice;
-import ubic.gemma.util.AuthorityConstants; 
+import ubic.gemma.util.AuthorityConstants;
 import ubic.gemma.util.ReflectionUtil;
 
 /**
@@ -96,8 +96,6 @@ public class AclAdvice extends HibernateDaoSupport {
     @Autowired
     private MutableAclService aclService;
 
-    // private boolean auditing = false;
-
     @Autowired
     private CrudUtils crudUtils;
 
@@ -108,7 +106,6 @@ public class AclAdvice extends HibernateDaoSupport {
     @Autowired
     public AclAdvice( SessionFactory sessionFactory, PlatformTransactionManager transactionManager ) {
         transactionTemplate = new TransactionTemplate( transactionManager );
-        // this.auditing = ConfigUtils.getBoolean( "gemma.acl.audit" );
         super.setSessionFactory( sessionFactory );
     }
 
@@ -463,7 +460,7 @@ public class AclAdvice extends HibernateDaoSupport {
          * This is a problem if the object is created by a regular user. Only admins can set auditing on objects.
          */
 
-        // if ( auditing ) acl.updateAuditing( acl.getEntries().size() - 1, true, true );
+        // acl.updateAuditing( acl.getEntries().size() - 1, true, true );
     }
 
     /**
