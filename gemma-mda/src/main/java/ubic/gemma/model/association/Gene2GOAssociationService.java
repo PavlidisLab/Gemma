@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.association;
 
+import java.util.Collection;
+
 import org.springframework.security.access.annotation.Secured;
 
 import ubic.gemma.model.common.description.VocabCharacteristic;
@@ -33,43 +35,36 @@ public interface Gene2GOAssociationService {
      * 
      */
     @Secured( { "GROUP_ADMIN" })
-    public ubic.gemma.model.association.Gene2GOAssociation create(
-            ubic.gemma.model.association.Gene2GOAssociation gene2GOAssociation );
+    public Gene2GOAssociation create( Gene2GOAssociation gene2GOAssociation );
 
     /**
      * 
      */
-    public ubic.gemma.model.association.Gene2GOAssociation find(
-            ubic.gemma.model.association.Gene2GOAssociation gene2GOAssociation );
+    public Gene2GOAssociation find( Gene2GOAssociation gene2GOAssociation );
 
     /**
-     * Returns all the Gene2GoAssociation's for the given Gene
+     * Returns all the Gene2GoAssociations for the given Gene
      */
-    public java.util.Collection<Gene2GOAssociation> findAssociationByGene( ubic.gemma.model.genome.Gene gene );
+    public Collection<Gene2GOAssociation> findAssociationByGene( ubic.gemma.model.genome.Gene gene );
 
     /**
      * 
      */
-    public java.util.Collection<VocabCharacteristic> findByGene( ubic.gemma.model.genome.Gene gene );
+    public Collection<VocabCharacteristic> findByGene( ubic.gemma.model.genome.Gene gene );
 
     /**
-     * <p>
      * Returns all the genes that have the given GoTerms or any of the given goterms children.
-     * </p>
      */
-    public java.util.Collection<Gene> findByGOTerm( java.lang.String goID, ubic.gemma.model.genome.Taxon taxon );
+    public Collection<Gene> findByGOTerm( java.lang.String goID, ubic.gemma.model.genome.Taxon taxon );
 
     /**
      * 
      */
     @Secured( { "GROUP_ADMIN" })
-    public ubic.gemma.model.association.Gene2GOAssociation findOrCreate(
-            ubic.gemma.model.association.Gene2GOAssociation gene2GOAssociation );
+    public Gene2GOAssociation findOrCreate( Gene2GOAssociation gene2GOAssociation );
 
     /**
-     * <p>
-     * Delete all Gene2GO associations from the system (done prior to an update
-     * </p>
+     * Delete all Gene2GO associations from the system (done prior to an update)
      */
     @Secured( { "GROUP_ADMIN" })
     public void removeAll();
