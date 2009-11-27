@@ -273,21 +273,26 @@ public class DifferentialExpressionAnalysisDaoImpl extends
                     result.addAll( this.getHibernateTemplate().findByNamedParam( queryStringParentTaxon, paramNames,
                             values ) );
                 } else {
+                    // most common case.
                     result.addAll( this.getHibernateTemplate().findByNamedParam( queryString,
-                            new String[] { "probes", "taxon" }, new Object[] { batch, gene.getTaxon() } ) );
+                            new String[] { "probes", "taxon" }, new Object[] { batch, taxon } ) );
                 }
                 batch.clear();
             }
 
         }
 
-        if ( batch.size() > 0 ) {
-            log.debug( "Finding children taxa experiments" );
-            Object[] values = { batch, taxon };
-            result.addAll( this.getHibernateTemplate().findByNamedParam( queryStringParentTaxon, paramNames, values ) );
-        } else {
-            result.addAll( this.getHibernateTemplate().findByNamedParam( queryString,
-                    new String[] { "probes", "taxon" }, new Object[] { batch, gene.getTaxon() } ) );
+        if ( !batch.isEmpty() ) {
+            if ( !taxon.getIsSpecies() ) {
+                log.debug( "Finding children taxa experiments" );
+                Object[] values = { batch, taxon };
+                result.addAll( this.getHibernateTemplate()
+                        .findByNamedParam( queryStringParentTaxon, paramNames, values ) );
+            } else {
+                // most common case.
+                result.addAll( this.getHibernateTemplate().findByNamedParam( queryString,
+                        new String[] { "probes", "taxon" }, new Object[] { batch, gene.getTaxon() } ) );
+            }
         }
 
         if ( timer.getTime() > 1000 ) {
