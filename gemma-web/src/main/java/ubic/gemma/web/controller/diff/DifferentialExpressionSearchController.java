@@ -176,6 +176,11 @@ public class DifferentialExpressionSearchController extends BaseFormController {
         for ( long geneId : geneIds ) {
             DifferentialExpressionMetaAnalysisValueObject mavo = getDifferentialExpressionMetaAnalysis( geneId,
                     selectedFactors, threshold );
+
+            if ( mavo == null ) {
+                continue; // no results.
+            }
+
             mavo.setSortKey();
             if ( selectedFactors != null && !selectedFactors.isEmpty() ) {
                 mavo.setNumSearchedExperiments( selectedFactors.size() );
@@ -218,6 +223,11 @@ public class DifferentialExpressionSearchController extends BaseFormController {
 
         Map<Long, DifferentialExpressionAnalysis> diffAnalyses = differentialExpressionAnalysisService
                 .findByInvestigationIds( securityFilteredIds );
+
+        if ( diffAnalyses.isEmpty() ) {
+            log.debug( "No differential expression analyses for given ids: " + StringUtils.join( filteredEeIds, ',' ) );
+            return result;
+        }
 
         Collection<ExpressionExperimentValueObject> eevos = this.expressionExperimentService
                 .loadValueObjects( diffAnalyses.keySet() );
@@ -397,6 +407,11 @@ public class DifferentialExpressionSearchController extends BaseFormController {
         /* find experiments that have had the diff cli run on it and have the gene g (analyzed) */
         Collection<ExpressionExperiment> experimentsAnalyzed = differentialExpressionAnalysisService
                 .findExperimentsWithAnalyses( g );
+
+        if ( experimentsAnalyzed.size() == 0 ) {
+            log.warn( "No experiments analyzed for that gene: " + g );
+            return null;
+        }
 
         /* the 'chosen' factors (and their associated experiments) */
         Map<Long, Long> eeFactorsMap = new HashMap<Long, Long>();
