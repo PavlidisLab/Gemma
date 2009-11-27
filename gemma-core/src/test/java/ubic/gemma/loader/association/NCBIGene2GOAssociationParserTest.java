@@ -18,7 +18,7 @@
  */
 package ubic.gemma.loader.association;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.InputStream;
 import java.util.zip.GZIPInputStream;
@@ -76,7 +76,10 @@ public class NCBIGene2GOAssociationParserTest extends BaseSpringContextTest {
         is.close();
         int count = gene2GOAssLoader.getCount();
 
-        assertEquals( 61, count );
+        /*
+         * Actual count might vary depending on state of database (which taxa are available)
+         */
+        assertTrue( count >= 61 );
 
     }
 
