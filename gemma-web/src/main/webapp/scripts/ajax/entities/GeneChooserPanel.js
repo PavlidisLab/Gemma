@@ -243,12 +243,13 @@ Gemma.GeneChooserToolBar = Ext.extend(Ext.Toolbar, {
 						}
 					}
 
-					// this.fireEvent("taxonchanged", taxon);
-
 				} else {
 					// Update the taxon combo.
 					this.taxonCombo.setTaxon(taxon);
 				}
+
+				// needed for listeners of this toolbar.
+				this.fireEvent("taxonchanged", taxon);
 
 			},
 
@@ -351,7 +352,7 @@ Gemma.GeneChooserToolBar = Ext.extend(Ext.Toolbar, {
 							}
 						}.createDelegate(this));
 
-				this.relayEvents(this.taxonCombo, ['ready', 'taxonchanged']);
+				this.relayEvents(this.taxonCombo, ['ready']);
 			},
 
 			afterRender : function(c, l) {
