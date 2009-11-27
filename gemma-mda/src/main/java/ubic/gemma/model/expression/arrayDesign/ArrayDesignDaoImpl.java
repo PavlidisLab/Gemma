@@ -977,6 +977,9 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
     @SuppressWarnings("unchecked")
     private Map<Long, String> getArrayToTaxonMap() {
 
+        StopWatch timer = new StopWatch();
+        timer.start();
+
         final String csString = "select distinct taxon, ad from ArrayDesignImpl "
                 + "as ad inner join ad.compositeSequences as cs inner join cs.biologicalCharacteristic as bioC inner join bioC.taxon as taxon";
         org.hibernate.Query csQueryObject = super.getSession().createQuery( csString );
@@ -1008,6 +1011,10 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
             arrayToTaxon.put( ad.getId(), taxonListString );
         }
 
+        if ( timer.getTime() > 1000 ) {
+            log.info( "Get array design taxa: " + timer.getTime() + "ms" );
+        }
+
         return arrayToTaxon;
     }
 
@@ -1017,7 +1024,15 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
     @SuppressWarnings("unchecked")
     private Map<Long, String> getArrayToTaxonMap( Collection<Long> ids ) {
         Map<Long, String> arrayToTaxon = new HashMap<Long, String>();
+
+        StopWatch timer = new StopWatch();
+        timer.start();
+
         Collection<? extends ArrayDesign> arrayDesigns = this.load( ids );
+
+        if ( timer.getTime() > 1000 ) {
+            log.info( "Get array designs before getting taxa: " + timer.getTime() + "ms" );
+        }
 
         // Warning: this can run very slowly, so cacheing it is crucial.
         for ( ArrayDesign ad : arrayDesigns ) {
@@ -1028,9 +1043,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
             org.hibernate.Query csQueryObject = super.getSession().createQuery( csString );
             csQueryObject.setParameter( "ad", ad );
             csQueryObject.setCacheable( true );
-            // csQueryObject.setMaxResults( 1 );
-            // the name of the cache region is configured in ehcache.xml
-            csQueryObject.setCacheRegion( null );
+            csQueryObject.setCacheRegion( "arrayDesignQuery" );
 
             List csList = csQueryObject.list();
 
@@ -1048,6 +1061,10 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
             String taxonListString = StringUtils.join( taxonSet, "; " );
             arrayToTaxon.put( ad.getId(), taxonListString );
 
+        }
+
+        if ( timer.getTime() > 1000 ) {
+            log.info( "Get array design taxa: " + timer.getTime() + "ms" );
         }
 
         return arrayToTaxon;

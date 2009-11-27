@@ -120,7 +120,7 @@ public interface DesignElementDataVectorService {
      * updates an already existing dedv
      * </p>
      */
-    @Secured( { "GROUP_USER"})
+    @Secured( { "GROUP_USER" })
     public void update( RawExpressionDataVector dedv );
 
 }

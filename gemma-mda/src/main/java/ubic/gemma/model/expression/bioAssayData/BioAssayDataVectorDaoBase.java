@@ -52,11 +52,6 @@ public abstract class BioAssayDataVectorDaoBase extends org.springframework.orm.
                 } );
         return entities;
     }
-    
-    
-    public Collection<? extends BioAssayDataVector > load( Collection<Long> ids ) {
-        return this.getHibernateTemplate().findByNamedParam( "from BioAssayDataVectorImpl where id in (:ids)", "ids", ids );
-    }
 
     /**
      * @see ubic.gemma.model.expression.bioAssayData.BioAssayDataVectorDao#create(int transform,
@@ -75,7 +70,7 @@ public abstract class BioAssayDataVectorDaoBase extends org.springframework.orm.
      * @see ubic.gemma.model.expression.bioAssayData.BioAssayDataVectorDao#find(int, java.lang.String,
      *      ubic.gemma.model.expression.bioAssayData.BioAssayDataVector)
      */
-    
+
     public BioAssayDataVector find( final java.lang.String queryString,
             final ubic.gemma.model.expression.bioAssayData.BioAssayDataVector bioAssayDataVector ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -113,7 +108,7 @@ public abstract class BioAssayDataVectorDaoBase extends org.springframework.orm.
      * @see ubic.gemma.model.expression.bioAssayData.BioAssayDataVectorDao#findOrCreate(int, java.lang.String,
      *      ubic.gemma.model.expression.bioAssayData.BioAssayDataVector)
      */
-    
+
     public BioAssayDataVector findOrCreate( final java.lang.String queryString,
             final ubic.gemma.model.expression.bioAssayData.BioAssayDataVector bioAssayDataVector ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -139,7 +134,7 @@ public abstract class BioAssayDataVectorDaoBase extends org.springframework.orm.
      * @see ubic.gemma.model.expression.bioAssayData.BioAssayDataVectorDao#findOrCreate(int,
      *      ubic.gemma.model.expression.bioAssayData.BioAssayDataVector)
      */
-    
+
     public BioAssayDataVector findOrCreate(
             final ubic.gemma.model.expression.bioAssayData.BioAssayDataVector bioAssayDataVector ) {
         return this
@@ -147,6 +142,11 @@ public abstract class BioAssayDataVectorDaoBase extends org.springframework.orm.
 
                         "from ubic.gemma.model.expression.bioAssayData.BioAssayDataVector as bioAssayDataVector where bioAssayDataVector.bioAssayDataVector = :bioAssayDataVector",
                         bioAssayDataVector );
+    }
+
+    public Collection<? extends BioAssayDataVector> load( Collection<Long> ids ) {
+        return this.getHibernateTemplate().findByNamedParam( "from BioAssayDataVectorImpl where id in (:ids)", "ids",
+                ids );
     }
 
     /**
@@ -164,7 +164,7 @@ public abstract class BioAssayDataVectorDaoBase extends org.springframework.orm.
     /**
      * @see ubic.gemma.model.expression.bioAssayData.BioAssayDataVectorDao#loadAll(int)
      */
-    
+
     public java.util.Collection<? extends BioAssayDataVector> loadAll() {
         final java.util.Collection results = this.getHibernateTemplate().loadAll(
                 ubic.gemma.model.expression.bioAssayData.BioAssayDataVectorImpl.class );

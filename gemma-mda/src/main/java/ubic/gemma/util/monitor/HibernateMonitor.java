@@ -21,10 +21,6 @@ package ubic.gemma.util.monitor;
 //import java.lang.management.ManagementFactory;
 import java.util.Arrays;
 
-import javax.management.ObjectName;
-
-import net.sf.ehcache.CacheManager;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.SessionFactory;
@@ -32,8 +28,6 @@ import org.hibernate.stat.CollectionStatistics;
 import org.hibernate.stat.EntityStatistics;
 import org.hibernate.stat.SecondLevelCacheStatistics;
 import org.hibernate.stat.Statistics;
-import org.springframework.beans.factory.DisposableBean;
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -44,12 +38,7 @@ import org.springframework.stereotype.Component;
  * @version $Id$
  */
 @Component
-public class HibernateMonitor implements InitializingBean, DisposableBean {
-
-    /**
-     * 
-     */
-    private static final String HIBERNATE_MBEAN_OBJECTNAME = "Hibernate:type=statistics,application=Gemma";
+public class HibernateMonitor {
 
     private static Log log = LogFactory.getLog( HibernateMonitor.class.getName() );
 
@@ -184,55 +173,4 @@ public class HibernateMonitor implements InitializingBean, DisposableBean {
         this.sessionFactory = sessionFactory;
     }
 
-    /*
-     * (non-Javadoc)
-     * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
-     */
-    public void afterPropertiesSet() throws Exception {
-
-        // Define ObjectName of the MBean
-        ObjectName on = new ObjectName( HIBERNATE_MBEAN_OBJECTNAME );
-
-        // // Enable Hibernate JMX Statistics
-        // StatisticsService statsMBean = new StatisticsService();
-        // statsMBean.setSessionFactory( this.sessionFactory );
-        // statsMBean.setStatisticsEnabled( true );
-        // MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
-        //
-        // try {
-        // mbs.getMBeanInfo( on );
-        // } catch ( InstanceNotFoundException e ) {
-        // try {
-        // mbs.registerMBean( statsMBean, on );
-        // } catch ( InstanceAlreadyExistsException e1 ) {
-        // // no problem
-        // }
-        // }
-
-        /**
-         * Enable Ehcache JMX Statistics Use CacheManager.getInstance() instead of new CacheManager() as
-         * net.sf.ehcache.hibernate.SingletonEhCacheProvider is used to ensure reference to the same CacheManager
-         * instance as used by Hibernate
-         */
-        try {
-            CacheManager cacheMgr = CacheManager.getInstance();
-            // ManagementService.registerMBeans( cacheMgr, mbs, true, true, true, true );
-        } catch ( RuntimeException e1 ) {
-            // no problem, it already exists...
-        }
-
-    }
-
-    /*
-     * (non-Javadoc)
-     * @see org.springframework.beans.factory.DisposableBean#destroy()
-     */
-    public void destroy() throws Exception {
-        // MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
-        // ObjectName on = new ObjectName( HIBERNATE_MBEAN_OBJECTNAME );
-        // mbs.unregisterMBean( on );
-
-        // CacheManager cacheMgr = CacheManager.getInstance();
-
-    }
 }

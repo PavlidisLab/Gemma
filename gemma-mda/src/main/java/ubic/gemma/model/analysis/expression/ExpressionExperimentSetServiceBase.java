@@ -131,7 +131,7 @@ public abstract class ExpressionExperimentSetServiceBase implements
     /**
      * Sets the reference to <code>expressionExperimentSet</code>'s DAO.
      */
-    
+
     public void setExpressionExperimentSetDao(
             ubic.gemma.model.analysis.expression.ExpressionExperimentSetDao expressionExperimentSetDao ) {
         this.expressionExperimentSetDao = expressionExperimentSetDao;

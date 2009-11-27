@@ -94,7 +94,7 @@ public class DifferentialExpressionAnalysisDaoImpl extends
     @SuppressWarnings("unchecked")
     @Override
     public void handleThaw( final Collection<DifferentialExpressionAnalysis> expressionAnalyses ) throws Exception {
-        for ( DifferentialExpressionAnalysis ea : ( Collection<DifferentialExpressionAnalysis> ) expressionAnalyses ) {
+        for ( DifferentialExpressionAnalysis ea : expressionAnalyses ) {
             DifferentialExpressionAnalysis dea = ea;
             thaw( dea );
         }

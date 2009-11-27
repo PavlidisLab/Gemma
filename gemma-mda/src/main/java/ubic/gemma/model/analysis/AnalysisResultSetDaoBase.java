@@ -51,7 +51,7 @@ public abstract class AnalysisResultSetDaoBase extends org.springframework.orm.h
     /**
      * @see ubic.gemma.model.analysis.AnalysisResultSetDao#loadAll()
      */
-    
+
     public java.util.Collection loadAll() {
         return this.loadAll( TRANSFORM_NONE );
     }

@@ -56,12 +56,6 @@ public abstract class GeneCoexpressionAnalysisDaoBase extends
         return entities;
     }
 
-    
-    public Collection<? extends GeneCoexpressionAnalysis> load( Collection<Long> ids ) {
-        return this.getHibernateTemplate().findByNamedParam( "from GeneCoexpressionAnalysisImpl where id in (:ids)",
-                "ids", ids );
-    }
-
     /**
      * @see ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisDao#create(int transform,
      *      ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis)
@@ -79,7 +73,7 @@ public abstract class GeneCoexpressionAnalysisDaoBase extends
     /**
      * @see ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisDao#create(java.util.Collection)
      */
-    
+
     public java.util.Collection create( final java.util.Collection entities ) {
         return create( TRANSFORM_NONE, entities );
     }
@@ -99,7 +93,6 @@ public abstract class GeneCoexpressionAnalysisDaoBase extends
      */
 
     @Override
-    
     public java.util.Collection findByName( final int transform, final java.lang.String name ) {
         return this.findByName( transform, "select a from AnalysisImpl as a where a.name like :name", name );
     }
@@ -110,7 +103,6 @@ public abstract class GeneCoexpressionAnalysisDaoBase extends
      */
 
     @Override
-    
     public java.util.Collection findByName( final int transform, final java.lang.String queryString,
             final java.lang.String name ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -138,7 +130,6 @@ public abstract class GeneCoexpressionAnalysisDaoBase extends
      */
 
     @Override
-    
     public java.util.Collection findByName( final java.lang.String queryString, final java.lang.String name ) {
         return this.findByName( TRANSFORM_NONE, queryString, name );
     }
@@ -162,7 +153,6 @@ public abstract class GeneCoexpressionAnalysisDaoBase extends
      *      ubic.gemma.model.common.auditAndSecurity.Securable)
      */
 
-    
     public Object getMask( final int transform, final java.lang.String queryString,
             final ubic.gemma.model.common.auditAndSecurity.Securable securable ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -191,7 +181,6 @@ public abstract class GeneCoexpressionAnalysisDaoBase extends
      *      ubic.gemma.model.common.auditAndSecurity.Securable)
      */
 
-    
     public Object getMask( final int transform, final ubic.gemma.model.common.auditAndSecurity.Securable securable ) {
         return this
                 .getMask(
@@ -205,7 +194,6 @@ public abstract class GeneCoexpressionAnalysisDaoBase extends
      *      ubic.gemma.model.common.auditAndSecurity.Securable)
      */
 
-    
     public java.lang.Integer getMask( final java.lang.String queryString,
             final ubic.gemma.model.common.auditAndSecurity.Securable securable ) {
         return ( java.lang.Integer ) this.getMask( TRANSFORM_NONE, queryString, securable );
@@ -224,7 +212,6 @@ public abstract class GeneCoexpressionAnalysisDaoBase extends
      *      java.lang.String, java.util.Collection)
      */
 
-    
     public Object getMasks( final int transform, final java.lang.String queryString,
             final java.util.Collection securables ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -253,7 +240,6 @@ public abstract class GeneCoexpressionAnalysisDaoBase extends
      *      java.util.Collection)
      */
 
-    
     public Object getMasks( final int transform, final java.util.Collection securables ) {
         return this
                 .getMasks(
@@ -267,7 +253,6 @@ public abstract class GeneCoexpressionAnalysisDaoBase extends
      *      java.util.Collection)
      */
 
-    
     public java.util.Map getMasks( final java.lang.String queryString, final java.util.Collection securables ) {
         return ( java.util.Map ) this.getMasks( TRANSFORM_NONE, queryString, securables );
     }
@@ -299,7 +284,6 @@ public abstract class GeneCoexpressionAnalysisDaoBase extends
      *      java.lang.String, ubic.gemma.model.common.auditAndSecurity.Securable)
      */
 
-    
     public Object getObjectIdentityId( final int transform, final java.lang.String queryString,
             final ubic.gemma.model.common.auditAndSecurity.Securable securable ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -370,7 +354,6 @@ public abstract class GeneCoexpressionAnalysisDaoBase extends
      *      java.lang.String, java.lang.Long)
      */
 
-    
     public Object getRecipient( final int transform, final java.lang.String queryString, final java.lang.Long id ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
         java.util.List<Object> args = new java.util.ArrayList<Object>();
@@ -409,6 +392,11 @@ public abstract class GeneCoexpressionAnalysisDaoBase extends
         return ( java.lang.String ) this.getRecipient( TRANSFORM_NONE, queryString, id );
     }
 
+    public Collection<? extends GeneCoexpressionAnalysis> load( Collection<Long> ids ) {
+        return this.getHibernateTemplate().findByNamedParam( "from GeneCoexpressionAnalysisImpl where id in (:ids)",
+                "ids", ids );
+    }
+
     /**
      * @see ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisDao#load(int, java.lang.Long)
      */
@@ -434,7 +422,6 @@ public abstract class GeneCoexpressionAnalysisDaoBase extends
      * @see ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisDao#loadAll()
      */
 
-    
     public java.util.Collection loadAll() {
         return this.loadAll( TRANSFORM_NONE );
     }

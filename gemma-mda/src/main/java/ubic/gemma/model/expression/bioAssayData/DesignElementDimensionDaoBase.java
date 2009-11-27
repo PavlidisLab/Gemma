@@ -55,12 +55,6 @@ public abstract class DesignElementDimensionDaoBase extends HibernateDaoSupport 
         return entities;
     }
 
-    
-    public Collection<? extends DesignElementDimension> load( Collection<Long> ids ) {
-        return this.getHibernateTemplate().findByNamedParam( "from DesignElementDimensionImpl where id in (:ids)",
-                "ids", ids );
-    }
-
     /**
      * @see ubic.gemma.model.expression.bioAssayData.DesignElementDimensionDao#create(int transform,
      *      ubic.gemma.model.expression.bioAssayData.DesignElementDimension)
@@ -78,7 +72,7 @@ public abstract class DesignElementDimensionDaoBase extends HibernateDaoSupport 
     /**
      * @see ubic.gemma.model.expression.bioAssayData.DesignElementDimensionDao#create(java.util.Collection)
      */
-    
+
     public java.util.Collection create( final java.util.Collection entities ) {
         return create( TRANSFORM_NONE, entities );
     }
@@ -96,7 +90,7 @@ public abstract class DesignElementDimensionDaoBase extends HibernateDaoSupport 
      * @see ubic.gemma.model.expression.bioAssayData.DesignElementDimensionDao#find(int, java.lang.String,
      *      ubic.gemma.model.expression.bioAssayData.DesignElementDimension)
      */
-    
+
     public Object find( final int transform, final java.lang.String queryString,
             final ubic.gemma.model.expression.bioAssayData.DesignElementDimension designElementDimension ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -123,7 +117,7 @@ public abstract class DesignElementDimensionDaoBase extends HibernateDaoSupport 
      * @see ubic.gemma.model.expression.bioAssayData.DesignElementDimensionDao#find(int,
      *      ubic.gemma.model.expression.bioAssayData.DesignElementDimension)
      */
-    
+
     public Object find( final int transform,
             final ubic.gemma.model.expression.bioAssayData.DesignElementDimension designElementDimension ) {
         return this
@@ -137,7 +131,7 @@ public abstract class DesignElementDimensionDaoBase extends HibernateDaoSupport 
      * @see ubic.gemma.model.expression.bioAssayData.DesignElementDimensionDao#find(java.lang.String,
      *      ubic.gemma.model.expression.bioAssayData.DesignElementDimension)
      */
-    
+
     public ubic.gemma.model.expression.bioAssayData.DesignElementDimension find( final java.lang.String queryString,
             final ubic.gemma.model.expression.bioAssayData.DesignElementDimension designElementDimension ) {
         return ( ubic.gemma.model.expression.bioAssayData.DesignElementDimension ) this.find( TRANSFORM_NONE,
@@ -157,7 +151,7 @@ public abstract class DesignElementDimensionDaoBase extends HibernateDaoSupport 
      * @see ubic.gemma.model.expression.bioAssayData.DesignElementDimensionDao#findOrCreate(int, java.lang.String,
      *      ubic.gemma.model.expression.bioAssayData.DesignElementDimension)
      */
-    
+
     public Object findOrCreate( final int transform, final java.lang.String queryString,
             final ubic.gemma.model.expression.bioAssayData.DesignElementDimension designElementDimension ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -184,7 +178,7 @@ public abstract class DesignElementDimensionDaoBase extends HibernateDaoSupport 
      * @see ubic.gemma.model.expression.bioAssayData.DesignElementDimensionDao#findOrCreate(int,
      *      ubic.gemma.model.expression.bioAssayData.DesignElementDimension)
      */
-    
+
     public Object findOrCreate( final int transform,
             final ubic.gemma.model.expression.bioAssayData.DesignElementDimension designElementDimension ) {
         return this
@@ -198,7 +192,7 @@ public abstract class DesignElementDimensionDaoBase extends HibernateDaoSupport 
      * @see ubic.gemma.model.expression.bioAssayData.DesignElementDimensionDao#findOrCreate(java.lang.String,
      *      ubic.gemma.model.expression.bioAssayData.DesignElementDimension)
      */
-    
+
     public ubic.gemma.model.expression.bioAssayData.DesignElementDimension findOrCreate(
             final java.lang.String queryString,
             final ubic.gemma.model.expression.bioAssayData.DesignElementDimension designElementDimension ) {
@@ -213,6 +207,11 @@ public abstract class DesignElementDimensionDaoBase extends HibernateDaoSupport 
             ubic.gemma.model.expression.bioAssayData.DesignElementDimension designElementDimension ) {
         return ( ubic.gemma.model.expression.bioAssayData.DesignElementDimension ) this.findOrCreate( TRANSFORM_NONE,
                 designElementDimension );
+    }
+
+    public Collection<? extends DesignElementDimension> load( Collection<Long> ids ) {
+        return this.getHibernateTemplate().findByNamedParam( "from DesignElementDimensionImpl where id in (:ids)",
+                "ids", ids );
     }
 
     /**
@@ -240,7 +239,6 @@ public abstract class DesignElementDimensionDaoBase extends HibernateDaoSupport 
      * @see ubic.gemma.model.expression.bioAssayData.DesignElementDimensionDao#loadAll()
      */
 
-    
     public java.util.Collection loadAll() {
         return this.loadAll( TRANSFORM_NONE );
     }

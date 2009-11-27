@@ -18,7 +18,6 @@
  */
 package ubic.gemma.model.analysis.expression.coexpression;
 
-
 /**
  * @see ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysis
  */

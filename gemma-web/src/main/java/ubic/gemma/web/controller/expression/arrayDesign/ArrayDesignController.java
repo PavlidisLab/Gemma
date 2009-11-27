@@ -38,20 +38,13 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
-import net.sf.ehcache.Cache;
-import net.sf.ehcache.CacheException;
-import net.sf.ehcache.CacheManager;
-import net.sf.ehcache.store.MemoryStoreEvictionPolicy;
-
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.Predicate;
-import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -93,7 +86,7 @@ import ubic.gemma.web.util.EntityNotFoundException;
  */
 @Controller
 @RequestMapping("/arrays")
-public class ArrayDesignController extends BackgroundProcessingMultiActionController implements InitializingBean {
+public class ArrayDesignController extends BackgroundProcessingMultiActionController {
 
     /**
      * Inner class used for building array design summary
@@ -165,21 +158,6 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
 
     private static boolean AJAX = true;
 
-    /**
-     * How many array designs can stay in memory
-     */
-    private static final int ARRAY_INFO_CACHE_SIZE = 5;
-
-    /**
-     * How long after creation before an object is evicted.
-     */
-    private static final int ARRAY_INFO_CACHE_TIME_TO_DIE = 2000;
-
-    /**
-     * How long an item in the cache lasts when it is not accessed.
-     */
-    private static final int ARRAY_INFO_CACHE_TIME_TO_IDLE = 60;
-
     private static Log log = LogFactory.getLog( ArrayDesignController.class.getName() );
     /**
      * Instead of showing all the probes for the array, we might only fetch some of them.
@@ -197,8 +175,6 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
 
     @Autowired
     private AuditTrailService auditTrailService;
-
-    private Cache cache;
 
     @Autowired
     private CompositeSequenceService compositeSequenceService = null;
@@ -226,31 +202,6 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
 
         arrayDesignService.update( ad );
         return formatAlternateNames( ad );
-    }
-
-    /*
-     * (non-Javadoc)
-     * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
-     */
-    public void afterPropertiesSet() throws Exception {
-        try {
-            CacheManager manager = CacheManager.getInstance();
-
-            if ( manager.cacheExists( "ArrayDesignCompositeSequenceCache" ) ) {
-                return;
-            }
-
-            cache = new Cache( "ArrayDesignCompositeSequenceCache", ARRAY_INFO_CACHE_SIZE,
-                    MemoryStoreEvictionPolicy.LFU, false, "/tmp/" + RandomStringUtils.randomNumeric( 40 ), false,
-                    ARRAY_INFO_CACHE_TIME_TO_DIE, ARRAY_INFO_CACHE_TIME_TO_IDLE, false, 500, null );
-
-            manager.addCache( cache );
-            cache = manager.getCache( "ArrayDesignCompositeSequenceCache" );
-
-        } catch ( CacheException e ) {
-            throw new RuntimeException( e );
-        }
-
     }
 
     /**

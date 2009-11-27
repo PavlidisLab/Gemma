@@ -2,8 +2,7 @@
 <jsp:useBean id="bioMaterial" scope="request" class="ubic.gemma.model.expression.biomaterial.BioMaterialImpl" />
 
 <head>
-	<title><fmt:message key="bioMaterial.details" />
-	</title>
+	<title><fmt:message key="bioMaterial.details" /></title>
 	<jwr:script src='/scripts/ajax/ext/data/DwrProxy.js' />
 	<jwr:script src='/scripts/app/bmFactorValues.js' />
 
@@ -44,7 +43,8 @@
 
 <h2>
 	BioMaterial: ${bioMaterial.name} from
-	<a title="${expressionExperiment.name}" href="/Gemma/expressionExperiment/showExpressionExperiment.html?id=${expressionExperiment.id}">${expressionExperiment.shortName}</a>
+	<a title="${expressionExperiment.name}"
+		href="/Gemma/expressionExperiment/showExpressionExperiment.html?id=${expressionExperiment.id}">${expressionExperiment.shortName}</a>
 </h2>
 <table width="50%" cellspacing="5">
 
@@ -139,7 +139,7 @@
 					value="Back">
 			</DIV>
 		</TD>
-		<security:accesscontrollist domainObject="${bioMaterial}" hasPermission="1,6">
+		<security:accesscontrollist domainObject="${bioMaterial}" hasPermission="2,16">
 			<TD COLSPAN="2">
 				<DIV align="left">
 					<input type="button" onclick="location.href='/Gemma/bioMaterial/editBioMaterial.html?id=${bioMaterial.id}"

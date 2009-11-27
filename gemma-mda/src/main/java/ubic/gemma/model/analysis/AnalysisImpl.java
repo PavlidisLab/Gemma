@@ -20,7 +20,6 @@
  */
 package ubic.gemma.model.analysis;
 
-import ubic.gemma.model.common.auditAndSecurity.SecuredNotChild;
 
 /**
  * @see ubic.gemma.model.analysis.Analysis

@@ -56,12 +56,6 @@ public abstract class ProbeCoexpressionAnalysisDaoBase extends
         return entities;
     }
 
-    
-    public Collection<? extends ProbeCoexpressionAnalysis> load( Collection<Long> ids ) {
-        return this.getHibernateTemplate().findByNamedParam( "from ProbeCoexpressionAnalysisImpl where id in (:ids)",
-                "ids", ids );
-    }
-
     /**
      * @see ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisDao#create(int transform,
      *      ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis)
@@ -79,7 +73,7 @@ public abstract class ProbeCoexpressionAnalysisDaoBase extends
     /**
      * @see ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisDao#create(java.util.Collection)
      */
-    
+
     public java.util.Collection create( final java.util.Collection entities ) {
         return create( TRANSFORM_NONE, entities );
     }
@@ -99,7 +93,6 @@ public abstract class ProbeCoexpressionAnalysisDaoBase extends
      */
 
     @Override
-    
     public java.util.Collection findByName( final int transform, final java.lang.String name ) {
         return this.findByName( transform, "select a from AnalysisImpl as a where a.name like :name", name );
     }
@@ -110,7 +103,6 @@ public abstract class ProbeCoexpressionAnalysisDaoBase extends
      */
 
     @Override
-    
     public java.util.Collection findByName( final int transform, final java.lang.String queryString,
             final java.lang.String name ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -138,9 +130,13 @@ public abstract class ProbeCoexpressionAnalysisDaoBase extends
      */
 
     @Override
-    
     public java.util.Collection findByName( final java.lang.String queryString, final java.lang.String name ) {
         return this.findByName( TRANSFORM_NONE, queryString, name );
+    }
+
+    public Collection<? extends ProbeCoexpressionAnalysis> load( Collection<Long> ids ) {
+        return this.getHibernateTemplate().findByNamedParam( "from ProbeCoexpressionAnalysisImpl where id in (:ids)",
+                "ids", ids );
     }
 
     /**
@@ -169,7 +165,6 @@ public abstract class ProbeCoexpressionAnalysisDaoBase extends
      * @see ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisDao#loadAll()
      */
 
-    
     public java.util.Collection loadAll() {
         return this.loadAll( TRANSFORM_NONE );
     }

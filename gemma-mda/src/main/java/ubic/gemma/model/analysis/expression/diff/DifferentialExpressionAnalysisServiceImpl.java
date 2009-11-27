@@ -48,6 +48,15 @@ public class DifferentialExpressionAnalysisServiceImpl extends
         return null;
     }
 
+    public void update( DifferentialExpressionAnalysis o ) {
+        this.getDifferentialExpressionAnalysisDao().update( o );
+    }
+
+    public void update( ExpressionAnalysisResultSet a ) {
+        this.getExpressionAnalysisResultSetDao().update( a );
+
+    }
+
     /**
      * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService#create(ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis)
      */
@@ -207,15 +216,6 @@ public class DifferentialExpressionAnalysisServiceImpl extends
     @Override
     protected void handleThaw( DifferentialExpressionAnalysis differentialExpressionAnalysis ) throws Exception {
         this.getDifferentialExpressionAnalysisDao().thaw( differentialExpressionAnalysis );
-    }
-
-    public void update( DifferentialExpressionAnalysis o ) {
-        this.getDifferentialExpressionAnalysisDao().update( o );
-    }
-
-    public void update( ExpressionAnalysisResultSet a ) {
-        this.getExpressionAnalysisResultSetDao().update( a );
-
     }
 
 }

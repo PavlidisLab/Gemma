@@ -104,7 +104,7 @@
 		</tr>
 	</table>
 </div>
-<security:accesscontrollist domainObject="${expressionExperiment}" hasPermission="1,6">
+<security:accesscontrollist domainObject="${expressionExperiment}" hasPermission="2,16">
 	<c:if test="${!hasPopulatedDesign}">
 		<div style="width: 600px; background-color: #EEEEEE; margin: 7px; padding: 7px;">
 			<p>

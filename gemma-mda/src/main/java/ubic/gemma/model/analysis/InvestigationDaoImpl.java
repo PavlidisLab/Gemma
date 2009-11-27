@@ -18,11 +18,10 @@
  */
 package ubic.gemma.model.analysis;
 
-import org.springframework.stereotype.Repository;
 
 /**
  * @see ubic.gemma.model.analysis.Investigation
- */ 
+ */
 public abstract class InvestigationDaoImpl<T extends Investigation> extends
         ubic.gemma.model.analysis.InvestigationDaoBase<T> {
 }

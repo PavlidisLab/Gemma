@@ -54,11 +54,6 @@ public abstract class ExpressionExperimentSetDaoBase extends HibernateDaoSupport
                 } );
         return entities;
     }
-    
-    
-    public Collection<? extends ExpressionExperimentSet > load( Collection<Long> ids ) {
-        return this.getHibernateTemplate().findByNamedParam( "from ExpressionExperimentSetImpl where id in (:ids)", "ids", ids );
-    }
 
     /**
      * @see ubic.gemma.model.analysis.expression.ExpressionExperimentSetDao#create(int transform,
@@ -117,6 +112,11 @@ public abstract class ExpressionExperimentSetDaoBase extends HibernateDaoSupport
         }
     }
 
+    public Collection<? extends ExpressionExperimentSet> load( Collection<Long> ids ) {
+        return this.getHibernateTemplate().findByNamedParam( "from ExpressionExperimentSetImpl where id in (:ids)",
+                "ids", ids );
+    }
+
     /**
      * @see ubic.gemma.model.analysis.expression.ExpressionExperimentSetDao#load(int, java.lang.Long)
      */
@@ -150,7 +150,6 @@ public abstract class ExpressionExperimentSetDaoBase extends HibernateDaoSupport
      * @see ubic.gemma.model.analysis.expression.ExpressionExperimentSetDao#loadAll(int)
      */
 
-    
     public java.util.Collection<? extends ExpressionExperimentSet> loadAll( final int transform ) {
         final java.util.Collection<? extends ExpressionExperimentSet> results = this.getHibernateTemplate().loadAll(
                 ubic.gemma.model.analysis.expression.ExpressionExperimentSetImpl.class );

@@ -60,7 +60,7 @@ public abstract class AnalysisDaoBase<T extends Analysis> extends HibernateDaoSu
     /**
      * @see ubic.gemma.model.analysis.AnalysisDao#findByName(int, java.lang.String)
      */
-    
+
     public java.util.Collection<T> findByName( final int transform, final java.lang.String name ) {
         return this.findByName( transform, "select a from AnalysisImpl as a where a.name like :name", name );
     }
@@ -68,7 +68,7 @@ public abstract class AnalysisDaoBase<T extends Analysis> extends HibernateDaoSu
     /**
      * @see ubic.gemma.model.analysis.AnalysisDao#findByName(int, java.lang.String, java.lang.String)
      */
-    
+
     public java.util.Collection<T> findByName( final int transform, final java.lang.String queryString,
             final java.lang.String name ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();

@@ -18,7 +18,6 @@
  */
 package ubic.gemma.model.genome.gene;
 
-
 /**
  * @see ubic.gemma.model.genome.gene.CandidateGene
  */

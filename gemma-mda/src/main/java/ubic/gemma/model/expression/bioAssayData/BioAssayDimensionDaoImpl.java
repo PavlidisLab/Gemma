@@ -50,11 +50,6 @@ public class BioAssayDimensionDaoImpl extends ubic.gemma.model.expression.bioAss
     public BioAssayDimensionDaoImpl( SessionFactory sessionFactory ) {
         super.setSessionFactory( sessionFactory );
     }
-    
-    @SuppressWarnings("unchecked")
-    public Collection<? extends BioAssayDimension > load( Collection<Long> ids ) {
-        return this.getHibernateTemplate().findByNamedParam( "from BioAssayDimensionImpl where id in (:ids)", "ids", ids );
-    }
 
     /*
      * (non-Javadoc)
@@ -65,7 +60,7 @@ public class BioAssayDimensionDaoImpl extends ubic.gemma.model.expression.bioAss
     @Override
     public BioAssayDimension find( BioAssayDimension bioAssayDimension ) {
         try {
-            Criteria queryObject = super.getSession(   ).createCriteria( BioAssayDimension.class );
+            Criteria queryObject = super.getSession().createCriteria( BioAssayDimension.class );
 
             if ( StringUtils.isNotBlank( bioAssayDimension.getName() ) ) {
                 queryObject.add( Restrictions.eq( "name", bioAssayDimension.getName() ) );
@@ -125,6 +120,12 @@ public class BioAssayDimensionDaoImpl extends ubic.gemma.model.expression.bioAss
         }
         if ( log.isDebugEnabled() ) log.debug( "Creating new " + bioAssayDimension );
         return create( bioAssayDimension );
+    }
+
+    @SuppressWarnings("unchecked")
+    public Collection<? extends BioAssayDimension> load( Collection<Long> ids ) {
+        return this.getHibernateTemplate().findByNamedParam( "from BioAssayDimensionImpl where id in (:ids)", "ids",
+                ids );
     }
 
     /*

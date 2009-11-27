@@ -53,6 +53,7 @@ public class GoldenPathBioSequenceParser extends BasicLineParser<BioSequence> im
         initGenbank();
     }
 
+    @Override
     protected void addResult( BioSequence obj ) {
         try {
             results.put( obj );

@@ -85,7 +85,7 @@ public abstract class BioAssayDimensionDaoBase extends HibernateDaoSupport imple
      * @see ubic.gemma.model.expression.bioAssayData.BioAssayDimensionDao#find(int, java.lang.String,
      *      ubic.gemma.model.expression.bioAssayData.BioAssayDimension)
      */
-    
+
     public BioAssayDimension find( final int transform, final java.lang.String queryString,
             final ubic.gemma.model.expression.bioAssayData.BioAssayDimension bioAssayDimension ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -142,7 +142,7 @@ public abstract class BioAssayDimensionDaoBase extends HibernateDaoSupport imple
      * @see ubic.gemma.model.expression.bioAssayData.BioAssayDimensionDao#findOrCreate(int, java.lang.String,
      *      ubic.gemma.model.expression.bioAssayData.BioAssayDimension)
      */
-    
+
     public BioAssayDimension findOrCreate( final int transform, final java.lang.String queryString,
             final ubic.gemma.model.expression.bioAssayData.BioAssayDimension bioAssayDimension ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -227,7 +227,6 @@ public abstract class BioAssayDimensionDaoBase extends HibernateDaoSupport imple
      * @see ubic.gemma.model.expression.bioAssayData.BioAssayDimensionDao#loadAll(int)
      */
 
-    
     public java.util.Collection<? extends BioAssayDimension> loadAll( final int transform ) {
         final java.util.Collection<? extends BioAssayDimension> results = this.getHibernateTemplate().loadAll(
                 ubic.gemma.model.expression.bioAssayData.BioAssayDimensionImpl.class );

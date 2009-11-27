@@ -29,7 +29,7 @@ public interface DesignElementDimensionService {
     /**
      * 
      */
-    @Secured( { "GROUP_USER", "AFTER_ACL_READ"})
+    @Secured( { "GROUP_USER", "AFTER_ACL_READ" })
     public ubic.gemma.model.expression.bioAssayData.DesignElementDimension findOrCreate(
             ubic.gemma.model.expression.bioAssayData.DesignElementDimension designElementDimension );
 

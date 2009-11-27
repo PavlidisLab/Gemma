@@ -55,12 +55,6 @@ public abstract class ExpressionAnalysisResultSetDaoBase extends HibernateDaoSup
         return entities;
     }
 
-    
-    public Collection<? extends ExpressionAnalysisResultSet> load( Collection<Long> ids ) {
-        return this.getHibernateTemplate().findByNamedParam( "from ExpressionAnalysisResultSetImpl where id in (:ids)",
-                "ids", ids );
-    }
-
     /**
      * @see ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSetDao#create(int transform,
      *      ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet)
@@ -74,6 +68,11 @@ public abstract class ExpressionAnalysisResultSetDaoBase extends HibernateDaoSup
         this.getHibernateTemplate().save( expressionAnalysisResultSet );
         return expressionAnalysisResultSet;
 
+    }
+
+    public Collection<? extends ExpressionAnalysisResultSet> load( Collection<Long> ids ) {
+        return this.getHibernateTemplate().findByNamedParam( "from ExpressionAnalysisResultSetImpl where id in (:ids)",
+                "ids", ids );
     }
 
     /**

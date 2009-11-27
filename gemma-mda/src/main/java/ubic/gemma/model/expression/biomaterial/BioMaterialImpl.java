@@ -20,7 +20,6 @@
  */
 package ubic.gemma.model.expression.biomaterial;
 
-
 /**
  * @see ubic.gemma.model.expression.biomaterial.BioMaterial
  * @author pavlidis

@@ -110,7 +110,7 @@ public interface BioSequenceService {
      * loads all biosequences specified by the provided ids.
      * </p>
      */
-    public java.util.Collection<BioSequence> loadMultiple( java.util.Collection ids );
+    public java.util.Collection<BioSequence> loadMultiple( java.util.Collection<Long> ids );
 
     /**
      * 

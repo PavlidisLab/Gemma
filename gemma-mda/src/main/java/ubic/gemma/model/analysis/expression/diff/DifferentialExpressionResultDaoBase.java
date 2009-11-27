@@ -58,12 +58,6 @@ public abstract class DifferentialExpressionResultDaoBase extends HibernateDaoSu
         return entities;
     }
 
-    
-    public Collection<? extends ProbeAnalysisResult> load( Collection<Long> ids ) {
-        return this.getHibernateTemplate().findByNamedParam( "from ProbeAnalysisResultImpl where id in (:ids)", "ids",
-                ids );
-    }
-
     /**
      * @see ubic.gemma.model.analysis.expression.diff.ProbeAnalysisResultDao#create(int transform,
      *      ubic.gemma.model.analysis.expression.diff.ProbeAnalysisResult)
@@ -103,6 +97,11 @@ public abstract class DifferentialExpressionResultDaoBase extends HibernateDaoSu
                     "Error performing 'ubic.gemma.model.analysis.expression.diff.ProbeAnalysisResultDao.getExperimentalFactors(ubic.gemma.model.analysis.expression.diff.ProbeAnalysisResult ProbeAnalysisResult)' --> "
                             + th, th );
         }
+    }
+
+    public Collection<? extends ProbeAnalysisResult> load( Collection<Long> ids ) {
+        return this.getHibernateTemplate().findByNamedParam( "from ProbeAnalysisResultImpl where id in (:ids)", "ids",
+                ids );
     }
 
     /**

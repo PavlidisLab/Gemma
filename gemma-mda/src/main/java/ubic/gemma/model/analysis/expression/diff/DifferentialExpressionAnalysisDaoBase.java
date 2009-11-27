@@ -58,12 +58,6 @@ public abstract class DifferentialExpressionAnalysisDaoBase extends
         return entities;
     }
 
-    
-    public Collection<? extends DifferentialExpressionAnalysis> load( Collection<Long> ids ) {
-        return this.getHibernateTemplate().findByNamedParam(
-                "from DifferentialExpressionAnalysisImpl where id in (:ids)", "ids", ids );
-    }
-
     /**
      * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao#create(int transform,
      *      ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis)
@@ -82,7 +76,7 @@ public abstract class DifferentialExpressionAnalysisDaoBase extends
     /**
      * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao#create(java.util.Collection)
      */
-    
+
     public java.util.Collection create( final java.util.Collection entities ) {
         return create( TRANSFORM_NONE, entities );
     }
@@ -137,7 +131,7 @@ public abstract class DifferentialExpressionAnalysisDaoBase extends
      * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao#findByName(int,
      *      java.lang.String, java.lang.String)
      */
-    
+
     @Override
     public java.util.Collection<DifferentialExpressionAnalysis> findByName( final int transform,
             final java.lang.String queryString, final java.lang.String name ) {
@@ -198,6 +192,11 @@ public abstract class DifferentialExpressionAnalysisDaoBase extends
         }
     }
 
+    public Collection<? extends DifferentialExpressionAnalysis> load( Collection<Long> ids ) {
+        return this.getHibernateTemplate().findByNamedParam(
+                "from DifferentialExpressionAnalysisImpl where id in (:ids)", "ids", ids );
+    }
+
     /**
      * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao#load(int, java.lang.Long)
      */
@@ -232,7 +231,6 @@ public abstract class DifferentialExpressionAnalysisDaoBase extends
      * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao#loadAll(int)
      */
 
-    
     public java.util.Collection<? extends DifferentialExpressionAnalysis> loadAll( final int transform ) {
         final java.util.Collection<? extends DifferentialExpressionAnalysis> results = this.getHibernateTemplate()
                 .loadAll( ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisImpl.class );

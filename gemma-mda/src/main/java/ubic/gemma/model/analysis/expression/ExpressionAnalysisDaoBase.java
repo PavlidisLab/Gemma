@@ -45,7 +45,6 @@ public abstract class ExpressionAnalysisDaoBase<T extends ExpressionAnalysis> ex
      */
 
     @Override
-    
     public java.util.Collection<T> findByName( final int transform, final java.lang.String queryString,
             final java.lang.String name ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();

@@ -41,6 +41,10 @@ public class ProbeCoexpressionAnalysisServiceImpl extends
         return this.getProbeCoexpressionAnalysisDao().getAssayedProbes( experiment );
     }
 
+    public void update( ProbeCoexpressionAnalysis o ) {
+        this.getProbeCoexpressionAnalysisDao().update( o );
+    }
+
     /**
      * @see ubic.gemma.model.analysis.expression.ProbeCoexpressionAnalysisService#create(ubic.gemma.model.analysis.expression.ProbeCoexpressionAnalysis)
      */
@@ -121,10 +125,6 @@ public class ProbeCoexpressionAnalysisServiceImpl extends
     @Override
     protected java.util.Collection handleLoadAll() throws java.lang.Exception {
         return this.getProbeCoexpressionAnalysisDao().loadAll();
-    }
-
-    public void update( ProbeCoexpressionAnalysis o ) {
-        this.getProbeCoexpressionAnalysisDao().update( o );
     }
 
 }

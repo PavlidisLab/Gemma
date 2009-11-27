@@ -122,6 +122,7 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
      * ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionDaoBase#handleFindCoexpressionRelationships(java
      * .util.Collection, ubic.gemma.model.analysis.Analysis, int)
      */
+    @Override
     @SuppressWarnings("unchecked")
     protected java.util.Map<Gene, Collection<Gene2GeneCoexpression>> handleFindCoexpressionRelationships(
             Collection<Gene> genes, int stringency, int maxResults, GeneCoexpressionAnalysis sourceAnalysis ) {
@@ -210,6 +211,7 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
      *      taxon, when reanalyses are in progress there can be more than one temporarily.
      *      <p>
      */
+    @Override
     protected java.util.Collection<Gene2GeneCoexpression> handleFindCoexpressionRelationships( Gene gene,
             int stringency, int maxResults, GeneCoexpressionAnalysis sourceAnalysis ) {
 
