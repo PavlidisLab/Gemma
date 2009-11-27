@@ -18,6 +18,9 @@
  */
 package ubic.gemma.model.analysis.expression.diff;
 
+import java.util.Collection;
+import java.util.Map;
+
 import org.springframework.security.access.annotation.Secured;
 
 import ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet;
@@ -49,7 +52,7 @@ public interface DifferentialExpressionAnalysisService extends
      * 
      */
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    public java.util.Collection<DifferentialExpressionAnalysis> find( ubic.gemma.model.genome.Gene gene,
+    public Collection<DifferentialExpressionAnalysis> find( ubic.gemma.model.genome.Gene gene,
             ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet resultSet, double threshold );
 
     /**
@@ -57,9 +60,8 @@ public interface DifferentialExpressionAnalysisService extends
      * Given a collection of ids, return a map of id -> differential expression analysis (one per id).
      * </p>
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    public java.util.Map<Long, DifferentialExpressionAnalysis> findByInvestigationIds(
-            java.util.Collection<Long> investigationIds );
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY" })
+    public Map<Long, DifferentialExpressionAnalysis> findByInvestigationIds( Collection<Long> investigationIds );
 
     /**
      * <p>
@@ -67,33 +69,32 @@ public interface DifferentialExpressionAnalysisService extends
      * </p>
      */
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    public java.util.Collection<ExpressionExperiment> findExperimentsWithAnalyses( ubic.gemma.model.genome.Gene gene );
+    public Collection<ExpressionExperiment> findExperimentsWithAnalyses( ubic.gemma.model.genome.Gene gene );
 
     /**
      * @param resultSetIds
      * @return
      */
-    public java.util.Collection<ExpressionAnalysisResultSet> getResultSets( java.util.Collection<Long> resultSetIds );
+    public Collection<ExpressionAnalysisResultSet> getResultSets( Collection<Long> resultSetIds );
 
     /**
      * 
      */
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    public java.util.Collection<ExpressionAnalysisResultSet> getResultSets(
+    public Collection<ExpressionAnalysisResultSet> getResultSets(
             ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment );
 
     /**
      * 
      */
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ" })
-    public void thaw( java.util.Collection<DifferentialExpressionAnalysis> expressionAnalyses );
+    public void thaw( Collection<DifferentialExpressionAnalysis> expressionAnalyses );
 
     /**
      * 
      */
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    public void thaw(
-            ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis differentialExpressionAnalysis );
+    public void thaw( DifferentialExpressionAnalysis differentialExpressionAnalysis );
 
     @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
     public void update( DifferentialExpressionAnalysis o );
