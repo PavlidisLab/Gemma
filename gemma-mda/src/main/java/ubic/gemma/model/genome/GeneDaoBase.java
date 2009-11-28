@@ -21,6 +21,8 @@ package ubic.gemma.model.genome;
 import java.util.Collection;
 import java.util.Map;
 
+import org.springframework.beans.factory.annotation.Autowired;
+
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionCollectionValueObject;
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionCache;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -37,6 +39,7 @@ import ubic.gemma.model.expression.experiment.BioAssaySet;
 public abstract class GeneDaoBase extends ubic.gemma.model.genome.ChromosomeFeatureDaoImpl<Gene> implements
         ubic.gemma.model.genome.GeneDao {
 
+    @Autowired
     private Probe2ProbeCoexpressionCache probe2ProbeCoexpressionCache;
 
     /**

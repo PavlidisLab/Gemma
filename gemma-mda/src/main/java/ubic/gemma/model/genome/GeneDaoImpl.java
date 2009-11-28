@@ -504,14 +504,14 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
             if ( eeResults != null ) {
                 cachedResults.put( ee.getId(), eeResults );
-                log.debug( "Cache hit! for ee=" + ee.getId() );
+                if ( log.isDebugEnabled() ) log.debug( "Cache hit! for ee=" + ee.getId() );
             } else {
                 eesToSearch.add( ee );
             }
         }
         overallWatch.stop();
         if ( overallWatch.getTime() > 100 ) {
-            log.info( "Probe2probe cache check: " + overallWatch.getTime() + "ms" );
+            if ( log.isInfoEnabled() ) log.info( "Probe2probe cache check: " + overallWatch.getTime() + "ms" );
         }
         overallWatch.reset();
         overallWatch.start();

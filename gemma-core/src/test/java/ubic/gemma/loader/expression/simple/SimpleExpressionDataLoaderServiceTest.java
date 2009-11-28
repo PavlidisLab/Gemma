@@ -20,6 +20,7 @@ package ubic.gemma.loader.expression.simple;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
 
 import java.io.InputStream;
 import java.util.Collection;
@@ -94,6 +95,39 @@ public class SimpleExpressionDataLoaderServiceTest extends BaseSpringContextTest
         assertNotNull( ee );
         assertEquals( 30, ee.getRawExpressionDataVectors().size() );
         assertEquals( 12, ee.getBioAssays().size() );
+    }
+
+    @Test
+    public final void testLoadDuplicatedRow() throws Exception {
+
+        SimpleExpressionExperimentMetaData metaData = new SimpleExpressionExperimentMetaData();
+        ArrayDesign ad = ArrayDesign.Factory.newInstance();
+        ad.setName( RandomStringUtils.randomAlphabetic( 5 ) );
+        Collection<ArrayDesign> ads = new HashSet<ArrayDesign>();
+        ads.add( ad );
+        metaData.setArrayDesigns( ads );
+
+        Taxon taxon = Taxon.Factory.newInstance();
+        taxon.setCommonName( "mouse" );
+        taxon.setIsGenesUsable( true );
+        taxon.setIsSpecies( true );
+        metaData.setTaxon( taxon );
+        metaData.setName( RandomStringUtils.randomAlphabetic( 5 ) );
+        metaData.setQuantitationTypeName( "testing" );
+        metaData.setGeneralType( GeneralType.QUANTITATIVE );
+        metaData.setScale( ScaleType.LOG2 );
+        metaData.setType( StandardQuantitationType.AMOUNT );
+        metaData.setIsRatio( true );
+
+        InputStream data = this.getClass().getResourceAsStream( "/data/testdata.duprow.txt" );
+
+        try {
+            ee = service.load( metaData, data );
+            fail( "Should have gotten an exception about duplicated row" );
+        } catch ( IllegalArgumentException e ) {
+            // expected
+        }
+
     }
 
     /**
