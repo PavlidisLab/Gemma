@@ -52,28 +52,28 @@ public abstract class Gene2GeneCoexpressionDaoBase extends HibernateDaoSupport i
     public Collection<? extends Gene2GeneCoexpression> create(
             final Collection<? extends Gene2GeneCoexpression> entities ) {
 
-        return this.getHibernateTemplate().executeWithNativeSession(
-                new HibernateCallback<List<? extends Gene2GeneCoexpression>>() {
-                    public List<? extends Gene2GeneCoexpression> doInHibernate( Session session )
-                            throws HibernateException {
-                        int numDone = 0;
-                        List<Gene2GeneCoexpression> result = new ArrayList<Gene2GeneCoexpression>();
-                        for ( Gene2GeneCoexpression object : entities ) {
-                            result.add( ( Gene2GeneCoexpression ) session.save( object ) );
-                            if ( ++numDone % 1000 == 0 ) {
-                                session.flush();
-                                session.clear();
-                            }
-                        }
-                        return result;
+        this.getHibernateTemplate().executeWithNativeSession( new HibernateCallback<Object>() {
+            public Object doInHibernate( Session session ) throws HibernateException {
+                int numDone = 0;
+
+                for ( Gene2GeneCoexpression object : entities ) {
+                    session.save( object );
+
+                    if ( ++numDone % 1000 == 0 ) {
+                        session.flush();
+                        session.clear();
                     }
-                } );
+                }
+                return null;
+            }
+        } );
+
+        return entities;
     }
-    
-    
-    
-    public Collection<? extends Gene2GeneCoexpression > load( Collection<Long> ids ) {
-        return this.getHibernateTemplate().findByNamedParam( "from Gene2GeneCoexpressionImpl where id in (:ids)", "ids", ids );
+
+    public Collection<? extends Gene2GeneCoexpression> load( Collection<Long> ids ) {
+        return this.getHibernateTemplate().findByNamedParam( "from Gene2GeneCoexpressionImpl where id in (:ids)",
+                "ids", ids );
     }
 
     /*
