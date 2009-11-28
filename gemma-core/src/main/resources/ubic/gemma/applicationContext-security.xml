@@ -162,7 +162,7 @@
 		<property name="rolePrefix" value="GROUP_" />
 	</bean>
 
-	<!-- Customized to user our roleHierarchy (otherwise we wouldn't need to declare this) -->
+	<!-- Customized to use the roleHierarchy (otherwise we wouldn't need to declare this) -->
 	<bean id="sidRetrievalStrategy" class="org.springframework.security.acls.domain.SidRetrievalStrategyImpl">
 		<constructor-arg>
 			<ref local="roleHierarchy" />
