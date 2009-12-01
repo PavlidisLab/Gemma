@@ -32,8 +32,7 @@ public interface GeneCoexpressionAnalysisService extends
      * 
      */
     @Secured( { "GROUP_ADMIN" })
-    public ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis create(
-            ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis analysis );
+    public GeneCoexpressionAnalysis create( GeneCoexpressionAnalysis analysis );
 
     /**
      * <p>
@@ -41,26 +40,22 @@ public interface GeneCoexpressionAnalysisService extends
      * </p>
      */
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    public java.util.Collection<ExpressionExperiment> getDatasetsAnalyzed(
-            ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis analysis );
+    public java.util.Collection<ExpressionExperiment> getDatasetsAnalyzed( GeneCoexpressionAnalysis analysis );
 
     /**
      * Get the number of data sets analyzed .
      */
-    public int getNumDatasetsAnalyzed(
-            ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis analysis );
+    public int getNumDatasetsAnalyzed( GeneCoexpressionAnalysis analysis );
 
     /**
      * 
      */
-    public void thaw(
-            ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis geneCoexpressionAnalysis );
+    public void thaw( GeneCoexpressionAnalysis geneCoexpressionAnalysis );
 
     /**
      * 
      */
     @Secured( { "GROUP_ADMIN" })
-    public void update(
-            ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis geneCoExpressionAnalysis );
+    public void update( GeneCoexpressionAnalysis geneCoExpressionAnalysis );
 
 }

@@ -18,52 +18,54 @@
  */
 package ubic.gemma.model.association;
 
+import java.util.Collection;
+
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.BaseDao;
 
 /**
- * @see ubic.gemma.model.association.Gene2GOAssociation
+ * @see Gene2GOAssociation
  */
 public interface Gene2GOAssociationDao extends BaseDao<Gene2GOAssociation> {
 
     /**
      * 
      */
-    public ubic.gemma.model.association.Gene2GOAssociation find(
-            ubic.gemma.model.association.Gene2GOAssociation gene2GOAssociation );
+    public Gene2GOAssociation find( Gene2GOAssociation gene2GOAssociation );
 
     /**
-     * <p>
-     * Returns the Gene2GoAssociation's associated with the given Gene
-     * </p>
+     * Returns the Gene2GoAssociations associated with the given Gene
      */
-    public java.util.Collection<Gene2GOAssociation> findAssociationByGene( ubic.gemma.model.genome.Gene gene );
+    public Collection<Gene2GOAssociation> findAssociationByGene( Gene gene );
 
     /**
      * 
      */
-    public java.util.Collection<Gene2GOAssociation> findByGene( ubic.gemma.model.genome.Gene gene );
+    public Collection<Gene2GOAssociation> findByGene( Gene gene );
 
     /**
      * <p>
      * Return all genes for the given taxon that have the given GO id associated.
      * </p>
      */
-    public java.util.Collection<Gene> findByGoTerm( java.lang.String goId, ubic.gemma.model.genome.Taxon taxon );
+    public Collection<Gene> findByGoTerm( java.lang.String goId, Taxon taxon );
 
     /**
      * <p>
      * Given a collection of GO Objects returns a colllection of genes that have any of the given goterms
      * </p>
      */
-    public java.util.Collection<Gene> findByGOTerm( java.util.Collection goTerms, ubic.gemma.model.genome.Taxon taxon );
+    public Collection<Gene> findByGOTerm( Collection goTerms, Taxon taxon );
 
     /**
      * 
      */
-    public ubic.gemma.model.association.Gene2GOAssociation findOrCreate(
-            ubic.gemma.model.association.Gene2GOAssociation gene2GOAssociation );
+    public Gene2GOAssociation findOrCreate( Gene2GOAssociation gene2GOAssociation );
 
+    /**
+     * Delete all {@link Gene2GOAssociation}s
+     */
     public void removeAll();
 
 }

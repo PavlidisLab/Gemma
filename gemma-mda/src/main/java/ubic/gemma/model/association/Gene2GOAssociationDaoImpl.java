@@ -87,7 +87,7 @@ public class Gene2GOAssociationDaoImpl extends ubic.gemma.model.association.Gene
             assert existing.getId() != null;
             return existing;
         }
-        return ( Gene2GOAssociation ) create( gene2GOAssociation );
+        return create( gene2GOAssociation );
     }
 
     /*
