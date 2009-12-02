@@ -281,7 +281,7 @@ public class SearchService implements InitializingBean {
         try {
             searchResults = this.search( settings, true );
         } catch ( Exception e ) {
-            log.error( "Search error: " + e.getMessage() );
+            log.error( "Search error: " + e.getMessage(), e );
         }
         return searchResults;
     }
@@ -785,7 +785,12 @@ public class SearchService implements InitializingBean {
 
         Map<Gene, SearchResult> genes = new HashMap<Gene, SearchResult>();
         for ( SearchResult sr : geneResults ) {
-            genes.put( ( Gene ) sr.getResultObject(), sr );
+            Object resultObject = sr.getResultObject();
+            if ( Gene.class.isAssignableFrom( resultObject.getClass() ) ) {
+                genes.put( ( Gene ) resultObject, sr );
+            } else {
+                log.warn( "Expected a Gene, got a " + resultObject.getClass() );
+            }
         }
 
         Map<Gene, Collection<BioSequence>> seqsFromDb = bioSequenceService.findByGenes( genes.keySet() );
