@@ -108,7 +108,7 @@ public class DatabaseViewGenerator {
     }
     
     public void runAll(){
-        runAll(null);
+        runAll(0);
     }
 
     /**
