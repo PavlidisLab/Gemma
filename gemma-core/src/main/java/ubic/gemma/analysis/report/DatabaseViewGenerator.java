@@ -91,11 +91,11 @@ public class DatabaseViewGenerator {
     ArrayDesignService arrayDesignService;
 
     /**
-     * @param limit if 0 or null will run against every dataset in Gemma else will only do the 1st to the given limit
+     * @param limit if null will run against every dataset in Gemma else will only do the 1st to the given limit
      */
     public void runAll( Integer limit ) {
-        //TODO:  put the loading and thawing of EE's here and pass the EE in as a parameter so that the 
-        //  EE's are not thawed multiple times (will this matter?)
+        // TODO: put the loading and thawing of EE's here and pass the EE in as a parameter so that the
+        // EE's are not thawed multiple times (will this matter?)
         try {
             generateDatasetView( limit );
             generateDatasetTissueView( limit );
@@ -106,9 +106,9 @@ public class DatabaseViewGenerator {
             throw new RuntimeException( e );
         }
     }
-    
-    public void runAll(){
-        runAll(0);
+
+    public void runAll() {
+        runAll( null );
     }
 
     /**
@@ -136,7 +136,7 @@ public class DatabaseViewGenerator {
          * Print out their names etc.
          */
         int i = 0;
-        for ( ExpressionExperiment vo : vos ) {            
+        for ( ExpressionExperiment vo : vos ) {
             expressionExperimentService.thawLite( vo );
             log.info( "Processing: " + vo.getShortName() );
 
@@ -155,17 +155,17 @@ public class DatabaseViewGenerator {
             description = StringUtils.replaceChars( description, '\t', ' ' );
             description = StringUtils.replaceChars( description, '\n', ' ' );
             description = StringUtils.replaceChars( description, '\r', ' ' );
-            
-            
+
             Taxon taxon = expressionExperimentService.getTaxon( gemmaId );
             Collection<ArrayDesign> ads = expressionExperimentService.getArrayDesignsUsed( vo );
             StringBuffer manufacturers = new StringBuffer();
 
-            //TODO could cache the arrayDesigns to make faster, thawing ad is time consuming
+            // TODO could cache the arrayDesigns to make faster, thawing ad is time consuming
             for ( ArrayDesign ad : ads ) {
                 arrayDesignService.thawLite( ad );
-                if (ad.getDesignProvider() == null){
-                    log.debug( "Array Design: " + ad.getShortName() + " has no design provoider assoicated with it. Skipping" );
+                if ( ad.getDesignProvider() == null ) {
+                    log.debug( "Array Design: " + ad.getShortName()
+                            + " has no design provoider assoicated with it. Skipping" );
                     continue;
                 }
                 manufacturers.append( ad.getDesignProvider().getName() + "," );
@@ -174,8 +174,9 @@ public class DatabaseViewGenerator {
             writer.write( String.format( "%d\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", gemmaId, source, acc, shortName, name,
                     description, taxon.getCommonName(), StringUtils.chomp( manufacturers.toString(), "," ) ) );
 
-            if ( ( limit != null || limit != 0 ) && ++i > limit ) break;
-
+            if ( limit != null ) {
+                if ( ++i > limit ) break;
+            }
         }
 
         writer.close();
@@ -201,9 +202,9 @@ public class DatabaseViewGenerator {
         int i = 0;
         for ( ExpressionExperiment vo : vos ) {
             expressionExperimentService.thawLite( vo );
-            
+
             log.info( "Processing: " + vo.getShortName() );
-            
+
             Long gemmaId = vo.getId();
 
             for ( Characteristic c : vo.getCharacteristics() ) {
@@ -231,7 +232,9 @@ public class DatabaseViewGenerator {
                 }
 
             }
-            if ( ( limit != null || limit != 0 ) && ++i > limit ) break;
+            if ( limit != null ) {
+                if ( ++i > limit ) break;
+            }
         }
 
         writer.close();
@@ -257,9 +260,8 @@ public class DatabaseViewGenerator {
         int i = 0;
         for ( ExpressionExperiment vo : vos ) {
             expressionExperimentService.thawLite( vo );
-            
+
             log.info( "Processing: " + vo.getShortName() );
-         
 
             Collection<ExpressionAnalysisResultSet> results = differentialExpressionAnalysisService.getResultSets( vo );
             if ( results == null || results.isEmpty() ) {
@@ -268,7 +270,7 @@ public class DatabaseViewGenerator {
             }
 
             for ( ExpressionAnalysisResultSet ears : results ) {
-                if (ears == null){
+                if ( ears == null ) {
                     log.warn( "No  expression analysis results found for " + vo );
                     continue;
                 }
@@ -277,33 +279,32 @@ public class DatabaseViewGenerator {
                 // Get the factor category name
                 String factorName = new String();
                 String factorURI = new String();
-                
+
                 for ( ExperimentalFactor ef : ears.getExperimentalFactor() ) {
                     factorName += ef.getName() + ",";
-                    if (ef.getCategory() instanceof VocabCharacteristic){                        
-                        factorURI += ((VocabCharacteristic)ef.getCategory()).getCategoryUri() + ",";
+                    if ( ef.getCategory() instanceof VocabCharacteristic ) {
+                        factorURI += ( ( VocabCharacteristic ) ef.getCategory() ).getCategoryUri() + ",";
                     }
                 }
                 factorName = StringUtils.chomp( factorName, "," );
                 factorURI = StringUtils.chomp( factorURI, "," );
 
-                
-                if (ears.getResults() == null || ears.getResults().isEmpty()){
+                if ( ears.getResults() == null || ears.getResults().isEmpty() ) {
                     log.warn( "No  differential expression analysis results found for " + vo );
                     continue;
                 }
                 // Generate probe details
                 for ( DifferentialExpressionAnalysisResult dear : ears.getResults() ) {
 
-                    if (dear == null){
-                        log.warn("Missing results for " + vo + " skipping to next. ");                        
+                    if ( dear == null ) {
+                        log.warn( "Missing results for " + vo + " skipping to next. " );
                         continue;
                     }
                     if ( dear instanceof ProbeAnalysisResult ) {
                         CompositeSequence cs = ( ( ProbeAnalysisResult ) dear ).getProbe();
 
                         // If p-value didn't make cut off then don't bother putting in file
-                        //TODO This is a slow way to do this.  Would be better to use a query to get the data needed. 
+                        // TODO This is a slow way to do this. Would be better to use a query to get the data needed.
                         if ( dear.getCorrectedPvalue() == null || dear.getCorrectedPvalue() > THRESH_HOLD ) continue;
 
                         // Figure out what gene is associated with the expressed probe.
@@ -316,11 +317,11 @@ public class DatabaseViewGenerator {
                             log.debug( "Probe: " + cs.getName() + " has " + genes.size()
                                     + " assoicated with it. Skipping because not specific." );
                             continue;
-                        }else if (genes.iterator().next().getNcbiId() == null){
+                        } else if ( genes.iterator().next().getNcbiId() == null ) {
                             log.debug( "Probe: " + cs.getName() + " has " + genes.iterator().next().getOfficialSymbol()
                                     + " assoicated with it. This gene has no NCBI id so skipping" );
                             continue;
-                            
+
                         }
 
                         // Write data to file.
@@ -337,8 +338,10 @@ public class DatabaseViewGenerator {
 
             } // ears loop
 
-            if ( ( limit != null || limit != 0 ) && ++i > limit ) break;
-        }//EE loop
+            if ( limit != null ) {
+                if ( ++i > limit ) break;
+            }
+        }// EE loop
         writer.close();
     }
 
