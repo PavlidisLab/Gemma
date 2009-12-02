@@ -83,6 +83,10 @@ public abstract class AbstractGemmaEndpoint extends AbstractDomPayloadEndpoint {
         return true;
     }
 
+    public void setManualAuthenticationService( ManualAuthenticationService map ) {
+        this.manualAuthenticationService = map;
+
+    }
     /**
      * Function to handle construction of output in xml for a bad response
      */
