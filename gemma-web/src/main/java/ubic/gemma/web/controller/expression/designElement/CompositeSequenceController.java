@@ -31,7 +31,7 @@ import org.apache.commons.lang.StringUtils;
 import org.hibernate.proxy.HibernateProxy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.ServletRequestDataBinder;
+import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
@@ -232,7 +232,7 @@ public class CompositeSequenceController extends BaseController {
     }
 
     @InitBinder
-    protected void initBinder( ServletRequestDataBinder binder ) throws Exception {
+    public void initBinder( WebDataBinder binder ) throws Exception {
         binder.registerCustomEditor( SequenceType.class, new SequenceTypePropertyEditor() );
     }
 
