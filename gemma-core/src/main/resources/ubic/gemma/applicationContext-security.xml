@@ -282,7 +282,7 @@
 	<!-- Aspect to add audit info for objects after CRUD operations. -->
 	<aop:config>
 		<aop:aspect id="auditAspect" ref="auditAdvice">
-			<aop:after-returning method="doAuditAdvice" pointcut="ubic.gemma.util.SystemArchitectureAspect.crud()"
+			<aop:after-returning method="doAuditAdvice" pointcut="ubic.gemma.util.SystemArchitectureAspect.modifier()"
 				returning="retValue" />
 		</aop:aspect>
 	</aop:config>

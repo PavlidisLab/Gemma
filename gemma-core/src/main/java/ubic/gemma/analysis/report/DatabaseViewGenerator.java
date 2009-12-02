@@ -33,10 +33,22 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet;
+import ubic.gemma.model.analysis.expression.ProbeAnalysisResult;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultService;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.VocabCharacteristic;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.designElement.CompositeSequenceService;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.util.ConfigUtils;
 
 /**
@@ -54,6 +66,8 @@ import ubic.gemma.util.ConfigUtils;
 @Service
 public class DatabaseViewGenerator {
 
+    private static final double THRESH_HOLD = 0.01;
+
     private static Log log = LogFactory.getLog( DatabaseViewGenerator.class );
 
     public static final String VIEW_DIR = ConfigUtils.getString( "gemma.appdata.home" ) + File.separatorChar
@@ -67,24 +81,41 @@ public class DatabaseViewGenerator {
 
     @Autowired
     ExpressionExperimentService expressionExperimentService;
+    @Autowired
+    CompositeSequenceService compositeSequenceService;
+    @Autowired
+    DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
+    @Autowired
+    DifferentialExpressionResultService differentialExpressionResultService;
+    @Autowired
+    ArrayDesignService arrayDesignService;
 
-    public void runAll() {
+    /**
+     * @param limit if 0 or null will run against every dataset in Gemma else will only do the 1st to the given limit
+     */
+    public void runAll( Integer limit ) {
+        //TODO:  put the loading and thawing of EE's here and pass the EE in as a parameter so that the 
+        //  EE's are not thawed multiple times (will this matter?)
         try {
-            generateDatasetView();
-            generateDatasetTissueView();
-            generateDifferentialExpressionView();
+            //generateDatasetView( limit );
+            //generateDatasetTissueView( limit );
+            generateDifferentialExpressionView( limit );
         } catch ( FileNotFoundException e ) {
             throw new RuntimeException( e );
         } catch ( IOException e ) {
             throw new RuntimeException( e );
         }
     }
+    
+    public void runAll(){
+        runAll(null);
+    }
 
     /**
      * @throws IOException
      * @throws FileNotFoundException
      */
-    public void generateDatasetView() throws FileNotFoundException, IOException {
+    public void generateDatasetView( Integer limit ) throws FileNotFoundException, IOException {
 
         log.info( "Generating dataset summary view" );
 
@@ -99,15 +130,15 @@ public class DatabaseViewGenerator {
          */
         Collection<ExpressionExperiment> vos = expressionExperimentService.loadAll();
 
-        writer.write( "GemmaDsId\tSource\tSourceAccession\tShortName\tName\n" );
+        writer.write( "GemmaDsId\tSource\tSourceAccession\tShortName\tName\tDescription\ttaxon\tManufacturer\n" );
 
         /*
          * Print out their names etc.
          */
         int i = 0;
-        for ( ExpressionExperiment vo : vos ) {
-            log.info( "Processing: " + vo.getShortName() );
+        for ( ExpressionExperiment vo : vos ) {            
             expressionExperimentService.thawLite( vo );
+            log.info( "Processing: " + vo.getShortName() );
 
             String acc = "";
             String source = "";
@@ -118,22 +149,30 @@ public class DatabaseViewGenerator {
             }
 
             Long gemmaId = vo.getId();
-
             String shortName = vo.getShortName();
-
             String name = vo.getName();
+            String description = vo.getDescription();
+            Taxon taxon = expressionExperimentService.getTaxon( gemmaId );
+            Collection<ArrayDesign> ads = expressionExperimentService.getArrayDesignsUsed( vo );
+            StringBuffer manufacturers = new StringBuffer();
 
-            writer.write( String.format( "%d\t%s\t%s\t%s\t%s\n", gemmaId, source, acc, shortName, name ) );
+            //TODO could cache the arrayDesigns to make faster, thawing ad is time consuming
+            for ( ArrayDesign ad : ads ) {
+                arrayDesignService.thawLite( ad );
+                manufacturers.append( ad.getDesignProvider().getName() + "," );
+            }
 
-            // testing.
-            if ( ++i > 100 ) break;
+            writer.write( String.format( "%d\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", gemmaId, source, acc, shortName, name,
+                    description, taxon.getCommonName(), StringUtils.chomp( manufacturers.toString(), "," ) ) );
+
+            if ( ( limit != null || limit != 0 ) && ++i > limit ) break;
 
         }
 
         writer.close();
     }
 
-    public void generateDatasetTissueView() throws FileNotFoundException, IOException {
+    public void generateDatasetTissueView( Integer limit ) throws FileNotFoundException, IOException {
         log.info( "Generating dataset tissue view" );
 
         /*
@@ -152,11 +191,10 @@ public class DatabaseViewGenerator {
         writer.write( "GemmaDsId\tTerm\tTermURI\n" );
         int i = 0;
         for ( ExpressionExperiment vo : vos ) {
-
-            log.info( "Processing: " + vo.getShortName() );
-
             expressionExperimentService.thawLite( vo );
-
+            
+            log.info( "Processing: " + vo.getShortName() );
+            
             Long gemmaId = vo.getId();
 
             for ( Characteristic c : vo.getCharacteristics() ) {
@@ -184,13 +222,13 @@ public class DatabaseViewGenerator {
                 }
 
             }
-            if ( ++i > 100 ) break;
+            if ( ( limit != null || limit != 0 ) && ++i > limit ) break;
         }
 
         writer.close();
     }
 
-    public void generateDifferentialExpressionView() throws FileNotFoundException, IOException {
+    public void generateDifferentialExpressionView( Integer limit ) throws FileNotFoundException, IOException {
         log.info( "Generating dataset diffex view" );
 
         /*
@@ -206,21 +244,80 @@ public class DatabaseViewGenerator {
         /*
          * For each gene that is differentially expressed, print out a line.F
          */
-        writer.write( "GemmaDsId\tGeneNCBIId\tGemmaGeneId\n" );
+        writer.write( "GemmaDsId\tEEShortName\tGeneNCBIId\tGemmaGeneId\tFactor\n" );
         int i = 0;
         for ( ExpressionExperiment vo : vos ) {
-            log.info( "Processing: " + vo.getShortName() );
             expressionExperimentService.thawLite( vo );
+            
+            log.info( "Processing: " + vo.getShortName() );
+         
 
-            /*
-             * Get diff ex regardless of the factor.
-             */
+            Collection<ExpressionAnalysisResultSet> results = differentialExpressionAnalysisService.getResultSets( vo );
+            if ( results == null || results.isEmpty() ) {
+                log.warn( "No differential expression results found for " + vo );
+                continue;
+            }
 
-            /*
-             * print gene + dataset.
-             */
-            if ( ++i > 100 ) break;
-        }
+            for ( ExpressionAnalysisResultSet ears : results ) {
+                if (ears == null){
+                    log.warn( "No  expression analysis results found for " + vo );
+                    continue;
+                }
+                differentialExpressionResultService.thaw( ears );
+
+                // Get the factor category name
+                String factorName = new String();
+                for ( ExperimentalFactor ef : ears.getExperimentalFactor() ) {
+                    factorName += ef.getName() + ",";
+                }
+                factorName = StringUtils.chomp( factorName, "," );
+
+                if (ears.getResults() == null || ears.getResults().isEmpty()){
+                    log.warn( "No  differential expression analysis results found for " + vo );
+                    continue;
+                }
+                // Generate probe details
+                for ( DifferentialExpressionAnalysisResult dear : ears.getResults() ) {
+
+                    if (dear == null){
+                        log.warn("Missing results for " + vo + " skipping to next. ");                        
+                        continue;
+                    }
+                    if ( dear instanceof ProbeAnalysisResult ) {
+                        CompositeSequence cs = ( ( ProbeAnalysisResult ) dear ).getProbe();
+
+                        // If p-value didn't make cut off then don't bother putting in file
+                        //TODO This is a slow way to do this.  Would be better to use a query to get the data needed. 
+                        if ( dear.getCorrectedPvalue() == null || dear.getCorrectedPvalue() > THRESH_HOLD ) continue;
+
+                        // Figure out what gene is associated with the expressed probe.
+                        Collection<Gene> genes = compositeSequenceService.getGenes( cs );
+                        if ( genes == null || genes.isEmpty() ) {
+                            log.info( "Probe: " + cs.getName()
+                                    + " met threshold but no genes associated with probe so skipping" );
+                            continue;
+                        } else if ( genes.size() > 1 ) {
+                            log.info( "Probe: " + cs.getName() + " has " + genes.size()
+                                    + " assoicated with it. Skipping because not specific." );
+                            continue;
+                        }
+
+                        // Write data to file.
+                        Gene gene = genes.iterator().next();
+                        writer.write( String.format( "%d\t%s\t%s\t%d\t%s\n", vo.getId(), vo.getShortName(), gene
+                                .getNcbiId(), gene.getId(), factorName ) );
+
+                    } else {
+                        log.warn( "probe details missing.  Unable to retrieve probe level information. Skipping  "
+                                + dear.getClass() + " with id: " + dear.getId() );
+                    }
+
+                } // dear loop
+
+            } // ears loop
+
+            if ( ( limit != null || limit != 0 ) && ++i > limit ) break;
+        }//EE loop
         writer.close();
     }
 
