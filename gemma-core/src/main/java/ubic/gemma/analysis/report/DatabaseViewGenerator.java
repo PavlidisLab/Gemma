@@ -97,8 +97,8 @@ public class DatabaseViewGenerator {
         //TODO:  put the loading and thawing of EE's here and pass the EE in as a parameter so that the 
         //  EE's are not thawed multiple times (will this matter?)
         try {
-            //generateDatasetView( limit );
-            //generateDatasetTissueView( limit );
+            generateDatasetView( limit );
+            generateDatasetTissueView( limit );
             generateDifferentialExpressionView( limit );
         } catch ( FileNotFoundException e ) {
             throw new RuntimeException( e );
@@ -152,6 +152,11 @@ public class DatabaseViewGenerator {
             String shortName = vo.getShortName();
             String name = vo.getName();
             String description = vo.getDescription();
+            description = StringUtils.replaceChars( description, '\t', ' ' );
+            description = StringUtils.replaceChars( description, '\n', ' ' );
+            description = StringUtils.replaceChars( description, '\r', ' ' );
+            
+            
             Taxon taxon = expressionExperimentService.getTaxon( gemmaId );
             Collection<ArrayDesign> ads = expressionExperimentService.getArrayDesignsUsed( vo );
             StringBuffer manufacturers = new StringBuffer();
@@ -159,6 +164,10 @@ public class DatabaseViewGenerator {
             //TODO could cache the arrayDesigns to make faster, thawing ad is time consuming
             for ( ArrayDesign ad : ads ) {
                 arrayDesignService.thawLite( ad );
+                if (ad.getDesignProvider() == null){
+                    log.debug( "Array Design: " + ad.getShortName() + " has no design provoider assoicated with it. Skipping" );
+                    continue;
+                }
                 manufacturers.append( ad.getDesignProvider().getName() + "," );
             }
 
@@ -244,7 +253,7 @@ public class DatabaseViewGenerator {
         /*
          * For each gene that is differentially expressed, print out a line.F
          */
-        writer.write( "GemmaDsId\tEEShortName\tGeneNCBIId\tGemmaGeneId\tFactor\n" );
+        writer.write( "GemmaDsId\tEEShortName\tGeneNCBIId\tGemmaGeneId\tFactor\tFactorURI\n" );
         int i = 0;
         for ( ExpressionExperiment vo : vos ) {
             expressionExperimentService.thawLite( vo );
@@ -267,11 +276,18 @@ public class DatabaseViewGenerator {
 
                 // Get the factor category name
                 String factorName = new String();
+                String factorURI = new String();
+                
                 for ( ExperimentalFactor ef : ears.getExperimentalFactor() ) {
                     factorName += ef.getName() + ",";
+                    if (ef.getCategory() instanceof VocabCharacteristic){                        
+                        factorURI += ((VocabCharacteristic)ef.getCategory()).getCategoryUri() + ",";
+                    }
                 }
                 factorName = StringUtils.chomp( factorName, "," );
+                factorURI = StringUtils.chomp( factorURI, "," );
 
+                
                 if (ears.getResults() == null || ears.getResults().isEmpty()){
                     log.warn( "No  differential expression analysis results found for " + vo );
                     continue;
@@ -300,12 +316,17 @@ public class DatabaseViewGenerator {
                             log.debug( "Probe: " + cs.getName() + " has " + genes.size()
                                     + " assoicated with it. Skipping because not specific." );
                             continue;
+                        }else if (genes.iterator().next().getNcbiId() == null){
+                            log.debug( "Probe: " + cs.getName() + " has " + genes.iterator().next().getOfficialSymbol()
+                                    + " assoicated with it. This gene has no NCBI id so skipping" );
+                            continue;
+                            
                         }
 
                         // Write data to file.
                         Gene gene = genes.iterator().next();
-                        writer.write( String.format( "%d\t%s\t%s\t%d\t%s\n", vo.getId(), vo.getShortName(), gene
-                                .getNcbiId(), gene.getId(), factorName ) );
+                        writer.write( String.format( "%d\t%s\t%s\t%d\t%s\t%s\n", vo.getId(), vo.getShortName(), gene
+                                .getNcbiId(), gene.getId(), factorName, factorURI ) );
 
                     } else {
                         log.warn( "probe details missing.  Unable to retrieve probe level information. Skipping  "
