@@ -293,11 +293,11 @@ public class DatabaseViewGenerator {
                         // Figure out what gene is associated with the expressed probe.
                         Collection<Gene> genes = compositeSequenceService.getGenes( cs );
                         if ( genes == null || genes.isEmpty() ) {
-                            log.info( "Probe: " + cs.getName()
+                            log.debug( "Probe: " + cs.getName()
                                     + " met threshold but no genes associated with probe so skipping" );
                             continue;
                         } else if ( genes.size() > 1 ) {
-                            log.info( "Probe: " + cs.getName() + " has " + genes.size()
+                            log.debug( "Probe: " + cs.getName() + " has " + genes.size()
                                     + " assoicated with it. Skipping because not specific." );
                             continue;
                         }
