@@ -57,7 +57,7 @@ public class DatabaseViewGeneratorCLI extends AbstractSpringAwareCLI {
         super.processCommandLine( "DatabaseViewGeneratorCLI", args );
 
         DatabaseViewGenerator v = ( DatabaseViewGenerator ) getBean( "databaseViewGenerator" );
-        v.runAll(100);
+        v.runAll();
 
         return null;
     }
