@@ -54,7 +54,7 @@ import ubic.gemma.util.ConfigUtils;
  */
 public abstract class AbstractGemmaEndpoint extends AbstractDomPayloadEndpoint {
 
-    protected ManualAuthenticationService manualAuthenticationProcessing;
+    protected ManualAuthenticationService manualAuthenticationService;
 
     /**
      * Namespace of both request and response.
@@ -78,13 +78,8 @@ public abstract class AbstractGemmaEndpoint extends AbstractDomPayloadEndpoint {
 
     }
 
-    public void setManualAuthenticationProcessing( ManualAuthenticationService map ) {
-        this.manualAuthenticationProcessing = map;
-
-    }
-
     protected boolean authenticate() {
-        this.manualAuthenticationProcessing.authenticateAnonymously();
+        this.manualAuthenticationService.authenticateAnonymously();
         return true;
     }
 
