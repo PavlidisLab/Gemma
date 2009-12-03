@@ -104,6 +104,7 @@ public abstract class BaseSpacesTask implements SpacesTask {
      */
     public void setGigaSpacesTemplate( GigaSpacesTemplate gigaSpacesTemplate ) {
         this.gigaSpacesTemplate = gigaSpacesTemplate;
+        this.gigaSpacesTemplate.setFifo( true );
     }
 
     /*
