@@ -27,10 +27,7 @@
 
 	<!-- Declaration of GigaSpace template-->
 	<bean id="gigaspacesTemplate" class="org.springmodules.javaspaces.gigaspaces.GigaSpacesTemplate">
-		<property name="space" ref="gigaspace" />
-		<property name="fifo"> 
-			<value> false </value>
-		</property>
+		<property name="space" ref="gigaspace" />		
 	</bean>
 
 	<!-- Add workers here -->
