@@ -647,7 +647,7 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
     /**
      * AJAX. Data summarizing the status of experiments.
      * 
-     * @param sId
+     * @param sId - ids, comma-delimited, can bel null to show all.
      * @param limit If >0, get the most recently updated N experiments, where N <= limit.
      * @return
      */
@@ -668,8 +668,41 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
             throw new AccessDeniedException( "User does not have access to experiment management" );
         }
 
+        eeValObjectCol = getEEVOsForManager( sId, filterDataByUser );
+
+        if ( timer.getTime() > 1000 ) {
+            log.info( "Phase 1 done in " + timer.getTime() + "ms" );
+        }
+
+        /*
+         * Phase I is pretty fast - even over a tunnel, about 10 seconds for 1500 data sets.
+         */
+
+        timer.reset();
+        timer.start();
+
+        Map<Long, Date> recentDateInfo = getReportData( eeValObjectCol );
+
+        if ( timer.getTime() > 1000 ) {
+            log.info( "Get report data: " + timer.getTime() + "ms; limit=" + limit );
+        }
+
+        timer.reset();
+        timer.start();
+
+        List<ExpressionExperimentValueObject> result = getRecentlyUpdated( recentDateInfo, eeValObjectCol, limit );
+        if ( timer.getTime() > 1000 ) {
+            log.info( "Sorting and filtering: " + timer.getTime() + "ms; limit=" + limit );
+        }
+
+        log.info( "Phase II done" );
+        return result;
+    }
+
+    private Collection<ExpressionExperimentValueObject> getEEVOsForManager( String sId, boolean filterDataByUser ) {
+        Collection<ExpressionExperimentValueObject> eeValObjectCol;
         if ( sId == null ) {
-            eeValObjectCol = this.getFilteredExpressionExperimentValueObjects( null, filterDataByUser );
+            eeValObjectCol = this.getFilteredExpressionExperimentValueObjects( null, filterDataByUser ); // pretty fast.
         } else { // if ids are specified, then display only those
             // expressionExperiments
             Collection<Long> ids = parseIdParameterString( sId );
@@ -679,20 +712,7 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
                 eeValObjectCol = this.getFilteredExpressionExperimentValueObjects( ids, false );
             }
         }
-
-        if ( timer.getTime() > 1000 ) {
-            log.info( "Phase 1 done in " + timer.getTime() + "ms" );
-        }
-
-        Map<Long, Date> recentDateInfo = getReportData( eeValObjectCol );
-
-        List<ExpressionExperimentValueObject> result = getRecentlyUpdated( recentDateInfo, eeValObjectCol, limit );
-
-        timer.stop();
-        if ( timer.getTime() > 1000 ) {
-            log.info( "Ready with " + result.size() + " EE reports in " + timer.getTime() + "ms; limit=" + limit );
-        }
-        return result;
+        return eeValObjectCol;
     }
 
     /**
@@ -715,7 +735,6 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
      * @param response
      * @return ModelAndView
      */
-    @SuppressWarnings( { "unchecked" })
     @RequestMapping("/showAllExpressionExperiments.html")
     public ModelAndView showAllExpressionExperiments( HttpServletRequest request, HttpServletResponse response ) {
 
@@ -1106,7 +1125,7 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         timer.start();
 
         /*
-         * FIXME remove troubled.
+         * FIXME remove troubled? Needs to be optional. For dataset managment page, don't.
          */
 
         /* Filtering for security happens here. */
@@ -1117,7 +1136,7 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
                 securedEEs = expressionExperimentService.loadMultiple( eeIds );
             }
         } else {
-            if ( eeIds == null ) {// TODO check this
+            if ( eeIds == null ) {
                 securedEEs = expressionExperimentService.loadAll();
             } else {
                 securedEEs = expressionExperimentService.loadMultiple( eeIds );
@@ -1169,11 +1188,15 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
     /**
      * @param recentDateInfo
      * @param expressionExperiments
-     * @param limit Only this many will be returned (ties at the cutoff date will result in more)
+     * @param limit Only this many will be returned (ties at the cutoff date will result in more), or all of them, but
+     *        sorted.
      * @return
      */
     private List<ExpressionExperimentValueObject> getRecentlyUpdated( Map<Long, Date> recentDateInfo,
             Collection<ExpressionExperimentValueObject> expressionExperiments, int limit ) {
+
+        StopWatch timer = new StopWatch();
+        timer.start();
 
         List<ExpressionExperimentValueObject> results = new ArrayList<ExpressionExperimentValueObject>();
 
@@ -1187,12 +1210,19 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         dates.addAll( recentDateInfo.values() );
         Collections.sort( dates );
 
+        if ( timer.getTime() > 1000 ) {
+            log.info( "Date sort: " + timer.getTime() + "ms" );
+        }
+
+        timer.reset();
+        timer.start();
+
         Date cutoff = null;
         int j = 0;
         for ( int i = dates.size() - 1; i >= 0; i-- ) {
             cutoff = dates.get( i );
             if ( ++j > limit ) {
-                // log.info( "Cutoff: " + cutoff + " at " + j );
+                log.info( "Cutoff date: " + cutoff );
                 break;
             }
         }
@@ -1212,12 +1242,16 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
             }
         }
 
+        if ( timer.getTime() > 1000 ) {
+            log.info( "Filter by date: " + timer.getTime() + "ms" );
+        }
+
         return results;
 
     }
 
     /**
-     * Updates the value objects with event information.
+     * Updates the value objects with event information and summaries
      * 
      * @param expressionExperiments
      * @return most recently changed information
@@ -1230,6 +1264,7 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         Map<Long, Date> lastUpdated = expressionExperimentReportService.fillLinkStatsFromCache( expressionExperiments );
 
         expressionExperimentReportService.fillAnnotationInformation( expressionExperiments );
+
         Map<Long, Date> eventDates = expressionExperimentReportService.fillEventInformation( expressionExperiments );
 
         for ( Long k : eventDates.keySet() ) {

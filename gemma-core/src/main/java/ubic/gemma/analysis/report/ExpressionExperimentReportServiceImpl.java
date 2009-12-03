@@ -30,6 +30,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang.time.StopWatch;
@@ -111,6 +112,10 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
      * @param vos
      */
     public void fillAnnotationInformation( Collection<ExpressionExperimentValueObject> vos ) {
+
+        StopWatch timer = new StopWatch();
+        timer.start();
+
         Collection<Long> ids = new HashSet<Long>();
         for ( ExpressionExperimentValueObject eeVo : vos ) {
             Long id = eeVo.getId();
@@ -125,6 +130,10 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
             Long id = eeVo.getId();
             eeVo.setNumAnnotations( annotationCounts.get( id ) );
             eeVo.setNumPopulatedFactors( factorCounts.get( id ) );
+        }
+
+        if ( timer.getTime() > 1000 ) {
+            log.info( "Fill annotation information: " + timer.getTime() + "ms" );
         }
 
     }
@@ -278,7 +287,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
 
             results.put( ee.getId(), mostRecentDate );
         }
-        log.debug( "processed events" );
+        log.info( "Processed events" );
 
         return results;
     }
@@ -292,8 +301,26 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
         StopWatch timer = new StopWatch();
         Map<Long, Date> result = new HashMap<Long, Date>();
         timer.start();
+
+        List<Long> ids = new ArrayList<Long>();
+        for ( ExpressionExperimentValueObject vo : vos ) {
+            ids.add( vo.getId() );
+        }
+
+        Collection<ExpressionExperimentValueObject> cachedVos = retrieveValueObjects( ids );
+        Map<Long, ExpressionExperimentValueObject> id2cachedVo = new HashMap<Long, ExpressionExperimentValueObject>();
+        for ( ExpressionExperimentValueObject cachedVo : cachedVos ) {
+            id2cachedVo.put( cachedVo.getId(), cachedVo );
+        }
+
+        if ( timer.getTime() > 1000 ) {
+            log.info( "Link stats read from cache in " + timer.getTime() + "ms" );
+        }
+        timer.reset();
+        timer.start();
+
         for ( ExpressionExperimentValueObject eeVo : vos ) {
-            ExpressionExperimentValueObject cacheVo = retrieveValueObject( eeVo.getId() );
+            ExpressionExperimentValueObject cacheVo = id2cachedVo.get( eeVo.getId() );
             if ( cacheVo != null ) {
                 eeVo.setBioMaterialCount( cacheVo.getBioMaterialCount() );
                 eeVo.setProcessedExpressionVectorCount( cacheVo.getProcessedExpressionVectorCount() );
@@ -313,13 +340,14 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
         }
         timer.stop();
         if ( timer.getTime() > 1000 ) {
-            log.info( "Link stats read from cache in " + timer.getTime() + "ms" );
+            log.info( "Link stats processed from cache in " + timer.getTime() + "ms" );
         }
 
         return result;
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
      * @see ubic.gemma.analysis.report.ExpressionExperimentReportService#generateSummaryObject(java.lang.Long)
      */
     @SuppressWarnings("unchecked")
@@ -333,7 +361,8 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
         return null;
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
      * @see ubic.gemma.analysis.report.ExpressionExperimentReportService#generateSummaryObjects()
      */
     @Secured( { "GROUP_AGENT" })
@@ -343,7 +372,8 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
         getStats( vos );
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
      * @see ubic.gemma.analysis.report.ExpressionExperimentReportService#generateSummaryObjects(java.util.Collection)
      */
     public Collection<ExpressionExperimentValueObject> generateSummaryObjects( Collection<Long> ids ) {
@@ -355,16 +385,18 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
         return vos;
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
      * @see ubic.gemma.analysis.report.ExpressionExperimentReportService#retrieveSummaryObjects()
-     */ 
+     */
     public Collection<ExpressionExperimentValueObject> retrieveSummaryObjects() {
         return retrieveValueObjects();
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
      * @see ubic.gemma.analysis.report.ExpressionExperimentReportService#retrieveSummaryObjects(java.util.Collection)
-     */ 
+     */
     public Collection<ExpressionExperimentValueObject> retrieveSummaryObjects( Collection<Long> ids ) {
         return retrieveValueObjects( ids );
     }
