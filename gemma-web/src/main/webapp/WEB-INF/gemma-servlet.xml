@@ -486,9 +486,6 @@
 		<property name="externalDatabaseService">
 			<ref bean="externalDatabaseService" />
 		</property>
-		<property name="localFileService">
-			<ref bean="localFileService" />
-		</property>
 	</bean>
 
 
