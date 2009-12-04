@@ -109,6 +109,9 @@ Ext.extend(Gemma.DatasetSearchField, Ext.form.TriggerField, {
 			},
 
 			taxonChanged : function(taxon, doSearch) {
+				if (!taxon) {
+					return;
+				}
 				taxon.id; // dummy statement forces initialization??? really weird.
 				this.taxon = taxon;
 				if (doSearch) {
