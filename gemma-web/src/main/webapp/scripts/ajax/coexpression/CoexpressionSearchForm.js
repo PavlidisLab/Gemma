@@ -18,7 +18,7 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 
 	layout : 'border',
 	width : 390,
-	height : 360,
+	height : 430,
 	frame : true,
 	stateful : true,
 	stateEvents : ["beforesearch"],
@@ -43,19 +43,6 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 		var currentState = this.getCoexpressionSearchCommand();
 		delete currentState.eeIds;
 		return currentState;
-
-	},
-
-	onRender : function() {
-		Gemma.CoexpressionSearchForm.superclass.onRender.apply(this, arguments);
-
-		Ext.apply(this, {
-					loadMask : new Ext.LoadMask(this.getEl(), {
-								msg : "Preparing Coexpression Interface  ..."
-							})
-				});
-
-		this.loadMask.show();
 
 	},
 
@@ -182,12 +169,14 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 		}
 
 		if (csc.taxonId) {
-			this.geneChooserPanel.toolbar.taxonCombo.setTaxon(csc.taxonId);
+			this.geneChooserPanel.getTopToolbar().taxonCombo.setTaxon(csc.taxonId);
 		}
 
 		if (csc.eeSetName) {
 			this.currentSet = this.eeSetChooserPanel.selectByName(csc.eeSetName);
-			csc.eeSetId = this.currentSet.get("id");
+			if (this.currentSet) {
+				csc.eeSetId = this.currentSet.get("id");
+			}
 		} else if (csc.eeSetId >= 0) {
 			this.eeSetChooserPanel.selectById(csc.eeSetId);
 		}
@@ -344,36 +333,46 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 
 	initComponent : function() {
 
-		this.geneChooserPanel = new Gemma.GeneChooserPanel({
-					height : 100,
+		this.geneChooserPanel = new Gemma.GeneGrid({
+					height : 400,
 					width : 230,
 					region : 'center',
 					id : 'gene-chooser-panel'
 				});
 
-		Ext.apply(this.geneChooserPanel.toolbar.taxonCombo, {
+		Ext.apply(this.geneChooserPanel.getTopToolbar().taxonCombo, {
 					stateId : "",
 					stateful : false,
 					stateEvents : []
 				});
 
+		/*
+		 * Shows the combo box and 'edit' button
+		 */
 		this.eeSetChooserPanel = new Gemma.ExpressionExperimentSetPanel({
-					isAdmin : this.admin,
-					store : new Gemma.ExpressionExperimentSetStore()
+					isAdmin : this.admin
 				});
 
+		/*
+		 * Filter the EESet chooser based on gene taxon.
+		 */
 		this.geneChooserPanel.on("taxonchanged", function(taxon) {
 					this.eeSetChooserPanel.filterByTaxon(taxon);
 				}.createDelegate(this));
 
 		this.eeSetChooserPanel.on("set-chosen", function(eeSetRecord) {
 
-					if (eeSetRecord === null || eeSetRecord == undefined)
+					if (eeSetRecord === null || eeSetRecord == undefined) {
 						return;
+					}
 
 					this.currentSet = eeSetRecord;
 
 					this.updateDatasetsToBeSearched(eeSetRecord.get("expressionExperimentIds"), eeSetRecord);
+
+					/*
+					 * Detect a change in the taxon via the EESet chooser.
+					 */
 					this.geneChooserPanel.taxonChanged({
 								id : this.currentSet.get("taxonId"),
 								name : this.currentSet.get("taxonName")
@@ -391,12 +390,13 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 			items : [this.geneChooserPanel, {
 				xtype : 'panel',
 				title : 'Analysis options',
-				collapsedTitle : '[Analysis options]',
+				// collapsedTitle : '[Analysis options]',
 				id : 'analysis-options',
 				region : 'south',
+				frame : true,
 				cmargins : '5 0 0 0 ',
 				margins : '5 0 0 0 ',
-				plugins : new Ext.ux.CollapsedPanelTitlePlugin(),
+				// plugins : new Ext.ux.CollapsedPanelTitlePlugin(),
 				width : 250,
 				height : 180,
 				items : [{
@@ -470,10 +470,20 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 					}
 				}, this);
 
+		this.on('afterrender', function() {
+					Ext.apply(this, {
+								loadMask : new Ext.LoadMask(this.getEl(), {
+											msg : "Preparing Coexpression Interface  ..."
+										})
+							});
+
+					this.loadMask.show();
+				});
+
 		/*
 		 * This horrible mess. We listen to taxon ready event and filter the presets on the taxon.
 		 */
-		this.geneChooserPanel.toolbar.taxonCombo.on("ready", function(taxon) {
+		this.geneChooserPanel.getTopToolbar().taxonCombo.on("ready", function(taxon) {
 					this.taxonComboReady = true;
 					this.restoreState(this);
 				}.createDelegate(this), this);

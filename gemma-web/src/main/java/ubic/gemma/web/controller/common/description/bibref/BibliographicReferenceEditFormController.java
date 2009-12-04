@@ -30,7 +30,6 @@ import ubic.gemma.model.common.description.BibliographicReferenceService;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.ExternalDatabaseService;
-import ubic.gemma.model.common.description.LocalFileService;
 import ubic.gemma.util.BeanPropertyCompleter;
 import ubic.gemma.web.controller.BaseFormController;
 
@@ -42,7 +41,6 @@ import ubic.gemma.web.controller.BaseFormController;
  */
 public class BibliographicReferenceEditFormController extends BaseFormController {
     private BibliographicReferenceService bibliographicReferenceService;
-    private LocalFileService localFileService;
     private static final String PUB_MED = "PubMed";
     private ExternalDatabaseService externalDatabaseService;
 
@@ -71,13 +69,6 @@ public class BibliographicReferenceEditFormController extends BaseFormController
      */
     public void setExternalDatabaseService( ExternalDatabaseService externalDatabaseService ) {
         this.externalDatabaseService = externalDatabaseService;
-    }
-
-    /**
-     * @param localFileService the localFileService to set
-     */
-    public void setLocalFileService( LocalFileService localFileService ) {
-        this.localFileService = localFileService;
     }
 
     /*
@@ -157,51 +148,4 @@ public class BibliographicReferenceEditFormController extends BaseFormController
         return new ModelAndView( getSuccessView() ).addObject( "bibliographicReference", bibRef );
     }
 
-    private void upLoadPdf() {
-        // String baseOutputPath = ConfigUtils.getString( "local.userfile.basepath" );
-        // String user = ( ( ServletEvent ) context.getSourceEvent() ).getRequest().getRemoteUser();
-        // String uploadDir = baseOutputPath + user + "/";
-        //
-        // File dirPath = new File( uploadDir );
-        // File saveToFile = new File( uploadDir + file.getOriginalFilename() );
-        //
-        // try {
-        // uploadFile( file, dirPath, saveToFile );
-        // } catch ( IOException e ) {
-        // // this.getFormErrors( context ).reject( e.getLocalizedMessage() );
-        // // log.error( e, e );
-        // // return error( e );
-        // throw new RuntimeException( e );
-        // }
-        //
-        // /* place the data in flow scope to be used by the next view state */
-        // context.getFlowScope().setAttribute( "fileName", file.getOriginalFilename() );
-        // context.getFlowScope().setAttribute( "contentType", file.getContentType() );
-        // context.getFlowScope().setAttribute( "size", file.getSize() + " bytes" );
-        // context.getFlowScope().setAttribute( "location",
-        // dirPath.getAbsolutePath() + Constants.FILE_SEP + file.getOriginalFilename() );
-        //
-        // String link = uploadDir;
-        //
-        // context.getFlowScope().setAttribute( "link", link + file.getOriginalFilename() );
-        //
-        // log.warn( "Uploaded file!" );
-        // addMessage( context, "display.title", new Object[] {} );
-        // // end dealing with the file.
-        //
-        // LocalFile pdf = LocalFile.Factory.newInstance();
-        // pdf.setSize( file.getSize() );
-        // pdf.setLocalURL( saveToFile.toURI().toURL() );
-        //
-        // pdf = localFileService.findOrCreate( pdf );
-        //
-        // bibRef.setFullTextPDF( pdf );
-        //
-        // this.bibliographicReferenceService.updateBibliographicReference( bibRef );
-        //
-        // context.getRequestScope().setAttribute( "accession", bibRef.getPubAccession().getAccession() );
-        // context.getRequestScope().setAttribute( "bibliographicReference", bibRef );
-        // addMessage( context, "bibliographicReference.updated", new Object[] { bibRef.getPubAccession().getAccession()
-        // } );
-    }
 }

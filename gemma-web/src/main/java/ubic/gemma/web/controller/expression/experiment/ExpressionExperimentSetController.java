@@ -45,13 +45,15 @@ import ubic.gemma.web.controller.BaseFormController;
  * @version $Id$
  */
 public class ExpressionExperimentSetController extends BaseFormController {
-    private ExpressionExperimentSetService expressionExperimentSetService;
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
     private ExpressionExperimentService expressionExperimentService;
+    private ExpressionExperimentSetService expressionExperimentSetService;
     private PersisterHelper persisterHelper;
     private TaxonService taxonService;
 
     /**
+     * AJAX
+     * 
      * @param obj
      * @return
      */
@@ -75,16 +77,27 @@ public class ExpressionExperimentSetController extends BaseFormController {
         ExpressionExperimentSet newSet = ExpressionExperimentSet.Factory.newInstance();
         newSet.setName( obj.getName() );
         newSet.setDescription( obj.getDescription() );
-        newSet.setTaxon( taxonService.load( obj.getTaxonId() ) );
-
-        if ( newSet.getTaxon() == null ) {
-            throw new IllegalArgumentException( "No such taxon with id=" + obj.getTaxonId() );
-        }
 
         Collection<? extends BioAssaySet> datasetsAnalyzed = expressionExperimentService.loadMultiple( obj
                 .getExpressionExperimentIds() );
 
         newSet.getExperiments().addAll( datasetsAnalyzed );
+
+        if ( obj.getTaxonId() != null )
+            newSet.setTaxon( taxonService.load( obj.getTaxonId() ) );
+        else {
+            /*
+             * Figure out the taxon from the experiments. FIXME: mustn't be heterogeneous.
+             */
+
+            Taxon taxon = expressionExperimentService.getTaxon( newSet.getExperiments().iterator().next().getId() );
+            newSet.setTaxon( taxon );
+
+        }
+
+        if ( newSet.getTaxon() == null ) {
+            throw new IllegalArgumentException( "No such taxon with id=" + obj.getTaxonId() );
+        }
 
         if ( newSet.getExperiments().size() < 2 ) {
             throw new IllegalArgumentException( "Attempt to create an ExpressionExperimentSet with only "
@@ -95,6 +108,8 @@ public class ExpressionExperimentSetController extends BaseFormController {
     }
 
     /**
+     * AJAX
+     * 
      * @return all available sets that have at least 2 experiments.
      */
     public Collection<ExpressionExperimentSetValueObject> getAvailableExpressionExperimentSets() {
@@ -102,34 +117,11 @@ public class ExpressionExperimentSetController extends BaseFormController {
         // by
         // security.
         Collection<ExpressionExperimentSetValueObject> results = new HashSet<ExpressionExperimentSetValueObject>();
+
+        // should be a small number of items.
         for ( ExpressionExperimentSet set : sets ) {
 
-            int size = set.getExperiments().size();
-            assert size > 1; // should be due to the query.
-
-            ExpressionExperimentSetValueObject vo = new ExpressionExperimentSetValueObject();
-            vo.setName( set.getName() );
-            vo.setId( set.getId() );
-            Taxon taxon = set.getTaxon();
-            if ( taxon == null ) {
-                // happens in test databases that aren't properly populated.
-                log.debug( "No taxon provided" );
-            } else {
-                vo.setTaxonId( taxon.getId() );
-                vo.setTaxonName( taxon.getCommonName() ); // If I don't do this, won't be populated in the
-                // downstream object. This is
-                // basically a thaw.
-            }
-
-            vo.setDescription( set.getDescription() == null ? "" : set.getDescription() );
-            if ( expressionExperimentSetService.getAnalyses( set ).size() > 0 ) {
-                vo.setModifiable( false );
-            }
-            for ( BioAssaySet ee : set.getExperiments() ) {
-                vo.getExpressionExperimentIds().add( ee.getId() );
-            }
-
-            vo.setNumExperiments( size );
+            ExpressionExperimentSetValueObject vo = makeEESetValueObject( set );
             results.add( vo );
         }
         return results;
@@ -269,12 +261,41 @@ public class ExpressionExperimentSetController extends BaseFormController {
         return request;
     }
 
+    private ExpressionExperimentSetValueObject makeEESetValueObject( ExpressionExperimentSet set ) {
+        int size = set.getExperiments().size();
+        assert size > 1; // should be due to the query.
+
+        ExpressionExperimentSetValueObject vo = new ExpressionExperimentSetValueObject();
+        vo.setName( set.getName() );
+        vo.setId( set.getId() );
+        Taxon taxon = set.getTaxon();
+        if ( taxon == null ) {
+            // happens in test databases that aren't properly populated.
+            log.debug( "No taxon provided" );
+        } else {
+            vo.setTaxonId( taxon.getId() );
+            vo.setTaxonName( taxon.getCommonName() ); // If I don't do this, won't be populated in the
+            // downstream object. This is
+            // basically a thaw.
+        }
+
+        vo.setDescription( set.getDescription() == null ? "" : set.getDescription() );
+        if ( expressionExperimentSetService.getAnalyses( set ).size() > 0 ) {
+            vo.setModifiable( false );
+        }
+        for ( BioAssaySet ee : set.getExperiments() ) {
+            vo.getExpressionExperimentIds().add( ee.getId() );
+        }
+
+        vo.setNumExperiments( size );
+        return vo;
+    }
+
     /**
      * Fill in information about analyses done on the experiments.
      * 
      * @param result
-     */
-    @SuppressWarnings("unchecked")
+     */ 
     private void populateAnalyses( Collection<Long> eeids, Collection<ExpressionExperimentValueObject> result ) {
         Map<Long, DifferentialExpressionAnalysis> analysisMap = differentialExpressionAnalysisService
                 .findByInvestigationIds( eeids );

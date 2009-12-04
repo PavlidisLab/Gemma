@@ -128,7 +128,7 @@ Ext.onReady(function() {
 					formBind : true, // use with monitorValid in Ext.FormPanel for client side validation
 					handler : submit
 				}],
-		bbar : new Ext.StatusBar({
+		bbar : new Ext.ux.StatusBar({
 					id : 'my-status',
 					text : '',
 					iconCls : 'default-icon',

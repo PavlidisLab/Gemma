@@ -17,10 +17,7 @@
  *
  */
 package ubic.gemma.web.controller.common.auditAndSecurity;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
+ 
 import ubic.gemma.model.common.auditAndSecurity.User;
 
 /**
@@ -28,8 +25,6 @@ import ubic.gemma.model.common.auditAndSecurity.User;
  * @version $Id$
  */
 public class UserValueObject {
-    private Log log = LogFactory.getLog( this.getClass() );
-
     private String userName;
     private String email;
     private String password;

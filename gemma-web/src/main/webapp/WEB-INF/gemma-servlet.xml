@@ -1058,6 +1058,8 @@
 								<value>getTaxa</value>
 								<value>getTaxaSpecies</value>
 								<value>getTaxaWithGenes</value>
+								<value>getTaxaWithDatasets</value>
+								<value>getTaxaWithArrays</value>
 								<value>getGenes</value>
 								<value>searchGenes</value>
 								<value>searchMultipleGenes</value>
@@ -1319,6 +1321,7 @@
 								<value>id</value>
 								<value>commonName</value>
 								<value>scientificName</value>
+								<value>parentTaxon</value>
 								<value>ncbiId</value>
 								<!-- needed to make links to ucsc -->
 								<value>externalDatabase</value>

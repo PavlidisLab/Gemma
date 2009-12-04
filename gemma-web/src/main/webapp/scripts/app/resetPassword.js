@@ -109,7 +109,7 @@ Ext.onReady(function() {
 		renderTo : 'resetPassword',
 		items : [resetPassword],
 
-		bbar : new Ext.StatusBar({
+		bbar : new Ext.ux.StatusBar({
 			id : 'my-status',
 			text : '',
 			iconCls : 'default-icon',

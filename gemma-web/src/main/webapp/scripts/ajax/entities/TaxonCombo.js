@@ -1,7 +1,8 @@
 Ext.namespace('Gemma');
 
 /**
- * Combobox to display available taxa.
+ * Combobox to display available taxa. This can be set to show only taxa that have genes, or only taxa that have data
+ * sets.
  * 
  * @class Gemma.TaxonCombo
  * @extends Ext.form.ComboBox
@@ -27,6 +28,7 @@ Gemma.TaxonCombo = Ext.extend(Ext.form.ComboBox, {
 	// this allows filtering of taxon
 	isDisplayTaxonSpecies : false,
 	isDisplayTaxonWithGenes : false,
+	isDisplayTaxonWithDatasets : false,
 
 	/**
 	 * Custom cookie config.
@@ -90,6 +92,8 @@ Gemma.TaxonCombo = Ext.extend(Ext.form.ComboBox, {
 			}, {
 				name : "scientificName",
 				type : "string"
+			}, {
+				name : "parentTaxon"
 			}]),
 
 	filter : function(taxon) {
@@ -108,11 +112,16 @@ Gemma.TaxonCombo = Ext.extend(Ext.form.ComboBox, {
 	initComponent : function() {
 
 		var tmpl = new Ext.XTemplate('<tpl for="."><div class="x-combo-list-item">{commonName} ({scientificName})</div></tpl>');
-		// option to either display all taxa, those taxa that are a species or those taxa that have genes.
+		// option to either display all taxa, those taxa that are a species or those taxa that have genes; or those
+		// which have datasets.
 		if (this.isDisplayTaxonSpecies) {
 			proxyTaxon = new Ext.data.DWRProxy(GenePickerController.getTaxaSpecies);
+		} else if (this.isDisplayTaxonWithDatasets) {
+			proxyTaxon = new Ext.data.DWRProxy(GenePickerController.getTaxaWithDatasets);
 		} else if (this.isDisplayTaxonWithGenes) {
 			proxyTaxon = new Ext.data.DWRProxy(GenePickerController.getTaxaWithGenes);
+		} else if (this.isDisplayTaxaWithArrays) {
+			proxyTaxon = new Ext.data.DWRProxy(GenePickerController.getTaxaWithArrays);
 		} else {
 			proxyTaxon = new Ext.data.DWRProxy(GenePickerController.getTaxa);
 		}

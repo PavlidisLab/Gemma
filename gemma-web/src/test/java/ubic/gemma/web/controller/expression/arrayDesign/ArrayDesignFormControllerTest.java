@@ -62,6 +62,7 @@ public class ArrayDesignFormControllerTest extends BaseSpringWebTest {
         ad = ArrayDesign.Factory.newInstance();
         ad.setName( RandomStringUtils.randomAlphabetic( 20 ) );
         ad.setDescription( "An array design created in the ArrayDesignFormControllerTest." );
+        ad.setPrimaryTaxon( this.getTaxon( "human" ) );
 
         Contact c = Contact.Factory.newInstance();
         c.setName( RandomStringUtils.randomAlphabetic( 20 ) );

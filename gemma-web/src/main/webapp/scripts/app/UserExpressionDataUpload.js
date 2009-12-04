@@ -252,14 +252,15 @@ Ext.onReady(function() {
 				allowBlank : false,
 				isDisplayTaxonSpecies : true
 			});
-	
+
 	var taxonArrayCombo = new Gemma.TaxonCombo({
 				id : 'taxonArray-combo',
-				fieldLabel : "Array taxon",	
+				fieldLabel : "Filter arrays by taxon",
+				stateful : false,
 				emptyText : "Array Taxon ",
 				allowBlank : false,
-				isDisplayTaxonSpecies : true
-	});
+				isDisplayTaxaWithArrays : true
+			});
 
 	var arrayDesignCombo = new Gemma.ArrayDesignCombo({
 				minHeight : 80,
@@ -351,28 +352,28 @@ Ext.onReady(function() {
 							columns : 1
 						},
 
-						items : [arrayDesignCombo,{
-								//create form layout for taxon array combo cell otherwise field label not displayed
-								xtype : 'panel',
-								layout : 'form',
-								items : [taxonArrayCombo]						
-							}, {
-							id : 'array-design-info-area',
-							xtype : 'panel',
-							html : "<div style='width:400px,height:100px;overflow :auto;margin: 4px 0px 4px 0px;border:1px #CCC solid ;'"
-									+ " id='array-design-info-inner-html'>"
-									+ "<p style='color:grey;'>Array design details will be displayed here</p></div>"
-								// ,width : 500,
-								// style : 'overflow :scroll;margin: 4px 0px 4px 0px;border:solid 1px;',
-								// height : 100,
-								// readOnly : true
-						}, {
-							xtype : 'label',
-							html : "Don't see your array design listed? Please see "
-									+ "<a target='_blank' href='/Gemma/arrays/showAllArrayDesigns.html'>the array design list</a>"
-									+ " for more information, "
-									+ "or <a href='mailto:gemma@ubic.ca'>let us know</a> about your array design."
-						}]
+						items : [arrayDesignCombo, {
+									// create form layout for taxon array combo cell otherwise field label not displayed
+									xtype : 'panel',
+									layout : 'form',
+									items : [taxonArrayCombo]
+								}, {
+									id : 'array-design-info-area',
+									xtype : 'panel',
+									html : "<div style='width:400px,height:100px;overflow :auto;margin: 4px 0px 4px 0px;border:1px #CCC solid ;'"
+											+ " id='array-design-info-inner-html'>"
+											+ "<p style='color:grey;'>Array design details will be displayed here</p></div>"
+									// ,width : 500,
+									// style : 'overflow :scroll;margin: 4px 0px 4px 0px;border:solid 1px;',
+									// height : 100,
+									// readOnly : true
+								}, {
+									xtype : 'label',
+									html : "Don't see your array design listed? Please see "
+											+ "<a target='_blank' href='/Gemma/arrays/showAllArrayDesigns.html'>the array design list</a>"
+											+ " for more information, "
+											+ "or <a href='mailto:gemma@ubic.ca'>let us know</a> about your array design."
+								}]
 						// fixme add link to report.
 					}, new Gemma.QuantitationTypePanel({
 								id : 'quantitation-type-panel',
@@ -454,27 +455,44 @@ Ext.onReady(function() {
 		tool.commandObject.arrayDesignIds = [arrayDesign.data.id];
 	});
 
-	
-	
-	taxonCombo.on('select', function(combo, taxon) {		
-		//if taxon combo changes should update array taxon combo with the same taxon
-		taxonArrayCombo.setTaxon(taxon.data);
-		arrayDesignCombo.taxonChanged(taxon.data);
-	}.createDelegate(this));
+	taxonCombo.on('select', function(combo, taxon) {
+				// if taxon combo changes should update array taxon combo with the same taxon, or at least the parent
+				// taxon.
+
+				var k = taxonArrayCombo.getStore().find("id", taxon.id);
+
+				if (k >= 0) {
+					taxonArrayCombo.setTaxon(taxon.id);
+					arrayDesignCombo.taxonChanged(taxon.data);
+				} else if (taxon.get("parentTaxon")) {
+					var parent = taxon.get("parentTaxon");
+					k = taxonArrayCombo.getStore().find("id", parent.id);
+
+					if (k < 0) {
+						Ext.Msg.alert("Sorry", "There are no arrays for that taxon");
+						return;
+					}
+
+					taxonArrayCombo.setTaxon(parent.id);
+					arrayDesignCombo.taxonChanged(parent);
+					console.log(parent);
+				} else {
+					Ext.Msg.alert("Sorry", "There are no arrays for that taxon");
+				}
+
+			}.createDelegate(this));
 
 	taxonCombo.on('ready', function(taxon) {
-		var task = new Ext.util.DelayedTask(arrayDesignCombo.taxonChanged, arrayDesignCombo, [taxon]);
-		task.delay(500);
-	}.createDelegate(this));
-	
-	taxonArrayCombo.on('select', function(combo, taxon) {
-		arrayDesignCombo.taxonChanged(taxon.data);
-	}.createDelegate(this));
+				arrayDesignCombo.taxonChanged(taxon);
+			}.createDelegate(this));
 
-    taxonArrayCombo.on('ready', function(taxon) {
-		var task = new Ext.util.DelayedTask(arrayDesignCombo.taxonChanged, arrayDesignCombo, [taxon]);
-		task.delay(500);
-	}.createDelegate(this));
+	taxonArrayCombo.on('select', function(combo, taxon) {
+				arrayDesignCombo.taxonChanged(taxon.data);
+			}.createDelegate(this));
+
+	taxonArrayCombo.on('ready', function(taxon) {
+				arrayDesignCombo.taxonChanged(taxon);
+			}.createDelegate(this));
 
 	uploadForm.on('start', function(result) {
 				Ext.getCmp('submit-data-button').disable();

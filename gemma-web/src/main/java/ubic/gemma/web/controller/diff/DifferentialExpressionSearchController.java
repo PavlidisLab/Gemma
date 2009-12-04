@@ -392,8 +392,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
      * @param eeIds
      * @param threshold
      * @return
-     */
-    @SuppressWarnings("unchecked")
+     */ 
     private DifferentialExpressionMetaAnalysisValueObject getDifferentialExpressionMetaAnalysis( Long geneId,
             Collection<DiffExpressionSelectedFactorCommand> selectedFactors, double threshold ) {
 

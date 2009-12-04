@@ -7,9 +7,7 @@ import java.util.Map;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+ 
 import org.springframework.validation.BindException;
 import org.springframework.web.bind.ServletRequestUtils;
 import org.springframework.web.servlet.ModelAndView;
@@ -25,9 +23,7 @@ import ubic.gemma.web.controller.BaseFormController;
  * @version $Id$
  */
 public class BioMaterialFormController extends BaseFormController {
-
-    private Log log = LogFactory.getLog( this.getClass() );
-
+ 
     BioMaterialService bioMaterialService = null;
 
     ExternalDatabaseService externalDatabaseService = null;
@@ -147,8 +143,7 @@ public class BioMaterialFormController extends BaseFormController {
      * @param request
      * @return Map
      */
-    @Override
-    @SuppressWarnings( { "unchecked" })
+    @Override 
     protected Map<String, Collection<ExternalDatabase>> referenceData( HttpServletRequest request ) {
         Collection<ExternalDatabase> edCol = externalDatabaseService.loadAll();
         Map<String, Collection<ExternalDatabase>> edMap = new HashMap<String, Collection<ExternalDatabase>>();

@@ -104,7 +104,7 @@ Gemma.ExpressionExperimentGrid = Ext.extend(Gemma.GemmaGridPanel, {
 						});
 			}
 			Ext.apply(this, {
-						bbar : new Gemma.PagingToolbar({
+						bbar : new Ext.PagingToolbar({
 									pageSize : this.pageSize,
 									store : this.store,
 									items : ['->', {

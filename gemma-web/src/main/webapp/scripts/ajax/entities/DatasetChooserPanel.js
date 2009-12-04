@@ -14,6 +14,7 @@ Ext.namespace('Gemma');
 Ext.namespace('Gemma.ExpressionExperimentSetStore');
 
 /**
+ * Show a list of available EEsets (combo) + a button to edit/view the sets.
  * 
  * @class Gemma.ExpressionExperimentSetPanel
  * @extends Ext.Panel
@@ -96,7 +97,7 @@ Gemma.ExpressionExperimentSetPanel = Ext.extend(Ext.Panel, {
 					this.fireEvent("set-chosen", rec);
 					return rec;
 				} else {
-					Ext.Msg("Whoops",
+					Ext.Msg.alert("Whoops",
 							"Sorry. Something went wrong in preparing the interface. Please reload the page and "
 									+ " if you have continuing problems <a href='mailto:gemma@chibi.ubc.ca'>notify us"
 									+ "</a>");
@@ -201,14 +202,12 @@ Gemma.ExpressionExperimentSetCombo = Ext.extend(Ext.form.ComboBox, {
 	loadingText : "Loading ...",
 	listWidth : 250,
 	forceSelection : true,
-	mode : 'local',
+	mode : 'local', // even though we are going remote.
 	triggerAction : 'all',
+	lastQuery : '',
 	lazyInit : false, // important!
 	emptyText : 'Select a search scope',
 	isReady : false,
-	// stateful : true,
-	// stateId : "Gemma.EESetCombo",
-	// stateEvents : ['select'],
 	suppressFiltering : false,
 
 	/**
@@ -218,7 +217,6 @@ Gemma.ExpressionExperimentSetCombo = Ext.extend(Ext.form.ComboBox, {
 	 *            state
 	 */
 	applyState : function(state) {
-		// console.log("apply state");
 		if (state && state.eeSet) {
 			this.setState(state.eeSet);
 		}
@@ -234,7 +232,6 @@ Gemma.ExpressionExperimentSetCombo = Ext.extend(Ext.form.ComboBox, {
 	},
 
 	setState : function(v) {
-		// console.log("Set state=" + v);
 		if (this.isReady) {
 			this.selectById(v);
 		} else {
@@ -242,21 +239,18 @@ Gemma.ExpressionExperimentSetCombo = Ext.extend(Ext.form.ComboBox, {
 		}
 	},
 
-	restoreState : function() {
-		// console.log("Restore state" + this.tmpState);
-
+	afterLoadSets : function() {
 		if (this.tmpState) {
 			this.selectById(this.tmpState);
 			delete this.tmpState;
-			this.isReady = true;
 		}
-
 		if (this.store.getSelected()) {
 			this.fireEvent('ready', this.store.getSelected().data);
 		} else {
 			this.fireEvent('ready');
 		}
 
+		this.isReady = true;
 		this.store.sort('name');
 
 	},
@@ -269,38 +263,23 @@ Gemma.ExpressionExperimentSetCombo = Ext.extend(Ext.form.ComboBox, {
 		this.doQueryBy(function(record, id) {
 					if (!record.get("taxonId")) {
 						return true; // in case there is none.
-					} else if (taxonId == record.get("taxonId")) {
+					} else if (taxonId === record.get("taxonId")) {
 						return true;
 					} else {
 						return false;
 					}
 				});
 
+		// clear the field if the current selection is for a record that was filtered out.
 		if (this.store.getSelected() && this.store.getSelected().get("taxonId") != taxonId) {
 			this.setValue("");
 		}
 	},
 
-	/**
-	 * Override.
-	 */
-	onTriggerClick : function() {
-		if (this.disabled) {
-			return;
-		}
-		if (this.isExpanded()) {
-			this.collapse();
-			this.el.focus();
-		} else {
-			this.onFocus();
-			this.expand();
-			this.el.focus();
-		}
-	},
-
 	doQueryBy : function(fn) {
 		this.store.clearFilter();
-		this.store.filterBy(fn);
+		this.store.filterBy(fn, this);
+		this.onLoad();
 	},
 
 	/**
@@ -310,7 +289,6 @@ Gemma.ExpressionExperimentSetCombo = Ext.extend(Ext.form.ComboBox, {
 	 *            id
 	 */
 	selectById : function(id) {
-		// console.log("Selecting id:" + id);
 		var index = this.store.find("id", id);
 		if (index >= 0) {
 			var rec = this.store.getAt(index);
@@ -322,25 +300,33 @@ Gemma.ExpressionExperimentSetCombo = Ext.extend(Ext.form.ComboBox, {
 
 	initComponent : function() {
 		Gemma.ExpressionExperimentSetCombo.superclass.initComponent.call(this);
+
+		if (!this.store) {
+			this.store = new Gemma.ExpressionExperimentSetStore();
+		}
+
 		this.tpl = new Ext.XTemplate('<tpl for="."><div ext:qtip="{description} ({numExperiments} members)" class="x-combo-list-item">{name}{[ values.taxon ? " (" + values.taxon.scientificName + ")" : "" ]}</div></tpl>');
 		this.tpl.compile();
 
 		this.addEvents("ready");
 
 		this.on("select", function(cb, rec, index) {
-					// console.log("selected " + rec.get("id"));
 					this.store.setSelected(rec);
 				});
 
-		this.store.on("ready", this.restoreState, this);
+		this.store.on("ready", this.afterLoadSets, this);
 
 	}
 
 });
 
 /**
+ * Holds the list of available ExpressionExperiment sets. This is a separate class so it can be more easily shared
+ * between components.
+ * 
  * @class Gemma.ExpressionExperimentSetStore
  * @extends Ext.data.Store
+ * @see ExpressionExperimentSetCombo
  */
 Gemma.ExpressionExperimentSetStore = function(config) {
 
@@ -375,10 +361,7 @@ Gemma.ExpressionExperimentSetStore = function(config) {
 
 	this.addEvents('ready');
 
-	// this.on("load", this.addFromCookie, this);
-	this.load({
-				callback : this.addFromCookie
-			});
+	this.on('load', this.addFromCookie);
 
 };
 
@@ -389,7 +372,7 @@ Gemma.ExpressionExperimentSetStore = function(config) {
  */
 Ext.extend(Gemma.ExpressionExperimentSetStore, Ext.data.Store, {
 
-			autoLoad : false,
+			autoLoad : true,
 
 			getSelected : function() {
 				if (this.selected) {
@@ -418,7 +401,6 @@ Ext.extend(Gemma.ExpressionExperimentSetStore, Ext.data.Store, {
 			},
 
 			clearSelected : function() {
-				// console.log("clear");
 				this.selected = null;
 				this.selectedId = null;
 				delete this.selected;
@@ -464,9 +446,7 @@ Ext.extend(Gemma.ExpressionExperimentSetStore, Ext.data.Store, {
 				for (var i = 0, len = storedSets.length; i < len; i++) {
 					var s = storedSets[i];
 
-					// Ext.log("Comparing " + s.get("name") + " to " + recName);
 					if (s.get("name") == recName) {
-						// Ext.log("Found existing set in cookie");
 						return s;
 					}
 				}
@@ -480,8 +460,6 @@ Ext.extend(Gemma.ExpressionExperimentSetStore, Ext.data.Store, {
 					var s = eeSets[i];
 					if (s.get("name") != rec.get("name")) {
 						updatedSets.push(s);
-					} else {
-						// Ext.log("Remove " + s.get("name") + " from cookie");
 					}
 				}
 
@@ -589,8 +567,6 @@ Gemma.DatasetChooserPanel = Ext.extend(Ext.Window, {
 					if (rec) {
 						this.eeSetStore.setSelected(rec);
 						this.fireEvent("datasets-selected", rec);
-					} else {
-						// console.log("Nothing selected");
 					}
 					this.fireEvent("commit", rec);
 				}
@@ -737,7 +713,6 @@ Gemma.DatasetChooserPanel = Ext.extend(Ext.Window, {
 				 * Set the taxon for the search field when the ee set is chosen.
 				 */
 				this.eeSetGrid.getSelectionModel().on('rowselect', function(model, rowindex, record) {
-							// console.log(record);
 							this.sourceDatasetsGrid.getTopToolbar().eeSearchField.taxonChanged({
 										id : record.get("taxonId")
 									});
@@ -1322,6 +1297,7 @@ Gemma.DetailsWindow = Ext.extend(Ext.Window, {
 													height : 200,
 													items : [new Gemma.TaxonCombo({
 																		id : 'eesetTaxon',
+																		isDisplayTaxonWithDatasets : true,
 																		fieldLabel : 'Taxon'
 																	}), this.nameField, new Ext.form.TextArea({
 																		fieldLabel : 'Description',

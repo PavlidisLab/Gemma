@@ -44,7 +44,6 @@ import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.security.SecurityService;
@@ -85,7 +84,6 @@ public class SecurityFormController extends BaseFormController {
 
     private SecurityService securityService = null;
     private ExpressionExperimentService expressionExperimentService = null;
-    private ArrayDesignService arrayDesignService = null;
     private ProbeCoexpressionAnalysisService probeCoexpressionAnalysisService = null;
     private GeneCoexpressionAnalysisService geneCoexpressionAnalysisService = null;
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService = null;
@@ -130,13 +128,6 @@ public class SecurityFormController extends BaseFormController {
         }
 
         return super.processFormSubmission( request, response, command, errors );
-    }
-
-    /**
-     * @param arrayDesignService
-     */
-    public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
-        this.arrayDesignService = arrayDesignService;
     }
 
     /**

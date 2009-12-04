@@ -18,8 +18,6 @@
  */
 package ubic.gemma.web.controller.expression.experiment;
 
-import org.directwebremoting.annotations.RemoteProxy;
-
 /**
  * @author luke
  * @version $Id$

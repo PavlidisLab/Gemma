@@ -130,7 +130,7 @@ Ext.onReady(function() {
 									}
 								}],
 
-						bbar : new Ext.StatusBar({
+						bbar : new Ext.ux.StatusBar({
 									id : 'my-status',
 									text : 'Ready',
 									iconCls : 'default-icon',

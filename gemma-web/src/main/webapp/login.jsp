@@ -98,7 +98,7 @@ version: $Id$
 						}
 					]})], // end of items for outer panel.
 					
-		   bbar: new Ext.StatusBar(
+		   bbar: new Ext.ux.StatusBar(
 			{
 				id: 'my-status',
 			    text: '',

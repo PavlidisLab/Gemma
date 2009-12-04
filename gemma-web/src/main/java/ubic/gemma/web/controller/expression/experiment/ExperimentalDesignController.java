@@ -235,6 +235,11 @@ public class ExperimentalDesignController extends BaseController {
         if ( e == null || e.getId() == null ) return;
         ExperimentalDesign ed = this.experimentalDesignService.load( e.getId() );
 
+        /*
+         * FIXME: this should be a single service call. However, it's not that easy to do. If you run this in a single
+         * transaction, you invariably get session errors.
+         */
+
         // First, remove the factorValues from the bioassays.
         ExpressionExperiment ee = experimentalDesignService.getExpressionExperiment( ed );
 

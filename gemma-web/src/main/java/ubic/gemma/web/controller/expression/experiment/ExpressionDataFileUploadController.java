@@ -108,6 +108,12 @@ public class ExpressionDataFileUploadController extends AbstractSpacesController
             // might have used instead of actual ADs.
             Collection<Long> arrayDesignIds = commandObject.getArrayDesignIds();
 
+            Long taxonId = commandObject.getTaxonId();
+
+            if ( taxonId != null ) {
+                commandObject.setTaxon( taxonService.load( taxonId ) );
+            }
+
             if ( arrayDesignIds != null && arrayDesignIds.size() > 0 ) {
                 for ( Long adid : arrayDesignIds ) {
                     arrayDesigns.add( arrayDesignService.load( adid ) );
@@ -116,6 +122,7 @@ public class ExpressionDataFileUploadController extends AbstractSpacesController
                 log.info( "Array design " + commandObject.getArrayDesignName() + " is new, will create from data." );
                 ArrayDesign arrayDesign = ArrayDesign.Factory.newInstance();
                 arrayDesign.setName( commandObject.getArrayDesignName() );
+                arrayDesign.setPrimaryTaxon( commandObject.getTaxon() );
                 commandObject.getArrayDesigns().add( arrayDesign );
             }
 
@@ -123,11 +130,6 @@ public class ExpressionDataFileUploadController extends AbstractSpacesController
             commandObject.setGeneralType( GeneralType.QUANTITATIVE );
             commandObject.setIsMaskedPreferred( true );
 
-            Long taxonId = commandObject.getTaxonId();
-
-            if ( taxonId != null ) {
-                commandObject.setTaxon( taxonService.load( taxonId ) );
-            }
         }
     }
 

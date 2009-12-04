@@ -94,7 +94,7 @@ Gemma.FileUploadForm = Ext.extend(Ext.Panel, {
 											scope : this
 										}]
 									})],
-							bbar : new Ext.StatusBar({
+							bbar : new Ext.ux.StatusBar({
 										id : 'messages'
 									})
 						});

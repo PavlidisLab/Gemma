@@ -233,9 +233,9 @@ ExperimentalDesignController.createFactorValueCharacteristic = function(p0, p1, 
 	dwr.engine._execute(ExperimentalDesignController._path, 'ExperimentalDesignController',
 			'createFactorValueCharacteristic', p0, p1, callback);
 }
-ExperimentalDesignController.deleteExperimentalFactors = function(p0, p1, callback) {
+ExperimentalDesignController.deleteExperimentalFactors = function(p1, callback) {
 	dwr.engine._execute(ExperimentalDesignController._path, 'ExperimentalDesignController',
-			'deleteExperimentalFactors', p0, p1, callback);
+			'deleteExperimentalFactors', p1, callback);
 }
 ExperimentalDesignController.deleteFactorValueCharacteristics = function(p0, callback) {
 	dwr.engine._execute(ExperimentalDesignController._path, 'ExperimentalDesignController',
@@ -450,6 +450,12 @@ GenePickerController.getTaxaSpecies = function(callback) {
 }
 GenePickerController.getTaxaWithGenes = function(callback) {
 	dwr.engine._execute(GenePickerController._path, 'GenePickerController', 'getTaxaWithGenes', callback);
+}
+GenePickerController.getTaxaWithDatasets = function(callback) {
+	dwr.engine._execute(GenePickerController._path, 'GenePickerController', 'getTaxaWithDatasets', callback);
+}
+GenePickerController.getTaxaWithArrays = function(callback) {
+	dwr.engine._execute(GenePickerController._path, 'GenePickerController', 'getTaxaWithArrays', callback);
 }
 GenePickerController.searchMultipleGenes = function(p0, p1, callback) {
 	dwr.engine._execute(GenePickerController._path, 'GenePickerController', 'searchMultipleGenes', p0, p1, callback);

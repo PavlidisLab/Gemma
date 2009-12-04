@@ -25,6 +25,8 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
@@ -32,6 +34,8 @@ import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
+import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
@@ -57,7 +61,13 @@ public class GenePickerController extends BaseController {
     private TaxonService taxonService = null;
 
     @Autowired
+    private ExpressionExperimentService expressionExperimentService;
+
+    @Autowired
     private SearchService searchService = null;
+
+    @Autowired
+    private ArrayDesignService arrayDesignService;
 
     private static final int MAX_GENES_PER_QUERY = 20;
 
@@ -107,6 +117,33 @@ public class GenePickerController extends BaseController {
             }
         }
         return taxaWithGenes;
+    }
+
+    /**
+     * @return collection of taxa that have expression experiments available.
+     */
+    public Collection<Taxon> getTaxaWithDatasets() {
+        Set<Taxon> taxaWithDatasets = new TreeSet<Taxon>( TAXON_COMPARATOR );
+
+        Map<Taxon, Long> perTaxonCount = expressionExperimentService.getPerTaxonCount();
+
+        for ( Taxon taxon : taxonService.loadAll() ) {
+            if ( perTaxonCount.containsKey( taxon ) && perTaxonCount.get( taxon ) > 0 ) {
+                taxaWithDatasets.add( taxon );
+            }
+        }
+        return taxaWithDatasets;
+    }
+
+    /**
+     * @return
+     */
+    public Collection<Taxon> getTaxaWithArrays() {
+        Set<Taxon> taxaWithDatasets = new TreeSet<Taxon>( TAXON_COMPARATOR );
+
+        taxaWithDatasets.addAll( arrayDesignService.getPerTaxonCount().keySet() );
+
+        return taxaWithDatasets;
     }
 
     /**

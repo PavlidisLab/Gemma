@@ -7,7 +7,8 @@
 	<head>
 		<%-- Include common set of meta tags for each layout --%>
 		<%@ include file="/common/meta.jsp"%>
-		<title><decorator:title /> | <fmt:message key="webapp.name" /></title>
+		<title><decorator:title /> | <fmt:message key="webapp.name" />
+		</title>
 
 		<jwr:style src="/bundles/gemma-all.css" />
 		<script type='text/javascript' src='/Gemma/dwr/engine.js'></script>
@@ -45,7 +46,8 @@
 					<decorator:body />
 				</div>
 
-				<div id="nav">
+				<div id="nav" style="z-index: 1">
+					<!--  make sure menus are not in front of other things  -->
 					<div class="wrapper">
 						<h2 class="accessibility">
 							Navigation

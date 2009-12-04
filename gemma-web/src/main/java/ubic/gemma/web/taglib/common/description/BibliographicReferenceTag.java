@@ -156,7 +156,6 @@ public class BibliographicReferenceTag extends TagSupport {
      * (non-Javadoc)
      * @see javax.servlet.jsp.tagext.BodyTagSupport#doEndTag()
      */
-    @SuppressWarnings("unused")
     @Override
     public int doEndTag() throws JspException {
         return EVAL_PAGE;

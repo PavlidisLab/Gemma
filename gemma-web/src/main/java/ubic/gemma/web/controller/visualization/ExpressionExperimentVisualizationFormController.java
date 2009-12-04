@@ -215,8 +215,7 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
      * @param errors
      * @return ModelAndView
      * @throws Exception
-     */
-    @SuppressWarnings("unchecked")
+     */ 
     @Override
     public ModelAndView processFormSubmission( HttpServletRequest request, HttpServletResponse response,
             Object command, BindException errors ) throws Exception {
@@ -315,8 +314,7 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
      * @param expressionExperiment
      * @param quantitationType
      * @return Collection<DesignElementDataVector>
-     */
-    @SuppressWarnings("unchecked")
+     */ 
     protected Collection<DesignElementDataVector> getVectors( Object command, BindException errors,
             ExpressionExperimentVisualizationCommand eevc, ExpressionExperiment expressionExperiment,
             QuantitationType quantitationType ) {
@@ -446,8 +444,7 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
     /**
      * @param expressionDataMatrix
      * @return
-     */
-    @SuppressWarnings("unchecked")
+     */ 
     private Map<CompositeSequence, Collection<Gene>> getGenes( ExpressionDataDoubleMatrix expressionDataMatrix ) {
         Collection<CompositeSequence> css = new HashSet<CompositeSequence>();
         for ( ExpressionDataMatrixRowElement el : expressionDataMatrix.getRowElements() ) {

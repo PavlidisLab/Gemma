@@ -175,8 +175,7 @@ public class GeneCoexpressionEndpoint extends AbstractGemmaEndpoint {
             final String FOUND_GENE_NAME = "found_gene";
             final String FOUND_GENE_ID = "found_id";
             final String SUPPORT_NAME = "support";
-            final String SIGN_NAME = "sign";
-            final String EEID_NAME = "eeIdList";
+            final String SIGN_NAME = "sign"; 
 
             Element responseWrapper = document.createElementNS( NAMESPACE_URI, LOCAL_NAME );
             Element responseElement = document.createElementNS( NAMESPACE_URI, LOCAL_NAME + RESPONSE );

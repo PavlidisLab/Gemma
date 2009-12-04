@@ -12,7 +12,7 @@ Gemma.ArrayDesignCombo = Ext.extend(Ext.form.ComboBox, {
 	valueField : 'id',
 	editable : true,
 	loadingText : "Loading ...",
-	listWidth : 450,
+	listWidth : 550,
 	forceSelection : true,
 	typeAhead : true,
 	mode : 'local',
@@ -64,9 +64,7 @@ Gemma.ArrayDesignCombo = Ext.extend(Ext.form.ComboBox, {
 									field : 'name',
 									direction : 'ASC'
 								},
-								proxy : new Ext.data.DWRProxy(ArrayDesignController.getArrayDesigns, {
-											baseParams : [[], true, true]
-										}),
+								proxy : new Ext.data.DWRProxy(ArrayDesignController.getArrayDesigns),
 								reader : new Ext.data.ListRangeReader({
 											id : "id"
 										}, this.record),
@@ -77,8 +75,12 @@ Gemma.ArrayDesignCombo = Ext.extend(Ext.form.ComboBox, {
 
 		Gemma.ArrayDesignCombo.superclass.initComponent.call(this);
 
+		this.store.on('load', function() {
+					this.taxonChanged(this.taxon);
+				}, this);
+
 		this.store.load({
-					params : [],
+					params : [[], false, true],
 					scope : this,
 					add : false
 				});
@@ -112,7 +114,14 @@ Gemma.ArrayDesignCombo = Ext.extend(Ext.form.ComboBox, {
 	},
 
 	taxonChanged : function(taxon) {
+
+		if (taxon === undefined) {
+			return;
+		}
+
+		this.taxon = taxon;
 		if (this.getArrayDesign() && this.getArrayDesign().taxon && this.getArrayDesign().taxon.id != taxon.id) {
+			console.log("reset");
 			this.reset();
 		}
 		this.applyFilter(taxon);
@@ -120,13 +129,14 @@ Gemma.ArrayDesignCombo = Ext.extend(Ext.form.ComboBox, {
 
 	applyFilter : function(taxon) {
 
-		if (taxon === undefined)
+		if (taxon === undefined) {
 			return;
+		}
 
 		this.store.filterBy(function(record, id) {
-					if (!record.data.taxon || (record.data.taxon.indexOf(taxon.commonName)== -1)) {
-						return false;									
-					}else{
+					if (!record.data.taxon || record.data.taxon.indexOf(taxon.commonName) == -1) {
+						return false;
+					} else {
 						return true;
 					}
 				});

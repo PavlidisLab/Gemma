@@ -28,7 +28,7 @@ Gemma.ExperimentalFactorChooserPanel = Ext.extend(Ext.Window, {
 	eeFactorsMap : null,
 
 	reset : function(eeSet) {
-		if (this.currentEEset != null && eeSet != this.currentEEset) {
+		if (this.currentEEset  && eeSet != this.currentEEset) {
 			// console.log("reset " + eeSet);
 			this.eeFactorsMap = null;
 		}

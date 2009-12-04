@@ -54,7 +54,7 @@ Ext.extend(Ext.data.ListRangeReader, Ext.data.DataReader, {
 					return (r === undefined || r === "") ? null : r;
 				};
 			} else {
-				this.getId = Ext.id; // random id generated.
+				this.getId = Ext.id; // random id generated.	
 			}
 			this.ef = [];
 			for (var i = 0; i < fields.length; i++) {

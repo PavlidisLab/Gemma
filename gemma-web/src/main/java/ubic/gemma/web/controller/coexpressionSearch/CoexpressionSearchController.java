@@ -35,6 +35,8 @@ import ubic.gemma.analysis.expression.coexpression.CoexpressionValueObjectExt;
 import ubic.gemma.analysis.expression.coexpression.GeneCoexpressionService;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSetService;
+import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis;
+import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Gene;
@@ -50,26 +52,29 @@ import ubic.gemma.web.view.TextView;
 @Controller
 public class CoexpressionSearchController extends BaseFormController {
 
-    private static final int MAX_RESULTS = 200;
-
     private static final int DEFAULT_STRINGENCY = 2;
 
     private static final int MAX_GENES_PER_QUERY = 20;
+
+    private static final int MAX_RESULTS = 200;
+
+    @Autowired
+    private ExpressionExperimentService expressionExperimentService;
+
+    @Autowired
+    private ExpressionExperimentSetService expressionExperimentSetService;
+
+    @Autowired
+    private GeneCoexpressionAnalysisService geneCoexpressionAnalysisService;
+
+    @Autowired
+    private GeneCoexpressionService geneCoexpressionService;
 
     @Autowired
     private GeneService geneService = null;
 
     @Autowired
     private SearchService searchService = null;
-    
-    @Autowired
-    private GeneCoexpressionService geneCoexpressionService;
-
-    @Autowired
-    private ExpressionExperimentService expressionExperimentService;
-    
-    @Autowired
-    private ExpressionExperimentSetService expressionExperimentSetService;
 
     /**
      * @param searchOptions
@@ -96,31 +101,12 @@ public class CoexpressionSearchController extends BaseFormController {
 
         this.geneService.thawLite( gene ); // need to thaw externalDB in taxon for marshling back to client...
 
-        ExpressionExperimentSet eeSet = null;
-        Long eeSetId = null;
+        Long eeSetId = getEESet( searchOptions, gene );
 
-        if ( searchOptions.getEeSetId() != null ) {
-            eeSet = expressionExperimentSetService.load( searchOptions.getEeSetId() );
-            if ( eeSet != null ) eeSetId = eeSet.getId();
-
-        } else {
-            Collection<ExpressionExperimentSet> eeSets = null;
-            if ( searchOptions.getEeSetName() != null ) {
-                eeSets = expressionExperimentSetService.findByName( searchOptions.getEeSetName() );
-            } else {
-                eeSets = expressionExperimentSetService.findByName( "All " + gene.getTaxon().getCommonName() );
-            }
-            // lmd eeSets was null
-            if ( eeSets == null || eeSets.size() == 0 ) {
-                result.setErrorState( "No gene coexpression analysis is available for "
-                        + gene.getTaxon().getScientificName() );
-                log.info( "No expression experiment set results for query: " + searchOptions );
-                return result;
-            }
-            if ( eeSets.size() > 1 ) {
-                log.warn( "more than one set found using 1st." );
-            }
-            eeSetId = eeSets.iterator().next().getId();
+        if ( eeSetId == null ) {
+            result.setErrorState( "No gene coexpression analysis is available for "
+                    + gene.getTaxon().getScientificName() );
+            log.info( "No expression experiment set results for query: " + searchOptions );
         }
 
         List<Gene> genes = new ArrayList<Gene>();
@@ -240,26 +226,6 @@ public class CoexpressionSearchController extends BaseFormController {
 
     }
 
-    private void addMyDataFlag( CoexpressionMetaValueObject vo, Collection<ExpressionExperiment> eesToFlag ) {
-
-        Collection<Long> eesToFlagIds = new ArrayList<Long>();
-        for ( ExpressionExperiment ee : eesToFlag ) {
-            eesToFlagIds.add( ee.getId() );
-        }
-
-        if ( vo == null || vo.getKnownGeneResults() == null || vo.getKnownGeneResults().isEmpty() ) return;
-
-        for ( CoexpressionValueObjectExt covo : vo.getKnownGeneResults() ) {
-            for ( Long eeToFlag : eesToFlagIds ) {
-                if ( covo.getSupportingExperiments().contains( eeToFlag ) ) {
-                    covo.setContainsMyData( true );
-                    break;
-                }
-            }
-        }
-
-    }
-
     /**
      * @param query
      * @param taxonId
@@ -338,6 +304,81 @@ public class CoexpressionSearchController extends BaseFormController {
         }
         return new ModelAndView( this.getFormView() );
 
+    }
+
+    private void addMyDataFlag( CoexpressionMetaValueObject vo, Collection<ExpressionExperiment> eesToFlag ) {
+
+        Collection<Long> eesToFlagIds = new ArrayList<Long>();
+        for ( ExpressionExperiment ee : eesToFlag ) {
+            eesToFlagIds.add( ee.getId() );
+        }
+
+        if ( vo == null || vo.getKnownGeneResults() == null || vo.getKnownGeneResults().isEmpty() ) return;
+
+        for ( CoexpressionValueObjectExt covo : vo.getKnownGeneResults() ) {
+            for ( Long eeToFlag : eesToFlagIds ) {
+                if ( covo.getSupportingExperiments().contains( eeToFlag ) ) {
+                    covo.setContainsMyData( true );
+                    break;
+                }
+            }
+        }
+
+    }
+
+    /**
+     * Locate an appropriate EESet to use.
+     * 
+     * @param searchOptions
+     * @param gene
+     * @return ID of the EESet, or null if none can be found.
+     */
+    private Long getEESet( CoexpressionSearchCommand searchOptions, Gene gene ) {
+        ExpressionExperimentSet eeSet = null;
+        Long eeSetId = null;
+
+        if ( searchOptions.getEeSetId() != null ) {
+            eeSet = expressionExperimentSetService.load( searchOptions.getEeSetId() );
+            if ( eeSet != null ) eeSetId = eeSet.getId();
+
+        } else {
+
+            if ( searchOptions.getEeSetName() != null ) {
+                Collection<ExpressionExperimentSet> eeSets = expressionExperimentSetService.findByName( searchOptions
+                        .getEeSetName() );
+
+                if ( eeSets == null || eeSets.size() == 0 ) {
+                    return null;
+                }
+                if ( eeSets.size() > 1 ) {
+                    log.warn( "more than one set found using 1st." );
+                }
+
+                eeSetId = eeSets.iterator().next().getId();
+
+            } else {
+
+                String analysisName = "All " + gene.getTaxon().getCommonName();
+                Collection<GeneCoexpressionAnalysis> analyses = geneCoexpressionAnalysisService
+                        .findByName( analysisName );
+
+                if ( analyses.isEmpty() ) {
+                    return null;
+                } else if ( analyses.size() > 1 ) {
+                    log.warn( "More than one analysis with name: " + analysisName );
+                }
+
+                GeneCoexpressionAnalysis analysis = analyses.iterator().next();
+
+                eeSet = analysis.getExpressionExperimentSetAnalyzed();
+
+                assert eeSet != null;
+
+                eeSetId = eeSet.getId();
+
+            }
+        }
+        return eeSetId;
     }
 
 }

@@ -3,12 +3,14 @@ Ext.namespace('Gemma.CharacteristicBrowser');
 Ext.onReady(function() {
 	Ext.QuickTips.init();
 
+	var topTbar = new Ext.Toolbar([]);
+
 	browsergrid = new Gemma.AnnotationGrid({
 				renderTo : "characteristicBrowser",
 				readMethod : CharacteristicBrowserController.findCharacteristicsCustom,
 				readParams : [],
 				editable : true,
-				tbar : new Ext.Toolbar(),
+				tbar : new Ext.Toolbar([]),
 				useDefaultToolbar : false,
 				showParent : true,
 				viewConfig : {
@@ -32,8 +34,6 @@ Ext.onReady(function() {
 		browsergrid.loadMask.hide();
 		saveButton.enable();
 	};
-
-	var pagingToolbar = browsergrid.getBottomToolbar();
 
 	var charCombo = new Gemma.CharacteristicCombo();
 
@@ -68,9 +68,6 @@ Ext.onReady(function() {
 					Ext.DomHelper.overwrite("messages", "");
 					var chars = browsergrid.getEditedCharacteristics();
 
-					// var callback = browsergrid.getBottomToolbar().doRefresh
-					// .createDelegate(browsergrid.getBottomToolbar());
-
 					var callback = browsergrid.refresh.createDelegate(browsergrid);
 					var errorHandler = Gemma.CharacteristicBrowser.handleError.createDelegate(this, [], true);
 					CharacteristicBrowserController.updateCharacteristics(chars, {
@@ -83,10 +80,6 @@ Ext.onReady(function() {
 	browsergrid.on("afteredit", function(e) {
 				saveButton.enable();
 			});
-
-	// browsergrid.on("loadexception", function(e) {
-	// Ext.DomHelper.overwrite("messages", "Sorry, there was an error.");
-	// });
 
 	var deleteButton = new Ext.Toolbar.Button({
 				text : "delete",
@@ -110,13 +103,6 @@ Ext.onReady(function() {
 								browsergrid.getView().refresh();
 								browsergrid.loadMask.hide();
 							});
-
-					// var callback =
-					// browsergrid.refresh.bind(
-					// browsergrid );
-					// CharacteristicBrowserController.removeCharacteristics(
-					// chars,
-					// callback );
 				}
 			});
 	browsergrid.getSelectionModel().on("selectionchange", function(model) {
@@ -246,6 +232,30 @@ Ext.onReady(function() {
 				}
 			});
 
+	var toolbar = browsergrid.getTopToolbar();
+
+	toolbar.addField(charCombo);
+	toolbar.addSpacer();
+	toolbar.addField(searchButton);
+	toolbar.addSeparator();
+	toolbar.addField(saveButton);
+	toolbar.addSeparator();
+	toolbar.addField(deleteButton);
+	toolbar.addSeparator();
+	toolbar.addField(revertButton);
+	toolbar.addSeparator();
+	toolbar.addField(copyButton);
+	toolbar.addSeparator();
+	toolbar.addField(pasteButton);
+	toolbar.addSeparator();
+	toolbar.addField(pasteCategoryButton);
+	toolbar.addFill();
+	toolbar.add(toggleDetailsButton);
+
+	/*
+	 * Second toolbar.
+	 */
+
 	var eeCheckBox = new Ext.form.Checkbox({
 				boxLabel : 'Expression Experiments',
 				checked : true,
@@ -280,31 +290,7 @@ Ext.onReady(function() {
 				width : 'auto'
 			});
 
-	var toolbar = browsergrid.getTopToolbar();
-
-	toolbar.addField(charCombo);
-	toolbar.addSpacer();
-	toolbar.addField(searchButton);
-	toolbar.addSeparator();
-	toolbar.addField(saveButton);
-	toolbar.addSeparator();
-	toolbar.addField(deleteButton);
-	toolbar.addSeparator();
-	toolbar.addField(revertButton);
-	toolbar.addSeparator();
-	toolbar.addField(copyButton);
-	toolbar.addSeparator();
-	toolbar.addField(pasteButton);
-	toolbar.addSeparator();
-	toolbar.addField(pasteCategoryButton);
-	toolbar.addFill();
-	toolbar.add(toggleDetailsButton);
-
-	/*
-	 * toolbar.addSeparator(); toolbar.addField( testButton );
-	 */
-
-	var secondToolbar = new Ext.Toolbar(toolbar.getEl().createChild());
+	var secondToolbar = new Ext.Toolbar();
 	secondToolbar.addSpacer();
 	secondToolbar.addText("Find characteristics from");
 	secondToolbar.addSpacer();
@@ -317,5 +303,8 @@ Ext.onReady(function() {
 	secondToolbar.addField(noCheckBox);
 	secondToolbar.addSpacer();
 	secondToolbar.addField(fvvCheckBox);
+
+	browsergrid.add(secondToolbar);
+	browsergrid.doLayout();
 
 });

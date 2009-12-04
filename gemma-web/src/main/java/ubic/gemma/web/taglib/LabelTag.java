@@ -52,11 +52,11 @@ import org.springmodules.validation.commons.ValidatorFactory;
  * It is designed to be used as follows:
  * 
  * <pre>
- *         
- *          
+ * 
+ * 
  *           &lt;tag:label key=&quot;userForm.username&quot; /&gt;
- *           
- *          
+ * 
+ * 
  * </pre>
  * 
  * </p>
@@ -305,13 +305,11 @@ public class LabelTag extends TagSupport {
                 DispatcherServlet.WEB_APPLICATION_CONTEXT_ATTRIBUTE );
         ValidatorFactory factory = null;
         try {
-            factory = ( ValidatorFactory ) BeanFactoryUtils.beanOfTypeIncludingAncestors( ctx, ValidatorFactory.class,
-                    true, true );
+            factory = BeanFactoryUtils.beanOfTypeIncludingAncestors( ctx, ValidatorFactory.class, true, true );
         } catch ( NoSuchBeanDefinitionException e ) {
             // look in main application context (i.e. applicationContext.xml)
             ctx = WebApplicationContextUtils.getRequiredWebApplicationContext( pageContext.getServletContext() );
-            factory = ( ValidatorFactory ) BeanFactoryUtils.beanOfTypeIncludingAncestors( ctx, ValidatorFactory.class,
-                    true, true );
+            factory = BeanFactoryUtils.beanOfTypeIncludingAncestors( ctx, ValidatorFactory.class, true, true );
         }
         return factory.getValidatorResources();
     }
@@ -320,7 +318,8 @@ public class LabelTag extends TagSupport {
      * Use the application context itself for default message resolution.
      */
     private MessageSource getMessageSource() {
-        // we should be able to do return requestContext.getWebApplicationContext(), but that doesn't work on production, for some reason.
+        // we should be able to do return requestContext.getWebApplicationContext(), but that doesn't work on
+        // production, for some reason.
         return ( MessageSource ) requestContext.getWebApplicationContext().getBean( "messageSource" );
     }
 

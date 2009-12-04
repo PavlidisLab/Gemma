@@ -188,7 +188,7 @@ Ext.onReady(function() {
 
 		],
 
-		// bbar : new Gemma.PagingToolbar({TODO add in when using the PagingDataStore
+		// bbar : new Ext.PagingToolbar({TODO add in when using the PagingDataStore
 		// pageSize : Gemma.USER_PAGE_SIZE,
 		// store : userStore
 		// }),

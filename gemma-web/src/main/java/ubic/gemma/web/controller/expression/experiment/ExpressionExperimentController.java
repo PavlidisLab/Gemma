@@ -1046,8 +1046,18 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
             buf.append( "[Unknown date]" );
         }
 
-        buf.append( citation.getTitle() + "; " + citation.getPublication() + ", " + citation.getVolume() + ": "
-                + citation.getPages() );
+        String volume = citation.getVolume();
+        if ( StringUtils.isBlank( volume ) ) {
+            volume = "[no vol.]";
+        }
+
+        String pages = citation.getPages();
+
+        if ( StringUtils.isBlank( pages ) ) {
+            pages = "[no pages]";
+        }
+
+        buf.append( citation.getTitle() + "; " + citation.getPublication() + ", " + volume + ": " + pages );
 
         return buf.toString();
     }

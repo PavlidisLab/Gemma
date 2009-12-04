@@ -26,8 +26,6 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.springframework.validation.BindException;
 import org.springframework.web.bind.ServletRequestUtils;
 import org.springframework.web.servlet.ModelAndView;
@@ -45,9 +43,7 @@ import ubic.gemma.web.controller.BaseFormController;
  */
 public class BioAssayFormController extends BaseFormController {
 
-    private Log log = LogFactory.getLog( this.getClass() );
-
-    BioAssayService bioAssayService = null;
+      BioAssayService bioAssayService = null;
 
     ExternalDatabaseService externalDatabaseService = null;
 
@@ -167,7 +163,6 @@ public class BioAssayFormController extends BaseFormController {
      * @return Map
      */
     @Override
-    @SuppressWarnings( { "unchecked", "unused" })
     protected Map<String, Collection<ExternalDatabase>> referenceData( HttpServletRequest request ) {
         Collection<ExternalDatabase> edCol = externalDatabaseService.loadAll();
         Map<String, Collection<ExternalDatabase>> edMap = new HashMap<String, Collection<ExternalDatabase>>();

@@ -26,13 +26,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeSet;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -408,7 +408,7 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
         // Filter...
         Collection<ArrayDesignValueObject> toHide = new HashSet<ArrayDesignValueObject>();
         for ( ArrayDesignValueObject a : result ) {
-            if ( !showMergees && a.getIsMergee() != null && a.getIsMergee() ) {
+            if ( !showMergees && a.getIsMergee() && a.getExpressionExperimentCount() == 0 ) {
                 toHide.add( a );
             }
             if ( !showOrphans && ( a.getExpressionExperimentCount() == null || a.getExpressionExperimentCount() == 0 ) ) {
@@ -568,7 +568,10 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
         Long numExpressionExperiments = new Long( ee.size() );
 
         Collection<Taxon> t = arrayDesignService.getTaxa( id );
-        String taxa = formatTaxa( t );
+
+        Taxon primaryTaxon = arrayDesign.getPrimaryTaxon();
+
+        String taxa = formatTaxa( primaryTaxon, t );
 
         String colorString = formatTechnologyType( arrayDesign );
 
@@ -772,24 +775,28 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
     /**
      * Method to format taxon list for display.
      * 
+     * @param primaryTaxon
      * @param taxonSet Collection of taxon used to create array/platform
      * @return Alpabetically sorted semicolon separated list of scientific names of taxa used on array/platform
      */
-    private String formatTaxa( Collection<Taxon> taxonSet ) {
-        String taxonListString = "";
+    private String formatTaxa( Taxon primaryTaxon, Collection<Taxon> taxonSet ) {
+        String taxonListString = primaryTaxon.getScientificName();
         int i = 0;
         if ( !taxonSet.isEmpty() ) {
-            String[] taxonList = new String[taxonSet.size()];
+            Collection<String> taxonList = new TreeSet<String>();
             for ( Taxon taxon : taxonSet ) {
-                taxonList[i] = taxon.getScientificName();
+                if ( taxon.equals( primaryTaxon ) ) continue;
+                taxonList.add( taxon.getScientificName() );
                 i++;
             }
-            Arrays.sort( taxonList, String.CASE_INSENSITIVE_ORDER );
-            taxonListString = StringUtils.join( taxonList, "; " );
-            ;
-        } else {
-            taxonListString = "(Taxon not known)";
+
+            if ( taxonList.size() > 0 ) {
+                taxonListString = taxonListString + " (primary; Also contains sequences from: "
+                        + StringUtils.join( taxonList, "; " ) + ")";
+            }
+
         }
+
         return taxonListString;
     }
 

@@ -28,9 +28,7 @@ import java.util.Map;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+ 
 import org.springframework.validation.BindException;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.servlet.ModelAndView;
@@ -49,8 +47,7 @@ import ubic.gemma.web.controller.BaseFormController;
  * @version $Id$
  */
 public class ArrayDesignFormController extends BaseFormController {
-    private static Log log = LogFactory.getLog( ArrayDesignFormController.class.getName() );
-
+    
     ArrayDesignService arrayDesignService = null;
 
     /**

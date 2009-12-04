@@ -476,7 +476,7 @@ Gemma.EEReportPanel = Ext.extend(Ext.grid.GridPanel, {
 					text :'Reset filter'
 				}, ' ', this.searchInGridField ]
 			}),
-			bbar :new Gemma.PagingToolbar( {
+			bbar :new Ext.PagingToolbar( {
 				pageSize :Gemma.EE_REPORT_PAGE_SIZE,
 				store :this.store
 			})

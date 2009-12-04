@@ -66,7 +66,7 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 						sortInfo : si,
 						pageSize : this.pageSize
 					});
-			this.bbar = new Gemma.PagingToolbar({
+			this.bbar = new Ext.PagingToolbar({
 						pageSize : this.pageSize,
 						store : this.store
 					});

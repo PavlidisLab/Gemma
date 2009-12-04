@@ -14,7 +14,7 @@
 	Expression Experiment Set Manager
 </h1>
 <security:authorize ifNotGranted="GROUP_ADMIN">
-Sorry, you must be an administrator.
+Sorry, you must be an administrator to use this tool.
 	<input type="hidden" name="hasAdmin" id="hasAdmin" value="" />
 </security:authorize>
 
@@ -30,14 +30,10 @@ Sorry, you must be an administrator.
 
 		var eeSetChooserPanel = new Gemma.ExpressionExperimentSetPanel( {
 			renderTo : 'EESetManager',
-			isAdmin : true,
-			store : new Gemma.ExpressionExperimentSetStore()
+			isAdmin : true 
 		});
 
-		// eeSetChooserPanel.render('EESetManager');
-			// eeSetChooserPanel.expand();
-
-		});
+	});
 </script>
 </security:authorize>
 

@@ -299,7 +299,7 @@ Gemma.ProbeDetailsGrid = Ext.extend(Ext.grid.GridPanel, {
 						title : "view at NCBI",
 						href : "http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=Nucleotide&cmd=search&term="
 								+ seq.sequenceDatabaseEntry.accession,
-						html : "<img src ='" + NCBI_ICON + "'/>",
+						html : "<img src ='" + Gemma.NCBI_ICON + "'/>",
 						"ext:qtip" : "View sequence at NCBI"
 					});
 		}
@@ -492,7 +492,7 @@ Gemma.ProbeGrid = Ext.extend(Ext.grid.GridPanel, {
 		});
 
 		Ext.apply(this, {
-					bbar : new Gemma.PagingToolbar({
+					bbar : new Ext.PagingToolbar({
 								pageSize : this.pageSize,
 								store : this.store
 							})

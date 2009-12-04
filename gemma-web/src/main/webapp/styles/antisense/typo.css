@@ -521,6 +521,30 @@ a.tooltip:hover .tooltiptext {
 	text-align: center;
 }
 
+
+/**
+* Replacement for StatusBar lost in Ext 3
+*/
+.x-statusbar .x-status-text {
+    height: 21px;
+    line-height: 21px;
+    padding: 0 4px;
+    cursor: default;
+}
+.x-statusbar .x-status-busy {
+    padding-left: 25px;
+    background: transparent url(../images/default/grid/loading.gif) no-repeat 3px 3px;
+}
+.x-statusbar .x-status-text-panel {
+    border-top: 1px solid #99BBE8;
+    border-right: 1px solid #fff;
+    border-bottom: 1px solid #fff;
+    border-left: 1px solid #99BBE8;
+    padding: 2px 8px 2px 5px;
+}
+
+
+
 .news {
 	padding-top : 8px;
 }

@@ -8,7 +8,6 @@ Gemma.AuditTrailGrid = Ext.extend(Ext.grid.GridPanel, {
 			collapsible : true,
 			height : 200,
 			width : 720,
-			maxHeight : 200,
 			loadMask : true,
 			stateful : false,
 
@@ -103,27 +102,14 @@ Gemma.AuditTrailGrid = Ext.extend(Ext.grid.GridPanel, {
 							params : [this.auditable]
 						});
 
-				this.getStore().on("load", this.getView().refresh.createDelegate(this), this);
-
 				this.on('rowdblclick', function(grid, row, event) {
 							var record = this.getStore().getAt(row).data;
-							var title = record.date + " by " + record.performer.userName;
 							var note = record.note;
 							var detail = record.detail;
-							var content = "";
-							if (note.length > 0) {
-								content = note;
-							}
-							if (detail.length > 0) {
-								if (content.length > 0) {
-									content = content + "\n--\n";
-								}
-								content = content + detail;
-							}
-							if (content.length === 0) {
-								content = "no information available";
-							}
-							Ext.MessageBox.alert(title, content);
+							var content = "Date: " + record.date + "<br />Performer: " + record.performer
+									+ "<br />Note: " + note + "<br />Details: " + detail;
+
+							Ext.MessageBox.alert("Event details", content);
 						});
 			}
 		});

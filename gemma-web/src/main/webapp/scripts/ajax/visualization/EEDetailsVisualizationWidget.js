@@ -21,7 +21,7 @@ Ext.namespace('Gemma');
  * @author paul, based on older code.
  * @version $Id$
  */
-Gemma.EEDetailsVisualizationWidget = Ext.extend(Gemma.GeneChooserPanel, {
+Gemma.EEDetailsVisualizationWidget = Ext.extend(Gemma.GeneGrid, {
 
 	height : 120,
 	width : 420,
@@ -50,9 +50,9 @@ Gemma.EEDetailsVisualizationWidget = Ext.extend(Gemma.GeneChooserPanel, {
 					 * taxon is the one filled in by staterestore; we need to enforce that we pick an exact taxon. Cant
 					 * use getToolbar() at this point.
 					 */
-					var foundTaxon = this.toolbar.taxonCombo.setTaxonByCommonName(this.taxon);
+					var foundTaxon = this.getTopToolbar().taxonCombo.setTaxonByCommonName(this.taxon);
 					this.taxonChanged(foundTaxon, false);
-					this.toolbar.taxonCombo.disable(false);
+					this.getTopToolbar().taxonCombo.disable(false);
 				});
 
 	},

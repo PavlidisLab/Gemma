@@ -53,8 +53,7 @@ public class UploadListener implements OutputStreamListener {
     private long totalBytesRead = 0;
     private ProgressJob pJob;
     private String taskId;
-
-    private HttpServletRequest request;
+ 
 
     /**
      * @param request
@@ -65,8 +64,7 @@ public class UploadListener implements OutputStreamListener {
         this.delay = debugDelay;
     }
 
-    public UploadListener( HttpServletRequest request ) {
-        this.request = request;
+    public UploadListener( HttpServletRequest request ) { 
         this.totalToRead = request.getContentLength();
     }
 

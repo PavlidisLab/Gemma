@@ -28,25 +28,18 @@ Gemma.DatasetSearchToolBar = Ext.extend(Ext.Toolbar, {
 				if (this.taxonSearch) {
 					this.taxonCombo = new Gemma.TaxonCombo({
 								emptyText : 'Select a taxon',
+								isDisplayTaxonWithDatasets : true,
 								width : 125,
 								listeners : {
 									'select' : {
 										fn : function(combo, record, index) {
 											var taxon = record.data;
-											this.eeSearchField.taxonChanged(taxon, false); // false:
-											// don't
-											// search for EE
-											// sets right
-											// away.
+											this.eeSearchField.taxonChanged(taxon);
 										}.createDelegate(this, [], true)
 									},
 									'ready' : {
 										fn : function(taxon) {
-											this.eeSearchField.taxonChanged(taxon, false); // false:
-											// don't
-											// search for EE
-											// sets right
-											// away.
+											this.eeSearchField.taxonChanged(taxon);
 										}.createDelegate(this, [], true)
 									}
 								}
