@@ -54,15 +54,18 @@ public class ExpressioDataTestMatrix extends ExpressionDataDoubleMatrix {
         SimpleExpressionDataLoaderService service = new SimpleExpressionDataLoaderService();
 
         SimpleExpressionExperimentMetaData metaData = new SimpleExpressionExperimentMetaData();
-        ArrayDesign ad = ArrayDesign.Factory.newInstance();
-        ad.setName( "new ad" );
-        ads.add( ad );
-        metaData.setArrayDesigns( ads );
 
         Taxon taxon = Taxon.Factory.newInstance();
         taxon.setCommonName( "mouse" );
         taxon.setIsGenesUsable( true );
         taxon.setIsSpecies( true );
+
+        ArrayDesign ad = ArrayDesign.Factory.newInstance();
+        ad.setName( "new ad" );
+        ad.setPrimaryTaxon( taxon );
+        ads.add( ad );
+        metaData.setArrayDesigns( ads );
+
         metaData.setTaxon( taxon );
         metaData.setName( "ee" );
 

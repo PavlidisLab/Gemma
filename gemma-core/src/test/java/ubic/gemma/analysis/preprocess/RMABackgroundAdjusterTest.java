@@ -67,7 +67,7 @@ public class RMABackgroundAdjusterTest extends TestCase {
 
         aa.setArrayDesign( arrayDesign );
         DoubleMatrix result = aa.adjust( celmatrix, null );
-        assertTrue( result != null );
+        assertNotNull( result );
         assertEquals( 10000, result.rows() );
         assertEquals( 3, result.columns() );
 

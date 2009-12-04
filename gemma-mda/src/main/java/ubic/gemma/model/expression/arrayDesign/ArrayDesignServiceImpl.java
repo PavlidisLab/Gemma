@@ -341,7 +341,14 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
     @Override
     protected Collection<Taxon> handleGetTaxa( java.lang.Long id ) {
         return this.getArrayDesignDao().getTaxa( id );
+    }
 
+    /*
+     * (non-Javadoc)
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#getPerTaxonCount()
+     */
+    public Map<Taxon, Integer> getPerTaxonCount() {
+        return this.getArrayDesignDao().getPerTaxonCount();
     }
 
     /*

@@ -204,12 +204,6 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
      */
     private GeoSeries processSeries( String seriesAccession ) {
 
-        Collection<String> datasetsToProcess = DatasetCombiner.findGDSforGSE( seriesAccession );
-
-        if ( datasetsToProcess == null || datasetsToProcess.size() == 0 ) {
-            log.warn( "No data set found for " + seriesAccession );
-        }
-
         Collection<LocalFile> fullSeries = seriesFetcher.fetch( seriesAccession );
         if ( fullSeries == null ) {
             log.warn( "No series file found for " + seriesAccession );
@@ -239,10 +233,14 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
         // Raw data files have been added to series object as a path (during parsing).
         // processRawData( series )
 
-        for ( String dataSetAccession : datasetsToProcess ) {
-            log.info( "Processing " + dataSetAccession );
-            processDataSet( series, dataSetAccession );
+        Collection<String> datasetsToProcess = DatasetCombiner.findGDSforGSE( seriesAccession );
+        if ( datasetsToProcess != null ) {
+            for ( String dataSetAccession : datasetsToProcess ) {
+                log.info( "Processing " + dataSetAccession );
+                processDataSet( series, dataSetAccession );
+            }
         }
+
         DatasetCombiner datasetCombiner = new DatasetCombiner( this.doSampleMatching );
 
         GeoSampleCorrespondence correspondence = datasetCombiner.findGSECorrespondence( series );

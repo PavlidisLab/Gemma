@@ -147,6 +147,10 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
 
     }
 
+    /*
+     * (non-Javadoc)
+     * @see ubic.gemma.analysis.report.ArrayDesignReportService#fillInSubsumptionInfo(java.util.Collection)
+     */
     public void fillInSubsumptionInfo( Collection<ArrayDesignValueObject> valueObjects ) {
         Collection<Long> ids = new ArrayList<Long>();
         for ( Object object : valueObjects ) {

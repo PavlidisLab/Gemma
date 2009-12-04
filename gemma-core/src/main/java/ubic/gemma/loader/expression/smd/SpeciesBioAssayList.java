@@ -22,9 +22,6 @@ import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.apache.commons.configuration.Configuration;
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.net.ftp.FTP;
@@ -32,12 +29,11 @@ import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
 
 import ubic.gemma.loader.expression.smd.util.SmdUtil;
+import ubic.gemma.util.ConfigUtils;
 
 /**
  * The list of all BioAssays (SMD "experiments") for a given species.
- * <hr>
- * <p>
- * 
+ 
  * @author pavlidis
  * @version $Id$
  */
@@ -54,15 +50,9 @@ public class SpeciesBioAssayList {
      * @throws IOException
      */
     public SpeciesBioAssayList() {
-        Configuration config = null;
-        try {
-            config = new PropertiesConfiguration( "Gemma.properties" );
-        } catch ( ConfigurationException e ) {
-            e.printStackTrace();
-        }
         speciesMap = new SMDSpeciesMapper();
         bioAssays = new HashSet<String>();
-        baseDir = ( String ) config.getProperty( "smd.organism.baseDir" );
+        baseDir = ( String ) ConfigUtils.getProperty( "smd.organism.baseDir" );
     }
 
     /**

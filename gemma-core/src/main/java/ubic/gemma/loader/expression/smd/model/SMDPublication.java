@@ -160,8 +160,7 @@ public class SMDPublication {
         private StringBuilder expSetBuf;
         private StringBuilder pubBuf;
 
-        @Override
-        @SuppressWarnings("unused")
+        @Override 
         public void startElement( String uri, String name, String qName, Attributes atts ) {
 
             if ( name.equals( "experiment_set" ) ) {
@@ -175,8 +174,7 @@ public class SMDPublication {
             }
         }
 
-        @Override
-        @SuppressWarnings("unused")
+        @Override 
         public void endElement( String uri, String tagName, String qName ) {
             if ( tagName.equals( "publication" ) && !inSet ) {
                 inPub = false;

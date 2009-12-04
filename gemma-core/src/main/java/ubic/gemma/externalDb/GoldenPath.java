@@ -68,7 +68,7 @@ public class GoldenPath {
     /**
      * Get golden path for the default database (human);
      */
-    public GoldenPath() throws SQLException {
+    public GoldenPath() {
         this.taxon = Taxon.Factory.newInstance();
         taxon.setCommonName( "human" );
         init();
@@ -89,17 +89,17 @@ public class GoldenPath {
         init( port, host, user, password );
     }
 
-    private void getTaxonForDbName( String databaseName ) {
+    private void getTaxonForDbName( String dbname ) {
         // This is a little dumb
         this.taxon = Taxon.Factory.newInstance();
-        if ( databaseName.startsWith( "hg" ) ) {
+        if ( dbname.startsWith( "hg" ) ) {
             taxon.setCommonName( "human" );
-        } else if ( databaseName.startsWith( "mm" ) ) {
+        } else if ( dbname.startsWith( "mm" ) ) {
             taxon.setCommonName( "mouse" );
-        } else if ( databaseName.startsWith( "rn" ) ) {
+        } else if ( dbname.startsWith( "rn" ) ) {
             taxon.setCommonName( "rat" );
         } else {
-            throw new IllegalArgumentException( "Cannot infer taxon for " + databaseName );
+            throw new IllegalArgumentException( "Cannot infer taxon for " + dbname );
         }
     }
 
@@ -108,7 +108,7 @@ public class GoldenPath {
      * 
      * @param taxon
      */
-    public GoldenPath( Taxon taxon ) throws SQLException {
+    public GoldenPath( Taxon taxon ) {
         this.taxon = taxon;
         init();
     }
@@ -129,7 +129,7 @@ public class GoldenPath {
         return databaseName;
     }
 
-    protected void init( int port, String host, String user, String password ) throws SQLException {
+    protected void init( int port, String host, String user, String password ) {
         assert databaseName != null;
         dataSource = new DriverManagerDataSource();
         jt = new JdbcTemplate( dataSource );
@@ -147,18 +147,10 @@ public class GoldenPath {
         jt.setDataSource( dataSource );
 
         try {
-            // FIXME This was removed when upgrading to Spring 2.5.5. If this is not needed, remove it.
-            // Class.forName( dataSource.getDriverClassName() ).newInstance();
             conn = DriverManager.getConnection( url, user, password );
         } catch ( SQLException e ) {
             throw new RuntimeException( e );
-        }// catch ( InstantiationException e ) {
-        // throw new RuntimeException( e );
-        // } catch ( IllegalAccessException e ) {
-        // throw new RuntimeException( e );
-        // } catch ( ClassNotFoundException e ) {
-        // throw new RuntimeException( e );
-        // }
+        }
 
         qr = new QueryRunner();
     }
@@ -175,7 +167,7 @@ public class GoldenPath {
         return driver;
     }
 
-    private void init() throws SQLException {
+    private void init() {
         if ( taxon == null ) throw new IllegalStateException( "Taxon cannot be null" );
         String commonName = taxon.getCommonName();
         if ( commonName.equals( "mouse" ) ) {

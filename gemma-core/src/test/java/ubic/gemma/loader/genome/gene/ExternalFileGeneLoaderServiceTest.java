@@ -9,13 +9,11 @@ import static org.junit.Assert.fail;
 import java.io.IOException;
 import java.util.Collection;
 
-import org.apache.commons.lang.RandomStringUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.testing.BaseSpringContextTest;

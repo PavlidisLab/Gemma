@@ -96,8 +96,7 @@ public class TTestAnalyzerTest extends BaseAnalyzerConfigurationTest {
 
     /**
      * Tests the t-test with an {@link ExpressionExperiment}.
-     */
-    @SuppressWarnings("unchecked")
+     */ 
     @Test
     public void testTTestWithExpressionExperiment() throws Exception {
 

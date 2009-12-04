@@ -1,7 +1,7 @@
 /*
  * The Gemma project
  * 
- * Copyright (c) 2008 University of British Columbia
+ * Copyright (c) 2009 University of British Columbia
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,13 +20,11 @@ package ubic.gemma.loader.expression.simple;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Iterator;
 
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.logging.Log;
@@ -43,7 +41,10 @@ import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.expression.biomaterial.BioMaterialService;
+import ubic.gemma.model.expression.experiment.ExperimentalDesignService;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
+import ubic.gemma.model.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.FactorValue;
@@ -53,10 +54,10 @@ import ubic.gemma.security.authorization.acl.AclTestUtils;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
- * @author Paul
+ * @author paul
  * @version $Id$
  */
-public class ExperimentalDesignImporterTest extends BaseSpringContextTest {
+public class ExperimentalDesignImporterTestB extends BaseSpringContextTest {
 
     private static Log log = LogFactory.getLog( ExperimentalDesignImporterTest.class.getName() );
 
@@ -72,7 +73,19 @@ public class ExperimentalDesignImporterTest extends BaseSpringContextTest {
     ExperimentalDesignImporter experimentalDesignImporter;
 
     @Autowired
+    ExperimentalFactorService experimentalFactorService;
+
+    @Autowired
     SimpleExpressionDataLoaderService simpleExpressionDataLoaderService;
+
+    @Autowired
+    ExpressionExperimentService expressionExperimentService;
+
+    @Autowired
+    BioMaterialService bioMaterialService;
+
+    @Autowired
+    ExperimentalDesignService experimentalDesignService;
 
     @Autowired
     AclTestUtils aclTestUtils;
@@ -89,35 +102,38 @@ public class ExperimentalDesignImporterTest extends BaseSpringContextTest {
     public void setup() throws Exception {
 
         InputStream data = this.getClass().getResourceAsStream(
-                "/data/loader/expression/experimentalDesignTestData.txt" );
+                "/data/loader/expression/head.Gill2007gemmaExpressionData.txt" );
 
         SimpleExpressionExperimentMetaData metaData = new SimpleExpressionExperimentMetaData();
+
         mos.init( true );
         while ( !mos.isOntologyLoaded() ) {
-            Thread.sleep( 5000 );
+            Thread.sleep( 1000 );
             log.info( "Waiting for mgedontology to load" );
         }
 
-        Taxon human = taxonService.findByCommonName( "human" );
+        Taxon salmon = taxonService.findByCommonName( "human" );
+
+        // doesn't matter what it is for this test, but the test data are from salmon.
+        assertNotNull( salmon );
 
         metaData.setShortName( RandomStringUtils.randomAlphabetic( 10 ) );
         metaData.setDescription( "bar" );
         metaData.setIsRatio( false );
-        metaData.setTaxon( human );
-        metaData.setQuantitationTypeName( "rma" );
+        metaData.setTaxon( salmon );
+        metaData.setQuantitationTypeName( "value" );
         metaData.setScale( ScaleType.LOG2 );
         metaData.setType( StandardQuantitationType.AMOUNT );
 
         ArrayDesign ad = ArrayDesign.Factory.newInstance();
-        ad.setShortName( "foobly" );
+        ad.setShortName( randomName() );
         ad.setName( "foobly foo" );
-        ad.setPrimaryTaxon( human );
 
         metaData.getArrayDesigns().add( ad );
 
         ee = simpleExpressionDataLoaderService.load( metaData, data );
 
-        eeService.thawLite( ee );
+        // eeService.thawLite( ee );
     }
 
     /**
@@ -125,9 +141,10 @@ public class ExperimentalDesignImporterTest extends BaseSpringContextTest {
      * .
      */
     @Test
-    public final void testParse() throws Exception {
+    public final void testParseLoadDelete() throws Exception {
 
-        InputStream is = this.getClass().getResourceAsStream( "/data/loader/expression/experimentalDesignTest.txt" );
+        InputStream is = this.getClass().getResourceAsStream(
+                "/data/loader/expression/gill2007temperatureGemmaAnnotationData.txt" );
 
         experimentalDesignImporter.importDesign( ee, is, false );
 
@@ -142,59 +159,36 @@ public class ExperimentalDesignImporterTest extends BaseSpringContextTest {
 
         this.aclTestUtils.checkEEAcls( ee );
 
-    }
+        ee = this.expressionExperimentService.load( ee.getId() );
 
-    @Test
-    public final void testParseDryRun() throws Exception {
+        int s = ee.getExperimentalDesign().getExperimentalFactors().size();
+        ExperimentalFactor toDelete = ee.getExperimentalDesign().getExperimentalFactors().iterator().next();
 
-        InputStream is = this.getClass().getResourceAsStream( "/data/loader/expression/experimentalDesignTest.txt" );
-
-        experimentalDesignImporter.importDesign( ee, is, true );
-
-        // / confirm we didn't save anything.
-        assertEquals( 4, ee.getExperimentalDesign().getExperimentalFactors().size() );
-        for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
-            assertNull( ef.getId() );
-        }
-    }
-
-    @Test
-    public final void testParseFailedDryRun() throws Exception {
-
-        InputStream is = this.getClass().getResourceAsStream( "/data/loader/expression/experimentalDesignTestBad.txt" );
-
-        try {
-            experimentalDesignImporter.importDesign( ee, is, true );
-            fail( "Should have gotten an Exception" );
-        } catch ( Exception e ) {
-            // ok
-        }
-
-    }
-
-    /**
-     * test case where the design file has extra information not relevant to the current samples.
-     * 
-     * @throws Exception
-     */
-    @Test
-    public final void testParseWhereExtraValue() throws Exception {
-
-        ExperimentalDesignImporter parser = ( ExperimentalDesignImporter ) this.getBean( "experimentalDesignImporter" );
-
-        InputStream is = this.getClass()
-                .getResourceAsStream( "/data/loader/expression/experimentalDesignTestExtra.txt" );
-
-        parser.importDesign( ee, is, false );
-
-        Collection<BioMaterial> bms = new HashSet<BioMaterial>();
+        /*
+         * FIXME: this should be a single service call, However, it's not that easy to do. If you run this in a single
+         * transaction, you invariably get session errors. See {@link ExperimentalDesignController}
+         */
+        this.expressionExperimentService.thawLite( ee );
         for ( BioAssay ba : ee.getBioAssays() ) {
             for ( BioMaterial bm : ba.getSamplesUsed() ) {
-                bms.add( bm );
+                boolean removed = false;
+                for ( Iterator<FactorValue> fIt = bm.getFactorValues().iterator(); fIt.hasNext(); ) {
+                    if ( fIt.next().getExperimentalFactor().equals( toDelete ) ) {
+                        fIt.remove();
+                        removed = true;
+                    }
+                }
+                if ( removed ) {
+                    bioMaterialService.update( bm );
+                }
             }
         }
+        ee.getExperimentalDesign().getExperimentalFactors().remove( toDelete );
+        experimentalFactorService.delete( toDelete );
+        experimentalDesignService.update( ee.getExperimentalDesign() );
 
-        checkResults( bms );
+        assertEquals( s - 1, ee.getExperimentalDesign().getExperimentalFactors().size() );
+
     }
 
     /**
@@ -202,15 +196,13 @@ public class ExperimentalDesignImporterTest extends BaseSpringContextTest {
      */
     private void checkResults( Collection<BioMaterial> bms ) {
         // check.
-        assertEquals( 4, ee.getExperimentalDesign().getExperimentalFactors().size() );
+        assertEquals( 25, ee.getExperimentalDesign().getExperimentalFactors().size() );
 
         Collection<Long> seenFactorValueIds = new HashSet<Long>();
         for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
 
-            if ( ef.getName().equals( "Profile" ) ) {
-                assertEquals( 2, ef.getFactorValues().size() );
-            } else if ( ef.getName().equals( "PMI (h)" ) ) {
-                assertEquals( 8, ef.getFactorValues().size() );
+            if ( ef.getName().equals( "Temperature treatment" ) ) {
+                assertEquals( 3, ef.getFactorValues().size() );
             }
 
             for ( FactorValue fv : ef.getFactorValues() ) {
@@ -226,13 +218,6 @@ public class ExperimentalDesignImporterTest extends BaseSpringContextTest {
             }
         }
 
-        for ( BioMaterial bm : bms ) {
-            assertEquals( 4, bm.getFactorValues().size() );
-            for ( FactorValue fv : bm.getFactorValues() ) {
-                assertTrue( seenFactorValueIds.contains( fv.getId() ) );
-            }
-
-        }
     }
 
 }

@@ -48,8 +48,7 @@ public class TaxonLoaderTest extends BaseSpringContextTest {
 
     @Test
     public void testLoadInputStream() throws Exception {
-        TaxonLoader tl = new TaxonLoader();
-        tl.setFilter( false );
+        TaxonLoader tl = new TaxonLoader(); 
         tl.setPersisterHelper( persisterHelper );
         int actualValue = tl.load( is );
         assertEquals( 75, actualValue );

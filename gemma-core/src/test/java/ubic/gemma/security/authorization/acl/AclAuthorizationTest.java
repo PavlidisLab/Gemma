@@ -47,7 +47,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.security.SecurityService;
 import ubic.gemma.security.authentication.UserDetailsImpl;
-import ubic.gemma.security.authentication.UserManager; 
+import ubic.gemma.security.authentication.UserManager;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
@@ -90,6 +90,7 @@ public class AclAuthorizationTest extends BaseSpringContextTest {
         arrayDesign.setName( arrayDesignName );
         arrayDesign.setShortName( arrayDesignName );
         arrayDesign.setDescription( "A test ArrayDesign from " + this.getClass().getName() );
+        arrayDesign.setPrimaryTaxon( this.getTaxon( "mouse" ) );
 
         CompositeSequence cs1 = CompositeSequence.Factory.newInstance();
         cs1.setName( compositeSequenceName1 );

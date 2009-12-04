@@ -90,6 +90,7 @@ public class ExperimentalDesignImportDuplicateValueTest extends BaseSpringContex
         ArrayDesign ad = ArrayDesign.Factory.newInstance();
         ad.setShortName( "gfoobly_" + randomName() );
         ad.setName( "foobly doo loo" );
+        ad.setPrimaryTaxon( human );
 
         metaData.getArrayDesigns().add( ad );
 

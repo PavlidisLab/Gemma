@@ -92,6 +92,7 @@ public class SecurityServiceTest extends BaseSpringContextTest {
         arrayDesign.setShortName( arrayDesignName );
         arrayDesign.setName( arrayDesignName );
         arrayDesign.setDescription( "A test ArrayDesign from " + this.getClass().getName() );
+        arrayDesign.setPrimaryTaxon( this.getTaxon( "human" ) );
 
         CompositeSequence cs1 = CompositeSequence.Factory.newInstance();
         cs1.setName( compositeSequenceName1 );

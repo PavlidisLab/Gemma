@@ -22,7 +22,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.sql.SQLException;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
@@ -31,13 +30,13 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.apache.commons.lang.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.analysis.sequence.ProbeMapper;
 import ubic.gemma.analysis.sequence.ProbeMapperConfig;
@@ -121,13 +120,8 @@ public class ArrayDesignProbeMapperService {
 
         for ( Taxon taxon : taxa ) {
 
-            GoldenPathSequenceAnalysis goldenPathDb;
-            try {
-                goldenPathDb = new GoldenPathSequenceAnalysis( taxon );
-            } catch ( SQLException e ) {
-                throw new RuntimeException( e );
-            }
-
+            GoldenPathSequenceAnalysis goldenPathDb  = new GoldenPathSequenceAnalysis( taxon );
+           
             BlockingQueue<BlatAssociation> persistingQueue = new ArrayBlockingQueue<BlatAssociation>( QUEUE_SIZE );
             AtomicBoolean generatorDone = new AtomicBoolean( false );
             AtomicBoolean loaderDone = new AtomicBoolean( false );

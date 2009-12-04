@@ -303,12 +303,7 @@ public class ArrayDesignSequenceAlignmentService {
     private Collection<BioSequence> getGoldenPathAlignments( Collection<BioSequence> sequencesToBlat, Taxon taxon,
             Map<BioSequence, Collection<BlatResult>> results ) {
 
-        GoldenPathQuery gpq;
-        try {
-            gpq = new GoldenPathQuery( taxon );
-        } catch ( SQLException e ) {
-            throw new RuntimeException( "Could not get golden path database for " + taxon, e );
-        }
+        GoldenPathQuery gpq = new GoldenPathQuery( taxon );
 
         Collection<BioSequence> needBlat = new HashSet<BioSequence>();
         int count = 0;

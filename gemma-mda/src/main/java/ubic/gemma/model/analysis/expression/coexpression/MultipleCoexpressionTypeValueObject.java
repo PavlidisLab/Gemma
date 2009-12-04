@@ -25,9 +25,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.PredictedGene;
@@ -42,9 +39,6 @@ public class MultipleCoexpressionTypeValueObject {
     public static final String PREDICTED_GENE_IMPL = "PredictedGeneImpl";
     public static final String PROBE_ALIGNED_REGION_IMPL = "ProbeAlignedRegionImpl";
     public static final String GENE_IMPL = "GeneImpl";
-
-    private static Log log = LogFactory.getLog( MultipleCoexpressionTypeValueObject.class.getName() );
-
     private Map<Long, ExpressionExperimentValueObject> expressionExperiments;
 
     private Map<Gene, CommonCoexpressionValueObject> geneToQueries;

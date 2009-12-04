@@ -61,23 +61,22 @@ public class SimpleExpressionDataLoaderServiceTest extends BaseSpringContextTest
             ee = eeService.load( ee.getId() );
             eeService.delete( ee );
         }
-
     }
 
     @Test
     public final void testLoad() throws Exception {
 
+        Taxon taxon = this.getTaxon( "mouse" );
+
         SimpleExpressionExperimentMetaData metaData = new SimpleExpressionExperimentMetaData();
         ArrayDesign ad = ArrayDesign.Factory.newInstance();
         ad.setName( RandomStringUtils.randomAlphabetic( 5 ) );
+        ad.setPrimaryTaxon( taxon );
+
         Collection<ArrayDesign> ads = new HashSet<ArrayDesign>();
         ads.add( ad );
         metaData.setArrayDesigns( ads );
 
-        Taxon taxon = Taxon.Factory.newInstance();
-        taxon.setCommonName( "mouse" );
-        taxon.setIsGenesUsable( true );
-        taxon.setIsSpecies( true );
         metaData.setTaxon( taxon );
         metaData.setName( RandomStringUtils.randomAlphabetic( 5 ) );
         metaData.setQuantitationTypeName( "testing" );
@@ -100,17 +99,17 @@ public class SimpleExpressionDataLoaderServiceTest extends BaseSpringContextTest
     @Test
     public final void testLoadDuplicatedRow() throws Exception {
 
+        Taxon taxon = this.getTaxon( "mouse" );
+
         SimpleExpressionExperimentMetaData metaData = new SimpleExpressionExperimentMetaData();
         ArrayDesign ad = ArrayDesign.Factory.newInstance();
         ad.setName( RandomStringUtils.randomAlphabetic( 5 ) );
+        ad.setPrimaryTaxon( taxon );
         Collection<ArrayDesign> ads = new HashSet<ArrayDesign>();
+
         ads.add( ad );
         metaData.setArrayDesigns( ads );
 
-        Taxon taxon = Taxon.Factory.newInstance();
-        taxon.setCommonName( "mouse" );
-        taxon.setIsGenesUsable( true );
-        taxon.setIsSpecies( true );
         metaData.setTaxon( taxon );
         metaData.setName( RandomStringUtils.randomAlphabetic( 5 ) );
         metaData.setQuantitationTypeName( "testing" );
@@ -138,15 +137,16 @@ public class SimpleExpressionDataLoaderServiceTest extends BaseSpringContextTest
     @Test
     public final void testLoadB() throws Exception {
 
+        Taxon taxon = this.getTaxon( "mouse" );
+
         SimpleExpressionExperimentMetaData metaData = new SimpleExpressionExperimentMetaData();
         ArrayDesign ad = ArrayDesign.Factory.newInstance();
         ad.setName( RandomStringUtils.randomAlphabetic( 5 ) );
+        ad.setPrimaryTaxon( taxon );
         Collection<ArrayDesign> ads = new HashSet<ArrayDesign>();
         ads.add( ad );
         metaData.setArrayDesigns( ads );
 
-        Taxon taxon = Taxon.Factory.newInstance();
-        taxon.setCommonName( "mouse" );
         metaData.setTaxon( taxon );
         metaData.setName( RandomStringUtils.randomAlphabetic( 5 ) );
         metaData.setQuantitationTypeName( "testing" );

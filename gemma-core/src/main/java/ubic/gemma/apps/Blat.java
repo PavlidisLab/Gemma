@@ -476,11 +476,7 @@ public class Blat {
         }
 
     }
-
-    private int choosePortForQuery( Taxon taxon ) {
-        return this.choosePortForQuery( taxon, false );
-    }
-
+ 
     /**
      * @param genome
      * @return

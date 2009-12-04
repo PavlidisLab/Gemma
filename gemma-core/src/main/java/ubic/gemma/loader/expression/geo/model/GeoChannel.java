@@ -205,6 +205,7 @@ public class GeoChannel {
                 break;
             case other:
                 result.setValue( "Other material type" );
+                break;
             default:
                 break;
         }

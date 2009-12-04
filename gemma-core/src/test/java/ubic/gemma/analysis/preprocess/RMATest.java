@@ -61,7 +61,7 @@ public class RMATest extends TestCase {
         aa.getRCommandObject().voidEval( "data(cdfenv.example)" );
 
         DoubleMatrix<String, String> result = aa.summarize( celmatrix );
-        assertTrue( result != null );
+        assertNotNull( result );
         assertEquals( 150, result.rows() );
         assertEquals( 3, result.columns() );
         assertEquals( "A28102_at", result.getRowName( 0 ) );

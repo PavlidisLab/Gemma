@@ -551,12 +551,12 @@ public class DatasetCombiner {
                         double secondaryDistance = Double.MAX_VALUE;
                         if ( targetSecondaryTitle != null && testSecondaryTitle != null ) {
                             secondaryDistance = computeDistance( targetSecondaryTitle, testSecondaryTitle );
-                        }
 
-                        if ( secondaryDistance < distance ) {
-                            distance = secondaryDistance;
-                            normalizedDistance = distance
-                                    / Math.max( targetSecondaryTitle.length(), testSecondaryTitle.length() );
+                            if ( secondaryDistance < distance ) {
+                                distance = secondaryDistance;
+                                normalizedDistance = distance
+                                        / Math.max( targetSecondaryTitle.length(), testSecondaryTitle.length() );
+                            }
                         }
 
                         if ( !meetsMinimalThreshold( normalizedDistance ) ) {

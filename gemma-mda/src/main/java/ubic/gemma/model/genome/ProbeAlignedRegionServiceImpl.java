@@ -33,8 +33,7 @@ public class ProbeAlignedRegionServiceImpl extends ubic.gemma.model.genome.Probe
     public void thaw( ProbeAlignedRegion par ) {
         this.getProbeAlignedRegionDao().thaw( par );
     }
-
-    @SuppressWarnings("unchecked")
+ 
     @Override
     protected Collection<ProbeAlignedRegion> handleFindAssociations( BlatResult blatResult ) throws Exception {
         return this.getProbeAlignedRegionDao().find( blatResult );

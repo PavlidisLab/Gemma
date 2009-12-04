@@ -43,7 +43,7 @@ public class GoldenPathQuery extends GoldenPath {
     private MrnaQuery mrnaQuery;
     BlatResultParser parser = new BlatResultParser();
 
-    public GoldenPathQuery() throws SQLException {
+    public GoldenPathQuery() {
         super();
     }
 
@@ -53,7 +53,7 @@ public class GoldenPathQuery extends GoldenPath {
 
     }
 
-    public GoldenPathQuery( Taxon taxon ) throws SQLException {
+    public GoldenPathQuery( Taxon taxon ) {
         super( taxon );
     }
 
@@ -65,7 +65,6 @@ public class GoldenPathQuery extends GoldenPath {
      * @param accession The genbank accession of the sequence.
      * @return
      */
-    @SuppressWarnings("unchecked")
     public Collection<BlatResult> findAlignments( String accession ) {
         Collection<BlatResult> results = estQuery.execute( accession );
         if ( results.size() > 0 ) {
@@ -75,7 +74,7 @@ public class GoldenPathQuery extends GoldenPath {
         return mrnaQuery.execute( accession );
     }
 
-    private class EstQuery extends MappingSqlQuery {
+    private class EstQuery extends MappingSqlQuery<BlatResult> {
 
         public EstQuery() {
             super( dataSource, "SELECT * FROM all_est where qName = ?" );
@@ -84,7 +83,7 @@ public class GoldenPathQuery extends GoldenPath {
         }
 
         @Override
-        protected Object mapRow( ResultSet rs, int rowNum ) throws SQLException {
+        protected BlatResult mapRow( ResultSet rs, int rowNum ) throws SQLException {
             return convertResult( rs );
 
         }
@@ -146,7 +145,7 @@ public class GoldenPathQuery extends GoldenPath {
         return result;
     }
 
-    private class MrnaQuery extends MappingSqlQuery {
+    private class MrnaQuery extends MappingSqlQuery<BlatResult> {
 
         public MrnaQuery() {
             super( dataSource, "SELECT * FROM all_mrna where qName = ?" );
@@ -155,14 +154,14 @@ public class GoldenPathQuery extends GoldenPath {
         }
 
         @Override
-        protected Object mapRow( ResultSet rs, int rowNum ) throws SQLException {
+        protected BlatResult mapRow( ResultSet rs, int rowNum ) throws SQLException {
             return convertResult( rs );
         }
 
     }
 
     @Override
-    protected void init( int port, String host, String user, String password ) throws SQLException {
+    protected void init( int port, String host, String user, String password ) {
         super.init( port, host, user, password );
         estQuery = new EstQuery();
         mrnaQuery = new MrnaQuery();

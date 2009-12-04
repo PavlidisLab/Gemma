@@ -1216,6 +1216,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
         try {
             org.hibernate.Query queryObject = super.getSession().createQuery( queryString );
 
+            queryObject.setReadOnly( true );
             queryObject.setCacheable( true );
             Map<Long, Collection<QuantitationType>> qtMap = getQuantitationTypeMap( null );
             ScrollableResults list = queryObject.scroll( ScrollMode.FORWARD_ONLY );
@@ -1511,6 +1512,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
             Collections.sort( idList );
             queryObject.setParameterList( "eeids", idList );
         }
+        queryObject.setReadOnly( true );
         queryObject.setCacheable( true );
 
         Map<Long, Collection<QuantitationType>> results = new HashMap<Long, Collection<QuantitationType>>();

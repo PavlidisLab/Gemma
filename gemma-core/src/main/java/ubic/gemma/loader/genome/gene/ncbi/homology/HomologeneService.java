@@ -42,7 +42,6 @@ import ubic.basecode.util.FileTools;
 import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.util.ConfigUtils;
 

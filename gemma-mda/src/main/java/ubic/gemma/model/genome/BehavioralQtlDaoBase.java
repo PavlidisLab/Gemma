@@ -28,8 +28,7 @@ import java.util.Collection;
  * 
  * @see ubic.gemma.model.genome.BehavioralQtl
  */
-public abstract class BehavioralQtlDaoBase extends BaseQtlDaoImpl<BehavioralQtl> implements
-        ubic.gemma.model.genome.BaseQtlDao<BehavioralQtl> {
+public abstract class BehavioralQtlDaoBase extends BaseQtlDaoImpl<BehavioralQtl> {
 
     /**
      * @see ubic.gemma.model.genome.BehavioralQtlDao#create(int, java.util.Collection)

@@ -4112,14 +4112,20 @@ public class MageMLConverterHelper {
 
         Collection<CompositeSequence> designObjs = initializeCompositeSequenceCollection( gemmaObj );
 
+        Taxon taxon = null;
+
         for ( CompositeGroup compositeGroup : compositeGroups ) {
             List<org.biomage.DesignElement.CompositeSequence> reps = compositeGroup.getCompositeSequences();
             for ( org.biomage.DesignElement.CompositeSequence compseq : reps ) {
                 CompositeSequence csconv = convertCompositeSequence( compseq );
+
+                taxon = csconv.getBiologicalCharacteristic().getTaxon();
                 csconv.setArrayDesign( gemmaObj );
                 if ( !designObjs.contains( csconv ) ) designObjs.add( csconv );
             }
         }
+
+        gemmaObj.setPrimaryTaxon( taxon );
         gemmaObj.setCompositeSequences( designObjs );
         gemmaObj.setAdvertisedNumberOfDesignElements( designObjs.size() );
     }

@@ -177,7 +177,7 @@ public class AffyProbeReaderTest extends TestCase {
         String expectedValue = "GCCCCCGTGAGGATGTCACTCAGAT"; // 10
         CompositeSequence cs = apr.get( "1004_at" );
 
-        assertTrue( "CompositeSequence was null", cs != null );
+        assertNotNull( "CompositeSequence was null", cs );
 
         boolean foundIt = false;
         for ( Iterator<Reporter> iter = cs.getComponentReporters().iterator(); iter.hasNext(); ) {
@@ -200,8 +200,7 @@ public class AffyProbeReaderTest extends TestCase {
 
         String expectedValue = "AGCTCAGGTGGCCCCAGTTCAATCT"; // 4
         CompositeSequence cs = apr.get( "1000_at" );
-
-        assertTrue( "CompositeSequence was null", cs != null );
+        assertNotNull( "CompositeSequence was null", cs );
 
         boolean foundIt = false;
         for ( Iterator<Reporter> iter = cs.getComponentReporters().iterator(); iter.hasNext(); ) {

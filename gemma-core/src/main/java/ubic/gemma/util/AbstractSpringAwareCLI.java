@@ -197,7 +197,7 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
         if ( hasOption( 'u' ) && hasOption( 'p' ) ) {
             username = getOptionValue( 'u' );
             password = getOptionValue( 'p' );
-            
+
             if ( StringUtils.isBlank( username ) ) {
                 System.err.println( "Not authenticated. Username was blank" );
                 log.debug( "Username=" + username );
@@ -212,7 +212,7 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
             boolean success = manAuthentication.validateRequest( username, password );
             if ( !success ) {
                 System.err.println( "Not authenticated. Make sure you entered a valid username (got '" + username
-                        + "') and/or password: " + password );
+                        + "') and/or password" );
                 bail( ErrorCode.AUTHENTICATION_ERROR );
             } else {
                 log.info( "Logged in as " + username );

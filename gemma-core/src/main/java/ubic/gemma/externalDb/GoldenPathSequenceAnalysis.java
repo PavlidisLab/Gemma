@@ -68,7 +68,7 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
         super( port, databaseName, host, user, password );
     }
 
-    public GoldenPathSequenceAnalysis( Taxon taxon ) throws SQLException {
+    public GoldenPathSequenceAnalysis( Taxon taxon ) {
         super( taxon );
     }
 

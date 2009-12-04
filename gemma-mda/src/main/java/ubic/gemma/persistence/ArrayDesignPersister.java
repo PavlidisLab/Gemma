@@ -37,6 +37,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.designElement.ReporterService;
+import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.biosequence.BioSequenceImpl;
 
@@ -313,6 +314,8 @@ abstract public class ArrayDesignPersister extends GenomePersister {
                 file = persistLocalFile( file );
             }
         }
+
+        arrayDesign.setPrimaryTaxon( ( Taxon ) persist( arrayDesign.getPrimaryTaxon() ) );
 
         for ( DatabaseEntry externalRef : arrayDesign.getExternalReferences() ) {
             externalRef.setExternalDatabase( persistExternalDatabase( externalRef.getExternalDatabase() ) );

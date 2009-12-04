@@ -195,8 +195,7 @@ public class GoldenPathBioSequenceLoader {
 
     /**
      * @param bioSequences
-     */
-    @SuppressWarnings("unchecked")
+     */ 
     void load( BlockingQueue<BioSequence> queue ) {
         log.debug( "Entering 'load' " );
 

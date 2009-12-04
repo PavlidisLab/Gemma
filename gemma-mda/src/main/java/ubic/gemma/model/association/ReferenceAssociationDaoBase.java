@@ -19,24 +19,24 @@
 package ubic.gemma.model.association;
 
 import java.util.Collection;
+import java.util.Iterator;
 
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 
 /**
  * <p>
  * Base Spring DAO Class: is able to create, update, remove, load, and find objects of type
- * <code>ubic.gemma.model.association.ReferenceAssociation</code>.
+ * <code>ReferenceAssociation</code>.
  * </p>
  * 
- * @see ubic.gemma.model.association.ReferenceAssociation
+ * @see ReferenceAssociation
  */
-public abstract class ReferenceAssociationDaoBase extends HibernateDaoSupport implements
-        ubic.gemma.model.association.ReferenceAssociationDao {
+public abstract class ReferenceAssociationDaoBase extends HibernateDaoSupport implements ReferenceAssociationDao {
 
     /**
-     * @see ubic.gemma.model.association.ReferenceAssociationDao#create(int, java.util.Collection)
+     * @see ReferenceAssociationDao#create(int, Collection)
      */
-    public java.util.Collection create( final java.util.Collection entities ) {
+    public Collection create( final Collection entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "ReferenceAssociation.create - 'entities' can not be null" );
         }
@@ -44,8 +44,8 @@ public abstract class ReferenceAssociationDaoBase extends HibernateDaoSupport im
                 new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                            create( ( ubic.gemma.model.association.ReferenceAssociation ) entityIterator.next() );
+                        for ( Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                            create( ( ReferenceAssociation ) entityIterator.next() );
                         }
                         return null;
                     }
@@ -53,16 +53,15 @@ public abstract class ReferenceAssociationDaoBase extends HibernateDaoSupport im
         return entities;
     }
 
-    
-    public Collection<? extends ReferenceAssociation > load( Collection<Long> ids ) {
-        return this.getHibernateTemplate().findByNamedParam( "from ReferenceAssociationImpl where id in (:ids)", "ids", ids );
+    public Collection<? extends ReferenceAssociation> load( Collection<Long> ids ) {
+        return this.getHibernateTemplate().findByNamedParam( "from ReferenceAssociationImpl where id in (:ids)", "ids",
+                ids );
     }
-    
+
     /**
-     * @see ubic.gemma.model.association.ReferenceAssociationDao#create(int transform,
-     *      ubic.gemma.model.association.ReferenceAssociation)
+     * @see ReferenceAssociationDao#create(int transform, ReferenceAssociation)
      */
-    public ReferenceAssociation create( final ubic.gemma.model.association.ReferenceAssociation referenceAssociation ) {
+    public ReferenceAssociation create( final ReferenceAssociation referenceAssociation ) {
         if ( referenceAssociation == null ) {
             throw new IllegalArgumentException( "ReferenceAssociation.create - 'referenceAssociation' can not be null" );
         }
@@ -71,49 +70,46 @@ public abstract class ReferenceAssociationDaoBase extends HibernateDaoSupport im
     }
 
     /**
-     * @see ubic.gemma.model.association.ReferenceAssociationDao#load(int, java.lang.Long)
+     * @see ReferenceAssociationDao#load(int, java.lang.Long)
      */
 
     public ReferenceAssociation load( final java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "ReferenceAssociation.load - 'id' can not be null" );
         }
-        final Object entity = this.getHibernateTemplate().get(
-                ubic.gemma.model.association.ReferenceAssociationImpl.class, id );
-        return ( ubic.gemma.model.association.ReferenceAssociation ) entity;
+        final Object entity = this.getHibernateTemplate().get( ReferenceAssociationImpl.class, id );
+        return ( ReferenceAssociation ) entity;
     }
 
     /**
-     * @see ubic.gemma.model.association.ReferenceAssociationDao#loadAll(int)
+     * @see ReferenceAssociationDao#loadAll(int)
      */
 
-    public java.util.Collection loadAll() {
-        final java.util.Collection results = this.getHibernateTemplate().loadAll(
-                ubic.gemma.model.association.ReferenceAssociationImpl.class );
+    public Collection loadAll() {
+        final Collection results = this.getHibernateTemplate().loadAll( ReferenceAssociationImpl.class );
 
         return results;
     }
 
     /**
-     * @see ubic.gemma.model.association.ReferenceAssociationDao#remove(java.lang.Long)
+     * @see ReferenceAssociationDao#remove(java.lang.Long)
      */
 
     public void remove( java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "ReferenceAssociation.remove - 'id' can not be null" );
         }
-        ubic.gemma.model.association.ReferenceAssociation entity = ( ubic.gemma.model.association.ReferenceAssociation ) this
-                .load( id );
+        ReferenceAssociation entity = this.load( id );
         if ( entity != null ) {
             this.remove( entity );
         }
     }
 
     /**
-     * @see ubic.gemma.model.association.RelationshipDao#remove(java.util.Collection)
+     * @see RelationshipDao#remove(Collection)
      */
 
-    public void remove( java.util.Collection entities ) {
+    public void remove( Collection entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "ReferenceAssociation.remove - 'entities' can not be null" );
         }
@@ -121,9 +117,9 @@ public abstract class ReferenceAssociationDaoBase extends HibernateDaoSupport im
     }
 
     /**
-     * @see ubic.gemma.model.association.ReferenceAssociationDao#remove(ubic.gemma.model.association.ReferenceAssociation)
+     * @see ReferenceAssociationDao#remove(ReferenceAssociation)
      */
-    public void remove( ubic.gemma.model.association.ReferenceAssociation referenceAssociation ) {
+    public void remove( ReferenceAssociation referenceAssociation ) {
         if ( referenceAssociation == null ) {
             throw new IllegalArgumentException( "ReferenceAssociation.remove - 'referenceAssociation' can not be null" );
         }
@@ -131,10 +127,10 @@ public abstract class ReferenceAssociationDaoBase extends HibernateDaoSupport im
     }
 
     /**
-     * @see ubic.gemma.model.association.RelationshipDao#update(java.util.Collection)
+     * @see RelationshipDao#update(Collection)
      */
 
-    public void update( final java.util.Collection entities ) {
+    public void update( final Collection entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "ReferenceAssociation.update - 'entities' can not be null" );
         }
@@ -142,8 +138,8 @@ public abstract class ReferenceAssociationDaoBase extends HibernateDaoSupport im
                 new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                            update( ( ubic.gemma.model.association.ReferenceAssociation ) entityIterator.next() );
+                        for ( Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                            update( ( ReferenceAssociation ) entityIterator.next() );
                         }
                         return null;
                     }
@@ -151,9 +147,9 @@ public abstract class ReferenceAssociationDaoBase extends HibernateDaoSupport im
     }
 
     /**
-     * @see ubic.gemma.model.association.ReferenceAssociationDao#update(ubic.gemma.model.association.ReferenceAssociation)
+     * @see ReferenceAssociationDao#update(ReferenceAssociation)
      */
-    public void update( ubic.gemma.model.association.ReferenceAssociation referenceAssociation ) {
+    public void update( ReferenceAssociation referenceAssociation ) {
         if ( referenceAssociation == null ) {
             throw new IllegalArgumentException( "ReferenceAssociation.update - 'referenceAssociation' can not be null" );
         }

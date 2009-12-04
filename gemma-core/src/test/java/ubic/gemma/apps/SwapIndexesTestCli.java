@@ -24,7 +24,6 @@ import java.util.Map;
 
 import org.apache.commons.lang.time.StopWatch;
 
-import ubic.gemma.search.IndexService;
 import ubic.gemma.search.IndexServiceImpl;
 import ubic.gemma.search.SearchResult;
 import ubic.gemma.search.SearchService;

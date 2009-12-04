@@ -21,10 +21,7 @@ package ubic.gemma.loader.genome;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import junit.framework.TestCase;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import junit.framework.TestCase; 
 
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.util.ConfigUtils;
@@ -38,8 +35,6 @@ public class SimpleFastaCmdTest extends TestCase {
     private static final String TEST_RESOURCE_PATH = ConfigUtils.getString( "gemma.home" )
             + "/gemma-core/src/test/resources/data/loader/genome/blast";
     private static final String TESTBLASTDB = "testblastdb";
-    private static Log log = LogFactory.getLog( SimpleFastaCmdTest.class.getName() );
-
     // Test may need to be disabled because it fails in continuum, sometimes (unpredictable)
     public void testGetMultiple() throws Exception {
         if ( !fastaCmdExecutableExists() ) {

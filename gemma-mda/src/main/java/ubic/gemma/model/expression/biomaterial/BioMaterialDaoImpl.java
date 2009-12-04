@@ -19,6 +19,7 @@
 package ubic.gemma.model.expression.biomaterial;
 
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 
 import org.apache.commons.logging.Log;
@@ -29,7 +30,9 @@ import org.hibernate.criterion.Restrictions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.FactorValue;
 
 /**
  * @author pavlidis
@@ -66,7 +69,7 @@ public class BioMaterialDaoImpl extends ubic.gemma.model.expression.biomaterial.
                         Restrictions.eq( "accession", bioMaterial.getExternalAccession().getAccession() ) );
             }
 
-            java.util.List results = queryObject.list();
+            java.util.List<?> results = queryObject.list();
             Object result = null;
             if ( results != null ) {
                 if ( results.size() > 1 ) {
@@ -120,6 +123,26 @@ public class BioMaterialDaoImpl extends ubic.gemma.model.expression.biomaterial.
         if ( result.size() > 0 ) return ( ExpressionExperiment ) result.iterator().next();
 
         return null;
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see ubic.gemma.model.expression.biomaterial.BioMaterialDao#removeFactor(java.util.Collection,
+     * ubic.gemma.model.expression.experiment.ExperimentalFactor)
+     */
+    public void removeFactor( Collection<BioMaterial> bioMaterials, ExperimentalFactor experimentalFactor ) {
+        for ( BioMaterial bm : bioMaterials ) {
+            boolean removed = false;
+            for ( Iterator<FactorValue> fIt = bm.getFactorValues().iterator(); fIt.hasNext(); ) {
+                if ( fIt.next().getExperimentalFactor().equals( experimentalFactor ) ) {
+                    fIt.remove();
+                    removed = true;
+                }
+            }
+            if ( removed ) {
+                this.update( bm );
+            }
+        }
     }
 
     /*

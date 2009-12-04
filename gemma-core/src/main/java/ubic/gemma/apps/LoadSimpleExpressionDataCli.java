@@ -190,7 +190,6 @@ public class LoadSimpleExpressionDataCli extends AbstractSpringAwareCLI {
      * @param fields
      * @param metaData
      */
-    @SuppressWarnings("unchecked")
     private void configureArrayDesigns( String[] fields, SimpleExpressionExperimentMetaData metaData ) {
         int i;
         TechnologyType techType = TechnologyType.fromString( fields[TECHNOLOGYTYPEI] );
@@ -199,10 +198,12 @@ public class LoadSimpleExpressionDataCli extends AbstractSpringAwareCLI {
             // that's okay, so long as we get an array design name
             ArrayDesign ad = getNewArrayDesignFromName( fields );
             ad.setTechnologyType( techType );
+            ad.setPrimaryTaxon( metaData.getTaxon() );
             ads.add( ad );
         } else if ( fields[AD_SHORT_NAME_I].trim().equals( "IMAGE" ) ) {
             ArrayDesign ad = getNewArrayDesignFromName( fields );
             ad.setTechnologyType( techType );
+            ad.setPrimaryTaxon( metaData.getTaxon() );
             ads.add( ad );
             metaData.setProbeIdsAreImageClones( true );
         } else {

@@ -90,8 +90,7 @@ public class DifferentialExpressionAnalysisDaoImpl extends
     /*
      * (non-Javadoc)
      * @see ubic.gemma.model.analysis.DifferentialExpressionAnalysisDaoBase#handleThaw(java.util.Collection)
-     */
-    @SuppressWarnings("unchecked")
+     */ 
     @Override
     public void handleThaw( final Collection<DifferentialExpressionAnalysis> expressionAnalyses ) throws Exception {
         for ( DifferentialExpressionAnalysis ea : expressionAnalyses ) {

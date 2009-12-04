@@ -31,7 +31,6 @@ import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceProcessingService;
 import ubic.gemma.model.common.description.LocalFile;
 
 /**
@@ -41,7 +40,7 @@ import ubic.gemma.model.common.description.LocalFile;
 public abstract class AbstractFetcher implements Fetcher {
 
     protected static final int INFO_UPDATE_INTERVAL = 5000;
-    protected static Log log = LogFactory.getLog( ArrayDesignSequenceProcessingService.class.getName() );
+    protected static Log log = LogFactory.getLog( AbstractFetcher.class.getName() );
     /**
      * Whether we are allowed to use an existing file rather than downloading again, in the case where we can't connect
      * to the remote host to check the size of the file. Setting force=true overrides this. Default is FALSE.
@@ -185,9 +184,7 @@ public abstract class AbstractFetcher implements Fetcher {
 
         }
 
-        if ( localBasePath == null || !targetPath.canRead() ) {
-            log.warn( "Could not create output directory " + newDir );
-
+        if ( targetPath == null || !targetPath.canRead() ) {
             File tmpDir;
             String systemTempDir = System.getProperty( "java.io.tmpdir" );
             if ( accession == null ) {
@@ -195,7 +192,7 @@ public abstract class AbstractFetcher implements Fetcher {
             } else {
                 tmpDir = new File( systemTempDir + File.separator + accession );
             }
-            log.warn( "Will use local temporary directory: " + tmpDir.getAbsolutePath() );
+            log.warn( "Will use local temporary directory for output: " + tmpDir.getAbsolutePath() );
             newDir = tmpDir;
         }
 
@@ -208,8 +205,6 @@ public abstract class AbstractFetcher implements Fetcher {
         if ( !newDir.canWrite() ) {
             throw new IOException( "Cannot write to target directory " + newDir.getAbsolutePath() );
         }
-
-        log.info( "New dir is " + newDir );
 
         return newDir;
     }

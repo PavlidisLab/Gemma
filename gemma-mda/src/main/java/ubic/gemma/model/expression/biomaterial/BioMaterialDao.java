@@ -20,6 +20,7 @@ package ubic.gemma.model.expression.biomaterial;
 
 import java.util.Collection;
 
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.BaseDao;
 
@@ -60,5 +61,12 @@ public interface BioMaterialDao extends BaseDao<BioMaterial> {
      * @return
      */
     public Collection<BioMaterial> load( Collection<Long> ids );
+
+    /**
+     * Remove the factor value.
+     * @param BioMaterials
+     * @param experimentalFactor
+     */
+    public void removeFactor( Collection<BioMaterial> bioMaterials, ExperimentalFactor experimentalFactor );
 
 }

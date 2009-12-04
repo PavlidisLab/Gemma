@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.expression.arrayDesign;
 
+import java.util.Map;
+
 import org.springframework.security.access.annotation.Secured;
 
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
@@ -35,97 +37,90 @@ public interface ArrayDesignService {
      * @return all compositeSequences for the given arrayDesign that do not have any bioSequence associations.
      */
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    public java.util.Collection<CompositeSequence> compositeSequenceWithoutBioSequences(
-            ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
+    public java.util.Collection<CompositeSequence> compositeSequenceWithoutBioSequences( ArrayDesign arrayDesign );
 
     /**
      * @return all compositeSequences for the given arrayDesign that do not have BLAT result associations.
      */
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    public java.util.Collection<CompositeSequence> compositeSequenceWithoutBlatResults(
-            ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
+    public java.util.Collection<CompositeSequence> compositeSequenceWithoutBlatResults( ArrayDesign arrayDesign );
 
     /**
      * @return all compositeSequences for the given arrayDesign that do not have gene associations.
      */
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    public java.util.Collection<CompositeSequence> compositeSequenceWithoutGenes(
-            ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
+    public java.util.Collection<CompositeSequence> compositeSequenceWithoutGenes( ArrayDesign arrayDesign );
 
     /**
      * @return global count of compositeSequences in the system.
      */
-    public java.lang.Integer countAll();
+    public Integer countAll();
 
     /**
      * 
      */
     @Secured( { "GROUP_USER" })
-    public ubic.gemma.model.expression.arrayDesign.ArrayDesign create(
-            ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
+    public ArrayDesign create( ArrayDesign arrayDesign );
 
     /**
      * delete sequence alignment results associated with the bioSequences for this array design.
      */
     @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    public void deleteAlignmentData( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
+    public void deleteAlignmentData( ArrayDesign arrayDesign );
 
     /**
      * deletes the gene product associations on the specified array design F
      */
     @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    public void deleteGeneProductAssociations( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
+    public void deleteGeneProductAssociations( ArrayDesign arrayDesign );
 
     /**
      * 
      */
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    public ubic.gemma.model.expression.arrayDesign.ArrayDesign find(
-            ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
+    public ArrayDesign find( ArrayDesign arrayDesign );
 
     /**
      * 
      */
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    public java.util.Collection<ArrayDesign> findByAlternateName( java.lang.String queryString );
+    public java.util.Collection<ArrayDesign> findByAlternateName( String queryString );
 
     /**
      * 
      */
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    public ubic.gemma.model.expression.arrayDesign.ArrayDesign findByName( java.lang.String name );
+    public ArrayDesign findByName( String name );
 
     /**
      * 
      */
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    public ubic.gemma.model.expression.arrayDesign.ArrayDesign findByShortName( java.lang.String shortName );
+    public ArrayDesign findByShortName( String shortName );
 
     /**
      * 
      */
     @Secured( { "GROUP_USER", "AFTER_ACL_READ" })
-    public ubic.gemma.model.expression.arrayDesign.ArrayDesign findOrCreate(
-            ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
+    public ArrayDesign findOrCreate( ArrayDesign arrayDesign );
 
     /**
      * 
      */
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    public java.util.Collection<BioAssay> getAllAssociatedBioAssays( java.lang.Long id );
+    public java.util.Collection<BioAssay> getAllAssociatedBioAssays( Long id );
 
     /**
      * 
      */
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    public java.lang.Integer getCompositeSequenceCount( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
+    public Integer getCompositeSequenceCount( ArrayDesign arrayDesign );
 
     /**
      * 
      */
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    public java.util.Collection<ExpressionExperiment> getExpressionExperiments(
-            ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
+    public java.util.Collection<ExpressionExperiment> getExpressionExperiments( ArrayDesign arrayDesign );
 
     /**
      * <p>
@@ -175,9 +170,15 @@ public interface ArrayDesignService {
     public java.util.Map<Long, AuditEvent> getLastValidationEvent( java.util.Collection<Long> ids );
 
     /**
+     * @return a map of taxon -> count of how many array designs there are for that taxon. Taxa with no arrays are
+     *         excluded.
+     */
+    public Map<Taxon, Integer> getPerTaxonCount();
+
+    /**
      * 
      */
-    public java.lang.Integer getReporterCount( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
+    public Integer getReporterCount( ArrayDesign arrayDesign );
 
     /**
      * Return the taxa for the array design. This can be multiple, or zero if the array is not processed.
@@ -185,16 +186,21 @@ public interface ArrayDesignService {
      * @param id The id of the array design
      * @return The Set of Taxons for array design.
      */
-    public java.util.Collection<Taxon> getTaxa( java.lang.Long id );
-
+    public java.util.Collection<Taxon> getTaxa( Long id );
+    
+    
     /**
      * Return the taxon for the array design. This can be misleading if the array uses multiple taxa: this method will
      * return the first one found.
      * 
      * @param id The id of the array design
      * @return The taxon
+     * @deprecated Use arrayDesign.getPrimaryTaxon if you want a single representative taxon for the array. Otherwise
+     *             use getTaxa to get the comprehensive list.
      */
-    public Taxon getTaxon( java.lang.Long id );
+    @Deprecated
+    public Taxon getTaxon( Long id );
+    
 
     /**
      * 
@@ -220,7 +226,7 @@ public interface ArrayDesignService {
      * 
      */
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    public ubic.gemma.model.expression.arrayDesign.ArrayDesign load( long id );
+    public ArrayDesign load( long id );
 
     /**
      * 
@@ -239,14 +245,13 @@ public interface ArrayDesignService {
      * 
      */
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    public java.util.Collection<CompositeSequence> loadCompositeSequences(
-            ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
+    public java.util.Collection<CompositeSequence> loadCompositeSequences( ArrayDesign arrayDesign );
 
     /**
      * Does a 'thaw' of an arrayDesign given an id. Returns the thawed arrayDesign.
      */
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    public ubic.gemma.model.expression.arrayDesign.ArrayDesign loadFully( java.lang.Long id );
+    public ArrayDesign loadFully( Long id );
 
     /**
      * <p>
@@ -325,7 +330,7 @@ public interface ArrayDesignService {
      * </p>
      */
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    public long numBioSequences( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
+    public long numBioSequences( ArrayDesign arrayDesign );
 
     /**
      * <p>
@@ -333,25 +338,25 @@ public interface ArrayDesignService {
      * </p>
      */
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    public long numBlatResults( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
+    public long numBlatResults( ArrayDesign arrayDesign );
 
     /**
      * 
      */
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    public long numCompositeSequenceWithBioSequences( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
+    public long numCompositeSequenceWithBioSequences( ArrayDesign arrayDesign );
 
     /**
      * 
      */
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    public long numCompositeSequenceWithBlatResults( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
+    public long numCompositeSequenceWithBlatResults( ArrayDesign arrayDesign );
 
     /**
      * 
      */
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    public long numCompositeSequenceWithGenes( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
+    public long numCompositeSequenceWithGenes( ArrayDesign arrayDesign );
 
     /**
      * <p>
@@ -359,7 +364,7 @@ public interface ArrayDesignService {
      * </p>
      */
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    public long numCompositeSequenceWithPredictedGenes( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
+    public long numCompositeSequenceWithPredictedGenes( ArrayDesign arrayDesign );
 
     /**
      * <p>
@@ -367,20 +372,19 @@ public interface ArrayDesignService {
      * </p>
      */
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    public long numCompositeSequenceWithProbeAlignedRegion(
-            ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
+    public long numCompositeSequenceWithProbeAlignedRegion( ArrayDesign arrayDesign );
 
     /**
      * Returns the number of unique Genes associated with this ArrayDesign id
      */
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    public long numGenes( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
+    public long numGenes( ArrayDesign arrayDesign );
 
     /**
      * 
      */
     @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    public void remove( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
+    public void remove( ArrayDesign arrayDesign );
 
     /**
      * Remove all associations that this array design has with BioSequences. This is needed for cases where the original
@@ -390,33 +394,31 @@ public interface ArrayDesignService {
      * does not delete the BioSequences, it just nulls the BiologicalCharacteristics of the CompositeSequences.
      */
     @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    public void removeBiologicalCharacteristics( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
+    public void removeBiologicalCharacteristics( ArrayDesign arrayDesign );
 
     /**
      * 
      */
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    public void thaw( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
+    public void thaw( ArrayDesign arrayDesign );
 
     /**
      * Perform a less intensive thaw of an array design.
      */
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    public void thawLite( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
+    public void thawLite( ArrayDesign arrayDesign );
 
     /**
      * 
      */
     @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    public void update( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
+    public void update( ArrayDesign arrayDesign );
 
     /**
      * Test whether the candidateSubsumer subsumes the candidateSubsumee. If so, the array designs are updated to
      * reflect this fact. The boolean value returned indicates whether there was indeed a subsuming relationship found.
      */
     @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    public java.lang.Boolean updateSubsumingStatus(
-            ubic.gemma.model.expression.arrayDesign.ArrayDesign candidateSubsumer,
-            ubic.gemma.model.expression.arrayDesign.ArrayDesign candidateSubsumee );
+    public Boolean updateSubsumingStatus( ArrayDesign candidateSubsumer, ArrayDesign candidateSubsumee );
 
 }

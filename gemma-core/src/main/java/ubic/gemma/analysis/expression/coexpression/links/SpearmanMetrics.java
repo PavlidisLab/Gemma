@@ -141,6 +141,7 @@ public class SpearmanMetrics extends MatrixRowPairPearsonAnalysis {
     /**
      * Compute correlations.
      */
+    @SuppressWarnings("null")
     @Override
     public void calculateMetrics() {
 

@@ -64,8 +64,7 @@ public class ProteinFileParser extends BasicLineParser<GeneProduct> {
      * (non-Javadoc)
      * 
      * @see ubic.gemma.loader.loaderutils.LineParser#parseOneLine(java.lang.String)
-     */
-    @SuppressWarnings("unchecked")
+     */ 
     public GeneProduct parseOneLine( String line ) {
         log.debug( line );
         String[] fields = StringUtils.splitPreserveAllTokens( line, '\t' );

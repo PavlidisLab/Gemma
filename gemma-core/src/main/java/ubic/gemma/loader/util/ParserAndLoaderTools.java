@@ -43,8 +43,7 @@ public class ParserAndLoaderTools {
      * 
      * @param loader
      * @param col
-     */
-    @SuppressWarnings("unchecked")
+     */ 
     public static final void loadDatabase( Persister loader, Collection<?> col ) {
         assert ( loader != null );
         assert ( col != null );

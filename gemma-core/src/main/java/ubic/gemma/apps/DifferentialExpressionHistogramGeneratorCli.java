@@ -66,8 +66,7 @@ public class DifferentialExpressionHistogramGeneratorCli extends ExpressionExper
     /*
      * (non-Javadoc)
      * @see ubic.gemma.apps.AbstractGeneExpressionExperimentManipulatingCLI#buildOptions()
-     */
-    @SuppressWarnings("static-access")
+     */ 
     @Override
     protected void buildOptions() {
 
@@ -86,8 +85,7 @@ public class DifferentialExpressionHistogramGeneratorCli extends ExpressionExper
      * (non-Javadoc)
      * @see ubic.gemma.util.AbstractCLI#doWork(java.lang.String[])
      */
-    @Override
-    @SuppressWarnings("unchecked")
+    @Override 
     protected Exception doWork( String[] args ) {
 
         Exception err = processCommandLine( "Generate Histograms", args );

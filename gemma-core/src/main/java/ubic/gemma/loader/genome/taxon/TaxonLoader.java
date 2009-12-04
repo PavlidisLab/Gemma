@@ -43,8 +43,6 @@ public class TaxonLoader {
 
     PersisterHelper persisterHelper;
 
-    private boolean filter = true;
-
     public void setPersisterHelper( PersisterHelper persisterHelper ) {
         this.persisterHelper = persisterHelper;
     }
@@ -104,12 +102,4 @@ public class TaxonLoader {
         return count;
     }
 
-    /**
-     * Default is to filter to exclude non-supported taxa.
-     * 
-     * @param b
-     */
-    public void setFilter( boolean b ) {
-        this.filter = b;
-    }
 }

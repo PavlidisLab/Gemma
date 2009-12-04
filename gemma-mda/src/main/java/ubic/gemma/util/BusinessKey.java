@@ -77,6 +77,10 @@ public class BusinessKey {
         /*
          * Test whether ANY of the associated external references match any of the given external references.
          */
+        if ( arrayDesign.getPrimaryTaxon() != null ) {
+            queryObject.add( Restrictions.eq( "primaryTaxon", arrayDesign.getPrimaryTaxon() ) );
+        }
+
         if ( arrayDesign.getExternalReferences().size() != 0 ) {
             Criteria externalRef = queryObject.createCriteria( "externalReferences" );
             Disjunction disjunction = Restrictions.disjunction();

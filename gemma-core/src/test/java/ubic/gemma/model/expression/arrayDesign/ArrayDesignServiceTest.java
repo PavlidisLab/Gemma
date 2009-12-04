@@ -107,8 +107,10 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
         c2.getComponentReporters().add( r2 );
         c3.getComponentReporters().add( r3 );
 
-        Taxon tax = Taxon.Factory.newInstance();
-        tax.setScientificName( DEFAULT_TAXON );
+        Taxon tax = this.getTaxon( "mouse" );
+
+        ad.setPrimaryTaxon( tax );
+
         BioSequence bs = BioSequence.Factory.newInstance( tax );
         bs.setName( RandomStringUtils.randomAlphabetic( 10 ) );
         bs.setSequence( RandomStringUtils.random( 40, "ATCG" ) );
@@ -199,6 +201,7 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
         ad = ArrayDesign.Factory.newInstance();
         String name = RandomStringUtils.randomAlphabetic( 20 ) + "_arraydesign";
         ad.setName( name );
+        ad.setPrimaryTaxon( this.getTaxon( "mouse" ) );
 
         String gplToFind = getGpl();
 
@@ -207,6 +210,7 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
         ad = ( ArrayDesign ) persisterHelper.persist( ad );
 
         ArrayDesign toFind = ArrayDesign.Factory.newInstance();
+        toFind.setPrimaryTaxon( this.getTaxon( "mouse" ) );
 
         // artficial, wouldn't normally have multiple GEO acc
         assignExternalReference( toFind, getGpl() );
@@ -224,9 +228,11 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
         assignExternalReference( ad, getGpl() );
         String name = RandomStringUtils.randomAlphabetic( 20 ) + "_arraydesign";
         ad.setName( name );
+        ad.setPrimaryTaxon( this.getTaxon( "mouse" ) );
         ad = ( ArrayDesign ) persisterHelper.persist( ad );
 
         ArrayDesign toFind = ArrayDesign.Factory.newInstance();
+        toFind.setPrimaryTaxon( this.getTaxon( "mouse" ) );
 
         // artficial, wouldn't normally have multiple GEO acc
         assignExternalReference( toFind, getGpl() );
@@ -402,10 +408,9 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
         // Create the composite Sequences
         CompositeSequence c1 = CompositeSequence.Factory.newInstance();
         c1.setName( "bar" );
-        Taxon tax = Taxon.Factory.newInstance();
-        tax.setScientificName( DEFAULT_TAXON );
-        tax.setIsSpecies( true );
-        tax.setIsGenesUsable( true );
+
+        Taxon tax = this.getTaxon( "mouse" );
+
         BioSequence bs = BioSequence.Factory.newInstance( tax );
         bs.setName( "fred" );
         bs.setSequence( "CG" );
@@ -415,7 +420,6 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
 
         CompositeSequence c3 = CompositeSequence.Factory.newInstance();
         c3.setName( "foo" );
-        tax.setScientificName( DEFAULT_TAXON );
         BioSequence bsb = BioSequence.Factory.newInstance( tax );
         bsb.setName( "barney" );
         bsb.setSequence( "CAAAAG" );
@@ -423,14 +427,16 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
         c3.setBiologicalCharacteristic( bsb );
         ad.getCompositeSequences().add( c3 );
 
+        ad.setPrimaryTaxon( tax );
+
         ad = ( ArrayDesign ) persisterHelper.persist( ad );
 
         ArrayDesign subsumedArrayDesign = ArrayDesign.Factory.newInstance();
         subsumedArrayDesign.setName( "subsumed_arraydesign" );
+        subsumedArrayDesign.setPrimaryTaxon( tax );
 
         // Create the composite Sequences
         CompositeSequence c2 = CompositeSequence.Factory.newInstance();
-        tax.setScientificName( DEFAULT_TAXON );
         c2.setName( "bar" ); // same as one on other AD.
         c2.setBiologicalCharacteristic( bs ); // same as one on other AD.
         subsumedArrayDesign.getCompositeSequences().add( c2 );

@@ -28,8 +28,6 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 /**
  * Holds information about GEO samples that "go together" across datasets (GDS), because they came from the same sample
@@ -39,8 +37,6 @@ import org.apache.commons.logging.LogFactory;
  * @version $Id$
  */
 public class GeoSampleCorrespondence {
-
-    private static Log log = LogFactory.getLog( GeoSampleCorrespondence.class.getName() );
 
     Collection<Set<String>> sets = new LinkedHashSet<Set<String>>();
 

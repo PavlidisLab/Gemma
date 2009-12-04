@@ -295,7 +295,7 @@ public class AuditEventDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
         }
         timer.stop();
         if ( timer.getTime() > 500 ) {
-            log.info( "Last event of type " + type.getClass().getSimpleName() + " retrieved for " + auditables.size()
+            log.info( "Last event of type " + type.getSimpleName() + " retrieved for " + auditables.size()
                     + " items in " + timer.getTime() + "ms" );
         }
 

@@ -53,6 +53,7 @@ public class AuditTrailServiceImplTest extends BaseSpringContextTest {
         auditable = ArrayDesign.Factory.newInstance();
         auditable.setName( "testing audit " + RandomStringUtils.randomAlphanumeric( 32 ) );
         auditable.setShortName( RandomStringUtils.randomAlphanumeric( 8 ) );
+        auditable.setPrimaryTaxon( this.getTaxon( "human" ) );
         auditable = ( ArrayDesign ) this.persisterHelper.persist( auditable );
 
         assertTrue( auditable.getAuditTrail() != null );

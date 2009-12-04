@@ -77,6 +77,7 @@ public class ExpressionExperimentSetServiceImpl extends
     /**
      * @see ubic.gemma.model.analysis.expression.ExpressionExperimentSetService#loadAll()
      */
+    @SuppressWarnings("unchecked")
     @Override
     protected java.util.Collection<ExpressionExperimentSet> handleLoadAll() throws java.lang.Exception {
         return ( Collection<ExpressionExperimentSet> ) this.getExpressionExperimentSetDao().loadAll();

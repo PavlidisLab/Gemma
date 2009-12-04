@@ -29,7 +29,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 
 /**
- * These tests require a populated Human database. Valid as of 1/2008.
+ * These tests require a populated Human database. Valid as of 11/2009.
  * 
  * @author pavlidis
  * @version $Id$
@@ -76,16 +76,9 @@ public class GoldenPathQueryTest extends TestCase {
         t.setCommonName( "human" );
         t.setIsGenesUsable( true );
         t.setIsSpecies( true );
-        try {
-            queryer = new GoldenPathQuery( t );
-        } catch ( java.sql.SQLException e ) {
-            if ( e.getMessage().contains( "Unknown database" ) ) {
-                hasDb = false;
-            } else if ( e.getMessage().contains( "Access denied" ) ) {
-                hasDb = false;
-            }
-            throw e;
-        }
+
+        queryer = new GoldenPathQuery( t );
+
     }
 
 }

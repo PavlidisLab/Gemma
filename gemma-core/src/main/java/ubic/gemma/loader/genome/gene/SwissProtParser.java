@@ -22,8 +22,6 @@ import java.util.Collection;
 import java.util.HashSet;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.loader.util.parser.RecordParser;
 
@@ -35,8 +33,7 @@ import ubic.gemma.loader.util.parser.RecordParser;
  */
 public class SwissProtParser extends RecordParser {
 
-    private static Log log = LogFactory.getLog( SwissProtParser.class.getName() );
-    Collection<Object> results = new HashSet<Object>();
+      Collection<Object> results = new HashSet<Object>();
 
     public SwissProtParser() {
         this.setRecordSeparator( "//" );

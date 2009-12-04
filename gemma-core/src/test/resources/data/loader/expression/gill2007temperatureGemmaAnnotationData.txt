@@ -1,0 +1,118 @@
+#$Sodium : Category=EnvironmentalHistory Type=continuous																									
+#$chloride : Category=EnvironmentalHistory Type=continuous																									
+#$Fat Probe 1 : Category=EnvironmentalHistory Type=continuous																									
+#$Fat Probe 2 : Category=EnvironmentalHistory Type=continuous																									
+#$glucose : Category=EnvironmentalHistory Type=continuous																									
+#$lactate : Category=EnvironmentalHistory Type=continuous																									
+#$Osmorality : Category=EnvironmentalHistory Type=continuous																									
+#$Pottasium : Category=EnvironmentalHistory Type=continuous																									
+#$Testosterone : Category=EnvironmentalHistory Type=continuous																									
+#$Cortisol : Category=EnvironmentalHistory Type=continuous																									
+#$Estradiol : Category=EnvironmentalHistory Type=continuous																									
+#$fork length : Category=EnvironmentalHistory Type=continuous																									
+#$Standard length : Category=EnvironmentalHistory Type=continuous																									
+#$POH : Category=EnvironmentalHistory Type=continuous																									
+#$Total weight : Category=EnvironmentalHistory Type=continuous																									
+#$PA Dorsal Wt (g) : Category=OrganismPart Type=continuous																									
+#$Gonad Wt (g) : Category=OrganismPart Type=continuous																									
+#$Liver Wt (g) : Category=OrganismPart Type=continuous																									
+#$POF Length (cm) : Category=EnvironmentalHistory Type=continuous																									
+#$Stock sockeye : Category=Ecotype Type=categorical																									
+#$Sex : Category=Sex Type=categorical																									
+#$Fish pairing number : Category=Ecotype Type=categorical																									
+#$Temperature treatment : Category=EnvironmentalHistory Type=categorical																									
+#$Sample Timing : Category=SamplingTimePoint Type=categorical																									
+#$Tank : Category=EnvironmentalHistory Type=categorical																									
+Sample	chloride	Cortisol	Estradiol	Fat Probe 1	Fat Probe 2	Fish pairing number	fork length	glucose	Gonad Wt (g)	lactate	Liver Wt (g)	Osmorality	PA Dorsal Wt (g)	POF Length (cm)	POH	Pottasium	Sample Timing	Sex	Sodium	Standard length	Stock sockeye	Tank	Temperature treatment	Testosterone	Total weight
+Adams_14_First_26_HH008_204	136.6	239.24	3.16			27		4.68		1.64		309.5				2.55	First	F	170.23		Adams	5	14	19.19	
+Adams_14_First_40_HH008_192	138.35	328.11	1.12			23		10.3		0.73		312.5				4.04	First	F	176.94		Adams	6	14	9.91	
+Adams_14_First_74_HH008_029	137.45	37.9	0.06			11		5.35		1.35		317.5				2.79	First	M	165.78		Adams	6	14	5.9	
+Adams_14_First_7_HH008_284	136.05	363.59	2.59			8		5.59		0.84		308				2.35	First	F	159.54		Adams	6	14	22.39	
+Adams_14_First_85_HH008_096	137.2	308.31	0.03			7		6.16		0.94		312.5				2.59	First	M	158.79		Adams	6	14	7.71	
+Adams_14_First_90_HH008_195	137.4	467.81	0.9			5		9.98		1.88		315				3.18	First	F	160.79		Adams	6	14	14.26	
+Adams_14_Mortality_6-13_HH008_030	64.9	451.64	0.05	4.1	3	11	60.5	0.25	39	35.5	41	323	195	56	50	48.89	Mortality	M	89.86	57	Adams	6	14	2.35	2781
+Adams_14_Mortality_6-14_HH008_183	98.25	557.54	1.25	2.9	2.5	8	62	0.36	301	31	72	325.5	171	57.5	54	14.3	Mortality	F	140.04	58	Adams	6	14	2.35	2787
+Adams_14_Mortality_6-4_HH008_193	102.2	636.33	0.34	3.3	2	23	64	1.65	225	19.1	52	300	175	59	52.5	5.89	Mortality	F	145.27	57.5	Adams	6	14	2.27	2892
+Adams_14_Mortality_6-6_HH008_097	99.85	437.69	0.04	1.9	1.4	7	65.6	0.22	33	33.4	50	324	315	59	53.3	23.97	Mortality	M	137.28	59.4	Adams	6	14	1.64	3298
+Adams_14_Mortality_6-7_HH008_040	96.9	577.69	0.93	6.2	3.7	5	58	0	193	19.4	48	279.5	153	53.5	47	15.48	Mortality	F	131.79	52.5	Adams	6	14	2.48	2474
+Adams_14_Second_224_HH008_205	135.2	221.1	3.75	2.3	1.8	27	63.5	4.44	303	1.66	70	301	173	58	52.5	2.5	Second	F	154.74	58.5	Adams	5	14	55.21	2841
+Adams_16.5_First_124_HH008_165	134.2	239.82	0.07			41		5.38		2.04						2.95	First	M	166		Adams	2	16.5	29.54	
+Adams_16.5_Second_235_HH008_166	138.95	249.29	0.1	1.4	1.3	41	60.2	5.73	45	4.78	34		201	53.3	48.5	3.05	Second	M	162.78	54.7	Adams	2	16.5	16.35	2423
+Adams_19_First_123_HH008_185	138.3	281.25	0.1			42		6.07		2.17		314.5				2.8	First	M	177.93		Adams	3	19	14.56	
+Adams_19_First_126_HH008_098	138.4	329.83	0.03			39		6.64		1.46		307.5				2.7	First	M	177.44		Adams	3	19	4.75	
+Adams_19_First_19_HH008_179	137.05	353.64	0.11			32		6.04		2.08		312.5				2.15	First	M	162.52		Adams	3	19	27.53	
+Adams_19_First_42_HH008_090	114.5	245.77	1.19			22		13.4		0.87		273				5.24	First	F	137.67		Adams	1	19	10.08	
+Adams_19_First_72_HH008_184	135.9	293.9	0.13			12		5.27		1.2		308.5				2.52	First	M	163.62		Adams	1	19	36.91	
+Adams_19_First_78_HH008_196	136.1	200.87	0.09			9		9.04		1.43		308				2.83	First	M	155.09		Adams	1	19	12	
+Adams_19_First_88_HH008_035	135.35	320.79	0.08			6		6.02		1		309.5				2.52	First	M	160.61		Adams	3	19	8.36	
+Adams_19_First_96_HH008_269	136.05	438.94	4.04			3		5.79		1.84		305.5				2.52	First	F	156.09		Adams	1	19	78.29	
+Adams_19_First_99_HH008_276	136.4	228.39	0.1			1		6.43		2.02		312				2.42	First	M	163.12		Adams	3	19	41.16	
+Adams_19_Mortality_1-1_HH008_091	79.95	403.21	0.39	4.5	5.7	22	53.5	4.47	125	13.2	37	241	93	50	46	2.4	Mortality	F	114.33	50	Adams	1	19	2.19	2004
+Adams_19_Mortality_1-2_HH008_197	83.85	389.9	0.05	5.1	4	9	54	3.13	24	14.4	37	240.5	125	49.5	44	5	Mortality	M	109.4	49	Adams	1	19	2.39	1823
+Adams_19_Mortality_1-4_HH008_270				1.6	1.5	3	62.3		488		66		260	57.4	52.5		Mortality	F		57.7	Adams	1	19		3111
+Adams_19_Mortality_1-7_HH008_039	108.3	342.91	0.05	2.2	1.5	12	61	2.58	39	16.5	47	287	177	54.5	48	3.05	Mortality	M	137	54.5	Adams	1	19	2.78	2323
+Adams_19_Mortality_3-4_HH008_099	97.4	454.3	0.04	2	1.4	39	67	5.05	48	12	61	260	258	61	56	3	Mortality	M	130.54	62	Adams	3	19	3.91	3330
+Adams_19_Second_210_HH008_036	139.8	235.71	0.04	4	2.8	6	66.5	5.63	45	2.21	63	314	223	61.5	57.5	2.5	Second	M	164.79	61	Adams	3	19	1.48	3298
+Adams_19_Second_216_HH008_186	135.65	144.79	0.03	5	3.7	42	66	6.26	43	3.67	81	306.5	196	60	52.5	2.85	Second	M	158.26	59	Adams	3	19	1.15	3174
+Adams_19_Second_218_HH008_277	138	239.61	0.04	2.3	1.7	1	61.5	4.49	27	2.87	46	315.5	189	57	52	3.25	Second	M	167.81	58.5	Adams	3	19	1.34	2582
+Adams_19_Second_221_HH008_180	143.65	278.35	0.07	1.7	1.3	32	58.5	5.1	27	3.33	43	315	125	52.5	46.5	2.6	Second	M	164.79	53	Adams	3	19	6.24	2038
+Chilko_14_First_11_HH008_271	134.25	366.88	2.57			43		5.48		1.47		311				2.9	First	F	167.99		Chilko	6	14	18.49	
+Chilko_14_First_125_HH008_173	140.75	364.33	2.86			40		6.04		3.09		326				2.9	First	F	175.94		Chilko	5	14	11.88	
+Chilko_14_First_127_HH008_084	139.65	397.14	1.43			38		5.56		3.54		315.5				3.7	First	F	174.45		Chilko	5	14	22.2	
+Chilko_14_First_129_HH008_171	134.45	269.78	0.07			37		6.02		3.59		321.5				3.65	First	M	168.99		Chilko	6	14	7.98	
+Chilko_14_First_1_HH008_031	134.25	38.57	0.08			31		4.37		0.83		305.5				2.5	First	M	189.86		Chilko	6	14	3.51	
+Chilko_14_First_21_HH008_022	133.9	9.63	0.12			30		3.93		0.6		303.5				2.4	First	M	156.56		Chilko	5	14	6.85	
+Chilko_14_First_24_HH008_194	137.25	224	4.89			29		3.98		1.21		313				3.15	First	F	170.23		Chilko	5	14	39.1	
+Chilko_14_First_25_HH008_189	137.15	288.71	1.64			28		6.12		1.94		312				2.95	First	F	171.73		Chilko	6	14	7.92	
+Chilko_14_First_29_HH008_175	121.5	307.78	0.06			25		4.73		1.8		283				5.04	First	M	165.51		Chilko	6	14	3.92	
+Chilko_14_First_37_HH008_187	134.8	176	2.84			24		6.77		0.88						3.35	First	M	164.51		Chilko	5	14	10.36	
+Chilko_14_First_46_HH008_198	137.4	339.95	2.99			21		6.75		1.62		313				3.99	First	F	183.9		Chilko	6	14	21.58	
+Chilko_14_First_53_HH008_200	134.25	354.7	4.38			19		6.81		3.28		315.5				3.38	First	F	150.07		Chilko	6	14	104.51	
+Chilko_14_First_60_HH008_280	138.8	404.34	1.19			18		7.08		1.54		309.5				3.03	First	F	158.1		Chilko	5	14	8.16	
+Chilko_14_Mortality_5-1_HH008_281				5.7	4.1	18	55		112		30		84	52	47.5		Mortality	F		50	Chilko	5	14		1940
+Chilko_14_Mortality_5-2_HH008_085	93.35	611.96	1.2	4.8	4.6	38	60	1.89	187	16	49	274	134	55	49	4.05	Mortality	F	123.54	53.5	Chilko	5	14	2.54	2235
+Chilko_14_Mortality_5-4_HH008_174	82.75	480.82	1.82	5	2.9	40	54	0.71	127		39	332.5	127	49.5	43.5	31.66	Mortality	F	124.8	49	Chilko	5	14	2.37	1724
+Chilko_14_Mortality_5-8_HH008_188	93.15	509.06	0.29	4.8	4.5	24	60	2.24	139	9.38	46		131	55.5	49.5	2.75	Mortality	M	127.54	54.5	Chilko	5	14	2.08	2164
+Chilko_14_Mortality_6-5_HH008_176	89.35	367.81	0.04	5.5	3	25	55	0.88	39	20.3	34	271	166	50.5	46	7	Mortality	M	119.54	50.5	Chilko	6	14	1.66	1911
+Chilko_14_Mortality_6-8_HH008_201	103.1	494.57	0.52	8.4	7.2	19	58	1.38	168	11.2	48	275	133	55	50	2.8	Mortality	F	131.04	53	Chilko	6	14	5.19	2155
+Chilko_14_Second_222_HH008_023	133.6	64.32	0.06	1.2	1	30	61.5	5.1	45	0.54	62	296.5	189	54	49	1.6	Second	M	159.26	56.5	Chilko	5	14	9.05	2680
+Chilko_14_Second_225_HH008_169	120.7	431.32	0.07	2.1	1.8	29	59	0.09	246	0.03	46	286.5	145	54	47	1.55	Second	F	152.77	52	Chilko	5	14	19.45	2183
+Chilko_14_Second_226_HH008_191	132.2	307.64	2.38	2	2.7	28	51.5	0.1	131	0.05	40	297.5	92	48	43	2.15	Second	F	152.28	47	Chilko	6	14	10.8	1427
+Chilko_14_Second_227_HH008_172				2.5	2	37	62.5		45		48		169	57	51.5		Second	M		57	Chilko	6	14		2774
+Chilko_14_Second_228_HH008_272	136.75	266.06	1.93	6.1	4.9	43	61	6.81	183	2.24	43	309.5	142	57.5	53.5	2	Second	F	161.15	57	Chilko	6	14	12.23	2265
+Chilko_14_Second_229_HH008_199	131.35	384.74	1.18	5.7	3.5	21	54.5	0.11	150	0.06	36	302	122	50.5	45	1.65	Second	F	152.28	49	Chilko	6	14	1.47	1894
+Chilko_14_Second_230_HH008_032	136.55	195.46	0.07	1.5	1.4	31	51	0.12	33	0.08	25	314.5	91	45.2	40.6	2.65	Second	M	155.23	46	Chilko	6	14	12.7	1358
+Chilko_19_First_108_HH008_102	130.85	488.18	1.08			46		7.08		2.98		302				3.45	First	F	167		Chilko	3	19	23.2	
+Chilko_19_First_110_HH008_282	137.55	320.29	0.13			45		5.15		1.59		320.5				3.8	First	M	175.45		Chilko	1	19	43.87	
+Chilko_19_First_114_HH008_177	133.55	313.24	0.14			44		4.49		0.81		317				3.2	First	M	167		Chilko	3	19	48.08	
+Chilko_19_First_12_HH008_274	135.45	303.72	0.07			36		5.94		1.07		309				3.05	First	M	158.05		Chilko	1	19	22.38	
+Chilko_19_First_14_HH008_033	129.9	281.63	0.12			35		5.55		1.41		310				2.8	First	M	172.47		Chilko	1	19	42.6	
+Chilko_19_First_17_HH008_202	134.75	320.13	0.12			34		6		1.87		312.5				2.85	First	M	164.51		Chilko	3	19	29.87	
+Chilko_19_First_18_HH008_024	140.6	283.89	0.09			33		6.91		1.81		321				2.75	First	M	165.51		Chilko	1	19	17.44	
+Chilko_19_First_28_HH008_095	134.65	180.86	0.12			26		5.27		0.87		308.5				3.05	First	M	174.95		Chilko	1	19	10.3	
+Chilko_19_First_4_HH008_037	136.25	333.18	2.8			20		5.42		3.35		318				3.2	First	F	168.49		Chilko	1	19	22.54	
+Chilko_19_First_61_HH008_027	136.15	189.56	0.1			17		5.9		1.12		311				2.79	First	M	153.8		Chilko	3	19	8.83	
+Chilko_19_First_64_HH008_100	140.4	228.01	0.14			16		4.79		0.89		328				2.98	First	M	166.28		Chilko	3	19	35.83	
+Chilko_19_First_67_HH008_167	140.05	400.33	3.56			15		4.86		2.37		323.5				2.24	First	F	164.29		Chilko	3	19	43.08	
+Chilko_19_First_69_HH008_088	132.15	240.12	0.12			14		5.06		1.95		308.5				2.64	First	M	167.78		Chilko	1	19	35.86	
+Chilko_19_First_6_HH008_086	136.05	181.6	0.1			13		5.09		0.88		309.5				2.75	First	M	158.55		Chilko	1	19	7.5	
+Chilko_19_First_76_HH008_267	135.35	80.94	0.16			10		6.24		1.63		314.5				2.98	First	M	156.3		Chilko	3	19	38.15	
+Chilko_19_First_91_HH008_181	134.3	328.38	0.1			4		6.51		1.54		318				2.54	First	M	173.27		Chilko	3	19	15.53	
+Chilko_19_First_97_HH008_278	137.7	292.46	0.08			2		5.69		2.28		313				2.93	First	M	156.8		Chilko	3	19	22.18	
+Chilko_19_Mortality_1-3_HH008_089	110.6	576.69	0.07	1.2	2.2	14	68	8.74	55	16.1	80	302	241	60	54.5	4.05	Mortality	M	139.46	62	Chilko	1	19	9.36	3500
+Chilko_19_Mortality_1-5_HH008_283	103.3	386.12	0.05	4.1	3.7	45	52.5	3.2	26	17.3	34	273	103	49	45	4.35	Mortality	M	128.62	49	Chilko	1	19	2.71	1550
+Chilko_19_Mortality_1-8_HH008_038	112.45	427.9	0.07	6.4	5.6	20	62.3	1.07	253	21.4	58	294.5	264	57.4	52.4	6.45	Mortality	F	138.97	57.2	Chilko	1	19	2.19	2866
+Chilko_19_Mortality_3-13_HH008_042	108.3	545.06	0.05	2.1	1.8	2	60.5	0.37	27	28.4	43	334.5	130	54.5	48.5	12.6	Mortality	M	150.05	54	Chilko	3	19	2.54	2034
+Chilko_19_Mortality_3-20_HH008_168	97.7	529.08	0.13	3.7	4.2	15	56.5	2.35	165	18.6	47	279.5	98	52.5	48	6.5	Mortality	F	137.54	52	Chilko	3	19	2	1881
+Chilko_19_Mortality_3-3_HH008_103	94	466.31	0.55	4.4	4.5	46	58	0.55	131	15.9	52	262.5	114	53	48	3.55	Mortality	F	122.04	53	Chilko	3	19	2.34	2136
+Chilko_19_Mortality_3-5_HH008_182	106.15	409.7	0.03	2.9	2.4	4	59.5	0.1	41	28.4	46	316	192	50.5	54.5	12.6	Mortality	M	141.04	55.8	Chilko	3	19	2.7	2192
+Chilko_19_Mortality_3-9_HH008_268	100.9	370.95	0.04	2.6	1.4	10	61	3.26	43	13.4	54	276	151	54.5	49	5.65	Mortality	M	132.04	54.5	Chilko	3	19	3.02	2214
+Chilko_19_Second_201_HH008_034	135.15	121.15	0.07	1.1	1.1	35	59.5	5.5	38	1.99	65	303.5	128	54	47.5	3.35	Second	M	156.75	54	Chilko	1	19	8.35	1965
+Chilko_19_Second_203_HH008_041	132.65	216.99	0.07	1.6	2.5	36	57	5.46	33	1.99	44	302	124	52	48.5	2.3	Second	M	156.25	53.5	Chilko	1	19	9.21	1914
+Chilko_19_Second_204_HH008_094	140.25	191.57	0.06	3.2	2.5	26	66.5	5.49	39	0.99	64	313	235	60	55.5	2.75	Second	M	157.76	60.2	Chilko	1	19	4.42	3037
+Chilko_19_Second_207_HH008_025	136.05	55.84	0.04	2.1	2	33	59	9.75	25	2.38	44	310.5	126	53.5	50	2.6	Second	M	154.24	55	Chilko	1	19	1.67	1787
+Chilko_19_Second_208_HH008_087	139.1	223.8	0.07	2.8	3.2	13	51.6	6.89	30	3.01	29	313	117	46.8	41.8	2.2	Second	M	157.25	47.5	Chilko	1	19	12.95	1383
+Chilko_19_Second_211_HH008_028	113.1	378.77	0.04	2.3	2.3	17	60	8.22	40	8.31	54	282.5	163	43.5	47.5	3.3	Second	M	146.7	53	Chilko	3	19	1.55	2159
+Chilko_19_Second_217_HH008_203	137.1	196.03	0.04	0.8	1	34	60	7.26	33	3.38	49	308.5	168	54	47	3.25	Second	M	160.27	52.5	Chilko	3	19	2.17	2190
+Chilko_19_Second_219_HH008_101	138.85	256.19	0.05	2.8	2.5	16	56.5	3.54	33	1.5	42	311	124	51	48	2.5	Second	M	160.27	52.5	Chilko	3	19	7.54	1743
+Chilko_19_Second_220_HH008_178	138.95	184.89	0.07	1.5	1.3	44	62	4.36	32	2.34	76	307.5	199	56	53	3.1	Second	M	165.29	58	Chilko	3	19	11.43	2623

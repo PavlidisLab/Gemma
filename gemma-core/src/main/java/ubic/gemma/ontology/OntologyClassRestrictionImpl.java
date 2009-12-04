@@ -18,9 +18,6 @@
  */
 package ubic.gemma.ontology;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 import ubic.gemma.model.common.description.ExternalDatabase;
 
 import com.hp.hpl.jena.ontology.AllValuesFromRestriction;
@@ -36,8 +33,6 @@ import com.hp.hpl.jena.rdf.model.RDFNode;
  * @version $Id$
  */
 public class OntologyClassRestrictionImpl extends OntologyRestrictionImpl implements OntologyClassRestriction {
-
-    private static Log log = LogFactory.getLog( OntologyClassRestrictionImpl.class.getName() );
     private OntologyTerm restrictedTo = null;
     RDFNode value = null;
 

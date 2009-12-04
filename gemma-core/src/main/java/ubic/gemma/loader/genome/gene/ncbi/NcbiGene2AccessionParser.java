@@ -248,8 +248,7 @@ public class NcbiGene2AccessionParser extends BasicLineParser implements Queuing
         }
     }
 
-    @Override
-    @SuppressWarnings("unused")
+    @Override 
     protected void addResult( Object obj ) {
         count++;
         // results.add( ( NCBIGene2Accession ) obj );

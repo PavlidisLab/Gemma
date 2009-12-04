@@ -19,22 +19,22 @@
 package ubic.gemma.model.association;
 
 import java.util.Collection;
+import java.util.Iterator;
 
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 
 /**
  * Base Spring DAO Class: is able to create, update, remove, load, and find objects of type
- * <code>ubic.gemma.model.association.LiteratureAssociation</code>.
+ * <code>LiteratureAssociation</code>.
  * 
- * @see ubic.gemma.model.association.LiteratureAssociation
+ * @see LiteratureAssociation
  */
-public abstract class LiteratureAssociationDaoBase extends HibernateDaoSupport implements
-        ubic.gemma.model.association.LiteratureAssociationDao {
+public abstract class LiteratureAssociationDaoBase extends HibernateDaoSupport implements LiteratureAssociationDao {
 
     /**
-     * @see ubic.gemma.model.association.LiteratureAssociationDao#create(int, java.util.Collection)
+     * @see LiteratureAssociationDao#create(int, Collection)
      */
-    public java.util.Collection create( final java.util.Collection entities ) {
+    public Collection create( final Collection entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "LiteratureAssociation.create - 'entities' can not be null" );
         }
@@ -42,25 +42,24 @@ public abstract class LiteratureAssociationDaoBase extends HibernateDaoSupport i
                 new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                            create( ( ubic.gemma.model.association.LiteratureAssociation ) entityIterator.next() );
+                        for ( Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                            create( ( LiteratureAssociation ) entityIterator.next() );
                         }
                         return null;
                     }
                 } );
         return entities;
     }
-    
-    
-    public Collection<? extends LiteratureAssociation > load( Collection<Long> ids ) {
-        return this.getHibernateTemplate().findByNamedParam( "from LiteratureAssociationImpl where id in (:ids)", "ids", ids );
+
+    public Collection<? extends LiteratureAssociation> load( Collection<Long> ids ) {
+        return this.getHibernateTemplate().findByNamedParam( "from LiteratureAssociationImpl where id in (:ids)",
+                "ids", ids );
     }
 
     /**
-     * @see ubic.gemma.model.association.LiteratureAssociationDao#create(int transform,
-     *      ubic.gemma.model.association.LiteratureAssociation)
+     * @see LiteratureAssociationDao#create(int transform, LiteratureAssociation)
      */
-    public LiteratureAssociation create( final ubic.gemma.model.association.LiteratureAssociation literatureAssociation ) {
+    public LiteratureAssociation create( final LiteratureAssociation literatureAssociation ) {
         if ( literatureAssociation == null ) {
             throw new IllegalArgumentException(
                     "LiteratureAssociation.create - 'literatureAssociation' can not be null" );
@@ -70,45 +69,42 @@ public abstract class LiteratureAssociationDaoBase extends HibernateDaoSupport i
     }
 
     /**
-     * @see ubic.gemma.model.association.LiteratureAssociationDao#load(int, java.lang.Long)
+     * @see LiteratureAssociationDao#load(int, java.lang.Long)
      */
     public LiteratureAssociation load( final java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "LiteratureAssociation.load - 'id' can not be null" );
         }
-        final Object entity = this.getHibernateTemplate().get(
-                ubic.gemma.model.association.LiteratureAssociationImpl.class, id );
-        return ( ubic.gemma.model.association.LiteratureAssociation ) entity;
+        final Object entity = this.getHibernateTemplate().get( LiteratureAssociationImpl.class, id );
+        return ( LiteratureAssociation ) entity;
     }
 
     /**
-     * @see ubic.gemma.model.association.LiteratureAssociationDao#loadAll(int)
+     * @see LiteratureAssociationDao#loadAll(int)
      */
-    public java.util.Collection loadAll() {
-        final java.util.Collection results = this.getHibernateTemplate().loadAll(
-                ubic.gemma.model.association.LiteratureAssociationImpl.class );
+    public Collection loadAll() {
+        final Collection results = this.getHibernateTemplate().loadAll( LiteratureAssociationImpl.class );
 
         return results;
     }
 
     /**
-     * @see ubic.gemma.model.association.LiteratureAssociationDao#remove(java.lang.Long)
+     * @see LiteratureAssociationDao#remove(java.lang.Long)
      */
     public void remove( java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "LiteratureAssociation.remove - 'id' can not be null" );
         }
-        ubic.gemma.model.association.LiteratureAssociation entity = ( ubic.gemma.model.association.LiteratureAssociation ) this
-                .load( id );
+        LiteratureAssociation entity = this.load( id );
         if ( entity != null ) {
             this.remove( entity );
         }
     }
 
     /**
-     * @see ubic.gemma.model.association.RelationshipDao#remove(java.util.Collection)
+     * @see RelationshipDao#remove(Collection)
      */
-    public void remove( java.util.Collection entities ) {
+    public void remove( Collection entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "LiteratureAssociation.remove - 'entities' can not be null" );
         }
@@ -116,9 +112,9 @@ public abstract class LiteratureAssociationDaoBase extends HibernateDaoSupport i
     }
 
     /**
-     * @see ubic.gemma.model.association.LiteratureAssociationDao#remove(ubic.gemma.model.association.LiteratureAssociation)
+     * @see LiteratureAssociationDao#remove(LiteratureAssociation)
      */
-    public void remove( ubic.gemma.model.association.LiteratureAssociation literatureAssociation ) {
+    public void remove( LiteratureAssociation literatureAssociation ) {
         if ( literatureAssociation == null ) {
             throw new IllegalArgumentException(
                     "LiteratureAssociation.remove - 'literatureAssociation' can not be null" );
@@ -127,9 +123,9 @@ public abstract class LiteratureAssociationDaoBase extends HibernateDaoSupport i
     }
 
     /**
-     * @see ubic.gemma.model.association.RelationshipDao#update(java.util.Collection)
+     * @see RelationshipDao#update(Collection)
      */
-    public void update( final java.util.Collection entities ) {
+    public void update( final Collection entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "LiteratureAssociation.update - 'entities' can not be null" );
         }
@@ -137,8 +133,8 @@ public abstract class LiteratureAssociationDaoBase extends HibernateDaoSupport i
                 new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                            update( ( ubic.gemma.model.association.LiteratureAssociation ) entityIterator.next() );
+                        for ( Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                            update( ( LiteratureAssociation ) entityIterator.next() );
                         }
                         return null;
                     }
@@ -146,9 +142,9 @@ public abstract class LiteratureAssociationDaoBase extends HibernateDaoSupport i
     }
 
     /**
-     * @see ubic.gemma.model.association.LiteratureAssociationDao#update(ubic.gemma.model.association.LiteratureAssociation)
+     * @see LiteratureAssociationDao#update(LiteratureAssociation)
      */
-    public void update( ubic.gemma.model.association.LiteratureAssociation literatureAssociation ) {
+    public void update( LiteratureAssociation literatureAssociation ) {
         if ( literatureAssociation == null ) {
             throw new IllegalArgumentException(
                     "LiteratureAssociation.update - 'literatureAssociation' can not be null" );

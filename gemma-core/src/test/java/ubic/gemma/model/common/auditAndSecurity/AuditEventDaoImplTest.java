@@ -45,7 +45,10 @@ public class AuditEventDaoImplTest extends BaseSpringContextTest {
         for ( int i = 0; i < 5; i++ ) {
             ArrayDesign ad = ArrayDesign.Factory.newInstance();
             ad.setName( "ffoo " + i );
+            ad.setPrimaryTaxon( this.getTaxon( "mouse" ) );
+
             ad = ads.create( ad );
+
             ad.setDescription( "arrrgh" );
             ads.update( ad );
         }

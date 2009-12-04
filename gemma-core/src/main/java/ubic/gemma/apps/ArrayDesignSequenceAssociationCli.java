@@ -157,6 +157,7 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
                 if ( sequenceFileIs == null ) {
                     log.error( "No file " + sequenceFile + " was readable" );
                     bail( ErrorCode.INVALID_OPTION );
+                    return null;
                 }
 
                 Taxon taxon = null;

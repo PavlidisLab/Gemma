@@ -56,11 +56,11 @@ public class GoldenPathDumper extends GoldenPath {
         super( port, databaseName, host, user, password );
     }
 
-    public GoldenPathDumper( Taxon taxon ) throws SQLException {
+    public GoldenPathDumper( Taxon taxon ) {
         super( taxon );
     }
 
-    public GoldenPathDumper() throws SQLException {
+    public GoldenPathDumper() {
         super();
     }
 
@@ -232,7 +232,7 @@ public class GoldenPathDumper extends GoldenPath {
      * @author paul
      * @version $Id$
      */
-    private class BioSequenceMappingQuery extends MappingSqlQuery {
+    private class BioSequenceMappingQuery extends MappingSqlQuery<BioSequence> {
 
         SequenceType type;
 
@@ -242,9 +242,8 @@ public class GoldenPathDumper extends GoldenPath {
             compile();
         }
 
-        @Override
-        @SuppressWarnings("unused")
-        public Object mapRow( ResultSet rs, int rowNumber ) throws SQLException {
+        @Override 
+        public BioSequence mapRow( ResultSet rs, int rowNumber ) throws SQLException {
             BioSequence bioSequence = BioSequence.Factory.newInstance();
 
             DatabaseEntry de = DatabaseEntry.Factory.newInstance();
@@ -272,16 +271,15 @@ public class GoldenPathDumper extends GoldenPath {
      * @author paul
      * @version $Id$
      */
-    private class BioSequenceRefseqMappingQuery extends MappingSqlQuery {
+    private class BioSequenceRefseqMappingQuery extends MappingSqlQuery<BioSequence> {
 
         public BioSequenceRefseqMappingQuery( DriverManagerDataSource ds, String query ) {
             super( ds, query );
             compile();
         }
 
-        @Override
-        @SuppressWarnings("unused")
-        public Object mapRow( ResultSet rs, int rowNumber ) throws SQLException {
+        @Override 
+        public BioSequence mapRow( ResultSet rs, int rowNumber ) throws SQLException {
             BioSequence bioSequence = BioSequence.Factory.newInstance();
 
             DatabaseEntry de = DatabaseEntry.Factory.newInstance();
@@ -305,7 +303,7 @@ public class GoldenPathDumper extends GoldenPath {
      * @author paul
      * @version $Id$
      */
-    private class BioSequenceEnsemblMappingQuery extends MappingSqlQuery {
+    private class BioSequenceEnsemblMappingQuery extends MappingSqlQuery<BioSequence> {
 
         public BioSequenceEnsemblMappingQuery( DriverManagerDataSource ds, String query ) {
             super( ds, query );
@@ -313,7 +311,7 @@ public class GoldenPathDumper extends GoldenPath {
         }
 
         @Override 
-        public Object mapRow( ResultSet rs, int rowNumber ) throws SQLException {
+        public BioSequence mapRow( ResultSet rs, int rowNumber ) throws SQLException {
             BioSequence bioSequence = BioSequence.Factory.newInstance();
 
             DatabaseEntry de = DatabaseEntry.Factory.newInstance();
@@ -336,8 +334,7 @@ public class GoldenPathDumper extends GoldenPath {
     /**
      * @param query
      * @return
-     */
-    @SuppressWarnings("unchecked")
+     */ 
     private Collection<BioSequence> loadSequencesByQuery( String table, SequenceType type, String limit ) {
         BioSequenceMappingQuery bsQuery = new BioSequenceMappingQuery( dataSource, table, type, limit );
         return bsQuery.execute();
@@ -346,8 +343,7 @@ public class GoldenPathDumper extends GoldenPath {
     /**
      * @param query
      * @return
-     */
-    @SuppressWarnings("unchecked")
+     */ 
     private Collection<BioSequence> loadRefseqByQuery( String limitSuffix ) {
         String query = "SELECT name FROM " + REF_GENE_TABLE_NAME + " " + limitSuffix;
         BioSequenceRefseqMappingQuery bsQuery = new BioSequenceRefseqMappingQuery( dataSource, query );
@@ -357,8 +353,7 @@ public class GoldenPathDumper extends GoldenPath {
     /**
      * @param query
      * @return
-     */
-    @SuppressWarnings("unchecked")
+     */ 
     private Collection<BioSequence> loadEnsemblByQuery( String limitSuffix ) {
         String query = "SELECT name FROM " + ENSEMBL_TABLE_NAME + " " + limitSuffix;
         BioSequenceEnsemblMappingQuery bsQuery = new BioSequenceEnsemblMappingQuery( dataSource, query );

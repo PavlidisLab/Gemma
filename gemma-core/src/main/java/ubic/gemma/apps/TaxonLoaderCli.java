@@ -57,8 +57,7 @@ public class TaxonLoaderCli extends AbstractSpringAwareCLI {
      * (non-Javadoc)
      * @see ubic.gemma.util.AbstractCLI#doWork(java.lang.String[])
      */
-    @Override
-    @SuppressWarnings("unused")
+    @Override 
     protected Exception doWork( String[] args ) {
         try {
             Exception err = processCommandLine( "Taxon loader", args );

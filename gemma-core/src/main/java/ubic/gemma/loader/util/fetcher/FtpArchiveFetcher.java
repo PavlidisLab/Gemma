@@ -31,15 +31,12 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
 
 import org.apache.commons.lang.time.StopWatch;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.taskdefs.Expand;
 import org.apache.tools.ant.taskdefs.Untar;
 import org.apache.tools.ant.taskdefs.Untar.UntarCompressionMethod;
 
 import ubic.basecode.util.FileTools;
-import ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceProcessingService;
 import ubic.gemma.model.common.description.LocalFile;
 
 /**
@@ -51,9 +48,7 @@ import ubic.gemma.model.common.description.LocalFile;
 public abstract class FtpArchiveFetcher extends FtpFetcher implements ArchiveFetcher {
 
     private String excludePattern;
-
-    protected static Log log = LogFactory.getLog( ArrayDesignSequenceProcessingService.class.getName() );
-    public Expand expander;
+   public Expand expander;
     protected boolean doDelete = false;
 
     /*

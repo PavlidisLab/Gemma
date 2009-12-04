@@ -25,8 +25,6 @@ import java.util.HashSet;
 import java.util.List;
 
 import org.apache.commons.lang.math.RandomUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.junit.Test;
 
 import ubic.gemma.model.common.measurement.Measurement;
@@ -43,50 +41,6 @@ import ubic.gemma.testing.BaseSpringContextTest;
  * @version $Id$
  */
 public class ExpressionDataMatrixColumnSortTest extends BaseSpringContextTest {
-    private static Log log = LogFactory.getLog( ExpressionDataMatrixColumnSortTest.class );
-
-    // ExpressionExperimentService expressionExperimentService;
-    // DesignElementDataVectorService designElementDataVectorService;
-    // ArrayDesignService adService;
-    // protected AbstractGeoService geoService;
-    // ExpressionDataDoubleMatrix matrix;
-    //
-    // /**
-    // * Test method for
-    // * {@link
-    // ubic.gemma.datastructure.matrix.ExpressionDataMatrixColumnSort#orderByExperimentalDesign(ubic.gemma.datastructure.matrix.ExpressionDataMatrix)}
-    // * .
-    // */
-    // @SuppressWarnings("unchecked")
-    // public void testOrderByExperimentalDesign() throws Exception {
-    //
-    // expressionExperimentService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
-    // adService = ( ArrayDesignService ) this.getBean( "arrayDesignService" );
-    // designElementDataVectorService = ( DesignElementDataVectorService ) this
-    // .getBean( "designElementDataVectorService" );
-    // geoService = ( AbstractGeoService ) this.getBean( "geoDatasetService" );
-    // ExpressionExperiment newee = this.expressionExperimentService.findByShortName( "GSE611" );
-    // if ( newee != null ) {
-    // expressionExperimentService.delete( newee );
-    // }
-    // String path = ConfigUtils.getString( "gemma.home" );
-    // assert path != null;
-    // geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path
-    // + AbstractGeoServiceTest.GEO_TEST_DATA_ROOT + "GSE611Short" ) );
-    // Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad(
-    // "GSE611", false, true, false, false, true );
-    // newee = results.iterator().next();
-    //
-    // expressionExperimentService.thaw( newee );
-    // // make sure we really thaw them, so we can get the design element sequences.
-    // Collection<RawExpressionDataVector> designElementDataVectors = newee.getRawExpressionDataVectors();
-    // designElementDataVectorService.thaw( designElementDataVectors );
-    //
-    // ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( designElementDataVectors );
-    // matrix = builder.getPreferredData();
-    // List<BioMaterial> orderByExperimentalDesign = ExpressionDataMatrixColumnSort.orderByExperimentalDesign( matrix );
-    // assertEquals( 4, orderByExperimentalDesign.size() );
-    // }
 
     @Test
     public void testOrderByExperimentalDesignB() throws Exception {

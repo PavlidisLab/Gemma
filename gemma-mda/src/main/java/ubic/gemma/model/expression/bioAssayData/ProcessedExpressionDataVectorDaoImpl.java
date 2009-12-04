@@ -508,8 +508,6 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
     /**
      * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDao#loadAll()
      */
-
-    @SuppressWarnings( { "unchecked" })
     public java.util.Collection<? extends ProcessedExpressionDataVector> loadAll() {
         return this.getHibernateTemplate().loadAll( ProcessedExpressionDataVectorImpl.class );
     }

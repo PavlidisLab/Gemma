@@ -18,8 +18,6 @@
  */
 package ubic.gemma.model.common.protocol;
 
-import ubic.gemma.model.common.auditAndSecurity.Securable;
-
 /**
  * @see ubic.gemma.model.common.protocol.Hardware
  */

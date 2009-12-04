@@ -516,6 +516,7 @@ public class ArrayDesignSequenceProcessingService {
             InputStream probeSequenceFile ) throws IOException {
         ArrayDesign result = ArrayDesign.Factory.newInstance();
         result.setName( arrayDesignName );
+        result.setPrimaryTaxon( taxon );
 
         Contact contact = Contact.Factory.newInstance();
         contact.setName( "Affymetrix" );

@@ -226,8 +226,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
      * (non-Javadoc)
      * 
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getRows(java.util.List)
-     */
-    @SuppressWarnings("unchecked")
+     */ 
     public Double[][] getRows( List<DesignElement> designElements ) {
         if ( designElements == null ) {
             return null;

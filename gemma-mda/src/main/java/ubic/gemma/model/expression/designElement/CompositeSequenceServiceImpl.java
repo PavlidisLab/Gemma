@@ -126,8 +126,7 @@ public class CompositeSequenceServiceImpl extends
      * (non-Javadoc)
      * @see ubic.gemma.model.expression.designElement.CompositeSequenceServiceBase#handleFindByName(java.lang.String)
      */
-    @Override
-    @SuppressWarnings("unchecked")
+    @Override 
     protected Collection<CompositeSequence> handleFindByName( String name ) throws Exception {
         return this.getCompositeSequenceDao().findByName( name );
     }

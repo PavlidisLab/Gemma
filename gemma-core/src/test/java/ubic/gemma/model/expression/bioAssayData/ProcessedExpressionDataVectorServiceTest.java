@@ -44,7 +44,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
@@ -68,9 +67,6 @@ public class ProcessedExpressionDataVectorServiceTest extends BaseSpringContextT
 
     @Autowired
     ArrayDesignService arrayDesignService;
-
-    @Autowired
-    TaxonService taxonService;
 
     @Autowired
     CompositeSequenceService compositeSequenceService;
@@ -141,7 +137,7 @@ public class ProcessedExpressionDataVectorServiceTest extends BaseSpringContextT
     private Collection<Gene> getGeneAssociatedWithEe( ExpressionExperiment ee ) {
         int i = 0;
         ArrayDesign ad = ee.getBioAssays().iterator().next().getArrayDesignUsed();
-        Taxon taxon = taxonService.findByCommonName( "mouse" );
+        Taxon taxon = this.getTaxon( "mouse" );
         this.arrayDesignService.thawLite( ad );
         Collection<Gene> genes = new HashSet<Gene>();
         for ( CompositeSequence cs : ad.getCompositeSequences() ) {

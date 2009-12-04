@@ -116,8 +116,7 @@ public class ImageCumulativePlatesLoader {
     /**
      * @param inputStream
      * @throws IOException
-     */
-    @SuppressWarnings("unchecked")
+     */ 
     public int load( final InputStream inputStream ) {
         final ImageCumulativePlatesParser parser = new ImageCumulativePlatesParser();
         final BlockingQueue<BioSequence> queue = new ArrayBlockingQueue<BioSequence>( QUEUE_SIZE );

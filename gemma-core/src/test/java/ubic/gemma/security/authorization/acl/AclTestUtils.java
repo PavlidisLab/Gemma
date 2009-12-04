@@ -111,9 +111,11 @@ public class AclTestUtils {
         checkHasAclParent( experimentalDesign, ee );
         checkLacksAces( experimentalDesign );
 
-        checkHasAcl( ee.getRawDataFile() );
-        checkHasAclParent( ee.getRawDataFile(), ee );
-        checkLacksAces( ee.getRawDataFile() );
+        if ( ee.getRawDataFile() != null ) {
+            checkHasAcl( ee.getRawDataFile() );
+            checkHasAclParent( ee.getRawDataFile(), ee );
+            checkLacksAces( ee.getRawDataFile() );
+        }
 
         for ( ExperimentalFactor f : experimentalDesign.getExperimentalFactors() ) {
             checkHasAcl( f );

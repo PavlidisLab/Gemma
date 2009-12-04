@@ -19,7 +19,6 @@
 package ubic.gemma.apps;
 
 import java.io.IOException;
-import java.sql.SQLException;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
@@ -77,7 +76,6 @@ public class GoldenPathBioSequenceLoaderCLI extends AbstractSpringAwareCLI {
      * @param file
      * @throws IOException
      */
-    @SuppressWarnings("unchecked")
     public void load( String taxonCommonName, String file, int limit ) throws IOException {
         Taxon taxon = taxonService.findByCommonName( taxonCommonName );
         if ( taxon == null ) {
@@ -94,7 +92,6 @@ public class GoldenPathBioSequenceLoaderCLI extends AbstractSpringAwareCLI {
      * @param limit
      * @throws IOException
      */
-    @SuppressWarnings("unchecked")
     public void load( Taxon taxon, String file, int limit ) throws IOException {
         doLoad( file, taxon, limit );
     }
@@ -172,17 +169,12 @@ public class GoldenPathBioSequenceLoaderCLI extends AbstractSpringAwareCLI {
         GoldenPathBioSequenceLoader gp = new GoldenPathBioSequenceLoader( taxon );
         gp.setExternalDatabaseService( externalDatabaseService );
         gp.setBioSequenceService( bioSequenceService );
-        GoldenPathDumper dumper;
-        try {
-            dumper = new GoldenPathDumper( taxon );
-            externalDatabaseService = ( ExternalDatabaseService ) this.getBean( "externalDatabaseService" );
+        GoldenPathDumper dumper = new GoldenPathDumper( taxon );
+        externalDatabaseService = ( ExternalDatabaseService ) this.getBean( "externalDatabaseService" );
 
-            dumper.setExternalDatabaseService( externalDatabaseService );
-            gp.setLimit( limit );
-            gp.load( dumper );
-        } catch ( SQLException e ) {
-            throw new RuntimeException( e );
-        }
+        dumper.setExternalDatabaseService( externalDatabaseService );
+        gp.setLimit( limit );
+        gp.load( dumper );
 
     }
 

@@ -60,6 +60,7 @@ public class AuditTrailDaoTest extends BaseSpringContextTest {
 
         ArrayDesign ad = ArrayDesign.Factory.newInstance();
         ad.setName( "testing" );
+        ad.setPrimaryTaxon( this.getTaxon( "mouse" ) );
 
         ArrayDesignService ads = ( ArrayDesignService ) getBean( "arrayDesignService" );
         ad = ads.create( ad );

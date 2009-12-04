@@ -88,6 +88,7 @@ public class MirBaseLoader extends AbstractSpringAwareCLI {
             if ( gffFileIs == null ) {
                 log.error( "No file " + fileName + " was readable" );
                 bail( ErrorCode.INVALID_OPTION );
+                return null;
             }
 
             Taxon taxon = null;

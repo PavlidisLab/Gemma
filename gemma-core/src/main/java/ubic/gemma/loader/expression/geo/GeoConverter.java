@@ -994,6 +994,8 @@ public class GeoConverter implements Converter<Object, Object> {
                 taxon = convertProbeOrganism( probeOrganism.get( i ) );
             }
 
+            arrayDesign.setPrimaryTaxon( taxon );
+
             BioSequence bs = createMinimalBioSequence( taxon );
 
             boolean isRefseq = false;

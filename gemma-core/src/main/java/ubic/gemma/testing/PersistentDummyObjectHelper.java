@@ -428,6 +428,8 @@ public class PersistentDummyObjectHelper {
         ad.setName( "arrayDesign_" + RandomStringUtils.randomAlphabetic( RANDOM_STRING_LENGTH ) );
         ad.setTechnologyType( TechnologyType.ONECOLOR );
 
+        ad.setPrimaryTaxon( this.getTestPersistentTaxon() );
+
         for ( int i = 0; i < numCompositeSequences; i++ ) {
 
             Reporter reporter = Reporter.Factory.newInstance();

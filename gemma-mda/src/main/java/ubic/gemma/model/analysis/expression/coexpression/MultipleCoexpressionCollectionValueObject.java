@@ -4,9 +4,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 import ubic.gemma.model.genome.Gene;
 
 /**
@@ -14,8 +11,6 @@ import ubic.gemma.model.genome.Gene;
  *         search.
  */
 public class MultipleCoexpressionCollectionValueObject {
-
-    private static Log log = LogFactory.getLog( MultipleCoexpressionCollectionValueObject.class.getName() );
 
     private int minimumCommonQueryGenes;
     // private Map<Gene, CoexpressionCollectionValueObject> queries;

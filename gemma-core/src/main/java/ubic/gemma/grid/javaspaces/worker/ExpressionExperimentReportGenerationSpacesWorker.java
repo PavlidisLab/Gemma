@@ -22,10 +22,10 @@ import net.jini.space.JavaSpace;
 
 import org.springframework.security.core.context.SecurityContextHolder;
 
-import ubic.gemma.analysis.report.ExpressionExperimentReportServiceImpl;
+import ubic.gemma.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.grid.javaspaces.AbstractSpacesWorkerCLI;
 import ubic.gemma.grid.javaspaces.CustomDelegatingWorker;
-import ubic.gemma.grid.javaspaces.task.expression.experiment.ExpressionExperimentReportTask; 
+import ubic.gemma.grid.javaspaces.task.expression.experiment.ExpressionExperimentReportTask;
 
 /**
  * This command line interface is used to take {@link ExpressionExperimentReportService} tasks from the

@@ -211,6 +211,7 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
         arrayDesign.setTechnologyType( TechnologyType.ONECOLOR );
         arrayDesign.setId( 1L );
         arrayDesign.setName( "MG-U74Test_" + RandomStringUtils.randomAlphanumeric( 12 ) );
+        arrayDesign.setPrimaryTaxon( taxonService.findByCommonName( "mouse" ) );
 
         expressionExperiment = ExpressionExperiment.Factory.newInstance();
         expressionExperiment.setName( "analysistest_" + RandomStringUtils.randomAlphanumeric( 12 ) );

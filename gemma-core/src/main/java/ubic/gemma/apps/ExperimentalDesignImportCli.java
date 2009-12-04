@@ -136,8 +136,7 @@ public class ExperimentalDesignImportCli extends AbstractSpringAwareCLI {
         }
         return experiment;
     }
-
-    @SuppressWarnings("unchecked")
+ 
     @Override
     protected void processOptions() {
         super.processOptions();
