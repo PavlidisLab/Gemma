@@ -62,7 +62,7 @@
 				<artifactId>maven-war-plugin</artifactId>
 				<configuration>
 					<excludes>
-						<exclude>**/*Test*,**/Test*,**/All*Tests</exclude> 
+						<exclude>**/*Test*,**/Test*,**/All*Tests</exclude>
 					</excludes>
 				</configuration>
 			</plugin>
@@ -102,22 +102,11 @@
 			<groupId>gemma</groupId>
 			<artifactId>gemma-util</artifactId>
 			<version>${project.version}</version>
-		</dependency> 
+		</dependency>
 		<dependency>
 			<groupId>commons-beanutils</groupId>
 			<artifactId>commons-beanutils</artifactId>
 			<version>1.7.0</version>
-		</dependency>
-		<dependency>
-			<groupId>commons-configuration</groupId>
-			<artifactId>commons-configuration</artifactId>
-			<version>1.1</version>
-			<exclusions>
-				<exclusion>
-					<groupId>xerces</groupId>
-					<artifactId>xerces</artifactId>
-				</exclusion>
-			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>commons-digester</groupId>
