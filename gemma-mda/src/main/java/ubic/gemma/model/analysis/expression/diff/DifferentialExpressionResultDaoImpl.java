@@ -396,7 +396,7 @@ public class DifferentialExpressionResultDaoImpl extends
     /**
      * 
      */
-    public void thaw( final ProbeAnalysisResult result ) throws Exception {
+    public void thaw( final ProbeAnalysisResult result ) {
         HibernateTemplate templ = this.getHibernateTemplate();
 
         templ.execute( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
@@ -407,6 +407,25 @@ public class DifferentialExpressionResultDaoImpl extends
 
                 CompositeSequence cs = result.getProbe();
                 Hibernate.initialize( cs );
+
+                return null;
+            }
+        } );
+    }
+
+    public void thaw( final Collection<ProbeAnalysisResult> results ) {
+        HibernateTemplate templ = this.getHibernateTemplate();
+
+        templ.execute( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
+
+            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                for ( ProbeAnalysisResult result : results ) {
+                    session.lock( result, LockMode.NONE );
+                    Hibernate.initialize( result );
+
+                    CompositeSequence cs = result.getProbe();
+                    Hibernate.initialize( cs );
+                }
 
                 return null;
             }

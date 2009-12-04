@@ -103,7 +103,9 @@ public interface DifferentialExpressionResultDao extends BaseDao<ProbeAnalysisRe
     public java.util.Collection<ExperimentalFactor> getExperimentalFactors(
             ProbeAnalysisResult differentialExpressionAnalysisResult );
 
-    public void thaw( final ProbeAnalysisResult result ) throws Exception;
+    public void thaw( final ProbeAnalysisResult result );
+    
+    public void thaw( Collection<ProbeAnalysisResult> results );
 
     /**
      * Find differential expression for a gene, exceeding a given significance level (using the corrected pvalue field)

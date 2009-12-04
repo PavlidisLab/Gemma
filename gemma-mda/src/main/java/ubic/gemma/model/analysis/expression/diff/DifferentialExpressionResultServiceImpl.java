@@ -87,8 +87,12 @@ public class DifferentialExpressionResultServiceImpl extends
         return this.getExpressionAnalysisResultSetDao().load( analysisResultId );
     }
 
-    public void thaw( ProbeAnalysisResult result ) throws Exception {
+    public void thaw( ProbeAnalysisResult result ) {
         this.getDifferentialExpressionResultDao().thaw( result );
+    }
+
+    public void thaw( Collection<ProbeAnalysisResult> results ) {
+        this.getDifferentialExpressionResultDao().thaw( results );
     }
 
     public void thawLite( ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet resultSet ) {

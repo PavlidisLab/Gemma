@@ -331,6 +331,9 @@ public class GeneDifferentialExpressionService {
             pvaluesToCombine.add( Math.max( p, PVALUE_CLIP_THRESHOLD ) );
 
             /* for each filtered result, set up a devo (contains only results with chosen factor) */
+
+            differentialExpressionResultService.thaw( filteredResults );
+
             for ( ProbeAnalysisResult r : filteredResults ) {
 
                 Collection<ExperimentalFactor> efs = dearToEf.get( r );
@@ -388,6 +391,7 @@ public class GeneDifferentialExpressionService {
 
     private DifferentialExpressionValueObject diffExResultToValueObject( ProbeAnalysisResult r, Gene gene,
             ExpressionExperimentValueObject eevo, Collection<ExperimentalFactor> efs ) {
+
         DifferentialExpressionValueObject devo = new DifferentialExpressionValueObject();
         devo.setGene( gene );
         devo.setExpressionExperiment( eevo );
@@ -479,12 +483,14 @@ public class GeneDifferentialExpressionService {
         Map<ProbeAnalysisResult, Collection<ExperimentalFactor>> dearToEf = getFactors( results );
 
         /*
-         * convert to DEVOs. NO DB QUERIES IN HERE!
+         * convert to DEVOs
          */
         for ( ExpressionExperiment ee : results.keySet() ) {
             ExpressionExperimentValueObject eevo = configExpressionExperimentValueObject( ee );
 
             Collection<ProbeAnalysisResult> probeResults = results.get( ee );
+
+            differentialExpressionResultService.thaw( probeResults );
 
             for ( ProbeAnalysisResult r : probeResults ) {
 

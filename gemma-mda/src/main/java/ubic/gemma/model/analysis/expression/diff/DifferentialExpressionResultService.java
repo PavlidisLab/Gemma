@@ -108,13 +108,15 @@ public interface DifferentialExpressionResultService {
 
     public AnalysisResultSet loadAnalysisResult( Long analysisResultId );
 
-    public void thaw( final ProbeAnalysisResult result ) throws Exception;
+    public void thaw( ProbeAnalysisResult result );
+
+    public void thaw( Collection<ProbeAnalysisResult> results );
 
     /**
      * 
      */
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    public void thaw( ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet resultSet );
+    public void thaw( ExpressionAnalysisResultSet resultSet );
 
     /**
      * Does not thaw the collection of probes (just the factor information)
@@ -122,7 +124,7 @@ public interface DifferentialExpressionResultService {
      * @param resultSet
      */
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    public void thawLite( ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet resultSet );
+    public void thawLite( ExpressionAnalysisResultSet resultSet );
 
     /**
      * Find differential expression for a gene, exceeding a given significance level (using the corrected pvalue field)
