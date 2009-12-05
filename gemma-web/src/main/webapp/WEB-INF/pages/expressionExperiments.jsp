@@ -6,8 +6,7 @@ Display table of expression experiments.
 $Id$ 
 --%>
 <head>
-	<title><fmt:message key="expressionExperiments.title" />
-	</title>
+	<title><fmt:message key="expressionExperiments.title" /></title>
 </head>
 
 <div id="messages" style="margin: 10px; width: 400px"></div>
@@ -39,7 +38,7 @@ $Id$
 
 		<security:authorize ifAnyGranted="GROUP_ADMIN,GROUP_USER">
 			<p>
-				For a view that allows editing of these experiments, go to the
+				For a view that allows editing of your experiments that are on this list, go to the
 				<a
 					href="<c:url value="/expressionExperiment/showAllExpressionExperimentLinkSummaries.html?ids=${fn:join(eeids, ',')}
 				" />">Data
