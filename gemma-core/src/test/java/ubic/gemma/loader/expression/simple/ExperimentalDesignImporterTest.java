@@ -121,7 +121,7 @@ public class ExperimentalDesignImporterTest extends BaseSpringContextTest {
     }
 
     /**
-     * Test method for {@link ubic.gemma.loader.expression.simple.ExperimentalDesignImporter#parse(java.io.InputStream)}
+     * Test method for {@link ubic.gemma.loader.expression.simple.ExperimentalDesignImporterImpl#parse(java.io.InputStream)}
      * .
      */
     @Test

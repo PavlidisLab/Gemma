@@ -117,6 +117,9 @@ public class ExperimentalDesignController extends BaseController {
         try {
             // Dry run. Try to avoid importing bad data.
             InputStream is = new FileInputStream( f );
+            /*
+             * NOTE this will fail if the experiment already has factors. But I think that's the correct behaviour.
+             */
             experimentalDesignImporter.importDesign( ee, is, true );
         } catch ( IOException e ) {
             throw new RuntimeException( "Failed to import the design: " + e.getMessage() );
@@ -124,7 +127,7 @@ public class ExperimentalDesignController extends BaseController {
 
         try {
             InputStream is = new FileInputStream( f );
-            // Reset everything
+            // Reset everything in case a design is already there.
             ee.getExperimentalDesign().getExperimentalFactors().clear();
             for ( BioAssay ba : ee.getBioAssays() ) {
                 for ( BioMaterial bm : ba.getSamplesUsed() ) {

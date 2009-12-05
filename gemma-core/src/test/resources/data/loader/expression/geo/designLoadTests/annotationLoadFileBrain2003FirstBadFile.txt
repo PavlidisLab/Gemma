@@ -1,0 +1,71 @@
+# Brain 2003 data set
+#$Run time : Category=EnvironmentalHistory Type=categorical
+#$SamplingLocation : Category=EnvironmentalHistory Type=categorical
+#$Stock : Category=Ecotype Type=categorical
+Sample	Run time	Sampling Location	Stock 
+B006_008_Onne_aRNA_Brain_77	Summer run	Port Renfrew	Upper Adams
+B006_009_Onne_aRNA_Brain_78	Summer run	Port Renfrew	Stellako
+B006_010_Onne_aRNA_Brain_100		Queen Charlotte Islands  	?  
+B006_011_Onne_aRNA_Brain_104	Late run	Queen Charlotte Islands  	Brikenhead
+B006_012_Onne_aRNA_Brain_587	Summer run	Whonnock	Chilko
+B006_013_Onne_aRNA_Brain_599	Summer run	Whonnock	Raft  
+B006_014_Onne_aRNA_Brain_602	Late run	Whonnock	Brikenhead
+B006_015_Onne_aRNA_Brain_607	Summer run	Whonnock	Horsefly
+B006_016_Onne_aRNA_Brain_614	Summer run	Whonnock	Raft  
+B006_017_Onne_aRNA_Brain_618	Summer run	Whonnock	Horsefly
+B006_018_Onne_aRNA_Brain_102	Late run	Queen Charlotte Islands  	Lower Adams
+B006_019_Onne_aRNA_Brain_110	Summer run	Queen Charlotte Islands  	Horsefly
+B006_020B_Onne_aRNA_Brain_126	Summer run	Queen Charlotte Islands  	Bowron
+B006_021_Onne_aRNA_Brain_733	Summer run	Whonnock	Horsefly
+B006_022_Onne_aRNA_Brain_701	Late run	Whonnock	Lower Adams
+B006_025_Onne_aRNA_Brain_106	Summer run	Queen Charlotte Islands   	Chilko
+B006_027_Onne_aRNA_Brain_105	Summer run	Queen Charlotte Islands  	
+B006_028_Onne_aRNA_Brain_1027	Summer run	Horsefly	Horsefly
+B006_029_Onne_aRNA_Brain_3022	Late run	Adams	Lower Adams
+B006_030_Onne_aRNA_Brain_111	Summer run	Queen Charlotte Islands  	Chilko
+B006_031_Onne_aRNA_Brain_540	Late run	Whonnock	Cultus lake
+B006_033_Onne_aRNA_Brain_454	Summer run	Johnstone Strait	Chilko
+B006_035_Onne_aRNA_Brain_79	Summer run	Port Renfrew	Chilko
+B006_036_Onne_aRNA_Brain_103	Late run	Queen Charlotte Islands  	Lower Adams
+B006_037_Onne_aRNA_Brain_3013	Late run	Adams	Lower Adams
+B006_038_Onne_aRNA_Brain_113	Summer run	Queen Charlotte Islands  	Chilko
+B006_039_Onne_aRNA_Brain_544	Late run	Whonnock	Lower Adams
+B006_041_Onne_aRNA_Brain_406	Late run	Johnstone Strait	Lower Adams
+B006_042_Onne_aRNA_Brain_888	Late run	Whonnock	Lower Adams
+B006_043_Onne_aRNA_Brain_458	Summer run	Johnstone Strait	Chilko
+B006_044_Onne_aRNA_Brain_1023	Summer run	Horsefly	Horsefly
+B006_045_Onne_aRNA_Brain_118	Late run	Queen Charlotte Islands  	Weaver
+B006_046_Onne_aRNA_Brain_119	Late run	Queen Charlotte Islands  	Lower Adams
+B006_048_Onne_aRNA_Brain_869	Late run	Whonnock	Lower Adams
+B006_049_Onne_aRNA_Brain_818	Summer run	Whonnock	Chilko
+B006_050_Onne_aRNA_Brain_3014	Late run	Adams	Lower Adams
+B006_051_Onne_aRNA_Brain_1028	Summer run	Horsefly	Horsefly
+C009_001_Onne_aRNA_Brain_459	Summer run	Johnstone Strait	Chilko
+C009_002_Onne_aRNA_Brain_75	Summer run	Port Renfrew	Pinchi  
+C009_003_Onne_aRNA_Brain_120	Late run	Queen Charlotte Islands  	Brikenhead
+C009_005_Onne_aRNA_Brain_828	Late run	Whonnock	Brikenhead
+C009_006B_Onne_aRNA_Brain_875	Late run	Whonnock	Lower Adams
+C009_007_Onne_aRNA_Brain_703	Summer run	Whonnock	Horsefly
+C009_008_Onne_aRNA_Brain_3018	Late run	Adams	Lower Adams
+C009_009_Onne_aRNA_Brain_457	Late run	Johnstone Strait	Brikenhead
+C009_011_Onne_aRNA_Brain_76	Summer run	Port Renfrew	Stellako
+C009_012_Onne_aRNA_Brain_116	Late run	Queen Charlotte Islands  	Lower Adams
+C009_013_Onne_aRNA_Brain_106	Summer run	Queen Charlotte Islands   	Chilko
+C009_014_Onne_aRNA_Brain_824	Late run	Whonnock	Brikenhead
+C009_015_Onne_aRNA_Brain_887	Late run	Whonnock	Lower Adams
+C009_016_Onne_aRNA_Brain_811	Summer run	Whonnock	Chilko
+C009_017_Onne_aRNA_Brain_713	Summer run	Whonnock	Chilko
+C009_018_Onne_aRNA_Brain_460	Summer run	Johnstone Strait	Mitchell
+C009_019_Onne_aRNA_Brain_123	Late run	Queen Charlotte Islands  	Weaver
+C009_021_Onne_aRNA_Brain_121	Summer run	Queen Charlotte Islands  	Horsefly
+C009_025_Onne_aRNA_Brain_809	Late run	Whonnock	Weaver
+C009_026_Onne_aRNA_Brain_810	Late run	Whonnock	Weaver
+C009_027_Onne_aRNA_Brain_711	Late run	Whonnock	Lower Adams
+C009_028_Onne_aRNA_Brain_868	Late run	Whonnock	Lower Adams
+C009_029_Onne_aRNA_Brain_882	Late run	Whonnock	Lower Adams
+C009_030_Onne_aRNA_Brain_3020	Late run	Adams	Lower Adams
+C009_031_Onne_aRNA_Brain_412	Late run	Johnstone Strait	Brikenhead
+C009_032_Onne_aRNA_Brain_407	Summer run	Johnstone Strait	Big Silver
+C009_033_Onne_aRNA_Brain_107	Summer run	Queen Charlotte Islands  	Chilko
+C009_034_Onne_aRNA_Brain_733	Summer run	Whonnock	Horsefly
+

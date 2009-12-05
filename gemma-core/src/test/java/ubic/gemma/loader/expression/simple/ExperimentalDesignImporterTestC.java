@@ -20,7 +20,9 @@ package ubic.gemma.loader.expression.simple;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.HashSet;
@@ -34,11 +36,15 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import ubic.gemma.loader.expression.geo.AbstractGeoServiceTest;
+import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
+import ubic.gemma.loader.expression.geo.service.GeoDatasetService;
 import ubic.gemma.loader.expression.simple.model.SimpleExpressionExperimentMetaData;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.BioMaterialService;
@@ -51,15 +57,14 @@ import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.ontology.MgedOntologyService;
 import ubic.gemma.security.authorization.acl.AclTestUtils;
-import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
  * @author paul
  * @version $Id$
  */
-public class ExperimentalDesignImporterTestB extends BaseSpringContextTest {
+public class ExperimentalDesignImporterTestC extends AbstractGeoServiceTest {
 
-    private static Log log = LogFactory.getLog( ExperimentalDesignImporterTestB.class.getName() );
+    private static Log log = LogFactory.getLog( ExperimentalDesignImporterTestC.class.getName() );
 
     ExpressionExperiment ee;
 
@@ -79,6 +84,9 @@ public class ExperimentalDesignImporterTestB extends BaseSpringContextTest {
     SimpleExpressionDataLoaderService simpleExpressionDataLoaderService;
 
     @Autowired
+    protected GeoDatasetService geoService;
+
+    @Autowired
     ExpressionExperimentService expressionExperimentService;
 
     @Autowired
@@ -86,6 +94,9 @@ public class ExperimentalDesignImporterTestB extends BaseSpringContextTest {
 
     @Autowired
     ExperimentalDesignService experimentalDesignService;
+
+    @Autowired
+    ArrayDesignService arrayDesignService;
 
     @Autowired
     AclTestUtils aclTestUtils;
@@ -101,8 +112,32 @@ public class ExperimentalDesignImporterTestB extends BaseSpringContextTest {
     @Before
     public void setup() throws Exception {
 
+        /*
+         * Have to add ssal for this platform.
+         */
+
+        Taxon salmon = taxonService.findByScientificName( "atlantic salmon" );
+
+        if ( salmon == null ) {
+            super.executeSqlScript( "/script/sql/add-fish-taxa.sql", false );
+            salmon = taxonService.findByCommonName( "atlantic salmon" );
+        }
+
+        assertNotNull( salmon );
+
+        /*
+         * Load the array design (platform).
+         */
+        String path = getTestFileBasePath();
+        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
+                + "designLoadTests" ) );
+        geoService.fetchAndLoad( "GPL2899", true, true, false, false, true );
+        ArrayDesign ad = arrayDesignService.findByShortName( "GPL2899" );
+
+        assertNotNull( ad );
+
         InputStream data = this.getClass().getResourceAsStream(
-                "/data/loader/expression/head.Gill2007gemmaExpressionData.txt" );
+                "/data/loader/expression/geo/designLoadTests/expressionDataBrain2003TestFile.txt" );
 
         SimpleExpressionExperimentMetaData metaData = new SimpleExpressionExperimentMetaData();
 
@@ -112,9 +147,6 @@ public class ExperimentalDesignImporterTestB extends BaseSpringContextTest {
             log.info( "Waiting for mgedontology to load" );
         }
 
-        Taxon salmon = taxonService.findByCommonName( "human" );
-
-        // doesn't matter what it is for this test, but the test data are from salmon.
         assertNotNull( salmon );
 
         metaData.setShortName( RandomStringUtils.randomAlphabetic( 10 ) );
@@ -125,10 +157,6 @@ public class ExperimentalDesignImporterTestB extends BaseSpringContextTest {
         metaData.setScale( ScaleType.LOG2 );
         metaData.setType( StandardQuantitationType.AMOUNT );
 
-        ArrayDesign ad = ArrayDesign.Factory.newInstance();
-        ad.setShortName( randomName() );
-        ad.setName( "foobly foo" );
-
         metaData.getArrayDesigns().add( ad );
 
         ee = simpleExpressionDataLoaderService.load( metaData, data );
@@ -137,16 +165,53 @@ public class ExperimentalDesignImporterTestB extends BaseSpringContextTest {
     }
 
     /**
-     * Test method for {@link ubic.gemma.loader.expression.simple.ExperimentalDesignImporterImpl#parse(java.io.InputStream)}
-     * .
+     * Test method for
+     * {@link ubic.gemma.loader.expression.simple.ExperimentalDesignImporterImpl#parse(java.io.InputStream)} .
      */
     @Test
-    public final void testParseLoadDelete() throws Exception {
+    public final void testUploadBadDesign() throws Exception {
 
+        /*
+         * The following file has a bug in it. It should fail.
+         */
         InputStream is = this.getClass().getResourceAsStream(
-                "/data/loader/expression/gill2007temperatureGemmaAnnotationData.txt" );
+                "/data/loader/expression/geo/designLoadTests/annotationLoadFileBrain2003FirstBadFile.txt" );
 
-        experimentalDesignImporter.importDesign( ee, is, false );
+        try {
+            experimentalDesignImporter.importDesign( ee, is, true ); // dry run, should fail.
+            fail( "Should have gotten an error when loading a bad file" );
+        } catch ( IOException ok ) {
+            // ok
+        }
+        is.close();
+        /*
+         * make sure we didn't load anything
+         */
+        ee = this.expressionExperimentService.load( ee.getId() );
+        this.expressionExperimentService.thawLite( ee );
+        assertEquals( 0, ee.getExperimentalDesign().getExperimentalFactors().size() );
+
+        /*
+         * Now try the good one.
+         */
+        is = this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/designLoadTests/annotationLoadFileBrain2003SecondGoodFile.txt" );
+
+        experimentalDesignImporter.importDesign( ee, is, true ); // dry run, should pass
+        is.close();
+
+        /*
+         * Reopen the file.
+         */
+        is = this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/designLoadTests/annotationLoadFileBrain2003SecondGoodFile.txt" );
+        experimentalDesignImporter.importDesign( ee, is, false ); // not a dry run, should pass.
+        is.close();
+        ee = this.expressionExperimentService.load( ee.getId() );
+        this.aclTestUtils.checkEEAcls( ee );
+        this.expressionExperimentService.thawLite( ee );
+
+        assertEquals( 3, ee.getExperimentalDesign().getExperimentalFactors().size() );
 
         Collection<BioMaterial> bms = new HashSet<BioMaterial>();
         for ( BioAssay ba : ee.getBioAssays() ) {
@@ -157,18 +222,15 @@ public class ExperimentalDesignImporterTestB extends BaseSpringContextTest {
 
         checkResults( bms );
 
-        this.aclTestUtils.checkEEAcls( ee );
-
-        ee = this.expressionExperimentService.load( ee.getId() );
-
         int s = ee.getExperimentalDesign().getExperimentalFactors().size();
         ExperimentalFactor toDelete = ee.getExperimentalDesign().getExperimentalFactors().iterator().next();
 
         /*
-         * FIXME: this should be a single service call, However, it's not that easy to do. If you run this in a single
-         * transaction, you invariably get session errors. See {@link ExperimentalDesignController}
+         * Test of deleting a factor. FIXME: this should be a single service call, However, it's not that easy to do. If
+         * you run this in a single transaction, you invariably get session errors. See {@link
+         * ExperimentalDesignController}
          */
-        this.expressionExperimentService.thawLite( ee );
+
         for ( BioAssay ba : ee.getBioAssays() ) {
             for ( BioMaterial bm : ba.getSamplesUsed() ) {
                 boolean removed = false;
@@ -196,13 +258,13 @@ public class ExperimentalDesignImporterTestB extends BaseSpringContextTest {
      */
     private void checkResults( Collection<BioMaterial> bms ) {
         // check.
-        assertEquals( 25, ee.getExperimentalDesign().getExperimentalFactors().size() );
+        assertEquals( 3, ee.getExperimentalDesign().getExperimentalFactors().size() );
 
         Collection<Long> seenFactorValueIds = new HashSet<Long>();
         for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
 
-            if ( ef.getName().equals( "Temperature treatment" ) ) {
-                assertEquals( 3, ef.getFactorValues().size() );
+            if ( ef.getName().equals( "SamplingLocation" ) ) {
+                assertEquals( 6, ef.getFactorValues().size() );
             }
 
             for ( FactorValue fv : ef.getFactorValues() ) {
