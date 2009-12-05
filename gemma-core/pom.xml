@@ -58,22 +58,11 @@
 		<directory>target</directory>
 		<finalName>${artifactId}-${version}</finalName>
 		<plugins>
-			<plugin>
-				<groupId>org.dstovall</groupId>
-				<artifactId>onejar-maven-plugin</artifactId>
-				<version>1.4.1</version>
-				<executions>
-					<execution>
-						<configuration>
-							<mainClass>ubic.gemma.apps.GemmaCLI</mainClass>
-						</configuration>
-						<goals>
-							<goal>one-jar</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
-		</plugins>
+	<!--
+		<plugin> <groupId>org.dstovall</groupId> <artifactId>onejar-maven-plugin</artifactId> <version>1.4.1</version>
+		<executions> <execution> <configuration> <mainClass>ubic.gemma.apps.GemmaCLI</mainClass> </configuration> <goals>
+		<goal>one-jar</goal> </goals> </execution> </executions> </plugin>
+	--></plugins>
 	</build>
 	<profiles>
 		<profile>
