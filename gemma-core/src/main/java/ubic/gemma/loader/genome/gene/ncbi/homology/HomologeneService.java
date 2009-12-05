@@ -181,7 +181,8 @@ public class HomologeneService {
         }
 
         genes = this.getGenesInGroup( groupId );
-        genes.remove( gene ); // remove the given gene from the list
+
+        if ( genes != null ) genes.remove( gene ); // remove the given gene from the list
 
         return genes;
 
