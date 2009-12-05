@@ -121,8 +121,8 @@ public class ExperimentalDesignImporterTest extends BaseSpringContextTest {
     }
 
     /**
-     * Test method for {@link ubic.gemma.loader.expression.simple.ExperimentalDesignImporterImpl#parse(java.io.InputStream)}
-     * .
+     * Test method for
+     * {@link ubic.gemma.loader.expression.simple.ExperimentalDesignImporterImpl#parse(java.io.InputStream)} .
      */
     @Test
     public final void testParse() throws Exception {
@@ -152,10 +152,8 @@ public class ExperimentalDesignImporterTest extends BaseSpringContextTest {
         experimentalDesignImporter.importDesign( ee, is, true );
 
         // / confirm we didn't save anything.
-        assertEquals( 4, ee.getExperimentalDesign().getExperimentalFactors().size() );
-        for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
-            assertNull( ef.getId() );
-        }
+        assertEquals( 0, ee.getExperimentalDesign().getExperimentalFactors().size() );
+
     }
 
     @Test
