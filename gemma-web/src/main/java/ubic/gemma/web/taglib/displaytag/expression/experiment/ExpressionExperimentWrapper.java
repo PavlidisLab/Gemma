@@ -490,17 +490,6 @@ public class ExpressionExperimentWrapper extends TableDecorator {
         return object.getTaxon();
     }
 
-    public String getDelete() {
-        ExpressionExperimentValueObject object = ( ExpressionExperimentValueObject ) getCurrentRowObject();
-
-        if ( object == null ) {
-            return "Expression Experiment unavailable";
-        }
-
-        return " <input type=\"button\" value=\"Delete\" onClick=\"return deleteExperiment(" + object.getId() + ")\"/>";
-
-    }
-
     public String getRefreshReport() {
         ExpressionExperimentValueObject object = ( ExpressionExperimentValueObject ) getCurrentRowObject();
 
@@ -508,18 +497,6 @@ public class ExpressionExperimentWrapper extends TableDecorator {
             return "Expression Experiment unavailable";
         }
         return " <input type=\"button\" value=\"Refresh\" onClick=\"return updateEEReport(" + object.getId() + ")\"/>";
-    }
-
-    public String getEdit() {
-        ExpressionExperimentValueObject object = ( ExpressionExperimentValueObject ) getCurrentRowObject();
-
-        if ( object == null ) {
-            return "Expression Experiment unavailable";
-        }
-
-        return "<input type='button' " + " onclick=\"location.href='editExpressionExperiment.html?id=" + object.getId()
-                + "'\"" + " value='Edit'>";
-
     }
 
     public String getSpecific() {

@@ -81,6 +81,7 @@ import ubic.gemma.search.SearchService;
 import ubic.gemma.search.SearchSettings;
 import ubic.gemma.security.SecurityService;
 import ubic.gemma.security.audit.AuditableUtil;
+import ubic.gemma.util.EntityUtils;
 import ubic.gemma.util.progress.ProgressJob;
 import ubic.gemma.util.progress.ProgressManager;
 import ubic.gemma.web.controller.BackgroundControllerJob;
@@ -647,11 +648,11 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
     /**
      * AJAX. Data summarizing the status of experiments.
      * 
-     * @param sId - ids, comma-delimited, can bel null to show all.
+     * @param sIds - ids, array of strings.
      * @param limit If >0, get the most recently updated N experiments, where N <= limit.
      * @return
      */
-    public Collection<ExpressionExperimentValueObject> loadStatusSummaries( String sId, Integer limit ) {
+    public Collection<ExpressionExperimentValueObject> loadStatusSummaries( Collection<Long> ids, Integer limit ) {
         StopWatch timer = new StopWatch();
         timer.start();
 
@@ -668,7 +669,7 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
             throw new AccessDeniedException( "User does not have access to experiment management" );
         }
 
-        eeValObjectCol = getEEVOsForManager( sId, filterDataByUser );
+        eeValObjectCol = getEEVOsForManager( ids, filterDataByUser );
 
         if ( timer.getTime() > 1000 ) {
             log.info( "Phase 1 done in " + timer.getTime() + "ms" );
@@ -699,14 +700,15 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         return result;
     }
 
-    private Collection<ExpressionExperimentValueObject> getEEVOsForManager( String sId, boolean filterDataByUser ) {
+    private Collection<ExpressionExperimentValueObject> getEEVOsForManager( Collection<Long> ids,
+            boolean filterDataByUser ) {
         Collection<ExpressionExperimentValueObject> eeValObjectCol;
-        if ( sId == null ) {
+        if ( ids == null || ids.isEmpty() ) {
             eeValObjectCol = this.getFilteredExpressionExperimentValueObjects( null, filterDataByUser ); // pretty fast.
         } else { // if ids are specified, then display only those
             // expressionExperiments
-            Collection<Long> ids = parseIdParameterString( sId );
-            if ( ids.size() == 0 ) {
+
+            if ( ids.isEmpty() ) {
                 eeValObjectCol = this.getFilteredExpressionExperimentValueObjects( null, filterDataByUser );
             } else {
                 eeValObjectCol = this.getFilteredExpressionExperimentValueObjects( ids, false );
@@ -799,6 +801,7 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         Long numExpressionExperiments = new Long( expressionExperiments.size() );
 
         mav.addObject( "expressionExperiments", expressionExperiments );
+        mav.addObject( "eeids", EntityUtils.getIdStrings( expressionExperiments ).toArray( new String[] {} ) );
         mav.addObject( "numExpressionExperiments", numExpressionExperiments );
         return mav;
 
@@ -1308,15 +1311,15 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
      * @param sId
      * @return
      */
-    private Collection<Long> parseIdParameterString( String sId ) {
+    private Collection<Long> parseIdParameterStrings( String[] sIds ) {
         Collection<Long> ids = new ArrayList<Long>();
-        String[] idList = StringUtils.split( sId, ',' );
-        for ( int i = 0; i < idList.length; i++ ) {
-            if ( StringUtils.isNotBlank( idList[i] ) ) {
+
+        for ( int i = 0; i < sIds.length; i++ ) {
+            if ( StringUtils.isNotBlank( sIds[i] ) ) {
                 try {
-                    ids.add( new Long( idList[i] ) );
+                    ids.add( new Long( sIds[i] ) );
                 } catch ( NumberFormatException e ) {
-                    log.warn( "Invalid id string" + idList[i] );
+                    log.warn( "Invalid id string" + sIds[i] );
                 }
             }
         }

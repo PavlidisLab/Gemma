@@ -37,6 +37,15 @@ $Id$
 		</h3>
 
 
+		<security:authorize ifAnyGranted="GROUP_ADMIN,GROUP_USER">
+			<p>
+				For a view that allows editing of these experiments, go to the
+				<a
+					href="<c:url value="/expressionExperiment/showAllExpressionExperimentLinkSummaries.html?ids=${fn:join(eeids, ',')}
+				" />">Data
+					Manager</a>
+			</p>
+		</security:authorize>
 
 		<form
 			style="border-color: #444; border-style: solid; border-width: 1px; width: 450px; padding: 10px; background-color: #DDD"
@@ -46,6 +55,7 @@ $Id$
 			<input type="text" name="filter" size="48" />
 			<input type="submit" value="Search" />
 		</form>
+
 
 		<display:table pagesize="100" name="expressionExperiments" sort="list" requestURI="" id="expressionExperimentList"
 			decorator="ubic.gemma.web.taglib.displaytag.expression.experiment.ExpressionExperimentWrapper">
@@ -74,8 +84,6 @@ $Id$
 
 			<security:authorize ifAnyGranted="GROUP_ADMIN">
 				<display:column property="dateCreatedNoTime" sortable="true" defaultorder="descending" title="Created" />
-				<display:column property="edit" sortable="false" title="Edit" />
-				<display:column property="delete" sortable="false" titleKey="expressionExperiment.delete" />
 			</security:authorize>
 
 			<display:setProperty name="basic.empty.showtable" value="true" />

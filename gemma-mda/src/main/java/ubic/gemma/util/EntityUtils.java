@@ -82,6 +82,26 @@ public class EntityUtils {
      * @param entities
      * @return
      */
+    public static Collection<String> getIdStrings( Collection<? extends Object> entities ) {
+
+        Collection<String> r;
+
+        if ( List.class.isAssignableFrom( entities.getClass() ) ) {
+            r = new ArrayList<String>();
+        } else {
+            r = new HashSet<String>();
+        }
+
+        for ( Object object : entities ) {
+            r.add( getId( object ).toString() );
+        }
+        return r;
+    }
+
+    /**
+     * @param entities
+     * @return
+     */
     public static Map<Long, Object> getIdMap( Collection<? extends Object> entities ) {
         Map<Long, Object> result = new HashMap<Long, Object>();
 
