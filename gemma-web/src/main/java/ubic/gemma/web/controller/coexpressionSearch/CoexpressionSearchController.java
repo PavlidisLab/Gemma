@@ -107,6 +107,7 @@ public class CoexpressionSearchController extends BaseFormController {
             result.setErrorState( "No gene coexpression analysis is available for "
                     + gene.getTaxon().getScientificName() );
             log.info( "No expression experiment set results for query: " + searchOptions );
+            return result;
         }
 
         List<Gene> genes = new ArrayList<Gene>();
