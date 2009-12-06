@@ -133,6 +133,10 @@
 	<listener>
 		<listener-class>ubic.gemma.web.listener.UserCounterListener</listener-class>
 	</listener>
+	<listener>
+		<listener-class>org.springframework.security.web.session.HttpSessionEventPublisher</listener-class>
+	</listener>
+
 
 	<!-- Dispatch Servlet Configuration -->
 	<servlet>
