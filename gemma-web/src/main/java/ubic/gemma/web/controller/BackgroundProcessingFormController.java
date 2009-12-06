@@ -21,9 +21,11 @@ package ubic.gemma.web.controller;
 import java.util.concurrent.FutureTask;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
+import ubic.gemma.security.authentication.ManualAuthenticationService;
 import ubic.gemma.util.progress.TaskRunningService;
 import ubic.gemma.web.util.MessageUtil;
 
@@ -38,6 +40,9 @@ public abstract class BackgroundProcessingFormController extends BaseFormControl
 
     @Autowired
     protected TaskRunningService taskRunningService;
+
+    @Autowired
+    private ManualAuthenticationService manualAuthenticationService;
 
     /**
      * This method can be exposed via AJAX to allow asynchronous calls
@@ -87,4 +92,9 @@ public abstract class BackgroundProcessingFormController extends BaseFormControl
         return mnv;
     }
 
+    protected void provideAuthentication() {
+        if ( SecurityContextHolder.getContext().getAuthentication() == null ) {
+            manualAuthenticationService.authenticateAnonymously();
+        }
+    }
 }

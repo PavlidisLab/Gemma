@@ -123,6 +123,7 @@ public class SecurityController extends BaseFormController {
     }
 
     /**
+     *AJAX
      * @param groupName
      * @return
      */

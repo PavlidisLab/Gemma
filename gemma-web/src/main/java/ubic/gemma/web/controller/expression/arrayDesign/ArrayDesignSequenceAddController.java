@@ -182,6 +182,7 @@ public class ArrayDesignSequenceAddController extends BackgroundProcessingFormCo
                 SequenceType sequenceType = commandObject.getSequenceType();
 
                 ProgressJob job = init( "Loading data from " + fileUpload.getLocalPath() );
+                provideAuthentication();
 
                 job.setForwardingURL( "/Gemma/arrayDesign/associateSequences.html" );
 

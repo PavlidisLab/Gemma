@@ -22,9 +22,8 @@
 	-->
 	<s:http auto-config="false" access-decision-manager-ref="httpAccessDecisionManager" realm="Gemma">
 		<s:http-basic />
-
-		<!-- Disable so we can customize this; see anonymousAuthFilter. -->
-		<s:anonymous enabled="false" />
+ 
+		<s:anonymous granted-authority="GROUP_ANONYMOUS" />
 
 		<s:intercept-url pattern="/admin/**" access="GROUP_ADMIN" />
 		<s:intercept-url pattern="/expressionExperiment/showAllExpressionExperimentLinkSummaries.html" access="GROUP_USER" />
@@ -38,9 +37,7 @@
 
 		<s:logout logout-success-url="/login.jsp" />
 		<s:form-login login-page="/login.jsp" default-target-url="/" />
-		<s:remember-me key="gemma_rm" />
-
-		<s:custom-filter position="ANONYMOUS_FILTER" ref="anonymousAuthFilter" />
+		<s:remember-me key="gemma_rm" /> 
 
 		<!--
 			See http://jira.springframework.org/browse/SEC-834 about the session fixation problem. If we enable it, we get
@@ -51,19 +48,6 @@
 		</s:session-management>
 
 	</s:http>
-
-	<!--
-		This is only needed because we need removeAfterRequest=false. Otherwise we should use s:anonymous in the s:http block.
-	-->
-	<bean id="anonymousAuthFilter" class="org.springframework.security.web.authentication.AnonymousAuthenticationFilter">
-		<property name="key" value="key" />
-		<property name="removeAfterRequest" value="false" />
-		<property name="userAttribute" value="anonymousUser,GROUP_ANONYMOUS" />
-	</bean>
-	<bean id="anonymousAuthenticationProvider" class="org.springframework.security.authentication.AnonymousAuthenticationProvider">
-		<property name="key" value="key" />
-	</bean>
-
 
 	<bean id="httpAccessDecisionManager" class="org.springframework.security.access.vote.AffirmativeBased">
 		<property name="allowIfAllAbstainDecisions" value="true" />

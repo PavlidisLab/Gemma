@@ -21,9 +21,11 @@ package ubic.gemma.web.controller;
 import java.util.concurrent.FutureTask;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
+import ubic.gemma.security.authentication.ManualAuthenticationService;
 import ubic.gemma.util.progress.TaskRunningService;
 
 /**
@@ -41,7 +43,10 @@ public abstract class BackgroundProcessingMultiActionController extends BaseCont
     public final static String JOB_ATTRIBUTE = "taskId";
 
     @Autowired
-    TaskRunningService taskRunningService;
+    private TaskRunningService taskRunningService;
+
+    @Autowired
+    private ManualAuthenticationService manualAuthenticationService;
 
     /**
      * @param taskRunningService the taskRunningService to set
@@ -77,6 +82,15 @@ public abstract class BackgroundProcessingMultiActionController extends BaseCont
         ModelAndView mnv = new ModelAndView( new RedirectView( "/Gemma/processProgress.html?taskId=" + taskId ) );
         mnv.addObject( "taskId", taskId );
         return mnv;
+    }
+
+    /**
+     * 
+     */
+    protected void provideAuthentication() {
+        if ( SecurityContextHolder.getContext().getAuthentication() == null ) {
+            manualAuthenticationService.authenticateAnonymously();
+        }
     }
 
 }

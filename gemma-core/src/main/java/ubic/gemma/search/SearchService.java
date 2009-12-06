@@ -993,6 +993,25 @@ public class SearchService implements InitializingBean {
             matchedCs = compositeSequenceService.findByName( searchString );
         }
 
+        /*
+         * In case the query _is_ a gene
+         */
+        Collection<SearchResult> rawGeneResults = this.databaseGeneSearch( settings );
+        for ( SearchResult searchResult : rawGeneResults ) {
+            Object j = searchResult.getResultObject();
+            if ( Gene.class.isAssignableFrom( j.getClass() ) ) {
+                geneSet.add( ( Gene ) j );
+            }
+        }
+
+        for ( Gene g : geneSet ) {
+            if ( settings.getArrayDesign() != null ) {
+                matchedCs.addAll( compositeSequenceService.findByGene( g, settings.getArrayDesign() ) );
+            } else {
+                matchedCs.addAll( compositeSequenceService.findByGene( g ) );
+            }
+        }
+
         // search by associated genes.
         for ( CompositeSequence sequence : matchedCs ) {
             geneSet.addAll( compositeSequenceService.getGenes( sequence ) );
@@ -1196,6 +1215,10 @@ public class SearchService implements InitializingBean {
             SearchResult compassHitDerivedFrom ) {
         List<SearchResult> results = new ArrayList<SearchResult>();
         for ( Object e : entities ) {
+            if ( e == null ) {
+                log.warn( "Null search result object" );
+                continue;
+            }
             SearchResult esr = dbHitToSearchResult( compassHitDerivedFrom, e );
             results.add( esr );
         }

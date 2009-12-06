@@ -26,7 +26,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.displaytag.decorator.TableDecorator;
 
-import ubic.gemma.analysis.sequence.BlatResultGeneSummary;
+import ubic.gemma.analysis.sequence.GeneMappingSummary;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
@@ -54,7 +54,7 @@ public class CompositeSequenceWrapper extends TableDecorator {
      * @return
      */
     public String getBlatIdentity() {
-        BlatResultGeneSummary object = ( BlatResultGeneSummary ) getCurrentRowObject();
+        GeneMappingSummary object = ( GeneMappingSummary ) getCurrentRowObject();
         BlatResult blatResult = object.getBlatResult();
         String retVal = "";
         if ( blatResult.identity() != null ) {
@@ -67,7 +67,7 @@ public class CompositeSequenceWrapper extends TableDecorator {
      * @return
      */
     public String getBlatResult() {
-        BlatResultGeneSummary object = ( BlatResultGeneSummary ) getCurrentRowObject();
+        GeneMappingSummary object = ( GeneMappingSummary ) getCurrentRowObject();
         BlatResult blatResult = object.getBlatResult();
         String retVal = "Chr. ";
         retVal += blatResult.getTargetChromosome().getName();
@@ -83,7 +83,7 @@ public class CompositeSequenceWrapper extends TableDecorator {
      * @return
      */
     public String getBlatScore() {
-        BlatResultGeneSummary object = ( BlatResultGeneSummary ) getCurrentRowObject();
+        GeneMappingSummary object = ( GeneMappingSummary ) getCurrentRowObject();
         BlatResult blatResult = object.getBlatResult();
         String retVal = "";
         if ( blatResult.score() != null ) {
@@ -96,7 +96,7 @@ public class CompositeSequenceWrapper extends TableDecorator {
      * @return
      */
     public String getGeneProducts() {
-        BlatResultGeneSummary object = ( BlatResultGeneSummary ) getCurrentRowObject();
+        GeneMappingSummary object = ( GeneMappingSummary ) getCurrentRowObject();
         Collection<GeneProduct> geneProducts = object.getGeneProducts();
 
         if ( geneProducts == null || geneProducts.size() == 0 ) {
@@ -123,7 +123,7 @@ public class CompositeSequenceWrapper extends TableDecorator {
      * @return
      */
     public String getGenes() {
-        BlatResultGeneSummary object = ( BlatResultGeneSummary ) getCurrentRowObject();
+        GeneMappingSummary object = ( GeneMappingSummary ) getCurrentRowObject();
         Collection<GeneProduct> geneProducts = object.getGeneProducts();
 
         if ( geneProducts == null || geneProducts.size() == 0 ) {

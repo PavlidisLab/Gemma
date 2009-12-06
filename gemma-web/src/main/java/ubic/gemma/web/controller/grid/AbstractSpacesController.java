@@ -26,6 +26,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.servlet.mvc.AbstractUrlViewController;
 import org.springmodules.javaspaces.gigaspaces.GigaSpacesTemplate;
 
@@ -33,6 +34,7 @@ import ubic.gemma.grid.javaspaces.util.SpacesEnum;
 import ubic.gemma.grid.javaspaces.util.SpacesJobObserver;
 import ubic.gemma.grid.javaspaces.util.SpacesUtil;
 import ubic.gemma.grid.javaspaces.util.entry.SpacesProgressEntry;
+import ubic.gemma.security.authentication.ManualAuthenticationService;
 import ubic.gemma.util.progress.TaskRunningService;
 import ubic.gemma.web.controller.BackgroundControllerJob;
 import ubic.gemma.web.controller.BaseControllerJob;
@@ -55,6 +57,9 @@ public abstract class AbstractSpacesController<T> extends AbstractUrlViewControl
     protected SpacesUtil spacesUtil = null;
 
     protected ApplicationContext updatedContext = null;
+
+    @Autowired
+    private ManualAuthenticationService manualAuthenticationService;
 
     private static Log log = LogFactory.getLog( AbstractSpacesController.class.getName() );
 
@@ -156,5 +161,11 @@ public abstract class AbstractSpacesController<T> extends AbstractUrlViewControl
 
         taskRunningService.submitTask( taskId, new FutureTask<T>( job ) );
         return taskId;
+    }
+
+    protected void provideAuthentication() {
+        if ( SecurityContextHolder.getContext().getAuthentication() == null ) {
+            manualAuthenticationService.authenticateAnonymously();
+        }
     }
 }

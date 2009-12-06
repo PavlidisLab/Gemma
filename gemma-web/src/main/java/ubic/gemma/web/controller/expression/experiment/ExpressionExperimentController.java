@@ -120,6 +120,7 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         @SuppressWarnings("synthetic-access")
         public ModelAndView call() throws Exception {
             ProgressJob job = init( "Deleting dataset: " + ee.getId() );
+            provideAuthentication();
 
             expressionExperimentService.delete( ee );
             saveMessage( "Dataset " + ee.getShortName() + " removed from Database" );
@@ -143,6 +144,7 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         @SuppressWarnings("synthetic-access")
         public Boolean call() throws Exception {
             ProgressJob job = init( "Removing primary reference..." );
+            provideAuthentication();
 
             job.updateProgress( "Loading experiment" );
             ExpressionExperiment ee = expressionExperimentService.load( eeId );
@@ -180,6 +182,7 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
 
         public ExpressionExperimentDetailsValueObject call() throws Exception {
             ProgressJob job = init( "Updating expression experiment info..." );
+            provideAuthentication();
 
             ExpressionExperiment ee = expressionExperimentService.load( command.getId() );
             if ( ee == null )
@@ -221,6 +224,7 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
 
         public ExpressionExperimentDetailsValueObject call() throws Exception {
             ProgressJob job = init( "Updating primary reference..." );
+            provideAuthentication();
 
             ExpressionExperiment expressionExperiment = expressionExperimentService.load( eeId );
             if ( expressionExperiment == null )

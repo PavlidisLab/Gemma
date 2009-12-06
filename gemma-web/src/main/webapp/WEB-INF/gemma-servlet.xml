@@ -667,7 +667,7 @@
 						</property>
 						<property name="includes">
 							<list>
-								<value>getBlatMappingSummary</value>
+								<value>getGeneMappingSummary</value>
 								<value>getCsSummaries</value>
 								<value>search</value>
 							</list>
@@ -1584,7 +1584,7 @@
 						</property>
 					</bean>
 				</entry>
-				<entry key="ubic.gemma.analysis.sequence.BlatResultGeneSummary">
+				<entry key="ubic.gemma.analysis.sequence.GeneMappingSummary">
 					<bean class="org.directwebremoting.spring.ConverterConfig">
 						<property name="type" value="bean" />
 						<property name="excludes">

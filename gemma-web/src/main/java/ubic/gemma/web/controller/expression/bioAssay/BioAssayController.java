@@ -64,7 +64,7 @@ public class BioAssayController extends BackgroundProcessingMultiActionControlle
 
         public ModelAndView call() throws Exception {
 
-            ProgressJob job = init( "Marking BioAssay: " + bioAssay.getName() + " as missing data" );
+            ProgressJob job = init( "Marking BioAssay: " + bioAssay.getName() + " as missing data" );provideAuthentication();
 
             sampleRemoveService.markAsMissing( this.bioAssay );
             saveMessage( "BioAssay  " + bioAssay.getName() + " marked as missing data." );

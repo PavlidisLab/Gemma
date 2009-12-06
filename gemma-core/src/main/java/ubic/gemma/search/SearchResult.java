@@ -31,6 +31,7 @@ public class SearchResult implements Comparable<SearchResult> {
      * @param searchResult
      */
     public SearchResult( Object searchResult ) {
+        if ( searchResult == null ) throw new IllegalArgumentException( "Search result cannot be null" );
         this.resultObject = searchResult;
         this.resultClass = ReflectionUtil.getBaseForImpl( searchResult.getClass() );
         this.objectId = EntityUtils.getId( resultObject );
@@ -150,7 +151,8 @@ public class SearchResult implements Comparable<SearchResult> {
 
     @Override
     public String toString() {
-        return this.getResultObject() + " matched in: " + ( this.highlightedText != null ? "'" + this.highlightedText + "'" : "(?)" );
+        return this.getResultObject() + " matched in: "
+                + ( this.highlightedText != null ? "'" + this.highlightedText + "'" : "(?)" );
     }
 
     /**

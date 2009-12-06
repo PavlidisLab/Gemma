@@ -151,7 +151,7 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
     @SuppressWarnings("unchecked")
     @Override
     public Collection<CompositeSequence> findByGene( Gene gene ) {
-        final String queryString = "select distinct cs from CompositeSequenceImpl cs, BioSequenceImpl bs, BlatAssociationImpl ba, GeneProductImpl   gp, GeneImpl gene  "
+        final String queryString = "select distinct cs from CompositeSequenceImpl cs, BioSequenceImpl bs, BioSequence2GeneProductImpl ba, GeneProductImpl gp, GeneImpl gene  "
                 + "where gp.gene=gene and cs.biologicalCharacteristic=bs and ba.geneProduct=gp  and ba.bioSequence=bs and gene = :gene";
         return this.getHibernateTemplate().findByNamedParam( queryString, "gene", gene );
     }
@@ -164,7 +164,7 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
     @SuppressWarnings("unchecked")
     @Override
     public Collection<CompositeSequence> findByGene( Gene gene, ArrayDesign arrayDesign ) {
-        final String queryString = "select distinct cs from CompositeSequenceImpl cs, BioSequenceImpl bs, BlatAssociationImpl ba, GeneProductImpl   gp, GeneImpl gene  "
+        final String queryString = "select distinct cs from CompositeSequenceImpl cs, BioSequenceImpl bs, BioSequence2GeneProductImpl ba, GeneProductImpl gp, GeneImpl gene  "
                 + "where gp.gene=gene and cs.biologicalCharacteristic=bs and ba.bioSequence=bs and ba.geneProduct=gp  and gene = :gene and cs.arrayDesign=:arrayDesign ";
         return this.getHibernateTemplate().findByNamedParam( queryString, new String[] { "gene", "arrayDesign" },
                 new Object[] { gene, arrayDesign } );

@@ -216,7 +216,7 @@ Gemma.ProbeDetailsGrid = Ext.extend(Ext.grid.GridPanel, {
 								tooltip : "Transcripts at this genomic location"
 							}],
 					store : new Ext.data.Store({
-								proxy : new Ext.data.DWRProxy(CompositeSequenceController.getBlatMappingSummary),
+								proxy : new Ext.data.DWRProxy(CompositeSequenceController.getGeneMappingSummary),
 								reader : new Ext.data.ListRangeReader({
 										// id : "blatResult" // don't use an id; let Ext define
 										// one for us.
@@ -258,7 +258,7 @@ Gemma.ProbeDetailsGrid = Ext.extend(Ext.grid.GridPanel, {
 		var seq = record.get("blatResult").querySequence;
 		var cs = record.get("compositeSequence");
 
-		if (cs !== null) {
+		if (cs !== null && Ext.get("probe-description")) {
 			var csDesc = cs.description !== null ? cs.description : "[None provided]";
 			dh.overwrite("probe-description", {
 						tag : 'li',
@@ -268,40 +268,43 @@ Gemma.ProbeDetailsGrid = Ext.extend(Ext.grid.GridPanel, {
 					});
 		}
 
-		dh.append("sequence-info", {
-					tag : 'li',
-					html : "Length: " + seq.length,
-					"ext:qtip" : "Sequence length in bases"
-				});
-		dh.append("sequence-info", {
-					tag : 'li',
-					html : "Type: " + seq.type.value,
-					"ext:qtip" : "Sequence type as classified by Gemma"
-				});
-		var repeatFrac = seq.fractionRepeats ? Math.round((seq.fractionRepeats * 1000) / 10) : 0;
-		dh.append("sequence-info", {
-					tag : 'li',
-					html : "Repeat-masked bases: " + repeatFrac + "%",
-					"ext:qtip" : "Percent bases masked by RepeatMasker"
-				});
-
-		dh.append("sequence-info", {
-			tag : 'li',
-			html : "Sequence: <div ext:qtip='Bases in lower-case were masked by RepeatMasker' class='clob' style='margin:3px;height:30px;font-size:smaller;font-style:courier'>"
-					+ seq.sequence + "</div>"
-		});
-
-		if (seq.sequenceDatabaseEntry) {
-			dh.append("probe-sequence-name", {
-						tag : 'a',
-						id : "ncbiLink",
-						target : "_blank",
-						title : "view at NCBI",
-						href : "http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=Nucleotide&cmd=search&term="
-								+ seq.sequenceDatabaseEntry.accession,
-						html : "<img src ='" + Gemma.NCBI_ICON + "'/>",
-						"ext:qtip" : "View sequence at NCBI"
+		if (seq && Ext.get("sequence-info")) {
+			dh.append("sequence-info", {
+						tag : 'li',
+						html : "Length: " + seq.length,
+						"ext:qtip" : "Sequence length in bases"
 					});
+
+			dh.append("sequence-info", {
+						tag : 'li',
+						html : "Type: " + seq.type.value,
+						"ext:qtip" : "Sequence type as classified by Gemma"
+					});
+			var repeatFrac = seq.fractionRepeats ? Math.round((seq.fractionRepeats * 1000) / 10) : 0;
+			dh.append("sequence-info", {
+						tag : 'li',
+						html : "Repeat-masked bases: " + repeatFrac + "%",
+						"ext:qtip" : "Percent bases masked by RepeatMasker"
+					});
+
+			dh.append("sequence-info", {
+				tag : 'li',
+				html : "Sequence: <div ext:qtip='Bases in lower-case were masked by RepeatMasker' class='clob' style='margin:3px;height:30px;font-size:smaller;font-style:courier'>"
+						+ seq.sequence + "</div>"
+			});
+
+			if (seq.sequenceDatabaseEntry && Ext.get("probe-sequence-name")) {
+				dh.append("probe-sequence-name", {
+							tag : 'a',
+							id : "ncbiLink",
+							target : "_blank",
+							title : "view at NCBI",
+							href : "http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=Nucleotide&cmd=search&term="
+									+ seq.sequenceDatabaseEntry.accession,
+							html : "<img src ='" + Gemma.NCBI_ICON + "'/>",
+							"ext:qtip" : "View sequence at NCBI"
+						});
+			}
 		}
 	}
 
@@ -563,8 +566,10 @@ Gemma.ProbeGrid = Ext.extend(Ext.grid.GridPanel, {
 		var query = Ext.getCmp('search-field').getValue();
 
 		// swap out table proxy, temporarily.
+		this.getBottomToolbar().changePage(0);
 		var oldprox = this.getStore().proxy;
 		this.getStore().proxy = new Ext.data.DWRProxy(CompositeSequenceController.search);
+		
 		this.getStore().load({
 					params : [query, id]
 				});

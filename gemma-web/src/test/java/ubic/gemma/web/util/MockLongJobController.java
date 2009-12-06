@@ -76,6 +76,7 @@ public class MockLongJobController extends BackgroundProcessingFormController {
         public ModelAndView call() throws Exception {
 
             ProgressJob job = init( "Doing something that will take a while" );
+            provideAuthentication();
 
             long millis = System.currentTimeMillis();
             while ( System.currentTimeMillis() - millis < JOB_LENGTH ) {

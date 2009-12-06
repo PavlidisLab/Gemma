@@ -75,6 +75,7 @@ public class ExpressionDataFileUploadController extends AbstractSpacesController
             populateCommandObject( commandObject );
 
             ProgressJob job = init( "Loading data from " + file.getName() );
+            provideAuthentication();
 
             InputStream stream = FileTools.getInputStreamFromPlainOrCompressedFile( file.getAbsolutePath() );
 
@@ -149,6 +150,7 @@ public class ExpressionDataFileUploadController extends AbstractSpacesController
          */
         public SimpleExpressionExperimentCommandValidation call() throws Exception {
             ProgressJob job = init( "Validating" );
+            provideAuthentication();
 
             /*
              * Check that 1) Data file is basically valid and parseable 2) The array design matches the data files.

@@ -113,8 +113,8 @@ CompositeSequenceController.getCsSummaries = function(p0, callback) {
 	dwr.engine._execute(CompositeSequenceController._path, 'CompositeSequenceController', 'getCsSummaries', p0,
 			callback);
 }
-CompositeSequenceController.getBlatMappingSummary = function(p0, callback) {
-	dwr.engine._execute(CompositeSequenceController._path, 'CompositeSequenceController', 'getBlatMappingSummary', p0,
+CompositeSequenceController.getGeneMappingSummary = function(p0, callback) {
+	dwr.engine._execute(CompositeSequenceController._path, 'CompositeSequenceController', 'getGeneMappingSummary', p0,
 			callback);
 }
 // ====================================================================================

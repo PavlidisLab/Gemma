@@ -112,6 +112,7 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
         public ModelAndView call() throws Exception {
 
             ProgressJob job = init( "Generating ArrayDesign Report summary" );
+            provideAuthentication();
 
             if ( arrayDesignId == null ) {
                 if ( this.getDoForward() ) saveMessage( "Generated summary for all platforms" );
@@ -144,7 +145,7 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
 
         public ModelAndView call() throws Exception {
 
-            ProgressJob job = init( "Deleting Array: " + ad.getShortName() );
+            ProgressJob job = init( "Deleting Array: " + ad.getShortName() );provideAuthentication();
 
             arrayDesignService.remove( ad );
             saveMessage( "Array " + ad.getShortName() + " removed from Database." );

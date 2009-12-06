@@ -65,12 +65,11 @@ public class ExpressionExperimentDataFetchController extends BackgroundProcessin
         public ModelAndView call() throws Exception {
 
             ProgressJob job = init( "Fetching coexpression data" );
+            provideAuthentication();
 
-            /* start time */
             StopWatch watch = new StopWatch();
             watch.start();
 
-            /* 'do yer thang' */
             assert this.command != null;
             Long eeId = ( Long ) this.command;
             ExpressionExperiment ee = expressionExperimentService.load( eeId );
@@ -113,8 +112,8 @@ public class ExpressionExperimentDataFetchController extends BackgroundProcessin
         public ModelAndView call() throws Exception {
 
             ProgressJob job = init( "Fetching data" );
+            provideAuthentication();
 
-            /* start time */
             StopWatch watch = new StopWatch();
             watch.start();
 
@@ -240,8 +239,8 @@ public class ExpressionExperimentDataFetchController extends BackgroundProcessin
         public ModelAndView call() throws Exception {
 
             ProgressJob job = init( "Fetching diff ex data" );
+            provideAuthentication();
 
-            /* start time */
             StopWatch watch = new StopWatch();
             watch.start();
 

@@ -35,7 +35,7 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
  * @author paul
  * @version $Id$
  */
-public class BlatResultGeneSummary implements Serializable {
+public class GeneMappingSummary implements Serializable {
 
     private static final long serialVersionUID = 8899320580201273360L;
 
@@ -59,7 +59,7 @@ public class BlatResultGeneSummary implements Serializable {
     // this and other ids are stored as strings to keep client side happy.
     private String blatResultId;
 
-    public BlatResultGeneSummary() {
+    public GeneMappingSummary() {
         geneProductMap = new HashMap<GeneProduct, Gene>();
         geneProductIdMap = new HashMap<String, GeneProduct>();
         geneProductIdGeneMap = new HashMap<String, Gene>();
