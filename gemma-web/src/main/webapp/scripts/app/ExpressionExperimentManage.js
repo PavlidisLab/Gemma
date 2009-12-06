@@ -211,18 +211,28 @@ Ext.onReady(function() {
 	};
 
 	var flagRenderer = function(value, metadata, record, rowIndex, colIndex, store) {
+		var id = record.get('id');
 		var result = '';
 		if (record.get('validatedFlag')) {
 			result = result + '<img src="/Gemma/images/icons/emoticon_smile.png" alt="validated" title="validated"/>';
 		}
 
 		if (record.get('troubleFlag')) {
-
 			result = result + '<img src="/Gemma/images/icons/stop.png" alt="trouble" title="trouble"/>';
 		}
+
 		if (!record.get('isPublic')) {
-			result = result + '<img src="/Gemma/images/icons/lock.png" alt="not public" title="not public"/>';
+			result = result
+					+ '<a href="#" onClick="return managePermissions(\'ExpressionExperiment\','
+					+ id
+					+ ')"><img ext:qtip="Data are not public; click to edit permissions" src="/Gemma/images/icons/lock.png" alt="not public"/></a>';
+		} else {
+			result = result
+					+ '<a href="#" onClick="return managePermissions(\'ExpressionExperiment\','
+					+ id
+					+ ')"><img ext:qtip="Data are publicly viewable; click to edit permissions" src="/Gemma/images/icons/lock_open2.png" "public"/></a>';
 		}
+
 		return result;
 
 	};

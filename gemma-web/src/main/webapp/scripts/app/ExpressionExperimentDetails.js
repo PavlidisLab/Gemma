@@ -1,7 +1,6 @@
 Ext.namespace('Gemma');
 Ext.BLANK_IMAGE_URL = '/Gemma/images/default/s.gif';
 
-
 /**
  * This is not a visual component but we want to use it with the componentmanager.
  * 
@@ -242,7 +241,8 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 		var params = {}
 		this.visDiffWindow = new Gemma.VisualizationWithThumbsWindow({
 					readMethod : DEDVController.getDEDVForDiffExVisualizationByThreshold,
-					title : "Top diff. ex. probes for " + factorDetails
+					title : "Top diff. ex. probes for " + factorDetails,
+					downloadLink : String.format("/Gemma/dedv/downloadDEDV.html?ee={0}&rs={1}&thresh={2}", eeid, diffResultId, Gemma.DIFFEXVIS_QVALUE_THRESHOLD)
 				});
 		this.visDiffWindow.show({
 					params : [eeid, diffResultId, Gemma.DIFFEXVIS_QVALUE_THRESHOLD]
@@ -301,11 +301,21 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 
 			result = result + '<img src="/Gemma/images/icons/stop.png" alt="trouble" title="trouble"/>';
 		}
-		if (!ee.isPublic) {
-			result = result + '<img src="/Gemma/images/icons/lock.png" alt="not public" title="not public"/>';
-		} else {
-			result = result + '<img src="/Gemma/images/icons/lock_open2.png" alt="public" title="public"/>';
+
+		if (this.editable) {
+			if (!ee.isPublic) {
+				result = result
+						+ '<a href="#" onClick="return managePermissions(\'ExpressionExperiment\','
+						+ ee.id
+						+ ')"><img ext:qtip="Data are not public; click to edit permissions" src="/Gemma/images/icons/lock.png" alt="not public"/></a>';
+			} else {
+				result = result
+						+ '<a href="#" onClick="return managePermissions(\'ExpressionExperiment\','
+						+ ee.id
+						+ ')"><img ext:qtip="Data are publicly viewable; click to edit permissions" src="/Gemma/images/icons/lock_open2.png" "public"/></a>';
+			}
 		}
+
 		return result;
 
 	},

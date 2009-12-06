@@ -22,6 +22,7 @@ package ubic.gemma.web.controller.expression.experiment;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -30,6 +31,7 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -337,9 +339,26 @@ public class DEDVController {
 
         }
 
+        Collection<DoubleVectorValueObject> dedvs = getDiffExVectors( eeId, resultSetId, threshold );
+
+        // Map<ExpressionExperiment, LinkedHashMap<BioAssay, Map<ExperimentalFactor, Double>>> layouts = null;
+        // FIXME: Commented out for performance and factor info not displayed on front end yet anyway.
+        // layouts = experimentalDesignVisualizationService.sortVectorDataByDesign( dedvs );
+
+        return makeVisCollection( dedvs, null, null, null );
+
+    }
+
+    /**
+     * @param eeId
+     * @param resultSetId
+     * @param threshold
+     * @return
+     */
+    private Collection<DoubleVectorValueObject> getDiffExVectors( Long eeId, Long resultSetId, Double threshold ) {
+
         StopWatch watch = new StopWatch();
         watch.start();
-
         AnalysisResultSet ar = differentialExpressionResultService.loadAnalysisResult( resultSetId );
         if ( ar == null ) return null;
 
@@ -364,17 +383,10 @@ public class DEDVController {
         Collection<DoubleVectorValueObject> dedvs = processedExpressionDataVectorService.getProcessedDataArraysByProbe(
                 ees, probes, false );
 
-        // Map<ExpressionExperiment, LinkedHashMap<BioAssay, Map<ExperimentalFactor, Double>>> layouts = null;
-        // FIXME: Commented out for performance and factor info not displayed on front end yet anyway.
-        // layouts = experimentalDesignVisualizationService.sortVectorDataByDesign( dedvs );
-
-        watch.stop();
-        Long time = watch.getTime();
-
-        log.info( "Retrieved " + dedvs.size() + " DEDVs for " + ar.getId() + " ResultSetId and " + probes.size()
-                + " genes in " + time + " ms." );
-
-        return makeVisCollection( dedvs, null, null, null );
+        if ( watch.getTime() > 1000 )
+            log.info( "Retrieved " + dedvs.size() + " DEDVs for " + ar.getId() + " ResultSetId and " + probes.size()
+                    + " genes in " + watch.getTime() + " ms." );
+        return dedvs;
 
     }
 
@@ -552,8 +564,23 @@ public class DEDVController {
         StopWatch watch = new StopWatch();
         watch.start();
 
-        Collection<Long> geneIds = extractIds( request.getParameter( "g" ) );
-        Collection<Long> eeIds = extractIds( request.getParameter( "ee" ) );
+        Collection<Long> geneIds = extractIds( request.getParameter( "g" ) ); // might not be any
+        Collection<Long> eeIds = extractIds( request.getParameter( "ee" ) ); // might not be there
+        /*
+         * The following should be set if we're viewing diff. ex results.
+         */
+        String threshSt = request.getParameter( "thresh" ); // qvalue threshold.
+        String resultSetIdSt = request.getParameter( "rs" );
+
+        Double thresh = null;
+        if ( StringUtils.isNumeric( threshSt ) ) {
+            thresh = Double.parseDouble( threshSt );
+        }
+
+        Long resultSetId = null;
+        if ( StringUtils.isNumeric( resultSetIdSt ) ) {
+            resultSetId = Long.parseLong( resultSetIdSt );
+        }
 
         ModelAndView mav = new ModelAndView( new TextView() );
 
@@ -563,7 +590,41 @@ public class DEDVController {
 
         }
 
-        Map<ExpressionExperiment, Map<Gene, Collection<DoubleVectorValueObject>>> result = getDEDV( eeIds, geneIds );
+        Map<ExpressionExperiment, Map<Gene, Collection<DoubleVectorValueObject>>> result = null;
+
+        if ( thresh != null && resultSetId != null ) {
+
+            Long eeId = eeIds.iterator().next();
+
+            Collection<DoubleVectorValueObject> diffExVectors = getDiffExVectors( eeId, resultSetId, thresh );
+
+            if ( diffExVectors == null || diffExVectors.isEmpty() ) {
+                mav.addObject( "text", "No DEDV results" );
+                return mav;
+            }
+
+            /*
+             * Organize the vectors in the same way expected by the ee+gene type of request.
+             */
+            ExpressionExperiment ee = expressionExperimentService.load( eeId );
+
+            result = new HashMap<ExpressionExperiment, Map<Gene, Collection<DoubleVectorValueObject>>>();
+            Map<Gene, Collection<DoubleVectorValueObject>> gmap = new HashMap<Gene, Collection<DoubleVectorValueObject>>();
+
+            for ( DoubleVectorValueObject dv : diffExVectors ) {
+                for ( Gene g : dv.getGenes() ) {
+                    if ( !gmap.containsKey( g ) ) {
+                        gmap.put( g, new HashSet<DoubleVectorValueObject>() );
+                    }
+                    gmap.get( g ).add( dv );
+                }
+            }
+
+            result.put( ee, gmap );
+
+        } else {
+            result = getDEDV( eeIds, geneIds );
+        }
 
         if ( result == null || result.isEmpty() ) {
             mav.addObject( "text", " No DEDV results for genes: " + geneIds + " and datasets: " + eeIds );
@@ -610,7 +671,8 @@ public class DEDVController {
     private String format4File( Map<ExpressionExperiment, Map<Gene, Collection<DoubleVectorValueObject>>> result ) {
         StringBuffer converted = new StringBuffer();
         Map<Long, String> genes = new HashMap<Long, String>(); // Saves us from loading genes unneccsarily
-        converted.append( ExpressionDataFileService.DISCLAIMER + "\n" );
+        converted.append( "# Generated by Gemma\n# " + ( new Date() ) + "\n" );
+        converted.append( ExpressionDataFileService.DISCLAIMER + "#\n");
         for ( ExpressionExperiment ee : result.keySet() ) {
 
             boolean didHeaderForEe = false;
@@ -637,9 +699,9 @@ public class DEDVController {
 
                     if ( dedv.getData() != null || dedv.getData().length != 0 ) {
                         for ( double data : dedv.getData() ) {
-                            converted.append( String.format( "%.3f", data ) + "|" );
+                            converted.append( String.format( "%.3f", data ) + "\t" );
                         }
-                        converted.deleteCharAt( converted.length() - 1 ); // remove the pipe.
+                        converted.deleteCharAt( converted.length() - 1 ); // remove the trailing tab
                     }
                     converted.append( "\n" );
                 }
@@ -902,13 +964,13 @@ public class DEDVController {
     private String makeHeader( DoubleVectorValueObject dedv ) {
         StringBuilder buf = new StringBuilder();
         ExpressionExperiment ee = dedv.getExpressionExperiment();
-        buf.append( ee.getShortName() + " : " + ee.getName() + "\n" );
+        buf.append( "# " + ee.getShortName() + " : " + ee.getName() + "\n" );
 
         buf.append( "Gene Symbol\tGene Name\tProbe\t" );
 
         bioAssayDimensionService.thaw( dedv.getBioAssayDimension() );
         for ( BioAssay ba : dedv.getBioAssayDimension().getBioAssays() ) {
-            buf.append( ba.getName() + "|" );
+            buf.append( ba.getName() + "\t" );
         }
         buf.deleteCharAt( buf.length() - 1 );
 
@@ -930,10 +992,9 @@ public class DEDVController {
                 result.put( e, new HashMap<Gene, Collection<DoubleVectorValueObject>>() );
             }
             Map<Gene, Collection<DoubleVectorValueObject>> innerMap = result.get( e );
-            
-            if (v.getGenes() == null || v.getGenes().isEmpty())
-                continue;
-            
+
+            if ( v.getGenes() == null || v.getGenes().isEmpty() ) continue;
+
             for ( Gene g : v.getGenes() ) {
                 if ( !innerMap.containsKey( g ) ) {
                     innerMap.put( g, new HashSet<DoubleVectorValueObject>() );

@@ -841,6 +841,7 @@ Gemma.VisualizationWithThumbsWindow = Ext.extend(Ext.Window, {
 											id : this.downloadDataBtnId,
 											icon : '../images/download.gif',
 											cls : 'x-btn-text-icon',
+											hidden : this.downloadLink === undefined,
 											disabled : true, // enabled after load.
 											tooltip : "Download displayed data in a tab-delimited format",
 											handler : this.downloadData.createDelegate(this)

@@ -84,8 +84,7 @@ public class ExpressionExperimentDataFetchController extends BackgroundProcessin
 
             ProgressManager.destroyProgressJob( job );
             watch.stop();
-            log.debug( "Finished writing and downloading co-expression file; done in " + watch.getTime()
-                    + " milliseconds" );
+            log.debug( "Finished getting co-expression file; done in " + watch.getTime() + " milliseconds" );
 
             String url = "/Gemma/getData.html?file=" + f.getName();
 
