@@ -21,7 +21,7 @@
 			<strong>Details</strong> will display more information about the dataset, if available from GEO, including information
 			about platforms. This information is often not available for a day or two after the data sets becomes publicly available.
 		</p>
-		<form action="<c:url value="/geoBrowser/showBatch.html" />" method="POST">
+		<form action="<c:url value="/admin/geoBrowser/showBatch.html" />" method="POST">
 			<input type="submit" name="prev" value="Show Last Batch" />
 			<input type="submit" name="next" value="Show Next Batch" />
 				Skip: <input type="text" name="skip"   width="100" />
