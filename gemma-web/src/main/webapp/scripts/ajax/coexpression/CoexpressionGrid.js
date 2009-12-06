@@ -319,14 +319,15 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 		Ext.DomHelper.applyStyles("coexpression-msg", "height: 2.2em");
 		Ext.DomHelper.overwrite("coexpression-msg", [{
 			tag : 'img',
-			src : '/Gemma/images/icons/warning.png'
+			src : '/Gemma/images/icons/information.png'
 		},
 		{
 			tag : 'span',
 			html : "&nbsp;&nbsp;" + errorMessage					
 		}]);
 		
-		this.loadMask.hide();		
+		this.loadMask.hide();
+		this.hide();
 	},
 
 	clearError : function() {

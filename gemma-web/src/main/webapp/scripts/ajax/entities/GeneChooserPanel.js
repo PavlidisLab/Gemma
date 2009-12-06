@@ -1,5 +1,5 @@
 /*
- * GeneGrid, GeneChooserPanel, GeneChooserToolbar. Widget for picking genes. Allows user to search for and select one or
+ * GeneGrid  GeneChooserToolbar. Widget for picking genes. Allows user to search for and select one or
  * more genes from the database. The selected genes are kept in a table which can be edited. This component is the top
  * part of the coexpression interface, but should be reusable.
  * 
@@ -15,9 +15,9 @@ Ext.namespace('Gemma');
 Gemma.MAX_GENES_PER_QUERY = 100;
 
 /**
- * Table of genes
+ * Table of genes with toolbar for searching.
  * 
- * @class Gemma.GeneChooserPanel
+ * @class GeneGrid
  * @extends Gemma.GemmaGridPanel
  */
 Gemma.GeneGrid = Ext.extend(Ext.grid.GridPanel, {

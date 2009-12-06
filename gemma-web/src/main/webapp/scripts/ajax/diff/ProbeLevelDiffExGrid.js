@@ -15,7 +15,7 @@ Gemma.ProbeLevelDiffExGrid = Ext.extend(Ext.grid.GridPanel, {
 	viewConfig : {
 // forceFit : true
 	},
-	
+
 	readMethod : DifferentialExpressionSearchController.getDifferentialExpression,
 
 	convertEE : function(s) {
@@ -27,7 +27,7 @@ Gemma.ProbeLevelDiffExGrid = Ext.extend(Ext.grid.GridPanel, {
 	},
 
 	initComponent : function() {
-			
+
 		Ext.apply(this, {
 					record : Ext.data.Record.create([{
 								name : "expressionExperiment",
@@ -49,7 +49,7 @@ Gemma.ProbeLevelDiffExGrid = Ext.extend(Ext.grid.GridPanel, {
 							}])
 				});
 
-			this.searchInGridField = new Ext.form.TextField({
+		this.searchInGridField = new Ext.form.TextField({
 					enableKeyEvents : true,
 					emptyText : 'Filter',
 					tooltip : "Text typed here will ",
@@ -63,7 +63,7 @@ Gemma.ProbeLevelDiffExGrid = Ext.extend(Ext.grid.GridPanel, {
 						}
 					}
 				});
-				
+
 		if (this.pageSize) {
 			Ext.apply(this, {
 						store : new Gemma.PagingDataStore({
@@ -101,9 +101,8 @@ Gemma.ProbeLevelDiffExGrid = Ext.extend(Ext.grid.GridPanel, {
 									}
 								})
 					});
-					
-		
-					Ext.apply(this, {
+
+			Ext.apply(this, {
 						bbar : new Ext.Toolbar({
 									items : ['->', {
 												xtype : 'button',
@@ -181,46 +180,39 @@ Gemma.ProbeLevelDiffExGrid = Ext.extend(Ext.grid.GridPanel, {
 
 		Gemma.ProbeLevelDiffExGrid.superclass.initComponent.call(this);
 
-			this.on("cellclick", this.rowClickHandler.createDelegate(this), this);
-			//once the store is loaded validate to see if it has any records and pass delegate reference to store
-			this.store.on("load", this.validate.createDelegate(this));			
-			
+		this.on("cellclick", this.rowClickHandler.createDelegate(this), this);
+		// once the store is loaded validate to see if it has any records and pass delegate reference to store
+		this.store.on("load", this.validate.createDelegate(this));
+
 	},
-	
-	
-	
+
 	/**
-	 * Checks if store contains any results if not print message indicating that there are no
-	 * differential analyses for this taxon. Triggered on load event firing.
+	 * Checks if store contains any results if not print message indicating that there are no differential analyses for
+	 * this taxon. Triggered on load event firing.
 	 */
-	validate : function() {	
-		if(this.store.getCount()==0){
-			//taxon from hidden field in jsp.
-			var scientificNameTaxon = dwr.util.getValue("taxonScientificName");
-			this.handleError("No gene differential analysis is available for " 	+ scientificNameTaxon);					
+	validate : function() {
+		if (this.store.getCount() == 0) {
+			this.handleError("No differential expression results available");
 		}
 	},
-	
-	
-	
+
 	/**
 	 * Print error message called when application throws and exception or error message set on result.
 	 */
 	handleError : function(errorMessage) {
 		Ext.DomHelper.applyStyles("diffExpression-msg", "height: 2.2em");
 		Ext.DomHelper.overwrite("diffExpression-msg", [{
-			tag : 'img',
-			src : '/Gemma/images/icons/warning.png'
-		},
-		{
-			tag : 'span',
-			html : "&nbsp;&nbsp;" + errorMessage					
-		}]);	
-		
+							tag : 'img',
+							src : '/Gemma/images/icons/information.png'
+						}, {
+							tag : 'span',
+							html : "&nbsp;&nbsp;" + errorMessage
+						}]);
+
+		this.hide();
+
 	},
-	
-	
-	
+
 	searchForText : function(button, keyev) {
 		var text = this.searchInGridField.getValue();
 		if (text.length < 2) {
@@ -239,10 +231,11 @@ Gemma.ProbeLevelDiffExGrid = Ext.extend(Ext.grid.GridPanel, {
 		var value = new RegExp(Ext.escapeRe(text), 'i');
 		return function(r, id) {
 			var obj = r.data;
-			return value.match(obj.expressionExperiment.name) || value.match(obj.expressionExperiment.shortName) || value.match(obj.experimentalFactors[0].name);
+			return value.match(obj.expressionExperiment.name) || value.match(obj.expressionExperiment.shortName)
+					|| value.match(obj.experimentalFactors[0].name);
 		}
 	},
-	
+
 	getEEIds : function() {
 		var result = [];
 		this.store.each(function(rec) {
@@ -266,52 +259,52 @@ Gemma.ProbeLevelDiffExGrid = Ext.extend(Ext.grid.GridPanel, {
 			return "";
 		}
 	},
-	
+
 	visStyler : function(value, metadata, record, row, col, ds) {
 		return "<img src='/Gemma/images/icons/chart_curve.png' ext:qtip='Visualize the data' />";
 	},
-	
+
 	rowClickHandler : function(grid, rowIndex, columnIndex, e) {
-	
-		if (!this.getSelectionModel().hasSelection()) 
+
+		if (!this.getSelectionModel().hasSelection())
 			return;
 
+		var record = this.getStore().getAt(rowIndex);
+		var fieldName = this.getColumnModel().getDataIndex(columnIndex);
 
-			var record = this.getStore().getAt(rowIndex);
-			var fieldName = this.getColumnModel().getDataIndex(columnIndex);
-			
+		if (fieldName == 'visualize') {
 
-			if (fieldName == 'visualize') {
-				
-				var ee = record.data.expressionExperiment;
-				var gene = record.data.gene;
-				var geneId;
-				
-				//Gene object might not be availiable in store, if not check if geneId is embeded in page. 
-				if (gene != null){
-						geneId = gene.id;
-				}else{
-					 geneId = dwr.util.getValue("gene");	//would be nice if there was a way to get the gene object.... 
-				}
+			var ee = record.data.expressionExperiment;
+			var gene = record.data.gene;
+			var geneId;
 
-				if (this.visDifWindow != null)
-					this.visDifWindow.close();
-			
-							
-				var title = "Visualization of probes in:  "	+ ee.shortName;
-				var downloadDedvLink = String.format(
-											"<a ext:qtip='Download raw data in a tab delimted format'  target='_blank'  href='/Gemma/dedv/downloadDEDV.html?ee={0} &g={1}' > <img src='/Gemma/images/download.gif'/></a>",
-											ee.id, geneId);
-					
-				this.visDifWindow = new Gemma.VisualizationWithThumbsWindow({
-					title : title,
-					thumbnails : false,
-					downloadLink : downloadDedvLink,
-					readMethod : DEDVController.getDEDVForDiffExVisualizationByExperiment
-				});
-								
-				this.visDifWindow.show({params : [ee.id, geneId, Gemma.DIFFEXVIS_QVALUE_THRESHOLD] });
+			// Gene object might not be availiable in store, if not check if geneId is embeded in page.
+			if (gene != null) {
+				geneId = gene.id;
+			} else {
+				geneId = dwr.util.getValue("gene"); // would be nice if there was a way to get the gene object....
 			}
+
+			if (this.visDifWindow != null)
+				this.visDifWindow.close();
+
+			var title = "Visualization of probes in:  " + ee.shortName;
+			var downloadDedvLink = String
+					.format(
+							"<a ext:qtip='Download raw data in a tab delimted format'  target='_blank'  href='/Gemma/dedv/downloadDEDV.html?ee={0} &g={1}' > <img src='/Gemma/images/download.gif'/></a>",
+							ee.id, geneId);
+
+			this.visDifWindow = new Gemma.VisualizationWithThumbsWindow({
+						title : title,
+						thumbnails : false,
+						downloadLink : downloadDedvLink,
+						readMethod : DEDVController.getDEDVForDiffExVisualizationByExperiment
+					});
+
+			this.visDifWindow.show({
+						params : [ee.id, geneId, Gemma.DIFFEXVIS_QVALUE_THRESHOLD]
+					});
+		}
 	}
 
 });
@@ -376,6 +369,3 @@ Gemma.ProbeLevelDiffExGrid.getEFStyler = function() {
 	}
 	return Gemma.ProbeLevelDiffExGrid.efStyler;
 };
-
-
-		

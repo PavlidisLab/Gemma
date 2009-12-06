@@ -34,6 +34,7 @@ import ubic.gemma.analysis.expression.diff.DiffExpressionSelectedFactorCommand;
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionMetaAnalysisValueObject;
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionValueObject;
 import ubic.gemma.analysis.expression.diff.GeneDifferentialExpressionService;
+import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSetService;
 import ubic.gemma.model.analysis.expression.FactorAssociatedAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
@@ -152,12 +153,20 @@ public class DifferentialExpressionSearchController extends BaseFormController {
         if ( eeScopeIds != null && !eeScopeIds.isEmpty() ) {
             eeScopeSize = eeScopeIds.size();
         } else {
-            if ( command.getEeSetName() != null )
-                eeScopeSize = this.expressionExperimentSetService.findByName( command.getEeSetName() ).iterator()
-                        .next().getExperiments().size();
+            if ( command.getEeSetName() != null ) {
+                Collection<ExpressionExperimentSet> eeSet = this.expressionExperimentSetService.findByName( command
+                        .getEeSetName() );
 
-            else if ( command.getEeSetId() >= 0 )
+                if ( eeSet == null ) {
+                    throw new IllegalArgumentException( "Unknown or ambiguous set name: " + command.getEeSetName() );
+                }
+
+                eeScopeSize = eeSet.iterator().next().getExperiments().size();
+            }
+
+            else if ( command.getEeSetId() >= 0 ) {
                 eeScopeSize = this.expressionExperimentSetService.load( command.getEeSetId() ).getExperiments().size();
+            }
 
         }
 
@@ -392,7 +401,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
      * @param eeIds
      * @param threshold
      * @return
-     */ 
+     */
     private DifferentialExpressionMetaAnalysisValueObject getDifferentialExpressionMetaAnalysis( Long geneId,
             Collection<DiffExpressionSelectedFactorCommand> selectedFactors, double threshold ) {
 

@@ -104,8 +104,7 @@ public class CoexpressionSearchController extends BaseFormController {
         Long eeSetId = getEESet( searchOptions, gene );
 
         if ( eeSetId == null ) {
-            result.setErrorState( "No gene coexpression analysis is available for "
-                    + gene.getTaxon().getScientificName() );
+            result.setErrorState( "No coexpression results available" );
             log.info( "No expression experiment set results for query: " + searchOptions );
             return result;
         }

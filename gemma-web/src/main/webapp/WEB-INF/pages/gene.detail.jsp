@@ -106,7 +106,7 @@
 			onclick="showHelpTip(event, 'Top data sets in which the gene is Differentially expressed in; results are listed per probe so a data set may be listed more than once. Use the link at right for more detailed differential analysis'); return false"><img
 				src="/Gemma/images/help.png" /> </a> &nbsp;
 
-		<a title="Go To Advanced Differential Expression Search with <%out.print( gene.getOfficialSymbol() );%>"
+		<a id="diff-link" title="Go To Advanced Differential Expression Search with <%out.print( gene.getOfficialSymbol() );%>"
 			href="/Gemma/diff/diffExpressionSearch.html?g=<%out.print( gene.getId() );%>&thres=0.01&t=<%out.print( gene.getTaxon().getId() );%>&setName=All <%out.print( gene.getTaxon().getCommonName() );%>">
 			<img src="<c:url value='/images/icons/diff-ex.png'/>" /> </a>
 
@@ -123,7 +123,7 @@
 			onclick="showHelpTip(event, 'Top genes with which this gene is coexpressed. Use the link at right to go to a more detailed coexpression results'); return false"><img
 				src="/Gemma/images/help.png" /> </a> &nbsp;
 
-		<a title="Do Advanced Coexpression Search with <%out.print( gene.getOfficialSymbol() );%>"
+		<a id="coexpression-link" title="Do Advanced Coexpression Search with <%out.print( gene.getOfficialSymbol() );%>"
 			href="/Gemma/searchCoexpression.html?g=<%out.print( gene.getId() );%>&s=3&t=<%out.print( gene.getTaxon().getId() );%>&an=All <%out.print( gene.getTaxon().getCommonName() );%>">
 			<img src="<c:url value='/images/icons/co-ex.png'/>" /> </a>
 

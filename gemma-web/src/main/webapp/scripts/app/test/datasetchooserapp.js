@@ -13,7 +13,7 @@ Gemma.DatasetChooser.app = function() {
 			Ext.QuickTips.init();
 			Ext.state.Manager.setProvider(new Ext.state.CookieProvider());
 
-			// gcp = new Gemma.GeneChooserPanel({
+			// gcp = new Gemma.GeneGrid({
 			// frame : true,
 			// renderTo : 'but',
 			// width : 400,
