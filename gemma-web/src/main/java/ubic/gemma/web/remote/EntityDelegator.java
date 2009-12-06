@@ -19,7 +19,7 @@
 package ubic.gemma.web.remote;
 
 /**
- * Bean to expose for remote access via AJAX, when all that is needed is the ID.
+ * Bean to expose for remote access via AJAX, when all that is needed is the ID and a way to know what the class is.
  * 
  * @author Paul
  * @version $Id$

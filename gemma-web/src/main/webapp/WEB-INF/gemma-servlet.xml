@@ -79,7 +79,7 @@
 				<prop key="/gene/*">geneController</prop>
 				<prop key="/geoBrowser/*">geoRecordBrowserController</prop>
 				<prop key="/blatTrack.html">blatResultTrackController</prop>
-				<prop key="/admin/securityManager.html">securityFormController</prop>
+				<prop key="/admin/securityManager.html">securityController</prop>
 				<prop key="/admin/maintenanceMode.html">maintenanceModeController</prop>
 				<prop key="/admin/systemStats.html">systemStatsController</prop>
 				<prop key="/diff/diffExpressionAnalysis.html">differentialExpressionAnalysisController</prop>
@@ -117,6 +117,7 @@
 	<!-- ==================================================== -->
 	<bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/register.html" />
 	<bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/userProfile.html" />
+	<bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/manageGroups.html" />
 	<bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/passwordHint.html" />
 	<bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/admin/userManager.html" />
 	<bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/admin/indexer.html" />
@@ -428,7 +429,7 @@
 		</property>
 	</bean>
 
-	<bean id="securityFormController" class="ubic.gemma.web.controller.security.SecurityFormController">
+	<bean id="securityController" class="ubic.gemma.web.controller.security.SecurityController">
 
 		<property name="commandName">
 			<value>securityCommand</value>
@@ -438,6 +439,9 @@
 		</property>
 		<property name="securityService">
 			<ref bean="securityService" />
+		</property>
+		<property name="userManager">
+			<ref bean="userManager" />
 		</property>
 		<property name="expressionExperimentService">
 			<ref bean="expressionExperimentService" />
@@ -1205,6 +1209,28 @@
 						<property name="includes">
 							<list>
 								<value>getAllenBrainAtlasLink</value>
+							</list>
+						</property>
+					</bean>
+				</entry>
+				<entry key="SecurityController">
+					<bean class="org.directwebremoting.spring.CreatorConfig">
+						<property name="creator">
+							<bean class="org.directwebremoting.spring.BeanCreator">
+								<property name="bean" ref="securityController" />
+							</bean>
+						</property>
+						<property name="includes">
+							<list>
+								<value>createGroup</value>
+								<value>getAvailableGroups</value>
+								<value>getSecurityInfo</value>
+								<value>makePrivate</value>
+								<value>makePublic</value>
+								<value>addGroupWriteable</value>
+								<value>addGroupReadable</value>
+								<value>addUserToGroup</value>
+								<value>removeUserFromGroup</value>
 							</list>
 						</property>
 					</bean>
@@ -2037,6 +2063,11 @@
 								<value>description</value>
 							</list>
 						</property>
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.web.controller.security.SecurityInfoValueObject">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="bean" />
 					</bean>
 				</entry>
 			</map>

@@ -145,13 +145,14 @@ DEDVController.getDEDVForVisualization = function(p0, p1, callback) {
 DEDVController.getVectorData = function(p0, callback) {
 	dwr.engine._execute(DEDVController._path, 'DEDVController', 'getVectorData', p0, callback);
 }
-DEDVController.getDEDVForDiffExVisualizationByThreshold = function(p0, p1,p2, callback) {
-	dwr.engine._execute(DEDVController._path, 'DEDVController', 'getDEDVForDiffExVisualizationByThreshold', p0, p1,p2,callback);
+DEDVController.getDEDVForDiffExVisualizationByThreshold = function(p0, p1, p2, callback) {
+	dwr.engine._execute(DEDVController._path, 'DEDVController', 'getDEDVForDiffExVisualizationByThreshold', p0, p1, p2,
+			callback);
 }
-DEDVController.getDEDVForDiffExVisualizationByExperiment = function(p0, p1,p2, callback) {
-	dwr.engine._execute(DEDVController._path, 'DEDVController', 'getDEDVForDiffExVisualizationByExperiment', p0, p1,p2,callback);
+DEDVController.getDEDVForDiffExVisualizationByExperiment = function(p0, p1, p2, callback) {
+	dwr.engine._execute(DEDVController._path, 'DEDVController', 'getDEDVForDiffExVisualizationByExperiment', p0, p1,
+			p2, callback);
 }
-
 
 // ====================================================================================
 if (DifferentialExpressionAnalysisController == null)
@@ -181,7 +182,7 @@ DifferentialExpressionAnalysisController.run = function(p0, callback) {
 if (DifferentialExpressionSearchController == null)
 	var DifferentialExpressionSearchController = {};
 DifferentialExpressionSearchController._path = '/Gemma/dwr';
-DifferentialExpressionSearchController.getDifferentialExpression = function(p0, p1,p2, callback) {
+DifferentialExpressionSearchController.getDifferentialExpression = function(p0, p1, p2, callback) {
 	dwr.engine._execute(DifferentialExpressionSearchController._path, 'DifferentialExpressionSearchController',
 			'getDifferentialExpression', p0, p1, p2, callback);
 }
@@ -389,19 +390,19 @@ ExpressionExperimentSetController.getExperimentsInSet = function(p0, callback) {
 	dwr.engine._execute(ExpressionExperimentSetController._path, 'ExpressionExperimentSetController',
 			'getExperimentsInSet', p0, callback);
 }
-//====================================================================================
+// ====================================================================================
 
 if (ExpressionExperimentReportGenerationController == null)
 	var ExpressionExperimentReportGenerationController = {};
 ExpressionExperimentReportGenerationController._path = '/Gemma/dwr';
 
 ExpressionExperimentReportGenerationController.run = function(p0, callback) {
-	dwr.engine._execute(ExpressionExperimentReportGenerationController._path, 'ExpressionExperimentReportGenerationController', 'run', p0,
-			callback);
+	dwr.engine._execute(ExpressionExperimentReportGenerationController._path,
+			'ExpressionExperimentReportGenerationController', 'run', p0, callback);
 }
 ExpressionExperimentReportGenerationController.runAll = function(callback) {
-	dwr.engine._execute(ExpressionExperimentReportGenerationController._path, 'ExpressionExperimentReportGenerationController',
-			'runAll',  callback);
+	dwr.engine._execute(ExpressionExperimentReportGenerationController._path,
+			'ExpressionExperimentReportGenerationController', 'runAll', callback);
 }
 // ====================================================================================
 if (ExtCoexpressionSearchController == null)
@@ -471,6 +472,38 @@ GeoBrowserService.toggleUsability = function(p0, callback) {
 	dwr.engine._execute(GeoBrowserService._path, 'GeoBrowserService', 'toggleUsability', p0, callback);
 }
 // ====================================================================================
+if (SecurityController == null)
+	var SecurityController = {};
+SecurityController._path = '/Gemma/dwr';
+SecurityController.createGroup = function(p0, callback) {
+	dwr.engine._execute(SecurityController._path, 'SecurityController', 'createGroup', p0, callback);
+}
+SecurityController.getAvailableGroups = function(callback) {
+	dwr.engine._execute(SecurityController._path, 'SecurityController', 'getAvailableGroups', callback);
+}
+SecurityController.getSecurityInfo = function(p0, callback) {
+	dwr.engine._execute(SecurityController._path, 'SecurityController', 'getSecurityInfo', p0, callback);
+}
+SecurityController.addUserToGroup = function(p0, p1, callback) {
+	dwr.engine._execute(SecurityController._path, 'SecurityController', 'addUserToGroup', p0, p1, callback);
+}
+SecurityController.removeUserFromGroup = function(p0, p1, callback) {
+	dwr.engine._execute(SecurityController._path, 'SecurityController', 'removeUserFromGroup', p0, p1, callback);
+}
+SecurityController.makeGroupReadable = function(p0, p1, callback) {
+	dwr.engine._execute(SecurityController._path, 'SecurityController', 'makeGroupReadable', p0, p1, callback);
+}
+SecurityController.makeGroupWriteable = function(p0, p1, callback) {
+	dwr.engine._execute(SecurityController._path, 'SecurityController', 'makeGroupWriteable', p0, p1, callback);
+}
+SecurityController.makePrivate = function(p0, callback) {
+	dwr.engine._execute(SecurityController._path, 'SecurityController', 'makePrivate', p0, callback);
+}
+SecurityController.makePublic = function(p0, callback) {
+	dwr.engine._execute(SecurityController._path, 'SecurityController', 'makePublic', p0, callback);
+}
+
+// ====================================================================================
 if (SystemMonitorController == null)
 	var SystemMonitorController = {};
 SystemMonitorController._path = '/Gemma/dwr';
@@ -496,9 +529,7 @@ LinkAnalysisController._path = '/Gemma/dwr';
 LinkAnalysisController.run = function(p0, callback) {
 	dwr.engine._execute(LinkAnalysisController._path, 'LinkAnalysisController', 'run', p0, callback);
 }
-LinkAnalysisController.run = function(p0, callback) {
-	dwr.engine._execute(LinkAnalysisController._path, 'LinkAnalysisController', 'run', p0, callback);
-}
+
 // ====================================================================================
 if (MgedOntologyService == null)
 	var MgedOntologyService = {};
@@ -621,10 +652,10 @@ UserListController.getUsers = function(callback) {
 UserListController.saveUser = function(p0, callback) {
 	dwr.engine._execute(UserListController._path, 'UserListController', 'saveUser', p0, callback);
 }
-//=====================================================================================
+// =====================================================================================
 if (LinkOutController == null)
 	var LinkOutController = {};
 LinkOutController._path = '/Gemma/dwr';
 LinkOutController.getAllenBrainAtlasLink = function(p0, callback) {
-	dwr.engine._execute(LinkOutController._path, 'LinkOutController', 'getAllenBrainAtlasLink',p0, callback);
+	dwr.engine._execute(LinkOutController._path, 'LinkOutController', 'getAllenBrainAtlasLink', p0, callback);
 }

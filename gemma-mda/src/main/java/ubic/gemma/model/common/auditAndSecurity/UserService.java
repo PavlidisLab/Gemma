@@ -39,7 +39,7 @@ public interface UserService {
      * @param user
      * @param group
      */
-    @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" /* this applies to the first arg only! */})
+    @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" /* this applies to the first arg only! - should use an expression */})
     public void addUserToGroup( UserGroup group, User user );
 
     /**

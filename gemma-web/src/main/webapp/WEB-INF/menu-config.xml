@@ -30,7 +30,8 @@
 		<Menu name="UserMenu" title="My Gemma" roles="GROUP_ADMIN,GROUP_USER">
 			<Item name="EeCurate" title="Manage data" page="/expressionExperiment/showAllExpressionExperimentLinkSummaries.html" />
 			<Item name="Upload data" description="Upload your expression data" title="menu.uploaddata" page="/expressionExperiment/upload.html" />
-			<Item name="UserMenu" title="menu.user" description="User Menu" page="/userProfile.html" />
+			<Item name="UserMenu" title="menu.user" description="Edit profile" page="/userProfile.html" />
+			<Item name="GroupMenu" title="menu.groups" description="Manage groups" page="/manageGroups.html" />
 		</Menu>
 		<Menu name="ResourcesMenu" title="resourcesMenu.title">
 			<Item name="Overview of Gemma" description="Gemma overview and general help" title="resourcesMenu.generalhelp"
@@ -46,7 +47,7 @@
 			<Item name="LoadData" title="Add data" description="Import from GEO or ArrayExpress" page="/admin/loadExpressionExperiment.html" />
 			<Item name="BrowseGeo" title="Browse GEO" page="/admin/geoBrowser/showBatch.html" />
 			<Item name="CharBrowse" title="Search annotations" page="/characteristicBrowser.html" />
-			<Item name="ViewUsers" title="menu.admin.users" page="/admin/userManager.html" /> 
+			<Item name="ViewUsers" title="menu.admin.users" page="/admin/userManager.html" />
 		</Menu>
 	</Menus>
 </MenuConfig>

@@ -242,7 +242,8 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 		this.visDiffWindow = new Gemma.VisualizationWithThumbsWindow({
 					readMethod : DEDVController.getDEDVForDiffExVisualizationByThreshold,
 					title : "Top diff. ex. probes for " + factorDetails,
-					downloadLink : String.format("/Gemma/dedv/downloadDEDV.html?ee={0}&rs={1}&thresh={2}", eeid, diffResultId, Gemma.DIFFEXVIS_QVALUE_THRESHOLD)
+					downloadLink : String.format("/Gemma/dedv/downloadDEDV.html?ee={0}&rs={1}&thresh={2}", eeid,
+							diffResultId, Gemma.DIFFEXVIS_QVALUE_THRESHOLD)
 				});
 		this.visDiffWindow.show({
 					params : [eeid, diffResultId, Gemma.DIFFEXVIS_QVALUE_THRESHOLD]
@@ -303,17 +304,9 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 		}
 
 		if (this.editable) {
-			if (!ee.isPublic) {
-				result = result
-						+ '<a href="#" onClick="return managePermissions(\'ExpressionExperiment\','
-						+ ee.id
-						+ ')"><img ext:qtip="Data are not public; click to edit permissions" src="/Gemma/images/icons/lock.png" alt="not public"/></a>';
-			} else {
-				result = result
-						+ '<a href="#" onClick="return managePermissions(\'ExpressionExperiment\','
-						+ ee.id
-						+ ')"><img ext:qtip="Data are publicly viewable; click to edit permissions" src="/Gemma/images/icons/lock_open2.png" "public"/></a>';
-			}
+			result = result
+					+ Gemma.SecurityManager.getSecurityLink(
+							'ubic.gemma.model.expression.experiment.ExpressionExperimentImpl', ee.id, ee.isPublic);
 		}
 
 		return result;

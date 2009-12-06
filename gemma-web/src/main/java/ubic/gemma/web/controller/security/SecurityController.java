@@ -47,7 +47,9 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.security.SecurityService;
+import ubic.gemma.security.authentication.UserManager;
 import ubic.gemma.web.controller.BaseFormController;
+import ubic.gemma.web.remote.EntityDelegator;
 import ubic.gemma.web.util.ConfigurationCookie;
 
 /**
@@ -56,7 +58,7 @@ import ubic.gemma.web.util.ConfigurationCookie;
  * @author keshav
  * @version $Id$
  */
-public class SecurityFormController extends BaseFormController {
+public class SecurityController extends BaseFormController {
 
     /**
      * @author keshav
@@ -82,31 +84,146 @@ public class SecurityFormController extends BaseFormController {
 
     }
 
-    private SecurityService securityService = null;
-    private ExpressionExperimentService expressionExperimentService = null;
-    private ProbeCoexpressionAnalysisService probeCoexpressionAnalysisService = null;
-    private GeneCoexpressionAnalysisService geneCoexpressionAnalysisService = null;
-    private DifferentialExpressionAnalysisService differentialExpressionAnalysisService = null;
-
-    private ExpressionExperimentSetService expressionExperimentSetService;
-    private final String expressionExperimentType = ExpressionExperiment.class.getSimpleName();
-    private final String arrayDesignType = ArrayDesign.class.getSimpleName();
-    private final String probeCoexpressionAnalysisType = ProbeCoexpressionAnalysis.class.getSimpleName();
-    private final String geneCoexpressionAnalysisType = GeneCoexpressionAnalysis.class.getSimpleName();
-    private final String differentialExpressionAnalysisType = DifferentialExpressionAnalysis.class.getSimpleName();
-
-    private final String expressionExperimentSetType = ExpressionExperimentSet.class.getSimpleName();
-    private final String PUBLIC = "Public";
-
-    private final String PRIVATE = "Private";
-
     private static final String COOKIE_NAME = "securityCookie";
 
-    public SecurityFormController() {
+    private final String arrayDesignType = ArrayDesign.class.getSimpleName();
+    private DifferentialExpressionAnalysisService differentialExpressionAnalysisService = null;
+    private final String differentialExpressionAnalysisType = DifferentialExpressionAnalysis.class.getSimpleName();
+    private ExpressionExperimentService expressionExperimentService = null;
+    private ExpressionExperimentSetService expressionExperimentSetService;
+
+    private final String expressionExperimentSetType = ExpressionExperimentSet.class.getSimpleName();
+    private final String expressionExperimentType = ExpressionExperiment.class.getSimpleName();
+    private GeneCoexpressionAnalysisService geneCoexpressionAnalysisService = null;
+    private final String geneCoexpressionAnalysisType = GeneCoexpressionAnalysis.class.getSimpleName();
+    private final String PRIVATE = "Private";
+    private ProbeCoexpressionAnalysisService probeCoexpressionAnalysisService = null;
+
+    private final String probeCoexpressionAnalysisType = ProbeCoexpressionAnalysis.class.getSimpleName();
+    private final String PUBLIC = "Public";
+
+    private SecurityService securityService = null;
+
+    private UserManager userManager = null;
+
+    public SecurityController() {
         /*
          * if true, reuses the same command object across the get-submit-process (get-post-process).
          */
         setSessionForm( true );
+    }
+
+    /**
+     * AJAX
+     * 
+     * @return List of group names the user can add members to and/or give permissions on objects to.
+     */
+    public Collection<String> getAvailableGroups() {
+        return userManager.findGroupsForUser( userManager.getCurrentUsername() );
+    }
+
+    /**
+     * @param groupName
+     * @return
+     */
+    public String createGroup( String groupName ) {
+        securityService.createGroup( groupName );
+        return groupName;
+    }
+
+    /**
+     * AJAX
+     * 
+     * @param userName
+     * @param groupName
+     * @return
+     */
+    public boolean removeUserFromGroup( String userName, String groupName ) {
+        securityService.removeUserFromGroup( userName, groupName );
+        return true;
+    }
+
+    /**
+     * AJAX
+     * 
+     * @param userName
+     * @param groupName
+     * @return
+     */
+    public boolean addUserToGroup( String userName, String groupName ) {
+        securityService.addUserToGroup( userName, groupName );
+        return true;
+    }
+
+    /**
+     * AJAX
+     * 
+     * @param ed
+     * @return
+     */
+    public SecurityInfoValueObject getSecurityInfo( EntityDelegator ed ) {
+
+        Securable s = getSecurable( ed );
+
+        boolean isPublic = securityService.isPublic( s );
+
+        SecurityInfoValueObject result = new SecurityInfoValueObject( s );
+
+        result.setPublic( isPublic );
+        result.setGroupsThatCanRead( securityService.getGroupsReadableBy( s ) );
+        result.setGroupsThatCanWrite( securityService.getGroupsEditableBy( s ) );
+
+        return result;
+    }
+
+    /**
+     * AJAX
+     * 
+     * @param ed
+     * @param groupName
+     * @return
+     */
+    public boolean makeGroupReadable( EntityDelegator ed, String groupName ) {
+        Securable s = getSecurable( ed );
+        securityService.makeReadableByGroup( s, groupName );
+        return true;
+    }
+
+    /**
+     * AJAX
+     * 
+     * @param ed
+     * @param groupName
+     * @return
+     */
+    public boolean makeGroupWriteable( EntityDelegator ed, String groupName ) {
+        Securable s = getSecurable( ed );
+        securityService.makeWriteableByGroup( s, groupName );
+        return true;
+    }
+
+    /**
+     * AJAX
+     * 
+     * @param ed
+     * @return
+     */
+    public boolean makePrivate( EntityDelegator ed ) {
+        Securable s = getSecurable( ed );
+        securityService.makePrivate( s );
+        return true;
+    }
+
+    /**
+     * AJAX
+     * 
+     * @param ed
+     * @return
+     */
+    public boolean makePublic( EntityDelegator ed ) {
+        Securable s = getSecurable( ed );
+        securityService.makePublic( s );
+        return true;
     }
 
     /**
@@ -168,6 +285,13 @@ public class SecurityFormController extends BaseFormController {
      */
     public void setSecurityService( SecurityService securityService ) {
         this.securityService = securityService;
+    }
+
+    /**
+     * @param userManager the userManager to set
+     */
+    public void setUserManager( UserManager userManager ) {
+        this.userManager = userManager;
     }
 
     /**
@@ -290,6 +414,33 @@ public class SecurityFormController extends BaseFormController {
         dropDownMap.put( "securableTypes", securableTypes );
 
         return dropDownMap;
+    }
+
+    /**
+     * @param ed
+     * @return
+     */
+    private Securable getSecurable( EntityDelegator ed ) {
+        String classDelegatingFor = ed.getClassDelegatingFor();
+
+        Class<?> clazz;
+        Securable s = null;
+        try {
+            clazz = Class.forName( classDelegatingFor );
+        } catch ( ClassNotFoundException e1 ) {
+            throw new RuntimeException( e1 );
+        }
+        if ( ExpressionExperiment.class.isAssignableFrom( clazz ) ) {
+            s = expressionExperimentService.load( ed.getId() );
+        } else {
+            log.warn( "We don't support that class yet, sorry" );
+            return null;
+        }
+
+        if ( s == null ) {
+            throw new IllegalArgumentException( "Entity does not exist or user does not have access." );
+        }
+        return s;
     }
 
     /**

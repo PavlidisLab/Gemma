@@ -3,6 +3,9 @@ Ext.BLANK_IMAGE_URL = '/Gemma/images/default/s.gif';
 
 Gemma.EE_REPORT_PAGE_SIZE = 25;
 
+/**
+ * Show table of multiple experiments
+ */
 Ext.onReady(function() {
 	Ext.QuickTips.init();
 	Ext.state.Manager.setProvider(new Ext.state.CookieProvider());
@@ -221,18 +224,9 @@ Ext.onReady(function() {
 			result = result + '<img src="/Gemma/images/icons/stop.png" alt="trouble" title="trouble"/>';
 		}
 
-		if (!record.get('isPublic')) {
-			result = result
-					+ '<a href="#" onClick="return managePermissions(\'ExpressionExperiment\','
-					+ id
-					+ ')"><img ext:qtip="Data are not public; click to edit permissions" src="/Gemma/images/icons/lock.png" alt="not public"/></a>';
-		} else {
-			result = result
-					+ '<a href="#" onClick="return managePermissions(\'ExpressionExperiment\','
-					+ id
-					+ ')"><img ext:qtip="Data are publicly viewable; click to edit permissions" src="/Gemma/images/icons/lock_open2.png" "public"/></a>';
-		}
-
+		result = result
+				+ Gemma.SecurityManager.getSecurityLink(
+						'ubic.gemma.model.expression.experiment.ExpressionExperimentImpl', id, record.get('isPublic'));
 		return result;
 
 	};

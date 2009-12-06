@@ -197,6 +197,14 @@ public class SecurityService {
     }
 
     /**
+     * @param userName
+     * @param groupName
+     */
+    public void removeUserFromGroup( String userName, String groupName ) {
+        this.userManager.removeUserFromGroup( userName, groupName );
+    }
+
+    /**
      * @param securables
      * @return the subset which are private, if any
      */
@@ -241,6 +249,36 @@ public class SecurityService {
 
     }
 
+    @Secured( { "ACL_SECURABLE_READ" })
+    public Collection<String> getGroupsEditableBy( Securable s ) {
+        Collection<String> groupNames = userManager.findGroupsForUser( userManager.getCurrentUsername() );
+
+        Collection<String> result = new HashSet<String>();
+
+        for ( String string : groupNames ) {
+            if ( this.isEditableByGroup( s, string ) ) {
+                result.add( string );
+            }
+        }
+
+        return result;
+    }
+
+    @Secured( { "ACL_SECURABLE_READ" })
+    public Collection<String> getGroupsReadableBy( Securable s ) {
+        Collection<String> groupNames = userManager.findGroupsForUser( userManager.getCurrentUsername() );
+
+        Collection<String> result = new HashSet<String>();
+
+        for ( String string : groupNames ) {
+            if ( this.isReadableByGroup( s, string ) ) {
+                result.add( string );
+            }
+        }
+
+        return result;
+    }
+
     /**
      * @param s
      * @param userName
@@ -257,6 +295,34 @@ public class SecurityService {
         requiredPermissions.clear();
         requiredPermissions.add( BasePermission.ADMINISTRATION );
         return hasPermission( s, requiredPermissions, userName );
+    }
+
+    @Secured("ACL_SECURABLE_READ")
+    public boolean isEditableByGroup( Securable s, String groupName ) {
+        List<Permission> requiredPermissions = new ArrayList<Permission>();
+        requiredPermissions.add( BasePermission.WRITE );
+
+        if ( groupHasPermission( s, requiredPermissions, groupName ) ) {
+            return true;
+        }
+
+        requiredPermissions.clear();
+        requiredPermissions.add( BasePermission.ADMINISTRATION );
+        return groupHasPermission( s, requiredPermissions, groupName );
+    }
+
+    @Secured("ACL_SECURABLE_READ")
+    public boolean isReadableByGroup( Securable s, String groupName ) {
+        List<Permission> requiredPermissions = new ArrayList<Permission>();
+        requiredPermissions.add( BasePermission.READ );
+
+        if ( groupHasPermission( s, requiredPermissions, groupName ) ) {
+            return true;
+        }
+
+        requiredPermissions.clear();
+        requiredPermissions.add( BasePermission.ADMINISTRATION );
+        return groupHasPermission( s, requiredPermissions, groupName );
     }
 
     /**
@@ -593,6 +659,8 @@ public class SecurityService {
     }
 
     /**
+     * Check if the current user can access the given group.
+     * 
      * @param groupName
      * @return
      */
@@ -635,13 +703,35 @@ public class SecurityService {
         Acl acl = null;
 
         try {
-            // Lookup only ACLs for SIDs we're interested in
+            // Lookup only ACLs for SIDs we're interested in (this actually get them all)
             acl = aclService.readAclById( objectIdentity, sids );
             // administrative mode = true
             return acl.isGranted( requiredPermissions, sids, true );
         } catch ( NotFoundException ignore ) {
             return false;
         }
+    }
+
+    private boolean groupHasPermission( Securable domainObject, List<Permission> requiredPermissions, String groupName ) {
+        ObjectIdentity objectIdentity = objectIdentityRetrievalStrategy.getObjectIdentity( domainObject );
+
+        List<GrantedAuthority> auths = userManager.findGroupAuthorities( groupName );
+
+        List<Sid> sids = new ArrayList<Sid>();
+        for ( GrantedAuthority a : auths ) {
+            GrantedAuthoritySid sid = new GrantedAuthoritySid( a );
+            sids.add( sid );
+        }
+
+        try {
+            // Lookup only ACLs for SIDs we're interested in (this actually get them all)
+            Acl acl = aclService.readAclById( objectIdentity, sids );
+            // administrative mode = true
+            return acl.isGranted( requiredPermissions, sids, true );
+        } catch ( NotFoundException ignore ) {
+            return false;
+        }
+
     }
 
     /**
