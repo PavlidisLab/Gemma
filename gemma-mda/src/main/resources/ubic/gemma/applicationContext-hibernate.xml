@@ -38,6 +38,8 @@
 			<tx:method name="find*" read-only="true" />
 			<tx:method name="load*" read-only="true" />
 			<tx:method name="thaw*" read-only="true" />
+			<tx:method name="is*" read-only="true" />
+			<tx:method name="count*" read-only="true" />						
 			<tx:method name="findOrCreate" read-only="false" />
 			<!-- other methods use the default transaction settings -->
 			<tx:method name="*" />
