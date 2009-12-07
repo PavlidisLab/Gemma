@@ -60,7 +60,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import ubic.gemma.model.common.auditAndSecurity.Securable;
+import ubic.gemma.model.common.auditAndSecurity.Securable; 
 import ubic.gemma.security.authentication.UserManager;
 import ubic.gemma.util.AuthorityConstants;
 
@@ -147,6 +147,14 @@ public class SecurityService {
     private UserManager userManager;
 
     /**
+     * @param userName
+     * @param groupName
+     */
+    public void addUserToGroup( String userName, String groupName ) {
+        this.userManager.addUserToGroup( userName, groupName );
+    }
+
+    /**
      * @param securables
      * @return
      */
@@ -155,6 +163,39 @@ public class SecurityService {
         for ( Securable s : securables ) {
             boolean p = isPrivate( s );
             result.put( s, p );
+        }
+        return result;
+    }
+
+    public Map<Securable, Boolean> areShared( Collection<? extends Securable> securables ) {
+        Map<Securable, Boolean> result = new HashMap<Securable, Boolean>();
+        for ( Securable s : securables ) {
+            boolean p = isShared( s );
+            result.put( s, p );
+        }
+        return result;
+    }
+
+    /**
+     * @param securables
+     * @return the subset which are private, if any
+     */
+    public Collection<Securable> choosePrivate( Collection<? extends Securable> securables ) {
+        Collection<Securable> result = new HashSet<Securable>();
+        for ( Securable s : securables ) {
+            if ( isPrivate( s ) ) result.add( s );
+        }
+        return result;
+    }
+
+    /**
+     * @param securables
+     * @return the subset that are public, if any
+     */
+    public Collection<Securable> choosePublic( Collection<? extends Securable> securables ) {
+        Collection<Securable> result = new HashSet<Securable>();
+        for ( Securable s : securables ) {
+            if ( isPublic( s ) ) result.add( s );
         }
         return result;
     }
@@ -186,46 +227,6 @@ public class SecurityService {
         this.userManager.createGroup( groupName, auths );
         addUserToGroup( userManager.getCurrentUsername(), groupName );
 
-    }
-
-    /**
-     * @param userName
-     * @param groupName
-     */
-    public void addUserToGroup( String userName, String groupName ) {
-        this.userManager.addUserToGroup( userName, groupName );
-    }
-
-    /**
-     * @param userName
-     * @param groupName
-     */
-    public void removeUserFromGroup( String userName, String groupName ) {
-        this.userManager.removeUserFromGroup( userName, groupName );
-    }
-
-    /**
-     * @param securables
-     * @return the subset which are private, if any
-     */
-    public Collection<Securable> choosePrivate( Collection<? extends Securable> securables ) {
-        Collection<Securable> result = new HashSet<Securable>();
-        for ( Securable s : securables ) {
-            if ( isPrivate( s ) ) result.add( s );
-        }
-        return result;
-    }
-
-    /**
-     * @param securables
-     * @return the subset that are public, if any
-     */
-    public Collection<Securable> choosePublic( Collection<? extends Securable> securables ) {
-        Collection<Securable> result = new HashSet<Securable>();
-        for ( Securable s : securables ) {
-            if ( isPublic( s ) ) result.add( s );
-        }
-        return result;
     }
 
     /**
@@ -279,6 +280,20 @@ public class SecurityService {
         return result;
     }
 
+    @Secured("ACL_SECURABLE_READ")
+    public boolean isEditableByGroup( Securable s, String groupName ) {
+        List<Permission> requiredPermissions = new ArrayList<Permission>();
+        requiredPermissions.add( BasePermission.WRITE );
+
+        if ( groupHasPermission( s, requiredPermissions, groupName ) ) {
+            return true;
+        }
+
+        requiredPermissions.clear();
+        requiredPermissions.add( BasePermission.ADMINISTRATION );
+        return groupHasPermission( s, requiredPermissions, groupName );
+    }
+
     /**
      * @param s
      * @param userName
@@ -295,34 +310,6 @@ public class SecurityService {
         requiredPermissions.clear();
         requiredPermissions.add( BasePermission.ADMINISTRATION );
         return hasPermission( s, requiredPermissions, userName );
-    }
-
-    @Secured("ACL_SECURABLE_READ")
-    public boolean isEditableByGroup( Securable s, String groupName ) {
-        List<Permission> requiredPermissions = new ArrayList<Permission>();
-        requiredPermissions.add( BasePermission.WRITE );
-
-        if ( groupHasPermission( s, requiredPermissions, groupName ) ) {
-            return true;
-        }
-
-        requiredPermissions.clear();
-        requiredPermissions.add( BasePermission.ADMINISTRATION );
-        return groupHasPermission( s, requiredPermissions, groupName );
-    }
-
-    @Secured("ACL_SECURABLE_READ")
-    public boolean isReadableByGroup( Securable s, String groupName ) {
-        List<Permission> requiredPermissions = new ArrayList<Permission>();
-        requiredPermissions.add( BasePermission.READ );
-
-        if ( groupHasPermission( s, requiredPermissions, groupName ) ) {
-            return true;
-        }
-
-        requiredPermissions.clear();
-        requiredPermissions.add( BasePermission.ADMINISTRATION );
-        return groupHasPermission( s, requiredPermissions, groupName );
     }
 
     /**
@@ -379,6 +366,48 @@ public class SecurityService {
         return !isPrivate( s );
     }
 
+    @Secured("ACL_SECURABLE_READ")
+    public boolean isReadableByGroup( Securable s, String groupName ) {
+        List<Permission> requiredPermissions = new ArrayList<Permission>();
+        requiredPermissions.add( BasePermission.READ );
+
+        if ( groupHasPermission( s, requiredPermissions, groupName ) ) {
+            return true;
+        }
+
+        requiredPermissions.clear();
+        requiredPermissions.add( BasePermission.ADMINISTRATION );
+        return groupHasPermission( s, requiredPermissions, groupName );
+    }
+
+    public boolean isShared( Securable s ) {
+        if ( s == null ) {
+            return false;
+        }
+
+        /*
+         * Implementation note: this code mimics AclEntryVoter.vote, but in adminsitrative mode so no auditing etc
+         * happens.
+         */
+
+        List<Permission> perms = new Vector<Permission>();
+        perms.add( BasePermission.READ );
+
+        ObjectIdentity oi = new ObjectIdentityImpl( s.getClass(), s.getId() );
+
+        /*
+         * Note: in theory, it should pay attention to the sid we ask for and return nothing if there is no acl.
+         * However, the implementation actually ignores the sid argument. See BasicLookupStrategy
+         */
+        try {
+            Acl acl = this.aclService.readAclById( oi );
+
+            return isShared( acl );
+        } catch ( NotFoundException nfe ) {
+            return true;
+        }
+    }
+
     /**
      * @param s
      * @param userName
@@ -395,6 +424,27 @@ public class SecurityService {
         requiredPermissions.clear();
         requiredPermissions.add( BasePermission.ADMINISTRATION );
         return hasPermission( s, requiredPermissions, userName );
+    }
+
+    /**
+     * Administrative method to allow a user to get access to an object. This is useful for cases where a data set is
+     * loaded by admin but we need to hand it off to a user.
+     * 
+     * @param s
+     * @param userName
+     */
+    @Secured("GROUP_ADMIN")
+    @Transactional
+    public void makeOwnedByUser( Securable s, String userName ) {
+        MutableAcl acl = getAcl( s );
+        acl.setOwner( new PrincipalSid( userName ) );
+        aclService.updateAcl( acl );
+
+        /*
+         * FIXME: I don't know if these are necessary if you are the owner.
+         */
+        addPrincipalAuthority( s, BasePermission.WRITE, userName );
+        addPrincipalAuthority( s, BasePermission.READ, userName );
     }
 
     /**
@@ -486,27 +536,6 @@ public class SecurityService {
     }
 
     /**
-     * Administrative method to allow a user to get access to an object. This is useful for cases where a data set is
-     * loaded by admin but we need to hand it off to a user.
-     * 
-     * @param s
-     * @param userName
-     */
-    @Secured("GROUP_ADMIN")
-    @Transactional
-    public void makeOwnedByUser( Securable s, String userName ) {
-        MutableAcl acl = getAcl( s );
-        acl.setOwner( new PrincipalSid( userName ) );
-        aclService.updateAcl( acl );
-
-        /*
-         * FIXME: I don't know if these are necessary if you are the owner.
-         */
-        addPrincipalAuthority( s, BasePermission.WRITE, userName );
-        addPrincipalAuthority( s, BasePermission.READ, userName );
-    }
-
-    /**
      * Adds read permission.
      * 
      * @param s
@@ -520,6 +549,10 @@ public class SecurityService {
 
         if ( !groups.contains( groupName ) ) {
             throw new AccessDeniedException( "User doesn't have access to that group" );
+        }
+
+        if ( isReadableByGroup( s, groupName ) ) {
+            return;
         }
 
         addGroupAuthority( s, BasePermission.READ, groupName );
@@ -597,6 +630,10 @@ public class SecurityService {
             throw new AccessDeniedException( "User doesn't have access to that group" );
         }
 
+        if ( isEditableByGroup( s, groupName ) ) {
+            return;
+        }
+
         addGroupAuthority( s, BasePermission.WRITE, groupName );
         addGroupAuthority( s, BasePermission.READ, groupName );
     }
@@ -618,6 +655,14 @@ public class SecurityService {
         }
 
         return result;
+    }
+
+    /**
+     * @param userName
+     * @param groupName
+     */
+    public void removeUserFromGroup( String userName, String groupName ) {
+        this.userManager.removeUserFromGroup( userName, groupName );
     }
 
     /**
@@ -665,7 +710,7 @@ public class SecurityService {
      * @return
      */
     private Collection<String> checkForGroupAccessByCurrentuser( String groupName ) {
-        if ( groupName.equals( AuthorityConstants.ADMIN_GROUP ) ) {
+        if ( groupName.equals( AuthorityConstants.ADMIN_GROUP_NAME ) ) {
             throw new AccessDeniedException( "Attempt to mess with ADMIN privileges denied" );
         }
         Collection<String> groups = userManager.findGroupsForUser( userManager.getCurrentUsername() );
@@ -684,6 +729,29 @@ public class SecurityService {
         } catch ( NotFoundException e ) {
             return null;
         }
+    }
+
+    private boolean groupHasPermission( Securable domainObject, List<Permission> requiredPermissions, String groupName ) {
+        ObjectIdentity objectIdentity = objectIdentityRetrievalStrategy.getObjectIdentity( domainObject );
+
+        List<GrantedAuthority> auths = userManager.findGroupAuthorities( groupName );
+
+        List<Sid> sids = new ArrayList<Sid>();
+        for ( GrantedAuthority a : auths ) {
+            GrantedAuthoritySid sid = new GrantedAuthoritySid( new GrantedAuthorityImpl( userManager.getRolePrefix()
+                    + a.getAuthority() ) );
+            sids.add( sid );
+        }
+
+        try {
+            // Lookup only ACLs for SIDs we're interested in (this actually get them all)
+            Acl acl = aclService.readAclById( objectIdentity, sids );
+            // administrative mode = true
+            return acl.isGranted( requiredPermissions, sids, true );
+        } catch ( NotFoundException ignore ) {
+            return false;
+        }
+
     }
 
     /*
@@ -710,28 +778,6 @@ public class SecurityService {
         } catch ( NotFoundException ignore ) {
             return false;
         }
-    }
-
-    private boolean groupHasPermission( Securable domainObject, List<Permission> requiredPermissions, String groupName ) {
-        ObjectIdentity objectIdentity = objectIdentityRetrievalStrategy.getObjectIdentity( domainObject );
-
-        List<GrantedAuthority> auths = userManager.findGroupAuthorities( groupName );
-
-        List<Sid> sids = new ArrayList<Sid>();
-        for ( GrantedAuthority a : auths ) {
-            GrantedAuthoritySid sid = new GrantedAuthoritySid( a );
-            sids.add( sid );
-        }
-
-        try {
-            // Lookup only ACLs for SIDs we're interested in (this actually get them all)
-            Acl acl = aclService.readAclById( objectIdentity, sids );
-            // administrative mode = true
-            return acl.isGranted( requiredPermissions, sids, true );
-        } catch ( NotFoundException ignore ) {
-            return false;
-        }
-
     }
 
     /**
@@ -769,6 +815,44 @@ public class SecurityService {
          */
         return true;
 
+    }
+
+    /**
+     * @param acl
+     * @return true if the ACL grants READ authority to at least one group that is not admin or agent.
+     */
+    private boolean isShared( Acl acl ) {
+        for ( AccessControlEntry ace : acl.getEntries() ) {
+
+            if ( !ace.getPermission().equals( BasePermission.READ ) ) continue;
+
+            Sid sid = ace.getSid();
+            if ( sid instanceof GrantedAuthoritySid ) {
+                String grantedAuthority = ( ( GrantedAuthoritySid ) sid ).getGrantedAuthority();
+                if ( grantedAuthority.startsWith( "GROUP_" ) && ace.isGranting() ) {
+
+                    if ( grantedAuthority.equals( AuthorityConstants.AGENT_GROUP )
+                            || grantedAuthority.equals( AuthorityConstants.ADMIN_GROUP ) ) {
+                        continue;
+                    }
+                    return true;
+
+                }
+            }
+        }
+
+        /*
+         * Even if the object is not private, it's parent might be and we might inherit that. Recursion happens here.
+         */
+        Acl parentAcl = acl.getParentAcl();
+        if ( parentAcl != null && acl.isEntriesInheriting() ) {
+            return isShared( parentAcl );
+        }
+
+        /*
+         * We didn't find a granted authority for any group.
+         */
+        return false;
     }
 
     /**

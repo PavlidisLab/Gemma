@@ -90,6 +90,8 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
     private String investigators;
 
     private boolean isPublic = true;
+    
+    private boolean isShared = false;
 
     private String linkAnalysisEventType;
 
@@ -638,6 +640,10 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
         return this.isPublic;
     }
 
+    public boolean isShared() {
+        return isShared;
+    }
+
     public void setAccession( String accession ) {
         this.accession = accession;
     }
@@ -793,6 +799,10 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
     public void setSampleRemovedFlags( Collection<AuditEventValueObject> sampleRemovedFlags ) {
 
         this.sampleRemovedFlags = sampleRemovedFlags;
+    }
+
+    public void setShared( boolean isShared ) {
+        this.isShared = isShared;
     }
 
     public void setShortName( String shortName ) {

@@ -129,7 +129,7 @@ version: $Id$
 		</p>
 
 		<p style='margin-left: 200px; width: 500; padding: 10px'>
-			<strong>Trouble logging in?</strong> Gemma recently underwent some upgrades that required a password rest. You will
+			<strong>Trouble logging in?</strong> Gemma recently underwent some upgrades that required a password reset. You will
 			need to request a new password by clicking on the "
 			<a href="<c:url  value='passwordHint.html' />">Forgot your password</a>" link.
 		</p>

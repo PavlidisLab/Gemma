@@ -23,6 +23,7 @@
 		<em>Coming soon!</em>
 	</h3>
 
-	<div id='manageGroups-div'></div>
+	<div id='manageGroups-div'> 
+	</div>
 	<div id='errorMessage' style='width: 500px; margin-bottom: 1em;'></div>
 </body>

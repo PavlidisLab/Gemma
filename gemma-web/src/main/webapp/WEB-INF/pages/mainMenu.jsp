@@ -103,9 +103,6 @@
 						<a href='<c:url value="/admin/indexer.html"/>'> <fmt:message key="menu.compassIndexer" /> </a>
 					</li>
 					<li>
-						<a href='<c:url value="/admin/securityManager.html"/>'> <fmt:message key="menu.securityManager" /> </a>
-					</li>
-					<li>
 						<a href='<c:url value="/expressionExperimentSetManager.html" />'>Manage experiment sets</a>
 					</li>
 					<li>
@@ -116,16 +113,7 @@
 					</li>
 
 				</ul>
-				<strong> Inactive, deprecated, or not ready for prime time </strong>
-				<ul class="compactList" style="padding-left: 3px;">
-					<li>
-						<a href='<c:url value="/bibRefSearch.html"/>'> <fmt:message key="menu.flow.PubMedSearch" /> </a>
-					</li>
-					<li>
-						<a href='<c:url value="/arrayDesign/associateSequences.html"/>'> <fmt:message
-								key="menu.arrayDesignSequenceAdd" /> </a>
-					</li>
-				</ul>
+
 			</div>
 			<div class="roundedcornr_bottom_777249">
 				<div></div>

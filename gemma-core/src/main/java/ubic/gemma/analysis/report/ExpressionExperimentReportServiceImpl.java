@@ -178,6 +178,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
         Map<Long, Collection<AuditEvent>> sampleRemovalEvents = getSampleRemovalEvents( ees );
 
         Map<Securable, Boolean> privacyInfo = securityService.arePrivate( ees );
+        Map<Securable, Boolean> sharingInfo = securityService.areShared( ees );
 
         Date mostRecentDate = new Date( 0 );
 
@@ -283,6 +284,10 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
             ExpressionExperiment ee = eemap.get( id );
             if ( privacyInfo.containsKey( ee ) ) {
                 eeVo.setIsPublic( !privacyInfo.get( ee ) );
+            }
+
+            if ( sharingInfo.containsKey( ee ) ) {
+                eeVo.setShared( sharingInfo.get( ee ) );
             }
 
             results.put( ee.getId(), mostRecentDate );

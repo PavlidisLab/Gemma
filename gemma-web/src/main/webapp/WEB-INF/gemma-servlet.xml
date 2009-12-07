@@ -78,8 +78,7 @@
 				<prop key="/searchCoexpression.html">coexpressionSearchController</prop>
 				<prop key="/gene/*">geneController</prop>
 				<prop key="/geoBrowser/*">geoRecordBrowserController</prop>
-				<prop key="/blatTrack.html">blatResultTrackController</prop>
-				<prop key="/admin/securityManager.html">securityController</prop>
+				<prop key="/blatTrack.html">blatResultTrackController</prop> 
 				<prop key="/admin/maintenanceMode.html">maintenanceModeController</prop>
 				<prop key="/admin/systemStats.html">systemStatsController</prop>
 				<prop key="/diff/diffExpressionAnalysis.html">differentialExpressionAnalysisController</prop>
@@ -428,44 +427,7 @@
 			<ref bean="bioMaterialValidator" />
 		</property>
 	</bean>
-
-	<bean id="securityController" class="ubic.gemma.web.controller.security.SecurityController">
-
-		<property name="commandName">
-			<value>securityCommand</value>
-		</property>
-		<property name="commandClass">
-			<value>ubic.gemma.web.controller.security.SecurityCommand</value>
-		</property>
-		<property name="securityService">
-			<ref bean="securityService" />
-		</property>
-		<property name="userManager">
-			<ref bean="userManager" />
-		</property>
-		<property name="expressionExperimentService">
-			<ref bean="expressionExperimentService" />
-		</property>
-		<property name="probeCoexpressionAnalysisService">
-			<ref bean="probeCoexpressionAnalysisService" />
-		</property>
-		<property name="geneCoexpressionAnalysisService">
-			<ref bean="geneCoexpressionAnalysisService" />
-		</property>
-		<property name="differentialExpressionAnalysisService">
-			<ref bean="differentialExpressionAnalysisService" />
-		</property>
-		<property name="expressionExperimentSetService">
-			<ref bean="expressionExperimentSetService" />
-		</property>
-		<property name="formView">
-			<value>/admin/securityManager</value>
-		</property>
-		<property name="successView">
-			<value>/admin/securityManager</value>
-		</property>
-	</bean>
-
+ 
 	<bean id="bibliographicReferenceEditFormController" class="ubic.gemma.web.controller.common.description.bibref.BibliographicReferenceEditFormController">
 
 		<property name="commandClass">
@@ -1227,10 +1189,13 @@
 								<value>getSecurityInfo</value>
 								<value>makePrivate</value>
 								<value>makePublic</value>
-								<value>addGroupWriteable</value>
-								<value>addGroupReadable</value>
+								<value>makeGroupWriteable</value>
+								<value>makeGroupReadable</value>
+								<value>removeGroupWriteable</value>
+								<value>removeGroupReadable</value>
 								<value>addUserToGroup</value>
 								<value>removeUserFromGroup</value>
+								<value>updatePermissions</value>
 							</list>
 						</property>
 					</bean>

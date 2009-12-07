@@ -19,14 +19,15 @@ Ext.onReady(function() {
 				errhandler : function(data) {
 					alert(data);
 				}
-			})
+			});
 
 		/*
-		 * Show link to add users.
+		 * Show link to add users to groups.
 		 */
 
 		/*
 		 * Show a form to add a new group.
 		 */
+		 
 
 	});

@@ -502,6 +502,15 @@ SecurityController.makePrivate = function(p0, callback) {
 SecurityController.makePublic = function(p0, callback) {
 	dwr.engine._execute(SecurityController._path, 'SecurityController', 'makePublic', p0, callback);
 }
+SecurityController.removeGroupWriteable = function(p0, p1, callback) {
+	dwr.engine._execute(SecurityController._path, 'SecurityController', 'removeGroupWriteable', p0, p1, callback);
+}
+SecurityController.removeGroupReadable = function(p0, p1, callback) {
+	dwr.engine._execute(SecurityController._path, 'SecurityController', 'removeGroupReadable', p0, p1, callback);
+}
+SecurityController.updatePermissions = function(p0, callback) {
+	dwr.engine._execute(SecurityController._path, 'SecurityController', 'updatePermissions', p0, callback);
+}
 
 // ====================================================================================
 if (SystemMonitorController == null)

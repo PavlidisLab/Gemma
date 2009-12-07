@@ -36,6 +36,12 @@ public class AuthorityConstants {
     public static final String ADMIN_GROUP = "GROUP_ADMIN";
 
     /**
+     * The name of the administrator group. Not the same as the group authority! This is originally set by
+     * init-entities.sql
+     */
+    public static final String ADMIN_GROUP_NAME = "Administrators";
+
+    /**
      * The name of the default user group authority. All authenticated users should be in this group or in the
      * administrator group.
      */

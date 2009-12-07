@@ -19,6 +19,7 @@
 package ubic.gemma.web.controller.security;
 
 import java.util.Collection;
+import java.util.HashSet;
 
 import ubic.gemma.model.common.auditAndSecurity.Securable;
 
@@ -30,15 +31,31 @@ import ubic.gemma.model.common.auditAndSecurity.Securable;
  */
 public class SecurityInfoValueObject {
 
-    String entityClazz;
+    /**
+     * Groups the user has control over.
+     */
+    private Collection<String> availableGroups = new HashSet<String>();
 
-    Long entityId;
+    private String entityClazz;
 
-    boolean isPublic;
+    private String entityDescription;
 
-    Collection<String> groupsThatCanRead;
+    private Long entityId;
 
-    Collection<String> groupsThatCanWrite;
+    private String entityName;
+
+    private String entityShortName;
+
+    private Collection<String> groupsThatCanRead = new HashSet<String>();
+
+    private Collection<String> groupsThatCanWrite = new HashSet<String>();
+
+    private boolean isPubliclyReadable;
+
+    private boolean isShared;
+
+    public SecurityInfoValueObject() {
+    }
 
     /**
      * @param s to initialize. Security information will not be filled in.
@@ -46,6 +63,10 @@ public class SecurityInfoValueObject {
     public SecurityInfoValueObject( Securable s ) {
         this.entityClazz = s.getClass().getName();
         this.entityId = s.getId();
+    }
+
+    public Collection<String> getAvailableGroups() {
+        return availableGroups;
     }
 
     /**
@@ -56,10 +77,10 @@ public class SecurityInfoValueObject {
     }
 
     /**
-     * @param entityClazz the entityClazz to set
+     * @return the entityDescription
      */
-    public void setEntityClazz( String entityClazz ) {
-        this.entityClazz = entityClazz;
+    public String getEntityDescription() {
+        return entityDescription;
     }
 
     /**
@@ -70,24 +91,17 @@ public class SecurityInfoValueObject {
     }
 
     /**
-     * @param entityId the entityId to set
+     * @return the entityName
      */
-    public void setEntityId( Long entityId ) {
-        this.entityId = entityId;
+    public String getEntityName() {
+        return entityName;
     }
 
     /**
-     * @return the isPublic
+     * @return the entityShortName
      */
-    public boolean isPublic() {
-        return isPublic;
-    }
-
-    /**
-     * @param isPublic the isPublic to set
-     */
-    public void setPublic( boolean isPublic ) {
-        this.isPublic = isPublic;
+    public String getEntityShortName() {
+        return entityShortName;
     }
 
     /**
@@ -98,6 +112,56 @@ public class SecurityInfoValueObject {
     }
 
     /**
+     * @return the groupsThatCanWrite
+     */
+    public Collection<String> getGroupsThatCanWrite() {
+        return groupsThatCanWrite;
+    }
+
+    public boolean isPubliclyReadable() {
+        return isPubliclyReadable;
+    }
+
+    public void setAvailableGroups( Collection<String> availableGroups ) {
+        this.availableGroups = availableGroups;
+    }
+
+    /**
+     * @param entityClazz the entityClazz to set
+     */
+    public void setEntityClazz( String entityClazz ) {
+        this.entityClazz = entityClazz;
+    }
+
+    /**
+     * @param entityDescription the entityDescription to set
+     */
+    public void setEntityDescription( String entityDescription ) {
+        this.entityDescription = entityDescription;
+    }
+
+    /**
+     * @param entityId the entityId to set
+     */
+    public void setEntityId( Long entityId ) {
+        this.entityId = entityId;
+    }
+
+    /**
+     * @param entityName the entityName to set
+     */
+    public void setEntityName( String entityName ) {
+        this.entityName = entityName;
+    }
+
+    /**
+     * @param entityShortName the entityShortName to set
+     */
+    public void setEntityShortName( String entityShortName ) {
+        this.entityShortName = entityShortName;
+    }
+
+    /**
      * @param groupsThatCanRead the groupsThatCanRead to set
      */
     public void setGroupsThatCanRead( Collection<String> groupsThatCanRead ) {
@@ -105,17 +169,22 @@ public class SecurityInfoValueObject {
     }
 
     /**
-     * @return the groupsThatCanWrite
-     */
-    public Collection<String> getGroupsThatCanWrite() {
-        return groupsThatCanWrite;
-    }
-
-    /**
      * @param groupsThatCanWrite the groupsThatCanWrite to set
      */
     public void setGroupsThatCanWrite( Collection<String> groupsThatCanWrite ) {
         this.groupsThatCanWrite = groupsThatCanWrite;
+    }
+
+    public void setPubliclyReadable( boolean isPubliclyReadable ) {
+        this.isPubliclyReadable = isPubliclyReadable;
+    }
+
+    public void setShared( boolean isShared ) {
+        this.isShared = isShared;
+    }
+
+    public boolean isShared() {
+        return isShared;
     }
 
 }
