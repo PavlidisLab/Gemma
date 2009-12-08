@@ -60,21 +60,11 @@ public class GeneImpl extends ubic.gemma.model.genome.Gene {
                 boolean bothHaveName = this.getOfficialName() != null && that.getOfficialName() != null;
                 boolean bothHavePhysicalLocation = this.getPhysicalLocation() != null
                         && that.getPhysicalLocation() != null;
-                boolean bothHaveGeneProducts = this.getProducts() != null && this.getProducts().size() > 0
-                        && that.getProducts() != null && that.getProducts().size() > 0;
 
                 if ( bothHaveName ) {
                     return this.getOfficialName().equals( that.getOfficialName() );
                 } else if ( bothHavePhysicalLocation ) {
                     return this.getPhysicalLocation().equals( that.getPhysicalLocation() );
-                } else if ( bothHaveGeneProducts ) {
-                    // fastest check: they must any given gene product in common.
-                    GeneProduct thisGeneProduct = this.getProducts().iterator().next();
-                    for ( GeneProduct thatGeneProduct : that.getProducts() ) {
-                        if ( thisGeneProduct.equals( thatGeneProduct ) ) {
-                            return true;
-                        }
-                    }
                 } else {
                     return false; // can't decide, assume unequal.
                 }
