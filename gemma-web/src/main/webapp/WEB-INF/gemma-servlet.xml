@@ -78,7 +78,7 @@
 				<prop key="/searchCoexpression.html">coexpressionSearchController</prop>
 				<prop key="/gene/*">geneController</prop>
 				<prop key="/geoBrowser/*">geoRecordBrowserController</prop>
-				<prop key="/blatTrack.html">blatResultTrackController</prop> 
+				<prop key="/blatTrack.html">blatResultTrackController</prop>
 				<prop key="/admin/maintenanceMode.html">maintenanceModeController</prop>
 				<prop key="/admin/systemStats.html">systemStatsController</prop>
 				<prop key="/diff/diffExpressionAnalysis.html">differentialExpressionAnalysisController</prop>
@@ -427,7 +427,7 @@
 			<ref bean="bioMaterialValidator" />
 		</property>
 	</bean>
- 
+
 	<bean id="bibliographicReferenceEditFormController" class="ubic.gemma.web.controller.common.description.bibref.BibliographicReferenceEditFormController">
 
 		<property name="commandClass">
@@ -1184,7 +1184,12 @@
 						</property>
 						<property name="includes">
 							<list>
+								<value>addUserToGroup</value>
 								<value>createGroup</value>
+								<value>deleteGroup</value>
+								<value>getGroupMembers</value>
+								<value>getUsersData</value>
+								<value>getAvailableSids</value>
 								<value>getAvailableGroups</value>
 								<value>getSecurityInfo</value>
 								<value>makePrivate</value>
@@ -1193,8 +1198,7 @@
 								<value>makeGroupReadable</value>
 								<value>removeGroupWriteable</value>
 								<value>removeGroupReadable</value>
-								<value>addUserToGroup</value>
-								<value>removeUserFromGroup</value>
+								<value>removeUsersFromGroup</value>
 								<value>updatePermissions</value>
 							</list>
 						</property>
@@ -1855,9 +1859,21 @@
 								<value>userName</value>
 								<value>email</value>
 								<value>enabled</value>
-								<value>role</value>
+								<value>currentGroup</value>
+								<value>inGroup</value>
+								<value>allowModification</value>
 							</list>
 						</property>
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.web.controller.common.auditAndSecurity.UserGroupValueObject">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="bean" />
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.web.controller.common.auditAndSecurity.SidValueObject">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="bean" />
 					</bean>
 				</entry>
 				<entry key="ubic.gemma.model.common.auditAndSecurity.AuditEventValueObject">
@@ -2030,7 +2046,7 @@
 						</property>
 					</bean>
 				</entry>
-				<entry key="ubic.gemma.web.controller.security.SecurityInfoValueObject">
+				<entry key="ubic.gemma.web.controller.common.auditAndSecurity.SecurityInfoValueObject">
 					<bean class="org.directwebremoting.spring.ConverterConfig">
 						<property name="type" value="bean" />
 					</bean>

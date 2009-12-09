@@ -249,14 +249,14 @@ public class AclAdvice extends HibernateDaoSupport {
              */
             if ( log.isDebugEnabled() ) log.debug( "Making administratable by GROUP_ADMIN: " + oi );
             grant( acl, BasePermission.ADMINISTRATION, new GrantedAuthoritySid( new GrantedAuthorityImpl(
-                    AuthorityConstants.ADMIN_GROUP ) ) );
+                    AuthorityConstants.ADMIN_GROUP_AUTHORITY ) ) );
 
             /*
              * Let agent read anything
              */
             if ( log.isDebugEnabled() ) log.debug( "Making readable by GROUP_AGENT: " + oi );
             grant( acl, BasePermission.READ, new GrantedAuthoritySid( new GrantedAuthorityImpl(
-                    AuthorityConstants.AGENT_GROUP ) ) );
+                    AuthorityConstants.AGENT_GROUP_AUTHORITY ) ) );
 
             /*
              * If admin, and the object is not a user or group, make it readable by anonymous.

@@ -43,7 +43,7 @@ import ubic.gemma.model.genome.Gene;
 
 /**
  * @author keshav
- * @version $Id$
+ * @version $Id$ 
  * @see ubic.gemma.model.expression.analysis.DifferentialExpressionAnalysisResult
  */
 @Repository

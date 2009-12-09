@@ -71,7 +71,7 @@ Ext.onReady(function() {
 		vtype : 'email'
 	});
 
-	var checkColumn = new Ext.grid.CheckColumn({
+	var checkColumn = new Ext.ux.grid.CheckColumn({
 		header : "Enabled?",
 		dataIndex : 'enabled',
 		width : 55

@@ -43,7 +43,7 @@ Ext.namespace("Ext.ux.data");
  * @param {Object}
  *            config The config object.
  */
-Ext.ux.data.DwrProxy = function(config) {
+Ext.ux.data.DwrProxy = function(method, config) {
 
 	// changed for backwards compatibility with our old Gemma code, where we don't use the api:{read: xxx} format.
 
@@ -57,7 +57,7 @@ Ext.ux.data.DwrProxy = function(config) {
 	// compaibility workaround
 	this.apiActionToHandlerMap['read'] = new Ext.ux.data.DwrProxy.ActionHandler({
 				action : 'read',
-				dwrFunction : config
+				dwrFunction : method
 			});
 	//	
 	// Ext.iterate(Ext.data.Api.actions, function(action) {
@@ -72,7 +72,7 @@ Ext.ux.data.DwrProxy = function(config) {
 	// If it isn't, an Ext.data.DataProxy.Error is thrown.
 	// To avoid this, api is set to apiActionToHandlerMap since they share the same keys ("create", "read", "update",
 	// and "destroy").
-	var upconf = {};
+	var upconf = config || {};
 	upconf.api = this.apiActionToHandlerMap;
 	Ext.ux.data.DwrProxy.superclass.constructor.call(this, upconf);
 };

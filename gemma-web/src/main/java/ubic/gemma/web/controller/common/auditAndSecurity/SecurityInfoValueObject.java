@@ -16,7 +16,7 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.web.controller.security;
+package ubic.gemma.web.controller.common.auditAndSecurity;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -24,35 +24,51 @@ import java.util.HashSet;
 import ubic.gemma.model.common.auditAndSecurity.Securable;
 
 /**
- * Carries security information about an entity
+ * Carries extensive security information about an entity.
  * 
  * @author paul
  * @version $Id$
  */
 public class SecurityInfoValueObject {
 
+    private static final long serialVersionUID = 2166768356457316142L;
+
     /**
      * Groups the user has control over.
      */
     private Collection<String> availableGroups = new HashSet<String>();
 
-    private String entityClazz;
+    /**
+     * Current focus. Can be null
+     */
+    private String currentGroup = null;
 
+    private Boolean currentGroupCanRead = false;
+
+    private Boolean currentGroupCanWrite = false;
+
+    private String entityClazz;
+   
     private String entityDescription;
 
     private Long entityId;
-
+   
     private String entityName;
-
+   
     private String entityShortName;
-
+  
     private Collection<String> groupsThatCanRead = new HashSet<String>();
-
+  
     private Collection<String> groupsThatCanWrite = new HashSet<String>();
-
+  
     private boolean isPubliclyReadable;
-
+  
     private boolean isShared;
+
+    /**
+     * Principal who owns the data. Can be null.
+     */
+    private SidValueObject owner;
 
     public SecurityInfoValueObject() {
     }
@@ -67,6 +83,10 @@ public class SecurityInfoValueObject {
 
     public Collection<String> getAvailableGroups() {
         return availableGroups;
+    }
+
+    public String getCurrentGroup() {
+        return currentGroup;
     }
 
     /**
@@ -118,12 +138,40 @@ public class SecurityInfoValueObject {
         return groupsThatCanWrite;
     }
 
+    public SidValueObject getOwner() {
+        return owner;
+    }
+
+    public boolean isCurrentGroupCanRead() {
+        return currentGroupCanRead;
+    }
+
+    public boolean isCurrentGroupCanWrite() {
+        return currentGroupCanWrite;
+    }
+
     public boolean isPubliclyReadable() {
         return isPubliclyReadable;
     }
 
+    public boolean isShared() {
+        return isShared;
+    }
+
     public void setAvailableGroups( Collection<String> availableGroups ) {
         this.availableGroups = availableGroups;
+    }
+
+    public void setCurrentGroup( String currentGroup ) {
+        this.currentGroup = currentGroup;
+    }
+
+    public void setCurrentGroupCanRead( boolean currentGroupCanRead ) {
+        this.currentGroupCanRead = currentGroupCanRead;
+    }
+
+    public void setCurrentGroupCanWrite( boolean currentGroupCanWrite ) {
+        this.currentGroupCanWrite = currentGroupCanWrite;
     }
 
     /**
@@ -175,16 +223,16 @@ public class SecurityInfoValueObject {
         this.groupsThatCanWrite = groupsThatCanWrite;
     }
 
+    public void setOwner( SidValueObject owner ) {
+        this.owner = owner;
+    }
+
     public void setPubliclyReadable( boolean isPubliclyReadable ) {
         this.isPubliclyReadable = isPubliclyReadable;
     }
 
     public void setShared( boolean isShared ) {
         this.isShared = isShared;
-    }
-
-    public boolean isShared() {
-        return isShared;
     }
 
 }

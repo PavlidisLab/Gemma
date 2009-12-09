@@ -22,7 +22,9 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
+import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,11 +32,8 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.AfterInvocationProvider;
 import org.springframework.security.access.ConfigAttribute;
 import org.springframework.security.acls.afterinvocation.AbstractAclProvider;
-import org.springframework.security.acls.model.Acl;
 import org.springframework.security.acls.model.AclService;
-import org.springframework.security.acls.model.ObjectIdentity;
 import org.springframework.security.acls.model.Permission;
-import org.springframework.security.acls.model.Sid;
 import org.springframework.security.core.Authentication;
 
 import ubic.gemma.model.common.auditAndSecurity.Securable;
@@ -99,41 +98,38 @@ public class AclAfterFilterCollectionForMyData extends AbstractAclProvider {
 
                 // Locate unauthorised Collection elements
                 Iterator collectionIter = filterer.iterator();
+                int count = 0;
+                StopWatch timer = new StopWatch();
+                timer.start();
 
+                /*
+                 * Collect up the securables
+                 */
+                Collection<Securable> securablesToFilter = new HashSet<Securable>();
                 while ( collectionIter.hasNext() ) {
-
                     Object domainObject = collectionIter.next();
-
                     if ( !Securable.class.isAssignableFrom( domainObject.getClass() ) ) {
                         continue;
                     }
+                    securablesToFilter.add( ( Securable ) domainObject );
+                }
 
-                    ObjectIdentity objectIdentity = objectIdentityRetrievalStrategy.getObjectIdentity( domainObject );
+                /*
+                 * Do it like this cuz it's wayyyy faster.
+                 */
+                Map<Securable, Boolean> ownership = securityService.areOwnedByCurrentUser( securablesToFilter );
 
-                    // Obtain the SIDs applicable to the principal. We're going to filter out anybody elses' anyway.
-                    List<Sid> sids = sidRetrievalStrategy.getSids( authentication );
-
-                    Acl acl = aclService.readAclById( objectIdentity, sids );
-
-                    if ( acl == null ) {
-                        filterer.remove( domainObject );
-                    } else
-
-                    /*
-                     * User has to have permission - this removes non-public data that doesn't belong to them
-                     */
-                    if ( !this.hasPermission( authentication, domainObject ) ) {
-                        filterer.remove( domainObject );
+                for ( Securable s : ownership.keySet() ) {
+                    if ( !ownership.containsKey( s ) || !ownership.get( s ) ) {
+                        /*
+                         * We look at the ACL owner. That way they can view data that is public, but which they have
+                         * ownership of.
+                         */
+                        filterer.remove( s );
                     }
 
-                    /*
-                     * Note: we might want to look at the ACL owner. That way they can view data that is public, but
-                     * which they have ownership of.
-                     */
-                    else {
-                        if ( securityService.isPublic( ( Securable ) domainObject ) ) {
-                            filterer.remove( domainObject );
-                        }
+                    if ( ++count % 100 == 0 && timer.getTime() > 10000 ) {
+                        log.info( count + " filtered" );
                     }
 
                 }

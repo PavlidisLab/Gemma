@@ -55,7 +55,7 @@ public class AuthenticationUtils {
         /*
          * "GROUP_ANONYMOUS" is defined in applicationContext-springSecurity.
          */
-        gas.add( new GrantedAuthorityImpl( AuthorityConstants.ANONYMOUS_GROUP ) );
+        gas.add( new GrantedAuthorityImpl( AuthorityConstants.ANONYMOUS_GROUP_AUTHORITY ) );
 
         /*
          * "anonymousUser" is defined in org.springframework.security.config.http.AuthenticationConfigBuilder (but is

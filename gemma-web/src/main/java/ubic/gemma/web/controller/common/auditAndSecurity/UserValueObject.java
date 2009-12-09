@@ -17,7 +17,7 @@
  *
  */
 package ubic.gemma.web.controller.common.auditAndSecurity;
- 
+
 import ubic.gemma.model.common.auditAndSecurity.User;
 
 /**
@@ -25,11 +25,20 @@ import ubic.gemma.model.common.auditAndSecurity.User;
  * @version $Id$
  */
 public class UserValueObject {
-    private String userName;
+    private String currentGroup;
     private String email;
+    private boolean enabled;
+    private boolean inGroup;
+
+    /*
+     * Should the client be allowed to edit the user (e.g., group membership or enabledness - used to protect 'special'
+     * users like the admin.
+     */
+    private boolean allowModification;
+
     private String password;
 
-    private boolean enabled;
+    private String userName;
 
     public UserValueObject() {
         super();
@@ -40,6 +49,10 @@ public class UserValueObject {
         email = user.getEmail();
         enabled = user.getEnabled();
         password = user.getPassword();
+    }
+
+    public String getCurrentGroup() {
+        return currentGroup;
     }
 
     public String getEmail() {
@@ -61,6 +74,14 @@ public class UserValueObject {
         return enabled;
     }
 
+    public boolean isInGroup() {
+        return inGroup;
+    }
+
+    public void setCurrentGroup( String currentGroup ) {
+        this.currentGroup = currentGroup;
+    }
+
     public void setEmail( String email ) {
         this.email = email;
     }
@@ -69,8 +90,20 @@ public class UserValueObject {
         this.enabled = enabled;
     }
 
+    public void setInGroup( boolean inGroup ) {
+        this.inGroup = inGroup;
+    }
+
     public void setUserName( String userName ) {
         this.userName = userName;
+    }
+
+    public void setAllowModification( boolean allowModification ) {
+        this.allowModification = allowModification;
+    }
+
+    public boolean isAllowModification() {
+        return allowModification;
     }
 
 }

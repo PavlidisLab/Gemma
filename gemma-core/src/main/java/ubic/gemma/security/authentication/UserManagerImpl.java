@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.lang.RandomStringUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.DateUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -53,6 +54,7 @@ import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.UserExistsException;
 import ubic.gemma.model.common.auditAndSecurity.UserGroup;
 import ubic.gemma.model.common.auditAndSecurity.UserService;
+import ubic.gemma.util.AuthorityConstants;
 
 /**
  * Implementation for Spring Security, plus some other handy methods.
@@ -217,10 +219,6 @@ public class UserManagerImpl implements UserManager {
 
     }
 
-    public boolean groupExists( String groupName ) {
-        return userService.groupExists( groupName );
-    }
-
     /*
      * (non-Javadoc)
      * @see
@@ -230,6 +228,8 @@ public class UserManagerImpl implements UserManager {
     @Transactional
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "RUN_AS_ADMIN" })
     public void createUser( UserDetails user ) {
+
+        validateUserName( user.getUsername() );
 
         User u = User.Factory.newInstance();
         u.setUserName( user.getUsername() );
@@ -413,6 +413,10 @@ public class UserManagerImpl implements UserManager {
 
     public String getRolePrefix() {
         return rolePrefix;
+    }
+
+    public boolean groupExists( String groupName ) {
+        return userService.groupExists( groupName );
     }
 
     /*
@@ -767,6 +771,35 @@ public class UserManagerImpl implements UserManager {
             throw new UsernameNotFoundException( "User with name " + username + " could not be loaded" );
         }
         return user;
+    }
+
+    private void validateUserName( String username ) {
+
+        boolean ok = StringUtils.isNotBlank( username );
+        if ( AuthorityConstants.ADMIN_GROUP_AUTHORITY.equals( username ) ) {
+            ok = false;
+        } else if ( AuthorityConstants.ADMIN_GROUP_NAME.equals( username ) ) {
+            ok = false;
+        } else if ( AuthorityConstants.AGENT_GROUP_AUTHORITY.equals( username ) ) {
+            ok = false;
+        } else if ( AuthorityConstants.AGENT_GROUP_NAME.equals( username ) ) {
+            ok = false;
+        } else if ( AuthorityConstants.IS_AUTHENTICATED_ANONYMOUSLY.equals( username ) ) {
+            ok = false;
+        } else if ( AuthorityConstants.RUN_AS_ADMIN_AUTHORITY.equals( username ) ) {
+            ok = false;
+        } else if ( AuthorityConstants.USER_GROUP_AUTHORITY.equals( username ) ) {
+            ok = false;
+        } else if ( AuthorityConstants.USER_GROUP_NAME.equals( username ) ) {
+            ok = false;
+        } else if ( username.toUpperCase().startsWith( this.getRolePrefix() ) ) {
+            ok = false;
+        }
+
+        if ( !ok ) {
+            throw new IllegalArgumentException( "Username=" + username + " is not allowed" );
+        }
+
     }
 
 }

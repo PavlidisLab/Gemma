@@ -22,7 +22,10 @@ import org.springframework.security.access.vote.AuthenticatedVoter;
 
 /**
  * Defines constants used in GrantedAuthories. An authority is basically a marker of a level of access; in Gemma this
- * corresponds to the authority on a 'group' of users (UserGroup).
+ * corresponds to the authority on a 'group' of users (UserGroup). There are currently three special groups:
+ * Administrators, Users, and Agents. Anonymous is another
+ * <p>
+ * Some of these values are originally set by init-entities.sql
  * 
  * @author klc, paul
  * @version $Id$
@@ -33,11 +36,10 @@ public class AuthorityConstants {
     /**
      * The name of the administrator group authority. All administrators must be in this group.
      */
-    public static final String ADMIN_GROUP = "GROUP_ADMIN";
+    public static final String ADMIN_GROUP_AUTHORITY = "GROUP_ADMIN";
 
     /**
-     * The name of the administrator group. Not the same as the group authority! This is originally set by
-     * init-entities.sql
+     * The name of the administrator group. Not the same as the group authority!
      */
     public static final String ADMIN_GROUP_NAME = "Administrators";
 
@@ -45,7 +47,9 @@ public class AuthorityConstants {
      * The name of the default user group authority. All authenticated users should be in this group or in the
      * administrator group.
      */
-    public static final String USER_GROUP = "GROUP_USER";
+    public static final String USER_GROUP_AUTHORITY = "GROUP_USER";
+
+    public static final String USER_GROUP_NAME = "Users";
 
     public static final String IS_AUTHENTICATED_ANONYMOUSLY = AuthenticatedVoter.IS_AUTHENTICATED_ANONYMOUSLY;
 
@@ -55,7 +59,7 @@ public class AuthorityConstants {
      * 
      * @see org.springframework.security.access.vote.AuthenticatedVoter.IS_AUTHENTICATED_ANONYMOUSLY
      */
-    public static final String ANONYMOUS_GROUP = "GROUP_ANONYMOUS";
+    public static final String ANONYMOUS_GROUP_AUTHORITY = "GROUP_ANONYMOUS";
 
     /**
      * Used when we are running at elevated permissions.
@@ -65,6 +69,8 @@ public class AuthorityConstants {
     /**
      * 
      */
-    public static final String AGENT_GROUP = "GROUP_AGENT";
+    public static final String AGENT_GROUP_AUTHORITY = "GROUP_AGENT";
+
+    public static final String AGENT_GROUP_NAME = "Agents";
 
 }

@@ -15,15 +15,12 @@
 		belong to, create groups, and change who is in groups you control.
 	</p>
 	<p>
-		To control which groups can view or edit your data sets, visit the
+		For additional controls on which groups can view or edit your data sets, visit the
 		<a href="<c:url value="/expressionExperiment/showAllExpressionExperimentLinkSummaries.html" />">Data Manager</a>.
 	</p>
 
-	<h3>
-		<em>Coming soon!</em>
-	</h3>
 
-	<div id='manageGroups-div'> 
+	<div id='manageGroups-div'>
 	</div>
 	<div id='errorMessage' style='width: 500px; margin-bottom: 1em;'></div>
 </body>

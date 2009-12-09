@@ -20,7 +20,9 @@ package ubic.gemma.web.controller.security;
 
 import static org.junit.Assert.*;
 
+import java.util.Collection;
 import java.util.Date;
+import java.util.HashSet;
 
 import org.apache.commons.lang.RandomStringUtils;
 import org.junit.Before;
@@ -34,6 +36,8 @@ import ubic.gemma.security.SecurityService;
 import ubic.gemma.security.authentication.UserDetailsImpl;
 import ubic.gemma.security.authentication.UserManager;
 import ubic.gemma.testing.BaseSpringWebTest;
+import ubic.gemma.web.controller.common.auditAndSecurity.SecurityController;
+import ubic.gemma.web.controller.common.auditAndSecurity.SecurityInfoValueObject;
 import ubic.gemma.web.remote.EntityDelegator;
 
 /**
@@ -82,6 +86,24 @@ public class SecurityControllerTest extends BaseSpringWebTest {
     }
 
     @Test
+    public void testRemoveUsersFromGroupDisallowed() throws Exception {
+        Collection<String> userNames = new HashSet<String>();
+        userNames.add( "administrator" );
+        try {
+            securityController.removeUsersFromGroup( userNames, "Administrators" );
+
+            /*
+             * Fix it.
+             */
+            securityController.addUserToGroup( "administrator", "Administrators" );
+
+            fail( "Should have gotten an exception" );
+        } catch ( Exception e ) {
+            // / ok
+        }
+    }
+
+    @Test
     public void testUpdatePermissions() throws Exception {
         String groupName = randomName();
         runAsUser( this.userName );
@@ -89,7 +111,10 @@ public class SecurityControllerTest extends BaseSpringWebTest {
         SecurityInfoValueObject securityInfo = securityController.getSecurityInfo( ed );
         securityInfo.getGroupsThatCanRead().add( groupName );
 
-        securityController.updatePermissions( securityInfo );
+        Collection<SecurityInfoValueObject> os = new HashSet<SecurityInfoValueObject>();
+        os.add( securityInfo );
+
+        securityController.updatePermissions( os );
 
         assertTrue( securityService.isReadableByGroup( ee, groupName ) );
     }

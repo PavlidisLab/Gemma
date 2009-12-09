@@ -60,7 +60,9 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import ubic.gemma.model.common.auditAndSecurity.Securable; 
+import ubic.gemma.model.common.auditAndSecurity.Securable;
+import ubic.gemma.model.common.auditAndSecurity.UserGroup;
+import ubic.gemma.model.common.auditAndSecurity.UserService;
 import ubic.gemma.security.authentication.UserManager;
 import ubic.gemma.util.AuthorityConstants;
 
@@ -96,7 +98,7 @@ public class SecurityService {
         Collection<GrantedAuthority> authorities = getAuthentication().getAuthorities();
         assert authorities != null;
         for ( GrantedAuthority authority : authorities ) {
-            if ( authority.getAuthority().equals( AuthorityConstants.ADMIN_GROUP ) ) {
+            if ( authority.getAuthority().equals( AuthorityConstants.ADMIN_GROUP_AUTHORITY ) ) {
                 return true;
             }
         }
@@ -146,6 +148,9 @@ public class SecurityService {
     @Autowired
     private UserManager userManager;
 
+    @Autowired
+    private UserService userService;
+
     /**
      * @param userName
      * @param groupName
@@ -158,20 +163,68 @@ public class SecurityService {
      * @param securables
      * @return
      */
+    public Map<Securable, Boolean> areOwnedByCurrentUser( Collection<? extends Securable> securables ) {
+
+        Map<Securable, Boolean> result = new HashMap<Securable, Boolean>();
+
+        Map<ObjectIdentity, Securable> objectIdentities = getObjectIdentities( securables );
+
+        /*
+         * Take advantage of fast bulk loading of ACLs. Other methods sohuld adopt this if they turn out to be heavily
+         * used/slow.
+         */
+        Map<ObjectIdentity, Acl> acls = aclService
+                .readAclsById( new Vector<ObjectIdentity>( objectIdentities.keySet() ) );
+
+        for ( ObjectIdentity oi : acls.keySet() ) {
+            Acl a = acls.get( oi );
+            Sid owner = a.getOwner();
+            if ( owner == null ) result.put( objectIdentities.get( oi ), false );
+
+            if ( owner instanceof PrincipalSid
+                    && ( ( PrincipalSid ) owner ).getPrincipal().equals( userManager.getCurrentUsername() ) ) {
+                result.put( objectIdentities.get( oi ), true );
+            }
+        }
+        return result;
+
+    }
+
+    /**
+     * @param securables
+     * @return
+     */
+    @Secured( { "ACL_SECURABLE_COLLECTION_READ" })
     public java.util.Map<Securable, Boolean> arePrivate( Collection<? extends Securable> securables ) {
         Map<Securable, Boolean> result = new HashMap<Securable, Boolean>();
-        for ( Securable s : securables ) {
-            boolean p = isPrivate( s );
-            result.put( s, p );
+        Map<ObjectIdentity, Securable> objectIdentities = getObjectIdentities( securables );
+
+        /*
+         * Take advantage of fast bulk loading of ACLs. Other methods sohuld adopt this if they turn out to be heavily
+         * used/slow.
+         */
+        Map<ObjectIdentity, Acl> acls = aclService
+                .readAclsById( new Vector<ObjectIdentity>( objectIdentities.keySet() ) );
+
+        for ( ObjectIdentity oi : acls.keySet() ) {
+            Acl a = acls.get( oi );
+            boolean p = isPrivate( a );
+            result.put( objectIdentities.get( oi ), p );
         }
         return result;
     }
 
+    @Secured( { "ACL_SECURABLE_COLLECTION_READ" })
     public Map<Securable, Boolean> areShared( Collection<? extends Securable> securables ) {
         Map<Securable, Boolean> result = new HashMap<Securable, Boolean>();
-        for ( Securable s : securables ) {
-            boolean p = isShared( s );
-            result.put( s, p );
+        Map<ObjectIdentity, Securable> objectIdentities = getObjectIdentities( securables );
+        Map<ObjectIdentity, Acl> acls = aclService
+                .readAclsById( new Vector<ObjectIdentity>( objectIdentities.keySet() ) );
+
+        for ( ObjectIdentity oi : acls.keySet() ) {
+            Acl a = acls.get( oi );
+            boolean p = isShared( a );
+            result.put( objectIdentities.get( oi ), p );
         }
         return result;
     }
@@ -180,10 +233,13 @@ public class SecurityService {
      * @param securables
      * @return the subset which are private, if any
      */
+    @Secured( { "ACL_SECURABLE_COLLECTION_READ" })
     public Collection<Securable> choosePrivate( Collection<? extends Securable> securables ) {
         Collection<Securable> result = new HashSet<Securable>();
+        Map<Securable, Boolean> arePrivate = arePrivate( securables );
+
         for ( Securable s : securables ) {
-            if ( isPrivate( s ) ) result.add( s );
+            if ( arePrivate.get( s ) ) result.add( s );
         }
         return result;
     }
@@ -192,10 +248,14 @@ public class SecurityService {
      * @param securables
      * @return the subset that are public, if any
      */
+    @Secured( { "ACL_SECURABLE_COLLECTION_READ" })
     public Collection<Securable> choosePublic( Collection<? extends Securable> securables ) {
         Collection<Securable> result = new HashSet<Securable>();
+
+        Map<Securable, Boolean> arePrivate = arePrivate( securables );
+
         for ( Securable s : securables ) {
-            if ( isPublic( s ) ) result.add( s );
+            if ( !arePrivate.get( s ) ) result.add( s );
         }
         return result;
     }
@@ -230,6 +290,17 @@ public class SecurityService {
     }
 
     /**
+     * @param groupName
+     */
+    public void deleteGroup( String groupName ) {
+        /*
+         * FIXME this doesn't clean up everything.
+         */
+
+        userManager.deleteGroup( groupName );
+    }
+
+    /**
      * @param s
      * @return list of userNames who can edit the given securable.
      */
@@ -250,9 +321,70 @@ public class SecurityService {
 
     }
 
+    /**
+     * This methods is only available to administrators.
+     * 
+     * @return collection of all available security ids (basically, user names and group authorities.
+     */
+    @Secured("GROUP_ADMIN")
+    public Collection<Sid> getAvailableSids() {
+
+        Collection<Sid> results = new HashSet<Sid>();
+
+        Collection<String> users = userManager.findAllUsers();
+
+        for ( String u : users ) {
+            results.add( new PrincipalSid( u ) );
+        }
+
+        Collection<String> groups = userManager.findAllGroups();
+
+        for ( String g : groups ) {
+            List<GrantedAuthority> ga = userManager.findGroupAuthorities( g );
+            for ( GrantedAuthority grantedAuthority : ga ) {
+                results.add( new GrantedAuthoritySid( grantedAuthority.getAuthority() ) );
+            }
+        }
+
+        return results;
+    }
+
+    /**
+     * @param s
+     * @return
+     */
+    @Secured( { "ACL_SECURABLE_COLLECTION_READ" })
+    public Map<Securable, Collection<String>> getGroupsEditableBy( Collection<? extends Securable> securables ) {
+        Collection<String> groupNames = getGroupsUserCanView();
+        Map<Securable, Collection<String>> result = new HashMap<Securable, Collection<String>>();
+
+        List<Permission> write = new ArrayList<Permission>();
+        write.add( BasePermission.WRITE );
+
+        List<Permission> admin = new ArrayList<Permission>();
+        admin.add( BasePermission.ADMINISTRATION );
+
+        for ( String groupName : groupNames ) {
+            Map<Securable, Boolean> groupHasPermission = this.groupHasPermission( securables, write, groupName );
+
+            populateGroupsEditableBy( result, groupName, groupHasPermission );
+
+            groupHasPermission = this.groupHasPermission( securables, admin, groupName );
+
+            populateGroupsEditableBy( result, groupName, groupHasPermission );
+
+        }
+
+        return result;
+    }
+
+    /**
+     * @param s
+     * @return
+     */
     @Secured( { "ACL_SECURABLE_READ" })
     public Collection<String> getGroupsEditableBy( Securable s ) {
-        Collection<String> groupNames = userManager.findGroupsForUser( userManager.getCurrentUsername() );
+        Collection<String> groupNames = getGroupsUserCanView();
 
         Collection<String> result = new HashSet<String>();
 
@@ -265,9 +397,42 @@ public class SecurityService {
         return result;
     }
 
+    /**
+     * @param s
+     * @return
+     */
+    @Secured( { "ACL_SECURABLE_COLLECTION_READ" })
+    public Map<Securable, Collection<String>> getGroupsReadableBy( Collection<? extends Securable> securables ) {
+        Collection<String> groupNames = getGroupsUserCanView();
+
+        Map<Securable, Collection<String>> result = new HashMap<Securable, Collection<String>>();
+
+        List<Permission> read = new ArrayList<Permission>();
+        read.add( BasePermission.READ );
+
+        List<Permission> admin = new ArrayList<Permission>();
+        admin.add( BasePermission.ADMINISTRATION );
+
+        for ( String groupName : groupNames ) {
+            Map<Securable, Boolean> groupHasPermission = this.groupHasPermission( securables, read, groupName );
+
+            populateGroupsEditableBy( result, groupName, groupHasPermission );
+
+            groupHasPermission = this.groupHasPermission( securables, admin, groupName );
+
+            populateGroupsEditableBy( result, groupName, groupHasPermission );
+        }
+
+        return result;
+    }
+
+    /**
+     * @param s
+     * @return
+     */
     @Secured( { "ACL_SECURABLE_READ" })
     public Collection<String> getGroupsReadableBy( Securable s ) {
-        Collection<String> groupNames = userManager.findGroupsForUser( userManager.getCurrentUsername() );
+        Collection<String> groupNames = getGroupsUserCanView();
 
         Collection<String> result = new HashSet<String>();
 
@@ -280,6 +445,71 @@ public class SecurityService {
         return result;
     }
 
+    /**
+     * @param userName
+     * @return
+     */
+    public Collection<String> getGroupsUserCanEdit( String userName ) {
+        Collection<String> groupNames = getGroupsUserCanView();
+
+        Collection<String> result = new HashSet<String>();
+        for ( String gname : groupNames ) {
+            UserGroup g = userService.findGroupByName( gname );
+            if ( this.isEditableByUser( g, userName ) ) {
+                result.add( gname );
+            }
+        }
+
+        return result;
+
+    }
+
+    /**
+     * Pretty much have to be either the owner of the securables or administrator to call this.
+     * 
+     * @param securables
+     * @return
+     * @throws AccessDeniedException if the current user is not allowed to access the information.
+     */
+    @Secured("ACL_SECURABLE_COLLECTION_READ")
+    public Map<Securable, Sid> getOwners( Collection<? extends Securable> securables ) {
+        Map<Securable, Sid> result = new HashMap<Securable, Sid>();
+        Map<ObjectIdentity, Securable> objectIdentities = getObjectIdentities( securables );
+
+        /*
+         * Take advantage of fast bulk loading of ACLs. Other methods sohuld adopt this if they turn out to be heavily
+         * used/slow.
+         */
+        Map<ObjectIdentity, Acl> acls = aclService
+                .readAclsById( new Vector<ObjectIdentity>( objectIdentities.keySet() ) );
+
+        for ( ObjectIdentity oi : acls.keySet() ) {
+            Acl a = acls.get( oi );
+            Sid owner = a.getOwner();
+            if ( owner == null )
+                result.put( objectIdentities.get( oi ), null );
+            else
+                result.put( objectIdentities.get( oi ), owner );
+        }
+        return result;
+    }
+
+    /**
+     * @param s
+     * @return
+     */
+    @Secured("ACL_SECURABLE_READ")
+    public Sid getOwner( Securable s ) {
+        ObjectIdentity oi = this.objectIdentityRetrievalStrategy.getObjectIdentity( s );
+        Acl a = this.aclService.readAclById( oi );
+        return a.getOwner();
+    }
+
+    /**
+     * @param s
+     * @param groupName
+     * @return
+     */
     @Secured("ACL_SECURABLE_READ")
     public boolean isEditableByGroup( Securable s, String groupName ) {
         List<Permission> requiredPermissions = new ArrayList<Permission>();
@@ -310,6 +540,30 @@ public class SecurityService {
         requiredPermissions.clear();
         requiredPermissions.add( BasePermission.ADMINISTRATION );
         return hasPermission( s, requiredPermissions, userName );
+    }
+
+    /**
+     * @param s
+     * @return
+     */
+    public boolean isOwnedByCurrentUser( Securable s ) {
+        ObjectIdentity oi = objectIdentityRetrievalStrategy.getObjectIdentity( s );
+
+        try {
+            Acl acl = this.aclService.readAclById( oi );
+
+            Sid owner = acl.getOwner();
+            if ( owner == null ) return false;
+
+            if ( owner instanceof PrincipalSid ) {
+                return ( ( PrincipalSid ) owner ).getPrincipal().equals( userManager.getCurrentUsername() );
+            }
+
+        } catch ( NotFoundException nfe ) {
+            return false;
+        }
+
+        return false;
     }
 
     /**
@@ -353,7 +607,6 @@ public class SecurityService {
         } catch ( NotFoundException nfe ) {
             return true;
         }
-
     }
 
     /**
@@ -393,7 +646,7 @@ public class SecurityService {
         List<Permission> perms = new Vector<Permission>();
         perms.add( BasePermission.READ );
 
-        ObjectIdentity oi = new ObjectIdentityImpl( s.getClass(), s.getId() );
+        ObjectIdentity oi = objectIdentityRetrievalStrategy.getObjectIdentity( s );
 
         /*
          * Note: in theory, it should pay attention to the sid we ask for and return nothing if there is no acl.
@@ -437,6 +690,11 @@ public class SecurityService {
     @Transactional
     public void makeOwnedByUser( Securable s, String userName ) {
         MutableAcl acl = getAcl( s );
+
+        if ( acl.getOwner().equals( userName ) ) {
+            return;
+        }
+
         acl.setOwner( new PrincipalSid( userName ) );
         aclService.updateAcl( acl );
 
@@ -731,6 +989,62 @@ public class SecurityService {
         }
     }
 
+    private Collection<String> getGroupsUserCanView() {
+        Collection<String> groupNames;
+        try {
+            // administrator...
+            groupNames = userManager.findAllGroups();
+        } catch ( AccessDeniedException e ) {
+            groupNames = userManager.findGroupsForUser( userManager.getCurrentUsername() );
+        }
+        return groupNames;
+    }
+
+    /**
+     * @param securables
+     * @return
+     */
+    private Map<ObjectIdentity, Securable> getObjectIdentities( Collection<? extends Securable> securables ) {
+        Map<ObjectIdentity, Securable> result = new HashMap<ObjectIdentity, Securable>();
+        for ( Securable s : securables ) {
+            result.put( objectIdentityRetrievalStrategy.getObjectIdentity( s ), s );
+        }
+        return result;
+    }
+
+    private Map<Securable, Boolean> groupHasPermission( Collection<? extends Securable> securables,
+            List<Permission> requiredPermissions, String groupName ) {
+        Map<Securable, Boolean> result = new HashMap<Securable, Boolean>();
+        Map<ObjectIdentity, Securable> objectIdentities = getObjectIdentities( securables );
+
+        List<GrantedAuthority> auths = userManager.findGroupAuthorities( groupName );
+
+        List<Sid> sids = new ArrayList<Sid>();
+        for ( GrantedAuthority a : auths ) {
+            GrantedAuthoritySid sid = new GrantedAuthoritySid( new GrantedAuthorityImpl( userManager.getRolePrefix()
+                    + a.getAuthority() ) );
+            sids.add( sid );
+        }
+
+        Map<ObjectIdentity, Acl> acls = aclService
+                .readAclsById( new Vector<ObjectIdentity>( objectIdentities.keySet() ) );
+
+        for ( ObjectIdentity oi : acls.keySet() ) {
+            Acl a = acls.get( oi );
+            try {
+                result.put( objectIdentities.get( oi ), a.isGranted( requiredPermissions, sids, true ) );
+            } catch ( NotFoundException ignore ) {
+            }
+        }
+        return result;
+    }
+
+    /**
+     * @param domainObject
+     * @param requiredPermissions
+     * @param groupName
+     * @return
+     */
     private boolean groupHasPermission( Securable domainObject, List<Permission> requiredPermissions, String groupName ) {
         ObjectIdentity objectIdentity = objectIdentityRetrievalStrategy.getObjectIdentity( domainObject );
 
@@ -831,8 +1145,8 @@ public class SecurityService {
                 String grantedAuthority = ( ( GrantedAuthoritySid ) sid ).getGrantedAuthority();
                 if ( grantedAuthority.startsWith( "GROUP_" ) && ace.isGranting() ) {
 
-                    if ( grantedAuthority.equals( AuthorityConstants.AGENT_GROUP )
-                            || grantedAuthority.equals( AuthorityConstants.ADMIN_GROUP ) ) {
+                    if ( grantedAuthority.equals( AuthorityConstants.AGENT_GROUP_AUTHORITY )
+                            || grantedAuthority.equals( AuthorityConstants.ADMIN_GROUP_AUTHORITY ) ) {
                         continue;
                     }
                     return true;
@@ -853,6 +1167,19 @@ public class SecurityService {
          * We didn't find a granted authority for any group.
          */
         return false;
+    }
+
+    private void populateGroupsEditableBy( Map<Securable, Collection<String>> result, String groupName,
+            Map<Securable, Boolean> groupHasPermission ) {
+        for ( Securable s : groupHasPermission.keySet() ) {
+            if ( groupHasPermission.get( s ) ) {
+                if ( !result.containsKey( s ) ) {
+                    result.put( s, new HashSet<String>() );
+                }
+                result.get( s ).add( groupName );
+            }
+
+        }
     }
 
     /**
