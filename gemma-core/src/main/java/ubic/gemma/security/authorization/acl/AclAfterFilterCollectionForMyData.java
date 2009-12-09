@@ -24,7 +24,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -98,9 +97,6 @@ public class AclAfterFilterCollectionForMyData extends AbstractAclProvider {
 
                 // Locate unauthorised Collection elements
                 Iterator collectionIter = filterer.iterator();
-                int count = 0;
-                StopWatch timer = new StopWatch();
-                timer.start();
 
                 /*
                  * Collect up the securables
@@ -128,10 +124,9 @@ public class AclAfterFilterCollectionForMyData extends AbstractAclProvider {
                         filterer.remove( s );
                     }
 
-                    if ( ++count % 100 == 0 && timer.getTime() > 10000 ) {
-                        log.info( count + " filtered" );
+                    if ( !hasPermission( authentication, s ) ) {
+                        filterer.remove( s );
                     }
-
                 }
 
                 if ( wasSingleton ) {

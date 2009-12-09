@@ -45,7 +45,7 @@ public interface UserService {
     /**
      * @param user
      * @return
-     * @throws ubic.gemma.model.common.auditAndSecurity.UserExistsException
+     * @throws UserExistsException
      */
     @Secured( { "GROUP_ADMIN" })
     public User create( User user ) throws UserExistsException;
@@ -77,7 +77,7 @@ public interface UserService {
      * 
      */
     @Secured( { "GROUP_USER", "AFTER_ACL_READ" })
-    public ubic.gemma.model.common.auditAndSecurity.User findByEmail( java.lang.String email );
+    public User findByEmail( java.lang.String email );
 
     /**
      * @param userName
@@ -115,7 +115,7 @@ public interface UserService {
      * @return
      */
     @Secured( { "GROUP_USER", "AFTER_ACL_READ" })
-    public ubic.gemma.model.common.auditAndSecurity.User load( java.lang.Long id );
+    public User load( java.lang.Long id );
 
     /**
      * Retrieves a list of users
@@ -149,7 +149,7 @@ public interface UserService {
      * @param user
      */
     @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    public void update( ubic.gemma.model.common.auditAndSecurity.User user );
+    public void update( User user );
 
     /**
      * @param group

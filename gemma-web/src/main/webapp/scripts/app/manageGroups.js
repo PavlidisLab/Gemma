@@ -116,9 +116,11 @@ Ext.onReady(function() {
 																}, groupname);
 
 														/*
-														 * Add the group to the table.
+														 * Refresh
 														 */
-														Ext.getCmp('manager-groups-listview').getStore().add(newrec);
+														Ext.getCmp("manager-groups-listview").getStore().load({
+																	params : []
+																});
 
 													},
 													errorHandler : function(e) {
@@ -131,24 +133,39 @@ Ext.onReady(function() {
 					}
 				}, {
 					icon : "/Gemma/images/icons/group_delete.png",
-					tooltip : "Delete a group (Not available)",
-					disabled : true,
-					hidden : true,
+					tooltip : "Delete a group",
+					// disabled : true,
+					// hidden : true,
 					handler : function() {
 
-						var processResult = function() {
+						var sel = Ext.getCmp('manager-groups-listview').getSelectionModel().getSelected();
+						var groupName = sel.get("groupName");
+
+						var processResult = function(btn) {
 							/*
-							 * TODO -- no full server side support yet! Deleting group is not easy if there is data
+							 * TODO -- no full server side support yet! Deleting group is not so easy if there is data
 							 * attached.
 							 */
 
-							Ext.getCmp('manager-groups-listview').getStore().getSelected();
-							var sel = this.getRecord(selections[0]);
-						};
+							if (btn == 'yes') {
+
+								SecurityController.deleteGroup(groupName, {
+											callback : function() {
+												Ext.getCmp('manager-groups-listview').getStore().load({
+															params : []
+														});
+											},
+											errorHandler : function(e) {
+												Ext.Msg.alert('Sorry', e);
+											}
+										});
+							};
+						}
 
 						Ext.Msg.show({
 									title : 'Are you sure?',
-									msg : 'The group will be permanently deleted. This cannot be undone.',
+									msg : 'The group "' + groupName
+											+ '" will be permanently deleted. This cannot be undone.',
 									buttons : Ext.Msg.YESNO,
 									fn : processResult,
 									animEl : 'elId',
@@ -161,6 +178,7 @@ Ext.onReady(function() {
 			items : [new Ext.grid.GridPanel({
 						id : 'manager-groups-listview',
 						height : 535,
+						loadMask : true,
 						selModel : new Ext.grid.RowSelectionModel({
 									singleSelect : true,
 									listeners : {
@@ -249,7 +267,7 @@ Ext.onReady(function() {
 										btn, userNameOrEmail) {
 									if (btn == 'ok') {
 
-										SecurityController.addUserToGroup(currentGroup, userNameOrEmail, {
+										SecurityController.addUserToGroup(userNameOrEmail, currentGroup, {
 													callback : function(d) {
 														refreshGroupMembers(currentGroup);
 													},
@@ -386,8 +404,6 @@ Ext.onReady(function() {
 										};
 										p.push(recs[i].data);
 									}
-
-									console.log(p);
 
 									SecurityController.updatePermissions(p, {
 												callback : function(d) {

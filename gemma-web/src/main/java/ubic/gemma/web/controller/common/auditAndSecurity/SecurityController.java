@@ -32,6 +32,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.acls.model.Sid;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Controller;
 
 import ubic.gemma.model.common.Describable;
@@ -72,7 +73,16 @@ public class SecurityController {
      * @return
      */
     public boolean addUserToGroup( String userName, String groupName ) {
-        securityService.addUserToGroup( userName, groupName );
+
+        if ( userManager.userExists( userName ) ) {
+            securityService.addUserToGroup( userName, groupName );
+        } else if ( userManager.userWithEmailExists( userName ) ) {
+            /*
+             * Have to send them an invitation...
+             */
+            throw new UnsupportedOperationException( "Sorry, you need the username" );
+        }
+
         /*
          * TODO: send the user an email.
          */
@@ -194,10 +204,11 @@ public class SecurityController {
             uvo.setAllowModification( true );
 
             /*
-             * FIXME get from contsants. Special users we aren't allowed to modify.
+             * FIXME get from contsants. Special users we aren't allowed to modify, and you can't remove yourself from a
+             * group.
              */
-            if ( userName.equals( "administrator" ) || userName.equals( "gemmaAgent" )
-                    || groupName.equals( AuthorityConstants.USER_GROUP_NAME ) ) {
+            if ( userName.equals( userManager.getCurrentUsername() ) || userName.equals( "administrator" )
+                    || userName.equals( "gemmaAgent" ) || groupName.equals( AuthorityConstants.USER_GROUP_NAME ) ) {
                 uvo.setAllowModification( false );
             }
 
@@ -262,10 +273,18 @@ public class SecurityController {
     public Collection<SecurityInfoValueObject> getUsersData( String currentGroup, boolean privateOnly ) {
         Collection<ExpressionExperiment> ees = expressionExperimentService.loadMyExpressionExperiments();
 
+        if ( ees.isEmpty() ) {
+            return new HashSet<SecurityInfoValueObject>();
+        }
+
         Collection<? extends Securable> secs = ees;
 
         if ( privateOnly ) {
-            secs = securityService.choosePrivate( ees );
+            try {
+                secs = securityService.choosePrivate( ees );
+            } catch ( AccessDeniedException e ) {
+                // okay, they just aren't allowed to see those.
+            }
         }
 
         /*
@@ -283,7 +302,12 @@ public class SecurityController {
      */
     private Collection<SecurityInfoValueObject> securables2VOs( Collection<? extends Securable> securables,
             String currentGroup ) {
+
         Collection<SecurityInfoValueObject> result = new HashSet<SecurityInfoValueObject>();
+
+        if ( securables.isEmpty() ) {
+            return result;
+        }
 
         /*
          * Fast computations out-of-loop

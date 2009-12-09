@@ -275,6 +275,7 @@ public class UserManagerImpl implements UserManager {
     @Transactional
     public void deleteGroup( String groupName ) {
         UserGroup group = loadGroup( groupName );
+        group.getGroupMembers().clear();
         userService.delete( group );
     }
 
@@ -617,8 +618,18 @@ public class UserManagerImpl implements UserManager {
      * (non-Javadoc)
      * @see ubic.gemma.security.authentication.UserManagerI#userExists(java.lang.String)
      */
+    @Secured("RUN_AS_ADMIN")
     public boolean userExists( String username ) {
         return userService.findByUserName( username ) != null;
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see ubic.gemma.security.authentication.UserManager#userWithEmailExists(java.lang.String)
+     */
+    @Secured("RUN_AS_ADMIN")
+    public boolean userWithEmailExists( String emailAddress ) {
+        return userService.findByEmail( emailAddress ) != null;
     }
 
     /*

@@ -223,7 +223,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
             StopWatch timer = new StopWatch();
             timer.start();
             ees = queryObject.list();
-            if ( timer.getTime() > 100 ) {
+            if ( timer.getTime() > 1000 ) {
                 log.info( "EEs loaded in " + timer.getTime() + "ms" );
             }
         } catch ( org.hibernate.HibernateException ex ) {

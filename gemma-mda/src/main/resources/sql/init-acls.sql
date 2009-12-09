@@ -68,8 +68,6 @@ alter table acl_entry
 	add index acloi (acl_object_identity), 
 	add constraint acl_entry_acl_oi_fkc foreign key (acl_object_identity) references acl_object_identity (id);
 
-
-
  -- add object_identity etc. for intialization of initial users
 insert into acl_class (id, class) values(1, "ubic.gemma.model.common.auditAndSecurity.UserImpl");
 insert into acl_class (id, class) values(2, "ubic.gemma.model.common.auditAndSecurity.UserGroupImpl");
@@ -109,8 +107,8 @@ insert into acl_entry (id, ace_order, mask, granting, audit_success, audit_failu
 insert into acl_entry (id, ace_order, mask, granting, audit_success, audit_failure, acl_object_identity, sid) values (4, 1, 16, 1, 0, 0, 4, 1);
 insert into acl_entry (id, ace_order, mask, granting, audit_success, audit_failure, acl_object_identity, sid) values (5, 1, 16, 1, 0, 0, 5, 1);
 
--- Give GROUP_USER READ priv on user group sid=2, oi=4, perm=1. (is this necessary?)
-insert into acl_entry (id, ace_order, mask, granting, audit_success, audit_failure, acl_object_identity, sid) values (6, 2, 1, 1, 0, 0, 4, 2);
+-- Give GROUP_USER READ priv on user group sid=2, oi=2, perm=1. (is this necessary?)
+-- insert into acl_entry (id, ace_order, mask, granting, audit_success, audit_failure, acl_object_identity, sid) values (6, 2, 1, 1, 0, 0, 2, 2);
 
 -- give user administrator admin priv on themselves (in addition to the group privileges)
 insert into acl_entry (id, ace_order, mask, granting, audit_success, audit_failure, acl_object_identity, sid) values (7, 2, 16, 1, 0, 0, 1, 5);

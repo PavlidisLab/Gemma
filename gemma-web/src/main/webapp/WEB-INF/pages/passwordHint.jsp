@@ -6,6 +6,7 @@ version: $Id$
 <%@ include file="/common/taglibs.jsp"%>
 
 <head>
+<title>Password reset</title>
 	<jwr:script src='/scripts/ajax/ext/data/DwrProxy.js' />
 	<jwr:script src='/scripts/app/resetPassword.js'/>
 </head>

@@ -176,13 +176,15 @@ public class SecurityService {
         Map<ObjectIdentity, Acl> acls = aclService
                 .readAclsById( new Vector<ObjectIdentity>( objectIdentities.keySet() ) );
 
+        String currentUsername = userManager.getCurrentUsername();
+
         for ( ObjectIdentity oi : acls.keySet() ) {
             Acl a = acls.get( oi );
             Sid owner = a.getOwner();
-            if ( owner == null ) result.put( objectIdentities.get( oi ), false );
 
-            if ( owner instanceof PrincipalSid
-                    && ( ( PrincipalSid ) owner ).getPrincipal().equals( userManager.getCurrentUsername() ) ) {
+            result.put( objectIdentities.get( oi ), false );
+            if ( owner != null && owner instanceof PrincipalSid
+                    && ( ( PrincipalSid ) owner ).getPrincipal().equals( currentUsername ) ) {
                 result.put( objectIdentities.get( oi ), true );
             }
         }
@@ -233,7 +235,6 @@ public class SecurityService {
      * @param securables
      * @return the subset which are private, if any
      */
-    @Secured( { "ACL_SECURABLE_COLLECTION_READ" })
     public Collection<Securable> choosePrivate( Collection<? extends Securable> securables ) {
         Collection<Securable> result = new HashSet<Securable>();
         Map<Securable, Boolean> arePrivate = arePrivate( securables );

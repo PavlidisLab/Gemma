@@ -42,6 +42,15 @@ public interface UserManager extends UserDetailsManager, GroupManager {
      * @return the prefix use on roles (groups, actually) e.g. "GROUP_"
      */
     public String getRolePrefix();
+    
+    
+    /**
+     * 
+     * @param emailAddress
+     * @return
+     */
+    public boolean userWithEmailExists(String emailAddress);
+    
 
     /**
      * @param username
