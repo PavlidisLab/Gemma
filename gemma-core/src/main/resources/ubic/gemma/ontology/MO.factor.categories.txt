@@ -34,3 +34,5 @@ SamplingTimePoint
 HistoryFactor
 Preservation
 Biometrics
+Individual
+Generation

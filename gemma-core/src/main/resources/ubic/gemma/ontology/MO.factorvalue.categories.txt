@@ -44,4 +44,6 @@ DistanceUnit
 ComplexAction
 HistoryFactor
 Biometrics
+Individual
+Generation
 
