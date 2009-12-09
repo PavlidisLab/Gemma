@@ -24,7 +24,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Map;
 import java.util.zip.GZIPOutputStream;
 
 import org.apache.commons.lang.StringUtils;
@@ -254,7 +256,7 @@ public class DatabaseViewGenerator {
          */Collection<ExpressionExperiment> vos = expressionExperimentService.loadAll();
 
         /*
-         * For each gene that is differentially expressed, print out a line.F
+         * For each gene that is differentially expressed, print out a line.
          */
         writer.write( "GemmaDsId\tEEShortName\tGeneNCBIId\tGemmaGeneId\tFactor\tFactorURI\n" );
         int i = 0;
@@ -293,6 +295,9 @@ public class DatabaseViewGenerator {
                     log.warn( "No  differential expression analysis results found for " + vo );
                     continue;
                 }
+
+                // Better to thaw the cs's together, much faster.
+                Collection<CompositeSequence> csList = new ArrayList<CompositeSequence>();
                 // Generate probe details
                 for ( DifferentialExpressionAnalysisResult dear : ears.getResults() ) {
 
@@ -304,37 +309,17 @@ public class DatabaseViewGenerator {
                         CompositeSequence cs = ( ( ProbeAnalysisResult ) dear ).getProbe();
 
                         // If p-value didn't make cut off then don't bother putting in file
-                        // TODO This is a slow way to do this. Would be better to use a query to get the data needed.
+                        // TODO This is a slow way to do this. Would be better to use a query to get only the
+                        // thresholded data needed.
                         if ( dear.getCorrectedPvalue() == null || dear.getCorrectedPvalue() > THRESH_HOLD ) continue;
-
-                        // Figure out what gene is associated with the expressed probe.
-                        Collection<Gene> genes = compositeSequenceService.getGenes( cs );
-                        if ( genes == null || genes.isEmpty() ) {
-                            log.debug( "Probe: " + cs.getName()
-                                    + " met threshold but no genes associated with probe so skipping" );
-                            continue;
-                        } else if ( genes.size() > 1 ) {
-                            log.debug( "Probe: " + cs.getName() + " has " + genes.size()
-                                    + " assoicated with it. Skipping because not specific." );
-                            continue;
-                        } else if ( genes.iterator().next().getNcbiId() == null ) {
-                            log.debug( "Probe: " + cs.getName() + " has " + genes.iterator().next().getOfficialSymbol()
-                                    + " assoicated with it. This gene has no NCBI id so skipping" );
-                            continue;
-
-                        }
-
-                        // Write data to file.
-                        Gene gene = genes.iterator().next();
-                        writer.write( String.format( "%d\t%s\t%s\t%d\t%s\t%s\n", vo.getId(), vo.getShortName(), gene
-                                .getNcbiId(), gene.getId(), factorName, factorURI ) );
-
+                        csList.add( cs );
                     } else {
                         log.warn( "probe details missing.  Unable to retrieve probe level information. Skipping  "
                                 + dear.getClass() + " with id: " + dear.getId() );
                     }
-
                 } // dear loop
+
+                writeDiffExpressedGenes2File( csList, vo, factorName, factorURI, writer );
 
             } // ears loop
 
@@ -343,6 +328,37 @@ public class DatabaseViewGenerator {
             }
         }// EE loop
         writer.close();
+    }
+
+    private void writeDiffExpressedGenes2File( Collection<CompositeSequence> csList, ExpressionExperiment vo,
+            String factorName, String factorURI, Writer writer ) throws IOException {
+
+        // Figure out what gene is associated with the expressed probe.
+        Map<CompositeSequence, Collection<Gene>> cs2genes = compositeSequenceService.getGenes( csList );
+
+        for ( CompositeSequence cs : csList ) {
+
+            Collection<Gene> genes = cs2genes.get( cs );
+            if ( genes == null || genes.isEmpty() ) {
+                log.debug( "Probe: " + cs.getName() + " met threshold but no genes associated with probe so skipping" );
+                continue;
+            } else if ( genes.size() > 1 ) {
+                log.debug( "Probe: " + cs.getName() + " has " + genes.size()
+                        + " assoicated with it. Skipping because not specific." );
+                continue;
+            } else if ( genes.iterator().next().getNcbiId() == null ) {
+                log.debug( "Probe: " + cs.getName() + " has " + genes.iterator().next().getOfficialSymbol()
+                        + " assoicated with it. This gene has no NCBI id so skipping" );
+                continue;
+            }
+
+            // Write data to file.
+            Gene gene = genes.iterator().next();
+            writer.write( String.format( "%d\t%s\t%s\t%d\t%s\t%s\n", vo.getId(), vo.getShortName(), gene.getNcbiId(),
+                    gene.getId(), factorName, factorURI ) );
+
+        }
+
     }
 
     private File getViewFile( String datasetDiffexViewBasename ) {

@@ -18,6 +18,12 @@
  */
 package ubic.gemma.apps;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
+
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.OptionBuilder;
+
 import ubic.gemma.analysis.report.DatabaseViewGenerator;
 import ubic.gemma.util.AbstractSpringAwareCLI;
 
@@ -29,6 +35,11 @@ import ubic.gemma.util.AbstractSpringAwareCLI;
  * @see DatabaseViewGenerator.
  */
 public class DatabaseViewGeneratorCLI extends AbstractSpringAwareCLI {
+
+    private boolean generateDiffExpressionSummary = false;
+    private boolean generateDatasetSummary = false;
+    private boolean generateTissueSummary = false;
+    private Integer limit = null;
 
     /**
      * @param args
@@ -47,9 +58,34 @@ public class DatabaseViewGeneratorCLI extends AbstractSpringAwareCLI {
         return "Generate views of the database in flat files";
     }
 
+    @SuppressWarnings("static-access")
     @Override
     protected void buildOptions() {
         super.buildStandardOptions();
+
+        Option datasetSummary = OptionBuilder.hasArg().withArgName( "Dataset Summary" ).withDescription(
+                "Will generate a zip file containing a summary of all accesable datasets in gemma" ).withLongOpt(
+                "dataset" ).create( 'd' );
+
+        Option datasetTissueSummary = OptionBuilder.hasArg().withArgName( "Dataset Tissue Summary" ).withDescription(
+                "Will generate a zip file containing a summary of all the tissues in accesable datasets" ).withLongOpt(
+                "tissue" ).create( 't' );
+
+        Option diffExpSummary = OptionBuilder
+                .hasArg()
+                .withArgName( "Differential Expression Summary" )
+                .withDescription(
+                        "Will generate a zip file containing a summary of all the differential expressed genes in accesable datasets" )
+                .withLongOpt( "diffexpression" ).create( 'x' );
+
+        Option limit = OptionBuilder.hasArg().withArgName( "Limit number of datasets" ).withDescription(
+                "will impose a limit on how many datasets to process" ).withLongOpt( "limit" ).create( 'l' );
+
+        addOption( datasetSummary );
+        addOption( datasetTissueSummary );
+        addOption( diffExpSummary );
+        addOption( limit );
+
     }
 
     @Override
@@ -57,9 +93,46 @@ public class DatabaseViewGeneratorCLI extends AbstractSpringAwareCLI {
         super.processCommandLine( "DatabaseViewGeneratorCLI", args );
 
         DatabaseViewGenerator v = ( DatabaseViewGenerator ) getBean( "databaseViewGenerator" );
-        v.runAll();
 
+        try {
+            if ( generateDatasetSummary ) v.generateDatasetView( limit );
+            if ( generateTissueSummary ) v.generateDatasetTissueView( limit );
+            if ( generateDiffExpressionSummary ) v.generateDifferentialExpressionView( limit );
+
+        } catch ( FileNotFoundException e ) {
+            throw new RuntimeException( e );
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
+        }
         return null;
+    }
+
+    @Override
+    protected void processOptions() {
+
+        if ( this.hasOption( 'x' ) ) {
+            this.generateDiffExpressionSummary = true;
+        }
+
+        if ( this.hasOption( 'd' ) ) {
+            this.generateDatasetSummary = true;
+        }
+
+        if ( this.hasOption( 't' ) ) {
+            this.generateTissueSummary = true;
+        }
+
+        if ( this.hasOption( 'l' ) ) {
+            try {
+                this.limit = Integer.parseInt( this.getOptionValue( 'l' ) );
+            } catch ( NumberFormatException nfe ) {
+                log.warn( "Unable to process limit paraemter.  Processing all availiable experiments." );
+                this.limit = null;
+            }
+        }
+
+        super.processOptions();
+
     }
 
 }
