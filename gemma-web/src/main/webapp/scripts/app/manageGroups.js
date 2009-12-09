@@ -375,7 +375,21 @@ Ext.onReady(function() {
 								 */
 								var recs = Ext.getCmp("group-data-grid").getStore().getModifiedRecords();
 								if (recs && recs[0]) {
-									SecurityController.updatePermissions(recs, {
+									var p = [];
+									for (var i = 0; i < recs.length; i++) {
+										/*
+										 * This is ugly. The 'owner' object gets turned into a plain string.
+										 */
+										recs[i].data.owner = {
+											authority : recs[i].data.owner,
+											principal : recs[i].data.owner.indexOf("GROUP_") < 0
+										};
+										p.push(recs[i].data);
+									}
+
+									console.log(p);
+
+									SecurityController.updatePermissions(p, {
 												callback : function(d) {
 													refreshData(currentGroup);
 												},
@@ -481,7 +495,6 @@ Ext.onReady(function() {
 									},
 									editor : new Ext.form.ComboBox({
 												typeAhead : true,
-												valueField : "authority",
 												displayField : "authority",
 												triggerAction : 'all',
 												lazyRender : true,
