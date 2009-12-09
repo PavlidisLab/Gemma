@@ -24,6 +24,7 @@ import org.springframework.security.provisioning.GroupManager;
 import org.springframework.security.provisioning.UserDetailsManager;
 
 import ubic.gemma.model.common.auditAndSecurity.User;
+import ubic.gemma.model.common.auditAndSecurity.UserGroup;
 
 /**
  * @author paul
@@ -102,4 +103,12 @@ public interface UserManager extends UserDetailsManager, GroupManager {
      */
     public String changePasswordForUser( String email, String username, String newPassword );
 
+    
+    /**
+     * Need a passthrough method to userService else we get a circular dependancy issue in the SecuritySercie at runtime startup.
+     * @param name
+     * @return
+     */
+    public UserGroup findGroupByName( String name );
+  
 }

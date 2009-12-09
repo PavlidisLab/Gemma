@@ -666,6 +666,12 @@ public class UserManagerImpl implements UserManager {
 
         return true;
     }
+    
+    
+    public UserGroup findGroupByName( String name ){        
+        return this.userService.findGroupByName( name );
+    }
+
 
     /*
      * (non-Javadoc)
@@ -673,8 +679,7 @@ public class UserManagerImpl implements UserManager {
      * org.springframework.security.provisioning.JdbcUserDetailsManager#updateUser(org.springframework.security.core
      * .userdetails.UserDetails)
      */
-    protected Authentication createNewAuthentication( Authentication currentAuth,
-            @SuppressWarnings("unused") String newPassword ) {
+    protected Authentication createNewAuthentication( Authentication currentAuth, String newPassword ) {
         UserDetails user = loadUserByUsername( currentAuth.getName() );
 
         UsernamePasswordAuthenticationToken newAuthentication = new UsernamePasswordAuthenticationToken( user, user
@@ -722,7 +727,6 @@ public class UserManagerImpl implements UserManager {
      * (non-Javadoc)
      * @see org.springframework.security.core.userdetails.jdbc.JdbcDaoImpl#loadUserAuthorities(java.lang.String)
      */
-    @SuppressWarnings("unused")
     protected List<GrantedAuthority> loadUserAuthorities( String username ) {
         throw new UnsupportedOperationException( "Use the group-based authorities instead" );
     }

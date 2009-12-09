@@ -62,7 +62,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.model.common.auditAndSecurity.UserGroup;
-import ubic.gemma.model.common.auditAndSecurity.UserService;
 import ubic.gemma.security.authentication.UserManager;
 import ubic.gemma.util.AuthorityConstants;
 
@@ -148,8 +147,6 @@ public class SecurityService {
     @Autowired
     private UserManager userManager;
 
-    @Autowired
-    private UserService userService;
 
     /**
      * @param userName
@@ -455,7 +452,7 @@ public class SecurityService {
 
         Collection<String> result = new HashSet<String>();
         for ( String gname : groupNames ) {
-            UserGroup g = userService.findGroupByName( gname );
+            UserGroup g = userManager.findGroupByName( gname );
             if ( this.isEditableByUser( g, userName ) ) {
                 result.add( gname );
             }
