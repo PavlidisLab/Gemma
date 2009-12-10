@@ -40,16 +40,14 @@ $Id$
 
 		<security:authorize ifAnyGranted="GROUP_ADMIN,GROUP_USER">
 			<c:choose>
-				<c:when test="${taxon != null}">
-					<security:authorize ifAllGranted="GROUP_ADMIN">
-						<p>
-							Go to the
-							<a
-								href="<c:url value="/expressionExperiment/showAllExpressionExperimentLinkSummaries.html?taxon=${taxon.id}&d=1
+				<c:when test="${taxon != null && not empty eeids}">
+					<p>
+						For a view that allows editing of your experiments that are on this list, go to the
+						<a
+							href="<c:url value="/expressionExperiment/showAllExpressionExperimentLinkSummaries.html?taxon=${taxon.id}&d=1
 				" />">Data
-								Manager</a> for this taxon.
-						</p>
-					</security:authorize>
+							Manager</a> for this taxon.
+					</p>
 				</c:when>
 				<c:otherwise>
 					<c:if test="${not empty eeids && fn:length(eeids) < 200}">

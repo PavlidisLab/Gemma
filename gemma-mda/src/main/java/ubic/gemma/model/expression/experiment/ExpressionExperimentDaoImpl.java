@@ -615,7 +615,7 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
     protected Collection<ExpressionExperiment> handleFindByTaxon( Taxon taxon ) throws Exception {
         final String queryString = "select distinct ee from ExpressionExperimentImpl as ee "
                 + "inner join ee.bioAssays as ba "
-                + "inner join ba.samplesUsed as sample where sample.sourceTaxon = :taxon ";
+                + "inner join ba.samplesUsed as sample where sample.sourceTaxon = :taxon or sample.sourceTaxon.parentTaxon = :taxon";
         return getHibernateTemplate().findByNamedParam( queryString, "taxon", taxon );
     }
 
@@ -950,26 +950,44 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
      * (non-Javadoc)
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleGetPerTaxonCount()
      */
+    @SuppressWarnings("unchecked")
     @Override
     protected Map<Taxon, Long> handleGetPerTaxonCount() throws Exception {
 
-        Map<Taxon, Long> taxonCount = new LinkedHashMap<Taxon, Long>();
-        final String queryString = "select t, count(distinct ee) from ExpressionExperimentImpl "
-                + "ee inner join ee.bioAssays as ba inner join ba.samplesUsed su "
-                + "inner join su.sourceTaxon t group by t order by t.scientificName "; // where ee.publiclyViewable=true
-
-        try {
-            // it is important to cache this, as it gets called on the home page.
-            org.hibernate.Query queryObject = super.getSession().createQuery( queryString );
-            queryObject.setCacheable( true );
-            ScrollableResults list = queryObject.scroll();
-            while ( list.next() ) {
-                taxonCount.put( ( Taxon ) list.get( 0 ), list.getLong( 1 ) );
-            }
-            return taxonCount;
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
+        Map<Taxon, Taxon> taxonParents = new HashMap<Taxon, Taxon>();
+        List<Object[]> tp = super.getHibernateTemplate().find(
+                "select t, p from TaxonImpl t left outer join t.parentTaxon p" );
+        for ( Object[] o : tp ) {
+            taxonParents.put( ( Taxon ) o[0], ( Taxon ) o[1] );
         }
+
+        Map<Taxon, Long> taxonCount = new LinkedHashMap<Taxon, Long>();
+        String queryString = "select t, count(distinct ee) from ExpressionExperimentImpl "
+                + "ee inner join ee.bioAssays as ba inner join ba.samplesUsed su "
+                + "inner join su.sourceTaxon t group by t order by t.scientificName ";
+
+        // it is important to cache this, as it gets called on the home page. Though it's actually fast.
+        org.hibernate.Query queryObject = super.getSession().createQuery( queryString );
+        queryObject.setCacheable( true );
+        ScrollableResults list = queryObject.scroll();
+        while ( list.next() ) {
+            Taxon taxon = ( Taxon ) list.get( 0 );
+            Taxon parent = taxonParents.get( taxon );
+            Long count = list.getLong( 1 );
+
+            if ( parent != null ) {
+                if ( !taxonCount.containsKey( parent ) ) {
+                    taxonCount.put( parent, 0L );
+                }
+
+                taxonCount.put( parent, taxonCount.get( parent ) + count );
+
+            } else {
+                taxonCount.put( taxon, count );
+            }
+        }
+        return taxonCount;
+
     }
 
     /*
