@@ -147,7 +147,6 @@ public class SecurityService {
     @Autowired
     private UserManager userManager;
 
-
     /**
      * @param userName
      * @param groupName
@@ -157,6 +156,9 @@ public class SecurityService {
     }
 
     /**
+     * A securable is considered "owned" if 1) the user is the actual owner assigned in the ACL or 2) the user is an
+     * administrator. In other words, for an administrator, the value will always be true.
+     * 
      * @param securables
      * @return
      */
@@ -175,13 +177,16 @@ public class SecurityService {
 
         String currentUsername = userManager.getCurrentUsername();
 
+        boolean isAdmin = isUserAdmin();
+
         for ( ObjectIdentity oi : acls.keySet() ) {
             Acl a = acls.get( oi );
             Sid owner = a.getOwner();
 
             result.put( objectIdentities.get( oi ), false );
-            if ( owner != null && owner instanceof PrincipalSid
-                    && ( ( PrincipalSid ) owner ).getPrincipal().equals( currentUsername ) ) {
+            if ( isAdmin
+                    || ( owner != null && owner instanceof PrincipalSid && ( ( PrincipalSid ) owner ).getPrincipal()
+                            .equals( currentUsername ) ) ) {
                 result.put( objectIdentities.get( oi ), true );
             }
         }

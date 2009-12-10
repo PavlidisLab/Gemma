@@ -644,7 +644,8 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         if ( ids.isEmpty() ) {
             return new HashSet<ExpressionExperimentValueObject>();
         }
-        Collection<ExpressionExperimentValueObject> result = getFilteredExpressionExperimentValueObjects( ids, false );
+        Collection<ExpressionExperimentValueObject> result = getFilteredExpressionExperimentValueObjects( null, ids,
+                false );
         populateAnalyses( ids, result ); // FIXME make this optional.
         return result;
     }
@@ -652,11 +653,13 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
     /**
      * AJAX. Data summarizing the status of experiments.
      * 
-     * @param sIds - ids, array of strings.
+     * @param taxonId can be null
+     * @param sIds - ids
      * @param limit If >0, get the most recently updated N experiments, where N <= limit.
      * @return
      */
-    public Collection<ExpressionExperimentValueObject> loadStatusSummaries( Collection<Long> ids, Integer limit ) {
+    public Collection<ExpressionExperimentValueObject> loadStatusSummaries( Long taxonId, Collection<Long> ids,
+            Integer limit ) {
         StopWatch timer = new StopWatch();
         timer.start();
 
@@ -673,7 +676,7 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
             throw new AccessDeniedException( "User does not have access to experiment management" );
         }
 
-        eeValObjectCol = getEEVOsForManager( ids, filterDataByUser );
+        eeValObjectCol = getEEVOsForManager( taxonId, ids, filterDataByUser );
 
         if ( timer.getTime() > 1000 ) {
             log.info( "Phase 1 done in " + timer.getTime() + "ms" );
@@ -704,19 +707,16 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         return result;
     }
 
-    private Collection<ExpressionExperimentValueObject> getEEVOsForManager( Collection<Long> ids,
+    private Collection<ExpressionExperimentValueObject> getEEVOsForManager( Long taxonId, Collection<Long> ids,
             boolean filterDataByUser ) {
         Collection<ExpressionExperimentValueObject> eeValObjectCol;
-        if ( ids == null || ids.isEmpty() ) {
-            eeValObjectCol = this.getFilteredExpressionExperimentValueObjects( null, filterDataByUser ); // pretty fast.
-        } else { // if ids are specified, then display only those
-            // expressionExperiments
-
-            if ( ids.isEmpty() ) {
-                eeValObjectCol = this.getFilteredExpressionExperimentValueObjects( null, filterDataByUser );
-            } else {
-                eeValObjectCol = this.getFilteredExpressionExperimentValueObjects( ids, false );
-            }
+        if ( taxonId != null ) {
+            Taxon taxon = taxonService.load( taxonId );
+            eeValObjectCol = this.getFilteredExpressionExperimentValueObjects( taxon, null, filterDataByUser );
+        } else if ( ids == null || ids.isEmpty() ) {
+            eeValObjectCol = this.getFilteredExpressionExperimentValueObjects( null, null, filterDataByUser );
+        } else {
+            eeValObjectCol = this.getFilteredExpressionExperimentValueObjects( null, null, filterDataByUser );
         }
         return eeValObjectCol;
     }
@@ -751,14 +751,14 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         Collection<ExpressionExperimentValueObject> eeValObjectCol;
         ModelAndView mav = new ModelAndView( "expressionExperiments" );
 
+        Collection<ExpressionExperimentValueObject> usersData;
         if ( taxonId != null ) {
             // if a taxon ID is specified, load all expression experiments for
             // this taxon
             try {
                 Long tId = Long.parseLong( taxonId );
                 Taxon taxon = taxonService.load( tId );
-                eeValObjectCol = this.getExpressionExperimentValueObjects( expressionExperimentService
-                        .findByTaxon( taxon ) );
+                eeValObjectCol = this.getFilteredExpressionExperimentValueObjects( taxon, null, false );
                 mav.addObject( "showAll", false );
                 mav.addObject( "taxon", taxon );
             } catch ( NumberFormatException e ) {
@@ -768,11 +768,8 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         } else if ( sId == null ) {
             this.saveMessage( request, "Displaying all Datasets" );
             mav.addObject( "showAll", true );
-            // if no IDs are specified, then load all expressionExperiments
-            eeValObjectCol = this.getFilteredExpressionExperimentValueObjects( null, false );
+            eeValObjectCol = this.getFilteredExpressionExperimentValueObjects( null, null, false );
         } else {
-            // if ids are specified, then display only those
-            // expressionExperiments
             Collection<Long> eeIdList = new ArrayList<Long>();
             String[] idList = StringUtils.split( sId, ',' );
             try {
@@ -786,7 +783,7 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
                 return mav;
             }
             mav.addObject( "showAll", false );
-            eeValObjectCol = this.getFilteredExpressionExperimentValueObjects( eeIdList, false );
+            eeValObjectCol = this.getFilteredExpressionExperimentValueObjects( null, eeIdList, false );
         }
         expressionExperiments.addAll( eeValObjectCol );
 
@@ -802,10 +799,19 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
             auditableUtil.removeTroubledEes( expressionExperiments );
         }
 
+        /*
+         * Figure out which of the data sets belong to the current user (if anonymous, this won't do anything; is
+         * administrator, they 'owned' is always true.)
+         */
+        usersData = this.getFilteredExpressionExperimentValueObjects( null,
+                EntityUtils.getIds( expressionExperiments ), true );
+
         Long numExpressionExperiments = new Long( expressionExperiments.size() );
 
         mav.addObject( "expressionExperiments", expressionExperiments );
-        mav.addObject( "eeids", EntityUtils.getIdStrings( expressionExperiments ).toArray( new String[] {} ) );
+
+        mav.addObject( "eeids", EntityUtils.getIdStrings( usersData ).toArray( new String[] {} ) );
+
         mav.addObject( "numExpressionExperiments", numExpressionExperiments );
         return mav;
 
@@ -1130,10 +1136,12 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
     /**
      * Get the expression experiment value objects for the expression experiments.
      * 
-     * @param eeCol
+     * @param taxon can be null
+     * @param eeids can be null; if taxon is non-null, this is ignored.
+     * @param
      * @return Collection<ExpressionExperimentValueObject>
      */
-    private Collection<ExpressionExperimentValueObject> getFilteredExpressionExperimentValueObjects(
+    private Collection<ExpressionExperimentValueObject> getFilteredExpressionExperimentValueObjects( Taxon taxon,
             Collection<Long> eeIds, boolean filterDataForUser ) {
 
         Collection<ExpressionExperiment> securedEEs = new ArrayList<ExpressionExperiment>();
@@ -1147,13 +1155,22 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
 
         /* Filtering for security happens here. */
         if ( filterDataForUser ) {
-            if ( eeIds == null ) {
-                securedEEs = expressionExperimentService.loadMyExpressionExperiments();
-            } else {
-                securedEEs = expressionExperimentService.loadMultiple( eeIds );
+            try {
+                if ( taxon != null ) {
+                    securedEEs = expressionExperimentService.findByTaxon( taxon );
+                } else if ( eeIds == null ) {
+                    securedEEs = expressionExperimentService.loadMyExpressionExperiments();
+                } else {
+                    securedEEs = expressionExperimentService.loadMultiple( eeIds );
+                }
+            } catch ( AccessDeniedException e ) {
+                log.info( "darn" );
+                return new HashSet<ExpressionExperimentValueObject>();
             }
         } else {
-            if ( eeIds == null ) {
+            if ( taxon != null ) {
+                securedEEs = expressionExperimentService.findByTaxon( taxon );
+            } else if ( eeIds == null ) {
                 securedEEs = expressionExperimentService.loadAll();
             } else {
                 securedEEs = expressionExperimentService.loadMultiple( eeIds );
@@ -1309,25 +1326,6 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
             return evMap.get( ee );
         }
         return new HashSet<AuditEvent>();
-    }
-
-    /**
-     * @param sId
-     * @return
-     */
-    private Collection<Long> parseIdParameterStrings( String[] sIds ) {
-        Collection<Long> ids = new ArrayList<Long>();
-
-        for ( int i = 0; i < sIds.length; i++ ) {
-            if ( StringUtils.isNotBlank( sIds[i] ) ) {
-                try {
-                    ids.add( new Long( sIds[i] ) );
-                } catch ( NumberFormatException e ) {
-                    log.warn( "Invalid id string" + sIds[i] );
-                }
-            }
-        }
-        return ids;
     }
 
     /**

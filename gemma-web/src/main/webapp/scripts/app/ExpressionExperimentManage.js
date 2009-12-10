@@ -334,9 +334,11 @@ Ext.onReady(function() {
 	 */
 	var queryStart = document.URL.indexOf("?");
 	var ids = null;
+	var taxonid = null;
 	if (queryStart > -1) {
 		var urlParams = Ext.urlDecode(document.URL.substr(queryStart + 1));
 		ids = urlParams.ids ? urlParams.ids.split(',') : null;
+		taxonid = urlParams.taxon;
 	}
 
 	/*
@@ -381,7 +383,7 @@ Ext.onReady(function() {
 			});
 
 	store.load({
-				params : [ids, limit]
+				params : [taxonid, ids, limit]
 			});
 
 	store.on("loadexception", function(scope, args, data, e) {

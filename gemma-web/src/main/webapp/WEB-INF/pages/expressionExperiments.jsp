@@ -37,15 +37,35 @@ $Id$
 		</h3>
 
 
+
 		<security:authorize ifAnyGranted="GROUP_ADMIN,GROUP_USER">
-			<p>
-				For a view that allows editing of your experiments that are on this list, go to the
-				<a
-					href="<c:url value="/expressionExperiment/showAllExpressionExperimentLinkSummaries.html?ids=${fn:join(eeids, ',')}&d=1
+			<c:choose>
+				<c:when test="${taxon != null}">
+					<security:authorize ifAllGranted="GROUP_ADMIN">
+						<p>
+							Go to the
+							<a
+								href="<c:url value="/expressionExperiment/showAllExpressionExperimentLinkSummaries.html?taxon=${taxon.id}&d=1
 				" />">Data
-					Manager</a>
-			</p>
+								Manager</a> for this taxon.
+						</p>
+					</security:authorize>
+				</c:when>
+				<c:otherwise>
+					<c:if test="${not empty eeids && fn:length(eeids) < 200}">
+						<p>
+							For a view that allows editing of your experiments that are on this list, go to the
+							<a
+								href="<c:url value="/expressionExperiment/showAllExpressionExperimentLinkSummaries.html?ids=${fn:join(eeids, ',')}&d=1
+				" />">Data
+								Manager</a>
+						</p>
+					</c:if>
+				</c:otherwise>
+			</c:choose>
 		</security:authorize>
+
+
 
 		<form
 			style="border-color: #444; border-style: solid; border-width: 1px; width: 450px; padding: 10px; background-color: #DDD"

@@ -117,10 +117,6 @@ public class AclAfterFilterCollectionForMyData extends AbstractAclProvider {
 
                 for ( Securable s : ownership.keySet() ) {
                     if ( !ownership.containsKey( s ) || !ownership.get( s ) ) {
-                        /*
-                         * We look at the ACL owner. That way they can view data that is public, but which they have
-                         * ownership of.
-                         */
                         filterer.remove( s );
                     }
 

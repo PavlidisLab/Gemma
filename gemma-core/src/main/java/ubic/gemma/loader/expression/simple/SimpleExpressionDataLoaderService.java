@@ -69,8 +69,18 @@ public class SimpleExpressionDataLoaderService {
 
     private static Log log = LogFactory.getLog( SimpleExpressionDataLoaderService.class.getName() );
 
-    @Autowired
-    PersisterHelper persisterHelper;
+    /**
+     * This method establishes the way raw input sample names are converted to (hopefully unique) biomaterial names in
+     * the system.
+     * 
+     * @param ee expression experiment the sample belongs to.
+     * @param inputSampleName The sample name as identified in the input file - the column header; this is basically the
+     *        bio assay name.
+     * @return String used to identify the biomaterial in the system.
+     */
+    public static String makeBioMaterialName( ExpressionExperiment ee, String inputSampleName ) {
+        return inputSampleName + "__" + ee.getShortName();
+    }
 
     @Autowired
     ArrayDesignService arrayDesignService;
@@ -79,17 +89,10 @@ public class SimpleExpressionDataLoaderService {
     BioMaterialService bioMaterialService;
 
     @Autowired
-    TaxonService taxonService;
+    PersisterHelper persisterHelper;
 
-    /**
-     * @param data
-     * @return DoubleMatrixNamed
-     * @throws IOException
-     */
-    public DoubleMatrix<String, String> parse( InputStream data ) throws IOException {
-        DoubleMatrixReader reader = new DoubleMatrixReader();
-        return reader.read( data );
-    }
+    @Autowired
+    TaxonService taxonService;
 
     /**
      * @param metaData
@@ -229,6 +232,37 @@ public class SimpleExpressionDataLoaderService {
     }
 
     /**
+     * @param data
+     * @return DoubleMatrixNamed
+     * @throws IOException
+     */
+    public DoubleMatrix<String, String> parse( InputStream data ) throws IOException {
+        DoubleMatrixReader reader = new DoubleMatrixReader();
+        return reader.read( data );
+    }
+
+    /**
+     * @param arrayDesignService the arrayDesignService to set
+     */
+    public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
+        this.arrayDesignService = arrayDesignService;
+    }
+
+    /**
+     * @param persisterHelper the persisterHelper to set
+     */
+    public void setPersisterHelper( PersisterHelper persisterHelper ) {
+        this.persisterHelper = persisterHelper;
+    }
+
+    /**
+     * @param taxonService the taxonService to set
+     */
+    public void setTaxonService( TaxonService taxonService ) {
+        this.taxonService = taxonService;
+    }
+
+    /**
      * For use in tests.
      * 
      * @param metaData
@@ -242,39 +276,6 @@ public class SimpleExpressionDataLoaderService {
         validate( experiment );
 
         return ( ExpressionExperiment ) persisterHelper.persist( experiment );
-    }
-
-    /**
-     * Check for some error conditions like biomaterial names matching in the system
-     * 
-     * @param experiment
-     * @throws Exception if there is something wrong
-     */
-    private void validate( ExpressionExperiment experiment ) {
-
-        for ( BioAssay ba : experiment.getBioAssays() ) {
-            for ( BioMaterial bm : ba.getSamplesUsed() ) {
-
-                if ( bioMaterialService.exists( bm ) ) {
-                    throw new IllegalArgumentException( "There is already a biomaterial in the system matching: " + bm );
-                }
-
-            }
-        }
-
-    }
-
-    /**
-     * @param taxonName
-     * @return
-     */
-    private Taxon convertTaxon( Taxon taxon ) {
-        if ( taxon == null ) throw new IllegalArgumentException( "Taxon cannot be null" );
-        if ( taxonService == null ) {
-            return taxon; // for tests
-        }
-        return taxonService.findOrCreate( taxon );
-
     }
 
     /**
@@ -322,72 +323,6 @@ public class SimpleExpressionDataLoaderService {
     }
 
     /**
-     * @param matrix
-     * @param newDesign
-     */
-    private void newArrayDesign( DoubleMatrix<String, String> matrix, ArrayDesign newDesign,
-            boolean probeNamesAreImageClones, Taxon taxon ) {
-        log.info( "Creating new ArrayDesign " + newDesign );
-
-        for ( int i = 0; i < matrix.rows(); i++ ) {
-            CompositeSequence cs = CompositeSequence.Factory.newInstance();
-            cs.setName( matrix.getRowName( i ) );
-            cs.setArrayDesign( newDesign );
-
-            if ( probeNamesAreImageClones ) {
-                provideImageClone( cs, taxon );
-            }
-
-            newDesign.getCompositeSequences().add( cs );
-        }
-        log.info( "New array design has " + newDesign.getCompositeSequences().size() + " compositeSequences" );
-    }
-
-    /**
-     * @param cs
-     * @param taxon
-     */
-    private void provideImageClone( CompositeSequence cs, Taxon taxon ) {
-        BioSequence bs = BioSequence.Factory.newInstance();
-        bs.setTaxon( taxon );
-        String imageId = cs.getName();
-        if ( imageId == null )
-            throw new IllegalArgumentException( "ComposisteSequence must have name filled in first" );
-        imageId = imageId.replaceFirst( "___\\d$", "" );
-        if ( !imageId.startsWith( "IMAGE:" ) ) {
-            imageId = "IMAGE:" + imageId;
-        }
-        assert imageId.matches( "^IMAGE:\\d+$" );
-        bs.setName( imageId );
-        cs.setBiologicalCharacteristic( bs );
-    }
-
-    /**
-     * @param metaData
-     * @return
-     */
-    private QuantitationType convertQuantitationType( SimpleExpressionExperimentMetaData metaData ) {
-        QuantitationType result = QuantitationType.Factory.newInstance();
-
-        result.setGeneralType( GeneralType.QUANTITATIVE );
-        result.setRepresentation( PrimitiveType.DOUBLE ); // no choice here
-        result.setIsPreferred( Boolean.TRUE );
-        result.setIsNormalized( Boolean.TRUE );
-        result.setIsBackgroundSubtracted( Boolean.TRUE );
-        result.setIsBackground( false );
-
-        result.setName( metaData.getQuantitationTypeName() );
-        result.setDescription( metaData.getQuantitationTypeDescription() );
-        result.setType( metaData.getType() );
-        result.setIsMaskedPreferred( metaData.getIsMaskedPreferred() );
-
-        result.setScale( metaData.getScale() );
-        result.setIsRatio( metaData.getIsRatio() );
-
-        return result;
-    }
-
-    /**
      * @param ee
      * @param arrayDesign
      * @param taxon
@@ -419,15 +354,6 @@ public class SimpleExpressionDataLoaderService {
         log.info( "Created " + bad.getBioAssays().size() + " bioAssays" );
 
         return bad;
-    }
-
-    /**
-     * @param ee
-     * @param inputSampleName The sample name as identified in the input file; this is basically the bio assay name.
-     * @return String used to identify the biomaterial in the system.
-     */
-    public static String makeBioMaterialName( ExpressionExperiment ee, String inputSampleName ) {
-        return inputSampleName + "__" + ee.getShortName();
     }
 
     /**
@@ -473,24 +399,102 @@ public class SimpleExpressionDataLoaderService {
     }
 
     /**
-     * @param arrayDesignService the arrayDesignService to set
+     * @param metaData
+     * @return
      */
-    public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
-        this.arrayDesignService = arrayDesignService;
+    private QuantitationType convertQuantitationType( SimpleExpressionExperimentMetaData metaData ) {
+        QuantitationType result = QuantitationType.Factory.newInstance();
+
+        result.setGeneralType( GeneralType.QUANTITATIVE );
+        result.setRepresentation( PrimitiveType.DOUBLE ); // no choice here
+        result.setIsPreferred( Boolean.TRUE );
+        result.setIsNormalized( Boolean.TRUE );
+        result.setIsBackgroundSubtracted( Boolean.TRUE );
+        result.setIsBackground( false );
+
+        result.setName( metaData.getQuantitationTypeName() );
+        result.setDescription( metaData.getQuantitationTypeDescription() );
+        result.setType( metaData.getType() );
+        result.setIsMaskedPreferred( metaData.getIsMaskedPreferred() );
+
+        result.setScale( metaData.getScale() );
+        result.setIsRatio( metaData.getIsRatio() );
+
+        return result;
     }
 
     /**
-     * @param persisterHelper the persisterHelper to set
+     * @param taxonName
+     * @return
      */
-    public void setPersisterHelper( PersisterHelper persisterHelper ) {
-        this.persisterHelper = persisterHelper;
+    private Taxon convertTaxon( Taxon taxon ) {
+        if ( taxon == null ) throw new IllegalArgumentException( "Taxon cannot be null" );
+        if ( taxonService == null ) {
+            return taxon; // for tests
+        }
+        return taxonService.findOrCreate( taxon );
+
     }
 
     /**
-     * @param taxonService the taxonService to set
+     * @param matrix
+     * @param newDesign
      */
-    public void setTaxonService( TaxonService taxonService ) {
-        this.taxonService = taxonService;
+    private void newArrayDesign( DoubleMatrix<String, String> matrix, ArrayDesign newDesign,
+            boolean probeNamesAreImageClones, Taxon taxon ) {
+        log.info( "Creating new ArrayDesign " + newDesign );
+
+        for ( int i = 0; i < matrix.rows(); i++ ) {
+            CompositeSequence cs = CompositeSequence.Factory.newInstance();
+            cs.setName( matrix.getRowName( i ) );
+            cs.setArrayDesign( newDesign );
+
+            if ( probeNamesAreImageClones ) {
+                provideImageClone( cs, taxon );
+            }
+
+            newDesign.getCompositeSequences().add( cs );
+        }
+        log.info( "New array design has " + newDesign.getCompositeSequences().size() + " compositeSequences" );
+    }
+
+    /**
+     * @param cs
+     * @param taxon
+     */
+    private void provideImageClone( CompositeSequence cs, Taxon taxon ) {
+        BioSequence bs = BioSequence.Factory.newInstance();
+        bs.setTaxon( taxon );
+        String imageId = cs.getName();
+        if ( imageId == null )
+            throw new IllegalArgumentException( "ComposisteSequence must have name filled in first" );
+        imageId = imageId.replaceFirst( "___\\d$", "" );
+        if ( !imageId.startsWith( "IMAGE:" ) ) {
+            imageId = "IMAGE:" + imageId;
+        }
+        assert imageId.matches( "^IMAGE:\\d+$" );
+        bs.setName( imageId );
+        cs.setBiologicalCharacteristic( bs );
+    }
+
+    /**
+     * Check for some error conditions like biomaterial names matching in the system
+     * 
+     * @param experiment
+     * @throws Exception if there is something wrong
+     */
+    private void validate( ExpressionExperiment experiment ) {
+
+        for ( BioAssay ba : experiment.getBioAssays() ) {
+            for ( BioMaterial bm : ba.getSamplesUsed() ) {
+
+                if ( bioMaterialService.exists( bm ) ) {
+                    throw new IllegalArgumentException( "There is already a biomaterial in the system matching: " + bm );
+                }
+
+            }
+        }
+
     }
 
 }
