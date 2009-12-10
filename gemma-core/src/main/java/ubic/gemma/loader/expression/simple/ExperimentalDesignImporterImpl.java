@@ -179,7 +179,8 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
                             + " columns based on EF descriptions (plus id column), got " + fields.length );
                 }
 
-                assignValuesToSamples( column2Factor, index2Column, fields, factorTypes, name2BioMaterial, dryRun );
+                assignValuesToSamples( experiment, column2Factor, index2Column, fields, factorTypes, name2BioMaterial,
+                        dryRun );
 
             }
         }
@@ -275,16 +276,19 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
     /**
      * Try to interpret the first field of a row as a biomaterial, and apply the factor values to it.
      * 
+     * @param expressionExperiment
      * @param column2Factor
      * @param index2Column
      * @param fields
      */
-    private void assignValuesToSamples( Map<String, ExperimentalFactor> column2Factor,
+    private void assignValuesToSamples( ExpressionExperiment ee, Map<String, ExperimentalFactor> column2Factor,
             Map<Integer, String> index2Column, String[] fields, Map<String, FactorType> factorTypes,
             Map<String, BioMaterial> name2BioMaterial, boolean dryRun ) {
         String sampleId = StringUtils.strip( fields[0] );
 
-        BioMaterial bm = getBioMaterial( sampleId, name2BioMaterial );
+        String bioMaterialName = SimpleExpressionDataLoaderService.makeBioMaterialName( ee, sampleId );
+
+        BioMaterial bm = getBioMaterial( bioMaterialName, name2BioMaterial );
         if ( bm == null ) {
             /*
              * It is arguable whether this should be an exception. I think it has to be to make sure that simple errors
@@ -292,7 +296,8 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
              * multiple microarray studies.
              */
             throw new IllegalArgumentException(
-                    "The uploaded file has a biomaterial name that does not match the study: " + sampleId );
+                    "The uploaded file has a biomaterial name that does not match the study: " + bioMaterialName
+                            + " (formatted based on on input: " + sampleId + ")" );
         }
 
         for ( int i = 1; i < fields.length; i++ ) {

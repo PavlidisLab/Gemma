@@ -401,10 +401,10 @@ public class SimpleExpressionDataLoaderService {
         bad.setName( "For " + ee.getShortName() );
         bad.setDescription( "Generated from flat file" );
         for ( int i = 0; i < matrix.columns(); i++ ) {
-            Object columnName = matrix.getColName( i );
+            String columnName = matrix.getColName( i );
 
             BioMaterial bioMaterial = BioMaterial.Factory.newInstance();
-            bioMaterial.setName( columnName.toString() + "__" + ee.getShortName() );
+            bioMaterial.setName( makeBioMaterialName( ee, columnName ) );
             bioMaterial.setSourceTaxon( taxon );
             Collection<BioMaterial> bioMaterials = new HashSet<BioMaterial>();
             bioMaterials.add( bioMaterial );
@@ -419,6 +419,15 @@ public class SimpleExpressionDataLoaderService {
         log.info( "Created " + bad.getBioAssays().size() + " bioAssays" );
 
         return bad;
+    }
+
+    /**
+     * @param ee
+     * @param inputSampleName The sample name as identified in the input file; this is basically the bio assay name.
+     * @return String used to identify the biomaterial in the system.
+     */
+    public static String makeBioMaterialName( ExpressionExperiment ee, String inputSampleName ) {
+        return inputSampleName + "__" + ee.getShortName();
     }
 
     /**
