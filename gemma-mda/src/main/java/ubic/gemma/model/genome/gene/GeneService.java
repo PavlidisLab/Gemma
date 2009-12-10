@@ -20,18 +20,18 @@ package ubic.gemma.model.genome.gene;
 
 import java.util.Collection;
 import java.util.Map;
-
 import org.springframework.security.access.annotation.Secured;
 
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionCollectionValueObject;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.PredictedGene;
 import ubic.gemma.model.genome.ProbeAlignedRegion;
-import ubic.gemma.model.genome.Qtl;
 import ubic.gemma.model.genome.RelativeLocationData;
+import ubic.gemma.model.genome.Taxon;
 
 /**
  * @author kelsey
@@ -39,13 +39,30 @@ import ubic.gemma.model.genome.RelativeLocationData;
  */
 public interface GeneService {
 
-    public java.lang.Integer countAll();
+    /**
+     * @return
+     */
+    public Integer countAll();
 
+    /**
+     * @param genes
+     * @return
+     */
     @Secured( { "GROUP_ADMIN" })
     public Collection<Gene> create( Collection<Gene> genes );
 
+    /**
+     * @param gene
+     * @return
+     */
     @Secured( { "GROUP_ADMIN" })
-    public ubic.gemma.model.genome.Gene create( ubic.gemma.model.genome.Gene gene );
+    public Gene create( Gene gene );
+
+    /**
+     * @param gene
+     * @return
+     */
+    public Gene find( Gene gene );
 
     /**
      * Find all genes at a physical location. All overlapping genes are returned. The location can be a point or a
@@ -56,26 +73,49 @@ public interface GeneService {
      */
     public Collection<Gene> find( PhysicalLocation physicalLocation );
 
-    public ubic.gemma.model.genome.Gene find( ubic.gemma.model.genome.Gene gene );
+    /**
+     * @param accession
+     * @param source
+     * @return
+     */
+    public Gene findByAccession( String accession, ubic.gemma.model.common.description.ExternalDatabase source );
 
-    public Collection<Qtl> findAllQtlsByPhysicalMapLocation(
-            ubic.gemma.model.genome.PhysicalLocation physicalMapLocation );
+    /**
+     * @param search
+     * @return
+     */
+    public Collection<Gene> findByAlias( String search );
 
-    public ubic.gemma.model.genome.Gene findByAccession( java.lang.String accession,
-            ubic.gemma.model.common.description.ExternalDatabase source );
+    /**
+     * @param accession
+     * @return
+     */
+    public Gene findByNCBIId( String accession );
 
-    public Collection<Gene> findByAlias( java.lang.String search );
+    /**
+     * @param officialName
+     * @return
+     */
+    public Collection<Gene> findByOfficialName( String officialName );
 
-    public ubic.gemma.model.genome.Gene findByNCBIId( java.lang.String accession );
+    /**
+     * @param officialSymbol
+     * @return
+     */
+    public Collection<Gene> findByOfficialSymbol( String officialSymbol );
 
-    public Collection<Gene> findByOfficialName( java.lang.String officialName );
+    /**
+     * @param symbol
+     * @param taxon
+     * @return
+     */
+    public Gene findByOfficialSymbol( String symbol, Taxon taxon );
 
-    public Collection<Gene> findByOfficialSymbol( java.lang.String officialSymbol );
-
-    public ubic.gemma.model.genome.Gene findByOfficialSymbol( java.lang.String symbol,
-            ubic.gemma.model.genome.Taxon taxon );
-
-    public Collection<Gene> findByOfficialSymbolInexact( java.lang.String officialSymbol );
+    /**
+     * @param officialSymbol
+     * @return
+     */
+    public Collection<Gene> findByOfficialSymbolInexact( String officialSymbol );
 
     /**
      * Find the gene(s) nearest to the location.
@@ -87,8 +127,12 @@ public interface GeneService {
      */
     public RelativeLocationData findNearest( PhysicalLocation physicalLocation, boolean useStrand );
 
+    /**
+     * @param gene
+     * @return
+     */
     @Secured( { "GROUP_ADMIN" })
-    public ubic.gemma.model.genome.Gene findOrCreate( ubic.gemma.model.genome.Gene gene );
+    public Gene findOrCreate( Gene gene );
 
     /**
      * @param genes
@@ -105,10 +149,8 @@ public interface GeneService {
             Collection<? extends BioAssaySet> ees, Integer stringency, boolean knownGenesOnly, boolean interGenesOnly );
 
     /**
-     * <p>
      * Function to get coexpressed genes given a gene and a collection of expressionExperiments. Returns the value
      * object:: CoexpressionCollectionValueObject
-     * </p>
      * 
      * @param gene
      * @param ees
@@ -117,93 +159,88 @@ public interface GeneService {
      * @return
      */
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ" })
-    public CoexpressionCollectionValueObject getCoexpressedGenes( ubic.gemma.model.genome.Gene gene,
-            Collection<? extends BioAssaySet> ees, java.lang.Integer stringency, boolean knownGenesOnly );
+    public CoexpressionCollectionValueObject getCoexpressedGenes( Gene gene, Collection<? extends BioAssaySet> ees,
+            Integer stringency, boolean knownGenesOnly );
 
     /**
-     * <p>
-     * Returns a Collection of Genes. Not ProbeAlignedRegions, Not PredictedGenes, just straight up known genes that
-     * didn't have any specificty problems (ie all the probes were clean).
-     * </p>
+     * @param id
+     * @return
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ" })
-    public Collection<Gene> getCoexpressedKnownGenes( ubic.gemma.model.genome.Gene gene,
-            Collection<? extends BioAssaySet> ees, java.lang.Integer stringency );
-
-    public long getCompositeSequenceCountById( java.lang.Long id );
+    public long getCompositeSequenceCountById( Long id );
 
     /**
-     * <p>
      * Returns a list of compositeSequences associated with the given gene and array design
-     * </p>
      */
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    public Collection<CompositeSequence> getCompositeSequences( ubic.gemma.model.genome.Gene gene,
-            ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
+    public Collection<CompositeSequence> getCompositeSequences( Gene gene, ArrayDesign arrayDesign );
 
     /**
      * @param id gemma gene id
      * @return Return probes for a given gene id.
      */
-    public Collection<CompositeSequence> getCompositeSequencesById( java.lang.Long id );
+    public Collection<CompositeSequence> getCompositeSequencesById( Long id );
 
     /**
-     * <p>
      * Gets all the genes for a given taxon
-     * </p>
      */
-    public Collection<Gene> getGenesByTaxon( ubic.gemma.model.genome.Taxon taxon );
+    public Collection<Gene> getGenesByTaxon( Taxon taxon );
 
     /**
-     * <p>
-     * Gets all the microRNA for a given taxon. Note query could be slow or inexact due to use of wild card searching of
-     * the genes description
-     * </p>
+     * @param id
+     * @return
      */
-    public Collection getMicroRnaByTaxon( ubic.gemma.model.genome.Taxon taxon );
+    public Gene load( long id );
 
-    public ubic.gemma.model.genome.Gene load( long id );
-
+    /**
+     * @return
+     */
     public Collection<Gene> loadAll();
 
     /**
-     * <p>
      * Returns a collection of geneImpls for the specified taxon. Ie not probe aligned regions and predicted genes
-     * </p>
      */
-    public Collection<Gene> loadKnownGenes( ubic.gemma.model.genome.Taxon taxon );
+    public Collection<Gene> loadKnownGenes( Taxon taxon );
 
     /**
-     * <p>
+     * Gets all the microRNAs for a given taxon. Note query could be slow or inexact due to use of wild card searching
+     * of the genes description
+     */
+    public Collection<Gene> loadMicroRNAs( Taxon taxon );
+
+    /**
      * load all genes specified by the given ids.
-     * </p>
      */
     public Collection<Gene> loadMultiple( Collection<Long> ids );
 
     /**
-     * <p>
      * Returns a collection of Predicted Genes for the specified taxon
-     * </p>
      */
-    public Collection<PredictedGene> loadPredictedGenes( ubic.gemma.model.genome.Taxon taxon );
+    public Collection<PredictedGene> loadPredictedGenes( Taxon taxon );
 
     /**
-     * <p>
      * Returns a collection of all ProbeAlignedRegion's for the specfied taxon
-     * </p>
      */
-    public Collection<ProbeAlignedRegion> loadProbeAlignedRegions( ubic.gemma.model.genome.Taxon taxon );
+    public Collection<ProbeAlignedRegion> loadProbeAlignedRegions( Taxon taxon );
 
+    /**
+     * @param genes
+     */
     @Secured( { "GROUP_ADMIN" })
     public void remove( Collection<Gene> genes );
 
+    /**
+     * @param gene
+     */
     @Secured( { "GROUP_ADMIN" })
     public void remove( Gene gene );
 
-    public void thaw( ubic.gemma.model.genome.Gene gene );
+    /**
+     * @param gene
+     */
+    public void thaw( Gene gene );
 
     /**
-     * 
+     * @param genes
      */
     public void thawLite( Collection<Gene> genes );
 
@@ -212,7 +249,10 @@ public interface GeneService {
      */
     public void thawLite( Gene gene );
 
+    /**
+     * @param gene
+     */
     @Secured( { "GROUP_ADMIN" })
-    public void update( ubic.gemma.model.genome.Gene gene );
+    public void update( Gene gene );
 
 }

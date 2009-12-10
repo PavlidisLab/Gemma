@@ -49,6 +49,7 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.expression.biomaterial.BioMaterialService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -73,6 +74,9 @@ public class SimpleExpressionDataLoaderService {
 
     @Autowired
     ArrayDesignService arrayDesignService;
+
+    @Autowired
+    BioMaterialService bioMaterialService;
 
     @Autowired
     TaxonService taxonService;
@@ -235,7 +239,29 @@ public class SimpleExpressionDataLoaderService {
             DoubleMatrix<String, String> matrix ) {
         ExpressionExperiment experiment = convert( metaData, matrix );
 
+        validate( experiment );
+
         return ( ExpressionExperiment ) persisterHelper.persist( experiment );
+    }
+
+    /**
+     * Check for some error conditions like biomaterial names matching in the system
+     * 
+     * @param experiment
+     * @throws Exception if there is something wrong
+     */
+    private void validate( ExpressionExperiment experiment ) {
+
+        for ( BioAssay ba : experiment.getBioAssays() ) {
+            for ( BioMaterial bm : ba.getSamplesUsed() ) {
+
+                if ( bioMaterialService.exists( bm ) ) {
+                    throw new IllegalArgumentException( "There is already a biomaterial in the system matching: " + bm );
+                }
+
+            }
+        }
+
     }
 
     /**
@@ -378,7 +404,7 @@ public class SimpleExpressionDataLoaderService {
             Object columnName = matrix.getColName( i );
 
             BioMaterial bioMaterial = BioMaterial.Factory.newInstance();
-            bioMaterial.setName( columnName.toString() );
+            bioMaterial.setName( columnName.toString() + "__" + ee.getShortName() );
             bioMaterial.setSourceTaxon( taxon );
             Collection<BioMaterial> bioMaterials = new HashSet<BioMaterial>();
             bioMaterials.add( bioMaterial );

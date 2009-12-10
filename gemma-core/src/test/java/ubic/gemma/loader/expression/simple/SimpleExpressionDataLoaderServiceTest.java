@@ -30,7 +30,7 @@ import org.apache.commons.lang.RandomStringUtils;
 import org.junit.After;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
+ 
 import ubic.gemma.loader.expression.simple.model.SimpleExpressionExperimentMetaData;
 import ubic.gemma.model.common.quantitationtype.GeneralType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
@@ -130,9 +130,7 @@ public class SimpleExpressionDataLoaderServiceTest extends BaseSpringContextTest
     }
 
     /**
-     * @throws Exception
-     *         {@link ubic.gemma.loader.expression.simple.SimpleExpressionDataLoaderService#loadPersistentModel(ubic.gemma.loader.expression.simple.model.ExpressionExperimentMetaData, java.io.InputStream)}
-     *         .
+     *  
      */
     @Test
     public final void testLoadB() throws Exception {
@@ -168,4 +166,5 @@ public class SimpleExpressionDataLoaderServiceTest extends BaseSpringContextTest
         // 
     }
 
+  
 }

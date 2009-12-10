@@ -48,6 +48,7 @@ import ubic.gemma.model.expression.arrayDesign.AlternateName;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Chromosome;
@@ -120,6 +121,23 @@ public class BusinessKey {
             attachCriteria( queryObject, bioAssay.getAccession(), "accession" );
         }
         queryObject.add( Restrictions.eq( "name", bioAssay.getName() ) );
+    }
+
+    public static void addRestrictions( Criteria queryObject, BioMaterial bioMaterial ) {
+
+        if ( bioMaterial.getName() != null ) {
+            queryObject.add( Restrictions.eq( "name", bioMaterial.getName() ) );
+        }
+
+        if ( bioMaterial.getExternalAccession() != null ) {
+            queryObject.createCriteria( "externalAccession" ).add(
+                    Restrictions.eq( "accession", bioMaterial.getExternalAccession().getAccession() ) );
+        }
+
+        if ( bioMaterial.getSourceTaxon() != null ) {
+            queryObject.add( Restrictions.eq( "sourceTaxon", bioMaterial.getSourceTaxon() ) );
+        }
+        
     }
 
     /**

@@ -147,8 +147,6 @@ public class ExperimentalDesignImporterTestC extends AbstractGeoServiceTest {
             log.info( "Waiting for mgedontology to load" );
         }
 
-        assertNotNull( salmon );
-
         metaData.setShortName( RandomStringUtils.randomAlphabetic( 10 ) );
         metaData.setDescription( "bar" );
         metaData.setIsRatio( false );

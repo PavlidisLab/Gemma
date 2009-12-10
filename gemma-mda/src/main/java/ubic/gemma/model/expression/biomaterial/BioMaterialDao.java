@@ -64,6 +64,7 @@ public interface BioMaterialDao extends BaseDao<BioMaterial> {
 
     /**
      * Remove the factor value.
+     * 
      * @param BioMaterials
      * @param experimentalFactor
      */

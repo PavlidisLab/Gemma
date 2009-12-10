@@ -51,6 +51,13 @@ public interface BioMaterialService {
     @Secured( { "GROUP_USER", "AFTER_ACL_READ" })
     public BioMaterial findOrCreate( BioMaterial bioMaterial );
 
+    /**
+     * @param bioMaterial
+     * @return true if a matching biomaterial exists in the system.
+     */
+    @Secured("GROUP_USER")
+    public boolean exists( BioMaterial bioMaterial );
+
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     public ExpressionExperiment getExpressionExperiment( Long id );
 

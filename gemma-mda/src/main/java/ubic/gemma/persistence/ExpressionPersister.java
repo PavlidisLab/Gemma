@@ -299,6 +299,9 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
 
         if ( log.isDebugEnabled() ) log.debug( assay.getSamplesUsed().size() + " bioMaterials for " + assay );
 
+        /*
+         * BioMaterials
+         */
         persistCollectionElements( assay.getSamplesUsed() );
 
         if ( assay.getRawDataFile() != null ) {

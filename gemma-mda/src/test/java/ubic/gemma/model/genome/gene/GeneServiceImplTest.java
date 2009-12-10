@@ -30,7 +30,6 @@ import java.util.HashSet;
 import junit.framework.TestCase;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.GeneDao;
-import ubic.gemma.model.genome.BaseQtlDao;
 import ubic.gemma.model.genome.Taxon;
 
 /**
@@ -44,7 +43,6 @@ public class GeneServiceImplTest extends TestCase {
     private Gene g2 = null;
     private Gene g3 = null;
     private GeneDao geneDaoMock;
-    private BaseQtlDao qtlDaoMock;
     GeneServiceImpl svc;
     Collection<Gene> allThree = new HashSet<Gene>();
     Collection<Gene> justRab = new HashSet<Gene>();
@@ -53,10 +51,8 @@ public class GeneServiceImplTest extends TestCase {
     @Override
     protected void setUp() throws Exception {
         geneDaoMock = createMock( GeneDao.class );
-        qtlDaoMock = createMock( BaseQtlDao.class );
         svc = new GeneServiceImpl();
         svc.setGeneDao( geneDaoMock );
-        svc.setQtlDao( qtlDaoMock );
         t = Taxon.Factory.newInstance();
         t.setCommonName( "moose" );
         t.setScientificName( "moose" );

@@ -126,4 +126,14 @@ public class BioMaterialServiceImpl extends ubic.gemma.model.expression.biomater
         this.getBioMaterialDao().update( bioMaterial );
     }
 
+    /*
+     * (non-Javadoc)
+     * @see
+     * ubic.gemma.model.expression.biomaterial.BioMaterialService#exists(ubic.gemma.model.expression.biomaterial.BioMaterial
+     * )
+     */
+    public boolean exists( BioMaterial bioMaterial ) {
+        return this.getBioMaterialDao().find( bioMaterial ) != null;
+    }
+
 }

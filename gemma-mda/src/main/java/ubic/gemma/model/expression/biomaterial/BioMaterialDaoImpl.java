@@ -26,13 +26,13 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 import org.hibernate.SessionFactory;
-import org.hibernate.criterion.Restrictions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.util.BusinessKey;
 
 /**
  * @author pavlidis
@@ -60,14 +60,7 @@ public class BioMaterialDaoImpl extends ubic.gemma.model.expression.biomaterial.
         try {
             Criteria queryObject = super.getSession().createCriteria( BioMaterial.class );
 
-            if ( bioMaterial.getName() != null ) {
-                queryObject.add( Restrictions.eq( "name", bioMaterial.getName() ) );
-            }
-
-            if ( bioMaterial.getExternalAccession() != null ) {
-                queryObject.createCriteria( "externalAccession" ).add(
-                        Restrictions.eq( "accession", bioMaterial.getExternalAccession().getAccession() ) );
-            }
+            BusinessKey.addRestrictions( queryObject, bioMaterial );
 
             java.util.List<?> results = queryObject.list();
             Object result = null;
@@ -208,4 +201,5 @@ public class BioMaterialDaoImpl extends ubic.gemma.model.expression.biomaterial.
         }
         return bs;
     }
+
 }
