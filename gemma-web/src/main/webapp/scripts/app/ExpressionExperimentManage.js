@@ -357,11 +357,11 @@ Ext.onReady(function() {
 			handler : function(chbx, checked) {
 				if (checked) {
 					store.load({
-								params : [ids, -1]
+								params : [taxonid, ids, -1]
 							});
 				} else {
 					store.load({
-								params : [ids, limit]
+								params : [taxonid, ids, limit]
 							});
 				}
 			}.createDelegate(this),
@@ -386,7 +386,7 @@ Ext.onReady(function() {
 				params : [taxonid, ids, limit]
 			});
 
-	store.on("loadexception", function(scope, args, data, e) {
+	store.on("exception", function(scope, args, data, e) {
 				Ext.Msg.alert('Session expired?', data + ".  \nTry signing in again.");
 			});
 });

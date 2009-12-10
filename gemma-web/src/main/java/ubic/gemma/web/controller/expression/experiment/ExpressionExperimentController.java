@@ -679,7 +679,7 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         eeValObjectCol = getEEVOsForManager( taxonId, ids, filterDataByUser );
 
         if ( timer.getTime() > 1000 ) {
-            log.info( "Phase 1 done in " + timer.getTime() + "ms" );
+            log.info( "Fetching basic data took: " + timer.getTime() + "ms" );
         }
 
         /*
@@ -692,18 +692,18 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         Map<Long, Date> recentDateInfo = getReportData( eeValObjectCol );
 
         if ( timer.getTime() > 1000 ) {
-            log.info( "Get report data: " + timer.getTime() + "ms" );
+            log.info( "Filling in report data: " + timer.getTime() + "ms" );
         }
 
         timer.reset();
         timer.start();
 
         List<ExpressionExperimentValueObject> result = getRecentlyUpdated( recentDateInfo, eeValObjectCol, limit );
+
         if ( timer.getTime() > 1000 ) {
             log.info( "Sorting and filtering: " + timer.getTime() + "ms; limit=" + limit );
         }
 
-        log.info( "Phase II done" );
         return result;
     }
 
@@ -785,6 +785,7 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
             mav.addObject( "showAll", false );
             eeValObjectCol = this.getFilteredExpressionExperimentValueObjects( null, eeIdList, false );
         }
+
         expressionExperiments.addAll( eeValObjectCol );
 
         // sort expression experiments by name first
@@ -1138,7 +1139,8 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
      * 
      * @param taxon can be null
      * @param eeids can be null; if taxon is non-null, this is ignored.
-     * @param
+     * @param filterDataForUser if true, then only the data owned by the user are returned (this has no effect if you
+     *        are an administrator)
      * @return Collection<ExpressionExperimentValueObject>
      */
     private Collection<ExpressionExperimentValueObject> getFilteredExpressionExperimentValueObjects( Taxon taxon,
