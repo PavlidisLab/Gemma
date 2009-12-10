@@ -692,7 +692,7 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         Map<Long, Date> recentDateInfo = getReportData( eeValObjectCol );
 
         if ( timer.getTime() > 1000 ) {
-            log.info( "Get report data: " + timer.getTime() + "ms; limit=" + limit );
+            log.info( "Get report data: " + timer.getTime() + "ms" );
         }
 
         timer.reset();

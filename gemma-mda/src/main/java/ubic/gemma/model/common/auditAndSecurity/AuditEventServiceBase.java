@@ -18,88 +18,88 @@
  */
 package ubic.gemma.model.common.auditAndSecurity;
 
+import java.util.Collection;
+import java.util.Date;
+
 import org.springframework.beans.factory.annotation.Autowired;
 
+import ubic.gemma.model.common.Auditable;
+
 /**
- * <p>
- * Spring Service base class for <code>ubic.gemma.model.common.auditAndSecurity.AuditEventService</code>, provides
- * access to all services and entities referenced by this service.
- * </p>
+ * Spring Service base class for <code>AuditEventService</code>, provides access to all services and entities referenced
+ * by this service.
  * 
- * @see ubic.gemma.model.common.auditAndSecurity.AuditEventService
+ * @version $Id$
+ * @see AuditEventService
  */
-public abstract class AuditEventServiceBase implements ubic.gemma.model.common.auditAndSecurity.AuditEventService {
+public abstract class AuditEventServiceBase implements AuditEventService {
 
     @Autowired
-    private ubic.gemma.model.common.auditAndSecurity.AuditEventDao auditEventDao;
+    private AuditEventDao auditEventDao;
 
     /**
-     * @see ubic.gemma.model.common.auditAndSecurity.AuditEventService#getNewSinceDate(java.util.Date)
+     * @see AuditEventService#getNewSinceDate(Date)
      */
-    public java.util.Collection getNewSinceDate( final java.util.Date date ) {
+    public Collection<Auditable> getNewSinceDate( final Date date ) {
         try {
             return this.handleGetNewSinceDate( date );
         } catch ( Throwable th ) {
-            throw new ubic.gemma.model.common.auditAndSecurity.AuditEventServiceException(
-                    "Error performing 'ubic.gemma.model.common.auditAndSecurity.AuditEventService.getNewSinceDate(java.util.Date date)' --> "
-                            + th, th );
+            throw new AuditEventServiceException(
+                    "Error performing 'AuditEventService.getNewSinceDate(Date date)' --> " + th, th );
         }
     }
 
     /**
-     * @see ubic.gemma.model.common.auditAndSecurity.AuditEventService#getUpdatedSinceDate(java.util.Date)
+     * @see AuditEventService#getUpdatedSinceDate(Date)
      */
-    public java.util.Collection getUpdatedSinceDate( final java.util.Date date ) {
+    public Collection<Auditable> getUpdatedSinceDate( final Date date ) {
         try {
             return this.handleGetUpdatedSinceDate( date );
         } catch ( Throwable th ) {
-            throw new ubic.gemma.model.common.auditAndSecurity.AuditEventServiceException(
-                    "Error performing 'ubic.gemma.model.common.auditAndSecurity.AuditEventService.getUpdatedSinceDate(java.util.Date date)' --> "
-                            + th, th );
+            throw new AuditEventServiceException(
+                    "Error performing 'AuditEventService.getUpdatedSinceDate(Date date)' --> " + th, th );
         }
     }
 
     /**
      * Sets the reference to <code>auditEvent</code>'s DAO.
      */
-    public void setAuditEventDao( ubic.gemma.model.common.auditAndSecurity.AuditEventDao auditEventDao ) {
+    public void setAuditEventDao( AuditEventDao auditEventDao ) {
         this.auditEventDao = auditEventDao;
     }
 
     /**
-     * @see ubic.gemma.model.common.auditAndSecurity.AuditEventService#thaw(ubic.gemma.model.common.auditAndSecurity.AuditEvent)
+     * @see AuditEventService#thaw(AuditEvent)
      */
-    public void thaw( final ubic.gemma.model.common.auditAndSecurity.AuditEvent auditEvent ) {
+    public void thaw( final AuditEvent auditEvent ) {
         try {
             this.handleThaw( auditEvent );
         } catch ( Throwable th ) {
-            throw new ubic.gemma.model.common.auditAndSecurity.AuditEventServiceException(
-                    "Error performing 'ubic.gemma.model.common.auditAndSecurity.AuditEventService.thaw(ubic.gemma.model.common.auditAndSecurity.AuditEvent auditEvent)' --> "
-                            + th, th );
+            throw new AuditEventServiceException(
+                    "Error performing 'AuditEventService.thaw(AuditEvent auditEvent)' --> " + th, th );
         }
     }
 
     /**
      * Gets the reference to <code>auditEvent</code>'s DAO.
      */
-    protected ubic.gemma.model.common.auditAndSecurity.AuditEventDao getAuditEventDao() {
+    protected AuditEventDao getAuditEventDao() {
         return this.auditEventDao;
     }
 
     /**
-     * Performs the core logic for {@link #getNewSinceDate(java.util.Date)}
+     * Performs the core logic for {@link #getNewSinceDate(Date)}
      */
-    protected abstract java.util.Collection handleGetNewSinceDate( java.util.Date date ) throws java.lang.Exception;
+    protected abstract Collection<Auditable> handleGetNewSinceDate( Date date ) throws java.lang.Exception;
 
     /**
-     * Performs the core logic for {@link #getUpdatedSinceDate(java.util.Date)}
+     * Performs the core logic for {@link #getUpdatedSinceDate(Date)}
      */
-    protected abstract java.util.Collection handleGetUpdatedSinceDate( java.util.Date date ) throws java.lang.Exception;
+    protected abstract Collection<Auditable> handleGetUpdatedSinceDate( Date date ) throws java.lang.Exception;
 
     /**
-     * Performs the core logic for {@link #thaw(ubic.gemma.model.common.auditAndSecurity.AuditEvent)}
+     * Performs the core logic for {@link #thaw(AuditEvent)}
      */
-    protected abstract void handleThaw( ubic.gemma.model.common.auditAndSecurity.AuditEvent auditEvent )
-            throws java.lang.Exception;
+    protected abstract void handleThaw( AuditEvent auditEvent ) throws java.lang.Exception;
 
 }

@@ -21,8 +21,6 @@ package ubic.gemma.analysis.report;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.FilenameFilter;
-import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
@@ -33,12 +31,20 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
+import net.sf.ehcache.Cache;
+import net.sf.ehcache.CacheManager;
+import net.sf.ehcache.Element;
+import net.sf.ehcache.store.MemoryStoreEvictionPolicy;
+
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Service;
+
+import edu.emory.mathcs.backport.java.util.Arrays;
 
 import ubic.basecode.util.FileTools;
 import ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet;
@@ -66,6 +72,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.security.SecurityService;
 import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.EntityUtils;
 
 /**
  * Handles creation, serialization and/or marshalling of reports about expression experiments. Reports are stored in
@@ -77,22 +84,32 @@ import ubic.gemma.util.ConfigUtils;
  * @version $Id$
  */
 @Service
-public class ExpressionExperimentReportServiceImpl implements ExpressionExperimentReportService {
+public class ExpressionExperimentReportServiceImpl implements ExpressionExperimentReportService, InitializingBean {
     private static final double CUT_OFF = 0.05;
-    private String HOME_DIR = ConfigUtils.getString( "gemma.appdata.home" );
-    private Log log = LogFactory.getLog( this.getClass() );
-
     @Autowired
     private AuditEventService auditEventService;
-
     @Autowired
     private AuditTrailService auditTrailService;
 
+    @Autowired
+    private CacheManager cacheManager;
+
+    @Autowired
+    private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
+
+    @Autowired
+    private DifferentialExpressionResultService differentialExpressionResultService;
     private String EE_LINK_SUMMARY = "AllExpressionLinkSummary";
     private String EE_REPORT_DIR = "ExpressionExperimentReports";
 
+    private String EESTATS_CACHE_NAME = "ExpressionExperimentReportsCache";
+
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
+
+    private String HOME_DIR = ConfigUtils.getString( "gemma.appdata.home" );
+
+    private Log log = LogFactory.getLog( this.getClass() );
 
     @Autowired
     private Probe2ProbeCoexpressionService probe2ProbeCoexpressionService;
@@ -100,11 +117,35 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
     @Autowired
     private SecurityService securityService;
 
-    @Autowired
-    private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
+    /**
+     * Batch of classes we can get events for all at once.
+     */
+    @SuppressWarnings("unchecked")
+    private Class<? extends AuditEventType>[] eventTypes = new Class[] { LinkAnalysisEvent.class,
+            MissingValueAnalysisEvent.class, ProcessedVectorComputationEvent.class, ValidatedFlagEvent.class,
+            DifferentialExpressionAnalysisEvent.class };
 
-    @Autowired
-    private DifferentialExpressionResultService differentialExpressionResultService;
+    /**
+     * Cache to hold stats in memory. This is used to avoid hittinig the disk for reports too often.
+     */
+    private Cache statsCache;
+
+    public void afterPropertiesSet() throws Exception {
+        /*
+         * Initialize the cache; if it already exists it will not be recreated.
+         */
+        int maxElements = 5000;
+        boolean eternal = true;
+        boolean overFlowToDisk = false;
+        boolean diskPersistent = true;
+
+        this.statsCache = new Cache( EESTATS_CACHE_NAME, maxElements, MemoryStoreEvictionPolicy.LRU, overFlowToDisk,
+                null, eternal, 0, 0, diskPersistent, 600 /* diskExpiryThreadInterval */, null );
+
+        cacheManager.addCache( statsCache );
+        this.statsCache = cacheManager.getCache( EESTATS_CACHE_NAME );
+
+    }
 
     /**
      * Populate information about how many annotations there are, and how many factor values there are.
@@ -144,16 +185,17 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
      * 
      * @return Map of EE ids to the most recent update.
      */
+    @SuppressWarnings("unchecked")
     public Map<Long, Date> fillEventInformation( Collection<ExpressionExperimentValueObject> vos ) {
-        Collection<Long> ids = new ArrayList<Long>();
-        for ( Object object : vos ) {
-            ExpressionExperimentValueObject eeVo = ( ExpressionExperimentValueObject ) object;
-            ids.add( eeVo.getId() );
-        }
+
+        StopWatch timer = new StopWatch();
+        timer.start();
+
+        Collection<Long> ids = EntityUtils.getIds( vos );
 
         Map<Long, Date> results = new HashMap<Long, Date>();
 
-        // do this ahead to avoid round trips.
+        // do this ahead to avoid round trips - this also filters...
         Collection<ExpressionExperiment> ees = expressionExperimentService.loadMultiple( ids );
 
         Map<Long, ExpressionExperiment> eemap = new HashMap<Long, ExpressionExperiment>();
@@ -164,17 +206,19 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
         if ( ees.size() == 0 ) {
             return results;
         }
-        // This is substantially faster than expressionExperimentService.getLastLinkAnalysis( ids ).
-        Map<Long, AuditEvent> linkAnalysisEvents = getEvents( ees, LinkAnalysisEvent.Factory.newInstance() );
-        Map<Long, AuditEvent> missingValueAnalysisEvents = getEvents( ees, MissingValueAnalysisEvent.Factory
-                .newInstance() );
-        Map<Long, AuditEvent> rankComputationEvents = getEvents( ees, ProcessedVectorComputationEvent.Factory
-                .newInstance() );
-        Map<Long, AuditEvent> troubleEvents = getEvents( ees, TroubleStatusFlagEvent.Factory.newInstance() );
-        Map<Long, AuditEvent> validationEvents = getEvents( ees, ValidatedFlagEvent.Factory.newInstance() );
-        Map<Long, AuditEvent> arrayDesignEvents = getEvents( ees, ArrayDesignGeneMappingEvent.Factory.newInstance() );
-        Map<Long, AuditEvent> differentialAnalysisEvents = getEvents( ees, DifferentialExpressionAnalysisEvent.Factory
-                .newInstance() );
+
+        Map<Long, AuditEvent> troubleEvents = getEvents( ees, TroubleStatusFlagEvent.class );
+        Map<Long, AuditEvent> arrayDesignEvents = getEvents( ees, ArrayDesignGeneMappingEvent.class );
+        Collection<Class<? extends AuditEventType>> typesToGet = Arrays.asList( eventTypes );
+
+        Map<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>> events = getEvents( ees, typesToGet );
+
+        Map<Auditable, AuditEvent> linkAnalysisEvents = events.get( LinkAnalysisEvent.class );
+        Map<Auditable, AuditEvent> missingValueAnalysisEvents = events.get( MissingValueAnalysisEvent.class );
+        Map<Auditable, AuditEvent> rankComputationEvents = events.get( ProcessedVectorComputationEvent.class );
+        Map<Auditable, AuditEvent> validationEvents = events.get( ValidatedFlagEvent.class );
+        Map<Auditable, AuditEvent> differentialAnalysisEvents = events.get( DifferentialExpressionAnalysisEvent.class );
+
         Map<Long, Collection<AuditEvent>> sampleRemovalEvents = getSampleRemovalEvents( ees );
 
         Map<Securable, Boolean> privacyInfo = securityService.arePrivate( ees );
@@ -182,11 +226,16 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
 
         Date mostRecentDate = new Date( 0 );
 
-        // add in the last events of interest for all eeVos
+        /*
+         * add in the last events of interest for all eeVos This step is remarkably slow.
+         */
         for ( ExpressionExperimentValueObject eeVo : vos ) {
             Long id = eeVo.getId();
-            if ( linkAnalysisEvents.containsKey( id ) ) {
-                AuditEvent event = linkAnalysisEvents.get( id );
+
+            ExpressionExperiment ee = eemap.get( id );
+
+            if ( linkAnalysisEvents.containsKey( ee ) ) {
+                AuditEvent event = linkAnalysisEvents.get( ee );
                 if ( event != null ) {
                     Date date = event.getDate();
                     eeVo.setDateLinkAnalysis( date );
@@ -199,8 +248,8 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
                 }
             }
 
-            if ( missingValueAnalysisEvents.containsKey( id ) ) {
-                AuditEvent event = missingValueAnalysisEvents.get( id );
+            if ( missingValueAnalysisEvents.containsKey( ee ) ) {
+                AuditEvent event = missingValueAnalysisEvents.get( ee );
                 if ( event != null ) {
                     Date date = event.getDate();
                     eeVo.setDateMissingValueAnalysis( date );
@@ -213,8 +262,8 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
                 }
             }
 
-            if ( rankComputationEvents.containsKey( id ) ) {
-                AuditEvent event = rankComputationEvents.get( id );
+            if ( rankComputationEvents.containsKey( ee ) ) {
+                AuditEvent event = rankComputationEvents.get( ee );
                 if ( event != null ) {
                     Date date = event.getDate();
                     eeVo.setDateProcessedDataVectorComputation( date );
@@ -224,6 +273,19 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
                     }
 
                     eeVo.setProcessedDataVectorComputationEventType( event.getEventType().getClass().getSimpleName() );
+                }
+            }
+
+            if ( differentialAnalysisEvents.containsKey( ee ) ) {
+                AuditEvent event = differentialAnalysisEvents.get( ee );
+                if ( event != null ) {
+                    Date date = event.getDate();
+                    eeVo.setDateDifferentialAnalysis( date );
+
+                    if ( date.after( mostRecentDate ) ) {
+                        mostRecentDate = date;
+                    }
+                    eeVo.setDifferentialAnalysisEventType( event.getEventType().getClass().getSimpleName() );
                 }
             }
 
@@ -240,18 +302,28 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
                 }
             }
 
-            if ( differentialAnalysisEvents.containsKey( id ) ) {
-                AuditEvent event = differentialAnalysisEvents.get( id );
-                if ( event != null ) {
-                    Date date = event.getDate();
-                    eeVo.setDateDifferentialAnalysis( date );
+            if ( validationEvents.containsKey( ee ) ) {
+                AuditEvent validated = validationEvents.get( ee );
+                auditEventService.thaw( validated );
 
-                    if ( date.after( mostRecentDate ) ) {
-                        mostRecentDate = date;
-                    }
-                    eeVo.setDifferentialAnalysisEventType( event.getEventType().getClass().getSimpleName() );
+                if ( validated.getDate().after( mostRecentDate ) ) {
+                    mostRecentDate = validated.getDate();
                 }
+
+                eeVo.setValidatedFlag( new AuditEventValueObject( validated ) );
             }
+
+            if ( privacyInfo.containsKey( ee ) ) {
+                eeVo.setIsPublic( !privacyInfo.get( ee ) );
+            }
+
+            if ( sharingInfo.containsKey( ee ) ) {
+                eeVo.setShared( sharingInfo.get( ee ) );
+            }
+
+            /*
+             * The following are keyed by ID
+             */
 
             if ( sampleRemovalEvents.containsKey( id ) ) {
                 Collection<AuditEvent> removalEvents = sampleRemovalEvents.get( id );
@@ -263,36 +335,18 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
             if ( troubleEvents.containsKey( id ) ) {
                 AuditEvent trouble = troubleEvents.get( id );
                 // we find we are getting lazy-load exceptions from this guy.
-                auditEventService.thaw( trouble );
+                // auditEventService.thaw( trouble );
                 eeVo.setTroubleFlag( new AuditEventValueObject( trouble ) );
 
                 if ( trouble.getDate().after( mostRecentDate ) ) {
                     mostRecentDate = trouble.getDate();
                 }
             }
-            if ( validationEvents.containsKey( id ) ) {
-                AuditEvent validated = validationEvents.get( id );
-                auditEventService.thaw( validated );
-
-                if ( validated.getDate().after( mostRecentDate ) ) {
-                    mostRecentDate = validated.getDate();
-                }
-
-                eeVo.setValidatedFlag( new AuditEventValueObject( validated ) );
-            }
-
-            ExpressionExperiment ee = eemap.get( id );
-            if ( privacyInfo.containsKey( ee ) ) {
-                eeVo.setIsPublic( !privacyInfo.get( ee ) );
-            }
-
-            if ( sharingInfo.containsKey( ee ) ) {
-                eeVo.setShared( sharingInfo.get( ee ) );
-            }
 
             results.put( ee.getId(), mostRecentDate );
         }
-        log.info( "Processed events" );
+
+        if ( timer.getTime() > 1000 ) log.info( "Retrieving audit events took " + timer.getTime() + "ms" );
 
         return results;
     }
@@ -374,7 +428,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
     public void generateSummaryObjects() {
         initDirectories( false );
         Collection<ExpressionExperimentValueObject> vos = expressionExperimentService.loadAllValueObjects();
-        getStats( vos );
+        updateStats( vos );
     }
 
     /*
@@ -386,16 +440,8 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
 
         Collection<Long> filteredIds = securityFilterExpressionExperimentIds( ids );
         Collection<ExpressionExperimentValueObject> vos = expressionExperimentService.loadValueObjects( filteredIds );
-        getStats( vos );
+        updateStats( vos );
         return vos;
-    }
-
-    /*
-     * (non-Javadoc)
-     * @see ubic.gemma.analysis.report.ExpressionExperimentReportService#retrieveSummaryObjects()
-     */
-    public Collection<ExpressionExperimentValueObject> retrieveSummaryObjects() {
-        return retrieveValueObjects();
     }
 
     /*
@@ -417,6 +463,16 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
         this.auditTrailService = auditTrailService;
     }
 
+    public void setDifferentialExpressionAnalysisService(
+            DifferentialExpressionAnalysisService differentialExpressionAnalysisService ) {
+        this.differentialExpressionAnalysisService = differentialExpressionAnalysisService;
+    }
+
+    public void setDifferentialExpressionResultService(
+            DifferentialExpressionResultService differentialExpressionResultService ) {
+        this.differentialExpressionResultService = differentialExpressionResultService;
+    }
+
     /**
      * @param expressionExperimentService the expressionExperimentService to set
      */
@@ -433,82 +489,6 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
 
     public void setSecurityService( SecurityService securityService ) {
         this.securityService = securityService;
-    }
-
-    /**
-     * @param ees
-     * @param type
-     * @return
-     */
-    private Map<Long, AuditEvent> getEvents( Collection<ExpressionExperiment> ees, AuditEventType type ) {
-        StopWatch timer = new StopWatch();
-        timer.start();
-        Map<Long, AuditEvent> result = new HashMap<Long, AuditEvent>();
-        Map<? extends Auditable, AuditEvent> events = null;
-        if ( type instanceof ArrayDesignAnalysisEvent ) {
-            events = expressionExperimentService.getLastArrayDesignUpdate( ees, type.getClass() );
-
-        } else if ( type instanceof TroubleStatusFlagEvent ) {
-            // This service unlike the others needs ids not EE objects
-            Collection<Long> eeIds = new HashSet<Long>();
-            for ( ExpressionExperiment ee : ees ) {
-                eeIds.add( ee.getId() );
-            }
-            timer.stop();
-            if ( timer.getTime() > 1000 ) {
-                log.info( "Retrieved " + type.getClass().getSimpleName() + " in " + timer.getTime() + "ms" );
-            }
-            // This service unlike the others returns ids to events
-            return expressionExperimentService.getLastTroubleEvent( eeIds );
-
-        } else {
-            events = auditEventService.getLastEvent( ees, type.getClass() );
-        }
-
-        for ( Auditable a : events.keySet() ) {
-            result.put( ( ( ExpressionExperiment ) a ).getId(), events.get( a ) );
-        }
-        timer.stop();
-        if ( timer.getTime() > 1000 ) {
-            log.info( "Retrieved " + type.getClass().getSimpleName() + " in " + timer.getTime() + "ms" );
-        }
-        return result;
-    }
-
-    /**
-     * @param id
-     * @return
-     */
-    private String getReportPath( long id ) {
-        return HOME_DIR + File.separatorChar + EE_REPORT_DIR + File.separatorChar + EE_LINK_SUMMARY + "." + id;
-    }
-
-    private Map<Long, Collection<AuditEvent>> getSampleRemovalEvents( Collection<ExpressionExperiment> ees ) {
-        Map<Long, Collection<AuditEvent>> result = new HashMap<Long, Collection<AuditEvent>>();
-        Map<ExpressionExperiment, Collection<AuditEvent>> rawr = expressionExperimentService
-                .getSampleRemovalEvents( ees );
-        for ( ExpressionExperiment e : rawr.keySet() ) {
-            result.put( e.getId(), rawr.get( e ) );
-        }
-        return result;
-    }
-
-    /**
-     * Compute statistics for EEs and serialize them to disk for later retrieval.
-     * 
-     * @param vos
-     */
-    private void getStats( Collection<ExpressionExperimentValueObject> vos ) {
-        log.info( "Getting stats for " + vos.size() + " value objects." );
-        int count = 0;
-        for ( ExpressionExperimentValueObject object : vos ) {
-            getStats( object );
-            // periodic updates.
-            if ( ++count % 10 == 0 ) {
-                log.info( "Processed " + count + " reports." );
-            }
-        }
-        log.info( "Done, processed " + count + " reports" );
     }
 
     /**
@@ -538,15 +518,216 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
             summaries.add( desvo );
 
         }
-
         return summaries;
+    }
+
+    private Map<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>> getEvents(
+            Collection<ExpressionExperiment> ees, Collection<Class<? extends AuditEventType>> types ) {
+
+        return auditEventService.getLastEvents( ees, types );
 
     }
 
     /**
+     * Read information about an particular type of event for the set of given EEs. These are read from the audit trail.
+     * 
+     * @param ees
+     * @param type
+     * @return
+     */
+    private Map<Long, AuditEvent> getEvents( Collection<ExpressionExperiment> ees, Class<? extends AuditEventType> type ) {
+        StopWatch timer = new StopWatch();
+        timer.start();
+
+        Map<Long, AuditEvent> result = new HashMap<Long, AuditEvent>();
+
+        Map<? extends Auditable, AuditEvent> events = null;
+
+        /*
+         * Two special cases: array designs (because they are not directly associated) and trouble events (because we
+         * have to check that there isn't a ok event after) - so have to use the EE service, not the AuditEventService.
+         */
+        if ( type.equals( ArrayDesignAnalysisEvent.class ) ) {
+            events = expressionExperimentService.getLastArrayDesignUpdate( ees, type );
+        } else if ( type.equals( TroubleStatusFlagEvent.class ) ) {
+            // This service unlike the others needs ids not EE objects
+            Collection<Long> eeIds = EntityUtils.getIds( ees );
+            return expressionExperimentService.getLastTroubleEvent( eeIds );
+
+        } else {
+            events = auditEventService.getLastEvent( ees, type );
+        }
+
+        for ( Auditable a : events.keySet() ) {
+            result.put( ( ( ExpressionExperiment ) a ).getId(), events.get( a ) );
+        }
+
+        if ( timer.getTime() > 1000 ) {
+            log.info( "Retrieved " + type.getSimpleName() + " in " + timer.getTime() + "ms" );
+        }
+        return result;
+    }
+
+    /**
+     * @param id
+     * @return
+     */
+    private String getReportPath( long id ) {
+        return HOME_DIR + File.separatorChar + EE_REPORT_DIR + File.separatorChar + EE_LINK_SUMMARY + "." + id;
+    }
+
+    // Methods needed to allow this to be used in a space.
+
+    /**
+     * @param ees
+     * @return
+     */
+    private Map<Long, Collection<AuditEvent>> getSampleRemovalEvents( Collection<ExpressionExperiment> ees ) {
+        Map<Long, Collection<AuditEvent>> result = new HashMap<Long, Collection<AuditEvent>>();
+        Map<ExpressionExperiment, Collection<AuditEvent>> rawr = expressionExperimentService
+                .getSampleRemovalEvents( ees );
+        for ( ExpressionExperiment e : rawr.keySet() ) {
+            result.put( e.getId(), rawr.get( e ) );
+        }
+        return result;
+    }
+
+    /**
+     * Check to see if the top level report storage directory exists. If it doesn't, create it, Check to see if the
+     * reports directory exists. If it doesn't, create it.
+     * 
+     * @param deleteFiles
+     */
+    private void initDirectories( boolean deleteFiles ) {
+
+        FileTools.createDir( HOME_DIR );
+        FileTools.createDir( HOME_DIR + File.separatorChar + EE_REPORT_DIR );
+        File f = new File( HOME_DIR + File.separatorChar + EE_REPORT_DIR );
+        Collection<File> files = new ArrayList<File>();
+        File[] fileArray = f.listFiles();
+        for ( File file : fileArray ) {
+            files.add( file );
+        }
+        // clear out all files
+        if ( deleteFiles ) {
+            FileTools.deleteFiles( files );
+        }
+    }
+
+    /**
+     * @return the serialized value objects (either from the disk store or from the in-memory cache).
+     */
+    private Collection<ExpressionExperimentValueObject> retrieveValueObjects( Collection<Long> ids ) {
+        Collection<ExpressionExperimentValueObject> eeValueObjects = new ArrayList<ExpressionExperimentValueObject>();
+        Collection<Long> filteredIds = securityFilterExpressionExperimentIds( ids );
+
+        int numWarnings = 0;
+        int maxWarnings = 5; // don't put 1000 warnings in the logs!
+
+        for ( Long id : filteredIds ) {
+
+            Element cachedElement = this.statsCache.get( id );
+            if ( cachedElement != null ) {
+                eeValueObjects.add( ( ExpressionExperimentValueObject ) cachedElement.getValue() );
+            }
+
+            File f = new File( getReportPath( id ) );
+
+            if ( !f.exists() ) {
+                continue;
+            }
+
+            try {
+
+                FileInputStream fis = new FileInputStream( getReportPath( id ) );
+                ObjectInputStream ois = new ObjectInputStream( fis );
+
+                ExpressionExperimentValueObject valueObject = ( ExpressionExperimentValueObject ) ois.readObject();
+
+                eeValueObjects.add( valueObject );
+                statsCache.put( new Element( id, valueObject ) );
+
+                ois.close();
+                fis.close();
+
+            } catch ( Exception e ) {
+                if ( numWarnings < maxWarnings ) {
+                    log.warn( "Unable to read report object for id =" + id + ": " + e.getMessage() );
+                } else if ( numWarnings == maxWarnings ) {
+                    log.warn( "Skipping futher warnings ... reports need refreshing?" );
+                }
+                numWarnings++;
+                continue;
+            }
+        }
+        return eeValueObjects;
+    }
+
+    /**
+     * Save the stats report to disk; also update the in-memory cache.
+     * 
+     * @param eeVo Expression Experiment value objects to serialize
+     */
+    private void saveValueObject( ExpressionExperimentValueObject eeVo ) {
+        try {
+            // remove old file first
+            File f = new File( getReportPath( eeVo.getId() ) );
+            if ( f.exists() ) {
+                f.delete();
+            }
+            FileOutputStream fos = new FileOutputStream( getReportPath( eeVo.getId() ) );
+            ObjectOutputStream oos = new ObjectOutputStream( fos );
+            oos.writeObject( eeVo );
+            oos.flush();
+            oos.close();
+
+            statsCache.put( new Element( eeVo.getId(), eeVo ) );
+        } catch ( Throwable e ) {
+            log.warn( e );
+        }
+    }
+
+    /**
+     * @param ids
+     * @return
+     */
+    private Collection<Long> securityFilterExpressionExperimentIds( Collection<Long> ids ) {
+        /*
+         * Because this method returns the results, we have to screen.
+         */
+        Collection<ExpressionExperiment> securityScreened = expressionExperimentService.loadMultiple( ids );
+
+        Collection<Long> filteredIds = new HashSet<Long>();
+        for ( ExpressionExperiment ee : securityScreened ) {
+            filteredIds.add( ee.getId() );
+        }
+        return filteredIds;
+    }
+
+    /**
+     * Compute statistics for EEs and serialize them to disk for later retrieval.
+     * 
+     * @param vos
+     */
+    private void updateStats( Collection<ExpressionExperimentValueObject> vos ) {
+        log.info( "Getting stats for " + vos.size() + " value objects." );
+        int count = 0;
+        for ( ExpressionExperimentValueObject object : vos ) {
+            updateStats( object );
+            // periodic updates.
+            if ( ++count % 10 == 0 ) {
+                log.info( "Processed " + count + " reports." );
+            }
+        }
+        log.info( "Done, processed " + count + " reports" );
+    }
+
+    /**
+     * Update the stats report for one EE
+     * 
      * @param object
      */
-    private void getStats( ExpressionExperimentValueObject eeVo ) {
+    private void updateStats( ExpressionExperimentValueObject eeVo ) {
         ExpressionExperiment tempEe = expressionExperimentService.load( eeVo.getId() );
 
         eeVo.setBioMaterialCount( expressionExperimentService.getBioMaterialCount( tempEe ) );
@@ -572,182 +753,6 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
         saveValueObject( eeVo );
 
         log.debug( "Generated report for " + eeVo.getShortName() );
-    }
-
-    // Methods needed to allow this to be used in a space.
-
-    /**
-     * Check to see if the top level report storage directory exists. If it doesn't, create it, Check to see if the
-     * reports directory exists. If it doesn't, create it.
-     * 
-     * @param deleteFiles
-     */
-    private void initDirectories( boolean deleteFiles ) {
-
-        FileTools.createDir( HOME_DIR );
-        FileTools.createDir( HOME_DIR + File.separatorChar + EE_REPORT_DIR );
-        File f = new File( HOME_DIR + File.separatorChar + EE_REPORT_DIR );
-        Collection<File> files = new ArrayList<File>();
-        File[] fileArray = f.listFiles();
-        for ( File file : fileArray ) {
-            files.add( file );
-        }
-        // clear out all files
-        if ( deleteFiles ) {
-            FileTools.deleteFiles( files );
-        }
-    }
-
-    /**
-     * @return the serialized value object
-     */
-    private ExpressionExperimentValueObject retrieveValueObject( long id ) {
-
-        Collection<Long> ids = new HashSet<Long>();
-        ids.add( id );
-
-        Collection<ExpressionExperimentValueObject> obs = retrieveValueObjects( ids );
-        if ( obs.size() == 1 ) {
-            return obs.iterator().next();
-        }
-        return null;
-    }
-
-    /**
-     * @return the serialized value objects
-     */
-    @SuppressWarnings("unchecked")
-    private Collection<ExpressionExperimentValueObject> retrieveValueObjects() {
-        Collection<ExpressionExperimentValueObject> eeValueObjects = null;
-        // load all files that start with EE_LINK_SUMMARY
-        FilenameFilter filter = new FilenameFilter() {
-            public boolean accept( File dir, String name ) {
-                return ( name.startsWith( EE_LINK_SUMMARY + "." ) );
-            }
-        };
-        File fDir = new File( HOME_DIR + File.separatorChar + EE_REPORT_DIR );
-        String[] filenames = fDir.list( filter );
-
-        int numWarnings = 0;
-        int maxWarnings = 5; // don't put 1000 warnings in the logs!
-        for ( String objectFile : filenames ) {
-            try {
-                FileInputStream fis = new FileInputStream( HOME_DIR + File.separatorChar + EE_REPORT_DIR
-                        + File.separatorChar + objectFile );
-                ObjectInputStream ois = new ObjectInputStream( fis );
-                eeValueObjects = ( Collection<ExpressionExperimentValueObject> ) ois.readObject();
-                ois.close();
-                fis.close();
-            } catch ( IOException e ) {
-                if ( numWarnings < maxWarnings ) {
-                    log.warn( "Unable to read report object from " + objectFile + ": " + e.getMessage() );
-                } else if ( numWarnings == maxWarnings ) {
-                    log.warn( "Skipping futher warnings ... reports need refreshing." );
-                }
-                numWarnings++;
-                continue;
-            } catch ( ClassNotFoundException e ) {
-                if ( numWarnings < maxWarnings ) {
-                    log.warn( "Unable to read report object from " + objectFile + ": " + e.getMessage() );
-                } else if ( numWarnings == maxWarnings ) {
-                    log.warn( "Skipping futher warnings ... reports need refreshing" );
-                }
-                numWarnings++;
-                continue;
-            }
-        }
-        return eeValueObjects;
-    }
-
-    /**
-     * @return the serialized value objects
-     */
-    private Collection<ExpressionExperimentValueObject> retrieveValueObjects( Collection<Long> ids ) {
-        Collection<ExpressionExperimentValueObject> eeValueObjects = new ArrayList<ExpressionExperimentValueObject>();
-        Collection<Long> filteredIds = securityFilterExpressionExperimentIds( ids );
-
-        int numWarnings = 0;
-        int maxWarnings = 5; // don't put 1000 warnings in the logs!
-
-        for ( Object object : filteredIds ) {
-            Long id = ( Long ) object;
-            File f = new File( getReportPath( id ) );
-            try {
-                if ( f.exists() ) {
-                    FileInputStream fis = new FileInputStream( getReportPath( id ) );
-                    ObjectInputStream ois = new ObjectInputStream( fis );
-                    eeValueObjects.add( ( ExpressionExperimentValueObject ) ois.readObject() );
-                    ois.close();
-                    fis.close();
-                } else {
-                    continue;
-                }
-            } catch ( IOException e ) {
-                if ( numWarnings < maxWarnings ) {
-                    log.warn( "Unable to read report object for id =" + id + ": " + e.getMessage() );
-                } else if ( numWarnings == maxWarnings ) {
-                    log.warn( "Skipping futher warnings ... reports need refreshing." );
-                }
-                numWarnings++;
-                continue;
-            } catch ( ClassNotFoundException e ) {
-                if ( numWarnings < maxWarnings ) {
-                    log.warn( "Unable to read report object from " + f + ": " + e.getMessage() );
-                } else if ( numWarnings == maxWarnings ) {
-                    log.warn( "Skipping futher warnings ... reports need refreshing" );
-                }
-                numWarnings++;
-                continue;
-            }
-        }
-        return eeValueObjects;
-    }
-
-    /**
-     * @param eeVo Expression Experiment value objects to serialize
-     */
-    private void saveValueObject( ExpressionExperimentValueObject eeVo ) {
-        try {
-            // remove file first
-            File f = new File( getReportPath( eeVo.getId() ) );
-            if ( f.exists() ) {
-                f.delete();
-            }
-            FileOutputStream fos = new FileOutputStream( getReportPath( eeVo.getId() ) );
-            ObjectOutputStream oos = new ObjectOutputStream( fos );
-            oos.writeObject( eeVo );
-            oos.flush();
-            oos.close();
-        } catch ( Throwable e ) {
-            log.warn( e );
-        }
-    }
-
-    /**
-     * @param ids
-     * @return
-     */
-    private Collection<Long> securityFilterExpressionExperimentIds( Collection<Long> ids ) {
-        /*
-         * Because this method returns the results, we have to screen.
-         */
-        Collection<ExpressionExperiment> securityScreened = expressionExperimentService.loadMultiple( ids );
-
-        Collection<Long> filteredIds = new HashSet<Long>();
-        for ( ExpressionExperiment ee : securityScreened ) {
-            filteredIds.add( ee.getId() );
-        }
-        return filteredIds;
-    }
-
-    public void setDifferentialExpressionAnalysisService(
-            DifferentialExpressionAnalysisService differentialExpressionAnalysisService ) {
-        this.differentialExpressionAnalysisService = differentialExpressionAnalysisService;
-    }
-
-    public void setDifferentialExpressionResultService(
-            DifferentialExpressionResultService differentialExpressionResultService ) {
-        this.differentialExpressionResultService = differentialExpressionResultService;
     }
 
 }

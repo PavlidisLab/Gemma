@@ -27,6 +27,9 @@ import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 
 /**
+ * Methods for reading and creating reports on ExpressinExperiments. Reports are typically updated either on demand or
+ * after an analysis; and retrieval is usually from the web interface.
+ * 
  * @author paul
  * @version $Id$
  */
@@ -59,19 +62,23 @@ public interface ExpressionExperimentReportService {
      * 
      * @return a collection of cached value objects
      */
-    public abstract Collection<ExpressionExperimentValueObject> retrieveSummaryObjects();
-
-    /**
-     * retrieves a collection of cached value objects containing summary information
-     * 
-     * @return a collection of cached value objects
-     */
     public abstract Collection<ExpressionExperimentValueObject> retrieveSummaryObjects( Collection<Long> ids );
 
+    /**
+     * @param vos
+     * @return
+     */
     public Map<Long, Date> fillEventInformation( Collection<ExpressionExperimentValueObject> vos );
 
+    /**
+     * @param vos
+     */
     public void fillAnnotationInformation( Collection<ExpressionExperimentValueObject> vos );
 
+    /**
+     * @param vos
+     * @return
+     */
     public Map<Long, Date> fillLinkStatsFromCache( Collection<ExpressionExperimentValueObject> vos );
 
 }

@@ -36,8 +36,7 @@ $Id$
 			</c:choose>
 		</h3>
 
-
-
+		<%-- Note: the d=1 in the urls here is just a hack to keep '#' from messing up id parsing. It's not a real parameter --%>
 		<security:authorize ifAnyGranted="GROUP_ADMIN,GROUP_USER">
 			<c:choose>
 				<c:when test="${taxon != null && not empty eeids}">
@@ -62,7 +61,6 @@ $Id$
 				</c:otherwise>
 			</c:choose>
 		</security:authorize>
-
 
 
 		<form

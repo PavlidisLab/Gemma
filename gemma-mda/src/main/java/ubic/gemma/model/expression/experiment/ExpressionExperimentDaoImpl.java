@@ -48,6 +48,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -73,7 +74,7 @@ import ubic.gemma.util.EntityUtils;
  * @see ubic.gemma.model.expression.experiment.ExpressionExperiment
  */
 @Repository
-public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase {
+public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
 
     static Log log = LogFactory.getLog( ExpressionExperimentDaoImpl.class.getName() );
 
@@ -834,8 +835,8 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
      */
     @SuppressWarnings("unchecked")
     @Override
-    protected Map<ExpressionExperiment, AuditEvent> handleGetLastArrayDesignUpdate( Collection expressionExperiments,
-            Class type ) throws Exception {
+    protected Map<ExpressionExperiment, AuditEvent> handleGetLastArrayDesignUpdate( Collection<ExpressionExperiment> expressionExperiments,
+            Class<? extends AuditEventType> type ) throws Exception {
         // helps make sure we use the query cache.
         List<ExpressionExperiment> eeList = new ArrayList<ExpressionExperiment>( expressionExperiments );
 
@@ -864,36 +865,36 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
 
         Map<ExpressionExperiment, AuditEvent> result = new HashMap<ExpressionExperiment, AuditEvent>();
 
-        try {
-            Session session = super.getSession();
-            org.hibernate.Query queryObject = session.createQuery( queryString );
-            queryObject.setCacheable( true );
-            queryObject.setParameterList( "ads", ads );
+        Session session = super.getSession();
+        org.hibernate.Query queryObject = session.createQuery( queryString );
+        queryObject.setCacheable( true );
+        queryObject.setParameterList( "ads", ads );
 
-            timer.start();
-            List qr = queryObject.list();
-            timer.stop();
-            if ( timer.getTime() > 1000 ) log.info( "Read events: " + timer.getTime() );
+        timer.start();
+        List qr = queryObject.list();
+        timer.stop();
+        if ( timer.getTime() > 1000 ) log.info( "Read events: " + timer.getTime() );
+        timer.reset();
+        timer.start();
 
-            if ( qr.isEmpty() ) return result;
+        if ( qr.isEmpty() ) return result;
 
-            for ( Object o : qr ) {
-                Object[] ar = ( Object[] ) o;
-                ArrayDesign ad = ( ArrayDesign ) ar[0];
-                AuditEvent e = ( AuditEvent ) ar[1];
+        for ( Object o : qr ) {
+            Object[] ar = ( Object[] ) o;
+            ArrayDesign ad = ( ArrayDesign ) ar[0];
+            AuditEvent e = ( AuditEvent ) ar[1];
 
-                Collection<ExpressionExperiment> eesForAd = eeAdMap.get( ad );
+            Collection<ExpressionExperiment> eesForAd = eeAdMap.get( ad );
 
-                // only one event per object, please - the most recent.
-                for ( ExpressionExperiment ee : eesForAd ) {
-                    if ( result.containsKey( ee ) ) continue;
-                    result.put( ee, e );
-                }
+            // only one event per object, please - the most recent.
+            for ( ExpressionExperiment ee : eesForAd ) {
+                if ( result.containsKey( ee ) ) continue;
+                result.put( ee, e );
             }
-
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
         }
+
+        if ( timer.getTime() > 1000 ) log.info( "Process events: " + timer.getTime() );
+
         return result;
     }
 
@@ -916,19 +917,15 @@ public class ExpressionExperimentDaoImpl extends ubic.gemma.model.expression.exp
                 + "ee.bioAssays b inner join b.arrayDesignUsed a inner join a.auditTrail trail inner join trail.events event left outer join event.eventType et "
                 + " where ee = :ee " + classRestriction + " order by event.date desc ";
 
-        try {
-            Session session = super.getSession();
-            org.hibernate.Query queryObject = session.createQuery( queryString );
-            queryObject.setCacheable( true );
-            queryObject.setMaxResults( 1 );
-            queryObject.setParameter( "ee", ee );
-            Collection results = queryObject.list();
-            session.clear();
-            if ( results.size() == 0 ) return null;
-            return ( AuditEvent ) results.iterator().next();
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
-        }
+        Session session = super.getSession();
+        org.hibernate.Query queryObject = session.createQuery( queryString );
+        queryObject.setCacheable( true );
+        queryObject.setMaxResults( 1 );
+        queryObject.setParameter( "ee", ee );
+        Collection results = queryObject.list();
+        session.clear();
+        if ( results.size() == 0 ) return null;
+        return ( AuditEvent ) results.iterator().next();
 
     }
 

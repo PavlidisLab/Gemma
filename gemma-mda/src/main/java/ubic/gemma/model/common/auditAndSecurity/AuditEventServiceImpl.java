@@ -33,7 +33,7 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
  * @version $Id$
  */
 @Service
-public class AuditEventServiceImpl extends ubic.gemma.model.common.auditAndSecurity.AuditEventServiceBase {
+public class AuditEventServiceImpl extends AuditEventServiceBase {
 
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.AuditEventService#getNewSinceDate(java.util.Date)
@@ -47,7 +47,7 @@ public class AuditEventServiceImpl extends ubic.gemma.model.common.auditAndSecur
      * @see ubic.gemma.model.common.auditAndSecurity.AuditEventService#getUpdatedSinceDate(java.util.Date)
      */
     @Override
-    protected java.util.Collection handleGetUpdatedSinceDate( java.util.Date date ) throws java.lang.Exception {
+    protected Collection<Auditable> handleGetUpdatedSinceDate( java.util.Date date ) throws java.lang.Exception {
         return this.getAuditEventDao().getUpdatedSinceDate( date );
     }
 
@@ -67,6 +67,11 @@ public class AuditEventServiceImpl extends ubic.gemma.model.common.auditAndSecur
     public Map<Auditable, AuditEvent> getLastEvent( Collection<? extends Auditable> auditables,
             Class<? extends AuditEventType> type ) {
         return this.getAuditEventDao().getLastEvent( auditables, type );
+    }
+
+    public Map<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>> getLastEvents(
+            Collection<? extends Auditable> auditables, Collection<Class<? extends AuditEventType>> types ) {
+        return this.getAuditEventDao().getLastEvents( auditables, types );
     }
 
     public AuditEvent getLastOutstandingTroubleEvent( Collection<AuditEvent> events ) {

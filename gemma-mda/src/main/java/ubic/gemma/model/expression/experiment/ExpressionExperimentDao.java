@@ -33,78 +33,70 @@ import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.genome.Taxon;
 
 /**
- * @see ubic.gemma.model.expression.experiment.ExpressionExperiment
+ * @see ExpressionExperiment
  */
-public interface ExpressionExperimentDao extends
-        ubic.gemma.model.expression.experiment.BioAssaySetDao<ExpressionExperiment> {
+public interface ExpressionExperimentDao extends BioAssaySetDao<ExpressionExperiment> {
     /**
      * This constant is used as a transformation flag; entities can be converted automatically into value objects or
      * other types, different methods in a class implementing this interface support this feature: look for an
      * <code>int</code> parameter called <code>transform</code>.
      * <p/>
      * This specific flag denotes entities must be transformed into objects of type
-     * {@link ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject}.
+     * {@link ExpressionExperimentValueObject}.
      */
     public final static int TRANSFORM_EXPRESSIONEXPERIMENTVALUEOBJECT = 1;
 
     /**
      * 
      */
-    public java.lang.Integer countAll();
+    public Integer countAll();
 
     /**
-     * Converts an instance of type {@link ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject} to
-     * this DAO's entity.
+     * Converts an instance of type {@link ExpressionExperimentValueObject} to this DAO's entity.
      */
-    public ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperimentValueObjectToEntity(
-            ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject expressionExperimentValueObject );
+    public ExpressionExperiment expressionExperimentValueObjectToEntity(
+            ExpressionExperimentValueObject expressionExperimentValueObject );
 
     /**
-     * Copies the fields of {@link ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject} to the
-     * specified entity.
+     * Copies the fields of {@link ExpressionExperimentValueObject} to the specified entity.
      * 
      * @param copyIfNull If FALSE, the value object's field will not be copied to the entity if the value is NULL. If
      *        TRUE, it will be copied regardless of its value.
      */
-    public void expressionExperimentValueObjectToEntity(
-            ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject sourceVO,
-            ubic.gemma.model.expression.experiment.ExpressionExperiment targetEntity, boolean copyIfNull );
+    public void expressionExperimentValueObjectToEntity( ExpressionExperimentValueObject sourceVO,
+            ExpressionExperiment targetEntity, boolean copyIfNull );
 
     /**
-     * Converts a Collection of instances of type
-     * {@link ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject} to this DAO's entity.
+     * Converts a Collection of instances of type {@link ExpressionExperimentValueObject} to this DAO's entity.
      */
-    public void expressionExperimentValueObjectToEntityCollection( java.util.Collection<ExpressionExperiment> instances );
-
-    /**
-     * 
-     */
-    public ubic.gemma.model.expression.experiment.ExpressionExperiment find(
-            ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment );
+    public void expressionExperimentValueObjectToEntityCollection( Collection<ExpressionExperiment> instances );
 
     /**
      * 
      */
-    public ubic.gemma.model.expression.experiment.ExpressionExperiment findByAccession(
-            ubic.gemma.model.common.description.DatabaseEntry accession );
+    public ExpressionExperiment find( ExpressionExperiment expressionExperiment );
+
+    /**
+     * 
+     */
+    public ExpressionExperiment findByAccession( ubic.gemma.model.common.description.DatabaseEntry accession );
 
     /**
      * <p>
      * Finds all the EE's that reference the given bibliographicReference id
      * </p>
      */
-    public java.util.Collection<ExpressionExperiment> findByBibliographicReference( java.lang.Long bibRefID );
+    public Collection<ExpressionExperiment> findByBibliographicReference( Long bibRefID );
 
     /**
      * 
      */
-    public ubic.gemma.model.expression.experiment.ExpressionExperiment findByBioMaterial(
-            ubic.gemma.model.expression.biomaterial.BioMaterial bm );
+    public ExpressionExperiment findByBioMaterial( ubic.gemma.model.expression.biomaterial.BioMaterial bm );
 
     /**
      * 
      */
-    public java.util.Collection<ExpressionExperiment> findByBioMaterials( java.util.Collection<BioMaterial> bioMaterials );
+    public Collection<ExpressionExperiment> findByBioMaterials( Collection<BioMaterial> bioMaterials );
 
     /**
      * <p>
@@ -112,66 +104,64 @@ public interface ExpressionExperimentDao extends
      * rank (percentile)
      * </p>
      */
-    public java.util.Collection<ExpressionExperiment> findByExpressedGene( ubic.gemma.model.genome.Gene gene,
-            java.lang.Double rank );
+    public Collection<ExpressionExperiment> findByExpressedGene( ubic.gemma.model.genome.Gene gene, Double rank );
 
     /**
      * 
      */
-    public ubic.gemma.model.expression.experiment.ExpressionExperiment findByFactorValue(
-            ubic.gemma.model.expression.experiment.FactorValue factorValue );
+    public ExpressionExperiment findByFactorValue( FactorValue factorValue );
 
     /**
      * 
      */
-    public java.util.Collection<ExpressionExperiment> findByFactorValues( java.util.Collection<FactorValue> factorValues );
+    public Collection<ExpressionExperiment> findByFactorValues( Collection<FactorValue> factorValues );
 
     /**
      * <p>
      * returns a collection of expression experiments that have an AD that assays for the given gene
      * </p>
      */
-    public java.util.Collection<ExpressionExperiment> findByGene( ubic.gemma.model.genome.Gene gene );
+    public Collection<ExpressionExperiment> findByGene( ubic.gemma.model.genome.Gene gene );
 
     /**
      * 
      */
-    public ubic.gemma.model.expression.experiment.ExpressionExperiment findByName( java.lang.String name );
+    public ExpressionExperiment findByName( String name );
 
     /**
      * 
      */
-    public java.util.Collection<ExpressionExperiment> findByParentTaxon( ubic.gemma.model.genome.Taxon taxon );
+    public Collection<ExpressionExperiment> findByParentTaxon( ubic.gemma.model.genome.Taxon taxon );
 
     public ExpressionExperiment findByQuantitationType( QuantitationType quantitationType );
 
     /**
      * 
      */
-    public ubic.gemma.model.expression.experiment.ExpressionExperiment findByShortName( java.lang.String shortName );
+    public ExpressionExperiment findByShortName( String shortName );
 
     /**
      * 
      */
-    public java.util.Collection<ExpressionExperiment> findByTaxon( ubic.gemma.model.genome.Taxon taxon );
+    public Collection<ExpressionExperiment> findByTaxon( ubic.gemma.model.genome.Taxon taxon );
 
     /**
      * 
      */
-    public ubic.gemma.model.expression.experiment.ExpressionExperiment findOrCreate(
-            ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment );
+    public ExpressionExperiment findOrCreate( ExpressionExperiment expressionExperiment );
 
     /**
      * <p>
      * Get the map of ids to number of terms associated with each expression experiment.
      * </p>
      */
-    public java.util.Map<Long, Integer> getAnnotationCounts( java.util.Collection<Long> ids );
+    public Map<Long, Integer> getAnnotationCounts( Collection<Long> ids );
 
     /**
-     * 
+     * @param ids
+     * @return
      */
-    public Map<Long, Map<Long, Collection<AuditEvent>>> getArrayDesignAuditEvents( java.util.Collection<Long> ids );
+    public Map<Long, Map<Long, Collection<AuditEvent>>> getArrayDesignAuditEvents( Collection<Long> ids );
 
     public Collection<ArrayDesign> getArrayDesignsUsed( ExpressionExperiment expressionExperiment );
 
@@ -181,7 +171,7 @@ public interface ExpressionExperimentDao extends
      * events do not exist, the map entry will point to null.
      * </p>
      */
-    public java.util.Map<Long, Collection<AuditEvent>> getAuditEvents( java.util.Collection<Long> ids );
+    public Map<Long, Collection<AuditEvent>> getAuditEvents( Collection<Long> ids );
 
     /**
      * 
@@ -199,7 +189,7 @@ public interface ExpressionExperimentDao extends
     /**
      * 
      */
-    public long getBioMaterialCount( ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment );
+    public long getBioMaterialCount( ExpressionExperiment expressionExperiment );
 
     /**
      * 
@@ -209,30 +199,28 @@ public interface ExpressionExperimentDao extends
     /**
      * 
      */
-    public java.util.Collection<DesignElementDataVector> getDesignElementDataVectors(
-            java.util.Collection<? extends DesignElement> designElements,
+    public Collection<DesignElementDataVector> getDesignElementDataVectors(
+            Collection<? extends DesignElement> designElements,
             ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType );
 
     /**
      * 
      */
-    public java.util.Collection<DesignElementDataVector> getDesignElementDataVectors(
-            java.util.Collection<QuantitationType> quantitationTypes );
+    public Collection<DesignElementDataVector> getDesignElementDataVectors(
+            Collection<QuantitationType> quantitationTypes );
 
     /**
      * 
      */
     public Map<ExpressionExperiment, AuditEvent> getLastArrayDesignUpdate(
-            java.util.Collection<ExpressionExperiment> expressionExperiments, java.lang.Class type );
+            Collection<ExpressionExperiment> expressionExperiments, Class<? extends AuditEventType> type );
 
     /**
      * <p>
      * Gets the last audit event for the AD's associated with the given EE.
      * </p>
      */
-    public ubic.gemma.model.common.auditAndSecurity.AuditEvent getLastArrayDesignUpdate(
-            ubic.gemma.model.expression.experiment.ExpressionExperiment ee,
-            java.lang.Class<? extends AuditEventType> eventType );
+    public AuditEvent getLastArrayDesignUpdate( ExpressionExperiment ee, Class<? extends AuditEventType> eventType );
 
     /**
      * <p>
@@ -240,43 +228,43 @@ public interface ExpressionExperimentDao extends
      * </p>
      */
     public ubic.gemma.model.common.quantitationtype.QuantitationType getMaskedPreferredQuantitationType(
-            ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment );
+            ExpressionExperiment expressionExperiment );
 
     /**
      * <p>
      * Function to get a count of expression experiments, grouped by Taxon
      * </p>
      */
-    public java.util.Map<Taxon, Long> getPerTaxonCount();
+    public Map<Taxon, Long> getPerTaxonCount();
 
     /**
-     * <p>
      * Get map of ids to how many factor values the experiment has, counting only factor values which are associated
      * with biomaterials.
-     * </p>
      */
-    public java.util.Map getPopulatedFactorCounts( java.util.Collection<Long> ids );
+    public Map<Long, Integer> getPopulatedFactorCounts( Collection<Long> ids );
 
+    /**
+     * @param ee
+     * @return
+     */
     public Collection<ProcessedExpressionDataVector> getProcessedDataVectors( ExpressionExperiment ee );
 
     /**
      * 
      */
-    public long getProcessedExpressionVectorCount(
-            ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment );
+    public long getProcessedExpressionVectorCount( ExpressionExperiment expressionExperiment );
 
     /**
      * <p>
      * Function to get a count of an expressionExperiment's designelementdatavectors, grouped by quantitation type.
      * </p>
      */
-    public java.util.Map<Long, Integer> getQuantitationTypeCountById( java.lang.Long Id );
+    public Map<Long, Integer> getQuantitationTypeCountById( Long Id );
 
     /**
      * 
      */
-    public java.util.Collection<QuantitationType> getQuantitationTypes(
-            ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment );
+    public Collection<QuantitationType> getQuantitationTypes( ExpressionExperiment expressionExperiment );
 
     /**
      * <p>
@@ -284,51 +272,49 @@ public interface ExpressionExperimentDao extends
      * useful for expression experiments that use more than one array design.
      * </p>
      */
-    public java.util.Collection<QuantitationType> getQuantitationTypes(
-            ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment,
+    public Collection<QuantitationType> getQuantitationTypes( ExpressionExperiment expressionExperiment,
             ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
 
     /**
      * 
      */
-    public java.util.Map<ExpressionExperiment, Collection<AuditEvent>> getSampleRemovalEvents(
-            java.util.Collection<ExpressionExperiment> expressionExperiments );
+    public Map<ExpressionExperiment, Collection<AuditEvent>> getSampleRemovalEvents(
+            Collection<ExpressionExperiment> expressionExperiments );
 
     /**
      * 
      */
-    public java.util.Collection<DesignElementDataVector> getSamplingOfVectors(
-            ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType, java.lang.Integer limit );
+    public Collection<DesignElementDataVector> getSamplingOfVectors(
+            ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType, Integer limit );
 
     /**
      * <p>
      * Return any ExpressionExperimentSubSets the given Experiment might have.
      * </p>
      */
-    public java.util.Collection<ExpressionExperimentSubSet> getSubSets(
-            ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment );
+    public Collection<ExpressionExperimentSubSet> getSubSets( ExpressionExperiment expressionExperiment );
 
     /**
      * <p>
      * Gets the taxon for the given expressionExperiment
      * </p>
      */
-    public ubic.gemma.model.genome.Taxon getTaxon( java.lang.Long ExpressionExperimentID );
+    public ubic.gemma.model.genome.Taxon getTaxon( Long ExpressionExperimentID );
 
     /**
      * 
      */
-    public java.util.Collection<ExpressionExperimentValueObject> loadAllValueObjects();
+    public Collection<ExpressionExperimentValueObject> loadAllValueObjects();
 
     /**
      * 
      */
-    public java.util.Collection<ExpressionExperimentValueObject> loadValueObjects( java.util.Collection<Long> ids );
+    public Collection<ExpressionExperimentValueObject> loadValueObjects( Collection<Long> ids );
 
     /**
      * 
      */
-    public void thaw( ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment );
+    public void thaw( ExpressionExperiment expressionExperiment );
 
     /**
      * <p>
@@ -336,28 +322,24 @@ public interface ExpressionExperimentDao extends
      * DesignElementDataVectors.
      * </p>
      */
-    public void thawBioAssays( ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment );
+    public void thawBioAssays( ExpressionExperiment expressionExperiment );
 
     /**
-     * Converts this DAO's entity to an object of type
-     * {@link ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject}.
+     * Converts this DAO's entity to an object of type {@link ExpressionExperimentValueObject}.
      */
-    public ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject toExpressionExperimentValueObject(
-            ubic.gemma.model.expression.experiment.ExpressionExperiment entity );
+    public ExpressionExperimentValueObject toExpressionExperimentValueObject( ExpressionExperiment entity );
 
     /**
      * Copies the fields of the specified entity to the target value object. This method is similar to
      * toExpressionExperimentValueObject(), but it does not handle any attributes in the target value object that are
      * "read-only" (as those do not have setter methods exposed).
      */
-    public void toExpressionExperimentValueObject(
-            ubic.gemma.model.expression.experiment.ExpressionExperiment sourceEntity,
-            ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject targetVO );
+    public void toExpressionExperimentValueObject( ExpressionExperiment sourceEntity,
+            ExpressionExperimentValueObject targetVO );
 
     /**
-     * Converts this DAO's entity to a Collection of instances of type
-     * {@link ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject}.
+     * Converts this DAO's entity to a Collection of instances of type {@link ExpressionExperimentValueObject}.
      */
-    public void toExpressionExperimentValueObjectCollection( java.util.Collection<ExpressionExperiment> entities );
+    public void toExpressionExperimentValueObjectCollection( Collection<ExpressionExperiment> entities );
 
 }

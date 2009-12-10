@@ -73,6 +73,23 @@ public interface AuditEventService {
     public Map<Auditable, AuditEvent> getLastEvent( java.util.Collection<? extends Auditable> auditables,
             Class<? extends AuditEventType> type );
 
+    /**
+     * Fast method to retrieve auditEventTypes of multiple classes.
+     * 
+     * @param auditables
+     * @param types
+     * @return map of AuditEventType to a Map of Auditable to the AuditEvent matching that type.
+     *         <p>
+     *         Note: cannot secure this very easily since map key is a Class.
+     */
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY" })
+    public Map<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>> getLastEvents(
+            Collection<? extends Auditable> auditables, Collection<Class<? extends AuditEventType>> types );
+
+    /**
+     * @param events
+     * @return
+     */
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY" })
     public AuditEvent getLastOutstandingTroubleEvent( Collection<AuditEvent> events );
 

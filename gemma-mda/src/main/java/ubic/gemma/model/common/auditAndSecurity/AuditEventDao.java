@@ -19,6 +19,8 @@
 package ubic.gemma.model.common.auditAndSecurity;
 
 import java.util.Collection;
+import java.util.Date;
+import java.util.List;
 import java.util.Map;
 
 import ubic.gemma.model.common.Auditable;
@@ -26,49 +28,70 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.persistence.BaseDao;
 
 /**
- * @see ubic.gemma.model.common.auditAndSecurity.AuditEvent
+ * @see AuditEvent
  */
 public interface AuditEventDao extends BaseDao<AuditEvent> {
 
     /**
+     * Get auditables that have been Created since the given date
      * 
+     * @return
      */
-    public java.util.Collection<Auditable> getNewSinceDate( java.util.Date date );
+    public Collection<Auditable> getNewSinceDate( Date date );
+
+    /**
+     * Get auditables that have been Updated since the given date
+     * 
+     * @return
+     */
+    public Collection<Auditable> getUpdatedSinceDate( Date date );
 
     /**
      * 
      */
-    public java.util.Collection<Auditable> getUpdatedSinceDate( java.util.Date date );
+    public void thaw( AuditEvent auditEvent );
 
     /**
-     * 
+     * @return events for the given auditable.
      */
-    public void thaw( ubic.gemma.model.common.auditAndSecurity.AuditEvent auditEvent );
-
-    /**
-     * 
-     */
-    public java.util.List<AuditEvent> getEvents( ubic.gemma.model.common.Auditable auditable );
+    public List<AuditEvent> getEvents( Auditable auditable );
 
     /**
      * Return a map of Auditables to AuditEvents for the given AuditEventType.
      */
-    public Map<Auditable, AuditEvent> getLastEvent( java.util.Collection<? extends Auditable> auditables,
+    public Map<Auditable, AuditEvent> getLastEvent( Collection<? extends Auditable> auditables,
             Class<? extends AuditEventType> type );
 
     /**
      * Returns the last AuditEvent of the specified type from the given auditable.
      */
-    public ubic.gemma.model.common.auditAndSecurity.AuditEvent getLastEvent(
-            ubic.gemma.model.common.Auditable auditable, Class<? extends AuditEventType> type );
+    public AuditEvent getLastEvent( Auditable auditable, Class<? extends AuditEventType> type );
 
     /**
      * Get all of the most recent AuditEvents for the given auditables, where the events have types. Return value is a
      * map of AuditEventType.classes -> Auditable -> AuditEven
      */
-    public java.util.Map<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>> getLastTypedAuditEvents(
-            java.util.Collection<? extends Auditable> auditables );
-    
-    public AuditEvent getLastOutstandingTroubleEvent(Collection<AuditEvent> events);
+    public Map<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>> getLastTypedAuditEvents(
+            Collection<? extends Auditable> auditables );
+
+    /**
+     * @param events
+     * @return
+     */
+    public AuditEvent getLastOutstandingTroubleEvent( Collection<AuditEvent> events );
+
+    /**
+     * @param auditables
+     * @return map of Auditable to AuditEvent. NOTE: for EEs, this DOES look at the ADs.
+     */
+    public Map<Auditable, AuditEvent> getLastOutstandingTroubleEvents( Collection<? extends Auditable> auditables );
+
+    /**
+     * @param auditables
+     * @param types
+     * @return
+     */
+    public Map<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>> getLastEvents(
+            Collection<? extends Auditable> auditables, Collection<Class<? extends AuditEventType>> types );
 
 }

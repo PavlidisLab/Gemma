@@ -429,7 +429,7 @@ public abstract class ExpressionExperimentServiceBase implements ExpressionExper
      * @see ExpressionExperimentService#getLastArrayDesignUpdate(ExpressionExperiment, java.lang.Class)
      */
     public AuditEvent getLastArrayDesignUpdate( final ExpressionExperiment expressionExperiment,
-            final java.lang.Class eventType ) {
+            final java.lang.Class<? extends AuditEventType> eventType ) {
         try {
             return this.handleGetLastArrayDesignUpdate( expressionExperiment, eventType );
         } catch ( Throwable th ) {

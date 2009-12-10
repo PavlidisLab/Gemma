@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
+import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.stereotype.Service;
@@ -30,6 +31,7 @@ import org.springframework.stereotype.Service;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
+import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
@@ -398,17 +400,10 @@ public class ExpressionExperimentServiceImpl extends
      * ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleGetLastRankComputation(java.util
      * .Collection)
      */
-    @SuppressWarnings("unchecked")
     @Override
-    protected Map<Long, AuditEvent> handleGetLastProcessedDataUpdate( Collection ids ) throws Exception {
+    protected Map<Long, AuditEvent> handleGetLastProcessedDataUpdate( Collection<Long> ids ) throws Exception {
         return getLastEvent( ids, ProcessedVectorComputationEvent.Factory.newInstance() );
     }
-
-    //
-    // @Override
-    // protected QuantitationType handleGetMaskedPreferredQuantitationType( ExpressionExperiment ee ) throws Exception {
-    // return this.getExpressionExperimentDao().getMaskedPreferredQuantitationType( ee );
-    // }
 
     /*
      * Note this is a little tricky since we have to reach through to check the ArrayDesigns. (non-Javadoc)
@@ -416,48 +411,29 @@ public class ExpressionExperimentServiceImpl extends
      * ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleGetLastTroubleEvent(java.util.Collection
      * )
      */
-    @SuppressWarnings("unchecked")
     @Override
-    protected Map<Long, AuditEvent> handleGetLastTroubleEvent( Collection /* <Long> */ids ) throws Exception {
-        Map<Long, Collection<AuditEvent>> eeEvents = this.getExpressionExperimentDao().getAuditEvents( ids );
-        Map<Long, Map<Long, Collection<AuditEvent>>> adEvents = this.getExpressionExperimentDao()
-                .getArrayDesignAuditEvents( ids );
+    protected Map<Long, AuditEvent> handleGetLastTroubleEvent( Collection<Long> ids ) throws Exception {
+        StopWatch timer = new StopWatch();
+        timer.start();
+        Collection<ExpressionExperiment> ees = this.loadMultiple( ids );
+
+        Map<Auditable, AuditEvent> directEvents = this.getAuditEventDao().getLastOutstandingTroubleEvents( ees );
+
         Map<Long, AuditEvent> troubleMap = new HashMap<Long, AuditEvent>();
-        for ( Long eeId : eeEvents.keySet() ) {
+        for ( Auditable a : directEvents.keySet() ) {
+            troubleMap.put( a.getId(), directEvents.get( a ) );
+        }
 
-            /*
-             * first check for trouble events on the expression experiment itself...
-             */
-            Collection<AuditEvent> events = eeEvents.get( eeId );
-            AuditEvent troubleEvent = null;
-            if ( events != null ) {
-                troubleEvent = this.getAuditEventDao().getLastOutstandingTroubleEvent( events );
-                if ( troubleEvent != null ) {
-                    troubleMap.put( eeId, troubleEvent );
-                    continue;
-                }
-            }
-
-            /*
-             * if there was no trouble on the expression experiment, check the component array designs...
-             */
-            Map<Long, Collection<AuditEvent>> myAdEvents = adEvents.get( eeId );
-            if ( myAdEvents != null ) {
-                for ( Long adId : myAdEvents.keySet() ) {
-
-                    events = myAdEvents.get( adId );
-                    if ( events == null ) continue;
-
-                    AuditEvent adTroubleEvent = this.getAuditEventDao().getLastOutstandingTroubleEvent( events );
-                    if ( adTroubleEvent != null )
-                        if ( troubleEvent == null || troubleEvent.getDate().before( adTroubleEvent.getDate() ) )
-                            troubleEvent = adTroubleEvent;
-
-                }
-
-                if ( troubleEvent != null ) troubleMap.put( eeId, troubleEvent );
+        /*
+         * if there was no trouble on the expression experiment, check the component array designs...slower...
+         */
+        Collection<Long> checkAd = new HashSet<Long>();
+        for ( Long id : ids ) {
+            if ( !troubleMap.containsKey( id ) ) {
+                checkAd.add( id );
             }
         }
+
         return troubleMap;
     }
 
