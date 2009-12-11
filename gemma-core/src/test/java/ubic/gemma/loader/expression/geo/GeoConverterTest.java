@@ -412,6 +412,48 @@ public class GeoConverterTest extends BaseSpringContextTest {
     }
 
     /**
+     * Problem with QT being interpreted as String instead of Double.
+     * 
+     * @throws Exception
+     */
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testConvertGSE5091() throws Exception {
+        InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/GSE5091_family.soft.gz" ) );
+        GeoFamilyParser parser = new GeoFamilyParser();
+        parser.parse( is );
+
+        GeoSeries series = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSeriesMap().get( "GSE5091" );
+        DatasetCombiner datasetCombiner = new DatasetCombiner();
+        GeoSampleCorrespondence correspondence = datasetCombiner.findGSECorrespondence( series );
+        series.setSampleCorrespondence( correspondence );
+        Object result = this.gc.convert( series );
+        assertNotNull( result );
+        Collection<ExpressionExperiment> ees = ( Collection<ExpressionExperiment> ) result;
+        assertEquals( 1, ees.size() );
+
+        ExpressionExperiment ee = ees.iterator().next();
+
+        Collection<QuantitationType> quantitationTypes = ee.getQuantitationTypes();
+
+        boolean found = false;
+        for ( QuantitationType quantitationType : quantitationTypes ) {
+            // log.info(quantitationType);
+            if ( quantitationType.getName().equals( "VALUE" ) ) {
+                /*
+                 * Here's the problem. Of course it works fine...
+                 */
+                assertEquals( PrimitiveType.DOUBLE, quantitationType.getRepresentation() );
+                assertTrue( quantitationType.getIsPreferred() );
+                found = true;
+            }
+        }
+
+        assertTrue( found );
+    }
+
+    /**
      * Case where the same sample can be in multiple series, we had problems with it.
      * 
      * @throws Exception
