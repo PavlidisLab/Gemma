@@ -32,6 +32,7 @@ import ubic.gemma.analysis.report.ArrayDesignReportService;
 import ubic.gemma.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.loader.entrez.pubmed.PubMedXMLFetcher;
 import ubic.gemma.loader.expression.geo.DatasetCombiner;
+import ubic.gemma.loader.expression.geo.GeoConverter;
 import ubic.gemma.loader.expression.geo.GeoSampleCorrespondence;
 import ubic.gemma.loader.expression.geo.model.GeoData;
 import ubic.gemma.loader.expression.geo.model.GeoDataset;
@@ -88,7 +89,12 @@ public class GeoDatasetService extends AbstractGeoService {
     public Collection fetchAndLoad( String geoAccession, boolean loadPlatformOnly, boolean doSampleMatching,
             boolean aggressiveQuantitationTypeRemoval, boolean splitIncompatiblePlatforms,
             boolean allowSuperSeriesImport ) {
-        this.geoConverter.clear();
+
+        /*
+         * We do this to get a fresh instantiation of GeoConverter (prototype scope)
+         */
+        GeoConverter geoConverter = ( GeoConverter ) this.beanFactory.getBean( "geoConverter" );
+
         geoDomainObjectGenerator.intialize();
         geoDomainObjectGenerator.setProcessPlatformsOnly( loadPlatformOnly );
         geoDomainObjectGenerator.setDoSampleMatching( doSampleMatching && !splitIncompatiblePlatforms );
@@ -135,7 +141,7 @@ public class GeoDatasetService extends AbstractGeoService {
 
         confirmPlatformUniqueness( series, doSampleMatching && !splitIncompatiblePlatforms );
 
-        matchToExistingPlatforms( series );
+        matchToExistingPlatforms( geoConverter, series );
 
         checkSamplesAreNew( series );
 
@@ -157,10 +163,7 @@ public class GeoDatasetService extends AbstractGeoService {
         assert persisterHelper != null;
         Collection persistedResult = persisterHelper.persist( result );
         log.debug( "Persisted " + seriesAccession );
-        this.geoConverter.clear();
-
         updateReports( persistedResult );
-
         return persistedResult;
     }
 
@@ -548,7 +551,7 @@ public class GeoDatasetService extends AbstractGeoService {
     /**
      * @param rawGEOPlatform
      */
-    private void matchToExistingPlatform( GeoPlatform rawGEOPlatform ) {
+    private void matchToExistingPlatform( GeoConverter geoConverter, GeoPlatform rawGEOPlatform ) {
         // we have to populate this.
         Map<String, String> probeNamesInGemma = rawGEOPlatform.getProbeNamesInGemma();
 
@@ -586,11 +589,11 @@ public class GeoDatasetService extends AbstractGeoService {
      * 
      * @param series
      */
-    private void matchToExistingPlatforms( GeoSeries series ) {
+    private void matchToExistingPlatforms( GeoConverter geoConverter, GeoSeries series ) {
         Set<GeoPlatform> platforms = getPlatforms( series );
         if ( platforms.size() == 0 ) throw new IllegalStateException( "Series has no platforms" );
         for ( GeoPlatform pl : platforms ) {
-            matchToExistingPlatform( pl );
+            matchToExistingPlatform( geoConverter, pl );
         }
     }
 

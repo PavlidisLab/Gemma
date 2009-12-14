@@ -18,13 +18,11 @@
  */
 package ubic.gemma.loader.expression.geo.service;
 
-import org.junit.Before;
 import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.loader.expression.geo.AbstractGeoServiceTest;
-import ubic.gemma.loader.expression.geo.GeoConverter;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
-import ubic.gemma.persistence.PersisterHelper;
 
 /**
  * Tests of GeoPlatformService
@@ -33,18 +31,9 @@ import ubic.gemma.persistence.PersisterHelper;
  * @version $Id$
  */
 public class GeoPlatformServiceTest extends AbstractGeoServiceTest {
-    protected AbstractGeoService geoService;
 
-    /*
-     * (non-Javadoc)
-     * @see ubic.gemma.loader.expression.geo.service.AbstractGeoServiceTest#init()
-     */
-    @Before
-    public void initGeoTest() {
-        geoService = new GeoPlatformService();
-        geoService.setGeoConverter( ( GeoConverter ) getBean( "geoConverter" ) );
-        geoService.setPersisterHelper( ( PersisterHelper ) getBean( "persisterHelper" ) );
-    }
+    @Autowired
+    GeoPlatformService geoService;
 
     /*
      * Test method for 'ubic.gemma.loader.expression.geo.GeoPlatformService.fetchAndLoad(String)'

@@ -20,6 +20,9 @@ package ubic.gemma.loader.expression.geo.service;
 
 import java.util.Collection;
 
+import org.springframework.stereotype.Service;
+
+import ubic.gemma.loader.expression.geo.GeoConverter;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.loader.expression.geo.model.GeoPlatform;
 
@@ -29,6 +32,7 @@ import ubic.gemma.loader.expression.geo.model.GeoPlatform;
  * @author pavlidis
  * @version $Id$
  */
+@Service
 public class GeoPlatformService extends AbstractGeoService {
 
     /**
@@ -47,6 +51,11 @@ public class GeoPlatformService extends AbstractGeoService {
             boolean ignored, boolean alsoIgnored, boolean allowSuperSeriesImport ) {
         if ( this.geoDomainObjectGenerator == null ) this.geoDomainObjectGenerator = new GeoDomainObjectGenerator();
         this.geoDomainObjectGenerator.setProcessPlatformsOnly( true );
+
+        /*
+         * We do this to get a fresh instantiation of GeoConverter (prototype scope)
+         */
+        GeoConverter geoConverter = ( GeoConverter ) this.beanFactory.getBean( "geoConverter" );
 
         Collection<GeoPlatform> platforms = ( Collection<GeoPlatform> ) geoDomainObjectGenerator
                 .generate( geoPlatformAccession );

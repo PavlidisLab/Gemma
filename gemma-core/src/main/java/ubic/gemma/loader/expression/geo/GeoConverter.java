@@ -34,6 +34,8 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.BeanDefinition;
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
 import ubic.basecode.io.ByteArrayConverter;
@@ -100,13 +102,15 @@ import ubic.gemma.ontology.MgedOntologyService;
  * series (GSE). HOWEVER, multiple datasets may go together to form a series (GSE). This can happen when the "A" and "B"
  * arrays were both run on the same samples. Thus we actually normally go by GSE.
  * <p>
- * This service can be used in database-aware or unaware states.
+ * This service can be used in database-aware or unaware states. However, it has prototype scope as it has some 'global'
+ * data structures used during processing.
  * 
  * @author keshav
  * @author pavlidis
  * @version $Id$
  */
 @Service
+@Scope(BeanDefinition.SCOPE_PROTOTYPE)
 public class GeoConverter implements Converter<Object, Object> {
 
     /**
@@ -174,6 +178,8 @@ public class GeoConverter implements Converter<Object, Object> {
         results = new HashSet<Object>();
         seenPlatforms = new HashMap<String, ArrayDesign>();
         platformDesignElementMap = new HashMap<String, Map<String, CompositeSequence>>();
+        taxonAbbreviationMap.clear();
+        taxonScientificNameMap.clear();
     }
 
     /**

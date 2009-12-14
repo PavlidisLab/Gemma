@@ -80,7 +80,7 @@ public class GeoConverterTest extends BaseSpringContextTest {
         Taxon t = taxonService.findByScientificName( "Salmonidae" );
 
         if ( t == null ) {
-            super.executeSqlScript( "/script/sql/add-fish-taxa.sql", true );
+            super.executeSqlScript( "/script/sql/add-fish-taxa.sql", false );
         }
 
         Taxon rainbowTrout = taxonService.findByAbbreviation( "omyk" );
@@ -641,7 +641,7 @@ public class GeoConverterTest extends BaseSpringContextTest {
         Taxon t = taxonService.findByScientificName( "Salmonidae" );
 
         if ( t == null ) {
-            super.executeSqlScript( "/script/sql/add-fish-taxa.sql", true );
+            super.executeSqlScript( "/script/sql/add-fish-taxa.sql", false );
         }
 
         Taxon rainbowTroat = taxonService.findByAbbreviation( "omyk" );
@@ -652,6 +652,7 @@ public class GeoConverterTest extends BaseSpringContextTest {
         assertNotNull( atlanticSalm );
 
         gc = ( GeoConverter ) this.getBean( "geoConverter" );
+        // gc.clear();
 
         InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
                 "/data/loader/expression/geo/GPL2899.soft.gz" ) );
@@ -677,6 +678,8 @@ public class GeoConverterTest extends BaseSpringContextTest {
             }
         }
         assertEquals( 5, taxa.size() );
+
+        log.info( taxa.toArray() );
 
         // original file has five taxa, test file just kept four.
         assertTrue( taxa.contains( atlanticSalm ) );

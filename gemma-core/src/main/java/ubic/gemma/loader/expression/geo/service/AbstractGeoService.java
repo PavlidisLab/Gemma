@@ -22,9 +22,11 @@ import java.util.Collection;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.BeanFactory;
+import org.springframework.beans.factory.BeanFactoryAware;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import ubic.gemma.loader.expression.geo.GeoConverter;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.PersisterHelper;
@@ -33,7 +35,7 @@ import ubic.gemma.persistence.PersisterHelper;
  * @author pavlidis
  * @version $Id$
  */
-public abstract class AbstractGeoService {
+public abstract class AbstractGeoService implements BeanFactoryAware {
 
     protected static Log log = LogFactory.getLog( AbstractGeoService.class );
 
@@ -45,12 +47,15 @@ public abstract class AbstractGeoService {
     @Autowired
     protected ArrayDesignService arrayDesignService;
 
-    @Autowired
-    protected GeoConverter geoConverter;
+    protected BeanFactory beanFactory;
 
     /**
      * @param geoAccession
-     * @param allowSuperSeriesImport TODO
+     * @param loadPlatformOnly
+     * @param doSampleMatching
+     * @param aggressiveQuantitationTypeRemoval
+     * @param splitIncompatiblePlatforms
+     * @param allowSuperSeriesImport
      * @return
      */
     public abstract Collection<?> fetchAndLoad( String geoAccession, boolean loadPlatformOnly,
@@ -74,13 +79,6 @@ public abstract class AbstractGeoService {
     }
 
     /**
-     * @param geoConv to set
-     */
-    public void setGeoConverter( GeoConverter geoConverter ) {
-        this.geoConverter = geoConverter;
-    }
-
-    /**
      * This is supplied to allow plugging in non-standard generators for testing (e.g., using local files only)
      * 
      * @param generator
@@ -95,4 +93,15 @@ public abstract class AbstractGeoService {
     public void setPersisterHelper( PersisterHelper persisterHelper ) {
         this.persisterHelper = persisterHelper;
     }
+
+    /*
+     * (non-Javadoc)
+     * @see
+     * org.springframework.beans.factory.BeanFactoryAware#setBeanFactory(org.springframework.beans.factory.BeanFactory)
+     * TODO a better way would be method injection.
+     */
+    public void setBeanFactory( BeanFactory beanFactory ) throws BeansException {
+        this.beanFactory = beanFactory;
+    }
+
 }
