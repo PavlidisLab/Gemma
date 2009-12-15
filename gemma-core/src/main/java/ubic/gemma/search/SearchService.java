@@ -281,7 +281,7 @@ public class SearchService implements InitializingBean {
         try {
             searchResults = this.search( settings, true );
         } catch ( Exception e ) {
-            log.error( "Search error: " + e.getMessage(), e );
+            log.error( "Search error on settings: " + settings + "; message=" + e.getMessage(), e );
         }
         return searchResults;
     }
