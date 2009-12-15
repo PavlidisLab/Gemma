@@ -27,22 +27,20 @@ import org.springframework.stereotype.Service;
  * @version $Id$
  */
 @Service
-public class TaxonServiceImpl extends ubic.gemma.model.genome.TaxonServiceBase {
+public class TaxonServiceImpl extends TaxonServiceBase {
 
     /**
-     * @see ubic.gemma.model.genome.TaxonService#create(ubic.gemma.model.genome.Taxon)
+     * @see TaxonService#create(Taxon)
      */
-    protected ubic.gemma.model.genome.Taxon handleCreate( ubic.gemma.model.genome.Taxon taxon )
-            throws java.lang.Exception {
+    protected Taxon handleCreate( Taxon taxon ) throws java.lang.Exception {
         return this.getTaxonDao().create( taxon );
     }
 
     /**
-     * @see ubic.gemma.model.genome.TaxonService#find(ubic.gemma.model.genome.Taxon)
+     * @see TaxonService#find(Taxon)
      */
     @Override
-    protected ubic.gemma.model.genome.Taxon handleFind( ubic.gemma.model.genome.Taxon taxon )
-            throws java.lang.Exception {
+    protected Taxon handleFind( Taxon taxon ) throws java.lang.Exception {
         return this.getTaxonDao().find( taxon );
     }
 
@@ -62,11 +60,10 @@ public class TaxonServiceImpl extends ubic.gemma.model.genome.TaxonServiceBase {
     }
 
     /**
-     * @see ubic.gemma.model.genome.TaxonService#findChildTaxaByParent(ubic.gemma.model.genome.Taxon)
+     * @see TaxonService#findChildTaxaByParent(Taxon)
      */
     @Override
-    protected Collection<Taxon> handleFindChildTaxaByParent( ubic.gemma.model.genome.Taxon taxon )
-            throws java.lang.Exception {
+    protected Collection<Taxon> handleFindChildTaxaByParent( Taxon taxon ) throws java.lang.Exception {
         return this.getTaxonDao().findChildTaxaByParent( taxon );
     }
 
@@ -86,23 +83,22 @@ public class TaxonServiceImpl extends ubic.gemma.model.genome.TaxonServiceBase {
     }
 
     /**
-     * @see ubic.gemma.model.genome.TaxonService#remove(ubic.gemma.model.genome.Taxon)
+     * @see TaxonService#remove(Taxon)
      */
     @Override
-    protected void handleRemove( ubic.gemma.model.genome.Taxon taxon ) throws java.lang.Exception {
+    protected void handleRemove( Taxon taxon ) throws java.lang.Exception {
         this.getTaxonDao().remove( taxon );
     }
 
     /**
-     * @see ubic.gemma.model.genome.TaxonService#update(ubic.gemma.model.genome.Taxon)
+     * @see TaxonService#update(Taxon)
      */
     @Override
-    protected void handleUpdate( ubic.gemma.model.genome.Taxon taxon ) throws java.lang.Exception {
+    protected void handleUpdate( Taxon taxon ) throws java.lang.Exception {
         this.getTaxonDao().update( taxon );
     }
-    
-    @Override
-    protected void handleThaw( ubic.gemma.model.genome.Taxon taxon ) throws Exception {
+
+    public void thaw( Taxon taxon ) {
         this.getTaxonDao().thaw( taxon );
     }
 
