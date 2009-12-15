@@ -914,23 +914,21 @@ public class GeoConverter implements Converter<Object, Object> {
         if ( sequenceColumn != null ) {
             sequences = platform.getColumnData( sequenceColumn );
         }
-        // even if blank probe set it to an empty taxon
-        Taxon taxon = Taxon.Factory.newInstance();
-        // get taxon details from platform, if there are no or multiple taxons for platforms and no probeOrganismColumn
-        // stop processing
+       //The primary taxon for the array: this should be a taxon that is listed as the platform taxon on geo submission      
         Collection<Taxon> platformTaxa = convertPlatformOrganism( platform, probeOrganismColumn );
-        // if there is only 1 taxon on platform set that as the taxon otherwise
-        // we have to get the taxon from the probeOrganismColumn.
-        if ( platformTaxa.size() == 1 ) {
-            taxon = platformTaxa.iterator().next();
-        }
-
+        
+        //these taxons represent taxons for the probes
         List<String> probeOrganism = null;
-
         if ( probeOrganismColumn != null ) {
             log.debug( "Organism details found for probes on array " + platform.getGeoAccession() );
             probeOrganism = platform.getColumnData( probeOrganismColumn );
         }
+        
+        //The primary taxon for the array: either taxon listed on geo submission, or parent taxon listed on geo submission or predominant probe taxon
+        //calcualted using platformTaxa or probeOrganismColumn
+        Taxon primaryTaxon = this.getPrimaryArrayTaxon(platformTaxa, probeOrganism );       
+        arrayDesign.setPrimaryTaxon( primaryTaxon );     
+
 
         /*
          * This is a very commonly found column name in files, it seems standard in GEO. If we don't find it, it's okay.
@@ -994,16 +992,20 @@ public class GeoConverter implements Converter<Object, Object> {
             cs.setDescription( description );
             cs.setArrayDesign( arrayDesign );
 
-            // LMD:1647- If There is a Organism Column given for the probe then set taxon from that overwriting platform
-            // taxon
+              // LMD:1647- If There is a Organism Column given for the probe then set taxon from that overwriting platform
+            //if probeOrganismColumn is set but for this probe no taxon do not set probeTaxon and thus create no biosequence
+            Taxon probeTaxon =  Taxon.Factory.newInstance();
             if ( probeOrganism != null && StringUtils.isNotBlank( probeOrganism.get( i ) ) ) {
-                taxon = convertProbeOrganism( probeOrganism.get( i ) );
+                probeTaxon = convertProbeOrganism( probeOrganism.get( i ) );
             }
+            //if there are no probe taxons then all the probes should take the taxon from the primary taxon
+            if(probeOrganismColumn ==null){
+                probeTaxon =primaryTaxon;
+            }
+            
 
-            arrayDesign.setPrimaryTaxon( taxon );
-
-            BioSequence bs = createMinimalBioSequence( taxon );
-
+            BioSequence bs = createMinimalBioSequence( probeTaxon );
+        
             boolean isRefseq = false;
             // ExternalDB will be null if it's IMAGE (this is really pretty messy, sorry)
             if ( externalAccession != null && externalDb != null && externalDb.getName().equals( "Genbank" )
@@ -1054,8 +1056,10 @@ public class GeoConverter implements Converter<Object, Object> {
                     log.debug( "Blank external reference and clone id for " + cs + " on " + arrayDesign
                             + ", no biological characteristic can be added." );
                 }
-            } else {
+            } else if(probeTaxon.getId() !=null){
+                //IF there is no taxon given for probe do not create a biosequence otherwise bombs as there is no taxon to persist
                 cs.setBiologicalCharacteristic( bs );
+                
             }
 
             compositeSequences.add( cs );
@@ -2724,4 +2728,85 @@ public class GeoConverter implements Converter<Object, Object> {
     public void setSplitIncompatiblePlatforms( boolean splitIncompatiblePlatforms ) {
         this.splitIncompatiblePlatforms = splitIncompatiblePlatforms;
     }
-}
+    
+    /**
+     * This method determines the primary taxon on the array: There are 4 main branches of logic.
+     * 
+     * 1.First it checks if there is only one platform taxon defined on the GEO submission:
+     * If there is that is the primary taxon.
+     * 2.If multiple taxa are given for the  platform then the taxa are checked to see if they share a common parent
+     * if so that is the primary taxon e.g. salmonid where atlantic salmon and rainbow trout are given.
+     * 3.Finally the probeTaxa are looked at and the most common probe taxa is calculated as the primary taxon
+     * 4. No taxon found throws an error
+     * 
+     * @param platformTaxa Collection of taxa that were given on the GEO array submission as platform taxa
+     * @param probeTaxa Collection of taxa strings defining the taxon of each probe on the array. 
+     * @return Primary taxon of array as determined by this method
+     * @exception Thrown if no primary taxon can be determined for array.
+     */    
+    protected Taxon getPrimaryArrayTaxon(Collection<Taxon> platformTaxa, Collection<String> probeTaxa) throws IllegalArgumentException{
+        Taxon primaryTaxon = Taxon.Factory.newInstance();
+        
+        //if there is only 1 taxon on the platform submission then this is the primary taxon
+        if (platformTaxa !=null && platformTaxa.size() == 1 ) {           
+            primaryTaxon = platformTaxa.iterator().next();
+            log.info("Only 1 taxon given on geo submission " + primaryTaxon);
+        } 
+        
+        //If there are multiple taxa on array 
+        else if(platformTaxa !=null && platformTaxa.size()>1) {
+            log.info("Multiple taxon on  geo submission ");
+           // check if they share a common parent taxon to use as primary taxa.
+            Collection<Taxon> parentTaxa = new HashSet<Taxon>();            
+            for(Taxon platformTaxon : platformTaxa){                
+                //thaw to get parent taxon 
+                this.taxonService.thaw(platformTaxon);
+                Taxon platformParentTaxon = platformTaxon.getParentTaxon();
+                parentTaxa.add(platformParentTaxon);                           
+            }
+            //check now if we only have one parent taxon adn check if no null, if a null then there was a taxon with no parent
+            if(!(parentTaxa.contains( null ))  && parentTaxa.size()==1){
+                log.info("Parent taxon found " + parentTaxa);
+                primaryTaxon = parentTaxa.iterator().next();
+            }
+            //No common parent then calculate based on probe taxons:
+            else{
+                log.info("Looking at probe taxons to determine primary taxon" );
+              //create a hashmap keyed on taxon with a counter to count the number of probes for that taxon.
+                Map<String, Integer> taxonProbeNumberList = new HashMap<String, Integer>();
+                
+                for (String probeTaxon: probeTaxa){
+                    //reset each iteration so if no probes already processed set to 1
+                    Integer counter =1;
+                    if(taxonProbeNumberList.containsKey( probeTaxon )){
+                        counter = taxonProbeNumberList.get(probeTaxon) + 1;
+                        taxonProbeNumberList.put( probeTaxon, counter ) ;                  
+                    }
+                    taxonProbeNumberList.put( probeTaxon, counter ) ;
+                }           
+                String primaryTaxonName ="";             
+                Integer highestScore =0;
+                 for (String taxon :taxonProbeNumberList.keySet()){
+                     //filter out those probes that have no taxon set control spots
+                     if ((StringUtils.isNotBlank(taxon)) && taxonProbeNumberList.get( taxon) > highestScore){
+                         primaryTaxonName = taxon;
+                         highestScore = taxonProbeNumberList.get( taxon);
+                     }
+                 }
+                 if(StringUtils.isNotBlank(primaryTaxonName)){
+                     primaryTaxon = this.convertProbeOrganism( primaryTaxonName );
+                 }else{
+                     throw new IllegalArgumentException("No taxon set for array " );
+                 }                
+            }       
+        
+        }
+        //error no taxon on array submission
+        else{           
+            throw new IllegalArgumentException("No taxon set for array ");
+        }           
+        return primaryTaxon;
+    }
+    
+    
+    }
