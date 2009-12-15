@@ -167,6 +167,20 @@ public abstract class TaxonServiceBase implements ubic.gemma.model.genome.TaxonS
                             + th, th );
         }
     }
+    
+    /**
+     * thaws taxon
+     */
+    public void thaw( final ubic.gemma.model.genome.Taxon taxon ) {
+        try {
+            this.handleThaw( taxon );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.genome.TaxonServiceException(
+                    "Error performing 'ubic.gemma.model.genome.TaxonService.thaw(ubic.gemma.model.genome.Taxon taxon)' -->' --> "
+                            + th, th );
+        }
+    }    
+    
 
     /**
      * Gets the reference to <code>taxon</code>'s DAO.
@@ -237,17 +251,6 @@ public abstract class TaxonServiceBase implements ubic.gemma.model.genome.TaxonS
     protected abstract void handleThaw( ubic.gemma.model.genome.Taxon taxon ) throws Exception ;
     
     
-    /**
-     * thaws taxon
-     */
-    public void thaw( final ubic.gemma.model.genome.Taxon taxon ) {
-        try {
-            this.handleThaw( taxon );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.genome.TaxonServiceException(
-                    "Error performing 'ubic.gemma.model.genome.TaxonService.thaw(ubic.gemma.model.genome.Taxon taxon)' -->' --> "
-                            + th, th );
-        }
-    }    
+    
 
 }

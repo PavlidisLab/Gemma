@@ -98,8 +98,10 @@ public class TaxonServiceImpl extends TaxonServiceBase {
         this.getTaxonDao().update( taxon );
     }
 
-    public void thaw( Taxon taxon ) {
-        this.getTaxonDao().thaw( taxon );
+   
+    @Override
+    protected void handleThaw( Taxon taxon ) throws Exception {
+        this.getTaxonDao().thaw( taxon );        
     }
 
 }
