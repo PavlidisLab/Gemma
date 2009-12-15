@@ -124,7 +124,7 @@ public class GeoConverterTest extends BaseSpringContextTest {
             }
         }
         // can be empty taxon if the probe does not have a sequence which is why taxon size is 3.
-        assertEquals( 3, taxa.size() );
+        assertEquals( 2, taxa.size() );
         assertTrue( taxa.contains( rainbowTrout ) );
         assertTrue( taxa.contains( atlanticSalm ) );
 
@@ -677,7 +677,7 @@ public class GeoConverterTest extends BaseSpringContextTest {
                 taxa.add( bs.getTaxon() );
             }
         }
-        assertEquals( 5, taxa.size() );
+        assertEquals( 4, taxa.size() );
 
         log.info( taxa.toArray() );
 
@@ -793,5 +793,43 @@ public class GeoConverterTest extends BaseSpringContextTest {
         }
         fail( "No sequences!" );
     }
+    
+    
+    /**
+     * Test logic to evaluate a primary array taxon
+     * Either from platform taxon, common parent taxon or probe taxon.
+     * 
+     * @throws Exception
+     */
+    @Test
+    public final void testGetPrimaryArrayTaxon() throws Exception {
+        Collection<Taxon> platformTaxa = new HashSet<Taxon>();
+        Collection<String> probeTaxa = new ArrayList<String> ();
+        Taxon salmonid = taxonService.findByCommonName( "salmonid" );
+        Taxon rainbowTroat = taxonService.findByAbbreviation( "omyk" );
+        Taxon atlanticSalm = taxonService.findByAbbreviation( "ssal" );
+        atlanticSalm.setParentTaxon(salmonid);
+        rainbowTroat.setParentTaxon( salmonid );
+        Taxon human = taxonService.findByCommonName( "human" );
+                                    
+        platformTaxa.add(atlanticSalm);
+        probeTaxa.add("ssal");
+        probeTaxa.add("omyk");
+        probeTaxa.add("ssal");
+        //test get primary taxon from the array design platform if only one        
+        Taxon primaryTaxon = this.gc.getPrimaryArrayTaxon( platformTaxa, probeTaxa );
+        assertEquals("atlantic salmon", primaryTaxon.getCommonName());
+        //test that can work out parent taxon
+        platformTaxa.add(rainbowTroat);
+        Taxon primaryTaxonTwo = this.gc.getPrimaryArrayTaxon( platformTaxa, probeTaxa );
+        assertEquals("salmonid", primaryTaxonTwo.getCommonName());   
+
+        //test that if no common parent taxon take most common taxon on probe
+        platformTaxa.add(human);
+        Taxon  primaryTaxonThree= this.gc.getPrimaryArrayTaxon( platformTaxa, probeTaxa );
+        assertEquals("atlantic salmon", primaryTaxonThree.getCommonName());         
+        
+    }    
+    
 
 }
