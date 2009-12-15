@@ -437,5 +437,26 @@ public abstract class TaxonDaoBase extends org.springframework.orm.hibernate3.su
         }
         return target;
     }
+    
+    /**
+     * Performs the core logic for {@link #thaw(ubic.gemma.model.expression.taxon.Taxon)}
+     */
+    protected abstract void handleThaw( ubic.gemma.model.genome.Taxon taxon )
+            throws java.lang.Exception;
+    
+    
+    /**
+     * @see ubic.gemma.model.genome.TaxonDao.thaw#thaw(ubic.gemma.model.expression.bioAssay.BioAssay)
+     */
+    public void thaw( final ubic.gemma.model.genome.Taxon taxon ) {
+        try {
+            this.handleThaw( taxon );
+        } catch ( Throwable th ) {
+            throw new java.lang.RuntimeException(
+                    "Error performing 'ubic.gemma.model.genome.TaxonDao.thaw(ubic.gemma.model.genome.Taxon)' --> "
+                            + th, th );
+        }
+    }
+    
 
 }

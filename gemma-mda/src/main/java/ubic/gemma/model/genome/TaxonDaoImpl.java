@@ -25,11 +25,16 @@ import java.util.List;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
+import org.hibernate.Hibernate;
+import org.hibernate.LockMode;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.orm.hibernate3.HibernateTemplate;
 import org.springframework.stereotype.Repository;
 
 import ubic.gemma.model.common.protocol.ProtocolDaoImpl;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.util.BusinessKey;
 
 /**
@@ -79,6 +84,22 @@ public class TaxonDaoImpl extends ubic.gemma.model.genome.TaxonDaoBase {
             throw super.convertHibernateAccessException( ex );
         }
     }
+    
+    @Override
+    public void handleThaw( final Taxon taxon ) throws Exception {
+        HibernateTemplate templ = this.getHibernateTemplate();
+        templ.executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
+            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                session.lock(taxon, LockMode.NONE );
+                Hibernate.initialize( taxon.getParentTaxon());     
+                session.evict( taxon );
+                return null;
+            }
+        } );
+    }
+    
+    
+    
 
     /*
      * (non-Javadoc)

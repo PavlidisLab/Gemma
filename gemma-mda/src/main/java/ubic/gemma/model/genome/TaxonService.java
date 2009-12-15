@@ -48,5 +48,8 @@ public interface TaxonService {
 
     @Secured( { "GROUP_USER" })
     public void update( ubic.gemma.model.genome.Taxon taxon );
+    
+    @Secured( { "GROUP_USER" })
+    public void thaw( Taxon taxon );
 
 }

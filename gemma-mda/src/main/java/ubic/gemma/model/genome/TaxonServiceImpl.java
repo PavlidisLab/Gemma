@@ -100,5 +100,10 @@ public class TaxonServiceImpl extends ubic.gemma.model.genome.TaxonServiceBase {
     protected void handleUpdate( ubic.gemma.model.genome.Taxon taxon ) throws java.lang.Exception {
         this.getTaxonDao().update( taxon );
     }
+    
+    @Override
+    protected void handleThaw( ubic.gemma.model.genome.Taxon taxon ) throws Exception {
+        this.getTaxonDao().thaw( taxon );
+    }
 
 }
