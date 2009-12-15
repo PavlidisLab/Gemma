@@ -230,5 +230,24 @@ public abstract class TaxonServiceBase implements ubic.gemma.model.genome.TaxonS
      * Performs the core logic for {@link #update(ubic.gemma.model.genome.Taxon)}
      */
     protected abstract void handleUpdate( ubic.gemma.model.genome.Taxon taxon ) throws java.lang.Exception;
+    
+    /**
+     * Performs the core logic for {@link #thaw(ubic.gemma.model.genome.Taxon)}
+     */
+    protected abstract void handleThaw( ubic.gemma.model.genome.Taxon taxon ) throws Exception ;
+    
+    
+    /**
+     * thaws taxon
+     */
+    public void thaw( final ubic.gemma.model.genome.Taxon taxon ) {
+        try {
+            this.handleThaw( taxon );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.genome.TaxonServiceException(
+                    "Error performing 'ubic.gemma.model.genome.TaxonService.thaw(ubic.gemma.model.genome.Taxon taxon)' -->' --> "
+                            + th, th );
+        }
+    }    
 
 }
