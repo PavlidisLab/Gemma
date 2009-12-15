@@ -33,8 +33,6 @@ import org.springframework.orm.hibernate3.HibernateTemplate;
 import org.springframework.stereotype.Repository;
 
 import ubic.gemma.model.common.protocol.ProtocolDaoImpl;
-import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.util.BusinessKey;
 
 /**

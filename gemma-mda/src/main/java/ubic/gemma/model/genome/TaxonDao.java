@@ -18,9 +18,6 @@
  */
 package ubic.gemma.model.genome;
 
-import org.springframework.security.access.annotation.Secured;
-
-import ubic.gemma.model.expression.bioAssay.BioAssay;
 
 /**
  * @see ubic.gemma.model.genome.Taxon
