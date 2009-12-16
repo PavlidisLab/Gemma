@@ -124,7 +124,6 @@ public class IndexerTaskImpl extends BaseSpacesTask implements IndexerTask {
 
         IndexerResult result = new IndexerResult();
 
-        try {
             if ( command.isIndexGene() ) {
                 rebuildIndex( geneGps, "Gene index" );
                 result.setPathToGeneIndex( compassGene.getSettings().getSetting( PATH_PROPERTY )
@@ -164,23 +163,23 @@ public class IndexerTaskImpl extends BaseSpacesTask implements IndexerTask {
 
             }
 
-        } catch ( Exception e ) {
-            log.error( e );
-        }
+    
 
         super.tidyProgress( spacesProgressAppender );
 
         return result;
     }
 
-    protected void rebuildIndex( CompassGpsInterfaceDevice device, String whatIndexingMsg ) throws Exception {
+    protected void rebuildIndex( CompassGpsInterfaceDevice device, String whatIndexingMsg ) {
 
         long time = System.currentTimeMillis();
 
         log.info( "Rebuilding " + whatIndexingMsg );
-
-        CompassUtils.rebuildCompassIndex( device );
-
+        try{
+            CompassUtils.rebuildCompassIndex( device );
+        } catch ( Exception e ) {
+            log.error( e );
+        }
         time = System.currentTimeMillis() - time;
 
         log.info( "Finished rebuilding " + whatIndexingMsg + ".  Took (ms): " + time );
