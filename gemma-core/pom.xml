@@ -344,12 +344,12 @@
 		<dependency>
 			<groupId>RoSuDA</groupId>
 			<artifactId>Rserve</artifactId>
-			<version>0.5-3</version>
+			<version>0.6-0</version>
 		</dependency>
 		<dependency>
 			<groupId>RoSuDA</groupId>
 			<artifactId>JRI</artifactId>
-			<version>0.4-3</version>
+			<version>0.5-0</version>
 		</dependency>
 		<dependency>
 			<groupId>RoSuDA</groupId>
