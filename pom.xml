@@ -22,8 +22,8 @@
 	</modules>
 	<packaging>pom</packaging>
 	<scm>
-		<connection>scm:cvs:ext:@krusty.chibi.ubc.ca:/space/cvs:Gemma</connection>
-		<developerConnection>scm:cvs:ext:@krusty.chibi.ubc.ca:/space/cvs:Gemma</developerConnection>
+		<connection>scm:cvs:ext:@katz.pavlab.chibi.ubc.ca:/space/cvs:Gemma</connection>
+		<developerConnection>scm:cvs:ext:@katz.pavlab.chibi.ubc.ca:/space/cvs:Gemma</developerConnection>
 		<url>http://www.chibi.ubc.ca/faculty/pavlidis/fisheye/browse/pavlab/Gemma</url>
 	</scm>
 	<issueManagement>
@@ -576,18 +576,18 @@
 		<site>
 			<id>website</id>
 			<url>
-				scp://krusty.chibi.ubc.ca:/space/gemmaData/gemma-devsite
+				scp://katz.pavlab.chibi.ubc.ca:/space/gemmaData/gemma-devsite
 			</url>
 		</site>
 		<repository>
 			<id>repo</id>
 			<name>Pavlab</name>
-			<url>scp://krusty.chibi.ubc.ca:/space/maven2</url>
+			<url>scp://katz.pavlab.chibi.ubc.ca:/space/maven2</url>
 		</repository>
 		<snapshotRepository>
 			<id>repo</id>
 			<name>Pavlab</name>
-			<url>scp://krusty.chibi.ubc.ca:/space/maven2</url>
+			<url>scp://katz.pavlab.chibi.ubc.ca:/space/maven2</url>
 		</snapshotRepository>
 	</distributionManagement>
 
