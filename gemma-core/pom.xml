@@ -354,7 +354,7 @@
 		<dependency>
 			<groupId>RoSuDA</groupId>
 			<artifactId>REngine</artifactId>
-			<version>0.5-3</version>
+			<version>0.6-0</version>
 		</dependency>
 		<dependency>
 			<groupId>org.compass-project</groupId>
