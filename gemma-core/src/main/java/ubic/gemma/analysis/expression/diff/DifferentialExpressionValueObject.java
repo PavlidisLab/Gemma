@@ -32,6 +32,7 @@ import ubic.gemma.model.genome.Gene;
  */
 public class DifferentialExpressionValueObject {
 
+    private Long id;
     private Gene gene;
     private ExpressionExperimentValueObject expressionExperiment;
     private String probe;
@@ -154,6 +155,14 @@ public class DifferentialExpressionValueObject {
 
     public void setFisherContribution( Boolean fisherContribution ) {
         this.fisherContribution = fisherContribution;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId( Long id ) {
+        this.id = id;
     }
 
 }

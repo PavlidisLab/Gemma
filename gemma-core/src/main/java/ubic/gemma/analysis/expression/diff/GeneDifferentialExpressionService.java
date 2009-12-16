@@ -19,6 +19,8 @@ import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisR
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultService;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.VocabCharacteristic;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -49,6 +51,9 @@ public class GeneDifferentialExpressionService {
 
     @Autowired
     private DifferentialExpressionResultService differentialExpressionResultService = null;
+    
+    @Autowired
+    private CompositeSequenceService csService = null;
 
     private Log log = LogFactory.getLog( this.getClass() );
 
@@ -395,9 +400,11 @@ public class GeneDifferentialExpressionService {
         DifferentialExpressionValueObject devo = new DifferentialExpressionValueObject();
         devo.setGene( gene );
         devo.setExpressionExperiment( eevo );
-        devo.setProbe( r.getProbe().getName() );
-        devo.setProbeId( r.getProbe().getId() );
+        CompositeSequence probe = r.getProbe();
+        devo.setProbe( probe.getName());
+        devo.setProbeId( probe.getId() );
         devo.setExperimentalFactors( new HashSet<ExperimentalFactorValueObject>() );
+        devo.setId(r.getId());
 
         for ( ExperimentalFactor ef : efs ) {
             ExperimentalFactorValueObject efvo = configExperimentalFactorValueObject( ef );
@@ -481,7 +488,7 @@ public class GeneDifferentialExpressionService {
         Collection<DifferentialExpressionValueObject> devos = new ArrayList<DifferentialExpressionValueObject>();
 
         Map<ProbeAnalysisResult, Collection<ExperimentalFactor>> dearToEf = getFactors( results );
-
+        
         /*
          * convert to DEVOs
          */
