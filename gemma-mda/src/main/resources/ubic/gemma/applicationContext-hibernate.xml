@@ -213,6 +213,10 @@
 				</value>
 				<value>classpath:ubic/gemma/model/analysis/expression/ExpressionExperimentSet.hbm.xml
 				</value>
+				<value>classpath:ubic/gemma/model/genome/gene/GeneSet.hbm.xml </value>
+				<value>classpath:ubic/gemma/model/genome/gene/GeneSetMember.hbm.xml   </value> 
+				
+				
 			</list>
 		</property>
 		<property name="hibernateProperties">

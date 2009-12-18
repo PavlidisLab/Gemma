@@ -19,3 +19,5 @@ alter table CHARACTERISTIC ADD INDEX value (VALUE);
 alter table CHARACTERISTIC ADD INDEX category (CATEGORY);
 alter table CHARACTERISTIC ADD INDEX valueUri (VALUE_URI);
 alter table CHARACTERISTIC ADD INDEX categoryUri (CATEGORY_URI);
+alter table GENE_SET ADD INDEX name (NAME);
+
