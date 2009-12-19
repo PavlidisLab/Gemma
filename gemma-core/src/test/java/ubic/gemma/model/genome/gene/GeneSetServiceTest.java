@@ -1,7 +1,30 @@
+/*
+ * The Gemma project
+ * 
+ * Copyright (c) 2009 University of British Columbia
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
 package ubic.gemma.model.genome.gene;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Set;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -10,6 +33,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.testing.BaseSpringContextTest;
 
+/**
+ * @author klc
+ * @version $Id$
+ */
 public class GeneSetServiceTest extends BaseSpringContextTest {
 
     private Gene g = null;
@@ -21,11 +48,9 @@ public class GeneSetServiceTest extends BaseSpringContextTest {
 
     @Before
     public void setUp() throws Exception {
-
         g = this.getTestPeristentGene();
         g2 = this.getTestPeristentGene();
         g3 = this.getTestPeristentGene();
-
     }
 
     @Test
@@ -45,7 +70,7 @@ public class GeneSetServiceTest extends BaseSpringContextTest {
         gset = geneSetService.create( gset );
 
         assert ( gset.equals( geneSetService.load( gset.getId() ).getId() ) );
-        
+
         geneSetService.remove( gset );
     }
 
@@ -101,40 +126,55 @@ public class GeneSetServiceTest extends BaseSpringContextTest {
         geneSetService.update( gset );
 
         assert ( geneSetService.load( gset.getId() ).getGeneSetMembers().size() == 2 );
-        
+
         geneSetService.remove( gset );
 
     }
 
-    // FIXME I thought this test would fail but it passes. Our API lets us add the same geneMember to the same set twice.
+    // FIXME I thought this test would fail but it passes. Our API lets us add the same geneMember to the same set
+    // twice.
     // Thought the HashSet would reject this.
-    
+
     @Test
     public void testUpdateAddingSameGeneMemberTwice() {
 
-        Collection<GeneSetMember> gsMembers = new HashSet<GeneSetMember>();
-        GeneSetMember gmember = new GeneSetMemberImpl();
+        GeneSetMember gmember = GeneSetMember.Factory.newInstance();
         gmember.setGene( this.g2 );
         gmember.setScore( 0.33 );
 
-        gsMembers.add( gmember );
-
-        GeneSet gset = new GeneSetImpl();
+        GeneSet gset = GeneSet.Factory.newInstance();
         gset.setName( "testUpdateAddingSameGeneMemberTwice" );
-        gset.setGeneSetMembers( gsMembers );
+        gset.getGeneSetMembers().add( gmember );
 
         gset = geneSetService.create( gset );
 
-        assert ( gset.equals( geneSetService.load( gset.getId() ).getId() ) );
+        assertNotNull( gset.getId() );
+        assertEquals( 1, gset.getGeneSetMembers().size() );
 
-        gset.getGeneSetMembers().add( gset.getGeneSetMembers().iterator().next() );
+        GeneSetMember persistedGeneSetMember = gset.getGeneSetMembers().iterator().next();
 
-        assert ( geneSetService.load( gset.getId() ).getGeneSetMembers().size() == 1 );
+        assertNotNull( persistedGeneSetMember.getId() );
+
+        Set<GeneSetMember> k = new HashSet<GeneSetMember>();
+        k.add( persistedGeneSetMember );
+        k.add( persistedGeneSetMember );
+        assertEquals( 1, k.size() );
+
+        assertNotNull( persistedGeneSetMember.getId() );
+
+        assertEquals( gset.getGeneSetMembers().iterator().next(), persistedGeneSetMember );
+
+        assertTrue( gset.getGeneSetMembers().contains( persistedGeneSetMember ) );
+
+        // add it again.
+        gset.getGeneSetMembers().add( persistedGeneSetMember );
+
+        assertEquals( 1, gset.getGeneSetMembers().size() );
 
         geneSetService.update( gset );
 
-        assert ( geneSetService.load( gset.getId() ).getGeneSetMembers().size() == 2 );
-        
+        assertEquals( 1, gset.getGeneSetMembers().size() );
+
         geneSetService.remove( gset );
 
     }
