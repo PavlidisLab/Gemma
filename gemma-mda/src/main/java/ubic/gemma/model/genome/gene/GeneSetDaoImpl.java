@@ -41,6 +41,10 @@ public class GeneSetDaoImpl extends HibernateDaoSupport implements GeneSetDao {
         super.setSessionFactory( sessionFactory );
     }
 
+    /*
+     * (non-Javadoc)
+     * @see ubic.gemma.persistence.BaseDao#create(java.util.Collection)
+     */
     public Collection<? extends GeneSet> create( final Collection<? extends GeneSet> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "GeneSet.create - 'genesets' can not be null" );
@@ -53,6 +57,10 @@ public class GeneSetDaoImpl extends HibernateDaoSupport implements GeneSetDao {
         return entities;
     }
 
+    /*
+     * (non-Javadoc)
+     * @see ubic.gemma.persistence.BaseDao#create(java.lang.Object)
+     */
     public GeneSet create( GeneSet entity ) {
         if ( entity == null ) {
             throw new IllegalArgumentException( "GeneSet.create - 'geneset' can not be null" );
@@ -63,19 +71,31 @@ public class GeneSetDaoImpl extends HibernateDaoSupport implements GeneSetDao {
 
     }
 
+    /*
+     * (non-Javadoc)
+     * @see ubic.gemma.persistence.BaseDao#load(java.util.Collection)
+     */
     @SuppressWarnings("unchecked")
     public Collection<? extends GeneSet> load( Collection<Long> ids ) {
         return this.getHibernateTemplate().findByNamedParam( "from GeneSetImpl where id in (:ids)", "ids", ids );
     }
 
+    /*
+     * (non-Javadoc)
+     * @see ubic.gemma.persistence.BaseDao#load(java.lang.Long)
+     */
     public GeneSet load( Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "CandidateGeneList.load - 'id' can not be null" );
         }
-        return this.getHibernateTemplate().get( GeneSet.class, id );
+        return this.getHibernateTemplate().get( GeneSetImpl.class, id );
 
     }
 
+    /*
+     * (non-Javadoc)
+     * @see ubic.gemma.persistence.BaseDao#loadAll()
+     */
     public Collection<? extends GeneSet> loadAll() {
         final java.util.Collection<GeneSetImpl> results = this.getHibernateTemplate().loadAll( GeneSetImpl.class );
         return results;
@@ -119,6 +139,10 @@ public class GeneSetDaoImpl extends HibernateDaoSupport implements GeneSetDao {
 
     }
 
+    /*
+     * (non-Javadoc)
+     * @see ubic.gemma.persistence.BaseDao#update(java.util.Collection)
+     */
     public void update( final Collection<? extends GeneSet> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "GeneSet.update - 'Collection of geneSets' can not be null" );
@@ -130,6 +154,10 @@ public class GeneSetDaoImpl extends HibernateDaoSupport implements GeneSetDao {
 
     }
 
+    /*
+     * (non-Javadoc)
+     * @see ubic.gemma.persistence.BaseDao#update(java.lang.Object)
+     */
     public void update( GeneSet entity ) {
         if ( entity == null ) {
             throw new IllegalArgumentException( "GeneSet.update - 'geneSet' can not be null" );
