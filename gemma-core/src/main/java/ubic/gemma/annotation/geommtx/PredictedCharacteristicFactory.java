@@ -59,6 +59,8 @@ public class PredictedCharacteristicFactory implements InitializingBean {
      * @return
      */
     public VocabCharacteristic getCharacteristic( String URI ) {
+        checkReady();
+
         VocabCharacteristic c = VocabCharacteristic.Factory.newInstance();
         c.setValueUri( URI );
         c.setValue( labels.get( URI ) );
@@ -73,11 +75,21 @@ public class PredictedCharacteristicFactory implements InitializingBean {
         return c;
     }
 
+    private void checkReady() {
+        if ( labels == null || labels.isEmpty() ) {
+            throw new IllegalStateException( "Sorry, not usable" );
+        }
+    }
+
     public String getLabel( String uri ) {
+        checkReady();
+
         return labels.get( uri );
     }
 
     public boolean hasLabel( String uri ) {
+        checkReady();
+
         return labels.containsKey( uri );
     }
 
