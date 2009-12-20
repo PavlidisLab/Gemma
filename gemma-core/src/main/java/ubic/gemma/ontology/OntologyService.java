@@ -30,9 +30,20 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import ubic.basecode.ontology.OntologyLoader;
+import ubic.basecode.ontology.model.OntologyIndividual;
+import ubic.basecode.ontology.model.OntologyResource;
+import ubic.basecode.ontology.model.OntologyTerm;
+import ubic.basecode.ontology.providers.AbstractOntologyService;
+import ubic.basecode.ontology.providers.BirnLexOntologyService;
+import ubic.basecode.ontology.providers.ChebiOntologyService;
+import ubic.basecode.ontology.providers.DiseaseOntologyService;
+import ubic.basecode.ontology.providers.FMAOntologyService;
+import ubic.basecode.ontology.search.OntologySearch;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicService;
@@ -43,6 +54,7 @@ import ubic.gemma.model.expression.biomaterial.BioMaterialService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.ontology.providers.MgedOntologyService;
 import ubic.gemma.search.SearchResult;
 import ubic.gemma.search.SearchService;
 import ubic.gemma.search.SearchSettings;
@@ -59,7 +71,7 @@ import com.hp.hpl.jena.util.iterator.ExtendedIterator;
  * @version $Id$
  */
 @Service
-public class OntologyService {
+public class OntologyService implements InitializingBean {
 
     // Private class for sorting Characteristics
     class TermComparator implements Comparator<Characteristic> {
@@ -109,7 +121,7 @@ public class OntologyService {
         ExtendedIterator<String> iterator = maker.listModels();
         while ( iterator.hasNext() ) {
             String name = iterator.next();
-            ExternalDatabase database = OntologyLoader.ontologyAsExternalDatabase( name );
+            ExternalDatabase database = OntologyUtils.ontologyAsExternalDatabase( name );
             ubic.gemma.ontology.Ontology o = new ubic.gemma.ontology.Ontology( database );
             ontologies.add( o );
         }
@@ -120,26 +132,46 @@ public class OntologyService {
     @Autowired
     private BioMaterialService bioMaterialService;
 
-    @Autowired
     private BirnLexOntologyService birnLexOntologyService;
     @Autowired
     private CharacteristicService characteristicService;
-    @Autowired
+
     private ChebiOntologyService chebiOntologyService;
-    @Autowired
+
     private DiseaseOntologyService diseaseOntologyService;
-    @Autowired
-    private ExpressionExperimentService eeService;
-    @Autowired
-    private FMAOntologyService fmaOntologyService;
 
     @Autowired
-    private SearchService searchService;
+    private ExpressionExperimentService eeService;
+
+    private FMAOntologyService fmaOntologyService;
 
     @Autowired
     private MgedOntologyService mgedOntologyService;
 
     private Collection<AbstractOntologyService> ontologyServices = new HashSet<AbstractOntologyService>();
+
+    @Autowired
+    private SearchService searchService;
+
+    public void afterPropertiesSet() throws Exception {
+
+        this.birnLexOntologyService = new BirnLexOntologyService();
+        this.chebiOntologyService = new ChebiOntologyService();
+        this.fmaOntologyService = new FMAOntologyService();
+        this.diseaseOntologyService = new DiseaseOntologyService();
+
+        this.ontologyServices.add( this.birnLexOntologyService );
+        this.ontologyServices.add( this.chebiOntologyService );
+        this.ontologyServices.add( this.fmaOntologyService );
+        this.ontologyServices.add( this.diseaseOntologyService );
+        this.ontologyServices.add( this.mgedOntologyService );
+
+        for ( AbstractOntologyService serv : this.ontologyServices ) {
+            log.info( "*************** " + serv + " *********************" );
+            serv.init( false );
+        }
+
+    }
 
     /**
      * Given a search string will first look through the characterisc database for any entries that have a match. If a
@@ -204,31 +236,11 @@ public class OntologyService {
 
         searchForGenes( queryString, categoryUri, searchResults );
 
-        // FIXME hard-coding of ontologies to search
-        results = mgedOntologyService.findResources( queryString );
-        if ( log.isDebugEnabled() )
-            log.debug( "found " + results.size() + " terms from mged in " + watch.getTime() + " ms" );
-        searchResults.addAll( filter( results, queryString ) );
-
-        results = birnLexOntologyService.findResources( queryString );
-        if ( log.isDebugEnabled() )
-            log.debug( "found " + results.size() + " terms from birnLex in " + watch.getTime() + " ms" );
-        searchResults.addAll( filter( results, queryString ) );
-
-        results = diseaseOntologyService.findResources( queryString );
-        if ( log.isDebugEnabled() )
-            log.debug( "found " + results.size() + " terms from obo in " + watch.getTime() + " ms" );
-        searchResults.addAll( filter( results, queryString ) );
-
-        results = fmaOntologyService.findResources( queryString );
-        if ( log.isDebugEnabled() )
-            log.debug( "found " + results.size() + " terms from fma in " + watch.getTime() + " ms" );
-        searchResults.addAll( filter( results, queryString ) );
-
-        results = chebiOntologyService.findResources( queryString );
-        if ( log.isDebugEnabled() )
-            log.debug( "found " + results.size() + " terms from chebi in " + watch.getTime() + " ms" );
-        searchResults.addAll( filter( results, queryString ) );
+        for ( AbstractOntologyService serv : this.ontologyServices ) {
+            results = serv.findResources( queryString );
+            if ( log.isDebugEnabled() ) log.debug( "found " + results.size() + " in " + watch.getTime() + " ms" );
+            searchResults.addAll( filter( results, queryString ) );
+        }
 
         // Sort the individual results.
         Collection<Characteristic> sortedResults = sort( individualResults, previouslyUsedInSystem, searchResults,
@@ -302,6 +314,41 @@ public class OntologyService {
         }
 
         return results;
+    }
+
+    /**
+     * @return the birnLexOntologyService
+     */
+    public BirnLexOntologyService getBirnLexOntologyService() {
+        return birnLexOntologyService;
+    }
+
+    /**
+     * @return the chebiOntologyService
+     */
+    public ChebiOntologyService getChebiOntologyService() {
+        return chebiOntologyService;
+    }
+
+    /**
+     * @return the diseaseOntologyService
+     */
+    public DiseaseOntologyService getDiseaseOntologyService() {
+        return diseaseOntologyService;
+    }
+
+    /**
+     * @return the fmaOntologyService
+     */
+    public FMAOntologyService getFmaOntologyService() {
+        return fmaOntologyService;
+    }
+
+    /**
+     * @return the mgedOntologyService
+     */
+    public MgedOntologyService getMgedOntologyService() {
+        return mgedOntologyService;
     }
 
     /**
@@ -515,14 +562,6 @@ public class OntologyService {
     }
 
     /**
-     * @param birnLexOntologyService the birnLexOntologyService to set
-     */
-    public void setBirnLexOntologyService( BirnLexOntologyService birnLexOntologyService ) {
-        this.birnLexOntologyService = birnLexOntologyService;
-        ontologyServices.add( birnLexOntologyService );
-    }
-
-    /**
      * @param characteristicService the characteristicService to set
      */
     public void setCharacteristicService( CharacteristicService characteristicService ) {
@@ -530,42 +569,10 @@ public class OntologyService {
     }
 
     /**
-     * @param chebiOntologyService the chebiOntologyService to set
-     */
-    public void setChebiOntologyService( ChebiOntologyService chebiOntologyService ) {
-        this.chebiOntologyService = chebiOntologyService;
-        ontologyServices.add( chebiOntologyService );
-    }
-
-    /**
-     * @param diseaseOntologyService the diseaseOntologyService to set
-     */
-    public void setDiseaseOntologyService( DiseaseOntologyService diseaseOntologyService ) {
-        this.diseaseOntologyService = diseaseOntologyService;
-        ontologyServices.add( diseaseOntologyService );
-    }
-
-    /**
      * @param expressionExperimentService
      */
     public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
         this.eeService = expressionExperimentService;
-    }
-
-    /**
-     * @param fmaOntologyService the fmaOntologyService to set
-     */
-    public void setFmaOntologyService( FMAOntologyService fmaOntologyService ) {
-        this.fmaOntologyService = fmaOntologyService;
-        ontologyServices.add( fmaOntologyService );
-    }
-
-    /**
-     * @param mgedDiseaseOntologyService the mgedDiseaseOntologyService to set
-     */
-    public void setMgedOntologyService( MgedOntologyService mgedOntologyService ) {
-        this.mgedOntologyService = mgedOntologyService;
-        ontologyServices.add( mgedOntologyService );
     }
 
     /**

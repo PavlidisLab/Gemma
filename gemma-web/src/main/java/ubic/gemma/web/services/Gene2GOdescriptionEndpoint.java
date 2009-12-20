@@ -28,10 +28,10 @@ import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
+import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneService;
-import ubic.gemma.ontology.GeneOntologyService;
-import ubic.gemma.ontology.OntologyTerm;
+import ubic.gemma.ontology.providers.GeneOntologyService;
 
 /**
  * Given a collection of Gene ID, will return a collection of Gene Ontology IDs (ie. GO:0039392) and their corresponding

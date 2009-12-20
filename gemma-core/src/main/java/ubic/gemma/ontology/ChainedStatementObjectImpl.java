@@ -21,7 +21,9 @@ package ubic.gemma.ontology;
 import java.util.Collection;
 import java.util.HashSet;
 
-import ubic.gemma.model.common.description.VocabCharacteristic;
+import ubic.basecode.ontology.model.ChainedStatementObject;
+import ubic.basecode.ontology.model.CharacteristicStatement;
+import ubic.basecode.ontology.model.OntologyTerm;
 
 /**
  * @author pavlidis
@@ -43,21 +45,6 @@ public class ChainedStatementObjectImpl implements ChainedStatementObject {
             throw new IllegalArgumentException( "Statement must have same subject as all others" );
         }
         this.statements.add( s );
-    }
-
-    public VocabCharacteristic toVocabCharacteristic() {
-        if ( statements.size() == 0 ) throw new IllegalStateException( "No statements!" );
-
-        VocabCharacteristic v = null;
-        for ( CharacteristicStatement s : statements ) {
-            if ( v == null ) {
-                v = s.toCharacteristic();
-            } else {
-                s.addToCharacteristic( v );
-            }
-
-        }
-        return v;
     }
 
 }

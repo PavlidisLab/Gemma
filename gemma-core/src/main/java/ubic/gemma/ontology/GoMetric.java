@@ -33,9 +33,11 @@ import org.springframework.stereotype.Service;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.dataStructure.matrix.SparseDoubleMatrix;
+import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.model.association.Gene2GOAssociationService;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.ontology.providers.GeneOntologyService;
 
 /**
  * @author meeta
@@ -50,6 +52,7 @@ public class GoMetric {
 
     @Autowired
     private Gene2GOAssociationService gene2GOAssociationService;
+    
     @Autowired
     private GeneOntologyService geneOntologyService;
 

@@ -14,6 +14,16 @@ if (dwr.engine == null)
 if (DWREngine == null)
 	var DWREngine = dwr.engine;
 // ====================================================================================
+if (AnnotationController == null)
+	var AnnotationController = {};
+AnnotationController._path = '/Gemma/dwr';
+AnnotationController.run = function(p0, callback) {
+	dwr.engine._execute(AnnotationController._path, 'AnnotationController', 'annotate', p0, callback);
+}
+AnnotationController.run = function(p0, callback) {
+	dwr.engine._execute(AnnotationController._path, 'AnnotationController', 'annotate', p0, callback);
+}
+// ====================================================================================
 if (ArrayDesignController == null)
 	var ArrayDesignController = {};
 ArrayDesignController._path = '/Gemma/dwr';

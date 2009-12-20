@@ -1343,8 +1343,7 @@
 				</bean>
 			</entry>
 			<entry key="ubic.gemma.model.common.quantitationtype.PrimitiveType">
-				<bean class="org.directwebremoting.spring.ConverterConfig">
-					<property name="type" value="bean" />
+				<bean class="org.directwebremoting.spring.ConverterCoubic.basecode.ontology.OntologyTreeNodealue="bean" />
 				</bean>
 			</entry>
 			<entry key="ubic.gemma.grid.javaspaces.index.IndexerTaskCommand">

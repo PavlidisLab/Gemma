@@ -30,7 +30,7 @@ import org.w3c.dom.Element;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
-import ubic.gemma.ontology.GeneOntologyService;
+import ubic.gemma.ontology.providers.GeneOntologyService;
 
 /**
  * Given a Gene Ontology Term URI and a Taxon ID as input, will return a collection of gene IDs that match the GO Term

@@ -146,52 +146,52 @@
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-beans</artifactId>
-			<version>3.0.0.RC2</version>
+			<version>3.0.0.RELEASE</version>
 			<type>jar</type>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-core</artifactId>
-			<version>3.0.0.RC2</version>
+			<version>3.0.0.RELEASE</version>
 			<type>jar</type>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-jdbc</artifactId>
-			<version>3.0.0.RC2</version>
+			<version>3.0.0.RELEASE</version>
 			<type>jar</type>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-orm</artifactId>
-			<version>3.0.0.RC2</version>
+			<version>3.0.0.RELEASE</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-expression</artifactId>
-			<version>3.0.0.RC2</version>
+			<version>3.0.0.RELEASE</version>
 			<type>jar</type>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-context-support</artifactId>
-			<version>3.0.0.RC2</version>
+			<version>3.0.0.RELEASE</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-aspects</artifactId>
-			<version>3.0.0.RC2</version>
+			<version>3.0.0.RELEASE</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-aop</artifactId>
-			<version>3.0.0.RC2</version>
+			<version>3.0.0.RELEASE</version>
 			<type>jar</type> 
 		</dependency>
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-test</artifactId>
-			<version>3.0.0.RC2</version>
+			<version>3.0.0.RELEASE</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.security</groupId>
@@ -238,7 +238,7 @@
 		<dependency>
 			<groupId>commons-configuration</groupId>
 			<artifactId>commons-configuration</artifactId>
-			<version>1.1</version>
+			<version>1.5</version>
 			<exclusions>
 				<exclusion>
 					<groupId>xerces</groupId>
@@ -251,6 +251,10 @@
 				<exclusion>
 					<groupId>commons-beanutils</groupId>
 					<artifactId>commons-beanutils-core</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>commons-digester</groupId>
+					<artifactId>commons-digester</artifactId>
 				</exclusion>
 			</exclusions>
 		</dependency>
@@ -460,6 +464,11 @@
     		<id>spring-milestone</id>	
     		<name>Spring Portfolio Milestone Repository</name>
     		<url>http://s3.amazonaws.com/maven.springframework.org/milestone</url>
+		</repository>
+		<repository>
+    		<id>spring</id>	
+    		<name>Spring Portfolio Repository</name>
+    		<url>http://s3.amazonaws.com/maven.springframework.org/release</url>
 		</repository>
 		<repository>
     		<id>spring-snapshot</id>	

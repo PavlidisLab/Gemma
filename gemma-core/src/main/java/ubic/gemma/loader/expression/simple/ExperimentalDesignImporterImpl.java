@@ -35,6 +35,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.datastructure.matrix.ExperimentalDesignWriter;
 import ubic.gemma.datastructure.matrix.ExpressionDataWriterUtils;
 import ubic.gemma.model.association.GOEvidenceCode;
@@ -52,8 +53,7 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueService;
-import ubic.gemma.ontology.MgedOntologyService;
-import ubic.gemma.ontology.OntologyTerm;
+import ubic.gemma.ontology.providers.MgedOntologyService;
 
 /**
  * <p>

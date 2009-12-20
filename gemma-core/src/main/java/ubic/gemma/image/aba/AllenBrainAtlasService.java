@@ -157,105 +157,83 @@ public class AllenBrainAtlasService {
         initDefaults();
     }
 
-    public boolean getVerbose() {
-        return ( this.verbose );
+    public String buildUrlString( String urlPattern, String args[] ) {
+
+        for ( int i = 0; i < args.length; i++ )
+            urlPattern = urlPattern.replaceFirst( "@", args[i] );
+
+        return ( API_BASE_URL + urlPattern );
     }
 
-    public void setVerbose( boolean v ) {
-        this.verbose = v;
+    public Document getAtlasImageMap( Integer imageseriesId ) {
+        File outputFile = getFile( "atlasImageMap" + imageseriesId.toString() );
+        Document atlasImageMapDoc = null;
+
+        try {
+            FileOutputStream out = new FileOutputStream( outputFile );
+            this.getAtlasImageMap( imageseriesId, out );
+
+            atlasImageMapDoc = XMLUtils.openAndParse( new FileInputStream( outputFile ) );
+        } catch ( ParserConfigurationException pce ) {
+            log.error( pce );
+            return null;
+        } catch ( SAXException se ) {
+            log.error( se );
+        } catch ( FileNotFoundException fnfe ) {
+            log.error( fnfe );
+        } catch ( IOException io ) {
+
+        }
+
+        return atlasImageMapDoc;
+
     }
 
-    public boolean getCaching() {
-        return ( this.useFileCache );
+    public boolean getAtlasImageMap( Integer imageseriesid, OutputStream out ) throws MalformedURLException,
+            IOException {
+
+        String args[] = { imageseriesid.toString() };
+        String getImageMapUrl = buildUrlString( GET_ATLAS_IMAGE_MAP_URL, args );
+
+        return ( doPageDownload( getImageMapUrl, out ) );
     }
 
-    public void setCaching( boolean v ) {
-        this.useFileCache = v;
+    public boolean getAtlasInfo( String plane, OutputStream out ) throws MalformedURLException, IOException {
+
+        String args[] = { plane };
+        String getAtlasInfoUrl = buildUrlString( GET_ATLAS_INFO_URL, args );
+
+        return ( doPageDownload( getAtlasInfoUrl, out ) );
     }
 
     public String getCacheDir() {
         return ( this.cacheDir );
     }
 
-    public void setCacheDir( String s ) {
-        this.cacheDir = s;
-    }
-
-    public PrintStream getInfoOut() {
-        return ( this.infoOut );
-    }
-
-    public void setInfoOut( PrintStream out ) {
-        this.infoOut = out;
+    public boolean getCaching() {
+        return ( this.useFileCache );
     }
 
     public PrintStream getErrOut() {
         return ( this.errOut );
     }
 
-    public void setErrOut( PrintStream out ) {
-        this.errOut = out;
+    public boolean getExpressionInfo( Integer imageseriesId, OutputStream out ) throws MalformedURLException,
+            IOException {
+
+        String args[] = { imageseriesId.toString() };
+        String getExpressionInfoUrl = buildUrlString( GET_EXPRESSION_INFO_URL, args );
+
+        return ( doPageDownload( getExpressionInfoUrl, out ) );
     }
 
-    private DataInputStream getCachedFile( String cachedName ) throws FileNotFoundException {
-        DataInputStream fs = new DataInputStream( new FileInputStream( cachedName ) );
-        return ( fs );
-    }
+    public boolean getExpressionVolume( Integer imageseriesId, OutputStream out ) throws MalformedURLException,
+            IOException {
 
-    private File getFile( String fileName ) {
+        String args[] = { imageseriesId.toString() };
+        String getVolumeUrl = buildUrlString( GET_EXPRESSION_VOLUME_URL, args );
 
-        File outputFile = new File( this.cacheDir + "aba_" + fileName + ".xml" );
-
-        if ( outputFile.exists() ) {
-            outputFile.delete();
-
-            // wait for file to be deleted before proceeding
-            int i = 5;
-            while ( ( i > 0 ) && ( outputFile.exists() ) ) {
-                try {
-                    Thread.sleep( 1000 );
-                } catch ( InterruptedException ie ) {
-                    log.error( ie );
-                }
-                i--;
-            }
-
-        }
-        return outputFile;
-
-    }
-
-    private void initDefaults() {
-        this.verbose = false;
-        this.useFileCache = false;
-        this.cacheDir = ConfigUtils.getString( "gemma.appdata.home" ) + ABA_CACHE;
-        File abaCacheDir = new File( this.cacheDir );
-        if ( !( abaCacheDir.exists() && abaCacheDir.canRead() ) ) {
-            log.warn( "Attempting to create aba cache directory in '" + this.cacheDir + "'" );
-            abaCacheDir.mkdirs();
-        }
-
-        this.infoOut = System.out;
-        this.errOut = System.err;
-    }
-
-    protected boolean getGene( String gene, OutputStream out ) throws MalformedURLException, IOException {
-
-        String args[] = { gene };
-        String getGeneUrl = buildUrlString( GET_GENE_URL, args );
-
-        return ( doPageDownload( getGeneUrl, out ) );
-    }
-
-    /**
-     * The allen brain atlas website 1st letter of gene symbol is capatilized, rest are not (webservice is case
-     * sensitive)
-     * 
-     * @param geneName
-     * @return
-     */
-    private String correctCase( String geneName ) {
-        return StringUtils.capitalize( StringUtils.lowerCase( geneName ) );
+        return ( doPageDownload( getVolumeUrl, out ) );
     }
 
     /**
@@ -374,78 +352,14 @@ public class AllenBrainAtlasService {
         return HTML_GENE_DETAILS_URL.replaceFirst( "@", this.correctCase( gene ) );
     }
 
-    /**
-     * @param gene
-     * @return
-     * @throws IOException
-     */
-    public Collection<ImageSeries> getRepresentativeSaggitalImages( String gene ) throws IOException {
+    public boolean getImageROI( String imagePath, Integer zoom, Integer top, Integer left, Integer width,
+            Integer height, Integer mimeType, OutputStream out ) throws MalformedURLException, IOException {
 
-        AbaGene grin1 = this.getGene( gene );
-        if ( grin1 == null ) return null;
+        String args[] = { mimeType.toString(), zoom.toString(), top.toString(), left.toString(), width.toString(),
+                height.toString(), imagePath };
+        String getImageUrl = buildUrlString( GET_IMAGE_ROI_URL, args );
 
-        Collection<ImageSeries> representativeSaggitalImages = new HashSet<ImageSeries>();
-
-        for ( ImageSeries is : grin1.getImageSeries() ) {
-            if ( is.getPlane().equalsIgnoreCase( "sagittal" ) ) {
-
-                Collection<Image> images = this.getImageseries( is.getImageSeriesId() );
-                Collection<Image> representativeImages = new HashSet<Image>();
-
-                for ( Image img : images ) {
-                    if ( ( 2600 > img.getPosition() ) && ( img.getPosition() > 2200 ) ) {
-                        representativeImages.add( img );
-                    }
-                }
-
-                if ( representativeImages.isEmpty() ) continue;
-
-                // Only add if there is something to add
-                is.setImages( representativeImages );
-                representativeSaggitalImages.add( is );
-            }
-        }
-        // grin1.setImageSeries( representativeSaggitalImages );
-
-        return representativeSaggitalImages;
-
-    }
-
-    protected boolean getImageseries( Integer imageseriesId, OutputStream out ) throws MalformedURLException,
-            IOException {
-
-        String args[] = { imageseriesId.toString() };
-        String getImageseriesUrl = buildUrlString( GET_IMAGESERIES_URL, args );
-
-        return ( doPageDownload( getImageseriesUrl, out ) );
-    }
-
-    /*
-     * Convieniece method for striping out the images from the image series. Also fully qaulifies URLs for link to allen
-     * brain atlas web site @param imageSeries @return
-     */
-
-    public Collection<Image> getImagesFromImageSeries( Collection<ImageSeries> imageSeries ) {
-
-        Collection<Image> representativeImages = new HashSet<Image>();
-
-        if ( imageSeries != null ) {
-            for ( ImageSeries is : imageSeries ) {
-                if ( is.getImages() == null ) continue;
-
-                for ( Image img : is.getImages() ) {
-                    // Convert the urls into fully qualified ones for ez displaying
-                    String args[] = { "2", "2", img.getDownloadExpressionPath() };
-                    img.setDownloadExpressionPath( this.buildUrlString( AllenBrainAtlasService.GET_IMAGE_URL, args ) );
-                    img.setExpressionThumbnailUrl( AllenBrainAtlasService.API_BASE_URL
-                            + img.getExpressionThumbnailUrl() );
-                    representativeImages.add( img );
-                }
-            }
-        }
-
-        return representativeImages;
-
+        return ( doPageDownload( getImageUrl, out ) );
     }
 
     public Collection<Image> getImageseries( Integer imageseriesId ) {
@@ -548,79 +462,121 @@ public class AllenBrainAtlasService {
 
     }
 
-    protected boolean getNeuroblast( Integer imageseriesId, String structure, String plane, OutputStream out )
+    public Collection<Image> getImagesFromImageSeries( Collection<ImageSeries> imageSeries ) {
+
+        Collection<Image> representativeImages = new HashSet<Image>();
+
+        if ( imageSeries != null ) {
+            for ( ImageSeries is : imageSeries ) {
+                if ( is.getImages() == null ) continue;
+
+                for ( Image img : is.getImages() ) {
+                    // Convert the urls into fully qualified ones for ez displaying
+                    String args[] = { "2", "2", img.getDownloadExpressionPath() };
+                    img.setDownloadExpressionPath( this.buildUrlString( AllenBrainAtlasService.GET_IMAGE_URL, args ) );
+                    img.setExpressionThumbnailUrl( AllenBrainAtlasService.API_BASE_URL
+                            + img.getExpressionThumbnailUrl() );
+                    representativeImages.add( img );
+                }
+            }
+        }
+
+        return representativeImages;
+
+    }
+
+    public PrintStream getInfoOut() {
+        return ( this.infoOut );
+    }
+
+    /**
+     * @param gene
+     * @return
+     * @throws IOException
+     */
+    public Collection<ImageSeries> getRepresentativeSaggitalImages( String gene ) throws IOException {
+
+        AbaGene grin1 = this.getGene( gene );
+        if ( grin1 == null ) return null;
+
+        Collection<ImageSeries> representativeSaggitalImages = new HashSet<ImageSeries>();
+
+        for ( ImageSeries is : grin1.getImageSeries() ) {
+            if ( is.getPlane().equalsIgnoreCase( "sagittal" ) ) {
+
+                Collection<Image> images = this.getImageseries( is.getImageSeriesId() );
+                Collection<Image> representativeImages = new HashSet<Image>();
+
+                for ( Image img : images ) {
+                    if ( ( 2600 > img.getPosition() ) && ( img.getPosition() > 2200 ) ) {
+                        representativeImages.add( img );
+                    }
+                }
+
+                if ( representativeImages.isEmpty() ) continue;
+
+                // Only add if there is something to add
+                is.setImages( representativeImages );
+                representativeSaggitalImages.add( is );
+            }
+        }
+        // grin1.setImageSeries( representativeSaggitalImages );
+
+        return representativeSaggitalImages;
+
+    }
+
+    public boolean getVerbose() {
+        return ( this.verbose );
+    }
+
+    public boolean searchGenes( String searchTerm, OutputStream out ) throws MalformedURLException, IOException {
+
+        String args[] = { searchTerm };
+        String searchGenesUrl = buildUrlString( SEARCH_GENE_URL, args );
+
+        return ( doPageDownload( searchGenesUrl, out ) );
+    }
+
+    public void setCacheDir( String s ) {
+        this.cacheDir = s;
+    }
+
+    /*
+     * Convieniece method for striping out the images from the image series. Also fully qaulifies URLs for link to allen
+     * brain atlas web site @param imageSeries @return
+     */
+
+    public void setCaching( boolean v ) {
+        this.useFileCache = v;
+    }
+
+    public void setErrOut( PrintStream out ) {
+        this.errOut = out;
+    }
+
+    public void setInfoOut( PrintStream out ) {
+        this.infoOut = out;
+    }
+
+    public void setVerbose( boolean v ) {
+        this.verbose = v;
+    }
+
+    protected boolean getGene( String gene, OutputStream out ) throws MalformedURLException, IOException {
+
+        String args[] = { gene };
+        String getGeneUrl = buildUrlString( GET_GENE_URL, args );
+
+        return ( doPageDownload( getGeneUrl, out ) );
+    }
+
+    protected boolean getImage( String imagePath, Integer zoom, Integer mimeType, OutputStream out )
             throws MalformedURLException, IOException {
+        String args[] = { mimeType.toString(), zoom.toString(), imagePath };
+        String getImageUrl = buildUrlString( GET_IMAGE_URL, args );
 
-        String getNeuroblastUrl;
-
-        if ( plane == null ) {
-            String args[] = { structure, imageseriesId.toString() };
-            getNeuroblastUrl = buildUrlString( GET_NEUROBLAST_URL, args );
-        } else {
-            String args[] = { structure, imageseriesId.toString(), plane };
-            getNeuroblastUrl = buildUrlString( GET_NEUROBLAST_PLANE_URL, args );
-        }
-
-        return ( doPageDownload( getNeuroblastUrl, out ) );
-    }
-
-    public boolean getExpressionVolume( Integer imageseriesId, OutputStream out ) throws MalformedURLException,
-            IOException {
-
-        String args[] = { imageseriesId.toString() };
-        String getVolumeUrl = buildUrlString( GET_EXPRESSION_VOLUME_URL, args );
-
-        return ( doPageDownload( getVolumeUrl, out ) );
-    }
-
-    public boolean getExpressionInfo( Integer imageseriesId, OutputStream out ) throws MalformedURLException,
-            IOException {
-
-        String args[] = { imageseriesId.toString() };
-        String getExpressionInfoUrl = buildUrlString( GET_EXPRESSION_INFO_URL, args );
-
-        return ( doPageDownload( getExpressionInfoUrl, out ) );
-    }
-
-    public boolean getAtlasInfo( String plane, OutputStream out ) throws MalformedURLException, IOException {
-
-        String args[] = { plane };
-        String getAtlasInfoUrl = buildUrlString( GET_ATLAS_INFO_URL, args );
-
-        return ( doPageDownload( getAtlasInfoUrl, out ) );
-    }
-
-    public boolean getAtlasImageMap( Integer imageseriesid, OutputStream out ) throws MalformedURLException,
-            IOException {
-
-        String args[] = { imageseriesid.toString() };
-        String getImageMapUrl = buildUrlString( GET_ATLAS_IMAGE_MAP_URL, args );
-
-        return ( doPageDownload( getImageMapUrl, out ) );
-    }
-
-    public Document getAtlasImageMap( Integer imageseriesId ) {
-        File outputFile = getFile( "atlasImageMap" + imageseriesId.toString() );
-        Document atlasImageMapDoc = null;
-
-        try {
-            FileOutputStream out = new FileOutputStream( outputFile );
-            this.getAtlasImageMap( imageseriesId, out );
-
-            atlasImageMapDoc = XMLUtils.openAndParse( new FileInputStream( outputFile ) );
-        } catch ( ParserConfigurationException pce ) {
-            log.error( pce );
-            return null;
-        } catch ( SAXException se ) {
-            log.error( se );
-        } catch ( FileNotFoundException fnfe ) {
-            log.error( fnfe );
-        } catch ( IOException io ) {
-
-        }
-
-        return atlasImageMapDoc;
-
+        return ( doPageDownload( getImageUrl, out ) );
     }
 
     protected boolean getImageInfo( Integer imageId, OutputStream out ) throws MalformedURLException, IOException {
@@ -639,38 +595,40 @@ public class AllenBrainAtlasService {
         return ( doPageDownload( getImageInfoUrl, out ) );
     }
 
-    protected boolean getImage( String imagePath, Integer zoom, Integer mimeType, OutputStream out )
+    protected boolean getImageseries( Integer imageseriesId, OutputStream out ) throws MalformedURLException,
+            IOException {
+
+        String args[] = { imageseriesId.toString() };
+        String getImageseriesUrl = buildUrlString( GET_IMAGESERIES_URL, args );
+
+        return ( doPageDownload( getImageseriesUrl, out ) );
+    }
+
+    protected boolean getNeuroblast( Integer imageseriesId, String structure, String plane, OutputStream out )
             throws MalformedURLException, IOException {
-        String args[] = { mimeType.toString(), zoom.toString(), imagePath };
-        String getImageUrl = buildUrlString( GET_IMAGE_URL, args );
 
-        return ( doPageDownload( getImageUrl, out ) );
+        String getNeuroblastUrl;
+
+        if ( plane == null ) {
+            String args[] = { structure, imageseriesId.toString() };
+            getNeuroblastUrl = buildUrlString( GET_NEUROBLAST_URL, args );
+        } else {
+            String args[] = { structure, imageseriesId.toString(), plane };
+            getNeuroblastUrl = buildUrlString( GET_NEUROBLAST_PLANE_URL, args );
+        }
+
+        return ( doPageDownload( getNeuroblastUrl, out ) );
     }
 
-    public boolean getImageROI( String imagePath, Integer zoom, Integer top, Integer left, Integer width,
-            Integer height, Integer mimeType, OutputStream out ) throws MalformedURLException, IOException {
-
-        String args[] = { mimeType.toString(), zoom.toString(), top.toString(), left.toString(), width.toString(),
-                height.toString(), imagePath };
-        String getImageUrl = buildUrlString( GET_IMAGE_ROI_URL, args );
-
-        return ( doPageDownload( getImageUrl, out ) );
-    }
-
-    public boolean searchGenes( String searchTerm, OutputStream out ) throws MalformedURLException, IOException {
-
-        String args[] = { searchTerm };
-        String searchGenesUrl = buildUrlString( SEARCH_GENE_URL, args );
-
-        return ( doPageDownload( searchGenesUrl, out ) );
-    }
-
-    public String buildUrlString( String urlPattern, String args[] ) {
-
-        for ( int i = 0; i < args.length; i++ )
-            urlPattern = urlPattern.replaceFirst( "@", args[i] );
-
-        return ( API_BASE_URL + urlPattern );
+    /**
+     * The allen brain atlas website 1st letter of gene symbol is capatilized, rest are not (webservice is case
+     * sensitive)
+     * 
+     * @param geneName
+     * @return
+     */
+    private String correctCase( String geneName ) {
+        return StringUtils.capitalize( StringUtils.lowerCase( geneName ) );
     }
 
     private boolean doPageDownload( String urlString, OutputStream out ) throws MalformedURLException, IOException {
@@ -684,6 +642,34 @@ public class AllenBrainAtlasService {
         transferData( in, out );
 
         return ( true );
+    }
+
+    private DataInputStream getCachedFile( String cachedName ) throws FileNotFoundException {
+        DataInputStream fs = new DataInputStream( new FileInputStream( cachedName ) );
+        return ( fs );
+    }
+
+    private File getFile( String fileName ) {
+
+        File outputFile = new File( this.cacheDir + "aba_" + fileName + ".xml" );
+
+        if ( outputFile.exists() ) {
+            outputFile.delete();
+
+            // wait for file to be deleted before proceeding
+            int i = 5;
+            while ( ( i > 0 ) && ( outputFile.exists() ) ) {
+                try {
+                    Thread.sleep( 1000 );
+                } catch ( InterruptedException ie ) {
+                    log.error( ie );
+                }
+                i--;
+            }
+
+        }
+        return outputFile;
+
     }
 
     private DataInputStream getInput( URL url ) throws IOException {
@@ -719,16 +705,18 @@ public class AllenBrainAtlasService {
         return ( in );
     }
 
-    private void transferData( DataInputStream in, OutputStream out ) throws IOException {
-        // This is whacked. There must be a better way than throwing an exception.
-        boolean EOF = false;
-        while ( !EOF ) {
-            try {
-                out.write( in.readUnsignedByte() );
-            } catch ( EOFException eof ) {
-                EOF = true;
-            }
+    private void initDefaults() {
+        this.verbose = false;
+        this.useFileCache = false;
+        this.cacheDir = ConfigUtils.getString( "gemma.appdata.home" ) + ABA_CACHE;
+        File abaCacheDir = new File( this.cacheDir );
+        if ( !( abaCacheDir.exists() && abaCacheDir.canRead() ) ) {
+            log.warn( "Attempting to create aba cache directory in '" + this.cacheDir + "'" );
+            abaCacheDir.mkdirs();
         }
+
+        this.infoOut = System.out;
+        this.errOut = System.err;
     }
 
     private void showHeader( URLConnection url ) {
@@ -739,6 +727,18 @@ public class AllenBrainAtlasService {
         this.infoOut.println( "Content-Length   : " + url.getContentLength() );
         if ( url.getContentEncoding() != null )
             this.infoOut.println( "Content-Encoding : " + url.getContentEncoding() );
+    }
+
+    private void transferData( DataInputStream in, OutputStream out ) throws IOException {
+        // This is whacked. There must be a better way than throwing an exception.
+        boolean EOF = false;
+        while ( !EOF ) {
+            try {
+                out.write( in.readUnsignedByte() );
+            } catch ( EOFException eof ) {
+                EOF = true;
+            }
+        }
     }
 
 }

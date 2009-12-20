@@ -29,6 +29,11 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.junit.Test;
 
+import ubic.basecode.ontology.OntologyLoader;
+import ubic.basecode.ontology.model.OntologyTerm;
+import ubic.basecode.ontology.search.OntologyIndexer;
+import ubic.basecode.ontology.search.OntologySearch;
+
 import com.hp.hpl.jena.ontology.OntModel;
 import com.hp.hpl.jena.ontology.OntModelSpec;
 import com.hp.hpl.jena.query.larq.IndexLARQ;

@@ -23,8 +23,12 @@ import static org.junit.Assert.assertEquals;
 import java.util.Collection;
 
 import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 
+import ubic.basecode.ontology.model.OntologyTerm;
+import ubic.basecode.ontology.providers.AbstractOntologyService;
 import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.ontology.OntologyService;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
@@ -33,6 +37,9 @@ import ubic.gemma.testing.BaseSpringContextTest;
  */
 public class OntologyServiceTest extends BaseSpringContextTest {
 
+    @Autowired
+    OntologyService os;
+
     /**
      * This test can fail if the db isn't initialized public void testListAvailableOntologies() throws Exception {
      * Collection<Ontology> name = OntologyService.listAvailableOntologies(); assertTrue( name.size() > 0 ); }
@@ -40,7 +47,6 @@ public class OntologyServiceTest extends BaseSpringContextTest {
     @Test
     public final void testFindExactMatch() throws Exception {
         loadOntology( "mgedOntologyService" );
-        OntologyService os = ( OntologyService ) this.getBean( "ontologyService" );
         Collection<Characteristic> name = os.findExactTerm( "male",
                 "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#Sex" );
         for ( Characteristic characteristic : name ) {
@@ -57,7 +63,6 @@ public class OntologyServiceTest extends BaseSpringContextTest {
     @Test
     public final void testFindTerm() throws Exception {
         loadOntology( "birnLexOntologyService" );
-        OntologyService os = ( OntologyService ) this.getBean( "ontologyService" );
         Collection<OntologyTerm> terms = os.findTerms( "liver" );
         // assertTrue( terms.size() > 0 );
         //

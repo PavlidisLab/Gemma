@@ -32,8 +32,8 @@ import org.directwebremoting.extend.OutboundContext;
 import org.directwebremoting.extend.OutboundVariable;
 import org.directwebremoting.extend.Property;
 
-import ubic.gemma.ontology.OntologyClassRestriction;
-import ubic.gemma.ontology.OntologyTerm;
+import ubic.basecode.ontology.model.OntologyClassRestriction;
+import ubic.basecode.ontology.model.OntologyTerm;
 
 /**
  * @author kelsey

@@ -200,7 +200,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractSpring
 
         if ( hasOption( 't' ) ) {
             String taxonName = getOptionValue( 't' );
-            taxon = taxonService.findByCommonName( taxonName );
+            this.taxon = taxonService.findByCommonName( taxonName );
             if ( taxon == null ) {
                 log.error( "ERROR: Cannot find taxon " + taxonName );
             }
@@ -228,7 +228,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractSpring
             }
         } else if ( hasOption( 'q' ) ) {
             log.info( "Processing all experiments that match query " + getOptionValue( 'q' ) );
-            this.expressionExperiments = this.findExpressionExperimentsByQuery( getOptionValue( 'q' ), taxon );
+            this.expressionExperiments = this.findExpressionExperimentsByQuery( getOptionValue( 'q' ) );
         } else if ( taxon != null ) {
             log.info( "Processing all experiments for " + taxon.getCommonName() );
             this.expressionExperiments = new HashSet( eeService.findByTaxon( taxon ) );
@@ -358,7 +358,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractSpring
      * 
      * @param query
      */
-    private Set<BioAssaySet> findExpressionExperimentsByQuery( String query, Taxon taxon ) {
+    private Set<BioAssaySet> findExpressionExperimentsByQuery( String query ) {
         Set<BioAssaySet> ees = new HashSet<BioAssaySet>();
         Collection<SearchResult> eeSearchResults = searchService.search(
                 SearchSettings.ExpressionExperimentSearch( query ) ).get( ExpressionExperiment.class );

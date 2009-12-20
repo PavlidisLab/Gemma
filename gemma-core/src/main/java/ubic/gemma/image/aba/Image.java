@@ -19,10 +19,9 @@
 package ubic.gemma.image.aba;
 
 /**
- * allen brain Atlas Image class.  represents 1 image in the Allen brain atlas library.
- *  
+ * allen brain Atlas Image class. represents 1 image in the Allen brain atlas library.
+ * 
  * @version $Id$ @author kelsey
- *
  */
 public class Image {
 
@@ -37,19 +36,15 @@ public class Image {
     String downloadExpressionPath;
     Integer height;
     Integer width;
-    
-    
-   
-    
+
     public Image() {
         super();
     }
 
-
     public Image( String displayName, Integer id, Integer position, Integer referenceAtlasIndex, String thumbnailUrl,
             String zoomifiedNisslUrl, String expressionThumbnailUrl, String downloadImagePath,
             String downloadExpressionPath, Integer height, Integer width ) {
-        
+
         this();
         this.displayName = displayName;
         this.id = id;
@@ -63,81 +58,93 @@ public class Image {
         this.height = height;
         this.width = width;
     }
-    
-    
+
     public String getDisplayName() {
         return displayName;
     }
-    public void setDisplayName( String displayName ) {
-        this.displayName = displayName;
-    }
-    public Integer getId() {
-        return id;
-    }
-    public void setId( Integer id ) {
-        this.id = id;
-    }
-    public Integer getPosition() {
-        return position;
-    }
-    public void setPosition( Integer position ) {
-        this.position = position;
-    }
-    public Integer getReferenceAtlasIndex() {
-        return referenceAtlasIndex;
-    }
-    public void setReferenceAtlasIndex( Integer referenceAtlasIndex ) {
-        this.referenceAtlasIndex = referenceAtlasIndex;
-    }
-    public String getThumbnailUrl() {
-        return thumbnailUrl;
-    }
-    public void setThumbnailUrl( String thumbnailUrl ) {
-        this.thumbnailUrl = thumbnailUrl;
-    }
-    public String getZoomifiedNisslUrl() {
-        return zoomifiedNisslUrl;
-    }
-    public void setZoomifiedNisslUrl( String zoomifiedNisslUrl ) {
-        this.zoomifiedNisslUrl = zoomifiedNisslUrl;
-    }
-    public String getExpressionThumbnailUrl() {
-        return expressionThumbnailUrl;
-    }
-    public void setExpressionThumbnailUrl( String expressionThumbnailUrl ) {
-        this.expressionThumbnailUrl = expressionThumbnailUrl;
-    }
-    public String getDownloadImagePath() {
-        return downloadImagePath;
-    }
-    public void setDownloadImagePath( String downloadImagePath ) {
-        this.downloadImagePath = downloadImagePath;
-    }
+
     public String getDownloadExpressionPath() {
         return downloadExpressionPath;
     }
-    public void setDownloadExpressionPath( String downloadExpressionPath ) {
-        this.downloadExpressionPath = downloadExpressionPath;
+
+    public String getDownloadImagePath() {
+        return downloadImagePath;
     }
 
+    public String getExpressionThumbnailUrl() {
+        return expressionThumbnailUrl;
+    }
 
     public Integer getHeight() {
         return height;
     }
 
-
-    public void setHeight( Integer height ) {
-        this.height = height;
+    public Integer getId() {
+        return id;
     }
 
+    public Integer getPosition() {
+        return position;
+    }
+
+    public Integer getReferenceAtlasIndex() {
+        return referenceAtlasIndex;
+    }
+
+    public String getThumbnailUrl() {
+        return thumbnailUrl;
+    }
 
     public Integer getWidth() {
         return width;
     }
 
+    public String getZoomifiedNisslUrl() {
+        return zoomifiedNisslUrl;
+    }
+
+    public void setDisplayName( String displayName ) {
+        this.displayName = displayName;
+    }
+
+    public void setDownloadExpressionPath( String downloadExpressionPath ) {
+        this.downloadExpressionPath = downloadExpressionPath;
+    }
+
+    public void setDownloadImagePath( String downloadImagePath ) {
+        this.downloadImagePath = downloadImagePath;
+    }
+
+    public void setExpressionThumbnailUrl( String expressionThumbnailUrl ) {
+        this.expressionThumbnailUrl = expressionThumbnailUrl;
+    }
+
+    public void setHeight( Integer height ) {
+        this.height = height;
+    }
+
+    public void setId( Integer id ) {
+        this.id = id;
+    }
+
+    public void setPosition( Integer position ) {
+        this.position = position;
+    }
+
+    public void setReferenceAtlasIndex( Integer referenceAtlasIndex ) {
+        this.referenceAtlasIndex = referenceAtlasIndex;
+    }
+
+    public void setThumbnailUrl( String thumbnailUrl ) {
+        this.thumbnailUrl = thumbnailUrl;
+    }
 
     public void setWidth( Integer width ) {
         this.width = width;
     }
-    
+
+    public void setZoomifiedNisslUrl( String zoomifiedNisslUrl ) {
+        this.zoomifiedNisslUrl = zoomifiedNisslUrl;
+    }
+
 }

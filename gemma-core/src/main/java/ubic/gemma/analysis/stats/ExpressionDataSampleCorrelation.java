@@ -203,7 +203,7 @@ public class ExpressionDataSampleCorrelation {
         OutputStream o;
 
         o = new FileOutputStream( f );
-        MatrixWriter writer = new ubic.basecode.io.writer.MatrixWriter( o );
+        MatrixWriter<BioAssay, BioAssay> writer = new MatrixWriter<BioAssay, BioAssay>( o );
         writer.writeMatrix( matrix, true );
         o.flush();
         o.close();
@@ -218,9 +218,9 @@ public class ExpressionDataSampleCorrelation {
      * @param addlabels
      * @throws IOException
      */
-    private static void writeImage( ColorMatrix matrix, File location, String fileName, int size, boolean addlabels )
-            throws IOException {
-        MatrixDisplay writer = new MatrixDisplay( matrix );
+    private static void writeImage( ColorMatrix<BioAssay, BioAssay> matrix, File location, String fileName, int size,
+            boolean addlabels ) throws IOException {
+        MatrixDisplay<BioAssay, BioAssay> writer = new MatrixDisplay<BioAssay, BioAssay>( matrix );
         writer.setCellSize( new Dimension( size, size ) );
         File f = new File( location, fileName );
         writer.saveImage( matrix, f.getAbsolutePath(), addlabels, false );

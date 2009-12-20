@@ -20,7 +20,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.ontology.MgedOntologyService;
+import ubic.gemma.ontology.providers.MgedOntologyService;
 
 public class SimpleExpressionDataLoaderServiceTestB extends AbstractGeoServiceTest {
 

@@ -23,7 +23,7 @@ import java.io.IOException;
 
 import org.apache.commons.cli.OptionBuilder;
 
-import ubic.gemma.ontology.OntologyLoader;
+import ubic.basecode.ontology.OntologyLoader;
 import ubic.gemma.util.AbstractCLI;
 
 /**

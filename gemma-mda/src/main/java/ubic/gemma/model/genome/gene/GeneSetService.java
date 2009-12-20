@@ -16,29 +16,30 @@
  * limitations under the License.
  *
  */
-
 package ubic.gemma.model.genome.gene;
 
 import java.util.Collection;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.annotation.Secured;
-import org.springframework.stereotype.Service;
+
+import ubic.gemma.model.genome.Gene;
 
 /**
  * Service for managing gene sets
  * 
- * @author kelsey
- * @version $Id: GeneSetService.java,
+ * @author kelsey,paul
+ * @version $Id$
  */
-@Service
-public class GeneSetService {
+public interface GeneSetService {
 
-    @Autowired
-    GeneSetDao geneSetDao = null;
-
-    @Autowired
-    GeneSetMemberDao geneSetMember = null;
+    /**
+     * Creates all the the given GeneSets in the given collection
+     * 
+     * @param sets
+     * @return
+     */
+    @Secured( { "GROUP_USER" })
+    public Collection<GeneSet> create( Collection<GeneSet> sets );
 
     /**
      * Creates the given geneset in the DB
@@ -47,80 +48,16 @@ public class GeneSetService {
      * @return
      */
     @Secured( { "GROUP_USER" })
-    public GeneSet create( GeneSet geneset ) {
-
-        return this.geneSetDao.create( geneset );
-    }
+    public GeneSet create( GeneSet geneset );
 
     /**
-     * Creates all the the given GeneSets in the given collection
+     * Return all sets that contain the given gene
      * 
-     * @param sets
+     * @param gene
      * @return
      */
-    @SuppressWarnings("unchecked")
-    @Secured( { "GROUP_USER" })
-    public Collection<GeneSet> create( Collection<GeneSet> sets ) {
-
-        return ( Collection<GeneSet> ) this.geneSetDao.create( sets );
-
-    }
-
-    /**
-     * IF the user has permisson to remove the Set, set will be removed.
-     * 
-     * @param geneset
-     */
-    @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    public void remove( GeneSet geneset ) {
-
-        this.geneSetDao.remove( geneset );
-    }
-
-    /**
-     * Given a collection of genesets remove them all from the db
-     * 
-     * @param sets
-     */
-    @Secured( { "GROUP_USER", "ACL_SECURABLE_COLLECTION_EDIT" })
-    public void remove( Collection<GeneSet> sets ) {
-
-        this.geneSetDao.remove( sets );
-    }
-
-    /**
-     * Update the given geneset with the new information in the DB
-     * 
-     * @param geneset
-     */
-    @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    public void update( GeneSet geneset ) {
-        this.geneSetDao.update( geneset );
-
-    }
-
-    /**
-     * Update all the genesets given in the Collection
-     * 
-     * @param sets
-     */
-    @Secured( { "GROUP_USER", "ACL_SECURABLE_COLLECTION_EDIT" })
-    public void update( Collection<GeneSet> sets ) {
-        this.geneSetDao.update( sets );
-
-    }
-
-    /**
-     * Loads the geneset with the given id
-     * 
-     * @param id
-     * @return geneSet witht he given ID
-     */
-    @Secured( { "GROUP_USER", "AFTER_ACL_READ" })
-    public GeneSet load( Long id ) {
-
-        return this.geneSetDao.load( id );
-    }
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    public Collection<GeneSet> findByGene( Gene gene );
 
     /**
      * Load all the genesets with the given IDs
@@ -128,12 +65,17 @@ public class GeneSetService {
      * @param ids
      * @return
      */
-    @SuppressWarnings("unchecked")
-    @Secured( { "GROUP_USER", "AFTER_ACL_COLLECTION_READ" })
-    public Collection<GeneSet> load( Collection<Long> ids ) {
-        return ( Collection<GeneSet> ) this.geneSetDao.load( ids );
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    public Collection<GeneSet> load( Collection<Long> ids );
 
-    }
+    /**
+     * Loads the geneset with the given id
+     * 
+     * @param id
+     * @return geneSet witht he given ID
+     */
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    public GeneSet load( Long id );
 
     /**
      * Load all the GeneSets that the user are the permissions to see.
@@ -141,18 +83,39 @@ public class GeneSetService {
      * @param id
      * @return
      */
-    @SuppressWarnings("unchecked")
-    @Secured( { "GROUP_USER", "AFTER_ACL_COLLECTION_READ" })
-    public Collection<GeneSet> loadAll() {
+    @Secured( { "GROUP_ADMIN", "AFTER_ACL_COLLECTION_READ" })
+    public Collection<GeneSet> loadAll();
 
-        return ( Collection<GeneSet> ) this.geneSetDao.loadAll();
-    }
+    /**
+     * Given a collection of genesets remove them all from the db
+     * 
+     * @param sets
+     */
+    @Secured( { "GROUP_USER", "ACL_SECURABLE_COLLECTION_EDIT" })
+    public void remove( Collection<GeneSet> sets );
 
-    public void setGeneSetDao( GeneSetDao geneSetDao ) {
-        this.geneSetDao = geneSetDao;
-    }
+    /**
+     * IF the user has permisson to remove the Set, set will be removed.
+     * 
+     * @param geneset
+     */
+    @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    public void remove( GeneSet geneset );
 
-    public void setGeneSetMember( GeneSetMemberDao geneSetMember ) {
-        this.geneSetMember = geneSetMember;
-    }
+    /**
+     * Update all the genesets given in the Collection
+     * 
+     * @param sets
+     */
+    @Secured( { "GROUP_USER", "ACL_SECURABLE_COLLECTION_EDIT" })
+    public void update( Collection<GeneSet> sets );
+
+    /**
+     * Update the given geneset with the new information in the DB
+     * 
+     * @param geneset
+     */
+    @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    public void update( GeneSet geneset );
+
 }

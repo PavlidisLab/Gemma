@@ -88,7 +88,7 @@ import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.biosequence.PolymerType;
 import ubic.gemma.model.genome.biosequence.SequenceType;
-import ubic.gemma.ontology.MgedOntologyService;
+import ubic.gemma.ontology.providers.MgedOntologyService;
 
 /**
  * Convert GEO domain objects into Gemma objects. Usually we trigger this by passing in GeoSeries objects.

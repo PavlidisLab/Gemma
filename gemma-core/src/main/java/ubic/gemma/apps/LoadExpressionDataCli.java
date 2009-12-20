@@ -140,11 +140,11 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
 
         addOption( aggressiveQtRemoval );
 
-        Option fileFormat = OptionBuilder.hasArg().withArgName( "File Format" ).withDescription(
+        Option fileFormatOpt = OptionBuilder.hasArg().withArgName( "File Format" ).withDescription(
                 "Either AE or GEO; defaults to GEO (using batch file does not work with Array Express)" ).withLongOpt(
                 "format" ).create( 'm' );
 
-        addOption( fileFormat );
+        addOption( fileFormatOpt );
 
         Option arrayDesign = OptionBuilder.hasArg().withArgName( "array design name" ).withDescription(
                 "Specify the name or short name of the platform the experiment uses (AE only)" ).withLongOpt( "array" )

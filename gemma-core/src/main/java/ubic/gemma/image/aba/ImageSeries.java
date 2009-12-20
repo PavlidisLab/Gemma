@@ -22,56 +22,51 @@ import java.util.Collection;
 import java.util.HashSet;
 
 /**
- *  
- *  A class that represents the ImageSeries information gotten from the alan brain atals
- *  
- *  @version $Id$ @author kelsey
+ * A class that represents the ImageSeries information gotten from the alan brain atals
  * 
+ * @version $Id$ @author kelsey
  */
-
 
 public class ImageSeries {
 
     Integer imageSeriesId;
     String plane;
     Collection<Image> images;
-    
-    public ImageSeries(Integer imageSeriesId, String plane){
+
+    public ImageSeries( Integer imageSeriesId, String plane ) {
         this.imageSeriesId = imageSeriesId;
         this.plane = plane;
-    
-    }
-    
-    
-    public Integer getImageSeriesId() {
-        return imageSeriesId;
+
     }
 
-    public void setImageSeriesId( Integer imageSeriesId ) {
-        this.imageSeriesId = imageSeriesId;
+    public void addImage( Image image ) {
+
+        if ( this.images == null ) this.images = new HashSet<Image>();
+
+        this.images.add( image );
+    }
+
+    public Collection<Image> getImages() {
+        return images;
+    }
+
+    public Integer getImageSeriesId() {
+        return imageSeriesId;
     }
 
     public String getPlane() {
         return plane;
     }
 
+    public void setImages( Collection<Image> images ) {
+        this.images = images;
+    }
+
+    public void setImageSeriesId( Integer imageSeriesId ) {
+        this.imageSeriesId = imageSeriesId;
+    }
+
     public void setPlane( String plane ) {
         this.plane = plane;
     }
-    
-    public Collection<Image> getImages(){
-        return images;
-    }
-    
-   public void setImages(Collection<Image> images){
-       this.images = images;       
-   }
- 
-   public void addImage(Image image){
-       
-       if (this.images == null)
-           this.images = new HashSet<Image>();
-       
-       this.images.add(image);
-   }
 }

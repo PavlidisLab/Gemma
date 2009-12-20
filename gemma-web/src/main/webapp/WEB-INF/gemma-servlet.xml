@@ -1146,6 +1146,20 @@
 						</property>
 					</bean>
 				</entry>
+				<entry key="AnnotationController">
+					<bean class="org.directwebremoting.spring.CreatorConfig">
+						<property name="creator">
+							<bean class="org.directwebremoting.spring.BeanCreator">
+								<property name="bean" ref="annotationController" />
+							</bean>
+						</property>
+						<property name="includes">
+							<list>
+								<value>annotate</value>
+							</list>
+						</property>
+					</bean>
+				</entry>
 				<entry key="UserListController">
 					<bean class="org.directwebremoting.spring.CreatorConfig">
 						<property name="creator">
@@ -1384,7 +1398,7 @@
 						<property name="type" value="bean" />
 					</bean>
 				</entry>
-				<entry key="ubic.gemma.ontology.OntologyTermImpl">
+				<entry key="ubic.basecode.ontology.model.OntologyTermImpl">
 					<bean class="org.directwebremoting.spring.ConverterConfig">
 						<property name="type" value="ontologyTermConverter" />
 						<property name="includes">
@@ -1401,7 +1415,7 @@
 						</property>
 					</bean>
 				</entry>
-				<entry key="ubic.gemma.ontology.OntologyRestrictionImpl">
+				<entry key="ubic.basecode.ontology.model.OntologyRestrictionImpl">
 					<bean class="org.directwebremoting.spring.ConverterConfig">
 						<property name="type" value="ontologyTermConverter" />
 						<property name="includes">
@@ -1418,7 +1432,7 @@
 						</property>
 					</bean>
 				</entry>
-				<entry key="ubic.gemma.ontology.OntologyCardinalityRestrictionImpl">
+				<entry key="ubic.basecode.ontology.model.OntologyCardinalityRestrictionImpl">
 					<bean class="org.directwebremoting.spring.ConverterConfig">
 						<property name="type" value="ontologyTermConverter" />
 						<property name="includes">
@@ -1437,7 +1451,7 @@
 						</property>
 					</bean>
 				</entry>
-				<entry key="ubic.gemma.ontology.OntologyClassRestrictionImpl">
+				<entry key="ubic.basecode.ontology.model.OntologyClassRestrictionImpl">
 					<bean class="org.directwebremoting.spring.ConverterConfig">
 						<property name="type" value="ontologyTermConverter" />
 						<property name="includes">
@@ -1455,7 +1469,7 @@
 						</property>
 					</bean>
 				</entry>
-				<entry key="ubic.gemma.ontology.OntologyDatatypeRestrictionImpl">
+				<entry key="ubic.basecode.ontology.model.OntologyDatatypeRestrictionImpl">
 					<bean class="org.directwebremoting.spring.ConverterConfig">
 						<property name="type" value="ontologyTermConverter" />
 						<property name="includes">
@@ -1473,7 +1487,7 @@
 						</property>
 					</bean>
 				</entry>
-				<entry key="ubic.gemma.ontology.OntologyPropertyImpl">
+				<entry key="ubic.basecode.ontology.model.OntologyPropertyImpl">
 					<bean class="org.directwebremoting.spring.ConverterConfig">
 						<property name="type" value="ontologyTermConverter" />
 						<property name="includes">
@@ -1484,7 +1498,7 @@
 						</property>
 					</bean>
 				</entry>
-				<entry key="ubic.gemma.ontology.DatatypePropertyImpl">
+				<entry key="ubic.basecode.ontology.model.DatatypePropertyImpl">
 					<bean class="org.directwebremoting.spring.ConverterConfig">
 						<property name="type" value="bean" />
 						<property name="includes">
@@ -1496,7 +1510,7 @@
 						</property>
 					</bean>
 				</entry>
-				<entry key="ubic.gemma.ontology.ObjectPropertyImpl">
+				<entry key="ubic.basecode.ontology.model.ObjectPropertyImpl">
 					<bean class="org.directwebremoting.spring.ConverterConfig">
 						<property name="type" value="bean" />
 						<property name="includes">
@@ -1508,7 +1522,7 @@
 						</property>
 					</bean>
 				</entry>
-				<entry key="ubic.gemma.ontology.OntologyIndividualImpl">
+				<entry key="ubic.basecode.ontology.model.OntologyIndividualImpl">
 					<bean class="org.directwebremoting.spring.ConverterConfig">
 						<property name="type" value="bean" />
 						<property name="includes">
@@ -1519,7 +1533,7 @@
 						</property>
 					</bean>
 				</entry>
-				<entry key="ubic.gemma.ontology.AnnotationPropertyImpl">
+				<entry key="ubic.basecode.ontology.model.AnnotationPropertyImpl">
 					<bean class="org.directwebremoting.spring.ConverterConfig">
 						<property name="type" value="bean" />
 						<property name="includes">
@@ -1785,7 +1799,7 @@
 					</bean>
 				</entry>
 				<entry key="ubic.gemma.model.genome.Chromosome">
-					<bean class="org.directwebremoting.spring.ConverterConfig">
+			 		<bean class="org.directwebremoting.spring.ConverterConfig">
 						<property name="type" value="hibernate3" />
 						<property name="includes">
 							<list>

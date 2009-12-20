@@ -23,7 +23,7 @@ import java.util.HashSet;
 
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.VocabCharacteristic;
-import ubic.gemma.ontology.MgedOntologyService;
+import ubic.gemma.ontology.providers.MgedOntologyService;
 
 /**
  * Represents data for one channel on a microarray in GEO. Corresponds (roughly) to a BioMaterial in Gemma.

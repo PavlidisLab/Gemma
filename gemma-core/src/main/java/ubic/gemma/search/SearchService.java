@@ -80,6 +80,8 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import ubic.basecode.ontology.model.OntologyIndividual;
+import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.model.association.Gene2GOAssociationService;
 import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.description.BibliographicReference;
@@ -105,9 +107,7 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.biosequence.BioSequenceService;
 import ubic.gemma.model.genome.gene.GeneProductService;
 import ubic.gemma.model.genome.gene.GeneService;
-import ubic.gemma.ontology.OntologyIndividual;
 import ubic.gemma.ontology.OntologyService;
-import ubic.gemma.ontology.OntologyTerm;
 import ubic.gemma.util.ConfigUtils;
 import ubic.gemma.util.EntityUtils;
 import ubic.gemma.util.ReflectionUtil;

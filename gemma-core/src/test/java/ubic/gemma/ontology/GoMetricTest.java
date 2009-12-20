@@ -32,6 +32,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
  
+import ubic.basecode.ontology.model.OntologyTerm;
+import ubic.gemma.ontology.providers.GeneOntologyService;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 /**

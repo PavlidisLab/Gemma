@@ -37,7 +37,7 @@ import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.ontology.GeneOntologyService;
+import ubic.gemma.ontology.providers.GeneOntologyService;
 import ubic.gemma.util.ConfigUtils;
 
 /**

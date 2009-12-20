@@ -94,8 +94,17 @@ Ext.onReady(function() {
 	var experimentTaggerRenderer = function(value, metadata, record, rowIndex, colIndex, store) {
 		var id = record.get('id');
 		var url = '<a href="#" onClick="return Ext.getCmp(\'eemanager\').tagger(' + id
-				+ ')"><img src="/Gemma/images/icons/pencil.png" alt="add tags" title="add tags"/></a>';
-		return value + '&nbsp;' + url;
+				+ ')"><img src="/Gemma/images/icons/pencil.png" alt="view tags" title="add tags"/></a>';
+		value = value + '&nbsp;' + url;
+
+		var isAdmin = Ext.get("hasAdmin").getValue() == 'true';
+		if (isAdmin) {
+			var turl = '<a href="#" onClick="return Ext.getCmp(\'eemanager\').autoTag(' + id
+					+ ')"><img src="/Gemma/images/icons/database_edit.png" alt="run auto-tagger" title="add tags automatically"/></a>';
+			value = value + '&nbsp;' + turl;
+		}
+
+		return value;
 	};
 
 	var linkAnalysisRenderer = function(value, metadata, record, rowIndex, colIndex, store) {

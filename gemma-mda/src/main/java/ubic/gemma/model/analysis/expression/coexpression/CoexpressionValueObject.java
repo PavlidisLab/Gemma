@@ -28,9 +28,9 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.ontology.OntologyTerm;
 
 /**
  * The results for one gene that is coexpressed with a query gene, across multiple expression experiments; possibly with

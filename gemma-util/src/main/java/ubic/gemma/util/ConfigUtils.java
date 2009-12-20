@@ -135,6 +135,12 @@ public class ConfigUtils {
             log.warn( "version.properties not found" );
         }
 
+        try {
+            config.addConfiguration( new PropertiesConfiguration( "geommtx.properties" ) );
+        } catch ( Exception e ) {
+            // no big deal...hopefully.
+        }
+
         // step through the result and do a final round of variable substitution
         for ( Iterator<String> it = config.getKeys(); it.hasNext(); ) {
             String key = it.next();

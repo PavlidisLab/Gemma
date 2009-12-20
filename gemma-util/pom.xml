@@ -68,9 +68,9 @@
 			<version>2.4.1</version>
 		</dependency>
 		<dependency>
-			<groupId>quartz</groupId>
+			<groupId>opensymphony</groupId>
 			<artifactId>quartz</artifactId>
-			<version>1.6.0</version>
+			<version>1.6.3</version>
 		</dependency>
 		<dependency>
 			<groupId>commons-io</groupId>

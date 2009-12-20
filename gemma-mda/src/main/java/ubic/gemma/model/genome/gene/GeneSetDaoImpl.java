@@ -25,6 +25,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 import org.springframework.stereotype.Repository;
 
+import ubic.gemma.model.genome.Gene;
+
 /**
  * Base Spring DAO Class: is able to create, update, remove, load, and find objects of type
  * <code>ubic.gemma.model.genome.gene.GeneSet</code>.
@@ -73,6 +75,16 @@ public class GeneSetDaoImpl extends HibernateDaoSupport implements GeneSetDao {
 
     /*
      * (non-Javadoc)
+     * @see ubic.gemma.model.genome.gene.GeneSetDao#findByGene(ubic.gemma.model.genome.Gene)
+     */
+    @SuppressWarnings("unchecked")
+    public Collection<GeneSet> findByGene( Gene gene ) {
+        return this.getHibernateTemplate().findByNamedParam(
+                "select gs from GeneSetImpl gs inner join gs.members m inner join m.gene ge where :g in (ge)", "g", gene );
+    }
+
+    /*
+     * (non-Javadoc)
      * @see ubic.gemma.persistence.BaseDao#load(java.util.Collection)
      */
     @SuppressWarnings("unchecked")
@@ -114,6 +126,18 @@ public class GeneSetDaoImpl extends HibernateDaoSupport implements GeneSetDao {
 
     /*
      * (non-Javadoc)
+     * @see ubic.gemma.persistence.BaseDao#remove(java.lang.Object)
+     */
+    public void remove( GeneSet entity ) {
+        if ( entity == null ) {
+            throw new IllegalArgumentException( "GeneSet.remove - 'geneset entity' can not be null" );
+        }
+        this.getHibernateTemplate().delete( entity );
+
+    }
+
+    /*
+     * (non-Javadoc)
      * @see ubic.gemma.persistence.BaseDao#remove(java.lang.Long)
      */
     public void remove( Long id ) {
@@ -124,18 +148,6 @@ public class GeneSetDaoImpl extends HibernateDaoSupport implements GeneSetDao {
         if ( entity != null ) {
             this.remove( entity );
         }
-
-    }
-
-    /*
-     * (non-Javadoc)
-     * @see ubic.gemma.persistence.BaseDao#remove(java.lang.Object)
-     */
-    public void remove( GeneSet entity ) {
-        if ( entity == null ) {
-            throw new IllegalArgumentException( "GeneSet.remove - 'geneset entity' can not be null" );
-        }
-        this.getHibernateTemplate().delete( entity );
 
     }
 

@@ -37,6 +37,7 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import ubic.basecode.dataStructure.CountingMap;
+import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.model.analysis.Analysis;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSetService;
@@ -55,8 +56,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneService;
-import ubic.gemma.ontology.GeneOntologyService;
-import ubic.gemma.ontology.OntologyTerm;
+import ubic.gemma.ontology.providers.GeneOntologyService;
 import ubic.gemma.util.AnchorTagUtil;
 
 /**

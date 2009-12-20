@@ -78,13 +78,13 @@ public class DatabaseViewGeneratorCLI extends AbstractSpringAwareCLI {
                         "Will generate a zip file containing a summary of all the differential expressed genes in accesable datasets" )
                 .withLongOpt( "diffexpression" ).create( 'x' );
 
-        Option limit = OptionBuilder.hasArg().withArgName( "Limit number of datasets" ).withDescription(
+        Option limitOpt = OptionBuilder.hasArg().withArgName( "Limit number of datasets" ).withDescription(
                 "will impose a limit on how many datasets to process" ).withLongOpt( "limit" ).create( 'l' );
 
         addOption( datasetSummary );
         addOption( datasetTissueSummary );
         addOption( diffExpSummary );
-        addOption( limit );
+        addOption( limitOpt );
 
     }
 

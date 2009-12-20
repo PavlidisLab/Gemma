@@ -43,8 +43,6 @@ import org.springframework.web.context.support.WebApplicationContextUtils;
 
 import ubic.gemma.Constants;
 import ubic.gemma.loader.genome.gene.ncbi.homology.HomologeneService;
-import ubic.gemma.ontology.AbstractOntologyService;
-import ubic.gemma.ontology.GeneOntologyService;
 import ubic.gemma.util.CompassUtils;
 import ubic.gemma.util.ConfigUtils;
 import ubic.gemma.util.QuartzUtils;
@@ -103,7 +101,7 @@ public class StartupListener extends ContextLoaderListener {
         loadTrackerInformation( config );
 
         ApplicationContext ctx = WebApplicationContextUtils.getRequiredWebApplicationContext( servletContext );
-        
+
         SecurityContextHolder.setStrategyName( SecurityContextHolder.MODE_INHERITABLETHREADLOCAL );
 
         CompassUtils.deleteCompassLocks();
@@ -111,9 +109,7 @@ public class StartupListener extends ContextLoaderListener {
         servletContext.setAttribute( Constants.CONFIG, config );
 
         if ( ConfigUtils.isGridEnabled() ) copyWorkerJars( servletContext );
-
-        initializeOntologies( ctx );
-
+ 
         initializeHomologene( ctx );
 
         configureScheduler( ctx );
@@ -153,7 +149,7 @@ public class StartupListener extends ContextLoaderListener {
             QuartzUtils.disableQuartzScheduler( ( StdScheduler ) ctx.getBean( "schedulerFactoryBean" ) );
             log.info( "Quartz scheduling disabled.  Set quartzOn=true in Gemma.properties to enable" );
         } else {
-            log.info( "Quartz scheduling enableded.  Set quartzOn=false in Gemma.properties to disable" );
+            log.info( "Quartz scheduling enabled.  Set quartzOn=false in Gemma.properties to disable" );
         }
 
     }
@@ -324,26 +320,7 @@ public class StartupListener extends ContextLoaderListener {
 
     }
 
-    /**
-     * Intialize ontologies as configured by the user's configuration file (Gemma.properties).
-     * <p>
-     * FIXME make this smarter so it can figure this out without hard-coding ontology names.
-     * 
-     * @param ctx
-     */
-    private void initializeOntologies( ApplicationContext ctx ) {
-
-        GeneOntologyService go = ( GeneOntologyService ) ctx.getBean( "geneOntologyService" );
-        go.init( false );
-
-        String[] otherOntologies = new String[] { "mged", "disease", "fMA", "birnLex", "chebi" };
-
-        for ( String ont : otherOntologies ) {
-            AbstractOntologyService os = ( AbstractOntologyService ) ctx.getBean( ont + "OntologyService" );
-            os.init( false );
-        }
-
-    }
+    
 
     /**
      * Load the style theme for the site.

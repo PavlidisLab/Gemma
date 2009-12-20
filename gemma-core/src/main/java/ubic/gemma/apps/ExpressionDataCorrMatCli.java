@@ -94,7 +94,7 @@ public class ExpressionDataCorrMatCli extends ExpressionExperimentManipulatingCL
     /**
      * @param arrayDesign
      */
-    private void audit( ExpressionExperiment ee, String note, AuditEventType eventType ) {
+    private void audit( ExpressionExperiment ee, AuditEventType eventType ) {
         auditTrailService.addUpdateEvent( ee, eventType, "Generated correlation matrix images" );
         successObjects.add( ee.toString() );
     }
@@ -139,7 +139,7 @@ public class ExpressionDataCorrMatCli extends ExpressionExperimentManipulatingCL
         ExpressionDataDoubleMatrix matrix = analysisHelperService.getFilteredMatrix( ee, filterConfig );
         log.info( filterConfig );
         ExpressionDataSampleCorrelation.process( matrix, ee );
-        audit( ee, "", null );
+        audit( ee, null );
 
     }
 

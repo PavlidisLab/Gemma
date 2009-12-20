@@ -18,6 +18,9 @@
  */
 package ubic.gemma.ontology;
 
+import ubic.basecode.ontology.model.DataStatement;
+import ubic.basecode.ontology.model.DatatypeProperty;
+import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.model.common.description.CharacteristicProperty;
 import ubic.gemma.model.common.description.DataProperty;
 
@@ -45,7 +48,7 @@ public class DataStatementImpl extends AbstractStatement implements DataStatemen
         prop.setData( data );
         prop.setValue( this.getProperty().getLabel() );
         prop.setValueUri( this.getProperty().getUri() );
-        prop.setType( ( ( DatatypeProperty ) this.getProperty() ).getType() );
+        // prop.setType( ( ( DatatypeProperty ) this.getProperty() ).getType() );
         return prop;
     }
 

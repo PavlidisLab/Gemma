@@ -130,8 +130,8 @@ public class WhatsNew {
      * 
      * @param newObjects
      */
-    public void addNewObjects( Collection<Auditable> newObjects ) {
-        this.newObjects.addAll( newObjects );
+    public void addNewObjects( Collection<Auditable> objs ) {
+        this.newObjects.addAll( objs );
     }
 
     /**
@@ -148,8 +148,8 @@ public class WhatsNew {
      * 
      * @param updatedObjects
      */
-    public void addUpdatedObjects( Collection<Auditable> updatedObjects ) {
-        this.updatedObjects.addAll( updatedObjects );
+    public void addUpdatedObjects( Collection<Auditable> objs ) {
+        this.updatedObjects.addAll( objs );
     }
 
     /**

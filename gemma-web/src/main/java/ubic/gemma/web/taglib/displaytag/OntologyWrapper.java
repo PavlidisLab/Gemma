@@ -24,7 +24,7 @@ import org.displaytag.decorator.TableDecorator;
 
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.VocabCharacteristic;
-import ubic.gemma.ontology.GeneOntologyService;
+import ubic.gemma.ontology.providers.GeneOntologyService;
 
 /**
  * This is for Gene Ontology.

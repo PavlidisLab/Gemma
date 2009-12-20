@@ -139,7 +139,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.biosequence.PolymerType;
 import ubic.gemma.model.genome.biosequence.SequenceType;
-import ubic.gemma.ontology.MgedOntologyService;
+import ubic.gemma.ontology.providers.MgedOntologyService;
 import ubic.gemma.util.ConfigUtils;
 import ubic.gemma.util.ReflectionUtil;
 

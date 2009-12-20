@@ -12,7 +12,7 @@
 
 
 	<context:component-scan
-		base-package="ubic.gemma.analysis,ubic.gemma.loader,ubic.gemma.grid,ubic.gemma.image,ubic.gemma.visualization,ubic.gemma.search,ubic.gemma.util,ubic.gemma.model,ubic.gemma.persistence,ubic.gemma.security,ubic.gemma.ontology"
+		base-package="ubic.gemma.analysis,ubic.gemma.loader,ubic.gemma.grid,ubic.gemma.image,ubic.gemma.visualization,ubic.gemma.search,ubic.gemma.util,ubic.gemma.model,ubic.gemma.persistence,ubic.gemma.security,ubic.gemma.ontology,ubic.gemma.annotation"
 		name-generator="ubic.gemma.util.BeanNameGenerator" />
 
 	<!--
@@ -39,7 +39,7 @@
 			<tx:method name="load*" read-only="true" />
 			<tx:method name="thaw*" read-only="true" />
 			<tx:method name="is*" read-only="true" />
-			<tx:method name="count*" read-only="true" />						
+			<tx:method name="count*" read-only="true" />
 			<tx:method name="findOrCreate" read-only="false" />
 			<!-- other methods use the default transaction settings -->
 			<tx:method name="*" />

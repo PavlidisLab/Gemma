@@ -20,11 +20,10 @@ package ubic.gemma.model.genome.gene;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -40,7 +39,6 @@ import ubic.gemma.testing.BaseSpringContextTest;
 public class GeneSetServiceTest extends BaseSpringContextTest {
 
     private Gene g = null;
-    private Gene g2 = null;
     private Gene g3 = null;
 
     @Autowired
@@ -49,133 +47,104 @@ public class GeneSetServiceTest extends BaseSpringContextTest {
     @Before
     public void setUp() throws Exception {
         g = this.getTestPeristentGene();
-        g2 = this.getTestPeristentGene();
         g3 = this.getTestPeristentGene();
     }
 
+    /**
+     * Test of cascade create
+     */
     @Test
-    public void testCreate() {
+    public void testCreateLoadAndRemove() {
 
-        Collection<GeneSetMember> gsMembers = new HashSet<GeneSetMember>();
-        GeneSetMember gmember = new GeneSetMemberImpl();
+        GeneSetMember gmember = GeneSetMember.Factory.newInstance();
         gmember.setGene( g );
         gmember.setScore( 0.22 );
 
-        gsMembers.add( gmember );
-
-        GeneSet gset = new GeneSetImpl();
+        GeneSet gset = GeneSet.Factory.newInstance();
         gset.setName( "CreateTest" );
-        gset.setGeneSetMembers( gsMembers );
+        gset.getMembers().add( gmember );
 
         gset = geneSetService.create( gset );
 
-        assert ( gset.equals( geneSetService.load( gset.getId() ).getId() ) );
+        Long id = gset.getId();
+        assertNotNull( id );
 
         geneSetService.remove( gset );
+
+        assertNull( geneSetService.load( id ) );
+
     }
 
+    /**
+     * 
+     */
     @Test
-    public void testRemove() {
+    public void testFindByGene() {
 
-        Collection<GeneSetMember> gsMembers = new HashSet<GeneSetMember>();
-        GeneSetMember gmember = new GeneSetMemberImpl();
-        gmember.setGene( this.g2 );
-        gmember.setScore( 0.33 );
+        GeneSetMember gmember = GeneSetMember.Factory.newInstance();
+        gmember.setGene( g );
+        gmember.setScore( 0.22 );
 
-        gsMembers.add( gmember );
-
-        GeneSet gset = new GeneSetImpl();
-        gset.setName( "DeleteTest" );
-        gset.setGeneSetMembers( gsMembers );
+        GeneSet gset = GeneSet.Factory.newInstance();
+        gset.setName( "FindTest" );
+        gset.getMembers().add( gmember );
 
         gset = geneSetService.create( gset );
+        assertNotNull( gset.getId() );
+        assertNotNull( gset.getMembers().iterator().next().getId() );
 
-        assert ( gset.equals( geneSetService.load( gset.getId() ).getId() ) );
+        assertEquals( g, gset.getMembers().iterator().next().getGene() );
 
-        geneSetService.remove( gset );
-
-        assert ( geneSetService.load( gset.getId() ) == null );
-
+        Collection<GeneSet> foundSets = geneSetService.findByGene( g );
+        assertTrue( foundSets.size() > 0 );
     }
 
+    /**
+     * Test adding a new member via a cascade.
+     */
     @Test
     public void testUpdate() {
 
-        Collection<GeneSetMember> gsMembers = new HashSet<GeneSetMember>();
-        GeneSetMember gmember = new GeneSetMemberImpl();
-        gmember.setGene( this.g2 );
-        gmember.setScore( 0.33 );
-
-        gsMembers.add( gmember );
-
-        GeneSet gset = new GeneSetImpl();
-        gset.setName( "Update Test" );
-        gset.setGeneSetMembers( gsMembers );
-
-        gset = geneSetService.create( gset );
-
-        assert ( gset.equals( geneSetService.load( gset.getId() ).getId() ) );
-
-        gmember = new GeneSetMemberImpl();
-        gmember.setGene( this.g3 );
-        gmember.setScore( 0.66 );
-        gset.getGeneSetMembers().add( gmember );
-
-        assert ( geneSetService.load( gset.getId() ).getGeneSetMembers().size() == 1 );
-
-        geneSetService.update( gset );
-
-        assert ( geneSetService.load( gset.getId() ).getGeneSetMembers().size() == 2 );
-
-        geneSetService.remove( gset );
-
-    }
-
-    // FIXME I thought this test would fail but it passes. Our API lets us add the same geneMember to the same set
-    // twice.
-    // Thought the HashSet would reject this.
-
-    @Test
-    public void testUpdateAddingSameGeneMemberTwice() {
-
         GeneSetMember gmember = GeneSetMember.Factory.newInstance();
-        gmember.setGene( this.g2 );
-        gmember.setScore( 0.33 );
+        gmember.setGene( g );
+        gmember.setScore( 0.22 );
 
         GeneSet gset = GeneSet.Factory.newInstance();
-        gset.setName( "testUpdateAddingSameGeneMemberTwice" );
-        gset.getGeneSetMembers().add( gmember );
+        gset.setName( "UpdateTest" );
+        gset.getMembers().add( gmember );
 
         gset = geneSetService.create( gset );
-
         assertNotNull( gset.getId() );
-        assertEquals( 1, gset.getGeneSetMembers().size() );
+        gmember = gset.getMembers().iterator().next();
+        assertNotNull( gmember.getId() );
 
-        GeneSetMember persistedGeneSetMember = gset.getGeneSetMembers().iterator().next();
+        // add one.
+        gset = geneSetService.load( gset.getId() );
+        gmember = GeneSetMember.Factory.newInstance();
+        gmember.setGene( this.g3 );
+        gmember.setScore( 0.66 );
+        gset.getMembers().add( gmember );
 
-        assertNotNull( persistedGeneSetMember.getId() );
+        assertEquals( 2, gset.getMembers().size() );
 
-        Set<GeneSetMember> k = new HashSet<GeneSetMember>();
-        k.add( persistedGeneSetMember );
-        k.add( persistedGeneSetMember );
-        assertEquals( 1, k.size() );
-
-        assertNotNull( persistedGeneSetMember.getId() );
-
-        assertEquals( gset.getGeneSetMembers().iterator().next(), persistedGeneSetMember );
-
-        assertTrue( gset.getGeneSetMembers().contains( persistedGeneSetMember ) );
-
-        // add it again.
-        gset.getGeneSetMembers().add( persistedGeneSetMember );
-
-        assertEquals( 1, gset.getGeneSetMembers().size() );
-
+        // persist.
         geneSetService.update( gset );
 
-        assertEquals( 1, gset.getGeneSetMembers().size() );
+        // check
+        gset = geneSetService.load( gset.getId() );
+        assertEquals( 2, gset.getMembers().size() );
 
+        // remove one
+        gset.getMembers().remove( gmember );
+        geneSetService.update( gset );
+
+        // check
+        gset = geneSetService.load( gset.getId() );
+        assertEquals( 1, gset.getMembers().size() );
+
+        // clean
         geneSetService.remove( gset );
+        assertNull( geneSetService.load( gset.getId() ) );
 
     }
 

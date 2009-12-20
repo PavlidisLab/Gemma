@@ -18,6 +18,10 @@
  */
 package ubic.gemma.ontology;
 
+import ubic.basecode.ontology.model.ChainedStatement;
+import ubic.basecode.ontology.model.ChainedStatementObject;
+import ubic.basecode.ontology.model.OntologyProperty;
+import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.model.common.description.Property;
 
 /**
@@ -55,7 +59,6 @@ public class ChainedStatementImpl extends AbstractStatement implements ChainedSt
         Property p = Property.Factory.newInstance();
         p.setValue( this.getProperty().getLabel() );
         p.setValueUri( this.getProperty().getUri() );
-        p.setObject( object.toVocabCharacteristic() );
         return p;
     }
 

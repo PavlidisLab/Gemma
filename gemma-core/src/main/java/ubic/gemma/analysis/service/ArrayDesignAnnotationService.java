@@ -47,6 +47,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.association.Gene2GOAssociationService;
@@ -56,8 +57,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.PredictedGene;
 import ubic.gemma.model.genome.ProbeAlignedRegion;
-import ubic.gemma.ontology.GeneOntologyService;
-import ubic.gemma.ontology.OntologyTerm;
+import ubic.gemma.ontology.providers.GeneOntologyService;
 import ubic.gemma.util.ConfigUtils;
 import ubic.gemma.util.DateUtil;
 

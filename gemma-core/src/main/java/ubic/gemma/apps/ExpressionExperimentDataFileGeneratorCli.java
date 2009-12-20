@@ -19,7 +19,6 @@
 
 package ubic.gemma.apps;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -37,6 +36,12 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.CommentedEvent;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
+/**
+ * TODO Document Me
+ * 
+ * @author ?
+ * @version $Id$
+ */
 public class ExpressionExperimentDataFileGeneratorCli extends ExpressionExperimentManipulatingCLI {
 
     /**
@@ -171,8 +176,8 @@ public class ExpressionExperimentDataFileGeneratorCli extends ExpressionExperime
             AuditTrailService auditEventService = ( AuditTrailService ) this.getBean( "auditTrailService" );
             AuditEventType type = CommentedEvent.Factory.newInstance();
 
-            File coexpressionFile = expressionDataFileService.writeOrLocateCoexpressionDataFile( ee, force_write );
-            File diffExpressionFile = expressionDataFileService.writeOrLocateDiffExpressionDataFile( ee, force_write );
+            expressionDataFileService.writeOrLocateCoexpressionDataFile( ee, force_write );
+            expressionDataFileService.writeOrLocateDiffExpressionDataFile( ee, force_write );
 
             auditEventService.addUpdateEvent( ee, type, "Generated Flat data files for downloading" );
             super.successObjects.add( "Success:  generated data file for " + ee.getShortName() + " ID=" + ee.getId() );

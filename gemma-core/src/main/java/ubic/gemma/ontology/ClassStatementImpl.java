@@ -18,6 +18,9 @@
  */
 package ubic.gemma.ontology;
 
+import ubic.basecode.ontology.model.ClassStatement;
+import ubic.basecode.ontology.model.ObjectProperty;
+import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.model.common.description.CharacteristicProperty;
 import ubic.gemma.model.common.description.Property;
 import ubic.gemma.model.common.description.VocabCharacteristic;

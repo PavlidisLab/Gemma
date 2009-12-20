@@ -43,8 +43,7 @@ img {
 }
 
 /* LINKS */
-a,a:link
-            a:active {
+a,a:link a:active {
 	color: #004f64;
 	text-decoration: none;
 }
@@ -61,6 +60,14 @@ a:hover {
 
 a.annotationLink {
 	text-decoration: underline;
+}
+
+a.newpage {
+	background:transparent url(../images/icons/newwindow.png) no-repeat scroll right center;
+}
+
+a.external {
+	background:transparent url(../images/icons/externallink	.png) no-repeat scroll right center;
 }
 
 /* END LINKS */ /* HEADINGS */

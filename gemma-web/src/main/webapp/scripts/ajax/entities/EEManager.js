@@ -117,6 +117,15 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 
 		ExpressionExperimentReportGenerationController.runAll.apply(this, callParams);
 	},
+	
+	autoTag : function(id) {
+		
+		/*
+		 * TODO: call AnnotationController.annotate(id). Need a progress bar of some sort.
+		 */
+		alert("Hi, this isn't set up yet!");
+		
+	},
 
 	tagger : function(id) {
 
