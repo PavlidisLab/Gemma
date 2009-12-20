@@ -19,6 +19,8 @@
 package ubic.gemma.ontology;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.util.Collection;
 
@@ -26,7 +28,6 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.basecode.ontology.model.OntologyTerm;
-import ubic.basecode.ontology.providers.AbstractOntologyService;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.ontology.OntologyService;
 import ubic.gemma.testing.BaseSpringContextTest;
@@ -46,7 +47,11 @@ public class OntologyServiceTest extends BaseSpringContextTest {
      */
     @Test
     public final void testFindExactMatch() throws Exception {
-        loadOntology( "mgedOntologyService" );
+        os.getMgedOntologyService().init( true );
+        while ( !os.getMgedOntologyService().isOntologyLoaded() ) {
+            Thread.sleep( 1000 );
+            log.info( "Waiting for Ontology to load" );
+        }
         Collection<Characteristic> name = os.findExactTerm( "male",
                 "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#Sex" );
         for ( Characteristic characteristic : name ) {
@@ -62,23 +67,18 @@ public class OntologyServiceTest extends BaseSpringContextTest {
      */
     @Test
     public final void testFindTerm() throws Exception {
-        loadOntology( "birnLexOntologyService" );
-        Collection<OntologyTerm> terms = os.findTerms( "liver" );
-        // assertTrue( terms.size() > 0 );
-        //
-        // for ( OntologyTerm term : terms ) {
-        // if ( term.getLabel().contains( "Organ" ) ) {
-        // assertTrue( false );
-        // }
-        // }
-    }
-
-    private void loadOntology( String ontology ) throws Exception {
-        AbstractOntologyService os = ( AbstractOntologyService ) this.getBean( ontology );
-        if ( !os.isOntologyLoaded() ) os.init( true ); // force load.
-        while ( !os.isOntologyLoaded() ) {
-            Thread.sleep( 1000 );
+        os.getBirnLexOntologyService().init( true );
+        while ( !os.getBirnLexOntologyService().isOntologyLoaded() ) {
+            Thread.sleep( 5000 );
             log.info( "Waiting for Ontology to load" );
+        }
+        Collection<OntologyTerm> terms = os.findTerms( "liver" );
+        assertTrue( terms.size() > 0 );
+        //
+        for ( OntologyTerm term : terms ) {
+            if ( term.getLabel().contains( "Organ" ) ) {
+                fail( "Should get organ as a child of liver" );
+            }
         }
     }
 
