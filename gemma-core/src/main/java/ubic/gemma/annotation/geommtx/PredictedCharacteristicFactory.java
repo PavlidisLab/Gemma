@@ -33,6 +33,7 @@ import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.ontology.OntologyService;
 import ubic.gemma.ontology.providers.MgedOntologyService;
+import ubic.gemma.util.ConfigUtils;
 
 /**
  * @author leon, paul
@@ -117,6 +118,15 @@ public class PredictedCharacteristicFactory implements InitializingBean {
      * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
      */
     public void afterPropertiesSet() throws Exception {
+        boolean activated = ConfigUtils.getBoolean( ExpressionExperimentAnnotator.MMTX_ACTIVATION_PROPERTY_KEY );
+
+        if ( !activated ) {
+            log.warn( "Automated tagger disabled; to turn on set "
+                    + ExpressionExperimentAnnotator.MMTX_ACTIVATION_PROPERTY_KEY
+                    + "=true in your Gemma.properties file" );
+            return;
+        }
+
         // term for Biological macromolecule in FMA (FMAID=63887)
         fmaMolecule = ontologyService.getTerm( "http://purl.org/obo/owl/FMA#FMA_63887" );
         labels = LabelLoader.readLabels();
