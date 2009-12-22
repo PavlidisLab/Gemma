@@ -547,7 +547,7 @@ public class GeneOntologyService implements InitializingBean {
             return;
         }
 
-        initilizeGoOntology();
+        initializeGoOntology();
     }
 
     /**
@@ -637,7 +637,7 @@ public class GeneOntologyService implements InitializingBean {
      * 
      */
     protected synchronized void forceLoadOntology() {
-        initilizeGoOntology();
+        initializeGoOntology();
     }
 
     /**
@@ -783,7 +783,7 @@ public class GeneOntologyService implements InitializingBean {
         return r;
     }
 
-    private synchronized void initilizeGoOntology() {
+    private synchronized void initializeGoOntology() {
 
         Thread loadThread = new Thread( new Runnable() {
             public void run() {
