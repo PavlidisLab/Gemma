@@ -678,6 +678,10 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
 
         eeValObjectCol = getEEVOsForManager( taxonId, ids, filterDataByUser );
 
+        if ( eeValObjectCol.isEmpty() ) {
+            return new HashSet<ExpressionExperimentValueObject>();
+        }
+
         if ( timer.getTime() > 1000 ) {
             log.info( "Fetching basic data took: " + timer.getTime() + "ms" );
         }
@@ -705,20 +709,6 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         }
 
         return result;
-    }
-
-    private Collection<ExpressionExperimentValueObject> getEEVOsForManager( Long taxonId, Collection<Long> ids,
-            boolean filterDataByUser ) {
-        Collection<ExpressionExperimentValueObject> eeValObjectCol;
-        if ( taxonId != null ) {
-            Taxon taxon = taxonService.load( taxonId );
-            eeValObjectCol = this.getFilteredExpressionExperimentValueObjects( taxon, null, filterDataByUser );
-        } else if ( ids == null || ids.isEmpty() ) {
-            eeValObjectCol = this.getFilteredExpressionExperimentValueObjects( null, null, filterDataByUser );
-        } else {
-            eeValObjectCol = this.getFilteredExpressionExperimentValueObjects( null, null, filterDataByUser );
-        }
-        return eeValObjectCol;
     }
 
     /**
@@ -1074,6 +1064,29 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         buf.append( citation.getTitle() + "; " + citation.getPublication() + ", " + volume + ": " + pages );
 
         return buf.toString();
+    }
+
+    /**
+     * @param taxonId
+     * @param ids - takes precedence
+     * @param filterDataByUser
+     * @return
+     */
+    private Collection<ExpressionExperimentValueObject> getEEVOsForManager( Long taxonId, Collection<Long> ids,
+            boolean filterDataByUser ) {
+        Collection<ExpressionExperimentValueObject> eeValObjectCol;
+        if ( taxonId != null && ( ids == null || ids.isEmpty() ) ) {
+            Taxon taxon = taxonService.load( taxonId );
+            if ( taxon == null ) {
+                throw new IllegalArgumentException( "No such taxon with id=" + taxonId );
+            }
+            eeValObjectCol = this.getFilteredExpressionExperimentValueObjects( taxon, null, filterDataByUser );
+        } else if ( ids == null || ids.isEmpty() ) {
+            eeValObjectCol = this.getFilteredExpressionExperimentValueObjects( null, null, filterDataByUser );
+        } else {
+            eeValObjectCol = this.getFilteredExpressionExperimentValueObjects( null, ids, filterDataByUser );
+        }
+        return eeValObjectCol;
     }
 
     /**
