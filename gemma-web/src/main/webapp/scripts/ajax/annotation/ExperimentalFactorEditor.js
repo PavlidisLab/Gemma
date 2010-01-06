@@ -264,12 +264,14 @@ Gemma.ExperimentalFactorAddWindow = Ext.extend(Ext.Window, {
 	modal : true,
 	closeAction : 'close',
 	title : "Fill in new factor details",
+	width : 400,
 
 	initComponent : function() {
 
 		Ext.apply(this, {
 			items : [{
 				xtype : 'form',
+				width : 400,
 				bodyStyle : "padding:10px",
 				monitorValid : true,
 				id : 'factor-create-form',
@@ -285,7 +287,7 @@ Gemma.ExperimentalFactorAddWindow = Ext.extend(Ext.Window, {
 							id : 'factor-description-field',
 							allowBlank : false,
 							fieldLabel : "Description",
-							emptyText : "Type a short distinctive description such as 'control vs. drug'"
+							emptyText : "A short phrase such as 'control vs. drug'"
 						}, {
 							xtype : 'checkbox',
 							id : 'factor-type-checkbox',
