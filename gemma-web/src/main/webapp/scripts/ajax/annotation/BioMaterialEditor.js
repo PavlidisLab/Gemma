@@ -132,9 +132,10 @@ Gemma.BioMaterialGrid = Ext.extend(Gemma.GemmaGridPanel, {
 			 * contains all the possible values for this factor.
 			 */
 			var rend = null;
-			if (!continuous) {
+			
+			//if (!continuous) {
 				rend = this.createValueRenderer();
-			}
+			//}/
 
 			/*
 			 * Define the column for this particular factor.
