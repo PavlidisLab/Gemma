@@ -244,9 +244,9 @@ ExperimentalDesignController.createFactorValueCharacteristic = function(p0, p1, 
 	dwr.engine._execute(ExperimentalDesignController._path, 'ExperimentalDesignController',
 			'createFactorValueCharacteristic', p0, p1, callback);
 }
-ExperimentalDesignController.deleteExperimentalFactors = function(p1, callback) {
+ExperimentalDesignController.deleteExperimentalFactors = function(pO, p1, callback) {
 	dwr.engine._execute(ExperimentalDesignController._path, 'ExperimentalDesignController',
-			'deleteExperimentalFactors', p1, callback);
+			'deleteExperimentalFactors', pO, p1, callback);
 }
 ExperimentalDesignController.deleteFactorValueCharacteristics = function(p0, callback) {
 	dwr.engine._execute(ExperimentalDesignController._path, 'ExperimentalDesignController',
@@ -327,10 +327,6 @@ ExpressionExperimentController.loadExpressionExperimentDetails = function(p0, ca
 ExpressionExperimentController.loadExpressionExperiments = function(p0, callback) {
 	dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController',
 			'loadExpressionExperiments', p0, callback);
-}
-ExpressionExperimentController.loadStatusSummaries = function(p0, p1, p2, callback) {
-	dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController', 'loadStatusSummaries',
-			p0, p1, p2, callback);
 }
 ExpressionExperimentController.removePrimaryPublication = function(p0, callback) {
 	dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController',
@@ -593,8 +589,12 @@ MgedOntologyService.isOntologyLoaded = function(callback) {
 if (OntologyService == null)
 	var OntologyService = {};
 OntologyService._path = '/Gemma/dwr';
+OntologyService.findExactTerm = function(p0, p1, callback) {
+	dwr.engine._execute(OntologyService._path, 'OntologyService', 'findExactTerm', p0, p1, callback);
+}
 OntologyService.findExactTerm = function(p0, p1, p2, callback) {
-	dwr.engine._execute(OntologyService._path, 'OntologyService', 'findExactTerm', p0, p1, p2, callback);
+	dwr.engine._execute(OntologyService._path, 'OntologyService', 'findExact', 'loadStatusSummaries',
+			p0, p1, p2, callback);
 }
 OntologyService.saveBioMaterialStatement = function(p0, p1, callback) {
 	dwr.engine._execute(OntologyService._path, 'OntologyService', 'saveBioMaterialStatement', p0, p1, callback);
