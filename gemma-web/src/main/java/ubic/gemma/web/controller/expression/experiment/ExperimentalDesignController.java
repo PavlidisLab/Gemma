@@ -102,7 +102,7 @@ public class ExperimentalDesignController extends BaseController {
         if ( ee == null ) {
             throw new IllegalArgumentException( "Could not access experiment with id=" + eeid );
         }
-
+        
         if ( ee.getExperimentalDesign().getExperimentalFactors().size() > 0 ) {
             throw new IllegalArgumentException(
                     "Cannot import an experimental design for an experiment that already has design data populated." );
@@ -115,26 +115,11 @@ public class ExperimentalDesignController extends BaseController {
         }
 
         try {
-            // Dry run. Try to avoid importing bad data.
-            InputStream is = new FileInputStream( f );
-            /*
-             * NOTE this will fail if the experiment already has factors. But I think that's the correct behaviour.
-             */
-            experimentalDesignImporter.importDesign( ee, is, true );
-        } catch ( IOException e ) {
-            throw new RuntimeException( "Failed to import the design: " + e.getMessage() );
-        }
-
-        try {
-            InputStream is = new FileInputStream( f );
-            // Reset everything in case a design is already there.
-            ee.getExperimentalDesign().getExperimentalFactors().clear();
-            for ( BioAssay ba : ee.getBioAssays() ) {
-                for ( BioMaterial bm : ba.getSamplesUsed() ) {
-                    bm.getFactorValues().clear();
-                }
-            }
-            experimentalDesignImporter.importDesign( ee, is );
+            //removed dry run code, validation and object creation is done before any commits to DB
+            //So if validation fails no rollback needed. HWoever, this call is wrapped in a transaction
+            //as a fail safe.
+            InputStream is = new FileInputStream( f );        
+            experimentalDesignImporter.importDesign( ee, is);
         } catch ( IOException e ) {
             throw new RuntimeException( "Failed to import the design: " + e.getMessage() );
         }
@@ -235,44 +220,48 @@ public class ExperimentalDesignController extends BaseController {
      * @param efIds a collection of ExperimentalFactor ids
      */
     public void deleteExperimentalFactors( EntityDelegator e, Collection<Long> efIds ) {
+        //log.info("Start processing " + System.currentTimeMillis());
+        
         if ( e == null || e.getId() == null ) return;
         ExperimentalDesign ed = this.experimentalDesignService.load( e.getId() );
-
-        /*
-         * FIXME: this should be a single service call. However, it's not that easy to do. If you run this in a single
-         * transaction, you invariably get session errors.
-         */
-
-        // First, remove the factorValues from the bioassays.
+      
         ExpressionExperiment ee = experimentalDesignService.getExpressionExperiment( ed );
-
+    
         if ( ee == null ) {
             throw new IllegalArgumentException( "No expression experiment for experimental design " + ed );
         }
-
-        expressionExperimentService.thawLite( ee );
-
-        for ( Long efId : efIds ) {
-            ExperimentalFactor ef = experimentalFactorService.load( efId );
-            for ( BioAssay ba : ee.getBioAssays() ) {
-                for ( BioMaterial bm : ba.getSamplesUsed() ) {
-                    boolean removed = false;
-                    for ( Iterator<FactorValue> fIt = bm.getFactorValues().iterator(); fIt.hasNext(); ) {
-                        if ( fIt.next().getExperimentalFactor().equals( ef ) ) {
-                            fIt.remove();
-                            removed = true;
-                        }
-                    }
-                    if ( removed ) {
-                        bioMaterialService.update( bm );
+        
+        Collection<ExperimentalFactor> experimentalFactorsToRemove = new HashSet<ExperimentalFactor>();      
+        for( Long efId : efIds){
+            ExperimentalFactor experimentalFactor = experimentalFactorService.load( efId );
+            experimentalFactorsToRemove.add(experimentalFactor);
+        }
+         
+        for ( BioAssay ba : ee.getBioAssays() ) {
+            for ( BioMaterial bm : ba.getSamplesUsed() ) {                
+                
+                Collection<FactorValue> factorValuesToRemoveFromBioMaterial = new HashSet<FactorValue>();
+                for ( FactorValue factorValue : bm.getFactorValues() ) {
+                    if (experimentalFactorsToRemove.contains( factorValue.getExperimentalFactor() )) {                           
+                        factorValuesToRemoveFromBioMaterial.add( factorValue );                        
                     }
                 }
-            }
-
-            ed.getExperimentalFactors().remove( ef );
-            experimentalFactorService.delete( ef );
+                //if there are factors to remove
+                if (factorValuesToRemoveFromBioMaterial != null && factorValuesToRemoveFromBioMaterial.size()>0 ) {
+                    bm.getFactorValues().removeAll( factorValuesToRemoveFromBioMaterial );
+                    bioMaterialService.update( bm );
+                }
+            }           
+        }
+              
+        
+        ed.getExperimentalFactors().removeAll( experimentalFactorsToRemove );
+        //delete the experimental factor this cascades to values.
+        for ( ExperimentalFactor factorRemove : experimentalFactorsToRemove ) {          
+            experimentalFactorService.delete( factorRemove );
         }
         experimentalDesignService.update( ed );
+        
     }
 
     /**
@@ -302,8 +291,11 @@ public class ExperimentalDesignController extends BaseController {
 
         for ( Long fvId : fvIds ) {
             FactorValue fv = factorValueService.load( fvId );
-            ef.getFactorValues().remove( fv );
+            if(ef!=null){
+                ef.getFactorValues().remove( fv );
+            }
             factorValueService.delete( fv );
+            
         }
         experimentalFactorService.update( ef );
     }
