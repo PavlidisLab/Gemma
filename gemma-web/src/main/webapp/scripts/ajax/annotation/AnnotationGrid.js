@@ -99,6 +99,7 @@ Gemma.AnnotationGrid = Ext.extend(Gemma.GemmaGridPanel, {
 			width : 500,
 			height : 200,
 			stateful : false,
+			taxonId : null,
 			loadMask : true,
 			viewConfig : {
 				enableRowBody : true,
@@ -230,7 +231,8 @@ Gemma.AnnotationGrid = Ext.extend(Gemma.GemmaGridPanel, {
 											deleteHandler : function(ids, callback) {
 												this.removeMethod(ids, [this.entId], callback);
 											}.createDelegate(this),
-											mgedTermKey : "experiment"
+											mgedTermKey : "experiment",
+											taxonId : this.taxonId
 										})
 							});
 				}
@@ -266,9 +268,9 @@ Gemma.AnnotationGrid = Ext.extend(Gemma.GemmaGridPanel, {
 							});
 					this.getColumnModel().setEditor(CATEGORY_COLUMN, categoryEditor);
 
-					// Value setup
-					this.valueCombo = new Gemma.CharacteristicCombo({
-								lazyRender : true
+					// Value setup 
+					this.valueCombo = new Gemma.CharacteristicCombo({ 
+								taxonId : this.taxonId
 							});
 					var valueEditor = new Ext.grid.GridEditor(this.valueCombo);
 					this.valueCombo.on("select", function(combo, record, index) {

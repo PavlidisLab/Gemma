@@ -53,7 +53,7 @@ public class OntologyServiceTest extends BaseSpringContextTest {
             log.info( "Waiting for Ontology to load" );
         }
         Collection<Characteristic> name = os.findExactTerm( "male",
-                "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#Sex" );
+                "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#Sex", null );
         for ( Characteristic characteristic : name ) {
             log.info( characteristic );
         }

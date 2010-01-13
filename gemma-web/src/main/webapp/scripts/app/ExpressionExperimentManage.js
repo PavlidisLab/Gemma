@@ -93,8 +93,9 @@ Ext.onReady(function() {
 
 	var experimentTaggerRenderer = function(value, metadata, record, rowIndex, colIndex, store) {
 		var id = record.get('id');
+		var taxonId = record.get('taxonId'); 
 		var url = '<a href="#" onClick="return Ext.getCmp(\'eemanager\').tagger(' + id
-				+ ')"><img src="/Gemma/images/icons/pencil.png" alt="view tags" title="add tags"/></a>';
+				+ ',' + taxonId +')"><img src="/Gemma/images/icons/pencil.png" alt="view tags" title="add tags"/></a>';
 		value = value + '&nbsp;' + url;
 
 		var isAdmin = Ext.get("hasAdmin").getValue() == 'true';

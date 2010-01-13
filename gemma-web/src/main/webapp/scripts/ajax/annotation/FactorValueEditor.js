@@ -9,6 +9,8 @@ Ext.namespace('Gemma');
 Gemma.FactorValueGrid = Ext.extend(Gemma.GemmaGridPanel, {
 
 	loadMask : true,
+	
+	taxonId : null,
 
 	record : Ext.data.Record.create([{
 				name : "charId",
@@ -111,7 +113,8 @@ Gemma.FactorValueGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				});
 
 		this.valueCombo = new Gemma.CharacteristicCombo({
-					lazyRender : true
+					lazyRender : true,
+					taxonId : this.taxonId
 				});
 
 		var valueEditor = new Ext.grid.GridEditor(this.valueCombo);

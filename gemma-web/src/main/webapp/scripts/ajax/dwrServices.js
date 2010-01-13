@@ -593,8 +593,8 @@ MgedOntologyService.isOntologyLoaded = function(callback) {
 if (OntologyService == null)
 	var OntologyService = {};
 OntologyService._path = '/Gemma/dwr';
-OntologyService.findExactTerm = function(p0, p1, callback) {
-	dwr.engine._execute(OntologyService._path, 'OntologyService', 'findExactTerm', p0, p1, callback);
+OntologyService.findExactTerm = function(p0, p1, p2, callback) {
+	dwr.engine._execute(OntologyService._path, 'OntologyService', 'findExactTerm', p0, p1, p2, callback);
 }
 OntologyService.saveBioMaterialStatement = function(p0, p1, callback) {
 	dwr.engine._execute(OntologyService._path, 'OntologyService', 'saveBioMaterialStatement', p0, p1, callback);

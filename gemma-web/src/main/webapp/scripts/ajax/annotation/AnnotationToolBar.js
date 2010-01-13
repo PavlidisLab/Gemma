@@ -22,6 +22,8 @@ Ext.namespace('Gemma');
 
 Gemma.AnnotationToolBar = Ext.extend(Ext.Toolbar, {
 
+	taxonId : null,
+	
 	initComponent : function() {
 
 		if (this.annotationGrid.editable && !this.saveHandler) {
@@ -30,7 +32,8 @@ Gemma.AnnotationToolBar = Ext.extend(Ext.Toolbar, {
 
 		var charComboOpts = {
 			emptyText : 'Enter term',
-			width : 140
+			width : 140,
+			taxonId : this.taxonId
 		};
 
 		if (this.charComboWidth) {

@@ -38,6 +38,8 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 			}, {
 				name : "taxon"
 			}, {
+				name : "taxonId"
+			}, {
 				name : "numAnnotations"
 			}, {
 				name : "numPopulatedFactors"
@@ -127,8 +129,7 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 		
 	},
 
-	tagger : function(id) {
-
+	tagger : function(id, taxonId) { 
 		var annotator = new Ext.Panel({
 					id : 'annotator-wrap',
 					title : "Tags",
@@ -149,6 +150,7 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 								editable : this.editable,
 								showParent : false,
 								mgedTermKey : "experiment",
+								taxonId : taxonId,
 								entId : id
 							})]
 				});

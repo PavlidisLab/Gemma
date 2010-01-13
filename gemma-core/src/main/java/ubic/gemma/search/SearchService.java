@@ -298,7 +298,7 @@ public class SearchService implements InitializingBean {
     public Map<Class<?>, List<SearchResult>> search( SearchSettings settings, boolean fillObjects ) {
 
         String searchString = StringEscapeUtils.escapeJava( StringUtils.strip( settings.getQuery() ) ); // probably not
-        // necessay to
+        // necessary to
         // escape...
 
         if ( StringUtils.isBlank( searchString ) ) {
@@ -1425,33 +1425,34 @@ public class SearchService implements InitializingBean {
      * @param settings
      * @param geneSet
      */
-    private void filterByTaxon( SearchSettings settings, Collection<SearchResult> results ) {
-        if ( settings.getTaxon() != null ) {
-            Collection<SearchResult> toRemove = new HashSet<SearchResult>();
-            Taxon t = settings.getTaxon();
-            for ( SearchResult sr : results ) {
-
-                Object o = sr.getResultObject();
-                try {
-                    Method m = o.getClass().getMethod( "getTaxon", new Class[] {} );
-                    Taxon currentTaxon = ( Taxon ) m.invoke( o, new Object[] {} );
-                    if ( !currentTaxon.equals( t ) ) {
-                        toRemove.add( sr );
-                    }
-                } catch ( SecurityException e ) {
-                    throw new RuntimeException( e );
-                } catch ( NoSuchMethodException e ) {
-                    throw new RuntimeException( e );
-                } catch ( IllegalArgumentException e ) {
-                    throw new RuntimeException( e );
-                } catch ( IllegalAccessException e ) {
-                    throw new RuntimeException( e );
-                } catch ( InvocationTargetException e ) {
-                    throw new RuntimeException( e );
-                }
-            }
-            results.removeAll( toRemove );
+    private void filterByTaxon( SearchSettings settings, Collection<SearchResult> results ) { 
+        if ( settings.getTaxon() == null ) {
+            return;
         }
+        Collection<SearchResult> toRemove = new HashSet<SearchResult>();
+        Taxon t = settings.getTaxon();
+        for ( SearchResult sr : results ) {
+
+            Object o = sr.getResultObject();
+            try {
+                Method m = o.getClass().getMethod( "getTaxon", new Class[] {} );
+                Taxon currentTaxon = ( Taxon ) m.invoke( o, new Object[] {} );
+                if ( !currentTaxon.equals( t ) ) {
+                    toRemove.add( sr );
+                }
+            } catch ( SecurityException e ) {
+                throw new RuntimeException( e );
+            } catch ( NoSuchMethodException e ) {
+                throw new RuntimeException( e );
+            } catch ( IllegalArgumentException e ) {
+                throw new RuntimeException( e );
+            } catch ( IllegalAccessException e ) {
+                throw new RuntimeException( e );
+            } catch ( InvocationTargetException e ) {
+                throw new RuntimeException( e );
+            }
+        }
+        results.removeAll( toRemove );
     }
 
     /**

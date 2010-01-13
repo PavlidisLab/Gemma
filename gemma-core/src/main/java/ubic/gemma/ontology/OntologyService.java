@@ -54,6 +54,8 @@ import ubic.gemma.model.expression.biomaterial.BioMaterialService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.ontology.providers.MgedOntologyService;
 import ubic.gemma.search.SearchResult;
 import ubic.gemma.search.SearchService;
@@ -146,6 +148,9 @@ public class OntologyService implements InitializingBean {
     private FMAOntologyService fmaOntologyService;
 
     @Autowired
+    private TaxonService taxonService;
+
+    @Autowired
     private MgedOntologyService mgedOntologyService;
 
     private Collection<AbstractOntologyService> ontologyServices = new HashSet<AbstractOntologyService>();
@@ -181,9 +186,10 @@ public class OntologyService implements InitializingBean {
      * 
      * @param givenQueryString
      * @param categoryUri
+     * @param taxonId Only used if we're going to search for genes or taxon is otherwise relevant.
      * @return
      */
-    public Collection<Characteristic> findExactTerm( String givenQueryString, String categoryUri ) {
+    public Collection<Characteristic> findExactTerm( String givenQueryString, String categoryUri, Long taxonId ) {
 
         if ( StringUtils.isBlank( givenQueryString ) ) return null;
 
@@ -192,8 +198,14 @@ public class OntologyService implements InitializingBean {
 
         String queryString = givenQueryString;
 
-        if ( log.isDebugEnabled() )
+        if ( log.isDebugEnabled() ) {
             log.debug( "starting findExactTerm for " + queryString + ". Timing information begins from here" );
+        }
+
+        Taxon taxon = null;
+        if ( taxonId != null ) {
+            taxon = taxonService.load( taxonId );
+        }
 
         Collection<OntologyResource> results;
         List<Characteristic> searchResults = new ArrayList<Characteristic>();
@@ -234,7 +246,7 @@ public class OntologyService implements InitializingBean {
 
         queryString = OntologySearch.stripInvalidCharacters( givenQueryString );
 
-        searchForGenes( queryString, categoryUri, searchResults );
+        searchForGenes( queryString, categoryUri, taxon, searchResults );
 
         for ( AbstractOntologyService serv : this.ontologyServices ) {
             results = serv.findResources( queryString );
@@ -417,6 +429,8 @@ public class OntologyService implements InitializingBean {
 
     /**
      * Will persist the give vocab characteristic to each expression experiment id supplied in the list.
+     * <p>
+     * AJAX
      * 
      * @param vc
      * @param bmIdList
@@ -429,7 +443,8 @@ public class OntologyService implements InitializingBean {
         Collection<ExpressionExperiment> ees = eeService.loadMultiple( eeIdList );
 
         for ( ExpressionExperiment ee : ees ) {
-            eeService.thawLite( ee );
+            // eeService.thawLite( ee ); // if used from web, this results in double-objectc-in-session issues. see bug
+            // 1801
             Collection<Characteristic> current = ee.getCharacteristics();
             if ( current == null ) continue;
 
@@ -533,7 +548,7 @@ public class OntologyService implements InitializingBean {
 
         Set<Characteristic> chars = new HashSet<Characteristic>();
         chars.add( vc );
-        eeService.thawLite( ee );
+        // eeService.thawLite( ee ); // see bug 1801
         Collection<Characteristic> current = ee.getCharacteristics();
         if ( current == null ) {
             current = new HashSet<Characteristic>( chars );
@@ -692,9 +707,10 @@ public class OntologyService implements InitializingBean {
     /**
      * @param queryString
      * @param categoryUri
+     * @param taxon okay if null
      * @param searchResults
      */
-    private void searchForGenes( String queryString, String categoryUri, List<Characteristic> searchResults ) {
+    private void searchForGenes( String queryString, String categoryUri, Taxon taxon, List<Characteristic> searchResults ) {
         log.info( queryString );
         if ( categoryUri != null
                 && ( categoryUri.equals( "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#GeneticModification" )
@@ -708,6 +724,7 @@ public class OntologyService implements InitializingBean {
             SearchSettings ss = new SearchSettings();
             ss.setQuery( queryString );
             ss.noSearches();
+            ss.setTaxon( taxon );
             ss.setSearchGenes( true );
             Map<Class<?>, List<SearchResult>> geneResults = this.searchService.search( ss, true );
 

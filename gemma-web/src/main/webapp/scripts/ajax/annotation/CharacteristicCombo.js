@@ -5,46 +5,48 @@ Gemma.CharacteristicCombo = Ext.extend(Ext.form.ComboBox, {
 	minChars : 2,
 	selectOnFocus : true,
 	listWidth : 350,
-	
+	taxonId : null,
+	name : 'characteristicCombo',
+
 	initComponent : function() {
 
 		Ext.apply(this, {
 
-			record : Ext.data.Record.create([{
-				name : "id",
-				type : "int"
-			}, {
-				name : "value",
-				type : "string"
-			}, {
-				name : "valueUri",
-				type : "string"
-			}, {
-				name : "categoryUri",
-				type : "string"
-			}, {
-				name : "category",
-				type : "string"
-			}, {
-				name : "hover",
-				mapping : "this",
-				convert : this.getHover.createDelegate(this)
-			}, {
-				name : "style",
-				mapping : "this",
-				convert : this.getStyle.createDelegate(this)
-			}])
-		});
+					record : Ext.data.Record.create([{
+								name : "id",
+								type : "int"
+							}, {
+								name : "value",
+								type : "string"
+							}, {
+								name : "valueUri",
+								type : "string"
+							}, {
+								name : "categoryUri",
+								type : "string"
+							}, {
+								name : "category",
+								type : "string"
+							}, {
+								name : "hover",
+								mapping : "this",
+								convert : this.getHover.createDelegate(this)
+							}, {
+								name : "style",
+								mapping : "this",
+								convert : this.getStyle.createDelegate(this)
+							}])
+				});
 
 		Ext.apply(this, {
-			store : new Ext.data.Store({
-				proxy : new Ext.data.DWRProxy(OntologyService.findExactTerm),
-				reader : new Ext.data.ListRangeReader({
-					id : "id"
-				}, this.record),
-				remoteSort : true
-			})
-		});
+					store : new Ext.data.Store({
+								proxy : new Ext.data.DWRProxy(OntologyService.findExactTerm),
+								reader : new Ext.data.ListRangeReader({
+											id : "id"
+										}, this.record),
+								remoteSort : true
+							})
+				});
 
 		Gemma.CharacteristicCombo.superclass.initComponent.call(this);
 
@@ -59,30 +61,29 @@ Gemma.CharacteristicCombo = Ext.extend(Ext.form.ComboBox, {
 		};
 
 		this.on("select", function(combo, record, index) {
-			this.characteristic.value = record.data.value;
-			this.characteristic.valueUri = record.data.valueUri;
-			combo.setValue(record.data.value);
-		});
+					this.characteristic.value = record.data.value;
+					this.characteristic.valueUri = record.data.valueUri;
+					combo.setValue(record.data.value);
+				});
 
 	},
 
 	getParams : function(query) {
-		return [query, this.characteristic.categoryUri];
+		return [query, this.characteristic.categoryUri, this.taxonId];
 	},
 
 	getCharacteristic : function() {
 		/*
-		 * check to see if the user has typed anything in the combo box; if they
-		 * have, remove the URI from the characteristic and update its value...
+		 * check to see if the user has typed anything in the combo box; if they have, remove the URI from the
+		 * characteristic and update its value...
 		 */
 		if (this.getValue() != this.characteristic.value) {
 			this.characteristic.value = this.getValue();
 			this.characteristic.valueUri = null;
 		}
 		/*
-		 * if we don't have a valueUri or categoryUri set, don't return URI
-		 * fields or a VocabCharacteristic will be created when we only want a
-		 * Characteristic...
+		 * if we don't have a valueUri or categoryUri set, don't return URI fields or a VocabCharacteristic will be
+		 * created when we only want a Characteristic...
 		 */
 		return (this.characteristic.valueUri !== null || this.characteristic.categoryUri !== null)
 				? this.characteristic
@@ -106,8 +107,8 @@ Gemma.CharacteristicCombo = Ext.extend(Ext.form.ComboBox, {
 	},
 
 	/*
-	 * if the characteristic has a URI, use that as the description; if not,
-	 * strip the " -USED- " string (added in OntologyService) if present.
+	 * if the characteristic has a URI, use that as the description; if not, strip the " -USED- " string (added in
+	 * OntologyService) if present.
 	 */
 	getHover : function(record) {
 		if (record.valueUri) {
