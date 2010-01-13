@@ -645,11 +645,16 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
         }
 
         String[] factorValueFields = StringUtils.splitPreserveAllTokens( factorValueLine, "\t" );
-        String biomaterialName = StringUtils.strip( factorValueFields[0] );
+        String biomaterialNameFromFile = StringUtils.strip( factorValueFields[0] );
         // format the biomaterial name gemma style
-        String bioMaterialName = SimpleExpressionDataLoaderService.makeBioMaterialName( expressionExperiment,
-                biomaterialName );
-        BioMaterial bioMaterial = biomaterialsInExpressionExperiment.get( bioMaterialName );
+        String bioMaterialNameFormatedWithShortName = SimpleExpressionDataLoaderService.makeBioMaterialName( expressionExperiment,
+                biomaterialNameFromFile );
+        //connected to fix to allow duplicate bioassay names across datasets
+        BioMaterial bioMaterial = biomaterialsInExpressionExperiment.get( bioMaterialNameFormatedWithShortName );
+        if(bioMaterial ==null){
+            log.debug("Name is without short name of experiment appeneded " + biomaterialNameFromFile);
+            bioMaterial = biomaterialsInExpressionExperiment.get( biomaterialNameFromFile );
+        }
         return bioMaterial;
     }
 
