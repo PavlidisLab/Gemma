@@ -111,8 +111,12 @@ public class ExperimentalDesignImporterTestB extends BaseSpringContextTest {
             Thread.sleep( 1000 );
             log.info( "Waiting for mgedontology to load" );
         }
-
-        Taxon salmon = taxonService.findByCommonName( "human" );
+        Taxon salmon = Taxon.Factory.newInstance();
+        salmon.setCommonName( "salmonid" );
+        salmon.setIsSpecies( true );
+        salmon.setIsGenesUsable( true );
+        
+        salmon = taxonService.findOrCreate( salmon );
 
         // doesn't matter what it is for this test, but the test data are from salmon.
         assertNotNull( salmon );
@@ -128,6 +132,7 @@ public class ExperimentalDesignImporterTestB extends BaseSpringContextTest {
         ArrayDesign ad = ArrayDesign.Factory.newInstance();
         ad.setShortName( randomName() );
         ad.setName( "foobly foo" );
+        ad.setPrimaryTaxon( salmon );
 
         metaData.getArrayDesigns().add( ad );
 
@@ -160,7 +165,7 @@ public class ExperimentalDesignImporterTestB extends BaseSpringContextTest {
         this.aclTestUtils.checkEEAcls( ee );
 
         ee = this.expressionExperimentService.load( ee.getId() );
-
+        this.expressionExperimentService.thawLite( ee );
         int s = ee.getExperimentalDesign().getExperimentalFactors().size();
         ExperimentalFactor toDelete = ee.getExperimentalDesign().getExperimentalFactors().iterator().next();
 
@@ -168,7 +173,7 @@ public class ExperimentalDesignImporterTestB extends BaseSpringContextTest {
          * FIXME: this should be a single service call, However, it's not that easy to do. If you run this in a single
          * transaction, you invariably get session errors. See {@link ExperimentalDesignController}
          */
-        this.expressionExperimentService.thawLite( ee );
+        
         for ( BioAssay ba : ee.getBioAssays() ) {
             for ( BioMaterial bm : ba.getSamplesUsed() ) {
                 boolean removed = false;
