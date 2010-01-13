@@ -51,6 +51,7 @@ import ubic.gemma.ontology.providers.MgedOntologyService;
 import ubic.gemma.security.authorization.acl.AclTestUtils;
 import ubic.gemma.testing.BaseSpringContextTest;
 
+
 /**
  * @author Paul
  * @version $Id$
@@ -127,7 +128,7 @@ public class ExperimentalDesignImporterTest extends BaseSpringContextTest {
     public final void testParse() throws Exception {
 
         InputStream is = this.getClass().getResourceAsStream( "/data/loader/expression/experimentalDesignTest.txt" );
-
+      
         experimentalDesignImporter.importDesign( ee, is, false );
 
         Collection<BioMaterial> bms = new HashSet<BioMaterial>();
@@ -150,8 +151,8 @@ public class ExperimentalDesignImporterTest extends BaseSpringContextTest {
 
         experimentalDesignImporter.importDesign( ee, is, true );
 
-        // / confirm we didn't save anything.
-        assertEquals( 0, ee.getExperimentalDesign().getExperimentalFactors().size() );
+       
+        assertEquals( 4, ee.getExperimentalDesign().getExperimentalFactors().size() );
 
     }
 
