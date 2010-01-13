@@ -166,7 +166,7 @@ Gemma.ExperimentalFactorGrid = Ext.extend(Gemma.GemmaGridPanel, {
 									Ext.Msg.alert("Error", er);
 								}.createDelegate(this);
 
-								ExperimentalDesignController.deleteExperimentalFactors(selected, {
+								ExperimentalDesignController.deleteExperimentalFactors(this.experimentalDesign, selected, {
 											callback : callback,
 											errorHandler : errorHandler
 										});
