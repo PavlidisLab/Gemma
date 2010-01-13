@@ -86,13 +86,15 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     /**
      * @see ExpressionExperimentDao#create(int, Collection)
      */
-    public Collection<ExpressionExperiment> create( final int transform, final Collection<ExpressionExperiment> entities ) {
+    public Collection<? extends ExpressionExperiment> create( final int transform,
+            final Collection<? extends ExpressionExperiment> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "ExpressionExperiment.create - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNewSession( new HibernateCallback<Object>() {
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                for ( Iterator<? extends ExpressionExperiment> entityIterator = entities.iterator(); entityIterator
+                        .hasNext(); ) {
                     create( transform, ( ExpressionExperiment ) entityIterator.next() );
                 }
                 return null;
@@ -116,7 +118,7 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
      * @see ExpressionExperimentDao#create(Collection)
      */
 
-    public Collection create( final Collection entities ) {
+    public Collection<? extends ExpressionExperiment> create( final Collection<? extends ExpressionExperiment> entities ) {
         return create( TRANSFORM_NONE, entities );
     }
 
@@ -147,7 +149,7 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     /**
      * @see ExpressionExperimentDao#expressionExperimentValueObjectToEntityCollection(Collection)
      */
-    public final void expressionExperimentValueObjectToEntityCollection( Collection instances ) {
+    public final void expressionExperimentValueObjectToEntityCollection( Collection<ExpressionExperiment> instances ) {
         if ( instances != null ) {
             for ( final Iterator<? extends Object> iterator = instances.iterator(); iterator.hasNext(); ) {
                 // - remove an objects that are null or not of the correct instance
