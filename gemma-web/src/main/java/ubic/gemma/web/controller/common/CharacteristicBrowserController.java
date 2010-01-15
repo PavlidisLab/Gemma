@@ -345,13 +345,8 @@ public class CharacteristicBrowserController {
     private Collection<Characteristic> convertToCharacteristic( Collection<AnnotationValueObject> avos ) {
         Collection<Characteristic> result = new HashSet<Characteristic>();
         for ( AnnotationValueObject avo : avos ) {
-            if ( avo.getObjectClass() == null ) {
-                // This should NOT happen...
-                log.warn( "Null object class for object with id=" + avo.getId() + " (probably a characteristic)" );
+            if ( avo.getObjectClass() != null && avo.getObjectClass().equals( FactorValue.class.getSimpleName() ) )
                 continue;
-            }
-
-            if ( avo.getObjectClass().equals( FactorValue.class.getSimpleName() ) ) continue;
 
             VocabCharacteristic vc = convertAvo2Characteristic( avo );
 
