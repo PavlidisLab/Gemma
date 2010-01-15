@@ -114,6 +114,8 @@ Gemma.AnnotationGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				}
 			},
 
+			forceValidation : true, // always fire edit event even if text doesn't change - the url might have. But this isn't good enough, ext has a limitation.
+
 			useDefaultToolbar : true,
 
 			record : Ext.data.Record.create([{

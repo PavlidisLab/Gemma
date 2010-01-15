@@ -63,7 +63,11 @@ Gemma.CharacteristicCombo = Ext.extend(Ext.form.ComboBox, {
 		this.on("select", function(combo, record, index) {
 					this.characteristic.value = record.data.value;
 					this.characteristic.valueUri = record.data.valueUri;
-					combo.setValue(record.data.value);
+					/*
+					 * The addition of '.' is a complete hack to workaround an extjs limitation. It's to make sure extjs
+					 * knows we want it to detect a change. See bug 1811
+					 */
+					combo.setValue(record.data.value + ".");
 				});
 
 	},
@@ -73,11 +77,12 @@ Gemma.CharacteristicCombo = Ext.extend(Ext.form.ComboBox, {
 	},
 
 	getCharacteristic : function() {
+
 		/*
-		 * check to see if the user has typed anything in the combo box; if they have, remove the URI from the
-		 * characteristic and update its value...
+		 * check to see if the user has typed anything in the combo box (rather than selecting something); if they have,
+		 * remove the URI from the characteristic and update its value, so we end up with a plain text. See note about hack '.' above.
 		 */
-		if (this.getValue() != this.characteristic.value) {
+		if (this.getValue() != this.characteristic.value + ".") {
 			this.characteristic.value = this.getValue();
 			this.characteristic.valueUri = null;
 		}
