@@ -70,9 +70,9 @@ var submitDesign = function() {
 					Ext.Msg.alert("Success", "Design imported.");
 					Ext.getCmp('experimental-factor-grid').getStore().reload();
 					// Ext.getCmp('factor-value-grid').getStore().reload(); // should have started out empty anyway.
-					//biomaterial-grid-panel was not available to initialise gets initialised on tabchange
-					//Ext.getCmp('biomaterial-grid-panel').init();
-					
+					// biomaterial-grid-panel was not available to initialise gets initialised on tabchange
+					// Ext.getCmp('biomaterial-grid-panel').init();
+
 				}
 			});
 };
@@ -164,18 +164,18 @@ Ext.onReady(function() {
 			 * Only initialize once we are viewing the tab to help ensure the scroll bars are rendered right away.
 			 */
 			tabPanel.on('tabchange', function(panel, tab) {
-						
+
 						if (!bioMaterialEditor.firstInitDone && tab.contentEl == 'bioMaterialsPanel') {
 							bioMaterialEditor.init();
 						}
 					});
 
-			experimentalFactorGrid.on("experimentalfactorchange", function(efgrid, efs) {					
-						bioMaterialEditor.init(); 
+			experimentalFactorGrid.on("experimentalfactorchange", function(efgrid, efs) {
+						bioMaterialEditor.init();
 						factorValueGrid.enable();
 						factorValueGrid.setTitle("Factor values");
 						factorValueGrid.setExperimentalFactor(null);
-						
+
 					});
 
 			experimentalFactorGrid.on("experimentalfactorselected", function(factor) {
@@ -183,7 +183,7 @@ Ext.onReady(function() {
 						if (factor.get("type") == "Continuous") {
 							factorValueGrid
 									.setTitle("Continuous values not displayed here, see the 'sample details' tab");
-							
+
 							factorValueGrid.disable();
 						} else {
 							factorValueGrid.enable();
@@ -193,15 +193,18 @@ Ext.onReady(function() {
 					});
 
 			factorValueGrid.on("factorvaluecreate", function(fvgrid, fvs) {
-						bioMaterialEditor.grid.reloadFactorValues();
+						if (bioMaterialEditor.grid != null)
+							bioMaterialEditor.grid.reloadFactorValues();
 					});
 
 			factorValueGrid.on("factorvaluechange", function(fvgrid, fvs) {
-						bioMaterialEditor.grid.reloadFactorValues();
+						if (bioMaterialEditor.grid != null)
+							bioMaterialEditor.grid.reloadFactorValues();
 					});
 
 			factorValueGrid.on("factorvaluedelete", function(fvgrid, fvs) {
-						bioMaterialEditor.grid.reloadFactorValues();
+						if (bioMaterialEditor.grid != null)
+							bioMaterialEditor.grid.reloadFactorValues();
 					});
 
 		});
