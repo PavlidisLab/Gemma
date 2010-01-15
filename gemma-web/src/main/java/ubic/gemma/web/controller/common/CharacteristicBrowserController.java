@@ -372,9 +372,8 @@ public class CharacteristicBrowserController {
     private Collection<FactorValue> convertToFactorValuesWithCharacteristics( Collection<AnnotationValueObject> avos ) {
         Collection<FactorValue> result = new HashSet<FactorValue>();
         for ( AnnotationValueObject avo : avos ) {
-            assert avo.getObjectClass() != null;
-
-            if ( !avo.getObjectClass().equals( FactorValue.class.getSimpleName() ) ) continue;
+            if ( avo.getObjectClass() == null || !avo.getObjectClass().equals( FactorValue.class.getSimpleName() ) )
+                continue;
 
             if ( avo.getId() == null ) {
                 log.warn( "No id" );
