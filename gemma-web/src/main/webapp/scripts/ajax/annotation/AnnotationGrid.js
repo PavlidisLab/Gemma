@@ -268,8 +268,8 @@ Gemma.AnnotationGrid = Ext.extend(Gemma.GemmaGridPanel, {
 							});
 					this.getColumnModel().setEditor(CATEGORY_COLUMN, categoryEditor);
 
-					// Value setup 
-					this.valueCombo = new Gemma.CharacteristicCombo({ 
+					// Value setup
+					this.valueCombo = new Gemma.CharacteristicCombo({
 								taxonId : this.taxonId
 							});
 					var valueEditor = new Ext.grid.GridEditor(this.valueCombo);
@@ -360,7 +360,6 @@ Gemma.AnnotationGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				this.getStore().each(function(record) {
 							if (record.dirty) {
 								var row = record.data;
-								// chars.push(this.convertToCharacteristic(row));
 								chars.push(row);
 							}
 						}.createDelegate(this), this);
