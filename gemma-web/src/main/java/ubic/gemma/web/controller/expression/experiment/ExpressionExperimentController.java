@@ -467,6 +467,9 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
                 annotationValue.setTermUri( vc.getValueUri() );
                 String termName = getLabelFromUri( vc.getValueUri() );
                 if ( termName != null ) annotationValue.setTermName( termName );
+                annotationValue.setObjectClass( VocabCharacteristic.class.getSimpleName() );
+            } else {
+                annotationValue.setObjectClass( Characteristic.class.getSimpleName() );
             }
             annotations.add( annotationValue );
         }
