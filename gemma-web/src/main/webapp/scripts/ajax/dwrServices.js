@@ -530,6 +530,9 @@ SecurityController.removeGroupReadable = function(p0, p1, callback) {
 SecurityController.updatePermissions = function(p0, callback) {
 	dwr.engine._execute(SecurityController._path, 'SecurityController', 'updatePermissions', p0, callback);
 }
+SecurityController.updatePermission = function(p0, callback) {
+	dwr.engine._execute(SecurityController._path, 'SecurityController', 'updatePermission', p0, callback);
+}
 SecurityController.getGroupMembers = function(p0, callback) {
 	dwr.engine._execute(SecurityController._path, 'SecurityController', 'getGroupMembers', p0, callback);
 }

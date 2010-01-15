@@ -89,28 +89,6 @@ public class SecurityController {
     }
 
     /**
-     * AJAX, but administrator-only!
-     * 
-     * @return
-     */
-    public Collection<SidValueObject> getAvailableSids() {
-        List<SidValueObject> results = new ArrayList<SidValueObject>();
-        try {
-            for ( Sid s : securityService.getAvailableSids() ) {
-                SidValueObject sv = new SidValueObject( s );
-
-                results.add( sv );
-            }
-        } catch ( AccessDeniedException e ) {
-            results.clear();
-        }
-
-        Collections.sort( results );
-
-        return results;
-    }
-
-    /**
      *AJAX
      * 
      * @param groupName
@@ -176,6 +154,28 @@ public class SecurityController {
     }
 
     /**
+     * AJAX, but administrator-only!
+     * 
+     * @return
+     */
+    public Collection<SidValueObject> getAvailableSids() {
+        List<SidValueObject> results = new ArrayList<SidValueObject>();
+        try {
+            for ( Sid s : securityService.getAvailableSids() ) {
+                SidValueObject sv = new SidValueObject( s );
+
+                results.add( sv );
+            }
+        } catch ( AccessDeniedException e ) {
+            results.clear();
+        }
+
+        Collections.sort( results );
+
+        return results;
+    }
+
+    /**
      * @param groupName
      * @return
      */
@@ -233,35 +233,6 @@ public class SecurityController {
     }
 
     /**
-     * Create a fully-populated value object for the given securable.
-     * 
-     * @param s
-     * @return
-     */
-    private SecurityInfoValueObject securable2VO( Securable s ) {
-        /*
-         * Problem: this is quite slow.
-         */
-        boolean isPublic = securityService.isPublic( s );
-        boolean isShared = securityService.isShared( s );
-
-        SecurityInfoValueObject result = new SecurityInfoValueObject( s );
-
-        result.setAvailableGroups( getGroupsForCurrentUser() );
-        result.setPubliclyReadable( isPublic );
-        result.setGroupsThatCanRead( securityService.getGroupsReadableBy( s ) );
-        result.setGroupsThatCanWrite( securityService.getGroupsEditableBy( s ) );
-        result.setShared( isShared );
-        result.setOwner( new SidValueObject( securityService.getOwner( s ) ) );
-
-        if ( Describable.class.isAssignableFrom( s.getClass() ) ) {
-            result.setEntityDescription( ( ( Describable ) s ).getDescription() );
-            result.setEntityName( ( ( Describable ) s ).getName() );
-        }
-        return result;
-    }
-
-    /**
      * AJAX
      * 
      * @param currentGroup A specific group that we're focusing on. Can be null
@@ -291,63 +262,6 @@ public class SecurityController {
          */
 
         Collection<SecurityInfoValueObject> result = securables2VOs( secs, currentGroup );
-        return result;
-    }
-
-    /**
-     * @param securables
-     * @param currentGroup A specific group that we're focusing on. Can be null
-     * @return
-     */
-    private Collection<SecurityInfoValueObject> securables2VOs( Collection<? extends Securable> securables,
-            String currentGroup ) {
-
-        Collection<SecurityInfoValueObject> result = new HashSet<SecurityInfoValueObject>();
-
-        if ( securables.isEmpty() ) {
-            return result;
-        }
-
-        /*
-         * Fast computations out-of-loop
-         */
-        Collection<String> groupsForCurrentUser = getGroupsForCurrentUser();
-        Map<Securable, Boolean> privacy = securityService.arePrivate( securables );
-        Map<Securable, Boolean> sharedness = securityService.areShared( securables );
-        Map<Securable, Sid> owners = securityService.getOwners( securables );
-        Map<Securable, Collection<String>> groupsReadableBy = securityService.getGroupsReadableBy( securables );
-        Map<Securable, Collection<String>> groupsEditableBy = securityService.getGroupsEditableBy( securables );
-
-        // int i = 0; // TESTING
-        for ( Securable s : securables ) {
-            SecurityInfoValueObject vo = new SecurityInfoValueObject( s );
-            vo.setCurrentGroup( currentGroup );
-            vo.setAvailableGroups( groupsForCurrentUser );
-            vo.setPubliclyReadable( !privacy.get( s ) );
-            vo.setShared( sharedness.get( s ) );
-            vo.setOwner( new SidValueObject( owners.get( s ) ) );
-            vo.setGroupsThatCanRead( groupsReadableBy.get( s ) );
-            vo.setGroupsThatCanWrite( groupsEditableBy.get( s ) );
-
-            vo.setEntityClazz( s.getClass().getName() );
-
-            if ( currentGroup != null ) {
-                vo.setCurrentGroupCanRead( groupsReadableBy.get( s ).contains( currentGroup ) );
-                vo.setCurrentGroupCanWrite( groupsEditableBy.get( s ).contains( currentGroup ) );
-            }
-
-            if ( Describable.class.isAssignableFrom( s.getClass() ) ) {
-                // vo.setEntityDescription( ( ( Describable ) s ).getDescription() );
-                vo.setEntityName( ( ( Describable ) s ).getName() );
-            }
-
-            if ( ExpressionExperiment.class.isAssignableFrom( s.getClass() ) ) {
-                vo.setEntityShortName( ( ( ExpressionExperiment ) s ).getShortName() );
-            }
-
-            result.add( vo );
-            // if ( ++i > 10 ) break; // TESTING
-        }
         return result;
     }
 
@@ -472,20 +386,11 @@ public class SecurityController {
     }
 
     /**
-     * AJAX (overloaded)
+     * AJAX
      * 
      * @param settings
      */
-    public void updatePermissions( Collection<SecurityInfoValueObject> settings ) {
-        for ( SecurityInfoValueObject so : settings ) {
-            this.updatePermission( so );
-        }
-    }
-
-    /**
-     * @param settings
-     */
-    private void updatePermission( SecurityInfoValueObject settings ) {
+    public void updatePermission( SecurityInfoValueObject settings ) {
         EntityDelegator sd = new EntityDelegator();
         sd.setId( settings.getEntityId() );
         sd.setClassDelegatingFor( settings.getEntityClazz() );
@@ -588,6 +493,17 @@ public class SecurityController {
     }
 
     /**
+     * AJAX  
+     * 
+     * @param settings
+     */
+    public void updatePermissions( Collection<SecurityInfoValueObject> settings ) {
+        for ( SecurityInfoValueObject so : settings ) {
+            this.updatePermission( so );
+        }
+    }
+
+    /**
      * @return groups the user can edit (not just the ones they are in!)
      */
     private Collection<String> getGroupsForCurrentUser() {
@@ -627,6 +543,92 @@ public class SecurityController {
             throw new IllegalArgumentException( "Entity does not exist or user does not have access." );
         }
         return s;
+    }
+
+    /**
+     * Create a fully-populated value object for the given securable.
+     * 
+     * @param s
+     * @return
+     */
+    private SecurityInfoValueObject securable2VO( Securable s ) {
+        /*
+         * Problem: this is quite slow.
+         */
+        boolean isPublic = securityService.isPublic( s );
+        boolean isShared = securityService.isShared( s );
+
+        SecurityInfoValueObject result = new SecurityInfoValueObject( s );
+
+        result.setAvailableGroups( getGroupsForCurrentUser() );
+        result.setPubliclyReadable( isPublic );
+        result.setGroupsThatCanRead( securityService.getGroupsReadableBy( s ) );
+        result.setGroupsThatCanWrite( securityService.getGroupsEditableBy( s ) );
+        result.setShared( isShared );
+        result.setOwner( new SidValueObject( securityService.getOwner( s ) ) );
+
+        if ( Describable.class.isAssignableFrom( s.getClass() ) ) {
+            result.setEntityDescription( ( ( Describable ) s ).getDescription() );
+            result.setEntityName( ( ( Describable ) s ).getName() );
+        }
+        return result;
+    }
+
+    /**
+     * @param securables
+     * @param currentGroup A specific group that we're focusing on. Can be null
+     * @return
+     */
+    private Collection<SecurityInfoValueObject> securables2VOs( Collection<? extends Securable> securables,
+            String currentGroup ) {
+
+        Collection<SecurityInfoValueObject> result = new HashSet<SecurityInfoValueObject>();
+
+        if ( securables.isEmpty() ) {
+            return result;
+        }
+
+        /*
+         * Fast computations out-of-loop
+         */
+        Collection<String> groupsForCurrentUser = getGroupsForCurrentUser();
+        Map<Securable, Boolean> privacy = securityService.arePrivate( securables );
+        Map<Securable, Boolean> sharedness = securityService.areShared( securables );
+        Map<Securable, Sid> owners = securityService.getOwners( securables );
+        Map<Securable, Collection<String>> groupsReadableBy = securityService.getGroupsReadableBy( securables );
+        Map<Securable, Collection<String>> groupsEditableBy = securityService.getGroupsEditableBy( securables );
+
+        // int i = 0; // TESTING
+        for ( Securable s : securables ) {
+            SecurityInfoValueObject vo = new SecurityInfoValueObject( s );
+            vo.setCurrentGroup( currentGroup );
+            vo.setAvailableGroups( groupsForCurrentUser );
+            vo.setPubliclyReadable( !privacy.get( s ) );
+            vo.setShared( sharedness.get( s ) );
+            vo.setOwner( new SidValueObject( owners.get( s ) ) );
+            vo.setGroupsThatCanRead( groupsReadableBy.get( s ) );
+            vo.setGroupsThatCanWrite( groupsEditableBy.get( s ) );
+
+            vo.setEntityClazz( s.getClass().getName() );
+
+            if ( currentGroup != null ) {
+                vo.setCurrentGroupCanRead( groupsReadableBy.get( s ).contains( currentGroup ) );
+                vo.setCurrentGroupCanWrite( groupsEditableBy.get( s ).contains( currentGroup ) );
+            }
+
+            if ( Describable.class.isAssignableFrom( s.getClass() ) ) {
+                // vo.setEntityDescription( ( ( Describable ) s ).getDescription() );
+                vo.setEntityName( ( ( Describable ) s ).getName() );
+            }
+
+            if ( ExpressionExperiment.class.isAssignableFrom( s.getClass() ) ) {
+                vo.setEntityShortName( ( ( ExpressionExperiment ) s ).getShortName() );
+            }
+
+            result.add( vo );
+            // if ( ++i > 10 ) break; // TESTING
+        }
+        return result;
     }
 
 }

@@ -1214,6 +1214,7 @@
 								<value>removeGroupReadable</value>
 								<value>removeUsersFromGroup</value>
 								<value>updatePermissions</value>
+								<value>updatePermission</value>
 							</list>
 						</property>
 					</bean>

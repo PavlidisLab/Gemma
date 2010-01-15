@@ -159,7 +159,7 @@ Gemma.SecurityManager.managePermissions = function(elid, clazz, id) {
 							securityInfo.groupsThatCanWrite = updatedGroupsThatCanWrite;
 							securityInfo.groupsThatCanRead = updatedGroupsThatCanRead;
 
-							SecurityController.updatePermissions(securityInfo, {
+							SecurityController.updatePermission(securityInfo, {
 										callback : function() {
 											sp.destroy();
 

@@ -833,8 +833,8 @@ public class SecurityService {
 
         Collection<String> groups = checkForGroupAccessByCurrentuser( groupName );
 
-        if ( !groups.contains( groupName ) ) {
-            throw new AccessDeniedException( "User doesn't have access to that group" );
+        if ( !groups.contains( groupName ) && !isUserAdmin() ) {
+            throw new AccessDeniedException( "User doesn't have access to that group: " + groupName );
         }
 
         List<GrantedAuthority> groupAuthorities = userManager.findGroupAuthorities( groupName );
@@ -868,7 +868,7 @@ public class SecurityService {
 
         Collection<String> groups = checkForGroupAccessByCurrentuser( groupName );
 
-        if ( !groups.contains( groupName ) ) {
+        if ( !groups.contains( groupName ) && !isUserAdmin() ) {
             throw new AccessDeniedException( "User doesn't have access to that group" );
         }
 
