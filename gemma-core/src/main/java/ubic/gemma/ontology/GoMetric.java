@@ -38,6 +38,7 @@ import ubic.gemma.model.association.Gene2GOAssociationService;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.ontology.providers.GeneOntologyService;
+import ubic.gemma.ontology.providers.GeneOntologyService.GOAspect;
 
 /**
  * @author meeta
@@ -52,7 +53,7 @@ public class GoMetric {
 
     @Autowired
     private Gene2GOAssociationService gene2GOAssociationService;
-    
+
     @Autowired
     private GeneOntologyService geneOntologyService;
 
@@ -185,6 +186,22 @@ public class GoMetric {
      */
     public Double computeMergedOverlap( List<Gene> sameGenes1, List<Gene> sameGenes2,
             Map<Long, Collection<String>> geneGoMap ) {
+        return computeMergedOverlap( sameGenes1, sameGenes2, geneGoMap, null );
+    }
+
+    /**
+     * Tailored to handle computing overlap between two gene lists which may contain duplicate genes of the same name
+     * but different IDs. If gene lists do not contain duplicates (size = 1) the result will be the same as that of
+     * computing simple overlap.
+     * 
+     * @param sameGenes1
+     * @param sameGenes2
+     * @param geneGoMap
+     * @param goAspect if non-null, limit overlap to only terms in the given aspect.
+     * @return number of overlapping terms between merged sets of GO terms for duplicate gene lists
+     */
+    public Double computeMergedOverlap( List<Gene> sameGenes1, List<Gene> sameGenes2,
+            Map<Long, Collection<String>> geneGoMap, GOAspect goAspect ) {
         HashSet<String> mergedGoTerms1 = new HashSet<String>();
         HashSet<String> mergedGoTerms2 = new HashSet<String>();
 
@@ -204,9 +221,25 @@ public class GoMetric {
         double score = 0.0;
 
         for ( String goTerm1 : mergedGoTerms1 ) {
+
+            /*
+             * aspect filtering.
+             */
+            if ( goAspect != null ) {
+                if ( GeneOntologyService.getTermAspect( goTerm1 ).equals( goAspect ) ) {
+                    continue;
+                }
+            }
+
             if ( goTerm1.equalsIgnoreCase( process ) || goTerm1.equalsIgnoreCase( function )
                     || goTerm1.equalsIgnoreCase( component ) ) continue;
             for ( String goTerm2 : mergedGoTerms2 ) {
+
+                if ( goAspect != null ) {
+                    if ( GeneOntologyService.getTermAspect( goTerm2 ).equals( goAspect ) ) {
+                        continue;
+                    }
+                }
 
                 if ( goTerm2.equalsIgnoreCase( process ) || goTerm2.equalsIgnoreCase( function )
                         || goTerm2.equalsIgnoreCase( component ) ) continue;
@@ -542,8 +575,8 @@ public class GoMetric {
             log.error( "computeSimpleOverlap called before geneOntologyService is ready!!!" );
 
         Double avgScore = 0.0;
-        Collection<OntologyTerm> masterGO = geneOntologyService.getGOTerms( gene1, includePartOf );
-        Collection<OntologyTerm> coExpGO = geneOntologyService.getGOTerms( gene2, includePartOf );
+        Collection<OntologyTerm> masterGO = geneOntologyService.getGOTerms( gene1, includePartOf, null );
+        Collection<OntologyTerm> coExpGO = geneOntologyService.getGOTerms( gene2, includePartOf, null );
 
         Collection<OntologyTerm> overlappingTerms = new HashSet<OntologyTerm>();
         for ( OntologyTerm o : masterGO ) {
@@ -572,8 +605,8 @@ public class GoMetric {
         if ( !geneOntologyService.isReady() )
             log.error( "computeSimpleOverlap called before geneOntologyService is ready!!!" );
 
-        Collection<OntologyTerm> masterGO = geneOntologyService.getGOTerms( gene1, includePartOf );
-        Collection<OntologyTerm> coExpGO = geneOntologyService.getGOTerms( gene2, includePartOf );
+        Collection<OntologyTerm> masterGO = geneOntologyService.getGOTerms( gene1, includePartOf, null );
+        Collection<OntologyTerm> coExpGO = geneOntologyService.getGOTerms( gene2, includePartOf, null );
 
         Collection<OntologyTerm> overlappingTerms = new HashSet<OntologyTerm>();
         for ( OntologyTerm o : masterGO ) {

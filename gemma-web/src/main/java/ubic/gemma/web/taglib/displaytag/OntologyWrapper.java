@@ -49,7 +49,7 @@ public class OntologyWrapper extends TableDecorator {
 
     public String getAspect() {
         VocabCharacteristic oe = ( VocabCharacteristic ) getCurrentRowObject();
-        return GeneOntologyService.getTermAspect( oe );
+        return GeneOntologyService.getTermAspect( oe ).toString().toLowerCase();
     }
 
 }

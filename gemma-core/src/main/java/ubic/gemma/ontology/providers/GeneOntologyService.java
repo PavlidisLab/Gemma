@@ -87,6 +87,10 @@ public class GeneOntologyService implements InitializingBean {
 
     private final static String MF_URL = "http://www.berkeleybop.org/ontologies/obo-all/molecular_function/molecular_function.owl";
 
+    public static enum GOAspect {
+        MOLECULAR_FUNCTION, BIOLOGICAL_PROCESS, CELLULAR_COMPONENT
+    };
+
     // private DirectedGraph graph = null;
 
     private static final String PART_OF_URI = "http://purl.org/obo/owl/OBO_REL#OBO_REL_part_of";
@@ -95,6 +99,8 @@ public class GeneOntologyService implements InitializingBean {
 
     // map of uris to terms
     private static Map<String, OntologyTerm> uri2Term;
+
+    private static Map<String, GOAspect> term2Aspect = new HashMap<String, GOAspect>();
 
     /**
      * @param term
@@ -118,7 +124,7 @@ public class GeneOntologyService implements InitializingBean {
      * @param goId
      * @return
      */
-    public static String getTermAspect( String goId ) {
+    public static GOAspect getTermAspect( String goId ) {
         OntologyTerm term = getTermForId( goId );
         return getTermAspect( term );
     }
@@ -127,7 +133,7 @@ public class GeneOntologyService implements InitializingBean {
      * @param goId
      * @return
      */
-    public static String getTermAspect( VocabCharacteristic goId ) {
+    public static GOAspect getTermAspect( VocabCharacteristic goId ) {
         String string = asRegularGoId( goId );
         return getTermAspect( string );
     }
@@ -157,7 +163,13 @@ public class GeneOntologyService implements InitializingBean {
      * @param term
      * @return
      */
-    private static String getTermAspect( OntologyTerm term ) {
+    private static GOAspect getTermAspect( OntologyTerm term ) {
+
+        String goid = term.getTerm();
+        if ( term2Aspect.containsKey( goid ) ) {
+            return term2Aspect.get( goid );
+        }
+
         String nameSpace = null;
         for ( AnnotationProperty annot : term.getAnnotations() ) {
             if ( annot.getProperty().equals( "hasOBONamespace" ) ) {
@@ -165,7 +177,15 @@ public class GeneOntologyService implements InitializingBean {
                 break;
             }
         }
-        return nameSpace;
+
+        if ( nameSpace == null ) {
+            throw new IllegalArgumentException( "Unknown GO id " + goid );
+        }
+
+        GOAspect aspect = GOAspect.valueOf( nameSpace.toUpperCase() );
+        term2Aspect.put( goid, aspect );
+
+        return aspect;
     }
 
     /**
@@ -211,23 +231,7 @@ public class GeneOntologyService implements InitializingBean {
      * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
      */
     public void afterPropertiesSet() throws Exception {
-        // try {
-        //
-        // if ( cacheManager.cacheExists( WHATS_NEW_CACHE ) ) {
-        // return;
-        // }
-        //
-        // // last two values are timetolive and timetoidle.
-        // whatsNewCache = new Cache( WHATS_NEW_CACHE, 1500, false, false, 100000, 100000 );
-        //
-        // cacheManager.addCache( whatsNewCache );
-        // whatsNewCache = cacheManager.getCache( WHATS_NEW_CACHE );
-        //
-        // } catch ( CacheException e ) {
-        // throw new RuntimeException( e );
-        // }
         this.init( false );
-
     }
 
     /**
@@ -368,7 +372,6 @@ public class GeneOntologyService implements InitializingBean {
 
     public Collection<OntologyTerm> getAllParents( OntologyTerm entry, boolean includePartOf ) {
         return getAncestors( entry, includePartOf );
-
     }
 
     /**
@@ -416,7 +419,7 @@ public class GeneOntologyService implements InitializingBean {
      * @param geneOntologyTerms
      */
     public Collection<OntologyTerm> getGOTerms( Gene gene ) {
-        return getGOTerms( gene, true );
+        return getGOTerms( gene, true, null );
     }
 
     /**
@@ -428,6 +431,19 @@ public class GeneOntologyService implements InitializingBean {
      * @return
      */
     public Collection<OntologyTerm> getGOTerms( Gene gene, boolean includePartOf ) {
+        return getGOTerms( gene, includePartOf, null );
+    }
+
+    /**
+     * Get all GO terms for a gene, including parents of terms via is-a relationships; and optinally also parents via
+     * part-of relationships.
+     * 
+     * @param gene
+     * @param includePartOf
+     * @param goAspect limit only to the given aspect (pass null to use all)
+     * @return
+     */
+    public Collection<OntologyTerm> getGOTerms( Gene gene, boolean includePartOf, GOAspect goAspect ) {
         Collection<OntologyTerm> cachedTerms = goTerms.get( gene );
         if ( log.isTraceEnabled() && cachedTerms != null ) {
             logIds( "found cached GO terms for " + gene.getOfficialSymbol(), goTerms.get( gene ) );
@@ -450,6 +466,19 @@ public class GeneOntologyService implements InitializingBean {
             cachedTerms = Collections.unmodifiableCollection( allGOTermSet );
             if ( log.isTraceEnabled() ) logIds( "caching GO terms for " + gene.getOfficialSymbol(), allGOTermSet );
             goTerms.put( gene, cachedTerms );
+        }
+
+        if ( goAspect != null ) {
+
+            Collection<OntologyTerm> finalTerms = new HashSet<OntologyTerm>();
+
+            for ( OntologyTerm ontologyTerm : cachedTerms ) {
+                if ( getTermAspect( ontologyTerm ).equals( goAspect ) ) {
+                    finalTerms.add( ontologyTerm );
+                }
+            }
+
+            return finalTerms;
         }
 
         return cachedTerms;
@@ -580,13 +609,13 @@ public class GeneOntologyService implements InitializingBean {
      */
     public boolean isBiologicalProcess( OntologyTerm term ) {
 
-        String nameSpace = getTermAspect( term );
+        GOAspect nameSpace = getTermAspect( term );
         if ( nameSpace == null ) {
             log.warn( "No namespace for " + term + ", assuming not Biological Process" );
             return false;
         }
 
-        return nameSpace.equals( "biological_process" );
+        return nameSpace.equals( GOAspect.BIOLOGICAL_PROCESS );
     }
 
     /**
@@ -662,6 +691,9 @@ public class GeneOntologyService implements InitializingBean {
         addTerms( terms );
     }
 
+    /**
+     * @param newTerms
+     */
     private void addTerms( Collection<OntologyResource> newTerms ) {
         if ( uri2Term == null ) uri2Term = new HashMap<String, OntologyTerm>();
         for ( OntologyResource term : newTerms ) {
@@ -677,6 +709,11 @@ public class GeneOntologyService implements InitializingBean {
         }
     }
 
+    /**
+     * @param entry
+     * @param includePartOf
+     * @return
+     */
     private synchronized Collection<OntologyTerm> getAncestors( OntologyTerm entry, boolean includePartOf ) {
 
         Collection<OntologyTerm> ancestors = parentsCache.get( entry.getUri() );
@@ -783,6 +820,9 @@ public class GeneOntologyService implements InitializingBean {
         return r;
     }
 
+    /**
+     * 
+     */
     private synchronized void initializeGoOntology() {
 
         Thread loadThread = new Thread( new Runnable() {

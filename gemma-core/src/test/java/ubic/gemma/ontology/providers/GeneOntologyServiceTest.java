@@ -50,6 +50,19 @@ public class GeneOntologyServiceTest extends TestCase {
         assertEquals( 2, terms.size() );
     }
 
+    public final void testGetAspect() throws Exception {
+        String aspect = GeneOntologyService.getTermAspect( "GO:1234567" ).toString().toLowerCase();
+        assertEquals( "molecular_function", aspect );
+        aspect = GeneOntologyService.getTermAspect( "GO:0000107" ).toString().toLowerCase();
+        assertEquals( "molecular_function", aspect );
+        aspect = GeneOntologyService.getTermAspect( "GO:0016791" ).toString().toLowerCase();
+        assertEquals( "molecular_function", aspect );
+        aspect = GeneOntologyService.getTermAspect( "GO:1234567" ).toString().toLowerCase(); // should be cached.
+        assertEquals( "molecular_function", aspect );
+        aspect = GeneOntologyService.getTermAspect( "GO:1234567" ).toString().toLowerCase();
+        assertEquals( "molecular_function", aspect );
+    }
+
     public final void testAsRegularGoId() throws Exception {
         String id = "GO:0000107";
         OntologyTerm termForId = gos.getTermForId( id );
