@@ -58,11 +58,12 @@
 		<directory>target</directory>
 		<finalName>${artifactId}-${version}</finalName>
 		<plugins>
-	<!--
-		<plugin> <groupId>org.dstovall</groupId> <artifactId>onejar-maven-plugin</artifactId> <version>1.4.1</version>
-		<executions> <execution> <configuration> <mainClass>ubic.gemma.apps.GemmaCLI</mainClass> </configuration> <goals>
-		<goal>one-jar</goal> </goals> </execution> </executions> </plugin>
-	--></plugins>
+			<!--
+				<plugin> <groupId>org.dstovall</groupId> <artifactId>onejar-maven-plugin</artifactId> <version>1.4.1</version>
+				<executions> <execution> <configuration> <mainClass>ubic.gemma.apps.GemmaCLI</mainClass> </configuration> <goals>
+				<goal>one-jar</goal> </goals> </execution> </executions> </plugin>
+			-->
+		</plugins>
 	</build>
 	<profiles>
 		<profile>
@@ -101,11 +102,6 @@
 			<version>${project.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>com.ibm.icu</groupId>
-			<artifactId>icu4j</artifactId>
-			<version>3.4.4</version>
-		</dependency>
-		<dependency>
 			<groupId>chibi</groupId>
 			<artifactId>GEOMMTx</artifactId>
 			<version>1.0-SNAPSHOT</version>
@@ -119,7 +115,7 @@
 			<groupId>commons-beanutils</groupId>
 			<artifactId>commons-beanutils</artifactId>
 			<version>1.7.0</version>
-		</dependency> 
+		</dependency>
 		<dependency>
 			<groupId>commons-fileupload</groupId>
 			<artifactId>commons-fileupload</artifactId>
@@ -199,7 +195,7 @@
 		<dependency>
 			<groupId>com.hp.hpl.jena</groupId>
 			<artifactId>jena</artifactId>
-			<version>2.6.0</version>
+			<version>2.6.2</version>
 			<exclusions>
 				<exclusion>
 					<groupId>org.apache.lucene</groupId>
@@ -209,14 +205,15 @@
 		</dependency>
 		<dependency>
 			<groupId>com.hp.hpl.jena</groupId>
-			<artifactId>iri</artifactId>
-			<version>0.6</version>
-		</dependency>
-		<dependency>
-			<groupId>com.hp.hpl.jena</groupId>
 			<artifactId>arq</artifactId>
-			<version>2.8.1</version>
-		</dependency>
+			<version>2.8.2</version>
+			<exclusions>
+				<exclusion>
+					<groupId>org.apache.lucene</groupId>
+					<artifactId>lucene-core</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency> 
 		<dependency>
 			<groupId>concurrent</groupId>
 			<artifactId>concurrent</artifactId>
@@ -408,6 +405,11 @@
 			<id>compass-project.org</id>
 			<name>Compass</name>
 			<url>http://repo.compass-project.org</url>
+		</repository>
+		<repository>
+			<id>jena</id>
+			<name>Jena</name>
+			<url>http://openjena.org/repo/</url>
 		</repository>
 	</repositories>
 	<pluginRepositories>

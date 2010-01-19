@@ -212,8 +212,8 @@
 			<attribute name="javadoc_location" value="http://lucene.apache.org/java/2_3_2/api/"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="var" path="M2_REPO/com/hp/hpl/jena/jena/2.6.0/jena-2.6.0.jar"/>
-	<classpathentry kind="var" path="M2_REPO/com/hp/hpl/jena/arq/2.8.1/arq-2.8.1.jar"/>
+	<classpathentry kind="var" path="M2_REPO/com/hp/hpl/jena/jena/2.6.2/jena-2.6.2.jar"/>
+	<classpathentry kind="var" path="M2_REPO/com/hp/hpl/jena/arq/2.8.2/arq-2.8.2.jar"/>
 	<classpathentry kind="var" path="M2_REPO/com/hp/hpl/jena/iri/0.6/iri-0.6.jar"/>
 	<classpathentry kind="var" path="M2_REPO/org/springframework/spring-webmvc/3.0.0.RELEASE/spring-webmvc-3.0.0.RELEASE.jar" sourcepath="/M2_REPO/org/springframework/spring-webmvc/3.0.0.RC2/spring-webmvc-3.0.0.RC2-sources.jar">
 		<attributes>
