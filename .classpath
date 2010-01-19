@@ -212,8 +212,8 @@
 			<attribute name="javadoc_location" value="http://lucene.apache.org/java/2_3_2/api/"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="var" path="M2_REPO/com/hp/hpl/jena/jena/2.6.2/jena-2.6.2.jar"/>
-	<classpathentry kind="var" path="M2_REPO/com/hp/hpl/jena/arq/2.8.2/arq-2.8.2.jar"/>
+	<classpathentry kind="var" path="M2_REPO/com/hp/hpl/jena/jena/2.6.0/jena-2.6.0.jar"/>
+	<classpathentry kind="var" path="M2_REPO/com/hp/hpl/jena/arq/2.7.0/arq-2.7.0.jar"/>
 	<classpathentry kind="var" path="M2_REPO/com/hp/hpl/jena/iri/0.6/iri-0.6.jar"/>
 	<classpathentry kind="var" path="M2_REPO/org/springframework/spring-webmvc/3.0.0.RELEASE/spring-webmvc-3.0.0.RELEASE.jar" sourcepath="/M2_REPO/org/springframework/spring-webmvc/3.0.0.RC2/spring-webmvc-3.0.0.RC2-sources.jar">
 		<attributes>
@@ -229,7 +229,6 @@
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="var" path="M2_REPO/net/sf/jsr107cache/jsr107cache/1.0/jsr107cache-1.0.jar"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/baseCode"/>
 	<classpathentry kind="var" path="M2_REPO/org/springframework/security/spring-security-acl/3.0.0.CI-SNAPSHOT/spring-security-acl-3.0.0.CI-SNAPSHOT.jar" sourcepath="/JAR_SRC/spring-security-3.0.0.RC1/src/spring-security-acl-3.0.0.RC1-sources.jar">
 		<attributes>
 			<attribute name="javadoc_location" value="http://static.springsource.org/spring-security/site/docs/3.0.x/apidocs/"/>
@@ -323,5 +322,6 @@
 	<classpathentry kind="var" path="M2_REPO/umls/kss-api-strip/5.0/kss-api-strip-5.0.jar"/>
 	<classpathentry kind="var" path="M2_REPO/umls/mmtxProject/2.4C/mmtxProject-2.4C.jar"/>
 	<classpathentry kind="var" path="M2_REPO/chibi/GEOMMTx/1.0-SNAPSHOT/GEOMMTx-1.0-SNAPSHOT.jar"/>
+	<classpathentry kind="var" path="M2_REPO/baseCode/baseCode/1.0.7-SNAPSHOT/baseCode-1.0.7-SNAPSHOT.jar"/>
 	<classpathentry kind="output" path="build/Gemma/WEB-INF/classes"/>
 </classpath>
