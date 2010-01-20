@@ -1,14 +1,13 @@
 # Driver script for the Gemma CLI.
 # $Id$
 
-# This script uses the following environment variables, which you must define here or in your profile.
-GEMMA_LIB=$(echo ~/.groovy/lib/* | tr ' ' ':') 
+# You must define $GEMMA_LIB in your env or here.
+GEMMA_LIB=/cygdrive/c/Temp/gemma.tmp/lib
+JARS=$(echo ${GEMMA_LIB}/* | tr ' ' ':') 
 
 APPARGS=$@
 
+JAVACMD="${JAVA_HOME}/bin/java $JAVA_OPTS"
 
-JAVACMD="${JAVA_HOME}/bin/java"
-
- 
-CMD="$JAVACMD $JAVA_OPTS -classpath ${GEMMA_LIB} $APPARGS"
+CMD="$JAVACMD -classpath ${JARS} $APPARGS"
 $CMD
