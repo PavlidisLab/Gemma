@@ -2,7 +2,8 @@
 # $Id$
 
 # You must define $GEMMA_LIB in your env or here.
-GEMMA_LIB=/cygdrive/c/Temp/gemma.tmp/lib
+# GEMMA_LIB=~/gemma-lib
+
 JARS=$(echo ${GEMMA_LIB}/* | tr ' ' ':') 
 
 APPARGS=$@
