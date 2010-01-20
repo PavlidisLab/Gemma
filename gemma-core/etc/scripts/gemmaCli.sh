@@ -10,5 +10,5 @@ APPARGS=$@
 
 JAVACMD="${JAVA_HOME}/bin/java $JAVA_OPTS"
 
-CMD="$JAVACMD -classpath ${JARS} $APPARGS"
+CMD="$JAVACMD -classpath ${GEMMA_LIB}:${JARS} $APPARGS"
 $CMD
