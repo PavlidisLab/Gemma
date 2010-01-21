@@ -68,10 +68,14 @@
 			<bean class="org.compass.spring.device.hibernate.SpringNativeHibernateExtractor" />
 		</property>
 		<property name="entitiesIndexer">
-			<bean class="org.compass.gps.device.hibernate.indexer.ScrollableHibernateIndexEntitiesIndexer" />
+			<bean class="org.compass.gps.device.hibernate.indexer.ScrollableHibernateIndexEntitiesIndexer">
+				<property name="performOrderById">
+					<value>false</value>
+				</property>
+			</bean>
 		</property>
 		<property name="fetchCount">
-			<value>40</value>
+			<value>50</value>
 		</property>
 		<property name="mirrorDataChanges">
 			<!-- This is critical. If true, then objects are indexed as they are persisted, which is not working for us -->
@@ -250,7 +254,7 @@
 				<prop key="compass.engine.connection">file://${gemma.compass.dir}/compass/gemma/probe</prop>
 				<prop key="compass.engine.lockFile">file://${gemma.compass.dir}/compass/gemma/probe/probe.lock
 				</prop>
-				<prop key="compass.transaction.lockTimeout">20</prop>
+				<prop key="compass.transaction.lockTimeout">60</prop>
 				<prop key="compass.engine.analyzer.default.type">Snowball</prop>
 				<prop key="compass.engine.analyzer.default.name">English</prop>
 				<prop key="compass.engine.optimizer.schedule">false</prop>
@@ -258,8 +262,8 @@
 				</prop>
 				<prop key="compass.engine.optimizer.aggressive.mergeFactor">5</prop>
 				<prop key="compass.engine.indexManagerScheduleInterval">-1</prop>
-				<prop key="compass.engine.mergeFactor">100</prop>
-				<prop key="compass.engine.maxBufferedDocs">100</prop>
+				<prop key="compass.engine.mergeFactor">50</prop>
+				<prop key="compass.engine.maxBufferedDocs">50</prop>
 				<prop key="compass.engine.queryParser.default.defaultOperator">${gemma.search.defaultOperator}</prop>
 			</props>
 		</property>
@@ -282,7 +286,7 @@
 				<prop key="compass.engine.lockFile">
 					file://${gemma.compass.dir}/compass/gemma/biosequence/biosequence.lock
 				</prop>
-				<prop key="compass.transaction.lockTimeout">20</prop>
+				<prop key="compass.transaction.lockTimeout">60</prop>
 				<prop key="compass.engine.analyzer.default.type">Snowball</prop>
 				<prop key="compass.engine.analyzer.default.name">English</prop>
 				<prop key="compass.engine.optimizer.schedule">false</prop>
@@ -290,8 +294,8 @@
 				</prop>
 				<prop key="compass.engine.optimizer.aggressive.mergeFactor">5</prop>
 				<prop key="compass.engine.indexManagerScheduleInterval">-1</prop>
-				<prop key="compass.engine.mergeFactor">100</prop>
-				<prop key="compass.engine.maxBufferedDocs">100</prop>
+				<prop key="compass.engine.mergeFactor">50</prop>
+				<prop key="compass.engine.maxBufferedDocs">50</prop>
 				<prop key="compass.engine.queryParser.default.defaultOperator">${gemma.search.defaultOperator}</prop>
 			</props>
 		</property>
