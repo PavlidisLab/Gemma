@@ -91,6 +91,7 @@
 						</goals>
 						<configuration>
 							<tasks>
+								<mkdir dir="${gemma.output.lib.dir}"  />
 								<delete>
 									<fileset dir="${gemma.output.lib.dir}" includes="*.jar" />
 								</delete>
@@ -133,6 +134,7 @@
 						</goals>
 						<configuration>
 							<tasks>
+								<mkdir dir="${gemma.output.lib.dir}"  />
 								<copy file="src/main/resources/log4j.properties" todir="${gemma.output.lib.dir}" />
 							</tasks>
 						</configuration>
