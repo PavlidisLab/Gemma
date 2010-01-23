@@ -78,18 +78,27 @@ public class DatabaseEntryTag extends TagSupport {
         if ( this.databaseEntry == null ) {
             buf.append( "No accession" );
         } else {
+            String accession = databaseEntry.getAccession();
+
             if ( databaseEntry.getExternalDatabase() != null ) {
+
                 if ( databaseEntry.getExternalDatabase().getName().equalsIgnoreCase( "GEO" ) ) {
-                    String name = databaseEntry.getAccession();
-                    buf.append( name + "&nbsp;<a title='NCBI page for this entry'"
-                            + " target='_blank' href='http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc="
-                            + databaseEntry.getAccession() + "'><img src='/Gemma/images/logo/geoTiny.png' /></a>" );
+
+                    accession = accession.replaceAll( "\\.[1-9]$", "" );
+                    buf.append( accession + "&nbsp;<a title='NCBI page for this entry'"
+                            + " target='_blank' href='http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=" + accession
+                            + "'><img src='/Gemma/images/logo/geoTiny.png' /></a>" );
+                } else if ( databaseEntry.getExternalDatabase().getName().equalsIgnoreCase( "ArrayExpress" ) ) {
+                    buf
+                            .append( accession
+                                    + "&nbsp;<a title='ArrayExpress page for this entry'"
+                                    + " target='_blank' href='http://www.ebi.ac.uk/microarray-as/aer/result?queryFor=Experiment&eAccession="
+                                    + accession + "'><img src='/Gemma/images/logo/arrayExpressTiny.png' /></a>" );
                 } else {
-                    buf.append( databaseEntry.getAccession() + "(" + databaseEntry.getExternalDatabase().getName()
-                            + ":" + ")" );
+                    buf.append( accession + "(" + databaseEntry.getExternalDatabase().getName() + ":" + ")" );
                 }
             } else {
-                buf.append( databaseEntry.getAccession() );
+                buf.append( accession );
             }
         }
 

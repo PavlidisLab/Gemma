@@ -159,7 +159,7 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 					this.change = true;
 				}.createDelegate(this));
 		var w = new Ext.Window({
-					modal : true,
+					modal : false,
 					stateful : false,
 					layout : 'fit',
 					items : [annotator],

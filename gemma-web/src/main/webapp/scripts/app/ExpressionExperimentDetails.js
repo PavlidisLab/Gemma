@@ -259,8 +259,10 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 
 		var logo = '';
 		if (ee.externalDatabase == 'GEO') {
+			var acc = ee.accession;
+			acc = acc.replace(/\.[1-9]$/, ''); // in case of multi-species.
 			logo = '/Gemma/images/logo/geoTiny.png';
-			result = '<a target="_blank" href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=' + ee.accession
+			result = '<a target="_blank" href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=' + acc
 					+ '"><img src="' + logo + '"/></a>';
 
 		} else if (ee.externalDatabase == 'ArrayExpress') {
@@ -643,7 +645,7 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 			},
 
 			renderTo : 'basics',
-			collapsible : true,
+			collapsible : false,
 			bodyBorder : false,
 			frame : false,
 			baseCls : 'x-plain-panel',
