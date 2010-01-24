@@ -96,7 +96,7 @@
 			<attribute name="javadoc_location" value="http://mged.sourceforge.net/software/javadocs/"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="var" path="M2_REPO/org/springframework/security/spring-security-core/3.0.0.CI-SNAPSHOT/spring-security-core-3.0.0.CI-SNAPSHOT.jar" sourcepath="/JAR_SRC/spring-security-3.0.0.RC1/src/spring-security-core-3.0.0.RC1-sources.jar">
+	<classpathentry kind="var" path="M2_REPO/org/springframework/security/spring-security-core/3.0.1.RELEASE/spring-security-core-3.0.1.RELEASE.jar" sourcepath="/JAR_SRC/spring-security-3.0.0.RC1/src/spring-security-core-3.0.0.RC1-sources.jar">
 		<attributes>
 			<attribute name="javadoc_location" value="http://static.springsource.org/spring-security/site/docs/3.0.x/apidocs/"/>
 		</attributes>
@@ -223,13 +223,13 @@
 	<classpathentry kind="var" path="M2_REPO/rome/rome/0.9/rome-0.9.jar"/>
 	<classpathentry kind="var" path="M2_REPO/jdom/jdom/1.0/jdom-1.0.jar"/>
 	<classpathentry kind="var" path="M2_REPO/rome/rome-fetcher/0.9/rome-fetcher-0.9.jar"/>
-	<classpathentry kind="var" path="M2_REPO/org/springframework/security/spring-security-taglibs/3.0.0.CI-SNAPSHOT/spring-security-taglibs-3.0.0.CI-SNAPSHOT.jar" sourcepath="/JAR_SRC/spring-security-3.0.0.RC1/src/spring-security-taglibs-3.0.0.RC1-sources.jar">
+	<classpathentry kind="var" path="M2_REPO/org/springframework/security/spring-security-taglibs/3.0.1.RELEASE/spring-security-taglibs-3.0.1.RELEASE.jar" sourcepath="/JAR_SRC/spring-security-3.0.0.RC1/src/spring-security-taglibs-3.0.0.RC1-sources.jar">
 		<attributes>
 			<attribute name="javadoc_location" value="http://static.springsource.org/spring-security/site/docs/3.0.x/apidocs/"/>
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="var" path="M2_REPO/net/sf/jsr107cache/jsr107cache/1.0/jsr107cache-1.0.jar"/>
-	<classpathentry kind="var" path="M2_REPO/org/springframework/security/spring-security-acl/3.0.0.CI-SNAPSHOT/spring-security-acl-3.0.0.CI-SNAPSHOT.jar" sourcepath="/JAR_SRC/spring-security-3.0.0.RC1/src/spring-security-acl-3.0.0.RC1-sources.jar">
+	<classpathentry kind="var" path="M2_REPO/org/springframework/security/spring-security-acl/3.0.1.RELEASE/spring-security-acl-3.0.1.RELEASE.jar" sourcepath="/JAR_SRC/spring-security-3.0.0.RC1/src/spring-security-acl-3.0.0.RC1-sources.jar">
 		<attributes>
 			<attribute name="javadoc_location" value="http://static.springsource.org/spring-security/site/docs/3.0.x/apidocs/"/>
 		</attributes>
@@ -279,12 +279,12 @@
 			<attribute name="javadoc_location" value="http://static.springsource.org/spring/docs/3.0.0.RC1/javadoc-api/"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="var" path="M2_REPO/org/springframework/security/spring-security-web/3.0.0.CI-SNAPSHOT/spring-security-web-3.0.0.CI-SNAPSHOT.jar" sourcepath="/JAR_SRC/spring-security-3.0.0.RC1/src/spring-security-web-3.0.0.RC1-sources.jar">
+	<classpathentry kind="var" path="M2_REPO/org/springframework/security/spring-security-web/3.0.1.RELEASE/spring-security-web-3.0.1.RELEASE.jar" sourcepath="/JAR_SRC/spring-security-3.0.0.RC1/src/spring-security-web-3.0.0.RC1-sources.jar">
 		<attributes>
 			<attribute name="javadoc_location" value="http://static.springsource.org/spring-security/site/docs/3.0.x/apidocs/"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="var" path="M2_REPO/org/springframework/security/spring-security-config/3.0.0.CI-SNAPSHOT/spring-security-config-3.0.0.CI-SNAPSHOT.jar" sourcepath="/JAR_SRC/spring-security-3.0.0.RC1/src/spring-security-config-3.0.0.RC1-sources.jar">
+	<classpathentry kind="var" path="M2_REPO/org/springframework/security/spring-security-config/3.0.1.RELEASE/spring-security-config-3.0.1.RELEASE.jar" sourcepath="/JAR_SRC/spring-security-3.0.0.RC1/src/spring-security-config-3.0.0.RC1-sources.jar">
 		<attributes>
 			<attribute name="javadoc_location" value="http://static.springsource.org/spring-security/site/docs/3.0.x/apidocs/"/>
 		</attributes>
