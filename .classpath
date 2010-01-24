@@ -227,8 +227,7 @@
 		<attributes>
 			<attribute name="javadoc_location" value="http://static.springsource.org/spring-security/site/docs/3.0.x/apidocs/"/>
 		</attributes>
-	</classpathentry>
-	<classpathentry kind="var" path="M2_REPO/net/sf/jsr107cache/jsr107cache/1.0/jsr107cache-1.0.jar"/>
+	</classpathentry> 
 	<classpathentry kind="var" path="M2_REPO/org/springframework/security/spring-security-acl/3.0.1.RELEASE/spring-security-acl-3.0.1.RELEASE.jar" sourcepath="/JAR_SRC/spring-security-3.0.0.RC1/src/spring-security-acl-3.0.0.RC1-sources.jar">
 		<attributes>
 			<attribute name="javadoc_location" value="http://static.springsource.org/spring-security/site/docs/3.0.x/apidocs/"/>
@@ -313,7 +312,6 @@
 	<classpathentry kind="var" path="M2_REPO/org/springframework/spring-expression/3.0.0.RELEASE/spring-expression-3.0.0.RELEASE.jar" sourcepath="/M2_REPO/org/springframework/spring-expression/3.0.0.RC1/spring-expression-3.0.0.RC1-sources.jar"/>
 	<classpathentry kind="var" path="M2_REPO/xerces/xmlParserAPIs/2.6.2/xmlParserAPIs-2.6.2.jar"/>
 	<classpathentry kind="var" path="M2_REPO/wsdl4j/wsdl4j/1.6.1/wsdl4j-1.6.1.jar"/>
-	<classpathentry kind="var" path="M2_REPO/stax/stax-api/1.0.1/stax-api-1.0.1.jar"/>
 	<classpathentry kind="var" path="M2_REPO/org/apache/poi/poi/3.5-beta6/poi-3.5-beta6.jar"/>
 	<classpathentry kind="var" path="M2_REPO/umls/mmtxProjectJS/2.4C/mmtxProjectJS-2.4C.jar"/>
 	<classpathentry kind="var" path="M2_REPO/umls/mms/1.0/mms-1.0.jar"/>
