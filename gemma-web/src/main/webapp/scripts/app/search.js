@@ -147,7 +147,12 @@ Gemma.SearchForm = Ext.extend(Ext.form.FormPanel, {
 	restoreState : function() {
 
 		// Override with info from the URL (bookmarkable link)
-		var params = Ext.urlDecode(window.location.href);
+		var queryStart = document.URL.indexOf("?");
+		if (queryStart > -1) {
+			var params = Ext.urlDecode(document.URL.substr(queryStart + 1));
+		}
+		//var params = Ext.urlDecode(window.location.href);
+		//console.log(params);
 
 		if (params.scope) {
 			var searchGenes = params.scope.match("G") !== null;

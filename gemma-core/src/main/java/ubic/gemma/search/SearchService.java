@@ -39,7 +39,6 @@ import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Element;
 import net.sf.ehcache.store.MemoryStoreEvictionPolicy;
 
-import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
@@ -280,6 +279,10 @@ public class SearchService implements InitializingBean {
         Map<Class<?>, List<SearchResult>> searchResults = new HashMap<Class<?>, List<SearchResult>>();
         try {
             searchResults = this.search( settings, true );
+        
+        }catch( org.compass.core.engine.SearchEngineQueryParseException qpe){
+            log.error( "Query parse Error: " + settings + "; message=" + qpe.getMessage(), qpe );
+            
         } catch ( Exception e ) {
             log.error( "Search error on settings: " + settings + "; message=" + e.getMessage(), e );
         }
@@ -297,9 +300,13 @@ public class SearchService implements InitializingBean {
      */
     public Map<Class<?>, List<SearchResult>> search( SearchSettings settings, boolean fillObjects ) {
 
-        String searchString = StringEscapeUtils.escapeJava( StringUtils.strip( settings.getQuery() ) ); // probably not
+        String searchString = QueryParser.escape( StringUtils.strip( settings.getQuery() ));
+        settings.setQuery( searchString );
+        //String searchString = StringEscapeUtils.escapeJava( StringUtils.strip( settings.getQuery() ) ); // probably not
         // necessary to
         // escape...
+        
+        
 
         if ( StringUtils.isBlank( searchString ) ) {
             return new HashMap<Class<?>, List<SearchResult>>();

@@ -1,6 +1,44 @@
+
+
 <%@ include file="/common/taglibs.jsp"%>
-<form id="search-form" name="quickSearch" action="<c:url value="/searcher.html"/>" method="get">
-	<input id="searchfield" type="text" name="query" value="Search Gemma" size="20"  onClick="clear()" />
-	<input id="searchbutton" type="submit" name="submit" value="go" />
-	 <input id="searchScope" type="hidden" name="scope" value="SEGAP" /> 
-</form>
+
+<script type="text/javascript">
+
+	//Perform serach by creating a bookmark and forwarding to search page. 
+	doSearch = function( ){
+				var query = $('searchfield').getValue();
+				if (valid(query)) {
+						location.href='/Gemma/searcher.html?query=' + query + '&scope=SEGAP'
+				}							
+			}
+	
+	//Did the user hit the enter key?
+	isEnterHit = function (e) {
+		var keycode;
+
+		if (window.event) keycode = window.event.keyCode;
+		else if (e) keycode = e.which;
+		else return true;
+		
+		if (keycode == 13)
+		{
+			doSearch();
+			return false;
+		}
+		else
+		   return true;
+	}
+	//Place to validate the query the user typed in. 
+	valid = function(query){
+		if (query == null)
+			return false;
+		
+		if (query.length < 3)
+			return false;
+			
+		return true;
+	}		
+</script>
+	
+       <input id="searchfield" type="text" name="query" value="Search Gemma" size="20"  onClick="clear()" onkeypress="isEnterHit(event)" />
+       <input id="searchbutton" type="button" value="go" onClick="doSearch()" />
