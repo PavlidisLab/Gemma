@@ -230,8 +230,10 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractSpring
             log.info( "Processing all experiments that match query " + getOptionValue( 'q' ) );
             this.expressionExperiments = this.findExpressionExperimentsByQuery( getOptionValue( 'q' ) );
         } else if ( taxon != null ) {
-            log.info( "Processing all experiments for " + taxon.getCommonName() );
-            this.expressionExperiments = new HashSet( eeService.findByTaxon( taxon ) );
+            if ( !hasOption( "dataFile" ) ) {
+                log.info( "Processing all experiments for " + taxon.getCommonName() );
+                this.expressionExperiments = new HashSet( eeService.findByTaxon( taxon ) );
+            }
         } else {
             if ( !hasOption( "dataFile" ) ) {
                 log.info( "Processing all experiments (futher filtering may modify)" );
