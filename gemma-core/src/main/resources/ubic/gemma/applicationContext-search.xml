@@ -262,8 +262,8 @@
 				</prop>
 				<prop key="compass.engine.optimizer.aggressive.mergeFactor">5</prop>
 				<prop key="compass.engine.indexManagerScheduleInterval">-1</prop>
-				<prop key="compass.engine.mergeFactor">50</prop>
-				<prop key="compass.engine.maxBufferedDocs">50</prop>
+				<prop key="compass.engine.mergeFactor">100</prop>
+				<prop key="compass.engine.maxBufferedDocs">100</prop>
 				<prop key="compass.engine.queryParser.default.defaultOperator">${gemma.search.defaultOperator}</prop>
 			</props>
 		</property>
