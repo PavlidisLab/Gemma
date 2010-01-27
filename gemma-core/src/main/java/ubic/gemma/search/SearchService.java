@@ -785,8 +785,10 @@ public class SearchService implements InitializingBean {
 
         Collection<SearchResult> geneResults = null;
         if ( previousGeneSearchResults == null ) {
+            log.info( "Biosequence Search:  running gene search with " + settings.getQuery() );
             geneResults = compassGeneSearch( settings );
         } else {
+            log.info("Biosequence Search:  using previous results" );
             geneResults = previousGeneSearchResults;
         }
 
@@ -796,7 +798,7 @@ public class SearchService implements InitializingBean {
             if ( Gene.class.isAssignableFrom( resultObject.getClass() ) ) {
                 genes.put( ( Gene ) resultObject, sr );
             } else {
-                log.warn( "Expected a Gene, got a " + resultObject.getClass() );
+                log.warn( "Expected a Gene, got a " + resultObject.getClass() + "");
             }
         }
 
