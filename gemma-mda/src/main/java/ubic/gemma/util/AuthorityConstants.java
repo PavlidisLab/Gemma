@@ -53,6 +53,8 @@ public class AuthorityConstants {
 
     public static final String IS_AUTHENTICATED_ANONYMOUSLY = AuthenticatedVoter.IS_AUTHENTICATED_ANONYMOUSLY;
 
+    public static final String ANONYMOUS_USER_NAME = "anonymousUser";
+
     /**
      * Name of the 'group' for anonymous users. Note: we don't use this; you should use
      * AuthenticatedVoter.IS_AUTHENTICATED_ANONYMOUSLY instead.

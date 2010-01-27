@@ -40,6 +40,7 @@ import ubic.gemma.util.AuthorityConstants;
  */
 public class AuthenticationUtils {
 
+    
     public static final String ANONYMOUS_AUTHENTICATION_KEY = "key";
     private static Log log = LogFactory.getLog( AuthenticationUtils.class.getName() );
 
@@ -61,7 +62,8 @@ public class AuthenticationUtils {
          * "anonymousUser" is defined in org.springframework.security.config.http.AuthenticationConfigBuilder (but is
          * also configurable...).
          */
-        Authentication authRequest = new AnonymousAuthenticationToken( ANONYMOUS_AUTHENTICATION_KEY, "anonymousUser",
+        Authentication authRequest = new AnonymousAuthenticationToken( ANONYMOUS_AUTHENTICATION_KEY,
+                AuthorityConstants.ANONYMOUS_USER_NAME,
                 gas );
         authRequest = manager.authenticate( authRequest );
         SecurityContextHolder.getContext().setAuthentication( authRequest );

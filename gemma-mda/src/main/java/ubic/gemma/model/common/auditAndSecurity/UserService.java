@@ -21,6 +21,7 @@ package ubic.gemma.model.common.auditAndSecurity;
 import java.util.Collection;
 
 import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 /**
  * @version $Id$
@@ -142,7 +143,7 @@ public interface UserService {
      * @param user
      * @param group
      */
-    @Secured("GROUP_ADMIN")
+    @PreAuthorize("hasPermission(#group, 'write')")
     public void removeUserFromGroup( User user, UserGroup group );
 
     /**

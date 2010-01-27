@@ -96,7 +96,7 @@ public class SecurityController {
      */
     public String createGroup( String groupName ) {
 
-        if ( StringUtils.isBlank( groupName ) || groupName.length() < 4 || !StringUtils.isAlpha( groupName ) ) {
+        if ( StringUtils.isBlank( groupName ) || groupName.length() < 3 || !StringUtils.isAlpha( groupName ) ) {
             throw new IllegalArgumentException(
                     "Group name must contain only letters and must be at least 3 letters long." );
         }
@@ -203,11 +203,10 @@ public class SecurityController {
             uvo.setAllowModification( true );
 
             /*
-             * FIXME get from contsants. Special users we aren't allowed to modify, and you can't remove yourself from a
-             * group.
+             * You can't remove yourself from a group, or remove users from the USER group.
              */
-            if ( userName.equals( userManager.getCurrentUsername() ) || userName.equals( "administrator" )
-                    || userName.equals( "gemmaAgent" ) || groupName.equals( AuthorityConstants.USER_GROUP_NAME ) ) {
+            if ( userName.equals( userManager.getCurrentUsername() )
+                    || groupName.equals( AuthorityConstants.USER_GROUP_NAME ) ) {
                 uvo.setAllowModification( false );
             }
 
@@ -359,7 +358,7 @@ public class SecurityController {
                 throw new IllegalArgumentException( "You cannot remove users from the USER group!" );
             }
 
-            // securityService.removeUserFromGroup( userName, groupName );
+            securityService.removeUserFromGroup( userName, groupName );
         }
         return true;
     }
@@ -493,7 +492,7 @@ public class SecurityController {
     }
 
     /**
-     * AJAX  
+     * AJAX
      * 
      * @param settings
      */

@@ -40,8 +40,7 @@ version: $Id$
 			        {
 						var sb = Ext.getCmp('my-status');
 						sb.showBusy();
-						document.getElementsByTagName("form")[1].action = "/Gemma/j_spring_security_check";
-						document.getElementsByTagName("form")[1].submit();
+						Ext.getCmp("_loginForm").getForm().submit();
 			        }
 				}
 			],
@@ -92,8 +91,7 @@ version: $Id$
 			        		{
 								var sb = Ext.getCmp('my-status');
 								sb.showBusy();
-								document.getElementsByTagName("form")[1].action =  '/Gemma/j_spring_security_check';
-								document.getElementsByTagName("form")[1].submit();
+								Ext.getCmp("_loginForm").getForm().submit();
 			        		}					
 						}
 					]})], // end of items for outer panel.

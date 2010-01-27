@@ -348,9 +348,15 @@ public class UserManagerImpl implements UserManager {
     @Transactional(readOnly = true)
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "RUN_AS_USER" })
     public Collection<String> findGroupsForUser( String userName ) {
+
+        Collection<String> result = new HashSet<String>();
+
+        if ( !loggedIn() ) {
+            return result;
+        }
+
         User u = loadUser( userName );
         Collection<UserGroup> groups = userService.findGroupsForUser( u );
-        Collection<String> result = new HashSet<String>();
 
         for ( UserGroup g : groups ) {
             result.add( g.getName() );
@@ -618,7 +624,7 @@ public class UserManagerImpl implements UserManager {
      * (non-Javadoc)
      * @see ubic.gemma.security.authentication.UserManagerI#userExists(java.lang.String)
      */
-    @Secured("RUN_AS_ADMIN")
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "RUN_AS_ADMIN" })
     public boolean userExists( String username ) {
         return userService.findByUserName( username ) != null;
     }
@@ -627,7 +633,7 @@ public class UserManagerImpl implements UserManager {
      * (non-Javadoc)
      * @see ubic.gemma.security.authentication.UserManager#userWithEmailExists(java.lang.String)
      */
-    @Secured("RUN_AS_ADMIN")
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "RUN_AS_ADMIN" })
     public boolean userWithEmailExists( String emailAddress ) {
         return userService.findByEmail( emailAddress ) != null;
     }
@@ -666,12 +672,14 @@ public class UserManagerImpl implements UserManager {
 
         return true;
     }
-    
-    
-    public UserGroup findGroupByName( String name ){        
+
+    /*
+     * (non-Javadoc)
+     * @see ubic.gemma.security.authentication.UserManager#findGroupByName(java.lang.String)
+     */
+    public UserGroup findGroupByName( String name ) {
         return this.userService.findGroupByName( name );
     }
-
 
     /*
      * (non-Javadoc)

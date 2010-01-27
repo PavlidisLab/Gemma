@@ -168,6 +168,8 @@ public class SecurityService {
 
         Map<ObjectIdentity, Securable> objectIdentities = getObjectIdentities( securables );
 
+        if ( objectIdentities.isEmpty() ) return result;
+
         /*
          * Take advantage of fast bulk loading of ACLs. Other methods sohuld adopt this if they turn out to be heavily
          * used/slow.
@@ -203,6 +205,8 @@ public class SecurityService {
         Map<Securable, Boolean> result = new HashMap<Securable, Boolean>();
         Map<ObjectIdentity, Securable> objectIdentities = getObjectIdentities( securables );
 
+        if ( objectIdentities.isEmpty() ) return result;
+
         /*
          * Take advantage of fast bulk loading of ACLs. Other methods sohuld adopt this if they turn out to be heavily
          * used/slow.
@@ -222,6 +226,9 @@ public class SecurityService {
     public Map<Securable, Boolean> areShared( Collection<? extends Securable> securables ) {
         Map<Securable, Boolean> result = new HashMap<Securable, Boolean>();
         Map<ObjectIdentity, Securable> objectIdentities = getObjectIdentities( securables );
+
+        if ( objectIdentities.isEmpty() ) return result;
+
         Map<ObjectIdentity, Acl> acls = aclService
                 .readAclsById( new Vector<ObjectIdentity>( objectIdentities.keySet() ) );
 
@@ -406,9 +413,12 @@ public class SecurityService {
      */
     @Secured( { "ACL_SECURABLE_COLLECTION_READ" })
     public Map<Securable, Collection<String>> getGroupsReadableBy( Collection<? extends Securable> securables ) {
-        Collection<String> groupNames = getGroupsUserCanView();
 
         Map<Securable, Collection<String>> result = new HashMap<Securable, Collection<String>>();
+
+        if ( securables.isEmpty() ) return result;
+
+        Collection<String> groupNames = getGroupsUserCanView();
 
         List<Permission> read = new ArrayList<Permission>();
         read.add( BasePermission.READ );
@@ -478,6 +488,8 @@ public class SecurityService {
     public Map<Securable, Sid> getOwners( Collection<? extends Securable> securables ) {
         Map<Securable, Sid> result = new HashMap<Securable, Sid>();
         Map<ObjectIdentity, Securable> objectIdentities = getObjectIdentities( securables );
+
+        if ( securables.isEmpty() ) return result;
 
         /*
          * Take advantage of fast bulk loading of ACLs. Other methods sohuld adopt this if they turn out to be heavily
