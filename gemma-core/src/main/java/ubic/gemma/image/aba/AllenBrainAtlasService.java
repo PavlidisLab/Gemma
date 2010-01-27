@@ -237,12 +237,29 @@ public class AllenBrainAtlasService {
     }
 
     /**
+     * Returns AbaGene object for a gene symbol. If it fails to find a gene using the given string it tries the first
+     * letter capitalized string.
+     * 
+     * @param givenGene
+     * @return AbaGene
+     * @throws IOException
+     */
+    public AbaGene getGene( String givenGene ) throws IOException {
+        AbaGene result = getGene( givenGene, false );
+        if ( result == null ) return getGene( givenGene, true );
+        return result;
+    }
+
+    /**
      * @param givenGene symbol of gene that will be used to search ABA.
      * @return
      */
-    public AbaGene getGene( String givenGene ) throws IOException {
+    protected AbaGene getGene( String givenGene, boolean correctCase ) throws IOException {
+        String gene = givenGene;
 
-        String gene = correctCase( givenGene );
+        if ( correctCase ) {
+            gene = correctCase( gene );
+        }
 
         File outputFile = getFile( gene );
         Document geneDoc = null;
@@ -250,6 +267,7 @@ public class AllenBrainAtlasService {
         try {
             FileOutputStream out = new FileOutputStream( outputFile );
             this.getGene( gene, out );
+            out.close();
 
             geneDoc = XMLUtils.openAndParse( new FileInputStream( outputFile ) );
         } catch ( ParserConfigurationException pce ) {
@@ -258,6 +276,7 @@ public class AllenBrainAtlasService {
         } catch ( SAXException se ) {
             log.warn( se );
         } catch ( FileNotFoundException fnfe ) {
+
             if ( log.isDebugEnabled() )
                 log.debug( gene + " gene not found in aba . Error thrown because cachefile not created: " + fnfe );
 
