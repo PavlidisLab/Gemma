@@ -395,8 +395,24 @@ public class GeoDatasetService extends AbstractGeoService {
             int numColsMatching = 0;
             for ( String colName : rawGEOPlatform.getColumnNames() ) {
                 if ( rawGEOPlatform.getColumnData( colName ).contains( gemmaProbeName ) ) {
+
+                    /*
+                     * Note: Spurious matches can happen if the ID is an integer and if there are other columns that
+                     * have numbers, so this can fail.
+                     */
                     numColsMatching++;
                     columnWithGemmaNames = colName;
+
+                    /*
+                     * The default column is 'ID' as per GEO specifications. We always use this unless the platform
+                     * probes have been renamed. Since this is the most common case, we stop here. Otherwise we go on to
+                     * check for other matching columns.
+                     */
+                    if ( colName.equals( "ID" ) ) {
+                        fillExistingProbeNameMap( rawGEOPlatform, columnWithGemmaNames, columnWithGeoNames );
+                        return;
+                    }
+
                 }
             }
 
@@ -409,8 +425,9 @@ public class GeoDatasetService extends AbstractGeoService {
             }
         }
 
-        throw new IllegalStateException(
-                "Could not figure out which column the Gemma probe names came from for platform=" + rawGEOPlatform );
+        throw new IllegalStateException( "Could not figure out which column the Gemma probe names came (e.g.: "
+                + existing.getCompositeSequences().iterator().next().getName() + ") from for platform="
+                + rawGEOPlatform );
 
     }
 

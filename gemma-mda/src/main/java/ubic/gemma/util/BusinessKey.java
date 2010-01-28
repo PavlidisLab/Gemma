@@ -78,7 +78,7 @@ public class BusinessKey {
         /*
          * Test whether ANY of the associated external references match any of the given external references.
          */
-        if ( arrayDesign.getPrimaryTaxon() != null ) {
+        if ( arrayDesign.getPrimaryTaxon() != null && arrayDesign.getPrimaryTaxon().getId() != null) {
             queryObject.add( Restrictions.eq( "primaryTaxon", arrayDesign.getPrimaryTaxon() ) );
         }
 

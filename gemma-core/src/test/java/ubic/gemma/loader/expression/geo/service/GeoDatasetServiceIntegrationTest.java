@@ -103,6 +103,30 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
      */
     @SuppressWarnings("unchecked")
     @Test
+    public void testFetchAndLoadGSE13657() throws Exception {
+        String path = ConfigUtils.getString( "gemma.home" );
+        try {
+            geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path
+                    + AbstractGeoServiceTest.GEO_TEST_DATA_ROOT ) );
+            Collection<ExpressionExperiment> results = geoService.fetchAndLoad( "GSE13657", false, true, false, false,
+                    true );
+            ee = results.iterator().next();
+        } catch ( AlreadyExistsInSystemException e ) {
+            log.info( "Test skipped because GSE13657 was already loaded - clean the DB before running the test" );
+            return;
+        }
+        eeService.thawLite( ee );
+        Collection qts = eeService.getQuantitationTypes( ee );
+        assertEquals( 17, qts.size() );
+
+        eeService.delete( ee );
+
+        assertNull( eeService.load( ee.getId() ) );
+
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
     public void testFetchAndLoadGSE5949() throws Exception {
         String path = ConfigUtils.getString( "gemma.home" );
         try {
