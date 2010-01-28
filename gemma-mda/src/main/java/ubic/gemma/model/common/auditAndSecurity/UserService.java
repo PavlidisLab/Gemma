@@ -143,7 +143,7 @@ public interface UserService {
      * @param user
      * @param group
      */
-    @PreAuthorize("hasPermission(#group, 'write')")
+    @PreAuthorize("hasPermission(#group, 'write') or hasPermission(#group, 'administration')")
     public void removeUserFromGroup( User user, UserGroup group );
 
     /**
