@@ -39,6 +39,7 @@ import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Element;
 import net.sf.ehcache.store.MemoryStoreEvictionPolicy;
 
+import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
@@ -176,6 +177,8 @@ public class SearchService implements InitializingBean {
 
     private static final int MINIMUM_STRING_LENGTH_FOR_FREE_TEXT_SEARCH = 3;
 
+    private static final String NCBI_GENE = "ncbi_gene";
+
     private static Log log = LogFactory.getLog( SearchService.class.getName() );
 
     Analyzer analyzer = new StandardAnalyzer();
@@ -279,10 +282,10 @@ public class SearchService implements InitializingBean {
         Map<Class<?>, List<SearchResult>> searchResults = new HashMap<Class<?>, List<SearchResult>>();
         try {
             searchResults = this.search( settings, true );
-        
-        }catch( org.compass.core.engine.SearchEngineQueryParseException qpe){
+
+        } catch ( org.compass.core.engine.SearchEngineQueryParseException qpe ) {
             log.error( "Query parse Error: " + settings + "; message=" + qpe.getMessage(), qpe );
-            
+
         } catch ( Exception e ) {
             log.error( "Search error on settings: " + settings + "; message=" + e.getMessage(), e );
         }
@@ -300,13 +303,59 @@ public class SearchService implements InitializingBean {
      */
     public Map<Class<?>, List<SearchResult>> search( SearchSettings settings, boolean fillObjects ) {
 
-        String searchString = QueryParser.escape( StringUtils.strip( settings.getQuery() ));
+        // 1st check to see if the query is a URI (from an ontology).
+        // Do this by seeing if we can find it in the loaded ontologies.
+        // Escape with general utilities because might not be doing a lucene backed search. (just a hibernate one).
+        String uriString = StringEscapeUtils.escapeJava( StringUtils.strip( settings.getQuery() ) );
+        OntologyTerm matchingTerm = this.ontologyService.getTerm( uriString );
+
+        if ( matchingTerm != null && matchingTerm.getUri() != null ) {
+            // Was a URI from a loaded ontology soo get the children.
+            Collection<OntologyTerm> terms2Search4 = matchingTerm.getChildren( true );
+            terms2Search4.add( matchingTerm );
+
+            Collection<Class> classesToSearch = new HashSet<Class>();
+            classesToSearch.add( ExpressionExperiment.class );
+            classesToSearch.add( BioMaterial.class );
+
+            Collection<SearchResult> matchingResults = this.databaseCharacteristicExactUriSearchForOwners(
+                    classesToSearch, terms2Search4 );
+            Map<Class<?>, List<SearchResult>> sortedFilteredResults = new HashMap<Class<?>, List<SearchResult>>();
+
+            for ( SearchResult searchR : matchingResults ) {
+                if ( sortedFilteredResults.containsKey( searchR.getResultClass() ) ) {
+                    sortedFilteredResults.get( searchR.getResultClass() ).add( searchR );
+                } else {
+                    List<SearchResult> rs = new ArrayList<SearchResult>();
+                    rs.add( searchR );
+                    sortedFilteredResults.put( searchR.getResultClass(), rs );
+                }
+            }
+
+            return sortedFilteredResults;
+
+        }// Perhaps is a valid gene URL. Want to search for the gene in gemma.
+        else if ( StringUtils.containsIgnoreCase( uriString, NCBI_GENE ) ) {
+
+            //FIXME:  should I actually look through the characteristic table and find anything that is tagged with the ncbi gene URI or just do a genearal search or both?
+            String ncbiAccessionFromUri = StringUtils.substringAfterLast( uriString, "/" );
+            Gene g = geneService.findByNCBIId( ncbiAccessionFromUri );
+            if ( g == null ) return null;
+
+            //Is a valid gene in the system.  Redo the search using the official symbol as the query.  
+            settings.setQuery( g.getOfficialSymbol() );
+            return this.search(settings );
+            
+        }
+
+        // Not an valid ontology term or a gene. 
+        //Proceed with general query parsing and searching.
+        String searchString = QueryParser.escape( StringUtils.strip( settings.getQuery() ) );
         settings.setQuery( searchString );
-        //String searchString = StringEscapeUtils.escapeJava( StringUtils.strip( settings.getQuery() ) ); // probably not
+
+        // not
         // necessary to
         // escape...
-        
-        
 
         if ( StringUtils.isBlank( searchString ) ) {
             return new HashMap<Class<?>, List<SearchResult>>();
@@ -788,7 +837,7 @@ public class SearchService implements InitializingBean {
             log.info( "Biosequence Search:  running gene search with " + settings.getQuery() );
             geneResults = compassGeneSearch( settings );
         } else {
-            log.info("Biosequence Search:  using previous results" );
+            log.info( "Biosequence Search:  using previous results" );
             geneResults = previousGeneSearchResults;
         }
 
@@ -798,7 +847,7 @@ public class SearchService implements InitializingBean {
             if ( Gene.class.isAssignableFrom( resultObject.getClass() ) ) {
                 genes.put( ( Gene ) resultObject, sr );
             } else {
-                log.warn( "Expected a Gene, got a " + resultObject.getClass() + "");
+                log.warn( "Expected a Gene, got a " + resultObject.getClass() + "" );
             }
         }
 
@@ -1183,33 +1232,32 @@ public class SearchService implements InitializingBean {
         return this.dbHitsToSearchResult( entities, null );
     }
 
-    // /**
-    // * Does a database search for the exact string treated as a prefix.
-    // *
-    // * @param clazz Class of objects to restrict the search to (typically ExpressionExperiment.class, for example).
-    // * @param settings
-    // * @return Collection of search results for the objects owning the found characteristics, where the owner is of
-    // * class clazz
-    // */
-    // @SuppressWarnings("unchecked")
-    // private Collection<SearchResult> databaseCharacteristicSearchForOwners( Collection<Class> classes,
-    // SearchSettings settings ) {
-    //
-    // /*
-    // * Searches such as 'sex AND female' will not yield any results from findByValue, even if they are should be
-    // * successful. If the terms are in ontologies it won't matter, but if they are 'plain text' they will not.
-    // */
-    // Collection<Characteristic> characteristicValueMatches = characteristicService.findByValue( settings.getQuery()
-    // + "%" );
-    //
-    // // FIXME put this back in.
-    // Collection<Characteristic> characteristicURIMatches = characteristicService.findByUri( settings.getQuery() );
-    //
-    // Map parentMap = characteristicService.getParents( characteristicValueMatches );
-    // parentMap.putAll( characteristicService.getParents( characteristicURIMatches ) );
-    //
-    // return filterCharacteristicOwnersByClass( classes, parentMap );
-    // }
+    /**
+     * Takes a list of ontology terms, and classes of objects of interest to be returned. Looks through the
+     * characteristic table for an exact match with the given ontology terms. Only tries to match the uri's.
+     * 
+     * @param clazz Class of objects to restrict the search to (typically ExpressionExperiment.class, for example).
+     * @param terms A list of ontololgy terms to search for
+     * @return Collection of search results for the objects owning the found characteristics, where the owner is of
+     *         class clazz
+     */
+    @SuppressWarnings("unchecked")
+    private Collection<SearchResult> databaseCharacteristicExactUriSearchForOwners( Collection<Class> classes,
+            Collection<OntologyTerm> terms ) {
+
+        // Collection<Characteristic> characteristicValueMatches = new ArrayList<Characteristic>();
+        Collection<Characteristic> characteristicURIMatches = new ArrayList<Characteristic>();
+
+        for ( OntologyTerm term : terms ) {
+            // characteristicValueMatches.addAll( characteristicService.findByValue( term.getUri() ));
+            characteristicURIMatches.addAll( characteristicService.findByUri( term.getUri() ) );
+        }
+
+        Map parentMap = characteristicService.getParents( characteristicURIMatches );
+        // parentMap.putAll( characteristicService.getParents(characteristicValueMatches ) );
+
+        return filterCharacteristicOwnersByClass( classes, parentMap );
+    }
 
     /**
      * Convert hits from database searches into SearchResults.
@@ -1434,7 +1482,7 @@ public class SearchService implements InitializingBean {
      * @param settings
      * @param geneSet
      */
-    private void filterByTaxon( SearchSettings settings, Collection<SearchResult> results ) { 
+    private void filterByTaxon( SearchSettings settings, Collection<SearchResult> results ) {
         if ( settings.getTaxon() == null ) {
             return;
         }

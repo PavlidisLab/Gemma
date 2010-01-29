@@ -36,6 +36,7 @@ public class SearchSettings {
     private Taxon taxon;
     private int maxResults = 500;
     private String query;
+    private String uri;
 
     private boolean searchGenes = true;
     private boolean searchExperiments = true;
@@ -258,6 +259,14 @@ public class SearchSettings {
 
     public void setUseCharacteristics( boolean useCharacteristics ) {
         this.useCharacteristics = useCharacteristics;
+    }
+
+    public void setUri( String uri ) {
+        this.uri = uri;
+    }
+
+    public String getUri() {
+        return uri;
     }
 
 }

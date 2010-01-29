@@ -25,14 +25,20 @@ Gemma.Search.app = function() {
 
 			/*
 			 * Search from url if we have to.
+			 * FIXME:  why isn't this using restoreState method?
 			 */
 			var url = document.URL;
 			if (url.indexOf("?") > -1) {
 				var sq = url.substr(url.indexOf("?") + 1);
 				var params = Ext.urlDecode(sq);
-				if (params.query) {
+				
+				if ((params.termUri) && (params.termUri.length != 0)){
+					this.form.getForm().findField('query').setValue(params.termUri);
+				}				
+				else if (params.query) {
 					this.form.getForm().findField('query').setValue(params.query);
 				}
+				
 				if (params.scope) {
 					if (params.scope.indexOf('E') > -1) {
 						Ext.getCmp('search-exps-chkbx').setValue(true);

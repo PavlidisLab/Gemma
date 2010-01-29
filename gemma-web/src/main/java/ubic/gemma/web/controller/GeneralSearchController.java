@@ -96,7 +96,11 @@ public class GeneralSearchController extends BaseFormController {
             BindException errors ) throws Exception {
 
         SearchSettings settings = command;
+        
+        
+        settings.setQuery( StringUtils.trim( settings.getQuery().trim()));
 
+        
         ModelAndView mav = new ModelAndView( "generalSearch" );
 
         if ( !searchStringValidator( settings.getQuery() ) ) {
@@ -115,25 +119,25 @@ public class GeneralSearchController extends BaseFormController {
         /*
          * Here is where the magic happens.
          */
-        Map<Class<?>, List<SearchResult>> searchResults = searchService.search( settings );
-
-        if ( searchResults != null ) {
-            for ( Class clazz : searchResults.keySet() ) {
-                List<SearchResult> results = searchResults.get( clazz );
-
-                if ( results.size() == 0 ) continue;
-
-                log.info( "Search result: " + results.size() + " " + clazz.getSimpleName() + "'s" );
-
-                /*
-                 * Now put the valueObjects inside the SearchResults
-                 */
-                fillValueObjects( clazz, results, settings );
-
-                mav.addObject( clazz.getSimpleName() + "_results", results );
-                mav.addObject( clazz.getSimpleName() + "_count", results.size() );
-            }
-        }
+//        Map<Class<?>, List<SearchResult>> searchResults = searchService.search( settings );
+//
+//        if ( searchResults != null ) {
+//            for ( Class clazz : searchResults.keySet() ) {
+//                List<SearchResult> results = searchResults.get( clazz );
+//
+//                if ( results.size() == 0 ) continue;
+//
+//                log.info( "Search result: " + results.size() + " " + clazz.getSimpleName() + "'s" );
+//
+//                /*
+//                 * Now put the valueObjects inside the SearchResults
+//                 */
+//                fillValueObjects( clazz, results, settings );
+//
+//                mav.addObject( clazz.getSimpleName() + "_results", results );
+//                mav.addObject( clazz.getSimpleName() + "_count", results.size() );
+//            }
+//        }
 
         return mav;
     }
