@@ -385,13 +385,12 @@ public class GeneLinkCoexpressionAnalyzer {
                     totalLinks += processBatch( expressionExperiments, stringency, knownGenesOnly, genesToAnalyzeMap,
                             analysis, processedGenes, eeIdOrder, batch );
 
-                    if ( processedGenes.size() % 100 == 0 ) {
-                        log.info( "Processed " + processedGenes.size() + " genes..." );
-                    }
-
                     batch.clear();
                 }
 
+                if ( processedGenes.size() % 100 == 0 ) {
+                    log.info( "Processed " + processedGenes.size() + " genes..." );
+                }
             }
 
             if ( batch.size() > 0 ) {
@@ -438,9 +437,15 @@ public class GeneLinkCoexpressionAnalyzer {
     private int processBatch( Collection<BioAssaySet> expressionExperiments, int stringency, boolean knownGenesOnly,
             Map<Long, Gene> genesToAnalyzeMap, GeneCoexpressionAnalysis analysis, Collection<Gene> processedGenes,
             Map<Long, Integer> eeIdOrder, Collection<Gene> batch ) {
-        // Do it
+
+        StopWatch timer = new StopWatch();
+        timer.start();
+
+        // Do the query
         Map<Gene, CoexpressionCollectionValueObject> coexpressionbatch = probeLinkCoexpressionAnalyzer.linkAnalysis(
                 batch, expressionExperiments, stringency, knownGenesOnly, false, 0 );
+
+        // postprocess.
         int totalLinks = 0;
         for ( Gene q : coexpressionbatch.keySet() ) {
             CoexpressionCollectionValueObject coexpressions = coexpressionbatch.get( q );
@@ -450,17 +455,19 @@ public class GeneLinkCoexpressionAnalyzer {
                 continue;
             }
 
-            StopWatch timer = new StopWatch();
+            StopWatch persistTimer = new StopWatch();
             if ( analysis != null ) {
-                timer.start();
+                // persist
+                persistTimer.start();
                 Collection<Gene2GeneCoexpression> created = persistCoexpressions( eeIdOrder, q, coexpressions,
                         analysis, genesToAnalyzeMap, processedGenes, stringency );
                 totalLinks += created.size();
-                timer.stop();
-                if ( timer.getTime() > 1000 ) {
+                persistTimer.stop();
+                if ( persistTimer.getTime() > 1000 ) {
                     log.info( "Persist links: " + timer.getTime() + "ms" );
                 }
             } else {
+                // print it out.
                 List<CoexpressionValueObject> coexps = coexpressions.getAllGeneCoexpressionData( stringency );
                 int usedLinks = 0;
                 for ( CoexpressionValueObject co : coexps ) {
@@ -482,6 +489,12 @@ public class GeneLinkCoexpressionAnalyzer {
             processedGenes.add( q );
 
         }
+
+        timer.stop();
+        if ( timer.getTime() > 1000 ) {
+            log.info( "Batch: " + timer.getTime() + "ms" );
+        }
+
         return totalLinks;
     }
 

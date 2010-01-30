@@ -502,7 +502,8 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         overallWatch.start();
 
         /*
-         * Check cache first.
+         * Check cache first, if we have already queried experiment X for the query, then we don't need to query
+         * experiment X at all.
          */
         Collection<BioAssaySet> eesToSearch = new HashSet<BioAssaySet>();
         Map<Long, Collection<CoexpressionCacheValueObject>> cachedResults = new HashMap<Long, Collection<CoexpressionCacheValueObject>>();
