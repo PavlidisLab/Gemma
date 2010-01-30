@@ -942,8 +942,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
     }
 
     /**
-     * For queries involving multiple genes as inputs. This query does not return 'self-links' (gene coexpressed with
-     * itself) which happens when two probes for the same gene are correlated. Query outputs:
+     * For queries involving multiple genes as inputs. Query outputs:
      * <ol >
      * <li>output gene id</li>
      * <li>output gene name</li>
@@ -1024,8 +1023,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
     }
 
     /**
-     * This query does not return 'self-links' (gene coexpressed with itself) which happens when two probes for the same
-     * gene are correlated. Query outputs:
+     * Query outputs:
      * <ol >
      * <li>output gene id</li>
      * <li>output gene name</li>
@@ -1244,6 +1242,8 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
     }
 
     /**
+     * Perform and process the coexpression query.
+     * 
      * @param queryGene
      * @param geneMap
      * @param queryObject

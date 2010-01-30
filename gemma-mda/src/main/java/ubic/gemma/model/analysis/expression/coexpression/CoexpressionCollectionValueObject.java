@@ -246,9 +246,16 @@ public class CoexpressionCollectionValueObject {
     }
 
     /**
-     * @return the numStringencyGenes
+     * @return the numStringencyGenes - for known genes.
      */
     public int getNumStringencyGenes() {
+        return getNumStringencyKnownGenes();
+    }
+
+    /**
+     * @return the numStringencyGenes - for known genes.
+     */
+    public int getNumStringencyKnownGenes() {
         return this.knownGeneCoexpressionData.getNumberOfGenes();
     }
 
