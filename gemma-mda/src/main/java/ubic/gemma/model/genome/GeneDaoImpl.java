@@ -450,8 +450,16 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         Session session = this.getSession( false );
         org.hibernate.Query queryObject = setCoexpQueryParameters( session, genes, id, queryString );
 
+        StopWatch overallWatch = new StopWatch();
+        overallWatch.start();
+
         // This is the actual business of querying the database.
         processCoexpQuery( queryGenes, queryObject, coexpressions );
+
+        overallWatch.stop();
+        if ( overallWatch.getTime() > 1000 ) {
+            log.info( "Raw query for " + genes.size() + " genes in batch: " + overallWatch.getTime() + "ms" );
+        }
 
         for ( CoexpressionCollectionValueObject coexp : coexpressions.values() ) {
             postProcessSpecificity( knownGenesOnly, coexp );
