@@ -100,8 +100,12 @@ public class GeneralSearchController extends BaseFormController {
         
         settings.setQuery( StringUtils.trim( settings.getQuery().trim()));
 
+        //Redirects should be done like this (i believe) to ensure that the URL is correctly encoded/unencoded:
+        //Currently not switching it because we have javascript code on the client side to deal with this. 
+        //response.sendRedirect( response.encodeRedirectURL( "/Gemma/signup.html" ) );
         
         ModelAndView mav = new ModelAndView( "generalSearch" );
+        
 
         if ( !searchStringValidator( settings.getQuery() ) ) {
             this.saveMessage( request, "Invalid search string" );
