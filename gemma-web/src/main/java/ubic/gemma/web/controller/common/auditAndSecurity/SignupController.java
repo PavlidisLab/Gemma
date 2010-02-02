@@ -214,7 +214,10 @@ public class SignupController extends BaseController {
             model.put( "confirmLink", "http://" + host + "/Gemma/confirmRegistration.html?key=" + u.getSignupToken()
                     + "&username=" + u.getUsername() );
             model.put( "message", getText( "signup.email.message", request.getLocale() ) );
-
+            model.put( "overviewURL", "http://" + host + "/Gemma/static/about.html" );
+            model.put( "faqURL", "http://" + host + "/Gemma/resources/faq.html" );
+            model.put( "wikiURL", "http://" +  host + "/faculty/pavlidis/wiki/display/gemma" );
+            
             /*
              * FIXME: make the template name configurable.
              */
