@@ -81,7 +81,8 @@ public class NCBIGene2GOAssociationLoaderCLI extends AbstractSpringAwareCLI {
      */
     @Override
     protected Exception doWork( String[] args ) {
-        Exception e = processCommandLine( "GO association loader", args );
+        Exception e = processCommandLine(
+                "Populate or update GO associations for all genes; old associations are deleted first.", args );
         if ( e != null ) {
             log.error( e );
             return e;
@@ -90,7 +91,8 @@ public class NCBIGene2GOAssociationLoaderCLI extends AbstractSpringAwareCLI {
         TaxonService taxonService = ( TaxonService ) this.getBean( "taxonService" );
 
         NCBIGene2GOAssociationLoader gene2GOAssLoader = new NCBIGene2GOAssociationLoader();
-        gene2GOAssLoader.setPersisterHelper( this.persisterHelper );
+
+        gene2GOAssLoader.setPersisterHelper( this.getPersisterHelper() );
 
         Collection<Taxon> taxa = taxonService.loadAll();
 

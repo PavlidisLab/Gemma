@@ -49,7 +49,9 @@ public class NCBIGene2GOAssociationLoader {
     protected static final Log log = LogFactory.getLog( NCBIGene2GOAssociationLoader.class );
     private static final int QUEUE_SIZE = 30000;
     private static final int BATCH_SIZE = 2000;
+
     private PersisterHelper persisterHelper;
+
     private NCBIGene2GOAssociationParser parser = null;
 
     AtomicBoolean producerDone = new AtomicBoolean( false );
@@ -151,7 +153,7 @@ public class NCBIGene2GOAssociationLoader {
                     double meanspt = secspt / cpt;
 
                     String progString = "Processed and loaded " + count + " (" + secsperthousand
-                            + " seconds elapsed, average per thousand=" + meanspt + ")";
+                            + " seconds elapsed, average per thousand=" + String.format( "%.2f", meanspt ) + ")";
                     ProgressManager.updateCurrentThreadsProgressJob( new ProgressData( count, progString ) );
                     log.info( progString );
                     millis = System.currentTimeMillis();
@@ -160,6 +162,7 @@ public class NCBIGene2GOAssociationLoader {
             }
         } catch ( Exception e ) {
             consumerDone.set( true );
+            log.fatal( e, e );
             throw new RuntimeException( e );
         }
 

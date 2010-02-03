@@ -56,7 +56,7 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
     private static final String GIGASPACES_ON = "gigaspacesOn";
 
     protected BeanFactory ctx = null;
-    protected PersisterHelper persisterHelper = null;
+    private PersisterHelper persisterHelper = null;
     protected AuditTrailService auditTrailService;
     protected Collection<Exception> exceptionCache = new ArrayList<Exception>();
 
