@@ -222,7 +222,7 @@ public class SignupController extends BaseController {
              * FIXME: make the template name configurable.
              */
             String templateName = "accountCreated.vm";
-            sendEmail( u.getUsername(), "Successful registration for Gemma", u.getEmail(), templateName, model );
+            sendEmail( u.getUsername(),  u.getEmail(), "Successful registration for Gemma", templateName, model );
             this.saveMessage( request, "signup.email.sent", u.getEmail(),
                     "A confirmation email was sent. Please check your mail and click the link it contains" );
         } catch ( Exception e ) {
