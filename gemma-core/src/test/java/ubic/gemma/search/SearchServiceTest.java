@@ -33,8 +33,7 @@ import ubic.gemma.testing.BaseSpringContextTest;
  * @author kelsey
  * @version $Id
  */
-public class SearchServiceTest extends BaseSpringContextTest
-{
+public class SearchServiceTest extends BaseSpringContextTest {
     private static final String GENE_URI = "http://purl.org/commons/record/ncbi_gene/20655";
 
     private static final String BRAIN_STEM = "http://purl.org/obo/owl/FMA#FMA_7647";
@@ -45,151 +44,139 @@ public class SearchServiceTest extends BaseSpringContextTest
 
     @Autowired
     ExpressionExperimentService eeService;
-    
+
     @Autowired
     SearchService searchService;
-    
+
     @Autowired
     OntologyService ontologyService;
 
     private ExpressionExperiment ee;
     private VocabCharacteristic eeCharSpinalCord;
-    private  VocabCharacteristic eeCharGeneURI;
-    private  VocabCharacteristic eeCharCortexURI;
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+    private VocabCharacteristic eeCharGeneURI;
+    private VocabCharacteristic eeCharCortexURI;
+
     /**
      * Does the search engine correctly match the spinal cord URI and find objects directly tagged with that URI
      */
     @Test
-    public void testURISearch(){
-        
-        waitForOntology(ontologyService.getFmaOntologyService());
+    public void testURISearch() {
+
+        waitForOntology( ontologyService.getFmaOntologyService() );
 
         SearchSettings settings = new SearchSettings();
         settings.setQuery( BRAIN_STEM );
         settings.setSearchExperiments( true );
-        Map<Class<?>,List<SearchResult>> found = this.searchService.search( settings );
-        if (found.isEmpty())
-            assertTrue(false);
-        
-           for(SearchResult sr : found.get( ExpressionExperiment.class )){
-               if (sr.getResultObject().equals( ee) ){
-                   assertTrue(true);
-                   return;
-               }
-           }
-           
-           assertTrue(false);
+        Map<Class<?>, List<SearchResult>> found = this.searchService.search( settings );
+        if ( found.isEmpty() ) assertTrue( false );
+
+        for ( SearchResult sr : found.get( ExpressionExperiment.class ) ) {
+            if ( sr.getResultObject().equals( ee ) ) {
+                assertTrue( true );
+                return;
+            }
+        }
+
+        assertTrue( false );
     }
-    
+
+    /**
+     * Tests that gene uris get handled correctly
+     */
     @Test
-    public void testGeneUriSearch(){
-        
+    public void testGeneUriSearch() {
+
         SearchSettings settings = new SearchSettings();
         settings.setQuery( GENE_URI );
         settings.setSearchExperiments( true );
-        Map<Class<?>,List<SearchResult>> found = this.searchService.search( settings );
-        if ((found == null) ||(found.isEmpty()))
-            assertTrue(false);
-        
-           for(SearchResult sr : found.get( ExpressionExperiment.class )){
-               if (sr.getResultObject().equals( ee) ){
-                   assertTrue(true);
-                   return;
-               }
-           }
-           
-           assertTrue(false);
-        
+        Map<Class<?>, List<SearchResult>> found = this.searchService.search( settings );
+        if ( ( found == null ) || ( found.isEmpty() ) ) assertTrue( false );
+
+        for ( SearchResult sr : found.get( ExpressionExperiment.class ) ) {
+            if ( sr.getResultObject().equals( ee ) ) {
+                assertTrue( true );
+                return;
+            }
+        }
+
+        assertTrue( false );
+
     }
-    
+
+    /**
+     * Tests that general search terms are resovlved to their proper ontology terms and objects tagged with those terms
+     * are found.
+     */
     @Test
-    public void testGeneralSearch4Brain(){
-        
-        waitForOntology(ontologyService.getFmaOntologyService());
+    public void testGeneralSearch4Brain() {
+
+        waitForOntology( ontologyService.getFmaOntologyService() );
 
         SearchSettings settings = new SearchSettings();
         settings.setQuery( "Brain" );
         settings.setSearchExperiments( true );
-        settings.setUseCharacteristics(  true );
-        Map<Class<?>,List<SearchResult>> found = this.searchService.search( settings );
-        if ((found == null) ||(found.isEmpty()))
-            assertTrue(false);
-        
-           for(SearchResult sr : found.get( ExpressionExperiment.class )){
-               if (sr.getResultObject().equals( ee) ){
-                   assertTrue(true);
-                   return;
-               }
-           }
-           
-           assertTrue(false);
-        
+        settings.setUseCharacteristics( true );
+        Map<Class<?>, List<SearchResult>> found = this.searchService.search( settings );
+        if ( ( found == null ) || ( found.isEmpty() ) ) assertTrue( false );
+
+        for ( SearchResult sr : found.get( ExpressionExperiment.class ) ) {
+            if ( sr.getResultObject().equals( ee ) ) {
+                assertTrue( true );
+                return;
+            }
+        }
+
+        assertTrue( false );
+
     }
 
-    //Pass in the given ontology you want to wait to finish loading. 
-    private void waitForOntology(AbstractOntologyService os) {
+    // Pass in the given ontology you want to wait to finish loading.
+    private void waitForOntology( AbstractOntologyService os ) {
         while ( !os.isOntologyLoaded() ) {
-            try{
-            Thread.sleep( 1000 );
-            }catch(InterruptedException ie){
+            try {
+                Thread.sleep( 1000 );
+            } catch ( InterruptedException ie ) {
                 log.warn( ie );
             }
             log.info( "Waiting for FMA Ontology to load" );
         }
     }
-    
+
     /**
      * @exception Exception
      */
     @Before
     public void setup() throws Exception {
-            ee = this.getTestPersistentBasicExpressionExperiment();
-            
-            eeCharSpinalCord = VocabCharacteristic.Factory.newInstance();
-            eeCharSpinalCord.setCategory( "test" );
-            eeCharSpinalCord.setCategoryUri( "test" );
-            eeCharSpinalCord.setValue(BRAIN_STEM);
-            eeCharSpinalCord.setValueUri( BRAIN_STEM );
-            characteristicService.create( eeCharSpinalCord );
-            
+        ee = this.getTestPersistentBasicExpressionExperiment();
 
-            eeCharGeneURI = VocabCharacteristic.Factory.newInstance();
-            eeCharGeneURI.setCategory( "test" );
-            eeCharGeneURI.setCategoryUri( "test" );
-            eeCharGeneURI.setValue(GENE_URI);
-            eeCharGeneURI.setValueUri( GENE_URI );
-            characteristicService.create( eeCharGeneURI );
+        eeCharSpinalCord = VocabCharacteristic.Factory.newInstance();
+        eeCharSpinalCord.setCategory( "test" );
+        eeCharSpinalCord.setCategoryUri( "test" );
+        eeCharSpinalCord.setValue( BRAIN_STEM );
+        eeCharSpinalCord.setValueUri( BRAIN_STEM );
+        characteristicService.create( eeCharSpinalCord );
 
-            eeCharCortexURI = VocabCharacteristic.Factory.newInstance();
-            eeCharCortexURI.setCategory( "test" );
-            eeCharCortexURI.setCategoryUri( "test" );
-            eeCharCortexURI.setValue(PREFRONTAL_CORTEX_URI);
-            eeCharCortexURI.setValueUri( PREFRONTAL_CORTEX_URI );
-            characteristicService.create( eeCharCortexURI );
-            
-            Collection<Characteristic> chars = new HashSet<Characteristic>();
-            chars.add( eeCharSpinalCord );
-            chars.add(eeCharGeneURI);
-            chars.add( eeCharCortexURI );
-            ee.setCharacteristics( chars );
-            eeService.update( ee );
-   
-        
+        eeCharGeneURI = VocabCharacteristic.Factory.newInstance();
+        eeCharGeneURI.setCategory( "test" );
+        eeCharGeneURI.setCategoryUri( "test" );
+        eeCharGeneURI.setValue( GENE_URI );
+        eeCharGeneURI.setValueUri( GENE_URI );
+        characteristicService.create( eeCharGeneURI );
 
-            
+        eeCharCortexURI = VocabCharacteristic.Factory.newInstance();
+        eeCharCortexURI.setCategory( "test" );
+        eeCharCortexURI.setCategoryUri( "test" );
+        eeCharCortexURI.setValue( PREFRONTAL_CORTEX_URI );
+        eeCharCortexURI.setValueUri( PREFRONTAL_CORTEX_URI );
+        characteristicService.create( eeCharCortexURI );
+
+        Collection<Characteristic> chars = new HashSet<Characteristic>();
+        chars.add( eeCharSpinalCord );
+        chars.add( eeCharGeneURI );
+        chars.add( eeCharCortexURI );
+        ee.setCharacteristics( chars );
+        eeService.update( ee );
+
     }
-    
+
 }

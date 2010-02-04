@@ -293,6 +293,11 @@ public class SearchService implements InitializingBean {
     }
 
     /**
+     * Makes an attempt at determining of the query term is a valid URI from an Ontology in Gemma or a Gene URI (a GENE
+     * URI is in the form: http://purl.org/commons/record/ncbi_gene/20655 (but is not a valid ontology loaded in gemma)
+     * ). If so then searches for objects that have been tagged with that term or any of that terms children. If not a
+     * URI then proceeds with the generalSearch.
+     * 
      * @param settings
      * @param fillObjects If false, the entities will not be filled in inside the searchsettings; instead, they will be
      *        nulled (for security purposes). You can then use the id and Class stored in the SearchSettings to load the
@@ -336,41 +341,55 @@ public class SearchService implements InitializingBean {
 
         }// Perhaps is a valid gene URL. Want to search for the gene in gemma.
         else if ( StringUtils.containsIgnoreCase( uriString, NCBI_GENE ) ) {
-            //1st get objects tagged with the given gene identifier
+            // 1st get objects tagged with the given gene identifier
             Collection<Class> classesToFilterOn = new HashSet<Class>();
             classesToFilterOn.add( ExpressionExperiment.class );
-      
-            
-            Collection<Characteristic> foundCharacteristics  = characteristicService.findByUri( uriString );
+
+            Collection<Characteristic> foundCharacteristics = characteristicService.findByUri( uriString );
             Map<Characteristic, Object> parentMap = characteristicService.getParents( foundCharacteristics );
 
-            Collection<SearchResult> characteriticOwnerResults =  filterCharacteristicOwnersByClass( classesToFilterOn, parentMap );
-            
-            //Get results from general search using the found gene's gene symbol
+            Collection<SearchResult> characteriticOwnerResults = filterCharacteristicOwnersByClass( classesToFilterOn,
+                    parentMap );
+
+            // Get results from general search using the found gene's gene symbol
             String ncbiAccessionFromUri = StringUtils.substringAfterLast( uriString, "/" );
             Gene g = geneService.findByNCBIId( ncbiAccessionFromUri );
-            if ( g == null ){
-                Map<Class<?>, List<SearchResult>> justCharacteristicResults = new HashMap<Class<?>,List<SearchResult>>();
+            if ( g == null ) {
+                Map<Class<?>, List<SearchResult>> justCharacteristicResults = new HashMap<Class<?>, List<SearchResult>>();
                 List<SearchResult> sortedCharacteristicResults = new ArrayList<SearchResult>();
                 sortedCharacteristicResults.addAll( characteriticOwnerResults );
-                justCharacteristicResults.put( ExpressionExperiment.class, sortedCharacteristicResults  );
+                justCharacteristicResults.put( ExpressionExperiment.class, sortedCharacteristicResults );
                 return justCharacteristicResults;
             }
-  
+
             settings.setQuery( g.getOfficialSymbol() );
-            Map<Class<?>, List<SearchResult>> genResults  = this.search(settings );
+            Map<Class<?>, List<SearchResult>> genResults = this.search( settings );
             genResults.get( ExpressionExperiment.class ).addAll( characteriticOwnerResults );
             return genResults;
-            
+
         }
 
-        // Not an valid ontology term or a gene. 
-        //Proceed with general query parsing and searching.
+        // Not an valid ontology term or a gene.
+        // Proceed with general query parsing and searching.
+        return generalSearch( settings, fillObjects );
+    }
+
+    /**
+     * Makes no attempt at resovling the search query as a URI. Will tokenize the search query if there are control
+     * characters in the String. URI's will get parsed into multiple query terms and lead to bad results.
+     * 
+     * @param settings Will try to resolve general terms like brain --> to appropriate OntologyTerms and search for
+     *        objects tagged with those terms (if isUseCharacte = true)
+     * @param fillObjects If false, the entities will not be filled in inside the searchsettings; instead, they will be
+     *        nulled (for security purposes). You can then use the id and Class stored in the SearchSettings to load the
+     *        entities at your leisure. If true, the entities are loaded in the usual secure fashion. Setting this to
+     *        false can be an optimization if all you need is the id. * @return
+     */
+    protected Map<Class<?>, List<SearchResult>> generalSearch( SearchSettings settings, boolean fillObjects ) {
         String searchString = QueryParser.escape( StringUtils.strip( settings.getQuery() ) );
         settings.setQuery( searchString );
 
-     
-        //If nothing to search return nothing. 
+        // If nothing to search return nothing.
         if ( StringUtils.isBlank( searchString ) ) {
             return new HashMap<Class<?>, List<SearchResult>>();
         }
@@ -383,7 +402,7 @@ public class SearchService implements InitializingBean {
         }
 
         Collection<SearchResult> genes = null;
-        if ( settings.isSearchGenes()  ) {
+        if ( settings.isSearchGenes() ) {
             genes = geneSearch( settings );
             accreteResults( rawResults, genes );
         }
@@ -410,7 +429,7 @@ public class SearchService implements InitializingBean {
             accreteResults( rawResults, ontologyGenes );
         }
 
-        if ( settings.isSearchBibrefs()  ) {
+        if ( settings.isSearchBibrefs() ) {
             Collection<SearchResult> bibliographicReferences = compassBibliographicReferenceSearch( settings );
             accreteResults( rawResults, bibliographicReferences );
         }
