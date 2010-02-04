@@ -11,7 +11,7 @@ ${confirmLink}
 Here are some useful links to help you get started. 
 General information about Gemma : ${overviewURL}
 Frequently asked questions (FAQ) : ${faqURL}
-Latest news about Gemma (wiki): http://chibi.ubc.ca/faculty/pavlidis/wiki/display/gemma 
+Latest news about Gemma (wiki): ${wikiURL}
 
 Please feel free to contact us: gemma@chibi.ubc.ca
 
