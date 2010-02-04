@@ -336,15 +336,31 @@ public class SearchService implements InitializingBean {
 
         }// Perhaps is a valid gene URL. Want to search for the gene in gemma.
         else if ( StringUtils.containsIgnoreCase( uriString, NCBI_GENE ) ) {
+            //1st get objects tagged with the given gene identifier
+            Collection<Class> classesToFilterOn = new HashSet<Class>();
+            classesToFilterOn.add( ExpressionExperiment.class );
+      
+            
+            Collection<Characteristic> foundCharacteristics  = characteristicService.findByUri( uriString );
+            Map<Characteristic, Object> parentMap = characteristicService.getParents( foundCharacteristics );
 
-            //FIXME:  should I actually look through the characteristic table and find anything that is tagged with the ncbi gene URI or just do a genearal search or both?
+            Collection<SearchResult> characteriticOwnerResults =  filterCharacteristicOwnersByClass( classesToFilterOn, parentMap );
+            
+            //Get results from general search using the found gene's gene symbol
             String ncbiAccessionFromUri = StringUtils.substringAfterLast( uriString, "/" );
             Gene g = geneService.findByNCBIId( ncbiAccessionFromUri );
-            if ( g == null ) return null;
-
-            //Is a valid gene in the system.  Redo the search using the official symbol as the query.  
+            if ( g == null ){
+                Map<Class<?>, List<SearchResult>> justCharacteristicResults = new HashMap<Class<?>,List<SearchResult>>();
+                List<SearchResult> sortedCharacteristicResults = new ArrayList<SearchResult>();
+                sortedCharacteristicResults.addAll( characteriticOwnerResults );
+                justCharacteristicResults.put( ExpressionExperiment.class, sortedCharacteristicResults  );
+                return justCharacteristicResults;
+            }
+  
             settings.setQuery( g.getOfficialSymbol() );
-            return this.search(settings );
+            Map<Class<?>, List<SearchResult>> genResults  = this.search(settings );
+            genResults.get( ExpressionExperiment.class ).addAll( characteriticOwnerResults );
+            return genResults;
             
         }
 
@@ -353,10 +369,8 @@ public class SearchService implements InitializingBean {
         String searchString = QueryParser.escape( StringUtils.strip( settings.getQuery() ) );
         settings.setQuery( searchString );
 
-        // not
-        // necessary to
-        // escape...
-
+     
+        //If nothing to search return nothing. 
         if ( StringUtils.isBlank( searchString ) ) {
             return new HashMap<Class<?>, List<SearchResult>>();
         }
@@ -369,34 +383,34 @@ public class SearchService implements InitializingBean {
         }
 
         Collection<SearchResult> genes = null;
-        if ( settings.isSearchGenes() && rawResults.size() < settings.getMaxResults() ) {
+        if ( settings.isSearchGenes()  ) {
             genes = geneSearch( settings );
             accreteResults( rawResults, genes );
         }
 
         Collection<SearchResult> compositeSequences = null;
-        if ( settings.isSearchProbes() && rawResults.size() < settings.getMaxResults() ) {
+        if ( settings.isSearchProbes() ) {
             compositeSequences = compositeSequenceSearch( settings );
             accreteResults( rawResults, compositeSequences );
         }
 
-        if ( settings.isSearchArrays() && rawResults.size() < settings.getMaxResults() ) {
+        if ( settings.isSearchArrays() ) {
             Collection<SearchResult> foundADs = arrayDesignSearch( settings, compositeSequences );
             accreteResults( rawResults, foundADs );
         }
 
-        if ( settings.isSearchBioSequences() && rawResults.size() < settings.getMaxResults() ) {
+        if ( settings.isSearchBioSequences() ) {
             Collection<SearchResult> bioSequences = bioSequenceSearch( settings, genes );
             accreteResults( rawResults, bioSequences );
         }
 
-        if ( settings.isSearchGenesByGO() && rawResults.size() < settings.getMaxResults() ) {
+        if ( settings.isSearchGenesByGO() ) {
             Collection<SearchResult> ontologyGenes = dbHitsToSearchResult( gene2GOAssociationService.findByGOTerm(
                     searchString, settings.getTaxon() ) );
             accreteResults( rawResults, ontologyGenes );
         }
 
-        if ( settings.isSearchBibrefs() && rawResults.size() < settings.getMaxResults() ) {
+        if ( settings.isSearchBibrefs()  ) {
             Collection<SearchResult> bibliographicReferences = compassBibliographicReferenceSearch( settings );
             accreteResults( rawResults, bibliographicReferences );
         }
