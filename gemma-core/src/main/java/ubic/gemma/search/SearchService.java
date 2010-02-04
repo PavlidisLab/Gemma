@@ -959,7 +959,8 @@ public class SearchService implements InitializingBean {
          */
 
         Collection<SearchResult> allResults = new HashSet<SearchResult>();
-        allResults.addAll( compassCompositeSequenceSearch( settings ) );
+        //Temporaily removing compass searching of composite sequences because it only bloats the results.  
+        //allResults.addAll( compassCompositeSequenceSearch( settings ) );
         allResults.addAll( databaseCompositeSequenceSearch( settings ) );
         // allResults.addAll( compositeSequenceByGeneSearch( settings, geneSearchResults ) );
 
