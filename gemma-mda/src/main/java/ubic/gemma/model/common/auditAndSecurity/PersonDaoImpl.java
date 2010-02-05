@@ -19,9 +19,9 @@
  *
  */
 package ubic.gemma.model.common.auditAndSecurity;
- 
+
 import org.hibernate.Criteria;
-import org.hibernate.SessionFactory; 
+import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
@@ -48,7 +48,7 @@ public class PersonDaoImpl extends ubic.gemma.model.common.auditAndSecurity.Pers
     public Person find( Person person ) {
         try {
             Criteria queryObject = super.getSession().createCriteria( Person.class );
- 
+
             BusinessKey.addRestrictions( queryObject, person );
 
             java.util.List results = queryObject.list();
@@ -58,7 +58,7 @@ public class PersonDaoImpl extends ubic.gemma.model.common.auditAndSecurity.Pers
                     throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
                             "More than one instance of '"
                                     + ubic.gemma.model.common.auditAndSecurity.Person.class.getName()
-                                    + "' was found when executing query" );
+                                    + "' was found when executing query - " + person );
 
                 } else if ( results.size() == 1 ) {
                     result = results.iterator().next();
