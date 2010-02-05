@@ -357,18 +357,27 @@ public class CoexpressionSearchController extends BaseFormController {
                 eeSetId = eeSets.iterator().next().getId();
 
             } else {
-
+                GeneCoexpressionAnalysis analysis = null;
                 String analysisName = "All " + gene.getTaxon().getCommonName();
                 Collection<GeneCoexpressionAnalysis> analyses = geneCoexpressionAnalysisService
                         .findByName( analysisName );
 
                 if ( analyses.isEmpty() ) {
                     return null;
-                } else if ( analyses.size() > 1 ) {
-                    log.warn( "More than one analysis with name: " + analysisName );
                 }
 
-                GeneCoexpressionAnalysis analysis = analyses.iterator().next();
+                /*
+                 * Find the first enabled one.
+                 */
+                for ( GeneCoexpressionAnalysis a : analyses ) {
+                    if ( a.getEnabled() ) {
+                        analysis = a;
+                    }
+                }
+
+                if ( analysis == null ) {
+                    throw new IllegalStateException( "No analysis is enabled" );
+                }
 
                 eeSet = analysis.getExpressionExperimentSetAnalyzed();
 
