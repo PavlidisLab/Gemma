@@ -536,7 +536,6 @@ public class GeneCoexpressionService {
             analyses = geneCoexpressionAnalysisService.findByTaxon( t );
         }
 
-        // Collection<? extends Analysis> analyses = geneCoexpressionAnalysisService.findByTaxon( t );
         if ( analyses.size() == 0 ) {
             throw new IllegalStateException( "No gene coexpression analysis is available for " + t.getScientificName() );
         } else if ( analyses.size() == 1 ) {
