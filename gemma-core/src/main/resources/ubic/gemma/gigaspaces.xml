@@ -27,7 +27,7 @@
 
 	<!-- Declaration of GigaSpace template-->
 	<bean id="gigaspacesTemplate" class="org.springmodules.javaspaces.gigaspaces.GigaSpacesTemplate">
-		<property name="space" ref="gigaspace" />		
+		<property name="space" ref="gigaspace" />
 	</bean>
 
 	<!-- Add workers here -->
@@ -232,6 +232,9 @@
 		</property>
 		<property name="processedExpressionDataVectorCreateService">
 			<ref bean="processedExpressionDataVectorCreateService" />
+		</property>
+		<property name="expressionDataMatrixService">
+			<ref bean="expressionDataMatrixService" />
 		</property>
 	</bean>
 

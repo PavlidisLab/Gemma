@@ -25,17 +25,20 @@ import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import ubic.basecode.dataStructure.Link;
 import ubic.basecode.math.CorrelationStats;
 import ubic.basecode.math.Stats;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
@@ -70,6 +73,8 @@ public class LinkAnalysis {
 
     private ProbeCoexpressionAnalysis analysis;
 
+    private Map<Integer, Integer> probeDegreeMap = new HashMap<Integer, Integer>();
+
     /**
      * @param config
      */
@@ -80,7 +85,7 @@ public class LinkAnalysis {
     }
 
     /**
-     * @return
+     * Main entry point.
      */
     public void analyze() {
         assert this.dataMatrix != null;
@@ -97,12 +102,70 @@ public class LinkAnalysis {
         log.info( "Current Options: \n" + this.config );
         this.calculateDistribution();
 
-        if ( expressionExperiment != null ) {// input is not from expression data file
-            this.writeDistribution();
-        }
-
         this.getLinks();
 
+        if ( expressionExperiment != null ) {// input is not from expression data file
+            this.writeCorrelationDistribution();
+            this.writeProbeDegreeDistribution();
+        }
+    }
+
+    private void writeProbeDegreeDistribution() {
+
+        File outputDir = getOutputDir();
+
+        if ( outputDir == null ) return;
+
+        String path = outputDir + File.separator + expressionExperiment.getShortName() + ".degreeDist.txt";
+
+        File outputFile = new File( path );
+        if ( outputFile.exists() ) {
+            outputFile.delete();
+        }
+
+        try {
+            FileWriter out = new FileWriter( outputFile );
+
+            out.write( "# Probe degree statistics (before filtering by probeDegreeThreshold)\n" );
+            out.write( "# date=" + ( new Date() ) + "\n" );
+            out.write( "# exp=" + expressionExperiment + " " + expressionExperiment.getShortName() + "\n" );
+            out.write( "Probe\tNumLinks\n" );
+
+            for ( Integer i : probeDegreeMap.keySet() ) {
+                out.write( this.getProbe( i ) + "\t" + probeDegreeMap.get( i ) + "\n" );
+            }
+
+            out.close();
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
+        }
+
+    }
+
+    /**
+     * @return
+     */
+    private File getOutputDir() {
+        File outputDir = null;
+
+        if ( this.config.isUseDb() ) {
+            outputDir = new File( ConfigUtils.getAnalysisStoragePath() );
+        } else {
+            outputDir = new File( System.getProperty( "user.home" ) + File.separator + "gemma.output" );
+            if ( !outputDir.exists() ) {
+                boolean ok = outputDir.mkdirs();
+                if ( !ok ) {
+                    log.warn( "Cannot create " + outputDir );
+                    return null;
+                }
+            }
+        }
+
+        if ( !outputDir.canWrite() ) {
+            log.warn( "Cannot write to " + outputDir );
+            return null;
+        }
+        return outputDir;
     }
 
     /**
@@ -127,27 +190,11 @@ public class LinkAnalysis {
      * 
      * @throws IOException
      */
-    public void writeDistribution() {
+    public void writeCorrelationDistribution() {
 
-        File outputDir = null;
+        File outputDir = getOutputDir();
 
-        if ( this.config.isUseDb() ) {
-            outputDir = new File( ConfigUtils.getAnalysisStoragePath() );
-        } else {
-            outputDir = new File( System.getProperty( "user.home" ) + File.separator + "gemma.output" );
-            if ( !outputDir.exists() ) {
-                boolean ok = outputDir.mkdirs();
-                if ( !ok ) {
-                    log.warn( "Cannot create " + outputDir + ", correlation distribution will not be saved to disk" );
-                    return;
-                }
-            }
-        }
-
-        if ( !outputDir.canWrite() ) {
-            log.warn( "Cannot write to " + outputDir + ", correlation distribution will not be saved to disk" );
-            return;
-        }
+        if ( outputDir == null ) return;
 
         String path = outputDir + File.separator + expressionExperiment.getShortName() + ".correlDist.txt";
 
@@ -201,7 +248,6 @@ public class LinkAnalysis {
         metricMatrix.calculateMetrics();
         log.info( "Completed first pass over the data. Cached " + metricMatrix.numCached()
                 + " values in the correlation matrix with values over " + config.getCorrelationCacheThreshold() );
-
     }
 
     /**
@@ -320,8 +366,45 @@ public class LinkAnalysis {
     private void getLinks() {
         chooseCutPoints();
         metricMatrix.calculateMetrics();
+
         keep = metricMatrix.getKeepers();
-        log.info( "Selected " + keep.size() + " values to keep" );
+
+        computeProbeDegrees();
+    }
+
+    /**
+     * Populates a map of probe index (in matrix) -> how many links.
+     */
+    private void computeProbeDegrees() {
+
+        this.probeDegreeMap = new HashMap<Integer, Integer>();
+
+        for ( Integer i = 0; i < metricMatrix.size(); i++ ) {
+            probeDegreeMap.put( i, 0 );
+        }
+
+        for ( int i = 0; i < keep.size(); i++ ) {
+            Link l = ( Link ) keep.get( i );
+            Integer x = l.getx();
+            Integer y = l.gety();
+
+            probeDegreeMap.put( x, probeDegreeMap.get( x ) + 1 );
+            probeDegreeMap.put( y, probeDegreeMap.get( y ) + 1 );
+
+        }
+    }
+
+    public DesignElement getProbe( int index ) {
+        return getMetricMatrix().getProbeForRow( getDataMatrix().getRowElement( index ) );
+    }
+
+    /**
+     * @param index row number in the metrixMatirx
+     * @return how many Links that probe appears in, or null if the probeDegree has not been populated for that index
+     *         (that is, either to early to check, or it was zero).
+     */
+    public Integer getProbeDegree( int index ) {
+        return this.probeDegreeMap.get( index );
     }
 
     /**

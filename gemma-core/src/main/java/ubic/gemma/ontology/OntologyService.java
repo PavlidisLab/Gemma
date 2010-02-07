@@ -172,7 +172,6 @@ public class OntologyService implements InitializingBean {
         this.ontologyServices.add( this.mgedOntologyService );
 
         for ( AbstractOntologyService serv : this.ontologyServices ) {
-            log.info( "*************** " + serv + " *********************" );
             serv.init( false );
         }
 

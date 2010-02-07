@@ -38,7 +38,7 @@ public class GemmaCLI {
             "ubic.gemma.apps.ArrayDesignBlatCli", "ubic.gemma.apps.ArrayDesignAnnotationFileCli",
             "ubic.gemma.apps.ProcessedDataComputeCLI", "ubic.gemma.apps.TwoChannelMissingValueCLI",
             "ubic.gemma.apps.VectorMergingCli", "ubic.gemma.apps.ArrayDesignProbeRenamerCli",
-            "ubic.gemma.apps.ArrayDesignMergeCli", "ubic.gemma.apps.LinkAnalysisCli",
+            "ubic.gemma.apps.ArrayDesignMergeCli", "ubic.gemma.apps.LinkAnalysisCli", "ubic.gemma.apps.LinkEvalCli",
             "ubic.gemma.apps.DifferentialExpressionAnalysisCli",
             "ubic.gemma.apps.ExpressionExperimentPlatformSwitchCli", "ubic.gemma.apps.ExpressionDataCorrMatCli",
             "ubic.gemma.apps.ArrayDesignSubsumptionTesterCli" };

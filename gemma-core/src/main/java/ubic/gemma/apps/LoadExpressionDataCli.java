@@ -31,6 +31,10 @@ import org.apache.commons.lang.time.StopWatch;
 
 import ubic.gemma.analysis.preprocess.ProcessedExpressionDataVectorCreateService;
 import ubic.gemma.analysis.preprocess.TwoChannelMissingValues;
+import ubic.gemma.analysis.preprocess.filter.FilterConfig;
+import ubic.gemma.analysis.service.ExpressionDataMatrixService;
+import ubic.gemma.analysis.stats.ExpressionDataSampleCorrelation;
+import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.loader.expression.arrayExpress.ArrayExpressLoadService;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.loader.expression.geo.service.GeoDatasetService;
@@ -40,6 +44,7 @@ import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
+import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.util.AbstractSpringAwareCLI;
@@ -90,6 +95,7 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
     protected ExpressionExperimentService eeService;
     protected ArrayDesignService adService;
     protected ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService;
+    protected ExpressionDataMatrixService expressionDataMatrixService;
     private TwoChannelMissingValues tcmv;
 
     private boolean splitIncompatiblePlatforms = false;
@@ -351,6 +357,7 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
         this.adService = ( ArrayDesignService ) getBean( "arrayDesignService" );
         this.processedExpressionDataVectorCreateService = ( ProcessedExpressionDataVectorCreateService ) getBean( "processedExpressionDataVectorCreateService" );
         this.tcmv = ( TwoChannelMissingValues ) this.getBean( "twoChannelMissingValues" );
+        this.expressionDataMatrixService = ( ExpressionDataMatrixService ) getBean( "expressionDataMatrixService" );
     }
 
     /**
@@ -389,7 +396,12 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
 
             ArrayDesign arrayDesignUsed = arrayDesignsUsed.iterator().next();
             processForMissingValues( ee, arrayDesignUsed );
-            processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
+            Collection<ProcessedExpressionDataVector> dataVectors = processedExpressionDataVectorCreateService
+                    .computeProcessedExpressionData( ee );
+
+            ExpressionDataDoubleMatrix datamatrix = expressionDataMatrixService.getFilteredMatrix( ee,
+                    new FilterConfig(), dataVectors );
+            ExpressionDataSampleCorrelation.process( datamatrix, ee );
         }
     }
 

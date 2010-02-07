@@ -200,6 +200,14 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
         return results.cardinality();
     }
 
+    /*
+     * (non-Javadoc)
+     * @see ubic.gemma.analysis.expression.coexpression.links.MatrixRowPairAnalysis#size()
+     */
+    public int size() {
+        return this.dataMatrix.rows();
+    }
+
     /**
      * 
      */

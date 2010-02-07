@@ -278,7 +278,12 @@ public class LinkAnalysisService {
 
         } else if ( linkAnalysisConfig.isTextOut() ) {
             try {
-                writeLinks( la, filterConfig, new PrintWriter( System.out ) );
+                PrintWriter w = new PrintWriter( System.out );
+                if ( linkAnalysisConfig.getOutputFile() != null ) {
+                    w = new PrintWriter( linkAnalysisConfig.getOutputFile() );
+                }
+
+                writeLinks( la, filterConfig, w );
             } catch ( IOException e ) {
                 throw new RuntimeException( e );
             }
@@ -643,6 +648,8 @@ public class LinkAnalysisService {
             c = new Creator( OtherProbeCoExpression.Factory.class, la.getExpressionExperiment() );
         }
 
+        Integer probeDegreeThreshold = la.getConfig().getProbeDegreeThreshold();
+        int skippedDueToDegree = 0;
         List<Probe2ProbeCoexpression> p2plinkBatch = new ArrayList<Probe2ProbeCoexpression>();
         for ( int i = 0, n = links.size(); i < n; i++ ) {
             Object val = links.getQuick( i );
@@ -652,8 +659,17 @@ public class LinkAnalysisService {
 
             assert w != null;
 
-            DesignElement p1 = la.getMetricMatrix().getProbeForRow( la.getDataMatrix().getRowElement( m.getx() ) );
-            DesignElement p2 = la.getMetricMatrix().getProbeForRow( la.getDataMatrix().getRowElement( m.gety() ) );
+            int x = m.getx();
+            int y = m.gety();
+
+            if ( probeDegreeThreshold > 0
+                    && ( la.getProbeDegree( x ) > probeDegreeThreshold || la.getProbeDegree( y ) > probeDegreeThreshold ) ) {
+                skippedDueToDegree++;
+                continue;
+            }
+
+            DesignElement p1 = la.getProbe( x );
+            DesignElement p2 = la.getProbe( y );
 
             ProcessedExpressionDataVector v1 = p2v.get( p1 );
             ProcessedExpressionDataVector v2 = p2v.get( p2 );
@@ -669,6 +685,8 @@ public class LinkAnalysisService {
             }
 
         }
+
+        log.info( skippedDueToDegree + " links skipped due to high probe node degree" );
 
         // last batch.
         if ( p2plinkBatch.size() > 0 ) {
@@ -734,6 +752,8 @@ public class LinkAnalysisService {
         NumberFormat nf = NumberFormat.getInstance();
         nf.setMaximumFractionDigits( 4 );
 
+        Integer probeDegreeThreshold = la.getConfig().getProbeDegreeThreshold();
+
         Transformer officialSymbolExtractor = new Transformer() {
             public Object transform( Object input ) {
                 Gene g = ( Gene ) input;
@@ -747,7 +767,7 @@ public class LinkAnalysisService {
         Random generator = new Random();
         double rand = 0.0;
         double fraction = subsetSize / links.size();
-
+        int skippedDueToDegree = 0;
         for ( int n = links.size(); i < n; i++ ) {
 
             Object val = links.getQuick( i );
@@ -757,8 +777,17 @@ public class LinkAnalysisService {
 
             assert w != null;
 
-            DesignElement p1 = la.getMetricMatrix().getProbeForRow( la.getDataMatrix().getRowElement( m.getx() ) );
-            DesignElement p2 = la.getMetricMatrix().getProbeForRow( la.getDataMatrix().getRowElement( m.gety() ) );
+            int x = m.getx();
+            int y = m.gety();
+
+            if ( probeDegreeThreshold > 0
+                    && ( la.getProbeDegree( x ) > probeDegreeThreshold || la.getProbeDegree( y ) > probeDegreeThreshold ) ) {
+                skippedDueToDegree++;
+                continue;
+            }
+
+            DesignElement p1 = la.getProbe( x );
+            DesignElement p2 = la.getProbe( y );
 
             Collection<Collection<Gene>> g1 = probeToGeneMap.get( p1 );
             Collection<Collection<Gene>> g2 = probeToGeneMap.get( p2 );
@@ -816,6 +845,7 @@ public class LinkAnalysisService {
 
         wr.write( "# totalLinks:" + keptLinksCount + "\n" );
         wr.write( "# printedLinks:" + buf.size() + "\n" );
+        wr.write( "# skippedDueToHighNodeDegree:" + skippedDueToDegree + "\n" );
 
         for ( String line : buf ) {// write links to file
             wr.write( line );
@@ -831,5 +861,4 @@ public class LinkAnalysisService {
         wr.flush();
 
     }
-
 }

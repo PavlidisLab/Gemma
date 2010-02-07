@@ -55,7 +55,6 @@ import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.dataStructure.matrix.SparseRaggedDoubleMatrix;
 import ubic.basecode.math.RandomChooser;
 import ubic.basecode.ontology.model.OntologyTerm;
-import ubic.gemma.model.association.Gene2GOAssociationService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
@@ -1523,18 +1522,30 @@ public class LinkEvalCli extends AbstractSpringAwareCLI {
      * @param genes
      */
     private void populateGeneGoMap( Collection<Gene> genes ) {
+        if ( genes.isEmpty() ) {
+            throw new IllegalArgumentException( "No genes!" );
+        }
         this.goMappedGenes = genes;
+        int hadTerms = 0;
         for ( Gene gene : genes ) {
             Collection<OntologyTerm> GOTerms = goService.getGOTerms( gene, partOf, goAspectToUse );
 
             if ( GOTerms == null || GOTerms.isEmpty() ) continue;
-            log.info( "Got go terms for " + gene.getName() );
+            if ( log.isDebugEnabled() ) log.debug( "Got go terms for " + gene.getName() );
+
+            hadTerms++;
 
             Collection<String> termString = new HashSet<String>();
             for ( OntologyTerm oe : GOTerms ) {
                 termString.add( oe.getUri() );
             }
             geneGoMap.put( gene.getId(), termString );
+        }
+
+        log.info( hadTerms + " genes had GO terms" );
+
+        if ( hadTerms == 0 ) {
+            throw new IllegalStateException( "NO genes had go terms" );
         }
     }
 

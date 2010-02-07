@@ -86,4 +86,9 @@ public interface MatrixRowPairAnalysis {
 
     double getNumUniqueGenes();
 
+    /**
+     * @return how many rows/columsn the matrix has.
+     */
+    int size();
+
 }

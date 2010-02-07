@@ -18,6 +18,7 @@
  */
 package ubic.gemma.security.authorization;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -31,11 +32,13 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.acls.domain.ObjectIdentityRetrievalStrategyImpl;
+import org.springframework.security.acls.domain.PrincipalSid;
 import org.springframework.security.acls.model.AclService;
 import org.springframework.security.acls.model.MutableAcl;
 import org.springframework.security.acls.model.NotFoundException;
 import org.springframework.security.acls.model.ObjectIdentity;
 import org.springframework.security.acls.model.ObjectIdentityRetrievalStrategy;
+import org.springframework.security.acls.model.Sid;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
 import ubic.gemma.model.common.auditAndSecurity.Securable;
@@ -128,6 +131,22 @@ public class SecurityServiceTest extends BaseSpringContextTest {
 
         assertTrue( securityService.isViewableByUser( arrayDesign, "administrator" ) );
         assertTrue( securityService.isViewableByUser( arrayDesign, "gemmaAgent" ) );
+    }
+
+    @Test
+    public void testSetOwner() {
+        ExpressionExperiment ee = super.getTestPersistentBasicExpressionExperiment();
+        securityService.makePrivate( ee );
+
+        String username = "first_" + randomName();
+        makeUser( username );
+
+        securityService.setOwner( ee, username );
+
+        Sid owner = securityService.getOwner( ee );
+        assertTrue( owner instanceof PrincipalSid );
+        assertEquals( username, ( ( PrincipalSid ) owner ).getPrincipal() );
+
     }
 
     /**

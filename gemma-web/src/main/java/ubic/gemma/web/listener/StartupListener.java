@@ -283,6 +283,9 @@ public class StartupListener extends ContextLoaderListener {
             }
         }
 
+        /*
+         * Create a text file that contains the list of jar files in java classpath format.
+         */
         try {
             File classpathFile = new File( targetLibdir, "CLASSPATH" );
 

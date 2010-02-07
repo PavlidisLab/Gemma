@@ -478,6 +478,17 @@ public class SecurityService {
     }
 
     /**
+     * @param s
+     * @return
+     */
+    @Secured("ACL_SECURABLE_READ")
+    public Sid getOwner( Securable s ) {
+        ObjectIdentity oi = this.objectIdentityRetrievalStrategy.getObjectIdentity( s );
+        Acl a = this.aclService.readAclById( oi );
+        return a.getOwner();
+    }
+
+    /**
      * Pretty much have to be either the owner of the securables or administrator to call this.
      * 
      * @param securables
@@ -507,17 +518,6 @@ public class SecurityService {
                 result.put( objectIdentities.get( oi ), owner );
         }
         return result;
-    }
-
-    /**
-     * @param s
-     * @return
-     */
-    @Secured("ACL_SECURABLE_READ")
-    public Sid getOwner( Securable s ) {
-        ObjectIdentity oi = this.objectIdentityRetrievalStrategy.getObjectIdentity( s );
-        Acl a = this.aclService.readAclById( oi );
-        return a.getOwner();
     }
 
     /**
@@ -936,6 +936,31 @@ public class SecurityService {
      */
     public void removeUserFromGroup( String userName, String groupName ) {
         this.userManager.removeUserFromGroup( userName, groupName );
+    }
+
+    /**
+     * Change the 'owner' of an object to a specific user. Note that this doesn't support making the owner a
+     * grantedAuthority.
+     * 
+     * @param s
+     * @param userName
+     */
+    @Secured("GROUP_ADMIN")
+    public void setOwner( Securable s, String userName ) {
+
+        // make sure user exists and is enabled.
+        UserDetails user = this.userManager.loadUserByUsername( userName );
+        if ( !user.isEnabled() || !user.isAccountNonExpired() || !user.isAccountNonLocked() ) {
+            throw new IllegalArgumentException( "User  " + userName + " has a disabled account" );
+        }
+
+        ObjectIdentity oi = this.objectIdentityRetrievalStrategy.getObjectIdentity( s );
+        MutableAcl a = ( MutableAcl ) this.aclService.readAclById( oi );
+
+        a.setOwner( new PrincipalSid( userName ) );
+
+        this.aclService.updateAcl( a );
+
     }
 
     /**

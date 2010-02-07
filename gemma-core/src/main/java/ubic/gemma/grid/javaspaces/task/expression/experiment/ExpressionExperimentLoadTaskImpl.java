@@ -26,6 +26,10 @@ import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.analysis.preprocess.ProcessedExpressionDataVectorCreateService;
 import ubic.gemma.analysis.preprocess.TwoChannelMissingValues;
+import ubic.gemma.analysis.preprocess.filter.FilterConfig;
+import ubic.gemma.analysis.service.ExpressionDataMatrixService;
+import ubic.gemma.analysis.stats.ExpressionDataSampleCorrelation;
+import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.grid.javaspaces.BaseSpacesTask;
 import ubic.gemma.grid.javaspaces.TaskResult;
 import ubic.gemma.loader.expression.arrayExpress.ArrayExpressLoadService;
@@ -33,6 +37,7 @@ import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.loader.expression.geo.service.GeoDatasetService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
+import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.util.progress.grid.javaspaces.SpacesProgressAppender;
@@ -49,6 +54,7 @@ public class ExpressionExperimentLoadTaskImpl extends BaseSpacesTask implements 
     ExpressionExperimentService eeService;
     ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService;
     TwoChannelMissingValues twoChannelMissingValueService;
+    ExpressionDataMatrixService expressionDataMatrixService;
 
     /*
      * (non-Javadoc)
@@ -148,7 +154,12 @@ public class ExpressionExperimentLoadTaskImpl extends BaseSpacesTask implements 
 
             ArrayDesign arrayDesignUsed = arrayDesignsUsed.iterator().next();
             processForMissingValues( ee, arrayDesignUsed );
-            processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
+            Collection<ProcessedExpressionDataVector> dataVectors = processedExpressionDataVectorCreateService
+                    .computeProcessedExpressionData( ee );
+
+            ExpressionDataDoubleMatrix datamatrix = expressionDataMatrixService.getFilteredMatrix( ee,
+                    new FilterConfig(), dataVectors );
+            ExpressionDataSampleCorrelation.process( datamatrix, ee );
         }
     }
 

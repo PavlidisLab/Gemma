@@ -153,7 +153,11 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
                 .create( "array" );
         addOption( arrayOpt );
 
-        Option textOutOpt = OptionBuilder.withDescription( "Output links as text to STOUT" ).create( "text" );
+        Option textOutOpt = OptionBuilder
+                .withDescription(
+                        "Output links as text. If multiple experiments are analyzed (e.g. using -f option) "
+                                + "results for each are put in a separate file in the current directory with the format {shortname}-links.txt. Otherwise output is to STDOUT" )
+                .create( "text" );
         addOption( textOutOpt );
 
         Option metricOption = OptionBuilder.hasArg().withArgName( "metric" ).withDescription(
@@ -192,6 +196,11 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
                         "Choose correlation threshold {fwe|cdfCut} to be used independently to select best links, default is none" )
                 .create( "choosecut" );
         addOption( chooseCutOption );
+
+        Option probeDegreeThresholdOption = OptionBuilder.hasArg().withArgName( "threshold" ).withDescription(
+                "Probes with greater than this number of links will be ignored; default is "
+                        + LinkAnalysisConfig.DEFAULT_PROBE_DEGREE_THRESHOLD ).create( "probeDegreeLim" );
+        addOption( probeDegreeThresholdOption );
 
         addForceOption();
         addAutoOption();
@@ -389,6 +398,10 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
             }
         }
 
+        if ( hasOption( "probeDegreeLim" ) ) {
+            this.linkAnalysisConfig.setProbeDegreeThreshold( getIntegerOptionValue( "probeDegreeLim" ) );
+        }
+
     }
 
     @SuppressWarnings("static-access")
@@ -480,7 +493,10 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
     private void processExperiment( ExpressionExperiment ee ) {
         eeService.thawLite( ee );
 
-        if ( !force && !needToRun( ee, LinkAnalysisEvent.class ) ) {
+        /*
+         * If we're not using the database, always run it.
+         */
+        if ( linkAnalysisConfig.isUseDb() && !force && !needToRun( ee, LinkAnalysisEvent.class ) ) {
             log.info( "Can't or Don't need to run " + ee );
             return;
         }
@@ -489,6 +505,12 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
          * Note that auditing is handled by the service.
          */
         try {
+
+            if ( this.expressionExperiments.size() > 1 && linkAnalysisConfig.isTextOut() ) {
+                linkAnalysisConfig
+                        .setOutputFile( new File( ee.getShortName().replaceAll( "\\s", "_" ) + "-links.txt" ) );
+            }
+
             linkAnalysisService.process( ee, filterConfig, linkAnalysisConfig );
             successObjects.add( ee.toString() );
         } catch ( Exception e ) {

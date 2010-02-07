@@ -18,6 +18,7 @@
  */
 package ubic.gemma.analysis.expression.coexpression.links;
 
+import java.io.File;
 import java.io.Serializable;
 
 import ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis;
@@ -40,6 +41,8 @@ public class LinkAnalysisConfig implements Serializable {
      */
     private static final long serialVersionUID = 1L;
 
+    public static final Integer DEFAULT_PROBE_DEGREE_THRESHOLD = 200;
+
     private boolean absoluteValue = false;
     private String arrayName = null;
 
@@ -59,13 +62,28 @@ public class LinkAnalysisConfig implements Serializable {
      * Remove negative correlated values at the end.
      */
     private boolean omitNegLinks = false;
+    private int probeDegreeThreshold = DEFAULT_PROBE_DEGREE_THRESHOLD;
     private String singularThreshold = "none"; // fwe|cdfCut
     private boolean subset = false;
     private double subsetSize = 0.0;
+
     private boolean subsetUsed = false;
 
     private boolean textOut;
     private boolean upperCdfCutUsed = false;
+
+    /**
+     * Only used if textOut = true; if null, just write to stdout.
+     */
+    private File outputFile = null;
+
+    public File getOutputFile() {
+        return outputFile;
+    }
+
+    public void setOutputFile( File outputFile ) {
+        this.outputFile = outputFile;
+    }
 
     private double upperTailCut = 0.01;
 
@@ -100,6 +118,10 @@ public class LinkAnalysisConfig implements Serializable {
      */
     public NormalizationMethod getNormalizationMethod() {
         return normalizationMethod;
+    }
+
+    public Integer getProbeDegreeThreshold() {
+        return this.probeDegreeThreshold;
     }
 
     /**
@@ -225,6 +247,16 @@ public class LinkAnalysisConfig implements Serializable {
     }
 
     /**
+     * Probe degree threshold: Probes with more than this number of links are ignored. If set to <= 0, this setting is
+     * ignored.
+     * 
+     * @param probeDegreeThreshold the probeDegreeThreshold to set
+     */
+    public void setProbeDegreeThreshold( int probeDegreeThreshold ) {
+        this.probeDegreeThreshold = probeDegreeThreshold;
+    }
+
+    /**
      * @param singularThreshold the singularThreshold to set
      */
     public void setSingularThreshold( String singularThreshold ) {
@@ -288,6 +320,8 @@ public class LinkAnalysisConfig implements Serializable {
         buf.append( "# knownGenesOnly:" + this.isKnownGenesOnly() + "\n" );
         buf.append( "# normalizationMethod:" + this.getNormalizationMethod() + "\n" );
         buf.append( "# omitNegLinks:" + this.isOmitNegLinks() + "\n" );
+
+        buf.append( "# probeDegreeThreshold:" + this.getProbeDegreeThreshold() + "\n" );
         /*
          * if ( this.isSubsetUsed() ) { buf.append( "# subset:" + this.subsetSize + "\n" ); }
          */
