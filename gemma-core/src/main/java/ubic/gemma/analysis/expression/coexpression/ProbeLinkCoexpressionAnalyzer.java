@@ -397,7 +397,7 @@ public class ProbeLinkCoexpressionAnalyzer {
         assert eeIndexMap.size() == ees.size();
 
         /*
-         * This is a potential bottleneck, because there are often >300 ees and >1000 cvos, and each EE tests >20000
+         * This is a potential bottleneck, because there are often >500 ees and >1000 cvos, and each EE tests >20000
          * genes. Therefore we try hard not to iterate over all the CVOEEs more than we need to. So this is coded very
          * carefully.
          */
@@ -407,31 +407,11 @@ public class ProbeLinkCoexpressionAnalyzer {
             Long queryGeneId = cvo.getQueryGene().getId();
 
             /*
-             * This condition is, pretty much, only true once in practice. That's because the first entry populates
-             * genesTestedIn for all the genes tested in any of the data sets, which is essentially all genes.
+             * This condition is, pretty much only true once in practice. That's because the first time through
+             * populates genesTestedIn for all the genes tested in any of the data sets, which is essentially all genes.
              */
             if ( !genesTestedIn.containsKey( coexGeneId ) || !genesTestedIn.containsKey( queryGeneId ) ) {
-
-                /*
-                 * This inner loop is slow; but once we've seen a gene, we don't have to repeat it. We used to cache the
-                 * ee->gene relationship, but doing it the other way around yields must faster code.
-                 */
-                for ( BioAssaySet ee : ees ) {
-                    Collection<Long> genes = probe2ProbeCoexpressionService.getGenesTestedBy( ee, false );
-
-                    // inverted map of gene -> ees tested in.
-                    Integer indexOfEEInAr = eeIndexMap.get( ee.getId() );
-                    for ( Long geneId : genes ) {
-                        if ( !genesTestedIn.containsKey( geneId ) ) {
-                            // initialize the boolean array for this gene.
-                            genesTestedIn.put( geneId, new ArrayList<Boolean>() );
-                            for ( int i = 0; i < ees.size(); i++ ) {
-                                genesTestedIn.get( geneId ).add( false );
-                            }
-                        }
-                        genesTestedIn.get( geneId ).set( indexOfEEInAr, true );
-                    }
-                }
+                cacheEesGeneTestedIn( ees, eeIndexMap );
             }
 
             /*
@@ -440,8 +420,9 @@ public class ProbeLinkCoexpressionAnalyzer {
              */
             List<Boolean> eesTestingQuery = genesTestedIn.get( queryGeneId );
             List<Boolean> eesTestingTarget = genesTestedIn.get( coexGeneId );
-            // log.info( cvo.getQueryGene().getId() + " " + cvo.getGeneId() + " testedin "
-            // + StringUtils.join( eesTestingQuery, " " ) + ":" + StringUtils.join( eesTestingTarget, " " ) );
+
+            // sanity check. Neither one of these can be empty.
+            assert !eesTestingTarget.isEmpty() && !eesTestingTarget.isEmpty() : "No data sets tested for : " + cvo;
 
             assert eesTestingQuery.size() == eesTestingTarget.size();
 
@@ -455,17 +436,48 @@ public class ProbeLinkCoexpressionAnalyzer {
                     cvo.getDatasetsTestedIn().add( eeid );
                 }
             }
+
+            // sanity check.
+            assert cvo.getDatasetsTestedIn().size() > 0 : "No data sets tested in for : " + cvo;
+
         }
 
         if ( timer.getTime() > 100 ) {
             log.info( "Compute EEs tested in (batch ): " + timer.getTime() + "ms" );
         }
 
-        // sanity check.
-        for ( CoexpressionValueObject o : coexpressionData ) {
-            assert o.getDatasetsTestedIn().size() > 0;// has to be at least stringency actually.
-        }
+    }
 
+    /**
+     * For each experiment, get the genes it tested and populate a map. This is slow; but once we've seen a gene, we
+     * don't have to repeat it. We used to cache the ee->gene relationship, but doing it the other way around yields
+     * must faster code.
+     * 
+     * @param ees
+     * @param eeIndexMap
+     */
+    private void cacheEesGeneTestedIn( Collection<BioAssaySet> ees, Map<Long, Integer> eeIndexMap ) {
+
+        for ( BioAssaySet ee : ees ) {
+            Collection<Long> genes = probe2ProbeCoexpressionService.getGenesTestedBy( ee, false );
+
+            // inverted map of gene -> ees tested in.
+            Integer indexOfEEInAr = eeIndexMap.get( ee.getId() );
+            for ( Long geneId : genes ) {
+                if ( !genesTestedIn.containsKey( geneId ) ) {
+
+                    // initialize the boolean array for this gene.
+                    genesTestedIn.put( geneId, new ArrayList<Boolean>() );
+                    for ( int i = 0; i < ees.size(); i++ ) {
+                        genesTestedIn.get( geneId ).add( Boolean.FALSE );
+                    }
+
+                }
+
+                // flip to true since the gene was tested in the ee
+                genesTestedIn.get( geneId ).set( indexOfEEInAr, Boolean.TRUE );
+            }
+        }
     }
 
     /**
