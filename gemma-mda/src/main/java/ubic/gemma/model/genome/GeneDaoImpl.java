@@ -1019,7 +1019,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         String query = "SELECT gcOut.GENE as id, coexp.EXPRESSION_EXPERIMENT_FK as exper, coexp.PVALUE as pvalue, coexp.SCORE as score, "
                 + "gcIn.CS as csIdIn, gcOut.CS as csIdOut, gcOut.GTYPE as geneType, gcIn.GENE as queryGeneId FROM GENE2CS gcIn INNER JOIN "
                 + p2pClass
-                + " coexp ON gcIn.CS=coexp."
+                + " coexp FORCE INDEX (EEKey) ON gcIn.CS=coexp."
                 + inKey
                 + " "
                 + " INNER JOIN GENE2CS gcOut ON gcOut.CS=coexp."
@@ -1092,7 +1092,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         String query = "SELECT gcOut.GENE as id, coexp.EXPRESSION_EXPERIMENT_FK as exper, coexp.PVALUE as pvalue, coexp.SCORE as score, "
                 + "gcIn.CS as csIdIn, gcOut.CS as csIdOut, gcOut.GTYPE as geneType FROM GENE2CS gcIn INNER JOIN "
                 + p2pClass
-                + " coexp ON gcIn.CS=coexp."
+                + " coexp FORCE INDEX (EEKey) ON gcIn.CS=coexp."
                 + inKey
                 + " "
                 + " INNER JOIN GENE2CS gcOut ON gcOut.CS=coexp."
