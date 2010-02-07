@@ -373,31 +373,50 @@ public class GeneLinkCoexpressionAnalyzer {
                 + expressionExperiments.size() + " experiments with a stringency of " + stringency );
 
         try {
-
-            int batchSize = 10; // FIXME make this easier to adjust.
-
-            Collection<Gene> batch = new HashSet<Gene>();
             for ( Gene queryGene : toUseGenes ) {
 
-                batch.add( queryGene );
+                // Do it
+                CoexpressionCollectionValueObject coexpressions = probeLinkCoexpressionAnalyzer.linkAnalysis(
+                        queryGene, expressionExperiments, stringency, knownGenesOnly, 0 );
 
-                if ( batch.size() == batchSize ) {
-                    totalLinks += processBatch( expressionExperiments, stringency, knownGenesOnly, genesToAnalyzeMap,
-                            analysis, processedGenes, eeIdOrder, batch );
+                // persist it or write out
+                if ( knownGenesOnly && coexpressions.getNumKnownGenes() > 0 ) {
+                    StopWatch timer = new StopWatch();
+                    if ( analysis != null ) {
+                        timer.start();
+                        Collection<Gene2GeneCoexpression> created = persistCoexpressions( eeIdOrder, queryGene,
+                                coexpressions, analysis, genesToAnalyzeMap, processedGenes, stringency );
+                        totalLinks += created.size();
+                        timer.stop();
+                        if ( timer.getTime() > 1000 ) {
+                            log.info( "Persist links: " + timer.getTime() + "ms" );
+                        }
+                    } else {
+                        List<CoexpressionValueObject> coexps = coexpressions.getAllGeneCoexpressionData( stringency );
+                        int usedLinks = 0;
+                        for ( CoexpressionValueObject co : coexps ) {
+                            if ( !genesToAnalyzeMap.containsKey( co.getGeneId() ) ) {
+                                continue;
+                            }
+                            Gene secondGene = genesToAnalyzeMap.get( co.getGeneId() );
+                            if ( processedGenes.contains( secondGene ) ) {
+                                continue;
+                            }
+                            processedGenes.add( secondGene );
+                            usedLinks++;
+                            totalLinks++;
+                            System.out.println( co );
+                        }
+                        if ( usedLinks > 0 ) log.info( usedLinks + " links for " + queryGene );
+                    }
 
-                    batch.clear();
                 }
+                // FIXME support using other than known genes (though we really don't do that now).
 
+                processedGenes.add( queryGene );
                 if ( processedGenes.size() % 100 == 0 ) {
                     log.info( "Processed " + processedGenes.size() + " genes..." );
                 }
-            }
-
-            if ( batch.size() > 0 ) {
-                totalLinks += processBatch( expressionExperiments, stringency, knownGenesOnly, genesToAnalyzeMap,
-                        analysis, processedGenes, eeIdOrder, batch );
-
-                batch.clear();
             }
 
             if ( analysis != null ) {
@@ -421,87 +440,6 @@ public class GeneLinkCoexpressionAnalyzer {
         return processedGenes;
     }
 
-    /**
-     * Perform the probe2probe query and persist results, for a batch of genes.
-     * 
-     * @param expressionExperiments
-     * @param stringency
-     * @param knownGenesOnly
-     * @param genesToAnalyzeMap
-     * @param analysis
-     * @param processedGenes
-     * @param eeIdOrder
-     * @param batch - genes
-     * @return
-     */
-    private int processBatch( Collection<BioAssaySet> expressionExperiments, int stringency, boolean knownGenesOnly,
-            Map<Long, Gene> genesToAnalyzeMap, GeneCoexpressionAnalysis analysis, Collection<Gene> processedGenes,
-            Map<Long, Integer> eeIdOrder, Collection<Gene> batch ) {
-
-        StopWatch timer = new StopWatch();
-        timer.start();
-
-        // Do the query
-        Map<Gene, CoexpressionCollectionValueObject> coexpressionbatch = probeLinkCoexpressionAnalyzer.linkAnalysis(
-                batch, expressionExperiments, stringency, knownGenesOnly, false, 0 );
-
-        // postprocess.
-        int totalLinks = 0;
-        for ( Gene q : coexpressionbatch.keySet() ) {
-            CoexpressionCollectionValueObject coexpressions = coexpressionbatch.get( q );
-
-            if ( coexpressions.getNumStringencyKnownGenes() == 0
-                    || ( knownGenesOnly && coexpressions.getNumKnownGenes() == 0 ) ) {
-                continue;
-            }
-
-            StopWatch persistTimer = new StopWatch();
-            if ( analysis != null ) {
-                // persist
-                persistTimer.start();
-                Collection<Gene2GeneCoexpression> created = persistCoexpressions( eeIdOrder, q, coexpressions,
-                        analysis, genesToAnalyzeMap, processedGenes, stringency );
-                totalLinks += created.size();
-                persistTimer.stop();
-                if ( persistTimer.getTime() > 1000 ) {
-                    log.info( "Persist links: " + timer.getTime() + "ms" );
-                }
-            } else {
-                // print it out.
-                List<CoexpressionValueObject> coexps = coexpressions.getAllGeneCoexpressionData( stringency );
-                int usedLinks = 0;
-                for ( CoexpressionValueObject co : coexps ) {
-                    if ( !genesToAnalyzeMap.containsKey( co.getGeneId() ) ) {
-                        continue;
-                    }
-                    Gene secondGene = genesToAnalyzeMap.get( co.getGeneId() );
-                    if ( processedGenes.contains( secondGene ) ) {
-                        continue;
-                    }
-                    processedGenes.add( secondGene );
-                    usedLinks++;
-                    totalLinks++;
-                    System.out.println( co );
-                }
-                if ( usedLinks > 0 ) log.info( usedLinks + " links for " + q );
-            }
-
-            processedGenes.add( q );
-
-        }
-
-        timer.stop();
-        if ( timer.getTime() > 1000 ) {
-            log.info( "Batch: " + timer.getTime() + "ms" );
-        }
-
-        return totalLinks;
-    }
-
-    /**
-     * @param taxon
-     * @return
-     */
     private Collection<GeneCoexpressionAnalysis> findExistingAnalysis( Taxon taxon ) {
         /*
          * Find the old analysis so we can disable it afterwards
