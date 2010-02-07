@@ -43,6 +43,7 @@ public class RawDataFetcherTest extends TestCase {
         RawDataFetcher rdf = new RawDataFetcher();
         try {
             Collection<LocalFile> result = rdf.fetch( "GSE1105" );
+            assertNotNull( result );
             assertEquals( 8, result.size() );
         } catch ( Exception e ) {
             if ( e.getCause() instanceof ExecutionException ) {
