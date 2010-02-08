@@ -136,7 +136,7 @@ public class ExpressionExperimentAnnotator implements InitializingBean {
                 try {
                     text2Owl = new Text2Owl( cacheManager );
                 } catch ( Exception e ) {
-                    log.warn( "Automated tagger could not be initialized: " + e.getMessage() );
+                    log.warn( "Automated tagger could not be initialized: " + e.getMessage(), e );
                     return;
                 } finally {
                     ready.set( false );
@@ -329,6 +329,7 @@ public class ExpressionExperimentAnnotator implements InitializingBean {
      */
     private void annotateDescription( Model model, ExpressionExperiment experiment ) {
         String description = experiment.getDescription();
+        // weird special case of something messed up in the experiment ... please remove this.
         if ( experiment.getId() == 444 ) {
             description = description.replace( "stroma", "stroma" );
             log.info( "fixing 444" );
