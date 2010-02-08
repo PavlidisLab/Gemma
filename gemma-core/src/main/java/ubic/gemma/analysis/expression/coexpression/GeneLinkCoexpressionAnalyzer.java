@@ -26,6 +26,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -404,7 +405,7 @@ public class GeneLinkCoexpressionAnalyzer {
                             }
                             usedLinks++;
                             totalLinks++;
-                            System.out.println( co );
+                            System.out.println( format( co ) );
                         }
                         if ( usedLinks > 0 ) log.info( usedLinks + " links printed for " + queryGene );
                     }
@@ -437,6 +438,20 @@ public class GeneLinkCoexpressionAnalyzer {
             throw new RuntimeException( e );
         }
         return processedGenes;
+    }
+
+    private String format( CoexpressionValueObject co ) {
+        StringBuilder buf = new StringBuilder();
+
+        buf.append( co.getQueryGene().getId() + "\t" );
+        buf.append( co.getQueryGene().getOfficialSymbol() + "\t" );
+        buf.append( co.getGeneId() + "\t" );
+        buf.append( co.getGeneName() + "\t" ); // this is not populated.
+        buf.append( co.getNumDatasetsTestedIn() + "\t" );
+        buf.append( co.getPositiveLinkSupport() + "\t" );
+        buf.append( co.getNegativeLinkSupport() + "\t" );
+
+        return buf.toString();
     }
 
     private Collection<GeneCoexpressionAnalysis> findExistingAnalysis( Taxon taxon ) {
