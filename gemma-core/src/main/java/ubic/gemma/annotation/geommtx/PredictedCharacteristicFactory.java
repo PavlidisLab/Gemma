@@ -20,6 +20,7 @@ package ubic.gemma.annotation.geommtx;
 
 import java.util.Collection;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -54,43 +55,71 @@ public class PredictedCharacteristicFactory implements InitializingBean {
 
     protected static Log log = LogFactory.getLog( PredictedCharacteristicFactory.class );
 
+    private static AtomicBoolean initializing = new AtomicBoolean( false );
+
+    private static AtomicBoolean ready = new AtomicBoolean( false );
+
     /**
-     * @param URI
-     * @return
+     * @return true if the annotator is ready to be used.
      */
-    public VocabCharacteristic getCharacteristic( String URI ) {
-        checkReady();
+    public static boolean ready() {
+        return ready.get();
+    }
 
-        VocabCharacteristic c = VocabCharacteristic.Factory.newInstance();
-        c.setValueUri( URI );
-        c.setValue( labels.get( URI ) );
+    /*
+     * (non-Javadoc)
+     * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
+     */
+    public void afterPropertiesSet() throws Exception {
 
-        String category = getCategory( URI );
+        // term for Biological macromolecule in FMA (FMAID=63887)
+        fmaMolecule = ontologyService.getTerm( "http://purl.org/obo/owl/FMA#FMA_63887" );
 
-        c.setCategory( category );
-        c.setCategoryUri( MgedOntologyService.MGED_ONTO_BASE_URL + "#" + category );
+        boolean activated = ConfigUtils.getBoolean( ExpressionExperimentAnnotator.MMTX_ACTIVATION_PROPERTY_KEY );
 
-        c.setEvidenceCode( GOEvidenceCode.IEA );
+        if ( !activated ) {
+            log.warn( "Automated tagger disabled; to turn on set "
+                    + ExpressionExperimentAnnotator.MMTX_ACTIVATION_PROPERTY_KEY
+                    + "=true in your Gemma.properties file" );
+            return;
+        }
 
-        return c;
+        if ( initializing.get() ) {
+            log.info( "Already loading..." );
+            return;
+        }
+
+        Thread loadThread = new Thread( new Runnable() {
+            public void run() {
+                initializing.set( true );
+
+                try {
+                    labels = LabelLoader.readLabels();
+                } catch ( Exception e ) {
+                   log.error(e,e);
+                   initializing.set(false);
+                   ready.set(false);
+                   return;
+                }
+
+                initializing.set( false );
+                ready.set( true );
+            }
+        }, "MMTX initialization" );
+
+        synchronized ( initializing ) {
+            if ( initializing.get() ) return; // no need to start it, we already finished, somehow
+            loadThread.setDaemon( true ); // So vm doesn't wait on these threads to shutdown (if shutting down)
+            loadThread.start();
+        }
+        log.info( "Started Label initialization" );
+
     }
 
     private void checkReady() {
-        if ( labels == null || labels.isEmpty() ) {
+        if ( !ready.get() ) {
             throw new IllegalStateException( "Sorry, not usable" );
         }
-    }
-
-    public String getLabel( String uri ) {
-        checkReady();
-
-        return labels.get( uri );
-    }
-
-    public boolean hasLabel( String uri ) {
-        checkReady();
-
-        return labels.containsKey( uri );
     }
 
     /**
@@ -125,22 +154,36 @@ public class PredictedCharacteristicFactory implements InitializingBean {
         return category;
     }
 
-    /*
-     * (non-Javadoc)
-     * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
+    /**
+     * @param URI
+     * @return
      */
-    public void afterPropertiesSet() throws Exception {
-        boolean activated = ConfigUtils.getBoolean( ExpressionExperimentAnnotator.MMTX_ACTIVATION_PROPERTY_KEY );
+    public VocabCharacteristic getCharacteristic( String URI ) {
+        checkReady();
 
-        if ( !activated ) {
-            log.warn( "Automated tagger disabled; to turn on set "
-                    + ExpressionExperimentAnnotator.MMTX_ACTIVATION_PROPERTY_KEY
-                    + "=true in your Gemma.properties file" );
-            return;
-        }
+        VocabCharacteristic c = VocabCharacteristic.Factory.newInstance();
+        c.setValueUri( URI );
+        c.setValue( labels.get( URI ) );
 
-        // term for Biological macromolecule in FMA (FMAID=63887)
-        fmaMolecule = ontologyService.getTerm( "http://purl.org/obo/owl/FMA#FMA_63887" );
-        labels = LabelLoader.readLabels();
+        String category = getCategory( URI );
+
+        c.setCategory( category );
+        c.setCategoryUri( MgedOntologyService.MGED_ONTO_BASE_URL + "#" + category );
+
+        c.setEvidenceCode( GOEvidenceCode.IEA );
+
+        return c;
+    }
+
+    public String getLabel( String uri ) {
+        checkReady();
+
+        return labels.get( uri );
+    }
+
+    public boolean hasLabel( String uri ) {
+        checkReady();
+
+        return labels.containsKey( uri );
     }
 }
