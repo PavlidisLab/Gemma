@@ -64,7 +64,7 @@ public class AnnotateExperimentCLI extends ExpressionExperimentManipulatingCLI {
             boolean needToRun = this.needToRun( experiment, AutomatedAnnotationEvent.class );
 
             if ( !needToRun ) {
-                log.info( "Skipping " + experiment + ", no need to run" );
+                log.debug( "Skipping " + experiment + ", no need to run" );
                 continue;
             }
 
@@ -84,6 +84,16 @@ public class AnnotateExperimentCLI extends ExpressionExperimentManipulatingCLI {
 
         expressionExperimentAnnotator = ( ExpressionExperimentAnnotator ) this
                 .getBean( "expressionExperimentAnnotator" );
+
+        while ( !ExpressionExperimentAnnotator.ready() || !PredictedCharacteristicFactory.ready() ) {
+            try {
+                Thread.sleep( 1000 );
+            } catch ( InterruptedException e ) {
+            }
+            log.info( "Waiting for MMTx..." );
+        }
+
+        log.info( " **** READY ***" );
     }
 
 }
