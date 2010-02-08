@@ -359,7 +359,7 @@ public class GeneLinkCoexpressionAnalyzer {
      * @param knownGenesOnly
      * @param analysisName
      * @param genesToAnalyzeMap
-     * @param analysis if null, no results will be saved to the database.
+     * @param analysis if null, no results will be saved to the database, and will be printed to stdout instead.
      * @return genes that were processed.
      */
     private Collection<Gene> doAnalysis( Collection<BioAssaySet> expressionExperiments, Collection<Gene> toUseGenes,
@@ -402,12 +402,11 @@ public class GeneLinkCoexpressionAnalyzer {
                             if ( processedGenes.contains( secondGene ) ) {
                                 continue;
                             }
-                            processedGenes.add( secondGene );
                             usedLinks++;
                             totalLinks++;
                             System.out.println( co );
                         }
-                        if ( usedLinks > 0 ) log.info( usedLinks + " links for " + queryGene );
+                        if ( usedLinks > 0 ) log.info( usedLinks + " links printed for " + queryGene );
                     }
 
                 }
