@@ -21,6 +21,7 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.basecode.ontology.providers.AbstractOntologyService;
+import ubic.basecode.ontology.providers.FMAOntologyService;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicService;
 import ubic.gemma.model.common.description.VocabCharacteristic;
@@ -61,23 +62,24 @@ public class SearchServiceTest extends BaseSpringContextTest {
      */
     @Test
     public void testURISearch() {
-
-        waitForOntology( ontologyService.getFmaOntologyService() );
+        FMAOntologyService fmaOntologyService = ontologyService.getFmaOntologyService();
+        fmaOntologyService.init( true );
+        waitForOntology( fmaOntologyService );
 
         SearchSettings settings = new SearchSettings();
         settings.setQuery( BRAIN_STEM );
         settings.setSearchExperiments( true );
         Map<Class<?>, List<SearchResult>> found = this.searchService.search( settings );
-        if ( found.isEmpty() ) assertTrue( false );
+        assertTrue( !found.isEmpty() );
 
+        boolean f = false;
         for ( SearchResult sr : found.get( ExpressionExperiment.class ) ) {
             if ( sr.getResultObject().equals( ee ) ) {
-                assertTrue( true );
-                return;
+                f = true;
             }
         }
 
-        assertTrue( false );
+        assertTrue( f );
     }
 
     /**
@@ -90,16 +92,15 @@ public class SearchServiceTest extends BaseSpringContextTest {
         settings.setQuery( GENE_URI );
         settings.setSearchExperiments( true );
         Map<Class<?>, List<SearchResult>> found = this.searchService.search( settings );
-        if ( ( found == null ) || ( found.isEmpty() ) ) assertTrue( false );
-
+        assertTrue( !found.isEmpty() );
+        boolean f = false;
         for ( SearchResult sr : found.get( ExpressionExperiment.class ) ) {
             if ( sr.getResultObject().equals( ee ) ) {
-                assertTrue( true );
-                return;
+                f = true;
             }
         }
 
-        assertTrue( false );
+        assertTrue( f );
 
     }
 
@@ -109,24 +110,26 @@ public class SearchServiceTest extends BaseSpringContextTest {
      */
     @Test
     public void testGeneralSearch4Brain() {
+        FMAOntologyService fmaOntologyService = ontologyService.getFmaOntologyService();
+        fmaOntologyService.init( true );
 
-        waitForOntology( ontologyService.getFmaOntologyService() );
+        waitForOntology( fmaOntologyService );
 
         SearchSettings settings = new SearchSettings();
         settings.setQuery( "Brain" );
         settings.setSearchExperiments( true );
         settings.setUseCharacteristics( true );
         Map<Class<?>, List<SearchResult>> found = this.searchService.search( settings );
-        if ( ( found == null ) || ( found.isEmpty() ) ) assertTrue( false );
+        assertTrue( !found.isEmpty() );
 
+        boolean f = false;
         for ( SearchResult sr : found.get( ExpressionExperiment.class ) ) {
             if ( sr.getResultObject().equals( ee ) ) {
-                assertTrue( true );
-                return;
+                f = true;
             }
         }
 
-        assertTrue( false );
+        assertTrue( f );
 
     }
 
@@ -134,7 +137,7 @@ public class SearchServiceTest extends BaseSpringContextTest {
     private void waitForOntology( AbstractOntologyService os ) {
         while ( !os.isOntologyLoaded() ) {
             try {
-                Thread.sleep( 1000 );
+                Thread.sleep( 5000 );
             } catch ( InterruptedException ie ) {
                 log.warn( ie );
             }
