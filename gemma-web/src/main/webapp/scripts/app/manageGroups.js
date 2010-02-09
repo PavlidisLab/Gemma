@@ -42,7 +42,7 @@ Ext.onReady(function() {
 
 	var refresh = function(groupName) {
 		currentGroup = groupName;
-
+		
 		refreshGroupMembers(groupName);
 		refreshData(groupName);
 
@@ -398,9 +398,11 @@ Ext.onReady(function() {
 										/*
 										 * This is ugly. The 'owner' object gets turned into a plain string.
 										 */
+										//have to reconstruct the owner from strings
 										recs[i].data.owner = {
-											authority : recs[i].data.owner,
-											principal : recs[i].data.owner.indexOf("GROUP_") < 0
+											authority : recs[i].data.owner.authority,
+											principal :recs[i].data.owner.principal
+											//principal : recs[i].data.owner.indexOf("GROUP_") < 0
 										};
 										p.push(recs[i].data);
 									}
