@@ -125,7 +125,7 @@ public class GeneOntologyService implements InitializingBean {
      * @return
      */
     public static GOAspect getTermAspect( String goId ) {
-        OntologyTerm term = getTermForId( goId );
+        OntologyTerm term = getTermForURI( goId );
         return getTermAspect( term );
     }
 
