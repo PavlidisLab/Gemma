@@ -205,7 +205,7 @@ Gemma.GeneSearch = Ext.extend(Ext.FormPanel, {
 				this.geneCombo.on("keypress", enterButtonPressed.createDelegate(this));
 
 				var submitButton = new Ext.Button({
-							text : "Search",
+							text : "Go",
 							handler : submitButtonHandler.createDelegate(this)
 						});
 
