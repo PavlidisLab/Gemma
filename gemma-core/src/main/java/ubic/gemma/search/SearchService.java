@@ -706,8 +706,7 @@ public class SearchService implements InitializingBean {
             allResults.addAll( characteristicSearchWord( classes, matchMap, rawTerm ) );
         }
 
-        
-        return  allResults;//postProcessCharacteristicResults( query, allResults, matchMap );
+        return allResults;// postProcessCharacteristicResults( query, allResults, matchMap );
 
     }
 
@@ -733,8 +732,7 @@ public class SearchService implements InitializingBean {
         watch.start();
 
         for ( OntologyIndividual term : individuals ) {
-            if ((term != null) && (term.getUri() != null))
-                characteristicUris.add( term.getUri() );
+            if ( ( term != null ) && ( term.getUri() != null ) ) characteristicUris.add( term.getUri() );
         }
 
         Collection<OntologyTerm> matchingTerms = ontologyService.findTerms( query );
@@ -749,8 +747,7 @@ public class SearchService implements InitializingBean {
 
         for ( OntologyTerm term : matchingTerms ) {
             String uri = term.getUri();
-            if (( uri == null) && (uri.isEmpty()))
-                continue;
+            if ( uri == null || uri.isEmpty() ) continue;
             characteristicUris.add( uri );
             addChildTerms( characteristicUris, term );
         }
@@ -782,9 +779,8 @@ public class SearchService implements InitializingBean {
          */
         String dbQueryString = query.replaceAll( "\\*", "" );
         Collection<Characteristic> valueMatches = characteristicService.findByValue( dbQueryString + "%" );
-        
-        if (valueMatches != null && !valueMatches.isEmpty())
-            cs.addAll( valueMatches );
+
+        if ( valueMatches != null && !valueMatches.isEmpty() ) cs.addAll( valueMatches );
 
         /*
          * Retrieve the owner objects
@@ -965,8 +961,8 @@ public class SearchService implements InitializingBean {
          */
 
         Collection<SearchResult> allResults = new HashSet<SearchResult>();
-        //Temporaily removing compass searching of composite sequences because it only bloats the results.  
-        //allResults.addAll( compassCompositeSequenceSearch( settings ) );
+        // Temporaily removing compass searching of composite sequences because it only bloats the results.
+        // allResults.addAll( compassCompositeSequenceSearch( settings ) );
         allResults.addAll( databaseCompositeSequenceSearch( settings ) );
         // allResults.addAll( compositeSequenceByGeneSearch( settings, geneSearchResults ) );
 
@@ -1422,7 +1418,6 @@ public class SearchService implements InitializingBean {
             TopDocCollector hc = new TopDocCollector( 1000 );
             searcher.search( parsedQuery, hc );
 
-            
             TopDocs topDocs = hc.topDocs();
 
             int hitcount = topDocs.totalHits;
@@ -1454,7 +1449,7 @@ public class SearchService implements InitializingBean {
             throw new RuntimeException( e );
         } catch ( IOException e ) {
             throw new RuntimeException( e );
-            
+
         }
         return results;
     }
@@ -1802,7 +1797,7 @@ public class SearchService implements InitializingBean {
         }
 
         writer.close();
-        
+
         return idx;
     }
 
