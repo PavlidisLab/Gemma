@@ -1026,7 +1026,8 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
                 + outKey
                 + " INNER JOIN INVESTIGATION ee ON ee.ID=coexp.EXPRESSION_EXPERIMENT_FK "
                 + " WHERE "
-                + eeClause + knownGeneClause + " gcIn.GENE in (:ids) " + interGeneOnlyClause;
+                + eeClause
+                + knownGeneClause + " gcIn.GENE in (:ids) " + interGeneOnlyClause;
 
         return query;
     }
@@ -1099,7 +1100,8 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
                 + outKey
                 + " INNER JOIN INVESTIGATION ee ON ee.ID=coexp.EXPRESSION_EXPERIMENT_FK "
                 + " WHERE "
-                + eeClause + knownGeneClause + " gcIn.GENE=:id ";
+                + eeClause
+                + knownGeneClause + " gcIn.GENE=:id ";
 
         // AND gcOut.GENE <> :id // Omit , see below!
 
@@ -1245,7 +1247,8 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
         timer.stop();
         if ( timer.getTime() > 1000 ) {
-            log.info( "Specificity postprocessing: " + timer.getTime() + "ms" );
+            log.info( "Specificity postprocessing: " + timer.getTime() + "ms for " + coexpressions.getNumKnownGenes()
+                    + " known gene results" );
         }
 
     }
@@ -1310,18 +1313,20 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         /*
          * Cache the result.
          */
-        CoexpressionCacheValueObject coExVOForCache = new CoexpressionCacheValueObject();
-        coExVOForCache.setQueryGene( queryGene );
-        coExVOForCache.setCoexpressedGene( coexpressedGene );
-        coExVOForCache.setGeneType( geneType );
-        coExVOForCache.setExpressionExperiment( eeID );
-        coExVOForCache.setScore( score );
-        coExVOForCache.setPvalue( pvalue );
-        coExVOForCache.setQueryProbe( queryProbe );
-        coExVOForCache.setCoexpressedProbe( coexpressedProbe );
-        if ( log.isDebugEnabled() ) log.debug( "Caching: " + coExVOForCache );
+        if ( this.getProbe2ProbeCoexpressionCache().isEnabled() ) {
+            CoexpressionCacheValueObject coExVOForCache = new CoexpressionCacheValueObject();
+            coExVOForCache.setQueryGene( queryGene );
+            coExVOForCache.setCoexpressedGene( coexpressedGene );
+            coExVOForCache.setGeneType( geneType );
+            coExVOForCache.setExpressionExperiment( eeID );
+            coExVOForCache.setScore( score );
+            coExVOForCache.setPvalue( pvalue );
+            coExVOForCache.setQueryProbe( queryProbe );
+            coExVOForCache.setCoexpressedProbe( coexpressedProbe );
+            if ( log.isDebugEnabled() ) log.debug( "Caching: " + coExVOForCache );
 
-        this.getProbe2ProbeCoexpressionCache().addToCache( eeID, coExVOForCache );
+            this.getProbe2ProbeCoexpressionCache().addToCache( eeID, coExVOForCache );
+        }
 
     }
 
@@ -1355,19 +1360,22 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         /*
          * Cache the result.
          */
-        CoexpressionCacheValueObject coExVOForCache = new CoexpressionCacheValueObject();
-        coExVOForCache.setQueryGene( queryGene );
-        coExVOForCache.setCoexpressedGene( coexpressedGene );
-        coExVOForCache.setGeneType( geneType );
-        coExVOForCache.setExpressionExperiment( eeID );
-        coExVOForCache.setScore( score );
-        coExVOForCache.setPvalue( pvalue );
-        coExVOForCache.setQueryProbe( queryProbe );
-        coExVOForCache.setCoexpressedProbe( coexpressedProbe );
-        if ( log.isDebugEnabled() ) log.debug( "Caching: " + coExVOForCache );
-        this.getProbe2ProbeCoexpressionCache().addToCache( eeID, coExVOForCache );
+        if ( this.getProbe2ProbeCoexpressionCache().isEnabled() ) {
+            CoexpressionCacheValueObject coExVOForCache = new CoexpressionCacheValueObject();
+            coExVOForCache.setQueryGene( queryGene );
+            coExVOForCache.setCoexpressedGene( coexpressedGene );
+            coExVOForCache.setGeneType( geneType );
+            coExVOForCache.setExpressionExperiment( eeID );
+            coExVOForCache.setScore( score );
+            coExVOForCache.setPvalue( pvalue );
+            coExVOForCache.setQueryProbe( queryProbe );
+            coExVOForCache.setCoexpressedProbe( coexpressedProbe );
+            if ( log.isDebugEnabled() ) log.debug( "Caching: " + coExVOForCache );
+            this.getProbe2ProbeCoexpressionCache().addToCache( eeID, coExVOForCache );
 
-        this.getProbe2ProbeCoexpressionCache().retrieve( eeID, coExVOForCache.getQueryGene() );
+            // why are we doing this?
+            this.getProbe2ProbeCoexpressionCache().retrieve( eeID, coExVOForCache.getQueryGene() );
+        }
     }
 
     /**

@@ -26,6 +26,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 
 import ubic.gemma.analysis.expression.coexpression.GeneLinkCoexpressionAnalyzer;
+import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionCache;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
@@ -112,6 +113,7 @@ public class Gene2GeneCoexpressionGeneratorCli extends ExpressionExperimentManip
         }
 
         log.info( "Using " + this.expressionExperiments.size() + " Expression Experiments." );
+        ( ( Probe2ProbeCoexpressionCache ) this.getBean( "probe2ProbeCoexpressionCache" ) ).setEnabled( false );
         geneVoteAnalyzer.analyze( this.expressionExperiments, toUseGenes, toUseStringency, knownGenesOnly,
                 analysisName, useDB );
 

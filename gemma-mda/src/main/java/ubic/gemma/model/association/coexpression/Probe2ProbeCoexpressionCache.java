@@ -53,6 +53,22 @@ public class Probe2ProbeCoexpressionCache {
 
     private CacheManager cacheManager;
 
+    private Boolean enabled = true;
+
+    /**
+     * @return the enabled
+     */
+    public Boolean isEnabled() {
+        return enabled;
+    }
+
+    /**
+     * @param enabled the enabled to set
+     */
+    public void setEnabled( Boolean enabled ) {
+        this.enabled = enabled;
+    }
+
     /**
      * We retain references to the caches separately from the CacheManager. This _could_ create leaks of caches if the
      * cache manager needs to recreate a cache for some reason. Something to keep in mind.
