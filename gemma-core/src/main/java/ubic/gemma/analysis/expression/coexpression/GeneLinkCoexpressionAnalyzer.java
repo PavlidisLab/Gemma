@@ -26,7 +26,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -313,6 +312,7 @@ public class GeneLinkCoexpressionAnalyzer {
      * @return
      */
     private byte[] computeTestedDatasetVector( Collection<Long> datasetsTestedIn, Map<Long, Integer> eeIdOrder ) {
+        // initialize.
         byte[] result = new byte[( int ) Math.ceil( eeIdOrder.size() / ( double ) Byte.SIZE )];
         for ( int i = 0, j = result.length; i < j; i++ ) {
             result[i] = 0x0;
@@ -346,6 +346,7 @@ public class GeneLinkCoexpressionAnalyzer {
     private void disableOldAnalyses( Collection<GeneCoexpressionAnalysis> oldAnalyses ) {
         if ( !oldAnalyses.isEmpty() ) {
             for ( GeneCoexpressionAnalysis oldAnalysis : oldAnalyses ) {
+                log.info( "Disabling old analysis: " + oldAnalysis );
                 oldAnalysis.setEnabled( false );
                 geneCoexpressionAnalysisService.update( oldAnalysis );
             }
@@ -423,18 +424,18 @@ public class GeneLinkCoexpressionAnalyzer {
                 // All done...
                 analysis.setDescription( analysis.getDescription() + "; " + totalLinks + " gene pairs stored." );
                 analysis.setEnabled( true );
-
                 geneCoexpressionAnalysisService.update( analysis );
-
                 securityService.makePublic( analysis );
             }
             log.info( totalLinks + " gene pairs processed." );
 
         } catch ( Exception e ) {
-            log.error( "There was an error during analysis:" );
-            log.error( e, e );
-            log.error( "Cleaning up if possible ..." );
-            geneCoexpressionAnalysisService.delete( analysis );
+            log.error( "There was an error during analysis!" );
+
+            if ( analysis != null ) {
+                log.error( "Cleaning up if possible ..." );
+                geneCoexpressionAnalysisService.delete( analysis );
+            }
             throw new RuntimeException( e );
         }
         return processedGenes;
@@ -450,6 +451,7 @@ public class GeneLinkCoexpressionAnalyzer {
         buf.append( co.getNumDatasetsTestedIn() + "\t" );
         buf.append( co.getPositiveLinkSupport() + "\t" );
         buf.append( co.getNegativeLinkSupport() + "\t" );
+        buf.append( BitUtil.prettyPrint( co.getDatasetsTestedInBytes() ) );
 
         return buf.toString();
     }
@@ -460,7 +462,7 @@ public class GeneLinkCoexpressionAnalyzer {
          */
 
         Collection<? extends Analysis> analysis = null;
-        if ( !taxon.getIsSpecies() ) {
+        if ( taxon.getIsSpecies() ) {
             analysis = geneCoexpressionAnalysisService.findByTaxon( taxon );
         } else {
             analysis = geneCoexpressionAnalysisService.findByParentTaxon( taxon );
@@ -473,6 +475,8 @@ public class GeneLinkCoexpressionAnalyzer {
             oldAnalyses.add( ( GeneCoexpressionAnalysis ) a );
 
         }
+
+        log.info( "Found " + oldAnalyses.size() + " analyses that will be disabled when this one is finished" );
         return oldAnalyses;
 
     }
@@ -627,7 +631,10 @@ public class GeneLinkCoexpressionAnalyzer {
                 log.debug( firstGene.getName() + " link to " + secondGene.getName() + " tested in "
                         + co.getDatasetsTestedIn().size() + " datasets" );
 
-            byte[] testedInVector = computeTestedDatasetVector( co.getDatasetsTestedIn(), eeIdOrder );
+            byte[] testedInVector = co.getDatasetsTestedInBytes();
+            if ( testedInVector == null ) {
+                testedInVector = computeTestedDatasetVector( co.getDatasetsTestedIn(), eeIdOrder );
+            }
 
             byte[] specificityVector = computeSpecificityVector( co.getNonspecificEE(), eeIdOrder );
 

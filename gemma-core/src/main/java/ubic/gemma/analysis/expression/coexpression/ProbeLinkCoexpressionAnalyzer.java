@@ -32,6 +32,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import ubic.basecode.dataStructure.BitUtil;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressedGenesDetails;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionCollectionValueObject;
@@ -74,6 +75,14 @@ public class ProbeLinkCoexpressionAnalyzer {
      * uses a 'short-lived' spring context build on the command line -- not the web application.
      */
     private Map<Long, List<Boolean>> genesTestedIn = new HashMap<Long, List<Boolean>>();
+
+    /**
+     * Gene->ees tested in, in a faster access format - preordered by the ees. As for the genesTestedIn, this should not
+     * be used in webapps.
+     */
+    private Map<Long, boolean[]> geneTestStatusCache = new HashMap<Long, boolean[]>();
+
+    private Map<Long, byte[]> geneTestStatusByteCache = new HashMap<Long, byte[]>();
 
     /**
      * @param genes
@@ -192,7 +201,7 @@ public class ProbeLinkCoexpressionAnalyzer {
 
         timer.stop();
         if ( timer.getTime() > 1000 ) {
-            log.info( "Postprocessing: " + timer.getTime() + "ms" );
+            log.info( "All Post-Postprocessing: " + timer.getTime() + "ms" );
         }
         log.debug( "Analysis completed" );
         return coexpressions;
@@ -374,14 +383,15 @@ public class ProbeLinkCoexpressionAnalyzer {
 
     /**
      * For the genes that the query is coexpressed with; this retrieves the information for all the coexpressionData
-     * passed in (no limit). This method uses a cache to speed repeated calls, so it is very slow at first and then gets
-     * much faster.
+     * passed in (no limit) - all of them have to be for the same query gene!
      * 
      * @param ees, including ALL experiments that were intially started with, NOT just the ones that the query gene was
      *        tested in.
-     * @param coexpressionData information on the genes needed to be examined.
+     * @param coexpressionData to check, the query gene must be the same for each of them.
      */
     private void computeEesTestedInBatch( Collection<BioAssaySet> ees, List<CoexpressionValueObject> coexpressionData ) {
+
+        if ( coexpressionData.isEmpty() ) return;
 
         StopWatch timer = new StopWatch();
         timer.start();
@@ -397,55 +407,148 @@ public class ProbeLinkCoexpressionAnalyzer {
         assert eeIndexMap.size() == ees.size();
 
         /*
+         * Save some computation in the inner loop by assuming the query gene is constant.
+         */
+        CoexpressionValueObject initializer = coexpressionData.iterator().next();
+        Long queryGeneId = initializer.getQueryGene().getId();
+
+        boolean[] queryGeneEETestStatus = getEETestedForGeneVector( queryGeneId, ees, eeIndexMap );
+
+        geneTestStatusCache.put( queryGeneId, queryGeneEETestStatus );
+
+        byte[] queryGeneEETestStatusBytes;
+        if ( geneTestStatusByteCache.containsKey( queryGeneId ) ) {
+            queryGeneEETestStatusBytes = geneTestStatusByteCache.get( queryGeneId );
+        } else {
+            queryGeneEETestStatusBytes = computeTestedDatasetVector( queryGeneId, ees, eeIndexMap );
+            geneTestStatusByteCache.put( queryGeneId, queryGeneEETestStatusBytes );
+        }
+
+        /*
          * This is a potential bottleneck, because there are often >500 ees and >1000 cvos, and each EE tests >20000
          * genes. Therefore we try hard not to iterate over all the CVOEEs more than we need to. So this is coded very
-         * carefully.
+         * carefully. Once the cache is warmed up, this still can take over 500ms to run (Feb 2010). The total number of
+         * loops _easily_ exceeds a million.
          */
+        int loopcount = 0; // for performance statistics
         for ( CoexpressionValueObject cvo : coexpressionData ) {
 
             Long coexGeneId = cvo.getGeneId();
-            Long queryGeneId = cvo.getQueryGene().getId();
-
-            /*
-             * This condition is, pretty much only true once in practice. That's because the first time through
-             * populates genesTestedIn for all the genes tested in any of the data sets, which is essentially all genes.
-             */
-            if ( !genesTestedIn.containsKey( coexGeneId ) || !genesTestedIn.containsKey( queryGeneId ) ) {
-                cacheEesGeneTestedIn( ees, eeIndexMap );
+            if ( !queryGeneId.equals( cvo.getQueryGene().getId() ) ) {
+                throw new IllegalArgumentException( "All coexpression value objects must have the same query gene here" );
             }
 
             /*
-             * This is the most efficient way I know to get common items out of two arrays: map them to arrays of
-             * booleans. Bits would work just as well but this is easier (fast bitwise AND would not really buy much)
+             * Get the target gene info, from the cache if possible.
              */
-            List<Boolean> eesTestingQuery = genesTestedIn.get( queryGeneId );
-            List<Boolean> eesTestingTarget = genesTestedIn.get( coexGeneId );
-
-            // sanity check. Neither one of these can be empty.
-            assert !eesTestingTarget.isEmpty() && !eesTestingTarget.isEmpty() : "No data sets tested for : " + cvo;
-
-            assert eesTestingQuery.size() == eesTestingTarget.size();
-
-            for ( BioAssaySet ee : ees ) {
-                Long eeid = ee.getId();
-                Integer index = eeIndexMap.get( eeid );
-                /*
-                 * Both the query and the target have to have been tested in the given experiment.
-                 */
-                if ( eesTestingQuery.get( index ) && eesTestingTarget.get( index ) ) {
-                    cvo.getDatasetsTestedIn().add( eeid );
-                }
+            byte[] targetGeneEETestStatus;
+            if ( geneTestStatusByteCache.containsKey( coexGeneId ) ) {
+                targetGeneEETestStatus = geneTestStatusByteCache.get( coexGeneId );
+            } else {
+                targetGeneEETestStatus = computeTestedDatasetVector( coexGeneId, ees, eeIndexMap );
+                geneTestStatusByteCache.put( coexGeneId, targetGeneEETestStatus );
             }
+
+            assert targetGeneEETestStatus.length == queryGeneEETestStatusBytes.length;
+
+            byte[] answer = new byte[targetGeneEETestStatus.length];
+
+            for ( int i = 0; i < answer.length; i++ ) {
+                answer[i] = ( byte ) ( targetGeneEETestStatus[i] & queryGeneEETestStatusBytes[i] );
+                loopcount++;
+            }
+
+            cvo.setDatasetsTestedInBytes( answer );
+
+            // That there is no easy way to avoid this inner loop - however, in this batch processing case where this is
+            // used, we end up with a bit vector later, so we could consider constructing that now instead.
+            // for ( BioAssaySet ee : ees ) {
+            // /*
+            // * Both the query and the target have to have been tested in the given experiment.
+            // */
+            // if ( queryGeneEETestStatus[i] && targetGeneEETestStatus[i] ) {
+            // Long eeid = ee.getId();
+            // cvo.getDatasetsTestedIn().add( eeid );
+            // }
+            // loopcount++;
+            // i++;
+            // }
 
             // sanity check.
-            assert cvo.getDatasetsTestedIn().size() > 0 : "No data sets tested in for : " + cvo;
+            // assert cvo.getDatasetsTestedIn().size() > 0 : "No data sets tested in for : " + cvo;
 
         }
 
         if ( timer.getTime() > 100 ) {
-            log.info( "Compute EEs tested in (batch ): " + timer.getTime() + "ms" );
+            log.info( "Compute EEs tested in (batch ): " + timer.getTime() + "ms; " + loopcount + " loops" );
         }
 
+    }
+
+    /**
+     * Method for batch processing. Should not be used in a web application context.
+     * 
+     * @param geneId
+     * @param ees
+     * @param eeIndexMap
+     * @return boolean array of same length as ees, where true means the given gene was tested in that dataset.
+     */
+    private boolean[] getEETestedForGeneVector( Long geneId, Collection<BioAssaySet> ees, Map<Long, Integer> eeIndexMap ) {
+        /*
+         * This condition is, pretty much only true once in practice. That's because the first time through populates
+         * genesTestedIn for all the genes tested in any of the data sets, which is essentially all genes.
+         */
+        if ( !genesTestedIn.containsKey( geneId ) ) {
+            cacheEesGeneTestedIn( ees, eeIndexMap );
+        }
+        List<Boolean> eesTestingGene = genesTestedIn.get( geneId );
+        assert eesTestingGene != null;
+        boolean[] queryGeneEETestStatus = new boolean[ees.size()];
+        int i = 0;
+        // note: we assume that this collection does not change iteration order.
+        for ( BioAssaySet ee : ees ) {
+            Long eeid = ee.getId();
+            Integer index = eeIndexMap.get( eeid );
+            queryGeneEETestStatus[i] = eesTestingGene.get( index );
+            i++;
+        }
+        return queryGeneEETestStatus;
+    }
+
+    /**
+     * @param datasetsTestedIn
+     * @param eeIdOrder
+     * @return
+     */
+    private byte[] computeTestedDatasetVector( Long geneId, Collection<BioAssaySet> ees, Map<Long, Integer> eeIdOrder ) {
+        /*
+         * This condition is, pretty much only true once in practice. That's because the first time through populates
+         * genesTestedIn for all the genes tested in any of the data sets.
+         */
+        if ( !genesTestedIn.containsKey( geneId ) ) {
+            cacheEesGeneTestedIn( ees, eeIdOrder );
+        }
+
+        assert genesTestedIn.containsKey( geneId );
+
+        List<Boolean> eesTestingGene = genesTestedIn.get( geneId );
+
+        // initialize.
+        byte[] result = new byte[( int ) Math.ceil( eeIdOrder.size() / ( double ) Byte.SIZE )];
+        for ( int i = 0, j = result.length; i < j; i++ ) {
+            result[i] = 0x0;
+        }
+
+        int i = 0;
+        for ( BioAssaySet ee : ees ) {
+            Long eeid = ee.getId();
+            Integer index = eeIdOrder.get( eeid );
+            if ( eesTestingGene.get( index ) ) {
+                BitUtil.set( result, index );
+            }
+            i++;
+        }
+        return result;
     }
 
     /**
