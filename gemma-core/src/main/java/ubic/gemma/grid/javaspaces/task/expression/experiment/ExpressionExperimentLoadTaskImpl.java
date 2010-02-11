@@ -56,6 +56,8 @@ public class ExpressionExperimentLoadTaskImpl extends BaseSpacesTask implements 
     TwoChannelMissingValues twoChannelMissingValueService;
     ExpressionDataMatrixService expressionDataMatrixService;
 
+ 
+
     /*
      * (non-Javadoc)
      * @see ubic.gemma.grid.javaspaces.SpacesTask#execute(java.lang.Object)
@@ -204,6 +206,10 @@ public class ExpressionExperimentLoadTaskImpl extends BaseSpacesTask implements 
 
     public void setTwoChannelMissingValueService( TwoChannelMissingValues twoChannelMissingValueService ) {
         this.twoChannelMissingValueService = twoChannelMissingValueService;
+    }
+    
+    public void setExpressionDataMatrixService( ExpressionDataMatrixService expressionDataMatrixService ) {
+        this.expressionDataMatrixService = expressionDataMatrixService;
     }
 
 }
