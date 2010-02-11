@@ -21,6 +21,9 @@ package ubic.gemma.model.analysis;
 import java.util.Collection;
 
 import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.core.userdetails.User;
+
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
  * Provides basic services for dealing with analysis
@@ -100,5 +103,18 @@ public interface AnalysisService<T extends Analysis> {
      */
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public java.util.Collection<T> loadAll();
+
+    /**
+     * Returns the {@link Analyses}s for the currently logged in {@link User} - i.e, ones for which the current user has
+     * specific read permissions on (as opposed to analyses which are public) and which are "Enabled". Important: This
+     * method will return all analyses if security is not enabled.
+     * <p>
+     * Implementation note: Via a methodInvocationFilter. See AclAfterFilterCollectionForMyData for
+     * processConfigAttribute. (in Gemma-core)
+     * 
+     * @return
+     */
+    @Secured( { "GROUP_USER", "AFTER_ACL_FILTER_MY_DATA" })
+    public Collection<T> loadMyAnalyses();
 
 }

@@ -19,6 +19,7 @@
 package ubic.gemma.model.analysis.expression.coexpression;
 
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.Map;
 
 import org.springframework.stereotype.Service;
@@ -151,6 +152,20 @@ public class GeneCoexpressionAnalysisServiceImpl extends
     @Override
     protected void handleUpdate( GeneCoexpressionAnalysis geneCoExpressionAnalysis ) throws Exception {
         this.getGeneCoexpressionAnalysisDao().update( geneCoExpressionAnalysis );
+    }
+
+    @SuppressWarnings("unchecked")
+    public Collection<GeneCoexpressionAnalysis> loadMyAnalyses() {
+        Collection<GeneCoexpressionAnalysis> all = ( Collection<GeneCoexpressionAnalysis> ) this
+                .getGeneCoexpressionAnalysisDao().loadAll();
+
+        for ( Iterator<GeneCoexpressionAnalysis> it = all.iterator(); it.hasNext(); ) {
+            if ( !it.next().getEnabled() ) {
+                it.remove();
+            }
+        }
+
+        return all;
     }
 
 }

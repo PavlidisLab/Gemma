@@ -123,8 +123,13 @@ public class ProbeCoexpressionAnalysisServiceImpl extends
      * @see ubic.gemma.model.analysis.AnalysisService#loadAll()
      */
     @Override
-    protected java.util.Collection handleLoadAll() throws java.lang.Exception {
+    protected Collection handleLoadAll() throws java.lang.Exception {
         return this.getProbeCoexpressionAnalysisDao().loadAll();
+    }
+
+    @SuppressWarnings("unchecked")
+    public Collection<ProbeCoexpressionAnalysis> loadMyAnalyses() {
+        return ( Collection<ProbeCoexpressionAnalysis> ) this.getProbeCoexpressionAnalysisDao().loadAll();
     }
 
 }

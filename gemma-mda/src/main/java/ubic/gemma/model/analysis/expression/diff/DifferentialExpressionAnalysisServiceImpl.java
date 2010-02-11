@@ -218,4 +218,9 @@ public class DifferentialExpressionAnalysisServiceImpl extends
         this.getDifferentialExpressionAnalysisDao().thaw( differentialExpressionAnalysis );
     }
 
+    @SuppressWarnings("unchecked")
+    public Collection<DifferentialExpressionAnalysis> loadMyAnalyses() {
+        return ( Collection<DifferentialExpressionAnalysis> ) this.getDifferentialExpressionAnalysisDao().loadAll();
+    }
+
 }
