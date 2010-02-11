@@ -706,7 +706,7 @@ public class SearchService implements InitializingBean {
             allResults.addAll( characteristicSearchWord( classes, matchMap, rawTerm ) );
         }
 
-        return allResults;// postProcessCharacteristicResults( query, allResults, matchMap );
+        return  postProcessCharacteristicResults( query, allResults, matchMap );
 
     }
 
@@ -1808,7 +1808,7 @@ public class SearchService implements InitializingBean {
      * @return
      */
     private Query makeLuceneQuery( String query ) {
-        QueryParser parser = new QueryParser( "", this.analyzer );
+        QueryParser parser = new QueryParser( INDEX_KEY, this.analyzer );
         QueryParser.Operator defaultOperator = null;
         String sDefaultOperator = ConfigUtils.getDefaultSearchOperator();
         if ( sDefaultOperator.equalsIgnoreCase( ( "or" ) ) ) {
