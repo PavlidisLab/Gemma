@@ -410,7 +410,8 @@ public class CoexpressedGenesDetails {
     // }
 
     /**
-     * This computes the support for each link, as well as updating information on specificity of probes. Terminology:
+     * This computes the support for each link from a single query gene, as well as updating information on specificity
+     * of probes. Terminology:
      * <ul>
      * <li>Query gene: the gene that was used to initate the search</li>
      * <li>Coexpressed gene: 'answer' to the query</li>

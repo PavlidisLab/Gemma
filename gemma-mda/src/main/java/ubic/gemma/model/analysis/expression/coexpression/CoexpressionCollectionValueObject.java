@@ -225,21 +225,21 @@ public class CoexpressionCollectionValueObject {
     }
 
     /**
-     * @return the number of Genes
+     * @return the number of Known Genes coexpressed with the query
      */
     public int getNumKnownGenes() {
         return this.knownGeneCoexpressionData.getNumberOfGenes();
     }
 
     /**
-     * @return the numPredictedGenes
+     * @return the numPredictedGenes coexpressed with the query
      */
     public int getNumPredictedGenes() {
         return this.predictedCoexpressionData.getNumberOfGenes();
     }
 
     /**
-     * @return the numProbeAlignedRegions
+     * @return the numProbeAlignedRegions coexpressed with the query
      */
     public int getNumProbeAlignedRegions() {
         return this.probeAlignedRegionCoexpressionData.getNumberOfGenes();
