@@ -34,6 +34,9 @@ import org.springframework.security.acls.model.Sid;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 
+import ubic.gemma.model.analysis.Analysis;
+import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis;
+import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisService;
 import ubic.gemma.model.common.Describable;
 import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -57,6 +60,9 @@ public class SecurityController {
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService = null;
+
+    @Autowired
+    private GeneCoexpressionAnalysisService geneCoexpressionAnalysisService;
 
     @Autowired
     private SecurityService securityService = null;
@@ -242,18 +248,27 @@ public class SecurityController {
     public Collection<SecurityInfoValueObject> getUsersData( String currentGroup, boolean privateOnly ) {
         Collection<ExpressionExperiment> ees = expressionExperimentService.loadMyExpressionExperiments();
 
-        if ( ees.isEmpty() ) {
-            return new HashSet<SecurityInfoValueObject>();
-        }
-
-        Collection<? extends Securable> secs = ees;
+        Collection<Securable> secs = new HashSet<Securable>();
 
         if ( privateOnly ) {
             try {
-                secs = securityService.choosePrivate( ees );
+                secs.addAll( securityService.choosePrivate( ees ) );
             } catch ( AccessDeniedException e ) {
                 // okay, they just aren't allowed to see those.
             }
+        } else {
+            secs.addAll( ees );
+        }
+
+        Collection<GeneCoexpressionAnalysis> analyses = geneCoexpressionAnalysisService.loadMyAnalyses();
+        if ( privateOnly ) {
+            try {
+                secs.addAll( securityService.choosePrivate( analyses ) );
+            } catch ( AccessDeniedException e ) {
+                // okay, they just aren't allowed to see those.
+            }
+        } else {
+            secs.addAll( analyses );
         }
 
         /*
@@ -414,18 +429,16 @@ public class SecurityController {
 
         /*
          * This works in one of two ways. If settings.currentGroup is non-null, we just update the permissions for that
-         * group. Otherwise, we update them all based on groupsThatCanRead/groupsThatCanWrite
+         * group - this may leave them unchanged. Otherwise, we update them all based on
+         * groupsThatCanRead/groupsThatCanWrite
          */
-        if ( StringUtils.isNotBlank( settings.getCurrentGroup() ) ) {
-            String groupName = settings.getCurrentGroup();
-            if ( groupName.equals( AuthorityConstants.ADMIN_GROUP_NAME )
-                    || groupName.equals( AuthorityConstants.AGENT_GROUP_NAME ) ) {
-                // never changes this.
-                throw new AccessDeniedException( "Attempt to change administrative or agent permissions: not allowed" );
-            }
+        String currentGroupName = settings.getCurrentGroup();
+        if ( StringUtils.isNotBlank( currentGroupName )
+                && !( currentGroupName.equals( AuthorityConstants.ADMIN_GROUP_NAME ) || currentGroupName
+                        .equals( AuthorityConstants.AGENT_GROUP_NAME ) ) ) {
 
-            if ( !getGroupsUserCanEdit().contains( groupName ) ) {
-                throw new AccessDeniedException( "Access denied to permissions on group=" + groupName );
+            if ( !getGroupsUserCanEdit().contains( currentGroupName ) ) {
+                throw new AccessDeniedException( "Access denied to permissions for group=" + currentGroupName );
 
             }
 
@@ -436,22 +449,22 @@ public class SecurityController {
             }
 
             if ( readable ) {
-                securityService.makeReadableByGroup( s, groupName );
+                securityService.makeReadableByGroup( s, currentGroupName );
             } else {
 
-                securityService.makeUnreadableByGroup( s, groupName );
+                securityService.makeUnreadableByGroup( s, currentGroupName );
             }
 
             if ( writeable ) {
-                securityService.makeWriteableByGroup( s, groupName );
+                securityService.makeWriteableByGroup( s, currentGroupName );
             } else {
-
-                securityService.makeUnwriteableByGroup( s, groupName );
+                securityService.makeUnwriteableByGroup( s, currentGroupName );
             }
 
         } else {
             /*
-             * Remove all group permissions
+             * Remove all group permissions - we'll set them back to what was requested. Exception: we don't allow
+             * changes to admin or agent permissions by this route.
              */
             for ( String groupName : getGroupsUserCanEdit() ) {
 
@@ -534,6 +547,8 @@ public class SecurityController {
         }
         if ( ExpressionExperiment.class.isAssignableFrom( clazz ) ) {
             s = expressionExperimentService.load( ed.getId() );
+        } else if ( GeneCoexpressionAnalysis.class.isAssignableFrom( clazz ) ) {
+            s = geneCoexpressionAnalysisService.load( ed.getId() );
         } else {
             throw new UnsupportedOperationException( clazz + " not supported by security controller yet" );
         }
