@@ -11,25 +11,11 @@ package ubic.gemma.search;
 
 import static org.junit.Assert.assertTrue;
 
-import java.io.IOException;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.analysis.standard.StandardAnalyzer;
-import org.apache.lucene.document.Document;
-import org.apache.lucene.document.Field;
-import org.apache.lucene.index.IndexWriter;
-import org.apache.lucene.index.IndexWriter.MaxFieldLength;
-import org.apache.lucene.queryParser.ParseException;
-import org.apache.lucene.queryParser.QueryParser;
-import org.apache.lucene.search.IndexSearcher;
-import org.apache.lucene.search.Query;
-import org.apache.lucene.search.TopDocCollector;
-import org.apache.lucene.search.TopDocs;
-import org.apache.lucene.store.RAMDirectory;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,7 +32,7 @@ import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
  * @author kelsey
- * @version $Id
+ * @version $Id$
  */
 public class SearchServiceTest extends BaseSpringContextTest {
     private static final String GENE_URI = "http://purl.org/commons/record/ncbi_gene/20655";
@@ -146,45 +132,6 @@ public class SearchServiceTest extends BaseSpringContextTest {
         }
 
         assertTrue( f );
-
-    }
-
-    /**
-     * Searching uses a ram index to deal with queries using logical operators. Though it can often be finiky. 
-     */
-    @Test
-    public void luceneRamIndexTest() {
-
-        RAMDirectory idx = new RAMDirectory();
-        Analyzer analyzer = new StandardAnalyzer();
-        try {
-            IndexWriter writer = new IndexWriter( idx, analyzer, true, MaxFieldLength.LIMITED );
-            Document doc = new Document();
-            Field f = new Field( "content", "I have a small braintest", Field.Store.YES, Field.Index.ANALYZED );
-            doc.add( f );
-            writer.addDocument( doc );
-            writer.close();
-
-            IndexSearcher searcher = new IndexSearcher( idx );
-            TopDocCollector hc = new TopDocCollector( 1000 );
-
-            QueryParser parser = new QueryParser( "", analyzer );
-            Query parsedQuery;
-            try {
-                parsedQuery = parser.parse( "braintest" );
-            } catch ( ParseException e ) {
-                throw new RuntimeException( "Cannot parse query: " + e.getMessage() );
-            }
-            //searcher.search( parsedQuery, hc );
-
-             TopDocs topDocs = searcher.search( parsedQuery, 10 );//hc.topDocs();
-
-            int hitcount = topDocs.totalHits;
-            assertTrue( hitcount >= 1 );
-
-        } catch ( IOException ioe ) {
-            log.warn( "unable to create ram index: " + ioe );
-        }
 
     }
 
