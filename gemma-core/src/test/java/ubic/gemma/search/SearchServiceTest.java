@@ -64,10 +64,6 @@ public class SearchServiceTest extends BaseSpringContextTest {
      */
     @Test
     public void testURISearch() {
-        FMAOntologyService fmaOntologyService = ontologyService.getFmaOntologyService();
-        fmaOntologyService.init( true );
-        waitForOntology( fmaOntologyService );
-
         SearchSettings settings = new SearchSettings();
         settings.setQuery( BRAIN_STEM );
         settings.setSearchExperiments( true );
@@ -112,10 +108,6 @@ public class SearchServiceTest extends BaseSpringContextTest {
      */
     @Test
     public void testGeneralSearch4Brain() {
-        FMAOntologyService fmaOntologyService = ontologyService.getFmaOntologyService();
-        fmaOntologyService.init( true );
-
-        waitForOntology( fmaOntologyService );
 
         SearchSettings settings = new SearchSettings();
         settings.setQuery( "Brain" );
@@ -154,7 +146,9 @@ public class SearchServiceTest extends BaseSpringContextTest {
     public void setup() throws Exception {
 
         // In case the fma ontology isn't set to be initizlized the the Gemma.properties file
-        ontologyService.getFmaOntologyService().init( true );
+        FMAOntologyService fmaOntologyService = ontologyService.getFmaOntologyService();
+        fmaOntologyService.init( true );
+        waitForOntology( fmaOntologyService );
 
         ee = this.getTestPersistentBasicExpressionExperiment();
 
