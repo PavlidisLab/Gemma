@@ -64,6 +64,11 @@ public class GeneImpl extends ubic.gemma.model.genome.Gene {
                 if ( bothHaveName ) {
                     return this.getOfficialName().equals( that.getOfficialName() );
                 } else if ( bothHavePhysicalLocation ) {
+                    /*
+                     * The gene must be thawed, which isn't certain, but if the gene is persistent, we _probably_
+                     * wouldn't get this far. See bug 1840, which involves code that _shouldn't_ get this far but it
+                     * does.
+                     */
                     return this.getPhysicalLocation().equals( that.getPhysicalLocation() );
                 } else {
                     return false; // can't decide, assume unequal.
