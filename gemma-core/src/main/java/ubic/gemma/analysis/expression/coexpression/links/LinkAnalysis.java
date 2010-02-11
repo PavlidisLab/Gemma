@@ -129,10 +129,12 @@ public class LinkAnalysis {
             out.write( "# Probe degree statistics (before filtering by probeDegreeThreshold)\n" );
             out.write( "# date=" + ( new Date() ) + "\n" );
             out.write( "# exp=" + expressionExperiment + " " + expressionExperiment.getShortName() + "\n" );
-            out.write( "Probe\tNumLinks\n" );
+            out.write( "ProbeID\tProbeName\tNumLinks\n" );
 
             for ( Integer i : probeDegreeMap.keySet() ) {
-                out.write( this.getProbe( i ) + "\t" + probeDegreeMap.get( i ) + "\n" );
+                DesignElement probe = this.getProbe( i );
+                out.write( probe.getId() + "\t" + probe.getName() + "\t"
+                        + probeDegreeMap.get( i ) + "\n" );
             }
 
             out.close();
