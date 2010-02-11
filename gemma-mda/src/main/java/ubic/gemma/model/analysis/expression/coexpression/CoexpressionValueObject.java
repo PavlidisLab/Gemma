@@ -56,6 +56,8 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
     // (pos+neg correlations, minus # of experiments that support both + and -)
     private Map<Long, ExpressionExperimentValueObject> expressionExperimentValueObjects;
 
+    private byte[] datasetsTestedInBytes = null;
+
     /**
      * ID of the coexpressed gene.
      */
@@ -205,6 +207,34 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
         }
     }
 
+    /**
+     * FIXME just returning zero for now.
+     * <p>
+     * Compute a combined pvalue for the scores.
+     * 
+     * @param mean
+     * @param size
+     * @param values
+     * @return
+     */
+    private double computePvalue( Collection<Map<Long, Double>> values ) {
+        return 0.0;
+        // double mean = 0.0;
+        // int size = 0;
+        // for ( Map<Long, Double> scores : values ) {
+        // for ( Double score : scores.values() ) {
+        // if ( score.doubleValue() == 0 ) {
+        // score = Constants.SMALL;
+        // }
+        // mean += Math.log( score );
+        // size++;
+        // }
+        // }
+        // assert size > 0;
+        //
+        // return Math.exp( mean / size );
+    }
+
     @Override
     public boolean equals( Object obj ) {
         if ( this == obj ) return true;
@@ -235,6 +265,10 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
      */
     public Collection<Long> getDatasetsTestedIn() {
         return this.datasetsTestedIn;
+    }
+
+    public byte[] getDatasetsTestedInBytes() {
+        return datasetsTestedInBytes;
     }
 
     /**
@@ -302,6 +336,13 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
     }
 
     /**
+     * @return the links
+     */
+    protected Map<Long, Collection<ProbePair>> getLinks() {
+        return links;
+    }
+
+    /**
      * Function to return the max of the negative and positive link support. This is used for sorting.
      * 
      * @return
@@ -310,15 +351,6 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
         int positiveLinks = this.getPositiveLinkSupport();
         int negativeLinks = this.getNegativeLinkSupport();
         return Math.max( positiveLinks, negativeLinks );
-    }
-
-    /**
-     * @param eeId
-     * @return
-     */
-    public Collection<Long> getNegativeCorrelationProbes( Long eeId ) {
-        if ( !negativeScores.containsKey( eeId ) ) return new HashSet<Long>();
-        return negativeScores.get( eeId ).keySet();
     }
 
     // /**
@@ -334,6 +366,15 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
     // buf.append( taxonId );
     // return buf.toString();
     // }
+
+    /**
+     * @param eeId
+     * @return
+     */
+    public Collection<Long> getNegativeCorrelationProbes( Long eeId ) {
+        if ( !negativeScores.containsKey( eeId ) ) return new HashSet<Long>();
+        return negativeScores.get( eeId ).keySet();
+    }
 
     /**
      * @return the negative link counts
@@ -575,6 +616,10 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
         this.datasetsTestedIn = datasetsTestedIn;
     }
 
+    public void setDatasetsTestedInBytes( byte[] datasetsTestedInBytes ) {
+        this.datasetsTestedInBytes = datasetsTestedInBytes;
+    }
+
     /**
      * @param geneId the geneId to set
      */
@@ -669,41 +714,6 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
         }
 
         return buf.toString();
-    }
-
-    /**
-     * @return the links
-     */
-    protected Map<Long, Collection<ProbePair>> getLinks() {
-        return links;
-    }
-
-    /**
-     * FIXME just returning zero for now.
-     * <p>
-     * Compute a combined pvalue for the scores.
-     * 
-     * @param mean
-     * @param size
-     * @param values
-     * @return
-     */
-    private double computePvalue( Collection<Map<Long, Double>> values ) {
-        return 0.0;
-        // double mean = 0.0;
-        // int size = 0;
-        // for ( Map<Long, Double> scores : values ) {
-        // for ( Double score : scores.values() ) {
-        // if ( score.doubleValue() == 0 ) {
-        // score = Constants.SMALL;
-        // }
-        // mean += Math.log( score );
-        // size++;
-        // }
-        // }
-        // assert size > 0;
-        //
-        // return Math.exp( mean / size );
     }
 
 }

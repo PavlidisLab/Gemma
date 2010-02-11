@@ -1175,6 +1175,9 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
      * @param coexpressions
      * @param knownGenesOnly this probably doesn't matter much, as results are already determined, but defensive
      *        programming.
+     *        <p>
+     *        Performance notes: Empirically this rarely takes very long, definitely less than 1s in vast majority of
+     *        cases. I changed the logging to trigger at 250ms get a bit better resolution - PP feb 2010
      */
     private void postProcess( CoexpressionCollectionValueObject coexpressions, boolean knownGenesOnly ) {
 
@@ -1192,7 +1195,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         Long elapsed = watch.getTime();
         coexpressions.setPostProcessTime( elapsed );
 
-        if ( elapsed > 1000 ) log.info( "Done postprocessing in " + elapsed + "ms." );
+        if ( elapsed > 250 ) log.info( "Specificity check: " + elapsed + "ms." );
     }
 
     /**
@@ -1227,7 +1230,8 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
      * 
      * @param knownGenesOnly
      * @param coexpressions
-     * @throws Exception
+     * @throws Exception <p>
+     *         Performance notes: This often takes 3-5 seconds. PP Feb 2010
      */
     private void postProcessSpecificity( boolean knownGenesOnly, final CoexpressionCollectionValueObject coexpressions )
             throws Exception {
@@ -1240,17 +1244,16 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         Map<Long, Collection<Long>> querySpecificity = getCS2GeneMap( queryGeneProbeIds );
         Map<Long, Collection<Long>> targetSpecificity = getCS2GeneMap( targetGeneProbeIds );
 
+        if ( timer.getTime() > 1000 ) {
+            log.info( "Specificity postprocess CS2GeneMap: " + timer.getTime() + "ms" );
+        }
+        timer.stop();
+        timer.reset();
+
         coexpressions.setQueryGeneSpecifityInfo( querySpecificity );
         coexpressions.setTargetGeneSpecificityInfo( targetSpecificity );
 
         postProcess( coexpressions, knownGenesOnly );
-
-        timer.stop();
-        if ( timer.getTime() > 1000 ) {
-            log.info( "Specificity postprocessing: " + timer.getTime() + "ms for " + coexpressions.getNumKnownGenes()
-                    + " known gene results" );
-        }
-
     }
 
     /**

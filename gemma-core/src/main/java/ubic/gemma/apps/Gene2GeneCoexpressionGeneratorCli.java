@@ -26,6 +26,8 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 
 import ubic.gemma.analysis.expression.coexpression.GeneLinkCoexpressionAnalyzer;
+import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis;
+import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisService;
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionCache;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -55,6 +57,7 @@ public class Gene2GeneCoexpressionGeneratorCli extends ExpressionExperimentManip
         }
     }
 
+    private GeneCoexpressionAnalysisService geneCoexpressionAnalysisService;
     private GeneLinkCoexpressionAnalyzer geneVoteAnalyzer;
     private Collection<Gene> toUseGenes;
     private int toUseStringency;
@@ -187,7 +190,7 @@ public class Gene2GeneCoexpressionGeneratorCli extends ExpressionExperimentManip
 
     private void initSpringBeans() {
         geneVoteAnalyzer = ( GeneLinkCoexpressionAnalyzer ) this.getBean( "geneLinkCoexpressionAnalyzer" );
-
+        geneCoexpressionAnalysisService = ( GeneCoexpressionAnalysisService ) this
+                .getBean( "geneCoexpressionAnalysisService" );
     }
-
 }

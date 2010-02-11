@@ -34,7 +34,7 @@ import ubic.gemma.model.genome.PredictedGeneImpl;
 import ubic.gemma.model.genome.ProbeAlignedRegionImpl;
 
 /**
- * The coexpressioncollectionValueObject is used for storing all the results of a coexpression search.
+ * The coexpressioncollectionValueObject is used for storing all the results of a coexpression search for one query gene.
  * 
  * @author jsantos
  * @author klc
