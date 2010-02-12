@@ -20,7 +20,7 @@ import ubic.gemma.util.AbstractSpringAwareCLI;
  * 
  * @author leon
  */
-public class GetAnnotationMatrix extends AbstractSpringAwareCLI {
+public class GetAnnotationMatrixCLI extends AbstractSpringAwareCLI {
 
     @Override
     protected void buildOptions() {
@@ -114,7 +114,7 @@ public class GetAnnotationMatrix extends AbstractSpringAwareCLI {
      * @param args
      */
     public static void main( String[] args ) {
-        GetAnnotationMatrix p = new GetAnnotationMatrix();
+        GetAnnotationMatrixCLI p = new GetAnnotationMatrixCLI();
 
         try {
             Exception ex = p.doWork( args );
