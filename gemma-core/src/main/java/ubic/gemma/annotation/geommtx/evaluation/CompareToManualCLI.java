@@ -36,17 +36,20 @@ import java.util.Set;
 
 import ubic.GEOMMTx.LabelLoader;
 import ubic.GEOMMTx.OntologyTools;
+import ubic.GEOMMTx.ParentFinder;
 import ubic.GEOMMTx.ProjectRDFModelTools;
 import ubic.GEOMMTx.evaluation.CheckHighLevelSpreadSheet;
 import ubic.GEOMMTx.evaluation.DescriptionExtractor;
+import ubic.GEOMMTx.evaluation.MakeHistogramData;
 import ubic.GEOMMTx.filters.BIRNLexFMANullsFilter;
 import ubic.GEOMMTx.filters.UninformativeFilter;
 import ubic.GEOMMTx.mappers.BirnLexMapper;
 import ubic.GEOMMTx.mappers.DiseaseOntologyMapper;
 import ubic.GEOMMTx.mappers.FMALiteMapper;
 import ubic.GEOMMTx.util.SetupParameters;
+import ubic.basecode.dataStructure.StringToStringSetMap;
+import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.gemma.annotation.geommtx.ExpressionExperimentAnnotator;
-import ubic.gemma.annotation.geommtx.evaluation.CheckHighLevelSpreadSheetReader;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -438,6 +441,8 @@ public class CompareToManualCLI extends AbstractSpringAwareCLI {
         long totaltime = System.currentTimeMillis();
         Exception err = processCommandLine( "GEOMMTx ", args );
         if ( err != null ) return err;
+
+        // System.exit( 1 );
 
         // long time = System.currentTimeMillis();
 
