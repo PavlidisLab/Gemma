@@ -132,6 +132,10 @@ public class DifferentialExpressionAnalyzer {
             throw new IllegalArgumentException( "Must provide at least one factor" );
         }
 
+        if ( type == null ) {
+            throw new IllegalArgumentException( "Must provide an analysis type" );
+        }
+
         switch ( type ) {
             case OWA:
                 if ( factors.size() != 1 ) {
@@ -158,7 +162,7 @@ public class DifferentialExpressionAnalyzer {
                 }
                 return this.studenttTestAnalyzer;
             default:
-                return null;
+                throw new IllegalArgumentException( "Analyses of that type are not yet supported" );
         }
     }
 
@@ -227,8 +231,8 @@ public class DifferentialExpressionAnalyzer {
 
         }
 
-        log.warn( "Differential expression analysis supports a maximum of 2 experimental factors at this time." );
-        return null;
+        throw new UnsupportedOperationException(
+                "Differential expression analysis supports a maximum of 2 experimental factors at this time." );
 
     }
 
