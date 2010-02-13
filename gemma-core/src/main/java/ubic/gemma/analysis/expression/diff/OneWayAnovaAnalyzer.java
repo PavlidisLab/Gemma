@@ -71,12 +71,12 @@ import ubic.gemma.model.expression.experiment.FactorValue;
  * Statistics are obtained in the same way.
  * <p>
  * qvalue(pvals)$qvalues
- *  
+ * 
  * @author keshav
  * @version $Id$
  */
 @Service
-@Scope(value="prototype")
+@Scope(value = "prototype")
 public class OneWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer {
 
     private Map<Integer, DesignElement> filteredMatrixDesignElementIndexMap = null;
@@ -336,9 +336,9 @@ public class OneWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer 
 
         expressionAnalysis.setName( this.getClass().getSimpleName() );
         expressionAnalysis.setDescription( "One-way ANOVA for " + experimentalFactor );
-        
+
         disconnectR();
-        
+
         log.info( "R analysis done" );
         return expressionAnalysis;
 

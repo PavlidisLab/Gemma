@@ -73,6 +73,9 @@ public class DifferentialExpressionAnalyzerService {
     @Autowired
     private ExpressionExperimentService expressionExperimentService = null;
 
+    @Autowired
+    private DifferentialExpressionAnalyzer differentialExpressionAnalyzer;
+
     private Log log = LogFactory.getLog( this.getClass() );
 
     @Autowired
@@ -120,7 +123,6 @@ public class DifferentialExpressionAnalyzerService {
      * @param expressionExperiment
      */
     public DifferentialExpressionAnalysis doDifferentialExpressionAnalysis( ExpressionExperiment expressionExperiment ) {
-        DifferentialExpressionAnalyzer differentialExpressionAnalyzer = new DifferentialExpressionAnalyzer();
         return differentialExpressionAnalyzer.analyze( expressionExperiment );
     }
 
@@ -133,7 +135,6 @@ public class DifferentialExpressionAnalyzerService {
      */
     public DifferentialExpressionAnalysis doDifferentialExpressionAnalysis( ExpressionExperiment expressionExperiment,
             Collection<ExperimentalFactor> factors ) {
-        DifferentialExpressionAnalyzer differentialExpressionAnalyzer = new DifferentialExpressionAnalyzer();
         return differentialExpressionAnalyzer.analyze( expressionExperiment, factors );
     }
 
@@ -147,7 +148,6 @@ public class DifferentialExpressionAnalyzerService {
      */
     public DifferentialExpressionAnalysis doDifferentialExpressionAnalysis( ExpressionExperiment expressionExperiment,
             Collection<ExperimentalFactor> factors, AnalysisType type ) {
-        DifferentialExpressionAnalyzer differentialExpressionAnalyzer = new DifferentialExpressionAnalyzer();
         return differentialExpressionAnalyzer.analyze( expressionExperiment, factors, type );
     }
 

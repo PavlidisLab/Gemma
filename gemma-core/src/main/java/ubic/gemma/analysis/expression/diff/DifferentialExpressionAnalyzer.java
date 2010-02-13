@@ -22,7 +22,9 @@ import java.util.Collection;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.BeansException;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Service;
 
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService.AnalysisType;
@@ -44,7 +46,7 @@ import ubic.gemma.model.expression.experiment.FactorValue;
  * @version $Id$
  */
 @Service
-public class DifferentialExpressionAnalyzer {
+public class DifferentialExpressionAnalyzer implements ApplicationContextAware {
 
     private DifferentialExpressionAnalysisHelperService differentialExpressionAnalysisHelperService = new DifferentialExpressionAnalysisHelperService();
     private int EXPERIMENTAL_FACTOR_ONE = 1;
@@ -53,18 +55,11 @@ public class DifferentialExpressionAnalyzer {
     private int FACTOR_VALUE_ONE = 1;
     private int FACTOR_VALUE_TWO = 2;
     private Log log = LogFactory.getLog( this.getClass() );
-
-    @Autowired
-    private OneWayAnovaAnalyzer oneWayAnovaAnalyzer = null;
-
-    @Autowired
-    private TTestAnalyzer studenttTestAnalyzer = null;
-
-    @Autowired
-    private TwoWayAnovaWithInteractionsAnalyzer twoWayAnovaWithInteractionsAnalyzer = null;
-
-    @Autowired
-    private TwoWayAnovaWithoutInteractionsAnalyzer twoWayAnovaWithoutInteractionsAnalyzer = null;
+    
+    /*
+     * Note - we are context-aware so we can get prototype beans.
+     */
+    private ApplicationContext applicationContext;
 
     /**
      * Initiates the differential expression analysis (this is the entry point).
@@ -125,6 +120,12 @@ public class DifferentialExpressionAnalyzer {
 
     }
 
+    /**
+     * @param expressionExperiment
+     * @param factors
+     * @param type
+     * @return
+     */
     public AbstractDifferentialExpressionAnalyzer determineAnalysis( ExpressionExperiment expressionExperiment,
             Collection<ExperimentalFactor> factors, AnalysisType type ) {
 
@@ -141,12 +142,12 @@ public class DifferentialExpressionAnalyzer {
                 if ( factors.size() != 1 ) {
                     throw new IllegalArgumentException( "Cannot run One-way ANOVA on more than one factor" );
                 }
-                return this.oneWayAnovaAnalyzer;
+                return this.applicationContext.getBean( OneWayAnovaAnalyzer.class );
             case TWA:
                 if ( factors.size() != 2 ) {
                     throw new IllegalArgumentException( "Need exactly two factors to run two-way ANOVA" );
                 }
-                return this.twoWayAnovaWithoutInteractionsAnalyzer;
+                return this.applicationContext.getBean( TwoWayAnovaWithoutInteractionsAnalyzer.class );
             case TWIA:
                 if ( factors.size() != 2 ) {
                     throw new IllegalArgumentException( "Need exactly two factors to run two-way ANOVA" );
@@ -155,12 +156,13 @@ public class DifferentialExpressionAnalyzer {
                     throw new IllegalArgumentException(
                             "Experimental design must be block complete to run Two-way ANOVA with interactions" );
                 }
-                return this.twoWayAnovaWithInteractionsAnalyzer;
+                return this.applicationContext.getBean( TwoWayAnovaWithInteractionsAnalyzer.class );
+
             case TTEST:
                 if ( factors.size() != 1 ) {
                     throw new IllegalArgumentException( "Cannot run t-test on more than one factor " );
                 }
-                return this.studenttTestAnalyzer;
+                return this.applicationContext.getBean( TTestAnalyzer.class );
             default:
                 throw new IllegalArgumentException( "Analyses of that type are not yet supported" );
         }
@@ -200,7 +202,7 @@ public class DifferentialExpressionAnalyzer {
                  * Return t-test analyzer. This can be taken care of by the one way anova, but keeping it separate for
                  * clarity.
                  */
-                return studenttTestAnalyzer;
+                return this.applicationContext.getBean( TTestAnalyzer.class );
             }
 
             else {
@@ -208,7 +210,7 @@ public class DifferentialExpressionAnalyzer {
                  * Return one way anova analyzer. NOTE: This can take care of the t-test as well, since a one-way anova
                  * with two groups is just a t-test
                  */
-                return oneWayAnovaAnalyzer;
+                return this.applicationContext.getBean( OneWayAnovaAnalyzer.class );
             }
 
         }
@@ -225,9 +227,9 @@ public class DifferentialExpressionAnalyzer {
             }
             /* Check for block design and execute two way anova (with or without interactions). */
             if ( !differentialExpressionAnalysisHelperService.blockComplete( expressionExperiment ) ) {
-                return twoWayAnovaWithoutInteractionsAnalyzer;
+                return this.applicationContext.getBean( TwoWayAnovaWithoutInteractionsAnalyzer.class );
             }
-            return twoWayAnovaWithInteractionsAnalyzer;
+            return this.applicationContext.getBean( TwoWayAnovaWithInteractionsAnalyzer.class );
 
         }
 
@@ -243,6 +245,15 @@ public class DifferentialExpressionAnalyzer {
     private boolean colIsEmpty( Collection<? extends Object> col ) {
         if ( col == null || col.isEmpty() ) return true;
         return false;
+    }
+
+    /*
+     * (non-Javadoc)
+     * @seeorg.springframework.context.ApplicationContextAware#setApplicationContext(org.springframework.context.
+     * ApplicationContext)
+     */
+    public void setApplicationContext( ApplicationContext applicationContext ) throws BeansException {
+        this.applicationContext = applicationContext;
     }
 
 }

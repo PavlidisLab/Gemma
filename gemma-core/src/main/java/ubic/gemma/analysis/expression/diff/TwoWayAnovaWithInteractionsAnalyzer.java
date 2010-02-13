@@ -165,7 +165,7 @@ public class TwoWayAnovaWithInteractionsAnalyzer extends AbstractTwoWayAnovaAnal
         log.info( "R analysis done" );
         return createExpressionAnalysis( dmatrix, mainEffectAPvalues, mainEffectBPvalues, interactionEffectPvalues,
                 anovaResult.getStatistics(), NUM_RESULTS_FROM_R, experimentalFactorA, experimentalFactorB,
-                quantitationType );
+                quantitationType, expressionExperiment );
 
     }
 

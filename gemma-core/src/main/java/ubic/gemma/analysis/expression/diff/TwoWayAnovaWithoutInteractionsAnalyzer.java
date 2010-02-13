@@ -59,7 +59,7 @@ import ubic.gemma.model.expression.experiment.FactorValue;
  * @see AbstractTwoWayAnovaAnalyzer
  */
 @Service
-@Scope(value="prototype")
+@Scope(value = "prototype")
 public class TwoWayAnovaWithoutInteractionsAnalyzer extends AbstractTwoWayAnovaAnalyzer {
 
     private static final int NUM_RESULTS_FROM_R = 2;
@@ -197,6 +197,7 @@ public class TwoWayAnovaWithoutInteractionsAnalyzer extends AbstractTwoWayAnovaA
         disconnectR();
         log.info( "R analysis done" );
         return createExpressionAnalysis( dmatrix, mainEffectAPvalues, mainEffectBPvalues, null, anovaResult
-                .getStatistics(), NUM_RESULTS_FROM_R, experimentalFactorA, experimentalFactorB, quantitationType );
+                .getStatistics(), NUM_RESULTS_FROM_R, experimentalFactorA, experimentalFactorB, quantitationType,
+                expressionExperiment );
     }
 }

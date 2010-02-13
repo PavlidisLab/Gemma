@@ -23,7 +23,6 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
- 
 
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.analysis.expression.ExpressionAnalysis;
@@ -50,9 +49,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * @author keshav
  * @version $Id$
  */
-public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer { 
-
-    private ExpressionExperiment ee = null;
+public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer {
 
     protected final int mainEffectAIndex = 0;
     protected final int mainEffectBIndex = 1;
@@ -71,12 +68,14 @@ public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractDifferentialEx
      * @param experimentalFactorA
      * @param experimentalFactorB
      * @param quantitationType
+     * @param expressionExperiment
      * @return
      */
     protected DifferentialExpressionAnalysis createExpressionAnalysis( ExpressionDataDoubleMatrix dmatrix,
             double[] mainEffectAPvalues, double[] mainEffectBPvalues, double[] interactionEffectPvalues,
             double[] fStatistics, int numResultsFromR, ExperimentalFactor experimentalFactorA,
-            ExperimentalFactor experimentalFactorB, QuantitationType quantitationType ) {
+            ExperimentalFactor experimentalFactorB, QuantitationType quantitationType,
+            ExpressionExperiment expressionExperiment ) {
 
         Collection<ExpressionAnalysisResultSet> resultSets = new HashSet<ExpressionAnalysisResultSet>();
 
@@ -194,7 +193,7 @@ public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractDifferentialEx
         expressionAnalysis.setResultSets( resultSets );
 
         expressionAnalysis.setName( this.getClass().getSimpleName() );
-        if ( ee != null ) {
+        if ( expressionExperiment != null ) {
             boolean interactions = false;
             if ( numResultsFromR == maxResults ) interactions = true;
             expressionAnalysis.setDescription( "Two-way ANOVA for " + experimentalFactorA + " and "
@@ -210,8 +209,6 @@ public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractDifferentialEx
      */
     @Override
     public DifferentialExpressionAnalysis run( ExpressionExperiment expressionExperiment ) {
-
-        ee = expressionExperiment;
 
         Collection<ExperimentalFactor> experimentalFactors = expressionExperiment.getExperimentalDesign()
                 .getExperimentalFactors();
