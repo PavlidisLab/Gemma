@@ -349,7 +349,7 @@ public class LinkAnalysisService {
         analysis.getExpressionExperimentSetAnalyzed().getExperiments().add( ee );
 
         /*
-         * Add probes used.
+         * Add probes used. Note that this includes probes that were not 
          */
         List<ExpressionDataMatrixRowElement> rowElements = eeDoubleMatrix.getRowElements();
         Collection<CompositeSequence> probesUsed = new HashSet<CompositeSequence>();
@@ -649,7 +649,8 @@ public class LinkAnalysisService {
         }
 
         Integer probeDegreeThreshold = la.getConfig().getProbeDegreeThreshold();
-        int skippedDueToDegree = 0;
+        int skippedDueToDegree = 0; 
+        
         List<Probe2ProbeCoexpression> p2plinkBatch = new ArrayList<Probe2ProbeCoexpression>();
         for ( int i = 0, n = links.size(); i < n; i++ ) {
             Object val = links.getQuick( i );
@@ -662,6 +663,9 @@ public class LinkAnalysisService {
             int x = m.getx();
             int y = m.gety();
 
+            /*
+             * Note that we use OR here - we don't require that _both_ probes have high degree.
+             */
             if ( probeDegreeThreshold > 0
                     && ( la.getProbeDegree( x ) > probeDegreeThreshold || la.getProbeDegree( y ) > probeDegreeThreshold ) ) {
                 skippedDueToDegree++;
