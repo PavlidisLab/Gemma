@@ -25,48 +25,9 @@ Gemma.Search.app = function() {
 
 			/*
 			 * Search from url if we have to.
-			 * FIXME:  why isn't this using restoreState method?
 			 */
-			var url = document.URL;
-			if (url.indexOf("?") > -1) {
-				var sq = url.substr(url.indexOf("?") + 1);
-				var params = Ext.urlDecode(sq);
-				
-				if ((params.termUri) && (params.termUri.length != 0)){
-					this.form.getForm().findField('query').setValue(params.termUri);
-				}				
-				else if (params.query) {
-					this.form.getForm().findField('query').setValue(params.query);
-				}
-				
-				if (params.scope) {
-					if (params.scope.indexOf('E') > -1) {
-						Ext.getCmp('search-exps-chkbx').setValue(true);
-					} else {
-						Ext.getCmp('search-exps-chkbx').setValue(false);
-					}
-					if (params.scope.indexOf('A') > -1) {
-						Ext.getCmp('search-ars-chkbx').setValue(true);
-					} else {
-						Ext.getCmp('search-ars-chkbx').setValue(false);
-					}
-					if (params.scope.indexOf('P') > -1) {
-						Ext.getCmp('search-prbs-chkbx').setValue(true);
-					} else {
-						Ext.getCmp('search-prbs-chkbx').setValue(false);
-					}
-					if (params.scope.indexOf('G') > -1) {
-						Ext.getCmp('search-genes-chkbx').setValue(true);
-					} else {
-						Ext.getCmp('search-genes-chkbx').setValue(false);
-					}
-					if (params.scope.indexOf('S') > -1) {
-						Ext.getCmp('search-seqs-chkbx').setValue(true);
-					} else {
-						Ext.getCmp('search-seqs-chkbx').setValue(false);
-					}
-				}
-				this.search();
+			if (this.form.restoreState()){
+					this.search();
 			}
 
 		},
@@ -152,31 +113,54 @@ Gemma.SearchForm = Ext.extend(Ext.form.FormPanel, {
 	 */
 	restoreState : function() {
 
-		// Override with info from the URL (bookmarkable link)
-		var queryStart = document.URL.indexOf("?");
-		if (queryStart > -1) {
-			var params = Ext.urlDecode(document.URL.substr(queryStart + 1));
-		}
-		//var params = Ext.urlDecode(window.location.href);
-		//console.log(params);
 
-		if (params.scope) {
-			var searchGenes = params.scope.match("G") !== null;
-			var searchExp = params.scope.match("E") !== null;
-			var searchSeq = params.scope.match("S") !== null;
-			var searchProbes = params.scope.match("P") !== null;
-			var searchArrays = params.scope.match("A") !== null;
-
-			// Populate the form with the values. Note we force false if not
-			// present, even if cookie demands it. This makes the bookmark
-			// accurate
-			Ext.getCmp('search-genes-chkbx').setValue(searchGenes);
-			Ext.getCmp('search-seqs-chkbx').setValue(searchSeq);
-			Ext.getCmp('search-exps-chkbx').setValue(searchExp);
-			Ext.getCmp('search-ars-chkbx').setValue(searchArrays);
-			Ext.getCmp('search-prbs-chkbx').setValue(searchProbes);
-
-		}
+		
+			var url = document.URL;
+			if (url.indexOf("?") > -1) {
+				var sq = url.substr(url.indexOf("?") + 1);
+				var params = Ext.urlDecode(sq);
+				
+				if ((params.termUri) && (params.termUri.length != 0)){
+					this.form.findField('query').setValue(params.termUri);
+				}				
+				else if (params.query) {
+					this.form.findField('query').setValue(params.query);
+				}
+				else // NO Query object (just a random ? in string uri)
+					return false;
+				
+				if (params.scope) {
+					if (params.scope.indexOf('E') > -1) {
+						Ext.getCmp('search-exps-chkbx').setValue(true);
+					} else {
+						Ext.getCmp('search-exps-chkbx').setValue(false);
+					}
+					if (params.scope.indexOf('A') > -1) {
+						Ext.getCmp('search-ars-chkbx').setValue(true);
+					} else {
+						Ext.getCmp('search-ars-chkbx').setValue(false);
+					}
+					if (params.scope.indexOf('P') > -1) {
+						Ext.getCmp('search-prbs-chkbx').setValue(true);
+					} else {
+						Ext.getCmp('search-prbs-chkbx').setValue(false);
+					}
+					if (params.scope.indexOf('G') > -1) {
+						Ext.getCmp('search-genes-chkbx').setValue(true);
+					} else {
+						Ext.getCmp('search-genes-chkbx').setValue(false);
+					}
+					if (params.scope.indexOf('S') > -1) {
+						Ext.getCmp('search-seqs-chkbx').setValue(true);
+					} else {
+						Ext.getCmp('search-seqs-chkbx').setValue(false);
+					}
+				}
+			}else{
+				return false;
+			}
+			
+			return  true;
 
 	},
 
@@ -405,7 +389,8 @@ Gemma.SearchGrid = Ext.extend(Ext.grid.GridPanel, {
 				return value.test(obj.name) || value.test(obj.description) || value.test(obj.arrayDesign.shortName);
 			} else if (clazz == "ArrayDesignValueObject") {
 				return value.test(obj.name) || value.test(obj.description);
-			} else if (/^BioSequence.*/.exec(clazz)) { // because we get proxies.
+			} else if (/^BioSequence.*/.exec(clazz)) { // because we get
+														// proxies.
 				return value.test(obj.name) || value.test(obj.description) || value.test(obj.taxon.commonName);
 			} else if (clazz == "Gene" || clazz == "PredictedGene" || clazz == "ProbeAlignedRegion") {
 				return value.test(obj.officialSymbol) || value.test(obj.officialName)
