@@ -64,7 +64,7 @@ import ubic.gemma.model.expression.experiment.FactorValue;
  * @version $Id$
  */
 @Service
-@Scope(value="prototype")
+@Scope(value = "prototype")
 public class TTestAnalyzer extends AbstractDifferentialExpressionAnalyzer {
 
     private Log log = LogFactory.getLog( this.getClass() );
@@ -167,13 +167,13 @@ public class TTestAnalyzer extends AbstractDifferentialExpressionAnalyzer {
         StringBuffer pvalueCommand = new StringBuffer();
         pvalueCommand.append( "apply(" );
         pvalueCommand.append( matrixName );
-        pvalueCommand.append( ", 1, function(x) {t.test(x ~ " + factor + ")$p.value}" );
+        pvalueCommand.append( ", 1, function(x) {   tryCatch(t.test(x ~ " + factor
+                + ")$p.value, error=function(e) {1.0})}" );
         pvalueCommand.append( ")" );
 
         log.info( "Starting R analysis ... please wait!" );
-        log.debug( pvalueCommand.toString() );
 
-        log.info( "Calculating p values.  R analysis started." );
+        log.info( "Calculating p values.  R analysis started: " + pvalueCommand );
         double[] pvalues = rc.doubleArrayEvalWithLogging( pvalueCommand.toString() );
 
         double[] ranks = computeRanks( pvalues );
@@ -185,12 +185,11 @@ public class TTestAnalyzer extends AbstractDifferentialExpressionAnalyzer {
         StringBuffer tstatisticCommand = new StringBuffer();
         tstatisticCommand.append( "apply(" );
         tstatisticCommand.append( matrixName );
-        tstatisticCommand.append( ", 1, function(x) {t.test(x ~ " + factor + ")$statistic}" );
+        tstatisticCommand.append( ", 1, function(x) {  tryCatch(t.test(x ~ " + factor
+                + ")$statistic, error=function(e) {0.0})}" );
         tstatisticCommand.append( ")" );
 
-        log.debug( tstatisticCommand.toString() );
-
-        log.info( "Calculating t statistics.  R analysis started." );
+        log.info( "Calculating t statistics.  R analysis started: " + tstatisticCommand );
         double[] tstatistics = rc.doubleArrayEvalWithLogging( tstatisticCommand.toString() );
 
         /* q-value */
