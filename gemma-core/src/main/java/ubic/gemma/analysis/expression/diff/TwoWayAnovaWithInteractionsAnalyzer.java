@@ -59,7 +59,7 @@ import ubic.gemma.model.expression.experiment.FactorValue;
  * @see AbstractTwoWayAnovaAnalyzer
  */
 @Service
-@Scope(value="prototype")
+@Scope(value = "prototype")
 public class TwoWayAnovaWithInteractionsAnalyzer extends AbstractTwoWayAnovaAnalyzer {
 
     private Log log = LogFactory.getLog( this.getClass() );
@@ -104,14 +104,8 @@ public class TwoWayAnovaWithInteractionsAnalyzer extends AbstractTwoWayAnovaAnal
         List<String> rFactorsB = DifferentialExpressionAnalysisHelperService.getRFactorsFromFactorValuesForTwoWayAnova(
                 experimentalFactorB, samplesUsed );
 
-        String factsA = rc.assignStringList( rFactorsA );
-        String factsB = rc.assignStringList( rFactorsB );
-
-        String tfactsA = "t(" + factsA + ")";
-        String tfactsB = "t(" + factsB + ")";
-
-        String factorA = "factor(" + tfactsA + ")";
-        String factorB = "factor(" + tfactsB + ")";
+        String tfactsA = rc.assignFactor( rFactorsA );
+        String tfactsB = rc.assignFactor( rFactorsB );
 
         String matrixName = rc.assignMatrix( namedMatrix );
 
@@ -120,8 +114,8 @@ public class TwoWayAnovaWithInteractionsAnalyzer extends AbstractTwoWayAnovaAnal
 
         pvalueCommand.append( "apply(" );
         pvalueCommand.append( matrixName );
-        pvalueCommand.append( ", 1, function(x) {anova(aov(x ~ " + factorA + "+" + factorB + "+" + factorA + "*"
-                + factorB + "))}" );
+        pvalueCommand.append( ", 1, function(x) { tryCatch( anova(aov(x ~ " + tfactsA + "*" + tfactsB
+                + ")), error=function(e) { e })}" );
         pvalueCommand.append( ")" );
 
         log.info( "Starting R analysis ... please wait!" );

@@ -140,14 +140,8 @@ public class TwoWayAnovaWithoutInteractionsAnalyzer extends AbstractTwoWayAnovaA
         List<String> rFactorsB = DifferentialExpressionAnalysisHelperService.getRFactorsFromFactorValuesForTwoWayAnova(
                 experimentalFactorB, samplesUsed );
 
-        String factsA = rc.assignStringList( rFactorsA );
-        String factsB = rc.assignStringList( rFactorsB );
-
-        String tfactsA = "t(" + factsA + ")";
-        String tfactsB = "t(" + factsB + ")";
-
-        String factorA = "factor(" + tfactsA + ")";
-        String factorB = "factor(" + tfactsB + ")";
+        String factorA = rc.assignFactor( rFactorsA );
+        String factorB = rc.assignFactor( rFactorsB );
 
         String matrixName = rc.assignMatrix( namedMatrix );
 
@@ -159,8 +153,7 @@ public class TwoWayAnovaWithoutInteractionsAnalyzer extends AbstractTwoWayAnovaA
 
         String modelDeclaration = "x ~ " + factorA + "+" + factorB;
 
-        command.append( ", 1, function(x) {anova(aov(" + modelDeclaration + "))}" );
-        command.append( ")" );
+        command.append( ", 1, function(x) {  tryCatch(anova(aov(" + modelDeclaration + ")), error=function(e) {e} )})" );
 
         log.info( "Starting R analysis ... please wait!" );
         log.debug( command.toString() );

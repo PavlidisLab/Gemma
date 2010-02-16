@@ -86,7 +86,7 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
             throw new IllegalArgumentException( "No pvalues provided" );
         }
 
-        if ( rc == null ) {
+        if ( rc == null || !rc.isConnected() ) {
             connectToR();
         }
 
