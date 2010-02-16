@@ -55,7 +55,7 @@ public class DifferentialExpressionAnalyzer implements ApplicationContextAware {
     private int FACTOR_VALUE_ONE = 1;
     private int FACTOR_VALUE_TWO = 2;
     private Log log = LogFactory.getLog( this.getClass() );
-    
+
     /*
      * Note - we are context-aware so we can get prototype beans.
      */
@@ -172,7 +172,7 @@ public class DifferentialExpressionAnalyzer implements ApplicationContextAware {
      * Determines the analysis to execute based on the experimental factors, factor values, and block design.
      * 
      * @param expressionExperiment
-     * @return
+     * @return an appropriate analyzer, or null if one could not be identified.
      */
     public AbstractDifferentialExpressionAnalyzer determineAnalysis( ExpressionExperiment expressionExperiment ) {
 
@@ -233,9 +233,7 @@ public class DifferentialExpressionAnalyzer implements ApplicationContextAware {
 
         }
 
-        throw new UnsupportedOperationException(
-                "Differential expression analysis supports a maximum of 2 experimental factors at this time." );
-
+        return null;
     }
 
     /**
