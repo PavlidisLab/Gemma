@@ -2,6 +2,7 @@ package ubic.gemma.model.genome.sequenceAnalysis;
 
 import java.util.Collection;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import ubic.gemma.model.genome.Gene;
@@ -10,6 +11,7 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 @Service
 public class AnnotationAssociationServiceImpl implements AnnotationAssociationService {
 
+    @Autowired
     AnnotationAssociationDao annotationAssociationDao;
 
     public AnnotationAssociation create( AnnotationAssociation annotationAssociation ) {
