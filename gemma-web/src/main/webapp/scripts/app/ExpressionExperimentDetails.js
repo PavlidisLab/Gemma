@@ -724,8 +724,12 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 						html : 'Profiles:'
 					}, {
 						id : 'processedExpressionVectorCount-region',
-						html : e.processedExpressionVectorCount,
-						width : 60
+						html : '<div id="downloads"> ' + e.processedExpressionVectorCount
+						+ '&nbsp;&nbsp; <a title="click to download the tab delimited data" href="#" onClick="fetchData(true,' + e.id  + ', \'text\', null, null)">Filtered</a> &nbsp;&nbsp;'
+						+ '<a href="#" title="click to download the tab delimited data" onClick="fetchData(false,' + e.id + ', \'text\', null, null)">Unfiltered</a> &nbsp;&nbsp;' 
+						+ '<a class="helpLink" href="?" onclick="showHelpTip(event, \'Tab-delimited data file for this experiment. The filtered version corresponds to what is used in most Gemma analyses, removing some probes. Unfiltered includes all probes\'); return false"> <img src="/Gemma/images/help.png" /> </a>' 
+						+ '</div>',
+						width : 200
 					}, {
 						html : 'Array designs:'
 					}, {

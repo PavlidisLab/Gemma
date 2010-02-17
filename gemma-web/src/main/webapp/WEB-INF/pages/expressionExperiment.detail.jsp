@@ -28,20 +28,6 @@
 </div>
 
 
-<div id="downloads" style="padding: 5px; font-size: smaller">
-
-	Download data Files:
-
-	<a href="#" onClick="fetchData(true, ${expressionExperiment.id }, 'text', null, null)">Filtered</a> &nbsp;&nbsp;
-	<a href="#" onClick="fetchData(false, ${expressionExperiment.id }, 'text', null, null)">Unfiltered</a>
-	<a class="helpLink" href="?"
-		onclick="showHelpTip(event, 'Tab-delimited data file for this experiment. The filtered version corresponds to what is used in most Gemma analyses, removing some probes. Unfiltered includes all probes'); return false"><img
-			src="/Gemma/images/help.png" /> </a>
-
-</div>
-
-
-
 <div class="clearfix" id="design" style="padding: 5px;">
 	<h3>
 		<fmt:message key="experimentalDesign.title" />
