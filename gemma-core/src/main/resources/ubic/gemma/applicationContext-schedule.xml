@@ -89,7 +89,7 @@
 			<ref bean="viewJobDetail" />
 		</property>
 		<property name="cronExpression">
-			<value>0 15 1 ? * MON</value><!-- Every Saturday at 1:15 am -->
+			<value>0 15 1 ? * MON</value><!-- Every monday at 1:15 am -->
 		</property>
 	</bean>
 
