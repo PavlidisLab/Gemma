@@ -12,7 +12,7 @@
 	version: $Id$
 -->
 <compass-core-mapping package="ubic.gemma.model">
-	<class name="genome.biosequence.BioSequenceImpl" alias="biologicalCharacteristic" root="true">
+	<class name="genome.biosequence.BioSequenceImpl" alias="biologicalCharacteristic" root="true"  support-unmarshall="false">
 		<id name="id" />
 		<property name="name">
 			<meta-data>name</meta-data>
@@ -24,7 +24,7 @@
 	</class>
 	<!--  Little woried about this as bioSequence2GeneProduct is an abstract class.  There are 3 concrete subclasses...
 		currently using BlatAssociationImpl... if bioSequence2GeneProduct is used bombs when unmarsheling.  -->
-	<class name="genome.sequenceAnalysis.BlatAssociationImpl" alias="bioSequence2GeneProduct" root="false">
+	<class name="genome.sequenceAnalysis.BlatAssociationImpl" alias="bioSequence2GeneProduct" root="false"  support-unmarshall="false">
 		<id name="id" />
 	</class>
 </compass-core-mapping>
