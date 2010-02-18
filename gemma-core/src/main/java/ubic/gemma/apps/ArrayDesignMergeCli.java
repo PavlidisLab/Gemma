@@ -116,6 +116,7 @@ public class ArrayDesignMergeCli extends ArrayDesignSequenceManipulatingCli {
                 if ( o == null ) {
                     throw new IllegalArgumentException( "Array design " + string + " not found" );
                 }
+                unlazifyArrayDesign( o );
                 this.otherArrayDesigns.add( o );
             }
         }
