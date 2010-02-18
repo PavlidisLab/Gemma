@@ -20,8 +20,6 @@ package ubic.gemma.analysis.expression.diff;
 
 import java.util.Collection;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -54,7 +52,6 @@ public class DifferentialExpressionAnalyzer implements ApplicationContextAware {
 
     private int FACTOR_VALUE_ONE = 1;
     private int FACTOR_VALUE_TWO = 2;
-    private Log log = LogFactory.getLog( this.getClass() );
 
     /*
      * Note - we are context-aware so we can get prototype beans.

@@ -73,11 +73,9 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
             Collection<ExperimentalFactor> factors );
 
     /**
-     * Calls the Q value function in R. Handles Double.NaN by filtering out p-values that are Double.NaN before passing
-     * the array to the qvalue function, then puts the Double.NaN values back in the resulting q-value array (in the
-     * correct position).
+     * Calls the Q value function in R.
      * 
-     * @param pvalues
+     * @param pvalues Entries that are NaN are ignored in the qvalue computation and rendered as NaN qvalues.
      * @return returns the qvalues (false discovery rates) for the pvalues using the method of Storey and Tibshirani.
      */
     protected double[] getQValues( double[] pvalues ) {
@@ -94,11 +92,10 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
         ArrayList<Double> pvaluesList = new ArrayList<Double>();
         for ( int i = 0; i < pvalues.length; i++ ) {
             if ( Double.isNaN( pvalues[i] ) ) continue;
-
             pvaluesList.add( pvalues[i] );
         }
 
-        /* create a new pvalue array without the Double.NaN. */
+        /* convert to primitive array */
         double[] pvaluesToUse = new double[pvaluesList.size()];
         int j = 0;
         for ( Double d : pvaluesList ) {
@@ -204,10 +201,9 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
      * Returns the preferred {@link QuantitationType}.
      * 
      * @param vectors
-     * @return
+     * @return the first quantitation type that has 'isPreferred' == true, or null if none is found.
      */
     protected QuantitationType getPreferredQuantitationType( Collection<DesignElementDataVector> vectors ) {
-        // FIXME could be slow?
         QuantitationType qt = null;
         for ( DesignElementDataVector vector : vectors ) {
             qt = vector.getQuantitationType();
