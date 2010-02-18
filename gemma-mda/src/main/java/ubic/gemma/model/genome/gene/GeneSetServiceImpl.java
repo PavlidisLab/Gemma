@@ -125,5 +125,15 @@ public class GeneSetServiceImpl implements GeneSetService {
         this.geneSetDao.update( geneset );
 
     }
+    
+
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.genome.gene.GeneSetService#loadMyGeneSets()
+     */
+    @SuppressWarnings("unchecked")
+    public Collection<GeneSet> loadMyGeneSets(){
+       return ( Collection<GeneSet> ) this.geneSetDao.loadAll();
+        
+    }
 
 }

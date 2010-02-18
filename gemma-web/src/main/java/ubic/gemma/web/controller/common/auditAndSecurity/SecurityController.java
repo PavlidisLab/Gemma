@@ -40,6 +40,8 @@ import ubic.gemma.model.common.Describable;
 import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.model.genome.gene.GeneSet;
+import ubic.gemma.model.genome.gene.GeneSetService;
 import ubic.gemma.security.SecurityService;
 import ubic.gemma.security.authentication.UserDetailsImpl;
 import ubic.gemma.security.authentication.UserManager;
@@ -68,6 +70,9 @@ public class SecurityController {
 
     @Autowired
     private UserManager userManager = null;
+
+    @Autowired
+    private GeneSetService geneSetService = null;
 
     /**
      * AJAX
@@ -159,7 +164,7 @@ public class SecurityController {
     }
 
     /**
-     * AJAX, but administrator-only!
+     * AJAX, but administrator-only!geneCoexpressionAnalysisService
      * 
      * @return
      */
@@ -245,6 +250,72 @@ public class SecurityController {
      * @return
      */
     public Collection<SecurityInfoValueObject> getUsersData( String currentGroup, boolean privateOnly ) {
+        Collection<Securable> secs = new HashSet<Securable>();
+
+        // Add experiments.
+        secs.addAll( getUsersExperiments( privateOnly ) );
+
+        // Add Analyses
+        secs.addAll( getUsersAnalyses( privateOnly ) );
+
+        // Add gene groups
+        secs.addAll( getUsersGeneGroups( privateOnly ) );
+
+        /*
+         * TODO: add other types of securables here.
+         */
+
+        Collection<SecurityInfoValueObject> result = securables2VOs( secs, currentGroup );
+        return result;
+    }
+
+    /**
+     * @param privateOnly
+     * @return
+     */
+    private Collection<Securable> getUsersGeneGroups( boolean privateOnly ) {
+        Collection<Securable> secs = new HashSet<Securable>();
+
+        Collection<GeneSet> geneSets = geneSetService.loadAll();
+        if ( privateOnly ) {
+            try {
+                secs.addAll( securityService.choosePrivate( geneSets ) );
+            } catch ( AccessDeniedException e ) {
+                // okay, they just aren't allowed to see those.
+            }
+        } else {
+            secs.addAll( geneSets );
+        }
+
+        return secs;
+    }
+
+    /**
+     * @param privateOnly
+     * @return
+     */
+    private Collection<Securable> getUsersAnalyses( boolean privateOnly ) {
+        Collection<Securable> secs = new HashSet<Securable>();
+
+        Collection<GeneCoexpressionAnalysis> analyses = geneCoexpressionAnalysisService.loadMyAnalyses();
+        if ( privateOnly ) {
+            try {
+                secs.addAll( securityService.choosePrivate( analyses ) );
+            } catch ( AccessDeniedException e ) {
+                // okay, they just aren't allowed to see those.
+            }
+        } else {
+            secs.addAll( analyses );
+        }
+
+        return secs;
+    }
+
+    /**
+     * @param privateOnly
+     * @return
+     */
+    private Collection<Securable> getUsersExperiments( boolean privateOnly ) {
         Collection<ExpressionExperiment> ees = expressionExperimentService.loadMyExpressionExperiments();
 
         Collection<Securable> secs = new HashSet<Securable>();
@@ -258,24 +329,7 @@ public class SecurityController {
         } else {
             secs.addAll( ees );
         }
-
-        Collection<GeneCoexpressionAnalysis> analyses = geneCoexpressionAnalysisService.loadMyAnalyses();
-        if ( privateOnly ) {
-            try {
-                secs.addAll( securityService.choosePrivate( analyses ) );
-            } catch ( AccessDeniedException e ) {
-                // okay, they just aren't allowed to see those.
-            }
-        } else {
-            secs.addAll( analyses );
-        }
-
-        /*
-         * TODO: add other types of securables here.
-         */
-
-        Collection<SecurityInfoValueObject> result = securables2VOs( secs, currentGroup );
-        return result;
+        return secs;
     }
 
     /**
@@ -389,6 +443,13 @@ public class SecurityController {
      */
     public void setSecurityService( SecurityService securityService ) {
         this.securityService = securityService;
+    }
+
+    /**
+     * @param geneSetService
+     */
+    public void setGeneSetService( GeneSetService geneSetService ) {
+        this.geneSetService = geneSetService;
     }
 
     /**
@@ -548,6 +609,8 @@ public class SecurityController {
             s = expressionExperimentService.load( ed.getId() );
         } else if ( GeneCoexpressionAnalysis.class.isAssignableFrom( clazz ) ) {
             s = geneCoexpressionAnalysisService.load( ed.getId() );
+        } else if ( GeneSet.class.isAssignableFrom( clazz ) ) {
+            s = geneSetService.load( ed.getId() );
         } else {
             throw new UnsupportedOperationException( clazz + " not supported by security controller yet" );
         }

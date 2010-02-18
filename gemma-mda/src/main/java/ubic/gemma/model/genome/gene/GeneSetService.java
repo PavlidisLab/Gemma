@@ -21,7 +21,9 @@ package ubic.gemma.model.genome.gene;
 import java.util.Collection;
 
 import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.core.userdetails.User;
 
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 
 /**
@@ -117,5 +119,19 @@ public interface GeneSetService {
      */
     @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
     public void update( GeneSet geneset );
+    
+    /**
+     * Returns the {@link GeneSet}s for the currently logged in {@link User} - i.e, ones for which the
+     * current user has specific read permissions on (as opposed to data sets which are public). Important: This method
+     * will return all gene sets if security is not enabled.
+     * <p>
+     * Implementation note: Via a methodInvocationFilter. See AclAfterFilterCollectionForMyData for
+     * processConfigAttribute. (in Gemma-core)
+     * 
+     * @return
+     */
+    @Secured( { "GROUP_USER", "AFTER_ACL_FILTER_MY_DATA" })
+    public Collection<GeneSet> loadMyGeneSets();
+    
 
 }
