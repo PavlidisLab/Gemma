@@ -1573,6 +1573,8 @@ public class GeoFamilyParser implements Parser<Object> {
             seriesSupplementaryFileSet( currentSeriesAccession, value );
         } else if ( startsWithIgnoreCase( line, "!Series_last_update_date" ) ) {
             seriesLastUpdateDate( currentSeriesAccession, value );
+        } else if ( startsWithIgnoreCase( line, "!Series_citation" ) ) {
+            // no-op. This should be redundant with the pubmed info and is hard to parse anyway
         } else {
             log.error( "Unknown flag in series: " + line );
         }
