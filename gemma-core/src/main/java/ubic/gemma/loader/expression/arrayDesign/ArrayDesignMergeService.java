@@ -82,6 +82,9 @@ public class ArrayDesignMergeService {
     public void merge( ArrayDesign arrayDesign, Collection<ArrayDesign> otherArrayDesigns, String nameOfNewDesign,
             String shortNameOfNewDesign ) {
 
+        if ( otherArrayDesigns.isEmpty() )
+            throw new IllegalArgumentException( "Must merge at least one array design" );
+
         // make map of biosequence -> design elements for all the array designs. But watch out for biosequences that
         // appear more than once per array design.
         Map<BioSequence, Collection<CompositeSequence>> globalBsMap = new HashMap<BioSequence, Collection<CompositeSequence>>();
@@ -172,6 +175,7 @@ public class ArrayDesignMergeService {
         } else {
             mergedAd = ArrayDesign.Factory.newInstance();
             mergedAd.setName( newName );
+            mergedAd.setPrimaryTaxon( arrayDesign.getPrimaryTaxon() ); // assume this is ok.
             mergedAd.setShortName( newShortName );
             mergedAd.setTechnologyType( arrayDesign.getTechnologyType() );
             mergedAd.setDesignProvider( arrayDesign.getDesignProvider() );
