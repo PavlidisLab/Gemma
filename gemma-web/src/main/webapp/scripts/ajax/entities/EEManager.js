@@ -50,7 +50,7 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 			}, {
 				name : "coexpressionLinkCount"
 			}, {
-				name : "diffExpressedProbes"	
+				name : "diffExpressedProbes"
 			}, {
 				name : "validatedFlag"
 			}, {
@@ -119,25 +119,22 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 
 		ExpressionExperimentReportGenerationController.runAll.apply(this, callParams);
 	},
-	
+
 	autoTag : function(id) {
-		
+
 		/*
 		 * TODO: call AnnotationController.annotate(id). Need a progress bar of some sort.
 		 */
 		alert("Hi, this isn't set up yet!");
-		
+
 	},
 
-	tagger : function(id, taxonId) { 
+	tagger : function(id, taxonId) {
 		var annotator = new Ext.Panel({
 					id : 'annotator-wrap',
-					title : "Tags",
 					collapsible : false,
 					stateful : false,
 					bodyBorder : false,
-					width : 600,
-					height : 200,
 					layout : 'fit',
 					items : [new Gemma.AnnotationGrid({
 								id : 'annotator-grid',
@@ -158,10 +155,14 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 		Ext.getCmp('annotator-grid').on('refresh', function() {
 					this.change = true;
 				}.createDelegate(this));
+
 		var w = new Ext.Window({
 					modal : false,
 					stateful : false,
+					title : "Experiment tags",
 					layout : 'fit',
+					width : 600,
+					height : 200,
 					items : [annotator],
 					buttons : [{
 						text : 'Help',
@@ -466,7 +467,7 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 							html : 'Please confirm. The analysis performed will be a ' + analysisType
 									+ '. Previous analysis results for this experiment will be deleted.',
 							buttons : [{
-										text : 'Proceed',										
+										text : 'Proceed',
 										handler : function(btn, text) {
 											var callParams = []
 											callParams.push(id);
@@ -576,5 +577,3 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 	}
 
 });
-
-
