@@ -276,7 +276,7 @@ public class SecurityController {
     private Collection<Securable> getUsersGeneGroups( boolean privateOnly ) {
         Collection<Securable> secs = new HashSet<Securable>();
 
-        Collection<GeneSet> geneSets = geneSetService.loadAll();
+        Collection<GeneSet> geneSets = geneSetService.loadMyGeneSets();
         if ( privateOnly ) {
             try {
                 secs.addAll( securityService.choosePrivate( geneSets ) );
@@ -516,6 +516,8 @@ public class SecurityController {
             }
 
             if ( writeable ) {
+                //if writable should be readable
+                securityService.makeReadableByGroup( s, currentGroupName );
                 securityService.makeWriteableByGroup( s, currentGroupName );
             } else {
                 securityService.makeUnwriteableByGroup( s, currentGroupName );
@@ -556,7 +558,8 @@ public class SecurityController {
                     // never changes this.
                     continue;
                 }
-
+                //when it is writable it should be readable
+                securityService.makeReadableByGroup( s, currentGroupName );
                 securityService.makeWriteableByGroup( s, writer );
             }
         }
