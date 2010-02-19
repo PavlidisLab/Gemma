@@ -41,7 +41,7 @@ public class LinkAnalysisConfig implements Serializable {
      */
     private static final long serialVersionUID = 1L;
 
-    public static final Integer DEFAULT_PROBE_DEGREE_THRESHOLD = 200;
+    public static final Integer DEFAULT_PROBE_DEGREE_THRESHOLD = -1;
 
     private boolean absoluteValue = false;
     private String arrayName = null;
