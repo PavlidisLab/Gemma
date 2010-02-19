@@ -32,6 +32,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import ubic.basecode.util.FileTools;
+import ubic.gemma.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.model.analysis.expression.ExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
@@ -80,6 +81,9 @@ public class DifferentialExpressionAnalyzerService {
 
     @Autowired
     private PersisterHelper persisterHelper = null;
+
+    @Autowired
+    private ExpressionExperimentReportService expressionExperimentReportService;
 
     /**
      * Delete the differential expression analysis for the experiment with shortName.
@@ -379,6 +383,12 @@ public class DifferentialExpressionAnalyzerService {
          */
         auditTrailService.addUpdateEvent( expressionExperiment, DifferentialExpressionAnalysisEvent.Factory
                 .newInstance(), diffExpressionAnalysis.getDescription() );
+
+        /*
+         * Update the report
+         */
+        expressionExperimentReportService.generateSummaryObject( expressionExperiment.getId() );
+
         return diffExpressionAnalysis;
     }
 

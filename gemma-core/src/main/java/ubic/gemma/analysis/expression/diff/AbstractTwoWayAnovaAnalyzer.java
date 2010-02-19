@@ -129,7 +129,7 @@ public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractDifferentialEx
                 probeAnalysisResult.setProbe( cs );
                 probeAnalysisResult.setQuantitationType( quantitationType );
 
-                probeAnalysisResult.setScore( fStatistics[k] );
+                probeAnalysisResult.setScore( Double.isNaN( fStatistics[k] ) ? null : fStatistics[k] );
                 // probeAnalysisResult.setParameters( parameters );
 
                 if ( j % numResultsFromR == mainEffectAIndex ) {
@@ -137,7 +137,7 @@ public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractDifferentialEx
                             .setPvalue( Double.isNaN( mainEffectAPvalues[l] ) ? null : mainEffectAPvalues[l] );
                     probeAnalysisResult.setCorrectedPvalue( Double.isNaN( mainEffectAQvalues[l] ) ? null
                             : mainEffectAQvalues[l] );
-                    probeAnalysisResult.setRank( Double.isNaN( mainEffectAPvalues[l] ) ? null : ranksA[l] );
+                    probeAnalysisResult.setRank( Double.isNaN( ranksA[l] ) ? null : ranksA[l] );
                     analysisResultsMainEffectA.add( probeAnalysisResult );
                     l++;
                 } else if ( j % numResultsFromR == mainEffectBIndex ) {
@@ -145,14 +145,14 @@ public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractDifferentialEx
                             .setPvalue( Double.isNaN( mainEffectBPvalues[m] ) ? null : mainEffectBPvalues[m] );
                     probeAnalysisResult.setCorrectedPvalue( Double.isNaN( mainEffectBQvalues[m] ) ? null
                             : mainEffectBQvalues[m] );
-                    probeAnalysisResult.setRank( Double.isNaN( mainEffectBPvalues[m] ) ? null : ranksB[m] );
+                    probeAnalysisResult.setRank( Double.isNaN( ranksB[m] ) ? null : ranksB[m] );
                     analysisResultsMainEffectB.add( probeAnalysisResult );
                     m++;
                 } else if ( j % numResultsFromR == mainEffectInteractionIndex ) {
                     if ( interactionEffectPvalues != null ) {
                         probeAnalysisResult.setPvalue( Double.isNaN( interactionEffectPvalues[n] ) ? null
                                 : interactionEffectPvalues[n] );
-                        probeAnalysisResult.setRank( Double.isNaN( interactionEffectPvalues[n] ) ? null : ranksI[n] );
+                        probeAnalysisResult.setRank( Double.isNaN( ranksI[n] ) ? null : ranksI[n] );
                     }
 
                     if ( interactionEffectQvalues != null ) {

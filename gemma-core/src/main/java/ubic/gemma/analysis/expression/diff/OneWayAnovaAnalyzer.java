@@ -319,7 +319,7 @@ public class OneWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer 
             probeAnalysisResult.setPvalue( Double.isNaN( pvalues[i] ) ? null : pvalues[i] );
             probeAnalysisResult.setCorrectedPvalue( Double.isNaN( qvalues[i] ) ? null : qvalues[i] );
             probeAnalysisResult.setScore( Double.isNaN( fstatistics[i] ) ? null : fstatistics[i] );
-            probeAnalysisResult.setRank( Double.isNaN( pvalues[i] ) ? null : ranks[i] );
+            probeAnalysisResult.setRank( Double.isNaN( ranks[i] ) ? null : ranks[i] );
             probeAnalysisResult.setQuantitationType( quantitationType );
 
             analysisResults.add( probeAnalysisResult );

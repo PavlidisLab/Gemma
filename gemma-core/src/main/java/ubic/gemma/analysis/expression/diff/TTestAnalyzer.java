@@ -216,11 +216,15 @@ public class TTestAnalyzer extends AbstractDifferentialExpressionAnalyzer {
 
             ProbeAnalysisResult probeAnalysisResult = ProbeAnalysisResult.Factory.newInstance();
             probeAnalysisResult.setProbe( cs );
+            // Don't use NaN as we can't save that in the database.
             probeAnalysisResult.setPvalue( Double.isNaN( pvalues[i] ) ? null : pvalues[i] );
             probeAnalysisResult.setCorrectedPvalue( Double.isNaN( qvalues[i] ) ? null : qvalues[i] );
             probeAnalysisResult.setScore( Double.isNaN( tstatistics[i] ) ? null : tstatistics[i] );
             probeAnalysisResult.setQuantitationType( quantitationType );
-            probeAnalysisResult.setRank( Double.isNaN( pvalues[i] ) ? null : ranks[i] );
+            probeAnalysisResult.setRank( Double.isNaN( ranks[i] ) ? null : ranks[i] );
+
+            assert !Double.isNaN( probeAnalysisResult.getPvalue() );
+            assert !Double.isNaN( probeAnalysisResult.getCorrectedPvalue() );
 
             analysisResults.add( probeAnalysisResult );
         }

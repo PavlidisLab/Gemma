@@ -106,21 +106,14 @@ public class TTestAnalyzerTest extends BaseAnalyzerConfigurationTest {
         }
 
         configureMocks();
-
         DifferentialExpressionAnalysis expressionAnalysis = analyzer.tTest( expressionExperiment, factorValueA, factorValueB );
-
-        log.info( expressionAnalysis );
-
         Collection<ExpressionAnalysisResultSet> resultSets = expressionAnalysis.getResultSets();
-
         ExpressionAnalysisResultSet resultSet = resultSets.iterator().next();
 
         int numResults = resultSet.getResults().size();
 
         assertEquals( numResults, NUM_DESIGN_ELEMENTS );
-
         logResults( resultSet );
-
     }
 
     /*
