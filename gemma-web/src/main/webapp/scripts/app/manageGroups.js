@@ -18,13 +18,20 @@ Ext.onReady(function() {
 				tooltip : 'If the user is in the group',
 				width : 55
 			});
+	
+	
+
+	
 	var writeableChks = new Ext.ux.grid.CheckColumn({
-				header : 'Write',
+				header : 'Read Write',
 				dataIndex : 'currentGroupCanWrite',
 				tooltip : 'Current group can write?',
 				groupable : false,
 				width : 55
 			});
+	
+	
+		
 	var readableChks = new Ext.ux.grid.CheckColumn({
 				header : 'Read',
 				dataIndex : 'currentGroupCanRead',
@@ -40,6 +47,7 @@ Ext.onReady(function() {
 				width : 55
 			});
 
+	
 	var refresh = function(groupName) {
 		currentGroup = groupName;
 		
@@ -48,6 +56,8 @@ Ext.onReady(function() {
 
 	}
 
+	
+	
 	/*
 	 * Load the users in the group, put in the members store.
 	 */
@@ -68,6 +78,9 @@ Ext.onReady(function() {
 					params : [groupName, showPrivateOnly]
 				});
 	}
+	
+	
+	
 
 	/*
 	 * The GUI
@@ -534,14 +547,15 @@ Ext.onReady(function() {
 														})
 											})
 								}, publicChks, readableChks, writeableChks],
-						view : new Ext.grid.GroupingView({
+								view : new Ext.grid.GroupingView({
 									forceFit : true,
 									groupTextTpl : '{text} ({[values.rs.length]} {[values.rs.length > 1 ? "Items" : "Item"]})'
 								})
 					})
+				
 
 			]
-
+			
 		}]
 
 	});
