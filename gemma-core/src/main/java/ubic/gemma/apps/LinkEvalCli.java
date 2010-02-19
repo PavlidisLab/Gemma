@@ -334,6 +334,8 @@ public class LinkEvalCli extends AbstractSpringAwareCLI {
 
     private ArrayDesignService arrayDesignService;
 
+    private String termsOutPath = null;
+
     /*
      * FIXME this seems to get overused - should not be class-scoped?
      */
@@ -407,6 +409,8 @@ public class LinkEvalCli extends AbstractSpringAwareCLI {
     private int secondProbeColumn = 1;
 
     private List<CompositeSequence> secondProbes;
+
+    Map<CompositeSequence, Collection<Gene>> probemap;
 
     private boolean selectSubset = false;
 
@@ -542,6 +546,10 @@ public class LinkEvalCli extends AbstractSpringAwareCLI {
                 "Limit to mf, bp or cc. Default=use all three" ).create( "aspect" );
         addOption( aspectOption );
 
+        Option outputGoAnnots = OptionBuilder.hasArg().withArgName( "path" ).withDescription(
+                "Also rint out the Gene-GO relationships in a tabbed format" ).create( "termsout" );
+        addOption( outputGoAnnots );
+
     }
 
     /*
@@ -580,9 +588,10 @@ public class LinkEvalCli extends AbstractSpringAwareCLI {
         } else {
             probes = this.arrayDesign.getCompositeSequences();
         }
+
         this.populateGeneGoMapForTaxon();
 
-        Map<CompositeSequence, Collection<Gene>> probemap = css.getGenes( probes );
+        probemap = css.getGenes( probes );
 
         if ( this.randomFromArray ) { // randomly select links from array design
 
@@ -617,6 +626,16 @@ public class LinkEvalCli extends AbstractSpringAwareCLI {
 
             writeGoSimilarityResults( scoreMap );
         }
+
+        if ( termsOutPath != null ) {
+            try {
+                writeGoMap();
+            } catch ( IOException e ) {
+                return e;
+            }
+
+        }
+
         return null;
 
     }
@@ -647,7 +666,7 @@ public class LinkEvalCli extends AbstractSpringAwareCLI {
         } else {
 
             // write into file
-            log.info( "Creating new annotation file " + fileName + " \n" );
+            log.info( "Creating new link eval file " + fileName + " \n" );
 
             File f = new File( fileName );
 
@@ -831,6 +850,11 @@ public class LinkEvalCli extends AbstractSpringAwareCLI {
                 this.weight = false;
         }
 
+        if ( hasOption( "termsout" ) ) {
+            this.termsOutPath = getOptionValue( "termsout" );
+            log.info( "GO mapping will be saved as tabbed text to " + this.termsOutPath );
+        }
+
         if ( hasOption( 'm' ) ) {
             String metricName = getOptionValue( 'm' );
             if ( metricName.equalsIgnoreCase( "resnik" ) )
@@ -899,10 +923,10 @@ public class LinkEvalCli extends AbstractSpringAwareCLI {
     /**
      * @param writer
      * @param pairString
-     * @param overlap
-     * @param goTerms
-     * @param masterGOTerms
-     * @param coExpGOTerms
+     * @param score e.g. overlap
+     * @param goTerms - terms in the overlap
+     * @param masterGOTerms number of go terms for the first gene
+     * @param coExpGOTerms number of go terms for the second gene
      * @throws IOException
      */
     protected void writeOverlapLine( Writer writer, String pairString, double score, Collection<OntologyTerm> goTerms,
@@ -1062,7 +1086,7 @@ public class LinkEvalCli extends AbstractSpringAwareCLI {
      * @param merged2
      * @return
      */
-    private Collection<OntologyTerm> getMergedTermOverlap( HashSet<String> merged1, HashSet<String> merged2 ) {
+    private Collection<OntologyTerm> getMergedTermOverlap( Set<String> merged1, Set<String> merged2 ) {
 
         Collection<OntologyTerm> overlapTerms = new HashSet<OntologyTerm>();
 
@@ -1482,13 +1506,13 @@ public class LinkEvalCli extends AbstractSpringAwareCLI {
      * found of different genes with the same gene name.
      * 
      * @param genes list of genes to be organized
-     * @return a hashmap of organized genes with the value being the collection of duplicate genes and the key being the
+     * @return a map of organized genes with the value being the collection of duplicate genes and the key being the
      *         common gene name among them
      */
-    private HashMap<String, List<Gene>> organizeDuplicates( List<Gene> genes ) {
-        HashMap<String, List<Gene>> organizedGeneBins = new HashMap<String, List<Gene>>();
+    private Map<String, List<Gene>> organizeDuplicates( List<Gene> genes ) {
+        Map<String, List<Gene>> organizedGeneBins = new HashMap<String, List<Gene>>();
         String tempName = "";
-        HashSet<String> uniqueGeneNames = new HashSet<String>();
+        Set<String> uniqueGeneNames = new HashSet<String>();
         for ( Gene tempGene : genes ) {
             tempName = tempGene.getName();
             if ( uniqueGeneNames.contains( tempName ) ) {// gene already encountered; duplicate
@@ -1574,6 +1598,44 @@ public class LinkEvalCli extends AbstractSpringAwareCLI {
     }
 
     /**
+     * Write the GO annotations in a tabbed format.
+     */
+    private void writeGoMap() throws IOException {
+
+        Writer w = new FileWriter( new File( this.termsOutPath ) );
+        w.write( "# Go terms for probes used in linkeval\n" );
+        w.write( "ProbeId\tProbeName\tGene\tGoTermCount\tGoTerms\n" );
+        Set<String> seenProbes = new HashSet<String>();
+        for ( CompositeSequence cs : this.probemap.keySet() ) {
+
+            if ( seenProbes.contains( cs.getName() ) ) {
+                log.info( "Skipping duplicate probe name " + cs.getName() );
+                continue;
+            }
+            seenProbes.add( cs.getName() );
+
+            w.write( cs.getId() + "\t" + cs.getName() + "\t" );
+            Collection<Gene> genes = this.probemap.get( cs );
+            Set<String> goTerms = new HashSet<String>();
+            Set<String> geneSymbs = new HashSet<String>();
+            for ( Gene gene : genes ) {
+                if ( geneGoMap.containsKey( gene.getId() ) ) {
+                    for ( String go : geneGoMap.get( gene.getId() ) ) {
+                        goTerms.add( GeneOntologyService.asRegularGoId( go ) );
+                    }
+                }
+                geneSymbs.add( gene.getOfficialSymbol() );
+            }
+
+            w.write( StringUtils.join( geneSymbs, "|" ) + "\t" );
+            w.write( goTerms.size() + "\t" );
+            w.write( StringUtils.join( goTerms, "|" ) + "\n" );
+        }
+
+        w.close();
+    }
+
+    /**
      * @param taxon
      */
     private void rebuildTaxonGeneGOMap() {
@@ -1598,8 +1660,8 @@ public class LinkEvalCli extends AbstractSpringAwareCLI {
             List<Double> scores = new ArrayList<Double>();
 
             if ( metric.equals( GoMetric.Metric.simple ) ) {
-                HashMap<String, List<Gene>> orgGenes1 = organizeDuplicates( genes1 );
-                HashMap<String, List<Gene>> orgGenes2 = organizeDuplicates( genes2 );
+                Map<String, List<Gene>> orgGenes1 = organizeDuplicates( genes1 );
+                Map<String, List<Gene>> orgGenes2 = organizeDuplicates( genes2 );
 
                 // calculate scores
                 for ( String geneName1 : orgGenes1.keySet() ) {
@@ -1705,7 +1767,7 @@ public class LinkEvalCli extends AbstractSpringAwareCLI {
                 }
                 int masterGOTerms = 0;
                 int coExpGOTerms = 0;
-                Collection<OntologyTerm> goTerms = null;
+                Collection<OntologyTerm> overlappingGoTerms = null;
                 if ( firstGenes.size() == 1 && secondGenes.size() == 1 ) {
                     Gene mGene = firstGenes.iterator().next();
                     Gene cGene = secondGenes.iterator().next();
@@ -1720,20 +1782,19 @@ public class LinkEvalCli extends AbstractSpringAwareCLI {
                     else
                         coExpGOTerms = ( geneGoMap.get( cGene.getId() ) ).size();
 
-                    goTerms = getTermOverlap( mGene, cGene );
+                    overlappingGoTerms = getTermOverlap( mGene, cGene );
 
                 } else {
-                    HashMap<String, List<Gene>> orgGenes1 = organizeDuplicates( firstGenes );
-                    HashMap<String, List<Gene>> orgGenes2 = organizeDuplicates( secondGenes );
-                    List<Gene> newFirst = new ArrayList<Gene>();
-                    List<Gene> newSecond = new ArrayList<Gene>();
+                    Map<String, List<Gene>> orgGenes1 = organizeDuplicates( firstGenes );
+                    Map<String, List<Gene>> orgGenes2 = organizeDuplicates( secondGenes );
+
                     GenePair uniquePair = new GenePair();
-                    List<HashSet<String>> mergedGoTerms1 = new ArrayList<HashSet<String>>();
-                    List<HashSet<String>> mergedGoTerms2 = new ArrayList<HashSet<String>>();
+                    List<Set<String>> mergedGoTerms1 = new ArrayList<Set<String>>();
+                    List<Set<String>> mergedGoTerms2 = new ArrayList<Set<String>>();
                     for ( String geneName1 : orgGenes1.keySet() ) {
                         List<Gene> tempGenes = orgGenes1.get( geneName1 );
                         uniquePair.addFirstGene( tempGenes.get( 0 ) );
-                        HashSet<String> uniqGoTerms = new HashSet<String>();
+                        Set<String> uniqGoTerms = new HashSet<String>();
                         for ( Gene g1 : tempGenes ) {
                             if ( geneGoMap.containsKey( g1.getId() ) ) {
                                 uniqGoTerms.addAll( geneGoMap.get( g1.getId() ) );
@@ -1744,7 +1805,7 @@ public class LinkEvalCli extends AbstractSpringAwareCLI {
                     for ( String geneName2 : orgGenes2.keySet() ) {
                         List<Gene> tempGenes = orgGenes2.get( geneName2 );
                         uniquePair.addSecondGene( tempGenes.get( 0 ) );
-                        HashSet<String> uniqGoTerms = new HashSet<String>();
+                        Set<String> uniqGoTerms = new HashSet<String>();
                         for ( Gene g2 : tempGenes ) {
                             if ( geneGoMap.containsKey( g2.getId() ) ) {
                                 uniqGoTerms.addAll( geneGoMap.get( g2.getId() ) );
@@ -1756,10 +1817,10 @@ public class LinkEvalCli extends AbstractSpringAwareCLI {
                     if ( orgGenes1.size() == 1 && orgGenes2.size() == 1 ) {
                         masterGOTerms = mergedGoTerms1.get( 0 ).size();
                         coExpGOTerms = mergedGoTerms2.get( 0 ).size();
-                        goTerms = getMergedTermOverlap( mergedGoTerms1.get( 0 ), mergedGoTerms2.get( 0 ) );
+                        overlappingGoTerms = getMergedTermOverlap( mergedGoTerms1.get( 0 ), mergedGoTerms2.get( 0 ) );
                     }
                 }
-                writeOverlapLine( write, pairString, score, goTerms, masterGOTerms, coExpGOTerms );
+                writeOverlapLine( write, pairString, score, overlappingGoTerms, masterGOTerms, coExpGOTerms );
             }
             write.flush();
             overallWatch.stop();
