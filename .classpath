@@ -227,7 +227,7 @@
 		<attributes>
 			<attribute name="javadoc_location" value="http://static.springsource.org/spring-security/site/docs/3.0.x/apidocs/"/>
 		</attributes>
-	</classpathentry> 
+	</classpathentry>
 	<classpathentry kind="var" path="M2_REPO/org/springframework/security/spring-security-acl/3.0.1.RELEASE/spring-security-acl-3.0.1.RELEASE.jar" sourcepath="/JAR_SRC/spring-security-3.0.0.RC1/src/spring-security-acl-3.0.0.RC1-sources.jar">
 		<attributes>
 			<attribute name="javadoc_location" value="http://static.springsource.org/spring-security/site/docs/3.0.x/apidocs/"/>
@@ -320,6 +320,6 @@
 	<classpathentry kind="var" path="M2_REPO/umls/kss-api-strip/5.0/kss-api-strip-5.0.jar"/>
 	<classpathentry kind="var" path="M2_REPO/umls/mmtxProject/2.4C/mmtxProject-2.4C.jar"/>
 	<classpathentry kind="var" path="M2_REPO/chibi/GEOMMTx/1.0-SNAPSHOT/GEOMMTx-1.0-SNAPSHOT.jar"/>
-	<classpathentry kind="var" path="M2_REPO/baseCode/baseCode/1.0.7-SNAPSHOT/baseCode-1.0.7-SNAPSHOT.jar"/>
+	<classpathentry kind="var" path="M2_REPO/baseCode/baseCode/1.0.7-SNAPSHOT/baseCode-1.0.7-SNAPSHOT.jar" sourcepath="/M2_REPO/baseCode/baseCode/1.0.7-SNAPSHOT/baseCode-1.0.7-SNAPSHOT-sources.jar"/>
 	<classpathentry kind="output" path="build/Gemma/WEB-INF/classes"/>
 </classpath>
