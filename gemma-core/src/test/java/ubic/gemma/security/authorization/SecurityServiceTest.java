@@ -289,7 +289,7 @@ public class SecurityServiceTest extends BaseSpringContextTest {
      * @throws Exception
      */
     @Test
-    public void testDuplicateAclsNotAddedOnPrivateExpressionExperiment() throws Exception {
+    public void testDuplicateAcesNotAddedOnPrivateExpressionExperiment() throws Exception {
         //make private experiment
         ExpressionExperiment ee = super.getTestPersistentBasicExpressionExperiment();       
         securityService.makePrivate( ee );
@@ -304,25 +304,25 @@ public class SecurityServiceTest extends BaseSpringContextTest {
         securityService.createGroup( groupName );
        
         MutableAcl acl = getAcl( ee );
-        int numberOfAcls = acl.getEntries().size();
+        int numberOfAces = acl.getEntries().size();
         
         securityService.makeReadableByGroup( ee, groupName );        
         MutableAcl aclAfterReadableAdded = getAcl( ee );
-        assertEquals(numberOfAcls +1, aclAfterReadableAdded.getEntries().size());
+        assertEquals(numberOfAces +1, aclAfterReadableAdded.getEntries().size());
         
         securityService.makeWriteableByGroup( ee, groupName );                            
         MutableAcl aclAfterWritableAdded = getAcl( ee );
-        assertEquals(numberOfAcls+2, aclAfterWritableAdded.getEntries().size());
+        assertEquals(numberOfAces+2, aclAfterWritableAdded.getEntries().size());
         
         //this time the acl there and should not be added again 
         securityService.makeReadableByGroup( ee, groupName );        
         MutableAcl aclAfterReadableAddedAgain = getAcl( ee );
-        assertEquals(numberOfAcls +2, aclAfterReadableAddedAgain.getEntries().size());
+        assertEquals(numberOfAces +2, aclAfterReadableAddedAgain.getEntries().size());
         
         //check writable too
         securityService.makeWriteableByGroup( ee, groupName );                            
         MutableAcl aclAfterWritableAddedAgain = getAcl( ee );
-        assertEquals(numberOfAcls+2, aclAfterWritableAddedAgain.getEntries().size());
+        assertEquals(numberOfAces+2, aclAfterWritableAddedAgain.getEntries().size());
         
 
     }    
@@ -335,7 +335,7 @@ public class SecurityServiceTest extends BaseSpringContextTest {
      * @throws Exception
      */
     @Test
-    public void testRemoveMultipleAclsFromPrivateExpressionExperiment() throws Exception {
+    public void testRemoveMultipleAcesFromPrivateExpressionExperiment() throws Exception {
         //make private experiment
         ExpressionExperiment ee = super.getTestPersistentBasicExpressionExperiment();       
         securityService.makePrivate( ee );
@@ -351,12 +351,12 @@ public class SecurityServiceTest extends BaseSpringContextTest {
        
         //get the basic acls
         MutableAcl acl = getAcl( ee );           
-        int numberOfAcls = acl.getEntries().size();        
+        int numberOfAces = acl.getEntries().size();        
         
         //make readable by group add first acl read for grouo and check added
         securityService.makeReadableByGroup( ee, groupName );        
         MutableAcl aclAfterReadableAdded = getAcl( ee );
-        assertEquals(numberOfAcls +1, aclAfterReadableAdded.getEntries().size());       
+        assertEquals(numberOfAces +1, aclAfterReadableAdded.getEntries().size());       
         
         //force the addition of  duplicate ACL read, fish group on the same experiment
         List<GrantedAuthority> groupAuthorities = userManager.findGroupAuthorities( groupName );            
@@ -365,14 +365,14 @@ public class SecurityServiceTest extends BaseSpringContextTest {
                 new GrantedAuthoritySid( userManager.getRolePrefix() + ga ), true );
         mutableAclService.updateAcl( aclAfterReadableAdded );
         MutableAcl aclAfterReadableAddedDuplicate = getAcl( ee );        
-        assertEquals(numberOfAcls +2, aclAfterReadableAddedDuplicate.getEntries().size());    
+        assertEquals(numberOfAces +2, aclAfterReadableAddedDuplicate.getEntries().size());    
         
         //delete the acl now and check removed both
         securityService.makeUnreadableByGroup( ee, groupName );
         MutableAcl aclAfterReadableAddedDuplicateRemoval = getAcl( ee );
-        assertEquals(numberOfAcls, aclAfterReadableAddedDuplicateRemoval.getEntries().size());  
+        assertEquals(numberOfAces, aclAfterReadableAddedDuplicateRemoval.getEntries().size());  
         List<AccessControlEntry> entriesAfterDelete =  aclAfterReadableAddedDuplicateRemoval.getEntries();       
-        assertEquals(numberOfAcls, entriesAfterDelete.size());    
+        assertEquals(numberOfAces, entriesAfterDelete.size());    
        
         //also check that the right acls  check the principals
         Collection<String> principals = new ArrayList<String>();
@@ -391,6 +391,10 @@ public class SecurityServiceTest extends BaseSpringContextTest {
        userManager.deleteGroup( groupName );
        //userManager.deleteUser( username );
     }            
+    
+    
+    
+    
     
 
 }
