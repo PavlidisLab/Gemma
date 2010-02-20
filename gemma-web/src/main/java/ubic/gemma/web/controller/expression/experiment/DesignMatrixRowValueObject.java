@@ -26,6 +26,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
 
 import ubic.basecode.dataStructure.CountingMap;
@@ -87,6 +88,10 @@ public class DesignMatrixRowValueObject implements Serializable {
 
     private Map<String, String> factorValueMap;
 
+    /**
+     * @param factorValues
+     * @param n
+     */
     public DesignMatrixRowValueObject( FactorValueVector factorValues, int n ) {
         factors = new ArrayList<String>();
         factorValueMap = new HashMap<String, String>();
@@ -148,7 +153,10 @@ public class DesignMatrixRowValueObject implements Serializable {
         if ( StringUtils.isBlank( factor.getDescription() ) || factor.getDescription().equals( factor.getName() ) ) {
             return factor.getName();
         }
-        String result = factor.getName() + " (" + StringUtils.abbreviate( factor.getDescription(), 25 ) + ")";
+        // Note: the use of stringUtils.abbreviate here can cause json parsing problems for DWR, due to the '...', and
+        // no means of escaping seems to fix this.
+        String result = factor.getName() + " ("
+                + StringUtils.abbreviate( factor.getDescription(), 25 ).replace( "...", "" ) + ")";
 
         if ( factorValueMap.containsKey( result ) ) {
             result = result + " [" + factor.getId() + "]";
