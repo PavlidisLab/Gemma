@@ -66,8 +66,6 @@ var DesignMatrix = {
 						forceFit : true
 					}
 				});
-		// this.grid.render();
-		// this.grid.doLayout();
 	},
 
 	init : function(entityDelegator) {
