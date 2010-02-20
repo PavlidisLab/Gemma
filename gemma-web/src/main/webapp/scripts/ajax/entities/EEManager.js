@@ -314,6 +314,7 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 						stateful : false,
 						resizable : false,
 						autoHeight : true,
+						width : 300,
 						plain : true,
 						title : "Differential analysis settings",
 						items : [{
@@ -321,7 +322,7 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 									autoHeight : true,
 									items : [{
 												xtype : 'fieldset',
-												title : "Select the factor(s) to use",
+												title : "Select up to 2 factor(s) to use",
 												autoHeight : true,
 												labelWidth : 200,
 												id : 'diff-ex-analysis-customize-factors'
@@ -333,7 +334,7 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 												items : [{
 															xtype : 'checkbox',
 															id : 'diff-ex-analysis-customize-include-interactions-checkbox',
-															fieldLabel : 'Include interactions'
+															fieldLabel : 'Include interactions if possible'
 														}]
 											}]
 								}],
@@ -362,6 +363,11 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 											factorsToUseIds.push(f.id);
 										}
 									}
+								}
+								
+								if (factorsToUseIds.length < 1 || factorsToUseIds.length > 2) {
+									Ext.Msg.alert("Please pick 1 or 2 factors.");
+									return;
 								}
 
 								/*
