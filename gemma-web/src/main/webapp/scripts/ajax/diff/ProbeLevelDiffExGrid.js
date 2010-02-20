@@ -289,15 +289,10 @@ Gemma.ProbeLevelDiffExGrid = Ext.extend(Ext.grid.GridPanel, {
 				this.visDifWindow.close();
 
 			var title = "Visualization of probes in:  " + ee.shortName;
-			var downloadDedvLink = String
-					.format(
-							"<a ext:qtip='Download raw data in a tab delimted format'  target='_blank'  href='/Gemma/dedv/downloadDEDV.html?ee={0} &g={1}' > <img src='/Gemma/images/download.gif'/></a>",
-							ee.id, geneId);
-
-			this.visDifWindow = new Gemma.VisualizationWithThumbsWindow({
+			this.visDifWindow = new Gemma.VisualizationDifferentialWindow({
 						title : title,
 						thumbnails : false,
-						downloadLink : downloadDedvLink,
+						downloadLink : String.format('/Gemma/dedv/downloadDEDV.html?ee={0}&g={1}', ee.id, geneId),
 						readMethod : DEDVController.getDEDVForDiffExVisualizationByExperiment
 					});
 
