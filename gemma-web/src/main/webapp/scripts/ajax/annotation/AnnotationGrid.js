@@ -100,6 +100,7 @@ Gemma.AnnotationGrid = Ext.extend(Gemma.GemmaGridPanel, {
 			height : 200,
 			stateful : false,
 			taxonId : null,
+			name : 'AnnotationGrid',
 			loadMask : true,
 			viewConfig : {
 				enableRowBody : true,
