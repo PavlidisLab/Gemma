@@ -232,6 +232,10 @@ public class MatrixWriter<T> {
                 names = geneStrings[2];
             }
 
+            // Improve compatibility with third-party programs like R. See bug 1851. Annotation file should already be
+            // cleaned, this is just to make sure.
+            names = names.replaceAll( "#", "_" );
+
             // initial tab has already been added before
             buf.append( symbols + "\t" + names + "\t" );
         } else {
