@@ -550,9 +550,15 @@ public class ArrayDesignAnnotationService {
 
         if ( gene == null ) gene = "";
 
-        if ( description == null ) description = "";
+        String formattedDescription = description;
+        if ( description == null ) {
+            formattedDescription = "";
+        } else {
+            // Try to help ensure file is readable by third-party programs like R. See bug 1851 
+            formattedDescription = formattedDescription.replaceAll( "#", "_" );
+        }
 
-        writer.write( probeId + "\t" + gene + "\t" + description + "\t" );
+        writer.write( probeId + "\t" + gene + "\t" + formattedDescription + "\t" );
 
         if ( ( goTerms == null ) || goTerms.isEmpty() ) {
             writer.write( "\n" );
