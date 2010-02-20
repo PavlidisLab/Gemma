@@ -568,7 +568,7 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 	},
 
 	// Creates a link for downloading raw dedv's data in tab
-	// delimted format
+	// delimited format
 	// currently not used as same function in visulazation
 	// widget
 	downloadDedvStyler : function(value, metadata, record, row, col, ds) {
