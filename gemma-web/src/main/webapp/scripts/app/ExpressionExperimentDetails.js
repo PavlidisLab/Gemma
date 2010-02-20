@@ -289,9 +289,7 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 					+ '&nbsp;&nbsp<a href="/Gemma/expressionExperiment/showBioAssaysFromExpressionExperiment.html?id='
 					+ ee.id + '"><img src="/Gemma/images/icons/magnifier.png"/></a>';
 		}
-
-		return result;
-
+		return ''+result; // hack for possible problem with extjs 3.1 - bare number not displayed, coerce to string.
 	},
 
 	renderStatus : function(ee) {
