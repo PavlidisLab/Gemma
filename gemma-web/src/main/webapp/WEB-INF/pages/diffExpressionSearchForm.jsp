@@ -4,13 +4,12 @@ version: $Id$
 --%>
 <%@ include file="/common/taglibs.jsp"%>
 <head>
-	<title><fmt:message key="diffExpressionSearch.title" />
-	</title>
+	<title><fmt:message key="diffExpressionSearch.title" /></title>
 
-	<jwr:script src='/scripts/ajax/diff/DiffExpressionSearchForm.js' useRandomParam='false' />
-	<jwr:script src='/scripts/app/DiffExpressionSearch.js' useRandomParam='false' />
-	<jwr:script src='/scripts/ajax/visualization/VisualizationWidget.js' useRandomParam='false' />
-	
+	<jwr:script src='/scripts/ajax/diff/DiffExpressionSearchForm.js' />
+	<jwr:script src='/scripts/app/DiffExpressionSearch.js' />
+	<jwr:script src='/scripts/ajax/visualization/VisualizationWidget.js' />
+
 
 
 	<content tag="heading">
@@ -27,7 +26,7 @@ version: $Id$
 </security:authorize>
 
 <div id="diff-wrap">
-	
+
 	<div id='diffExpression-messages' style='width: 100%; height: 2.4em; margin: 5px'></div>
 	<div id='diffExpression-form' style='width: 500px; margin-bottom: 1em;'></div>
 	<div id='diffExpression-results'></div>

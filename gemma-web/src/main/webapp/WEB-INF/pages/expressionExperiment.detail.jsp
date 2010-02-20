@@ -59,10 +59,10 @@
 	<h3>
 		Quantitation types
 	</h3>
-	<display:table name="quantitationTypes" class="scrollTable" id="qtList" pagesize="100"
+	<display:table name="quantitationTypes" class="scrollTable" id="qtList" pagesize="100" 
 		decorator="ubic.gemma.web.taglib.displaytag.quantitationType.QuantitationTypeWrapper">
-		<display:column property="qtName" sortable="true" maxWords="20" titleKey="name" />
-		<display:column property="description" sortable="true" maxLength="20" titleKey="description" />
+		<display:column escapeXml="true" property="qtName" sortable="true" maxWords="20" titleKey="name" />
+		<display:column escapeXml="true" property="description" sortable="true" maxLength="20" titleKey="description" />
 		<display:column property="qtPreferredStatus" sortable="true" maxWords="20" titleKey="quantitationType.preferred" />
 		<display:column property="qtRatioStatus" sortable="true" maxWords="20" titleKey="quantitationType.ratio" />
 		<display:column property="qtBackground" sortable="true" maxWords="20" titleKey="quantitationType.background" />

@@ -54,7 +54,7 @@
 		</td>
 		<td>
 			<c:choose>
-				<c:when test="${not empty bioMaterial.description}">${bioMaterial.description}</c:when>
+				<c:when test="${not empty bioMaterial.description}"><c:out value="${bioMaterial.description}" /></c:when>
 				<c:otherwise>Description not available</c:otherwise>
 			</c:choose>
 		</td>
@@ -66,7 +66,7 @@
 		</td>
 		<td>
 			<c:choose>
-				<c:when test="${not empty bioMaterial.sourceTaxon}">${bioMaterial.sourceTaxon.scientificName}</c:when>
+				<c:when test="${not empty bioMaterial.sourceTaxon}"><c:out value="${bioMaterial.sourceTaxon.scientificName}" /></c:when>
 				<c:otherwise>Taxon not available</c:otherwise>
 			</c:choose>
 		</td>
@@ -79,7 +79,7 @@
 
 		<td>
 			<c:choose>
-				<c:when test="${not empty bioMaterial.externalAccession}">${bioMaterial.externalAccession.accession}</c:when>
+				<c:when test="${not empty bioMaterial.externalAccession}"><c:out value="${bioMaterial.externalAccession.accession}" /></c:when>
 				<c:otherwise>No external identifier</c:otherwise>
 			</c:choose>
 		</td>
