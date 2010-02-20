@@ -1,6 +1,6 @@
 /*!
- * Ext JS Library 3.0.3
- * Copyright(c) 2006-2009 Ext JS, LLC
+ * Ext JS Library 3.1.1
+ * Copyright(c) 2006-2010 Ext JS, LLC
  * licensing@extjs.com
  * http://www.extjs.com/license
  */
@@ -19,7 +19,7 @@ Ext = {
      * The version of the framework
      * @type String
      */
-    version : '3.0.3'
+    version : '3.1.1'
 };
 
 /**
@@ -53,7 +53,7 @@ Ext.apply = function(o, c, defaults){
         DOC = document,
         isStrict = DOC.compatMode == "CSS1Compat",
         isOpera = check(/opera/),
-        isChrome = check(/chrome/),
+        isChrome = check(/\bchrome\b/),
         isWebKit = check(/webkit/),
         isSafari = !isChrome && check(/safari/),
         isSafari2 = isSafari && check(/applewebkit\/4/), // unique to Safari 2
@@ -86,7 +86,7 @@ Ext.apply = function(o, c, defaults){
          * the IE insecure content warning (<tt>'about:blank'</tt>, except for IE in secure mode, which is <tt>'javascript:""'</tt>).
          * @type String
          */
-        SSL_SECURE_URL : isSecure && isIE ? 'javascript:""' : 'about:blank', 
+        SSL_SECURE_URL : isSecure && isIE ? 'javascript:""' : 'about:blank',
         /**
          * True if the browser is in strict (standards-compliant) mode, as opposed to quirks mode
          * @type Boolean
@@ -116,11 +116,17 @@ Ext.apply = function(o, c, defaults){
         enableGarbageCollector : true,
 
         /**
-         * True to automatically purge event listeners after uncaching an element (defaults to false).
-         * Note: this only happens if {@link #enableGarbageCollector} is true.
+         * True to automatically purge event listeners during garbageCollection (defaults to false).
          * @type Boolean
          */
         enableListenerCollection : false,
+
+        /**
+         * EXPERIMENTAL - True to cascade listener removal to child elements when an element is removed.
+         * Currently not optimized for performance.
+         * @type Boolean
+         */
+        enableNestedListenerRemoval : false,
 
         /**
          * Indicates whether to use native browser parsing for JSON methods.
@@ -155,7 +161,11 @@ Ext.apply = function(o, c, defaults){
          * @return {String} The generated Id.
          */
         id : function(el, prefix){
-            return (el = Ext.getDom(el) || {}).id = el.id || (prefix || "ext-gen") + (++idSeed);
+            el = Ext.getDom(el, true) || {};
+            if (!el.id) {
+                el.id = (prefix || "ext-gen") + (++idSeed);
+            }
+            return el.id;
         },
 
         /**
@@ -197,7 +207,7 @@ MyGridPanel = Ext.extend(Ext.grid.GridPanel, {
          * prototype, and are therefore shared among all instances of the new class.</div></li>
          * </ul></div>
          *
-         * @param {Function} subclass The constructor of class being extended.
+         * @param {Function} superclass The constructor of class being extended.
          * @param {Object} overrides <p>A literal with members which are copied into the subclass's
          * prototype, and are therefore shared between all instances of the new class.</p>
          * <p>This may contain a special member named <tt><b>constructor</b></tt>. This is used
@@ -205,7 +215,7 @@ MyGridPanel = Ext.extend(Ext.grid.GridPanel, {
          * <i>not</i> specified, a constructor is generated and returned which just calls the
          * superclass's constructor passing on its parameters.</p>
          * <p><b>It is essential that you call the superclass constructor in any provided constructor. See example code.</b></p>
-         * @return {Function} The subclass constructor.
+         * @return {Function} The subclass constructor from the <code>overrides</code> parameter, or a generated one if not provided.
          */
         extend : function(){
             // inline overrides
@@ -267,7 +277,7 @@ Ext.override(MyClass, {
             if(overrides){
                 var p = origclass.prototype;
                 Ext.apply(p, overrides);
-                if(Ext.isIE && overrides.toString != origclass.toString){
+                if(Ext.isIE && overrides.hasOwnProperty('toString')){
                     p.toString = overrides.toString;
                 }
             }
@@ -373,19 +383,19 @@ Ext.urlDecode("foo=1&bar=2&bar=3&bar=4", false); // returns {foo: "1", bar: ["2"
          * @param {Iterable} the iterable object to be turned into a true Array.
          * @return (Array) array
          */
-        toArray : function(){
-            return isIE ?
-                function(a, i, j, res){
-                    res = [];
-                    Ext.each(a, function(v) {
-                        res.push(v);
-                    });
-                    return res.slice(i || 0, j || res.length);
-                } :
-                function(a, i, j){
-                    return Array.prototype.slice.call(a, i || 0, j || a.length);
-                }
-        }(),
+         toArray : function(){
+             return isIE ?
+                 function(a, i, j, res){
+                     res = [];
+                     for(var x = 0, len = a.length; x < len; x++) {
+                         res.push(a[x]);
+                     }
+                     return res.slice(i || 0, j || res.length);
+                 } :
+                 function(a, i, j){
+                     return Array.prototype.slice.call(a, i || 0, j || a.length);
+                 }
+         }(),
 
         isIterable : function(v){
             //check for array or arguments
@@ -398,7 +408,7 @@ Ext.urlDecode("foo=1&bar=2&bar=3&bar=4", false); // returns {foo: "1", bar: ["2"
             }
             //NodeList has an item and length property
             //IXMLDOMNodeList has nextNode method, needs to be checked first.
-            return ((v.nextNode || v.item) && Ext.isNumber(v.length));
+            return ((typeof v.nextNode != 'undefined' || v.item) && Ext.isNumber(v.length));
         },
 
         /**
@@ -450,10 +460,10 @@ Ext.urlDecode("foo=1&bar=2&bar=3&bar=4", false); // returns {foo: "1", bar: ["2"
          * <li>Arrays : <tt>(Object item, Number index, Array allItems)</tt>
          * <div class="sub-desc">
          * When iterating an array, the supplied function is called with each item.</div></li>
-         * <li>Objects : <tt>(String key, Object value)</tt>
+         * <li>Objects : <tt>(String key, Object value, Object)</tt>
          * <div class="sub-desc">
          * When iterating an object, the supplied function is called with each key-value pair in
-         * the object.</div></li>
+         * the object, and the iterated object</div></li>
          * </ul></div>
          * @param {Object} scope The scope (<code>this</code> reference) in which the specified function is executed. Defaults to
          * the <code>object</code> being iterated.
@@ -468,7 +478,7 @@ Ext.urlDecode("foo=1&bar=2&bar=3&bar=4", false); // returns {foo: "1", bar: ["2"
             }else if(Ext.isObject(obj)){
                 for(var prop in obj){
                     if(obj.hasOwnProperty(prop)){
-                        if(fn.call(scope || obj, prop, obj[prop]) === false){
+                        if(fn.call(scope || obj, prop, obj[prop], obj) === false){
                             return;
                         };
                     }
@@ -478,6 +488,8 @@ Ext.urlDecode("foo=1&bar=2&bar=3&bar=4", false); // returns {foo: "1", bar: ["2"
 
         /**
          * Return the dom node for the passed String (id), dom node, or Ext.Element.
+         * Optional 'strict' flag is needed for IE since it can return 'name' and
+         * 'id' elements by using getElementById.
          * Here are some examples:
          * <pre><code>
 // gets dom node based on id
@@ -497,11 +509,29 @@ function(el){
          * @param {Mixed} el
          * @return HTMLElement
          */
-        getDom : function(el){
+        getDom : function(el, strict){
             if(!el || !DOC){
                 return null;
             }
-            return el.dom ? el.dom : (Ext.isString(el) ? DOC.getElementById(el) : el);
+            if (el.dom){
+                return el.dom;
+            } else {
+                if (Ext.isString(el)) {
+                    var e = DOC.getElementById(el);
+                    // IE returns elements with the 'name' and 'id' attribute.
+                    // we do a strict check to return the element with only the id attribute
+                    if (e && isIE && strict) {
+                        if (el == e.getAttribute('id')) {
+                            return e;
+                        } else {
+                            return null;
+                        }
+                    }
+                    return e;
+                } else {
+                    return el;
+                }
+            }
         },
 
         /**
@@ -513,21 +543,31 @@ function(el){
         },
 
         /**
-         * Removes a DOM node from the document.  The body node will be ignored if passed in.
+         * Removes a DOM node from the document.
+         */
+        /**
+         * <p>Removes this element from the document, removes all DOM event listeners, and deletes the cache reference.
+         * All DOM event listeners are removed from this element. If {@link Ext#enableNestedListenerRemoval} is
+         * <code>true</code>, then DOM event listeners are also removed from all child nodes. The body node
+         * will be ignored if passed in.</p>
          * @param {HTMLElement} node The node to remove
          */
-        removeNode : isIE ? function(){
+        removeNode : isIE && !isIE8 ? function(){
             var d;
             return function(n){
                 if(n && n.tagName != 'BODY'){
+                    (Ext.enableNestedListenerRemoval) ? Ext.EventManager.purgeElement(n, true) : Ext.EventManager.removeAll(n);
                     d = d || DOC.createElement('div');
                     d.appendChild(n);
                     d.innerHTML = '';
+                    delete Ext.elCache[n.id];
                 }
             }
         }() : function(n){
             if(n && n.parentNode && n.tagName != 'BODY'){
+                (Ext.enableNestedListenerRemoval) ? Ext.EventManager.purgeElement(n, true) : Ext.EventManager.removeAll(n);
                 n.parentNode.removeChild(n);
+                delete Ext.elCache[n.id];
             }
         },
 
@@ -571,7 +611,7 @@ function(el){
          * @return {Boolean}
          */
         isObject : function(v){
-            return v && typeof v == "object";
+            return !!v && Object.prototype.toString.call(v) === '[object Object]';
         },
 
         /**
@@ -617,6 +657,15 @@ function(el){
          */
         isBoolean : function(v){
             return typeof v === 'boolean';
+        },
+
+        /**
+         * Returns true if the passed value is an HTMLElement
+         * @param {Mixed} value The value to test
+         * @return {Boolean}
+         */
+        isElement : function(v) {
+            return !!v && v.tagName;
         },
 
         /**
@@ -743,8 +792,9 @@ Company.data.CustomStore = function(config) { ... }
     Ext.ns = Ext.namespace;
 })();
 
-Ext.ns("Ext", "Ext.util", "Ext.lib", "Ext.data");
+Ext.ns("Ext.util", "Ext.lib", "Ext.data");
 
+Ext.elCache = {};
 
 /**
  * @class Function
@@ -974,7 +1024,7 @@ Ext.applyIf(Array.prototype, {
  * @class Ext
  */
 
-Ext.ns("Ext.grid", "Ext.dd", "Ext.tree", "Ext.form", "Ext.menu",
+Ext.ns("Ext.grid", "Ext.list", "Ext.dd", "Ext.tree", "Ext.form", "Ext.menu",
        "Ext.state", "Ext.layout", "Ext.app", "Ext.ux", "Ext.chart", "Ext.direct");
     /**
      * Namespace alloted for extensions to the framework.
@@ -1024,8 +1074,8 @@ Ext.apply(Ext, function(){
          * @return {Number} Value, if numeric, else defaultValue
          */
         num : function(v, defaultValue){
-            v = Number(Ext.isEmpty(v) || Ext.isBoolean(v) ? NaN : v);
-            return isNaN(v)? defaultValue : v;
+            v = Number(Ext.isEmpty(v) || Ext.isArray(v) || Ext.isBoolean(v) || (Ext.isString(v) && v.trim().length == 0) ? NaN : v);
+            return isNaN(v) ? defaultValue : v;
         },
 
         /**
@@ -1298,7 +1348,7 @@ ImageComponent = Ext.extend(Ext.BoxComponent, {
          * @return {Number} The mean.
          */
         mean : function(arr){
-           return Ext.sum(arr) / arr.length;
+           return arr.length > 0 ? Ext.sum(arr) / arr.length : undefined;
         },
 
         /**
@@ -1826,12 +1876,12 @@ var libFlyweight,
     mouseEnterSupported = (parseInt(version[0]) >= 2) || (parseInt(version[1]) >= 7) || (parseInt(version[2]) >= 1),
     mouseCache = {},
     elContains = function(parent, child) {
-       if(parent && parent.firstChild){  
+       if(parent && parent.firstChild){
          while(child) {
             if(child === parent) {
                 return true;
             }
-            child = child.parentNode;               
+            child = child.parentNode;
             if(child && (child.nodeType != 1)) {
                 child = null;
             }
@@ -1840,7 +1890,7 @@ var libFlyweight,
         return false;
     },
     checkRelatedTarget = function(e) {
-        return !elContains(e.currentTarget, pub.getRelatedTarget(e));
+        return !elContains(e.currentTarget, Ext.lib.Event.getRelatedTarget(e));
     };
 
 Ext.lib.Dom = {
@@ -1889,7 +1939,7 @@ Ext.lib.Dom = {
 
     isAncestor : function(p, c){ // missing from prototype?
         var ret = false;
-            
+
         p = Ext.getDom(p);
         c = Ext.getDom(c);
         if (p && c) {
@@ -1899,10 +1949,10 @@ Ext.lib.Dom = {
                 return !!(p.compareDocumentPosition(c) & 16);
             } else {
                 while (c = c.parentNode) {
-                    ret = c == p || ret;                        
+                    ret = c == p || ret;
                 }
-            }               
-        }   
+            }
+        }
         return ret;
     },
 
@@ -2065,7 +2115,7 @@ Ext.lib.Event = {
 
     un : function(el, eventName, fn){
         if((eventName == 'mouseenter' || eventName == 'mouseleave') && !mouseEnterSupported){
-            var item = mouseCache[el.id], 
+            var item = mouseCache[el.id],
                 ev = item && item[eventName];
 
             if(ev){
@@ -2132,12 +2182,12 @@ Ext.lib.Ajax = function(){
     };
     var createResponse = function(cb, xhr){
         var headerObj = {},
-            headerStr,              
+            headerStr,
             t,
             s;
 
         try {
-            headerStr = xhr.getAllResponseHeaders();   
+            headerStr = xhr.getAllResponseHeaders();
             Ext.each(headerStr.replace(/\r\n/g, '\n').split('\n'), function(v){
                 t = v.indexOf(':');
                 if(t >= 0){
@@ -2149,7 +2199,7 @@ Ext.lib.Ajax = function(){
                 }
             });
         } catch(e) {}
-        
+
         return {
             responseText: xhr.responseText,
             responseXML : xhr.responseXML,
@@ -2211,7 +2261,7 @@ Ext.lib.Ajax = function(){
         abort : function(trans){
             return false;
         },
-        
+
         serializeForm : function(form){
             return Form.serialize(form.dom||form);
         }
@@ -2220,7 +2270,7 @@ Ext.lib.Ajax = function(){
 
 
 Ext.lib.Anim = function(){
-    
+
     var easings = {
         easeOut: function(pos) {
             return 1-Math.pow(1-pos,2);
@@ -2318,7 +2368,7 @@ function fly(el){
     libFlyweight.dom = el;
     return libFlyweight;
 }
-    
+
 Ext.lib.Region = function(t, r, b, l) {
     this.top = t;
     this[1] = t;
