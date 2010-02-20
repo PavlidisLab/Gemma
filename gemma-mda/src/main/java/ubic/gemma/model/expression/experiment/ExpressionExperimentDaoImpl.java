@@ -835,8 +835,9 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
      */
     @SuppressWarnings("unchecked")
     @Override
-    protected Map<ExpressionExperiment, AuditEvent> handleGetLastArrayDesignUpdate( Collection<ExpressionExperiment> expressionExperiments,
-            Class<? extends AuditEventType> type ) throws Exception {
+    protected Map<ExpressionExperiment, AuditEvent> handleGetLastArrayDesignUpdate(
+            Collection<ExpressionExperiment> expressionExperiments, Class<? extends AuditEventType> type )
+            throws Exception {
         // helps make sure we use the query cache.
         List<ExpressionExperiment> eeList = new ArrayList<ExpressionExperiment>( expressionExperiments );
 
@@ -1278,24 +1279,25 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
         if ( ids == null || ids.size() == 0 ) {
             return new HashSet<ExpressionExperimentValueObject>();
         }
-        final String queryString = "select ee.id as id, "
-                + "ee.name as name, "
-                + "ED.name as externalDatabaseName, "
-                + "ED.webUri as externalDatabaseUri, "
-                + "ee.source as source, "
-                + "ee.accession.accession as accession, "
-                + "taxon.commonName as taxonCommonName,"
-                + "taxon.id as taxonId,"
-                + "count(distinct BA) as bioAssayCount, "
-                + "count(distinct AD) as arrayDesignCount, "
-                + "ee.shortName as shortName, "
-                + "eventCreated.date as createdDate, "
-                + "AD.technologyType, ee.class, "
-                + " EDES.id as designId "
+        final String queryString = "select ee.id as id, " // 0
+                + "ee.name as name, " // 1
+                + "ED.name as externalDatabaseName, " // 2
+                + "ED.webUri as externalDatabaseUri, " // 3
+                + "ee.source as source, " // 4
+                + "ee.accession.accession as accession, " // 5
+                + "taxon.commonName as taxonCommonName," // 6
+                + "taxon.id as taxonId," // 7
+                + "count(distinct BA) as bioAssayCount, " // 8
+                + "count(distinct AD) as arrayDesignCount, " // 9
+                + "ee.shortName as shortName, " // 10
+                + "eventCreated.date as createdDate, " // 11
+                + "AD.technologyType, ee.class, " // 12, 13
+                + " EDES.id as designId " // 14
                 + " from ExpressionExperimentImpl as ee inner join ee.bioAssays as BA left join ee.auditTrail atr left join atr.events as eventCreated "
                 + "left join BA.samplesUsed as SU left join BA.arrayDesignUsed as AD "
                 + "left join SU.sourceTaxon as taxon left join ee.accession acc left join acc.externalDatabase as ED "
-                + " inner join ee.experimentalDesign as EDES " + " where eventCreated.action='C' and ee.id in (:ids) "
+                + " inner join ee.experimentalDesign as EDES "
+                + " where eventCreated.action='C' and ee.id in (:ids) "
                 + " group by ee order by ee.name";
 
         try {
@@ -1333,9 +1335,9 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
                 v.setArrayDesignCount( ( Long ) res[9] );
                 v.setShortName( ( String ) res[10] );
                 v.setDateCreated( ( ( Date ) res[11] ) );
+                v.setTechnologyType( ( ( TechnologyType ) res[12] ).toString() );
                 if ( !qtMap.isEmpty() && res[11] != null ) {
-                    String type = res[11].toString();
-                    fillQuantitationTypeInfo( qtMap, v, eeId, type );
+                    fillQuantitationTypeInfo( qtMap, v, eeId, v.getTechnologyType() );
                 }
                 v.setClazz( ( String ) res[13] );
                 v.setExperimentalDesign( ( Long ) res[14] );
