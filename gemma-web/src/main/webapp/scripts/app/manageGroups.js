@@ -18,10 +18,7 @@ Ext.onReady(function() {
 				tooltip : 'If the user is in the group',
 				width : 55
 			});
-	
-	
 
-	
 	var writeableChks = new Ext.ux.grid.CheckColumn({
 				header : 'Read Write',
 				dataIndex : 'currentGroupCanWrite',
@@ -29,9 +26,7 @@ Ext.onReady(function() {
 				groupable : false,
 				width : 55
 			});
-	
-	
-		
+
 	var readableChks = new Ext.ux.grid.CheckColumn({
 				header : 'Read',
 				dataIndex : 'currentGroupCanRead',
@@ -47,17 +42,14 @@ Ext.onReady(function() {
 				width : 55
 			});
 
-	
 	var refresh = function(groupName) {
 		currentGroup = groupName;
-		
+
 		refreshGroupMembers(groupName);
 		refreshData(groupName);
 
 	}
 
-	
-	
 	/*
 	 * Load the users in the group, put in the members store.
 	 */
@@ -68,7 +60,8 @@ Ext.onReady(function() {
 	}
 
 	/*
-	 * Load the data available to the _current_ user w.r.t the selected group, put in the data column.
+	 * Load the data available to the _current_ user w.r.t the selected group,
+	 * put in the data column.
 	 */
 	var refreshData = function(groupName) {
 
@@ -78,13 +71,19 @@ Ext.onReady(function() {
 					params : [groupName, showPrivateOnly]
 				});
 	}
-	
-	
-	
 
 	/*
 	 * The GUI
 	 */
+
+	var geneGroupImporter = new Gemma.GeneGroupImporter({
+				renderTo : 'genesetCreation-div',
+				width : "100%",
+				height : 300,
+				layout : 'border'
+
+			});
+
 	var groupviewer = new Ext.Panel({
 		height : 600,
 		id : 'manager-panel',
@@ -116,30 +115,36 @@ Ext.onReady(function() {
 					tooltip : "Add a group",
 					handler : function() {
 
-						Ext.Msg.prompt('New Group', 'Please enter the group name:', function(btn, text) {
+						Ext.Msg.prompt('New Group',
+								'Please enter the group name:', function(btn,
+										text) {
 									if (btn == 'ok') {
 
 										SecurityController.createGroup(text, {
-													callback : function(groupname) {
+											callback : function(groupname) {
 
-														var c = Ext.getCmp('manager-groups-listview').getStore().recordType;
+												var c = Ext
+														.getCmp('manager-groups-listview')
+														.getStore().recordType;
 
-														var newrec = new c({
-																	groupName : groupname
-																}, groupname);
+												var newrec = new c({
+															groupName : groupname
+														}, groupname);
 
-														/*
-														 * Refresh
-														 */
-														Ext.getCmp("manager-groups-listview").getStore().load({
+												/*
+												 * Refresh
+												 */
+												Ext
+														.getCmp("manager-groups-listview")
+														.getStore().load({
 																	params : []
 																});
 
-													},
-													errorHandler : function(e) {
-														Ext.Msg.alert('Sorry', e);
-													}
-												})
+											},
+											errorHandler : function(e) {
+												Ext.Msg.alert('Sorry', e);
+											}
+										})
 									}
 								});
 
@@ -151,22 +156,25 @@ Ext.onReady(function() {
 					// hidden : true,
 					handler : function() {
 
-						var sel = Ext.getCmp('manager-groups-listview').getSelectionModel().getSelected();
+						var sel = Ext.getCmp('manager-groups-listview')
+								.getSelectionModel().getSelected();
 						var groupName = sel.get("groupName");
 
 						var processResult = function(btn) {
 							/*
-							 * TODO -- no full server side support yet! Deleting group is not so easy if there is data
-							 * attached.
+							 * TODO -- no full server side support yet! Deleting
+							 * group is not so easy if there is data attached.
 							 */
 
 							if (btn == 'yes') {
 
 								SecurityController.deleteGroup(groupName, {
 											callback : function() {
-												Ext.getCmp('manager-groups-listview').getStore().load({
-															params : []
-														});
+												Ext
+														.getCmp('manager-groups-listview')
+														.getStore().load({
+																	params : []
+																});
 											},
 											errorHandler : function(e) {
 												Ext.Msg.alert('Sorry', e);
@@ -176,88 +184,91 @@ Ext.onReady(function() {
 						}
 
 						Ext.Msg.show({
-									title : 'Are you sure?',
-									msg : 'The group "' + groupName
-											+ '" will be permanently deleted. This cannot be undone.',
-									buttons : Ext.Msg.YESNO,
-									fn : processResult,
-									animEl : 'elId',
-									icon : Ext.MessageBox.QUESTION
-								});
+							title : 'Are you sure?',
+							msg : 'The group "'
+									+ groupName
+									+ '" will be permanently deleted. This cannot be undone.',
+							buttons : Ext.Msg.YESNO,
+							fn : processResult,
+							animEl : 'elId',
+							icon : Ext.MessageBox.QUESTION
+						});
 
 					}
 				}]
 			},
 			items : [new Ext.grid.GridPanel({
-						id : 'manager-groups-listview',
-						height : 535,
-						loadMask : true,
-						selModel : new Ext.grid.RowSelectionModel({
-									singleSelect : true,
-									listeners : {
-										'selectionChange' : {
-											fn : function(selmod) {
+				id : 'manager-groups-listview',
+				height : 535,
+				loadMask : true,
+				selModel : new Ext.grid.RowSelectionModel({
+							singleSelect : true,
+							listeners : {
+								'selectionChange' : {
+									fn : function(selmod) {
 
-												var sel = selmod.getSelected();
+										var sel = selmod.getSelected();
 
-												if (!sel) {
-													return;
-												}
-												refresh(sel.get("groupName"));
-											}
+										if (!sel) {
+											return;
 										}
+										refresh(sel.get("groupName"));
 									}
-								}),
-						store : new Ext.data.Store({
-									autoLoad : true,
-									proxy : new Ext.data.DWRProxy(SecurityController.getAvailableGroups),
-									reader : new Ext.data.ListRangeReader({
-												id : "groupName"
-											}, Ext.data.Record.create([{
-														name : "groupName"
+								}
+							}
+						}),
+				store : new Ext.data.Store({
+					autoLoad : true,
+					proxy : new Ext.data.DWRProxy(SecurityController.getAvailableGroups),
+					reader : new Ext.data.ListRangeReader({
+								id : "groupName"
+							}, Ext.data.Record.create([{
+										name : "groupName"
 
-													}, {
-														name : "canEdit",
-														type : "boolean"
-													}, {
-														name : "member",
-														type : "boolean"
-													}])),
-									listeners : {
-										"exception" : function(proxy, type, action, options, response, arg) {
-											Ext.Msg.alert('Sorry', response);
-										}
-									}
-								}),
-						columns : [{
-									header : 'Group name',
-									dataIndex : 'groupName',
-									sortable : true
-								}, {
-									header : 'Edit',
-									width : 60,
-									dataIndex : 'canEdit',
-									tooltip : "Can you edit this group?",
-									sortable : true,
-									renderer : function(value, metaData, record, rowIndex, colIndex, store) {
-										return value ? "Y" : "N";
-									}
-								}, {
-									header : 'Member',
-									width : 60,
-									dataIndex : 'member',
-									tooltip : "Are  you a member of this group?",
-									sortable : true,
-									renderer : function(value) {
-										return value ? "Y" : "N";
-									}
-
-								}],
-						viewConfig : {
-							forceFit : true
+									}, {
+										name : "canEdit",
+										type : "boolean"
+									}, {
+										name : "member",
+										type : "boolean"
+									}])),
+					listeners : {
+						"exception" : function(proxy, type, action, options,
+								response, arg) {
+							Ext.Msg.alert('Sorry', response);
 						}
+					}
+				}),
+				columns : [{
+							header : 'Group name',
+							dataIndex : 'groupName',
+							sortable : true
+						}, {
+							header : 'Edit',
+							width : 60,
+							dataIndex : 'canEdit',
+							tooltip : "Can you edit this group?",
+							sortable : true,
+							renderer : function(value, metaData, record,
+									rowIndex, colIndex, store) {
+								return value ? "Y" : "N";
+							}
+						}, {
+							header : 'Member',
+							width : 60,
+							dataIndex : 'member',
+							tooltip : "Are  you a member of this group?",
+							sortable : true,
+							renderer : function(value) {
+								return value ? "Y" : "N";
+							}
 
-					})
+						}],
+				viewConfig : {
+					forceFit : true
+				}
+
+			})
 
 			]
 		}, /*
@@ -276,16 +287,20 @@ Ext.onReady(function() {
 					tooltip : "Invite new member",
 					handler : function() {
 
-						Ext.Msg.prompt('New group member', 'Please enter the user name or email address:', function(
-										btn, userNameOrEmail) {
+						Ext.Msg.prompt('New group member',
+								'Please enter the user name or email address:',
+								function(btn, userNameOrEmail) {
 									if (btn == 'ok') {
 
-										SecurityController.addUserToGroup(userNameOrEmail, currentGroup, {
+										SecurityController.addUserToGroup(
+												userNameOrEmail, currentGroup,
+												{
 													callback : function(d) {
 														refreshGroupMembers(currentGroup);
 													},
 													errorHandler : function(e) {
-														Ext.Msg.alert('Sorry', e);
+														Ext.Msg.alert('Sorry',
+																e);
 													}
 												});
 									}
@@ -298,11 +313,13 @@ Ext.onReady(function() {
 					id : 'manager-group-members-panel-save-btn',
 					handler : function(b, e) {
 						/*
-						 * remove group members who are unchecked NOTE this does not add users! They get removed from
-						 * the table once they are not in the group.
+						 * remove group members who are unchecked NOTE this does
+						 * not add users! They get removed from the table once
+						 * they are not in the group.
 						 */
 
-						var recs = Ext.getCmp("group-members-grid").getStore().getModifiedRecords();
+						var recs = Ext.getCmp("group-members-grid").getStore()
+								.getModifiedRecords();
 						if (recs && recs[0]) {
 
 							var userNames = [];
@@ -314,18 +331,23 @@ Ext.onReady(function() {
 							}
 
 							if (userNames.length > 0) {
-								Ext.getCmp("group-members-grid").loadMask.show();
-								SecurityController.removeUsersFromGroup(userNames, currentGroup, {
+								Ext.getCmp("group-members-grid").loadMask
+										.show();
+								SecurityController.removeUsersFromGroup(
+										userNames, currentGroup, {
 											callback : function(d) {
 												refreshGroupMembers(currentGroup);
 											},
 											errorHandler : function(e) {
 												Ext.Msg.alert('Sorry', e);
-												Ext.getCmp("group-members-grid").loadMask.hide();
+												Ext
+														.getCmp("group-members-grid").loadMask
+														.hide();
 											}
 										});
 							} else {
-								Ext.Msg.alert('No changes', "There were no changes to save.");
+								Ext.Msg.alert('No changes',
+										"There were no changes to save.");
 							}
 
 						}
@@ -340,48 +362,49 @@ Ext.onReady(function() {
 				}]
 			},
 			items : [new Ext.grid.EditorGridPanel({
-						id : "group-members-grid",
-						plugins : [groupMembershipChks],
-						height : 535,
-						loadMask : true,
-						store : new Ext.data.Store({
-									autoLoad : false,
+				id : "group-members-grid",
+				plugins : [groupMembershipChks],
+				height : 535,
+				loadMask : true,
+				store : new Ext.data.Store({
+					autoLoad : false,
 
-									proxy : new Ext.data.DWRProxy(SecurityController.getGroupMembers),
-									reader : new Ext.data.ListRangeReader({
-												id : 'userName'
-											}, Ext.data.Record.create([{
-														name : "userName"
-													}, {
-														name : "email"
-													}, {
-														name : "inGroup",
-														type : "boolean"
-													}, {
-														name : "allowModification",
-														type : "boolean"
-													}])),
-									listeners : {
-										"exception" : function(proxy, type, action, options, response, arg) {
-											Ext.Msg.alert('Sorry', response);
-										}
-									}
-								}),
-						columns : [{
-									header : 'User name',
-									dataIndex : 'userName',
-									sortable : true,
-									editable : false
-								}, {
-									header : 'Email',
-									dataIndex : 'email',
-									sortable : true,
-									editable : false
-								}, groupMembershipChks],
-						viewConfig : {
-							forceFit : true
+					proxy : new Ext.data.DWRProxy(SecurityController.getGroupMembers),
+					reader : new Ext.data.ListRangeReader({
+								id : 'userName'
+							}, Ext.data.Record.create([{
+										name : "userName"
+									}, {
+										name : "email"
+									}, {
+										name : "inGroup",
+										type : "boolean"
+									}, {
+										name : "allowModification",
+										type : "boolean"
+									}])),
+					listeners : {
+						"exception" : function(proxy, type, action, options,
+								response, arg) {
+							Ext.Msg.alert('Sorry', response);
 						}
-					})
+					}
+				}),
+				columns : [{
+							header : 'User name',
+							dataIndex : 'userName',
+							sortable : true,
+							editable : false
+						}, {
+							header : 'Email',
+							dataIndex : 'email',
+							sortable : true,
+							editable : false
+						}, groupMembershipChks],
+				viewConfig : {
+					forceFit : true
+				}
+			})
 
 			]
 
@@ -397,167 +420,246 @@ Ext.onReady(function() {
 			cmargins : '5 5 0 0',
 			tbar : {
 				items : [{
-							tooltip : "Save changes",
-							icon : "/Gemma/images/icons/database_save.png",
-							id : 'manager-data-panel-save-btn',
-							handler : function(b, e) {
+					tooltip : "Save changes",
+					icon : "/Gemma/images/icons/database_save.png",
+					id : 'manager-data-panel-save-btn',
+					handler : function(b, e) {
+						/*
+						 * change R/W/P on selected data, set owner. Get just
+						 * the edited records.
+						 */
+						var recs = Ext.getCmp("group-data-grid").getStore()
+								.getModifiedRecords();
+						if (recs && recs[0]) {
+							var p = [];
+							for (var i = 0; i < recs.length; i++) {
 								/*
-								 * change R/W/P on selected data, set owner. Get just the edited records.
+								 * This is ugly. The 'owner' object gets turned
+								 * into a plain string.
 								 */
-								var recs = Ext.getCmp("group-data-grid").getStore().getModifiedRecords();
-								if (recs && recs[0]) {
-									var p = [];
-									for (var i = 0; i < recs.length; i++) {
-										/*
-										 * This is ugly. The 'owner' object gets turned into a plain string.
-										 */
-										//have to reconstruct the owner from strings
-										recs[i].data.owner = {
-											authority : recs[i].data.owner.authority,
-											principal :recs[i].data.owner.principal
-											//principal : recs[i].data.owner.indexOf("GROUP_") < 0
-										};
-										p.push(recs[i].data);
-									}
+								// have to reconstruct the owner from strings
+								recs[i].data.owner = {
+									authority : recs[i].data.owner.authority,
+									principal : recs[i].data.owner.principal
+									// principal :
+									// recs[i].data.owner.indexOf("GROUP_") < 0
+								};
+								p.push(recs[i].data);
+							}
 
-									SecurityController.updatePermissions(p, {
-												callback : function(d) {
-													refreshData(currentGroup);
-												},
-												errorHandler : function(e) {
-													Ext.Msg.alert('Sorry', e);
-												}
-											});
-								}
+							SecurityController.updatePermissions(p, {
+										callback : function(d) {
+											refreshData(currentGroup);
+										},
+										errorHandler : function(e) {
+											Ext.Msg.alert('Sorry', e);
+										}
+									});
+						}
 
-							}
-						}, {
-							tooltip : "Refresh from the database",
-							icon : "/Gemma/images/icons/arrow_refresh_small.png",
-							handler : function() {
-								refreshData(currentGroup);
-							}
-						}, {
-							tooltip : "Show/hide public data",
-							id : "manager-data-panel-show-public",
-							enableToggle : true,
-							icon : "/Gemma/images/icons/world_add.png",
-							handler : function() {
-								refreshData(currentGroup);
-							}
-						}]
+					}
+				}, {
+					tooltip : "Refresh from the database",
+					icon : "/Gemma/images/icons/arrow_refresh_small.png",
+					handler : function() {
+						refreshData(currentGroup);
+					}
+				}, {
+					tooltip : "Show/hide public data",
+					id : "manager-data-panel-show-public",
+					enableToggle : true,
+					icon : "/Gemma/images/icons/world_add.png",
+					handler : function() {
+						refreshData(currentGroup);
+					}
+				}]
 			},
 			items : [new Ext.grid.EditorGridPanel({
-						height : 535,
-						id : "group-data-grid",
-						loadMask : true,
-						stateful : false,
-						plugins : [publicChks, readableChks, writeableChks],
-						store : new Ext.data.GroupingStore({
-									name : "data-store",
-									autoLoad : false,
-									groupField : "entityClazz",
-									sortInfo : {
-										field : 'entityName'
-									},
-									proxy : new Ext.data.DWRProxy(SecurityController.getUsersData),
-									reader : new Ext.data.ListRangeReader({}, Ext.data.Record.create([{
-														name : "entityClazz",
-														type : "string"
-													}, {
-														name : "entityId",
-														type : "int"
-													}, {
-														name : "entityName",
-														type : "string"
-													}, {
-														name : "entityShortName",
-														type : "string"
-													}, {
-														name : "owner"
-													}, {
-														name : "publiclyReadable",
-														type : "boolean"
-													}, {
-														name : "currentGroup",
-														type : "string"
-													}, {
-														name : "currentGroupCanRead",
-														type : "boolean"
-													}, {
-														name : "currentGroupCanWrite",
-														type : "boolean"
-													}])),
-									listeners : {
-										"exception" : function(proxy, type, action, options, response, arg) {
-											Ext.Msg.alert('Sorry', response);
-										}
-									}
-								}),
-						columns : [{
-									header : 'Type',
-									dataIndex : 'entityClazz',
-									groupable : true,
-									editable : false,
-									sortable : true,
-									renderer : function(value, metaData, record, rowIndex, colIndex, store) {
-										return value.replace(/.*\./, '');
-									}
-								}, {
-									header : 'ShortName',
-									dataIndex : 'entityShortName',
-									editable : false,
-									groupable : false,
-									sortable : true
-								}, {
-									header : 'Name',
-									dataIndex : 'entityName',
-									editable : false,
-									groupable : false,
-									sortable : true
-								}, {
-									header : 'Owner',
-									tooltip : 'Who owns the data',
-									dataIndex : 'owner',
-									groupable : true,
-									sortable : true,
-									renderer : function(value, metaData, record, rowIndex, colIndex, store) {
-										return value.authority ? value.authority : value;
-									},
-									editor : new Ext.form.ComboBox({
-												typeAhead : true,
-												displayField : "authority",
-												triggerAction : 'all',
-												lazyRender : true,
-												store : new Ext.data.Store({
-															proxy : new Ext.data.DWRProxy(SecurityController.getAvailableSids),
-															reader : new Ext.data.ListRangeReader({}, Ext.data.Record
-																			.create([{
-																						name : "authority"
-																					}, {
-																						name : "principal",
-																						type : "boolean"
-																					}])),
-															listeners : {
-																"exception" : function(proxy, type, action, options,
-																		response, arg) {
-																	Ext.Msg.alert('Sorry', response);
-																}
-															}
-														})
-											})
-								}, publicChks, readableChks, writeableChks],
-								view : new Ext.grid.GroupingView({
-									forceFit : true,
-									groupTextTpl : '{text} ({[values.rs.length]} {[values.rs.length > 1 ? "Items" : "Item"]})'
-								})
+				height : 535,
+				id : "group-data-grid",
+				loadMask : true,
+				stateful : false,
+				plugins : [publicChks, readableChks, writeableChks],
+				store : new Ext.data.GroupingStore({
+					name : "data-store",
+					autoLoad : false,
+					groupField : "entityClazz",
+					sortInfo : {
+						field : 'entityName'
+					},
+					proxy : new Ext.data.DWRProxy(SecurityController.getUsersData),
+					reader : new Ext.data.ListRangeReader({}, Ext.data.Record
+									.create([{
+												name : "entityClazz",
+												type : "string"
+											}, {
+												name : "entityId",
+												type : "int"
+											}, {
+												name : "entityName",
+												type : "string"
+											}, {
+												name : "entityShortName",
+												type : "string"
+											}, {
+												name : "owner"
+											}, {
+												name : "publiclyReadable",
+												type : "boolean"
+											}, {
+												name : "currentGroup",
+												type : "string"
+											}, {
+												name : "currentGroupCanRead",
+												type : "boolean"
+											}, {
+												name : "currentGroupCanWrite",
+												type : "boolean"
+											}])),
+					listeners : {
+						"exception" : function(proxy, type, action, options,
+								response, arg) {
+							Ext.Msg.alert('Sorry', response);
+						}
+					}
+				}),
+				columns : [{
+					header : 'Type',
+					dataIndex : 'entityClazz',
+					groupable : true,
+					editable : false,
+					sortable : true,
+					renderer : function(value, metaData, record, rowIndex,
+							colIndex, store) {
+						return value.replace(/.*\./, '');
+					}
+				}, {
+					header : 'ShortName',
+					dataIndex : 'entityShortName',
+					editable : false,
+					groupable : false,
+					sortable : true
+				}, {
+					header : 'Name',
+					dataIndex : 'entityName',
+					editable : false,
+					groupable : false,
+					sortable : true
+				}, {
+					header : 'Owner',
+					tooltip : 'Who owns the data',
+					dataIndex : 'owner',
+					groupable : true,
+					sortable : true,
+					renderer : function(value, metaData, record, rowIndex,
+							colIndex, store) {
+						return value.authority ? value.authority : value;
+					},
+					editor : new Ext.form.ComboBox({
+						typeAhead : true,
+						displayField : "authority",
+						triggerAction : 'all',
+						lazyRender : true,
+						store : new Ext.data.Store({
+							proxy : new Ext.data.DWRProxy(SecurityController.getAvailableSids),
+							reader : new Ext.data.ListRangeReader({},
+									Ext.data.Record.create([{
+												name : "authority"
+											}, {
+												name : "principal",
+												type : "boolean"
+											}])),
+							listeners : {
+								"exception" : function(proxy, type, action,
+										options, response, arg) {
+									Ext.Msg.alert('Sorry', response);
+								}
+							}
+						})
 					})
-				
+				}, publicChks, readableChks, writeableChks],
+				view : new Ext.grid.GroupingView({
+					forceFit : true,
+					groupTextTpl : '{text} ({[values.rs.length]} {[values.rs.length > 1 ? "Items" : "Item"]})'
+				})
+			})
 
 			]
-			
+
 		}]
 
 	});
 
+});
+
+Gemma.GeneGroupImporter = Ext.extend(Ext.Panel, {
+
+	initComponent : function() {
+		this.geneChooserPanel = new Gemma.GeneGrid({
+					height : 400,
+					width : 230,
+					region : 'center',
+					id : 'gene-chooser-panel'
+				});
+
+		Ext.apply(this.geneChooserPanel.getTopToolbar().taxonCombo, {
+					stateId : "",
+					stateful : false,
+					stateEvents : []
+				});
+
+		Ext.apply(this, {
+			title : "Import a new Gene Group",
+			tbar : {
+				items : [{
+					tooltip : "Save New Group",
+					icon : "/Gemma/images/icons/database_save.png",
+					id : 'geneimportgroup-save-btn',
+					handler : function(b, e) {
+
+						Ext.Msg.prompt('New Group',
+								'Please enter the group name:', function(btn,
+										text) {
+									if (btn == 'ok') {
+
+										var geneIds = Ext.getCmp("gene-chooser-panel").getGeneIds();
+										//TODO add checks for no/bad genes
+									
+										SecurityController.createGeneGroup(text, geneIds, {
+											callback : function(groupname) {
+
+												var c = Ext
+														.getCmp('manager-groups-listview')
+														.getStore().recordType;
+
+												var newrec = new c({
+															groupName : groupname
+														}, groupname);
+
+												/*
+												 * Refresh
+												 */
+												Ext
+														.getCmp("manager-groups-listview")
+														.getStore().load({
+																	params : []
+																});
+
+											},
+											errorHandler : function(e) {
+												Ext.Msg.alert('Sorry', e);
+											}
+										})
+									}
+								});
+
+					}
+				}]
+			},
+			items : [this.geneChooserPanel]
+		});
+
+		Gemma.GeneGroupImporter.superclass.initComponent.call(this);
+
+	}
 });

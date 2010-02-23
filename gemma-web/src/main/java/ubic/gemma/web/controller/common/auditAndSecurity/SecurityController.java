@@ -40,7 +40,10 @@ import ubic.gemma.model.common.Describable;
 import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.model.genome.gene.GeneSet;
+import ubic.gemma.model.genome.gene.GeneSetMember;
 import ubic.gemma.model.genome.gene.GeneSetService;
 import ubic.gemma.security.SecurityService;
 import ubic.gemma.security.authentication.UserDetailsImpl;
@@ -73,6 +76,9 @@ public class SecurityController {
 
     @Autowired
     private GeneSetService geneSetService = null;
+
+    @Autowired
+    private GeneService geneService = null;
 
     /**
      * AJAX
@@ -459,6 +465,10 @@ public class SecurityController {
         this.userManager = userManager;
     }
 
+    public void setGeneService( GeneService geneService ) {
+        this.geneService = geneService;
+    }
+
     /**
      * AJAX
      * 
@@ -516,7 +526,7 @@ public class SecurityController {
             }
 
             if ( writeable ) {
-                //if writable should be readable
+                // if writable should be readable
                 securityService.makeReadableByGroup( s, currentGroupName );
                 securityService.makeWriteableByGroup( s, currentGroupName );
             } else {
@@ -558,7 +568,7 @@ public class SecurityController {
                     // never changes this.
                     continue;
                 }
-                //when it is writable it should be readable
+                // when it is writable it should be readable
                 securityService.makeReadableByGroup( s, currentGroupName );
                 securityService.makeWriteableByGroup( s, writer );
             }
@@ -576,6 +586,50 @@ public class SecurityController {
         for ( SecurityInfoValueObject so : settings ) {
             this.updatePermission( so );
         }
+    }
+
+    /**
+     * AJAX Creates a new gene group given a name for the group and the genes in the group
+     * 
+     * @param name
+     * @param genes
+     * @return
+     */
+    public String createGeneGroup( String name, Collection<Long> geneIds ) {
+
+        if ( geneIds == null || geneIds.isEmpty() ) return null;
+
+        if ( name == null || name.isEmpty() ) return null;
+
+        Collection<Gene> genes = geneService.loadMultiple( geneIds );
+
+        if ( genes == null || genes.isEmpty() ) return null;
+
+        GeneSet gset = GeneSet.Factory.newInstance();
+        gset.setName( name );
+        
+        for ( Gene g : genes ) {
+            GeneSetMember gmember = GeneSetMember.Factory.newInstance();
+            gmember.setGene( g );
+            gset.getMembers().add( gmember );
+        }
+
+        gset = this.geneSetService.create( gset );
+
+        return gset.getName();
+    }
+
+    /**
+     * Given a valid gene group will remove it from db (if the user has permissons to do so). 
+     * @param groupId
+     */
+    public void deleteGeneGroup( Long groupId ) {
+
+        if ( groupId == null ) return;
+
+        GeneSet gset = geneSetService.load( groupId );
+        if ( gset != null ) geneSetService.remove( gset );
+
     }
 
     /**

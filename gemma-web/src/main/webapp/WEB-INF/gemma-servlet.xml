@@ -1200,7 +1200,9 @@
 							<list>
 								<value>addUserToGroup</value>
 								<value>createGroup</value>
+								<value>createGeneGroup</value>
 								<value>deleteGroup</value>
+								<value>deleteGeneGroup</value>
 								<value>getGroupMembers</value>
 								<value>getUsersData</value>
 								<value>getAvailableSids</value>

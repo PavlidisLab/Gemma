@@ -22,5 +22,13 @@
 
 	<div id='manageGroups-div'>
 	</div>
+	
+	<br> </br>
+	<div id='genesetCreation-div'> </div>
+	
 	<div id='errorMessage' style='width: 500px; margin-bottom: 1em;'></div>
+	
+	
+	
+	
 </body>

@@ -536,7 +536,12 @@ SecurityController.updatePermission = function(p0, callback) {
 SecurityController.getGroupMembers = function(p0, callback) {
 	dwr.engine._execute(SecurityController._path, 'SecurityController', 'getGroupMembers', p0, callback);
 }
-
+SecurityController.createGeneGroup = function(p0,p1, callback) {
+	dwr.engine._execute(SecurityController._path, 'SecurityController', 'createGeneGroup', p0,p1, callback);
+}
+SecurityController.deleteGeneGroup = function(p0, callback) {
+	dwr.engine._execute(SecurityController._path, 'SecurityController', 'deleteGeneGroup', p0, callback);
+}
 // ====================================================================================
 if (SystemMonitorController == null)
 	var SystemMonitorController = {};
