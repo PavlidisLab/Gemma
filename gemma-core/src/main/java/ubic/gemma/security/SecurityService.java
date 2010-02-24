@@ -709,7 +709,13 @@ public class SecurityService {
         if ( acl.getOwner().equals( userName ) ) {
             return;
         }
-
+        
+        // make sure user exists and is enabled.
+        UserDetails user = this.userManager.loadUserByUsername( userName );
+        if ( !user.isEnabled() || !user.isAccountNonExpired() || !user.isAccountNonLocked() ) {
+            throw new IllegalArgumentException( "User  " + userName + " has a disabled account" );
+        }
+        
         acl.setOwner( new PrincipalSid( userName ) );
         aclService.updateAcl( acl );
 
@@ -975,6 +981,9 @@ public class SecurityService {
         this.aclService.updateAcl( a );
 
     }
+    
+    
+    
 
     /**
      * Provide permission to the given group on the given securable.
