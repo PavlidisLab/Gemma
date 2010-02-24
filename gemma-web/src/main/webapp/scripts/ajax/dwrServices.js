@@ -542,6 +542,9 @@ SecurityController.createGeneGroup = function(p0,p1, callback) {
 SecurityController.deleteGeneGroup = function(p0, callback) {
 	dwr.engine._execute(SecurityController._path, 'SecurityController', 'deleteGeneGroup', p0, callback);
 }
+SecurityController.getAvailablePrincipalSids = function(callback) {
+	dwr.engine._execute(SecurityController._path, 'SecurityController', 'getAvailablePrincipalSids', callback);
+}
 // ====================================================================================
 if (SystemMonitorController == null)
 	var SystemMonitorController = {};

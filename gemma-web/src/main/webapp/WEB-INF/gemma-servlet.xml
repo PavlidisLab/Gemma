@@ -1217,6 +1217,7 @@
 								<value>removeUsersFromGroup</value>
 								<value>updatePermissions</value>
 								<value>updatePermission</value>
+								<value>getAvailablePrincipalSids</value>
 							</list>
 						</property>
 					</bean>
