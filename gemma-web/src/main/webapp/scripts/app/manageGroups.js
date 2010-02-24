@@ -435,15 +435,24 @@ Ext.onReady(function() {
 							for (var i = 0; i < recs.length; i++) {
 								/*
 								 * This is ugly. The 'owner' object gets turned
-								 * into a plain string.
+								 * into a plain string.have to reconstruct the owner from strings
 								 */
-								// have to reconstruct the owner from strings
-								recs[i].data.owner = {
-									authority : recs[i].data.owner.authority,
-									principal : recs[i].data.owner.principal
-									// principal :
-									// recs[i].data.owner.indexOf("GROUP_") < 0
-								};
+								// This is the value if the owner has not been changed in the combo box
+								if(recs[i].data.owner.authority){
+									recs[i].data.owner = {
+											authority : recs[i].data.owner.authority,
+											principal : recs[i].data.owner.principal											
+									};									
+								}
+								//this is the value if the owner has not been changed. principal is always true as combo only filled with principals
+								else if (recs[i].data.owner){
+									recs[i].data.owner = {
+											authority : recs[i].data.owner,
+											principal : "true"											
+									};
+								}else{
+										Ext.Msg.alert('Owner can not be changed');
+								}
 								p.push(recs[i].data);
 							}
 
@@ -561,7 +570,7 @@ Ext.onReady(function() {
 						triggerAction : 'all',
 						lazyRender : true,
 						store : new Ext.data.Store({
-							proxy : new Ext.data.DWRProxy(SecurityController.getAvailableSids),
+							proxy : new Ext.data.DWRProxy(SecurityController.getAvailablePrincipalSids),
 							reader : new Ext.data.ListRangeReader({},
 									Ext.data.Record.create([{
 												name : "authority"
