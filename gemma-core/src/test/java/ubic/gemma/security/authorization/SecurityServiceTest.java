@@ -391,9 +391,31 @@ public class SecurityServiceTest extends BaseSpringContextTest {
        userManager.deleteGroup( groupName );
        //userManager.deleteUser( username );
     }            
-    
-    
-    
+    /**
+     * Test to ensure that on creation of principal using a username that does not exist in system exception is 
+     * thrown. Principal ids are created in these method calls on SecurityService.
+     */
+    @Test
+    public void testSetPrincialSID(){
+        String username = "first_" + randomName();
+        ExpressionExperiment ee = super.getTestPersistentBasicExpressionExperiment();       
+        securityService.makePrivate( ee );
+        
+        try {
+            securityService.setOwner( ee, username );
+            fail();
+        } catch ( Exception e ) {
+           
+        }
+        
+        try {
+            securityService.makeOwnedByUser( ee, username );
+            fail();
+        } catch ( Exception e ) {
+            
+        }              
+                
+    }   
     
     
 
