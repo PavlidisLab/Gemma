@@ -191,6 +191,35 @@ public class SecurityController {
         return results;
     }
 
+    
+    
+    /**
+     * Return a list of principals that is users
+     * 
+     * @return SidValueObjects
+     */
+    public Collection<SidValueObject> getAvailablePrincipalSids() {
+        List<SidValueObject> results = new ArrayList<SidValueObject>();
+        try {
+            for ( Sid s : securityService.getAvailableSids() ) {
+                SidValueObject sv = new SidValueObject( s );
+                if(sv.isPrincipal()){
+                    results.add( sv );
+                }
+            }
+        } catch ( AccessDeniedException e ) {
+            results.clear();
+        }
+
+        Collections.sort( results );
+        return results;
+    }
+    
+    
+    
+    
+    
+    
     /**
      * @param groupName
      * @return
