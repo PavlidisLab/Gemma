@@ -20,11 +20,12 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 		this.addEvents({
 					"ready" : true
 				});
-
-		this.isAdmin = Ext.get("hasAdmin").getValue() == 'true';
-		this.isUser = Ext.get("hasUser").getValue() == 'true';
-		this.editable = this.isAdmin || this.isUser;
-
+		//if no permissions hasWritePermission is no set.
+		
+		if((Ext.get("hasWritePermission")) && Ext.get("hasWritePermission").getValue() == 'true'){
+			this.editable = 'true';			
+		}
+		
 		/*
 		 * Load the EE information via an ajax call.
 		 */
