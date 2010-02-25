@@ -77,8 +77,8 @@
 	</display:table>
 
 </div>
-
-<security:authorize ifAnyGranted="GROUP_ADMIN">
+<%-- Only printed if user has write permissions to object --%>
+<security:accesscontrollist hasPermission="WRITE" domainObject="${expressionExperiment}">
 	<div id="history" style="padding: 5px;">
 	</div>
 	<c:if test="${ lastArrayDesignUpdate != null}">
@@ -86,21 +86,5 @@
 			The last time an array design associated with this experiment was updated: ${lastArrayDesignUpdate.date}
 		</p>
 	</c:if>
-</security:authorize>
-
-
-
-<security:authorize ifAnyGranted="GROUP_ADMIN">
-	<%-- fixme: let 'users' edit their own datasets --%>
-	<input type="hidden" name="hasAdmin" id="hasAdmin" value="true" />
-</security:authorize>
-<security:authorize ifNotGranted="GROUP_ADMIN">
-	<input type="hidden" name="hasAdmin" id="hasAdmin" value="" />
-</security:authorize>
-
-<security:authorize ifAnyGranted="GROUP_USER">
-	<input type="hidden" name="hasUser" id="hasUser" value="true" />
-</security:authorize>
-<security:authorize ifNotGranted="GROUP_USER">
-	<input type="hidden" name="hasUser" id="hasUser" value="" />
-</security:authorize>
+	<input type="hidden" name="hasWritePermission" id="hasWritePermission" value="true" />	
+</security:accesscontrollist>
