@@ -18,11 +18,17 @@
  */
 package ubic.gemma.model.genome;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+/**
+ * @author paul
+ * @version $Id$
+ */
 @Service
 public class PhysicalLocationServiceImpl implements PhysicalLocationService {
-
+    
+    @Autowired
     private PhysicalLocationDao physicalLocationDao;
 
     public PhysicalLocationDao getPhysicalLocationDao() {
