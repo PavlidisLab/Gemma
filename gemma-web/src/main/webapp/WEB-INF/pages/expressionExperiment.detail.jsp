@@ -78,7 +78,7 @@
 
 </div>
 <%-- Only printed if user has write permissions to object --%>
-<security:accesscontrollist hasPermission="WRITE" domainObject="${expressionExperiment}">
+<security:accesscontrollist hasPermission="ADMINISTRATION,WRITE" domainObject="${expressionExperiment}">
 	<div id="history" style="padding: 5px;">
 	</div>
 	<c:if test="${ lastArrayDesignUpdate != null}">
