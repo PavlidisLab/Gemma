@@ -49,17 +49,18 @@
 
 <div id="qc" style="padding: 5px;">
 	<h3>
-		Quality Control information
+		Diagnostic plots
 	</h3>
 	<Gemma:expressionQC ee="${expressionExperiment.id}" hasCorrDistFile="${hasCorrDistFile}"
-		hasCorrMatFile="${hasCorrMatFile}" hasPvalueDistFile="${hasPvalueDistFile}" />
+		hasCorrMatFile="${hasCorrMatFile}" hasPCAFile="${hasPCAFile}" hasNodeDegreeDistFile="${hasNodeDegreeDistFile}"
+		hasPvalueDistFiles="${hasPvalueDistFiles}" />
 </div>
 
 <div style="padding-bottom: 12px;" id="qts">
 	<h3>
 		Quantitation types
 	</h3>
-	<display:table name="quantitationTypes" class="scrollTable" id="qtList" pagesize="100" 
+	<display:table name="quantitationTypes" class="scrollTable" id="qtList" pagesize="100"
 		decorator="ubic.gemma.web.taglib.displaytag.quantitationType.QuantitationTypeWrapper">
 		<display:column escapeXml="true" property="qtName" sortable="true" maxWords="20" titleKey="name" />
 		<display:column escapeXml="true" property="description" sortable="true" maxLength="20" titleKey="description" />
@@ -86,5 +87,5 @@
 			The last time an array design associated with this experiment was updated: ${lastArrayDesignUpdate.date}
 		</p>
 	</c:if>
-	<input type="hidden" name="hasWritePermission" id="hasWritePermission" value="true" />	
+	<input type="hidden" name="hasWritePermission" id="hasWritePermission" value="true" />
 </security:accesscontrollist>

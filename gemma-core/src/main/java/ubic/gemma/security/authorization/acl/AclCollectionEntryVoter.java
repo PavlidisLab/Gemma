@@ -213,7 +213,7 @@ public class AclCollectionEntryVoter extends AbstractAclVoter {
                     acl = aclService.readAclById( objectIdentity, sids );
                 } catch ( NotFoundException nfe ) {
                     if ( logger.isDebugEnabled() ) {
-                        logger.debug( "Voting to deny access - no ACLs apply for this principal" );
+                        logger.debug( "Voting to deny access - no ACLs apply for this principal: " + domainObject );
                     }
 
                     return ACCESS_DENIED;
@@ -240,7 +240,7 @@ public class AclCollectionEntryVoter extends AbstractAclVoter {
 
             // No denials, so we're allowing access.
             if ( logger.isDebugEnabled() ) {
-                logger.debug( "Voting to grant access" );
+                logger.debug( "Voting to grant access: " + coll );
             }
             return ACCESS_GRANTED;
 

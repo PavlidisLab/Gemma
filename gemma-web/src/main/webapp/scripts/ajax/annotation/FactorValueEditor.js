@@ -259,14 +259,10 @@ Gemma.FactorValueGrid = Ext.extend(Gemma.GemmaGridPanel, {
 					}.createDelegate(this), this);
 
 			/*
-			 * Commit changes to factor values (added characteristics)
+			 * Commit changes to factor values (added characteristics or updated characteristics)
 			 */
 			this.getTopToolbar().on("save", function() {
 						var edited = this.getEditedRecords();
-						var seen = {}, fvids = [];
-						for (var i = 0; i < edited.length; ++i) {
-							// ??
-						}
 						var callback = function() {
 							this.factorValuesChanged(edited);
 						}.createDelegate(this);

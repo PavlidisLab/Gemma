@@ -507,9 +507,6 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
         // get the expression experiment counts
         Map<Long, Integer> eeCounts = this.getExpressionExperimentCountMap();
-
-        log.info( eeCounts.size() + " ADS FROM EECOUNTS" );
-
         final String queryString = "select ad.id as id, ad.name as name, ad.shortName as shortName, "
                 + "ad.technologyType, ad.description, event.date as createdDate,  mergedInto  from ArrayDesignImpl ad "
                 + "left join ad.auditTrail as trail inner join trail.events as event left join ad.mergedInto as mergedInto "
@@ -1097,8 +1094,10 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         List<Object[]> list = getHibernateTemplate().findByNamedParam( queryString, "ids", arrayDesignIds );
 
         // Bug 1549: for unknown reasons, this method sometimes returns only a single record (or no records)
-        log.info( list.size() + " rows from getExpressionExperimentCountMap query for " + arrayDesignIds.size()
-                + " ids" );
+        if ( arrayDesignIds.size() > 1 && list.size() != arrayDesignIds.size() ) {
+            log.info( list.size() + " rows from getExpressionExperimentCountMap query for " + arrayDesignIds.size()
+                    + " ids" );
+        }
 
         for ( Object[] o : list ) {
             Long id = ( Long ) o[0];

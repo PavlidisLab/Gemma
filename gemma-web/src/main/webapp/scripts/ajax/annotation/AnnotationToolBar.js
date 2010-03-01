@@ -5,9 +5,9 @@ Ext.namespace('Gemma');
  * with the following options:
  * 
  * @param createHandler :
- *            a function with arguments ( characteristic, callback ) where characteristic is the new characteristic to
- *            add and callback is the function to be called when the characteristic has been added if this argument is
- *            not present, there will be no create button in the toolbar
+ *            a function with arguments (characteristic, id, callback ) where characteristic is the new characteristic
+ *            to add, id is the 'owner' and callback is the function to be called when the characteristic has been added
+ *            if this argument is not present, there will be no create button in the toolbar
  * 
  * @param deleteHandler :
  *            a function with arguments ( ids, callback ) where ids is an array of characteristic ids to remove and
@@ -18,12 +18,13 @@ Ext.namespace('Gemma');
  *            a function with arguments ( characteristics, callback ) where characteristics is an array of
  *            characteristics to update and callback is the function to be called when the characteristics have been
  *            updated if this argument is not present, there will be no save button in the toolbar
+ * @version $Id$
  */
 
 Gemma.AnnotationToolBar = Ext.extend(Ext.Toolbar, {
 
 	taxonId : null,
-	
+
 	initComponent : function() {
 
 		if (this.annotationGrid.editable && !this.saveHandler) {
@@ -125,48 +126,24 @@ Gemma.AnnotationToolBar = Ext.extend(Ext.Toolbar, {
 	},
 
 	afterRender : function(l, r) {
-		/*
-		 * These wrapper panels ensure the toolbar displays correctly in things like tabpanels. See
-		 * http://extjs.com/forum/showthread.php?t=45674
-		 */
-
-		// this.add(new Ext.Panel({
-		// bodyStyle : 'background-color:transparent;',
-		// width : 170,
-		// items : [this.mgedCombo]
-		// }));
 		this.add(this.mgedCombo);
 		this.addSpacer();
-
-		// this.add(new Ext.Panel({
-		// bodyStyle : 'background-color:transparent;',
-		// width : 170,
-		// items : [this.charCombo]
-		// }));
 		this.add(this.charCombo);
 		this.addSpacer();
 
 		if (this.addDescription) {
 			this.add(this.descriptionField);
-			// this.addSpacer();
 		}
 
 		if (this.createHandler) {
 			this.add(this.createButton);
 		}
-		// if (this.createHandler && (this.deleteHandler || this.saveHandler)) {
-		// this.addSeparator();
-		// }
 		if (this.deleteHandler) {
 			this.add(this.deleteButton);
 		}
-		// if ((this.createHandler || this.deleteHandler) && this.saveHandler) {
-		// this.addSeparator();
-		// }
 		if (this.saveHandler) {
 			this.add(this.saveButton);
 		}
-
 		Gemma.AnnotationToolBar.superclass.afterRender.call(this, l, r);
 	}
 

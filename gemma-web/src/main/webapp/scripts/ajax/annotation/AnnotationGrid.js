@@ -21,13 +21,9 @@ Ext.namespace('Gemma');
  * 
  * pageSize : if defined, the grid will be paged on the client side, with the defined page size
  * 
- * writeMethod : funciton pointer to server side ajax call to add an annotation eg)
- * ontologyService.saveExpressionExperimentStatement
+ * writeMethod : function pointer to server side ajax call to add an annotation eg
  * 
- * 
- * removeMethod :funciton pointer to server side ajax call to remove an annotation eg)
- * ontologyService.removeExpressionExperimentStatement
- * 
+ * removeMethod :function pointer to server side ajax call to remove an annotation
  * 
  * entId : the entity that the annotations belong to eg) eeId or bmId
  * 
@@ -115,7 +111,8 @@ Gemma.AnnotationGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				}
 			},
 
-			forceValidation : true, // always fire edit event even if text doesn't change - the url might have. But this isn't good enough, ext has a limitation.
+			forceValidation : true, // always fire edit event even if text doesn't change - the url might have. But this
+			// isn't good enough, ext has a limitation.
 
 			useDefaultToolbar : true,
 
@@ -229,10 +226,10 @@ Gemma.AnnotationGrid = Ext.extend(Gemma.GemmaGridPanel, {
 								tbar : new Gemma.AnnotationToolBar({
 											annotationGrid : this,
 											createHandler : function(characteristic, callback) {
-												this.writeMethod(characteristic, [this.entId], callback);
+												this.writeMethod(characteristic, this.entId, callback);
 											}.createDelegate(this),
 											deleteHandler : function(ids, callback) {
-												this.removeMethod(ids, [this.entId], callback);
+												this.removeMethod(ids, this.entId, callback);
 											}.createDelegate(this),
 											mgedTermKey : "experiment",
 											taxonId : this.taxonId

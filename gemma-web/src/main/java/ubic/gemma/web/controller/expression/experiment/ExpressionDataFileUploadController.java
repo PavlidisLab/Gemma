@@ -27,6 +27,7 @@ import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -86,6 +87,7 @@ public class ExpressionDataFileUploadController extends AbstractSpacesController
             /*
              * Main action here!
              */
+            scrub( commandObject );
             ExpressionExperiment result = simpleExpressionDataLoaderService.load( commandObject, stream );
             stream.close();
 
@@ -168,16 +170,16 @@ public class ExpressionDataFileUploadController extends AbstractSpacesController
     private ArrayDesignService arrayDesignService;
 
     @Autowired
-    private SimpleExpressionDataLoaderService simpleExpressionDataLoaderService;
-
-    @Autowired
     private ExpressionExperimentService expressionExperimentService;
 
     @Autowired
-    private TaxonService taxonService;
+    private ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService;
 
     @Autowired
-    private ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService;
+    private SimpleExpressionDataLoaderService simpleExpressionDataLoaderService;
+
+    @Autowired
+    private TaxonService taxonService;
 
     /**
      * AJAX
@@ -258,6 +260,7 @@ public class ExpressionDataFileUploadController extends AbstractSpacesController
      */
     private SimpleExpressionExperimentCommandValidation doValidate( SimpleExpressionExperimentLoadCommand ed ) {
 
+        scrub( ed );
         ExpressionExperiment existing = expressionExperimentService.findByShortName( ed.getShortName() );
         SimpleExpressionExperimentCommandValidation result = new SimpleExpressionExperimentCommandValidation();
 
@@ -350,6 +353,17 @@ public class ExpressionDataFileUploadController extends AbstractSpacesController
         }
 
         return file;
+    }
+
+    private void scrub( SimpleExpressionExperimentLoadCommand o ) {
+        o.setName( scrub( o.getName() ) );
+        o.setDescription( scrub( o.getDescription() ) );
+        o.setShortName( scrub( o.getShortName() ) );
+
+    }
+
+    private String scrub( String s ) {
+        return StringEscapeUtils.escapeHtml( s );
     }
 
 }

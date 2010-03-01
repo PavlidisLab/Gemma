@@ -224,7 +224,7 @@ public class ArrayDesignWrapper extends TableDecorator {
 
     public String getShortName() {
         ArrayDesignValueObject object = ( ArrayDesignValueObject ) getCurrentRowObject();
-        String result = object.getShortName();
+        String result = StringEscapeUtils.escapeHtml( object.getShortName() );
 
         if ( result == null ) result = "--";
 

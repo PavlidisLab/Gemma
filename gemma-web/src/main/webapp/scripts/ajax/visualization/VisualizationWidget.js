@@ -316,7 +316,6 @@ Gemma.HeatmapTemplate = Ext.extend(Ext.XTemplate, {
  * @return {}
  */
 Gemma.getProfileThumbnailTemplate = function(heatmap, havePvalues, smooth) {
-
 	var pvalueString = "";
 	if (havePvalues) {
 		// yes, minPvalue, from EEVO pValue. The best pvalue of any of the profiles.
@@ -545,6 +544,9 @@ Gemma.VisualizationWithThumbsWindow = Ext.extend(Ext.Window, {
 
 	thumbnails : true,
 
+	// supply an initial default. Important!
+	tpl : Gemma.getProfileThumbnailTemplate(false, true),
+	
 	showThumbNails : true,
 
 	heatmapSortMethod : Gemma.sortByImportance,
@@ -952,15 +954,8 @@ Gemma.VisualizationWithThumbsWindow = Ext.extend(Ext.Window, {
  * Specialization to show differentially expressed genes.
  */
 Gemma.VisualizationDifferentialWindow = Ext.extend(Gemma.VisualizationWithThumbsWindow, {
-
 			havePvalues : true,
-
-			initComponent : function() {
-				this.tpl = Gemma.getProfileThumbnailTemplate(false, true);
-				Gemma.VisualizationDifferentialWindow.superclass.initComponent.call(this);
-
-			},
-
+			tpl : Gemma.getProfileThumbnailTemplate(false, true),
 			readMethod : DEDVController.getDEDVForDiffExVisualization
 		});
 
@@ -971,15 +966,7 @@ Gemma.VisualizationDifferentialWindow = Ext.extend(Gemma.VisualizationWithThumbs
  * @extends Gemma.VisualizationWithThumbsWindow
  */
 Gemma.CoexpressionVisualizationWindow = Ext.extend(Gemma.VisualizationWithThumbsWindow, {
-
-			/**
-			 * config : {}
-			 */
-			initComponent : function() {
-				this.tpl = Gemma.getProfileThumbnailTemplate(false, false);
-				Gemma.VisualizationDifferentialWindow.superclass.initComponent.call(this);
-
-			},
+			tpl : Gemma.getProfileThumbnailTemplate(false, false),
 			readMethod : DEDVController.getDEDVForCoexpressionVisualization
 		});
 

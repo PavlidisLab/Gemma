@@ -793,43 +793,65 @@ public class GeoConverterTest extends BaseSpringContextTest {
         }
         fail( "No sequences!" );
     }
-    
-    
+
     /**
-     * Test logic to evaluate a primary array taxon
-     * Either from platform taxon, common parent taxon or probe taxon.
+     * Test logic to evaluate a primary array taxon Either from platform taxon, common parent taxon or probe taxon.
      * 
      * @throws Exception
      */
     @Test
     public final void testGetPrimaryArrayTaxon() throws Exception {
         Collection<Taxon> platformTaxa = new HashSet<Taxon>();
-        Collection<String> probeTaxa = new ArrayList<String> ();
+        Collection<String> probeTaxa = new ArrayList<String>();
         Taxon salmonid = taxonService.findByCommonName( "salmonid" );
         Taxon rainbowTroat = taxonService.findByAbbreviation( "omyk" );
         Taxon atlanticSalm = taxonService.findByAbbreviation( "ssal" );
-        atlanticSalm.setParentTaxon(salmonid);
+        atlanticSalm.setParentTaxon( salmonid );
         rainbowTroat.setParentTaxon( salmonid );
         Taxon human = taxonService.findByCommonName( "human" );
-                                    
-        platformTaxa.add(atlanticSalm);
-        probeTaxa.add("ssal");
-        probeTaxa.add("omyk");
-        probeTaxa.add("ssal");
-        //test get primary taxon from the array design platform if only one        
-        Taxon primaryTaxon = this.gc.getPrimaryArrayTaxon( platformTaxa, probeTaxa );
-        assertEquals("atlantic salmon", primaryTaxon.getCommonName());
-        //test that can work out parent taxon
-        platformTaxa.add(rainbowTroat);
-        Taxon primaryTaxonTwo = this.gc.getPrimaryArrayTaxon( platformTaxa, probeTaxa );
-        assertEquals("salmonid", primaryTaxonTwo.getCommonName());   
 
-        //test that if no common parent taxon take most common taxon on probe
-        platformTaxa.add(human);
-        Taxon  primaryTaxonThree= this.gc.getPrimaryArrayTaxon( platformTaxa, probeTaxa );
-        assertEquals("atlantic salmon", primaryTaxonThree.getCommonName());         
-        
-    }    
-    
+        platformTaxa.add( atlanticSalm );
+        probeTaxa.add( "ssal" );
+        probeTaxa.add( "omyk" );
+        probeTaxa.add( "ssal" );
+        // test get primary taxon from the array design platform if only one
+        Taxon primaryTaxon = this.gc.getPrimaryArrayTaxon( platformTaxa, probeTaxa );
+        assertEquals( "atlantic salmon", primaryTaxon.getCommonName() );
+        // test that can work out parent taxon
+        platformTaxa.add( rainbowTroat );
+        Taxon primaryTaxonTwo = this.gc.getPrimaryArrayTaxon( platformTaxa, probeTaxa );
+        assertEquals( "salmonid", primaryTaxonTwo.getCommonName() );
+
+        // test that if no common parent taxon take most common taxon on probe
+        platformTaxa.add( human );
+        Taxon primaryTaxonThree = this.gc.getPrimaryArrayTaxon( platformTaxa, probeTaxa );
+        assertEquals( "atlantic salmon", primaryTaxonThree.getCommonName() );
+
+    }
+
+    /**
+     * Has only one GDS in GEOs when there really should be two. Bug 1829.
+     * @throws Exception
+     */
+    @Test
+    public final void testGSE8872() throws Exception {
+        InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/gse8872short/GSE8872_family.soft.gz" ) );
+        GeoFamilyParser parser = new GeoFamilyParser();
+        parser.parse( is );
+
+        is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/gse8872Short/GDS2942.soft.gz" ) );
+        parser.parse( is );
+
+        GeoSeries series = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSeriesMap().get( "GSE8872" );
+        DatasetCombiner datasetCombiner = new DatasetCombiner();
+        GeoSampleCorrespondence correspondence = datasetCombiner.findGSECorrespondence( series );
+        series.setSampleCorrespondence( correspondence );
+        Object result = this.gc.convert( series );
+        assertNotNull( result );
+        Collection<ExpressionExperiment> ees = ( Collection<ExpressionExperiment> ) result;
+        assertEquals( 1, ees.size() );
+    }
 
 }

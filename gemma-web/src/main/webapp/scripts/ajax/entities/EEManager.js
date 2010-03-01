@@ -121,11 +121,20 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 	},
 
 	autoTag : function(id) {
+		var callParams = [];
+		callParams.push(id);
+		callParams.push({
+					callback : function(data) {
+						var k = new Gemma.WaitHandler();
+						this.relayEvents(k, ['done']);
+						k.handleWait(data, false);
+						k.on('done', function(payload) {
+									this.fireEvent('tagsUpdated', payload)
+								});
+					}.createDelegate(this)
+				});
 
-		/*
-		 * TODO: call AnnotationController.annotate(id). Need a progress bar of some sort.
-		 */
-		alert("Hi, this isn't set up yet!");
+		AnnotationController.autoTag.apply(this, callParams);
 
 	},
 
@@ -139,8 +148,8 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 					items : [new Gemma.AnnotationGrid({
 								id : 'annotator-grid',
 								readMethod : ExpressionExperimentController.getAnnotation,
-								writeMethod : OntologyService.saveExpressionExperimentStatement,
-								removeMethod : OntologyService.removeExpressionExperimentStatement,
+								writeMethod : AnnotationController.createExperimentTag,
+								removeMethod : AnnotationController.removeExperimentTag,
 								readParams : [{
 											id : id
 										}],
@@ -364,9 +373,9 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 										}
 									}
 								}
-								
+
 								if (factorsToUseIds.length < 1 || factorsToUseIds.length > 2) {
-									Ext.Msg.alert("Please pick 1 or 2 factors.");
+									Ext.Msg.alert("Invalid selection", "Please pick 1 or 2 factors.");
 									return;
 								}
 

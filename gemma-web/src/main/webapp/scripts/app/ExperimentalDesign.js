@@ -171,7 +171,6 @@ Ext.onReady(function() {
 					});
 
 			experimentalFactorGrid.on("experimentalfactorchange", function(efgrid, efs) {
-						bioMaterialEditor.init();
 						factorValueGrid.enable();
 						factorValueGrid.setTitle("Factor values");
 						factorValueGrid.setExperimentalFactor(null);

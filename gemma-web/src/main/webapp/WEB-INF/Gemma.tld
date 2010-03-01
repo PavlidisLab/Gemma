@@ -282,7 +282,12 @@
 		</attribute>
 		<attribute>
 			<description>default=false</description>
-			<name>hasPvalueDistFile</name>
+			<name>hasPvalueDistFiles</name>
+			<rtexprvalue>true</rtexprvalue> 
+		</attribute>
+		<attribute>
+			<description>default=false</description>
+			<name>hasNodeDegreeDistFile</name>
 			<rtexprvalue>true</rtexprvalue> 
 		</attribute>
 	</tag>

@@ -106,7 +106,7 @@ public class Histogram {
             bin.isOverflow = true;
         } else {
             // search for histogram bin into which x falls
-            double binWidth = ( max - min ) / nbins;
+            double binWidth = stepSize();
             for ( int i = 0; i < nbins; i++ ) {
                 double highEdge = min + ( i + 1 ) * binWidth;
                 if ( x <= highEdge ) {
@@ -118,6 +118,10 @@ public class Histogram {
         }
         return bin;
 
+    }
+
+    public double stepSize() {
+        return ( max - min ) / nbins;
     }
 
     /**
@@ -136,7 +140,7 @@ public class Histogram {
 
         double step = 0;
 
-        double binWidth = ( max - min ) / nbins;
+        double binWidth = stepSize();
 
         double[] binHeights = this.getArray();
 

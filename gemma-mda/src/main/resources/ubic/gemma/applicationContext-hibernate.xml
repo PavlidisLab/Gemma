@@ -207,6 +207,8 @@
 				</value>
 				<value>classpath:ubic/gemma/model/analysis/AnalysisResult.hbm.xml
 				</value>
+				<value>classpath:ubic/gemma/model/analysis/CoexpressionProbe.hbm.xml
+				</value>
 				<value>classpath:ubic/gemma/model/analysis/Investigation.hbm.xml
 				</value>
 				<value>classpath:ubic/gemma/model/analysis/AnalysisResultSet.hbm.xml

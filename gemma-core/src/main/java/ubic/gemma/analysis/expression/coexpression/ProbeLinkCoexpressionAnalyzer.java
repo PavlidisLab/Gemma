@@ -275,7 +275,6 @@ public class ProbeLinkCoexpressionAnalyzer {
 
     /**
      * @param stringency
-     * @param unorganizedGeneCoexpression
      * @param coexpressions
      */
     private void fillInGeneInfo( int stringency, CoexpressionCollectionValueObject coexpressions ) {
@@ -316,6 +315,7 @@ public class ProbeLinkCoexpressionAnalyzer {
             cod.setGeneName( g.getName() );
             cod.setGeneOfficialName( g.getOfficialName() );
             cod.setGeneType( g.getClass().getSimpleName() );
+            cod.setTaxonId( g.getTaxon().getId() );
             coexpressions.add( cod );
         }
         timer.stop();

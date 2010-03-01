@@ -551,10 +551,11 @@
 		<property name="configParams">
 			<map>
 				<entry key="allowScriptTagRemoting" value="true"></entry>
-				<!--
-					<entry key="crossDomainSessionSecurity" value="false"></entry> Uncomment for development if you are getting DWR
-					security errors
-				-->
+
+				<!--Uncomment for development if you are getting DWR
+					security errors-->
+				<entry key="crossDomainSessionSecurity" value="false"></entry>
+
 				<!--
 					<entry key="activeReverseAjaxEnabled" value="true"></entry> <entry
 					key="org.directwebremoting.extend.ServerLoadMonitor"
@@ -791,22 +792,19 @@
 						</property>
 					</bean>
 				</entry>
-				<entry key="OntologyService">
+				<entry key="AnnotationController">
 					<bean class="org.directwebremoting.spring.CreatorConfig">
 						<property name="creator">
 							<bean class="org.directwebremoting.spring.BeanCreator">
-								<property name="bean" ref="ontologyService" />
+								<property name="bean" ref="annotationController" />
 							</bean>
 						</property>
 						<property name="includes">
 							<list>
+								<value>autoTag</value>
 								<value>findTerm</value>
-								<value>findExactTerm</value>
-								<value>saveBioMaterialStatement</value>
-								<value>saveExpressionExperimentStatement</value>
-								<value>saveExpressionExperimentsStatement</value> <!-- multiple ees at a time -->
-								<value>removeExpressionExperimentStatement</value>
-								<value>removeBioMaterialStatement</value>
+								<value>createExperimentTag</value>
+								<value>removeExperimentTag</value>
 							</list>
 						</property>
 					</bean>
@@ -1142,20 +1140,6 @@
 						<property name="includes">
 							<list>
 								<value>getLatestNews</value>
-							</list>
-						</property>
-					</bean>
-				</entry>
-				<entry key="AnnotationController">
-					<bean class="org.directwebremoting.spring.CreatorConfig">
-						<property name="creator">
-							<bean class="org.directwebremoting.spring.BeanCreator">
-								<property name="bean" ref="annotationController" />
-							</bean>
-						</property>
-						<property name="includes">
-							<list>
-								<value>annotate</value>
 							</list>
 						</property>
 					</bean>
@@ -1803,7 +1787,7 @@
 					</bean>
 				</entry>
 				<entry key="ubic.gemma.model.genome.Chromosome">
-			 		<bean class="org.directwebremoting.spring.ConverterConfig">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
 						<property name="type" value="hibernate3" />
 						<property name="includes">
 							<list>

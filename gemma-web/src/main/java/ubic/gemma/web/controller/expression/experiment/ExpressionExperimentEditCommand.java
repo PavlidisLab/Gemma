@@ -20,6 +20,8 @@ package ubic.gemma.web.controller.expression.experiment;
 
 import java.util.List;
 
+import org.apache.commons.lang.StringEscapeUtils;
+
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentImpl;
@@ -70,14 +72,14 @@ public class ExpressionExperimentEditCommand extends ExpressionExperimentImpl {
      * @return
      */
     public ExpressionExperiment toExpressionExperiment() {
-        expressionExperiment.setName( this.getName() );
-        expressionExperiment.setDescription( this.getDescription() );
+        expressionExperiment.setName( scrub( this.getName() ) );
+        expressionExperiment.setDescription( scrub( this.getDescription() ) );
         expressionExperiment.setBioAssays( this.getBioAssays() );
         expressionExperiment.setAuditTrail( this.getAuditTrail() );
         expressionExperiment.setExperimentalDesign( this.getExperimentalDesign() );
         expressionExperiment.setOtherRelevantPublications( this.getOtherRelevantPublications() );
         expressionExperiment.setPrimaryPublication( this.getPrimaryPublication() );
-        expressionExperiment.setShortName( this.getShortName() );
+        expressionExperiment.setShortName( scrub( this.getShortName() ) );
         expressionExperiment.setSource( this.getSource() );
         expressionExperiment.setInvestigators( this.getInvestigators() );
         expressionExperiment.setId( this.getId() ); // maybe not...
@@ -89,4 +91,7 @@ public class ExpressionExperimentEditCommand extends ExpressionExperimentImpl {
         return expressionExperiment;
     }
 
+    private String scrub( String s ) {
+        return StringEscapeUtils.escapeHtml( s );
+    }
 }

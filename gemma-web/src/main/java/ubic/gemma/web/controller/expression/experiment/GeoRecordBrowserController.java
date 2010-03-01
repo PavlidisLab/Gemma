@@ -84,6 +84,17 @@ public class GeoRecordBrowserController {
             }
         }
 
+        String minSamplesS = request.getParameter( "minsam" );
+        if ( StringUtils.isNotBlank( skipSize ) ) {
+            try {
+                skip = Integer.parseInt( skipSize );
+            } catch ( NumberFormatException e ) {
+                //
+            }
+        }
+
+        String taxonS = request.getParameter( "taxon" );
+
         if ( next ) {
             start += count;
         } else if ( prev ) {

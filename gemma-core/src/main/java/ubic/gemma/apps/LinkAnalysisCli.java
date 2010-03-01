@@ -35,6 +35,7 @@ import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.analysis.expression.coexpression.links.LinkAnalysisConfig;
 import ubic.gemma.analysis.expression.coexpression.links.LinkAnalysisService;
 import ubic.gemma.analysis.expression.coexpression.links.LinkAnalysisConfig.NormalizationMethod;
+import ubic.gemma.analysis.expression.coexpression.links.LinkAnalysisConfig.SingularThreshold;
 import ubic.gemma.analysis.preprocess.filter.FilterConfig;
 import ubic.gemma.loader.expression.simple.SimpleExpressionDataLoaderService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.LinkAnalysisEvent;
@@ -391,7 +392,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
             if ( singularThreshold.equals( "fwe" ) || singularThreshold.equals( "cdfCut" )
                     || singularThreshold.equals( "none" ) ) {
                 log.info( "Singular correlation threshold chosen" );
-                this.linkAnalysisConfig.setSingularThreshold( singularThreshold );
+                this.linkAnalysisConfig.setSingularThreshold( SingularThreshold.valueOf( singularThreshold ) );
             } else {
                 log
                         .error( "Must choose 'fwe', 'cdfCut', or 'none' as the singular correlation threshold, defaulting to 'none'" );

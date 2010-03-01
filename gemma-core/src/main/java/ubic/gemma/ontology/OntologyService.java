@@ -55,7 +55,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.ontology.providers.MgedOntologyService;
 import ubic.gemma.search.SearchResult;
 import ubic.gemma.search.SearchService;
@@ -67,7 +66,7 @@ import com.hp.hpl.jena.util.iterator.ExtendedIterator;
 /**
  * Has a static method for finding out which ontologies are loaded into the system and a general purpose find method
  * that delegates to the many ontology services. NOTE: Logging messages from this service are important for tracking
- * changes to annotations. Also NOTE that method names are not overloaded to avoid AJAX call confusion.
+ * changes to annotations.
  * 
  * @author pavlidis
  * @version $Id$
@@ -148,9 +147,6 @@ public class OntologyService implements InitializingBean {
     private FMAOntologyService fmaOntologyService;
 
     @Autowired
-    private TaxonService taxonService;
-
-    @Autowired
     private MgedOntologyService mgedOntologyService;
 
     private Collection<AbstractOntologyService> ontologyServices = new HashSet<AbstractOntologyService>();
@@ -185,10 +181,10 @@ public class OntologyService implements InitializingBean {
      * 
      * @param givenQueryString
      * @param categoryUri
-     * @param taxonId Only used if we're going to search for genes or taxon is otherwise relevant.
+     * @param taxon Only used if we're going to search for genes or taxon is otherwise relevant.
      * @return
      */
-    public Collection<Characteristic> findExactTerm( String givenQueryString, String categoryUri, Long taxonId ) {
+    public Collection<Characteristic> findExactTerm( String givenQueryString, String categoryUri, Taxon taxon ) {
 
         if ( StringUtils.isBlank( givenQueryString ) ) return null;
 
@@ -199,11 +195,6 @@ public class OntologyService implements InitializingBean {
 
         if ( log.isDebugEnabled() ) {
             log.debug( "starting findExactTerm for " + queryString + ". Timing information begins from here" );
-        }
-
-        Taxon taxon = null;
-        if ( taxonId != null ) {
-            taxon = taxonService.load( taxonId );
         }
 
         Collection<OntologyResource> results;
@@ -374,7 +365,7 @@ public class OntologyService implements InitializingBean {
     }
 
     /**
-     * @return the OntologyTerm for the specified URI. Exposed for AJAX.
+     * @return the OntologyTerm for the specified URI.
      */
     public OntologyTerm getTerm( String uri ) {
         for ( AbstractOntologyService ontology : ontologyServices ) {
@@ -427,50 +418,6 @@ public class OntologyService implements InitializingBean {
     }
 
     /**
-     * Will persist the give vocab characteristic to each expression experiment id supplied in the list.
-     * <p>
-     * AJAX
-     * 
-     * @param vc
-     * @param bmIdList
-     */
-    public void removeExpressionExperimentStatement( Collection<Long> characterIds, Collection<Long> eeIdList ) {
-
-        log.debug( "Vocab Characteristic: " + characterIds );
-        log.debug( "Expression Experiment ID List: " + eeIdList );
-
-        Collection<ExpressionExperiment> ees = eeService.loadMultiple( eeIdList );
-
-        for ( ExpressionExperiment ee : ees ) {
-            // eeService.thawLite( ee ); // if used from web, this results in double-objectc-in-session issues. see bug
-            // 1801
-            Collection<Characteristic> current = ee.getCharacteristics();
-            if ( current == null ) continue;
-
-            Collection<Characteristic> found = new HashSet<Characteristic>();
-
-            for ( Characteristic characteristic : current ) {
-                if ( characterIds.contains( characteristic.getId() ) ) found.add( characteristic );
-
-            }
-            if ( found.size() == 0 ) continue;
-
-            for ( Characteristic characteristic : found ) {
-                log.info( "Removing characteristic  from " + ee + " : " + characteristic );
-            }
-
-            current.removeAll( found );
-            ee.setCharacteristics( current );
-            eeService.update( ee );
-
-        }
-
-        for ( Long id : characterIds ) {
-            characteristicService.delete( id );
-        }
-    }
-
-    /**
      * Will persist the give vocab characteristic to each biomaterial id supplied in the list. Exposed for AJAX.
      * 
      * @param vc
@@ -506,28 +453,12 @@ public class OntologyService implements InitializingBean {
     }
 
     /**
-     * Will persist the give vocab characteristic to each expression experiment id supplied in the list.
-     * 
-     * @param vc . If the evidence code is null, it will be filled in with IC. A category and value must be provided.
-     * @param eeIds
-     */
-    public void saveExpressionExperimentsStatement( Characteristic vc, Collection<Long> eeIds ) {
-        for ( Long id : eeIds ) {
-            this.saveExpressionExperimentStatement( vc, id );
-        }
-    }
-
-    /**
      * Will persist the give vocab characteristic to the expression experiment.
      * 
      * @param vc . If the evidence code is null, it will be filled in with IC. A category and value must be provided.
      * @param ee
      */
-    public void saveExpressionExperimentStatement( Characteristic vc, Long id ) {
-        ExpressionExperiment ee = eeService.load( id );
-        if ( ee == null ) {
-            throw new IllegalArgumentException( "Cannot load experiment with id=" + id );
-        }
+    public void saveExpressionExperimentStatement( Characteristic vc, ExpressionExperiment ee ) {
         if ( vc == null ) {
             throw new IllegalArgumentException( "Null characteristic" );
         }
@@ -537,7 +468,6 @@ public class OntologyService implements InitializingBean {
 
         if ( StringUtils.isBlank( vc.getValue() ) ) {
             throw new IllegalArgumentException( "Must provide a value" );
-
         }
 
         if ( vc.getEvidenceCode() == null ) {
@@ -547,7 +477,6 @@ public class OntologyService implements InitializingBean {
 
         Set<Characteristic> chars = new HashSet<Characteristic>();
         chars.add( vc );
-        // eeService.thawLite( ee ); // see bug 1801
         Collection<Characteristic> current = ee.getCharacteristics();
         if ( current == null ) {
             current = new HashSet<Characteristic>( chars );
@@ -562,9 +491,13 @@ public class OntologyService implements InitializingBean {
 
     }
 
-    public void saveExpressionExperimentStatements( Collection<Characteristic> vc, Long id ) {
+    /**
+     * @param vc
+     * @param ee
+     */
+    public void saveExpressionExperimentStatements( Collection<Characteristic> vc, ExpressionExperiment ee ) {
         for ( Characteristic characteristic : vc ) {
-            saveExpressionExperimentStatement( characteristic, id );
+            saveExpressionExperimentStatement( characteristic, ee );
         }
     }
 
@@ -710,12 +643,12 @@ public class OntologyService implements InitializingBean {
      * @param searchResults
      */
     private void searchForGenes( String queryString, String categoryUri, Taxon taxon, List<Characteristic> searchResults ) {
-        log.info( queryString );
-        if ( categoryUri != null
-                && ( categoryUri.equals( "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#GeneticModification" )
-                        || categoryUri
-                                .equals( "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#IndividualGeneticCharacteristics" ) || categoryUri
-                        .equals( "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#Genotype" ) ) ) {
+        if ( categoryUri == null ) return;
+
+        if ( categoryUri.equals( "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#GeneticModification" )
+                || categoryUri
+                        .equals( "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#IndividualGeneticCharacteristics" )
+                || categoryUri.equals( "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#Genotype" ) ) {
 
             /*
              * Kick into a special search for genes. The user will have to deal with choosing one from the right taxon.
@@ -729,9 +662,8 @@ public class OntologyService implements InitializingBean {
 
             if ( geneResults.containsKey( Gene.class ) ) {
                 for ( SearchResult sr : geneResults.get( Gene.class ) ) {
-
                     Gene g = ( Gene ) sr.getResultObject();
-                    log.info( g );
+                    log.debug( "Search for " + queryString + " returned: " + g );
                     searchResults.add( gene2Characteristic( g ) );
                 }
             }

@@ -26,7 +26,7 @@ import javax.sql.DataSource;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.hibernate.SessionFactory; 
+import org.hibernate.SessionFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -376,6 +376,23 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
      */
     protected Contact getTestPersistentContact() {
         return testHelper.getTestPersistentContact();
+    }
+
+    /**
+     * Change the number of elements created in collections (basically controls the size of test data sets). This needn't be called unless the test needs larger data sets. FCall
+     * {@link resetTestCollectionSize} after you are done. 
+     * 
+     * @param size
+     */
+    protected void setTestCollectionSize( int size ) {
+        testHelper.setTestElementCollectionSize( size );
+    }
+
+    /**
+     * Restore to default.
+     */
+    protected void resetTestCollectionSize() {
+        testHelper.resetTestElementCollectionSize();
     }
 
     /**

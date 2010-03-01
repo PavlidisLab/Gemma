@@ -507,7 +507,20 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         String efUri = "&nbsp;<a target='_blank' href='/Gemma/experimentalDesign/showExperimentalDesign.html?eeid="
                 + ee.getId() + "'>(details)</a >";
 
-        descriptive.append( "<b>Factors:</b>&nbsp;" );
+        Collection<Characteristic> tags = ee.getCharacteristics();
+        if ( tags.size() > 0 ) {
+            descriptive.append( "&nbsp;<b>Tags:</b>&nbsp;" );
+            int i = 0;
+            for ( Characteristic tag : tags ) {
+                descriptive.append( tag.getValue() + ", " );
+                if ( ++i > 5 ) {
+                    descriptive.append( " [more tags not shown]" );
+                    break;
+                }
+            }
+        }
+
+        descriptive.append( "&nbsp;<b>Factors:</b>&nbsp;" );
         for ( ExperimentalFactor ef : efs ) {
             descriptive.append( ef.getName() + ", " );
         }
@@ -964,6 +977,9 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         mav.addObject( "hasCorrDistFile", ExpressionExperimentQCUtils.hasCorrDistFile( expressionExperiment ) );
         mav.addObject( "hasCorrMatFile", ExpressionExperimentQCUtils.hasCorrMatFile( expressionExperiment ) );
         mav.addObject( "hasPvalueDistFiles", ExpressionExperimentQCUtils.hasPvalueDistFiles( expressionExperiment ) );
+        mav.addObject( "hasPCAFile", ExpressionExperimentQCUtils.hasPCAFile( expressionExperiment ) );
+        mav.addObject( "hasNodeDegreeDistFile", ExpressionExperimentQCUtils
+                .hasNodeDegreeDistFile( expressionExperiment ) );
 
         boolean isPrivate = securityService.isPrivate( expressionExperiment );
         mav.addObject( "isPrivate", isPrivate );

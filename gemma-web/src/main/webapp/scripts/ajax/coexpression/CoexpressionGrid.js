@@ -280,21 +280,20 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 	},
 
 	/**
-	 * Load the data if there is no data returned an errorState message is set on the result
-	 * to indicate what the exact problem was.
+	 * Load the data if there is no data returned an errorState message is set on the result to indicate what the exact
+	 * problem was.
+	 * 
 	 * @param {}
-	 *      	result 
+	 *            result
 	 */
 	loadDataCb : function(result) {
 		if (result.errorState) {
 			this.handleError(result.errorState);
-		}
-		else{		
+		} else {
 			this.loadData(result.isCannedAnalysis, result.queryGenes.length, result.knownGeneResults,
-				result.knownGeneDatasets);
+					result.knownGeneDatasets);
 		}
 	},
-		
 
 	doSearch : function(csc) {
 
@@ -305,27 +304,26 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 				});
 		this.loadMask.show();
 		var errorHandler = this.handleError.createDelegate(this);
-		ExtCoexpressionSearchController.doSearch(csc, {			
+		ExtCoexpressionSearchController.doSearch(csc, {
 					callback : this.loadDataCb.createDelegate(this),
 					errorHandler : errorHandler
 				});
 	},
-	
+
 	/**
-	 * Checks if store contains any results if not print message indicating that there are non.
-	 * Stop loader. Called when an error thrown of after data load processing
+	 * Checks if store contains any results if not print message indicating that there are non. Stop loader. Called when
+	 * an error thrown of after data load processing
 	 */
 	handleError : function(errorMessage) {
 		Ext.DomHelper.applyStyles("coexpression-msg", "height: 2.2em");
 		Ext.DomHelper.overwrite("coexpression-msg", [{
-			tag : 'img',
-			src : '/Gemma/images/icons/information.png'
-		},
-		{
-			tag : 'span',
-			html : "&nbsp;&nbsp;" + errorMessage					
-		}]);
-		
+							tag : 'img',
+							src : '/Gemma/images/icons/information.png'
+						}, {
+							tag : 'span',
+							html : "&nbsp;&nbsp;" + errorMessage
+						}]);
+
 		this.loadMask.hide();
 		this.hide();
 	},
@@ -333,7 +331,6 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 	clearError : function() {
 		Ext.DomHelper.overwrite("coexpression-messages", "");
 	},
-		
 
 	toggleMyData : function(btn, pressed) {
 		var buttonText = btn.getText();
@@ -488,14 +485,19 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 			g.officialName = "";
 		}
 
-		g.taxonId = g.taxon.id;
-		g.taxonName = g.taxon.commonName;
+		if (g.taxon != null) {
+			g.taxonId = g.taxon.id;
+			g.taxonName = g.taxon.commonName;
+		} else {
+			g.taxonId = -1;
+			g.taxonName = "?";
+		}
 
 		return this.foundGeneTemplate.apply(g);
 	},
 
 	/**
-	 * 
+	 * FIXME this should use the same analysis as the last query. Here we always use 'All'.
 	 */
 	foundGeneTemplate : new Ext.Template(
 			"<a href='/Gemma/searchCoexpression.html?g={id}&s=3&t={taxonId}&an=All {taxonName}'> <img src='/Gemma/images/logo/gemmaTiny.gif' ext:qtip='Make {officialSymbol} the query gene' /> </a>",
@@ -679,7 +681,7 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 							// autoHeight is false.
 							// Most likely a loading issue (no data in
 							// store, so no height).
-							//autoHeight : true,
+							// autoHeight : true,
 							stateful : false
 						});
 
@@ -693,7 +695,7 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 							threshold : 0.01,
 							// width : 750,
 							// height : 380,
-							stateful : false							
+							stateful : false
 						});
 
 				var detailsTP = new Ext.TabPanel({
@@ -809,17 +811,17 @@ Gemma.CoexpressionGrid.linkOutPopUp = function(linkOutValueObject) {
 	}
 
 	var abaWindowId = "coexpressionAbaWindow";
-	
+
 	var popUpLinkOutWin = Ext.getCmp(abaWindowId);
 	if (popUpLinkOutWin != null) {
 		popUpLinkOutWin.close();
-		popUpLinkOutWin = null;		
+		popUpLinkOutWin = null;
 	}
-	
+
 	popUpLinkOutWin = new Ext.Window({
 				id : abaWindowId,
 				html : popUpHtml,
-				stateful : false, 
+				stateful : false,
 				resizable : false
 			});
 	popUpLinkOutWin

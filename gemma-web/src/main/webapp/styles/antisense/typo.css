@@ -63,11 +63,13 @@ a.annotationLink {
 }
 
 a.newpage {
-	background:transparent url(../images/icons/newwindow.png) no-repeat scroll right center;
+	background:transparent url(../../images/icons/newwindow.png) no-repeat scroll right center;
+	padding-right:15px;
 }
 
 a.external {
-	background:transparent url(../images/icons/externallink	.png) no-repeat scroll right center;
+	background:transparent url(../../images/icons/externallink.png) no-repeat scroll right center;
+	padding-right:15px;
 }
 
 /* END LINKS */ /* HEADINGS */
@@ -540,7 +542,7 @@ a.tooltip:hover .tooltiptext {
 }
 .x-statusbar .x-status-busy {
     padding-left: 25px;
-    background: transparent url(../images/default/grid/loading.gif) no-repeat 3px 3px;
+    background: transparent url(../../images/default/grid/loading.gif) no-repeat 3px 3px;
 }
 .x-statusbar .x-status-text-panel {
     border-top: 1px solid #99BBE8;

@@ -153,7 +153,7 @@ public class Probe2ProbeCoexpressionServiceTest extends BaseSpringContextTest {
 
         assertNotNull( ee.getId() );
 
-        results = ppcs.validateProbesInCoexpression( queryProbeIds, coexpressedProbeIds, ee, "mouse" );
+        results = ppcs.getCoexpressedProbes( queryProbeIds, coexpressedProbeIds, ee, "mouse" );
 
         assertEquals( 2, results.size() );
 

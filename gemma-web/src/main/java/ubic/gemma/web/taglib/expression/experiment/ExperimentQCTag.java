@@ -39,7 +39,9 @@ public class ExperimentQCTag extends TagSupport {
 
     private boolean hasPCAFile = false;
 
-    private boolean hasPvalueDistFile = false;
+    private boolean hasPvalueDistFiles = false;
+
+    private boolean hasNodeDegreeDistFile = false;
 
     enum Size {
         small, large
@@ -78,8 +80,12 @@ public class ExperimentQCTag extends TagSupport {
     /**
      * @param value
      */
-    public void setHasPvalueDistFile( boolean value ) {
-        this.hasPvalueDistFile = value;
+    public void setHasPvalueDistFiles( boolean value ) {
+        this.hasPvalueDistFiles = value;
+    }
+
+    public void setHasNodeDegreeDistFile( boolean value ) {
+        this.hasNodeDegreeDistFile = value;
     }
 
     /**
@@ -107,19 +113,23 @@ public class ExperimentQCTag extends TagSupport {
          */
 
         buf.append( "<div class=\"eeqc\" id=\"eeqc\">" );
-        buf.append( "<table border=\"0\" cellspacing=\"8\"  >" );
+        buf.append( "<table border=\"0\" cellspacing=\"4\" style=\"background-color:#DDDDDD\" >" );
 
-        buf
-                .append( "<tr><th valign=\"top\" align=\"center\"><strong>Sample correlation (black &le; "
-                        + ExpressionDataSampleCorrelation.HI_CONTRAST_COR_THRESH
-                        + ")</strong></th><th valign=\"top\" align=\"center\"><strong>Probe correlation</strong</th><th valign=\"top\" align=\"center\"><strong>Pvalue distributions</strong></th></tr>" );
+        buf.append( "<tr><th valign=\"top\" align=\"center\"><strong>Sample correlation (black &le; "
+                + ExpressionDataSampleCorrelation.HI_CONTRAST_COR_THRESH + ")</strong></th>"
+                + "<th valign=\"top\" align=\"center\"><strong>PCA</strong></th>"
+                + "<th valign=\"top\" align=\"center\"><strong>Node degree</strong></th>"
+                + "<th valign=\"top\" align=\"center\"><strong>Probe correlation</strong</th>"
+                + "<th valign=\"top\" align=\"center\"><strong>Pvalue distributions</strong></th>" + "</tr>" );
 
         buf.append( "<tr>" );
+
+        String placeHolder = "<td  style=\"margin:3px;padding:8px;background-color:#EEEEEE\" valign='top'>Not available</td>";
 
         if ( hasCorrMatFile ) {
 
             buf
-                    .append( "<td valign='top'><a target=\"_blank\" title=\"Click for larger version (opens in new window)\" href=\"visualizeCorrMat.html?id="
+                    .append( "<td style=\"margin:3px;padding:2px;background-color:#EEEEEE\" valign='top'><a target=\"_blank\" title=\"Click for larger version (new page)\" href=\"visualizeCorrMat.html?id="
                             + this.eeid
                             + "&size=large\"><img src=\"visualizeCorrMat.html?id="
                             + this.eeid
@@ -128,30 +138,49 @@ public class ExperimentQCTag extends TagSupport {
 
             // link to lower contrast version
             buf
-                    .append( "<ul class='glassList'><li><a target=\"_blank\" title=\"Click for larger lower contrast version (opens in new window)\" href=\"visualizeCorrMat.html?id="
+                    .append( "<ul><li><a class=\"newpage\" target=\"_blank\" title=\"Click for larger lower contrast version\" href=\"visualizeCorrMat.html?id="
                             + this.eeid
-                            + "&size=large&contr=lo\">lower contrast version (black &le;"
+                            + "&size=large&contr=lo\">View low contrast version (black &le;"
                             + ExpressionDataSampleCorrelation.LO_CONTRAST_COR_THRESH + ")</a></li>" );
             buf
-                    .append( "<li><a title=\"Download a file containing the raw correlation matrix data\" href=\"visualizeCorrMat.html?id="
-                            + this.eeid + "&text=1\">Data</a></li>" );
+                    .append( "<li><a title=\"Download a file containing the raw correlation matrix data\" class=\"newpage\"  target=\"_blank\"  href=\"visualizeCorrMat.html?id="
+                            + this.eeid + "&text=1\">Get data</a></li>" );
 
             buf.append( "</ul></td>" );
         } else {
-            buf.append( "<td align='center' valign='top'>Not available</td>" );
+            buf.append( placeHolder );
+        }
+
+        if ( hasPCAFile ) {
+            buf
+                    .append( "<td style=\"margin:3px;padding:2px;background-color:#EEEEEE\" valign='top'><img alt='PCA' src=\"visualizePCA.html?id="
+                            + this.eeid + "\" /></td>" );
+        } else {
+            buf.append( placeHolder );
+        }
+
+        if ( hasNodeDegreeDistFile ) {
+            buf
+                    .append( "<td style=\"margin:3px;padding:2px;background-color:#EEEEEE\" valign='top'><img alt='Node degree dist' src=\"visualizeNodeDegreeDist.html?id="
+                            + this.eeid + "\" /></td>" );
+        } else {
+            buf.append( placeHolder );
         }
 
         if ( hasCorrDistFile ) {
-            buf.append( " <td valign='top'><img alt='Correlation distribution' src=\"visualizeProbeCorrDist.html?id=" + this.eeid
-                    + "\" /></td>" );
+            buf
+                    .append( " <td style=\"margin:3px;padding:2px;background-color:#EEEEEE\" valign='top'><img alt='Correlation distribution' src=\"visualizeProbeCorrDist.html?id="
+                            + this.eeid + "\" /></td>" );
         } else {
-            buf.append( "<td align='center' valign='top'>Not available</td>" );
+            buf.append( placeHolder );
         }
 
-        if ( hasPvalueDistFile ) {
-            buf.append( "<td><img alt='Pvalue ditribution' src=\"visualizePvalueDist.html?id=" + this.eeid + "\" /></td>" );
+        if ( hasPvalueDistFiles ) {
+            buf
+                    .append( "<td style=\"margin:3px;padding:2px;background-color:#EEEEEE\" valign='top'><img alt='Pvalue distribution' src=\"visualizePvalueDist.html?id="
+                            + this.eeid + "\" /></td>" );
         } else {
-            buf.append( "<td align='center' valign='top'>Not available</td>" );
+            buf.append( placeHolder );
         }
 
         buf.append( "</tr></table></div>" );

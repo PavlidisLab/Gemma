@@ -539,7 +539,7 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
      * populate geneToProbeMap and gather stats.
      */
     private void initGeneToProbeMap() {
-        int[] stats = new int[10];
+        int[] stats = new int[20]; // how many genes per probe
         this.numUniqueGenes = 0;
         this.flatProbe2GeneMap = new HashMap<CompositeSequence, Collection<Gene>>();
         this.geneToProbeMap = new HashMap<Gene, Collection<CompositeSequence>>();
@@ -567,6 +567,6 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
                 }
             }
         }
-        log.info( "Mapping Stats: " + ArrayUtils.toString( stats ) );
+        log.info( "Mapping Stats: " + numUniqueGenes + " unique genes; genes per probe distribution: " + ArrayUtils.toString( stats ) );
     }
 }

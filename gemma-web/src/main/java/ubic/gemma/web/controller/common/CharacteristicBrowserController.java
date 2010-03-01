@@ -52,6 +52,7 @@ import ubic.gemma.web.controller.expression.experiment.AnnotationValueObject;
  * @author luke
  * @author paul
  * @version $Id$
+ * @see ubic.gemma.web.controller.expression.experiment.AnnotationController for related methods.
  */
 @Controller
 public class CharacteristicBrowserController {

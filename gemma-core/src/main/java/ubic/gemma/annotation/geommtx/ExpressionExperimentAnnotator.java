@@ -265,7 +265,7 @@ public class ExpressionExperimentAnnotator implements InitializingBean {
         // attach the Characteristic to the experiment. Comment out these lines if you don't want to save the
         // results to the database
         log.info( "Saving " + newChars.size() + " new annotations for " + e );
-        ontologyService.saveExpressionExperimentStatements( newChars, e.getId() );
+        ontologyService.saveExpressionExperimentStatements( newChars, e );
         audit( e );
 
         return newChars;

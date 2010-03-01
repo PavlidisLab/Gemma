@@ -688,7 +688,7 @@ Gemma.DatasetChooserPanel = Ext.extend(Ext.Window, {
 							collapsible : true,
 							collapseMode : 'mini',
 							loadMask : {
-								msg : 'Loading'
+								msg : 'Loading ...'
 							},
 							height : 200,
 							title : "Available expression experiment sets",
@@ -1151,7 +1151,7 @@ Gemma.EditExpressionExperimentSetToolbar = Ext.extend(Ext.Toolbar, {
 						 * try to create it in the db.
 						 */
 						var callback = function(data) {
-							if (data) {
+							if (data) { // the id
 								Ext.Msg.alert("Created", "The set was created in the database");
 							} else {
 								Ext.Msg.alert("Error", "Could not create. See the logs for details.");
@@ -1171,11 +1171,7 @@ Gemma.EditExpressionExperimentSetToolbar = Ext.extend(Ext.Toolbar, {
 				} else {
 					if (this.userCanWriteToDB) {
 						var updateCallback = function(data) {
-							if (data) {
-								Ext.Msg.alert("Created", "The set was updated in the database");
-							} else {
-								Ext.Msg.alert("Error", "Could not updated. See the logs for details.");
-							}
+							Ext.Msg.alert("Updated", "The set was updated in the database");
 						}.createDelegate(this);
 						var updateErrorHandler = function(data) {
 							Ext.Msg.alert("Error", "Could not update. See the logs for details.<br/>" + data);

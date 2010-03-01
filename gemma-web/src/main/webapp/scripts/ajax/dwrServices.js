@@ -17,11 +17,17 @@ if (DWREngine == null)
 if (AnnotationController == null)
 	var AnnotationController = {};
 AnnotationController._path = '/Gemma/dwr';
-AnnotationController.run = function(p0, callback) {
-	dwr.engine._execute(AnnotationController._path, 'AnnotationController', 'annotate', p0, callback);
+AnnotationController.autoTag = function(p0, callback) {
+	dwr.engine._execute(AnnotationController._path, 'AnnotationController', 'autoTag', p0, callback);
 }
-AnnotationController.run = function(p0, callback) {
-	dwr.engine._execute(AnnotationController._path, 'AnnotationController', 'annotate', p0, callback);
+AnnotationController.findTerm = function(p0, p1, p2, callback) {
+	dwr.engine._execute(AnnotationController._path, 'AnnotationController', 'findTerm', p0, p1, p2, callback);
+}
+AnnotationController.createExperimentTag = function(p0, p1, callback) {
+	dwr.engine._execute(AnnotationController._path, 'AnnotationController', 'createExperimentTag', p0, p1, callback);
+}
+AnnotationController.removeExperimentTag = function(p0, p1, callback) {
+	dwr.engine._execute(AnnotationController._path, 'AnnotationController', 'removeExperimentTag', p0, p1, callback);
 }
 // ====================================================================================
 if (ArrayDesignController == null)
@@ -536,8 +542,8 @@ SecurityController.updatePermission = function(p0, callback) {
 SecurityController.getGroupMembers = function(p0, callback) {
 	dwr.engine._execute(SecurityController._path, 'SecurityController', 'getGroupMembers', p0, callback);
 }
-SecurityController.createGeneGroup = function(p0,p1, callback) {
-	dwr.engine._execute(SecurityController._path, 'SecurityController', 'createGeneGroup', p0,p1, callback);
+SecurityController.createGeneGroup = function(p0, p1, callback) {
+	dwr.engine._execute(SecurityController._path, 'SecurityController', 'createGeneGroup', p0, p1, callback);
 }
 SecurityController.deleteGeneGroup = function(p0, callback) {
 	dwr.engine._execute(SecurityController._path, 'SecurityController', 'deleteGeneGroup', p0, callback);
@@ -599,35 +605,6 @@ MgedOntologyService.getTermIndividuals = function(p0, callback) {
 }
 MgedOntologyService.isOntologyLoaded = function(callback) {
 	dwr.engine._execute(MgedOntologyService._path, 'MgedOntologyService', 'isOntologyLoaded', callback);
-}
-// ====================================================================================
-if (OntologyService == null)
-	var OntologyService = {};
-OntologyService._path = '/Gemma/dwr';
-OntologyService.findExactTerm = function(p0, p1, p2, callback) {
-	dwr.engine._execute(OntologyService._path, 'OntologyService', 'findExactTerm', p0, p1, p2, callback);
-}
-OntologyService.saveBioMaterialStatement = function(p0, p1, callback) {
-	dwr.engine._execute(OntologyService._path, 'OntologyService', 'saveBioMaterialStatement', p0, p1, callback);
-}
-OntologyService.saveExpressionExperimentStatement = function(p0, p1, callback) {
-	dwr.engine
-			._execute(OntologyService._path, 'OntologyService', 'saveExpressionExperimentStatement', p0, p1, callback);
-}
-OntologyService.saveExpressionExperimentStatement = function(p0, p1, callback) {
-	dwr.engine._execute(OntologyService._path, 'OntologyService', 'saveExpressionExperimentStatementById', p0, p1,
-			callback);
-}
-OntologyService.saveExpressionExperimentStatement = function(p0, p1, callback) {
-	dwr.engine._execute(OntologyService._path, 'OntologyService', 'saveExpressionExperimentsStatement', p0, p1,
-			callback);
-}
-OntologyService.removeExpressionExperimentStatement = function(p0, p1, callback) {
-	dwr.engine._execute(OntologyService._path, 'OntologyService', 'removeExpressionExperimentStatement', p0, p1,
-			callback);
-}
-OntologyService.removeBioMaterialStatement = function(p0, p1, callback) {
-	dwr.engine._execute(OntologyService._path, 'OntologyService', 'removeBioMaterialStatement', p0, p1, callback);
 }
 // ====================================================================================
 if (ProcessedExpressionDataVectorCreateController == null)

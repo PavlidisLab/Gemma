@@ -65,12 +65,12 @@
             onclick="location.href='/Gemma/expressionExperiment/showAllExpressionExperiments.html'"
             value="Back"></DIV>
             </TD>
-        <security:acl domainObject="${experimentalFactor}" hasPermission="1,6">
+        <security:accesscontrollist domainObject="${experimentalFactor}" hasPermission="WRITE,ADMINISTRATION">
             <TD COLSPAN="2">    
             <DIV align="left"><input type="button"
             onclick="location.href='editExperimentalFactor.html?id=<%=request.getAttribute("id")%>'"
             value="Edit"></DIV>
             </TD>
-        </security:acl>
+        </security:accesscontrollist>
     </TR>
     </table>

@@ -46,6 +46,7 @@ import org.springframework.stereotype.Service;
 
 import ubic.basecode.dataStructure.Link;
 import ubic.basecode.math.CorrelationStats;
+import ubic.basecode.math.Rank;
 import ubic.gemma.analysis.preprocess.ExpressionDataSVD;
 import ubic.gemma.analysis.preprocess.InsufficientProbesException;
 import ubic.gemma.analysis.preprocess.filter.FilterConfig;
@@ -55,6 +56,7 @@ import ubic.gemma.analysis.service.ExpressionDataMatrixService;
 import ubic.gemma.analysis.stats.ExpressionDataSampleCorrelation;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrixRowElement;
+import ubic.gemma.model.analysis.CoexpressionProbe;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis;
 import ubic.gemma.model.association.BioSequence2GeneProduct;
@@ -84,6 +86,7 @@ import ubic.gemma.model.genome.ProbeAlignedRegion;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.PersisterHelper;
 import ubic.gemma.util.TaxonUtility;
+import cern.colt.list.DoubleArrayList;
 import cern.colt.list.ObjectArrayList;
 
 /**
@@ -164,7 +167,8 @@ public class LinkAnalysisService {
      * @param linkAnalysisConfig Configuration for the link analysis.
      * @throws Exception
      */
-    public void process( ExpressionExperiment ee, FilterConfig filterConfig, LinkAnalysisConfig linkAnalysisConfig ) {
+    public LinkAnalysis process( ExpressionExperiment ee, FilterConfig filterConfig,
+            LinkAnalysisConfig linkAnalysisConfig ) {
 
         try {
             LinkAnalysis la = new LinkAnalysis( linkAnalysisConfig );
@@ -178,6 +182,7 @@ public class LinkAnalysisService {
             process( ee, filterConfig, linkAnalysisConfig, la, dataVectors );
 
             log.info( "Done with processing of " + ee );
+            return la;
         } catch ( Exception e ) {
 
             if ( linkAnalysisConfig.isUseDb() ) {
@@ -198,8 +203,8 @@ public class LinkAnalysisService {
      * @param filterConfig
      * @param linkAnalysisConfig - must include the array name.
      */
-    public void process( Taxon t, Collection<ProcessedExpressionDataVector> dataVectors, FilterConfig filterConfig,
-            LinkAnalysisConfig linkAnalysisConfig ) {
+    public LinkAnalysis process( Taxon t, Collection<ProcessedExpressionDataVector> dataVectors,
+            FilterConfig filterConfig, LinkAnalysisConfig linkAnalysisConfig ) {
         ExpressionDataDoubleMatrix datamatrix = expressionDataMatrixService.getFilteredMatrix( linkAnalysisConfig
                 .getArrayName(), filterConfig, dataVectors );
 
@@ -216,78 +221,14 @@ public class LinkAnalysisService {
         setUpForAnalysis( t, la, dataVectors, datamatrix );
 
         la.analyze();
+
         try {
             writeLinks( la, filterConfig, new PrintWriter( System.out ) );
         } catch ( IOException e ) {
             throw new RuntimeException( e );
         }
+        return la;
 
-    }
-
-    /**
-     * @param ee
-     * @param filterConfig
-     * @param linkAnalysisConfig
-     * @param la
-     * @param dataVectors
-     */
-    private void process( ExpressionExperiment ee, FilterConfig filterConfig, LinkAnalysisConfig linkAnalysisConfig,
-            LinkAnalysis la, Collection<ProcessedExpressionDataVector> dataVectors ) {
-        checkVectors( ee, dataVectors );
-
-        ExpressionDataDoubleMatrix datamatrix = expressionDataMatrixService.getFilteredMatrix( ee, filterConfig,
-                dataVectors );
-
-        if ( datamatrix.rows() == 0 ) {
-            log.info( "No rows left after filtering" );
-            throw new InsufficientProbesException( "No rows left after filtering" );
-        } else if ( datamatrix.rows() < FilterConfig.MINIMUM_ROWS_TO_BOTHER ) {
-            throw new InsufficientProbesException( "To few rows (" + datamatrix.rows()
-                    + "), data sets are not analyzed unless they have at least " + FilterConfig.MINIMUM_ROWS_TO_BOTHER
-                    + " rows" );
-        }
-
-        datamatrix = this.normalize( datamatrix, linkAnalysisConfig );
-
-        /*
-         * Might as well while we have the data handy
-         */
-        if ( linkAnalysisConfig.isMakeSampleCorrMatImages() ) {
-            log.info( "Creating sample correlation matrix ..." );
-            ExpressionDataSampleCorrelation.process( datamatrix, ee );
-        }
-
-        /*
-         * Link analysis section.
-         */
-        log.info( "Starting link analysis... " + ee );
-        setUpForAnalysis( ee, la, dataVectors, datamatrix );
-        addAnalysisObj( ee, datamatrix, filterConfig, linkAnalysisConfig, la );
-        Map<CompositeSequence, ProcessedExpressionDataVector> p2v = getProbe2VectorMap( dataVectors );
-        la.analyze();
-
-        // output
-        if ( linkAnalysisConfig.isUseDb() && !linkAnalysisConfig.isTextOut() ) {
-
-            Collection<ExpressionExperiment> ees = new HashSet<ExpressionExperiment>();
-            ees.add( ee );
-
-            saveLinks( p2v, la );
-
-            audit( ee, "", LinkAnalysisEvent.Factory.newInstance() );
-
-        } else if ( linkAnalysisConfig.isTextOut() ) {
-            try {
-                PrintWriter w = new PrintWriter( System.out );
-                if ( linkAnalysisConfig.getOutputFile() != null ) {
-                    w = new PrintWriter( linkAnalysisConfig.getOutputFile() );
-                }
-
-                writeLinks( la, filterConfig, w );
-            } catch ( IOException e ) {
-                throw new RuntimeException( e );
-            }
-        }
     }
 
     public void setAuditTrailService( AuditTrailService auditTrailService ) {
@@ -349,12 +290,19 @@ public class LinkAnalysisService {
         analysis.getExpressionExperimentSetAnalyzed().getExperiments().add( ee );
 
         /*
-         * Add probes used. Note that this includes probes that were not 
+         * Add probes used. Note that this includes probes that were not ......
          */
         List<ExpressionDataMatrixRowElement> rowElements = eeDoubleMatrix.getRowElements();
-        Collection<CompositeSequence> probesUsed = new HashSet<CompositeSequence>();
+        Collection<CoexpressionProbe> probesUsed = new HashSet<CoexpressionProbe>();
         for ( ExpressionDataMatrixRowElement el : rowElements ) {
-            probesUsed.add( ( CompositeSequence ) el.getDesignElement() );
+            CoexpressionProbe p = CoexpressionProbe.Factory.newInstance();
+            p.setProbe( ( CompositeSequence ) el.getDesignElement() );
+            /*
+             * later we set node degree.
+             */
+            assert p.getProbe().getId() != null;
+
+            probesUsed.add( p );
         }
         analysis.setProbesUsed( probesUsed );
 
@@ -380,6 +328,47 @@ public class LinkAnalysisService {
         ExpressionExperiment expressionExperiment = la.getExpressionExperiment();
         log.info( "Deleting any old links for " + expressionExperiment + " ..." );
         ppService.deleteLinks( expressionExperiment );
+    }
+
+    /**
+     * Populates the analysis object with the node degrees for the probes.
+     * 
+     * @param la
+     */
+    private void fillInNodeDegree( LinkAnalysis la ) {
+
+        Map<Long, Integer> pId2ND = new HashMap<Long, Integer>();
+        DoubleArrayList vals = new DoubleArrayList();
+        int j = la.getDataMatrix().rows();
+        for ( int i = 0; i < j; i++ ) {
+            int pd = la.getProbeDegree( i );
+            long id = la.getDataMatrix().getDesignElementForRow( i ).getId();
+            pId2ND.put( id, pd );
+            vals.add( pd );
+        }
+
+        Map<Long, Double> pId2NDRank = new HashMap<Long, Double>();
+
+        DoubleArrayList ranks = Rank.rankTransform( vals );
+        for ( int i = 0; i < j; i++ ) {
+            long id = la.getDataMatrix().getDesignElementForRow( i ).getId();
+            double rank = ranks.get( i );
+            rank = rank / j;
+            pId2NDRank.put( id, rank );
+
+        }
+
+        boolean gotDegrees = false;
+        for ( CoexpressionProbe p : la.getAnalysisObj().getProbesUsed() ) {
+            Long pid = p.getProbe().getId();
+            assert pid != null;
+            if ( pId2ND.containsKey( pid ) ) {
+                p.setNodeDegree( pId2ND.get( pid ) );
+                p.setNodeDegreeRank( pId2NDRank.get( pid ) );
+                gotDegrees = true;
+            }
+        }
+        assert gotDegrees : "No node degree information was in the data structures"; // this would be a BUG.
     }
 
     /**
@@ -528,6 +517,72 @@ public class LinkAnalysisService {
         }
     }
 
+    /**
+     * @param ee
+     * @param filterConfig
+     * @param linkAnalysisConfig
+     * @param la
+     * @param dataVectors
+     */
+    private void process( ExpressionExperiment ee, FilterConfig filterConfig, LinkAnalysisConfig linkAnalysisConfig,
+            LinkAnalysis la, Collection<ProcessedExpressionDataVector> dataVectors ) {
+        checkVectors( ee, dataVectors );
+
+        ExpressionDataDoubleMatrix datamatrix = expressionDataMatrixService.getFilteredMatrix( ee, filterConfig,
+                dataVectors );
+
+        if ( datamatrix.rows() == 0 ) {
+            log.info( "No rows left after filtering" );
+            throw new InsufficientProbesException( "No rows left after filtering" );
+        } else if ( datamatrix.rows() < FilterConfig.MINIMUM_ROWS_TO_BOTHER ) {
+            throw new InsufficientProbesException( "To few rows (" + datamatrix.rows()
+                    + "), data sets are not analyzed unless they have at least " + FilterConfig.MINIMUM_ROWS_TO_BOTHER
+                    + " rows" );
+        }
+
+        datamatrix = this.normalize( datamatrix, linkAnalysisConfig );
+
+        /*
+         * Might as well while we have the data handy
+         */
+        if ( linkAnalysisConfig.isMakeSampleCorrMatImages() ) {
+            log.info( "Creating sample correlation matrix ..." );
+            ExpressionDataSampleCorrelation.process( datamatrix, ee );
+        }
+
+        /*
+         * Link analysis section.
+         */
+        log.info( "Starting link analysis... " + ee );
+        setUpForAnalysis( ee, la, dataVectors, datamatrix );
+        addAnalysisObj( ee, datamatrix, filterConfig, linkAnalysisConfig, la );
+        Map<CompositeSequence, ProcessedExpressionDataVector> p2v = getProbe2VectorMap( dataVectors );
+        la.analyze();
+
+        // output
+        if ( linkAnalysisConfig.isUseDb() && !linkAnalysisConfig.isTextOut() ) {
+
+            Collection<ExpressionExperiment> ees = new HashSet<ExpressionExperiment>();
+            ees.add( ee );
+
+            saveLinks( p2v, la );
+
+            audit( ee, "", LinkAnalysisEvent.Factory.newInstance() );
+
+        } else if ( linkAnalysisConfig.isTextOut() ) {
+            try {
+                PrintWriter w = new PrintWriter( System.out );
+                if ( linkAnalysisConfig.getOutputFile() != null ) {
+                    w = new PrintWriter( linkAnalysisConfig.getOutputFile() );
+                }
+
+                writeLinks( la, filterConfig, w );
+            } catch ( IOException e ) {
+                throw new RuntimeException( e );
+            }
+        }
+    }
+
     private void removeNonKnownGenes( Collection<Gene> cluster ) {
         for ( Iterator<Gene> iterator = cluster.iterator(); iterator.hasNext(); ) {
             Gene gene = iterator.next();
@@ -551,8 +606,10 @@ public class LinkAnalysisService {
 
         if ( useDB ) {
             deleteOldLinks( la );
-            // Create new analysis object.
+            // Complete and persist the new analysis object.
+            fillInNodeDegree( la );
             ProbeCoexpressionAnalysis analysisObj = la.getAnalysisObj();
+
             analysisObj = ( ProbeCoexpressionAnalysis ) persisterHelper.persist( analysisObj );
             la.setAnalysisObj( analysisObj );
         }
@@ -649,8 +706,8 @@ public class LinkAnalysisService {
         }
 
         Integer probeDegreeThreshold = la.getConfig().getProbeDegreeThreshold();
-        int skippedDueToDegree = 0; 
-        
+        int skippedDueToDegree = 0;
+
         List<Probe2ProbeCoexpression> p2plinkBatch = new ArrayList<Probe2ProbeCoexpression>();
         for ( int i = 0, n = links.size(); i < n; i++ ) {
             Object val = links.getQuick( i );

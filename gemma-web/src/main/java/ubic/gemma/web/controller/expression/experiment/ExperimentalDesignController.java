@@ -24,7 +24,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
@@ -102,7 +101,7 @@ public class ExperimentalDesignController extends BaseController {
         if ( ee == null ) {
             throw new IllegalArgumentException( "Could not access experiment with id=" + eeid );
         }
-        
+
         if ( ee.getExperimentalDesign().getExperimentalFactors().size() > 0 ) {
             throw new IllegalArgumentException(
                     "Cannot import an experimental design for an experiment that already has design data populated." );
@@ -115,11 +114,11 @@ public class ExperimentalDesignController extends BaseController {
         }
 
         try {
-            //removed dry run code, validation and object creation is done before any commits to DB
-            //So if validation fails no rollback needed. HWoever, this call is wrapped in a transaction
-            //as a fail safe.
-            InputStream is = new FileInputStream( f );        
-            experimentalDesignImporter.importDesign( ee, is);
+            // removed dry run code, validation and object creation is done before any commits to DB
+            // So if validation fails no rollback needed. HWoever, this call is wrapped in a transaction
+            // as a fail safe.
+            InputStream is = new FileInputStream( f );
+            experimentalDesignImporter.importDesign( ee, is );
         } catch ( IOException e ) {
             throw new RuntimeException( "Failed to import the design: " + e.getMessage() );
         }
@@ -220,48 +219,47 @@ public class ExperimentalDesignController extends BaseController {
      * @param efIds a collection of ExperimentalFactor ids
      */
     public void deleteExperimentalFactors( EntityDelegator e, Collection<Long> efIds ) {
-        //log.info("Start processing " + System.currentTimeMillis());
-        
+        // log.info("Start processing " + System.currentTimeMillis());
+
         if ( e == null || e.getId() == null ) return;
         ExperimentalDesign ed = this.experimentalDesignService.load( e.getId() );
-      
+
         ExpressionExperiment ee = experimentalDesignService.getExpressionExperiment( ed );
-    
+
         if ( ee == null ) {
             throw new IllegalArgumentException( "No expression experiment for experimental design " + ed );
         }
-        
-        Collection<ExperimentalFactor> experimentalFactorsToRemove = new HashSet<ExperimentalFactor>();      
-        for( Long efId : efIds){
+
+        Collection<ExperimentalFactor> experimentalFactorsToRemove = new HashSet<ExperimentalFactor>();
+        for ( Long efId : efIds ) {
             ExperimentalFactor experimentalFactor = experimentalFactorService.load( efId );
-            experimentalFactorsToRemove.add(experimentalFactor);
+            experimentalFactorsToRemove.add( experimentalFactor );
         }
-         
+
         for ( BioAssay ba : ee.getBioAssays() ) {
-            for ( BioMaterial bm : ba.getSamplesUsed() ) {                
-                
+            for ( BioMaterial bm : ba.getSamplesUsed() ) {
+
                 Collection<FactorValue> factorValuesToRemoveFromBioMaterial = new HashSet<FactorValue>();
                 for ( FactorValue factorValue : bm.getFactorValues() ) {
-                    if (experimentalFactorsToRemove.contains( factorValue.getExperimentalFactor() )) {                           
-                        factorValuesToRemoveFromBioMaterial.add( factorValue );                        
+                    if ( experimentalFactorsToRemove.contains( factorValue.getExperimentalFactor() ) ) {
+                        factorValuesToRemoveFromBioMaterial.add( factorValue );
                     }
                 }
-                //if there are factors to remove
-                if (factorValuesToRemoveFromBioMaterial != null && factorValuesToRemoveFromBioMaterial.size()>0 ) {
+                // if there are factors to remove
+                if ( factorValuesToRemoveFromBioMaterial != null && factorValuesToRemoveFromBioMaterial.size() > 0 ) {
                     bm.getFactorValues().removeAll( factorValuesToRemoveFromBioMaterial );
                     bioMaterialService.update( bm );
                 }
-            }           
+            }
         }
-              
-        
+
         ed.getExperimentalFactors().removeAll( experimentalFactorsToRemove );
-        //delete the experimental factor this cascades to values.
-        for ( ExperimentalFactor factorRemove : experimentalFactorsToRemove ) {          
+        // delete the experimental factor this cascades to values.
+        for ( ExperimentalFactor factorRemove : experimentalFactorsToRemove ) {
             experimentalFactorService.delete( factorRemove );
         }
         experimentalDesignService.update( ed );
-        
+
     }
 
     /**
@@ -291,11 +289,11 @@ public class ExperimentalDesignController extends BaseController {
 
         for ( Long fvId : fvIds ) {
             FactorValue fv = factorValueService.load( fvId );
-            if(ef!=null){
+            if ( ef != null ) {
                 ef.getFactorValues().remove( fv );
             }
             factorValueService.delete( fv );
-            
+
         }
         experimentalFactorService.update( ef );
     }
@@ -584,11 +582,24 @@ public class ExperimentalDesignController extends BaseController {
          */
         for ( FactorValueValueObject fvvo : fvvos ) {
 
-            Long charId = fvvo.getCharId();
+            Long fvID = fvvo.getId();
 
+            if ( fvID == null ) {
+                throw new IllegalArgumentException( "Factor value id must be supplied" );
+            }
+
+            FactorValue fv = this.factorValueService.load( fvID );
+            if ( fv == null ) {
+                throw new IllegalArgumentException( "Could not load factorvalue with id=" + fvID );
+            }
+
+            Long charId = fvvo.getCharId(); // this is optional. Maybe we're actually adding a characteristic for the
+            // first time.
+
+            Characteristic c;
             if ( charId != null ) {
 
-                Characteristic c = characteristicService.load( charId );
+                c = characteristicService.load( charId );
 
                 if ( c == null ) {
                     /*
@@ -597,16 +608,36 @@ public class ExperimentalDesignController extends BaseController {
                     throw new IllegalStateException( "No characteristic with id " + fvvo.getCharId() );
                 }
 
-                c.setCategory( fvvo.getCategory() );
-                c.setValue( fvvo.getValue() );
-                if ( c instanceof VocabCharacteristic ) {
-                    VocabCharacteristic vc = ( VocabCharacteristic ) c;
-                    vc.setCategoryUri( fvvo.getCategoryUri() );
-                    vc.setValueUri( fvvo.getValueUri() );
+                if ( !fv.getCharacteristics().contains( c ) ) {
+                    throw new IllegalArgumentException( "Characteristic with id=" + charId
+                            + " does not belong to factorvalue with id=" + fvID );
                 }
-                c.setEvidenceCode( GOEvidenceCode.IC ); // characteristic has been manually updated
-                characteristicService.update( c );
+
+            } else {
+
+                if ( StringUtils.isNotBlank( fvvo.getValueUri() ) ) {
+                    c = VocabCharacteristic.Factory.newInstance();
+                } else {
+                    c = Characteristic.Factory.newInstance();
+                }
             }
+
+            c.setCategory( fvvo.getCategory() );
+            c.setValue( fvvo.getValue() );
+            if ( c instanceof VocabCharacteristic ) {
+                VocabCharacteristic vc = ( VocabCharacteristic ) c;
+                vc.setCategoryUri( fvvo.getCategoryUri() );
+                vc.setValueUri( fvvo.getValueUri() );
+            }
+            c.setEvidenceCode( GOEvidenceCode.IC ); // characteristic has been manually updated
+
+            if ( c.getId() != null ) {
+                characteristicService.update( c );
+            } else {
+                fv.getCharacteristics().add( c );
+                factorValueService.update( fv );
+            }
+
         }
     }
 

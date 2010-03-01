@@ -34,6 +34,7 @@ import org.apache.commons.logging.LogFactory;
 import ubic.basecode.dataStructure.Link;
 import ubic.basecode.math.CorrelationStats;
 import ubic.basecode.math.Stats;
+import ubic.gemma.analysis.expression.diff.Histogram;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -110,17 +111,26 @@ public class LinkAnalysis {
         }
     }
 
+    /**
+     * Writes two flies: one the actual probe degrees, and the other a histogram (dist)
+     */
     private void writeProbeDegreeDistribution() {
 
         File outputDir = getOutputDir();
 
         if ( outputDir == null ) return;
 
-        String path = outputDir + File.separator + expressionExperiment.getShortName() + ".degreeDist.txt";
+        String distPath = outputDir + File.separator + expressionExperiment.getShortName() + ".degreeDist.txt";
+        String path = outputDir + File.separator + expressionExperiment.getShortName() + ".degrees.txt";
 
         File outputFile = new File( path );
         if ( outputFile.exists() ) {
             outputFile.delete();
+        }
+
+        File outputDistFile = new File( distPath );
+        if ( outputDistFile.exists() ) {
+            outputDistFile.delete();
         }
 
         try {
@@ -133,8 +143,35 @@ public class LinkAnalysis {
 
             for ( Integer i : probeDegreeMap.keySet() ) {
                 DesignElement probe = this.getProbe( i );
-                out.write( probe.getId() + "\t" + probe.getName() + "\t"
-                        + probeDegreeMap.get( i ) + "\n" );
+                out.write( probe.getId() + "\t" + probe.getName() + "\t" + probeDegreeMap.get( i ) + "\n" );
+            }
+
+            out.close();
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
+        }
+
+        Histogram hist = new Histogram( "foo", 100, 0, 1000 );
+        for ( Integer i : probeDegreeMap.values() ) {
+            hist.fill( i.doubleValue() );
+        }
+
+        double[] counts = hist.getArray();
+        try {
+            FileWriter out = new FileWriter( outputDistFile );
+
+            int d = ( int ) hist.min();
+            int step = ( int ) hist.stepSize();
+
+            out.write( "# Probe degree histogram (before filtering by probeDegreeThreshold)\n" );
+            out.write( "# date=" + ( new Date() ) + "\n" );
+            out.write( "# exp=" + expressionExperiment + " " + expressionExperiment.getShortName() + "\n" );
+            out.write( "Bin\tCount\n" );
+
+            for ( int i = 0; i < counts.length; i++ ) {
+                Double v = counts[i];
+                out.write( d + "\t" + v.intValue() + "\n" );
+                d += step;
             }
 
             out.close();

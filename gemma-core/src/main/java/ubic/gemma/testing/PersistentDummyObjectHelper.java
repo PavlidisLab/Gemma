@@ -82,12 +82,14 @@ public class PersistentDummyObjectHelper {
     public static final int NUM_QUANTITATION_TYPES = 2;
     public static final int NUM_BIOMATERIALS = 8;
     private static final int RANDOM_STRING_LENGTH = 10;
-    public static final int TEST_ELEMENT_COLLECTION_SIZE = 6;
+    public static final int DEFAULT_TEST_ELEMENT_COLLECTION_SIZE = 6;
     private PersisterHelper persisterHelper;
     private ExternalDatabaseService externalDatabaseService;
 
     private ExternalDatabase geo;
     private ExternalDatabase genbank;
+
+    private int testElementCollectionSize = DEFAULT_TEST_ELEMENT_COLLECTION_SIZE;
 
     // private Taxon testTaxon;
 
@@ -183,8 +185,13 @@ public class PersistentDummyObjectHelper {
 
     private byte[] getDoubleData() {
         double[] data = new double[NUM_BIOMATERIALS];
+        double bump = 0.0;
         for ( int j = 0; j < data.length; j++ ) {
-            data[j] = RandomUtils.nextDouble();
+            data[j] = RandomUtils.nextDouble() + bump;
+            if ( j % 3 == 0 ) {
+                // add some correlation structure to the data.
+                bump += 0.5;
+            }
         }
         ByteArrayConverter bconverter = new ByteArrayConverter();
         byte[] bdata = bconverter.doubleArrayToBytes( data );
@@ -310,14 +317,14 @@ public class PersistentDummyObjectHelper {
 
         LocalFile file = LocalFile.Factory.newInstance();
         try {
-            file.setLocalURL( new URL( "file:///tmp/" + ee.getShortName() ) );
+            file.setLocalURL( new URL( "file:///just/a/placeholder/" + ee.getShortName() ) );
         } catch ( MalformedURLException e ) {
         }
 
         ee.setRawDataFile( file );
 
-        ArrayDesign adA = this.getTestPersistentArrayDesign( TEST_ELEMENT_COLLECTION_SIZE, false, dosequence );
-        ArrayDesign adB = this.getTestPersistentArrayDesign( TEST_ELEMENT_COLLECTION_SIZE, false, dosequence );
+        ArrayDesign adA = this.getTestPersistentArrayDesign( this.getTestElementCollectionSize(), false, dosequence );
+        ArrayDesign adB = this.getTestPersistentArrayDesign( this.getTestElementCollectionSize(), false, dosequence );
 
         ExperimentalDesign ed = getExperimentalDesign();
         ee.setExperimentalDesign( ed );
@@ -589,7 +596,7 @@ public class PersistentDummyObjectHelper {
     private Collection<BioSequence2GeneProduct> getTestPersistentBioSequence2GeneProducts( BioSequence bioSequence ) {
 
         Collection<BioSequence2GeneProduct> b2gCol = new HashSet<BioSequence2GeneProduct>();
-        for ( int i = 0; i < TEST_ELEMENT_COLLECTION_SIZE; i++ ) {
+        for ( int i = 0; i < DEFAULT_TEST_ELEMENT_COLLECTION_SIZE; i++ ) {
             BlatAssociation b2g = BlatAssociation.Factory.newInstance();
             b2g.setScore( RandomUtils.nextDouble() );
             b2g.setBioSequence( bioSequence );
@@ -788,6 +795,24 @@ public class PersistentDummyObjectHelper {
      */
     public void setPersisterHelper( PersisterHelper persisterHelper ) {
         this.persisterHelper = persisterHelper;
+    }
+
+    /**
+     * Override the number of elements made in collections. By default this is quite small, so you can increase it. But
+     * please call 'reset' afterwards.
+     * 
+     * @param testElementCollectionSize
+     */
+    public void setTestElementCollectionSize( int testElementCollectionSize ) {
+        this.testElementCollectionSize = testElementCollectionSize;
+    }
+
+    public void resetTestElementCollectionSize() {
+        this.testElementCollectionSize = DEFAULT_TEST_ELEMENT_COLLECTION_SIZE;
+    }
+
+    public int getTestElementCollectionSize() {
+        return testElementCollectionSize;
     }
 
 }

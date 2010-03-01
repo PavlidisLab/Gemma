@@ -36,12 +36,9 @@ public class LinkAnalysisConfig implements Serializable {
         BALANCE, none, SPELL, SVD
     }
 
-    /**
-     * 
-     */
     private static final long serialVersionUID = 1L;
 
-    public static final Integer DEFAULT_PROBE_DEGREE_THRESHOLD = -1;
+    public static final Integer DEFAULT_PROBE_DEGREE_THRESHOLD = 500;
 
     private boolean absoluteValue = false;
     private String arrayName = null;
@@ -58,12 +55,26 @@ public class LinkAnalysisConfig implements Serializable {
 
     private String metric = "pearson"; // spearman
     private NormalizationMethod normalizationMethod = NormalizationMethod.none;
-    /*
+
+    /**
      * Remove negative correlated values at the end.
      */
     private boolean omitNegLinks = false;
+
+    /**
+     * Probes with more than this many links are removed.
+     */
     private int probeDegreeThreshold = DEFAULT_PROBE_DEGREE_THRESHOLD;
-    private String singularThreshold = "none"; // fwe|cdfCut
+
+    /**
+     * Configures whether only one of the two thresholds should be used. Set to 'none' to use the standard
+     * dual-threshold, or choose 'fwe' or 'cdfcut' to use only one of those.
+     */
+    public enum SingularThreshold {
+        none, fwe, cdfcut
+    };
+
+    private SingularThreshold singularThreshold = SingularThreshold.none; // fwe|cdfCut
     private boolean subset = false;
     private double subsetSize = 0.0;
 
@@ -127,7 +138,7 @@ public class LinkAnalysisConfig implements Serializable {
     /**
      * @return the singularThreshold
      */
-    public String getSingularThreshold() {
+    public SingularThreshold getSingularThreshold() {
         return singularThreshold;
     }
 
@@ -257,9 +268,11 @@ public class LinkAnalysisConfig implements Serializable {
     }
 
     /**
-     * @param singularThreshold the singularThreshold to set
+     * Set to modify threshold behaviour: enforce the choice of only one of the two standard thresholds.
+     * 
+     * @param singularThreshold the singularThreshold to set. Default is 'none'.
      */
-    public void setSingularThreshold( String singularThreshold ) {
+    public void setSingularThreshold( SingularThreshold singularThreshold ) {
         this.singularThreshold = singularThreshold;
     }
 

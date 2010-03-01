@@ -36,6 +36,10 @@ var LinePlot = function() {
 		 */
 		function draw(container, series, config, sampleLabels) {
 
+			// maybe not ready yet.
+			if (series.length == 0)
+				return;
+
 			var numberOfColumns = series[0].data.length; // assumed to be the same always.
 
 			// avoid insanity
@@ -146,7 +150,6 @@ var LinePlot = function() {
 					var message;
 					if (numberOfColumns.length > 80) { // basically, no matter how wide they make it, there won't be
 						// room.
-						// TODO: implement expand.
 						message = "Click 'expand' to see the sample labels";
 					} else {
 						message = "Click 'expand' or try widening the window to see the sample labels";

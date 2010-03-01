@@ -1,10 +1,20 @@
 /*
- * The Gemma project Copyright (c) 2010 University of British Columbia Licensed under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the
- * License at http://www.apache.org/licenses/LICENSE-2.0 Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied. See the License for the specific language governing permissions and limitations
- * under the License.
+ * The Gemma project
+ * 
+ * Copyright (c) 2010 University of British Columbia
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
  */
 
 package ubic.gemma.search;
@@ -19,8 +29,7 @@ import java.util.Map;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import ubic.basecode.ontology.providers.AbstractOntologyService;
+ 
 import ubic.basecode.ontology.providers.FMAOntologyService;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicService;
@@ -127,18 +136,6 @@ public class SearchServiceTest extends BaseSpringContextTest {
 
     }
 
-    // Pass in the given ontology you want to wait to finish loading.
-    private void waitForOntology( AbstractOntologyService os ) {
-        while ( !os.isOntologyLoaded() ) {
-            try {
-                Thread.sleep( 5000 );
-            } catch ( InterruptedException ie ) {
-                log.warn( ie );
-            }
-            log.info( "Waiting for FMA Ontology to load" );
-        }
-    }
-
     /**
      * @exception Exception
      */
@@ -148,7 +145,10 @@ public class SearchServiceTest extends BaseSpringContextTest {
         // In case the fma ontology isn't set to be initizlized the the Gemma.properties file
         FMAOntologyService fmaOntologyService = ontologyService.getFmaOntologyService();
         fmaOntologyService.init( true );
-        waitForOntology( fmaOntologyService );
+        while ( !ontologyService.getFmaOntologyService().isOntologyLoaded() ) {
+            Thread.sleep( 10000 );
+            log.info( "Waiting for FMA Ontology to load" );
+        }
 
         ee = this.getTestPersistentBasicExpressionExperiment();
 

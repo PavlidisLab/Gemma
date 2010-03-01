@@ -33,6 +33,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.xml.parsers.ParserConfigurationException;
 
+import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.tools.ant.filters.StringInputStream;
 import org.springframework.validation.BindException;
@@ -557,8 +558,8 @@ public class ExpressionExperimentFormController extends BaseFormController {
                     revisedType.setType( newType );
                     revisedType.setScale( newscale );
                     revisedType.setGeneralType( newgentype );
-                    revisedType.setDescription( newDescription );
-                    revisedType.setName( newName );
+                    revisedType.setDescription( scrub( newDescription ) );
+                    revisedType.setName( scrub( newName ) );
                     revisedType.setIsNormalized( newisNormalized );
 
                     qType.setIsBackgroundSubtracted( newisBkgSub );
@@ -570,8 +571,8 @@ public class ExpressionExperimentFormController extends BaseFormController {
                     qType.setType( newType );
                     qType.setScale( newscale );
                     qType.setGeneralType( newgentype );
-                    qType.setDescription( newDescription );
-                    qType.setName( newName );
+                    qType.setDescription( scrub( newDescription ) );
+                    qType.setName( scrub( newName ) );
                     qType.setIsNormalized( newisNormalized );
 
                     if ( newName != null && ( oldName == null || !oldName.equals( newName ) ) ) {
@@ -626,4 +627,9 @@ public class ExpressionExperimentFormController extends BaseFormController {
             }
         }
     }
+
+    private String scrub( String s ) {
+        return StringEscapeUtils.escapeHtml( s );
+    }
+
 }

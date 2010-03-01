@@ -75,16 +75,14 @@ public class GeneCoexpressionService {
      * instead...
      */
     private static class SimpleGene extends Gene {
-        /**
-         * 
-         */
         private static final long serialVersionUID = 1L;
 
-        public SimpleGene( Long id, String name, String officialName ) {
+        public SimpleGene( Long id, String name, String officialName, Taxon taxon ) {
             super();
             this.setId( id );
             this.setOfficialSymbol( name );
             this.setOfficialName( officialName );
+            this.setTaxon( taxon );
         }
     }
 
@@ -187,11 +185,6 @@ public class GeneCoexpressionService {
                     return getFilteredCannedAnalysisResults( eeSet.getId(), eeIds, genes, stringency, maxResults,
                             queryGenesOnly );
                 }
-
-                /*
-                 * FIXME: if there is an analysis that contains 'most' of the experiments, it may be performant to split
-                 * it up: get the expression results for some datasets from gene2gene, and some via probe-level query.
-                 */
             }
         }
 
@@ -437,7 +430,8 @@ public class GeneCoexpressionService {
 
             CoexpressionValueObjectExt ecvo = new CoexpressionValueObjectExt();
             ecvo.setQueryGene( queryGene );
-            ecvo.setFoundGene( new SimpleGene( cvo.getGeneId(), cvo.getGeneName(), cvo.getGeneOfficialName() ) );
+            ecvo.setFoundGene( new SimpleGene( cvo.getGeneId(), cvo.getGeneName(), cvo.getGeneOfficialName(), queryGene
+                    .getTaxon() ) );
 
             ecvo.setPosSupp( cvo.getPositiveLinkSupport() );
             ecvo.setNegSupp( cvo.getNegativeLinkSupport() );

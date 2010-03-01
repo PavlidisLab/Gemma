@@ -40,7 +40,7 @@ Gemma.CharacteristicCombo = Ext.extend(Ext.form.ComboBox, {
 
 		Ext.apply(this, {
 					store : new Ext.data.Store({
-								proxy : new Ext.data.DWRProxy(OntologyService.findExactTerm),
+								proxy : new Ext.data.DWRProxy(AnnotationController.findTerm),
 								reader : new Ext.data.ListRangeReader({
 											id : "id"
 										}, this.record),
@@ -112,8 +112,7 @@ Gemma.CharacteristicCombo = Ext.extend(Ext.form.ComboBox, {
 	},
 
 	/*
-	 * if the characteristic has a URI, use that as the description; if not, strip the " -USED- " string (added in
-	 * OntologyService) if present.
+	 * if the characteristic has a URI, use that as the description; if not, strip the " -USED- " string (added server-side)F if present.
 	 */
 	getHover : function(record) {
 		if (record.valueUri) {

@@ -139,7 +139,7 @@
 					value="Back">
 			</DIV>
 		</TD>
-		<security:accesscontrollist domainObject="${bioMaterial}" hasPermission="2,16">
+		<security:accesscontrollist domainObject="${bioMaterial}" hasPermission="WRITE,ADMINISTRATION">
 			<TD COLSPAN="2">
 				<DIV align="left">
 					<input type="button" onclick="location.href='/Gemma/bioMaterial/editBioMaterial.html?id=${bioMaterial.id}"
