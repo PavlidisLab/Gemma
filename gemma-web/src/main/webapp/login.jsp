@@ -75,6 +75,7 @@ version: $Id$
 				},{
 					fieldLabel: 'Remember Me',
 					boxLabel : 'rememberMe',
+					// defined in AbstractRememberMeServices.
 					id : '_spring_security_remember_me',
 					name : '_spring_security_remember_me',
 					inputType: 'checkbox'
