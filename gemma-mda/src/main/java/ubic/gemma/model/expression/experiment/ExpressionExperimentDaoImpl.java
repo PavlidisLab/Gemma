@@ -37,6 +37,7 @@ import org.apache.commons.logging.LogFactory;
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
+import org.hibernate.Query;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
@@ -1204,66 +1205,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
      */
     @Override
     protected Collection<ExpressionExperimentValueObject> handleLoadAllValueObjects() throws Exception {
-        Map<Long, ExpressionExperimentValueObject> vo = new HashMap<Long, ExpressionExperimentValueObject>();
-        final String queryString = "select distinct ee.id as id, "
-                + "ee.name as name, "
-                + "ED.name as externalDatabaseName, "
-                + "ED.webUri as externalDatabaseUri, "
-                + "ee.source as source, "
-                + "ee.accession.accession as accession, "
-                + "taxon.commonName as taxonCommonName,"
-                + "taxon.id as taxonId,"
-                + "count(distinct BA) as bioAssayCount, "
-                + "count(distinct AD) as arrayDesignCount, "
-                + "ee.shortName as shortName, "
-                + "eventCreated.date as createdDate, "
-                + "AD.technologyType, "
-                + " ee.class, "
-                + " EDES.id as designId "
-                // removed to speed up query
-                // "count(distinct dedv) as dedvCount, " +
-                // "count(distict SU) as bioMaterialCount " +
-                + " from ExpressionExperimentImpl as ee inner join ee.bioAssays as BA inner join ee.auditTrail atr inner join atr.events as eventCreated "
-                + "inner join BA.samplesUsed as SU inner join BA.arrayDesignUsed as AD "
-                + "inner join SU.sourceTaxon as taxon left join ee.accession acc inner join acc.externalDatabase as ED "
-                + " inner join ee.experimentalDesign as EDES " + " WHERE eventCreated.action='C'"
-                + " group by ee order by ee.name";
-
-        try {
-            org.hibernate.Query queryObject = super.getSession().createQuery( queryString );
-
-            queryObject.setReadOnly( true );
-            queryObject.setCacheable( true );
-            Map<Long, Collection<QuantitationType>> qtMap = getQuantitationTypeMap( null );
-            ScrollableResults list = queryObject.scroll( ScrollMode.FORWARD_ONLY );
-            while ( list.next() ) {
-                ExpressionExperimentValueObject v = new ExpressionExperimentValueObject();
-                Long eeId = list.getLong( 0 );
-                if ( vo.containsKey( eeId ) ) {
-                    v = vo.get( eeId );
-                }
-                v.setId( eeId );
-                v.setName( list.getString( 1 ) );
-                v.setExternalDatabase( list.getString( 2 ) );
-                v.setExternalUri( list.getString( 3 ) );
-                v.setSource( list.getString( 4 ) );
-                v.setAccession( list.getString( 5 ) );
-                v.setTaxon( list.getString( 6 ) );
-                v.setTaxonId( list.getLong( 7 ) );
-                v.setBioAssayCount( list.getLong( 8 ) );
-                v.setArrayDesignCount( list.getLong( 9 ) );
-                v.setShortName( list.getString( 10 ) );
-                v.setDateCreated( list.getDate( 11 ) );
-                String type = list.get( 12 ) != null ? list.get( 12 ).toString() : null;
-                v.setClazz( list.getString( 13 ) );
-                v.setExperimentalDesign( list.getLong( 14 ) );
-                if ( !qtMap.isEmpty() && type != null ) fillQuantitationTypeInfo( qtMap, v, eeId, type );
-                vo.put( eeId, v );
-            }
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
-        }
-        return vo.values();
+        return handleLoadValueObjects( null );
     }
 
     /*
@@ -1273,12 +1215,17 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
      */
     @SuppressWarnings("unchecked")
     @Override
-    protected Collection handleLoadValueObjects( Collection /* <Long> */ids ) throws Exception {
+    protected Collection<ExpressionExperimentValueObject> handleLoadValueObjects( Collection<Long> ids )
+            throws Exception {
         Map<Long, ExpressionExperimentValueObject> vo = new HashMap<Long, ExpressionExperimentValueObject>();
-        // sanity check
-        if ( ids == null || ids.size() == 0 ) {
+
+        if ( ids != null && ids.size() == 0 ) {
             return new HashSet<ExpressionExperimentValueObject>();
         }
+
+        String idRestrictionClause = "";
+        if ( ids != null ) idRestrictionClause = "and ee.id in (:ids) ";
+
         final String queryString = "select ee.id as id, " // 0
                 + "ee.name as name, " // 1
                 + "ED.name as externalDatabaseName, " // 2
@@ -1297,18 +1244,22 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
                 + "left join BA.samplesUsed as SU left join BA.arrayDesignUsed as AD "
                 + "left join SU.sourceTaxon as taxon left join ee.accession acc left join acc.externalDatabase as ED "
                 + " inner join ee.experimentalDesign as EDES "
-                + " where eventCreated.action='C' and ee.id in (:ids) "
-                + " group by ee order by ee.name";
+                + " where eventCreated.action='C' "
+                + idRestrictionClause + " group by ee order by ee.name";
 
         try {
 
-            List<Long> idl = new ArrayList<Long>( ids );
-            Collections.sort( idl ); // so it's consistent and therefore cacheable.
-            org.hibernate.Query queryObject = super.getSession().createQuery( queryString );
+            Query queryObject = super.getSession().createQuery( queryString );
+            Map<Long, Collection<QuantitationType>> qtMap;
+            if ( ids != null ) {
+                List<Long> idl = new ArrayList<Long>( ids );
+                Collections.sort( idl ); // so it's consistent and therefore cacheable.
+                qtMap = getQuantitationTypeMap( idl );
+                queryObject.setParameterList( "ids", idl );
+            } else {
+                qtMap = getQuantitationTypeMap( null );
+            }
 
-            Map<Long, Collection<QuantitationType>> qtMap = getQuantitationTypeMap( idl );
-
-            queryObject.setParameterList( "ids", idl );
             queryObject.setCacheable( true );
             queryObject.setCacheRegion( "org.hibernate.cache.StandardQueryCache" );
 
