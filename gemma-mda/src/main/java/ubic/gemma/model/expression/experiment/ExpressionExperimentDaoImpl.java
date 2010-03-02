@@ -1335,7 +1335,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
                 v.setArrayDesignCount( ( Long ) res[9] );
                 v.setShortName( ( String ) res[10] );
                 v.setDateCreated( ( ( Date ) res[11] ) );
-                v.setTechnologyType( ( ( TechnologyType ) res[12] ).toString() );
+                if ( res[12] != null ) v.setTechnologyType( ( ( TechnologyType ) res[12] ).toString() );
                 if ( !qtMap.isEmpty() && res[11] != null ) {
                     fillQuantitationTypeInfo( qtMap, v, eeId, v.getTechnologyType() );
                 }
