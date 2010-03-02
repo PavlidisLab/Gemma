@@ -1257,7 +1257,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
                 String type = list.get( 12 ) != null ? list.get( 12 ).toString() : null;
                 v.setClazz( list.getString( 13 ) );
                 v.setExperimentalDesign( list.getLong( 14 ) );
-                fillQuantitationTypeInfo( qtMap, v, eeId, type );
+                if ( !qtMap.isEmpty() && type != null ) fillQuantitationTypeInfo( qtMap, v, eeId, type );
                 vo.put( eeId, v );
             }
         } catch ( org.hibernate.HibernateException ex ) {
@@ -1336,7 +1336,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
                 v.setShortName( ( String ) res[10] );
                 v.setDateCreated( ( ( Date ) res[11] ) );
                 if ( res[12] != null ) v.setTechnologyType( ( ( TechnologyType ) res[12] ).toString() );
-                if ( !qtMap.isEmpty() && res[11] != null ) {
+                if ( !qtMap.isEmpty() && v.getTechnologyType() != null ) {
                     fillQuantitationTypeInfo( qtMap, v, eeId, v.getTechnologyType() );
                 }
                 v.setClazz( ( String ) res[13] );
@@ -1468,6 +1468,9 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
      */
     private void fillQuantitationTypeInfo( Map<Long, Collection<QuantitationType>> qtMap,
             ExpressionExperimentValueObject v, Long eeId, String type ) {
+
+        assert qtMap != null;
+
         if ( v.getTechnologyType() != null && !v.getTechnologyType().equals( type ) ) {
             v.setTechnologyType( "MIXED" );
         } else {
