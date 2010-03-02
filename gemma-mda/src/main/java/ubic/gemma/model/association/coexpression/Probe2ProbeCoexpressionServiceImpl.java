@@ -27,6 +27,7 @@ import org.springframework.stereotype.Service;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.Taxon;
 
 /**
  * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService
@@ -46,10 +47,10 @@ public class Probe2ProbeCoexpressionServiceImpl extends
         return this.getProbe2ProbeCoexpressionDao().getTopCoexpressedLinks( ee, threshold, limit );
     }
 
-    public Collection<Long> validateProbesInCoexpression( Collection<Long> queryProbeIds,
-            Collection<Long> coexpressedProbeIds, ExpressionExperiment ee, String taxon ) {
-        return this.getProbe2ProbeCoexpressionDao().validateProbesInCoexpression( queryProbeIds, coexpressedProbeIds,
-                ee, taxon );
+    public Collection<Long> getCoexpressedProbes( Collection<Long> queryProbeIds, Collection<Long> coexpressedProbeIds,
+            ExpressionExperiment ee, String taxon ) {
+        return this.getProbe2ProbeCoexpressionDao()
+                .getCoexpressedProbes( queryProbeIds, coexpressedProbeIds, ee, taxon );
     }
 
     @Override

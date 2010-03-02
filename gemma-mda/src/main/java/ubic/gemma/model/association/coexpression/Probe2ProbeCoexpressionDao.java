@@ -95,7 +95,7 @@ public interface Probe2ProbeCoexpressionDao {
      * get the probe coexpression by using native sql query.
      * </p>
      */
-    public java.util.Collection getProbeCoExpression(
+    public java.util.Collection<ProbeLink> getProbeCoExpression(
             ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment,
             java.lang.String taxonCommonName, boolean useWorkingTable );
 
@@ -133,7 +133,7 @@ public interface Probe2ProbeCoexpressionDao {
     public void prepareForShuffling( java.util.Collection<ExpressionExperiment> ees, java.lang.String taxon,
             boolean filterNonSpecific );
 
-    public Collection<Long> validateProbesInCoexpression( Collection<Long> queryProbeIds,
-            Collection<Long> coexpressedProbeIds, ExpressionExperiment ee, String taxon );
+    public Collection<Long> getCoexpressedProbes( Collection<Long> queryProbeIds, Collection<Long> coexpressedProbeIds,
+            ExpressionExperiment ee, String taxon );
 
 }

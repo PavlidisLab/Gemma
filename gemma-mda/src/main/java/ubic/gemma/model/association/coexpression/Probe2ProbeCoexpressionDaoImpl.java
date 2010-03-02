@@ -191,11 +191,11 @@ public class Probe2ProbeCoexpressionDaoImpl extends
 
     /*
      * (non-Javadoc)
-     * @seeubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDao#validateProbesInCoexpression(java.util.
+     * @seeubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDao#getCoexpressedProbes(java.util.
      * Collection, java.util.Collection, ubic.gemma.model.expression.experiment.ExpressionExperiment, java.lang.String)
      */
-    public Collection<Long> validateProbesInCoexpression( Collection<Long> queryProbeIds,
-            Collection<Long> coexpressedProbeIds, ExpressionExperiment ee, String taxon ) {
+    public Collection<Long> getCoexpressedProbes( Collection<Long> queryProbeIds, Collection<Long> coexpressedProbeIds,
+            ExpressionExperiment ee, String taxon ) {
 
         String tableName = getTableName( taxon, false );
 

@@ -27,6 +27,7 @@ import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.Taxon;
 
 /**
  * @author paul
@@ -191,17 +192,16 @@ public interface Probe2ProbeCoexpressionService {
     public void prepareForShuffling( Collection<BioAssaySet> ees, java.lang.String taxon, boolean filterNonSpecific );
 
     /**
-     * Given a list of probeIds and a taxon tests to see if the given list of probeIds were invloved in any coexpression
-     * links. That is to say: which of the given probes could have been involved in any coexpression results
+     * Determine which probes, among those provided, actually appear together in links.
      * 
      * @param queryProbeIds
      * @param coexpressedProbeIds
      * @param ee
-     * @param taxon
-     * @return
+     * @param taxon (to save another query) common name
+     * @return the probes, among the query and coexpressed probes given, which appear in coexpression links.
      */
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    public Collection<Long> validateProbesInCoexpression( Collection<Long> queryProbeIds,
-            Collection<Long> coexpressedProbeIds, ExpressionExperiment ee, String taxon );
+    public Collection<Long> getCoexpressedProbes( Collection<Long> queryProbeIds, Collection<Long> coexpressedProbeIds,
+            ExpressionExperiment ee, String taxon );
 
 }
