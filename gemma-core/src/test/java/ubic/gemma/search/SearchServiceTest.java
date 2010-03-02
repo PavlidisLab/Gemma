@@ -20,7 +20,9 @@
 package ubic.gemma.search;
 
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
+import java.io.InputStream;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -29,7 +31,7 @@ import java.util.Map;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
- 
+
 import ubic.basecode.ontology.providers.FMAOntologyService;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicService;
@@ -46,7 +48,7 @@ import ubic.gemma.testing.BaseSpringContextTest;
 public class SearchServiceTest extends BaseSpringContextTest {
     private static final String GENE_URI = "http://purl.org/commons/record/ncbi_gene/20655";
 
-    private static final String BRAIN_STEM = "http://purl.org/obo/owl/FMA#FMA_7647";
+    private static final String SPINAL_CORD = "http://purl.org/obo/owl/FMA#FMA_7647";
 
     private static final String BRAIN_CAVITY = "http://purl.org/obo/owl/FMA#FMA_242395";
 
@@ -74,19 +76,37 @@ public class SearchServiceTest extends BaseSpringContextTest {
     @Test
     public void testURISearch() {
         SearchSettings settings = new SearchSettings();
-        settings.setQuery( BRAIN_STEM );
+        settings.setQuery( SPINAL_CORD );
         settings.setSearchExperiments( true );
         Map<Class<?>, List<SearchResult>> found = this.searchService.search( settings );
         assertTrue( !found.isEmpty() );
 
-        boolean f = false;
         for ( SearchResult sr : found.get( ExpressionExperiment.class ) ) {
             if ( sr.getResultObject().equals( ee ) ) {
-                f = true;
+                return;
             }
         }
+        fail( "Didn't get expected result from search" );
+    }
 
-        assertTrue( f );
+    /**
+     * Test we find EE tagged with a child term that matches the given uri.
+     */
+    @Test
+    public void testURIChildSearch() throws Exception {
+        SearchSettings settings = new SearchSettings();
+        settings.setQuery( "http://purl.org/obo/owl/FMA#FMA_83153" ); // OrganComponent of Neuraxis; superclass of
+                                                                      // 'spinal cord'.
+        settings.setSearchExperiments( true );
+        Map<Class<?>, List<SearchResult>> found = this.searchService.search( settings );
+        assertTrue( !found.isEmpty() );
+
+        for ( SearchResult sr : found.get( ExpressionExperiment.class ) ) {
+            if ( sr.getResultObject().equals( ee ) ) {
+                return;
+            }
+        }
+        fail( "Didn't get expected result from search" );
     }
 
     /**
@@ -100,40 +120,38 @@ public class SearchServiceTest extends BaseSpringContextTest {
         settings.setSearchExperiments( true );
         Map<Class<?>, List<SearchResult>> found = this.searchService.search( settings );
         assertTrue( !found.isEmpty() );
-        boolean f = false;
+
         for ( SearchResult sr : found.get( ExpressionExperiment.class ) ) {
             if ( sr.getResultObject().equals( ee ) ) {
-                f = true;
+                return;
             }
         }
 
-        assertTrue( f );
+        fail( "Didn't get expected result from search" );
 
     }
 
     /**
      * Tests that general search terms are resolved to their proper ontology terms and objects tagged with those terms
-     * are found.
+     * are found, -- requires LARQ index.
      */
     @Test
     public void testGeneralSearch4Brain() {
 
         SearchSettings settings = new SearchSettings();
-        settings.setQuery( "Brain" );
+        settings.setQuery( "Brain" ); // should hit 'cavity of brain'.
         settings.setSearchExperiments( true );
         settings.setUseCharacteristics( true );
         Map<Class<?>, List<SearchResult>> found = this.searchService.search( settings );
         assertTrue( !found.isEmpty() );
 
-        boolean f = false;
         for ( SearchResult sr : found.get( ExpressionExperiment.class ) ) {
             if ( sr.getResultObject().equals( ee ) ) {
-                f = true;
+                return;
             }
         }
 
-        assertTrue( f );
-
+        fail( "Didn't get expected result from search" );
     }
 
     /**
@@ -142,21 +160,23 @@ public class SearchServiceTest extends BaseSpringContextTest {
     @Before
     public void setup() throws Exception {
 
-        // In case the fma ontology isn't set to be initizlized the the Gemma.properties file
-        FMAOntologyService fmaOntologyService = ontologyService.getFmaOntologyService();
-        fmaOntologyService.init( true );
-        while ( !ontologyService.getFmaOntologyService().isOntologyLoaded() ) {
-            Thread.sleep( 10000 );
-            log.info( "Waiting for FMA Ontology to load" );
-        }
+        FMAOntologyService fmaOntologyService = new FMAOntologyService();
+        InputStream is = this.getClass().getResourceAsStream( "/data/loader/ontology/fma.test.owl" );
+        assert is != null;
+        fmaOntologyService.loadTermsInNameSpace( is );
+
+        // In case the fma ontology isn't set to be initialized the the Gemma.properties file
+        ontologyService.setFmaOntologyService( fmaOntologyService );
+
+        log.info( "Ready to test" );
 
         ee = this.getTestPersistentBasicExpressionExperiment();
 
         eeCharSpinalCord = VocabCharacteristic.Factory.newInstance();
-        eeCharSpinalCord.setCategory( BRAIN_STEM );
-        eeCharSpinalCord.setCategoryUri( BRAIN_STEM );
-        eeCharSpinalCord.setValue( BRAIN_STEM );
-        eeCharSpinalCord.setValueUri( BRAIN_STEM );
+        eeCharSpinalCord.setCategory( SPINAL_CORD );
+        eeCharSpinalCord.setCategoryUri( SPINAL_CORD );
+        eeCharSpinalCord.setValue( SPINAL_CORD );
+        eeCharSpinalCord.setValueUri( SPINAL_CORD );
         characteristicService.create( eeCharSpinalCord );
 
         eeCharGeneURI = VocabCharacteristic.Factory.newInstance();

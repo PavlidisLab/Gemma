@@ -1842,8 +1842,7 @@ public class SearchService implements InitializingBean {
 
         /*
          * Direct search.
-         */
-        // StopWatch watch = startTiming();
+         */ 
         Collection<SearchResult> results = new HashSet<SearchResult>();
 
         // results.addAll( databaseCharacteristicSearchForOwners( classes, settings ) );

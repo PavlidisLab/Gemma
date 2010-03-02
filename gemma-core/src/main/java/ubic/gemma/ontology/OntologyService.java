@@ -134,6 +134,7 @@ public class OntologyService implements InitializingBean {
     private BioMaterialService bioMaterialService;
 
     private BirnLexOntologyService birnLexOntologyService;
+
     @Autowired
     private CharacteristicService characteristicService;
 
@@ -145,7 +146,6 @@ public class OntologyService implements InitializingBean {
     private ExpressionExperimentService eeService;
 
     private FMAOntologyService fmaOntologyService;
-
     @Autowired
     private MgedOntologyService mgedOntologyService;
 
@@ -520,6 +520,19 @@ public class OntologyService implements InitializingBean {
      */
     public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
         this.eeService = expressionExperimentService;
+    }
+
+    /**
+     * This is provided for testing purposes. Normally this is set internally.
+     * 
+     * @param fmaOntologyService the fmaOntologyService to set
+     */
+    public void setFmaOntologyService( FMAOntologyService fmaOntologyService ) {
+        if ( this.ontologyServices.contains( this.fmaOntologyService ) ) {
+            this.ontologyServices.remove( this.fmaOntologyService );
+        }
+        this.fmaOntologyService = fmaOntologyService;
+        this.ontologyServices.add( this.fmaOntologyService );
     }
 
     /**

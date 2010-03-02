@@ -1,0 +1,984 @@
+<?xml version="1.0"?>
+<rdf:RDF xmlns:oboInOwl="http://www.geneontology.org/formats/oboInOwl#"
+xmlns:oboContent="http://purl.org/obo/owl/"
+xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+xmlns:protege="http://protege.stanford.edu/plugins/owl/protege#"
+xmlns:xsp="http://www.owl-ontologies.com/2005/08/07/xsp.owl#"
+xmlns:owl="http://www.w3.org/2002/07/owl#"
+xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
+xmlns:oban="http://purl.org/obo/oban/"
+xmlns:swrl="http://www.w3.org/2003/11/swrl#"
+xmlns:swrlb="http://www.w3.org/2003/11/swrlb#"
+xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+xml:base="http://purl.org/obo/owl/fma_lite">
+  <owl:Ontology rdf:about="">
+    <oboInOwl:hasDate rdf:datatype="http://www.w3.org/2001/XMLSchema#string">
+    24:07:2008 15:29</oboInOwl:hasDate>
+    <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">
+    This is an OWL translation of an ontology whose native
+    representational form is .obo. The translation was performed
+    using the oboInOwl xslt library. For details, see
+    http://www.berkeleybop.org/obo-conv.cgi</rdfs:comment>
+    <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">
+    this is an ALPHA version of the FMA2.0 in obo. Conversion based
+    on
+    http://www.bioontology.org/wiki/index.php/FMAInOwl</rdfs:comment>
+    <oboInOwl:hasDefaultNamespace rdf:datatype="http://www.w3.org/2001/XMLSchema#string">
+    fma</oboInOwl:hasDefaultNamespace>
+    <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">
+    fma</rdfs:label>
+  </owl:Ontology>
+  <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_62955">
+    <oboInOwl:hasDefinition>
+      <oboInOwl:Definition>
+        <rdfs:label xml:lang="en">Organismal continuant entity
+        which is enclosed by the bona fide boundary of an organism
+        or is an attribute of its structural organization.
+        Examples: cell, heart, head, peritoneal cavity, apex of
+        lung, anatomical term, sagittal plane.</rdfs:label>
+      </oboInOwl:Definition>
+    </oboInOwl:hasDefinition>
+    <oboInOwl:hasOBONamespace rdf:datatype="http://www.w3.org/2001/XMLSchema#string">
+    fma</oboInOwl:hasOBONamespace>
+    <rdfs:label xml:lang="en">Anatomical entity</rdfs:label>
+  </owl:Class>
+  <owl:Class rdf:about="http://www.geneontology.org/formats/oboInOwl#ObsoleteClass" />
+  <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_7154">
+    <oboInOwl:hasDefinition>
+      <oboInOwl:Definition>
+        <rdfs:label xml:lang="en">Cardinal body part, which
+        consists of a maximal set of diverse subclasses of organ
+        and organ part spatially associated with the skull, it is
+        partially surrounded by skin of head. Examples: There is
+        only one head.</rdfs:label>
+      </oboInOwl:Definition>
+    </oboInOwl:hasDefinition>
+    <rdfs:subClassOf rdf:resource="http://purl.org/obo/owl/FMA#FMA_7153" />
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:someValuesFrom>
+          <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_67812" />
+        </owl:someValuesFrom>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:about="http://purl.org/obo/owl/obo#regional_part_of" />
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:someValuesFrom>
+          <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_67811" />
+        </owl:someValuesFrom>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:about="http://purl.org/obo/owl/obo#regional_part_of" />
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:someValuesFrom>
+          <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_20394" />
+        </owl:someValuesFrom>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:about="http://purl.org/obo/owl/obo#regional_part_of" />
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <oboInOwl:hasOBONamespace rdf:datatype="http://www.w3.org/2001/XMLSchema#string">
+    fma</oboInOwl:hasOBONamespace>
+    <oboInOwl:hasExactSynonym>
+      <oboInOwl:Synonym>
+        <rdfs:label xml:lang="en">Head (volume)</rdfs:label>
+      </oboInOwl:Synonym>
+    </oboInOwl:hasExactSynonym>
+    <rdfs:label xml:lang="en">Head</rdfs:label>
+  </owl:Class>
+   <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_7153">
+    <rdfs:label xml:lang="en">Cardinal body part</rdfs:label>
+    <oboInOwl:hasDefinition>
+      <oboInOwl:Definition>
+        <rdfs:label xml:lang="en">Anatomical structure, which has as its direct parts instances of anatomical sets of organs and cardinal organ parts spatially associated with either the skull, vertebral column, or the skeleton of a limb; in their aggregate are surrounded by a part of the skin Examples: Head, body proper, right upper limb.</rdfs:label>
+      </oboInOwl:Definition>
+    </oboInOwl:hasDefinition>
+    <oboInOwl:hasExactSynonym>
+      <oboInOwl:Synonym>
+        <rdfs:label xml:lang="en">Body region</rdfs:label>
+      </oboInOwl:Synonym>
+    </oboInOwl:hasExactSynonym>
+    <oboInOwl:hasOBONamespace>fma</oboInOwl:hasOBONamespace>
+    <rdfs:subClassOf rdf:resource="http://purl.org/obo/owl/FMA#FMA_67135"/>
+  </owl:Class>
+  <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_242787">
+    <rdfs:subClassOf rdf:resource="http://purl.org/obo/owl/FMA#FMA_242789" />
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:about="http://purl.org/obo/owl/obo#regional_part_of" />
+        </owl:onProperty>
+        <owl:someValuesFrom>
+          <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_242675" />
+        </owl:someValuesFrom>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:someValuesFrom>
+          <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_50801" />
+        </owl:someValuesFrom>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:about="http://purl.org/obo/owl/obo#constitutional_part_of" />
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <oboInOwl:hasOBONamespace rdf:datatype="http://www.w3.org/2001/XMLSchema#string">
+    fma</oboInOwl:hasOBONamespace>
+    <rdfs:label xml:lang="en">Ventricular system of
+    brain</rdfs:label>
+  </owl:Class>
+  
+  <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_242789">
+    <rdfs:label xml:lang="en">Region of ventricluar system of neuraxis</rdfs:label>
+    <oboInOwl:hasOBONamespace>fma</oboInOwl:hasOBONamespace>
+    <rdfs:subClassOf rdf:resource="http://purl.org/obo/owl/FMA#FMA_86103"/>
+  </owl:Class>
+   <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_86103">
+    <rdfs:label xml:lang="en">Region of organ component</rdfs:label>
+    <oboInOwl:hasDefinition>
+      <oboInOwl:Definition>
+        <rdfs:label xml:lang="en">Cardinal organ part which is a fiat subdivision of an organ component. Examples: cervical part of wall of esophagus, mucosa of body of stomach.</rdfs:label>
+      </oboInOwl:Definition>
+    </oboInOwl:hasDefinition>
+    <oboInOwl:hasExactSynonym>
+      <oboInOwl:Synonym>
+        <rdfs:label xml:lang="en">Organ component region</rdfs:label>
+      </oboInOwl:Synonym>
+    </oboInOwl:hasExactSynonym>
+    <oboInOwl:hasOBONamespace>fma</oboInOwl:hasOBONamespace>
+    <rdfs:subClassOf rdf:resource="http://purl.org/obo/owl/FMA#FMA_82472"/>
+  </owl:Class>
+  
+  
+  <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_82472">
+    <rdfs:label xml:lang="en">Cardinal organ part</rdfs:label>
+    <oboInOwl:hasDefinition>
+      <oboInOwl:Definition>
+        <rdfs:label xml:lang="en">anatomical structure which has as its direct parts two or more types of tissue and is continuous with one or more anatomical structures likewise constituted by two or more portions of tissues distinct from those of their complement. Examples: osteon, cortical bone, neck of femur, bronchopulmonary segment, left lobe of liver, anterior right side of heart, interventricular branch of left coronary artery, right atrium, mitral valve, head of pancreas.</rdfs:label>
+      </oboInOwl:Definition>
+    </oboInOwl:hasDefinition>
+    <oboInOwl:hasOBONamespace>fma</oboInOwl:hasOBONamespace>
+    <rdfs:subClassOf rdf:resource="http://purl.org/obo/owl/FMA#FMA_67135"/>
+  </owl:Class>
+  
+  <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_67135">
+    <rdfs:subClassOf>
+      <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_67165" />
+    </rdfs:subClassOf>
+    <oboInOwl:hasOBONamespace rdf:datatype="http://www.w3.org/2001/XMLSchema#string">
+    fma</oboInOwl:hasOBONamespace>
+    <oboInOwl:hasExactSynonym>
+      <oboInOwl:Synonym>
+        <rdfs:label xml:lang="en">Biological structure</rdfs:label>
+      </oboInOwl:Synonym>
+    </oboInOwl:hasExactSynonym>
+    <rdfs:label xml:lang="en">Anatomical structure</rdfs:label>
+    <oboInOwl:hasDefinition>
+      <oboInOwl:Definition>
+        <rdfs:label xml:lang="en">Material anatomical entity which
+        is generated by coordinated expression of the organism's
+        own genes that guide its morphogenesis; has inherent 3D
+        shape; its parts are connected and spatially related to one
+        another in patterns determined by coordinated gene
+        expression. Examples: heart, right ventricle, mitral valve,
+        myocardium, endothelium, lymphocyte, fibroblast, thorax,
+        cardiovascular system, hemoglobin, T cell
+        receptor.</rdfs:label>
+      </oboInOwl:Definition>
+    </oboInOwl:hasDefinition>
+  </owl:Class>
+  <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_14065">
+    <rdfs:label xml:lang="en">Organ component</rdfs:label>
+    <rdfs:subClassOf>
+      <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_82472" />
+    </rdfs:subClassOf>
+    <oboInOwl:hasOBONamespace rdf:datatype="http://www.w3.org/2001/XMLSchema#string">
+    fma</oboInOwl:hasOBONamespace>
+    <oboInOwl:hasDefinition>
+      <oboInOwl:Definition>
+        <rdfs:label xml:lang="en">Cardinal organ part which is
+        bounded predominantly by bonafide boundaries. Examples:
+        lobe of lung, osteon, acinus, submucosa, anterior leaflet
+        of mitral valve, capsule of kidney, cortical bone, muscle
+        fasciculus.</rdfs:label>
+      </oboInOwl:Definition>
+    </oboInOwl:hasDefinition>
+  </owl:Class>
+  <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_20394">
+    <rdfs:label xml:lang="en">Human body</rdfs:label>
+    <oboInOwl:hasDefinition>
+      <oboInOwl:Definition>
+        <rdfs:label xml:lang="en">Anatomical structure which is the
+        aggregate material substance of an individual member of the
+        Homo sapiens species. Examples: There is only one human
+        body.</rdfs:label>
+      </oboInOwl:Definition>
+    </oboInOwl:hasDefinition>
+    <oboInOwl:hasOBONamespace rdf:datatype="http://www.w3.org/2001/XMLSchema#string">
+    fma</oboInOwl:hasOBONamespace>
+    <rdfs:subClassOf rdf:resource="http://purl.org/obo/owl/FMA#FMA_256133" />
+  </owl:Class>
+  <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_75007">
+    <rdfs:subClassOf rdf:resource="http://purl.org/obo/owl/FMA#FMA_12237" />
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:someValuesFrom>
+          <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_242675" />
+        </owl:someValuesFrom>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:about="http://purl.org/obo/owl/obo#constitutional_part_of" />
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <oboInOwl:hasOBONamespace rdf:datatype="http://www.w3.org/2001/XMLSchema#string">
+    fma</oboInOwl:hasOBONamespace>
+    <rdfs:label xml:lang="en">Cavity of neuraxis</rdfs:label>
+    <oboInOwl:hasExactSynonym>
+      <oboInOwl:Synonym>
+        <rdfs:label xml:lang="en">Neuraxis cavity</rdfs:label>
+      </oboInOwl:Synonym>
+    </oboInOwl:hasExactSynonym>
+    <oboInOwl:hasExactSynonym>
+      <oboInOwl:Synonym>
+        <rdfs:label xml:lang="en">Cavity of ventricular system of
+        neuraxis</rdfs:label>
+      </oboInOwl:Synonym>
+    </oboInOwl:hasExactSynonym>
+  </owl:Class>
+  
+   <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_12237">
+    <rdfs:label xml:lang="en">Organ cavity</rdfs:label>
+    <oboInOwl:hasDefinition>
+      <oboInOwl:Definition>
+        <rdfs:label xml:lang="en">Anatomical cavity, which is surrounded by all morphological parts of an organ; is continuous within the organ; contains one or more body substances. Examples: pericardial cavity, cavity of stomach, uterine cavity.</rdfs:label>
+      </oboInOwl:Definition>
+    </oboInOwl:hasDefinition>
+    <oboInOwl:hasExactSynonym>
+      <oboInOwl:Synonym>
+        <rdfs:label xml:lang="en">Cavity of organ</rdfs:label>
+      </oboInOwl:Synonym>
+    </oboInOwl:hasExactSynonym>
+    <oboInOwl:hasOBONamespace>fma</oboInOwl:hasOBONamespace>
+    <rdfs:subClassOf rdf:resource="http://purl.org/obo/owl/FMA#FMA_67552"/>
+  </owl:Class>
+  <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_256133">
+    <rdfs:label xml:lang="en">Body of vertebrate</rdfs:label>
+    <oboInOwl:hasOBONamespace>fma</oboInOwl:hasOBONamespace>
+    <rdfs:subClassOf rdf:resource="http://purl.org/obo/owl/FMA#FMA_256135"/>
+  </owl:Class>
+  <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_256135">
+    <rdfs:label xml:lang="en">Body</rdfs:label>
+    <oboInOwl:hasDefinition>
+      <oboInOwl:Definition>
+        <rdfs:label xml:lang="en">Anatomical structure which is the aggregate material substance of an individual member of a species.</rdfs:label>
+      </oboInOwl:Definition>
+    </oboInOwl:hasDefinition>
+    <oboInOwl:hasOBONamespace>fma</oboInOwl:hasOBONamespace>
+    <rdfs:subClassOf rdf:resource="http://purl.org/obo/owl/FMA#FMA_67135"/>
+  </owl:Class>
+  
+  <owl:Class rdf:about="http://www.geneontology.org/formats/oboInOwl#DbXref">
+
+    <rdfs:subClassOf rdf:resource="http://purl.org/obo/owl/FMA#FMA_9642" />
+    <rdfs:subClassOf rdf:resource="http://www.w3.org/2002/07/owl#Thing" />
+  </owl:Class>
+  <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_242681">
+    <rdfs:subClassOf>
+      <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_9337" />
+    </rdfs:subClassOf>
+    <oboInOwl:hasOBONamespace rdf:datatype="http://www.w3.org/2001/XMLSchema#string">
+    fma</oboInOwl:hasOBONamespace>
+    <rdfs:label xml:lang="en">Subdivision of cavity of
+    neuraxis</rdfs:label>
+  </owl:Class>
+  
+  <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_9642">
+    <rdfs:label xml:lang="en">Portion of neural tissue</rdfs:label>
+    <oboInOwl:hasDefinition>
+      <oboInOwl:Definition>
+        <rdfs:label xml:lang="en">Tissue which consists of neurons and their processes and neuroglia. Examples: Neural tissue of brain, neural tissue of peripheral ganglion, neural tissue of nerve.</rdfs:label>
+      </oboInOwl:Definition>
+    </oboInOwl:hasDefinition>
+    <oboInOwl:hasExactSynonym>
+      <oboInOwl:Synonym>
+        <rdfs:label xml:lang="en">Nerve tissue</rdfs:label>
+      </oboInOwl:Synonym>
+    </oboInOwl:hasExactSynonym>
+    <oboInOwl:hasExactSynonym>
+      <oboInOwl:Synonym>
+        <rdfs:label xml:lang="en">Nervous tissue</rdfs:label>
+      </oboInOwl:Synonym>
+    </oboInOwl:hasExactSynonym>
+    <oboInOwl:hasExactSynonym>
+      <oboInOwl:Synonym>
+        <rdfs:label xml:lang="en">Neural tissue</rdfs:label>
+      </oboInOwl:Synonym>
+    </oboInOwl:hasExactSynonym>
+    <oboInOwl:hasOBONamespace>fma</oboInOwl:hasOBONamespace>
+    <rdfs:subClassOf rdf:resource="http://purl.org/obo/owl/FMA#FMA_9637"/>
+  </owl:Class>
+   <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_9637">
+    <rdfs:label xml:lang="en">Portion of tissue</rdfs:label>
+    <oboInOwl:hasDefinition>
+      <oboInOwl:Definition>
+        <rdfs:label xml:lang="en">Anatomical structure which has as its parts cells of predominantly one type with or without intercellular matrix. Examples: epithelium, muscle tissue, connective tissue, neural tissue, lymphoid tissue.</rdfs:label>
+      </oboInOwl:Definition>
+    </oboInOwl:hasDefinition>
+    <oboInOwl:hasExactSynonym>
+      <oboInOwl:Synonym>
+        <rdfs:label xml:lang="en">Tissue</rdfs:label>
+      </oboInOwl:Synonym>
+    </oboInOwl:hasExactSynonym>
+    <oboInOwl:hasOBONamespace>fma</oboInOwl:hasOBONamespace>
+    <rdfs:subClassOf rdf:resource="http://purl.org/obo/owl/FMA#FMA_67135"/>
+  </owl:Class>
+  
+  <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_67135">
+    <rdfs:label xml:lang="en">Anatomical structure</rdfs:label>
+    <oboInOwl:hasDefinition>
+      <oboInOwl:Definition>
+        <rdfs:label xml:lang="en">Material anatomical entity which is generated by coordinated expression of the organism's own genes that guide its morphogenesis; has inherent 3D shape; its parts are connected and spatially related to one another in patterns determined by coordinated gene expression. Examples: heart, right ventricle, mitral valve, myocardium, endothelium, lymphocyte, fibroblast, thorax, cardiovascular system, hemoglobin, T cell receptor.</rdfs:label>
+      </oboInOwl:Definition>
+    </oboInOwl:hasDefinition>
+    <oboInOwl:hasExactSynonym>
+      <oboInOwl:Synonym>
+        <rdfs:label xml:lang="en">Biological structure</rdfs:label>
+      </oboInOwl:Synonym>
+    </oboInOwl:hasExactSynonym>
+    <oboInOwl:hasOBONamespace>fma</oboInOwl:hasOBONamespace>
+    <rdfs:subClassOf rdf:resource="http://purl.org/obo/owl/FMA#FMA_67165"/>
+  </owl:Class>
+  
+   <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_55671">
+    <rdfs:label xml:lang="en">Cavitated organ</rdfs:label>
+    <oboInOwl:hasDefinition>
+      <oboInOwl:Definition>
+        <rdfs:label xml:lang="en">Organ the unshared parts of which surround one or more macroscopic anatomical spaces. Examples: neuraxis, tooth, esophagus, heart, long bone, corpus spongiosum of penis.</rdfs:label>
+      </oboInOwl:Definition>
+    </oboInOwl:hasDefinition>
+    <oboInOwl:hasOBONamespace>fma</oboInOwl:hasOBONamespace>
+    <rdfs:subClassOf rdf:resource="http://purl.org/obo/owl/FMA#FMA_67498"/>
+  </owl:Class>
+  <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_55672">
+    <rdfs:label xml:lang="en">Organ with organ cavity</rdfs:label>
+    <oboInOwl:hasDefinition>
+      <oboInOwl:Definition>
+        <rdfs:label xml:lang="en">Cavitated organ in which its unshared parts surround one continuous anatomical space. Examples: stomach, urinary bladder, esophagus, uterine tube.</rdfs:label>
+      </oboInOwl:Definition>
+    </oboInOwl:hasDefinition>
+    <oboInOwl:hasOBONamespace>fma</oboInOwl:hasOBONamespace>
+    <rdfs:subClassOf rdf:resource="http://purl.org/obo/owl/FMA#FMA_55671"/>
+  </owl:Class>
+  <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_55673">
+    <rdfs:label xml:lang="en">Organ with cavitated organ parts</rdfs:label>
+    <oboInOwl:hasDefinition>
+      <oboInOwl:Definition>
+        <rdfs:label xml:lang="en">Cavitated organ in which its unshared parts surround two or more macroscopic anatomical spaces. Examples: heart, long bone, corpus spongiosum of penis, bulb of vestibule.</rdfs:label>
+      </oboInOwl:Definition>
+    </oboInOwl:hasDefinition>
+    <oboInOwl:hasOBONamespace>fma</oboInOwl:hasOBONamespace>
+    <rdfs:subClassOf rdf:resource="http://purl.org/obo/owl/FMA#FMA_55671"/>
+  </owl:Class>
+  
+   <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_67498">
+    <rdfs:label xml:lang="en">Organ</rdfs:label>
+    <oboInOwl:hasDefinition>
+      <oboInOwl:Definition>
+        <rdfs:label xml:lang="en">Anatomical structure which has as its direct parts portions of two or more types of tissue or two or more types of cardinal organ part which constitute a maximally connected anatomical structure demarcated predominantly by a bona fide anatomical surface. Examples: femur, biceps, liver, heart, skin, tracheobronchial tree, ovary.</rdfs:label>
+      </oboInOwl:Definition>
+    </oboInOwl:hasDefinition>
+    <oboInOwl:hasOBONamespace>fma</oboInOwl:hasOBONamespace>
+    <rdfs:subClassOf rdf:resource="http://purl.org/obo/owl/FMA#FMA_67135"/>
+  </owl:Class>
+  
+  
+  
+  
+  <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_242675">
+    <rdfs:label xml:lang="en">Ventricular system of
+    neuraxis</rdfs:label>
+    <oboInOwl:hasOBONamespace rdf:datatype="http://www.w3.org/2001/XMLSchema#string">
+    fma</oboInOwl:hasOBONamespace>
+    <rdfs:subClassOf>
+      <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_83153" />
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:about="http://purl.org/obo/owl/obo#constitutional_part_of" />
+        </owl:onProperty>
+        <owl:someValuesFrom>
+          <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_55675" />
+        </owl:someValuesFrom>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+  </owl:Class>
+  <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_61775">
+    <oboInOwl:hasDefinition>
+      <oboInOwl:Definition>
+        <rdfs:label xml:lang="en">Anatomical entity which has three
+        or fewer spatial dimensions. Examples: hemoglobin molecule,
+        mitochondrion, hepatocyte, erythrocyte, heart, head, blood,
+        urine, peritoneal cavity, diaphragmatic surface of heart,
+        inferior margin of liver, apex of lung.</rdfs:label>
+      </oboInOwl:Definition>
+    </oboInOwl:hasDefinition>
+    <oboInOwl:hasOBONamespace rdf:datatype="http://www.w3.org/2001/XMLSchema#string">
+    fma</oboInOwl:hasOBONamespace>
+    <rdfs:subClassOf rdf:resource="http://purl.org/obo/owl/FMA#FMA_62955" />
+    <rdfs:label xml:lang="en">Physical anatomical
+    entity</rdfs:label>
+  </owl:Class>
+  <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_82472">
+    <oboInOwl:hasOBONamespace rdf:datatype="http://www.w3.org/2001/XMLSchema#string">
+    fma</oboInOwl:hasOBONamespace>
+    <oboInOwl:hasDefinition>
+      <oboInOwl:Definition>
+        <rdfs:label xml:lang="en">anatomical structure which has as
+        its direct parts two or more types of tissue and is
+        continuous with one or more anatomical structures likewise
+        constituted by two or more portions of tissues distinct
+        from those of their complement. Examples: osteon, cortical
+        bone, neck of femur, bronchopulmonary segment, left lobe of
+        liver, anterior right side of heart, interventricular
+        branch of left coronary artery, right atrium, mitral valve,
+        head of pancreas.</rdfs:label>
+      </oboInOwl:Definition>
+    </oboInOwl:hasDefinition>
+    <rdfs:subClassOf rdf:resource="http://purl.org/obo/owl/FMA#FMA_67135" />
+    <rdfs:label xml:lang="en">Cardinal organ part</rdfs:label>
+  </owl:Class>
+  <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_55675">
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:about="http://purl.org/obo/owl/obo#constitutional_part_of" />
+        </owl:onProperty>
+        <owl:someValuesFrom>
+          <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_67811" />
+        </owl:someValuesFrom>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:someValuesFrom rdf:resource="http://purl.org/obo/owl/FMA#FMA_20394" />
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:about="http://purl.org/obo/owl/obo#constitutional_part_of" />
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:someValuesFrom>
+          <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_67812" />
+        </owl:someValuesFrom>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:about="http://purl.org/obo/owl/obo#constitutional_part_of" />
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:someValuesFrom>
+          <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_7157" />
+        </owl:someValuesFrom>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:about="http://purl.org/obo/owl/obo#regional_part_of" />
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <oboInOwl:hasExactSynonym>
+      <oboInOwl:Synonym>
+        <rdfs:label xml:lang="en">Central nervous
+        system</rdfs:label>
+      </oboInOwl:Synonym>
+    </oboInOwl:hasExactSynonym>
+    <oboInOwl:hasOBONamespace rdf:datatype="http://www.w3.org/2001/XMLSchema#string">
+    fma</oboInOwl:hasOBONamespace>
+    <rdfs:label xml:lang="en">Neuraxis</rdfs:label>
+    <oboInOwl:hasDefinition>
+      <oboInOwl:Definition>
+        <rdfs:label xml:lang="en">Organ with organ cavity which
+        consists of gray matter and white matter. Examples: There
+        is only one neuraxis.</rdfs:label>
+      </oboInOwl:Definition>
+    </oboInOwl:hasDefinition>
+    <oboInOwl:hasExactSynonym>
+      <oboInOwl:Synonym>
+        <rdfs:label xml:lang="en">Cerebrospinal axis</rdfs:label>
+      </oboInOwl:Synonym>
+    </oboInOwl:hasExactSynonym>
+    <rdfs:subClassOf>
+      <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_55672" />
+    </rdfs:subClassOf>
+  </owl:Class>
+  <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_67552">
+    <rdfs:subClassOf>
+      <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_5897" />
+    </rdfs:subClassOf>
+    <rdfs:label xml:lang="en">Anatomical cavity</rdfs:label>
+    <oboInOwl:hasOBONamespace rdf:datatype="http://www.w3.org/2001/XMLSchema#string">
+    fma</oboInOwl:hasOBONamespace>
+    <oboInOwl:hasDefinition>
+      <oboInOwl:Definition>
+        <rdfs:label xml:lang="en">Anatomical space which contains
+        portions of one or more body substances and is bounded by
+        the internal surface of one maximally connected anatomical
+        structure. Examples: cranial cavity, pharyngeal recess
+        space, nasal cavity, tooth socket, cavity of serous sac,
+        lumen of stomach, lumen of artery, fornix of
+        vagina.</rdfs:label>
+      </oboInOwl:Definition>
+    </oboInOwl:hasDefinition>
+  </owl:Class>
+  <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_67812">
+    <oboInOwl:hasOBONamespace rdf:datatype="http://www.w3.org/2001/XMLSchema#string">
+    fma</oboInOwl:hasOBONamespace>
+    <rdfs:label xml:lang="en">Female human body</rdfs:label>
+    <rdfs:subClassOf rdf:resource="http://purl.org/obo/owl/FMA#FMA_20394" />
+  </owl:Class>
+  <owl:Class rdf:about="http://www.geneontology.org/formats/oboInOwl#Subset" />
+  <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_55672">
+    <rdfs:subClassOf rdf:resource="http://purl.org/obo/owl/FMA#FMA_55671" />
+    <oboInOwl:hasOBONamespace rdf:datatype="http://www.w3.org/2001/XMLSchema#string">
+    fma</oboInOwl:hasOBONamespace>
+    <rdfs:label xml:lang="en">Organ with organ cavity</rdfs:label>
+    <oboInOwl:hasDefinition>
+      <oboInOwl:Definition>
+        <rdfs:label xml:lang="en">Cavitated organ in which its
+        unshared parts surround one continuous anatomical space.
+        Examples: stomach, urinary bladder, esophagus, uterine
+        tube.</rdfs:label>
+      </oboInOwl:Definition>
+    </oboInOwl:hasDefinition>
+  </owl:Class>
+  <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_242005">
+    <oboInOwl:hasOBONamespace rdf:datatype="http://www.w3.org/2001/XMLSchema#string">
+    fma</oboInOwl:hasOBONamespace>
+    <rdfs:subClassOf rdf:resource="http://purl.org/obo/owl/FMA#FMA_9642" />
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:about="http://purl.org/obo/owl/obo#regional_part_of" />
+        </owl:onProperty>
+        <owl:someValuesFrom rdf:resource="http://purl.org/obo/owl/FMA#FMA_70954" />
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:about="http://purl.org/obo/owl/obo#constitutional_part_of" />
+        </owl:onProperty>
+        <owl:someValuesFrom rdf:resource="http://purl.org/obo/owl/FMA#FMA_7647" />
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:label xml:lang="en">Neural tissue of spinal
+    cord</rdfs:label>
+    <oboInOwl:hasDefinition>
+      <oboInOwl:Definition>
+        <rdfs:label xml:lang="en">Neural tissue which consists of
+        all the neuron cell bodies, neuronal processes and
+        neuroglia in the spinal cord. Examples: There is only one
+        neural tissue of spinal cord.</rdfs:label>
+      </oboInOwl:Definition>
+    </oboInOwl:hasDefinition>
+  </owl:Class>
+  
+   <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_70954">
+    <rdfs:label xml:lang="en">Neural tissue of neuraxis</rdfs:label>
+    <oboInOwl:hasDefinition>
+      <oboInOwl:Definition>
+        <rdfs:label xml:lang="en">Neural tissue which consists of all the neuron cell bodies, neuronal processes and neuroglia in the brain and the spinal cord.  Examples: There is only one neural tissue of neuraxis.</rdfs:label>
+      </oboInOwl:Definition>
+    </oboInOwl:hasDefinition>
+    <oboInOwl:hasOBONamespace>fma</oboInOwl:hasOBONamespace>
+    <rdfs:subClassOf rdf:resource="http://purl.org/obo/owl/FMA#FMA_9642"/>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:about="http://purl.org/obo/owl/obo#constitutional_part_of"/>
+        </owl:onProperty>
+        <owl:someValuesFrom rdf:resource="http://purl.org/obo/owl/FMA#FMA_55675"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+  </owl:Class>
+  
+  
+  <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_50801">
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:about="http://purl.org/obo/owl/obo#regional_part_of" />
+        </owl:onProperty>
+        <owl:someValuesFrom rdf:resource="http://purl.org/obo/owl/FMA#FMA_55675" />
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:about="http://purl.org/obo/owl/obo#constitutional_part_of" />
+        </owl:onProperty>
+        <owl:someValuesFrom rdf:resource="http://purl.org/obo/owl/FMA#FMA_7154" />
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:about="http://purl.org/obo/owl/obo#constitutional_part_of" />
+        </owl:onProperty>
+        <owl:someValuesFrom rdf:resource="http://purl.org/obo/owl/FMA#FMA_54545" />
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_83153" />
+    </rdfs:subClassOf>
+    <oboInOwl:hasOBONamespace rdf:datatype="http://www.w3.org/2001/XMLSchema#string">
+    fma</oboInOwl:hasOBONamespace>
+    <rdfs:label xml:lang="en">Brain</rdfs:label>
+    <oboInOwl:hasDefinition>
+      <oboInOwl:Definition>
+        <rdfs:label xml:lang="en">Segment of neuraxis that has as
+        its parts gray matter and white matter that surround the
+        cerebral ventricular system; Examples: There is only one
+        brain.</rdfs:label>
+      </oboInOwl:Definition>
+    </oboInOwl:hasDefinition>
+  </owl:Class>
+  
+   <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_54545">
+    <rdfs:label xml:lang="en">Head proper</rdfs:label>
+    <oboInOwl:hasDefinition>
+      <oboInOwl:Definition>
+        <rdfs:label xml:lang="en">Subdivision of head which consists of the neurocranium and all layers superficial to it including the cranial cavity and its contents. Examples: There is only one head proper.</rdfs:label>
+      </oboInOwl:Definition>
+    </oboInOwl:hasDefinition>
+    <oboInOwl:hasOBONamespace>fma</oboInOwl:hasOBONamespace>
+    <rdfs:subClassOf rdf:resource="http://purl.org/obo/owl/FMA#FMA_24218"/>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:about="http://purl.org/obo/owl/obo#regional_part_of"/>
+        </owl:onProperty>
+        <owl:someValuesFrom rdf:resource="http://purl.org/obo/owl/FMA#FMA_7154"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+  </owl:Class>
+  <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_24218">
+    <rdfs:label xml:lang="en">Subdivision of head</rdfs:label>
+    <oboInOwl:hasExactSynonym>
+      <oboInOwl:Synonym>
+        <rdfs:label xml:lang="en">Head region</rdfs:label>
+      </oboInOwl:Synonym>
+    </oboInOwl:hasExactSynonym>
+    <oboInOwl:hasExactSynonym>
+      <oboInOwl:Synonym>
+        <rdfs:label xml:lang="en">Head subdivision</rdfs:label>
+      </oboInOwl:Synonym>
+    </oboInOwl:hasExactSynonym>
+    <oboInOwl:hasExactSynonym>
+      <oboInOwl:Synonym>
+        <rdfs:label xml:lang="en">Region of head</rdfs:label>
+      </oboInOwl:Synonym>
+    </oboInOwl:hasExactSynonym>
+    <oboInOwl:hasOBONamespace>fma</oboInOwl:hasOBONamespace>
+    <rdfs:subClassOf rdf:resource="http://purl.org/obo/owl/FMA#FMA_67504"/>
+  </owl:Class>
+  <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_67504">
+    <rdfs:label xml:lang="en">Subdivision of cardinal body part</rdfs:label>
+    <oboInOwl:hasDefinition>
+      <oboInOwl:Definition>
+        <rdfs:label xml:lang="en">Anatomical structure, which is a subdivision of a cardinal body part; it may exclude bones; is demarcated from other subdivisions of the same cardinal body part by anatomical surfaces or lines or topographical references; together with other contiguous subdivisions of the same cardinal body part, it constitutes a cardinal body part. Examples: thorax, perineum, back of neck, forearm, hand, phalanx, nose, auricle of ear, scrotum.</rdfs:label>
+      </oboInOwl:Definition>
+    </oboInOwl:hasDefinition>
+    <oboInOwl:hasExactSynonym>
+      <oboInOwl:Synonym>
+        <rdfs:label xml:lang="en">Principal body part subdivision</rdfs:label>
+      </oboInOwl:Synonym>
+    </oboInOwl:hasExactSynonym>
+    <oboInOwl:hasOBONamespace>fma</oboInOwl:hasOBONamespace>
+    <rdfs:subClassOf rdf:resource="http://purl.org/obo/owl/FMA#FMA_67135"/>
+  </owl:Class>
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_67165">
+    <rdfs:label xml:lang="en">Material anatomical
+    entity</rdfs:label>
+    <oboInOwl:hasOBONamespace rdf:datatype="http://www.w3.org/2001/XMLSchema#string">
+    fma</oboInOwl:hasOBONamespace>
+    <rdfs:subClassOf rdf:resource="http://purl.org/obo/owl/FMA#FMA_61775" />
+    <oboInOwl:hasDefinition>
+      <oboInOwl:Definition>
+        <rdfs:label xml:lang="en">Physical anatomical entity which
+        has mass. Examples: hemoglobin molecule, mitochondrion,
+        hepatocyte, erythrocyte, heart, head, blood,
+        urine.</rdfs:label>
+      </oboInOwl:Definition>
+    </oboInOwl:hasDefinition>
+  </owl:Class>
+  <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_242395">
+    <rdfs:subClassOf rdf:resource="http://purl.org/obo/owl/FMA#FMA_242681" />
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:someValuesFrom rdf:resource="http://purl.org/obo/owl/FMA#FMA_75007" />
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:about="http://purl.org/obo/owl/obo#regional_part_of" />
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:about="http://purl.org/obo/owl/obo#constitutional_part_of" />
+        </owl:onProperty>
+        <owl:someValuesFrom rdf:resource="http://purl.org/obo/owl/FMA#FMA_242787" />
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <oboInOwl:hasExactSynonym>
+      <oboInOwl:Synonym>
+        <rdfs:label xml:lang="en">Cavity of ventricular system of
+        brain</rdfs:label>
+      </oboInOwl:Synonym>
+    </oboInOwl:hasExactSynonym>
+    <rdfs:label xml:lang="en">Cavity of brain</rdfs:label>
+    <oboInOwl:hasOBONamespace rdf:datatype="http://www.w3.org/2001/XMLSchema#string">
+    fma</oboInOwl:hasOBONamespace>
+  </owl:Class>
+  <owl:Class rdf:about="http://www.geneontology.org/formats/oboInOwl#SynonymType" />
+  <owl:Class rdf:about="http://www.geneontology.org/formats/oboInOwl#Definition" />
+  <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_83153">
+    <oboInOwl:hasDefinition>
+      <oboInOwl:Definition>
+        <rdfs:label xml:lang="en">Organ component which is part of
+        the brain or spinal cord.</rdfs:label>
+      </oboInOwl:Definition>
+    </oboInOwl:hasDefinition>
+    <rdfs:label xml:lang="en">Organ component of
+    neuraxis</rdfs:label>
+    <oboInOwl:hasOBONamespace rdf:datatype="http://www.w3.org/2001/XMLSchema#string">
+    fma</oboInOwl:hasOBONamespace>
+    <rdfs:subClassOf rdf:resource="http://purl.org/obo/owl/FMA#FMA_14065" />
+  </owl:Class>
+  <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_7647">
+    <oboInOwl:hasOBONamespace rdf:datatype="http://www.w3.org/2001/XMLSchema#string">
+    fma</oboInOwl:hasOBONamespace>
+    <rdfs:label xml:lang="en">Spinal cord</rdfs:label>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:someValuesFrom rdf:resource="http://purl.org/obo/owl/FMA#FMA_55675" />
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:about="http://purl.org/obo/owl/obo#regional_part_of" />
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf rdf:resource="http://purl.org/obo/owl/FMA#FMA_83153" />
+    <oboInOwl:hasDefinition>
+      <oboInOwl:Definition>
+        <rdfs:label xml:lang="en">Organ component of neuraxis that
+        has as its parts gray matter and white matter that surround
+        the central canal. Examples: There is only one spinal
+        cord.</rdfs:label>
+      </oboInOwl:Definition>
+    </oboInOwl:hasDefinition>
+  </owl:Class>
+  <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_5897">
+    <oboInOwl:hasOBONamespace rdf:datatype="http://www.w3.org/2001/XMLSchema#string">
+    fma</oboInOwl:hasOBONamespace>
+    <rdfs:label xml:lang="en">Anatomical space</rdfs:label>
+    <rdfs:subClassOf>
+      <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_67112" />
+    </rdfs:subClassOf>
+    <oboInOwl:hasDefinition>
+      <oboInOwl:Definition>
+        <rdfs:label xml:lang="en">Immaterial anatomical entity
+        which has three spatial dimensions. Examples: celom,
+        thoracic cavity, lesser sac of peritoneum, cavity of right
+        atrium, lumen of aorta, mediastinal space, space of
+        anterior compartment of forearm, intervertebral foramen
+        space.</rdfs:label>
+      </oboInOwl:Definition>
+    </oboInOwl:hasDefinition>
+  </owl:Class>
+  <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_67112">
+    <oboInOwl:hasExactSynonym>
+      <oboInOwl:Synonym>
+        <rdfs:label xml:lang="en">Immaterial physical anatomical
+        entity</rdfs:label>
+      </oboInOwl:Synonym>
+    </oboInOwl:hasExactSynonym>
+    <rdfs:label xml:lang="en">Immaterial anatomical
+    entity</rdfs:label>
+    <oboInOwl:hasOBONamespace rdf:datatype="http://www.w3.org/2001/XMLSchema#string">
+    fma</oboInOwl:hasOBONamespace>
+    <rdfs:subClassOf rdf:resource="http://purl.org/obo/owl/FMA#FMA_61775" />
+    <oboInOwl:hasDefinition>
+      <oboInOwl:Definition>
+        <rdfs:label xml:lang="en">Physical anatomical entity which
+        is a three-dimensional space, surface, line or point
+        associated with a material anatomical entity. Examples:
+        body space, surface of heart, costal margin, apex of right
+        lung, anterior compartment of right arm.</rdfs:label>
+      </oboInOwl:Definition>
+    </oboInOwl:hasDefinition>
+  </owl:Class>
+  <owl:Class rdf:about="http://www.geneontology.org/formats/oboInOwl#Synonym" />
+  <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_7157">
+    <rdfs:label xml:lang="en">Nervous system</rdfs:label>
+    <rdfs:subClassOf rdf:resource="http://purl.org/obo/owl/FMA#FMA_7149" />
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:about="http://purl.org/obo/owl/obo#systemic_part_of" />
+        </owl:onProperty>
+        <owl:someValuesFrom rdf:resource="http://purl.org/obo/owl/FMA#FMA_67812" />
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:about="http://purl.org/obo/owl/obo#systemic_part_of" />
+        </owl:onProperty>
+        <owl:someValuesFrom>
+          <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_67811" />
+        </owl:someValuesFrom>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:someValuesFrom rdf:resource="http://purl.org/obo/owl/FMA#FMA_20394" />
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:about="http://purl.org/obo/owl/obo#systemic_part_of" />
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <oboInOwl:hasOBONamespace rdf:datatype="http://www.w3.org/2001/XMLSchema#string">
+    fma</oboInOwl:hasOBONamespace>
+  </owl:Class>
+  <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_9337">
+    <oboInOwl:hasDefinition>
+      <oboInOwl:Definition>
+        <rdfs:label xml:lang="en">Anatomical cavity, which is
+        surrounded by a morphological subdivision of an organ; is
+        continuous with other organ cavity subdivisions of the same
+        organ; together with other organ cavity subdivisions, it
+        constitutes the organ cavity. Examples: oblique sinus of
+        pericardial cavity, pyloric antrum, costodiaphragmatic
+        recess, cervical canal of uterus, cavity of body of gall
+        bladder.</rdfs:label>
+      </oboInOwl:Definition>
+    </oboInOwl:hasDefinition>
+    <rdfs:subClassOf rdf:resource="http://purl.org/obo/owl/FMA#FMA_67552" />
+    <oboInOwl:hasOBONamespace rdf:datatype="http://www.w3.org/2001/XMLSchema#string">
+    fma</oboInOwl:hasOBONamespace>
+    <rdfs:label xml:lang="en">Organ cavity subdivision</rdfs:label>
+  </owl:Class>
+  <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_67811">
+    <rdfs:label xml:lang="en">Male human body</rdfs:label>
+    <rdfs:subClassOf rdf:resource="http://purl.org/obo/owl/FMA#FMA_20394" />
+    <oboInOwl:hasOBONamespace rdf:datatype="http://www.w3.org/2001/XMLSchema#string">
+    fma</oboInOwl:hasOBONamespace>
+  </owl:Class>
+  
+  <owl:Class rdf:about="http://purl.org/obo/owl/FMA#FMA_7149">
+    <rdfs:label xml:lang="en">Organ system</rdfs:label>
+    <oboInOwl:hasDefinition>
+      <oboInOwl:Definition>
+        <rdfs:label xml:lang="en">Anatomical structure, which has as its direct parts instances of one or more organ types which are interconnected with one another by zones of continuity. Examples: skeletal system, cardiovascular system, alimentary system.</rdfs:label>
+      </oboInOwl:Definition>
+    </oboInOwl:hasDefinition>
+    <oboInOwl:hasOBONamespace>fma</oboInOwl:hasOBONamespace>
+    <rdfs:subClassOf rdf:resource="http://purl.org/obo/owl/FMA#FMA_67135"/>
+  </owl:Class>
+  
+  <owl:ObjectProperty rdf:about="http://purl.org/obo/owl/obo#regional_part_of">
+
+    <oboInOwl:hasOBONamespace rdf:datatype="http://www.w3.org/2001/XMLSchema#string">
+    fma</oboInOwl:hasOBONamespace>
+    <rdfs:subPropertyOf>
+      <rdf:Property rdf:about="http://purl.org/obo/owl/obo#part_of" />
+    </rdfs:subPropertyOf>
+    <rdfs:label xml:lang="en">regional_part_of</rdfs:label>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="http://purl.org/obo/owl/obo#constitutional_part_of">
+
+    <rdfs:label xml:lang="en">constitutional_part_of</rdfs:label>
+    <rdfs:subPropertyOf rdf:resource="http://purl.org/obo/owl/obo#part_of" />
+    <oboInOwl:hasOBONamespace rdf:datatype="http://www.w3.org/2001/XMLSchema#string">
+    fma</oboInOwl:hasOBONamespace>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="http://purl.org/obo/owl/obo#branch_of">
+
+    <rdfs:label xml:lang="en">branch_of</rdfs:label>
+    <oboInOwl:hasOBONamespace rdf:datatype="http://www.w3.org/2001/XMLSchema#string">
+    fma</oboInOwl:hasOBONamespace>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="http://purl.org/obo/owl/obo#attaches_to">
+
+    <oboInOwl:hasOBONamespace rdf:datatype="http://www.w3.org/2001/XMLSchema#string">
+    fma</oboInOwl:hasOBONamespace>
+    <rdfs:label xml:lang="en">attaches_to</rdfs:label>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="http://purl.org/obo/owl/obo#bounds">
+
+    <oboInOwl:hasOBONamespace rdf:datatype="http://www.w3.org/2001/XMLSchema#string">
+    fma</oboInOwl:hasOBONamespace>
+    <rdfs:label xml:lang="en">bounds</rdfs:label>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="http://purl.org/obo/owl/obo#systemic_part_of">
+
+    <rdfs:label xml:lang="en">systemic_part_of</rdfs:label>
+    <oboInOwl:hasOBONamespace rdf:datatype="http://www.w3.org/2001/XMLSchema#string">
+    fma</oboInOwl:hasOBONamespace>
+    <rdfs:subPropertyOf rdf:resource="http://purl.org/obo/owl/obo#part_of" />
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="http://www.geneontology.org/formats/oboInOwl#ObsoleteProperty" />
+  <owl:TransitiveProperty rdf:about="http://purl.org/obo/owl/OBO_REL#part_of">
+
+    <rdfs:label xml:lang="en">part_of</rdfs:label>
+    <oboInOwl:hasOBONamespace rdf:datatype="http://www.w3.org/2001/XMLSchema#string">
+    fma</oboInOwl:hasOBONamespace>
+  </owl:TransitiveProperty>
+  <owl:AnnotationProperty rdf:about="http://www.geneontology.org/formats/oboInOwl#replacedBy" />
+  <owl:AnnotationProperty rdf:about="http://www.geneontology.org/formats/oboInOwl#hasSynonymType" />
+  <owl:AnnotationProperty rdf:about="http://www.geneontology.org/formats/oboInOwl#hasNarrowSynonym" />
+  <owl:AnnotationProperty rdf:about="http://www.geneontology.org/formats/oboInOwl#hasBroadSynonym" />
+  <owl:AnnotationProperty rdf:about="http://www.geneontology.org/formats/oboInOwl#hasURI" />
+  <owl:AnnotationProperty rdf:about="http://www.geneontology.org/formats/oboInOwl#hasOBONamespace" />
+  <owl:AnnotationProperty rdf:about="http://www.geneontology.org/formats/oboInOwl#hasDefinition" />
+  <owl:AnnotationProperty rdf:about="http://www.geneontology.org/formats/oboInOwl#hasSynonym" />
+  <owl:AnnotationProperty rdf:about="http://www.geneontology.org/formats/oboInOwl#hasDbXref" />
+  <owl:AnnotationProperty rdf:about="http://www.geneontology.org/formats/oboInOwl#hasVersion" />
+  <owl:AnnotationProperty rdf:about="http://www.geneontology.org/formats/oboInOwl#isCyclic" />
+  <owl:AnnotationProperty rdf:about="http://www.geneontology.org/formats/oboInOwl#hasDefaultNamespace" />
+  <owl:AnnotationProperty rdf:about="http://www.geneontology.org/formats/oboInOwl#savedBy" />
+  <owl:AnnotationProperty rdf:about="http://www.geneontology.org/formats/oboInOwl#hasDate" />
+  <owl:AnnotationProperty rdf:about="http://www.geneontology.org/formats/oboInOwl#hasExactSynonym" />
+  <owl:AnnotationProperty rdf:about="http://www.geneontology.org/formats/oboInOwl#hasRelatedSynonym" />
+  <owl:AnnotationProperty rdf:about="http://www.geneontology.org/formats/oboInOwl#consider" />
+  <owl:AnnotationProperty rdf:about="http://www.geneontology.org/formats/oboInOwl#inSubset" />
+  <owl:AnnotationProperty rdf:about="http://www.geneontology.org/formats/oboInOwl#hasSubset" />
+  <owl:AnnotationProperty rdf:about="http://www.geneontology.org/formats/oboInOwl#hasAlternativeId" />
+</rdf:RDF>
+<!-- Created with Protege (with OWL Plugin 3.4, Build 533)  http://protege.stanford.edu -->
