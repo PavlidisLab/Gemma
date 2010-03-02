@@ -129,7 +129,8 @@ public class GeneOntologyService implements InitializingBean {
      * @return
      */
     public static GOAspect getTermAspect( String goId ) {
-        OntologyTerm term = getTermForURI( goId );
+        OntologyTerm term = getTermForId( goId );
+        if ( term == null ) return null;
         return getTermAspect( term );
     }
 
@@ -168,7 +169,7 @@ public class GeneOntologyService implements InitializingBean {
      * @return
      */
     private static GOAspect getTermAspect( OntologyTerm term ) {
-
+        assert term != null;
         String goid = term.getTerm();
         if ( term2Aspect.containsKey( goid ) ) {
             return term2Aspect.get( goid );
