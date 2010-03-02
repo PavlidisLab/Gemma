@@ -841,7 +841,7 @@ public class GeoConverterTest extends BaseSpringContextTest {
         parser.parse( is );
 
         is = new GZIPInputStream( this.getClass().getResourceAsStream(
-                "/data/loader/expression/geo/gse8872Short/GDS2942.soft.gz" ) );
+                "/data/loader/expression/geo/gse8872short/GDS2942.soft.gz" ) );
         parser.parse( is );
 
         GeoSeries series = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSeriesMap().get( "GSE8872" );
