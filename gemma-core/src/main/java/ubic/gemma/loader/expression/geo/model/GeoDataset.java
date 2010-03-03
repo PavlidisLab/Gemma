@@ -390,7 +390,7 @@ public class GeoDataset extends GeoData {
     }
 
     /**
-     * count, log ratio, log2 ratio, log10 ratio, logE ratio, transformed count
+     * count, log ratio, log2 ratio, log10 ratio, logE ratio, log e ratio, transformed count
      * 
      * @param string
      * @return
@@ -405,6 +405,8 @@ public class GeoDataset extends GeoData {
         } else if ( string.equals( "log10 ratio" ) ) {
             return ValueType.log10ratio;
         } else if ( string.equals( "logE ratio" ) ) {
+            return ValueType.logERatio;
+        } else if ( string.equals( "log e ratio" ) ) {
             return ValueType.logERatio;
         } else if ( string.equals( "transformed count" ) ) {
             return ValueType.transformedCount;
