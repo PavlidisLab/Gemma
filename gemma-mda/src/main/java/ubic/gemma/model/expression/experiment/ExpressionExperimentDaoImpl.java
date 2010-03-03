@@ -516,26 +516,26 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
             eds.add( fv.getExperimentalFactor().getExperimentalDesign() );
         }
 
-        if ( eds.size() > 0 ) {
-            final String queryString = "select distinct ee from ExpressionExperimentImpl as ee inner join ee.experimentalDesign ed where ed in (:eds) ";
-            Collection results = new HashSet();
-            Collection batch = new HashSet();
-            for ( Object o : fvs ) {
-                batch.add( o );
-                if ( batch.size() == BATCH_SIZE ) {
-                    results.addAll( getHibernateTemplate().findByNamedParam( queryString, "eds", batch ) );
-                    batch.clear();
-                }
-            }
-
-            if ( batch.size() > 0 ) {
-                results.addAll( getHibernateTemplate().findByNamedParam( queryString, "eds", batch ) );
-            }
-
-            return results;
-
+        if ( eds.size() == 0 ) {
+            return new HashSet<ExpressionExperiment>();
         }
-        return new HashSet<ExpressionExperiment>();
+
+        final String queryString = "select distinct ee from ExpressionExperimentImpl as ee where ee.experimentalDesign in (:eds) ";
+        Collection results = new HashSet();
+        Collection<ExperimentalDesign> batch = new HashSet();
+        for ( ExperimentalDesign o : eds ) {
+            batch.add( o );
+            if ( batch.size() == BATCH_SIZE ) {
+                results.addAll( getHibernateTemplate().findByNamedParam( queryString, "eds", batch ) );
+                batch.clear();
+            }
+        }
+
+        if ( batch.size() > 0 ) {
+            results.addAll( getHibernateTemplate().findByNamedParam( queryString, "eds", batch ) );
+        }
+
+        return results;
 
     }
 
