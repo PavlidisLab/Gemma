@@ -22,15 +22,25 @@
  */
 package ubic.gemma.model.genome.gene;
 
+import ubic.gemma.model.genome.Gene;
+
 /**
  * @see ubic.gemma.model.genome.gene.GeneSet
  */
-public class GeneSetImpl
-    extends ubic.gemma.model.genome.gene.GeneSet
-{
+public class GeneSetImpl extends ubic.gemma.model.genome.gene.GeneSet {
     /**
      * The serial version UID of this class. Needed for serialization.
      */
     private static final long serialVersionUID = 7069729200662464958L;
+
+    static public boolean containsGene( Gene g, GeneSet gs ) {
+
+        for ( GeneSetMember gm : gs.getMembers() ) {
+            if ( gm.getGene().equals( g ) ) return true;
+        }
+
+        return false;
+
+    }
 
 }

@@ -43,8 +43,10 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.model.genome.gene.GeneSet;
+import ubic.gemma.model.genome.gene.GeneSetImpl;
 import ubic.gemma.model.genome.gene.GeneSetMember;
 import ubic.gemma.model.genome.gene.GeneSetService;
+import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.security.SecurityService;
 import ubic.gemma.security.authentication.UserDetailsImpl;
 import ubic.gemma.security.authentication.UserManager;
@@ -61,6 +63,7 @@ import ubic.gemma.web.remote.EntityDelegator;
 public class SecurityController {
 
     private static Log log = LogFactory.getLog( SecurityController.class );
+    private static final Double DEFAULT_SCORE = 0.0;
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService = null;
@@ -191,8 +194,6 @@ public class SecurityController {
         return results;
     }
 
-    
-    
     /**
      * Return a list of principals that is users
      * 
@@ -203,7 +204,7 @@ public class SecurityController {
         try {
             for ( Sid s : securityService.getAvailableSids() ) {
                 SidValueObject sv = new SidValueObject( s );
-                if(sv.isPrincipal()){
+                if ( sv.isPrincipal() ) {
                     results.add( sv );
                 }
             }
@@ -214,12 +215,7 @@ public class SecurityController {
         Collections.sort( results );
         return results;
     }
-    
-    
-    
-    
-    
-    
+
     /**
      * @param groupName
      * @return
@@ -293,36 +289,15 @@ public class SecurityController {
         // Add Analyses
         secs.addAll( getUsersAnalyses( privateOnly ) );
 
+        Collection<SecurityInfoValueObject> result = securables2VOs( secs, currentGroup );
         // Add gene groups
-        secs.addAll( getUsersGeneGroups( privateOnly ) );
+        result.addAll( getUsersGeneGroups( privateOnly ) );
 
         /*
          * TODO: add other types of securables here.
          */
 
-        Collection<SecurityInfoValueObject> result = securables2VOs( secs, currentGroup );
         return result;
-    }
-
-    /**
-     * @param privateOnly
-     * @return
-     */
-    private Collection<Securable> getUsersGeneGroups( boolean privateOnly ) {
-        Collection<Securable> secs = new HashSet<Securable>();
-
-        Collection<GeneSet> geneSets = geneSetService.loadMyGeneSets();
-        if ( privateOnly ) {
-            try {
-                secs.addAll( securityService.choosePrivate( geneSets ) );
-            } catch ( AccessDeniedException e ) {
-                // okay, they just aren't allowed to see those.
-            }
-        } else {
-            secs.addAll( geneSets );
-        }
-
-        return secs;
     }
 
     /**
@@ -617,6 +592,33 @@ public class SecurityController {
         }
     }
 
+    // **********************************
+    // GENE GROUP AJAX SERVICES
+    // **********************************
+    /**
+     * AJAX Returns just the current users gene sets
+     * 
+     * @param privateOnly
+     * @return
+     */
+    public Collection<SecurityInfoValueObject> getUsersGeneGroups( boolean privateOnly ) {
+        Collection<Securable> secs = new HashSet<Securable>();
+
+        Collection<GeneSet> geneSets = geneSetService.loadMyGeneSets();
+        if ( privateOnly ) {
+            try {
+                secs.addAll( securityService.choosePrivate( geneSets ) );
+            } catch ( AccessDeniedException e ) {
+                // okay, they just aren't allowed to see those.
+            }
+        } else {
+            secs.addAll( geneSets );
+        }
+
+        Collection<SecurityInfoValueObject> result = securables2VOs( secs, null );
+        return result;
+    }
+
     /**
      * AJAX Creates a new gene group given a name for the group and the genes in the group
      * 
@@ -636,20 +638,23 @@ public class SecurityController {
 
         GeneSet gset = GeneSet.Factory.newInstance();
         gset.setName( name );
-        
+
         for ( Gene g : genes ) {
             GeneSetMember gmember = GeneSetMember.Factory.newInstance();
             gmember.setGene( g );
+            gmember.setScore( DEFAULT_SCORE );
             gset.getMembers().add( gmember );
         }
 
         gset = this.geneSetService.create( gset );
+        this.securityService.makePrivate( gset );
 
         return gset.getName();
     }
 
     /**
-     * Given a valid gene group will remove it from db (if the user has permissons to do so). 
+     * AJAX Given a valid gene group will remove it from db (if the user has permissons to do so).
+     * 
      * @param groupId
      */
     public void deleteGeneGroup( Long groupId ) {
@@ -658,6 +663,56 @@ public class SecurityController {
 
         GeneSet gset = geneSetService.load( groupId );
         if ( gset != null ) geneSetService.remove( gset );
+
+    }
+
+    /**
+     * AJAX If the current user has access to given gene group will return the gene ids in the gene group
+     * 
+     * @param groupId
+     * @return
+     */
+    public Collection<GeneValueObject> getGenesInGroup( Long groupId ) {
+
+        Collection<GeneValueObject> results = null;
+
+        GeneSet gs = this.geneSetService.load( groupId );
+        if ( gs == null ) return null; // FIXME: Send and error code/feedback?
+
+        results = GeneValueObject.convertMembers2GeneValueObjects( gs.getMembers() );
+
+        return results;
+
+    }
+
+    /**
+     * AJAX Updates the given gene group (permission permitting) with the given list of geneIds Will not allow the same
+     * gene to be added to the gene set twice.
+     * 
+     * @param groupId
+     * @param geneIds
+     */
+    public void updateGeneGroup( Long groupId, Collection<Long> geneIds ) {
+
+        if ( geneIds == null || geneIds.isEmpty() ) return;
+
+        Collection<Gene> genes = geneService.loadMultiple( geneIds );
+
+        if ( genes == null || genes.isEmpty() ) return;
+
+        GeneSet gset = this.geneSetService.load( groupId );
+
+        for ( Gene g : genes ) {
+            if ( GeneSetImpl.containsGene( g, gset ) ) continue;
+            GeneSetMember gmember = GeneSetMember.Factory.newInstance();
+            gmember.setGene( g );
+            gmember.setScore( DEFAULT_SCORE );
+            gset.getMembers().add( gmember );
+        }
+
+        this.geneSetService.update( gset );
+
+        return;
 
     }
 

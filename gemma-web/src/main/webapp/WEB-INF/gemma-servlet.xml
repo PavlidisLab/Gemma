@@ -117,6 +117,7 @@
 	<bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/register.html" />
 	<bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/userProfile.html" />
 	<bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/manageGroups.html" />
+	<bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/geneGroupManager.html" />
 	<bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/passwordHint.html" />
 	<bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/admin/userManager.html" />
 	<bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/admin/indexer.html" />
@@ -1202,6 +1203,10 @@
 								<value>updatePermissions</value>
 								<value>updatePermission</value>
 								<value>getAvailablePrincipalSids</value>
+								<value>getUsersGeneGroups</value>
+								<value>getGenesInGroup</value>
+								<value>updateGeneGroup</value>
+								
 							</list>
 						</property>
 					</bean>

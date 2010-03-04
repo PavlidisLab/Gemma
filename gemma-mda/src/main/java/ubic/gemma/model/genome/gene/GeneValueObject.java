@@ -36,7 +36,6 @@ public class GeneValueObject implements java.io.Serializable {
      */
     private static final long serialVersionUID = -7098036090107647318L;
 
-    // TODO move this to GeneValueObject
     public static Collection<GeneValueObject> convert2GeneValueObjects( Collection<Gene> genes ) {
 
         Collection<GeneValueObject> converted = new HashSet<GeneValueObject>();
@@ -45,7 +44,25 @@ public class GeneValueObject implements java.io.Serializable {
         for ( Gene g : genes ) {
             if ( g == null ) continue;
             converted.add( new GeneValueObject( g.getId(), g.getName(), g.getNcbiId(), g.getOfficialSymbol(), g
-                    .getOfficialName(), g.getDescription() ) );
+                    .getOfficialName(), g.getDescription(), null ) );
+        }
+
+        return converted;
+    }
+    
+    /**
+     * A static method for easily converting GeneSetMembers into GeneValueObjects
+     * @param genes
+     * @return
+     */
+    public static Collection<GeneValueObject> convertMembers2GeneValueObjects( Collection<GeneSetMember> genes ) {
+
+        Collection<GeneValueObject> converted = new HashSet<GeneValueObject>();
+        if ( genes == null ) return converted;
+
+        for ( GeneSetMember g : genes ) {
+            if ( g == null ) continue;
+            converted.add( new GeneValueObject( g ));
         }
 
         return converted;
@@ -62,6 +79,8 @@ public class GeneValueObject implements java.io.Serializable {
     private java.lang.String officialName;
 
     private java.lang.String description;
+    
+    private Double score;  //This is for genes in genesets might have a rank or a score associated with them. 
 
     public GeneValueObject() {
     }
@@ -74,17 +93,28 @@ public class GeneValueObject implements java.io.Serializable {
      */
     public GeneValueObject( GeneValueObject otherBean ) {
         this( otherBean.getId(), otherBean.getName(), otherBean.getNcbiId(), otherBean.getOfficialSymbol(), otherBean
-                .getOfficialName(), otherBean.getDescription() );
+                .getOfficialName(), otherBean.getDescription(), otherBean.getScore() );
+    }
+    
+    /**
+     * Copy constructor for GeneSetMember
+     * @param otherBean
+     */
+    public GeneValueObject( GeneSetMember otherBean ) {
+        this( otherBean.getGene().getId(), otherBean.getGene().getName(), otherBean.getGene().getNcbiId(), otherBean.getGene().getOfficialSymbol(), otherBean
+                .getGene().getOfficialName(), otherBean.getGene().getDescription(), otherBean.getScore() );
     }
 
+
     public GeneValueObject( java.lang.Long id, java.lang.String name, java.lang.String ncbiId,
-            java.lang.String officialSymbol, java.lang.String officialName, java.lang.String description ) {
+            java.lang.String officialSymbol, java.lang.String officialName, java.lang.String description, Double score ) {
         this.id = id;
         this.name = name;
         this.ncbiId = ncbiId;
         this.officialSymbol = officialSymbol;
         this.officialName = officialName;
         this.description = description;
+        this.score = score;
     }
 
     /**
@@ -98,6 +128,7 @@ public class GeneValueObject implements java.io.Serializable {
             this.setOfficialSymbol( otherBean.getOfficialSymbol() );
             this.setOfficialName( otherBean.getOfficialName() );
             this.setDescription( otherBean.getDescription() );
+            this.setScore( otherBean.getScore() );
         }
     }
 
@@ -165,6 +196,14 @@ public class GeneValueObject implements java.io.Serializable {
 
     public void setOfficialSymbol( java.lang.String officialSymbol ) {
         this.officialSymbol = officialSymbol;
+    }
+
+    public void setScore( Double score ) {
+        this.score = score;
+    }
+
+    public Double getScore() {
+        return score;
     }
 
     // ubic.gemma.model.genome.gene.GeneValueObject value-object java merge-point

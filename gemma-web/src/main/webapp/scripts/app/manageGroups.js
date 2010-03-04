@@ -10,7 +10,7 @@ Ext.onReady(function() {
 	Ext.QuickTips.init();
 	Ext.state.Manager.setProvider(new Ext.state.CookieProvider());
 
-	var currentGroup;
+	var currentGroup;  //FIXME  Holding onto state info smells bad...
 
 	var groupMembershipChks = new Ext.ux.grid.CheckColumn({
 				header : 'In group',
@@ -76,13 +76,7 @@ Ext.onReady(function() {
 	 * The GUI
 	 */
 
-	var geneGroupImporter = new Gemma.GeneGroupImporter({
-				renderTo : 'genesetCreation-div',
-				width : "100%",
-				height : 300,
-				layout : 'border'
 
-			});
 
 	var groupviewer = new Ext.Panel({
 		height : 600,
@@ -435,23 +429,27 @@ Ext.onReady(function() {
 							for (var i = 0; i < recs.length; i++) {
 								/*
 								 * This is ugly. The 'owner' object gets turned
-								 * into a plain string.have to reconstruct the owner from strings
+								 * into a plain string.have to reconstruct the
+								 * owner from strings
 								 */
-								// This is the value if the owner has not been changed in the combo box
-								if(recs[i].data.owner.authority){
+								// This is the value if the owner has not been
+								// changed in the combo box
+								if (recs[i].data.owner.authority) {
 									recs[i].data.owner = {
-											authority : recs[i].data.owner.authority,
-											principal : recs[i].data.owner.principal											
-									};									
-								}
-								//this is the value if the owner has not been changed. principal is always true as combo only filled with principals
-								else if (recs[i].data.owner){
-									recs[i].data.owner = {
-											authority : recs[i].data.owner,
-											principal : "true"											
+										authority : recs[i].data.owner.authority,
+										principal : recs[i].data.owner.principal
 									};
-								}else{
-										Ext.Msg.alert('Owner can not be changed');
+								}
+								// this is the value if the owner has not been
+								// changed. principal is always true as combo
+								// only filled with principals
+								else if (recs[i].data.owner) {
+									recs[i].data.owner = {
+										authority : recs[i].data.owner,
+										principal : "true"
+									};
+								} else {
+									Ext.Msg.alert('Owner can not be changed');
 								}
 								p.push(recs[i].data);
 							}
@@ -599,76 +597,4 @@ Ext.onReady(function() {
 
 	});
 
-});
-
-Gemma.GeneGroupImporter = Ext.extend(Ext.Panel, {
-
-	initComponent : function() {
-		this.geneChooserPanel = new Gemma.GeneGrid({
-					height : 400,
-					width : 230,
-					region : 'center',
-					id : 'gene-chooser-panel'
-				});
-
-		Ext.apply(this.geneChooserPanel.getTopToolbar().taxonCombo, {
-					stateId : "",
-					stateful : false,
-					stateEvents : []
-				});
-
-		Ext.apply(this, {
-			title : "Import a new Gene Group",
-			tbar : {
-				items : [{
-					tooltip : "Save New Group",
-					icon : "/Gemma/images/icons/database_save.png",
-					id : 'geneimportgroup-save-btn',
-					handler : function(b, e) {
-
-						Ext.Msg.prompt('New Group',
-								'Please enter the group name:', function(btn,
-										text) {
-									if (btn == 'ok') {
-
-										var geneIds = Ext.getCmp("gene-chooser-panel").getGeneIds();
-										//TODO add checks for no/bad genes
-									
-										SecurityController.createGeneGroup(text, geneIds, {
-											callback : function(groupname) {
-
-												var c = Ext
-														.getCmp('manager-groups-listview')
-														.getStore().recordType;
-
-												var newrec = new c({
-															groupName : groupname
-														}, groupname);
-
-												/*
-												 * Refresh
-												 */
-												Ext
-														.getCmp("manager-groups-listview")
-														.getStore().load({
-																	params : []
-																});
-
-											},
-											errorHandler : function(e) {
-												Ext.Msg.alert('Sorry', e);
-											}
-										})
-									}
-								});
-
-					}
-				}]
-			},
-			items : [this.geneChooserPanel]
-		});
-
-		Gemma.GeneGroupImporter.superclass.initComponent.call(this);
-
-	}
 });

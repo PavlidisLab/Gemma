@@ -14,17 +14,18 @@
 		A 'Group' is a set of Gemma users who have a common set of permissions. This page allows you to see what Groups you
 		belong to, create groups, and change who is in groups you control.
 	</p>
+
 	<p>
 		For additional controls on which groups can view or edit your data sets, visit the
 		<a href="<c:url value="/expressionExperiment/showAllExpressionExperimentLinkSummaries.html" />">Data Manager</a>.
+		
+		If you want to Manage Gene Groups go to the  <a href="<c:url value="/geneGroupManager.html" />">Gene Group Manager</a>.
 	</p>
 
 
 	<div id='manageGroups-div'>
 	</div>
 	
-	<br> </br>
-	<div id='genesetCreation-div'> </div>
 	
 	<div id='errorMessage' style='width: 500px; margin-bottom: 1em;'></div>
 	
