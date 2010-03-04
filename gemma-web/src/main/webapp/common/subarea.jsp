@@ -24,7 +24,7 @@
 
 
 <%--Don't show this area if the user is logged in. --%>
-<security:authorize ifNotGranted="GROUP_USER,GROUP_ADMIN">
+<security:authorize access="isAnonymous()">
 	<div class="roundedcornr_box_777249" style="margin-bottom: 10px;">
 		<div class="roundedcornr_top_777249">
 			<div></div>
