@@ -34,7 +34,7 @@
 		<img src='/Gemma/images/pubmed.gif' />
 	</display:column>
 	<display:column title="Experiments" property="experiments" />
-	<security:authorize ifAnyGranted="GROUP_ADMIN">
+	<security:authorize access="hasRole('GROUP_ADMIN')">
 		<display:column property="update" sortable="false" title="Update from NCBI" />
 	</security:authorize>
 </display:table>

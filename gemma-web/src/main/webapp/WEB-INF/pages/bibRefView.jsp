@@ -12,7 +12,7 @@
 <h2>
 	Bibliographic Reference record
 </h2>
-<security:authorize ifAnyGranted="GROUP_ADMIN">
+<security:authorize access="hasRole('GROUP_ADMIN')">
 	<c:if test="${!requestScope.existsInSystem}">
 		<p>
 			This reference was obtained from PubMed; it is not in the Gemma system. You can add it to Gemma by clicking the
@@ -44,13 +44,13 @@
 <Gemma:bibref bibliographicReference="${bibliographicReference}" />
 
 <br />
-<security:authorize ifAnyGranted="GROUP_ADMIN">
+<security:authorize access="hasRole('GROUP_ADMIN')">
 	<table>
 		<tr>
 			<td align="left">
 				<c:if test="${!requestScope.existsInSystem}">
 					<div align="left">
-						<form method="GET" action="<c:url value="/bibRef/bibRefAdd.html"/>"
+						<form method="GET" action="<c:url value="/bibRef/bibRefAdd.html"/>">
 							<input type="hidden" name="acc"
 							value="${bibliographicReference.pubAccession.accession}">
 						<input type="submit" value="Add to Gemma Database">
@@ -58,41 +58,7 @@
 				</div>
 			</c:if>
 		</td>
-		<td align="left">
-			<c:if test="${requestScope.incompleteEntry}">
-				<div align="left">
-					<form method="GET" action="<c:url value="/bibRef/bibRefAdd.html"/>"
-						<input type="hidden" name="acc"
-							value="${bibliographicReference.pubAccession.accession}">
-							<input type="hidden" name="refresh" value="1">
-						<input type="submit" value="Add to Gemma Database">
-					</form>
-				</div>
-			</c:if>
-		</td>
-		<td>
-			<c:if test="${requestScope.existsInSystem}"> 
-					<div align="right">
-						<form method="GET" action="<c:url value="/bibRefEdit.html"/>">
-							<input type="submit" value="Edit" />
-							<input type="hidden" name="id"
-								value="${bibliographicReference.id}">
-						</form>
-					</div>
-			</c:if>
-		</td>
-		
-		<td>
-			<c:if test="${requestScope.existsInSystem}"> 
-					<div align="right">
-						<form method="get"
-							action="<c:url value="/bibRef/deleteBibRef.html"/>" 
-							<input type="hidden"  name="acc" value="${bibliographicReference.pubAccession.accession}"
-							<input type="submit"  
-										value="Delete" /></form>
-					</div>
-			</c:if>
-		</td>
+	
 	</tr>
 </table>
 </security:authorize>
