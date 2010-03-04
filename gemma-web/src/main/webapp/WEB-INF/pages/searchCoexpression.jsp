@@ -17,19 +17,7 @@
 </head>
 
 
-<security:authorize ifAnyGranted="GROUP_ADMIN">
-	<input type="hidden" name="hasAdmin" id="hasAdmin" value="true" />
-</security:authorize>
-<security:authorize ifNotGranted="GROUP_ADMIN">
-	<input type="hidden" name="hasAdmin" id="hasAdmin" value="" />
-</security:authorize>
 
-<security:authorize ifAnyGranted="GROUP_USER">
-	<input type="hidden" name="hasUser" id="hasUser" value="true" />
-</security:authorize>
-<security:authorize ifNotGranted="GROUP_USER">
-	<input type="hidden" name="hasUser" id="hasUser" value="" />
-</security:authorize>
 
 <div id='coexpression-messages' style='width: 100%; height: 2.2em; margin: 5px'></div>
 <div id='coexpression-experiments' class="x-hidden"></div>
