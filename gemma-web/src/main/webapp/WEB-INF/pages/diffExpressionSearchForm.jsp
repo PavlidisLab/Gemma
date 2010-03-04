@@ -13,17 +13,11 @@ version: $Id$
 
 
 	<content tag="heading">
-	<fmt:message key="diffExpressionSearch.title" />
+		<fmt:message key="diffExpressionSearch.title" />
 	</content>
 
 </head>
 
-<security:authorize ifAnyGranted="GROUP_ADMIN">
-	<input type="hidden" name="hasAdmin" id="hasAdmin" value="true" />
-</security:authorize>
-<security:authorize ifNotGranted="GROUP_ADMIN">
-	<input type="hidden" name="hasAdmin" id="hasAdmin" value="" />
-</security:authorize>
 
 <div id="diff-wrap">
 

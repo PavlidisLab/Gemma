@@ -10,12 +10,6 @@
 	<jwr:script src='/scripts/app/ExperimentalDesign.js' />
 </head>
 
-<security:authorize ifAnyGranted="GROUP_ADMIN,GROUP_USER">
-	<input type="hidden" name="hasAdmin" id="hasAdmin" value="true" />
-</security:authorize>
-<security:authorize ifNotGranted="GROUP_ADMIN,GROUP_USER">
-	<input type="hidden" name="hasAdmin" id="hasAdmin" value="" />
-</security:authorize>
 
 <input type="hidden" name="expressionExperimentID" value="${expressionExperiment.id}" />
 <input type="hidden" name="experimentalDesignID" value="${experimentalDesign.id}" />

@@ -34,12 +34,7 @@
 
 </head>
 
-<security:authorize ifAnyGranted="GROUP_ADMIN">
-	<input type="hidden" name="hasAdmin" id="hasAdmin" value="true" />
-</security:authorize>
-<security:authorize ifNotGranted="GROUP_ADMIN">
-	<input type="hidden" name="hasAdmin" id="hasAdmin" value="false" />
-</security:authorize>
+
 
 <h2>
 	BioMaterial: ${bioMaterial.name} from
