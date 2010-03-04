@@ -85,7 +85,13 @@ Ext.onReady(function() {
 			var eeId = dwr.util.getValue("expressionExperimentID");
 			var edId = dwr.util.getValue("experimentalDesignID");
 			var admin = dwr.util.getValue("hasAdmin");
-			var editable = admin ? true : false;
+			//added in user as in the jsp as well setting admin to true if admin or group user
+			var user = dwr.util.getValue("hasUser");
+			var editable = false;
+			if(admin || user){
+				editable = true;
+			}
+				
 
 			/*
 			 * TODO: load up the MGED terms, experimental design and factor values ahead of time. We end up doing it
