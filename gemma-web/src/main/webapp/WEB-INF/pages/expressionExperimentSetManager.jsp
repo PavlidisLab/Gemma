@@ -11,18 +11,16 @@
 
 
 <h1>
-	Expression Experiment Set Manager
+	Expression Experiment Set Manager 
 </h1>
-<security:authorize ifNotGranted="GROUP_ADMIN">
+<security:authorize access="!hasRole('GROUP_ADMIN')">
 Sorry, you must be an administrator to use this tool.
-	<input type="hidden" name="hasAdmin" id="hasAdmin" value="" />
+
 </security:authorize>
 
 
-<security:authorize ifAnyGranted="GROUP_ADMIN">
+	<security:authorize access="hasRole('GROUP_ADMIN')">
 	<div id='messages' style='width: 600px; height: 1.6em; margin: 0.2em; padding-bottom: 0.4em;'></div>
-
-	<input type="hidden" name="hasAdmin" id="hasAdmin" value="true" />
 	<script type="text/javascript">
 	Ext.namespace('Gemma');
 	Ext.onReady( function() {

@@ -6,7 +6,7 @@
 	<jwr:script src='/scripts/ajax/ext/data/DwrProxy.js' />
 	<jwr:script src='/scripts/app/gene.detail.js' />
 
-	<security:authorize ifAnyGranted="GROUP_ADMIN">
+	<security:authorize access="hasRole('GROUP_ADMIN')">
 		<script type="text/javascript">
 	Ext.namespace('Gemma');
 	Ext.onReady(function() {
@@ -191,7 +191,7 @@
 	</c:if>
 
 
-	<security:authorize ifAnyGranted="GROUP_ADMIN">
+	<security:authorize access="hasRole('GROUP_ADMIN')">
 		<div id="auditTrail"></div>
 		<input type="hidden" name="auditableId" id="auditableId" value="${gene.id}" />
 		<input type="hidden" name="auditableClass" id="auditableClass" value="${gene.class.name}" />

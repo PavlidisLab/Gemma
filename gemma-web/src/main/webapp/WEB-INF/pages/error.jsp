@@ -25,7 +25,7 @@
 			<a href="mailto:gemma@chibi.ubc.ca?subject=${param.exception.message}">Email us</a> about the problem.
 		</p>
 
-		<security:authorize ifAllGranted="GROUP_ADMIN">
+		<security:authorize access="hasRole('GROUP_ADMIN')">
 			<Gemma:exception exception="${exception}" />
 		</security:authorize>
 	</c:when>
@@ -43,7 +43,7 @@
 		</p>
 
 
-		<security:authorize ifAllGranted="GROUP_ADMIN">
+		<security:authorize access="hasRole('GROUP_ADMIN')">
 			<Gemma:exception exception="${requestScope['javax.servlet.error.exception']}" />
 		</security:authorize>
 	</c:when>
@@ -60,7 +60,7 @@
 		</p>
 
 
-		<security:authorize ifAllGranted="GROUP_ADMIN">
+		<security:authorize access="hasRole('GROUP_ADMIN')">
 			<Gemma:exception exception="${requestScope['exception']}" />
 		</security:authorize>
 	</c:when>

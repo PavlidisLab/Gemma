@@ -37,8 +37,8 @@ $Id$
 		</h3>
 
 		<%-- Note: the d=1 in the urls here is just a hack to keep '#' from messing up id parsing. It's not a real parameter --%>
-		<security:authorize ifAnyGranted="GROUP_ADMIN,GROUP_USER">
-			<c:choose>
+		<security:authorize access="hasAnyRole('GROUP_ADMIN','GROUP_USER' )">
+		<c:choose>
 				<c:when test="${taxon != null && not empty eeids}">
 					<p>
 						For a view that allows editing of your experiments that are on this list, go to the
@@ -79,7 +79,7 @@ $Id$
 			<display:column property="nameLink" sortable="true" sortProperty="name" titleKey="expressionExperiment.name"
 				comparator="ubic.gemma.web.taglib.displaytag.StringComparator" />
 
-			<security:authorize ifAnyGranted="GROUP_ADMIN">
+			<security:authorize access="hasRole('GROUP_ADMIN')">
 				<display:column property="status" sortable="true" titleKey="expressionExperiment.status"
 					style="text-align:center; vertical-align:middle;" comparator="ubic.gemma.web.taglib.displaytag.StringComparator"
 					defaultorder="descending" />
@@ -87,7 +87,7 @@ $Id$
 
 			<display:column property="shortName" sortable="true" titleKey="expressionExperiment.shortName" />
 
-			<security:authorize ifAnyGranted="GROUP_ADMIN">
+				<security:authorize access="hasRole('GROUP_ADMIN')">
 				<display:column property="arrayDesignLink" sortable="true" defaultorder="descending" title="Arrays"
 					comparator="ubic.gemma.web.taglib.displaytag.NumberComparator" />
 			</security:authorize>
@@ -98,7 +98,7 @@ $Id$
 
 			<display:column property="taxon" sortable="true" titleKey="taxon.title" />
 
-			<security:authorize ifAnyGranted="GROUP_ADMIN">
+				<security:authorize access="hasRole('GROUP_ADMIN')">
 				<display:column property="dateCreatedNoTime" sortable="true" defaultorder="descending" title="Created" />
 			</security:authorize>
 

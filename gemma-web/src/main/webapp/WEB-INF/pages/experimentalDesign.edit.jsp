@@ -92,7 +92,7 @@
 	    </td>
 	</tr>	
 	
-	<security:authorize ifAllGranted="GROUP_ADMIN">
+	<security:authorize access="hasRole('GROUP_ADMIN')">
 		<tr>
 			<td class="label">
 				<fmt:message key="auditTrail.date" />

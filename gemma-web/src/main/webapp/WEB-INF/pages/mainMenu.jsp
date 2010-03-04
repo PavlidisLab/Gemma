@@ -87,8 +87,8 @@
 		<a style="font-size: 0.90em" href="http://www.chibi.ubc.ca/faculty/pavlidis/wiki/display/gemma/All+news">More news</a>
 	</div>
 
-
-	<security:authorize ifAnyGranted="GROUP_ADMIN">
+	<security:authorize access="hasRole('GROUP_ADMIN')">
+	
 		<div id="adminFunctions" class="roundedcornr_box_777249" style="margin-bottom: 15px;">
 			<div class="roundedcornr_top_777249">
 				<div></div>
@@ -120,9 +120,8 @@
 			</div>
 		</div>
 
-
-
 	</security:authorize>
+	
 
 </div>
 
