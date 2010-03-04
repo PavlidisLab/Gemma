@@ -15,7 +15,7 @@
            http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.0.xsd">
 
 	<bean id="authenticationLoggerListener" class="org.springframework.security.authentication.event.LoggerListener" />
-
+	
 	<!--
 		Notes. 1) The auto-config doesn't do much since we customize most things. 2) We provide a custom accessDecisionManager
 		so we can get the role hierarchy and GROUP_ prefix applied to http request.
@@ -32,6 +32,7 @@
 		<s:intercept-url pattern="/userProfile.html" access="GROUP_USER" />
 		<s:intercept-url pattern="/manageGroups.html" access="GROUP_USER" />
 		<s:intercept-url pattern="/loadExpressionExperiment.html" access="GROUP_ADMIN" />
+		<s:intercept-url pattern="/characteristicBrowser.html" access="GROUP_ADMIN" />		
 		<s:intercept-url pattern="/loadSimpleExpressionExperiment.html" access="GROUP_USER" />
 		<s:intercept-url pattern="/**" access="IS_AUTHENTICATED_ANONYMOUSLY" />
 
@@ -48,6 +49,10 @@
 		</s:session-management>
 
 	</s:http>
+	
+	<!-- For use with access tags  -->
+ 	<bean id="defaultWebSecurityExpressionHandler" class="org.springframework.security.web.access.expression.DefaultWebSecurityExpressionHandler"></bean>
+  	
 
 	<bean id="httpAccessDecisionManager" class="org.springframework.security.access.vote.AffirmativeBased">
 		<property name="allowIfAllAbstainDecisions" value="true" />
@@ -373,5 +378,5 @@
 		</constructor-arg>
 	</bean>
 
-
+ 	
 </beans>
