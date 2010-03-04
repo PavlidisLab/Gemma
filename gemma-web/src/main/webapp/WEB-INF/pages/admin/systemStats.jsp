@@ -2,20 +2,9 @@
 <head>
 	<title>System stats</title>
 	<jwr:script src='/scripts/ajax/ext/data/DwrProxy.js' />
-
-	<security:authorize ifAnyGranted="GROUP_ADMIN">
-		<jwr:script src='/scripts/app/monitoring.js' />
-	</security:authorize>
-
-
+	<jwr:script src='/scripts/app/monitoring.js' />
 </head>
 <body>
-	<security:authorize ifNotGranted="GROUP_ADMIN">
-		<p>
-			Sorry, you do not have permissions to view this page.
-		</p>
-	</security:authorize>
-	<security:authorize ifAnyGranted="GROUP_ADMIN">
 		<h2>
 			Hibernate statistics
 		</h2>
@@ -34,6 +23,6 @@
 		</h2>
 		<pre>
 		<div id="spaceStats">Waiting ...</div>
-</pre>
-	</security:authorize>
+		</pre>
+	
 </body>

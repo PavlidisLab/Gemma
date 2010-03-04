@@ -7,7 +7,6 @@
 	<jwr:script src='/scripts/app/geoBrowse.js' />
 </head>
 <body>
-	<security:authorize ifAnyGranted="GROUP_ADMIN">
 
 		<div id="messages" style="margin: 10px; width: 600px"></div>
 		<div id="taskId" style="display: none;"></div>
@@ -53,5 +52,5 @@
 
 			<display:setProperty name="basic.empty.showtable" value="true" />
 		</display:table>
-	</security:authorize>
+	
 </body>

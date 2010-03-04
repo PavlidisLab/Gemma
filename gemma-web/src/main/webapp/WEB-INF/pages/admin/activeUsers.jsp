@@ -5,13 +5,10 @@
 <fmt:message key="activeUsers.heading" />
 </content>
 <body id="activeUsers" />
-	<security:authorize ifAllGranted="GROUP_ADMIN">
 		<p>
 			<fmt:message key="activeUsers.message" />
 			(FIXME, this is all users)
 		</p>
-
-
 
 
 		<display:table name="users" id="user" cellspacing="0" cellpadding="0" defaultsort="1" class="table" pagesize="50"
@@ -32,4 +29,4 @@
 			<display:setProperty name="paging.banner.items_name" value="users" />
 
 		</display:table>
-	</security:authorize>
+	
