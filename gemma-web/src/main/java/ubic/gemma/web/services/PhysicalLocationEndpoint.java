@@ -85,8 +85,9 @@ public class PhysicalLocationEndpoint extends AbstractGemmaEndpoint {
         Gene gene = geneService.load( Long.parseLong( geneId ) );
 
         PhysicalLocation physicalLocation = geneService.getMaxPhysicalLength( gene );
-
-        Element wrapper = buildLocationWrapper( document, physicalLocation.getChromosome().getId(), physicalLocation
+        log.info( "Webservice - Phyisical location for gene: " + gene.getOfficialSymbol() + "physicallocation is: " + physicalLocation);
+        
+        Element wrapper = buildLocationWrapper( document, physicalLocation.getChromosome().getName(), physicalLocation
                 .getNucleotide(), physicalLocation.getNucleotideLength() );
 
         watch.stop();
@@ -95,14 +96,14 @@ public class PhysicalLocationEndpoint extends AbstractGemmaEndpoint {
         return wrapper;
     }
 
-    private Element buildLocationWrapper( Document document, Long chrom, Long min, Integer length ) {
+    private Element buildLocationWrapper( Document document, String chrom, Long min, Integer length ) {
 
         Element responseWrapper = document.createElementNS( NAMESPACE_URI, PLOC_LOCAL_NAME );
         Element responseElement = document.createElementNS( NAMESPACE_URI, PLOC_LOCAL_NAME + RESPONSE );
         responseWrapper.appendChild( responseElement );
 
         Element e1 = document.createElement( "chromId" );
-        e1.appendChild( document.createTextNode( chrom.toString() ) );
+        e1.appendChild( document.createTextNode( chrom ) );
         responseElement.appendChild( e1 );
 
         Element e2 = document.createElement( "minNT" );
