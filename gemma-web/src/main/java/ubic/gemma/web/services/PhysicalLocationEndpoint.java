@@ -48,10 +48,7 @@ public class PhysicalLocationEndpoint extends AbstractGemmaEndpoint {
 
     private GeneService geneService;
 
-    private Long minNT;
-    private Long maxNT;
-    private String chromId;
-    private PhysicalLocation pLoc;
+
     /**
      * The local name of the expected Request/Response.
      */
@@ -84,120 +81,42 @@ public class PhysicalLocationEndpoint extends AbstractGemmaEndpoint {
             geneId = id;
         }
 
-        log.info( "XML input read: gene id, " + geneId );
-        // get the physical location of gene using GeneService
-        Gene gene = geneService.load( Long.parseLong( geneId ) );
+        log.debug( "XML input read: gene id, " + geneId );
+        
+        PhysicalLocation physicalLocation = geneService.getMaxPhysicalLength(  Long.parseLong( geneId ) );
 
-        if ( gene == null ) {
-            String msg = "No gene with id, " + geneId + " can be found.";
-            return buildBadResponse( document, msg );
-        }
+       
 
-        // thaw the gene
-        geneService.thaw( gene );
-
-        // get gene products
-        Collection<GeneProduct> gpCollection = gene.getProducts();
-
-        if ( gpCollection == null ) {
-            String msg = "No gene products for the gene, " + gene.getName() + " can be found.";
-            return buildBadResponse( document, msg );
-        }
-
-        Long nt;
-        int ntLength;
-        boolean chromCheck = false;
-        String strand = null;
-        int gpCount = 0; // see how many gene products have physical locations annotated
-
-        // each Gene Product
-
-        for ( GeneProduct gp : gpCollection ) {
-            // use PhysicalLocation accessor methods to get:
-            // do we use getCdsPhysicalLocation() (from GeneProduct) or getPhysicalLocation() (from ChromosomeFeature)?
-            pLoc = gp.getPhysicalLocation();
-            if ( pLoc != null ) {
-                // nucleotide length
-                ntLength = pLoc.getNucleotideLength();
-
-                // nucleotide
-                nt = pLoc.getNucleotide();
-
-                // strand (+ or -)
-                strand = pLoc.getStrand();
-
-                // see if start/end is max/min, then set minNT and maxNT
-                if ( ( nt != null ) || ( ntLength != 0 ) || ( strand != null ) ) {
-                    if ( ( maxNT != null ) ) {
-                        if ( maxNT < getMaxNT( strand, nt, ntLength ) ) maxNT = getMaxNT( strand, nt, ntLength );
-                    } else
-                        // if (maxNT == null)
-                        maxNT = getMaxNT( strand, nt, ntLength );
-
-                    if ( ( minNT != null ) ) {
-                        if ( minNT > getMinNT( strand, nt, ntLength ) ) minNT = getMinNT( strand, nt, ntLength );
-                    } else
-                        minNT = getMinNT( strand, nt, ntLength );
-                }
-
-                // chromosome id
-                if ( chromCheck == false ) {
-                    Chromosome chrom = pLoc.getChromosome();
-                    chromId = chrom.getName();
-                    chromCheck = true;
-                }
-
-                gpCount++;
-
-            }
-
-        } // for each gene product
-
-        // if (minNT == -1 || maxNT == -1)
-        // responseElement.appendChild(document.createTextNode("No nucleotide range for this physical location."));
-
-        // build results in the form of a collection
-        // Collection<String> physLoc = new ArrayList<String>();
-        // physLoc.add(Long.toString(chromId));
-        // physLoc.add(Long.toString(minNT));
-        // physLoc.add(Long.toString(maxNT));
-        Element wrapper = buildLocationWrapper( document, chromId, Long.toString( minNT ), Long.toString( maxNT ) );
+        Element wrapper = buildLocationWrapper( document, physicalLocation.getChromosome().getId(),physicalLocation.getNucleotide(), physicalLocation.getNucleotideLength() );
 
         watch.stop();
         Long time = watch.getTime();
-        log.info( "XML response for physical location result built in " + time + "ms." );
+        log.debug( "XML response for physical location result built in " + time + "ms." );
         return wrapper;
     }
 
-    private Element buildLocationWrapper( Document document, String chrom, String min, String max ) {
+    private Element buildLocationWrapper( Document document, Long chrom, Long min, Integer length ) {
 
         Element responseWrapper = document.createElementNS( NAMESPACE_URI, PLOC_LOCAL_NAME );
         Element responseElement = document.createElementNS( NAMESPACE_URI, PLOC_LOCAL_NAME + RESPONSE );
         responseWrapper.appendChild( responseElement );
 
         Element e1 = document.createElement( "chromId" );
-        e1.appendChild( document.createTextNode( chrom ) );
+        e1.appendChild( document.createTextNode( chrom.toString() ) );
         responseElement.appendChild( e1 );
 
         Element e2 = document.createElement( "minNT" );
-        e2.appendChild( document.createTextNode( min ) );
+        e2.appendChild( document.createTextNode( min.toString() ) );
         responseElement.appendChild( e2 );
 
         Element e3 = document.createElement( "maxNT" );
-        e3.appendChild( document.createTextNode( max ) );
+        Long maxNt = min + length;
+        e3.appendChild( document.createTextNode( maxNt.toString() ) );
         responseElement.appendChild( e3 );
 
         return responseWrapper;
     }
 
-    private Long getMaxNT( String strand, Long nt, int ntLength ) {
-        if ( strand.equals( "-" ) ) return nt;
-        return ( nt + ntLength );
-    }
 
-    private Long getMinNT( String strand, Long nt, int ntLength ) {
-        if ( strand.equals( "-" ) ) return ( nt - ntLength );
-        return nt;
-    }
 
 }

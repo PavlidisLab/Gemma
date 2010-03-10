@@ -184,6 +184,15 @@ public interface GeneService {
      * Gets all the genes for a given taxon
      */
     public Collection<Gene> getGenesByTaxon( Taxon taxon );
+    
+    /**
+     * Given the gemma id of a valid gemma gene will try to calculate the maximum extend of the transcript length.
+     * Does this by using the gene products to find the largest max and min nucliotide positions
+     * 
+     * @param geneId
+     * @return
+     */
+    public PhysicalLocation getMaxPhysicalLength(Long geneId);
 
     /**
      * @param id

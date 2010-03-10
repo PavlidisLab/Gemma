@@ -31,6 +31,7 @@ import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
+import ubic.gemma.model.genome.Chromosome;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.PredictedGene;
@@ -293,6 +294,82 @@ public class GeneServiceImpl extends GeneServiceBase {
     @Override
     protected void handleUpdate( Gene gene ) throws java.lang.Exception {
         this.getGeneDao().update( gene );
+    }
+
+    @Override
+    public PhysicalLocation getMaxPhysicalLength( Long geneId ) {
+        if ( geneId == null ) return null;
+
+        Gene gene = this.load( geneId );
+        this.thaw( gene );
+
+        Collection<GeneProduct> gpCollection = gene.getProducts();
+
+        if ( gpCollection == null ) return null;
+
+        Long minStartNt = null;
+        Long maxEndNt = null;
+        String strand = null;
+        Chromosome chromosone = null;
+
+        for ( GeneProduct gp : gpCollection ) {
+
+            PhysicalLocation pLoc = gp.getPhysicalLocation();
+            if ( pLoc == null ) {
+                log.warn("No phyiscal location for Gene: " + gene.getOfficialSymbol() + "'s Gene Product: " + gp.getId() + ". Skipping.");
+                continue;
+            }
+
+            String currentStrand = pLoc.toString();
+            Chromosome currentChromosone = pLoc.getChromosome();
+            Long currentStartNt = pLoc.getNucleotide();
+            Long currentEndNt = currentStartNt + pLoc.getNucleotideLength();
+
+            // 1st time through loop
+            if ( minStartNt == null ) {
+                minStartNt = currentStartNt;
+                maxEndNt = currentEndNt;
+                strand = currentStrand;
+                chromosone = currentChromosone;
+                continue;
+            }
+
+            // FIXME: This is defensive coding. Not sure if this will ever happen. If it does, will need to sort the
+            // gene products in advance to remove the outliers. Currently this method is assuming the 1st gene product
+            // is not the outlier.
+            if ( !currentStrand.equalsIgnoreCase( strand ) ) {
+                log
+                        .warn( "Gene products for "
+                                + gene.getOfficialSymbol()
+                                + " , Id="
+                                + gene.getId()
+                                + " are on different strands. Unable to compute distance when products are on different strands. Skipping Gene product: "
+                                + gp.getId() );
+                continue;
+            }
+
+            if ( !currentChromosone.equals( chromosone ) ) {
+                log
+                        .warn( "Gene products for "
+                                + gene.getOfficialSymbol()
+                                + " , Id="
+                                + gene.getId()
+                                + " are on different chromosones. Unable to compute distance when gene products are on different chromosomes. Skipping Gene product: "
+                                + gp.getId() );
+
+                continue;
+            }
+
+            if ( currentStartNt < minStartNt ) minStartNt = currentStartNt;
+
+            if ( currentEndNt > maxEndNt ) maxEndNt = currentEndNt;
+
+        } // for each gene product
+
+        Long length = maxEndNt - minStartNt;
+        PhysicalLocation result = PhysicalLocation.Factory.newInstance(minStartNt, length.intValue(), strand, null, chromosone);
+        return result;
+
     }
 
 }
