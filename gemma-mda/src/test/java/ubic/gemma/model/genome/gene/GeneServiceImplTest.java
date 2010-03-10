@@ -80,92 +80,89 @@ public class GeneServiceImplTest extends TestCase {
         g3.setOfficialName( "rabble" );
         g3.setNcbiId( "12345" );
         g3.setOfficialSymbol( "rab3" );
-        g3.setId((long) 1234 );
+        g3.setId( ( long ) 1234 );
 
-        //For testing need to add physical locations to the gene products of a given gene. 
+        // For testing need to add physical locations to the gene products of a given gene.
         Chromosome chromosome = Chromosome.Factory.newInstance();
         chromosome.setId( ( long ) 54321 );
         chromosome.setName( "fakeChromosome" );
         chromosome.setTaxon( t );
 
-        //Gene product 1 (Min=100 max=200)
+        // Gene product 1 (Min=100 max=200)
         PhysicalLocation ploc1 = PhysicalLocation.Factory.newInstance();
         ploc1.setChromosome( chromosome );
         ploc1.setStrand( STRAND );
-        ploc1.setNucleotide( (long) 100 );
+        ploc1.setNucleotide( ( long ) 100 );
         ploc1.setNucleotideLength( 100 );
-        
+
         GeneProduct gp1 = GeneProduct.Factory.newInstance();
         gp1.setPhysicalLocation( ploc1 );
-        gp1.setGene( g3 );    
+        gp1.setGene( g3 );
         gp1.setName( "gp1" );
-      
-        //gene product 2 (min=110 max = 210)
+
+        // gene product 2 (min=110 max = 210)
         PhysicalLocation ploc2 = PhysicalLocation.Factory.newInstance();
         ploc2.setChromosome( chromosome );
         ploc2.setStrand( STRAND );
-        ploc2.setNucleotide( (long) 110 );
+        ploc2.setNucleotide( ( long ) 110 );
         ploc2.setNucleotideLength( 100 );
-        
+
         GeneProduct gp2 = GeneProduct.Factory.newInstance();
         gp2.setPhysicalLocation( ploc2 );
-        gp2.setGene( g3 );    
+        gp2.setGene( g3 );
         gp2.setName( "gp2" );
-              
-        //Gene Product 3 (min=90 max=140)
+
+        // Gene Product 3 (min=90 max=140)
         PhysicalLocation ploc3 = PhysicalLocation.Factory.newInstance();
         ploc3.setChromosome( chromosome );
         ploc3.setStrand( STRAND );
-        ploc3.setNucleotide( (long) 90 );
+        ploc3.setNucleotide( ( long ) 90 );
         ploc3.setNucleotideLength( 50 );
-        
+
         GeneProduct gp3 = GeneProduct.Factory.newInstance();
         gp3.setPhysicalLocation( ploc3 );
-        gp3.setGene( g3 );    
+        gp3.setGene( g3 );
         gp3.setName( "gp3" );
-        
-        //Gene Product 4 (wrong strand should get regected, min 10 max 210)
-        PhysicalLocation ploc4= PhysicalLocation.Factory.newInstance();
+
+        // Gene Product 4 (wrong strand should get regected, min 10 max 210)
+        PhysicalLocation ploc4 = PhysicalLocation.Factory.newInstance();
         ploc4.setChromosome( chromosome );
         ploc4.setStrand( "-" );
-        ploc4.setNucleotide( (long) 10 );
+        ploc4.setNucleotide( ( long ) 10 );
         ploc4.setNucleotideLength( 200 );
-        
+
         GeneProduct gp4 = GeneProduct.Factory.newInstance();
         gp4.setPhysicalLocation( ploc4 );
-        gp4.setGene( g3 );    
+        gp4.setGene( g3 );
         gp4.setName( "wrong strand gp4" );
-        gp4.setId( (long ) 3456);
-      
-        //Gene Product 5 (right strand wrong chromosome should get regected, min 20 max 220)
+        gp4.setId( ( long ) 3456 );
+
+        // Gene Product 5 (right strand wrong chromosome should get regected, min 20 max 220)
         Chromosome wrongChromosome = Chromosome.Factory.newInstance();
         wrongChromosome.setId( ( long ) 43215 );
         wrongChromosome.setName( "wrongFakeChromosome" );
         wrongChromosome.setTaxon( t );
 
-
-        PhysicalLocation ploc5= PhysicalLocation.Factory.newInstance();
+        PhysicalLocation ploc5 = PhysicalLocation.Factory.newInstance();
         ploc5.setChromosome( wrongChromosome );
         ploc5.setStrand( STRAND );
-        ploc5.setNucleotide( (long) 20 );
+        ploc5.setNucleotide( ( long ) 20 );
         ploc5.setNucleotideLength( 200 );
-        
+
         GeneProduct gp5 = GeneProduct.Factory.newInstance();
         gp5.setPhysicalLocation( ploc5 );
-        gp5.setGene( g3 );    
+        gp5.setGene( g3 );
         gp5.setName( "wrong chromosome gp5" );
-        gp5.setId( (long ) 4567);
+        gp5.setId( ( long ) 4567 );
 
-        
-        
         Collection<GeneProduct> gps = new ArrayList<GeneProduct>();
         gps.add( gp1 );
         gps.add( gp2 );
         gps.add( gp4 );
         gps.add( gp5 );
-        gps.add( gp3 );        
+        gps.add( gp3 );
         g3.setProducts( gps );
-        
+
         allThree.add( g3 );
         justRabble.add( g3 );
 
@@ -224,12 +221,12 @@ public class GeneServiceImplTest extends TestCase {
         svc.loadAll();
         verify( geneDaoMock );
     }
-    
+
     public void testGetMaxPhysicalLength() {
-        reset( geneDaoMock);
+        reset( geneDaoMock );
         PhysicalLocation ploc = svc.getMaxPhysicalLength( g3 );
-        assertTrue(ploc.getNucleotide() == 90 );
-        assertTrue(ploc.getNucleotideLength() == 120 );
+        assertTrue( ploc.getNucleotide() == 90 );
+        assertTrue( ploc.getNucleotideLength() == 120 );
     }
 
     @Override

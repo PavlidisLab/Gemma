@@ -48,7 +48,6 @@ public class PhysicalLocationEndpoint extends AbstractGemmaEndpoint {
 
     private GeneService geneService;
 
-
     /**
      * The local name of the expected Request/Response.
      */
@@ -82,14 +81,13 @@ public class PhysicalLocationEndpoint extends AbstractGemmaEndpoint {
         }
 
         log.debug( "XML input read: gene id, " + geneId );
-        
+
         Gene gene = geneService.load( Long.parseLong( geneId ) );
-        
-        PhysicalLocation physicalLocation = geneService.getMaxPhysicalLength(  gene );
 
-       
+        PhysicalLocation physicalLocation = geneService.getMaxPhysicalLength( gene );
 
-        Element wrapper = buildLocationWrapper( document, physicalLocation.getChromosome().getId(),physicalLocation.getNucleotide(), physicalLocation.getNucleotideLength() );
+        Element wrapper = buildLocationWrapper( document, physicalLocation.getChromosome().getId(), physicalLocation
+                .getNucleotide(), physicalLocation.getNucleotideLength() );
 
         watch.stop();
         Long time = watch.getTime();
@@ -118,7 +116,5 @@ public class PhysicalLocationEndpoint extends AbstractGemmaEndpoint {
 
         return responseWrapper;
     }
-
-
 
 }
