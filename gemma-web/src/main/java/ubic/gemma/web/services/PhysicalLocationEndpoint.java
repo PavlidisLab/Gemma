@@ -83,7 +83,9 @@ public class PhysicalLocationEndpoint extends AbstractGemmaEndpoint {
 
         log.debug( "XML input read: gene id, " + geneId );
         
-        PhysicalLocation physicalLocation = geneService.getMaxPhysicalLength(  Long.parseLong( geneId ) );
+        Gene gene = geneService.load( Long.parseLong( geneId ) );
+        
+        PhysicalLocation physicalLocation = geneService.getMaxPhysicalLength(  gene );
 
        
 

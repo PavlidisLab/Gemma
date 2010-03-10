@@ -192,7 +192,7 @@ public interface GeneService {
      * @param geneId
      * @return
      */
-    public PhysicalLocation getMaxPhysicalLength(Long geneId);
+    public PhysicalLocation getMaxPhysicalLength(Gene gene);
 
     /**
      * @param id

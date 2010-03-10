@@ -297,10 +297,9 @@ public class GeneServiceImpl extends GeneServiceBase {
     }
 
     @Override
-    public PhysicalLocation getMaxPhysicalLength( Long geneId ) {
-        if ( geneId == null ) return null;
+    public PhysicalLocation getMaxPhysicalLength( Gene gene ) {
+        if ( gene == null ) return null;
 
-        Gene gene = this.load( geneId );
         this.thaw( gene );
 
         Collection<GeneProduct> gpCollection = gene.getProducts();
@@ -320,7 +319,7 @@ public class GeneServiceImpl extends GeneServiceBase {
                 continue;
             }
 
-            String currentStrand = pLoc.toString();
+            String currentStrand = pLoc.getStrand();
             Chromosome currentChromosone = pLoc.getChromosome();
             Long currentStartNt = pLoc.getNucleotide();
             Long currentEndNt = currentStartNt + pLoc.getNucleotideLength();
