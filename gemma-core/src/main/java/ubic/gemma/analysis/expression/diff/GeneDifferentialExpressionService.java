@@ -51,9 +51,6 @@ public class GeneDifferentialExpressionService {
 
     @Autowired
     private DifferentialExpressionResultService differentialExpressionResultService = null;
-    
-    @Autowired
-    private CompositeSequenceService csService = null;
 
     private Log log = LogFactory.getLog( this.getClass() );
 
@@ -284,7 +281,6 @@ public class GeneDifferentialExpressionService {
 
         Collection<Long> eesThatMetThreshold = new HashSet<Long>();
 
-        /* each gene will have a row, and each row will have a row expander with supporting datasets */
         for ( ExpressionExperiment ee : resultsMap.keySet() ) {
 
             ExpressionExperimentValueObject eevo = configExpressionExperimentValueObject( ee );
@@ -302,6 +298,11 @@ public class GeneDifferentialExpressionService {
 
                 ExperimentalFactor ef = efs.iterator().next();
 
+                /*
+                 * note that we don't care about the reverse: the eefactorsmap can have stuff we don't need. We focus on
+                 * the experiments because they are easy to select & secure. The eefactorsmap provides additional
+                 * details.
+                 */
                 assert eeFactorsMap.containsKey( ee.getId() ) : "eeFactorsMap does not contain ee=" + ee.getId();
 
                 Long sfId = eeFactorsMap.get( ee.getId() );
@@ -401,10 +402,10 @@ public class GeneDifferentialExpressionService {
         devo.setGene( gene );
         devo.setExpressionExperiment( eevo );
         CompositeSequence probe = r.getProbe();
-        devo.setProbe( probe.getName());
+        devo.setProbe( probe.getName() );
         devo.setProbeId( probe.getId() );
         devo.setExperimentalFactors( new HashSet<ExperimentalFactorValueObject>() );
-        devo.setId(r.getId());
+        devo.setId( r.getId() );
 
         for ( ExperimentalFactor ef : efs ) {
             ExperimentalFactorValueObject efvo = configExperimentalFactorValueObject( ef );
@@ -488,7 +489,7 @@ public class GeneDifferentialExpressionService {
         Collection<DifferentialExpressionValueObject> devos = new ArrayList<DifferentialExpressionValueObject>();
 
         Map<ProbeAnalysisResult, Collection<ExperimentalFactor>> dearToEf = getFactors( results );
-        
+
         /*
          * convert to DEVOs
          */
