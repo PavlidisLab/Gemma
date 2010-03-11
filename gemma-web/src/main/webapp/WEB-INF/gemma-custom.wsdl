@@ -326,6 +326,9 @@
 	<wsdl:message name="physicalLocationResponse">
 		<wsdl:part name="physical_location" type="schema:geneLocation" />
 	</wsdl:message>
+		<wsdl:message name="genesAtPhysicalLocationResponse">
+		<wsdl:part name="genesAtPhysical_location" type="xsd:integer" />
+	</wsdl:message>
 	<wsdl:message name="experimentNumSamplesResponse">
 		<wsdl:part name="eeNumSample_id" type="xsd:string" />
 	</wsdl:message>
@@ -344,6 +347,13 @@
 	</wsdl:message>
 	<wsdl:message name="physicalLocationRequest">
 		<wsdl:part name="gene_id" type="xsd:integer" />
+	</wsdl:message>
+	<wsdl:message name="genesAtPhysicalLocationRequest">
+		<wsdl:part name="startNucleotide" type="xsd:integer" />			
+		<wsdl:part name="endNucleotide" type="xsd:integer" />			
+		<wsdl:part name="chromosome" type="xsd:string" />			
+		<wsdl:part name="taxon_id" type="xsd:integer" />			
+
 	</wsdl:message>
 	<wsdl:message name="goTerm2GeneRequest">
 		<wsdl:part name="go_id" type="xsd:string" />
@@ -510,6 +520,12 @@
 			<wsdl:input message="schema:physicalLocationRequest" name="physicalLocationRequest">
 			</wsdl:input>
 			<wsdl:output message="schema:physicalLocationResponse" name="physicalLocationResponse">
+			</wsdl:output>
+		</wsdl:operation>
+		<wsdl:operation name="genesAtPhysicalLocation">
+			<wsdl:input message="schema:genesAtPhysicalLocationRequest" name="genesAtPhysicalLocationRequest">
+			</wsdl:input>
+			<wsdl:output message="schema:genesAtPhysicalLocationResponse" name="genesAtPhysicalLocationResponse">
 			</wsdl:output>
 		</wsdl:operation>
 		<wsdl:operation name="goTerm2Gene">
@@ -702,6 +718,15 @@
 				<soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
 			</wsdl:output>
 		</wsdl:operation> 
+		<wsdl:operation name="genesAtPhysicalLocation">
+			<soap:operation soapAction=""/>
+			<wsdl:input name="genesAtPhysicalLocationRequest">
+				<soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+			</wsdl:input>
+			<wsdl:output name="genesAtPhysicalLocationResponse">
+				<soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+			</wsdl:output>
+		</wsdl:operation> 
 		<wsdl:operation name="goTerm2Gene">
 			<soap:operation soapAction=""/>
 			<wsdl:input name="goTerm2GeneRequest">
@@ -830,10 +855,10 @@
 
 			<!-- for production, use http://chibi.ubc.ca/Gemma/ws -->
 
-				<soap:address location="http://chibi.ubc.ca/Gemma/ws"/>
+			<!-- 	<soap:address location="http://chibi.ubc.ca/Gemma/ws"/>  -->
     
-			<!-- for local machine 
-			<soap:address location="http://localhost:8080/Gemma/ws"/>-->
+			<!-- for local machine  -->
+			<soap:address location="http://137.82.157.72:8080/Gemma/ws"/>
   
 		</wsdl:port>
 	</wsdl:service>

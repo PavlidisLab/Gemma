@@ -249,6 +249,34 @@ public abstract class AbstractGemmaEndpoint extends AbstractDomPayloadEndpoint {
     }
 
     /**
+     * basically Delegates to getSingleNodeValue and returns the just the last value. 
+     * @param requestElement
+     * @param tagName
+     * @return
+     */
+    protected String getLastSingleNodeValue( Element requestElement, String tagName ) {
+        Assert.isTrue( NAMESPACE_URI.equals( requestElement.getNamespaceURI() ), "Invalid namespace" );
+        Assert.isTrue( localName.equals( requestElement.getLocalName() ), "Invalid local name" );
+        authenticate();
+        String lastValue = null;
+        String node = "";
+        // get the Element with name = tagName
+        NodeList children = requestElement.getElementsByTagName( tagName ).item( 0 ).getChildNodes();
+        // iterate over the child nodes
+        for ( int i = 0; i < children.getLength(); i++ ) {
+
+            if ( children.item( i ).getNodeType() == Node.TEXT_NODE ) {
+                node = children.item( i ).getNodeValue();
+                lastValue = node;
+            }
+            node = null;
+        }
+        if ( lastValue ==null || lastValue.isEmpty() ) {
+            // throw new IllegalArgumentException( "Could not find request text node" );
+        }
+        return lastValue;
+    }
+    /**
      * Looks to parse a previously generated xml report that was saved to disk. Returns null if it fails to do so.
      * 
      * @param InputStream from an existing xml file

@@ -62,6 +62,9 @@
 				<prop key="{http://chibi.ubc.ca/Gemma/ws}differentialExpressionProbeResult">differentialExpressionProbeResultEndpoint</prop>
 
 				<prop key="{http://chibi.ubc.ca/Gemma/ws}gene2GOdescription">gene2GOdescriptionEndpoint</prop>
+				
+				<prop key="{http://chibi.ubc.ca/Gemma/ws}genesAtPhysicalLocation">genesAtPhysicalLocationEndpoint</prop>
+				
 
 
 			</props>
@@ -320,6 +323,16 @@
 		<property name="geneService" ref="geneService" />
 		<property name="manualAuthenticationService" ref="manualAuthenticationService" />
 		<property name="geneOntologyService" ref="geneOntologyService" />
+	</bean>
+	
+	<bean id="genesAtPhysicalLocationEndpoint" class="ubic.gemma.web.services.GenesAtPhysicalLocationEndpoint">
+		<description>
+			Given a physical location will try to find all the genes that are in the given location (will grow the location given to include all genes)
+		</description>
+		<property name="geneService" ref="geneService" />
+		<property name="chromosomeService" ref="chromosomeService" />		
+		<property name="taxonService" ref="taxonService" />		
+		<property name="manualAuthenticationService" ref="manualAuthenticationService" />
 	</bean>
 
 
