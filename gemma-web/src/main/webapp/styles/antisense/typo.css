@@ -299,7 +299,7 @@ h2.helpstep,h3.helpstep {
 }
 
 .x-loading {
-	background: url(../../images/default/tree/loading.gif) no-repeat;
+	background: url(../../images/default/tree/loading.gif) no-repeat center;
 }
 
 /* used by CollapsedPanelTitlePlugin.js, style based on ext-all.css x-panel-header */
