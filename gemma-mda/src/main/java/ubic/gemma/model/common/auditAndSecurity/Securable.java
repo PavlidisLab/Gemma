@@ -19,8 +19,7 @@
 package ubic.gemma.model.common.auditAndSecurity;
 
 /**
- * Marker interface that indicates an entity can be secured. By default, permissions are inherited by associated
- * objects.
+ * Interface that indicates an entity can be secured. By default, permissions are inherited by associated objects.
  * 
  * @author paul
  * @version $Id$
