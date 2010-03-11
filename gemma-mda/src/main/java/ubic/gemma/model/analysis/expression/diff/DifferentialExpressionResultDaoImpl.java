@@ -43,7 +43,7 @@ import ubic.gemma.model.genome.Gene;
 
 /**
  * @author keshav
- * @version $Id$ 
+ * @version $Id$
  * @see ubic.gemma.model.expression.analysis.DifferentialExpressionAnalysisResult
  */
 @Repository
@@ -99,7 +99,6 @@ public class DifferentialExpressionResultDaoImpl extends
         if ( gene == null ) return results;
 
         HibernateTemplate tpl = new HibernateTemplate( this.getSessionFactory() );
-        tpl.setQueryCacheRegion( "diffExResult" );
         tpl.setCacheQueries( true );
 
         List qresult = tpl.findByNamedParam( fetchResultsByGene, "gene", gene );

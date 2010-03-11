@@ -139,7 +139,6 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         org.hibernate.Query csQueryObject = super.getSession().createQuery( csString );
         csQueryObject.setReadOnly( true );
         csQueryObject.setCacheable( true );
-        csQueryObject.setCacheRegion( "arrayDesignQuery" );
 
         List<?> csList = csQueryObject.list();
 
@@ -966,7 +965,6 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         org.hibernate.Query csQueryObject = super.getSession().createQuery( csString );
         csQueryObject.setReadOnly( true );
         csQueryObject.setCacheable( true );
-        csQueryObject.setCacheRegion( "arrayDesignQuery" );
 
         List<?> csList = csQueryObject.list();
 
@@ -1014,7 +1012,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         org.hibernate.Query csQueryObject = super.getSession().createQuery( csString );
         csQueryObject.setReadOnly( true );
         csQueryObject.setCacheable( true );
-        csQueryObject.setCacheRegion( "arrayDesignQuery" );
+
         csQueryObject.setParameterList( "ids", ids );
 
         List<?> csList = csQueryObject.list();
@@ -1121,7 +1119,6 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
                 + "as ad inner join ad.compositeSequences as cs inner join cs.biologicalCharacteristic as bioC inner join bioC.taxon as taxon";
         org.hibernate.Query csQueryObject = super.getSession().createQuery( csString );
         csQueryObject.setCacheable( true );
-        csQueryObject.setCacheRegion( "arrayDesignQuery" );
 
         List csList = csQueryObject.list();
 
@@ -1181,7 +1178,6 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
             csQueryObject.setParameter( "ad", ad );
             csQueryObject.setCacheable( true );
             csQueryObject.setReadOnly( true );
-            csQueryObject.setCacheRegion( "arrayDesignQuery" );
 
             List csList = csQueryObject.list();
 

@@ -38,7 +38,6 @@ import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.Query;
-import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -80,8 +79,6 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
     static Log log = LogFactory.getLog( ExpressionExperimentDaoImpl.class.getName() );
 
     private static final int BATCH_SIZE = 1000;
-
-    private static final String EXPRESSION_EXPERIMENT_QCACHE_REGION = "expressionExperiment-qc";
 
     @Autowired
     public ExpressionExperimentDaoImpl( SessionFactory sessionFactory ) {
@@ -221,7 +218,6 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
             org.hibernate.Query queryObject = session.createQuery( queryString );
             queryObject.setReadOnly( true );
             queryObject.setCacheable( true );
-            queryObject.setCacheRegion( EXPRESSION_EXPERIMENT_QCACHE_REGION );
             StopWatch timer = new StopWatch();
             timer.start();
             ees = queryObject.list();
@@ -375,8 +371,6 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
         }
 
         session.delete( toDelete );
-
-        session.getSessionFactory().evictQueries( EXPRESSION_EXPERIMENT_QCACHE_REGION );
 
         /*
          * Put transient instances back. This is possibly useful for clearing ACLS.
@@ -1261,7 +1255,6 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
             }
 
             queryObject.setCacheable( true );
-            queryObject.setCacheRegion( "org.hibernate.cache.StandardQueryCache" );
 
             List list = queryObject.list();
             for ( Object object : list ) {

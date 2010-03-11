@@ -202,7 +202,6 @@ public class CommonQueries {
         Map<CompositeSequence, Collection<Gene>> cs2gene = new HashMap<CompositeSequence, Collection<Gene>>();
         org.hibernate.Query queryObject = session.createQuery( csQueryString );
         queryObject.setCacheable( true );
-        queryObject.setCacheRegion( "org.hibernate.cache.StandardQueryCache" );
         queryObject.setParameterList( "probes", probes );
 
         ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
@@ -239,7 +238,6 @@ public class CommonQueries {
         Map<CompositeSequence, Collection<Gene>> cs2gene = new HashMap<CompositeSequence, Collection<Gene>>();
         org.hibernate.Query queryObject = session.createQuery( csQueryString );
         queryObject.setCacheable( true );
-        queryObject.setCacheRegion( "org.hibernate.cache.StandardQueryCache" );
         queryObject.setParameterList( "genes", genes );
 
         ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );

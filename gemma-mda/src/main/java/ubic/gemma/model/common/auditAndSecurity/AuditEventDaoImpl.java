@@ -56,11 +56,6 @@ import ubic.gemma.util.CommonQueries;
 @Repository
 public class AuditEventDaoImpl extends ubic.gemma.model.common.auditAndSecurity.AuditEventDaoBase {
 
-    /**
-     * Matches field in ehache.xml
-     */
-    private static final String AUDIT_EVENTS_QUERY_CACHE_REGION = "auditEvents-qc";
-
     private static Log log = LogFactory.getLog( AuditEventDaoImpl.class.getName() );
 
     /**
@@ -243,8 +238,6 @@ public class AuditEventDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
         try {
             org.hibernate.Query queryObject = super.getSession().createQuery( queryString );
             queryObject.setCacheable( true );
-            queryObject.setCacheRegion( AUDIT_EVENTS_QUERY_CACHE_REGION );
-
             queryObject.setParameter( "trail", auditTrail );
             queryObject.setMaxResults( 1 );
 
@@ -395,7 +388,6 @@ public class AuditEventDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
         try {
             org.hibernate.Query queryObject = super.getSession().createQuery( queryString );
             queryObject.setCacheable( true );
-            queryObject.setCacheRegion( "auditEvents" );
             queryObject.setParameter( "trails", atmap.keySet() );
 
             List qr = queryObject.list();
