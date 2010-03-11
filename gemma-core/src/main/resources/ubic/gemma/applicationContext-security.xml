@@ -15,14 +15,14 @@
            http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.0.xsd">
 
 	<bean id="authenticationLoggerListener" class="org.springframework.security.authentication.event.LoggerListener" />
-	
+
 	<!--
 		Notes. 1) The auto-config doesn't do much since we customize most things. 2) We provide a custom accessDecisionManager
 		so we can get the role hierarchy and GROUP_ prefix applied to http request.
 	-->
 	<s:http auto-config="false" access-decision-manager-ref="httpAccessDecisionManager" realm="Gemma">
 		<s:http-basic />
- 
+
 		<s:anonymous granted-authority="GROUP_ANONYMOUS" />
 
 		<s:intercept-url pattern="/admin/**" access="GROUP_ADMIN" />
@@ -32,13 +32,13 @@
 		<s:intercept-url pattern="/userProfile.html" access="GROUP_USER" />
 		<s:intercept-url pattern="/manageGroups.html" access="GROUP_USER" />
 		<s:intercept-url pattern="/loadExpressionExperiment.html" access="GROUP_ADMIN" />
-		<s:intercept-url pattern="/characteristicBrowser.html" access="GROUP_ADMIN" />		
+		<s:intercept-url pattern="/characteristicBrowser.html" access="GROUP_ADMIN" />
 		<s:intercept-url pattern="/loadSimpleExpressionExperiment.html" access="GROUP_USER" />
 		<s:intercept-url pattern="/**" access="IS_AUTHENTICATED_ANONYMOUSLY" />
 
 		<s:logout logout-success-url="/login.jsp" />
 		<s:form-login login-page="/login.jsp" default-target-url="/" />
-		<s:remember-me key="gemma_rm" /> 
+		<s:remember-me key="gemma_rm" />
 
 		<!--
 			See http://jira.springframework.org/browse/SEC-834 about the session fixation problem. If we enable it, we get
@@ -49,10 +49,10 @@
 		</s:session-management>
 
 	</s:http>
-	
+
 	<!-- For use with access tags  -->
- 	<bean id="defaultWebSecurityExpressionHandler" class="org.springframework.security.web.access.expression.DefaultWebSecurityExpressionHandler"></bean>
-  	
+	<bean id="defaultWebSecurityExpressionHandler" class="org.springframework.security.web.access.expression.DefaultWebSecurityExpressionHandler"></bean>
+
 
 	<bean id="httpAccessDecisionManager" class="org.springframework.security.access.vote.AffirmativeBased">
 		<property name="allowIfAllAbstainDecisions" value="true" />
@@ -112,6 +112,7 @@
 		<s:after-invocation-provider ref="afterAclDataVectorCollectionRead" />
 		<s:after-invocation-provider ref="afterAclMyDataRead" />
 		<s:after-invocation-provider ref="afterAclMapRead" />
+		<s:after-invocation-provider ref="afterAclMapValuesRead" />
 		<s:after-invocation-provider ref="postInvocationAdviceProvider" /><!-- for @Post... -->
 
 	</s:global-method-security>
@@ -320,7 +321,7 @@
 		<property name="processDomainObjectClass" value="ubic.gemma.model.common.auditAndSecurity.Securable" />
 	</bean>
 
-	<!-- after reading a map: filter -->
+	<!-- after reading a map: filter by keys (securable) and also values, if they are securable -->
 	<bean id="afterAclMapRead" class="ubic.gemma.security.authorization.acl.AclAfterInvocationMapFilteringProvider">
 		<constructor-arg ref="aclService" />
 		<constructor-arg>
@@ -332,6 +333,20 @@
 		<property name="sidRetrievalStrategy" ref="sidRetrievalStrategy" />
 		<property name="processDomainObjectClass" value="ubic.gemma.model.common.auditAndSecurity.Securable" />
 	</bean>
+
+	<!-- after reading a map: filter by values -->
+	<bean id="afterAclMapValuesRead" class="ubic.gemma.security.authorization.acl.AclAfterInvocationMapValueFilteringProvider">
+		<constructor-arg ref="aclService" />
+		<constructor-arg>
+			<list>
+				<util:constant static-field="org.springframework.security.acls.domain.BasePermission.ADMINISTRATION" />
+				<util:constant static-field="org.springframework.security.acls.domain.BasePermission.READ" />
+			</list>
+		</constructor-arg>
+		<property name="sidRetrievalStrategy" ref="sidRetrievalStrategy" />
+		<property name="processDomainObjectClass" value="ubic.gemma.model.common.auditAndSecurity.Securable" />
+	</bean>
+
 
 	<!-- After reading collection of composite sequences -->
 	<bean id="afterAclArrayDesignCollectionRead" class="ubic.gemma.security.authorization.acl.AclAfterCollectionCompSeqByArrayDesignFilter">
@@ -378,5 +393,5 @@
 		</constructor-arg>
 	</bean>
 
- 	
+
 </beans>

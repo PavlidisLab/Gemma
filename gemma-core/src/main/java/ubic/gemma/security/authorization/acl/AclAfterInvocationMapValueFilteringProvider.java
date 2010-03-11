@@ -1,7 +1,7 @@
 /*
- * The Gemma_sec1 project
+ * The Gemma project
  * 
- * Copyright (c) 2009 University of British Columbia
+ * Copyright (c) 2010 University of British Columbia
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,19 +36,18 @@ import org.springframework.security.core.Authentication;
 import ubic.gemma.model.common.auditAndSecurity.Securable;
 
 /**
- * Like the AclEntryAfterInvocationCollectionFilteringProvider, but filters on the keys AND values of a Map, where the
- * keys are Securable and the values MAY be Securable. If your keys are non-securable, use
- * {@link AclAfterInvocationMapValueFilteringProvider}
+ * Filter a one-to-one map where the keys are NON-SECURABLE and the values ARE securable (or at least, can be). The
+ * values can be a mixture of securable or non-securable. If you are using a map where both they keys and values are
+ * securable, use {@link AclAfterInvocationMapFilteringProvider}
  * 
- * @see org.springframework.security.acls.afterinvocation.AclEntryAfterInvocationCollectionFilteringProvider
  * @author paul
  * @version $Id$
- * @see AclAfterInvocationMapValueFilteringProvider.java
+ * @see AclAfterInvocationMapFilteringProvider
  */
-public class AclAfterInvocationMapFilteringProvider extends AbstractAclProvider {
+public class AclAfterInvocationMapValueFilteringProvider extends AbstractAclProvider {
 
-    public AclAfterInvocationMapFilteringProvider( AclService aclService, List<Permission> requirePermission ) {
-        super( aclService, "AFTER_ACL_MAP_READ", requirePermission );
+    public AclAfterInvocationMapValueFilteringProvider( AclService aclService, List<Permission> requirePermission ) {
+        super( aclService, "AFTER_ACL_MAP_VALUES_READ", requirePermission );
     }
 
     protected static final Log logger = LogFactory.getLog( AclAfterInvocationMapFilteringProvider.class );
@@ -77,11 +76,10 @@ public class AclAfterInvocationMapFilteringProvider extends AbstractAclProvider 
                 }
 
                 Filterer<Object> filterer = null;
-                Map<? extends Object, Object> map;
 
                 if ( returnedObject instanceof Map ) {
-                    map = ( Map<? extends Object, Object> ) returnedObject;
-                    filterer = new MapFilterer( map );
+                    Map<? extends Object, Object> map = ( Map<? extends Object, Object> ) returnedObject;
+                    filterer = new MapValueFilterer( map );
                 } else {
                     throw new AuthorizationServiceException( "A Map was required as the "
                             + "returnedObject, but the returnedObject was: " + returnedObject );
@@ -93,26 +91,14 @@ public class AclAfterInvocationMapFilteringProvider extends AbstractAclProvider 
                 while ( collectionIter.hasNext() ) {
                     Object domainObject = collectionIter.next();
 
-                    if ( !Securable.class.isAssignableFrom( domainObject.getClass() ) ) {
-                        throw new IllegalArgumentException( "Expected a map with keys as Securables, got "
-                                + domainObject.getClass() );
-                    }
-
                     boolean hasPermission = false;
 
-                    if ( domainObject == null ) {
+                    if ( !Securable.class.isAssignableFrom( domainObject.getClass() ) ) {
+                        hasPermission = true;
+                    } else if ( domainObject == null ) {
                         hasPermission = true;
                     } else {
                         hasPermission = hasPermission( authentication, domainObject );
-                    }
-
-                    Object value = map.get( domainObject );
-
-                    /*
-                     * Check the VALUE as well.
-                     */
-                    if ( value != null && Securable.class.isAssignableFrom( value.getClass() ) ) {
-                        hasPermission = hasPermission( authentication, value ) && hasPermission;
                     }
 
                     if ( !hasPermission ) {
@@ -130,4 +116,5 @@ public class AclAfterInvocationMapFilteringProvider extends AbstractAclProvider 
 
         return returnedObject;
     }
+
 }
