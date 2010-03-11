@@ -121,7 +121,7 @@
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="var" path="M2_REPO/commons-pool/commons-pool/1.2/commons-pool-1.2.jar"/>
-	<classpathentry kind="var" path="M2_REPO/org/directwebremoting/dwr/2.0.5/dwr-2.0.5.jar" sourcepath="/JAR_SRC/dwr-2.0.5/java"/>
+	<classpathentry kind="var" path="M2_REPO/org/directwebremoting/dwr/2.0.5/dwr-2.0.5.jar" sourcepath="/M2_REPO/org/directwebremoting/dwr/2.0.5"/>
 	<classpathentry kind="var" path="M2_REPO/xalan/xalan/2.7.0/xalan-2.7.0.jar"/>
 	<classpathentry kind="var" path="M2_REPO/commons-io/commons-io/1.1/commons-io-1.1.jar"/>
 	<classpathentry kind="var" path="M2_REPO/jetty/org.mortbay.jetty/5.1.12/org.mortbay.jetty-5.1.12.jar"/>
@@ -166,7 +166,7 @@
 	</classpathentry>
 	<classpathentry kind="var" path="M2_REPO/com/ibm/icu/icu4j/3.4.4/icu4j-3.4.4.jar"/>
 	<classpathentry kind="var" path="M2_REPO/net/sf/json-lib/json-lib/2.2/json-lib-2.2-jdk15.jar"/>
-	<classpathentry kind="var" path="M2_REPO/org/springframework/spring-orm/3.0.1.RELEASE/spring-orm-3.0.1.RELEASE.jar" sourcepath="/JAR_SRC/spring-framework-3.0.0.RC1/src/org.springframework.orm-sources-3.0.1.RELEASE.jar">
+	<classpathentry kind="var" path="M2_REPO/org/springframework/spring-orm/3.0.1.RELEASE/spring-orm-3.0.1.RELEASE.jar" sourcepath="/M2_REPO/org/springframework/spring-orm/3.0.1.RELEASE/spring-orm-3.0.1.RELEASE-sources.jar">
 		<attributes>
 			<attribute name="javadoc_location" value="http://static.springsource.org/spring/docs/3.0.1.RELEASE/javadoc-api/"/>
 		</attributes>
@@ -243,7 +243,7 @@
 			<attribute name="javadoc_location" value="http://static.springsource.org/spring/docs/3.0.0.RC1/javadoc-api/"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="var" path="M2_REPO/org/springframework/spring-aop/3.0.1.RELEASE/spring-aop-3.0.1.RELEASE.jar" sourcepath="/M2_REPO/org/springframework/">
+	<classpathentry kind="var" path="M2_REPO/org/springframework/spring-aop/3.0.1.RELEASE/spring-aop-3.0.1.RELEASE.jar" sourcepath="/M2_REPO/org/springframework/spring-aop/3.0.1.RELEASE/spring-aop-3.0.1.RELEASE-sources.jar">
 		<attributes>
 			<attribute name="javadoc_location" value="http://static.springsource.org/spring/docs/3.0.0.RC1/javadoc-api/"/>
 		</attributes>

@@ -580,6 +580,33 @@
 				</plugins>
 			</build>
 		</profile>
+		<profile>
+		<!-- For deployment where host is local (and ssh isn't available for builder, e.g. CI) -->
+			<id>local-deploy</id>
+			<activation>
+				<activeByDefault>false</activeByDefault>
+				<property>
+					<name>deploy.local</name>
+				</property>
+			</activation>
+			<distributionManagement>
+				<site>
+					<id>localDeploy</id>
+					<name>localDeploy</name>
+					<url>file:///space/gemmaData/gemma-devsite</url>
+				</site> 
+				<repository>
+					<id>repo</id>
+					<name>Pavlab</name>
+					<url>file:///space/maven2</url>
+				</repository>
+				<snapshotRepository>
+					<id>repo</id>
+					<name>Pavlab</name>
+					<url>file:///space/maven2</url>
+				</snapshotRepository>
+			</distributionManagement>
+		</profile>
 	</profiles>
 	<distributionManagement>
 		<site>
