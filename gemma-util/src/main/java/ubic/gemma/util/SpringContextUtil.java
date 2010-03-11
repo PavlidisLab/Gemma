@@ -35,7 +35,8 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.web.context.support.GenericWebApplicationContext;
 
 /**
- * Methods to create Spring contexts for Gemma.
+ * Methods to create Spring contexts for Gemma. This is not used for webapps except under Test environments. It is
+ * normally used for CLIs only.
  * 
  * @author pavlidis
  * @version $Id$

@@ -914,6 +914,8 @@ public class GeneCoexpressionService {
     }
 
     /**
+     * Ignore experiments that don't represent the genes we're querying for.
+     * 
      * @param genes
      * @return
      */

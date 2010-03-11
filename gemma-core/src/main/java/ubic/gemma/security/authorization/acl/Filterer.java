@@ -17,8 +17,8 @@ package ubic.gemma.security.authorization.acl;
 import java.util.Iterator;
 
 /**
- * Filter strategy interface. See org.springframework.security.acls.afterinvocation.Filterer, which is not part of the
- * public spring-security API
+ * Filter strategy interface. See org.springframework.security.acls.afterinvocation. Filterer, which is not part of the
+ * public spring-security API so we have to put it here.
  * 
  * @author Ben Alex
  * @author Paulo Neves
