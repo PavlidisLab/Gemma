@@ -296,7 +296,9 @@ public class GeneServiceImpl extends GeneServiceBase {
         this.getGeneDao().update( gene );
     }
 
-    @Override
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.genome.gene.GeneService#getMaxPhysicalLength(ubic.gemma.model.genome.Gene)
+     */
     public PhysicalLocation getMaxPhysicalLength( Gene gene ) {
         if ( gene == null ) return null;
 
