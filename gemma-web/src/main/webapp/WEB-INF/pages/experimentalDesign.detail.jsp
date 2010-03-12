@@ -4,15 +4,15 @@
 <jsp:useBean id="expressionExperiment" scope="request"
 	class="ubic.gemma.model.expression.experiment.ExpressionExperimentImpl" />
 <head>
-	<title><fmt:message key="experimentalDesign.details" /></title>
-	<jwr:script src='/scripts/ajax/ext/data/DwrProxy.js' useRandomParam="false" />
+	<title><fmt:message key="experimentalDesign.details" />
+	</title>
+	<jwr:script src='/scripts/ajax/ext/data/DwrProxy.js' />
 	<jwr:script src='/scripts/app/eeDataFetch.js' />
 	<jwr:script src='/scripts/app/ExperimentalDesign.js' />
 </head>
 
-
-<input type="hidden" name="expressionExperimentID" value="${expressionExperiment.id}" />
-<input type="hidden" name="experimentalDesignID" value="${experimentalDesign.id}" />
+<input type="hidden" id="expressionExperimentID" value="${expressionExperiment.id}" />
+<input type="hidden" id="experimentalDesignID" value="${experimentalDesign.id}" />
 
 <div id="messages" style="margin: 10px; width: 400px"></div>
 

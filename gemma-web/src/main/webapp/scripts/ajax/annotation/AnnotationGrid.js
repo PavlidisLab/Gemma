@@ -19,7 +19,6 @@ Ext.namespace('Gemma');
  * 
  * noInitialLoad : if true, the grid will not be loaded immediately upon creation
  * 
- * pageSize : if defined, the grid will be paged on the client side, with the defined page size
  * 
  * writeMethod : function pointer to server side ajax call to add an annotation eg
  * 
@@ -29,6 +28,15 @@ Ext.namespace('Gemma');
  * 
  * TODO add writeParams and removeParams methods if more parameters are needed for removing and writing annotations
  * other than entId
+ * @version $Id$
+ */
+
+
+
+/**
+ * Shows tags in a simple row of links.
+ * @class Gemma.AnnotationDataView
+ * @extends Ext.DataView
  */
 Gemma.AnnotationDataView = Ext.extend(Ext.DataView, {
 
@@ -55,6 +63,9 @@ Gemma.AnnotationDataView = Ext.extend(Ext.DataView, {
 		return (typeof this.readParams == "function") ? this.readParams() : this.readParams;
 	},
 
+	/*
+	 * Assumes search scope should be experiments only ..
+	 */
 	tpl : new Ext.XTemplate(
 			'<tpl for=".">',
 			'<span class="ann-wrap" ext:qtip="{className}" ><span  class="x-editable">'
@@ -84,6 +95,64 @@ Gemma.AnnotationDataView = Ext.extend(Ext.DataView, {
 
 });
 
+/*
+ * Experimental, not used yet.
+ */
+Gemma.CharacteristicPagingStore = Ext.extend(Ext.data.Store, {
+			constructor : function(config) {
+				Gemma.CharacteristicPagingStore.superclass.constructor.call(this, config);
+			},
+			remoteSort : true,
+			proxy : new Ext.data.DWRProxy({
+						apiActionToHandlerMap : {
+							read : {
+								dwrFunction : CharacteristicBrowserController.browse,
+								getDwrArgsFunction : function(request) {
+									var params = request.params;
+									return [params];
+								}
+							}
+						}
+					}),
+
+			reader : new Ext.data.JsonReader({
+						root : 'records', // required.
+						successProperty : 'success', // same as default.
+						messageProperty : 'message', // optional
+						totalProperty : 'totalRecords', // default is 'total'; optional unless paging.
+						idProperty : "id", // same as default
+						fields : [{
+									name : "id",
+									type : "int"
+								}, {
+									name : "objectClass"
+								}, {
+									name : "classUri"
+								}, {
+									name : "className"
+								}, {
+									name : "termUri"
+								}, {
+									name : "termName"
+								}, {
+									name : "parentLink"
+								}, {
+									name : "parentDescription"
+								}, {
+									name : "parentOfParentLink"
+								}, {
+									name : "parentOfParentDescription"
+								}, {
+									name : "evidenceCode"
+								}]
+					}),
+
+			writer : new Ext.data.JsonWriter({
+						writeAllFields : true
+					})
+
+		});
+
 /**
  * 
  * @class Gemma.AnnotationGrid
@@ -97,7 +166,7 @@ Gemma.AnnotationGrid = Ext.extend(Gemma.GemmaGridPanel, {
 			stateful : false,
 			taxonId : null,
 			name : 'AnnotationGrid',
-			loadMask : true,
+
 			viewConfig : {
 				enableRowBody : true,
 				emptyText : 'No annotations',
@@ -109,6 +178,11 @@ Gemma.AnnotationGrid = Ext.extend(Gemma.GemmaGridPanel, {
 					}
 					return '';
 				}
+			},
+
+			loadMask : {
+				msg : 'Processing ...',
+				store : this.store
 			},
 
 			forceValidation : true, // always fire edit event even if text doesn't change - the url might have. But this
@@ -151,10 +225,6 @@ Gemma.AnnotationGrid = Ext.extend(Gemma.GemmaGridPanel, {
 			formatParentWithStyle : function(id, expanded, parentLink, parentDescription, parentOfParentLink,
 					parentOfParentDescription) {
 				var value;
-				// if (parentOfParentLink) {
-				// value = String.format("{0}<br> from {1}", parentLink,
-				// parentOfParentLink);
-				// } else {
 				value = (parentLink ? (parentLink + "&nbsp;&nbsp;") : "")
 						+ (parentDescription ? parentDescription : "");
 
@@ -171,46 +241,37 @@ Gemma.AnnotationGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				return Gemma.GemmaGridPanel.formatTermWithStyle(value, record.data.termUri);
 			},
 
+			/**
+			 * 
+			 */
 			initComponent : function() {
 
 				Ext.apply(this, {
 							columns : [{
 										header : "Category",
-										dataIndex : "className"
+										dataIndex : "className",
+										sortable : true
 									}, {
 										header : "Term",
 										dataIndex : "termName",
-										renderer : this.termStyler.createDelegate(this)
+										renderer : this.termStyler.createDelegate(this),
+										sortable : true
 									}, {
 										header : "Annotation belongs to:",
 										dataIndex : "parentLink",
 										renderer : this.parentStyler.createDelegate(this),
-										hidden : this.showParent ? false : true
+										tooltip : "The 'owner' of this annotation. May be hidden due to security.",
+										hidden : this.showParent ? false : true,
+										sortable : false
 									}, {
 										header : "Evidence",
-										dataIndex : "evidenceCode"
+										dataIndex : "evidenceCode",
+										sortable : true
 									}]
 
 						});
 
-				if (this.pageSize) {
-					Ext.apply(this, {
-								store : new Gemma.PagingDataStore({
-											proxy : new Ext.data.DWRProxy(this.readMethod),
-											reader : new Ext.data.ListRangeReader({
-														id : "id"
-													}, this.record),
-											pageSize : this.pageSize
-										})
-							});
-					Ext.apply(this, {
-								bbar : new Ext.PagingToolbar({
-											pageSize : this.pageSize,
-											store : this.getStore()
-										})
-							});
-
-				} else {
+				if (this.store == null) {
 					Ext.apply(this, {
 								store : new Ext.data.Store({
 											proxy : new Ext.data.DWRProxy(this.readMethod),
@@ -236,11 +297,12 @@ Gemma.AnnotationGrid = Ext.extend(Gemma.GemmaGridPanel, {
 										})
 							});
 				}
+				//
 				Gemma.AnnotationGrid.superclass.initComponent.call(this);
 
 				this.getStore().setDefaultSort('className');
 
-				// this.relayEvents(this.getStore(), ["loadexception"]);
+				this.loadMask.store = this.getStore();
 
 				this.autoExpandColumn = this.showParent ? 2 : 1;
 
@@ -345,6 +407,9 @@ Gemma.AnnotationGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				return (typeof this.readParams == "function") ? this.readParams() : this.readParams;
 			},
 
+			/*
+			 * TODO deal with records, let writer handle conversion.
+			 */
 			getSelectedCharacteristics : function() {
 				var selected = this.getSelectionModel().getSelections();
 				var chars = [];
@@ -355,6 +420,9 @@ Gemma.AnnotationGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				return chars;
 			},
 
+			/*
+			 * TODO deal with records, let writer handle conversion.
+			 */
 			getEditedCharacteristics : function() {
 				var chars = [];
 				this.getStore().each(function(record) {

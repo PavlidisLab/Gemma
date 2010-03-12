@@ -121,6 +121,7 @@
 	<bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/passwordHint.html" />
 	<bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/admin/userManager.html" />
 	<bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/admin/indexer.html" />
+	<bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/admin/widgetTest.html" />
 
 	<!-- ==================================================== -->
 	<!-- Exception handler. -->
@@ -215,6 +216,9 @@
 		</property>
 		<property name="taxonService">
 			<ref bean="taxonService" />
+		</property>
+		<property name="securityService">
+			<ref bean="securityService" />
 		</property>
 	</bean>
 
@@ -806,6 +810,8 @@
 								<value>findTerm</value>
 								<value>createExperimentTag</value>
 								<value>removeExperimentTag</value>
+								<value>createBioMaterialTag</value>
+								<value>removeBioMaterialTag</value>
 							</list>
 						</property>
 					</bean>
@@ -985,6 +991,8 @@
 								<value>findCharacteristicsCustom</value>
 								<value>removeCharacteristics</value>
 								<value>updateCharacteristics</value>
+								<value>browse</value>
+								<value>count</value>
 							</list>
 						</property>
 					</bean>
@@ -1051,7 +1059,7 @@
 						<property name="includes">
 							<list>
 								<value>getExperimentsInSet</value>
-								<value>getAvailableExpressionExperimentSets</value>
+								<value>loadAll</value>
 								<value>update</value>
 								<value>create</value>
 								<value>remove</value>
@@ -1206,7 +1214,7 @@
 								<value>getUsersGeneGroups</value>
 								<value>getGenesInGroup</value>
 								<value>updateGeneGroup</value>
-								
+
 							</list>
 						</property>
 					</bean>
@@ -1231,7 +1239,12 @@
 						</property>
 					</bean>
 				</entry>
-				<entry key="ubic.gemma.web.remote.ListRange">
+				<entry key="ubic.gemma.web.remote.JsonReaderResponse">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="bean" />
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.web.remote.ListBatchCommand">
 					<bean class="org.directwebremoting.spring.ConverterConfig">
 						<property name="type" value="bean" />
 					</bean>
@@ -1685,7 +1698,7 @@
 				</entry>
 				<entry key="ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject">
 					<bean class="org.directwebremoting.spring.ConverterConfig">
-						<property name="type" value="hibernate3" />
+						<property name="type" value="bean" />
 						<!--
 							<property name="includes"> <list> <value>id</value> <value>name</value> <value>shortName</value>
 							<value>description</value> <value>probeSpecificForQueryGene</value> <value>arrayDesignCount</value>
@@ -1696,7 +1709,7 @@
 				</entry>
 				<entry key="ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject">
 					<bean class="org.directwebremoting.spring.ConverterConfig">
-						<property name="type" value="hibernate3" />
+						<property name="type" value="bean" />
 						<!--
 							<property name="includes"> <list> <value>id</value> <value>name</value> <value>shortName</value>
 							<value>description</value> <value>probeSpecificForQueryGene</value> <value>arrayDesignCount</value>
@@ -1707,7 +1720,7 @@
 				</entry>
 				<entry key="ubic.gemma.web.controller.expression.experiment.ExpressionExperimentSetValueObject">
 					<bean class="org.directwebremoting.spring.ConverterConfig">
-						<property name="type" value="hibernate3" />
+						<property name="type" value="bean" />
 					</bean>
 				</entry>
 				<entry key="ubic.gemma.web.controller.coexpressionSearch.CoexpressionSearchCommand">

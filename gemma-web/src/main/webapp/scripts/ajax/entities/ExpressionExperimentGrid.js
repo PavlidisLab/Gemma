@@ -44,6 +44,9 @@ Gemma.ExpressionExperimentGrid = Ext.extend(Gemma.GemmaGridPanel, {
 			}, {
 				name : "differentialExpressionAnalysisId",
 				type : "string"
+			}, {
+				name : 'taxonId',
+				type : 'int'
 			}]),
 
 	searchForText : function(button, keyev) {
@@ -83,69 +86,34 @@ Gemma.ExpressionExperimentGrid = Ext.extend(Gemma.GemmaGridPanel, {
 					}
 				});
 
-		if (this.pageSize) {
-			if (this.records) {
-				Ext.apply(this, {
-							store : new Ext.data.Store({
-										proxy : new Ext.ux.data.PagingMemoryProxy(this.records),
-										reader : new Ext.data.ListRangeReader({}, this.record),
-										pageSize : this.pageSize
-									})
-						});
-			} else {
-				Ext.apply(this, {
-							store : new Gemma.PagingDataStore({
-										proxy : new Ext.data.DWRProxy(this.readMethod),
-										reader : new Ext.data.ListRangeReader({
-													id : "id"
-												}, this.record),
-										pageSize : this.pageSize
-									})
-						});
-			}
+		if (!this.records) {
 			Ext.apply(this, {
-						bbar : new Ext.PagingToolbar({
-									pageSize : this.pageSize,
-									store : this.store,
-									items : ['->', {
-												xtype : 'button',
-												handler : this.clearFilter.createDelegate(this),
-												scope : this,
-												cls : 'x-btn-text',
-												text : 'Reset filter'
-											}, ' ', this.searchInGridField]
+						store : new Ext.data.Store({
+									proxy : new Ext.data.DWRProxy(this.readMethod),
+									reader : new Ext.data.ListRangeReader({
+												id : "id"
+											}, this.record)
 								})
 					});
 		} else {
-			if (!this.records) {
-				Ext.apply(this, {
-							store : new Ext.data.Store({
-										proxy : new Ext.data.DWRProxy(this.readMethod),
-										reader : new Ext.data.ListRangeReader({
-													id : "id"
-												}, this.record)
-									})
-						});
-			} else {
-				Ext.apply(this, {
-							store : new Ext.data.Store({
-										proxy : new Ext.data.MemoryProxy(this.records),
-										reader : new Ext.data.ListRangeReader({}, this.record)
-									})
-						});
-			}
 			Ext.apply(this, {
-						bbar : new Ext.Toolbar({
-									items : ['->', {
-												xtype : 'button',
-												handler : this.clearFilter.createDelegate(this),
-												scope : this,
-												cls : 'x-btn-text',
-												text : 'Reset filter'
-											}, ' ', this.searchInGridField]
+						store : new Ext.data.Store({
+									proxy : new Ext.data.MemoryProxy(this.records),
+									reader : new Ext.data.ListRangeReader({}, this.record)
 								})
 					});
 		}
+		Ext.apply(this, {
+					bbar : new Ext.Toolbar({
+								items : ['->', {
+											xtype : 'button',
+											handler : this.clearFilter.createDelegate(this),
+											scope : this,
+											cls : 'x-btn-text',
+											text : 'Reset filter'
+										}, ' ', this.searchInGridField]
+							})
+				});
 
 		Ext.apply(this, {
 			columns : [{
@@ -214,11 +182,14 @@ Gemma.ExpressionExperimentGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				}, this);
 
 		this.getStore().on("load", function(store, records, options) {
-					// if (this.title) {
-					// this.setTitle(this.title + " - " + records.length + " items");
-					// }
 					this.doLayout.createDelegate(this);
 				}, this);
+
+		if (this.eeids) {
+			this.getStore().load({
+						params : [this.eeids]
+					});
+		}
 
 	},
 
@@ -285,6 +256,87 @@ Gemma.ExpressionExperimentGrid = Ext.extend(Gemma.GemmaGridPanel, {
 
 });
 
+Gemma.ExpressionExperimentListView = Ext.extend(Ext.list.ListView, {
+	columns : [{
+		id : 'shortName',
+		header : "Dataset",
+		dataIndex : "shortName",
+		tooltip : "The unique short name for the dataset, often the accession number from the originating source database. Click on the name to view the details page.",
+		renderer : this.formatEE,
+		width : 0.2,
+		sortable : true
+	}, {
+		id : 'name',
+		header : "Name",
+		dataIndex : "name",
+		tooltip : "The descriptive name of the dataset, usually supplied by the submitter",
+		width : 0.2,
+		sortable : true
+	}, {
+		id : 'arrays',
+		header : "Arrays",
+		dataIndex : "arrayDesignCount",
+		hidden : true,
+		tooltip : "The number of different types of array platforms used",
+		width : 0.2,
+		sortable : true
+	}, {
+		id : 'assays',
+		header : "Assays",
+		dataIndex : "bioAssayCount",
+		tooltip : "The number of arrays (~samples) present in the study",
+		width : 0.2,
+		sortable : true
+	}],
+	store : new Ext.data.Store({
+				proxy : new Ext.data.DWRProxy({
+							apiActionToHandlerMap : {
+								read : {
+									dwrFunction : ExpressionExperimentController.loadExpressionExperiments
+								}
+							}
+						}),
+				reader : new Ext.data.ListRangeReader({
+							id : "id",
+							fields : [{
+										name : "id",
+										type : "int"
+									}, {
+										name : "shortName",
+										type : "string"
+									}, {
+										name : "name",
+										type : "string"
+									}, {
+										name : "arrayDesignCount",
+										type : "int"
+									}, {
+										name : "bioAssayCount",
+										type : "int"
+									}, {
+										name : "externalUri",
+										type : "string"
+									}, {
+										name : "description",
+										type : "string"
+									}, {
+										name : "differentialExpressionAnalysisId",
+										type : "string"
+									}, {
+										name : 'taxonId',
+										type : 'int'
+									}]
+						})
+			})
+});
+
+/**
+ * 
+ * @param {}
+ *            datasets
+ * @param {}
+ *            eeMap
+ */
 Gemma.ExpressionExperimentGrid.updateDatasetInfo = function(datasets, eeMap) {
 	for (var i = 0; i < datasets.length; ++i) {
 		var ee = eeMap[datasets[i].id];
@@ -295,6 +347,11 @@ Gemma.ExpressionExperimentGrid.updateDatasetInfo = function(datasets, eeMap) {
 	}
 };
 
+/**
+ * 
+ * @class Gemma.EEGridRowExpander
+ * @extends Ext.grid.RowExpander
+ */
 Gemma.EEGridRowExpander = Ext.extend(Ext.grid.RowExpander, {
 
 			fillExpander : function(data, body, rowIndex) {

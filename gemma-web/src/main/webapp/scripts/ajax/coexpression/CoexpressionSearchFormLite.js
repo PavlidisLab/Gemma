@@ -34,9 +34,9 @@ Gemma.CoexpressionSearchFormLite = Ext.extend(Ext.FormPanel, {
 
 				this.geneCombo.on("focus", this.clearMessages, this);
 
-				this.store = new Gemma.ExpressionExperimentSetStore();
+				this.store = new Gemma.DatasetGroupStore();
 
-				this.eeSetCombo = new Gemma.ExpressionExperimentSetCombo({
+				this.eeSetCombo = new Gemma.DatasetGroupCombo({
 							width : 175,
 							fieldLabel : 'Select search scope',
 							store : this.store

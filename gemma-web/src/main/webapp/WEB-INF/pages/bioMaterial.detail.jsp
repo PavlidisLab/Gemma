@@ -12,20 +12,19 @@
 		Ext.onReady(function() {
 		Ext.QuickTips.init();
 	
-	var bmId = dwr.util.getValue("bmId");
-	var bmClass = dwr.util.getValue("bmClass");
-	var admin = dwr.util.getValue("hasAdmin");
+	var bmId = Ext.get("bmId").getValue();
+	var bmClass = Ext.get("bmClass").getValue();
+	var canEdit = Ext.get('canEdit') === null ? false : Ext.get('canEdit	').value();
 	var grid = new Gemma.AnnotationGrid( { renderTo : "bmAnnotations",
 				readMethod :BioMaterialController.getAnnotation,
 				readParams : [{
 					id : bmId,
 					classDelegatingFor : bmClass
 				}],
-				writeMethod : OntologyService.saveBioMaterialStatement,
-				removeMethod : OntologyService.removeBioMaterialStatement,
-				entId : bmId,
-				
-				editable : admin,
+				writeMethod : AnnotationController.createBioMaterialTag,
+				removeMethod : AnnotationController.removeBioMaterialTag,
+				entId : bmId, 
+				editable : canEdit,
 				mgedTermKey : "experiment"
 			});
 }); 
@@ -49,7 +48,9 @@
 		</td>
 		<td>
 			<c:choose>
-				<c:when test="${not empty bioMaterial.description}"><c:out value="${bioMaterial.description}" /></c:when>
+				<c:when test="${not empty bioMaterial.description}">
+					<c:out value="${bioMaterial.description}" />
+				</c:when>
 				<c:otherwise>Description not available</c:otherwise>
 			</c:choose>
 		</td>
@@ -61,7 +62,9 @@
 		</td>
 		<td>
 			<c:choose>
-				<c:when test="${not empty bioMaterial.sourceTaxon}"><c:out value="${bioMaterial.sourceTaxon.scientificName}" /></c:when>
+				<c:when test="${not empty bioMaterial.sourceTaxon}">
+					<c:out value="${bioMaterial.sourceTaxon.scientificName}" />
+				</c:when>
 				<c:otherwise>Taxon not available</c:otherwise>
 			</c:choose>
 		</td>
@@ -74,7 +77,9 @@
 
 		<td>
 			<c:choose>
-				<c:when test="${not empty bioMaterial.externalAccession}"><c:out value="${bioMaterial.externalAccession.accession}" /></c:when>
+				<c:when test="${not empty bioMaterial.externalAccession}">
+					<c:out value="${bioMaterial.externalAccession.accession}" />
+				</c:when>
 				<c:otherwise>No external identifier</c:otherwise>
 			</c:choose>
 		</td>
@@ -135,6 +140,7 @@
 			</DIV>
 		</TD>
 		<security:accesscontrollist domainObject="${bioMaterial}" hasPermission="WRITE,ADMINISTRATION">
+			<input type="hidden" name="canEdit" id="canEdit" value="true" />
 			<TD COLSPAN="2">
 				<DIV align="left">
 					<input type="button" onclick="location.href='/Gemma/bioMaterial/editBioMaterial.html?id=${bioMaterial.id}"

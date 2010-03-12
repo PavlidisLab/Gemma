@@ -37,7 +37,7 @@ Gemma.DatasetChooser.app = function() {
 			// renderTo : 'but'
 			// });
 			//
-			// dcp = new Ext.Gemma.ExpressionExperimentSetPanel({
+			// dcp = new Ext.Gemma.DatasetGroupComboPanel({
 			// renderTo : 'but'
 			// });
 			//

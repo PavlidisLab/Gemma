@@ -187,11 +187,24 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 					}, {
 						text : 'Done',
 						handler : function() {
+
+							var r = Ext.getCmp('annotator-grid').getEditedCharacteristics();
+							
+							if (r.length > 0) {
+								Ext.Msg.confirm("Unsaved changes",
+										"There are unsaved changes. Do you want to continue without saving?", function(btn, txt) {
+											if (btn == 'OK') {
+												w.hide();
+											}
+											})
+							} else {
+								w.hide();
+							}
+
 							if (this.change) {
 								/* Update the display of the tags. */
 								this.fireEvent('tagsUpdated');
-							}
-							w.hide();
+							} 
 						},
 						scope : this
 					}]

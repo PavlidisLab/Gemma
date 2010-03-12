@@ -82,16 +82,9 @@ Ext.onReady(function() {
 			Ext.QuickTips.init();
 			Ext.state.Manager.setProvider(new Ext.state.CookieProvider());
 
-			var eeId = dwr.util.getValue("expressionExperimentID");
-			var edId = dwr.util.getValue("experimentalDesignID");
-			var admin = dwr.util.getValue("hasAdmin");
-			//added in user as in the jsp as well setting admin to true if admin or group user
-			var user = dwr.util.getValue("hasUser");
-			var editable = false;
-			if(admin || user){
-				editable = true;
-			}
-				
+			var eeId = Ext.get("expressionExperimentID").getValue();
+			var edId = Ext.get("experimentalDesignID").getValue();
+			var editable = Ext.get('loggedIn').getValue();
 
 			/*
 			 * TODO: load up the MGED terms, experimental design and factor values ahead of time. We end up doing it

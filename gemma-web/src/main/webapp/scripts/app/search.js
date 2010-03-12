@@ -7,27 +7,26 @@
 Ext.namespace("Gemma.Search");
 Ext.BLANK_IMAGE_URL = '/Gemma/images/default/s.gif';
 
-
 Gemma.Search.app = function() {
 	return {
 		init : function() {
 
 			this.form = new Gemma.SearchForm({
-				renderTo : 'general-search-form'
-			});
+						renderTo : 'general-search-form'
+					});
 
 			this.resultGrid = new Gemma.SearchGrid({
-				renderTo : 'search-results-grid',
-				form : this.form
-			});
+						renderTo : 'search-results-grid',
+						form : this.form
+					});
 
 			this.form.on("search", this.search.createDelegate(this));
 
 			/*
 			 * Search from url if we have to.
 			 */
-			if (this.form.restoreState()){
-					this.search();
+			if (this.form.restoreState()) {
+				this.search();
 			}
 
 		},
@@ -49,7 +48,7 @@ Gemma.Search.app = function() {
 			var searchDatabase = true;
 			var searchIndices = true;
 			var searchCharacteristics = true;
-			if (dwr.util.getValue("hasAdmin")) {
+			if (Ext.get('hasAdmin').getValue()) {
 				searchDatabase = Ext.getCmp('search-database-chkbx').getValue();
 				searchIndices = Ext.getCmp('search-indices-chkbx').getValue();
 				searchCharacteristics = Ext.getCmp('search-characteristics-chkbx').getValue();
@@ -73,18 +72,18 @@ Gemma.Search.app = function() {
 			}
 
 			this.resultGrid.getStore().load({
-				params : [{
-					query : query,
-					searchProbes : searchProbes,
-					searchBioSequences : searchSequences,
-					searchArrays : searchArrays,
-					searchExperiments : searchExperiments,
-					searchGenes : searchGenes,
-					useDatabase : searchDatabase,
-					useIndices : searchIndices,
-					useCharacteristics : searchCharacteristics
-				}]
-			});
+						params : [{
+									query : query,
+									searchProbes : searchProbes,
+									searchBioSequences : searchSequences,
+									searchArrays : searchArrays,
+									searchExperiments : searchExperiments,
+									searchGenes : searchGenes,
+									useDatabase : searchDatabase,
+									useIndices : searchIndices,
+									useCharacteristics : searchCharacteristics
+								}]
+					});
 
 			if (typeof pageTracker != 'undefined') {
 				pageTracker._trackPageview("/Gemma/searcher.search?query=" + escape(query) + scopes);
@@ -93,10 +92,10 @@ Gemma.Search.app = function() {
 			Ext.DomHelper.overwrite('messages', "");
 			this.form.findById('submit-button').setDisabled(true);
 			Ext.DomHelper.overwrite('search-bookmark', {
-				tag : 'a',
-				href : "/Gemma/searcher.html?query=" + escape(query) + scopes,
-				html : 'Bookmarkable link'
-			});
+						tag : 'a',
+						href : "/Gemma/searcher.html?query=" + escape(query) + scopes,
+						html : 'Bookmarkable link'
+					});
 		}
 	};
 }();
@@ -104,235 +103,232 @@ Gemma.Search.app = function() {
 Gemma.Search.MAX_AUTO_EXPAND_SIZE = 15;
 
 Gemma.SearchForm = Ext.extend(Ext.form.FormPanel, {
-	frame : true,
-	autoHeight : true,
-	width : 300,
+			frame : true,
+			autoHeight : true,
+			width : 300,
 
-	/**
-	 * Restore state ... fixme.
-	 */
-	restoreState : function() {
+			/**
+			 * Restore state ... fixme.
+			 */
+			restoreState : function() {
 
+				var url = document.URL;
+				if (url.indexOf("?") > -1) {
+					var sq = url.substr(url.indexOf("?") + 1);
+					var params = Ext.urlDecode(sq);
 
-		
-			var url = document.URL;
-			if (url.indexOf("?") > -1) {
-				var sq = url.substr(url.indexOf("?") + 1);
-				var params = Ext.urlDecode(sq);
-				
-				if ((params.termUri) && (params.termUri.length != 0)){
-					this.form.findField('query').setValue(params.termUri);
-				}				
-				else if (params.query) {
-					this.form.findField('query').setValue(params.query);
-				}
-				else // NO Query object (just a random ? in string uri)
-					return false;
-				
-				if (params.scope) {
-					if (params.scope.indexOf('E') > -1) {
-						Ext.getCmp('search-exps-chkbx').setValue(true);
-					} else {
-						Ext.getCmp('search-exps-chkbx').setValue(false);
-					}
-					if (params.scope.indexOf('A') > -1) {
-						Ext.getCmp('search-ars-chkbx').setValue(true);
-					} else {
-						Ext.getCmp('search-ars-chkbx').setValue(false);
-					}
-					if (params.scope.indexOf('P') > -1) {
-						Ext.getCmp('search-prbs-chkbx').setValue(true);
-					} else {
-						Ext.getCmp('search-prbs-chkbx').setValue(false);
-					}
-					if (params.scope.indexOf('G') > -1) {
-						Ext.getCmp('search-genes-chkbx').setValue(true);
-					} else {
-						Ext.getCmp('search-genes-chkbx').setValue(false);
-					}
-					if (params.scope.indexOf('S') > -1) {
-						Ext.getCmp('search-seqs-chkbx').setValue(true);
-					} else {
-						Ext.getCmp('search-seqs-chkbx').setValue(false);
-					}
-				}
-			}else{
-				return false;
-			}
-			
-			return  true;
+					if ((params.termUri) && (params.termUri.length != 0)) {
+						this.form.findField('query').setValue(params.termUri);
+					} else if (params.query) {
+						this.form.findField('query').setValue(params.query);
+					} else
+						// NO Query object (just a random ? in string uri)
+						return false;
 
-	},
-
-	initComponent : function() {
-
-		Ext.apply(this, {
-			items : [{
-				xtype : 'panel',
-				layout : 'column',
-				items : [new Ext.form.TextField({
-					id : 'search-text-field',
-					fieldLabel : 'Search term(s)',
-					name : 'query',
-					columnWidth : 0.75,
-					allowBlank : false,
-					regex : new RegExp("[\\w\\s]{3,}\\*?"),
-					regexText : "Query contains invalid characters",
-					minLengthText : "Query must be at least 3 characters long",
-					msgTarget : "validation-messages",
-					validateOnBlur : false,
-					value : this.query,
-					minLength : 3,
-					listeners : {
-						'specialkey' : {
-							fn : function(r, e) {
-								if (e.getKey() == e.ENTER) {
-									this.fireEvent("search");
-								}
-							}.createDelegate(this),
-							scope : this
+					if (params.scope) {
+						if (params.scope.indexOf('E') > -1) {
+							Ext.getCmp('search-exps-chkbx').setValue(true);
+						} else {
+							Ext.getCmp('search-exps-chkbx').setValue(false);
+						}
+						if (params.scope.indexOf('A') > -1) {
+							Ext.getCmp('search-ars-chkbx').setValue(true);
+						} else {
+							Ext.getCmp('search-ars-chkbx').setValue(false);
+						}
+						if (params.scope.indexOf('P') > -1) {
+							Ext.getCmp('search-prbs-chkbx').setValue(true);
+						} else {
+							Ext.getCmp('search-prbs-chkbx').setValue(false);
+						}
+						if (params.scope.indexOf('G') > -1) {
+							Ext.getCmp('search-genes-chkbx').setValue(true);
+						} else {
+							Ext.getCmp('search-genes-chkbx').setValue(false);
+						}
+						if (params.scope.indexOf('S') > -1) {
+							Ext.getCmp('search-seqs-chkbx').setValue(true);
+						} else {
+							Ext.getCmp('search-seqs-chkbx').setValue(false);
 						}
 					}
-				}),
+				} else {
+					return false;
+				}
 
-				new Ext.Button({
-					id : 'submit-button',
-					text : 'Submit',
-					name : 'Submit',
-					columnWidth : 0.25,
-					setSize : function() {
-					},
-					handler : function() {
-						this.fireEvent("search");
-					}.createDelegate(this)
-				})]
-			}, {
-				xtype : 'fieldset',
-				collapsible : true,
-				autoHeight : true,
-				defaultType : 'checkbox',
-				title : 'Items to search for',
-				width : 180,
-				items : [{
-					id : 'search-genes-chkbx',
-					name : "searchGenes",
-					boxLabel : "Genes",
-					stateful : true,
-					stateEvents : ['check'],
-					hideLabel : true,
-					getState : function() {
-						return {
-							value : this.getValue()
-						};
-					},
-					applyState : function(state) {
-						this.setValue(state.value);
-					}
-				}, {
-					id : 'search-seqs-chkbx',
-					name : "searchSequences",
-					boxLabel : "Sequences",
-					stateful : true,
-					stateEvents : ['check'],
-					getState : function() {
-						return {
-							value : this.getValue()
-						};
-					},
-					applyState : function(state) {
-						this.setValue(state.value);
-					},
-					hideLabel : true
-				}, {
-					id : 'search-exps-chkbx',
-					name : "searchExperiments",
-					stateful : true,
-					stateEvents : ['check'],
-					getState : function() {
-						return {
-							value : this.getValue()
-						};
-					},
-					applyState : function(state) {
-						this.setValue(state.value);
-					},
-					boxLabel : "Experiments",
-					hideLabel : true
-				}, {
-					id : 'search-ars-chkbx',
-					name : "searchArrays",
-					boxLabel : "Arrays",
-					stateful : true,
-					stateEvents : ['check'],
-					getState : function() {
-						return {
-							value : this.getValue()
-						};
-					},
-					applyState : function(state) {
-						this.setValue(state.value);
-					},
-					hideLabel : true
-				}, {
-					id : 'search-prbs-chkbx',
-					name : "searchProbes",
-					boxLabel : "Probes",
-					stateful : true,
-					stateEvents : ['check'],
-					getState : function() {
-						return {
-							value : this.getValue()
-						};
-					},
-					applyState : function(state) {
-						this.setValue(state.value);
-					},
-					hideLabel : true
-				}]
-			}]
+				return true;
+
+			},
+
+			initComponent : function() {
+
+				Ext.apply(this, {
+							items : [{
+										xtype : 'panel',
+										layout : 'column',
+										items : [new Ext.form.TextField({
+															id : 'search-text-field',
+															fieldLabel : 'Search term(s)',
+															name : 'query',
+															columnWidth : 0.75,
+															allowBlank : false,
+															regex : new RegExp("[\\w\\s]{3,}\\*?"),
+															regexText : "Query contains invalid characters",
+															minLengthText : "Query must be at least 3 characters long",
+															msgTarget : "validation-messages",
+															validateOnBlur : false,
+															value : this.query,
+															minLength : 3,
+															listeners : {
+																'specialkey' : {
+																	fn : function(r, e) {
+																		if (e.getKey() == e.ENTER) {
+																			this.fireEvent("search");
+																		}
+																	}.createDelegate(this),
+																	scope : this
+																}
+															}
+														}),
+
+												new Ext.Button({
+															id : 'submit-button',
+															text : 'Submit',
+															name : 'Submit',
+															columnWidth : 0.25,
+															setSize : function() {
+															},
+															handler : function() {
+																this.fireEvent("search");
+															}.createDelegate(this)
+														})]
+									}, {
+										xtype : 'fieldset',
+										collapsible : true,
+										autoHeight : true,
+										defaultType : 'checkbox',
+										title : 'Items to search for',
+										width : 180,
+										items : [{
+													id : 'search-genes-chkbx',
+													name : "searchGenes",
+													boxLabel : "Genes",
+													stateful : true,
+													stateEvents : ['check'],
+													hideLabel : true,
+													getState : function() {
+														return {
+															value : this.getValue()
+														};
+													},
+													applyState : function(state) {
+														this.setValue(state.value);
+													}
+												}, {
+													id : 'search-seqs-chkbx',
+													name : "searchSequences",
+													boxLabel : "Sequences",
+													stateful : true,
+													stateEvents : ['check'],
+													getState : function() {
+														return {
+															value : this.getValue()
+														};
+													},
+													applyState : function(state) {
+														this.setValue(state.value);
+													},
+													hideLabel : true
+												}, {
+													id : 'search-exps-chkbx',
+													name : "searchExperiments",
+													stateful : true,
+													stateEvents : ['check'],
+													getState : function() {
+														return {
+															value : this.getValue()
+														};
+													},
+													applyState : function(state) {
+														this.setValue(state.value);
+													},
+													boxLabel : "Experiments",
+													hideLabel : true
+												}, {
+													id : 'search-ars-chkbx',
+													name : "searchArrays",
+													boxLabel : "Arrays",
+													stateful : true,
+													stateEvents : ['check'],
+													getState : function() {
+														return {
+															value : this.getValue()
+														};
+													},
+													applyState : function(state) {
+														this.setValue(state.value);
+													},
+													hideLabel : true
+												}, {
+													id : 'search-prbs-chkbx',
+													name : "searchProbes",
+													boxLabel : "Probes",
+													stateful : true,
+													stateEvents : ['check'],
+													getState : function() {
+														return {
+															value : this.getValue()
+														};
+													},
+													applyState : function(state) {
+														this.setValue(state.value);
+													},
+													hideLabel : true
+												}]
+									}]
+						});
+
+				var showAdvancedOptions = Ext.get("hasAdmin").getValue();
+
+				if (showAdvancedOptions) {
+					var advancedOptions = {
+						width : 180,
+						xtype : 'fieldset',
+						defaultType : 'checkbox',
+						collapsible : true,
+						autoHeight : true,
+						title : 'Advanced options',
+						items : [{
+									id : 'search-database-chkbx',
+									name : "searchDatabase",
+									boxLabel : "Search database",
+									hideLabel : true,
+									checked : true
+								}, {
+									id : 'search-indices-chkbx',
+									name : "searchIndices",
+									boxLabel : "Seach indices",
+									hideLabel : true,
+									checked : true
+								}, {
+									id : 'search-characteristics-chkbx',
+									name : "searchCharacteristics",
+									boxLabel : "Search characteristics",
+									hideLabel : true,
+									checked : true
+								}]
+					};
+
+					this.items.push(advancedOptions);
+				}
+
+				Gemma.SearchForm.superclass.initComponent.call(this);
+				this.addEvents("search");
+
+				this.restoreState();
+			}
+
 		});
-
-		var showAdvancedOptions = dwr.util.getValue("hasAdmin");
-
-		if (showAdvancedOptions) {
-			var advancedOptions = {
-				width : 180,
-				xtype : 'fieldset',
-				defaultType : 'checkbox',
-				collapsible : true,
-				autoHeight : true,
-				title : 'Advanced options',
-				items : [{
-					id : 'search-database-chkbx',
-					name : "searchDatabase",
-					boxLabel : "Search database",
-					hideLabel : true,
-					checked : true
-				}, {
-					id : 'search-indices-chkbx',
-					name : "searchIndices",
-					boxLabel : "Seach indices",
-					hideLabel : true,
-					checked : true
-				}, {
-					id : 'search-characteristics-chkbx',
-					name : "searchCharacteristics",
-					boxLabel : "Search characteristics",
-					hideLabel : true,
-					checked : true
-				}]
-			};
-
-			this.items.push(advancedOptions);
-		}
-
-		Gemma.SearchForm.superclass.initComponent.call(this);
-		this.addEvents("search");
-
-		this.restoreState();
-	}
-
-});
 
 Gemma.SearchGrid = Ext.extend(Ext.grid.GridPanel, {
 
@@ -344,27 +340,27 @@ Gemma.SearchGrid = Ext.extend(Ext.grid.GridPanel, {
 	stateful : false,
 	title : "Search results",
 	selModel : new Ext.grid.RowSelectionModel({
-		singleSelect : true
-	}),
+				singleSelect : true
+			}),
 	record : Ext.data.Record.create([{
-		name : "score",
-		type : "float"
-	}, {
-		name : "resultClass",
-		type : "string"
-	}, {
-		name : "id",
-		type : "int"
-	}, {
-		name : "resultObject",
-		sortType : this.sortInfo
-	}, {
-		name : "highlightedText",
-		type : "string"
-	}, {
-		name : "indexSearchResult",
-		type : "boolean"
-	}]),
+				name : "score",
+				type : "float"
+			}, {
+				name : "resultClass",
+				type : "string"
+			}, {
+				name : "id",
+				type : "int"
+			}, {
+				name : "resultObject",
+				sortType : this.sortInfo
+			}, {
+				name : "highlightedText",
+				type : "string"
+			}, {
+				name : "indexSearchResult",
+				type : "boolean"
+			}]),
 
 	toggleDetails : function(btn, pressed) {
 		var view = this.getView();
@@ -390,7 +386,7 @@ Gemma.SearchGrid = Ext.extend(Ext.grid.GridPanel, {
 			} else if (clazz == "ArrayDesignValueObject") {
 				return value.test(obj.name) || value.test(obj.description);
 			} else if (/^BioSequence.*/.exec(clazz)) { // because we get
-														// proxies.
+				// proxies.
 				return value.test(obj.name) || value.test(obj.description) || value.test(obj.taxon.commonName);
 			} else if (clazz == "Gene" || clazz == "PredictedGene" || clazz == "ProbeAlignedRegion") {
 				return value.test(obj.officialSymbol) || value.test(obj.officialName)
@@ -416,89 +412,90 @@ Gemma.SearchGrid = Ext.extend(Ext.grid.GridPanel, {
 		proxy.on("loadexception", this.handleLoadError.createDelegate(this));
 
 		Ext.apply(this, {
-			tbar : new Ext.Toolbar({
-				items : [{
-					pressed : true,
-					enableToggle : true,
-					text : 'Toggle details',
-					tooltip : "Click to show/hide details for results",
-					cls : 'x-btn-text-icon details',
-					toggleHandler : this.toggleDetails.createDelegate(this)
-				}, ' ', ' ', {
-					xtype : 'textfield',
-					id : 'search-in-grid',
-					tabIndex : 1,
-					enableKeyEvents : true,
-					emptyText : 'Find in results',
-					listeners : {
-						"keyup" : {
-							fn : this.searchForText.createDelegate(this),
-							scope : this,
-							options : {
-								delay : 100
-							}
-						}
-					}
-				}]
-			}),
-			view : new Ext.grid.GroupingView({
-				enableRowBody : true,
-				showPreview : true,
-				getRowClass : function(record, index, p, store) {
-					if (this.showPreview) {
-						p.body = "<p class='search-result-body' >" + record.get("highlightedText") + "</p>"; // typo.css
-					}
-					return '';
-				},
-				startCollapsed : true,
-				forceFit : true,
-				groupTextTpl : '{text}s ({[values.rs.length]} {[values.rs.length > 1 ? "Items" : "Item"]})'
-			}),
-			columns : [{
-				header : "Category",
-				width : 150,
-				dataIndex : "resultClass",
-				renderer : this.renderEntityClass,
-				tooltip : "Type of search result",
-				hidden : true,
-				sortable : true
-			}, {
-				header : "Item",
-				width : 480,
-				dataIndex : "resultObject",
-				renderer : this.renderEntity,
-				tooltip : "a link to search result",
-				sortable : true
-			}, {
-				header : "Score",
-				width : 60,
-				dataIndex : "score",
-				tooltip : "How good of a match",
-				hidden : true,
-				sortable : true
-			}, {
-				header : "Matched via:",
-				width : 180,
-				hidden : true,
-				dataIndex : "highlightedText",
-				tooltip : "The text or part of the result that matched the search",
-				sortable : true
-			}],
-			store : new Ext.data.GroupingStore({
-				proxy : proxy,
-				reader : new Ext.data.ListRangeReader({
-					id : "id",
-					root : "data",
-					totalProperty : "totalSize"
-				}, this.record),
-				remoteSort : false,
-				groupField : 'resultClass',
-				sortInfo : {
-					field : "score",
-					direction : "DESC"
-				}
-			})
-		});
+					tbar : new Ext.Toolbar({
+								items : [{
+											pressed : true,
+											enableToggle : true,
+											text : 'Toggle details',
+											tooltip : "Click to show/hide details for results",
+											cls : 'x-btn-text-icon details',
+											toggleHandler : this.toggleDetails.createDelegate(this)
+										}, ' ', ' ', {
+											xtype : 'textfield',
+											id : 'search-in-grid',
+											tabIndex : 1,
+											enableKeyEvents : true,
+											emptyText : 'Find in results',
+											listeners : {
+												"keyup" : {
+													fn : this.searchForText.createDelegate(this),
+													scope : this,
+													options : {
+														delay : 100
+													}
+												}
+											}
+										}]
+							}),
+					view : new Ext.grid.GroupingView({
+								enableRowBody : true,
+								showPreview : true,
+								getRowClass : function(record, index, p, store) {
+									if (this.showPreview) {
+										p.body = "<p class='search-result-body' >" + record.get("highlightedText")
+												+ "</p>"; // typo.css
+									}
+									return '';
+								},
+								startCollapsed : true,
+								forceFit : true,
+								groupTextTpl : '{text}s ({[values.rs.length]} {[values.rs.length > 1 ? "Items" : "Item"]})'
+							}),
+					columns : [{
+								header : "Category",
+								width : 150,
+								dataIndex : "resultClass",
+								renderer : this.renderEntityClass,
+								tooltip : "Type of search result",
+								hidden : true,
+								sortable : true
+							}, {
+								header : "Item",
+								width : 480,
+								dataIndex : "resultObject",
+								renderer : this.renderEntity,
+								tooltip : "a link to search result",
+								sortable : true
+							}, {
+								header : "Score",
+								width : 60,
+								dataIndex : "score",
+								tooltip : "How good of a match",
+								hidden : true,
+								sortable : true
+							}, {
+								header : "Matched via:",
+								width : 180,
+								hidden : true,
+								dataIndex : "highlightedText",
+								tooltip : "The text or part of the result that matched the search",
+								sortable : true
+							}],
+					store : new Ext.data.GroupingStore({
+								proxy : proxy,
+								reader : new Ext.data.JsonReader({
+											id : "id",
+											root : "records",
+											totalProperty : "totalRecords"
+										}, this.record),
+								remoteSort : false,
+								groupField : 'resultClass',
+								sortInfo : {
+									field : "score",
+									direction : "DESC"
+								}
+							})
+				});
 		Gemma.SearchGrid.superclass.initComponent.call(this);
 		this.getStore().on("load", this.handleLoadSuccess.createDelegate(this));
 
@@ -534,13 +531,13 @@ Gemma.SearchGrid = Ext.extend(Ext.grid.GridPanel, {
 
 	handleLoadError : function(scope, b, message, exception) {
 		Ext.DomHelper.overwrite('messages', {
-			tag : 'img',
-			src : '/Gemma/images/icons/warning.png'
-		});
+					tag : 'img',
+					src : '/Gemma/images/icons/warning.png'
+				});
 		Ext.DomHelper.append('messages', {
-			tag : 'span',
-			html : '&nbsp;&nbsp;' + message
-		});
+					tag : 'span',
+					html : '&nbsp;&nbsp;' + message
+				});
 		this.form.findById('submit-button').setDisabled(false);
 	},
 

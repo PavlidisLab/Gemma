@@ -1,135 +1,91 @@
+/*
+ * ! Ext JS Library 3.1.1 Copyright(c) 2006-2010 Ext JS, LLC licensing@extjs.com http://www.extjs.com/license
+ */
+
+/* Fix for Opera, which does not seem to include the map function on Array's */
+if (!Array.prototype.map) {
+	Array.prototype.map = function(fun) {
+		var len = this.length;
+		if (typeof fun != 'function') {
+			throw new TypeError();
+		}
+		var res = new Array(len);
+		var thisp = arguments[1];
+		for (var i = 0; i < len; i++) {
+			if (i in this) {
+				res[i] = fun.call(thisp, this[i], i, this);
+			}
+		}
+		return res;
+	};
+}
+
+Ext.ns('Ext.ux.data');
+
 /**
-  * Ext.ux.data.PagingMemoryProxy.js
-  *
-  * A proxy for local / in-browser data structures
-  * supports paging / sorting / filtering / etc
-  *
-  * @file	Ext.ux.PagingMemoryProxy.js
-  * @author	Ing. Ido Sebastiaan Bas van Oostveen
-  * 
-  * @changelog:
-  * @version    1.4
-  * @date       21-Februari-2008
-  *             - added filter prototype method for array's
-  * @version    1.3
-  * @date       30-September-2007
-  *             - added customFilter config option
-  * @version	1.2 
-  * @date	29-September-2007
-  *		- fixed several sorting bugs
-  * @version	1.1
-  * @date	30-August-2007
-  * @version	1.0
-  * @date	22-August-2007
-  *
-  */
-
-Ext.namespace("Ext.ux");
-Ext.namespace("Ext.ux.data");
-
-/* Paging Memory Proxy, allows to use paging grid with in memory dataset */
-Ext.ux.data.PagingMemoryProxy = function(data, config) {
-	Ext.ux.data.PagingMemoryProxy.superclass.constructor.call(this);
-	this.data = data;
-	Ext.apply(this, config);
-};
-
-Ext.extend(Ext.ux.data.PagingMemoryProxy, Ext.data.MemoryProxy, {
-	customFilter: null,
-	
-	load : function(params, reader, callback, scope, arg) {
-		params = params || {};
-		var result;
-		try {
-			result = reader.readRecords(this.data);
-		} catch(e) {
-			this.fireEvent("loadexception", this, arg, null, e);
-			callback.call(scope, null, arg, false);
-			return;
-		}
-		
-		// filtering
-		if (this.customFilter!=null) {
-			result.records = result.records.filter(this.customFilter);
-			result.totalRecords = result.records.length;
-		} else if (params.filter!==undefined) {
-			result.records = result.records.filter(function(el){
-			    if (typeof(el)=="object"){
-					var att = params.filterCol || 0;
-					return String(el.data[att]).match(params.filter)?true:false;
-			    } else {
-					return String(el).match(params.filter)?true:false;
-			    }
-			});
-			result.totalRecords = result.records.length;
-		}
-		
-		// sorting
-		if (params.sort!==undefined) {
-		    // use integer as params.sort to specify column, since arrays are not named
-		    // params.sort=0; would also match a array without columns
-		    var dir = String(params.dir).toUpperCase() == "DESC" ? -1 : 1;
-        	    var fn = function(r1, r2){
-			    return r1==r2 ? 0 : r1<r2 ? -1 : 1;
-        	    };
-		    var st = reader.recordType.getField(params.sort).sortType;
-		    result.records.sort(function(a, b) {
-				var v = 0;
-				if (typeof(a)=="object"){
-				    v = fn(st(a.data[params.sort]), st(b.data[params.sort])) * dir;
-				} else {
-				    v = fn(a, b) * dir;
+ * @class Ext.ux.data.PagingMemoryProxy
+ * @extends Ext.data.MemoryProxy
+ *          <p>
+ *          Paging Memory Proxy, allows to use paging grid with in memory dataset
+ *          </p>
+ */
+Ext.ux.data.PagingMemoryProxy = Ext.extend(Ext.data.MemoryProxy, {
+			constructor : function(data) {
+				Ext.ux.data.PagingMemoryProxy.superclass.constructor.call(this);
+				this.data = data;
+			},
+			doRequest : function(action, rs, params, reader, callback, scope, options) {
+				params = params || {};
+				var result;
+				try {
+					result = reader.readRecords(this.data);
+				} catch (e) {
+					this.fireEvent('loadexception', this, options, null, e);
+					callback.call(scope, null, options, false);
+					return;
 				}
-				if (v==0) {
-				    v = (a.index < b.index ? -1 : 1);
+
+				// filtering
+				if (params.filter !== undefined) {
+					result.records = result.records.filter(function(el) {
+								if (typeof(el) == 'object') {
+									var att = params.filterCol || 0;
+									return String(el.data[att]).match(params.filter) ? true : false;
+								} else {
+									return String(el).match(params.filter) ? true : false;
+								}
+							});
+					result.totalRecords = result.records.length;
 				}
-				return v;
-		    });
-		}
 
-		// paging (use undefined cause start can also be 0 (thus false))
-		if (params.start!==undefined && params.limit!==undefined) {
-			result.records = result.records.slice(params.start, params.start+params.limit);
-		}
-		
-		callback.call(scope, result, arg, true);
-	}
-});
+				// sorting
+				if (params.sort !== undefined) {
+					// use integer as params.sort to specify column, since arrays are not named
+					// params.sort=0; would also match a array without columns
+					var dir = String(params.dir).toUpperCase() == 'DESC' ? -1 : 1;
+					var fn = function(v1, v2) {
+						return v1 > v2 ? 1 : (v1 < v2 ? -1 : 0);
+					};
+					result.records.sort(function(a, b) {
+								var v = 0;
+								if (typeof(a) == 'object') {
+									v = fn(a.data[params.sort], b.data[params.sort]) * dir;
+								} else {
+									v = fn(a, b) * dir;
+								}
+								if (v == 0) {
+									v = (a.index < b.index ? -1 : 1);
+								}
+								return v;
+							});
+				}
+				// paging (use undefined cause start can also be 0 (thus false))
+				if (params.start !== undefined && params.limit !== undefined) {
+					result.records = result.records.slice(params.start, params.start + params.limit);
+				}
+				callback.call(scope, result, options, true);
+			}
+		});
 
-
-/* Fixes for IE/Opera old javascript versions */
-if(!Array.prototype.map){
-    Array.prototype.map = function(fun){
-	var len = this.length;
-	if(typeof fun != "function"){
-	    throw new TypeError();
-	}
-	var res = new Array(len);
-	var thisp = arguments[1];
-	for(var i = 0; i < len; i++){
-	    if(i in this){
-		res[i] = fun.call(thisp, this[i], i, this);
-	    }
-	}
-        return res;
-     };
-}
-
-if (!Array.prototype.filter){
-  Array.prototype.filter = function(fun /*, thisp*/){
-    var len = this.length;
-    if (typeof fun != "function")
-      throw new TypeError();
-
-    var res = new Array();
-    var thisp = arguments[1];
-    for (var i = 0; i < len; i++){
-      if (i in this){
-        var val = this[i]; // in case fun mutates this
-        if (fun.call(thisp, val, i, this))
-          res.push(val);
-      }
-    }
-    return res;
-  };
-}
+// backwards compat.
+Ext.data.PagingMemoryProxy = Ext.ux.data.PagingMemoryProxy;

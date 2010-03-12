@@ -1,35 +1,37 @@
 <%@ include file="/common/taglibs.jsp"%>
 
 <head>
-	<title>Expression Experiment Set Manager</title>
+	<title>Dataset Group Manager</title>
 
 	<jwr:script src='/scripts/ajax/ext/data/DwrProxy.js' />
-	<jwr:script src='/scripts/ajax/entities/DatasetChooserPanel.js' />
+	<jwr:script src='/scripts/ajax/entities/DatasetGroupEditor.js' />
 
 </head>
 
-
-
-<h1>
-	Expression Experiment Set Manager 
-</h1>
-<security:authorize access="!hasRole('GROUP_ADMIN')">
-Sorry, you must be an administrator to use this tool.
-
+<security:authorize ifNotGranted="GROUP_ADMIN,GROUP_USER">
+	<p>
+		Sorry, you must be logged in to use this tool.
+	</p>
 </security:authorize>
 
-
-	<security:authorize access="hasRole('GROUP_ADMIN')">
+<security:authorize ifAnyGranted="GROUP_ADMIN,GROUP_USER">
 	<div id='messages' style='width: 600px; height: 1.6em; margin: 0.2em; padding-bottom: 0.4em;'></div>
+
+	<p>
+		Use this tool to create and edit groups of datasets. You can modify a built-in set by making a copy ("clone") and
+		editing the copy.
+	</p>
+
 	<script type="text/javascript">
 	Ext.namespace('Gemma');
 	Ext.onReady( function() {
 		Ext.QuickTips.init();
 
-		var eeSetChooserPanel = new Gemma.ExpressionExperimentSetPanel( {
-			renderTo : 'EESetManager',
-			isAdmin : true 
+		var eeSetChooserPanel = new Gemma.DatasetGroupEditor( {
+			id : 'eesetEditor',
+			renderTo : 'EESetManager'
 		});
+		eeSetChooserPanel.show();
 
 	});
 </script>

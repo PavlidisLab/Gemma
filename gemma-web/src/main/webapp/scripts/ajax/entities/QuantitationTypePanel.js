@@ -1,7 +1,7 @@
 Ext.namespace("Gemma");
 
 /**
- * Input description of a quantitation type.
+ * Input description of a quantitation type - for dataset upload.
  * 
  * @author paul
  * @version $Id$
@@ -30,23 +30,23 @@ Gemma.QuantitationTypePanel = Ext.extend(Ext.form.FieldSet, {
 									// id : 'qtype-description',
 									// width : 300,
 									// name : "Description",
-									//										fieldLabel : "Description",
-									//										emptyText : 'Enter a brief description of the measurement'
-									//									},
+									// fieldLabel : "Description",
+									// emptyText : 'Enter a brief description of the measurement'
+									// },
 									{
-										xtype : 'checkbox',
-										id : 'qtype-isratio',
-										name : 'Ratio',
-										fieldLabel : "Ratios?",
-										boxLabel : "Check the box if the expression values are ratios",
-										tooltip : 'Check if your input values are ratios'
-									}, {
-										xtype : 'checkbox',
-										id : 'qtype-islogged',
-										fieldLabel : 'Log transformed?',
-										boxLabel : "Check the box if the expression values are on a log scale (log2 assumed)",
-										tooltip : 'Check if your data are on a log scale'
-									}
+								xtype : 'checkbox',
+								id : 'qtype-isratio',
+								name : 'Ratio',
+								fieldLabel : "Ratios?",
+								boxLabel : "Check the box if the expression values are ratios",
+								tooltip : 'Check if your input values are ratios'
+							}, {
+								xtype : 'checkbox',
+								id : 'qtype-islogged',
+								fieldLabel : 'Log transformed?',
+								boxLabel : "Check the box if the expression values are on a log scale (log2 assumed)",
+								tooltip : 'Check if your data are on a log scale'
+							}
 
 							]
 

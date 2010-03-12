@@ -16,6 +16,7 @@ Gemma.DatasetSearchToolBar = Ext.extend(Ext.Toolbar, {
 
 			setTaxon : function(taxon) {
 				this.taxonCombo.setValue(taxon);
+				this.eeSearchField.setTaxon(taxon);
 			},
 
 			filterTaxon : function(taxon) {
@@ -29,18 +30,20 @@ Gemma.DatasetSearchToolBar = Ext.extend(Ext.Toolbar, {
 					this.taxonCombo = new Gemma.TaxonCombo({
 								emptyText : 'Select a taxon',
 								isDisplayTaxonWithDatasets : true,
-								width : 125,
+								width : 110,
 								listeners : {
 									'select' : {
 										fn : function(combo, record, index) {
 											var taxon = record.data;
-											this.eeSearchField.taxonChanged(taxon);
-										}.createDelegate(this, [], true)
+											this.eeSearchField.setTaxon(taxon);
+										},
+										scope : this
 									},
 									'ready' : {
 										fn : function(taxon) {
-											this.eeSearchField.taxonChanged(taxon);
-										}.createDelegate(this, [], true)
+											this.eeSearchField.setTaxon(taxon);
+										},
+										scope : this
 									}
 								}
 							});
@@ -55,7 +58,9 @@ Gemma.DatasetSearchToolBar = Ext.extend(Ext.Toolbar, {
 							listeners : {
 								'beforesearch' : {
 									fn : function() {
-										this.grid.setTitle("Dataset locator");
+										if (this.grid) {
+											this.grid.setTitle("Dataset locator");
+										}
 									}.createDelegate(this)
 								},
 								'aftersearch' : {
@@ -100,7 +105,26 @@ Gemma.DataSetSearchAndGrabToolbar = Ext.extend(Gemma.DatasetSearchToolBar, {
 
 			addSelections : function(sels) {
 				if (sels.length > 0) {
+
+					/*
+					 * This doesn't handle the case where the currently selected EESet taxon doesn't match this one -
+					 * we're just matching on what is already in the targetGrid.
+					 */
+					if (this.targetGrid.getStore().getCount() > 0) {
+						var taxonId = this.targetGrid.getStore().getAt(0).get('taxonId');
+
+						for (var i = 0; i < sels.length; i++) {
+							if (taxonId != sels[i].get('taxonId')) {
+								Ext.Msg
+										.alert("Invalid",
+												"You cannot mix data sets from different species in one group");
+								return;
+							}
+						}
+					}
+
 					this.targetGrid.getStore().insert(0, sels);
+					this.grid.getStore().remove(sels);
 				}
 			},
 
@@ -142,9 +166,6 @@ Gemma.DataSetSearchAndGrabToolbar = Ext.extend(Gemma.DatasetSearchToolBar, {
 				this.targetGrid.getStore().on("add", function(store, recs, index) {
 							this.targetGrid.getView().refresh();
 							this.fireEvent("grabbed", recs);
-							if (this.targetGrid.getBottomToolBar && this.targetGrid.getBottomToolBar.changePage) {
-								this.targetGrid.getBottomToolBar().changePage(1);
-							}
 						}.createDelegate(this));
 			}
 

@@ -42,8 +42,12 @@ Ext.extend(Gemma.DatasetSearchField, Ext.form.TriggerField, {
 
 			initComponent : function() {
 				Gemma.DatasetSearchField.superclass.initComponent.call(this);
-
 				this.addEvents('beforesearch', 'aftersearch');
+
+				if (this.initQuery) {
+					this.setValue(this.initQuery);
+					this.findDatasets();
+				}
 			},
 
 			// defined in typo.css
@@ -66,31 +70,20 @@ Ext.extend(Gemma.DatasetSearchField, Ext.form.TriggerField, {
 			filterDatasets : function() {
 				var params = [this.getValue(), this.taxon ? this.taxon.id : -1];
 				params.push(this.filterFrom);
-				if (this.lastParams && (params[0] == this.lastParams[0] && params[1] == this.lastParams[1])) {
-					return;
-				}
 
 			},
 
 			findDatasets : function() {
-				if (this.filtering) {
-					this.filterDatasets();
-				} else {
-					// If there is no taxon
-					if (!this.taxon) {
-						Ext.Msg.alert("Sorry", "Please select a taxon first");
-						return;
-					}
+				// If there is no taxon
+				if (!this.taxon) {
+					Ext.Msg.alert("Sorry", "Please select a taxon first");
+					return;
+				}
 
-					var params = [this.getValue(), this.taxon ? this.taxon.id : -1];
-					if (this.lastParams && (params[0] == this.lastParams[0] && params[1] == this.lastParams[1])) {
-						return;
-					}
-					if (this.fireEvent('beforesearch', this, params) !== false) {
-						this.lastParams = params;
-						ExpressionExperimentController.find(params[0], params[1], this.foundDatasets
-										.createDelegate(this));
-					}
+				var params = [this.getValue(), this.taxon ? this.taxon.id : -1];
+				if (this.fireEvent('beforesearch', this, params) !== false) {
+					this.lastParams = params;
+					ExpressionExperimentController.find(params[0], params[1], this.foundDatasets.createDelegate(this));
 				}
 			},
 
@@ -108,14 +101,16 @@ Ext.extend(Gemma.DatasetSearchField, Ext.form.TriggerField, {
 				return this.eeIds;
 			},
 
-			taxonChanged : function(taxon, doSearch) {
-				if (!taxon) {
+			setTaxon : function(taxon) {
+				if (taxon === undefined) {
 					return;
 				}
-				taxon.id; // dummy statement forces initialization??? really weird.
-				this.taxon = taxon;
-				if (doSearch) {
-					this.findDatasets();
+				if (taxon.id) {
+					this.taxon = taxon;
+				} else {
+					this.taxon = {
+						id : taxon
+					};
 				}
 			},
 

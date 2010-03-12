@@ -32,6 +32,7 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 	editable : false,
 	style : "margin-bottom: 1em;",
 	height : 300,
+	autoScroll : true,
 	stateful : false,
 
 	lite : false,
@@ -57,28 +58,13 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 			};
 		}
 
-		if (this.pageSize) {
-			this.store = new Gemma.PagingDataStore({
-						proxy : new Ext.data.MemoryProxy([]),
-						reader : new Ext.data.ListRangeReader({
-									id : "id"
-								}, this.record),
-						sortInfo : si,
-						pageSize : this.pageSize
-					});
-			this.bbar = new Ext.PagingToolbar({
-						pageSize : this.pageSize,
-						store : this.store
-					});
-		} else {
-			this.ds = new Ext.data.Store({
-						proxy : new Ext.data.MemoryProxy([]),
-						reader : new Ext.data.ListRangeReader({
-									id : "id"
-								}, this.record),
-						sortInfo : si
-					});
-		}
+		this.ds = new Ext.data.Store({
+					proxy : new Ext.data.MemoryProxy([]),
+					reader : new Ext.data.ListRangeReader({
+								id : "id"
+							}, this.record),
+					sortInfo : si
+				});
 
 		var columns;
 

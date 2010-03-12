@@ -1,6 +1,5 @@
 <%@ include file="/common/taglibs.jsp"%>
-<title><fmt:message key="mainMenu.title" />
-</title>
+<title><fmt:message key="mainMenu.title" /></title>
 
 
 <script type="text/javascript">
@@ -88,7 +87,7 @@
 	</div>
 
 	<security:authorize access="hasRole('GROUP_ADMIN')">
-	
+
 		<div id="adminFunctions" class="roundedcornr_box_777249" style="margin-bottom: 15px;">
 			<div class="roundedcornr_top_777249">
 				<div></div>
@@ -111,6 +110,9 @@
 					<li>
 						<a href='<c:url value="/whatsnew/generateCache.html" />'>Regenerate What's New Cache</a>
 					</li>
+					<li>
+						<a href='<c:url value="/admin/widgetTest.html"/>'>Widget test</a>
+					</li>
 
 				</ul>
 
@@ -121,7 +123,7 @@
 		</div>
 
 	</security:authorize>
-	
+
 
 </div>
 

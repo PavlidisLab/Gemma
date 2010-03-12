@@ -41,42 +41,48 @@ Ext.namespace("Ext.ux.data");
  * </pre></code>
  * @constructor
  * @param {Object}
- *            config The config object.
+ *            configOrMethod The config object, or a read metod.
  */
-Ext.ux.data.DwrProxy = function(method, config) {
+Ext.ux.data.DwrProxy = function(configOrMethod) {
 
-	// changed for backwards compatibility with our old Gemma code, where we don't use the api:{read: xxx} format.
+	// changed by PP for backwards compatibility with our old Gemma code, where we don't generally use the api:{read:
+	// xxx}
+	// format.
 
-	if (!config || !config.apiActionToHandlerMap) {
-		// throw new Exception('"apiActionToHandlerMap" is not defined within config.');
-	}
-
-	// Construct Ext.ux.data.DwrProxy.ActionHandlers from any configs objects.
 	this.apiActionToHandlerMap = {};
+	if (configOrMethod.apiActionToHandlerMap) {
+		Ext.iterate(Ext.data.Api.actions, function(action) {
+					var actionHandlerConfig = configOrMethod.apiActionToHandlerMap[action];
+					if (actionHandlerConfig) {
+						actionHandlerConfig.action = action;
+						this.apiActionToHandlerMap[action] = new Ext.ux.data.DwrProxy.ActionHandler(actionHandlerConfig);
+					}
+				}, this);
 
-	// compaibility workaround
-	this.apiActionToHandlerMap['read'] = new Ext.ux.data.DwrProxy.ActionHandler({
-				action : 'read',
-				dwrFunction : method
-			});
-	//	
-	// Ext.iterate(Ext.data.Api.actions, function(action) {
-	// var actionHandlerConfig = config.apiActionToHandlerMap[action];
-	// if (actionHandlerConfig) {
-	// actionHandlerConfig.action = action;
-	// this.apiActionToHandlerMap[action] = new Ext.ux.data.DwrProxy.ActionHandler(actionHandlerConfig);
-	// }
-	// }, this);
+		// Ext.data.DataProxy requires that an API action be defined under the "api" key.
+		// If it isn't, an Ext.data.DataProxy.Error is thrown.
+		// To avoid this, api is set to apiActionToHandlerMap since they share the same keys ("create", "read",
+		// "update",
+		// and "destroy").
+		configOrMethod.api = this.apiActionToHandlerMap;
+		Ext.ux.data.DwrProxy.superclass.constructor.call(this, configOrMethod);
+	} else if (typeof configOrMethod == 'function') {
+		// Backwards compatibility (PP)
+		// Construct Ext.ux.data.DwrProxy.ActionHandlers from any configs objects.
+		this.apiActionToHandlerMap['read'] = new Ext.ux.data.DwrProxy.ActionHandler({
+					action : 'read',
+					dwrFunction : configOrMethod
+				});
 
-	// Ext.data.DataProxy requires that an API action be defined under the "api" key.
-	// If it isn't, an Ext.data.DataProxy.Error is thrown.
-	// To avoid this, api is set to apiActionToHandlerMap since they share the same keys ("create", "read", "update",
-	// and "destroy").
-	var upconf = config || {};
-	upconf.api = this.apiActionToHandlerMap;
-	Ext.ux.data.DwrProxy.superclass.constructor.call(this, upconf);
+		var upconf = configOrMethod || {};
+		upconf.api = this.apiActionToHandlerMap;
+		Ext.ux.data.DwrProxy.superclass.constructor.call(this, upconf);
+	} else {
+		throw "OH no!";
+	}
 };
 
+// for backwards compatibility.
 Ext.data.DWRProxy = Ext.ux.data.DwrProxy;
 
 Ext.extend(Ext.ux.data.DwrProxy, Ext.data.DataProxy, {
@@ -108,7 +114,9 @@ Ext.extend(Ext.ux.data.DwrProxy, Ext.data.DataProxy, {
 				var dwrArgs = apiActionHandler.getDwrArgsFunction.call(apiActionHandler.getDwrArgsScope, request, this
 								.getRecordDataArray(records), this.getRecordDataBeforeUpdateArray(records))
 						|| [];
-				dwrArgs.push(this.createCallback(request));
+						
+
+				dwrArgs.push(this.createCallback(request)); 
 				apiActionHandler.dwrFunction.apply(Object, dwrArgs); // the scope for calling the dwrFunction doesn't
 				// matter, so we simply set it to Object.
 			},
@@ -153,16 +161,16 @@ Ext.extend(Ext.ux.data.DwrProxy, Ext.data.DataProxy, {
 			 *            request The arguments passed to {@link #doRequest}.
 			 * @private
 			 */
-			createCallback : function(request) {
+			createCallback : function(request) { 
 				return {
-					callback : function(response) {
+					callback : function(response) {  
 						if (request.action === Ext.data.Api.actions.read) {
 							this.onRead(request, response);
 						} else {
 							this.onWrite(request, response);
 						}
 					}.createDelegate(this),
-					exceptionHandler : function(message, exception) {
+					exceptionHandler : function(message, exception) { 
 						// The event is supposed to pass the response, but since DWR doesn't provide that to us, we pass
 						// the message.
 						this.handleResponseException(request, message, exception);
@@ -194,9 +202,10 @@ Ext.extend(Ext.ux.data.DwrProxy, Ext.data.DataProxy, {
 				}
 				if (readDataBlock.success === false) {
 					this.fireEvent("exception", this, 'remote', request.action, request.options, response, null);
-				} else {
+				} else { 
 					this.fireEvent("load", this, request, request.options);
 				}
+				// The callback will usually be store.loadRecords.
 				request.callback.call(request.scope, readDataBlock, request.options, readDataBlock.success);
 			},
 
@@ -225,6 +234,7 @@ Ext.extend(Ext.ux.data.DwrProxy, Ext.data.DataProxy, {
 					this.fireEvent("write", this, request.action, readDataBlock.data, readDataBlock, request.records,
 							request.options);
 				}
+				// store.onCreateRecords or onUpdateRecords or onDestroyRecords. 
 				request.callback.call(request.scope, readDataBlock.data, readDataBlock, readDataBlock.success);
 			},
 
@@ -283,13 +293,16 @@ Ext.extend(Ext.ux.data.DwrProxy.ActionHandler, Object, {
 			 */
 			defaultGetDwrArgsFunctions : {
 				/**
-				 * @return {Array} MODIFIED to pass request.options.params (or an empty array), which is the oldstyle.
+				 * @return {Array} MODIFIED by PP to pass request.options.params (or an empty array), which is the
+				 *         oldstyle.
 				 * @private
 				 */
 				read : function(request) {
+					// old way
 					if (request.options && request.options.params && request.options.params.push) {
 						return request.options.params;
 					}
+					// new way.
 					return [];
 				},
 
@@ -319,7 +332,11 @@ Ext.extend(Ext.ux.data.DwrProxy.ActionHandler, Object, {
 				 * @private
 				 */
 				update : function(request, recordDataArray, oldRecordDataArray) {
-					return [oldRecordDataArray, recordDataArray];
+					/*
+					 * MODIFIED by PP to just take the records to be modified.
+					 */
+					// return [oldRecordDataArray, recordDataArray];
+					return [recordDataArray];
 				},
 
 				/**

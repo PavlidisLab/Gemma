@@ -6,7 +6,7 @@ Ext.namespace("Gemma");
  * @class Gemma.ArrayDesignCombo
  * @extends Ext.form.ComboBox
  */
-Gemma.ArrayDesignCombo = Ext.extend(Ext.form.ComboBox, {
+Gemma.ArrayDesignCombo = Ext.extend(Gemma.StatefulRemoteCombo, {
 
 	displayField : 'name',
 	valueField : 'id',
@@ -15,9 +15,10 @@ Gemma.ArrayDesignCombo = Ext.extend(Ext.form.ComboBox, {
 	listWidth : 550,
 	forceSelection : true,
 	typeAhead : true,
-	mode : 'local',
 	triggerAction : 'all',
 	emptyText : 'Select an array design',
+
+	stateId : 'Gemma.ArrayDesign',
 
 	record : Ext.data.Record.create([{
 				name : "id",
@@ -34,25 +35,6 @@ Gemma.ArrayDesignCombo = Ext.extend(Ext.form.ComboBox, {
 				name : "shortName",
 				type : "string"
 			}]),
-
-	setState : function(v) {
-		if (this.ready) {
-			Gemma.ArrayDesignCombo.superclass.setValue.call(this, v);
-		} else {
-			this.state = v;
-		}
-	},
-
-	restoreState : function() {
-		if (this.state) {
-			Gemma.ArrayDesignCombo.superclass.setValue.call(this, v);
-			delete this.state;
-		}
-		this.setValue(this.state);
-		delete this.state;
-		this.ready = true;
-		this.fireEvent('ready');
-	},
 
 	initComponent : function() {
 
@@ -87,7 +69,7 @@ Gemma.ArrayDesignCombo = Ext.extend(Ext.form.ComboBox, {
 
 		this.doQuery();
 
-		this.addEvents('arrayDesignchanged', 'ready');
+		this.addEvents('arrayDesignchanged');
 	},
 
 	setValue : function(v) {
@@ -140,21 +122,6 @@ Gemma.ArrayDesignCombo = Ext.extend(Ext.form.ComboBox, {
 						return true;
 					}
 				});
-	},
-
-	/**
-	 * Given the id (primary key in Gemma) of the ArrayDesign, select it.
-	 * 
-	 * @param {}
-	 *            args
-	 */
-	selectById : function(args) {
-		this.store.un("add", this.selectById);
-		if (args.id) {
-			this.selectByValue(args.id, true);
-		} else {
-			this.selectByValue(args, true);
-		}
 	},
 
 	clearCustom : function() {

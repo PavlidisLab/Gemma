@@ -6,9 +6,9 @@ Ext.namespace('Gemma');
 Gemma.DiffExpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 
 	width : 800,
+	height : 400,
 	collapsible : true,
 	editable : false,
-	autoHeight : true,
 	style : "margin-bottom: 1em;",
 	stateful : false,
 
@@ -42,30 +42,12 @@ Gemma.DiffExpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 
 	initComponent : function() {
 
-		if (this.pageSize) {
-			Ext.apply(this, {
-						store : new Gemma.PagingDataStore({
-									proxy : new Ext.data.MemoryProxy([]),
-									reader : new Ext.data.ListRangeReader({
-												id : "id"
-											}, this.record),
-									pageSize : this.pageSize
-								})
-					});
-			Ext.apply(this, {
-						bbar : new Ext.PagingToolbar({
-									pageSize : this.pageSize,
-									store : this.store
-								})
-					});
-		} else {
-			Ext.apply(this, {
-						store : new Ext.data.Store({
-									proxy : new Ext.data.MemoryProxy(this.records),
-									reader : new Ext.data.ListRangeReader({}, this.record)
-								})
-					});
-		}
+		Ext.apply(this, {
+					store : new Ext.data.Store({
+								proxy : new Ext.data.MemoryProxy(this.records),
+								reader : new Ext.data.ListRangeReader({}, this.record)
+							})
+				});
 
 		Ext.apply(this, {
 			columns : [{
@@ -164,10 +146,8 @@ Gemma.DiffExpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 					activeExperimentIds.push(activeExperiments[i].id);
 				}
 
-				var downloadDedvLink = String
-						.format(
-								"/Gemma/dedv/downloadDEDV.html?ee={0}&g={1}",
-								activeExperimentIds.join(','), gene.id);
+				var downloadDedvLink = String.format("/Gemma/dedv/downloadDEDV.html?ee={0}&g={1}", activeExperimentIds
+								.join(','), gene.id);
 
 				this.visWindow = new Gemma.VisualizationDifferentialWindow({
 							readMethod : DEDVController.getDEDVForDiffExVisualization,
@@ -285,18 +265,18 @@ Gemma.DiffExpressionGrid.linkOutPopUp = function(linkOutValueObject) {
 		popUpHtml = String.format("<a href='{0}' target='_blank' > <img height=200 width=400 src={1}> </a>",
 				linkOutValueObject.abaGeneUrl, linkOutValueObject.abaGeneImageUrls[0]);
 	}
-	
+
 	var abaWindowId = "diffExpressionAbaWindow";
-	
+
 	var popUpLinkOutWin = Ext.getCmp(abaWindowId);
 	if (popUpLinkOutWin != null) {
 		popUpLinkOutWin.close();
-		popUpLinkOutWin = null;		
+		popUpLinkOutWin = null;
 	}
 
 	popUpLinkOutWin = new Ext.Window({
 				id : abaWindowId,
-				stateful : false, 
+				stateful : false,
 				html : popUpHtml,
 				resizable : false
 			});

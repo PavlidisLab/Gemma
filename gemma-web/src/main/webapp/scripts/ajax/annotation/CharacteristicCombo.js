@@ -1,13 +1,25 @@
 Ext.namespace("Gemma");
+
+/**
+ * Remote-mode combo-box that queries for characteristics with type-ahead.
+ * 
+ * @class Gemma.CharacteristicCombo
+ * @extends Ext.form.ComboBox
+ * @version $Id$
+ */
 Gemma.CharacteristicCombo = Ext.extend(Ext.form.ComboBox, {
 
 	loadingText : "Searching...",
 	minChars : 2,
 	selectOnFocus : true,
 	listWidth : 350,
-	taxonId : null,
+	taxonId : null, // set on initialization
 	name : 'characteristicCombo',
+	lazyInit : false,
 
+	/**
+	 * @Override
+	 */
 	initComponent : function() {
 
 		Ext.apply(this, {
@@ -28,7 +40,7 @@ Gemma.CharacteristicCombo = Ext.extend(Ext.form.ComboBox, {
 								name : "category",
 								type : "string"
 							}, {
-								name : "hover",
+								name : "description",
 								mapping : "this",
 								convert : this.getHover.createDelegate(this)
 							}, {
@@ -40,7 +52,19 @@ Gemma.CharacteristicCombo = Ext.extend(Ext.form.ComboBox, {
 
 		Ext.apply(this, {
 					store : new Ext.data.Store({
-								proxy : new Ext.data.DWRProxy(AnnotationController.findTerm),
+								proxy : new Ext.data.DWRProxy({
+											apiActionToHandlerMap : {
+												read : {
+													dwrFunction : AnnotationController.findTerm,
+													getDwrArgsFunction : function(request) {
+														// This is only used when directly calling 'load', which is not
+														// usual but can be used for tests.
+														return [request.params[0], this.characteristic.categoryUri,
+																this.taxonId];
+													}.createDelegate(this)
+												}
+											}
+										}),
 								reader : new Ext.data.ListRangeReader({
 											id : "id"
 										}, this.record),
@@ -50,7 +74,7 @@ Gemma.CharacteristicCombo = Ext.extend(Ext.form.ComboBox, {
 
 		Gemma.CharacteristicCombo.superclass.initComponent.call(this);
 
-		this.tpl = new Ext.XTemplate('<tpl for="."><div ext:qtip="{hover}"  style="font-size:11px" class="x-combo-list-item {style}">{value}</div></tpl>');
+		this.tpl = new Ext.XTemplate('<tpl for="."><div ext:qtip="{description}"  style="font-size:11px" class="x-combo-list-item {style}">{value}</div></tpl>');
 		this.tpl.compile();
 
 		this.characteristic = {
@@ -64,25 +88,35 @@ Gemma.CharacteristicCombo = Ext.extend(Ext.form.ComboBox, {
 					this.characteristic.value = record.data.value;
 					this.characteristic.valueUri = record.data.valueUri;
 					/*
-					 * The addition of '.' is a complete hack to workaround an extjs limitation. It's to make sure extjs
-					 * knows we want it to detect a change. See bug 1811
+					 * The addition of '\t' is a complete hack to workaround an extjs limitation. It's to make sure
+					 * extjs knows we want it to detect a change. See bug 1811
 					 */
-					combo.setValue(record.data.value + ".");
+					combo.setValue(record.data.value + "\t");
 				});
 
 	},
 
+	/**
+	 * This is used when doing live-search - called by 'doQuery'.
+	 * 
+	 * @Override so we can have more than one parameter passed.
+	 */
 	getParams : function(query) {
 		return [query, this.characteristic.categoryUri, this.taxonId];
 	},
 
+	/**
+	 * 
+	 * @return {}
+	 */
 	getCharacteristic : function() {
 
 		/*
 		 * check to see if the user has typed anything in the combo box (rather than selecting something); if they have,
-		 * remove the URI from the characteristic and update its value, so we end up with a plain text. See note about hack '.' above.
+		 * remove the URI from the characteristic and update its value, so we end up with a plain text. See note about
+		 * hack '\t' above.
 		 */
-		if (this.getValue() != this.characteristic.value + ".") {
+		if (this.getValue() != this.characteristic.value + "\t") {
 			this.characteristic.value = this.getValue();
 			this.characteristic.valueUri = null;
 		}
@@ -98,6 +132,17 @@ Gemma.CharacteristicCombo = Ext.extend(Ext.form.ComboBox, {
 				};
 	},
 
+	/**
+	 * 
+	 * @param {}
+	 *            value
+	 * @param {}
+	 *            valueUri
+	 * @param {}
+	 *            category
+	 * @param {}
+	 *            categoryUri
+	 */
 	setCharacteristic : function(value, valueUri, category, categoryUri) {
 		this.characteristic.value = value;
 		this.characteristic.valueUri = valueUri;
@@ -106,15 +151,23 @@ Gemma.CharacteristicCombo = Ext.extend(Ext.form.ComboBox, {
 		this.setValue(value);
 	},
 
+	/**
+	 * 
+	 * @param {}
+	 *            category
+	 * @param {}
+	 *            categoryUri
+	 */
 	setCategory : function(category, categoryUri) {
 		this.characteristic.category = category;
 		this.characteristic.categoryUri = categoryUri;
 	},
 
 	/*
-	 * if the characteristic has a URI, use that as the description; if not, strip the " -USED- " string (added server-side)F if present.
+	 * if the characteristic has a URI, use that as the description; if not, strip the " -USED- " string (added
+	 * server-side)F if present.
 	 */
-	getHover : function(record) {
+	getHover : function(value, record) {
 		if (record.valueUri) {
 			return record.valueUri;
 		} else {
@@ -123,7 +176,7 @@ Gemma.CharacteristicCombo = Ext.extend(Ext.form.ComboBox, {
 					: record.description;
 		}
 	},
-	getStyle : function(record) {
+	getStyle : function(value, record) {
 		if (record.description && record.description.substring(0, 8) == " -USED- ") {
 			return record.valueUri ? "usedWithUri" : "usedNoUri";
 		} else {

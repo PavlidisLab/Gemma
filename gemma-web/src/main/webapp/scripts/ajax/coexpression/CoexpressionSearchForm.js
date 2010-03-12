@@ -178,7 +178,7 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 				csc.eeSetId = this.currentSet.get("id");
 			}
 		} else if (csc.eeSetId >= 0) {
-			this.eeSetChooserPanel.selectById(csc.eeSetId);
+			this.eeSetChooserPanel.selectById(csc.eeSetId, false);
 		}
 
 		if (csc.stringency) {
@@ -349,9 +349,7 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 		/*
 		 * Shows the combo box and 'edit' button
 		 */
-		this.eeSetChooserPanel = new Gemma.ExpressionExperimentSetPanel({
-					isAdmin : this.admin
-				});
+		this.eeSetChooserPanel = new Gemma.DatasetGroupComboPanel();
 
 		/*
 		 * Filter the EESet chooser based on gene taxon.
@@ -360,7 +358,7 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 					this.eeSetChooserPanel.filterByTaxon(taxon);
 				}.createDelegate(this));
 
-		this.eeSetChooserPanel.on("set-chosen", function(eeSetRecord) {
+		this.eeSetChooserPanel.on("select", function(combo, eeSetRecord, index) {
 
 					if (eeSetRecord === null || eeSetRecord == undefined) {
 						return;
@@ -379,7 +377,7 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 							});
 				}.createDelegate(this));
 
-		this.eeSetChooserPanel.combo.on("ready", function() {
+		this.eeSetChooserPanel.on("ready", function() {
 					this.eeSetReady = true;
 					this.restoreState();
 				}.createDelegate(this));

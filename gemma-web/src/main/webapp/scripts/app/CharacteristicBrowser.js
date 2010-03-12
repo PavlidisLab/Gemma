@@ -5,9 +5,28 @@ Ext.onReady(function() {
 
 	var topTbar = new Ext.Toolbar([]);
 
-	browsergrid = new Gemma.AnnotationGrid({
-				renderTo : "characteristicBrowser",
+	var pageSize = 25;
+
+	// var store = new Gemma.CharacteristicStore({
+	// autoSave : false,
+	// autoLoad : {
+	// params : {
+	// start : 0,
+	// limit : pageSize
+	// }
+	// }
+	// });
+	var browsergrid = new Gemma.AnnotationGrid({
+
+				viewConfig : {
+					forceFit : true
+					// custom grouping text template to display the number of items per group
+					// groupTextTpl : '{text} ({[values.rs.length]} {[values.rs.length > 1 ? "Items" :
+					// "Item"]})'
+				},
+
 				readMethod : CharacteristicBrowserController.findCharacteristicsCustom,
+				renderTo : "characteristicBrowser",
 				readParams : [],
 				editable : true,
 				tbar : new Ext.Toolbar([]),
@@ -18,8 +37,7 @@ Ext.onReady(function() {
 				},
 				width : 1200,
 				height : 500,
-				noInitialLoad : true,
-				pageSize : 20
+				noInitialLoad : true
 			});
 
 	Gemma.CharacteristicBrowser.handleError = function(msg, e) {
@@ -35,26 +53,30 @@ Ext.onReady(function() {
 		saveButton.enable();
 	};
 
-	var charCombo = new Gemma.CharacteristicCombo();
+	var queryField = new Ext.form.TextField({
+				width : 240
+			});
+
+	var doQuery = function() {
+		Ext.DomHelper.overwrite("messages", "");
+		var query = queryField.getValue();
+		if (!query) {
+			Ext.DomHelper.overwrite("messages", "Please enter a query");
+			return;
+		}
+		browsergrid.loadMask.msg = "Updating ...";
+		var searchEEs = eeCheckBox.getValue();
+		var searchBMs = bmCheckBox.getValue();
+		var searchFVs = fvCheckBox.getValue();
+		var searchNos = noCheckBox.getValue();
+		var searchFactorsValueValues = fvvCheckBox.getValue();
+		browsergrid.refresh([query, searchNos, searchEEs, searchBMs, searchFVs, searchFactorsValueValues]);
+	};
 
 	var searchButton = new Ext.Toolbar.Button({
 				text : "search",
 				tooltip : "Find matching characteristics in the database",
-				handler : function() {
-					Ext.DomHelper.overwrite("messages", "");
-					var query = charCombo.getCharacteristic().value;
-					if (!query) {
-						Ext.DomHelper.overwrite("messages", "Please enter a query");
-						return;
-					}
-					browsergrid.loadMask.msg = "Searching ...";
-					var searchEEs = eeCheckBox.getValue();
-					var searchBMs = bmCheckBox.getValue();
-					var searchFVs = fvCheckBox.getValue();
-					var searchNos = noCheckBox.getValue();
-					var searchFactorsValueValues = fvvCheckBox.getValue();
-					browsergrid.refresh([query, searchNos, searchEEs, searchBMs, searchFVs, searchFactorsValueValues]);
-				}
+				handler : doQuery
 			});
 
 	var saveButton = new Ext.Toolbar.Button({
@@ -68,12 +90,18 @@ Ext.onReady(function() {
 					Ext.DomHelper.overwrite("messages", "");
 					var chars = browsergrid.getEditedCharacteristics();
 
-					var callback = browsergrid.refresh.createDelegate(browsergrid);
-					var errorHandler = Gemma.CharacteristicBrowser.handleError.createDelegate(this, [], true);
-					CharacteristicBrowserController.updateCharacteristics(chars, {
-								callback : callback,
-								errorHandler : errorHandler
-							});
+					/*
+					 * Call store.save(). Shouldn't have to call refresh.
+					 */
+
+					store.save();
+
+					// var callback = browsergrid.refresh.createDelegate(browsergrid);
+					// var errorHandler = Gemma.CharacteristicBrowser.handleError.createDelegate(this, [], true);
+					// CharacteristicBrowserController.updateCharacteristics(chars, {
+					// callback : callback,
+					// errorHandler : errorHandler
+					// });
 				}
 			});
 
@@ -90,6 +118,11 @@ Ext.onReady(function() {
 					browsergrid.loadMask.msg = "Deleting ...";
 					browsergrid.loadMask.show();
 					var chars = browsergrid.getSelectedCharacteristics();
+
+					/*
+					 * FIXME: remove them from the store and then call store.save().
+					 */
+
 					CharacteristicBrowserController.removeCharacteristics(chars, function() {
 
 								/*
@@ -234,7 +267,7 @@ Ext.onReady(function() {
 
 	var toolbar = browsergrid.getTopToolbar();
 
-	toolbar.addField(charCombo);
+	toolbar.addField(queryField);
 	toolbar.addSpacer();
 	toolbar.addField(searchButton);
 	toolbar.addSeparator();
@@ -284,7 +317,7 @@ Ext.onReady(function() {
 			});
 
 	var noCheckBox = new Ext.form.Checkbox({
-				boxLabel : 'No parent',
+				boxLabel : 'No parent', // careful, these might just be hidden due to security.
 				checked : true,
 				name : 'searchNos',
 				width : 'auto'
@@ -306,5 +339,12 @@ Ext.onReady(function() {
 
 	browsergrid.add(secondToolbar);
 	browsergrid.doLayout();
+
+	// FIXME put this somewhere better.
+	queryField.el.on("keyup", function(e) {
+				if (e.getCharCode() == Ext.EventObject.ENTER) {
+					doQuery();
+				}
+			});
 
 });

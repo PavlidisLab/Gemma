@@ -4,8 +4,8 @@ Ext.onReady(function() {
 	Ext.QuickTips.init();
 	Ext.state.Manager.setProvider(new Ext.state.CookieProvider());
 
-	var admin = dwr.util.getValue("hasAdmin");
-	var user = dwr.util.getValue("hasUser");
+	var admin = Ext.get('hasAdmin').getValue();
+	var user = Ext.get('hasUser').getValue();
 
 	if (Ext.isIE6) {
 		Ext.DomHelper.append('coexpression-all', {
@@ -34,9 +34,8 @@ Ext.onReady(function() {
 
 	var knownGeneGrid = new Gemma.CoexpressionGrid({
 				width : 800,
+				height : 400,
 				title : "Coexpressed genes",
-				autoHeight : true,
-				pageSize : 25,
 				colspan : 2,
 				user : user
 
@@ -61,10 +60,9 @@ Ext.onReady(function() {
 		predictedGeneGrid = new Gemma.CoexpressionGrid({
 					width : 800,
 					title : "Coexpressed predicted genes",
-					pageSize : 25,
 					id : 'pred-gene-grid',
 					colspan : 2,
-					autoHeight : true
+					height : 400
 				});
 
 		probeAlignedDatasetGrid = new Gemma.CoexpressionDatasetGrid({
@@ -78,9 +76,8 @@ Ext.onReady(function() {
 		probeAlignedGrid = new Gemma.CoexpressionGrid({
 					width : 800,
 					colspan : 2,
-					autoHeight : true,
-					title : "Coexpressed probe-aligned regions",
-					pageSize : 25
+					height : 400,
+					title : "Coexpressed probe-aligned regions"
 				});
 
 		items.push(predictedGeneDatasetGrid);

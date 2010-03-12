@@ -25,6 +25,7 @@ Gemma.GemmaGridPanel = Ext.extend(Ext.grid.EditorGridPanel, {
 			},
 
 			getEditedRecords : function() {
+				// FIXME use store.getModifiedRecords
 				var edited = [];
 				var all = this.getStore().getRange();
 				for (var i = 0; i < all.length; ++i) {
@@ -36,6 +37,7 @@ Gemma.GemmaGridPanel = Ext.extend(Ext.grid.EditorGridPanel, {
 			},
 
 			getSelectedRecords : function() {
+				// FIXME just use getSelections.
 				var records = [];
 				var selected = this.getSelectionModel().getSelections();
 				for (var i = 0; i < selected.length; ++i) {
@@ -54,6 +56,7 @@ Gemma.GemmaGridPanel = Ext.extend(Ext.grid.EditorGridPanel, {
 			},
 
 			refresh : function(params) {
+				// FIXME is this necessary.
 				var reloadOpts = {
 					callback : this.getView().refresh.createDelegate(this.getView())
 				};
@@ -64,6 +67,7 @@ Gemma.GemmaGridPanel = Ext.extend(Ext.grid.EditorGridPanel, {
 				this.fireEvent('refresh');
 			},
 
+			// FIXME is this necessary.
 			revertSelected : function() {
 				var selected = this.getSelectionModel().getSelections();
 				for (var i = 0; i < selected.length; ++i) {
@@ -72,6 +76,7 @@ Gemma.GemmaGridPanel = Ext.extend(Ext.grid.EditorGridPanel, {
 				this.getView().refresh();
 			},
 
+			// FIXME is this necessary
 			getReadParams : function() {
 				return (typeof this.readParams == "function") ? this.readParams() : this.readParams;
 			}

@@ -212,7 +212,7 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 				dsc.eeSetId = this.currentSet.get("id");
 			}
 		} else if (dsc.eeSetId >= 0) {
-			this.eeSetChooserPanel.selectById(dsc.eeSetId);
+			this.eeSetChooserPanel.selectById(dsc.eeSetId, false);
 		}
 		if (dsc.threshold) {
 			this.thresholdField.setValue(dsc.threshold);
@@ -385,8 +385,6 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 
 	initComponent : function() {
 
-		var isAdmin = dwr.util.getValue("hasAdmin");
-
 		this.geneChooserPanel = new Gemma.GeneGrid({
 					id : 'gene-chooser-panel',
 					region : 'center',
@@ -400,9 +398,7 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 					stateEvents : []
 				});
 
-		this.eeSetChooserPanel = new Gemma.ExpressionExperimentSetPanel({
-					isAdmin : isAdmin
-				});
+		this.eeSetChooserPanel = new Gemma.DatasetGroupComboPanel();
 
 		/* factor chooser */
 		this.efChooserPanel = new Gemma.ExperimentalFactorChooserPanel({
@@ -413,7 +409,7 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 					this.eeSetChooserPanel.filterByTaxon(taxon);
 				}.createDelegate(this));
 
-		this.eeSetChooserPanel.on("set-chosen", function(eeSetRecord) {
+		this.eeSetChooserPanel.on("select", function(combo, eeSetRecord, index) {
 					this.currentSet = eeSetRecord;
 					this.updateDatasetsToBeSearched(eeSetRecord.get("expressionExperimentIds"), eeSetRecord);
 					this.geneChooserPanel.taxonChanged({
@@ -424,7 +420,7 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 					this.efChooserPanel.reset(eeSetRecord.get("name"));
 				}.createDelegate(this));
 
-		this.eeSetChooserPanel.combo.on("ready", function() {
+		this.eeSetChooserPanel.on("ready", function() {
 					this.eeSetReady = true;
 					this.restoreState();
 				}.createDelegate(this));

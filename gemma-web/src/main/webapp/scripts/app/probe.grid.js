@@ -53,7 +53,7 @@ Gemma.ProbeBrowser.app = function() {
 						arrayDesignId : arrayDesignId,
 						detailsDataSource : this.detailsGrid.getStore(),
 						renderTo : "probe-grid",
-						pageSize : 20,
+
 						height : 350,
 						width : 630
 					});
@@ -319,8 +319,6 @@ Gemma.ProbeGrid = Ext.extend(Ext.grid.GridPanel, {
 
 	autoExpandColumn : 'genes',
 
-	pageSize : 30,
-
 	loadMask : {
 		msg : "Loading probes ..."
 	},
@@ -483,23 +481,15 @@ Gemma.ProbeGrid = Ext.extend(Ext.grid.GridPanel, {
 						tooltip : "Symbols of genes this probe potentially targets; if there are more than 3, the total count is provided in parentheses",
 						renderer : this.convertgenes.createDelegate(this)
 					}],
-			store : new Gemma.PagingDataStore({
+			store : new Ext.data.Store({
 						proxy : proxy,
-						reader : reader,
-						pageSize : this.pageSize
+						reader : reader
 					}),
 			selModel : new Ext.grid.RowSelectionModel({
 						singleSelect : true
 					})
 
 		});
-
-		Ext.apply(this, {
-					bbar : new Ext.PagingToolbar({
-								pageSize : this.pageSize,
-								store : this.store
-							})
-				});
 
 		if (this.isArrayDesign) {
 			Ext.apply(this, {
@@ -569,7 +559,7 @@ Gemma.ProbeGrid = Ext.extend(Ext.grid.GridPanel, {
 		this.getBottomToolbar().changePage(0);
 		var oldprox = this.getStore().proxy;
 		this.getStore().proxy = new Ext.data.DWRProxy(CompositeSequenceController.search);
-		
+
 		this.getStore().load({
 					params : [query, id]
 				});

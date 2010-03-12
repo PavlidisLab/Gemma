@@ -64,56 +64,28 @@ Gemma.ProbeLevelDiffExGrid = Ext.extend(Ext.grid.GridPanel, {
 					}
 				});
 
-		if (this.pageSize) {
-			Ext.apply(this, {
-						store : new Gemma.PagingDataStore({
-									proxy : new Ext.data.DWRProxy(this.readMethod),
-									reader : new Ext.data.ListRangeReader({}, this.record),
-									pageSize : this.pageSize,
-									sortInfo : {
-										field : "p",
-										direction : "ASC"
-									}
-								})
-					});
-			Ext.apply(this, {
-						bbar : new Ext.PagingToolbar({
-									pageSize : this.pageSize,
-									store : this.store,
-									items : ['->', {
-												xtype : 'button',
-												handler : this.clearFilter.createDelegate(this),
-												scope : this,
-												cls : 'x-btn-text',
-												text : 'Reset filter'
-											}, ' ', this.searchInGridField]
-								})
-					});
-		} else {
-			// nonpaging
-			Ext.apply(this, {
-						store : new Ext.data.Store({
-									proxy : new Ext.data.DWRProxy(this.readMethod),
-									reader : new Ext.data.ListRangeReader({}, this.record),
-									sortInfo : {
-										field : "p",
-										direction : "ASC"
-									}
-								})
-					});
+		Ext.apply(this, {
+					store : new Ext.data.Store({
+								proxy : new Ext.data.DWRProxy(this.readMethod),
+								reader : new Ext.data.ListRangeReader({}, this.record),
+								sortInfo : {
+									field : "p",
+									direction : "ASC"
+								}
+							})
+				});
 
-			Ext.apply(this, {
-						bbar : new Ext.Toolbar({
-									items : ['->', {
-												xtype : 'button',
-												handler : this.clearFilter.createDelegate(this),
-												scope : this,
-												cls : 'x-btn-text',
-												text : 'Reset filter'
-											}, ' ', this.searchInGridField]
-								})
-					});
-		}
+		Ext.apply(this, {
+					bbar : new Ext.Toolbar({
+								items : ['->', {
+											xtype : 'button',
+											handler : this.clearFilter.createDelegate(this),
+											scope : this,
+											cls : 'x-btn-text',
+											text : 'Reset filter'
+										}, ' ', this.searchInGridField]
+							})
+				});
 
 		Ext.apply(this, {
 			columns : [{

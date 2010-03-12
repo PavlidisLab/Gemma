@@ -1,8 +1,6 @@
 Ext.namespace('Gemma');
 Ext.BLANK_IMAGE_URL = '/Gemma/images/default/s.gif';
 
-Gemma.EE_REPORT_PAGE_SIZE = 25;
-
 /**
  * Show table of multiple experiments
  */
@@ -32,7 +30,6 @@ Ext.onReady(function() {
 							id : "id"
 						}, manager.record),
 				remoteSort : false,
-				pageSize : Gemma.EE_REPORT_PAGE_SIZE,
 				sortInfo : {
 					field : 'dateCreated',
 					direction : 'DESC'
@@ -93,14 +90,15 @@ Ext.onReady(function() {
 
 	var experimentTaggerRenderer = function(value, metadata, record, rowIndex, colIndex, store) {
 		var id = record.get('id');
-		var taxonId = record.get('taxonId'); 
-		var url = '<a href="#" onClick="return Ext.getCmp(\'eemanager\').tagger(' + id
-				+ ',' + taxonId +')"><img src="/Gemma/images/icons/pencil.png" alt="view tags" title="add tags"/></a>';
+		var taxonId = record.get('taxonId');
+		var url = '<a href="#" onClick="return Ext.getCmp(\'eemanager\').tagger(' + id + ',' + taxonId
+				+ ')"><img src="/Gemma/images/icons/pencil.png" alt="view tags" title="add tags"/></a>';
 		value = value + '&nbsp;' + url;
 
 		var isAdmin = Ext.get("hasAdmin").getValue() == 'true';
 		if (isAdmin) {
-			var turl = '<a href="#" onClick="return Ext.getCmp(\'eemanager\').autoTag(' + id
+			var turl = '<a href="#" onClick="return Ext.getCmp(\'eemanager\').autoTag('
+					+ id
 					+ ')"><img src="/Gemma/images/icons/database_edit.png" alt="run auto-tagger" title="add tags automatically"/></a>';
 			value = value + '&nbsp;' + turl;
 		}
@@ -472,11 +470,8 @@ Gemma.EEReportPanel = Ext.extend(Ext.grid.GridPanel, {
 													cls : 'x-btn-text',
 													text : 'Reset filter'
 												}, ' ', this.searchInGridField]
-									}),
-							bbar : new Ext.PagingToolbar({
-										pageSize : Gemma.EE_REPORT_PAGE_SIZE,
-										store : this.store
 									})
+
 						});
 				Gemma.EEReportPanel.superclass.initComponent.call(this);
 			}

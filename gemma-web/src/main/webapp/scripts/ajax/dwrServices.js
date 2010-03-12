@@ -29,6 +29,12 @@ AnnotationController.createExperimentTag = function(p0, p1, callback) {
 AnnotationController.removeExperimentTag = function(p0, p1, callback) {
 	dwr.engine._execute(AnnotationController._path, 'AnnotationController', 'removeExperimentTag', p0, p1, callback);
 }
+AnnotationController.createBioMaterialTag = function(p0, p1, callback) {
+	dwr.engine._execute(AnnotationController._path, 'AnnotationController', 'createBioMaterialTag', p0, p1, callback);
+}
+AnnotationController.removeBioMaterialTag = function(p0, p1, callback) {
+	dwr.engine._execute(AnnotationController._path, 'AnnotationController', 'removeBioMaterialTag', p0, p1, callback);
+}
 // ====================================================================================
 if (ArrayDesignController == null)
 	var ArrayDesignController = {};
@@ -117,6 +123,13 @@ CharacteristicBrowserController.removeCharacteristics = function(p0, callback) {
 CharacteristicBrowserController.updateCharacteristics = function(p0, callback) {
 	dwr.engine._execute(CharacteristicBrowserController._path, 'CharacteristicBrowserController',
 			'updateCharacteristics', p0, callback);
+}
+CharacteristicBrowserController.browse = function(p0, callback) {
+	dwr.engine._execute(CharacteristicBrowserController._path, 'CharacteristicBrowserController', 'browse', p0,
+			callback);
+}
+CharacteristicBrowserController.count = function(callback) {
+	dwr.engine._execute(CharacteristicBrowserController._path, 'CharacteristicBrowserController', 'count', callback);
 }
 // ====================================================================================
 if (CompositeSequenceController == null)
@@ -398,9 +411,9 @@ ExpressionExperimentSetController.update = function(p0, callback) {
 	dwr.engine._execute(ExpressionExperimentSetController._path, 'ExpressionExperimentSetController', 'update', p0,
 			callback);
 }
-ExpressionExperimentSetController.getAvailableExpressionExperimentSets = function(callback) {
-	dwr.engine._execute(ExpressionExperimentSetController._path, 'ExpressionExperimentSetController',
-			'getAvailableExpressionExperimentSets', callback);
+ExpressionExperimentSetController.loadAll = function(callback) {
+	dwr.engine._execute(ExpressionExperimentSetController._path, 'ExpressionExperimentSetController', 'loadAll',
+			callback);
 }
 ExpressionExperimentSetController.getExperimentsInSet = function(p0, callback) {
 	dwr.engine._execute(ExpressionExperimentSetController._path, 'ExpressionExperimentSetController',
@@ -557,11 +570,9 @@ SecurityController.getUsersGeneGroups = function(p0, callback) {
 SecurityController.getGenesInGroup = function(p0, callback) {
 	dwr.engine._execute(SecurityController._path, 'SecurityController', 'getGenesInGroup', p0, callback);
 }
-SecurityController.updateGeneGroup = function(p0, p1,callback) {
+SecurityController.updateGeneGroup = function(p0, p1, callback) {
 	dwr.engine._execute(SecurityController._path, 'SecurityController', 'updateGeneGroup', p0, p1, callback);
 }
-
-
 
 // ====================================================================================
 if (SystemMonitorController == null)

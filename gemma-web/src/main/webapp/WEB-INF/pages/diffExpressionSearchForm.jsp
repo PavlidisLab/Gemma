@@ -4,20 +4,18 @@ version: $Id$
 --%>
 <%@ include file="/common/taglibs.jsp"%>
 <head>
-	<title><fmt:message key="diffExpressionSearch.title" /></title>
+	<title><fmt:message key="diffExpressionSearch.title" />
+	</title>
 
 	<jwr:script src='/scripts/ajax/diff/DiffExpressionSearchForm.js' />
 	<jwr:script src='/scripts/app/DiffExpressionSearch.js' />
 	<jwr:script src='/scripts/ajax/visualization/VisualizationWidget.js' />
 
-
-
 	<content tag="heading">
-		<fmt:message key="diffExpressionSearch.title" />
+	<fmt:message key="diffExpressionSearch.title" />
 	</content>
 
 </head>
-
 
 <div id="diff-wrap">
 
