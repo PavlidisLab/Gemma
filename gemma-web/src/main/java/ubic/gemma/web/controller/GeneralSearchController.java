@@ -64,7 +64,7 @@ import ubic.gemma.security.SecurityService;
 import ubic.gemma.security.audit.AuditableUtil;
 import ubic.gemma.util.EntityUtils;
 import ubic.gemma.web.propertyeditor.TaxonPropertyEditor;
-import ubic.gemma.web.remote.ListRange;
+import ubic.gemma.web.remote.JsonReaderResponse;
 
 /**
  * @author klc
@@ -90,22 +90,23 @@ public class GeneralSearchController extends BaseFormController {
     @Autowired
     private AuditableUtil auditableUtil;
 
-    @SuppressWarnings("unchecked")
+    /**
+     * @param request
+     * @param response
+     * @param command
+     * @param errors
+     * @return
+     * @throws Exception
+     */
     @RequestMapping(value = "/searcher.html", method = RequestMethod.POST)
     public ModelAndView doSearch( HttpServletRequest request, HttpServletResponse response, SearchSettings command,
             BindException errors ) throws Exception {
 
         SearchSettings settings = command;
-        
-        
-        settings.setQuery( StringUtils.trim( settings.getQuery().trim()));
 
-        //Redirects should be done like this (i believe) to ensure that the URL is correctly encoded/unencoded:
-        //Currently not switching it because we have javascript code on the client side to deal with this. 
-        //response.sendRedirect( response.encodeRedirectURL( "/Gemma/signup.html" ) );
-        
+        settings.setQuery( StringUtils.trim( settings.getQuery().trim() ) );
+
         ModelAndView mav = new ModelAndView( "generalSearch" );
-        
 
         if ( !searchStringValidator( settings.getQuery() ) ) {
             this.saveMessage( request, "Invalid search string" );
@@ -120,34 +121,16 @@ public class GeneralSearchController extends BaseFormController {
         if ( ( settings.getTaxon() != null ) && ( settings.getTaxon().getId() != null ) )
             mav.addObject( "searchTaxon", settings.getTaxon().getScientificName() );
 
-        /*
-         * Here is where the magic happens.
-         */
-//        Map<Class<?>, List<SearchResult>> searchResults = searchService.search( settings );
-//
-//        if ( searchResults != null ) {
-//            for ( Class clazz : searchResults.keySet() ) {
-//                List<SearchResult> results = searchResults.get( clazz );
-//
-//                if ( results.size() == 0 ) continue;
-//
-//                log.info( "Search result: " + results.size() + " " + clazz.getSimpleName() + "'s" );
-//
-//                /*
-//                 * Now put the valueObjects inside the SearchResults
-//                 */
-//                fillValueObjects( clazz, results, settings );
-//
-//                mav.addObject( clazz.getSimpleName() + "_results", results );
-//                mav.addObject( clazz.getSimpleName() + "_count", results.size() );
-//            }
-//        }
-
         return mav;
     }
 
     /**
-     * 
+     * @param request
+     * @param response
+     * @param command
+     * @param errors
+     * @return
+     * @throws Exception
      */
     public ModelAndView processFormSubmission( HttpServletRequest request, HttpServletResponse response,
             SearchSettings command, BindException errors ) throws Exception {
@@ -172,7 +155,7 @@ public class GeneralSearchController extends BaseFormController {
      * @param settings
      * @return
      */
-    public ListRange search( SearchSettings settings ) {
+    public JsonReaderResponse<SearchResult> search( SearchSettings settings ) {
         List<SearchResult> finalResults = new ArrayList<SearchResult>();
         if ( settings == null || StringUtils.isBlank( settings.getQuery() )
                 || StringUtils.isBlank( settings.getQuery().replaceAll( "\\*", "" ) ) ) {
@@ -197,7 +180,7 @@ public class GeneralSearchController extends BaseFormController {
         watch.start();
 
         if ( searchResults != null ) {
-            for ( Class clazz : searchResults.keySet() ) {
+            for ( Class<?> clazz : searchResults.keySet() ) {
                 List<SearchResult> results = searchResults.get( clazz );
 
                 if ( results.size() == 0 ) continue;
@@ -219,7 +202,7 @@ public class GeneralSearchController extends BaseFormController {
             log.info( "Final unpacking of results for query:" + settings + " took " + watch.getTime() + " ms" );
         }
 
-        return new ListRange( finalResults );
+        return new JsonReaderResponse<SearchResult>( finalResults );
     }
 
     /**
