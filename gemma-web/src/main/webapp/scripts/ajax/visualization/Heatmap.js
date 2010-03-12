@@ -78,7 +78,7 @@ var Heatmap = function() {
 		// Creates 1 canvas per row of the heat map
 		function drawMap(vectorObjs, target, colors, config, sampleLabels) {
 
-			if (target.getWidth() <= 0 || target.getHeight() <= 0) {
+			if (target.getWidth() <= 0 || target.getHeight() <= 0 || vectorObjs.length == 0) {
 				return;
 			}
 
