@@ -311,8 +311,10 @@ public class OntologyService implements InitializingBean {
         }
 
         for ( AbstractOntologyService ontology : ontologyServices ) {
-            Collection<OntologyTerm> found = ontology.findTerm( query );
-            if ( found != null ) results.addAll( found );
+            if ( ontology.isEnabled() ) {
+                Collection<OntologyTerm> found = ontology.findTerm( query );
+                if ( found != null ) results.addAll( found );
+            }
         }
 
         return results;
@@ -418,7 +420,19 @@ public class OntologyService implements InitializingBean {
     }
 
     /**
-     * Will persist the give vocab characteristic to each biomaterial id supplied in the list. Exposed for AJAX.
+     * @param characterId characteristic id
+     * @param bm
+     */
+    public void removeBioMaterialStatement( Long characterId, BioMaterial bm ) {
+        Characteristic vc = characteristicService.load( characterId );
+        if ( vc == null )
+            throw new IllegalArgumentException( "No characteristic with id=" + characterId + " was foundF" );
+        bm.getCharacteristics().remove( vc );
+        characteristicService.delete( characterId );
+    }
+
+    /**
+     * Will persist the give vocab characteristic to each biomaterial id supplied in the list.
      * 
      * @param vc
      * @param bioMaterialIdList
@@ -428,27 +442,40 @@ public class OntologyService implements InitializingBean {
         log.debug( "Vocab Characteristic: " + vc );
         log.debug( "Biomaterial ID List: " + bioMaterialIdList );
 
-        vc.setEvidenceCode( GOEvidenceCode.IC ); // manually added characteristic
-        Set<Characteristic> chars = new HashSet<Characteristic>();
-        chars.add( vc );
         Collection<BioMaterial> biomaterials = bioMaterialService.loadMultiple( bioMaterialIdList );
 
         for ( BioMaterial bioM : biomaterials ) {
-
-            Collection<Characteristic> current = bioM.getCharacteristics();
-            if ( current == null )
-                current = new HashSet<Characteristic>( chars );
-            else
-                current.addAll( chars );
-
-            for ( Characteristic characteristic : chars ) {
-                log.info( "Adding characteristic to " + bioM + " : " + characteristic );
-            }
-
-            bioM.setCharacteristics( current );
-            bioMaterialService.update( bioM );
-
+            saveBioMaterialStatement( vc, bioM );
         }
+
+    }
+
+    /**
+     * Will persist the give vocab characteristic to the given biomaterial
+     * 
+     * @param vc
+     * @param bm
+     */
+    public void saveBioMaterialStatement( Characteristic vc, BioMaterial bm ) {
+
+        log.debug( "Vocab Characteristic: " + vc );
+
+        vc.setEvidenceCode( GOEvidenceCode.IC ); // manually added characteristic
+        Set<Characteristic> chars = new HashSet<Characteristic>();
+        chars.add( vc );
+
+        Collection<Characteristic> current = bm.getCharacteristics();
+        if ( current == null )
+            current = new HashSet<Characteristic>( chars );
+        else
+            current.addAll( chars );
+
+        for ( Characteristic characteristic : chars ) {
+            log.info( "Adding characteristic to " + bm + " : " + characteristic );
+        }
+
+        bm.setCharacteristics( current );
+        bioMaterialService.update( bm );
 
     }
 
