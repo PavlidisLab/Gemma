@@ -327,7 +327,7 @@
 		<wsdl:part name="physical_location" type="schema:geneLocation" />
 	</wsdl:message>
 		<wsdl:message name="genesAtPhysicalLocationResponse">
-		<wsdl:part name="genesAtPhysical_location" type="xsd:integer" />
+		<wsdl:part name="genesAtPhysical_location" type="schema:ArrayOfIDs" />
 	</wsdl:message>
 	<wsdl:message name="experimentNumSamplesResponse">
 		<wsdl:part name="eeNumSample_id" type="xsd:string" />

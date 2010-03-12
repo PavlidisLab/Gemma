@@ -9,6 +9,9 @@
 
 package ubic.gemma.web.services;
 
+import java.util.ArrayList;
+import java.util.Collection;
+
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -84,41 +87,33 @@ public class GenesAtPhysicalLocationEndpoint extends AbstractGemmaEndpoint {
         
         
         
-        log.debug( "XML input read: startNucleotide,endNucleotide,taxon,chromosome " + startN + " ," + endN + ", " +taxonId + " ," + chromosomeName  );
+        log.info( "GenesAtPhysicalLocationEndpoint XML input: startNucleotide,endNucleotide,taxon,chromosome " + startN + " ," + endN + ", " +taxonId + " ," + chromosomeName  );
 
-        Chromosome chrom = this.chromosomeService.find( chromosomeName, taxon );
-        
+        Collection<Chromosome> chroms = this.chromosomeService.find( chromosomeName, taxon );
+
         PhysicalLocation physicalLocation  = PhysicalLocation.Factory.newInstance();
         physicalLocation.setNucleotide( startN );
         physicalLocation.setNucleotideLength(length.intValue());
         physicalLocation.setStrand( null );
-        physicalLocation.setChromosome( chrom );
-        
-        RelativeLocationData rld  = geneService.findNearest( physicalLocation, false );
 
-        Gene nearestGene = rld.getNearestGene();
-        buildNearestGeneWrapper(document, nearestGene);
+        Collection<RelativeLocationData> results = new ArrayList<RelativeLocationData>();
+        Collection<String> geneIdResults = new ArrayList<String>();
+        
+        for(Chromosome chrom : chroms){
+            physicalLocation.setChromosome( chrom );
+            RelativeLocationData rld  = geneService.findNearest( physicalLocation, false );
+            results.add( rld );
+            geneIdResults.add( rld.getNearestGene().getId().toString() );
+        }
+        
+
+        this.buildWrapper( document, geneIdResults, GENES_PLOC_LOCAL_NAME );
+
         watch.stop();
         Long time = watch.getTime();
         log.debug( "XML response for physical location result built in " + time + "ms." );
 
         return null;
-    }
-
-
-    private Element buildNearestGeneWrapper( Document document, Gene nearestGene ) {
-
-        Element responseWrapper = document.createElementNS( NAMESPACE_URI, GENES_PLOC_LOCAL_NAME );
-        Element responseElement = document.createElementNS( NAMESPACE_URI, GENES_PLOC_LOCAL_NAME + RESPONSE );
-        responseWrapper.appendChild( responseElement );
-
-        Element e1 = document.createElement( "genesAtPhysical_location" );
-        e1.appendChild( document.createTextNode( nearestGene.getId().toString() ) );
-        responseElement.appendChild( e1 );
-
-       
-        return responseWrapper;
-    }
-    
+    }   
 
 }

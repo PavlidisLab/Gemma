@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.genome;
 
+import java.util.Collection;
+
 import org.springframework.security.access.annotation.Secured;
 
 /**
@@ -32,7 +34,7 @@ public interface ChromosomeService {
      * @param name
      * @return
      */
-    public Chromosome find( String name, Taxon taxon );
+    public Collection<Chromosome> find( String name, Taxon taxon );
 
     /**
      * 

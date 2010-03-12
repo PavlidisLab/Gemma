@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.genome;
 
+import java.util.Collection;
+
 import org.springframework.stereotype.Service;
 
 /**
@@ -26,7 +28,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class ChromosomeServiceImpl extends ubic.gemma.model.genome.ChromosomeServiceBase {
 
-    public Chromosome find( String name, Taxon taxon ) {
+    public Collection<Chromosome> find( String name, Taxon taxon ) {
         return this.getChromosomeDao().find( name, taxon );
     }
 

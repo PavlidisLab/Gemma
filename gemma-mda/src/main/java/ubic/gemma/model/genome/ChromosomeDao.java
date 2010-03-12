@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.genome;
 
+import java.util.Collection;
+
 /**
  * @see ubic.gemma.model.genome.Chromosome
  */
@@ -94,7 +96,7 @@ public interface ChromosomeDao {
      * @param taxon
      * @return
      */
-    public Chromosome find( String name, Taxon taxon );
+    public Collection<Chromosome> find( String name, Taxon taxon );
 
     /**
      * <p>
