@@ -555,6 +555,31 @@ public class SecurityService {
         requiredPermissions.clear();
         requiredPermissions.add( BasePermission.ADMINISTRATION );
         return hasPermission( s, requiredPermissions, userName );
+    } 
+    
+    /**
+     * @param s
+     * @return true if the current user can edit the securable
+     */
+    @Secured("ACL_SECURABLE_READ")
+    public boolean isEditable( Securable s) {
+        
+        if (!isUserLoggedIn()) {
+            return false;
+        }
+        
+        String currentUser = this.userManager.getCurrentUsername();
+        
+        List<Permission> requiredPermissions = new ArrayList<Permission>();
+        
+        requiredPermissions.add( BasePermission.WRITE );
+        if ( hasPermission( s, requiredPermissions, currentUser ) ) {
+            return true;
+        }
+
+        requiredPermissions.clear();
+        requiredPermissions.add( BasePermission.ADMINISTRATION );
+        return hasPermission( s, requiredPermissions, currentUser );
     }
 
     /**
