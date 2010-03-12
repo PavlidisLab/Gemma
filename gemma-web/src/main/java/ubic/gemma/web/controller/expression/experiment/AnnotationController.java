@@ -21,6 +21,7 @@ package ubic.gemma.web.controller.expression.experiment;
 import java.util.Collection;
 import java.util.HashSet;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +30,8 @@ import org.springframework.stereotype.Controller;
 import ubic.gemma.annotation.geommtx.ExpressionExperimentAnnotator;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicService;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.expression.biomaterial.BioMaterialService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Taxon;
@@ -63,6 +66,9 @@ public class AnnotationController {
     @Autowired
     private TaxonService taxonService;
 
+    @Autowired
+    private BioMaterialService bioMaterialService;
+
     /**
      * @param eeId
      * @return
@@ -96,6 +102,9 @@ public class AnnotationController {
      * @return
      */
     public Collection<Characteristic> findTerm( String givenQueryString, String categoryUri, Long taxonId ) {
+        if (StringUtils.isBlank( givenQueryString )){
+            return new HashSet<Characteristic>();
+        }
         Taxon taxon = null;
         if ( taxonId != null ) {
             taxon = taxonService.load( taxonId );
@@ -148,7 +157,27 @@ public class AnnotationController {
      */
     public void createExperimentTag( Characteristic vc, Long id ) {
         ExpressionExperiment ee = expressionExperimentService.load( id );
+        if ( ee == null ) {
+            throw new IllegalArgumentException( "No such experiment with id=" + id );
+        }
         ontologyService.saveExpressionExperimentStatement( vc, ee );
 
     }
+
+    public void createBiomaterialTag( Characteristic vc, Long id ) {
+        BioMaterial bm = bioMaterialService.load( id );
+        if ( bm == null ) {
+            throw new IllegalArgumentException( "No such BioMaterial with id=" + id );
+        }
+        ontologyService.saveBioMaterialStatement( vc, bm );
+    }
+
+    public void removeBiomaterialTag( Characteristic vc, Long id ) {
+        BioMaterial bm = bioMaterialService.load( id );
+        if ( bm == null ) {
+            throw new IllegalArgumentException( "No such BioMaterial with id=" + id );
+        }
+        ontologyService.removeBioMaterialStatement( vc.getId(), bm );
+    }
+
 }
