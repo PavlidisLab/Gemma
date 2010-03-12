@@ -151,21 +151,30 @@ public class DifferentialExpressionSearchController extends BaseFormController {
         int eeScopeSize = 0;
 
         if ( eeScopeIds != null && !eeScopeIds.isEmpty() ) {
+
+            // do we need to validate these ids further? It should get checked late (in the analysis stage)
+
             eeScopeSize = eeScopeIds.size();
         } else {
             if ( command.getEeSetName() != null ) {
                 Collection<ExpressionExperimentSet> eeSet = this.expressionExperimentSetService.findByName( command
                         .getEeSetName() );
 
-                if ( eeSet == null ) {
+                if ( eeSet == null || eeSet.isEmpty() ) {
                     throw new IllegalArgumentException( "Unknown or ambiguous set name: " + command.getEeSetName() );
                 }
 
                 eeScopeSize = eeSet.iterator().next().getExperiments().size();
-            }
-
-            else if ( command.getEeSetId() >= 0 ) {
-                eeScopeSize = this.expressionExperimentSetService.load( command.getEeSetId() ).getExperiments().size();
+            } else {
+                Long eeSetId = command.getEeSetId();
+                if ( eeSetId >= 0 ) {
+                    ExpressionExperimentSet eeSet = this.expressionExperimentSetService.load( eeSetId );
+                    // validation/security check.
+                    if ( eeSet == null ) {
+                        throw new IllegalArgumentException( "No such set with id=" + eeSetId );
+                    }
+                    eeScopeSize = eeSet.getExperiments().size();
+                }
             }
 
         }
@@ -399,6 +408,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
      * 
      * @param geneId
      * @param eeIds
+     * @param selectedFactors
      * @param threshold
      * @return
      */
@@ -412,7 +422,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
             return null;
         }
 
-        /* find experiments that have had the diff cli run on it and have the gene g (analyzed) */
+        /* find experiments that have had the diff cli run on it and have the gene g (analyzed) - security filtered. */
         Collection<ExpressionExperiment> experimentsAnalyzed = differentialExpressionAnalysisService
                 .findExperimentsWithAnalyses( g );
 
@@ -424,11 +434,15 @@ public class DifferentialExpressionSearchController extends BaseFormController {
         /* the 'chosen' factors (and their associated experiments) */
         Map<Long, Long> eeFactorsMap = new HashMap<Long, Long>();
         for ( DiffExpressionSelectedFactorCommand selectedFactor : selectedFactors ) {
-            eeFactorsMap.put( selectedFactor.getEeId(), selectedFactor.getEfId() );
-            log.debug( selectedFactor.getEeId() + " --> " + selectedFactor.getEfId() );
+            Long eeId = selectedFactor.getEeId();
+            eeFactorsMap.put( eeId, selectedFactor.getEfId() );
+            if ( log.isDebugEnabled() ) log.debug( eeId + " --> " + selectedFactor.getEfId() );
         }
 
-        /* filter experiments that had the diff cli run on it and are in the scope of eeFactorsMap eeIds (active) */
+        /*
+         * filter experiments that had the diff cli run on it and are in the scope of eeFactorsMap eeIds
+         * (active/available to the user).
+         */
         Collection<ExpressionExperiment> activeExperiments = null;
         if ( eeFactorsMap.keySet() == null || eeFactorsMap.isEmpty() ) {
             activeExperiments = experimentsAnalyzed;

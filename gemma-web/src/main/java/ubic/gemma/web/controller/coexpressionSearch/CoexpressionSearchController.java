@@ -174,11 +174,12 @@ public class CoexpressionSearchController extends BaseFormController {
         }
 
         // Add the users datasets to the selected datasets
+        Collection<Long> eeIds = searchOptions.getEeIds();
         if ( searchOptions.isUseMyDatasets() ) {
             myEE = expressionExperimentService.loadMyExpressionExperiments();
             if ( myEE != null && !myEE.isEmpty() ) {
                 for ( ExpressionExperiment ee : myEE )
-                    searchOptions.getEeIds().add( ee.getId() );
+                    eeIds.add( ee.getId() );
 
                 searchOptions.setForceProbeLevelSearch( true );
             } else
@@ -194,6 +195,11 @@ public class CoexpressionSearchController extends BaseFormController {
                     .getEeSetName() );
             if ( eeSets.size() == 1 ) {
                 eeSetId = eeSets.iterator().next().getId();
+                // validation/security check.
+                if ( expressionExperimentSetService.load( eeSetId ) == null ) {
+                    result.setErrorState( "No such set with id=" + eeSetId );
+                    return result;
+                }
             } else {
                 result.setErrorState( "Unknown or ambiguous set name: " + searchOptions.getEeSetName() );
                 return result;
@@ -205,11 +211,16 @@ public class CoexpressionSearchController extends BaseFormController {
             result = geneCoexpressionService.coexpressionSearch( eeSetId, genes, searchOptions.getStringency(),
                     MAX_RESULTS, searchOptions.getQueryGenesOnly() );
         } else {
-            assert ( searchOptions.getEeIds() != null && searchOptions.getEeIds().size() > 0 );
+            assert ( eeIds != null && eeIds.size() > 0 );
 
-            result = geneCoexpressionService.coexpressionSearch( searchOptions.getEeIds(), genes, searchOptions
-                    .getStringency(), MAX_RESULTS, searchOptions.getQueryGenesOnly(), searchOptions
-                    .isForceProbeLevelSearch() );
+            // validation/security
+            if ( expressionExperimentService.loadMultiple( eeIds ).isEmpty() ) {
+                result.setErrorState( "Invalid experiment ids" );
+                return result;
+            }
+
+            result = geneCoexpressionService.coexpressionSearch( eeIds, genes, searchOptions.getStringency(),
+                    MAX_RESULTS, searchOptions.getQueryGenesOnly(), searchOptions.isForceProbeLevelSearch() );
 
         }
 
