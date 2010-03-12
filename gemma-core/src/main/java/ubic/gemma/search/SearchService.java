@@ -319,7 +319,7 @@ public class SearchService implements InitializingBean {
             Collection<OntologyTerm> terms2Search4 = matchingTerm.getChildren( true );
             terms2Search4.add( matchingTerm );
 
-            Collection<Class> classesToSearch = new HashSet<Class>();
+            Collection<Class<?>> classesToSearch = new HashSet<Class<?>>();
             classesToSearch.add( ExpressionExperiment.class );
             classesToSearch.add( BioMaterial.class );
 
@@ -342,7 +342,7 @@ public class SearchService implements InitializingBean {
         }// Perhaps is a valid gene URL. Want to search for the gene in gemma.
         else if ( StringUtils.containsIgnoreCase( uriString, NCBI_GENE ) ) {
             // 1st get objects tagged with the given gene identifier
-            Collection<Class> classesToFilterOn = new HashSet<Class>();
+            Collection<Class<?>> classesToFilterOn = new HashSet<Class<?>>();
             classesToFilterOn.add( ExpressionExperiment.class );
 
             Collection<Characteristic> foundCharacteristics = characteristicService.findByUri( uriString );
@@ -600,7 +600,7 @@ public class SearchService implements InitializingBean {
     private Collection<SearchResult> characteristicExpressionExperimentSearch( final SearchSettings settings ) {
         Collection<SearchResult> results = new HashSet<SearchResult>();
 
-        Collection<Class> classesToSearch = new HashSet<Class>();
+        Collection<Class<?>> classesToSearch = new HashSet<Class<?>>();
         classesToSearch.add( ExpressionExperiment.class );
         classesToSearch.add( BioMaterial.class );
         classesToSearch.add( FactorValue.class );
@@ -648,6 +648,7 @@ public class SearchService implements InitializingBean {
             Collection<ExpressionExperiment> ees = expressionExperimentService.findByFactorValues( factorValues );
             for ( ExpressionExperiment ee : ees ) {
                 if ( !results.contains( ee ) ) {
+                    if ( log.isDebugEnabled() ) log.debug( ee );
                     results.add( new SearchResult( ee, INDIRECT_DB_HIT_PENALTY, "Factor characteristic" ) );
                 }
             }
@@ -688,7 +689,7 @@ public class SearchService implements InitializingBean {
      *         (entities which have been 'tagged' with the term) of those Characteristics
      */
     @SuppressWarnings("unchecked")
-    private Collection<SearchResult> characteristicSearchWithChildren( Collection<Class> classes,
+    private Collection<SearchResult> characteristicSearchWithChildren( Collection<Class<?>> classes,
             SearchSettings settings ) {
 
         String query = settings.getQuery();
@@ -706,7 +707,7 @@ public class SearchService implements InitializingBean {
             allResults.addAll( characteristicSearchWord( classes, matchMap, rawTerm ) );
         }
 
-        return  postProcessCharacteristicResults( query, allResults, matchMap );
+        return postProcessCharacteristicResults( query, allResults, matchMap );
 
     }
 
@@ -717,7 +718,7 @@ public class SearchService implements InitializingBean {
      * @return
      */
     @SuppressWarnings("unchecked")
-    private Collection<SearchResult> characteristicSearchWord( Collection<Class> classes,
+    private Collection<SearchResult> characteristicSearchWord( Collection<Class<?>> classes,
             Map<SearchResult, String> matches, String query ) {
 
         StopWatch watch = startTiming();
@@ -1278,7 +1279,7 @@ public class SearchService implements InitializingBean {
      *         class clazz
      */
     @SuppressWarnings("unchecked")
-    private Collection<SearchResult> databaseCharacteristicExactUriSearchForOwners( Collection<Class> classes,
+    private Collection<SearchResult> databaseCharacteristicExactUriSearchForOwners( Collection<Class<?>> classes,
             Collection<OntologyTerm> terms ) {
 
         // Collection<Characteristic> characteristicValueMatches = new ArrayList<Characteristic>();
@@ -1556,7 +1557,7 @@ public class SearchService implements InitializingBean {
      * @return
      */
     @SuppressWarnings("unchecked")
-    private Collection<SearchResult> filterCharacteristicOwnersByClass( Collection<Class> classes,
+    private Collection<SearchResult> filterCharacteristicOwnersByClass( Collection<Class<?>> classes,
             Map<Characteristic, Object> characteristic2entity ) {
         Collection<SearchResult> results = new HashSet<SearchResult>();
         for ( Characteristic c : characteristic2entity.keySet() ) {
@@ -1616,7 +1617,7 @@ public class SearchService implements InitializingBean {
      * @return
      */
     @SuppressWarnings("unchecked")
-    private Collection<SearchResult> getAnnotatedEntities( Collection<Class> classes, Collection<Characteristic> cs ) {
+    private Collection<SearchResult> getAnnotatedEntities( Collection<Class<?>> classes, Collection<Characteristic> cs ) {
 
         Map<Characteristic, Object> characterstic2entity = characteristicService.getParents( cs );
         Collection<SearchResult> matchedEntities = filterCharacteristicOwnersByClass( classes, characterstic2entity );
@@ -1838,11 +1839,12 @@ public class SearchService implements InitializingBean {
      * @return
      */
     @SuppressWarnings("unchecked")
-    private Collection<SearchResult> ontologySearchAnnotatedObject( Collection<Class> classes, SearchSettings settings ) {
+    private Collection<SearchResult> ontologySearchAnnotatedObject( Collection<Class<?>> classes,
+            SearchSettings settings ) {
 
         /*
          * Direct search.
-         */ 
+         */
         Collection<SearchResult> results = new HashSet<SearchResult>();
 
         // results.addAll( databaseCharacteristicSearchForOwners( classes, settings ) );
