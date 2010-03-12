@@ -18,43 +18,70 @@
  */
 package ubic.gemma.model.common.description;
 
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+
 import ubic.gemma.persistence.BaseDao;
 
 /**
  * @see ubic.gemma.model.common.description.Characteristic
+ * @version $Id$
  */
 public interface CharacteristicDao extends BaseDao<Characteristic> {
 
     /**
-     * <p>
      * Finds all characteristics whose parent object is of the specified class. Returns a map of characteristics to
      * parent objects.
-     * </p>
      */
-    public java.util.Map findByParentClass( java.lang.Class parentClass );
+    public Map findByParentClass( java.lang.Class parentClass );
 
     /**
      * 
      */
-    public java.util.Collection<Characteristic> findByUri( java.lang.String searchString );
+    public Collection<Characteristic> findByUri( java.lang.String searchString );
 
     /**
      * 
      */
-    public java.util.Collection<Characteristic> findByUri( java.util.Collection uris );
+    public Collection<Characteristic> findByUri( Collection<String> uris );
 
     /**
      * <p>
      * Finds all Characteristics whose value match the given search term
      * </p>
      */
-    public java.util.Collection<Characteristic> findByValue( java.lang.String search );
+    public Collection<Characteristic> findByValue( java.lang.String search );
 
     /**
      * <p>
      * Returns a map of the specified characteristics to their parent objects.
      * </p>
      */
-    public java.util.Map getParents( java.lang.Class parentClass, java.util.Collection<Characteristic> characteristics );
+    public Map getParents( java.lang.Class parentClass, Collection<Characteristic> characteristics );
+
+    /**
+     * Browse through the characteristics, excluding GO annotations.
+     * 
+     * @param start How far into the list to start
+     * @param limit Maximum records to retrieve (might be subject to security filtering)
+     */
+    public List<Characteristic> browse( Integer start, Integer limit );
+
+    /**
+     * Browse through the characteristics, excluding GO annotations, with sorting.
+     * 
+     * @param start
+     * @param limit
+     * @param sortField
+     * @param descending
+     * @return
+     */
+    public List<Characteristic> browse( Integer start, Integer limit, String sortField, boolean descending );
+
+    /**
+     * @return how many Characteristics are in the system, excluding GO annotations.
+     */
+    public Integer count();
 
 }

@@ -21,8 +21,10 @@ package ubic.gemma.model.common.description;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 
+import org.hibernate.Query;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -160,6 +162,40 @@ public class CharacteristicDaoImpl extends ubic.gemma.model.common.description.C
             Object[] row = ( Object[] ) o;
             charToParent.put( ( Characteristic ) row[1], row[0] );
         }
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see ubic.gemma.model.common.description.CharacteristicDao#browse(java.lang.Integer, java.lang.Integer)
+     */
+    public List<Characteristic> browse( Integer start, Integer limit ) {
+        Query query = this.getSession().createQuery( "from CharacteristicImpl where value not like 'GO_%'" );
+        query.setMaxResults( limit );
+        query.setFirstResult( start );
+        return query.list();
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see ubic.gemma.model.common.description.CharacteristicDao#browse(java.lang.Integer, java.lang.Integer,
+     * java.lang.String, boolean)
+     */
+    public List<Characteristic> browse( Integer start, Integer limit, String orderField, boolean descending ) {
+        Query query = this.getSession().createQuery(
+                "from CharacteristicImpl where value not like 'GO_%' order by " + orderField + " "
+                        + ( descending ? "desc" : "" ) );
+        query.setMaxResults( limit );
+        query.setFirstResult( start );
+        return query.list();
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see ubic.gemma.model.common.description.CharacteristicDao#count()
+     */
+    public Integer count() {
+        return ( ( Long ) getHibernateTemplate().find(
+                "select count(*) from CharacteristicImpl where value not like 'GO_%'" ).iterator().next() ).intValue();
     }
 
 }

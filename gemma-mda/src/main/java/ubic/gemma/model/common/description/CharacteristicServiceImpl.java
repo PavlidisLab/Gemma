@@ -21,6 +21,7 @@ package ubic.gemma.model.common.description;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.stereotype.Service;
@@ -39,6 +40,9 @@ import ubic.gemma.model.expression.experiment.FactorValueImpl;
 @Service
 public class CharacteristicServiceImpl extends ubic.gemma.model.common.description.CharacteristicServiceBase {
 
+    /**
+     * Classes examined when getting the "parents" of characteristics.
+     */
     private static final Class[] CLASSES_WITH_CHARACTERISTICS = new Class[] { ExpressionExperimentImpl.class,
             BioMaterialImpl.class, FactorValueImpl.class, ExperimentalFactorImpl.class, Gene2GOAssociationImpl.class };
 
@@ -122,6 +126,18 @@ public class CharacteristicServiceImpl extends ubic.gemma.model.common.descripti
     @Override
     protected void handleUpdate( Characteristic c ) throws Exception {
         this.getCharacteristicDao().update( c );
+    }
+
+    public List<Characteristic> browse( Integer start, Integer limit ) {
+        return this.getCharacteristicDao().browse( start, limit );
+    }
+
+    public List<Characteristic> browse( Integer start, Integer limit, String sortField, boolean descending ) {
+        return this.getCharacteristicDao().browse( start, limit, sortField, descending );
+    }
+
+    public Integer count() {
+        return this.getCharacteristicDao().count();
     }
 
 }

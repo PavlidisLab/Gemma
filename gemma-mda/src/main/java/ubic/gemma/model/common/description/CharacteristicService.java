@@ -18,6 +18,10 @@
  */
 package ubic.gemma.model.common.description;
 
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+
 import org.springframework.security.access.annotation.Secured;
 
 /**
@@ -30,8 +34,7 @@ public interface CharacteristicService {
      * 
      */
     @Secured( { "GROUP_USER" })
-    public ubic.gemma.model.common.description.Characteristic create(
-            ubic.gemma.model.common.description.Characteristic c );
+    public Characteristic create( Characteristic c );
 
     /**
      * 
@@ -43,7 +46,7 @@ public interface CharacteristicService {
      * 
      */
     @Secured( { "GROUP_USER" })
-    public void delete( ubic.gemma.model.common.description.Characteristic c );
+    public void delete( Characteristic c );
 
     /**
      * <p>
@@ -51,15 +54,16 @@ public interface CharacteristicService {
      * parent objects.
      * </p>
      */
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_MAP_VALUES_READ" })
     @SuppressWarnings("unchecked")
-    public java.util.Map<Characteristic, Object> findByParentClass( java.lang.Class parentClass );
+    public Map<Characteristic, Object> findByParentClass( java.lang.Class parentClass );
 
     /**
      * <p>
      * Looks for an exact match of the give string to a valueUri in the characteritic database
      * </p>
      */
-    public java.util.Collection<Characteristic> findByUri( java.lang.String searchString );
+    public Collection<Characteristic> findByUri( java.lang.String searchString );
 
     /**
      * <p>
@@ -67,7 +71,7 @@ public interface CharacteristicService {
      * with URI's matching anyone in the given collection
      * </p>
      */
-    public java.util.Collection<Characteristic> findByUri( java.util.Collection<String> uris );
+    public Collection<Characteristic> findByUri( Collection<String> uris );
 
     /**
      * <p>
@@ -77,7 +81,7 @@ public interface CharacteristicService {
      * (the value is usually a human readable form of the termURI
      * </p>
      */
-    public java.util.Collection<Characteristic> findByValue( java.lang.String search );
+    public Collection<Characteristic> findByValue( java.lang.String search );
 
     /**
      * <p>
@@ -85,24 +89,50 @@ public interface CharacteristicService {
      * </p>
      */
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    public java.lang.Object getParent( ubic.gemma.model.common.description.Characteristic characteristic );
+    public Object getParent( Characteristic characteristic );
 
     /**
      * <p>
      * Returns a map of the specified characteristics to their parent objects.
      * </p>
      */
-    public java.util.Map<Characteristic, Object> getParents( java.util.Collection<Characteristic> characteristics );
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_MAP_VALUES_READ" })
+    public Map<Characteristic, Object> getParents( Collection<Characteristic> characteristics );
+
+    /**
+     * Browse through the characteristics, excluding GO annotations.
+     * 
+     * @param start How far into the list to start
+     * @param limit Maximum records to retrieve
+     * @return
+     */
+    public List<Characteristic> browse( Integer start, Integer limit );
+
+    /**
+     * Browse through the characteristics, excluding GO annotations.
+     * 
+     * @param start How far into the list to start
+     * @param limit Maximum records to retrieve
+     * @param sortField
+     * @param descending
+     * @return
+     */
+    public List<Characteristic> browse( Integer start, Integer limit, String sortField, boolean descending );
+
+    /**
+     * @return how many Characteristics are in the system, excluding GO annotations.
+     */
+    public Integer count();
 
     /**
      * 
      */
-    public ubic.gemma.model.common.description.Characteristic load( java.lang.Long id );
+    public Characteristic load( java.lang.Long id );
 
     /**
      * 
      */
     @Secured( { "GROUP_USER" })
-    public void update( ubic.gemma.model.common.description.Characteristic c );
+    public void update( Characteristic c );
 
 }

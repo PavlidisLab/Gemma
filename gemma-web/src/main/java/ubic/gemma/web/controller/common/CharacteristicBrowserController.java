@@ -18,8 +18,10 @@
  */
 package ubic.gemma.web.controller.common;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
@@ -45,6 +47,8 @@ import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueService;
 import ubic.gemma.util.AnchorTagUtil;
 import ubic.gemma.web.controller.expression.experiment.AnnotationValueObject;
+import ubic.gemma.web.remote.JsonReaderResponse;
+import ubic.gemma.web.remote.ListBatchCommand;
 
 /**
  * NOTE: Logging messages from this service are important for tracking changes to annotations.
@@ -123,12 +127,15 @@ public class CharacteristicBrowserController {
                     avo.setObjectClass( Characteristic.class.getSimpleName() );
                 }
 
-                populateParentInformation( avo, parent );
+                if ( parent != null ) {
+                    populateParentInformation( avo, parent );
+                }
+
                 results.add( avo );
             }
         }
 
-        if ( searchFVVs ) {
+        if ( searchFVVs ) { // non-characteristics.
             Collection<FactorValue> factorValues = factorValueService.findByValue( valuePrefix );
             for ( FactorValue factorValue : factorValues ) {
                 if ( factorValue.getCharacteristics().size() > 0 ) continue;
@@ -138,7 +145,6 @@ public class CharacteristicBrowserController {
 
                 avo.setId( factorValue.getId() );
                 avo.setTermName( factorValue.getValue() );
-
                 avo.setObjectClass( FactorValue.class.getSimpleName() );
 
                 populateParentInformation( avo, factorValue );
@@ -149,6 +155,81 @@ public class CharacteristicBrowserController {
 
         log.info( "Characteristic search for: '" + valuePrefix + "*': " + results.size() + " results" );
         return results;
+    }
+
+    /**
+     * @return
+     */
+    public Integer count() {
+        return characteristicService.count();
+    }
+
+    /**
+     * @param batch
+     * @return
+     */
+    public JsonReaderResponse<AnnotationValueObject> browse( ListBatchCommand batch ) {
+        Integer count = characteristicService.count(); // fixme: maybe don't do this every time. It's actually fast once
+        // it's cached.
+
+        List<AnnotationValueObject> results = new ArrayList<AnnotationValueObject>();
+
+        Collection<Characteristic> records;
+        if ( StringUtils.isNotBlank( batch.getSort() ) ) {
+
+            String o = batch.getSort();
+
+            String orderBy = "";
+            if ( o.equals( "className" ) ) {
+                orderBy = "category";
+            } else if ( o.equals( "termName" ) ) {
+                orderBy = "value";
+
+            } else if ( o.equals( "evidenceCode" ) ) {
+                orderBy = "evidenceCode";
+
+            } else {
+                throw new IllegalArgumentException( "Unknown sort field: " + o );
+            }
+
+            boolean descending = batch.getDir() != null && batch.getDir().equalsIgnoreCase( "DESC" );
+            records = characteristicService.browse( batch.getStart(), batch.getLimit(), orderBy, descending );
+
+        } else {
+            records = characteristicService.browse( batch.getStart(), batch.getLimit() );
+        }
+
+        Map<Characteristic, Object> charToParent = characteristicService.getParents( records );
+
+        for ( Object o : records ) {
+            Characteristic c = ( Characteristic ) o;
+            Object parent = charToParent.get( c );
+
+            AnnotationValueObject avo = new AnnotationValueObject();
+            avo.setId( c.getId() );
+            avo.setClassName( c.getCategory() );
+            avo.setTermName( c.getValue() );
+
+            if ( c.getEvidenceCode() != null ) avo.setEvidenceCode( c.getEvidenceCode().toString() );
+
+            if ( c instanceof VocabCharacteristic ) {
+                VocabCharacteristic vc = ( VocabCharacteristic ) c;
+                avo.setClassUri( vc.getCategoryUri() );
+                avo.setTermUri( vc.getValueUri() );
+                avo.setObjectClass( VocabCharacteristic.class.getSimpleName() );
+            } else {
+                avo.setObjectClass( Characteristic.class.getSimpleName() );
+            }
+
+            if ( parent != null ) {
+                populateParentInformation( avo, parent );
+            }
+            results.add( avo );
+        }
+
+        JsonReaderResponse<AnnotationValueObject> returnVal = new JsonReaderResponse<AnnotationValueObject>( results,
+                count.intValue() );
+        return returnVal;
     }
 
     /**
@@ -405,18 +486,20 @@ public class CharacteristicBrowserController {
         return result;
     }
 
+    /**
+     * @param avo
+     * @param parent
+     */
     private void populateParentInformation( AnnotationValueObject avo, Object parent ) {
         if ( parent == null ) {
-            avo.setParentLink( "[Orphan, " + avo.getObjectClass() + " ID=" + avo.getId() + "]" );
+            avo.setParentLink( "[Parent hidden or not available, " + avo.getObjectClass() + " ID=" + avo.getId() + "]" );
         } else if ( parent instanceof ExpressionExperiment ) {
             ExpressionExperiment ee = ( ExpressionExperiment ) parent;
             avo.setParentName( String.format( "Experiment: %s", ee.getName() ) );
-            // avo.setParentDescription( ee.getDescription() );
             avo.setParentLink( AnchorTagUtil.getExpressionExperimentLink( ee.getId(), avo.getParentName() ) );
         } else if ( parent instanceof BioMaterial ) {
             BioMaterial bm = ( BioMaterial ) parent;
             avo.setParentName( String.format( "BioMat: %s", bm.getName() ) );
-            // avo.setParentDescription( bm.getDescription() );
             avo.setParentLink( AnchorTagUtil.getBioMaterialLink( bm.getId(), avo.getParentName() ) );
             ExpressionExperiment ee = expressionExperimentService.findByBioMaterial( bm );
 
@@ -432,23 +515,18 @@ public class CharacteristicBrowserController {
             FactorValue fv = ( FactorValue ) parent;
             avo.setParentDescription( String.format( "FactorValue: %s &laquo; Exp.Factor: %s",
                     ( fv.getValue() == null ? "" : ": " + fv.getValue() ), fv.getExperimentalFactor().getName() ) );
-            // avo.setParentLink( AnchorTagUtil.getExperimentalDesignLink( fv.getExperimentalFactor()
-            // .getExperimentalDesign().getId(), avo.getParentName() ) );
             ExpressionExperiment ee = experimentalDesignService.getExpressionExperiment( fv.getExperimentalFactor()
                     .getExperimentalDesign() );
             avo.setParentOfParentName( String.format( "Experimental Design for: %s", ee.getName() ) );
-            // avo.setParentOfParentDescription( ee.getDescription() );
             avo.setParentOfParentLink( AnchorTagUtil.getExperimentalDesignLink( fv.getExperimentalFactor()
                     .getExperimentalDesign().getId(), avo.getParentName() )
                     + "&nbsp;&laquo;&nbsp;" + AnchorTagUtil.getExpressionExperimentLink( ee.getId(), ee.getName() ) );
         } else if ( parent instanceof ExperimentalFactor ) {
             ExperimentalFactor ef = ( ExperimentalFactor ) parent;
-            // avo.setParentDescription( String.format( "ExperimentalFactor: %s  ", ef.getName() ) );
             avo.setParentLink( AnchorTagUtil.getExperimentalDesignLink( ef.getExperimentalDesign().getId(),
                     "Exp. Factor: " + ef.getName() ) );
             ExpressionExperiment ee = experimentalDesignService.getExpressionExperiment( ef.getExperimentalDesign() );
             avo.setParentOfParentName( String.format( "%s", ee.getName() ) );
-            // avo.setParentOfParentDescription( ee.getDescription() );
             avo.setParentOfParentLink( AnchorTagUtil.getExpressionExperimentLink( ee.getId(), avo
                     .getParentOfParentName() ) );
         }
