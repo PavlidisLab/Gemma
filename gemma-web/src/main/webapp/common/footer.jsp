@@ -22,10 +22,11 @@
 
 	<security:authorize access="hasRole('GROUP_ADMIN')">
 		<span class="right"> <a href="<c:url value="/admin/activeUsers.html"/>"><fmt:message
-					key="mainMenu.activeUsers" /></a>:&nbsp;<c:out value="${applicationScope.activeUsers}" />
+					key="mainMenu.activeUsers" />
+		</a>:&nbsp;<c:out value="${applicationScope.activeUsers}" />
 			&nbsp;SignedIn:&nbsp;${applicationScope.authenticatedUsers}&nbsp;|&nbsp;</span>
 	</security:authorize>
-	
+
 	<br />
 	<security:authorize access="hasRole('GROUP_ADMIN')">
 		Gemma version ${appConfig['version']}&nbsp;|
@@ -35,20 +36,25 @@
 		<Gemma:lastModified refFile="/WEB-INF/gemma-servlet.xml"></Gemma:lastModified>
 	</security:authorize>
 </div>
-<%-- Security fields used in Java script calls to hide or display buttons--%>
-
-	<security:authorize access="hasRole('GROUP_ADMIN')">
-		<input type="hidden" name="hasAdmin" id="hasAdmin" value="true" />
-	</security:authorize>
-	<security:authorize access="!hasRole('GROUP_ADMIN')">
-		<input type="hidden" name="hasAdmin" id="hasAdmin" value="" />
-	</security:authorize>
-	<security:authorize access="hasRole('GROUP_USER')">
-		<input type="hidden" name="hasUser" id="hasUser" value="true" />
-	</security:authorize>	
-	<security:authorize access="!hasRole('GROUP_USER')">
-		<input type="hidden" name="hasUser" id="hasUser" value="" />
-	</security:authorize>
+<%-- Security fields used in Java script calls to hide or display information on pages --%>
+<security:authorize access="hasRole('GROUP_ADMIN')">
+	<input type="hidden" name="hasAdmin" id="hasAdmin" value="true" />
+</security:authorize>
+<security:authorize access="!hasRole('GROUP_ADMIN')">
+	<input type="hidden" name="hasAdmin" id="hasAdmin" value="" />
+</security:authorize>
+<security:authorize access="hasRole('GROUP_USER')">
+	<input type="hidden" name="hasUser" id="hasUser" value="true" />
+</security:authorize>
+<security:authorize access="!hasRole('GROUP_USER')">
+	<input type="hidden" name="hasUser" id="hasUser" value="" />
+</security:authorize>
+<security:authorize ifAnyGranted="GROUP_USER,GROUP_ADMIN">
+	<input type="hidden" name="loggedIn" id="loggedIn" value="true" />
+</security:authorize>
+<security:authorize ifNotGranted="GROUP_USER,GROUP_ADMIN">
+	<input type="hidden" name="loggedIn" id="loggedIn" value="" />
+</security:authorize>
 
 <c:if test='${ appConfig["ga.tracker"] != null}'>
 	<script type="text/javascript">
