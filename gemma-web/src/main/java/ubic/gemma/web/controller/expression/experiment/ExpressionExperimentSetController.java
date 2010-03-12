@@ -18,13 +18,17 @@
  */
 package ubic.gemma.web.controller.expression.experiment;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.lang.StringUtils;
+
+import edu.emory.mathcs.backport.java.util.Collections;
 
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSetService;
@@ -36,10 +40,17 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.persistence.PersisterHelper;
+import ubic.gemma.security.SecurityService;
 import ubic.gemma.web.controller.BaseFormController;
 
 /**
  * For fetching and manipulating ExpressionExperimentSets
+ * 
+ * @author paul
+ * @version $Id$
+ */
+/**
+ * TODO Document Me
  * 
  * @author paul
  * @version $Id$
@@ -49,15 +60,135 @@ public class ExpressionExperimentSetController extends BaseFormController {
     private ExpressionExperimentService expressionExperimentService;
     private ExpressionExperimentSetService expressionExperimentSetService;
     private PersisterHelper persisterHelper;
+    private SecurityService securityService;
+
     private TaxonService taxonService;
+
+    public Collection<ExpressionExperimentSetValueObject> create(
+            Collection<ExpressionExperimentSetValueObject> entities ) {
+        Collection<ExpressionExperimentSetValueObject> result = new HashSet<ExpressionExperimentSetValueObject>();
+        for ( ExpressionExperimentSetValueObject ees : entities ) {
+            result.add( this.create( ees ) );
+        }
+        return result;
+    }
+
+    /**
+     * @param id
+     * @return
+     */
+    public Collection<Long> getExperimentIdsInSet( Long id ) {
+        ExpressionExperimentSet eeSet = expressionExperimentSetService.load( id ); // secure
+        Collection<BioAssaySet> datasets = eeSet.getExperiments(); // Not secure.
+        Collection<Long> eeids = new HashSet<Long>();
+        for ( BioAssaySet ee : datasets ) {
+            eeids.add( ee.getId() );
+        }
+        return eeids;
+    }
+
+    /**
+     * @param id
+     * @return
+     */
+    public Collection<ExpressionExperimentValueObject> getExperimentsInSet( Long id ) {
+        Collection<Long> eeids = getExperimentIdsInSet( id );
+        Collection<ExpressionExperimentValueObject> result = expressionExperimentService.loadValueObjects( eeids );
+        populateAnalyses( eeids, result );
+        return result;
+    }
 
     /**
      * AJAX
      * 
+     * @return all available sets that have at least 2 experiments (so not really all)
+     */
+    public Collection<ExpressionExperimentSetValueObject> loadAll() {
+        Collection<ExpressionExperimentSet> sets = expressionExperimentSetService.loadAllMultiExperimentSets(); // filtered
+        // by
+        // security.
+        List<ExpressionExperimentSetValueObject> results = new ArrayList<ExpressionExperimentSetValueObject>();
+
+        // should be a small number of items.
+        for ( ExpressionExperimentSet set : sets ) {
+            ExpressionExperimentSetValueObject vo = makeEESetValueObject( set );
+            results.add( vo );
+        }
+
+        Collections.sort( results );
+
+        return results;
+    }
+
+    /**
+     * @param entities
+     * @return the entities which were removed.
+     */
+    public Collection<ExpressionExperimentSetValueObject> remove(
+            Collection<ExpressionExperimentSetValueObject> entities ) {
+        for ( ExpressionExperimentSetValueObject ees : entities ) {
+            this.remove( ees );
+        }
+        return entities;
+    }
+
+    public void setDifferentialExpressionAnalysisService(
+            DifferentialExpressionAnalysisService differentialExpressionAnalysisService ) {
+        this.differentialExpressionAnalysisService = differentialExpressionAnalysisService;
+    }
+
+    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
+        this.expressionExperimentService = expressionExperimentService;
+    }
+
+    public void setExpressionExperimentSetService( ExpressionExperimentSetService expressionExperimentSetService ) {
+        this.expressionExperimentSetService = expressionExperimentSetService;
+    }
+
+    public void setPersisterHelper( PersisterHelper persisterHelper ) {
+        this.persisterHelper = persisterHelper;
+    }
+
+    /**
+     * @param securityService the securityService to set
+     */
+    public void setSecurityService( SecurityService securityService ) {
+        this.securityService = securityService;
+    }
+
+    public void setTaxonService( TaxonService taxonService ) {
+        this.taxonService = taxonService;
+    }
+
+    /**
+     * @param entities
+     * @return the entities which were updated (even if they weren't actually updated)
+     */
+    public Collection<ExpressionExperimentSetValueObject> update(
+            Collection<ExpressionExperimentSetValueObject> entities ) {
+        for ( ExpressionExperimentSetValueObject ees : entities ) {
+            update( ees );
+        }
+        return entities;
+    }
+
+    /**
+     * This is needed or you will have to specify a commandClass in the DispatcherServlet's context
+     * 
+     * @param request
+     * @return Object
+     * @throws Exception
+     */
+    @Override
+    protected Object formBackingObject( HttpServletRequest request ) throws Exception {
+        return request;
+    }
+
+    /**
      * @param obj
      * @return
      */
-    public Long create( ExpressionExperimentSetValueObject obj ) {
+    private ExpressionExperimentSetValueObject create( ExpressionExperimentSetValueObject obj ) {
 
         if ( obj.getId() != null && obj.getId() >= 0 ) {
             throw new IllegalArgumentException( "Should not provide an id for 'create': " + obj.getId() );
@@ -104,52 +235,62 @@ public class ExpressionExperimentSetController extends BaseFormController {
                     + newSet.getExperiments().size() + ", must have at least 2" );
         }
         ExpressionExperimentSet newAnalysis = ( ExpressionExperimentSet ) persisterHelper.persist( newSet );
-        return newAnalysis.getId();
+        return this.makeEESetValueObject( newAnalysis );
     }
 
     /**
-     * AJAX
+     * @param set
+     * @return
+     */
+    private ExpressionExperimentSetValueObject makeEESetValueObject( ExpressionExperimentSet set ) {
+        int size = set.getExperiments().size();
+        assert size > 1; // should be due to the query.
+
+        ExpressionExperimentSetValueObject vo = new ExpressionExperimentSetValueObject();
+        vo.setName( set.getName() );
+        vo.setId( set.getId() );
+        Taxon taxon = set.getTaxon();
+        if ( taxon == null ) {
+            // happens in test databases that aren't properly populated.
+            log.debug( "No taxon provided" );
+        } else {
+            vo.setTaxonId( taxon.getId() );
+            vo.setTaxonName( taxon.getCommonName() ); // If I don't do this, won't be populated in the
+            // downstream object. This is
+            // basically a thaw.
+        }
+
+        vo.setCurrentUserHasWritePermission( securityService.isEditable( set ) );
+
+        vo.setDescription( set.getDescription() == null ? "" : set.getDescription() );
+        if ( expressionExperimentSetService.getAnalyses( set ).size() > 0 ) {
+            vo.setModifiable( false );
+        } else {
+            vo.setModifiable( true );
+        }
+
+        for ( BioAssaySet ee : set.getExperiments() ) {
+            vo.getExpressionExperimentIds().add( ee.getId() );
+        }
+
+        vo.setNumExperiments( size );
+        return vo;
+    }
+
+    /**
+     * Fill in information about analyses done on the experiments.
      * 
-     * @return all available sets that have at least 2 experiments.
+     * @param result
      */
-    public Collection<ExpressionExperimentSetValueObject> getAvailableExpressionExperimentSets() {
-        Collection<ExpressionExperimentSet> sets = expressionExperimentSetService.loadAllMultiExperimentSets(); // filtered
-        // by
-        // security.
-        Collection<ExpressionExperimentSetValueObject> results = new HashSet<ExpressionExperimentSetValueObject>();
-
-        // should be a small number of items.
-        for ( ExpressionExperimentSet set : sets ) {
-
-            ExpressionExperimentSetValueObject vo = makeEESetValueObject( set );
-            results.add( vo );
+    private void populateAnalyses( Collection<Long> eeids, Collection<ExpressionExperimentValueObject> result ) {
+        Map<Long, DifferentialExpressionAnalysis> analysisMap = differentialExpressionAnalysisService
+                .findByInvestigationIds( eeids );
+        for ( ExpressionExperimentValueObject eevo : result ) {
+            if ( !analysisMap.containsKey( eevo.getId() ) ) {
+                continue;
+            }
+            eevo.setDifferentialExpressionAnalysisId( analysisMap.get( eevo.getId() ).getId() );
         }
-        return results;
-    }
-
-    /**
-     * @param id
-     * @return
-     */
-    public Collection<Long> getExperimentIdsInSet( Long id ) {
-        ExpressionExperimentSet eeSet = expressionExperimentSetService.load( id ); // secure
-        Collection<BioAssaySet> datasets = eeSet.getExperiments(); // Not secure.
-        Collection<Long> eeids = new HashSet<Long>();
-        for ( BioAssaySet ee : datasets ) {
-            eeids.add( ee.getId() );
-        }
-        return eeids;
-    }
-
-    /**
-     * @param id
-     * @return
-     */
-    public Collection<ExpressionExperimentValueObject> getExperimentsInSet( Long id ) {
-        Collection<Long> eeids = getExperimentIdsInSet( id );
-        Collection<ExpressionExperimentValueObject> result = expressionExperimentService.loadValueObjects( eeids );
-        populateAnalyses( eeids, result );
-        return result;
     }
 
     /**
@@ -159,7 +300,7 @@ public class ExpressionExperimentSetController extends BaseFormController {
      * @return true if it was deleted.
      * @throw IllegalArgumentException it has analyses associated with it
      */
-    public boolean remove( ExpressionExperimentSetValueObject obj ) {
+    private boolean remove( ExpressionExperimentSetValueObject obj ) {
         Long id = obj.getId();
         if ( id == null || id < 0 ) {
             throw new IllegalArgumentException( "Cannot delete eeset with id=" + id );
@@ -181,31 +322,10 @@ public class ExpressionExperimentSetController extends BaseFormController {
         return true;
     }
 
-    public void setDifferentialExpressionAnalysisService(
-            DifferentialExpressionAnalysisService differentialExpressionAnalysisService ) {
-        this.differentialExpressionAnalysisService = differentialExpressionAnalysisService;
-    }
-
-    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
-        this.expressionExperimentService = expressionExperimentService;
-    }
-
-    public void setExpressionExperimentSetService( ExpressionExperimentSetService expressionExperimentSetService ) {
-        this.expressionExperimentSetService = expressionExperimentSetService;
-    }
-
-    public void setPersisterHelper( PersisterHelper persisterHelper ) {
-        this.persisterHelper = persisterHelper;
-    }
-
-    public void setTaxonService( TaxonService taxonService ) {
-        this.taxonService = taxonService;
-    }
-
     /**
      * @param obj
      */
-    public void update( ExpressionExperimentSetValueObject obj ) {
+    private void update( ExpressionExperimentSetValueObject obj ) {
 
         if ( obj.getId() == null ) {
             throw new IllegalArgumentException( "Can only update an existing eeset (passed id=" + obj.getId() + ")" );
@@ -247,64 +367,6 @@ public class ExpressionExperimentSetController extends BaseFormController {
             log.info( "No changes found for " + obj.getName() );
         }
 
-    }
-
-    /**
-     * This is needed or you will have to specify a commandClass in the DispatcherServlet's context
-     * 
-     * @param request
-     * @return Object
-     * @throws Exception
-     */
-    @Override
-    protected Object formBackingObject( HttpServletRequest request ) throws Exception {
-        return request;
-    }
-
-    private ExpressionExperimentSetValueObject makeEESetValueObject( ExpressionExperimentSet set ) {
-        int size = set.getExperiments().size();
-        assert size > 1; // should be due to the query.
-
-        ExpressionExperimentSetValueObject vo = new ExpressionExperimentSetValueObject();
-        vo.setName( set.getName() );
-        vo.setId( set.getId() );
-        Taxon taxon = set.getTaxon();
-        if ( taxon == null ) {
-            // happens in test databases that aren't properly populated.
-            log.debug( "No taxon provided" );
-        } else {
-            vo.setTaxonId( taxon.getId() );
-            vo.setTaxonName( taxon.getCommonName() ); // If I don't do this, won't be populated in the
-            // downstream object. This is
-            // basically a thaw.
-        }
-
-        vo.setDescription( set.getDescription() == null ? "" : set.getDescription() );
-        if ( expressionExperimentSetService.getAnalyses( set ).size() > 0 ) {
-            vo.setModifiable( false );
-        }
-        for ( BioAssaySet ee : set.getExperiments() ) {
-            vo.getExpressionExperimentIds().add( ee.getId() );
-        }
-
-        vo.setNumExperiments( size );
-        return vo;
-    }
-
-    /**
-     * Fill in information about analyses done on the experiments.
-     * 
-     * @param result
-     */ 
-    private void populateAnalyses( Collection<Long> eeids, Collection<ExpressionExperimentValueObject> result ) {
-        Map<Long, DifferentialExpressionAnalysis> analysisMap = differentialExpressionAnalysisService
-                .findByInvestigationIds( eeids );
-        for ( ExpressionExperimentValueObject eevo : result ) {
-            if ( !analysisMap.containsKey( eevo.getId() ) ) {
-                continue;
-            }
-            eevo.setDifferentialExpressionAnalysisId( analysisMap.get( eevo.getId() ).getId() );
-        }
     }
 
     /**

@@ -25,16 +25,23 @@ import java.util.HashSet;
  * @author paul
  * @version $Id$
  */
-public class ExpressionExperimentSetValueObject {
+public class ExpressionExperimentSetValueObject implements Comparable<ExpressionExperimentSetValueObject> {
 
     private Long id;
     private String name;
     private String description;
     private Collection<Long> expressionExperimentIds;
     private Integer numExperiments;
+
+    /**
+     * If modifying the set is contrained by existing analyses.
+     */
     private boolean modifiable;
+
     private String taxonName;
     private Long taxonId;
+
+    private boolean currentUserHasWritePermission = false;
 
     public ExpressionExperimentSetValueObject() {
         this.expressionExperimentIds = new HashSet<Long>();
@@ -102,6 +109,19 @@ public class ExpressionExperimentSetValueObject {
 
     public void setTaxonName( String taxonName ) {
         this.taxonName = taxonName;
+    }
+
+    public int compareTo( ExpressionExperimentSetValueObject arg0 ) {
+        if ( this.getName() == null || arg0.getName() == null ) return 0;
+        return this.getName().compareTo( arg0.getName() );
+    }
+
+    public void setCurrentUserHasWritePermission( boolean currentUserHasWritePermission ) {
+        this.currentUserHasWritePermission = currentUserHasWritePermission;
+    }
+
+    public boolean isCurrentUserHasWritePermission() {
+        return currentUserHasWritePermission;
     }
 
 }
