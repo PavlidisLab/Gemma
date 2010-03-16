@@ -161,6 +161,8 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
      */
     public RelativeLocationData findNearest( PhysicalLocation physicalLocation, boolean useStrand ) {
 
+        //FIXME  Should return a collection of relativeLocationData in the case of ties
+        
         if ( physicalLocation.getNucleotide() == null ) {
             throw new IllegalArgumentException( "Locations must have a nucleotide position" );
         }

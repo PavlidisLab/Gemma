@@ -11,6 +11,8 @@ package ubic.gemma.web.services;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
@@ -20,7 +22,6 @@ import org.w3c.dom.Element;
 
 import ubic.gemma.model.genome.Chromosome;
 import ubic.gemma.model.genome.ChromosomeService;
-import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.RelativeLocationData;
 import ubic.gemma.model.genome.Taxon;
@@ -96,24 +97,24 @@ public class GenesAtPhysicalLocationEndpoint extends AbstractGemmaEndpoint {
         physicalLocation.setNucleotideLength(length.intValue());
         physicalLocation.setStrand( null );
 
-        Collection<RelativeLocationData> results = new ArrayList<RelativeLocationData>();
-        Collection<String> geneIdResults = new ArrayList<String>();
+        Set<Long> results = new HashSet<Long>(); //so we don't get duplicates didn't want to compare strings when i have longs....
+        Set<String> geneIdResults = new HashSet<String>();  
         
         for(Chromosome chrom : chroms){
             physicalLocation.setChromosome( chrom );
             RelativeLocationData rld  = geneService.findNearest( physicalLocation, false );
-            results.add( rld );
-            geneIdResults.add( rld.getNearestGene().getId().toString() );
+            if (rld != null && results.add( rld.getNearestGene().getId()))
+                geneIdResults.add( rld.getNearestGene().getId().toString() );
         }
         
 
-        this.buildWrapper( document, geneIdResults, GENES_PLOC_LOCAL_NAME );
+      Element result =   this.buildWrapper( document, geneIdResults, GENES_PLOC_LOCAL_NAME );
 
         watch.stop();
         Long time = watch.getTime();
         log.debug( "XML response for physical location result built in " + time + "ms." );
 
-        return null;
+        return result;
     }   
 
 }
