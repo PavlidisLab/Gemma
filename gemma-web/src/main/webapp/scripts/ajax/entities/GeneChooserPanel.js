@@ -215,11 +215,6 @@ Gemma.GeneGrid = Ext.extend(Ext.grid.GridPanel, {
 				this.fireEvent("addgenes", [geneId]);
 			},
 
-			loadGenes : function(geneIds, callback, args) {
-				this.loadGenes(geneIds, callback, args);
-				this.fireEvent("addgenes", geneIds);
-			},
-
 			/**
 			 * 
 			 * @return {} list of all geneids currently held, including ones in the grid and possible one in the field.
