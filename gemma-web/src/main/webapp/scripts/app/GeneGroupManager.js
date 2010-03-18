@@ -24,35 +24,9 @@ Ext.onReady(function() {
 
 		});
 
-// FIXME: Not sure how to get these as part of the widget directly.
-
-writeableChks = new Ext.ux.grid.CheckColumn({
-			header : 'Read Write',
-			dataIndex : 'currentGroupCanWrite',
-			tooltip : 'Current group can write?',
-			groupable : false,
-			width : 55
-		});
-
-readableChks = new Ext.ux.grid.CheckColumn({
-			header : 'Read',
-			dataIndex : 'currentGroupCanRead',
-			tooltip : 'Current group can read?',
-			groupable : false,
-			width : 55
-		});
-publicChks = new Ext.ux.grid.CheckColumn({
-			header : 'Public',
-			dataIndex : 'publiclyReadable',
-			tooltip : 'Data is publicly readable?',
-			groupable : false,
-			width : 55
-		});
-
 // Displays the current users Gene Groups
 Gemma.GeneGroupPanel = Ext.extend(Ext.grid.EditorGridPanel, {
 
-	plugins : [publicChks, readableChks, writeableChks],
 	loadMask : true,
 	stateful : false,
 	selModel : new Ext.grid.RowSelectionModel({
@@ -70,13 +44,45 @@ Gemma.GeneGroupPanel = Ext.extend(Ext.grid.EditorGridPanel, {
 					SecurityController.getGenesInGroup(selectedGeneGroupId,
 							function(geneValueObjs) {
 
-								// Need call back for load mask?
-								if (!geneValueObjs || geneValueObjs.length == 0)
-									return; // No genes returned throw an error?
+								var genePanel = Ext
+										.getCmp('gene-chooser-panel');
+								// If no genes in gene set, enable taxon
+								// selction
+								if (!geneValueObjs
+										|| geneValueObjs.size() === 0) {
+									genePanel.getTopToolbar().taxonCombo
+											.reset();
+									genePanel.getTopToolbar().geneCombo.reset();
+									genePanel.getTopToolbar().taxonCombo
+											.setDisabled(false);
+									genePanel.fireEvent("taxonchanged", null);
+									genePanel.loadGenes([]);
+									return;
+								}
+
 								var geneIds = [];
+								var taxonId = geneValueObjs[0].taxonId;
 								for (var i = 0; i < geneValueObjs.length; i++) {
+									if (taxonId != geneValueObjs[0].taxonId) {
+										Ext.Msg
+												.alert(
+														'Sorry.  Gene groups do not support mixed taxa. Please remove this gene group',
+														response);
+									}
 									geneIds.push(geneValueObjs[i].id);
 								}
+
+								var groupTaxon = {
+									id : taxonId,
+									commonName : geneValueObjs[0].taxonName
+								};
+								genePanel.getTopToolbar().taxonCombo
+										.setTaxon(groupTaxon);
+								genePanel.getTopToolbar().geneCombo
+										.setTaxon(groupTaxon);
+								genePanel.getTopToolbar().taxonCombo
+										.setDisabled(true);
+
 								Ext.getCmp('gene-chooser-panel')
 										.loadGenes(geneIds);
 							});
@@ -85,7 +91,11 @@ Gemma.GeneGroupPanel = Ext.extend(Ext.grid.EditorGridPanel, {
 		}
 	}),
 	store : new Ext.data.Store({
+		autoLoad : false,
 		name : "geneGroupData-store",
+		baseParams : {
+			params : [true]
+		},
 		proxy : new Ext.data.DWRProxy(SecurityController.getUsersGeneGroups),
 		reader : new Ext.data.ListRangeReader({}, Ext.data.Record.create([{
 							name : "entityClazz",
@@ -102,18 +112,13 @@ Gemma.GeneGroupPanel = Ext.extend(Ext.grid.EditorGridPanel, {
 						}, {
 							name : "owner"
 						}, {
-							name : "publiclyReadable",
+							name : "isPubliclyReadable",
 							type : "boolean"
 						}, {
-							name : "currentGroup",
-							type : "string"
-						}, {
-							name : "currentGroupCanRead",
-							type : "boolean"
-						}, {
-							name : "currentGroupCanWrite",
+							name : "isShared",
 							type : "boolean"
 						}])),
+
 		listeners : {
 			"exception" : function(proxy, type, action, options, response, arg) {
 				Ext.Msg.alert('Sorry', response);
@@ -123,6 +128,7 @@ Gemma.GeneGroupPanel = Ext.extend(Ext.grid.EditorGridPanel, {
 	columns : [{
 		header : 'Type',
 		dataIndex : 'entityClazz',
+		hidden : true,
 		groupable : true,
 		editable : false,
 		sortable : true,
@@ -132,6 +138,7 @@ Gemma.GeneGroupPanel = Ext.extend(Ext.grid.EditorGridPanel, {
 	}, {
 		header : 'ShortName',
 		dataIndex : 'entityShortName',
+		hidden : true,
 		editable : false,
 		groupable : false,
 		sortable : true
@@ -172,7 +179,21 @@ Gemma.GeneGroupPanel = Ext.extend(Ext.grid.EditorGridPanel, {
 				}
 			})
 		})
-	}, publicChks, readableChks, writeableChks
+	}, {
+		header : 'Flags',
+		sortable : true,
+		renderer : function(value, metadata, record, rowIndex, colIndex, store) {
+			var id = record.get('entityId');
+			var clazz = record.get('entityClazz');
+			var isPub = record.get('isPubliclyReadable');
+			var isShare = record.get('isShared');
+			
+			var result =  Gemma.SecurityManager.getSecurityLink(clazz, id,isPub, isShare);
+			return result;
+
+		},
+		tooltip : 'Click to edit permissions'
+	}
 
 	]
 });
@@ -191,15 +212,13 @@ Gemma.GeneGroupImporter = Ext.extend(Ext.Panel, {
 		};
 
 		this.geneChooserPanel = new Gemma.GeneGrid({
-					height : 300,
-					region : 'south',
+					region : 'east',
 					id : 'gene-chooser-panel'
 				});
 
 		this.geneGroupPanel = new Gemma.GeneGroupPanel({
-					height : 300,
 					id : 'gene-group-panel',
-					region : 'north'
+					region : 'center'
 				});
 
 		Ext.apply(this.geneChooserPanel.getTopToolbar().taxonCombo, {
@@ -209,6 +228,9 @@ Gemma.GeneGroupImporter = Ext.extend(Ext.Panel, {
 				});
 
 		Ext.apply(this, {
+			layout : 'border',
+			width : "100%",
+			height : 400,
 			title : "Gene Group Manager",
 			tbar : {
 				items : [{
@@ -232,15 +254,7 @@ Gemma.GeneGroupImporter = Ext.extend(Ext.Panel, {
 													callback : function(
 															groupname) {
 
-														/*
-														 * Refresh
-														 */
-														Ext
-																.getCmp("gene-group-panel")
-																.getStore()
-																.load({
-																			params : []
-																		});
+														refreshGeneGroupData();
 
 													},
 													errorHandler : function(e) {
@@ -257,43 +271,18 @@ Gemma.GeneGroupImporter = Ext.extend(Ext.Panel, {
 					icon : "/Gemma/images/icons/database_save.png",
 					id : 'manager-data-panel-save-btn',
 					handler : function(b, e) {
-						/*
-						 * change R/W/P on selected data, set owner. Get just
-						 * the edited records.
-						 */
-						var recs = Ext.getCmp("gene-group-panel").getStore()
-								.getModifiedRecords();
-						if (recs && recs[0]) {
-							var p = [];
-							for (var i = 0; i < recs.length; i++) {
-								/*
-								 * This is ugly. The 'owner' object gets turned
-								 * into a plain string.have to reconstruct the
-								 * owner from strings
-								 */
-								// This is the value if the owner has not been
-								// changed in the combo box
-								if (recs[i].data.owner.authority) {
-									recs[i].data.owner = {
-										authority : recs[i].data.owner.authority,
-										principal : recs[i].data.owner.principal
-									};
-								}
-								// this is the value if the owner has not been
-								// changed. principal is always true as combo
-								// only filled with principals
-								else if (recs[i].data.owner) {
-									recs[i].data.owner = {
-										authority : recs[i].data.owner,
-										principal : "true"
-									};
-								} else {
-									Ext.Msg.alert('Owner can not be changed');
-								}
-								p.push(recs[i].data);
-							}
 
-							SecurityController.updatePermissions(p, {
+						var rec = Ext.getCmp("gene-group-panel")
+								.getSelectionModel().getSelected();
+						if (rec) {
+
+							// Update the genes incase they changed also. Can
+							// only update the genes for 1 list.
+							var geneIds = Ext.getCmp("gene-chooser-panel")
+									.getGeneIds();
+
+							SecurityController.updateGeneGroup(
+									rec.data.entityId, geneIds, {
 										callback : function(d) {
 											refreshGeneGroupData();
 										},
@@ -301,6 +290,7 @@ Gemma.GeneGroupImporter = Ext.extend(Ext.Panel, {
 											Ext.Msg.alert('Sorry', e);
 										}
 									});
+
 						}
 
 					}
@@ -327,21 +317,15 @@ Gemma.GeneGroupImporter = Ext.extend(Ext.Panel, {
 						var sel = Ext.getCmp('gene-group-panel')
 								.getSelectionModel().getSelected();
 						var groupId = sel.get("entityId");
+						var groupName = sel.get("entityName");
 
 						var processResult = function(btn) {
-							/*
-							 * TODO -- no full server side support yet! Deleting
-							 * group is not so easy if there is data attached.
-							 */
 
 							if (btn == 'yes') {
 
 								SecurityController.deleteGeneGroup(groupId, {
 											callback : function() {
-												Ext.getCmp('gene-group-panel')
-														.getStore().load({
-																	params : []
-																});
+												refreshGeneGroupData();
 											},
 											errorHandler : function(e) {
 												Ext.Msg.alert('Sorry', e);
@@ -353,6 +337,8 @@ Gemma.GeneGroupImporter = Ext.extend(Ext.Panel, {
 						Ext.Msg.show({
 							title : 'Are you sure?',
 							msg : 'The group "'
+									+ groupName
+									+ " with id "
 									+ groupId
 									+ '" will be permanently deleted. This cannot be undone.',
 							buttons : Ext.Msg.YESNO,
@@ -368,6 +354,8 @@ Gemma.GeneGroupImporter = Ext.extend(Ext.Panel, {
 		});
 
 		Gemma.GeneGroupImporter.superclass.initComponent.call(this);
+
+		refreshGeneGroupData();
 
 	}
 });

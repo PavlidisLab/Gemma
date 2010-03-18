@@ -33,13 +33,18 @@ public class GeneSetImpl extends ubic.gemma.model.genome.gene.GeneSet {
      */
     private static final long serialVersionUID = 7069729200662464958L;
 
-    static public boolean containsGene( Gene g, GeneSet gs ) {
+    /**
+     * @param g
+     * @param gs
+     * @return null if g is not in gs.  Returns the geneSetMember if g is in gs.
+     */
+    static public GeneSetMember containsGene( Gene g, GeneSet gs ) {
 
         for ( GeneSetMember gm : gs.getMembers() ) {
-            if ( gm.getGene().equals( g ) ) return true;
+            if ( gm.getGene().equals( g ) ) return gm;
         }
 
-        return false;
+        return null;
 
     }
 

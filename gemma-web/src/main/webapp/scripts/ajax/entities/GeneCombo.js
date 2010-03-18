@@ -79,6 +79,8 @@ Gemma.GeneCombo = Ext.extend(Ext.form.ComboBox, {
 	reset : function() {
 		Gemma.GeneCombo.superclass.reset.call(this);
 		delete this.selectedGene;
+		this.lastQuery = null;
+		
 		if (this.tooltip) {
 			this.tooltip.destroy();
 		}

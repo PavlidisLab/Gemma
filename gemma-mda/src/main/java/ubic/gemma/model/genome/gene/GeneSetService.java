@@ -23,7 +23,6 @@ import java.util.Collection;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.userdetails.User;
 
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 
 /**

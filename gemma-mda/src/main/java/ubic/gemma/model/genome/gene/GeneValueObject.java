@@ -44,7 +44,7 @@ public class GeneValueObject implements java.io.Serializable {
         for ( Gene g : genes ) {
             if ( g == null ) continue;
             converted.add( new GeneValueObject( g.getId(), g.getName(), g.getNcbiId(), g.getOfficialSymbol(), g
-                    .getOfficialName(), g.getDescription(), null ) );
+                    .getOfficialName(), g.getDescription(), null, g.getTaxon().getId(), g.getTaxon().getScientificName() ) );
         }
 
         return converted;
@@ -80,6 +80,12 @@ public class GeneValueObject implements java.io.Serializable {
 
     private java.lang.String description;
     
+    private java.lang.Long taxonId;
+    
+    private java.lang.String taxonName;
+    
+
+
     private Double score;  //This is for genes in genesets might have a rank or a score associated with them. 
 
     public GeneValueObject() {
@@ -93,7 +99,7 @@ public class GeneValueObject implements java.io.Serializable {
      */
     public GeneValueObject( GeneValueObject otherBean ) {
         this( otherBean.getId(), otherBean.getName(), otherBean.getNcbiId(), otherBean.getOfficialSymbol(), otherBean
-                .getOfficialName(), otherBean.getDescription(), otherBean.getScore() );
+                .getOfficialName(), otherBean.getDescription(), otherBean.getScore(), otherBean.getTaxonId(), otherBean.getTaxonName() );
     }
     
     /**
@@ -102,12 +108,12 @@ public class GeneValueObject implements java.io.Serializable {
      */
     public GeneValueObject( GeneSetMember otherBean ) {
         this( otherBean.getGene().getId(), otherBean.getGene().getName(), otherBean.getGene().getNcbiId(), otherBean.getGene().getOfficialSymbol(), otherBean
-                .getGene().getOfficialName(), otherBean.getGene().getDescription(), otherBean.getScore() );
+                .getGene().getOfficialName(), otherBean.getGene().getDescription(), otherBean.getScore(), otherBean.getGene().getTaxon().getId(), otherBean.getGene().getTaxon().getScientificName() );
     }
 
 
     public GeneValueObject( java.lang.Long id, java.lang.String name, java.lang.String ncbiId,
-            java.lang.String officialSymbol, java.lang.String officialName, java.lang.String description, Double score ) {
+            java.lang.String officialSymbol, java.lang.String officialName, java.lang.String description, Double score, Long taxonId, String taxonName) {
         this.id = id;
         this.name = name;
         this.ncbiId = ncbiId;
@@ -115,6 +121,8 @@ public class GeneValueObject implements java.io.Serializable {
         this.officialName = officialName;
         this.description = description;
         this.score = score;
+        this.taxonId = taxonId;
+        this.taxonName = taxonName;
     }
 
     /**
@@ -133,7 +141,13 @@ public class GeneValueObject implements java.io.Serializable {
     }
 
     /**
-     * 
+     *     public java.lang.Long getTaxonId() {
+        return taxonId;
+    }
+
+    public void setTaxonId( java.lang.Long taxonId ) {
+        this.taxonId = taxonId;
+    }
      */
     public java.lang.String getDescription() {
         return this.description;
@@ -205,6 +219,21 @@ public class GeneValueObject implements java.io.Serializable {
     public Double getScore() {
         return score;
     }
+    
+    public java.lang.Long getTaxonId() {
+        return taxonId;
+    }
 
-    // ubic.gemma.model.genome.gene.GeneValueObject value-object java merge-point
+    public void setTaxonId( java.lang.Long taxonId ) {
+        this.taxonId = taxonId;
+    }
+
+    public void setTaxonName( java.lang.String taxonName ) {
+        this.taxonName = taxonName;
+    }
+
+    public java.lang.String getTaxonName() {
+        return taxonName;
+    }
+
 }

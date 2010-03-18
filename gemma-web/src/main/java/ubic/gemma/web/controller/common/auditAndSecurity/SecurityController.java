@@ -628,16 +628,23 @@ public class SecurityController {
      */
     public String createGeneGroup( String name, Collection<Long> geneIds ) {
 
-        if ( geneIds == null || geneIds.isEmpty() ) return null;
-
         if ( name == null || name.isEmpty() ) return null;
+
+        GeneSet gset = GeneSet.Factory.newInstance();
+        gset.setName( name );
+
+        //If no gene Ids just create group and return. 
+        if ( geneIds == null || geneIds.isEmpty() ) {
+            gset = this.geneSetService.create( gset );
+            this.securityService.makePrivate( gset );
+            return gset.getName();
+        }
+
 
         Collection<Gene> genes = geneService.loadMultiple( geneIds );
 
         if ( genes == null || genes.isEmpty() ) return null;
 
-        GeneSet gset = GeneSet.Factory.newInstance();
-        gset.setName( name );
 
         for ( Gene g : genes ) {
             GeneSetMember gmember = GeneSetMember.Factory.newInstance();
@@ -694,22 +701,42 @@ public class SecurityController {
      */
     public void updateGeneGroup( Long groupId, Collection<Long> geneIds ) {
 
-        if ( geneIds == null || geneIds.isEmpty() ) return;
+        GeneSet gset = this.geneSetService.load( groupId );
+        Collection<GeneSetMember> updatedGenelist = new HashSet<GeneSetMember>(); // Creating a new gene list indirectly allows for
+                                                                                  // easy deletion of gene group members
+
+        // Create the empty gene group
+        if ( geneIds == null || geneIds.isEmpty() ) {
+            gset.setMembers( updatedGenelist );
+            this.geneSetService.update( gset );
+            return;
+        }
 
         Collection<Gene> genes = geneService.loadMultiple( geneIds );
 
-        if ( genes == null || genes.isEmpty() ) return;
-
-        GeneSet gset = this.geneSetService.load( groupId );
-
-        for ( Gene g : genes ) {
-            if ( GeneSetImpl.containsGene( g, gset ) ) continue;
-            GeneSetMember gmember = GeneSetMember.Factory.newInstance();
-            gmember.setGene( g );
-            gmember.setScore( DEFAULT_SCORE );
-            gset.getMembers().add( gmember );
+        if ( genes == null || genes.isEmpty() ) {
+            log.warn( "GeneIds returned were valid GeneIds:  Terminating updated and changing nothing." );
+            return;
         }
 
+        for ( Gene g : genes ) {
+
+            GeneSetMember gsm = GeneSetImpl.containsGene( g, gset );
+
+            // Gene not in list create memember and add it.
+            if ( gsm == null ) {
+                GeneSetMember gmember = GeneSetMember.Factory.newInstance();
+                gmember.setGene( g );
+                gmember.setScore( DEFAULT_SCORE );
+                gset.getMembers().add( gmember );
+                updatedGenelist.add( gmember );
+            } else {
+                updatedGenelist.add( gsm );
+            }
+
+        }
+
+        gset.setMembers( updatedGenelist );
         this.geneSetService.update( gset );
 
         return;
