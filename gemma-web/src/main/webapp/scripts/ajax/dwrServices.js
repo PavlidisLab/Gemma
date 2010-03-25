@@ -555,25 +555,31 @@ SecurityController.updatePermission = function(p0, callback) {
 SecurityController.getGroupMembers = function(p0, callback) {
 	dwr.engine._execute(SecurityController._path, 'SecurityController', 'getGroupMembers', p0, callback);
 }
-SecurityController.createGeneGroup = function(p0, p1, callback) {
-	dwr.engine._execute(SecurityController._path, 'SecurityController', 'createGeneGroup', p0, p1, callback);
-}
-SecurityController.deleteGeneGroup = function(p0, callback) {
-	dwr.engine._execute(SecurityController._path, 'SecurityController', 'deleteGeneGroup', p0, callback);
-}
 SecurityController.getAvailablePrincipalSids = function(callback) {
 	dwr.engine._execute(SecurityController._path, 'SecurityController', 'getAvailablePrincipalSids', callback);
 }
 SecurityController.getUsersGeneGroups = function(p0, callback) {
 	dwr.engine._execute(SecurityController._path, 'SecurityController', 'getUsersGeneGroups', p0, callback);
 }
-SecurityController.getGenesInGroup = function(p0, callback) {
-	dwr.engine._execute(SecurityController._path, 'SecurityController', 'getGenesInGroup', p0, callback);
+//==============================================================================
+if (GeneSetController == null)
+	var GeneSetController = {};
+GeneSetController._path = '/Gemma/dwr';
+GeneSetController.getGenesInGroup = function(p0, callback) {
+	dwr.engine._execute(GeneSetController._path, 'GeneSetController', 'getGenesInGroup', p0, callback);
 }
-SecurityController.updateGeneGroup = function(p0, p1, callback) {
-	dwr.engine._execute(SecurityController._path, 'SecurityController', 'updateGeneGroup', p0, p1, callback);
+GeneSetController.updateGeneGroup = function(p0, p1, callback) {
+	dwr.engine._execute(GeneSetController._path, 'GeneSetController', 'updateGeneGroup', p0, p1, callback);
 }
-
+GeneSetController.createGeneGroup = function(p0, p1, callback) {
+	dwr.engine._execute(GeneSetController._path, 'GeneSetController', 'createGeneGroup', p0, p1, callback);
+}
+GeneSetController.deleteGeneGroup = function(p0, callback) {
+	dwr.engine._execute(GeneSetController._path, 'GeneSetController', 'deleteGeneGroup', p0, callback);
+}
+GeneSetController.getUsersGeneGroups = function(p0, callback) {
+	dwr.engine._execute(GeneSetController._path, 'GeneSetController', 'getUsersGeneGroups', p0, callback);
+}
 // ====================================================================================
 if (SystemMonitorController == null)
 	var SystemMonitorController = {};

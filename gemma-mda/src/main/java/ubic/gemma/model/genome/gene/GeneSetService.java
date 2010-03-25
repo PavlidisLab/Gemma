@@ -119,6 +119,8 @@ public interface GeneSetService {
     @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
     public void update( GeneSet geneset );
     
+    
+    
     /**
      * Returns the {@link GeneSet}s for the currently logged in {@link User} - i.e, ones for which the
      * current user has specific read permissions on (as opposed to data sets which are public). Important: This method
@@ -132,5 +134,6 @@ public interface GeneSetService {
     @Secured( { "GROUP_USER", "AFTER_ACL_FILTER_MY_DATA" })
     public Collection<GeneSet> loadMyGeneSets();
     
+
 
 }

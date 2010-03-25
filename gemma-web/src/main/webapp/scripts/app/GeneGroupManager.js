@@ -40,8 +40,8 @@ Gemma.GeneGroupPanel = Ext.extend(Ext.grid.EditorGridPanel, {
 					if (!sel) {
 						return;
 					}
-					var selectedGeneGroupId = sel.data.entityId;
-					SecurityController.getGenesInGroup(selectedGeneGroupId,
+					var selectedGeneGroupId = sel.data.id;
+					GeneSetController.getGenesInGroup(selectedGeneGroupId,
 							function(geneValueObjs) {
 
 								var genePanel = Ext
@@ -93,26 +93,20 @@ Gemma.GeneGroupPanel = Ext.extend(Ext.grid.EditorGridPanel, {
 	store : new Ext.data.Store({
 		autoLoad : false,
 		name : "geneGroupData-store",
-		baseParams : {
-			params : [true]
-		},
-		proxy : new Ext.data.DWRProxy(SecurityController.getUsersGeneGroups),
+		proxy : new Ext.data.DWRProxy(GeneSetController.getUsersGeneGroups),
 		reader : new Ext.data.ListRangeReader({}, Ext.data.Record.create([{
-							name : "entityClazz",
-							type : "string"
-						}, {
-							name : "entityId",
+							name : "id",
 							type : "int"
 						}, {
-							name : "entityName",
+							name : "name",
 							type : "string"
 						}, {
-							name : "entityShortName",
+							name : "description",
 							type : "string"
 						}, {
 							name : "owner"
 						}, {
-							name : "isPubliclyReadable",
+							name : "isPublic",
 							type : "boolean"
 						}, {
 							name : "isShared",
@@ -126,74 +120,71 @@ Gemma.GeneGroupPanel = Ext.extend(Ext.grid.EditorGridPanel, {
 		}
 	}),
 	columns : [{
-		header : 'Type',
-		dataIndex : 'entityClazz',
-		hidden : true,
-		groupable : true,
-		editable : false,
-		sortable : true,
-		renderer : function(value, metaData, record, rowIndex, colIndex, store) {
-			return value.replace(/.*\./, '');
-		}
-	}, {
-		header : 'ShortName',
-		dataIndex : 'entityShortName',
-		hidden : true,
-		editable : false,
-		groupable : false,
-		sortable : true
-	}, {
-		header : 'Name',
-		dataIndex : 'entityName',
-		editable : false,
-		groupable : false,
-		sortable : true
-	}, {
-		header : 'Owner',
-		tooltip : 'Who owns the data',
-		dataIndex : 'owner',
-		groupable : true,
-		sortable : true,
-		renderer : function(value, metaData, record, rowIndex, colIndex, store) {
-			return value.authority ? value.authority : value;
-		},
-		editor : new Ext.form.ComboBox({
-			typeAhead : true,
-			displayField : "authority",
-			triggerAction : 'all',
-			lazyRender : true,
-			store : new Ext.data.Store({
-				proxy : new Ext.data.DWRProxy(SecurityController.getAvailablePrincipalSids),
-				reader : new Ext.data.ListRangeReader({}, Ext.data.Record
-								.create([{
+				header : 'Name',
+				dataIndex : 'name',
+				editable : false,
+				groupable : false,
+				sortable : true
+			}, {
+				header : 'Description',
+				dataIndex : 'description',
+				editable : false,
+				groupable : false,
+				sortable : true
+			}, {
+				header : 'Owner',
+				tooltip : 'Who owns the data',
+				dataIndex : 'owner',
+				groupable : true,
+				sortable : true,
+				renderer : function(value, metaData, record, rowIndex,
+						colIndex, store) {
+					return value.authority ? value.authority : value;
+				},
+				editor : new Ext.form.ComboBox({
+					typeAhead : true,
+					displayField : "authority",
+					triggerAction : 'all',
+					lazyRender : true,
+					store : new Ext.data.Store({
+						proxy : new Ext.data.DWRProxy(SecurityController.getAvailablePrincipalSids),
+						reader : new Ext.data.ListRangeReader({},
+								Ext.data.Record.create([{
 											name : "authority"
 										}, {
 											name : "principal",
 											type : "boolean"
 										}])),
-				listeners : {
-					"exception" : function(proxy, type, action, options,
-							response, arg) {
-						Ext.Msg.alert('Sorry', response);
-					}
-				}
-			})
-		})
-	}, {
-		header : 'Flags',
-		sortable : true,
-		renderer : function(value, metadata, record, rowIndex, colIndex, store) {
-			var id = record.get('entityId');
-			var clazz = record.get('entityClazz');
-			var isPub = record.get('isPubliclyReadable');
-			var isShare = record.get('isShared');
-			
-			var result =  Gemma.SecurityManager.getSecurityLink(clazz, id,isPub, isShare);
-			return result;
+						listeners : {
+							"exception" : function(proxy, type, action,
+									options, response, arg) {
+								Ext.Msg.alert('Sorry', response);
+							}
+						}
+					})
+				})
+			}, {
+				header : 'Flags',
+				sortable : true,
+				renderer : function(value, metadata, record, rowIndex,
+						colIndex, store) {
 
-		},
-		tooltip : 'Click to edit permissions'
-	}
+					// Not sure why record.get("publik") returns null and
+					// record.data is an empty string but record.json has my
+					// data. Data is in GeneSetValueObject and all other
+					// information is there on the server. Looking at record
+					// object in debugger i found my variables
+					// encouded as json. Not sure why....
+
+					var result = Gemma.SecurityManager.getSecurityLink(
+							"ubic.gemma.model.genome.gene.GeneSetImpl",
+							record.json.id, record.json.publik,
+							record.json.shared);
+					return result;
+
+				},
+				tooltip : 'Click to edit permissions'
+			}
 
 	]
 });
@@ -244,13 +235,8 @@ Gemma.GeneGroupImporter = Ext.extend(Ext.Panel, {
 										text) {
 									if (btn == 'ok') {
 
-										var geneIds = Ext
-												.getCmp("gene-chooser-panel")
-												.getGeneIds();
-										// TODO add checks for no/bad genes
-
-										SecurityController.createGeneGroup(
-												text, geneIds, {
+										GeneSetController.createGeneGroup(text,
+												[], {
 													callback : function(
 															groupname) {
 
@@ -261,7 +247,7 @@ Gemma.GeneGroupImporter = Ext.extend(Ext.Panel, {
 														Ext.Msg.alert('Sorry',
 																e);
 													}
-												})
+												});
 									}
 								});
 
@@ -281,8 +267,8 @@ Gemma.GeneGroupImporter = Ext.extend(Ext.Panel, {
 							var geneIds = Ext.getCmp("gene-chooser-panel")
 									.getGeneIds();
 
-							SecurityController.updateGeneGroup(
-									rec.data.entityId, geneIds, {
+							GeneSetController.updateGeneGroup(rec.data.id,
+									geneIds, {
 										callback : function(d) {
 											refreshGeneGroupData();
 										},
@@ -316,14 +302,14 @@ Gemma.GeneGroupImporter = Ext.extend(Ext.Panel, {
 
 						var sel = Ext.getCmp('gene-group-panel')
 								.getSelectionModel().getSelected();
-						var groupId = sel.get("entityId");
-						var groupName = sel.get("entityName");
+						var groupId = sel.get("id");
+						var groupName = sel.get("name");
 
 						var processResult = function(btn) {
 
 							if (btn == 'yes') {
 
-								SecurityController.deleteGeneGroup(groupId, {
+								GeneSetController.deleteGeneGroup(groupId, {
 											callback : function() {
 												refreshGeneGroupData();
 											},
@@ -331,8 +317,8 @@ Gemma.GeneGroupImporter = Ext.extend(Ext.Panel, {
 												Ext.Msg.alert('Sorry', e);
 											}
 										});
-							};
-						}
+							}
+						};
 
 						Ext.Msg.show({
 							title : 'Are you sure?',

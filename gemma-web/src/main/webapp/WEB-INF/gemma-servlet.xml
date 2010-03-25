@@ -1193,9 +1193,7 @@
 							<list>
 								<value>addUserToGroup</value>
 								<value>createGroup</value>
-								<value>createGeneGroup</value>
 								<value>deleteGroup</value>
-								<value>deleteGeneGroup</value>
 								<value>getGroupMembers</value>
 								<value>getUsersData</value>
 								<value>getAvailableSids</value>
@@ -1211,10 +1209,24 @@
 								<value>updatePermissions</value>
 								<value>updatePermission</value>
 								<value>getAvailablePrincipalSids</value>
+							</list>
+						</property>
+					</bean>
+				</entry>
+					<entry key="GeneSetController">
+					<bean class="org.directwebremoting.spring.CreatorConfig">
+						<property name="creator">
+							<bean class="org.directwebremoting.spring.BeanCreator">
+								<property name="bean" ref="geneSetController" />
+							</bean>
+						</property>
+						<property name="includes">
+							<list>							
+								<value>createGeneGroup</value>
+								<value>deleteGeneGroup</value>
 								<value>getUsersGeneGroups</value>
 								<value>getGenesInGroup</value>
 								<value>updateGeneGroup</value>
-
 							</list>
 						</property>
 					</bean>
@@ -2067,6 +2079,16 @@
 					</bean>
 				</entry>
 				<entry key="ubic.gemma.web.controller.common.auditAndSecurity.SecurityInfoValueObject">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="bean" />
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.web.controller.common.auditAndSecurity.GeneSetValueObject">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="bean" />
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.model.genome.gene.GeneSetMemberImpl">
 					<bean class="org.directwebremoting.spring.ConverterConfig">
 						<property name="type" value="bean" />
 					</bean>

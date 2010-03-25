@@ -40,13 +40,9 @@ import ubic.gemma.model.common.Describable;
 import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.model.genome.gene.GeneSet;
-import ubic.gemma.model.genome.gene.GeneSetImpl;
-import ubic.gemma.model.genome.gene.GeneSetMember;
 import ubic.gemma.model.genome.gene.GeneSetService;
-import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.security.SecurityService;
 import ubic.gemma.security.authentication.UserDetailsImpl;
 import ubic.gemma.security.authentication.UserManager;
@@ -63,7 +59,6 @@ import ubic.gemma.web.remote.EntityDelegator;
 public class SecurityController {
 
     private static Log log = LogFactory.getLog( SecurityController.class );
-    private static final Double DEFAULT_SCORE = 0.0;
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService = null;
@@ -592,12 +587,8 @@ public class SecurityController {
         }
     }
 
-    // **********************************
-    // GENE GROUP AJAX SERVICES
-    // **********************************
-    /**
-     * AJAX Returns just the current users gene sets
-     * 
+    /*
+     * AJAX exposed method
      * @param privateOnly
      * @return
      */
@@ -617,130 +608,6 @@ public class SecurityController {
 
         Collection<SecurityInfoValueObject> result = securables2VOs( secs, null );
         return result;
-    }
-
-    /**
-     * AJAX Creates a new gene group given a name for the group and the genes in the group
-     * 
-     * @param name
-     * @param genes
-     * @return
-     */
-    public String createGeneGroup( String name, Collection<Long> geneIds ) {
-
-        if ( name == null || name.isEmpty() ) return null;
-
-        GeneSet gset = GeneSet.Factory.newInstance();
-        gset.setName( name );
-
-        //If no gene Ids just create group and return. 
-        if ( geneIds == null || geneIds.isEmpty() ) {
-            gset = this.geneSetService.create( gset );
-            this.securityService.makePrivate( gset );
-            return gset.getName();
-        }
-
-
-        Collection<Gene> genes = geneService.loadMultiple( geneIds );
-
-        if ( genes == null || genes.isEmpty() ) return null;
-
-
-        for ( Gene g : genes ) {
-            GeneSetMember gmember = GeneSetMember.Factory.newInstance();
-            gmember.setGene( g );
-            gmember.setScore( DEFAULT_SCORE );
-            gset.getMembers().add( gmember );
-        }
-
-        gset = this.geneSetService.create( gset );
-        this.securityService.makePrivate( gset );
-
-        return gset.getName();
-    }
-
-    /**
-     * AJAX Given a valid gene group will remove it from db (if the user has permissons to do so).
-     * 
-     * @param groupId
-     */
-    public void deleteGeneGroup( Long groupId ) {
-
-        if ( groupId == null ) return;
-
-        GeneSet gset = geneSetService.load( groupId );
-        if ( gset != null ) geneSetService.remove( gset );
-
-    }
-
-    /**
-     * AJAX If the current user has access to given gene group will return the gene ids in the gene group
-     * 
-     * @param groupId
-     * @return
-     */
-    public Collection<GeneValueObject> getGenesInGroup( Long groupId ) {
-
-        Collection<GeneValueObject> results = null;
-
-        GeneSet gs = this.geneSetService.load( groupId );
-        if ( gs == null ) return null; // FIXME: Send and error code/feedback?
-
-        results = GeneValueObject.convertMembers2GeneValueObjects( gs.getMembers() );
-
-        return results;
-
-    }
-
-    /**
-     * AJAX Updates the given gene group (permission permitting) with the given list of geneIds Will not allow the same
-     * gene to be added to the gene set twice.
-     * 
-     * @param groupId
-     * @param geneIds
-     */
-    public void updateGeneGroup( Long groupId, Collection<Long> geneIds ) {
-
-        GeneSet gset = this.geneSetService.load( groupId );
-        Collection<GeneSetMember> updatedGenelist = new HashSet<GeneSetMember>(); // Creating a new gene list indirectly allows for
-                                                                                  // easy deletion of gene group members
-
-        // Create the empty gene group
-        if ( geneIds == null || geneIds.isEmpty() ) {
-            gset.setMembers( updatedGenelist );
-            this.geneSetService.update( gset );
-            return;
-        }
-
-        Collection<Gene> genes = geneService.loadMultiple( geneIds );
-
-        if ( genes == null || genes.isEmpty() ) {
-            log.warn( "GeneIds returned were valid GeneIds:  Terminating updated and changing nothing." );
-            return;
-        }
-
-        for ( Gene g : genes ) {
-
-            GeneSetMember gsm = GeneSetImpl.containsGene( g, gset );
-
-            // Gene not in list create memember and add it.
-            if ( gsm == null ) {
-                GeneSetMember gmember = GeneSetMember.Factory.newInstance();
-                gmember.setGene( g );
-                gmember.setScore( DEFAULT_SCORE );
-                gset.getMembers().add( gmember );
-                updatedGenelist.add( gmember );
-            } else {
-                updatedGenelist.add( gsm );
-            }
-
-        }
-
-        gset.setMembers( updatedGenelist );
-        this.geneSetService.update( gset );
-
-        return;
-
     }
 
     /**

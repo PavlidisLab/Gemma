@@ -44,8 +44,32 @@ Gemma.SecurityManager.managePermissions = function(elid, clazz, id) {
 		var writers = securityInfo.groupsThatCanWrite;
 		var availableGroups = securityInfo.availableGroups;
 
-		readerChecks = [];
-		writerChecks = [];
+		// FIXME:
+		// Server returns null if the currently logged user belongs to no
+		// custom groups which is bad (for following reasons) and technikally
+		// incorrect.
+		// All users belong to the user group anyway but can't edit it.
+		// Adding an array=null to a Component bombs. Adding a null check
+		// doesn't
+		// help because the panel has a 'field set' already declared, which at
+		// runtime has to have at least one checkbox in it.
+		// A way out of this is to apply the combo boxes and the field set at
+		// the same time if they are necessary.
+		// My kungfu no enough strong ;p
+
+		readerChecks = [new Ext.form.Checkbox({
+					checked : true,
+					boxLabel : 'Users',
+					id : 'user' + "-read-chk",
+					disabled : true
+				})];
+		writerChecks = [new Ext.form.Checkbox({
+					checked : true,
+					boxLabel : 'Users',
+					id : 'user' + "-write-chk",
+					disabled : true
+				})];
+
 		for (var i = 0, len = availableGroups.length; i < len; i++) {
 			var groupName = availableGroups[i];
 			readerChecks.push(new Ext.form.Checkbox({
@@ -241,7 +265,8 @@ Gemma.SecurityManager.updateSecurityLink = function(elid, isPublic, isShared) {
 
 /**
  * Display an icon representing the security status. The icon is a link to the
- * security manager for that entity.
+ * security manager for that entity. If IsPublic and isShared not provided
+ * Locked icon is returned
  * 
  * @param {}
  *            clazz full qualified class name of Gemma entity impl, e.g.
@@ -275,4 +300,43 @@ Gemma.SecurityManager.getSecurityLink = function(clazz, id, isPublic, isShared) 
 			+ elid
 			+ '" >' + icon + '&nbsp;' + sharedIcon + '</span>';
 	return result;
+};
+
+/**
+ * Display an icon representing the security status. The icon is a link to the
+ * security manager for that entity. Makes a call to the server side to get the
+ * security info for the given user.
+ * 
+ * @param {}
+ *            clazz full qualified class name of Gemma entity impl, e.g.
+ *            ubic.gemma.model.expression.experiment.ExpressionExperimentImpl.
+ * @param {}
+ *            id of the entity
+ * @return {} html for the link
+ */
+Gemma.SecurityManager.getSecurityUrl = function(clazz, id) {
+
+	// FIXME: make method wait for callback method to return ends prematurly
+	// return no link at all.
+
+	SecurityController.getSecurityInfo({
+				classDelegatingFor : clazz,
+				id : id
+			}, {
+				callback : function(securityInfo) {
+
+					var isPublic = securityInfo.publiclyReadable;
+					var isShared = securityInfo.shared;
+
+					return Gemma.SecurityManager.getSecurityLink(clazz, id,
+							isPublic, isShared);
+
+				},
+				errorHandler : function(data) {
+					alert("There was an error getting your group information: "
+							+ data);
+				}
+
+			});
+
 };

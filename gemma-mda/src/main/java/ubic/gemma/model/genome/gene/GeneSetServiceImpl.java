@@ -20,6 +20,8 @@ package ubic.gemma.model.genome.gene;
 
 import java.util.Collection;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -36,6 +38,8 @@ public class GeneSetServiceImpl implements GeneSetService {
 
     @Autowired
     private GeneSetDao geneSetDao = null;
+
+    private static Log log = LogFactory.getLog( GeneSetServiceImpl.class );
 
     /*
      * (non-Javadoc)
@@ -54,7 +58,8 @@ public class GeneSetServiceImpl implements GeneSetService {
         return this.geneSetDao.create( geneset );
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
      * @see ubic.gemma.model.genome.gene.GeneSetService#findByGene(ubic.gemma.model.genome.Gene)
      */
     public Collection<GeneSet> findByGene( Gene gene ) {
@@ -125,15 +130,15 @@ public class GeneSetServiceImpl implements GeneSetService {
         this.geneSetDao.update( geneset );
 
     }
-    
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
      * @see ubic.gemma.model.genome.gene.GeneSetService#loadMyGeneSets()
      */
     @SuppressWarnings("unchecked")
-    public Collection<GeneSet> loadMyGeneSets(){
-       return ( Collection<GeneSet> ) this.geneSetDao.loadAll();
-        
+    public Collection<GeneSet> loadMyGeneSets() {
+        return ( Collection<GeneSet> ) this.geneSetDao.loadAll();
+
     }
 
 }
