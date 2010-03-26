@@ -202,9 +202,9 @@ public class GeneSetController {
 
         //Create valueobject (need to add security info or would move this out into the valueobject...
         Collection<GeneSetValueObject> result = new HashSet<GeneSetValueObject>();
-        for(GeneSet gs : geneSets){            
+        for(Securable gs : secs){            
 
-            GeneSetValueObject gsvo = new GeneSetValueObject(gs);
+            GeneSetValueObject gsvo = new GeneSetValueObject((GeneSet) gs);
             gsvo.setPublik( securityService.isPublic( gs ) );
             gsvo.setShared( securityService.isShared( gs ) );      
             gsvo.setOwner( new SidValueObject( securityService.getOwner( gs ) ) );
