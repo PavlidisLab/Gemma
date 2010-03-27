@@ -18,6 +18,7 @@
  */
 package ubic.gemma.web.controller.expression.arrayDesign;
 
+import ubic.gemma.job.TaskCommand;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.genome.biosequence.SequenceType;
 import ubic.gemma.web.controller.common.auditAndSecurity.FileUpload;
@@ -28,7 +29,7 @@ import ubic.gemma.web.controller.common.auditAndSecurity.FileUpload;
  * @author pavlidis
  * @version $Id$
  */
-public class ArrayDesignSequenceAddCommand {
+public class ArrayDesignSequenceAddCommand extends TaskCommand {
 
     ArrayDesign arrayDesign;
 

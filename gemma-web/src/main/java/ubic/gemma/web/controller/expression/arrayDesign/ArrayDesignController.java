@@ -36,15 +36,12 @@ import java.util.TreeSet;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.Predicate;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -56,6 +53,11 @@ import ubic.gemma.analysis.report.ArrayDesignReportServiceImpl;
 import ubic.gemma.analysis.sequence.ArrayDesignMapResultService;
 import ubic.gemma.analysis.sequence.CompositeSequenceMapValueObject;
 import ubic.gemma.analysis.service.ArrayDesignAnnotationService;
+import ubic.gemma.job.AbstractTaskService;
+import ubic.gemma.job.BackgroundJob;
+import ubic.gemma.job.TaskCommand;
+import ubic.gemma.job.TaskResult;
+import ubic.gemma.job.progress.ProgressManager;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.expression.arrayDesign.AlternateName;
@@ -71,10 +73,6 @@ import ubic.gemma.search.SearchResult;
 import ubic.gemma.search.SearchService;
 import ubic.gemma.search.SearchSettings;
 import ubic.gemma.security.SecurityService;
-import ubic.gemma.util.progress.ProgressJob;
-import ubic.gemma.util.progress.ProgressManager;
-import ubic.gemma.web.controller.BackgroundControllerJob;
-import ubic.gemma.web.controller.BackgroundProcessingMultiActionController;
 import ubic.gemma.web.remote.EntityDelegator;
 import ubic.gemma.web.taglib.arrayDesign.ArrayDesignHtmlUtil;
 import ubic.gemma.web.taglib.displaytag.ArrayDesignValueObjectComparator;
@@ -86,47 +84,33 @@ import ubic.gemma.web.util.EntityNotFoundException;
  */
 @Controller
 @RequestMapping("/arrays")
-public class ArrayDesignController extends BackgroundProcessingMultiActionController {
+public class ArrayDesignController extends AbstractTaskService {
 
     /**
      * Inner class used for building array design summary
      */
-    class GenerateSummary extends BackgroundControllerJob<ModelAndView> {
+    class GenerateSummary extends BackgroundJob<TaskCommand> {
 
-        private Long arrayDesignId;
-
-        public GenerateSummary( HttpSession session ) {
-            super( getMessageUtil(), session );
-            arrayDesignId = null;
+        public GenerateSummary( TaskCommand command ) {
+            super( command );
         }
 
-        public GenerateSummary( Long id ) {
-            this( null, id );
-        }
+        @Override
+        public TaskResult processJob() {
 
-        public GenerateSummary( HttpSession session, Long id ) {
-            super( getMessageUtil(), session );
-            this.arrayDesignId = id;
-        }
-
-        public ModelAndView call() throws Exception {
-
-            ProgressJob job = init( "Generating ArrayDesign Report summary" );
-            provideAuthentication();
-
-            if ( arrayDesignId == null ) {
-                if ( this.getDoForward() ) saveMessage( "Generated summary for all platforms" );
-                job.updateProgress( "Generated summary for all platforms" );
+            if ( this.command.getEntityId() == null ) {
+                log.info( "Generated summary for all platforms" );
                 arrayDesignReportService.generateArrayDesignReport();
             } else {
-                if ( this.getDoForward() ) saveMessage( "Generating summary for platform " + arrayDesignId );
-                job.updateProgress( "Generating summary for specified platform" );
-                ArrayDesignValueObject report = arrayDesignReportService.generateArrayDesignReport( arrayDesignId );
-                job.setPayload( report );
+                log.info( "Generating summary for specified platform" );
+                ArrayDesignValueObject report = arrayDesignReportService.generateArrayDesignReport( this.command
+                        .getEntityId() );
+                ProgressManager.setPayload( taskId, report ); // FIXME do this via the TaskResult.
             }
 
-            // ProgressManager.destroyProgressJob( job, this.getDoForward() );
-            return new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesignStatistics.html" ) );
+           
+            return new TaskResult( command, new ModelAndView( new RedirectView(
+                    "/Gemma/arrays/showAllArrayDesignStatistics.html" ) ) );
 
         }
     }
@@ -134,32 +118,28 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
     /**
      * Inner class used for deleting array designs
      */
-    class RemoveArrayJob extends BackgroundControllerJob<ModelAndView> {
+    class RemoveArrayJob extends BackgroundJob<TaskCommand> {
 
-        private ArrayDesign ad;
-
-        public RemoveArrayJob( ArrayDesign ad ) {
-            super();
-            this.ad = ad;
+        public RemoveArrayJob( TaskCommand command ) {
+            super( command );
         }
 
-        public ModelAndView call() throws Exception {
-
-            ProgressJob job = init( "Deleting Array: " + ad.getShortName() );provideAuthentication();
-
+        @Override
+        public TaskResult processJob() {
+            ArrayDesign ad = arrayDesignService.load( command.getEntityId() );
+            if ( ad == null ) {
+                throw new IllegalArgumentException( "Could not load array design with id=" + command.getEntityId() );
+            }
             arrayDesignService.remove( ad );
-            saveMessage( "Array " + ad.getShortName() + " removed from Database." );
-            ad = null;
-
-            ProgressManager.destroyProgressJob( job, true );
-            return new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html" ) );
+            return new TaskResult( command, new ModelAndView( new RedirectView(
+                    "/Gemma/arrays/showAllArrayDesigns.html" ) ).addObject( "message", "Array " + ad.getShortName()
+                    + " removed from Database." ) );
 
         }
     }
 
     private static boolean AJAX = true;
 
-    private static Log log = LogFactory.getLog( ArrayDesignController.class.getName() );
     /**
      * Instead of showing all the probes for the array, we might only fetch some of them.
      */
@@ -179,10 +159,6 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
 
     @Autowired
     private CompositeSequenceService compositeSequenceService = null;
-
-    private final String identifierNotFound = "Must provide a valid Array Design identifier";
-
-    private final String messageName = "Array design with name";
 
     @Autowired
     private SearchService searchService;
@@ -237,15 +213,15 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
         // Do this by checking if there are any bioassays that depend this AD
         Collection<BioAssay> assays = arrayDesignService.getAllAssociatedBioAssays( id );
         if ( assays.size() != 0 ) {
-            // String eeName = ( ( BioAssay ) assays.iterator().next() )
-            // todo tell user what EE depends on this array design
-            addMessage( request, "Array  " + arrayDesign.getName()
-                    + " can't be deleted. Dataset has a dependency on this Array.", new Object[] { messageName,
-                    arrayDesign.getName() } );
-            return new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html" ) );
+            return new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html" ) ).addObject(
+                    "message", "Array  " + arrayDesign.getName()
+                            + " can't be deleted. Dataset has a dependency on this Array." );
         }
 
-        return startJob( new RemoveArrayJob( arrayDesign ) );
+        RemoveArrayJob job = new RemoveArrayJob( new TaskCommand( arrayDesign.getId() ) );
+        super.startTask( job );
+
+        return new ModelAndView().addObject( "taskId", job.getTaskId() );
 
     }
 
@@ -322,44 +298,38 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
 
         // Validate the filtering search criteria.
         if ( StringUtils.isBlank( filter ) ) {
-            this.saveMessage( request, "No search critera provided" );
-            return showAllArrayDesigns( request, response );
+            return new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html" ) ).addObject(
+                    "message", "No search criteria provided" );
         }
 
         Collection<SearchResult> searchResults = searchService.search( SearchSettings.ArrayDesignSearch( filter ) )
                 .get( ArrayDesign.class );
 
         if ( ( searchResults == null ) || ( searchResults.size() == 0 ) ) {
-            this.saveMessage( request, "Your search yielded no results" );
-            Long overallElapsed = overallWatch.getTime();
-            log.info( "No results found. Search took: " + overallElapsed / 1000 + "s " );
-            return showAllArrayDesigns( request, response );
+            return new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html" ) ).addObject(
+                    "message", "No search criteria provided" );
+
         }
 
         String list = "";
 
         if ( searchResults.size() == 1 ) {
             ArrayDesign arrayDesign = arrayDesignService.load( searchResults.iterator().next().getId() );
-            this.saveMessage( request, "Matched one : " + arrayDesign.getName() + "(" + arrayDesign.getShortName()
-                    + ")" );
-            overallWatch.stop();
-            Long overallElapsed = overallWatch.getTime();
-            log.info( "Filter found 1 AD:  " + arrayDesign.getName() + " took: " + overallElapsed / 1000 + "s " );
-            return new ModelAndView( new RedirectView( "/Gemma/arrays/showArrayDesign.html?id=" + arrayDesign.getId() ) );
+            return new ModelAndView( new RedirectView( "/Gemma/arrays/showArrayDesign.html?id=" + arrayDesign.getId() ) )
+                    .addObject( "message", "Matched one : " + arrayDesign.getName() + "(" + arrayDesign.getShortName()
+                            + ")" );
         }
 
         for ( SearchResult ad : searchResults ) {
             list += ad.getId() + ",";
         }
 
-        this.saveMessage( request, "Search Criteria: " + filter );
-        this.saveMessage( request, searchResults.size() + " Array Designs matched your search." );
-
         overallWatch.stop();
         Long overallElapsed = overallWatch.getTime();
         log.info( "Generating the AD list:  (" + list + ") took: " + overallElapsed / 1000 + "s " );
 
-        return new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html?id=" + list ) );
+        return new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html?id=" + list ) ).addObject(
+                "message", searchResults.size() + " Array Designs matched your search." );
 
     }
 
@@ -376,11 +346,17 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
         String sId = request.getParameter( "id" );
 
         // if no IDs are specified, then load all expressionExperiments and show the summary (if available)
+        GenerateSummary job;
         if ( sId == null ) {
-            return startJob( new GenerateSummary( request.getSession() ) );
+            job = new GenerateSummary( new TaskCommand() );
+        } else {
+            Long id = Long.parseLong( sId );
+            job = new GenerateSummary( new TaskCommand( id ) );
         }
-        Long id = Long.parseLong( sId );
-        return startJob( new GenerateSummary( request.getSession(), id ) );
+        startTask( job );
+
+        return new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html?id=" + sId ) ).addObject(
+                "taskId", job.getTaskId() );
     }
 
     /**
@@ -486,7 +462,12 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
             throw new IllegalArgumentException( "Cannot delete " + arrayDesign
                     + ", it is used by an expression experiment" );
         }
-        return ( String ) startJob( new RemoveArrayJob( arrayDesign ) ).getModel().get( "taskId" );
+
+        RemoveArrayJob job = new RemoveArrayJob( new TaskCommand( arrayDesign.getId() ) );
+
+        super.startTask( job );
+
+        return job.getTaskId();
     }
 
     /**
@@ -532,6 +513,59 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
     }
 
     /**
+     * Show all array designs, or according to a list of IDs passed in.
+     * 
+     * @param request
+     * @param response
+     * @return
+     */
+    @RequestMapping("/showAllArrayDesigns.html")
+    public ModelAndView showAllArrayDesigns( HttpServletRequest request, HttpServletResponse response ) {
+
+        StopWatch overallWatch = new StopWatch();
+        overallWatch.start();
+
+        String sId = request.getParameter( "id" );
+        String sShowMerge = request.getParameter( "showMerg" );
+        String sShowOrph = request.getParameter( "showOrph" );
+
+        boolean showMergees = Boolean.parseBoolean( sShowMerge );
+        boolean showOrphans = Boolean.parseBoolean( sShowOrph );
+
+        ArrayDesignValueObject summary = arrayDesignReportService.getSummaryObject();
+
+        Collection<Long> ids = new ArrayList<Long>();
+        if ( sId != null ) {
+            String[] idList = StringUtils.split( sId, ',' );
+            for ( int i = 0; i < idList.length; i++ ) {
+                ids.add( new Long( idList[i] ) );
+            }
+        }
+
+        Collection<ArrayDesignValueObject> valueObjects = getArrayDesigns( ids, showMergees, showOrphans );
+
+        if ( !SecurityService.isUserAdmin() ) {
+            removeTroubledArrayDesigns( valueObjects );
+        }
+
+        arrayDesignReportService.fillInValueObjects( valueObjects );
+        arrayDesignReportService.fillEventInformation( valueObjects );
+        arrayDesignReportService.fillInSubsumptionInfo( valueObjects );
+
+        Long numArrayDesigns = new Long( valueObjects.size() );
+        ModelAndView mav = new ModelAndView( "arrayDesigns" );
+        mav.addObject( "showMergees", showMergees );
+        mav.addObject( "showOrphans", showOrphans );
+        mav.addObject( "arrayDesigns", valueObjects );
+        mav.addObject( "numArrayDesigns", numArrayDesigns );
+        mav.addObject( "summary", summary );
+
+        log.info( "ArrayDesign.showall took: " + overallWatch.getTime() + "ms for " + numArrayDesigns );
+
+        return mav;
+    }
+
+    /**
      * @param request
      * @param response
      * @param errors
@@ -543,9 +577,8 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
         String idStr = request.getParameter( "id" );
 
         if ( ( name == null ) && ( idStr == null ) ) {
-            // should be a validation error, on 'submit'.
-            this.saveMessage( request, "Must provide an array design name or id. Displaying all Arrays" );
-            return this.showAllArrayDesigns( request, response );
+            return new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html" ) ).addObject(
+                    "message", "Must provide an array design name or id. Displaying all Arrays" );
 
         }
         ArrayDesign arrayDesign = null;
@@ -558,8 +591,8 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
         }
 
         if ( arrayDesign == null ) {
-            this.saveMessage( request, "Unable to load Array Design with id: " + idStr + ". Displaying all Arrays" );
-            return this.showAllArrayDesigns( request, response );
+            return new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html" ) ).addObject(
+                    "message", "Unable to load Array Design with id: " + idStr + ". Displaying all Arrays" );
 
         }
         long id = arrayDesign.getId();
@@ -618,63 +651,6 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
     }
 
     /**
-     * Show all array designs, or according to a list of IDs passed in.
-     * 
-     * @param request
-     * @param response
-     * @return
-     */
-    @RequestMapping("/showAllArrayDesigns.html")
-    public ModelAndView showAllArrayDesigns( HttpServletRequest request, HttpServletResponse response ) {
-
-        StopWatch overallWatch = new StopWatch();
-        overallWatch.start();
-
-        String sId = request.getParameter( "id" );
-        String sShowMerge = request.getParameter( "showMerg" );
-        String sShowOrph = request.getParameter( "showOrph" );
-
-        boolean showMergees = Boolean.parseBoolean( sShowMerge );
-        boolean showOrphans = Boolean.parseBoolean( sShowOrph );
-
-        ArrayDesignValueObject summary = arrayDesignReportService.getSummaryObject();
-
-        if ( sId == null ) {
-            this.saveMessage( request, "Displaying all Arrays" );
-        }
-
-        Collection<Long> ids = new ArrayList<Long>();
-        if ( sId != null ) {
-            String[] idList = StringUtils.split( sId, ',' );
-            for ( int i = 0; i < idList.length; i++ ) {
-                ids.add( new Long( idList[i] ) );
-            }
-        }
-
-        Collection<ArrayDesignValueObject> valueObjects = getArrayDesigns( ids, showMergees, showOrphans );
-
-        if ( !SecurityService.isUserAdmin() ) {
-            removeTroubledArrayDesigns( valueObjects );
-        }
-
-        arrayDesignReportService.fillInValueObjects( valueObjects );
-        arrayDesignReportService.fillEventInformation( valueObjects );
-        arrayDesignReportService.fillInSubsumptionInfo( valueObjects );
-
-        Long numArrayDesigns = new Long( valueObjects.size() );
-        ModelAndView mav = new ModelAndView( "arrayDesigns" );
-        mav.addObject( "showMergees", showMergees );
-        mav.addObject( "showOrphans", showOrphans );
-        mav.addObject( "arrayDesigns", valueObjects );
-        mav.addObject( "numArrayDesigns", numArrayDesigns );
-        mav.addObject( "summary", summary );
-
-        log.info( "ArrayDesign.showall took: " + overallWatch.getTime() + "ms for " + numArrayDesigns );
-
-        return mav;
-    }
-
-    /**
      * Show (some of) the probes from an array.
      * 
      * @param request
@@ -719,13 +695,13 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
         Long id = Long.parseLong( request.getParameter( "id" ) );
         if ( id == null ) {
             // should be a validation error, on 'submit'.
-            throw new EntityNotFoundException( identifierNotFound );
+            throw new EntityNotFoundException( "Not found" );
         }
 
         ArrayDesign arrayDesign = arrayDesignService.load( id );
         if ( arrayDesign == null ) {
-            this.addMessage( request, "errors.objectnotfound", new Object[] { "Array Design " } );
-            return new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html" ) );
+            return new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html" ) ).addObject(
+                    "message", "Array design with id=" + id + " not found" );
         }
 
         Collection<ExpressionExperiment> ees = arrayDesignService.getExpressionExperiments( arrayDesign );
@@ -745,9 +721,9 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
      * @return the taskid
      */
     public String updateReport( EntityDelegator ed ) {
-        GenerateSummary runner = new GenerateSummary( ed.getId() );
-        runner.setDoForward( false );
-        return ( String ) super.startJob( runner ).getModel().get( "taskId" );
+        GenerateSummary runner = new GenerateSummary( new TaskCommand( ed.getId() ) );
+        super.startTask( runner );
+        return runner.getTaskId();
     }
 
     /**
@@ -897,5 +873,15 @@ public class ArrayDesignController extends BackgroundProcessingMultiActionContro
             assert newSize < size;
             log.info( "Removed " + ( size - newSize ) + " array designs with 'trouble' flags, leaving " + newSize );
         }
+    }
+
+    @Override
+    protected BackgroundJob<?> getInProcessRunner( TaskCommand command ) {
+        return null;
+    }
+
+    @Override
+    protected BackgroundJob<?> getSpaceRunner( TaskCommand command ) {
+        return null;
     }
 }

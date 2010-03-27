@@ -24,6 +24,8 @@ import java.util.Observer;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import ubic.gemma.job.progress.ProgressData;
+
 /**
  * Just a mock client inner class to ease testing
  * 

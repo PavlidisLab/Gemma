@@ -18,11 +18,27 @@
  */
 package ubic.gemma.analysis.preprocess;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.zip.GZIPInputStream;
+
+import org.apache.commons.lang.RandomStringUtils;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import ubic.gemma.loader.expression.geo.DatasetCombiner;
 import ubic.gemma.loader.expression.geo.GeoConverter;
+import ubic.gemma.loader.expression.geo.GeoFamilyParser;
+import ubic.gemma.loader.expression.geo.GeoParseResult;
+import ubic.gemma.loader.expression.geo.GeoSampleCorrespondence;
+import ubic.gemma.loader.expression.geo.model.GeoSeries;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
+import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.testing.BaseSpringContextTest;
 
@@ -106,24 +122,78 @@ public class TwoChannelMissingValuesTest extends BaseSpringContextTest {
      * @throws Exception
      */
 
+//    @Test
+//    public void testMissingValueGSE56() throws Exception {
+//
+//        // * FIXME: Get this test passing in release process (mvn release:perform fails) could not get release process
+//        // to pass with these tests (failed on final release couldn't reproduce)
+//
+//        InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
+//                "/data/loader/expression/geo/GSE56Short/GSE56_family.soft.gz" ) );
+//        GeoFamilyParser parser = new GeoFamilyParser();
+//        parser.parse( is );
+//        GeoSeries series = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSeriesMap().get( "GSE56" );
+//        DatasetCombiner datasetCombiner = new DatasetCombiner();
+//        GeoSampleCorrespondence correspondence = datasetCombiner.findGSECorrespondence( series );
+//        series.setSampleCorrespondence( correspondence );
+//        Object result = this.gc.convert( series );
+//
+//        assertNotNull( result );
+//        ExpressionExperiment expExp = ( ExpressionExperiment ) ( ( Collection ) result ).iterator().next();
+//        // make sure we don't run into bad data that already is in the DB
+//        expExp.setShortName( RandomStringUtils.randomAlphabetic( 20 ) );
+//        expExp.setName( RandomStringUtils.randomAlphabetic( 200 ) );
+//        expExp.setAccession( null );
+//        expExp = ( ExpressionExperiment ) persisterHelper.persist( expExp );
+//        Collection<RawExpressionDataVector> calls = tcmv.computeMissingValues( expExp, 2.0, new ArrayList<Double>() );
+//
+//        // There
+//        // is
+//        // one
+//        // array
+//        // design
+//        // and
+//        // it
+//        // has
+//        // 10
+//        // rows.
+//        assertEquals( 10, calls.size() );
+//    }
+
+    /**
+     * GSE56 is corrupt: there is no Channel 1 signal value in the data file.
+     * 
+     * @throws Exception
+     */
+
     @Test
-    public void testMissingValueGSE56() throws Exception {
+    public void testMissingValueGSE5091() throws Exception {
 
-        /*
-         * FIXME: Get this test passing in release process (mvn release:perform fails) could not get release process to
-         * pass with these tests (failed on final release couldn't reproduce) InputStream is = new GZIPInputStream(
-         * this.getClass().getResourceAsStream( "/data/loader/expression/geo/GSE56Short/GSE56_family.soft.gz" ) );
-         * GeoFamilyParser parser = new GeoFamilyParser(); parser.parse( is ); GeoSeries series = ( ( GeoParseResult )
-         * parser.getResults().iterator().next() ).getSeriesMap().get( "GSE56" ); DatasetCombiner datasetCombiner = new
-         * DatasetCombiner(); GeoSampleCorrespondence correspondence = datasetCombiner.findGSECorrespondence( series );
-         * series.setSampleCorrespondence( correspondence ); Object result = this.gc.convert( series ); assertNotNull(
-         * result ); ExpressionExperiment expExp = ( ExpressionExperiment ) ( ( Collection ) result ).iterator().next();
-         * // make sure we don't run into bad data that already is in the DB expExp.setShortName(
-         * RandomStringUtils.randomAlphabetic( 20 ) ); expExp.setName( RandomStringUtils.randomAlphabetic( 200 ) );
-         * expExp.setAccession( null ); expExp = ( ExpressionExperiment ) persisterHelper.persist( expExp );
-         * Collection<RawExpressionDataVector> calls = tcmv.computeMissingValues( expExp, 2.0, new ArrayList<Double>()
-         * ); //There is one array design and it has 10 rows. assertEquals( 10, calls.size() );
-         */
+        // * FIXME: Get this test passing in release process (mvn release:perform fails) could not get release process
+        // to pass with these tests (failed on final release couldn't reproduce)
+
+        InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/GSE5091Short/GSE5091_family.soft.gz" ) );
+        GeoFamilyParser parser = new GeoFamilyParser();
+        parser.parse( is );
+        GeoSeries series = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSeriesMap().get( "GSE5091" );
+        DatasetCombiner datasetCombiner = new DatasetCombiner();
+        GeoSampleCorrespondence correspondence = datasetCombiner.findGSECorrespondence( series );
+        series.setSampleCorrespondence( correspondence );
+        
+        gc = ( GeoConverter ) this.getBean( "geoConverter" );
+        
+        Object result = this.gc.convert( series );
+
+        assertNotNull( result );
+        ExpressionExperiment expExp = ( ExpressionExperiment ) ( ( Collection ) result ).iterator().next();
+        // make sure we don't run into bad data that already is in the DB
+        expExp.setShortName( RandomStringUtils.randomAlphabetic( 20 ) );
+        expExp.setName( RandomStringUtils.randomAlphabetic( 200 ) );
+        expExp.setAccession( null );
+        expExp = ( ExpressionExperiment ) persisterHelper.persist( expExp );
+        Collection<RawExpressionDataVector> calls = tcmv.computeMissingValues( expExp, 2.0, new ArrayList<Double>() );
+
+        assertEquals( 10, calls.size() );
     }
-
 }

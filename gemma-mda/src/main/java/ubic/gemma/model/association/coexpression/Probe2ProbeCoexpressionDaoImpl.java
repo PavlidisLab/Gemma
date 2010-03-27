@@ -47,7 +47,7 @@ import org.springframework.orm.hibernate3.HibernateCallback;
 import org.springframework.stereotype.Repository;
 
 import ubic.basecode.util.BatchIterator;
-import ubic.gemma.model.analysis.Analysis;
+import ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
@@ -287,14 +287,14 @@ public class Probe2ProbeCoexpressionDaoImpl extends
          * efficient to access P2P with native queries.
          */
         int totalDone = 0;
-        Analysis analysis = null;
+        ProbeCoexpressionAnalysis analysis = null;
         for ( String p2pClassName : p2pClassNames ) {
 
             final String findLinkAnalysisObject = "select p from ProbeCoexpressionAnalysisImpl p inner join"
                     + " p.expressionExperimentSetAnalyzed eas inner join eas.experiments e where e = :ee";
             List o = this.getHibernateTemplate().findByNamedParam( findLinkAnalysisObject, "ee", ee );
             if ( o.size() > 0 ) {
-                analysis = ( Analysis ) o.iterator().next();
+                analysis = ( ProbeCoexpressionAnalysis ) o.iterator().next();
             }
 
             final String nativeDeleteQuery = "DELETE FROM " + getTableName( p2pClassName, false )
@@ -947,10 +947,11 @@ public class Probe2ProbeCoexpressionDaoImpl extends
     /**
      * @param analysis
      */
-    private void removeAnalysisObject( Analysis analysis ) {
+    private void removeAnalysisObject( ProbeCoexpressionAnalysis analysis ) {
         if ( analysis != null ) {
             log.info( "Deleting analysis object" );
-            this.getHibernateTemplate().delete( analysis );
+
+            this.getHibernateTemplate().delete( analysis ); // cascade to CoexpressionProbe collection
             this.getHibernateTemplate().flush();
         } else {
             log.info( "No analysis object associated with link " );

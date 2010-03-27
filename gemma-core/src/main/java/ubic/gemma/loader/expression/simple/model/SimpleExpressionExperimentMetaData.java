@@ -23,6 +23,7 @@ import java.util.HashSet;
 
 import org.biomage.AuditAndSecurity.Contact;
 
+import ubic.gemma.job.TaskCommand;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.quantitationtype.GeneralType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
@@ -37,7 +38,7 @@ import ubic.gemma.model.genome.Taxon;
  * @author pavlidis
  * @version $Id$
  */
-public class SimpleExpressionExperimentMetaData {
+public class SimpleExpressionExperimentMetaData extends TaskCommand {
 
     private String name;
 

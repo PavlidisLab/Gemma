@@ -25,8 +25,7 @@ import org.junit.Test;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.context.ApplicationContext;
 
-import ubic.gemma.grid.javaspaces.util.SpacesEnum;
-import ubic.gemma.grid.javaspaces.util.SpacesUtil;
+import ubic.gemma.job.grid.util.SpacesUtil;
 import ubic.gemma.testing.BaseSpringContextTest;
 import ubic.gemma.util.SpringContextUtil;
 
@@ -52,11 +51,10 @@ public class SpacesUtilTest extends BaseSpringContextTest {
 
         SpacesUtil gigaspacesUtil = ( SpacesUtil ) this.getBean( "spacesUtil" );
 
-        BeanFactory updatedCtx = gigaspacesUtil.addGemmaSpacesToApplicationContext( SpacesEnum.DEFAULT_SPACE
-                .getSpaceUrl() );
+        BeanFactory updatedCtx = gigaspacesUtil.addGemmaSpacesToApplicationContext();
 
         /* verify that we have the new gigaspaces beans */
-        if ( !SpacesUtil.isSpaceRunning( SpacesEnum.DEFAULT_SPACE.getSpaceUrl() ) )
+        if ( !SpacesUtil.isSpaceRunning() )
             assertFalse( updatedCtx.containsBean( gigaspacesTemplate ) );
         else {
             assertTrue( updatedCtx.containsBean( gigaspacesTemplate ) );
@@ -79,7 +77,7 @@ public class SpacesUtilTest extends BaseSpringContextTest {
     @Test
     public void testIsSpaceRunning() {
 
-        boolean isRunning = SpacesUtil.isSpaceRunning( SpacesEnum.DEFAULT_SPACE.getSpaceUrl() );
+        boolean isRunning = SpacesUtil.isSpaceRunning();
 
         if ( isRunning ) {
             assertTrue( isRunning );
@@ -94,7 +92,7 @@ public class SpacesUtilTest extends BaseSpringContextTest {
      */
     @Test
     public void testLogSpaceStatistics() {
-        SpacesUtil.logSpaceStatistics( SpacesEnum.DEFAULT_SPACE.getSpaceUrl() );
+        SpacesUtil.logSpaceStatistics();
     }
 
     /**
@@ -103,9 +101,9 @@ public class SpacesUtilTest extends BaseSpringContextTest {
     @Test
     public void testNumIdle() {
         SpacesUtil gigaspacesUtil = ( SpacesUtil ) this.getBean( "spacesUtil" );
-        gigaspacesUtil.addGemmaSpacesToApplicationContext( SpacesEnum.DEFAULT_SPACE.getSpaceUrl() );
+        gigaspacesUtil.addGemmaSpacesToApplicationContext();
 
-        int count = gigaspacesUtil.numIdleWorkers( SpacesEnum.DEFAULT_SPACE.getSpaceUrl() );
+        int count = gigaspacesUtil.numIdleWorkers();
         assertTrue( count >= 0 );
 
     }

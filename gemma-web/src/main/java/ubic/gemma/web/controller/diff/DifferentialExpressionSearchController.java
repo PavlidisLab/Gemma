@@ -68,15 +68,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
     private ExpressionExperimentService expressionExperimentService = null;
     private ExpressionExperimentSetService expressionExperimentSetService = null;
 
-    /**
-     * 
-     */
-    public DifferentialExpressionSearchController() {
-        /*
-         * if true, reuses the same command object across the edit-submit-process (get-post-process).
-         */
-        setSessionForm( true );
-    }
+   
 
     /**
      * AJAX entry which returns results on a non-meta analysis basis. That is, the differential expression results for

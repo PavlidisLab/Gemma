@@ -375,6 +375,44 @@ public class SearchService implements InitializingBean {
     }
 
     /**
+     * @param query if empty, all experiments for the taxon are returned; otherwise, we use the search facility.
+     * @param taxonId required.
+     * @return Collection of ids.
+     */
+    public Collection<Long> searchExpressionExperiments( String query, Long taxonId ) {
+        Taxon taxon = taxonService.load( taxonId );
+        Collection<Long> eeIds = new HashSet<Long>();
+        if ( StringUtils.isNotBlank( query ) ) {
+
+            if ( query.length() < MINIMUM_EE_QUERY_LENGTH ) return eeIds;
+
+            // Initial list
+            List<SearchResult> results = this.search( SearchSettings.ExpressionExperimentSearch( query ), false ).get(
+                    ExpressionExperiment.class );
+            for ( SearchResult result : results ) {
+                eeIds.add( result.getId() );
+            }
+
+            // Filter by taxon
+            if ( taxon != null ) {
+                Collection<Long> eeIdsToKeep = new HashSet<Long>();
+                Collection<ExpressionExperiment> ees = expressionExperimentService.findByTaxon( taxon );
+                for ( ExpressionExperiment ee : ees ) {
+                    if ( eeIds.contains( ee.getId() ) ) eeIdsToKeep.add( ee.getId() );
+                }
+                eeIds.retainAll( eeIdsToKeep );
+            }
+        } else {
+            Collection<ExpressionExperiment> ees = ( taxon != null ) ? expressionExperimentService.findByTaxon( taxon )
+                    : expressionExperimentService.loadAll();
+            for ( ExpressionExperiment ee : ees ) {
+                eeIds.add( ee.getId() );
+            }
+        }
+        return eeIds;
+    }
+
+    /**
      * Makes no attempt at resovling the search query as a URI. Will tokenize the search query if there are control
      * characters in the String. URI's will get parsed into multiple query terms and lead to bad results.
      * 
@@ -444,41 +482,32 @@ public class SearchService implements InitializingBean {
     }
 
     /**
-     * @param query if empty, all experiments for the taxon are returned; otherwise, we use the search facility.
-     * @param taxonId required.
-     * @return Collection of ids.
+     * Runs inside Compass transaction
+     * 
+     * @param query
+     * @param session
+     * @return
      */
-    public Collection<Long> searchExpressionExperiments( String query, Long taxonId ) {
-        Taxon taxon = taxonService.load( taxonId );
-        Collection<Long> eeIds = new HashSet<Long>();
-        if ( StringUtils.isNotBlank( query ) ) {
+    Collection<SearchResult> performSearch( SearchSettings settings, CompassSession session ) {
+        StopWatch watch = startTiming();
 
-            if ( query.length() < MINIMUM_EE_QUERY_LENGTH ) return eeIds;
+        String query = settings.getQuery().trim();
+        if ( StringUtils.isBlank( query ) || query.length() < MINIMUM_STRING_LENGTH_FOR_FREE_TEXT_SEARCH
+                || query.equals( "*" ) ) return new ArrayList<SearchResult>();
 
-            // Initial list
-            List<SearchResult> results = this.search( SearchSettings.ExpressionExperimentSearch( query ), false ).get(
-                    ExpressionExperiment.class );
-            for ( SearchResult result : results ) {
-                eeIds.add( result.getId() );
-            }
+        CompassQuery compassQuery = session.queryBuilder().queryString( query.trim() ).toQuery();
+        CompassHits hits = compassQuery.hits();
 
-            // Filter by taxon
-            if ( taxon != null ) {
-                Collection<Long> eeIdsToKeep = new HashSet<Long>();
-                Collection<ExpressionExperiment> ees = expressionExperimentService.findByTaxon( taxon );
-                for ( ExpressionExperiment ee : ees ) {
-                    if ( eeIds.contains( ee.getId() ) ) eeIdsToKeep.add( ee.getId() );
-                }
-                eeIds.retainAll( eeIdsToKeep );
-            }
-        } else {
-            Collection<ExpressionExperiment> ees = ( taxon != null ) ? expressionExperimentService.findByTaxon( taxon )
-                    : expressionExperimentService.loadAll();
-            for ( ExpressionExperiment ee : ees ) {
-                eeIds.add( ee.getId() );
-            }
+        watch.stop();
+        if ( watch.getTime() > 1000 ) {
+            log.info( "Getting " + hits.getLength() + " hits for " + query + " took " + watch.getTime() + " ms" );
         }
-        return eeIds;
+
+        cacheHighlightedText( hits );
+
+        Collection<SearchResult> searchResults = getSearchResults( hits );
+
+        return searchResults;
     }
 
     /**
@@ -496,6 +525,36 @@ public class SearchService implements InitializingBean {
                  */
                 rawResults.add( sr );
             }
+        }
+    }
+
+    /**
+     * @param characteristicUris
+     * @param term
+     */
+    @SuppressWarnings("unchecked")
+    private void addChildTerms( Collection<String> characteristicUris, OntologyTerm term ) {
+        String uri = term.getUri();
+        /*
+         * getChildren can be very slow for 'high-level' classes like "neoplasm", so we use a cache.
+         */
+        Collection<OntologyTerm> children = null;
+        if ( StringUtils.isBlank( uri ) ) {
+            // shouldn't happen, but just in case
+            if ( log.isDebugEnabled() ) log.debug( "Blank uri for " + term );
+        }
+
+        Element cachedChildren = this.childTermCache.get( uri );
+        // log.debug("Getting children of " + term);
+        if ( cachedChildren == null ) {
+            children = term.getChildren( false );
+            childTermCache.put( new Element( uri, children ) );
+        } else {
+            children = ( Collection<OntologyTerm> ) cachedChildren.getValue();
+        }
+
+        for ( OntologyTerm child : children ) {
+            characteristicUris.add( child.getUri() );
         }
     }
 
@@ -687,8 +746,7 @@ public class SearchService implements InitializingBean {
      * @param settings
      * @return SearchResults of CharcteristicObjects. Typically to be useful one needs to retrieve the 'parents'
      *         (entities which have been 'tagged' with the term) of those Characteristics
-     */
-    @SuppressWarnings("unchecked")
+     */ 
     private Collection<SearchResult> characteristicSearchWithChildren( Collection<Class<?>> classes,
             SearchSettings settings ) {
 
@@ -716,8 +774,7 @@ public class SearchService implements InitializingBean {
      * @param matches
      * @param query
      * @return
-     */
-    @SuppressWarnings("unchecked")
+     */  
     private Collection<SearchResult> characteristicSearchWord( Collection<Class<?>> classes,
             Map<SearchResult, String> matches, String query ) {
 
@@ -803,36 +860,6 @@ public class SearchService implements InitializingBean {
             }
         }
         return matchingCharacteristics;
-    }
-
-    /**
-     * @param characteristicUris
-     * @param term
-     */
-    @SuppressWarnings("unchecked")
-    private void addChildTerms( Collection<String> characteristicUris, OntologyTerm term ) {
-        String uri = term.getUri();
-        /*
-         * getChildren can be very slow for 'high-level' classes like "neoplasm", so we use a cache.
-         */
-        Collection<OntologyTerm> children = null;
-        if ( StringUtils.isBlank( uri ) ) {
-            // shouldn't happen, but just in case
-            if ( log.isDebugEnabled() ) log.debug( "Blank uri for " + term );
-        }
-
-        Element cachedChildren = this.childTermCache.get( uri );
-        // log.debug("Getting children of " + term);
-        if ( cachedChildren == null ) {
-            children = term.getChildren( false );
-            childTermCache.put( new Element( uri, children ) );
-        } else {
-            children = ( Collection<OntologyTerm> ) cachedChildren.getValue();
-        }
-
-        for ( OntologyTerm child : children ) {
-            characteristicUris.add( child.getUri() );
-        }
     }
 
     /**
@@ -1062,6 +1089,33 @@ public class SearchService implements InitializingBean {
     }
 
     /**
+     * Takes a list of ontology terms, and classes of objects of interest to be returned. Looks through the
+     * characteristic table for an exact match with the given ontology terms. Only tries to match the uri's.
+     * 
+     * @param clazz Class of objects to restrict the search to (typically ExpressionExperiment.class, for example).
+     * @param terms A list of ontololgy terms to search for
+     * @return Collection of search results for the objects owning the found characteristics, where the owner is of
+     *         class clazz
+     */
+    @SuppressWarnings("unchecked")
+    private Collection<SearchResult> databaseCharacteristicExactUriSearchForOwners( Collection<Class<?>> classes,
+            Collection<OntologyTerm> terms ) {
+
+        // Collection<Characteristic> characteristicValueMatches = new ArrayList<Characteristic>();
+        Collection<Characteristic> characteristicURIMatches = new ArrayList<Characteristic>();
+
+        for ( OntologyTerm term : terms ) {
+            // characteristicValueMatches.addAll( characteristicService.findByValue( term.getUri() ));
+            characteristicURIMatches.addAll( characteristicService.findByUri( term.getUri() ) );
+        }
+
+        Map parentMap = characteristicService.getParents( characteristicURIMatches );
+        // parentMap.putAll( characteristicService.getParents(characteristicValueMatches ) );
+
+        return filterCharacteristicOwnersByClass( classes, parentMap );
+    }
+
+    /**
      * Search the DB for composite sequences and the genes that are matched to them.
      * 
      * @param searchString
@@ -1267,33 +1321,6 @@ public class SearchService implements InitializingBean {
      */
     private Collection<SearchResult> dbHitsToSearchResult( Collection<? extends Object> entities ) {
         return this.dbHitsToSearchResult( entities, null );
-    }
-
-    /**
-     * Takes a list of ontology terms, and classes of objects of interest to be returned. Looks through the
-     * characteristic table for an exact match with the given ontology terms. Only tries to match the uri's.
-     * 
-     * @param clazz Class of objects to restrict the search to (typically ExpressionExperiment.class, for example).
-     * @param terms A list of ontololgy terms to search for
-     * @return Collection of search results for the objects owning the found characteristics, where the owner is of
-     *         class clazz
-     */
-    @SuppressWarnings("unchecked")
-    private Collection<SearchResult> databaseCharacteristicExactUriSearchForOwners( Collection<Class<?>> classes,
-            Collection<OntologyTerm> terms ) {
-
-        // Collection<Characteristic> characteristicValueMatches = new ArrayList<Characteristic>();
-        Collection<Characteristic> characteristicURIMatches = new ArrayList<Characteristic>();
-
-        for ( OntologyTerm term : terms ) {
-            // characteristicValueMatches.addAll( characteristicService.findByValue( term.getUri() ));
-            characteristicURIMatches.addAll( characteristicService.findByUri( term.getUri() ) );
-        }
-
-        Map parentMap = characteristicService.getParents( characteristicURIMatches );
-        // parentMap.putAll( characteristicService.getParents(characteristicValueMatches ) );
-
-        return filterCharacteristicOwnersByClass( classes, parentMap );
     }
 
     /**
@@ -1615,8 +1642,7 @@ public class SearchService implements InitializingBean {
      * @param classes Which classes of entities to look for
      * @param cs
      * @return
-     */
-    @SuppressWarnings("unchecked")
+     */ 
     private Collection<SearchResult> getAnnotatedEntities( Collection<Class<?>> classes, Collection<Characteristic> cs ) {
 
         Map<Characteristic, Object> characterstic2entity = characteristicService.getParents( cs );
@@ -1837,22 +1863,14 @@ public class SearchService implements InitializingBean {
      * @param classes
      * @param searchString
      * @return
-     */
-    @SuppressWarnings("unchecked")
+     */ 
     private Collection<SearchResult> ontologySearchAnnotatedObject( Collection<Class<?>> classes,
             SearchSettings settings ) {
 
         /*
          * Direct search.
          */
-        Collection<SearchResult> results = new HashSet<SearchResult>();
-
-        // results.addAll( databaseCharacteristicSearchForOwners( classes, settings ) );
-        //
-        // // if ( watch.getTime() > 1000 ) {
-        // log.info( "Search for characteristics exactly matching '" + settings + "' took " + watch.getTime() + " ms, "
-        // + results.size() + " hits." );
-        // // }
+        Collection<SearchResult> results = new HashSet<SearchResult>(); 
 
         /*
          * Include children in ontologies, if any. This can be slow if there are a lot of children.
@@ -1863,35 +1881,6 @@ public class SearchService implements InitializingBean {
 
         return results;
 
-    }
-
-    /**
-     * Runs inside Compass transaction
-     * 
-     * @param query
-     * @param session
-     * @return
-     */
-    Collection<SearchResult> performSearch( SearchSettings settings, CompassSession session ) {
-        StopWatch watch = startTiming();
-
-        String query = settings.getQuery().trim();
-        if ( StringUtils.isBlank( query ) || query.length() < MINIMUM_STRING_LENGTH_FOR_FREE_TEXT_SEARCH
-                || query.equals( "*" ) ) return new ArrayList<SearchResult>();
-
-        CompassQuery compassQuery = session.queryBuilder().queryString( query.trim() ).toQuery();
-        CompassHits hits = compassQuery.hits();
-
-        watch.stop();
-        if ( watch.getTime() > 1000 ) {
-            log.info( "Getting " + hits.getLength() + " hits for " + query + " took " + watch.getTime() + " ms" );
-        }
-
-        cacheHighlightedText( hits );
-
-        Collection<SearchResult> searchResults = getSearchResults( hits );
-
-        return searchResults;
     }
 
     /**

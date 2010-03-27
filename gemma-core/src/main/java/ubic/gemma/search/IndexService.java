@@ -20,58 +20,76 @@ package ubic.gemma.search;
 
 import org.springframework.security.access.annotation.Secured;
 
+import ubic.gemma.tasks.maintenance.IndexerTaskCommand;
+
 /**
  * @author paul
  * @version $Id$
  */
 public interface IndexService {
 
-    @Secured("GROUP_AGENT")
-    public String runAll();
-
     /**
      * Indexes expression experiments, genes, array designs, probes and bibliographic references. This is a convenience
      * method for Quartz to schedule indexing of the entire database.
+     * 
+     * @return taskId
      */
     @Secured("GROUP_AGENT")
-    public void indexAll();
+    public String indexAll();
+
+    /**
+     * @param command
+     * @return taskId
+     */
+    @Secured("GROUP_AGENT")
+    public String index( IndexerTaskCommand command );
 
     /**
      * Indexes array designs.
+     * 
+     * @return taskId
      */
     @Secured("GROUP_AGENT")
-    public void indexArrayDesigns();
+    public String indexArrayDesigns();
 
     /**
      * Indexes bibliographic references.
+     * 
+     * @return taskId
      */
     @Secured("GROUP_AGENT")
-    public void indexBibligraphicReferences();
+    public String indexBibligraphicReferences();
 
     /**
      * Indexes sequences
+     * 
+     * @return taskId
      */
     @Secured("GROUP_AGENT")
-    public void indexBioSequences();
+    public String indexBioSequences();
 
     /**
      * Indexes expression experiments.
+     * 
+     * @return taskId
      */
     @Secured("GROUP_AGENT")
-    public void indexExpressionExperiments();
+    public String indexExpressionExperiments();
 
     /**
      * Indexes genes.
+     * 
+     * @return taskId
      */
     @Secured("GROUP_AGENT")
-    public void indexGenes();
+    public String indexGenes();
 
     /**
      * Indexes probes.
+     * 
+     * @return taskId
      */
     @Secured("GROUP_AGENT")
-    public void indexProbes();
-
-    public String run( Object command, String spaceUrl, String taskName, boolean runInWebapp );
+    public String indexProbes();
 
 }

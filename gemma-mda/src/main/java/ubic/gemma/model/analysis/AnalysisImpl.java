@@ -20,7 +20,6 @@
  */
 package ubic.gemma.model.analysis;
 
-
 /**
  * @see ubic.gemma.model.analysis.Analysis
  */

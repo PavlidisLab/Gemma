@@ -18,35 +18,26 @@
  */
 package ubic.gemma.web.controller;
 
-import java.util.concurrent.CancellationException;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
- 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.View;
 import org.springframework.web.servlet.view.RedirectView;
 
-import ubic.gemma.util.progress.TaskRunningService;
+import ubic.gemma.job.TaskResult;
+import ubic.gemma.job.TaskRunningService;
 
 /**
- * Generic controller that looks for a finished job.
+ * Generic controller that looks for a finished job. Used when a job is done to get the result.
  * 
  * @author pavlidis
  * @version $Id$
  */
 @Controller
-public class TaskCompletionController extends BaseFormController {
+public class TaskCompletionController {
 
-     @Autowired
+    @Autowired
     TaskRunningService taskRunningService;
-
-    /**
-     * If this has a value in the request, the job given will be cancelled (instead of checked).
-     */
-    public static final String CANCEL_ATTRIBUTE = "cancel";
 
     /**
      * AJAX
@@ -59,6 +50,10 @@ public class TaskCompletionController extends BaseFormController {
 
         if ( result == null ) return null;
 
+        if ( result instanceof TaskResult ) {
+            result = ( ( TaskResult ) result ).getAnswer();
+        }
+
         if ( result instanceof ModelAndView ) {
             View view = ( ( ModelAndView ) result ).getView();
             if ( view instanceof RedirectView ) {
@@ -67,62 +62,6 @@ public class TaskCompletionController extends BaseFormController {
             return null;
         }
         return result;
-    }
-
-    /**
-     * @param taskRunningService the taskRunningService to set
-     */
-    public void setTaskRunningService( TaskRunningService taskRunningService ) {
-        this.taskRunningService = taskRunningService;
-    }
-
-    /*
-     * The normal way this is reached is via a call with the task id. Usually this should be called only when the job is
-     * done and the results are needed.
-     */
-    @Override
-    protected ModelAndView handleRequestInternal( HttpServletRequest request, HttpServletResponse response )
-            throws Exception {
-        String taskId = request.getParameter( TaskRunningService.JOB_ATTRIBUTE );
-        if ( taskId == null ) {
-            this.saveMessage( request, "Can not monitor a task with a null task Id" );
-            return new ModelAndView( new RedirectView( "/Gemma/mainMenu.html" ) ); // have to replace this...
-        }
-
-        // todo: is this redundant code? see ProcessDeleteController. remove?
-        if ( request.getAttribute( CANCEL_ATTRIBUTE ) != null ) {
-            log.debug( "Cancelling " + taskId );
-            taskRunningService.cancelTask( taskId );
-            return new ModelAndView( new RedirectView( "/Gemma/mainMenu.html" ) ); // have to replace this...
-        }
-
-        log.debug( "Checking for job " + taskId );
-
-        ModelAndView returnedView = null;
-        try {
-            int tries = 0;
-            while ( tries < 3 ) {
-                returnedView = ( ModelAndView ) taskRunningService.checkResult( taskId );
-                if ( returnedView != null ) {
-                    log.debug( "Got result for " + taskId + ":" + returnedView );
-                    return returnedView;
-                }
-                tries++;
-                Thread.sleep( 100 );
-            }
-
-            this.saveMessage( request, "No task found with id, or still running: " + taskId );
-            return new ModelAndView( new RedirectView( "/Gemma/mainMenu.html" ) ); // have to replace this...
-
-        } catch ( CancellationException e ) {
-            log.debug( "Job was cancelled" );
-            return new ModelAndView( new RedirectView( "/Gemma/mainMenu.html" ) ); // have to replace this...
-        } catch ( Throwable e ) {
-            log.debug( "Got an exception: " + e );
-            if ( e instanceof Exception ) throw ( Exception ) e;
-            return new ModelAndView( new RedirectView( "/Gemma/mainMenu.html" ) ); // have to replace this...
-        }
-
     }
 
 }

@@ -19,6 +19,7 @@
 package ubic.gemma.analysis.preprocess;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import cern.colt.list.DoubleArrayList;
@@ -26,8 +27,7 @@ import cern.colt.matrix.DoubleMatrix1D;
 import cern.colt.matrix.DoubleMatrix2D;
 import cern.colt.matrix.impl.DenseDoubleMatrix1D;
 import cern.colt.matrix.impl.DenseDoubleMatrix2D;
-import cern.colt.matrix.linalg.Algebra;
-import edu.emory.mathcs.backport.java.util.Collections;
+import cern.colt.matrix.linalg.Algebra; 
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.math.DescriptiveWithMissing;

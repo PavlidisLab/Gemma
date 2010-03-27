@@ -55,14 +55,38 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
 
     private static final String GIGASPACES_ON = "gigaspacesOn";
 
-    protected BeanFactory ctx = null;
-    private PersisterHelper persisterHelper = null;
     protected AuditTrailService auditTrailService;
+
+    protected BeanFactory ctx = null;
     protected Collection<Exception> exceptionCache = new ArrayList<Exception>();
+    private boolean forceGigaSpacesOn = false;
+    private PersisterHelper persisterHelper = null;
+
+    public AbstractSpringAwareCLI() {
+        super();
+
+        CompassUtils.deleteCompassLocks();
+
+    }
 
     @Override
     public String getShortDesc() {
         return "";
+    }
+
+    public boolean isForceGigaSpacesOn() {
+        return forceGigaSpacesOn;
+    }
+
+    /**
+     * @param ctx
+     */
+    public void setCtx( BeanFactory ctx ) {
+        this.ctx = ctx;
+    }
+
+    public void setForceGigaSpacesOn( boolean forceGigaSpacesOn ) {
+        this.forceGigaSpacesOn = forceGigaSpacesOn;
     }
 
     @Override
@@ -72,48 +96,34 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
         addSpecialServiceOptions();
     }
 
-    private void addSpecialServiceOptions() {
-        Option gigaspacesOnOpt = new Option(
-                GIGASPACES_ON,
-                false,
-                "Use the compute grid for large jobs; by default the grid is not enabled for CLIs and ignores any relevant setting in your Gemma.properties file." );
-        options.addOption( gigaspacesOnOpt );
-    }
-
-    public AbstractSpringAwareCLI() {
-        super();
-
-        CompassUtils.deleteCompassLocks();
-
+    /**
+     * @param e Adds an exception to a cache. this is usefull in the scenairo where we don't want the CLI to bomb on the
+     *        exception but continue with its processing. Granted if the exception is fatal then the CLI should
+     *        terminate regardless.
+     */
+    protected void cacheException( Exception e ) {
+        exceptionCache.add( e );
     }
 
     /**
-     * @param fileName
-     * @return Given a file name returns a collection of strings. Each string represents one line of the file
+     * Override this method in your subclass to provide additional Spring configuration files that will be merged with
+     * the Gemma spring context. See SpringContextUtil; an example path is
+     * "classpath*:/myproject/applicationContext-mine.xml".
+     * 
+     * @return
      */
-    protected Collection<String> processFile( String fileName ) {
+    protected String[] getAdditionalSpringConfigLocations() {
+        return null;
+    }
 
-        Collection<String> lines = new ArrayList<String>();
-        int lineNumber = 0;
-        try {
-
-            InputStream is = new FileInputStream( fileName );
-            BufferedReader br = new BufferedReader( new InputStreamReader( is ) );
-
-            String line = null;
-
-            while ( ( line = br.readLine() ) != null ) {
-                lineNumber++;
-                if ( StringUtils.isBlank( line ) ) {
-                    continue;
-                }
-                lines.add( line.trim().toUpperCase() );
-            }
-        } catch ( IOException ioe ) {
-            log.error( "At line: " + lineNumber + " an error occured processing " + fileName + ". \n Error is: " + ioe );
-        }
-
-        return lines;
+    /**
+     * Convenience method to obtain instance of any bean by name.
+     * 
+     * @param name
+     * @return
+     */
+    protected Object getBean( String name ) {
+        return ctx.getBean( name );
     }
 
     /**
@@ -184,6 +194,54 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
         return needToRun && okToRun;
     }
 
+    protected void printExceptions() {
+        log.info( "Displaying cached error messages: " );
+
+        for ( Exception e : exceptionCache ) {
+            log.info( e );
+        }
+    }
+
+    /**
+     * @param fileName
+     * @return Given a file name returns a collection of strings. Each string represents one line of the file
+     */
+    protected Collection<String> processFile( String fileName ) {
+
+        Collection<String> lines = new ArrayList<String>();
+        int lineNumber = 0;
+        try {
+
+            InputStream is = new FileInputStream( fileName );
+            BufferedReader br = new BufferedReader( new InputStreamReader( is ) );
+
+            String line = null;
+
+            while ( ( line = br.readLine() ) != null ) {
+                lineNumber++;
+                if ( StringUtils.isBlank( line ) ) {
+                    continue;
+                }
+                lines.add( line.trim().toUpperCase() );
+            }
+        } catch ( IOException ioe ) {
+            log.error( "At line: " + lineNumber + " an error occured processing " + fileName + ". \n Error is: " + ioe );
+        }
+
+        return lines;
+    }
+
+    /**
+     * You must override this method to process any options you added.
+     */
+    @Override
+    protected void processOptions() {
+        createSpringContext();
+        authenticate();
+        this.auditTrailService = ( AuditTrailService ) this.getBean( "auditTrailService" );
+
+    }
+
     /** check username and password. */
     void authenticate() {
 
@@ -229,8 +287,8 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
      */
     void createSpringContext() {
 
-        ctx = SpringContextUtil.getApplicationContext( hasOption( "testing" ), true, hasOption( GIGASPACES_ON ), false,
-                getAdditionalSpringConfigLocations() );
+        ctx = SpringContextUtil.getApplicationContext( hasOption( "testing" ), true, hasOption( GIGASPACES_ON )
+                || this.isForceGigaSpacesOn(), false, getAdditionalSpringConfigLocations() );
 
         /* disable the scheduler */
         QuartzUtils.disableQuartzScheduler( ( StdScheduler ) this.getBean( "schedulerFactoryBean" ) );
@@ -242,60 +300,12 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
 
     }
 
-    /**
-     * Override this method in your subclass to provide additional Spring configuration files that will be merged with
-     * the Gemma spring context. See SpringContextUtil; an example path is
-     * "classpath*:/myproject/applicationContext-mine.xml".
-     * 
-     * @return
-     */
-    protected String[] getAdditionalSpringConfigLocations() {
-        return null;
-    }
-
-    /**
-     * @param ctx
-     */
-    public void setCtx( BeanFactory ctx ) {
-        this.ctx = ctx;
-    }
-
-    /**
-     * Convenience method to obtain instance of any bean by name.
-     * 
-     * @param name
-     * @return
-     */
-    protected Object getBean( String name ) {
-        return ctx.getBean( name );
-    }
-
-    /**
-     * You must override this method to process any options you added.
-     */
-    @Override
-    protected void processOptions() {
-        createSpringContext();
-        authenticate();
-        this.auditTrailService = ( AuditTrailService ) this.getBean( "auditTrailService" );
-
-    }
-
-    /**
-     * @param e Adds an exception to a cache. this is usefull in the scenairo where we don't want the CLI to bomb on the
-     *        exception but continue with its processing. Granted if the exception is fatal then the CLI should
-     *        terminate regardless.
-     */
-    protected void cacheException( Exception e ) {
-        exceptionCache.add( e );
-    }
-
-    protected void printExceptions() {
-        log.info( "Displaying cached error messages: " );
-
-        for ( Exception e : exceptionCache ) {
-            log.info( e );
-        }
+    private void addSpecialServiceOptions() {
+        Option gigaspacesOnOpt = new Option(
+                GIGASPACES_ON,
+                false,
+                "Use the compute grid for large jobs; by default the grid is not enabled for CLIs and ignores any relevant setting in your Gemma.properties file." );
+        options.addOption( gigaspacesOnOpt );
     }
 
 }

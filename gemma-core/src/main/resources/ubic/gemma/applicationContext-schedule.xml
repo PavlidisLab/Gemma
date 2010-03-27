@@ -31,6 +31,7 @@
 				<ref local="whatsNewTrigger" />
 				<ref local="gene2CsUpdateTrigger" />
 				<ref local="viewTrigger" />
+				<ref local="monitorSpaceTrigger" />
 			</list>
 		</property>
 	</bean>
@@ -83,14 +84,25 @@
 			<value>0 40 0 ? * *</value><!-- daily at 00:40 (should only update if it needs to) -->
 		</property>
 	</bean>
-	
+
 	<bean id="viewTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
 		<property name="jobDetail">
 			<ref bean="viewJobDetail" />
 		</property>
 		<property name="cronExpression">
-			<value>0 15 1 ? * MON</value><!-- Every monday at 1:15 am -->
+			<value>0 15 1 10 * ?</value> <!-- on the 10th of each month -->
 		</property>
+	</bean>
+
+	<bean id="monitorSpaceTrigger" class="org.springframework.scheduling.quartz.SimpleTriggerBean">
+		<property name="jobDetail">
+			<ref bean="monitorSpaceJobDetail" />
+		</property>
+		<property name="repeatInterval">
+			<value>10000</value>
+		</property>
+
+		<property name="startDelay" value="10000" />
 	</bean>
 
 
@@ -101,7 +113,7 @@
 		</property>
 		<property name="concurrent" value="false" />
 		<property name="targetMethod">
-			<value>runAll</value>
+			<value>indexAll</value>
 		</property>
 	</bean>
 	<bean id="arrayDesignReportJobDetail" class="ubic.gemma.security.authentication.SecureMethodInvokingJobDetailFactoryBean">
@@ -148,6 +160,16 @@
 		<property name="concurrent" value="false" />
 		<property name="targetMethod">
 			<value>runAll</value>
+		</property>
+	</bean>
+
+	<bean id="monitorSpaceJobDetail" class="ubic.gemma.security.authentication.SecureMethodInvokingJobDetailFactoryBean">
+		<property name="targetObject">
+			<ref bean="spaceMonitor" />
+		</property>
+		<property name="concurrent" value="false" /><!-- set to true for interesting test -->
+		<property name="targetMethod">
+			<value>ping</value>
 		</property>
 	</bean>
 </beans>

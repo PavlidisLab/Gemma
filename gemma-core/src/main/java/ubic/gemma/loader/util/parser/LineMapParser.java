@@ -23,8 +23,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
-import ubic.gemma.util.progress.ProgressData;
-import ubic.gemma.util.progress.ProgressManager;
+import ubic.gemma.job.progress.ProgressData;
+import ubic.gemma.job.progress.ProgressManager;
 
 /**
  * The difference between this class and BasicLineMapParser is more flexibility in how keys are provided. The
@@ -85,8 +85,7 @@ public abstract class LineMapParser<K, T> extends BasicLineMapParser<K, T> {
 
             if ( ++linesParsed % PARSE_ALERT_FREQUENCY == 0 ) {
                 String message = "Parsed " + linesParsed + " lines...";
-                ProgressManager.updateCurrentThreadsProgressJob( new ProgressData( 0, message ) );
-                log.debug( message );
+                log.info( message );
             }
 
         }

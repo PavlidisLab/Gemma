@@ -67,7 +67,7 @@ function index(event) {
 		src : '/Gemma/images/default/tree/loading.gif'
 	});
 	Ext.DomHelper.append("messages", "&nbsp;Submitting job...");
-	CustomCompassIndexController.run.apply(this, callParams);
+	IndexService.index.apply(this, callParams);
 
 }
 

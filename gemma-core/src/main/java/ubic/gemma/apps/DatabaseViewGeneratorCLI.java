@@ -64,7 +64,7 @@ public class DatabaseViewGeneratorCLI extends AbstractSpringAwareCLI {
         super.buildStandardOptions();
 
         Option datasetSummary = OptionBuilder.hasArg().withArgName( "Dataset Summary" ).withDescription(
-                "Will generate a zip file containing a summary of all accesable datasets in gemma" ).withLongOpt(
+                "Will generate a zip file containing a summary of all accessible datasets in gemma" ).withLongOpt(
                 "dataset" ).create( 'd' );
 
         Option datasetTissueSummary = OptionBuilder.hasArg().withArgName( "Dataset Tissue Summary" ).withDescription(

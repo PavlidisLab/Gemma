@@ -30,8 +30,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.basecode.util.FileTools;
-import ubic.gemma.util.progress.ProgressData;
-import ubic.gemma.util.progress.ProgressManager;
+import ubic.gemma.job.progress.ProgressData;
+import ubic.gemma.job.progress.ProgressManager;
 
 /**
  * A simple LineParser implementation that doesn't do anything. Subclass this and implement the "parseOneLine" method.
@@ -49,7 +49,6 @@ public abstract class BasicLineParser<T> implements LineParser<T> {
 
     /*
      * (non-Javadoc)
-     * 
      * @see baseCode.io.reader.LineParser#parse(java.io.InputStream)
      */
     public void parse( InputStream is ) throws IOException {
@@ -85,8 +84,7 @@ public abstract class BasicLineParser<T> implements LineParser<T> {
 
             if ( ++linesParsed % PARSE_ALERT_FREQUENCY == 0 ) {
                 String message = "Parsed " + linesParsed + " lines...";
-                ProgressManager.updateCurrentThreadsProgressJob( new ProgressData( 0, message ) );
-                log.debug( message );
+                log.info( message );
             }
 
         }
@@ -99,7 +97,6 @@ public abstract class BasicLineParser<T> implements LineParser<T> {
 
     /*
      * (non-Javadoc)
-     * 
      * @see baseCode.io.reader.LineParser#parse(java.io.File)
      */
     public void parse( File file ) throws IOException {
@@ -116,7 +113,6 @@ public abstract class BasicLineParser<T> implements LineParser<T> {
 
     /*
      * (non-Javadoc)
-     * 
      * @see baseCode.io.reader.LineParser#pasre(java.lang.String)
      */
     public void parse( String filename ) throws IOException {

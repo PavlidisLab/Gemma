@@ -230,6 +230,7 @@ public class QuantitationTypeParameterGuesser {
         representationDescPatterns.get( PrimitiveType.INT ).add( ".*(x_coord|y_coord|x_location|y_location).*" );
         representationNamePatterns.get( PrimitiveType.STRING ).add( "abs([ _])?call" );
         representationNamePatterns.get( PrimitiveType.STRING ).add( "flag(s)?" );
+        representationDescPatterns.get( PrimitiveType.DOUBLE ).add( ".*ratio.*" );
 
         isBackgroundDescPatterns.put( Boolean.FALSE, new HashSet<String>() );
         isBackgroundDescPatterns.put( Boolean.TRUE, new HashSet<String>() );
@@ -447,7 +448,12 @@ public class QuantitationTypeParameterGuesser {
                 exampleString = ( String ) exampleValue;
             }
 
-            if ( StringUtils.isNotBlank( exampleString ) ) {
+            /*
+             * Goofy special case of 'null' thanks to bad decision by GEO data submitters. See bug 1760
+             */
+            if ( StringUtils.isNotBlank( exampleString ) && exampleString != null
+                    && !exampleString.equalsIgnoreCase( "null" ) ) {
+
                 try {
                     Double.parseDouble( exampleString );
                 } catch ( NumberFormatException e ) {

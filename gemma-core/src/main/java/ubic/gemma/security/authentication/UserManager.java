@@ -43,15 +43,12 @@ public interface UserManager extends UserDetailsManager, GroupManager {
      * @return the prefix use on roles (groups, actually) e.g. "GROUP_"
      */
     public String getRolePrefix();
-    
-    
+
     /**
-     * 
      * @param emailAddress
      * @return
      */
-    public boolean userWithEmailExists(String emailAddress);
-    
+    public boolean userWithEmailExists( String emailAddress );
 
     /**
      * @param username
@@ -64,6 +61,14 @@ public interface UserManager extends UserDetailsManager, GroupManager {
      * @return
      */
     public boolean groupExists( String name );
+
+    /**
+     * Need a passthrough method to userService else we get a circular dependancy issue at runtime startup.
+     * 
+     * @param userName
+     * @return
+     */
+    public User findByUserName( String userName );
 
     /**
      * Sign in the user identified
@@ -103,12 +108,19 @@ public interface UserManager extends UserDetailsManager, GroupManager {
      */
     public String changePasswordForUser( String email, String username, String newPassword );
 
-    
     /**
-     * Need a passthrough method to userService else we get a circular dependancy issue in the SecuritySercie at runtime startup.
+     * Need a passthrough method to userService else we get a circular dependancy issue at runtime startup.
+     * 
      * @param name
      * @return
      */
     public UserGroup findGroupByName( String name );
-  
+
+    /**
+     * Need a passthrough method to userService else we get a circular dependancy issue at runtime startup.
+     * 
+     * @return
+     */
+    public Collection<User> loadAll();
+
 }

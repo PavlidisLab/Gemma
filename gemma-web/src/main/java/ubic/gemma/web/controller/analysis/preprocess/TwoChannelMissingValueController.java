@@ -18,25 +18,17 @@
  */
 package ubic.gemma.web.controller.analysis.preprocess;
 
-import java.util.Collection;
-
-import javax.servlet.http.HttpServletRequest;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
-import ubic.gemma.analysis.preprocess.TwoChannelMissingValues;
-import ubic.gemma.grid.javaspaces.TaskCommand;
-import ubic.gemma.grid.javaspaces.TaskResult;
-import ubic.gemma.grid.javaspaces.task.analysis.preprocess.TwoChannelMissingValueTask;
-import ubic.gemma.grid.javaspaces.task.analysis.preprocess.TwoChannelMissingValueTaskCommand;
-import ubic.gemma.grid.javaspaces.util.SpacesEnum;
-import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
+import ubic.gemma.job.AbstractTaskService;
+import ubic.gemma.job.BackgroundJob;
+import ubic.gemma.job.TaskCommand;
+import ubic.gemma.job.TaskResult;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.web.controller.BackgroundControllerJob;
-import ubic.gemma.web.controller.BaseControllerJob;
-import ubic.gemma.web.controller.grid.AbstractSpacesController;
+import ubic.gemma.tasks.analysis.expression.TwoChannelMissingValueTask;
+import ubic.gemma.tasks.analysis.expression.TwoChannelMissingValueTaskCommand;
 
 /**
  * Run misssing value computation via web request.
@@ -45,85 +37,46 @@ import ubic.gemma.web.controller.grid.AbstractSpacesController;
  * @version $Id$
  */
 @Controller
-public class TwoChannelMissingValueController extends AbstractSpacesController<Boolean> {
+public class TwoChannelMissingValueController extends AbstractTaskService {
 
-    private class TwoChannelMissingValueJob extends BaseControllerJob<Boolean> {
+    public TwoChannelMissingValueController() {
+        super();
+        this.setBusinessInterface( TwoChannelMissingValueTask.class );
+    }
 
-        public TwoChannelMissingValueJob( String taskId, Object commandObj ) {
-            super( taskId, commandObj );
-        }
+    @Autowired
+    TwoChannelMissingValueTask twoChannelMissingValueTask;
 
-        public Boolean call() throws Exception {
+    private class TwoChannelMissingValueJob extends BackgroundJob<TwoChannelMissingValueTaskCommand> {
 
-            TwoChannelMissingValueTaskCommand tc = ( ( TwoChannelMissingValueTaskCommand ) command );
-
-            super.initializeProgressJob( tc.getExpressionExperiment().getShortName() );
-
-            return processJob( tc );
+        public TwoChannelMissingValueJob( TwoChannelMissingValueTaskCommand commandObj ) {
+            super( commandObj );
         }
 
         @Override
-        protected Boolean processJob( TaskCommand c ) {
-            TwoChannelMissingValueTaskCommand tc = ( ( TwoChannelMissingValueTaskCommand ) c );
-
-            try {
-                Collection<RawExpressionDataVector> results = twoChannelMissingValues.computeMissingValues( tc
-                        .getExpressionExperiment(), tc.getS2n(), tc.getExtraMissingValueIndicators() );
-                return results.size() > 0;
-            } catch ( Exception e ) {
-                throw new RuntimeException( e );
-            }
-
+        protected TaskResult processJob() {
+            return twoChannelMissingValueTask.execute( this.command );
         }
 
     }
 
-    private class TwoChannelMissingValueSpaceJob extends TwoChannelMissingValueJob {
+    private class TwoChannelMissingValueSpaceJob extends BackgroundJob<TwoChannelMissingValueTaskCommand> {
 
-        final TwoChannelMissingValueTask taskProxy = ( TwoChannelMissingValueTask ) updatedContext.getBean( "proxy" );
+        final TwoChannelMissingValueTask taskProxy = ( TwoChannelMissingValueTask ) getProxy();
 
-        public TwoChannelMissingValueSpaceJob( String taskId, Object commandObj ) {
-            super( taskId, commandObj );
+        public TwoChannelMissingValueSpaceJob( TwoChannelMissingValueTaskCommand commandObj ) {
+            super( commandObj );
         }
 
-        /**
-         * @param command
-         * @return
-         */
-        protected TwoChannelMissingValueTaskCommand createCommandObject( TwoChannelMissingValueTaskCommand c ) {
-            return new TwoChannelMissingValueTaskCommand( taskId, c.getExpressionExperiment() );
-        }
-
-        /*
-         * (non-Javadoc)
-         * @seeubic.gemma.web.controller.analysis.preprocess.ProcessedExpressionDataVectorCreateController.
-         * ProcessedExpressionDataVectorCreateJob#processJob(ubic.gemma.web.controller.BaseCommand)
-         */
         @Override
-        protected Boolean processJob( TaskCommand baseCommand ) {
-            baseCommand.setTaskId( this.taskId );
-            TwoChannelMissingValueTaskCommand vectorCommand = ( TwoChannelMissingValueTaskCommand ) baseCommand;
-            process( vectorCommand );
-            return true;
-        }
-
-        /**
-         * @param command
-         * @return
-         */
-        private TaskResult process( TwoChannelMissingValueTaskCommand c ) {
-            TwoChannelMissingValueTaskCommand jsCommand = createCommandObject( c );
-            TaskResult result = taskProxy.execute( jsCommand );
-            return result;
+        protected TaskResult processJob() {
+            return taskProxy.execute( this.command );
         }
 
     }
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService = null;
-
-    @Autowired
-    private TwoChannelMissingValues twoChannelMissingValues = null;
 
     /**
      * AJAX entry point. -- uses default settings
@@ -143,34 +96,21 @@ public class TwoChannelMissingValueController extends AbstractSpacesController<B
 
         TwoChannelMissingValueTaskCommand cmd = new TwoChannelMissingValueTaskCommand( null, ee );
 
-        return super
-                .run( cmd, SpacesEnum.DEFAULT_SPACE.getSpaceUrl(), TwoChannelMissingValueTask.class.getName(), true );
+        return super.run( cmd );
     }
 
     public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
         this.expressionExperimentService = expressionExperimentService;
     }
 
-    /**
-     * @param twoChannelMissingValues the twoChannelMissingValues to set
-     */
-    public void setTwoChannelMissingValues( TwoChannelMissingValues twoChannelMissingValues ) {
-        this.twoChannelMissingValues = twoChannelMissingValues;
+    @Override
+    protected BackgroundJob<TwoChannelMissingValueTaskCommand> getInProcessRunner( TaskCommand command ) {
+        return new TwoChannelMissingValueJob( ( TwoChannelMissingValueTaskCommand ) command );
     }
 
     @Override
-    protected BackgroundControllerJob<Boolean> getRunner( String jobId, Object command ) {
-        return new TwoChannelMissingValueJob( jobId, command );
-    }
-
-    @Override
-    protected BackgroundControllerJob<Boolean> getSpaceRunner( String jobId, Object command ) {
-        return new TwoChannelMissingValueSpaceJob( jobId, command );
-    }
-
-    @Override
-    protected String getViewNameForRequest( HttpServletRequest arg0 ) {
-        return null;
+    protected BackgroundJob<TwoChannelMissingValueTaskCommand> getSpaceRunner( TaskCommand command ) {
+        return new TwoChannelMissingValueSpaceJob( ( TwoChannelMissingValueTaskCommand ) command );
     }
 
 }

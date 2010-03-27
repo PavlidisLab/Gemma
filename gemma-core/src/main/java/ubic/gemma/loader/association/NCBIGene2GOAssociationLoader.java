@@ -33,11 +33,11 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import ubic.basecode.util.FileTools;
+import ubic.gemma.job.progress.ProgressData;
+import ubic.gemma.job.progress.ProgressManager;
 import ubic.gemma.model.association.Gene2GOAssociation;
 import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.persistence.PersisterHelper;
-import ubic.gemma.util.progress.ProgressData;
-import ubic.gemma.util.progress.ProgressManager;
 
 /**
  * @author keshav
@@ -154,7 +154,6 @@ public class NCBIGene2GOAssociationLoader {
 
                     String progString = "Processed and loaded " + count + " (" + secsperthousand
                             + " seconds elapsed, average per thousand=" + String.format( "%.2f", meanspt ) + ")";
-                    ProgressManager.updateCurrentThreadsProgressJob( new ProgressData( count, progString ) );
                     log.info( progString );
                     millis = System.currentTimeMillis();
                 }

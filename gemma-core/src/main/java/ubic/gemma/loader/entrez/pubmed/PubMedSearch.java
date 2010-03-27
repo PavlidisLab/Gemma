@@ -148,7 +148,9 @@ public class PubMedSearch {
     public Collection<BibliographicReference> searchAndRetrieveIdByHTTP( Collection<String> searchTerms )
             throws IOException {
 
-        Collection<BibliographicReference> results = fetchById( searchTerms );
+        Collection<BibliographicReference> results;
+
+        results = fetchById( searchTerms );
 
         log.info( "Fetched " + results.size() + " references" );
 

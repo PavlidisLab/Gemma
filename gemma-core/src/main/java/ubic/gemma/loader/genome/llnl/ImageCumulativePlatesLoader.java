@@ -32,15 +32,13 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import ubic.basecode.util.FileTools;
+import ubic.basecode.util.FileTools; 
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.ExternalDatabaseService;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.biosequence.BioSequenceService;
 import ubic.gemma.persistence.PersisterHelper;
-import ubic.gemma.util.progress.ProgressData;
-import ubic.gemma.util.progress.ProgressManager;
 
 /**
  * Persist biosequences generated from the IMAGE clone library. IMAGE contains ESTs from human, mouse, rat, rhesus and a
@@ -116,7 +114,7 @@ public class ImageCumulativePlatesLoader {
     /**
      * @param inputStream
      * @throws IOException
-     */ 
+     */
     public int load( final InputStream inputStream ) {
         final ImageCumulativePlatesParser parser = new ImageCumulativePlatesParser();
         final BlockingQueue<BioSequence> queue = new ArrayBlockingQueue<BioSequence>( QUEUE_SIZE );
@@ -194,7 +192,6 @@ public class ImageCumulativePlatesLoader {
                     String progString = "Processed and loaded " + count + " sequences, last one was "
                             + sequence.getName() + " (" + secsperthousand + " seconds elapsed, average per thousand="
                             + meanspt + ")";
-                    ProgressManager.updateCurrentThreadsProgressJob( new ProgressData( count, progString ) );
                     log.info( progString );
                     millis = System.currentTimeMillis();
                 }

@@ -201,6 +201,7 @@ public class SpringContextUtil {
         }
 
         if ( gigaspacesOn ) {
+            log.info( "************* Adding gigaspaces configuration ************" );
             paths.add( GRID_SPRING_BEAN_CONFIG );
         }
 
@@ -240,11 +241,11 @@ public class SpringContextUtil {
 
         CommonsConfigurationPropertyPlaceholderConfigurer configurationPropertyConfigurer = ( CommonsConfigurationPropertyPlaceholderConfigurer ) genericCtx
                 .getBean( "configurationPropertyConfigurer" );
-        if ( configurationPropertyConfigurer != null )
-            configurationPropertyConfigurer.postProcessBeanFactory( genericCtx.getBeanFactory() );
+        configurationPropertyConfigurer.postProcessBeanFactory( genericCtx.getBeanFactory() );
 
         genericCtx.refresh();
 
         return genericCtx;
     }
+
 }

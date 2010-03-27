@@ -62,6 +62,36 @@ public class ExpressionExperimentQCUtils {
         return f.exists() && f.canRead();
     }
 
+    /**
+     * @param ee
+     * @return
+     */
+    public static boolean hasNodeDegreeDistFile( ExpressionExperimentImpl ee ) {
+        if ( ee == null ) return false;
+        String shortName = ee.getShortName();
+        // TODO implement
+        // String analysisStoragePath = ConfigUtils.getAnalysisStoragePath() + File.separatorChar
+        // + ExpressionDataSampleCorrelation.CORRMAT_DIR_NAME;
+        // File f = new File( analysisStoragePath + File.separatorChar + shortName + "_corrmat" + ".txt" );
+        // return f.exists() && f.canRead();
+        return false;
+    }
+
+    /**
+     * @param ee
+     * @return
+     */
+    public static boolean hasPCAFile( ExpressionExperimentImpl ee ) {
+        if ( ee == null ) return false;
+        String shortName = ee.getShortName();
+        // TODO implement
+        // String analysisStoragePath = ConfigUtils.getAnalysisStoragePath() + File.separatorChar
+        // + ExpressionDataSampleCorrelation.CORRMAT_DIR_NAME;
+        // File f = new File( analysisStoragePath + File.separatorChar + shortName + "_corrmat" + ".txt" );
+        // return f.exists() && f.canRead();
+        return false;
+    }
+
     public static boolean hasPvalueDistFiles( ExpressionExperiment ee ) {
 
         if ( ee == null ) return false;
@@ -81,36 +111,6 @@ public class ExpressionExperimentQCUtils {
             }
         }
 
-        return false;
-    }
-
-    /**
-     * @param ee
-     * @return
-     */
-    public static boolean hasPCAFile( ExpressionExperimentImpl ee ) {
-        if ( ee == null ) return false;
-        String shortName = ee.getShortName();
-        // TODO implement
-        // String analysisStoragePath = ConfigUtils.getAnalysisStoragePath() + File.separatorChar
-        // + ExpressionDataSampleCorrelation.CORRMAT_DIR_NAME;
-        // File f = new File( analysisStoragePath + File.separatorChar + shortName + "_corrmat" + ".txt" );
-        // return f.exists() && f.canRead();
-        return false;
-    }
-
-    /**
-     * @param ee
-     * @return
-     */
-    public static boolean hasNodeDegreeDistFile( ExpressionExperimentImpl ee ) {
-        if ( ee == null ) return false;
-        String shortName = ee.getShortName();
-        // TODO implement
-        // String analysisStoragePath = ConfigUtils.getAnalysisStoragePath() + File.separatorChar
-        // + ExpressionDataSampleCorrelation.CORRMAT_DIR_NAME;
-        // File f = new File( analysisStoragePath + File.separatorChar + shortName + "_corrmat" + ".txt" );
-        // return f.exists() && f.canRead();
         return false;
     }
 

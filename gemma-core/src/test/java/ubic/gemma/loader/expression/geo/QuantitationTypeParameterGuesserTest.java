@@ -169,6 +169,14 @@ public class QuantitationTypeParameterGuesserTest extends TestCase {
         assertEquals( "got " + s, StandardQuantitationType.AMOUNT, s );
     }
 
+    @Test
+    public void testBadRatio() throws Exception {
+        String a = "VALUE";
+        String b = "Log2 ratio (CH_1 Median-CH1_B/CH2_Median-CH2_B)";
+        PrimitiveType s = QuantitationTypeParameterGuesser.guessPrimitiveType( a.toLowerCase(), b.toLowerCase(), "null" );
+        assertEquals( "got " + s, PrimitiveType.DOUBLE, s );
+    }
+
     /**
      * @throws Exception
      */

@@ -10,11 +10,7 @@
 	author: keshav   
 	$Id$ 
 -->
-	<!-- Service for search. -->
-
-	<context:component-scan base-package="ubic.gemma.grid" name-generator="ubic.gemma.util.BeanNameGenerator" />
-
-	<bean id="indexService" class="ubic.gemma.search.IndexServiceImpl">
+	<bean id="indexerTask" class="ubic.gemma.tasks.maintenance.IndexerTaskImpl">
 		<property name="expressionGps">
 			<ref bean="expressionGps" />
 		</property>
@@ -51,14 +47,29 @@
 		<property name="compassBibliographic">
 			<ref bean="compassBibliographic" />
 		</property>
-		<property name="spacesUtil">
-			<ref bean="spacesUtil" />
-		</property>
-		<property name="taskRunningService">
-			<ref bean="taskRunningService" />
-		</property>
 	</bean>
 
+	<bean id="indexService" class="ubic.gemma.search.IndexServiceImpl">
+		<property name="indexerTask" ref="indexerTask" />
+		<property name="compassExpression">
+			<ref bean="compassExpression" />
+		</property>
+		<property name="compassArray">
+			<ref bean="compassArray" />
+		</property>
+		<property name="compassProbe">
+			<ref bean="compassProbe" />
+		</property>
+		<property name="compassGene">
+			<ref bean="compassGene" />
+		</property>
+		<property name="compassBiosequence">
+			<ref bean="compassBiosequence" />
+		</property>
+		<property name="compassBibliographic">
+			<ref bean="compassBibliographic" />
+		</property>
+	</bean>
 
 	<!-- Generic compass configuration beans  -->
 	<bean id="hibernateGpsDevice" class="org.compass.gps.device.hibernate.HibernateGpsDevice" scope="prototype">

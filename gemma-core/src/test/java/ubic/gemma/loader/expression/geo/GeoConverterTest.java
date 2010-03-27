@@ -420,7 +420,7 @@ public class GeoConverterTest extends BaseSpringContextTest {
     @Test
     public void testConvertGSE5091() throws Exception {
         InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
-                "/data/loader/expression/geo/GSE5091_family.soft.gz" ) );
+                "/data/loader/expression/geo/GSE5091Short/GSE5091_family.soft.gz" ) );
         GeoFamilyParser parser = new GeoFamilyParser();
         parser.parse( is );
 
@@ -437,7 +437,6 @@ public class GeoConverterTest extends BaseSpringContextTest {
 
         Collection<QuantitationType> quantitationTypes = ee.getQuantitationTypes();
 
-        boolean found = false;
         for ( QuantitationType quantitationType : quantitationTypes ) {
             // log.info(quantitationType);
             if ( quantitationType.getName().equals( "VALUE" ) ) {
@@ -446,11 +445,11 @@ public class GeoConverterTest extends BaseSpringContextTest {
                  */
                 assertEquals( PrimitiveType.DOUBLE, quantitationType.getRepresentation() );
                 assertTrue( quantitationType.getIsPreferred() );
-                found = true;
+                return;
             }
         }
 
-        assertTrue( found );
+        fail( "Expected to find 'VALUE' with type Double" );
     }
 
     /**
@@ -831,8 +830,10 @@ public class GeoConverterTest extends BaseSpringContextTest {
 
     /**
      * Has only one GDS in GEOs when there really should be two. Bug 1829.
+     * 
      * @throws Exception
      */
+    @SuppressWarnings("unchecked")
     @Test
     public final void testGSE8872() throws Exception {
         InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
@@ -852,6 +853,38 @@ public class GeoConverterTest extends BaseSpringContextTest {
         assertNotNull( result );
         Collection<ExpressionExperiment> ees = ( Collection<ExpressionExperiment> ) result;
         assertEquals( 1, ees.size() );
+    }
+
+    /**
+     * quantitation type problem. See bug 1760
+     */
+    @SuppressWarnings("unchecked")
+    @Test
+    public void test5091() throws Exception {
+
+        InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/GSE5091Short/GSE5091_family.soft.gz" ) );
+        GeoFamilyParser parser = new GeoFamilyParser();
+        parser.parse( is );
+        is.close();
+
+        GeoSeries series = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSeriesMap().get( "GSE5091" );
+        DatasetCombiner datasetCombiner = new DatasetCombiner();
+        GeoSampleCorrespondence correspondence = datasetCombiner.findGSECorrespondence( series );
+        series.setSampleCorrespondence( correspondence );
+        Object result = this.gc.convert( series );
+        assertNotNull( result );
+        Collection<ExpressionExperiment> ees = ( Collection<ExpressionExperiment> ) result;
+        assertEquals( 1, ees.size() );
+
+        ExpressionExperiment ee = ees.iterator().next();
+        for ( QuantitationType qt : ee.getQuantitationTypes() ) {
+            if ( qt.getName().equals( "VALUE" ) ) {
+                assertEquals( PrimitiveType.DOUBLE, qt.getRepresentation() );
+                return;
+            }
+        }
+        fail( "Didn't find the 'value' quantitation type" );
     }
 
 }

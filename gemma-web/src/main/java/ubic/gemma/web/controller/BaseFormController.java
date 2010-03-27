@@ -43,7 +43,6 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.SimpleFormController;
 
 import ubic.gemma.model.common.auditAndSecurity.User;
-import ubic.gemma.model.common.auditAndSecurity.UserService;
 import ubic.gemma.util.MailEngine;
 import ubic.gemma.web.util.MessageUtil;
 
@@ -64,9 +63,6 @@ public abstract class BaseFormController extends SimpleFormController {
     @Autowired
     protected MailEngine mailEngine = null;
 
-    @Autowired
-    protected UserService userService = null;
-
     /**
      * @return the messageUtil
      */
@@ -82,10 +78,6 @@ public abstract class BaseFormController extends SimpleFormController {
      */
     public String getText( String msgKey, Locale locale ) {
         return this.messageUtil.getText( msgKey, locale );
-    }
-
-    public UserService getUserService() {
-        return this.userService;
     }
 
     /**
@@ -153,13 +145,6 @@ public abstract class BaseFormController extends SimpleFormController {
      */
     public void setMessageUtil( MessageUtil messageUtil ) {
         this.messageUtil = messageUtil;
-    }
-
-    /**
-     * @param userService
-     */
-    public void setUserService( UserService userService ) {
-        this.userService = userService;
     }
 
     /**

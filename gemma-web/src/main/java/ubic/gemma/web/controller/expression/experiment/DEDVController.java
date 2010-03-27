@@ -350,47 +350,6 @@ public class DEDVController {
     }
 
     /**
-     * @param eeId
-     * @param resultSetId
-     * @param threshold
-     * @return
-     */
-    private Collection<DoubleVectorValueObject> getDiffExVectors( Long eeId, Long resultSetId, Double threshold ) {
-
-        StopWatch watch = new StopWatch();
-        watch.start();
-        AnalysisResultSet ar = differentialExpressionResultService.loadAnalysisResult( resultSetId );
-        if ( ar == null ) return null;
-
-        Collection<ExpressionAnalysisResultSet> ars = new ArrayList<ExpressionAnalysisResultSet>();
-        ars.add( ( ExpressionAnalysisResultSet ) ar );
-
-        ExpressionExperiment ee = expressionExperimentService.load( eeId );
-        if ( ee == null ) return null;
-        Collection<ExpressionExperiment> ees = new ArrayList<ExpressionExperiment>();
-        ees.add( ee );
-
-        Map<ExpressionAnalysisResultSet, Collection<ProbeAnalysisResult>> ee2probeResults = differentialExpressionResultService
-                .findInResultSets( ars, threshold, MAX_RESULTS_TO_RETURN );
-
-        if ( ee2probeResults == null || ee2probeResults.isEmpty() ) return null;
-
-        Collection<CompositeSequence> probes = new HashSet<CompositeSequence>();
-        for ( ProbeAnalysisResult par : ee2probeResults.get( ar ) ) {
-            probes.add( par.getProbe() );
-        }
-
-        Collection<DoubleVectorValueObject> dedvs = processedExpressionDataVectorService.getProcessedDataArraysByProbe(
-                ees, probes, false );
-
-        if ( watch.getTime() > 1000 )
-            log.info( "Retrieved " + dedvs.size() + " DEDVs for " + ar.getId() + " ResultSetId and " + probes.size()
-                    + " genes in " + watch.getTime() + " ms." );
-        return dedvs;
-
-    }
-
-    /**
      * AJAX exposed method
      * 
      * @param eeIds
@@ -553,9 +512,29 @@ public class DEDVController {
         this.processedExpressionDataVectorService = processedExpressionDataVectorService;
     }
 
+    /**
+     * Returns a collection of {@link Long} ids from strings.
+     * 
+     * @param idString
+     * @return
+     */
+    protected Collection<Long> extractIds( String idString ) {
+        Collection<Long> ids = new ArrayList<Long>();
+        if ( idString != null ) {
+            for ( String s : idString.split( "," ) ) {
+                try {
+                    ids.add( Long.parseLong( s.trim() ) );
+                } catch ( NumberFormatException e ) {
+                    log.warn( "invalid id " + s );
+                }
+            }
+        }
+        return ids;
+    }
+
     /*
      * Handle case of text export of the results.
-     * @seeorg.springframework.web.servlet.mvc.AbstractFormController#handleRequestInternal(javax.servlet.http.
+     * @see org.springframework.web.servlet.mvc.AbstractFormController#handleRequestInternal(javax.servlet.http.
      * HttpServletRequest, javax.servlet.http.HttpServletResponse) Called by /Gemma/dedv/downloadDEDV.html
      */
     @RequestMapping("/downloadDEDV.html")
@@ -643,26 +622,6 @@ public class DEDVController {
     }
 
     /**
-     * Returns a collection of {@link Long} ids from strings.
-     * 
-     * @param idString
-     * @return
-     */
-    protected Collection<Long> extractIds( String idString ) {
-        Collection<Long> ids = new ArrayList<Long>();
-        if ( idString != null ) {
-            for ( String s : idString.split( "," ) ) {
-                try {
-                    ids.add( Long.parseLong( s.trim() ) );
-                } catch ( NumberFormatException e ) {
-                    log.warn( "invalid id " + s );
-                }
-            }
-        }
-        return ids;
-    }
-
-    /**
      * Converts the given map into a tab delimited String
      * 
      * @param result
@@ -711,6 +670,47 @@ public class DEDVController {
         }
         converted.append( "\r\n" );
         return converted.toString();
+    }
+
+    /**
+     * @param eeId
+     * @param resultSetId
+     * @param threshold
+     * @return
+     */
+    private Collection<DoubleVectorValueObject> getDiffExVectors( Long eeId, Long resultSetId, Double threshold ) {
+
+        StopWatch watch = new StopWatch();
+        watch.start();
+        AnalysisResultSet ar = differentialExpressionResultService.loadAnalysisResult( resultSetId );
+        if ( ar == null ) return null;
+
+        Collection<ExpressionAnalysisResultSet> ars = new ArrayList<ExpressionAnalysisResultSet>();
+        ars.add( ( ExpressionAnalysisResultSet ) ar );
+
+        ExpressionExperiment ee = expressionExperimentService.load( eeId );
+        if ( ee == null ) return null;
+        Collection<ExpressionExperiment> ees = new ArrayList<ExpressionExperiment>();
+        ees.add( ee );
+
+        Map<ExpressionAnalysisResultSet, Collection<ProbeAnalysisResult>> ee2probeResults = differentialExpressionResultService
+                .findInResultSets( ars, threshold, MAX_RESULTS_TO_RETURN );
+
+        if ( ee2probeResults == null || ee2probeResults.isEmpty() ) return null;
+
+        Collection<CompositeSequence> probes = new HashSet<CompositeSequence>();
+        for ( ProbeAnalysisResult par : ee2probeResults.get( ar ) ) {
+            probes.add( par.getProbe() );
+        }
+
+        Collection<DoubleVectorValueObject> dedvs = processedExpressionDataVectorService.getProcessedDataArraysByProbe(
+                ees, probes, false );
+
+        if ( watch.getTime() > 1000 )
+            log.info( "Retrieved " + dedvs.size() + " DEDVs for " + ar.getId() + " ResultSetId and " + probes.size()
+                    + " genes in " + watch.getTime() + " ms." );
+        return dedvs;
+
     }
 
     /**

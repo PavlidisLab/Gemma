@@ -28,8 +28,12 @@ import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Test; 
+import org.junit.Test;
 
+import ubic.gemma.job.TaskCommand;
+import ubic.gemma.job.progress.ProgressAppender;
+import ubic.gemma.job.progress.ProgressJob;
+import ubic.gemma.job.progress.ProgressManager;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
@@ -81,7 +85,7 @@ public class ProgressAppenderTest extends BaseSpringContextTest {
 
         log4jLogger.setLevel( Level.INFO );
 
-        job = ProgressManager.createProgressJob( TaskRunningService.generateTaskId(), "testing" );
+        job = ProgressManager.createProgressJob( new TaskCommand() );
     }
 
     /*

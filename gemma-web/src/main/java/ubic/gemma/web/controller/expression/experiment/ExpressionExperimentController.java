@@ -18,6 +18,7 @@
  */
 package ubic.gemma.web.controller.expression.experiment;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
@@ -30,7 +31,6 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
@@ -44,6 +44,11 @@ import org.springframework.web.servlet.view.RedirectView;
 
 import ubic.basecode.ontology.model.OntologyResource;
 import ubic.gemma.analysis.report.ExpressionExperimentReportService;
+import ubic.gemma.job.AbstractTaskService;
+import ubic.gemma.job.BackgroundJob;
+import ubic.gemma.job.TaskCommand;
+import ubic.gemma.job.TaskResult;
+import ubic.gemma.job.progress.ProgressManager;
 import ubic.gemma.loader.entrez.pubmed.PubMedSearch;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
@@ -81,11 +86,9 @@ import ubic.gemma.search.SearchService;
 import ubic.gemma.search.SearchSettings;
 import ubic.gemma.security.SecurityService;
 import ubic.gemma.security.audit.AuditableUtil;
+import ubic.gemma.tasks.analysis.expression.UpdateEEDetailsCommand;
+import ubic.gemma.tasks.analysis.expression.UpdatePubMedCommand;
 import ubic.gemma.util.EntityUtils;
-import ubic.gemma.util.progress.ProgressJob;
-import ubic.gemma.util.progress.ProgressManager;
-import ubic.gemma.web.controller.BackgroundControllerJob;
-import ubic.gemma.web.controller.BackgroundProcessingMultiActionController;
 import ubic.gemma.web.remote.EntityDelegator;
 import ubic.gemma.web.taglib.displaytag.ExpressionExperimentValueObjectComparator;
 import ubic.gemma.web.util.EntityNotFoundException;
@@ -96,7 +99,7 @@ import ubic.gemma.web.util.EntityNotFoundException;
  */
 @Controller
 @RequestMapping("/expressionExperiment")
-public class ExpressionExperimentController extends BackgroundProcessingMultiActionController {
+public class ExpressionExperimentController extends AbstractTaskService {
 
     /**
      * Delete expression experiments.
@@ -104,89 +107,66 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
      * @author pavlidis
      * @version $Id$
      */
-    private class RemoveExpressionExperimentJob extends BackgroundControllerJob<ModelAndView> {
+    private class RemoveExpressionExperimentJob extends BackgroundJob<TaskCommand> {
 
-        ExpressionExperiment ee;
-
-        public RemoveExpressionExperimentJob( ExpressionExperiment ee ) {
-            super();
-            this.ee = ee;
+        public RemoveExpressionExperimentJob( TaskCommand command ) {
+            super( command );
         }
 
-        /*
-         * (non-Javadoc)
-         * @see java.util.concurrent.Callable#call()
-         */
-        @SuppressWarnings("synthetic-access")
-        public ModelAndView call() throws Exception {
-            ProgressJob job = init( "Deleting dataset: " + ee.getId() );
-            provideAuthentication();
-
+        @Override
+        public TaskResult processJob() {
+            ExpressionExperiment ee = expressionExperimentService.load( command.getEntityId() );
             expressionExperimentService.delete( ee );
-            saveMessage( "Dataset " + ee.getShortName() + " removed from Database" );
-            ee = null;
 
-            ProgressManager.destroyProgressJob( job );
-            return new ModelAndView( new RedirectView( "/Gemma/expressionExperiment/showAllExpressionExperiments.html" ) );
+            return new TaskResult( command, new ModelAndView( new RedirectView(
+                    "/Gemma/expressionExperiment/showAllExpressionExperiments.html" ) ).addObject( "message",
+                    "Dataset " + ee.getShortName() + " removed from Database" ) );
 
         }
     }
 
-    private class RemovePubMed extends BackgroundControllerJob<Boolean> {
+    private class RemovePubMed extends BackgroundJob<TaskCommand> {
 
         Long eeId;
 
-        public RemovePubMed( HttpSession session, Long eeId ) {
-            super( getMessageUtil(), session );
-            this.eeId = eeId;
+        public RemovePubMed( TaskCommand command ) {
+            super( command );
         }
 
-        @SuppressWarnings("synthetic-access")
-        public Boolean call() throws Exception {
-            ProgressJob job = init( "Removing primary reference..." );
-            provideAuthentication();
+        @Override
+        public TaskResult processJob() {
+            ExpressionExperiment ee = expressionExperimentService.load( command.getEntityId() );
 
-            job.updateProgress( "Loading experiment" );
-            ExpressionExperiment ee = expressionExperimentService.load( eeId );
-
-            if ( ee == null ) {
-                return false;
-            }
             expressionExperimentService.thawLite( ee );
 
             if ( ee.getPrimaryPublication() == null ) {
-                return false;
+                return new TaskResult( command, false );
             }
 
-            job.updateProgress( "Removing reference" );
+            log.info( "Removing reference" );
             ee.setPrimaryPublication( null );
 
             expressionExperimentService.update( ee );
 
-            return true;
+            return new TaskResult( command, true );
         }
 
     }
 
-    private class UpdateBasics extends BackgroundControllerJob<ExpressionExperimentDetailsValueObject> {
+    private class UpdateBasics extends BackgroundJob<UpdateEEDetailsCommand> {
 
-        ExpressionExperimentDetailsValueObject command;
-        private ExpressionExperimentService eeService;
+        public UpdateBasics( UpdateEEDetailsCommand command ) {
+            super( command );
 
-        public UpdateBasics( ExpressionExperimentService expressionExperimentService,
-                ExpressionExperimentDetailsValueObject command ) {
-            super();
-            this.eeService = expressionExperimentService;
-            this.command = command;
         }
 
-        public ExpressionExperimentDetailsValueObject call() throws Exception {
-            ProgressJob job = init( "Updating expression experiment info..." );
-            provideAuthentication();
+        @Override
+        public TaskResult processJob() {
 
-            ExpressionExperiment ee = expressionExperimentService.load( command.getId() );
+            ExpressionExperiment ee = expressionExperimentService.load( command.getEntityId() );
             if ( ee == null )
-                throw new IllegalArgumentException( "Cannot locate or access experiment with id=" + command.getId() );
+                throw new IllegalArgumentException( "Cannot locate or access experiment with id="
+                        + command.getEntityId() );
 
             if ( StringUtils.isNotBlank( command.getShortName() ) && !command.getShortName().equals( ee.getShortName() ) ) {
                 if ( expressionExperimentService.findByShortName( command.getShortName() ) != null ) {
@@ -203,55 +183,55 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
                 ee.setDescription( command.getDescription() );
             }
 
-            job.updateProgress( "Updating ..." );
-            this.eeService.update( ee );
+            log.info( "Updating ..." );
+            expressionExperimentService.update( ee );
 
-            return loadExpressionExperimentDetails( ee.getId() );
+            ExpressionExperimentDetailsValueObject eeDetails = loadExpressionExperimentDetails( ee.getId() );
+            return new TaskResult( command, eeDetails );
         }
     }
 
-    private class UpdatePubMed extends BackgroundControllerJob<ExpressionExperimentDetailsValueObject> {
+    private class UpdatePubMed extends BackgroundJob<UpdatePubMedCommand> {
 
-        Long eeId;
-        String pubmedId;
-
-        public UpdatePubMed( Long eeId, String pubmedId ) {
-            super( getMessageUtil(), null );
-            this.eeId = eeId;
-            this.pubmedId = pubmedId;
-
+        public UpdatePubMed( UpdatePubMedCommand command ) {
+            super( command );
         }
 
-        public ExpressionExperimentDetailsValueObject call() throws Exception {
-            ProgressJob job = init( "Updating primary reference..." );
-            provideAuthentication();
-
+        @Override
+        public TaskResult processJob() {
+            Long eeId = command.getEntityId();
             ExpressionExperiment expressionExperiment = expressionExperimentService.load( eeId );
             if ( expressionExperiment == null )
                 throw new IllegalArgumentException( "Cannot access experiment with id=" + eeId );
 
+            String pubmedId = command.getPubmedId();
             BibliographicReference publication = bibliographicReferenceService.findByExternalId( pubmedId );
 
             if ( publication != null ) {
 
-                job.updateProgress( "Reference exists in system, associating..." );
+                log.info( "Reference exists in system, associating..." );
                 expressionExperiment.setPrimaryPublication( publication );
                 expressionExperimentService.update( expressionExperiment );
             } else {
-                job.updateProgress( "Searching pubmed on line .." );
+                log.info( "Searching pubmed on line .." );
 
                 // search for pubmedId
                 PubMedSearch pms = new PubMedSearch();
                 Collection<String> searchTerms = new ArrayList<String>();
                 searchTerms.add( pubmedId );
-                Collection<BibliographicReference> publications = pms.searchAndRetrieveIdByHTTP( searchTerms );
+                Collection<BibliographicReference> publications;
+                try {
+                    publications = pms.searchAndRetrieveIdByHTTP( searchTerms );
+                } catch ( IOException e ) {
+                    throw new RuntimeException( e );
+                }
                 // check to see if there are publications found
                 // if there are none, or more than one, add an error message and do nothing
                 if ( publications.size() == 0 ) {
-                    job.updateProgress( "No matching publication found" );
+                    log.info( "No matching publication found" );
                     throw new IllegalArgumentException( "No matching publication found" );
                 } else if ( publications.size() > 1 ) {
-                    job.updateProgress( "Multiple matching publications found!" );
+                    log.info( "Multiple matching publications found!" );
                     throw new IllegalArgumentException( "Multiple matching publications found!" );
                 } else {
                     publication = publications.iterator().next();
@@ -265,7 +245,7 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
                     publication.setPubAccession( pubAccession );
 
                     // persist new publication
-                    job.updateProgress( "Found new publication, associating ..." );
+                    log.info( "Found new publication, associating ..." );
 
                     publication = ( BibliographicReference ) persisterHelper.persist( publication );
                     // publication = bibliographicReferenceService.findOrCreate( publication );
@@ -279,7 +259,7 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
             result.setPubmedId( Integer.parseInt( pubmedId ) );
             result.setId( expressionExperiment.getId() );
             result.setPrimaryCitation( formatCitation( expressionExperiment.getPrimaryPublication() ) );
-            return result;
+            return new TaskResult( command, result );
         }
 
     }
@@ -341,38 +321,6 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
     private TaxonService taxonService;
 
     /**
-     * @param request
-     * @param response
-     * @return ModelAndView
-     */
-    @RequestMapping("/deleteExpressionExperiment.html")
-    public ModelAndView delete( HttpServletRequest request, HttpServletResponse response ) {
-
-        Long id = null;
-        try {
-            id = Long.parseLong( request.getParameter( "id" ) );
-        } catch ( NumberFormatException e ) {
-            throw new EntityNotFoundException( "There was no valid identifier." );
-        }
-
-        if ( id == null ) {
-            // should be a validation error.
-            throw new EntityNotFoundException( identifierNotFound );
-        }
-
-        ExpressionExperiment expressionExperiment = expressionExperimentService.load( id );
-        if ( expressionExperiment == null ) {
-            throw new EntityNotFoundException( expressionExperiment + " not found" );
-        }
-
-        RemoveExpressionExperimentJob removeExpressionExperimentJob = new RemoveExpressionExperimentJob(
-                expressionExperiment );
-
-        return startJob( removeExpressionExperimentJob );
-
-    }
-
-    /**
      * Exposed for AJAX calls.
      * 
      * @param id
@@ -381,9 +329,9 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
     public String deleteById( Long id ) {
         ExpressionExperiment expressionExperiment = expressionExperimentService.load( id );
         if ( expressionExperiment == null ) return null;
-        RemoveExpressionExperimentJob removeExpressionExperimentJob = new RemoveExpressionExperimentJob(
-                expressionExperiment );
-        return run( removeExpressionExperimentJob );
+        RemoveExpressionExperimentJob job = new RemoveExpressionExperimentJob( new TaskCommand( id ) );
+        startTask( job );
+        return job.getTaskId();
     }
 
     /**
@@ -397,8 +345,8 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
 
         // Validate the filtering search criteria.
         if ( StringUtils.isBlank( searchString ) ) {
-            this.saveMessage( request, "No search criteria provided" );
-            return showAllExpressionExperiments( request, response );
+            return new ModelAndView( new RedirectView( "/Gemma/expressionExperiment/showAllExpressionExperiments.html" ) )
+                    .addObject( "message", "No search criteria provided" );
         }
 
         Map<Class<?>, List<SearchResult>> searchResultsMap = searchService.search( SearchSettings
@@ -409,25 +357,25 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
         Collection<SearchResult> searchResults = searchResultsMap.get( ExpressionExperiment.class );
 
         if ( searchResults == null || searchResults.size() == 0 ) {
-            this.saveMessage( request, "Your search yielded no results." );
-            return showAllExpressionExperiments( request, response );
+
+            return new ModelAndView( new RedirectView( "/Gemma/expressionExperiment/showAllExpressionExperiments.html" ) )
+                    .addObject( "message", "Your search yielded no results." );
+
         }
 
         if ( searchResults.size() == 1 ) {
-            this.saveMessage( request, "Search Criteria: " + searchString + "; " + searchResults.size()
-                    + " Datasets matched." );
             return new ModelAndView( new RedirectView( "/Gemma/expressionExperiment/showExpressionExperiment.html?id="
-                    + searchResults.iterator().next().getId() ) );
+                    + searchResults.iterator().next().getId() ) ).addObject( "message", "Search Criteria: "
+                    + searchString + "; " + searchResults.size() + " Datasets matched." );
         }
 
         String list = "";
         for ( SearchResult ee : searchResults )
             list += ee.getId() + ",";
 
-        this.saveMessage( request, "Search Criteria: " + searchString + "; " + searchResults.size()
-                + " Datasets matched." );
         return new ModelAndView( new RedirectView( "/Gemma/expressionExperiment/showAllExpressionExperiments.html?id="
-                + list ) );
+                + list ) ).addObject( "message", "Search Criteria: " + searchString + "; " + searchResults.size()
+                + " Datasets matched." );
     }
 
     /**
@@ -736,8 +684,9 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
      * @throws Exception
      */
     public String removePrimaryPublication( Long eeId ) throws Exception {
-        RemovePubMed runner = new RemovePubMed( null, eeId );
-        return run( runner );
+        RemovePubMed runner = new RemovePubMed( new TaskCommand( eeId ) );
+        startTask( runner );
+        return runner.getTaskId();
     }
 
     /**
@@ -768,11 +717,9 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
                 mav.addObject( "showAll", false );
                 mav.addObject( "taxon", taxon );
             } catch ( NumberFormatException e ) {
-                this.saveMessage( request, "Invalid taxon id, must be an integer" );
-                return mav;
+                return mav.addObject( "message", "Invalid taxon id, must be an integer" );
             }
         } else if ( sId == null ) {
-            this.saveMessage( request, "Displaying all Datasets" );
             mav.addObject( "showAll", true );
             eeValObjectCol = this.getFilteredExpressionExperimentValueObjects( null, null, false );
         } else {
@@ -785,8 +732,7 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
                     }
                 }
             } catch ( NumberFormatException e ) {
-                this.saveMessage( request, "Invalid ids, must be a list of integers separated by commas." );
-                return mav;
+                return mav.addObject( "message", "Invalid ids, must be a list of integers separated by commas." );
             }
             mav.addObject( "showAll", false );
             eeValObjectCol = this.getFilteredExpressionExperimentValueObjects( null, eeIdList, false );
@@ -1022,10 +968,10 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
      * @param command
      * @return
      */
-    public String updateBasics( ExpressionExperimentDetailsValueObject command ) {
-        UpdateBasics runner = new UpdateBasics( expressionExperimentService, command );
-        runner.setDoForward( false );
-        return run( runner );
+    public String updateBasics( UpdateEEDetailsCommand command ) {
+        UpdateBasics runner = new UpdateBasics( command );
+        startTask( runner );
+        return runner.getTaskId();
     }
 
     /**
@@ -1037,8 +983,11 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
      * @throws Exception
      */
     public String updatePubMed( Long eeId, String pubmedId ) throws Exception {
-        UpdatePubMed runner = new UpdatePubMed( eeId, pubmedId );
-        return run( runner );
+        UpdatePubMedCommand command = new UpdatePubMedCommand( eeId );
+        command.setPubmedId( pubmedId );
+        UpdatePubMed runner = new UpdatePubMed( command );
+        startTask( runner );
+        return runner.getTaskId();
     }
 
     /**
@@ -1386,8 +1335,17 @@ public class ExpressionExperimentController extends BackgroundProcessingMultiAct
      * @return
      */
     private ModelAndView redirectHome( HttpServletRequest request ) {
-        this.addMessage( request, "errors.objectnotfound", new Object[] { "Expression Experiment" } );
-        return new ModelAndView( "mainMenu.html" );
+        return new ModelAndView( "mainMenu.html" ).addObject( "message", "Not found" );
+    }
+
+    @Override
+    protected BackgroundJob<?> getInProcessRunner( TaskCommand command ) {
+        return null;
+    }
+
+    @Override
+    protected BackgroundJob<?> getSpaceRunner( TaskCommand command ) {
+        return null;
     }
 
 }

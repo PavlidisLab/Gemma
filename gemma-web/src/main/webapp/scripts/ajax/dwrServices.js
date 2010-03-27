@@ -147,11 +147,11 @@ CompositeSequenceController.getGeneMappingSummary = function(p0, callback) {
 			callback);
 }
 // ====================================================================================
-if (CustomCompassIndexController == null)
-	var CustomCompassIndexController = {};
-CustomCompassIndexController._path = '/Gemma/dwr';
-CustomCompassIndexController.run = function(p0, callback) {
-	dwr.engine._execute(CustomCompassIndexController._path, 'CustomCompassIndexController', 'run', p0, callback);
+if (IndexService == null)
+	var IndexService = {};
+IndexService._path = '/Gemma/dwr';
+IndexService.index = function(p0, callback) {
+	dwr.engine._execute(IndexService._path, 'IndexService', 'index', p0, callback);
 }
 // ====================================================================================
 if (DEDVController == null)
@@ -669,6 +669,21 @@ ProgressStatusService.getProgressStatus = function(p0, callback) {
 ProgressStatusService.cancelJob = function(p0, callback) {
 	dwr.engine._execute(ProgressStatusService._path, 'ProgressStatusService', 'cancelJob', p0, callback);
 }
+ProgressStatusService.addEmailAlert = function(p0, callback) {
+	dwr.engine._execute(ProgressStatusService._path, 'ProgressStatusService', 'addEmailAlert', p0, callback);
+}
+ProgressStatusService.getSubmittedTasks = function( callback) {
+	dwr.engine._execute(ProgressStatusService._path, 'ProgressStatusService', 'getSubmittedTasks', callback);
+}
+ProgressStatusService.getFailedTasks = function(p0, callback) {
+	dwr.engine._execute(ProgressStatusService._path, 'ProgressStatusService', 'getFailedTasks', callback);
+}
+ProgressStatusService.getCancelledTasks = function(p0, callback) {
+	dwr.engine._execute(ProgressStatusService._path, 'ProgressStatusService', 'getCancelledTasks', callback);
+}
+ProgressStatusService.getFinishedTasks = function(p0, callback) {
+	dwr.engine._execute(ProgressStatusService._path, 'ProgressStatusService', 'getFinishedTasks', callback);
+}
 // ====================================================================================
 if (SearchService == null)
 	var SearchService = {};
@@ -682,6 +697,13 @@ if (TaskCompletionController == null)
 TaskCompletionController._path = '/Gemma/dwr';
 TaskCompletionController.checkResult = function(p0, callback) {
 	dwr.engine._execute(TaskCompletionController._path, 'TaskCompletionController', 'checkResult', p0, callback);
+}
+// ====================================================================================
+if (TestTaskController == null)
+	var TestTaskController = {};
+TestTaskController._path = '/Gemma/dwr';
+TestTaskController.run = function(p0, p1, p2, p3, callback) {
+	dwr.engine._execute(TestTaskController._path, 'TestTaskController', 'run', p0, p1, p2, p3, callback);
 }
 // ====================================================================================
 if (FeedReader == null)

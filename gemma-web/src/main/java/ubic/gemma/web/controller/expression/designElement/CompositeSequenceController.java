@@ -91,26 +91,25 @@ public class CompositeSequenceController extends BaseController {
         String filter = request.getParameter( "filter" );
         String arid = request.getParameter( "arid" );
 
+        ModelAndView mav = new ModelAndView( "compositeSequences.geneMap" );
+
         // Validate the filtering search criteria.
         if ( StringUtils.isBlank( filter ) ) {
-            this.saveMessage( request, "No search critera provided" );
+            mav.getModel().put( "message", "No search critera provided" );
             // return showAll( request, response );
-        }
-
-        Collection<CompositeSequenceMapValueObject> compositeSequenceSummary = search( filter, arid );
-
-        if ( ( compositeSequenceSummary == null ) || ( compositeSequenceSummary.size() == 0 ) ) {
-            this.saveMessage( request, "Your search yielded no results" );
-            compositeSequenceSummary = new ArrayList<CompositeSequenceMapValueObject>();
         } else {
-            this.saveMessage( request, compositeSequenceSummary.size() + " probes matched your search." );
-        }
+            Collection<CompositeSequenceMapValueObject> compositeSequenceSummary = search( filter, arid );
 
-        ModelAndView mav = new ModelAndView( "compositeSequences.geneMap" );
-        mav.addObject( "arrayDesign", loadArrayDesign( arid ) );
-        mav.addObject( "sequenceData", compositeSequenceSummary );
-        mav.addObject( "numCompositeSequences", compositeSequenceSummary.size() );
-        this.saveMessage( request, "Search Criteria: " + filter );
+            if ( ( compositeSequenceSummary == null ) || ( compositeSequenceSummary.size() == 0 ) ) {
+                mav.getModel().put( "message", "Your search yielded no results" );
+                compositeSequenceSummary = new ArrayList<CompositeSequenceMapValueObject>();
+            } else {
+                mav.getModel().put( "message", compositeSequenceSummary.size() + " probes matched your search." );
+            }
+            mav.addObject( "arrayDesign", loadArrayDesign( arid ) );
+            mav.addObject( "sequenceData", compositeSequenceSummary );
+            mav.addObject( "numCompositeSequences", compositeSequenceSummary.size() );
+        }
 
         return mav;
     }
@@ -197,7 +196,6 @@ public class CompositeSequenceController extends BaseController {
         CompositeSequence cs = compositeSequenceService.load( id );
         if ( cs == null ) {
             addMessage( request, "object.notfound", new Object[] { "composite sequence " + id } );
-            return new ModelAndView( "mainMenu.html" );
         }
 
         ModelAndView mav = new ModelAndView( "compositeSequence.detail" );
@@ -308,7 +306,6 @@ public class CompositeSequenceController extends BaseController {
             try {
                 arrayDesign = arrayDesignService.load( Long.parseLong( arrayDesignId ) );
             } catch ( NumberFormatException e ) {
-                log.info( "Invalid array design id: " + arrayDesignId );
                 // Fail gracefully, please.
             }
         }

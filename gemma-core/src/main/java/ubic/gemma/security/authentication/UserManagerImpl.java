@@ -321,6 +321,14 @@ public class UserManagerImpl implements UserManager {
 
     /*
      * (non-Javadoc)
+     * @see ubic.gemma.security.authentication.UserManager#findByUserName(java.lang.String)
+     */
+    public User findByUserName( String userName ) {
+        return this.userService.findByUserName( userName );
+    }
+
+    /*
+     * (non-Javadoc)
      * @see ubic.gemma.security.authentication.UserManagerI#findGroupAuthorities(java.lang.String)
      */
     @Transactional(readOnly = true)
@@ -339,6 +347,14 @@ public class UserManagerImpl implements UserManager {
         }
 
         return result;
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see ubic.gemma.security.authentication.UserManager#findGroupByName(java.lang.String)
+     */
+    public UserGroup findGroupByName( String name ) {
+        return this.userService.findGroupByName( name );
     }
 
     /*
@@ -440,6 +456,14 @@ public class UserManagerImpl implements UserManager {
      */
     public boolean isEnableGroups() {
         return enableGroups;
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see ubic.gemma.security.authentication.UserManager#loadAll()
+     */
+    public Collection<User> loadAll() {
+        return this.userService.loadAll();
     }
 
     /*
@@ -675,19 +699,12 @@ public class UserManagerImpl implements UserManager {
 
     /*
      * (non-Javadoc)
-     * @see ubic.gemma.security.authentication.UserManager#findGroupByName(java.lang.String)
-     */
-    public UserGroup findGroupByName( String name ) {
-        return this.userService.findGroupByName( name );
-    }
-
-    /*
-     * (non-Javadoc)
      * @see
      * org.springframework.security.provisioning.JdbcUserDetailsManager#updateUser(org.springframework.security.core
      * .userdetails.UserDetails)
      */
-    protected Authentication createNewAuthentication( Authentication currentAuth, String newPassword ) {
+    protected Authentication createNewAuthentication( Authentication currentAuth,
+            @SuppressWarnings("unused") String newPassword ) {
         UserDetails user = loadUserByUsername( currentAuth.getName() );
 
         UsernamePasswordAuthenticationToken newAuthentication = new UsernamePasswordAuthenticationToken( user, user
@@ -735,7 +752,7 @@ public class UserManagerImpl implements UserManager {
      * (non-Javadoc)
      * @see org.springframework.security.core.userdetails.jdbc.JdbcDaoImpl#loadUserAuthorities(java.lang.String)
      */
-    protected List<GrantedAuthority> loadUserAuthorities( String username ) {
+    protected List<GrantedAuthority> loadUserAuthorities( @SuppressWarnings("unused") String username ) {
         throw new UnsupportedOperationException( "Use the group-based authorities instead" );
     }
 

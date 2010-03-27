@@ -18,11 +18,13 @@
  */
 package ubic.gemma.web.controller.expression.experiment;
 
+import ubic.gemma.job.TaskCommand;
+
 /**
  * @author paul
  * @version $Id$
  */
-public class ExpressionExperimentDataFetchCommand {
+public class ExpressionExperimentDataFetchCommand extends TaskCommand {
 
     private Long quantitationTypeId;
     private Long expressionExperimentId;

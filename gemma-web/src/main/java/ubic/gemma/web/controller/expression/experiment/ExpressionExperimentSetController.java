@@ -20,6 +20,7 @@ package ubic.gemma.web.controller.expression.experiment;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -27,8 +28,6 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.lang.StringUtils;
-
-import edu.emory.mathcs.backport.java.util.Collections;
 
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSetService;

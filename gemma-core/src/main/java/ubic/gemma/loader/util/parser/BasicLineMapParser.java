@@ -30,8 +30,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.basecode.util.FileTools;
-import ubic.gemma.util.progress.ProgressData;
-import ubic.gemma.util.progress.ProgressManager;
+import ubic.gemma.job.progress.ProgressData;
+import ubic.gemma.job.progress.ProgressManager;
 
 /**
  * A line parser that produces a Map instead of a Collection. Subclasses must provide a method to generate keys, which
@@ -102,7 +102,6 @@ public abstract class BasicLineMapParser<K, T> implements LineParser<T> {
 
             if ( ++linesParsed % PARSE_ALERT_FREQUENCY == 0 ) {
                 String message = "Parsed " + linesParsed + " lines..., last had key " + key;
-                ProgressManager.updateCurrentThreadsProgressJob( new ProgressData( 0, message ) );
                 log.info( message );
             }
 

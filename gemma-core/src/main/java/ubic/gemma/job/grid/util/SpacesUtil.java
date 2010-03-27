@@ -1,0 +1,495 @@
+/*
+ * The Gemma project
+ * 
+ * Copyright (c) 2007 University of British Columbia
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+package ubic.gemma.job.grid.util;
+
+import java.rmi.RemoteException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
+import net.jini.core.lease.Lease;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.BeansException;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.stereotype.Service;
+import org.springmodules.javaspaces.gigaspaces.GigaSpacesTemplate;
+
+import ubic.gemma.job.grid.worker.SpacesBusyEntry;
+import ubic.gemma.job.grid.worker.SpacesRegistrationEntry;
+import ubic.gemma.util.SpringContextUtil;
+
+import com.j_spaces.core.IJSpace;
+import com.j_spaces.core.admin.IJSpaceContainerAdmin;
+import com.j_spaces.core.admin.StatisticsAdmin;
+import com.j_spaces.core.client.FinderException;
+import com.j_spaces.core.client.SpaceFinder;
+import com.j_spaces.core.exception.StatisticsNotAvailable;
+import com.j_spaces.core.filters.StatisticsContext;
+
+/**
+ * A utility class to test javaspaces features such as if the space is running, whether to add the gigaspaces beans to
+ * the spring context, whether workers are available, etc. This class is {@link ApplicationContextAware} and therefore
+ * knows about the context that creates it.
+ * 
+ * @author keshav
+ * @version $Id$
+ */
+@Service
+public class SpacesUtil implements ApplicationContextAware {
+
+    /** The amount of time an entry will stay in the space (forever) */
+    public static final long ENTRY_TTL = Lease.FOREVER;
+
+    /** The amount of time to wait for an entry before timing out */
+    public static final int WAIT_TIMEOUT = 1000;
+
+    private static final String GIGASPACES_TEMPLATE = "gigaspacesTemplate";
+
+    private static Log log = LogFactory.getLog( SpacesUtil.class );
+
+    /**
+     * First checks to see if the space is running at the given url. If the space is running, returns the
+     * {@link IJSpaceContainerAdmin}, which is useful to obtain space information such as the runtime configuration
+     * report. If the space is not running, returns null.
+     * 
+     * @param url
+     * @return {@link IJSpaceContainerAdmin}
+     */
+    public static IJSpaceContainerAdmin getContainerSpaceAdmin() {
+        if ( !isSpaceRunning() ) {
+            return null;
+        }
+        try {
+            IJSpace space = getSpace();
+            IJSpaceContainerAdmin admin = ( IJSpaceContainerAdmin ) space.getContainer();
+            return admin;
+        } catch ( Exception e ) {
+            throw new RuntimeException( e );
+        }
+    }
+
+    /**
+     * First checks if the space is running at the given url. If it is running, returns the {@link StatisticsAdmin},
+     * which is useful for administration statistics. If the space is not running, returns null.
+     * 
+     * @param url
+     */
+    public static StatisticsAdmin getStatisticsAdmin() {
+        if ( !isSpaceRunning() ) {
+            return null;
+        }
+        try {
+            IJSpace space = getSpace();
+            StatisticsAdmin admin = ( StatisticsAdmin ) space.getAdmin();
+            return admin;
+        } catch ( Exception e ) {
+            throw new RuntimeException( e );
+        }
+
+    }
+
+    /**
+     * Checks if space is running at specified url.
+     * 
+     * @param ctx
+     * @return boolean
+     */
+    public static boolean isSpaceRunning() {
+        try {
+            SpaceFinder.find( SpacesEnum.DEFAULT_SPACE.getSpaceUrl() );
+            return true;
+        } catch ( FinderException e ) {
+            return false;
+        }
+    }
+
+    /**
+     * Logs the runtime configuration report. This report contains information about the space, including the system
+     * environment configuration.
+     */
+    public static void logRuntimeConfigurationReport() {
+        IJSpaceContainerAdmin admin = getContainerSpaceAdmin();
+
+        if ( admin != null ) {
+            try {
+                log.info( "Runtime configuration report: " + admin.getRuntimeConfigReport() );
+            } catch ( RemoteException e ) {
+                e.printStackTrace();
+            }
+        }
+
+        log.error( "Runtime configuration report unavailable." );
+    }
+
+    /**
+     * Logs the space statistics from the {@link StatisticsAdmin}.
+     * 
+     * @param url
+     */
+    @SuppressWarnings("unchecked")
+    public static String logSpaceStatistics() {
+        StatisticsAdmin admin = getStatisticsAdmin();
+
+        if ( admin != null ) {
+            try {
+                if ( !admin.isStatisticsAvailable() ) {
+                    return "Space is running but there are no statistics available";
+                }
+            } catch ( RemoteException e ) {
+                return "Error while checking for statistics: " + e.getMessage();
+            }
+
+            StringBuilder buf = new StringBuilder();
+            try {
+                Map<Integer, StatisticsContext> statsMap = admin.getStatistics();
+                Collection<Integer> keys = statsMap.keySet();
+                Iterator<Integer> iter = keys.iterator();
+                while ( iter.hasNext() ) {
+                    StatisticsContext message = statsMap.get( iter.next() );
+                    buf.append( message + "\n" );
+                    log.debug( message );
+                }
+                if ( buf.length() == 0 ) {
+                    return "No statistics!";
+                }
+                return buf.toString();
+            } catch ( StatisticsNotAvailable e ) {
+                throw new RuntimeException( e );
+            } catch ( RemoteException e ) {
+                throw new RuntimeException( e );
+            }
+        }
+        return "Space not running";
+    }
+
+    private static IJSpace getSpace() throws FinderException {
+        return ( IJSpace ) SpaceFinder.find( SpacesEnum.DEFAULT_SPACE.getSpaceUrl() );
+    }
+
+    private ApplicationContext applicationContext = null;
+
+    /**
+     * First checks if the space is running at url. If space is running, adds the gigaspaces beans to the context if
+     * they do not exist. If the space is not running, returns the original context.
+     * 
+     * @param url
+     * @return ApplicatonContext
+     */
+    public ApplicationContext addGemmaSpacesToApplicationContext() {
+
+        if ( this.applicationContext == null ) {
+            throw new IllegalStateException( "Context is null. Service not correctly initialized" );
+        }
+
+        if ( !contextContainsGigaspaces() ) {
+            this.applicationContext = SpringContextUtil.addResourceToContext( applicationContext,
+                    new ClassPathResource( SpringContextUtil.GRID_SPRING_BEAN_CONFIG ) );
+
+            GigaSpacesTemplate gigaspacesTemplate = this.getGigaspacesTemplate();
+            gigaspacesTemplate.getUrl().getURL();
+        }
+
+        log.debug( "Application context unchanged. Gigaspaces beans already exist." );
+
+        return this.applicationContext;
+
+    }
+
+    /**
+     * Cancels the task.
+     * 
+     * @param taskId
+     */
+    public void cancel( String taskId ) {
+
+        if ( !isSpaceRunning() ) {
+            return;
+        }
+
+        GigaSpacesTemplate template = getGigaspacesTemplate();
+
+        IJSpace space = ( IJSpace ) template.getSpace();
+        try {
+            for ( SpacesRegistrationEntry e : this.getRegisteredWorkers() ) {
+
+                SpacesCancellationEntry cancellationEntry = new SpacesCancellationEntry( e.registrationId );
+                cancellationEntry.setTaskId( taskId );
+                space.write( cancellationEntry, null, ENTRY_TTL );
+            }
+        } catch ( Exception e ) {
+            throw new RuntimeException( "Could not cancel task " + taskId, e );
+        }
+
+    }
+
+    /**
+     * Returns true if the task can be serviced by the space at the given url. The task may be serviced now or later,
+     * depending on whether or not it is busy.
+     * 
+     * @param taskName The name of the task to be serviced.
+     * @param url The space url.
+     * @return boolean
+     */
+    public boolean canServiceTask( String taskName ) {
+        if ( canServiceTaskNow( taskName ) ) {
+            log.debug( "Can service " + taskName );
+            return true;
+        } else if ( canServiceTaskLater( taskName ) ) {
+            log.debug( "Cannot service " + taskName + " at this time but can service later.  Task will be queued." );
+            return false;
+        } else {
+            log.debug( "Cannot service " + taskName + " at this time." );
+            return false;
+        }
+    }
+
+    /**
+     * Can service the task with taskName later.
+     * 
+     * @param taskName
+     * @param url
+     * @return
+     */
+    public boolean canServiceTaskLater( String taskName ) {
+        /*
+         * FIXME this doesn't work - busy stuff.
+         */
+        boolean serviceable = false;
+
+        List<String> busyTasks = this.tasksThatCanBeServicedLater();
+
+        if ( busyTasks.contains( taskName ) ) {
+            serviceable = true;
+        }
+
+        return serviceable;
+    }
+
+    /**
+     * Can service the task with taskName now.
+     * 
+     * @param taskName
+     * @param url
+     * @return
+     */
+    public boolean canServiceTaskNow( String taskName ) {
+
+        boolean serviceable = false;
+
+        List<String> serviceableTasks = this.tasksThatCanBeServiced();
+
+        if ( serviceableTasks.contains( taskName ) ) {
+            serviceable = true;
+        }
+
+        return serviceable;
+    }
+
+    /**
+     * @return
+     */
+    public List<SpacesBusyEntry> getBusyWorkers() {
+
+        List<SpacesBusyEntry> workerEntries = new ArrayList<SpacesBusyEntry>();
+        if ( !isSpaceRunning() ) {
+            return workerEntries;
+        }
+
+        try {
+            IJSpace space = getSpace();
+
+            Object[] commandObjects = space.readMultiple( new SpacesBusyEntry(), null, 120000 /* magic number */);
+
+            workerEntries = new ArrayList<SpacesBusyEntry>();
+            for ( int i = 0; i < commandObjects.length; i++ ) {
+                SpacesBusyEntry entry = ( SpacesBusyEntry ) commandObjects[i];
+                workerEntries.add( entry );
+            }
+        } catch ( Exception e ) {
+            e.printStackTrace();
+        }
+        return workerEntries;
+    }
+
+    public GigaSpacesTemplate getGigaspacesTemplate() {
+        return ( GigaSpacesTemplate ) applicationContext.getBean( GIGASPACES_TEMPLATE );
+    }
+
+    /**
+     * @return proxy of interface for a task
+     */
+    public Object getProxy() {
+        addGemmaSpacesToApplicationContext();
+        return applicationContext.getBean( "javaspaceProxyInterfaceFactory" );
+    }
+
+    /**
+     * Returns a list of all the workers that have registered themselves with the grid.
+     * 
+     * @param url
+     * @return List<SpacesGenericEntry>
+     */
+    public List<SpacesRegistrationEntry> getRegisteredWorkers() {
+
+        List<SpacesRegistrationEntry> workerEntries = new ArrayList<SpacesRegistrationEntry>();
+        if ( !isSpaceRunning() ) {
+            return workerEntries;
+        }
+
+        try {
+            IJSpace space = getSpace();
+
+            Object[] commandObjects = space
+                    .readMultiple( new SpacesRegistrationEntry(), null, 120000 /* magic number */);
+
+            for ( int i = 0; i < commandObjects.length; i++ ) {
+                SpacesRegistrationEntry entry = ( SpacesRegistrationEntry ) commandObjects[i];
+                workerEntries.add( entry );
+            }
+        } catch ( Exception e ) {
+            e.printStackTrace();
+            return null;
+        }
+        return workerEntries;
+    }
+
+    /**
+     * Returns the number of busy workers.
+     * 
+     * @param url
+     * @return
+     */
+    public int numBusyWorkers() {
+        int count = 0;
+
+        if ( !isSpaceRunning() ) {
+            return count;
+        }
+
+        try {
+            IJSpace space = getSpace();
+            count = space.count( new SpacesBusyEntry(), null );
+            log.debug( "Number of busy workers: " + count );
+        } catch ( Exception e ) {
+            log.error( "Could not check for busy workers.  Assuming 0 workers are busy." );
+            e.printStackTrace();
+            return 0;
+        }
+
+        return count;
+    }
+
+    /**
+     * Returns the number of idle workers.
+     * 
+     * @param url
+     * @return int
+     */
+    public int numIdleWorkers() {
+        int count = 0;
+
+        if ( !isSpaceRunning() ) {
+            log.error( "Space not started, Returning a count of 0 (idle workers)." );
+            return count;
+        }
+
+        try {
+            IJSpace space = getSpace();
+            count = space.count( new SpacesRegistrationEntry(), null );
+            log.debug( "Number of idle workers: " + count );
+        } catch ( Exception e ) {
+            log.error( "Could not check for idle workers.  Assuming 0 workers are idle." );
+            e.printStackTrace();
+            return 0;
+        }
+
+        return count;
+    }
+
+    /*
+     * (non-Javadoc)
+     * @seeorg.springframework.context.ApplicationContextAware#setApplicationContext(org.springframework.context.
+     * ApplicationContext)
+     */
+    public void setApplicationContext( ApplicationContext applicationContext ) throws BeansException {
+        this.applicationContext = applicationContext;
+
+    }
+
+    /**
+     * Returns the list of tasks that can currently be serviced at the space url based on the currently registered
+     * workers.
+     * 
+     * @param url
+     * @return List <String>
+     */
+    public List<String> tasksThatCanBeServiced() {
+
+        List<String> taskNames = new ArrayList<String>();
+
+        List<SpacesRegistrationEntry> workerEntries = this.getRegisteredWorkers();
+
+        if ( workerEntries == null ) {
+            return taskNames;
+        }
+
+        for ( SpacesGenericEntry entry : workerEntries ) {
+            String taskName = entry.getMessage();
+            log.debug( "Can service task " + taskName + " now." );
+            taskNames.add( taskName );
+        }
+
+        return taskNames;
+    }
+
+    /**
+     * Returns a list of tasks that can be serviced later (are currently busy).
+     * 
+     * @param url
+     * @return
+     */
+    public List<String> tasksThatCanBeServicedLater() {
+
+        List<String> taskNames = new ArrayList<String>();
+
+        List<SpacesBusyEntry> busyEntries = this.getBusyWorkers();
+        if ( busyEntries == null ) {
+            return taskNames;
+        }
+        for ( SpacesBusyEntry entry : busyEntries ) {
+            String taskName = entry.getMessage();
+            log.debug( "Can service task " + taskName + " later." );
+            taskNames.add( taskName );
+        }
+        return taskNames;
+    }
+
+    /**
+     * Determines if the {@link ApplicationContext} contains gigaspaces beans.
+     */
+    private boolean contextContainsGigaspaces() {
+        return applicationContext.containsBean( GIGASPACES_TEMPLATE );
+    }
+}

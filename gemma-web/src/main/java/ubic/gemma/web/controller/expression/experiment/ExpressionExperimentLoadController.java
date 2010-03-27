@@ -23,8 +23,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.servlet.http.HttpServletRequest;
-
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -34,11 +32,10 @@ import org.springframework.web.servlet.view.RedirectView;
 
 import ubic.gemma.analysis.preprocess.ProcessedExpressionDataVectorCreateService;
 import ubic.gemma.analysis.preprocess.TwoChannelMissingValues;
-import ubic.gemma.grid.javaspaces.TaskCommand;
-import ubic.gemma.grid.javaspaces.TaskResult;
-import ubic.gemma.grid.javaspaces.task.expression.experiment.ExpressionExperimentLoadTask;
-import ubic.gemma.grid.javaspaces.task.expression.experiment.ExpressionExperimentLoadTaskCommand;
-import ubic.gemma.grid.javaspaces.util.SpacesEnum;
+import ubic.gemma.job.AbstractTaskService;
+import ubic.gemma.job.BackgroundJob;
+import ubic.gemma.job.TaskCommand;
+import ubic.gemma.job.TaskResult;
 import ubic.gemma.loader.expression.arrayExpress.ArrayExpressLoadService;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.loader.expression.geo.service.GeoDatasetService;
@@ -46,10 +43,9 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentService; 
-import ubic.gemma.web.controller.BackgroundControllerJob;
-import ubic.gemma.web.controller.BaseControllerJob;
-import ubic.gemma.web.controller.grid.AbstractSpacesController;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.tasks.analysis.expression.ExpressionExperimentLoadTask;
+import ubic.gemma.tasks.analysis.expression.ExpressionExperimentLoadTaskCommand;
 
 /**
  * Handles loading of Expression data into the system when the source is GEO or ArrayExpress, via Spring MVC or AJAX,
@@ -64,7 +60,12 @@ import ubic.gemma.web.controller.grid.AbstractSpacesController;
  */
 @Controller
 @RequestMapping("/admin/loadExpressionExperiment.html")
-public class ExpressionExperimentLoadController extends AbstractSpacesController<ModelAndView> {
+public class ExpressionExperimentLoadController extends AbstractTaskService {
+
+    public ExpressionExperimentLoadController() {
+        super();
+        this.setBusinessInterface( ExpressionExperimentLoadTask.class );
+    }
 
     /**
      * Job that loads in a javaspace.
@@ -74,22 +75,18 @@ public class ExpressionExperimentLoadController extends AbstractSpacesController
      */
     private class LoadInSpaceJob extends LoadJob {
 
-        final ExpressionExperimentLoadTask eeTaskProxy = ( ExpressionExperimentLoadTask ) updatedContext
-                .getBean( "proxy" );
+        final ExpressionExperimentLoadTask eeTaskProxy = ( ExpressionExperimentLoadTask ) getProxy();
 
         /**
-         * @param taskId
-         * @param parentSecurityContext
          * @param commandObj
-         * @param messenger
          */
-        public LoadInSpaceJob( String taskId, Object commandObj ) {
-            super( taskId, commandObj );
+        public LoadInSpaceJob( ExpressionExperimentLoadTaskCommand commandObj ) {
+            super( commandObj );
 
         }
 
         @Override
-        protected ModelAndView processArrayExpressJob( ExpressionExperimentLoadTaskCommand eeLoadCommand ) {
+        protected TaskResult processArrayExpressJob( ExpressionExperimentLoadTaskCommand eeLoadCommand ) {
             TaskResult result = this.process( eeLoadCommand );
             return super.processArrayExpressResult( ( ExpressionExperiment ) result.getAnswer() );
         }
@@ -101,14 +98,14 @@ public class ExpressionExperimentLoadController extends AbstractSpacesController
          */
         @Override
         @SuppressWarnings("unchecked")
-        protected ModelAndView processGEODataJob( ExpressionExperimentLoadTaskCommand eeLoadCommand ) {
+        protected TaskResult processGEODataJob( ExpressionExperimentLoadTaskCommand eeLoadCommand ) {
             TaskResult result = this.process( eeLoadCommand );
             return super.processGeoLoadResult( ( Collection<ExpressionExperiment> ) result.getAnswer() );
         }
 
         @Override
         @SuppressWarnings("unchecked")
-        protected ModelAndView processPlatformOnlyJob( ExpressionExperimentLoadTaskCommand eeLoadCommand ) {
+        protected TaskResult processPlatformOnlyJob( ExpressionExperimentLoadTaskCommand eeLoadCommand ) {
             TaskResult result = this.process( eeLoadCommand );
             return super.processArrayDesignResult( ( Collection<ArrayDesign> ) result.getAnswer() );
         }
@@ -136,7 +133,7 @@ public class ExpressionExperimentLoadController extends AbstractSpacesController
     /**
      * Regular job.
      */
-    private class LoadJob extends BaseControllerJob<ModelAndView> {
+    private class LoadJob extends BackgroundJob<ExpressionExperimentLoadTaskCommand> {
 
         /**
          * @param taskId
@@ -144,8 +141,8 @@ public class ExpressionExperimentLoadController extends AbstractSpacesController
          * @param commandObj
          * @param messenger
          */
-        public LoadJob( String taskId, Object commandObj ) {
-            super( taskId, commandObj );
+        public LoadJob( ExpressionExperimentLoadTaskCommand commandObj ) {
+            super( commandObj );
             if ( geoDatasetService.getGeoDomainObjectGenerator() == null ) {
                 geoDatasetService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
             }
@@ -156,33 +153,35 @@ public class ExpressionExperimentLoadController extends AbstractSpacesController
          * (non-Javadoc)
          * @see java.util.concurrent.Callable#call()
          */
-        public ModelAndView call() throws Exception {
+        @Override
+        public TaskResult processJob() {
 
-            ExpressionExperimentLoadTaskCommand expressionExperimentLoadCommand = ( ( ExpressionExperimentLoadTaskCommand ) command );
-
-            super.initializeProgressJob( expressionExperimentLoadCommand.getAccession() );
-
-            return processJob( expressionExperimentLoadCommand );
-
+            if ( command.isLoadPlatformOnly() ) {
+                return processPlatformOnlyJob( command );
+            } else if ( command.isArrayExpress() ) {
+                return processArrayExpressJob( command );
+            } else /* GEO */{
+                return processGEODataJob( command );
+            }
         }
 
         /**
          * @param arrayDesigns
          * @return
          */
-        protected ModelAndView processArrayDesignResult( Collection<ArrayDesign> arrayDesigns ) {
+        protected TaskResult processArrayDesignResult( Collection<ArrayDesign> arrayDesigns ) {
             Map<Object, Object> model = new HashMap<Object, Object>();
-            this.saveMessage( "Successfully loaded " + arrayDesigns.size() + " array designs" );
             model.put( "arrayDesigns", arrayDesigns );
 
             if ( arrayDesigns.size() == 1 ) {
-                return new ModelAndView( new RedirectView( "/Gemma/arrays/showArrayDesign.html?id="
-                        + arrayDesigns.iterator().next().getId() ) );
+                return new TaskResult( command, new ModelAndView( new RedirectView(
+                        "/Gemma/arrays/showArrayDesign.html?id=" + arrayDesigns.iterator().next().getId() ) ) );
             }
             String list = "";
             for ( ArrayDesign ad : arrayDesigns )
                 list += ad.getId() + ",";
-            return new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html?ids=" + list ) );
+            return new TaskResult( command, new ModelAndView( new RedirectView(
+                    "/Gemma/arrays/showAllArrayDesigns.html?ids=" + list ) ) );
         }
 
         /**
@@ -192,8 +191,7 @@ public class ExpressionExperimentLoadController extends AbstractSpacesController
          * @return
          * @throws IOException
          */
-        protected ModelAndView processArrayExpressJob(
-                ExpressionExperimentLoadTaskCommand expressionExperimentLoadCommand ) {
+        protected TaskResult processArrayExpressJob( ExpressionExperimentLoadTaskCommand expressionExperimentLoadCommand ) {
 
             String accession = getAccession( expressionExperimentLoadCommand );
             ExpressionExperiment result = arrayExpressLoadService.load( accession, expressionExperimentLoadCommand
@@ -206,15 +204,14 @@ public class ExpressionExperimentLoadController extends AbstractSpacesController
          * @param result
          * @return
          */
-        protected ModelAndView processArrayExpressResult( ExpressionExperiment result ) {
+        protected TaskResult processArrayExpressResult( ExpressionExperiment result ) {
             if ( result == null ) {
                 throw new IllegalStateException( "Loading failed" );
             }
-            this.saveMessage( "Successfully loaded " + result );
             Map<Object, Object> model = new HashMap<Object, Object>();
             model.put( "expressionExperiment", result );
-            return new ModelAndView( new RedirectView( "/Gemma/expressionExperiment/showExpressionExperiment.html?id="
-                    + result.getId() ) );
+            return new TaskResult( command, new ModelAndView( new RedirectView(
+                    "/Gemma/expressionExperiment/showExpressionExperiment.html?id=" + result.getId() ) ) );
         }
 
         /**
@@ -224,7 +221,7 @@ public class ExpressionExperimentLoadController extends AbstractSpacesController
          * @return
          */
         @SuppressWarnings("unchecked")
-        protected ModelAndView processGEODataJob( ExpressionExperimentLoadTaskCommand expressionExperimentLoadCommand ) {
+        protected TaskResult processGEODataJob( ExpressionExperimentLoadTaskCommand expressionExperimentLoadCommand ) {
 
             String accession = getAccession( expressionExperimentLoadCommand );
             boolean doSampleMatching = !expressionExperimentLoadCommand.isSuppressMatching();
@@ -248,45 +245,24 @@ public class ExpressionExperimentLoadController extends AbstractSpacesController
          * @param result
          * @return
          */
-        protected ModelAndView processGeoLoadResult( Collection<ExpressionExperiment> result ) {
+        protected TaskResult processGeoLoadResult( Collection<ExpressionExperiment> result ) {
             Map<Object, Object> model = new HashMap<Object, Object>();
             if ( result == null || result.size() == 0 ) {
                 throw new RuntimeException( "No results were returned (cancelled or failed)" );
             }
             if ( result.size() == 1 ) {
                 ExpressionExperiment loaded = result.iterator().next();
-                this.saveMessage( "Successfully loaded " + loaded );
                 model.put( "expressionExperiment", loaded );
-                return new ModelAndView( new RedirectView(
+                return new TaskResult( command, new ModelAndView( new RedirectView(
                         "/Gemma/expressionExperiment/showExpressionExperiment.html?id="
-                                + result.iterator().next().getId() ) );
+                                + result.iterator().next().getId() ) ) );
             }
 
-            this.saveMessage( "Successfully loaded " + result.size() + " expression experiments" );
             String list = "";
             for ( ExpressionExperiment ee : result )
                 list += ee.getId() + ",";
-            return new ModelAndView( new RedirectView(
-                    "/Gemma/expressionExperiment/showAllExpressionExperiments.html?ids=" + list ) );
-        }
-
-        /*
-         * (non-Javadoc)
-         * @see ubic.gemma.web.controller.BaseControllerJob#processJob(ubic.gemma.grid.javaspaces.TaskCommand)
-         */
-        @Override
-        protected ModelAndView processJob( TaskCommand c ) {
-
-            ExpressionExperimentLoadTaskCommand expressionExperimentLoadCommand = ( ExpressionExperimentLoadTaskCommand ) c;
-
-            if ( expressionExperimentLoadCommand.isLoadPlatformOnly() ) {
-                return processPlatformOnlyJob( expressionExperimentLoadCommand );
-            } else if ( expressionExperimentLoadCommand.isArrayExpress() ) {
-                return processArrayExpressJob( expressionExperimentLoadCommand );
-            } else /* GEO */{
-                return processGEODataJob( expressionExperimentLoadCommand );
-            }
-
+            return new TaskResult( command, new ModelAndView( new RedirectView(
+                    "/Gemma/expressionExperiment/showAllExpressionExperiments.html?ids=" + list ) ) );
         }
 
         /**
@@ -301,8 +277,7 @@ public class ExpressionExperimentLoadController extends AbstractSpacesController
          * @return
          */
         @SuppressWarnings("unchecked")
-        protected ModelAndView processPlatformOnlyJob(
-                ExpressionExperimentLoadTaskCommand expressionExperimentLoadCommand ) {
+        protected TaskResult processPlatformOnlyJob( ExpressionExperimentLoadTaskCommand expressionExperimentLoadCommand ) {
             String accession = getAccession( expressionExperimentLoadCommand );
 
             boolean doSampleMatching = !expressionExperimentLoadCommand.isSuppressMatching();
@@ -402,7 +377,7 @@ public class ExpressionExperimentLoadController extends AbstractSpacesController
             throw new IllegalArgumentException( "Must provide an accession" );
         }
 
-        return run( command, SpacesEnum.DEFAULT_SPACE.getSpaceUrl(), ExpressionExperimentLoadTask.class.getName(), true );
+        return run( command );
     }
 
     /**
@@ -444,9 +419,9 @@ public class ExpressionExperimentLoadController extends AbstractSpacesController
      * @see ubic.gemma.web.controller.grid.AbstractSpacesController#getRunner(java.lang.String, java.lang.Object)
      */
     @Override
-    protected BackgroundControllerJob<ModelAndView> getRunner( String taskId, Object command ) {
+    protected BackgroundJob<ExpressionExperimentLoadTaskCommand> getInProcessRunner( TaskCommand command ) {
 
-        return new LoadJob( taskId, command );
+        return new LoadJob( ( ExpressionExperimentLoadTaskCommand ) command );
     }
 
     /*
@@ -454,18 +429,8 @@ public class ExpressionExperimentLoadController extends AbstractSpacesController
      * @see ubic.gemma.web.controller.grid.AbstractSpacesController#getSpaceRunner(java.lang.String, java.lang.Object)
      */
     @Override
-    protected BackgroundControllerJob<ModelAndView> getSpaceRunner( String taskId, Object command ) {
-        return new LoadInSpaceJob( taskId, command );
-    }
-
-    /*
-     * (non-Javadoc)
-     * @seeorg.springframework.web.servlet.mvc.AbstractUrlViewController#getViewNameForRequest(javax.servlet.http.
-     * HttpServletRequest)
-     */
-    @Override
-    protected String getViewNameForRequest( HttpServletRequest arg0 ) {
-        return "/admin/loadExpressionExperimentForm";
+    protected BackgroundJob<ExpressionExperimentLoadTaskCommand> getSpaceRunner( TaskCommand command ) {
+        return new LoadInSpaceJob( ( ExpressionExperimentLoadTaskCommand ) command );
     }
 
 }

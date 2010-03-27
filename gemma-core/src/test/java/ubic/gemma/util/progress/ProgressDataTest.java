@@ -24,6 +24,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import ubic.gemma.job.progress.ProgressData;
+
 /**
  * @author klc
  * @version $Id$
@@ -35,7 +37,7 @@ public class ProgressDataTest {
     @Before
     public void setUp() throws Exception {
 
-        pd = new ProgressData( 1, "test", false );
+        pd = new ProgressData( "12344", 1, "test", false );
 
     }
 

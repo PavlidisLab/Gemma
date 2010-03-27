@@ -26,16 +26,11 @@ import java.util.List;
 
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.mock.web.MockHttpServletRequest;
-import org.springframework.mock.web.MockHttpServletResponse;
-import org.springframework.web.servlet.ModelAndView;
-import org.springframework.web.servlet.mvc.AbstractController;
-import org.springframework.web.servlet.view.RedirectView;
 
+import ubic.gemma.job.TaskCommand;
+import ubic.gemma.job.progress.ProgressData;
+import ubic.gemma.job.progress.ProgressStatusService;
 import ubic.gemma.testing.BaseSpringWebTest;
-import ubic.gemma.util.progress.ProgressData;
-import ubic.gemma.util.progress.ProgressStatusService;
-import ubic.gemma.util.progress.TaskRunningService;
 import ubic.gemma.web.util.MockLongJobController;
 
 /**
@@ -46,8 +41,6 @@ import ubic.gemma.web.util.MockLongJobController;
  */
 @SuppressWarnings("null")
 public class TaskRunningTest extends BaseSpringWebTest {
-
-    AbstractController controller;
 
     @Autowired
     TaskCompletionController taskCheckController;
@@ -64,25 +57,16 @@ public class TaskRunningTest extends BaseSpringWebTest {
     @Test
     public final void testCancelledRun() throws Exception {
 
-        MockHttpServletResponse response = new MockHttpServletResponse();
-        MockHttpServletRequest request = newPost( "/mock.html" );
-        request.setAttribute( "cancel", "true" );
-
-        // goes to the progress page...
-        ModelAndView mv = mockLongJobController.handleRequest( request, response );
-        assertTrue( mv.getView() instanceof RedirectView );
-        assertTrue( "Got " + ( ( RedirectView ) mv.getView() ).getUrl(), ( ( RedirectView ) mv.getView() ).getUrl()
-                .startsWith( "/Gemma/processProgress.html?taskid=" ) );
-
-        Object taskId = mv.getModel().get( TaskRunningService.JOB_ATTRIBUTE );
-        assertNotNull( taskId );
+        // goes to the progress page...handleRequest
+        TaskCommand taskCommand = new TaskCommand();
+        String taskId = mockLongJobController.runJob( taskCommand );
 
         // let it go a little while
         Thread.sleep( 100 );
 
         // cancel it.
-        boolean cancelJob = progressStatusService.cancelJob( ( String ) taskId );
-         assertTrue( cancelJob );
+        boolean cancelJob = progressStatusService.cancelJob( taskId );
+        assertTrue( cancelJob );
 
     }
 
@@ -92,17 +76,11 @@ public class TaskRunningTest extends BaseSpringWebTest {
     @Test
     public final void testFailedRun() throws Exception {
 
-        MockHttpServletResponse response = new MockHttpServletResponse();
-        MockHttpServletRequest request = newPost( "/mock.html" );
-        request.setAttribute( "throw", "true" );
+        // goes to the progress page...handleRequest
+        TaskCommand taskCommand = new TaskCommand();
+        taskCommand.setPersistJobDetails( false ); // we use this for 'die' in this test.
+        String taskId = mockLongJobController.runJob( taskCommand );
 
-        // goes to the progress page...
-        ModelAndView mv = mockLongJobController.handleRequest( request, response );
-        assertTrue( mv.getView() instanceof RedirectView );
-        assertTrue( "Got " + ( ( RedirectView ) mv.getView() ).getUrl(), ( ( RedirectView ) mv.getView() ).getUrl()
-                .startsWith( "/Gemma/processProgress.html?taskid=" ) );
-
-        Object taskId = mv.getModel().get( TaskRunningService.JOB_ATTRIBUTE );
         assertNotNull( taskId );
 
         // wait for job to run
@@ -111,7 +89,7 @@ public class TaskRunningTest extends BaseSpringWebTest {
         long startTime = System.currentTimeMillis();
         wait: while ( true ) {
             Thread.sleep( 500 );
-            List<ProgressData> result = progressStatusService.getProgressStatus( ( String ) taskId );
+            List<ProgressData> result = progressStatusService.getProgressStatus( taskId );
             if ( result.size() > 1 ) {
 
                 for ( ProgressData lr : result ) {
@@ -138,17 +116,8 @@ public class TaskRunningTest extends BaseSpringWebTest {
     @Test
     public final void testSuccessfulRun() throws Exception {
 
-        MockHttpServletResponse response = new MockHttpServletResponse();
-        MockHttpServletRequest request = newPost( "/mock.html" );
-
-        // goes to the progress page...
-        ModelAndView mv = mockLongJobController.handleRequest( request, response );
-        assertTrue( mv.getView() instanceof RedirectView );
-        assertTrue( "Got " + ( ( RedirectView ) mv.getView() ).getUrl(), ( ( RedirectView ) mv.getView() ).getUrl()
-                .startsWith( "/Gemma/processProgress.html?taskid=" ) );
-
-        Object taskId = mv.getModel().get( TaskRunningService.JOB_ATTRIBUTE );
-        assertNotNull( taskId );
+        TaskCommand taskCommand = new TaskCommand();
+        String taskId = mockLongJobController.runJob( taskCommand );
 
         // wait for job to run
         long timeout = 5000;
@@ -156,7 +125,7 @@ public class TaskRunningTest extends BaseSpringWebTest {
         long startTime = System.currentTimeMillis();
         wait: while ( true ) {
             Thread.sleep( 500 );
-            List<ProgressData> result = progressStatusService.getProgressStatus( ( String ) taskId );
+            List<ProgressData> result = progressStatusService.getProgressStatus( taskId );
             if ( result.size() > 1 ) {
                 for ( ProgressData lr : result ) {
                     lastResult = lr;

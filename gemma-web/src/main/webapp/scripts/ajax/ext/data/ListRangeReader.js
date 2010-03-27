@@ -12,8 +12,10 @@
  * 
  */
 Ext.data.ListRangeReader = function(meta, recordType) {
-	Ext.data.ListRangeReader.superclass.constructor.call(this, meta, recordType);
-	this.recordType = recordType;
+	this.recordType = meta.record || recordType;
+
+	Ext.data.ListRangeReader.superclass.constructor.call(this, meta, this.recordType);
+
 };
 
 Ext.extend(Ext.data.ListRangeReader, Ext.data.JsonReader, {

@@ -95,6 +95,29 @@ public class AnnotationController {
         return expressionExperimentAnnotator.annotate( ee, false );
     }
 
+    public void createBiomaterialTag( Characteristic vc, Long id ) {
+        BioMaterial bm = bioMaterialService.load( id );
+        if ( bm == null ) {
+            throw new IllegalArgumentException( "No such BioMaterial with id=" + id );
+        }
+        ontologyService.saveBioMaterialStatement( vc, bm );
+    }
+
+    /**
+     * Ajax
+     * 
+     * @param vc . If the evidence code is null, it will be filled in with IC. A category and value must be provided.
+     * @param id of the expression experiment
+     */
+    public void createExperimentTag( Characteristic vc, Long id ) {
+        ExpressionExperiment ee = expressionExperimentService.load( id );
+        if ( ee == null ) {
+            throw new IllegalArgumentException( "No such experiment with id=" + id );
+        }
+        ontologyService.saveExpressionExperimentStatement( vc, ee );
+
+    }
+
     /**
      * @param givenQueryString
      * @param categoryUri
@@ -102,7 +125,7 @@ public class AnnotationController {
      * @return
      */
     public Collection<Characteristic> findTerm( String givenQueryString, String categoryUri, Long taxonId ) {
-        if (StringUtils.isBlank( givenQueryString )){
+        if ( StringUtils.isBlank( givenQueryString ) ) {
             return new HashSet<Characteristic>();
         }
         Taxon taxon = null;
@@ -110,6 +133,14 @@ public class AnnotationController {
             taxon = taxonService.load( taxonId );
         }
         return ontologyService.findExactTerm( givenQueryString, categoryUri, taxon );
+    }
+
+    public void removeBiomaterialTag( Characteristic vc, Long id ) {
+        BioMaterial bm = bioMaterialService.load( id );
+        if ( bm == null ) {
+            throw new IllegalArgumentException( "No such BioMaterial with id=" + id );
+        }
+        ontologyService.removeBioMaterialStatement( vc.getId(), bm );
     }
 
     /**
@@ -147,37 +178,6 @@ public class AnnotationController {
             characteristicService.delete( id );
         }
 
-    }
-
-    /**
-     * Ajax
-     * 
-     * @param vc . If the evidence code is null, it will be filled in with IC. A category and value must be provided.
-     * @param id of the expression experiment
-     */
-    public void createExperimentTag( Characteristic vc, Long id ) {
-        ExpressionExperiment ee = expressionExperimentService.load( id );
-        if ( ee == null ) {
-            throw new IllegalArgumentException( "No such experiment with id=" + id );
-        }
-        ontologyService.saveExpressionExperimentStatement( vc, ee );
-
-    }
-
-    public void createBiomaterialTag( Characteristic vc, Long id ) {
-        BioMaterial bm = bioMaterialService.load( id );
-        if ( bm == null ) {
-            throw new IllegalArgumentException( "No such BioMaterial with id=" + id );
-        }
-        ontologyService.saveBioMaterialStatement( vc, bm );
-    }
-
-    public void removeBiomaterialTag( Characteristic vc, Long id ) {
-        BioMaterial bm = bioMaterialService.load( id );
-        if ( bm == null ) {
-            throw new IllegalArgumentException( "No such BioMaterial with id=" + id );
-        }
-        ontologyService.removeBioMaterialStatement( vc.getId(), bm );
     }
 
 }

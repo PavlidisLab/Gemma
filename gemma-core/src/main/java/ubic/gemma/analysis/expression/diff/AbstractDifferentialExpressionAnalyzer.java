@@ -75,7 +75,8 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
     /**
      * Calls the Q value function in R.
      * 
-     * @param pvalues Entries that are NaN are ignored in the qvalue computation and rendered as NaN qvalues.
+     * @param pvalues Entries that are NaN or out of range [0,1] are ignored in the qvalue computation and rendered as
+     *        NaN qvalues.
      * @return returns the qvalues (false discovery rates) for the pvalues using the method of Storey and Tibshirani.
      */
     protected double[] getQValues( double[] pvalues ) {
@@ -91,8 +92,9 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
         /* Create a list with only the p-values that are not Double.NaN */
         ArrayList<Double> pvaluesList = new ArrayList<Double>();
         for ( int i = 0; i < pvalues.length; i++ ) {
-            if ( Double.isNaN( pvalues[i] ) ) continue;
-            pvaluesList.add( pvalues[i] );
+            double pvalue = pvalues[i];
+            if ( pvalue < 0.0 || pvalue > 1.0 || Double.isNaN( pvalue ) ) continue;
+            pvaluesList.add( pvalue );
         }
 
         /* convert to primitive array */
@@ -108,14 +110,27 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
             throw new IllegalStateException( "qvalue does not seem to be available" );
         }
 
-        StringBuffer qvalueCommand = new StringBuffer();
         String pvalsName = "pvals_" + RandomStringUtils.randomAlphabetic( 10 );
+
         rc.assign( pvalsName, pvaluesToUse );
-        qvalueCommand.append( "qvalue(" + pvalsName + ")$qvalues" );
+        String qvalueCommand = ( "qvalue(" + pvalsName + ")$qvalues" );
         double[] qvaluesFromR = rc.doubleArrayEval( qvalueCommand.toString() );
 
         if ( qvaluesFromR == null ) {
-            throw new IllegalStateException( "Null qvalues.  Check the R side." );
+            /*
+             * Qvalue will return an error in several conditions. 1)if the vector contains NaNs [we handle that
+             * already]; 2) p-values are out of range 0-1 [we handle that too]; 3) pi0 [proportion of unchanged genes]
+             * <= 0; 4) other invalid arguments which we don't set anyway. I suspect the main cause of this is actually
+             * #3. So we try the other method.
+             */
+            qvalueCommand = "qvalue(" + pvalsName + ", method=\"bootstrap\"" + ")$qvalues";
+            qvaluesFromR = rc.doubleArrayEval( qvalueCommand.toString() );
+
+            if ( qvaluesFromR == null ) {
+                throw new IllegalStateException(
+                        "Null qvalues were returned from R. No details about the problem, but probably pi0 was <= 0. Tried both fitting methods. Last attempted command was: "
+                                + qvalueCommand );
+            }
         }
 
         if ( qvaluesFromR.length != pvaluesToUse.length ) {
@@ -127,7 +142,8 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
         int k = 0;
         double[] qvalues = new double[pvalues.length];
         for ( int i = 0; i < qvalues.length; i++ ) {
-            if ( Double.isNaN( pvalues[i] ) ) {
+            double pvalue = pvalues[i];
+            if ( pvalue < 0.0 || pvalue > 1.0 || Double.isNaN( pvalue ) ) {
                 qvalues[i] = Double.NaN;
             } else {
                 qvalues[i] = qvaluesFromR[k];

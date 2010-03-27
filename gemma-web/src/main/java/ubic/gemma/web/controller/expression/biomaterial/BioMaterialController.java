@@ -45,28 +45,17 @@ import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueService;
 import ubic.gemma.model.expression.experiment.FactorValueValueObject;
 import ubic.gemma.ontology.OntologyService;
-import ubic.gemma.web.controller.BaseController;
 import ubic.gemma.web.controller.expression.experiment.AnnotationValueObject;
 import ubic.gemma.web.remote.EntityDelegator;
 import ubic.gemma.web.util.EntityNotFoundException;
 
 /**
- * <bean id="bioMaterialActions" class="org.springframework.web.servlet.mvc.multiaction.PropertiesMethodNameResolver">
- * <property name="mappings"> <props> <prop key="/bioMaterial/showAllBioMaterials.html">showAll</prop> <prop
- * key="/bioMaterial/showBioMaterial.html">show</prop> <prop key="/bioMaterial/">show</prop> <prop
- * key="/bioMaterial/annotate.html">annot</prop> </props> </property> </bean> <bean id="bioMaterialController"
- * class="ubic.gemma.web.controller.expression.biomaterial.BioMaterialController"> <property name="bioMaterialService">
- * <ref bean="bioMaterialService" /> </property> <property name="expressionExperimentService"> <ref
- * bean="expressionExperimentService" /> </property> <property name="methodNameResolver"> <ref bean="bioMaterialActions"
- * /> </property> <property name="ontologyService"> <ref bean="ontologyService" /> </property> <property
- * name="factorValueService"> <ref bean="factorValueService" /> </property> </bean>
- * 
  * @author keshav
  * @version $Id$
  */
 @Controller
 @RequestMapping("/bioMaterial")
-public class BioMaterialController extends BaseController {
+public class BioMaterialController {
 
     private static Log log = LogFactory.getLog( BioMaterialController.class.getName() );
 
@@ -280,14 +269,12 @@ public class BioMaterialController extends BaseController {
         try {
             id = Long.parseLong( request.getParameter( "id" ) );
         } catch ( NumberFormatException e ) {
-            saveMessage( request, "Must provide a biomaterial id" );
-            return new ModelAndView( "mainMenu.html" );
+            String message = "Must provide a numeric biomaterial id";
+            return new ModelAndView( "mainMenu.html" ).addObject( "message", message );
         }
 
         if ( id == null ) {
-            // should also be a validation error, on 'submit'.
-            saveMessage( request, "Must provide a biomaterial id" );
-            return new ModelAndView( "mainMenu.html" );
+            return new ModelAndView( "mainMenu.html" ).addObject( "message", "Must provide a biomaterial id" );
         }
 
         BioMaterial bioMaterial = bioMaterialService.load( id );
@@ -295,25 +282,12 @@ public class BioMaterialController extends BaseController {
             throw new EntityNotFoundException( id + " not found" );
         }
 
-        this.saveMessage( request, "biomaterial with id " + id + " found" );
         request.setAttribute( "id", id );
         ModelAndView mnv = new ModelAndView( "bioMaterial.detail" ).addObject( "bioMaterial", bioMaterial ).addObject(
-                "expressionExperiment", bioMaterialService.getExpressionExperiment( id ) );
+                "expressionExperiment", bioMaterialService.getExpressionExperiment( id ) ).addObject( "message",
+                "biomaterial with id " + id + " found" );
 
         return mnv;
-    }
-
-    /**
-     * @param request
-     * @param response
-     * @return
-     */
-    @RequestMapping("/showAllBioMaterials.html")
-    public ModelAndView showAll( HttpServletRequest request, HttpServletResponse response ) {
-        /*
-         * FIXME this is not really useful; we need to take in an id list.
-         */
-        return new ModelAndView( "bioMaterials" ).addObject( "bioMaterials", bioMaterialService.loadAll() );
     }
 
     private String getLabelFromUri( String uri ) {

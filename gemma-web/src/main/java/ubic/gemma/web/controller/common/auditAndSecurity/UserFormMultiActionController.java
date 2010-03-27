@@ -37,7 +37,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import ubic.gemma.model.common.auditAndSecurity.User;
-import ubic.gemma.model.common.auditAndSecurity.UserService;
 import ubic.gemma.security.authentication.UserDetailsImpl;
 import ubic.gemma.security.authentication.UserManager;
 import ubic.gemma.util.ConfigUtils;
@@ -55,9 +54,6 @@ import ubic.gemma.web.util.JSONUtil;
 public class UserFormMultiActionController extends BaseController {
 
     public static final int MIN_PASSWORD_LENGTH = 6;
-
-    @Autowired
-    private UserService userService;
 
     @Autowired
     private UserManager userManager;
@@ -176,7 +172,7 @@ public class UserFormMultiActionController extends BaseController {
             username = o.toString();
         }
 
-        User user = userService.findByUserName( username );
+        User user = userManager.findByUserName( username );
 
         JSONUtil jsonUtil = new JSONUtil( request, response );
 

@@ -13,19 +13,26 @@
 
 
 	<!-- Configured here because autowiring doesn't work with static fields. -->
-	<bean id="progressManager" class="ubic.gemma.util.progress.ProgressManager" lazy-init="true">
+	<bean id="progressManager" class="ubic.gemma.job.progress.ProgressManager" lazy-init="true">
 		<property name="userManager" ref="userManager" />
-		<property name="jobInfoDao" ref="jobInfoDao" />
+		<property name="jobInfoService" ref="jobInfoService" />
 	</bean>
 
-	<!-- Pointcut for monitoring methods. See ubic.gemma.util.monitor.MonitorAdvice and Monitored (annotations not working here) -->
+	<aop:aspectj-autoproxy />
+
+	<!--
+		Pointcut for monitoring methods. See ubic.gemma.util.monitor.MonitorAdvice and Monitored (annotations not working
+		here)
+	-->
 	<aop:config>
 		<aop:aspect id="monitorAspect" ref="monitorAdvice">
 			<aop:around method="profile" pointcut="execution(@ubic.gemma.util.monitor.Monitored * *(..))" />
 		</aop:aspect>
 	</aop:config>
 
+	<!-- setup/teardown for long-running tasks. See also gigaspaces.xml -->
 
+	<bean id="taskMethodAdvice" class="ubic.gemma.job.TaskMethodAdvice" />
 
 	<!--
 		see
@@ -35,8 +42,6 @@
 		<aop:pointcut id="serviceMethod" expression="ubic.gemma.util.SystemArchitectureAspect.serviceMethod()" />
 		<aop:advisor advice-ref="txAdvice" pointcut-ref="serviceMethod" />
 	</aop:config>
-
-
 
 	<!-- Message source for this context, loaded from localized "messages_xx" files -->
 	<bean id="messageSource" class="org.springframework.context.support.ReloadableResourceBundleMessageSource">
@@ -70,8 +75,6 @@
 		<property name="ignoreUnresolvablePlaceholders" value="false" />
 		<property name="ignoreResourceNotFound" value="false" />
 	</bean>
-
-
 
 	<!-- ==================================================== -->
 	<!--    Email configuration   -->

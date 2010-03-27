@@ -18,26 +18,17 @@
  */
 package ubic.gemma.web.controller.analysis.preprocess;
 
-import java.util.Collection;
-
-import javax.servlet.http.HttpServletRequest;
-
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Controller;
 
-import ubic.gemma.analysis.preprocess.ProcessedExpressionDataVectorCreateService;
-import ubic.gemma.grid.javaspaces.TaskCommand;
-import ubic.gemma.grid.javaspaces.TaskResult;
-import ubic.gemma.grid.javaspaces.task.analysis.preprocess.ProcessedExpressionDataVectorCreateTask;
-import ubic.gemma.grid.javaspaces.task.analysis.preprocess.ProcessedExpressionDataVectorCreateTaskCommand;
-import ubic.gemma.grid.javaspaces.util.SpacesEnum;
-import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
+import ubic.gemma.job.AbstractTaskService;
+import ubic.gemma.job.BackgroundJob;
+import ubic.gemma.job.TaskCommand;
+import ubic.gemma.job.TaskResult;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.web.controller.BackgroundControllerJob;
-import ubic.gemma.web.controller.BaseControllerJob;
-import ubic.gemma.web.controller.grid.AbstractSpacesController;
+import ubic.gemma.tasks.analysis.expression.ProcessedExpressionDataVectorCreateTask;
+import ubic.gemma.tasks.analysis.expression.ProcessedExpressionDataVectorCreateTaskCommand;
 
 /**
  * A controller to preprocess expression data vectors.
@@ -46,56 +37,35 @@ import ubic.gemma.web.controller.grid.AbstractSpacesController;
  * @version $Id$
  */
 @Controller
-public class ProcessedExpressionDataVectorCreateController extends AbstractSpacesController<Boolean> {
+public class ProcessedExpressionDataVectorCreateController extends AbstractTaskService {
+
+    public ProcessedExpressionDataVectorCreateController() {
+        super();
+        this.setBusinessInterface( ProcessedExpressionDataVectorCreateTask.class );
+    }
+
+    @Autowired
+    ProcessedExpressionDataVectorCreateTask processedExpressionDataVectorCreateTask;
 
     /**
      * @author keshav
      */
-    private class ProcessedExpressionDataVectorCreateJob extends BaseControllerJob<Boolean> {
+    private class ProcessedExpressionDataVectorCreateJob extends
+            BackgroundJob<ProcessedExpressionDataVectorCreateTaskCommand> {
 
         /**
          * @param taskId
          * @param commandObj
          */
-        public ProcessedExpressionDataVectorCreateJob( String taskId, Object commandObj ) {
-            super( taskId, commandObj );
+        public ProcessedExpressionDataVectorCreateJob( ProcessedExpressionDataVectorCreateTaskCommand commandObj ) {
+            super( commandObj );
         }
 
-        /*
-         * (non-Javadoc)
-         * @see java.util.concurrent.Callable#call()
-         */
-        public Boolean call() throws Exception {
-
-            ProcessedExpressionDataVectorCreateTaskCommand vectorCommand = ( ( ProcessedExpressionDataVectorCreateTaskCommand ) command );
-
-            super.initializeProgressJob( vectorCommand.getExpressionExperiment().getShortName() );
-
-            return processJob( vectorCommand );
-        }
-
-        /*
-         * (non-Javadoc)
-         * @see ubic.gemma.web.controller.BaseControllerJob#processJob(ubic.gemma.web.controller.BaseCommand)
-         */
         @Override
-        protected Boolean processJob( TaskCommand c ) {
-            ProcessedExpressionDataVectorCreateTaskCommand vectorCommand = ( ( ProcessedExpressionDataVectorCreateTaskCommand ) c );
-
-            ExpressionExperiment ee = vectorCommand.getExpressionExperiment();
-            // expressionExperimentService.thawLite( ee );
-
-            try {
-                Collection<ProcessedExpressionDataVector> processedVectors = processedExpressionDataVectorCreateService
-                        .computeProcessedExpressionData( ee );
-                return processedVectors.size() > 0;
-            } catch ( DataIntegrityViolationException e ) {
-                log.error( e, e );
-                throw new RuntimeException(
-                        "The processed vectors could not be created, probably because analysis results refer to the old ones."
-                                + " Old analyses must be deleted first. Detailed message: " + e.getMessage() );
-            }
+        public TaskResult processJob() {
+            return processedExpressionDataVectorCreateTask.execute( command );
         }
+
     }
 
     /**
@@ -106,56 +76,21 @@ public class ProcessedExpressionDataVectorCreateController extends AbstractSpace
      */
     private class ProcessedExpressionDataVectorCreateSpaceJob extends ProcessedExpressionDataVectorCreateJob {
 
-        final ProcessedExpressionDataVectorCreateTask taskProxy = ( ProcessedExpressionDataVectorCreateTask ) updatedContext
-                .getBean( "proxy" );
+        final ProcessedExpressionDataVectorCreateTask taskProxy = ( ProcessedExpressionDataVectorCreateTask ) getProxy();
 
-        /**
-         * @param taskId
-         * @param commandObj
-         */
-        public ProcessedExpressionDataVectorCreateSpaceJob( String taskId, Object commandObj ) {
-            super( taskId, commandObj );
+        public ProcessedExpressionDataVectorCreateSpaceJob( ProcessedExpressionDataVectorCreateTaskCommand commandObj ) {
+            super( commandObj );
         }
 
-        /**
-         * @param command
-         * @return
-         */
-        protected ProcessedExpressionDataVectorCreateTaskCommand createCommandObject(
-                ProcessedExpressionDataVectorCreateTaskCommand command ) {
-            return new ProcessedExpressionDataVectorCreateTaskCommand( taskId, command.getExpressionExperiment() );
-        }
-
-        /*
-         * (non-Javadoc)
-         * @seeubic.gemma.web.controller.analysis.preprocess.ProcessedExpressionDataVectorCreateController.
-         * ProcessedExpressionDataVectorCreateJob#processJob(ubic.gemma.web.controller.BaseCommand)
-         */
         @Override
-        protected Boolean processJob( TaskCommand baseCommand ) {
-            baseCommand.setTaskId( this.taskId );
-            ProcessedExpressionDataVectorCreateTaskCommand vectorCommand = ( ProcessedExpressionDataVectorCreateTaskCommand ) baseCommand;
-            process( vectorCommand );
-            return true;
-        }
-
-        /**
-         * @param command
-         * @return
-         */
-        private TaskResult process( ProcessedExpressionDataVectorCreateTaskCommand command ) {
-            ProcessedExpressionDataVectorCreateTaskCommand jsCommand = createCommandObject( command );
-            TaskResult result = taskProxy.execute( jsCommand );
-            return result;
+        public TaskResult processJob() {
+            return taskProxy.execute( command );
         }
 
     }
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService = null;
-
-    @Autowired
-    private ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService = null;
 
     /**
      * AJAX entry point.
@@ -170,17 +105,7 @@ public class ProcessedExpressionDataVectorCreateController extends AbstractSpace
 
         ProcessedExpressionDataVectorCreateTaskCommand cmd = new ProcessedExpressionDataVectorCreateTaskCommand( ee );
 
-        return super.run( cmd, SpacesEnum.DEFAULT_SPACE.getSpaceUrl(), ProcessedExpressionDataVectorCreateTask.class
-                .getName(), true );
-    }
-
-    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
-        this.expressionExperimentService = expressionExperimentService;
-    }
-
-    public void setProcessedExpressionDataVectorCreateService(
-            ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService ) {
-        this.processedExpressionDataVectorCreateService = processedExpressionDataVectorCreateService;
+        return super.run( cmd );
     }
 
     /*
@@ -188,8 +113,8 @@ public class ProcessedExpressionDataVectorCreateController extends AbstractSpace
      * @see ubic.gemma.web.controller.grid.AbstractSpacesController#getRunner(java.lang.String, java.lang.Object)
      */
     @Override
-    protected BackgroundControllerJob<Boolean> getRunner( String jobId, Object command ) {
-        return new ProcessedExpressionDataVectorCreateJob( jobId, command );
+    protected BackgroundJob<ProcessedExpressionDataVectorCreateTaskCommand> getInProcessRunner( TaskCommand command ) {
+        return new ProcessedExpressionDataVectorCreateJob( ( ProcessedExpressionDataVectorCreateTaskCommand ) command );
     }
 
     /*
@@ -197,18 +122,9 @@ public class ProcessedExpressionDataVectorCreateController extends AbstractSpace
      * @see ubic.gemma.web.controller.grid.AbstractSpacesController#getSpaceRunner(java.lang.String, java.lang.Object)
      */
     @Override
-    protected BackgroundControllerJob<Boolean> getSpaceRunner( String jobId, Object command ) {
-        return new ProcessedExpressionDataVectorCreateSpaceJob( jobId, command );
-    }
-
-    /*
-     * (non-Javadoc)
-     * @seeorg.springframework.web.servlet.mvc.AbstractUrlViewController#getViewNameForRequest(javax.servlet.http.
-     * HttpServletRequest)
-     */
-    @Override
-    protected String getViewNameForRequest( HttpServletRequest arg0 ) {
-        return null;
+    protected BackgroundJob<ProcessedExpressionDataVectorCreateTaskCommand> getSpaceRunner( TaskCommand command ) {
+        return new ProcessedExpressionDataVectorCreateSpaceJob(
+                ( ProcessedExpressionDataVectorCreateTaskCommand ) command );
     }
 
 }

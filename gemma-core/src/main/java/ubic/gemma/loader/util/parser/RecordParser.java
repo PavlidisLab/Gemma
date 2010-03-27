@@ -11,8 +11,8 @@ import java.util.Collection;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import ubic.gemma.util.progress.ProgressData;
-import ubic.gemma.util.progress.ProgressManager;
+import ubic.gemma.job.progress.ProgressData;
+import ubic.gemma.job.progress.ProgressManager;
 
 /**
  * Abstract record-based parser. Records are defined by lines starting with a given record separator. The default record
@@ -70,7 +70,6 @@ public abstract class RecordParser<T> implements Parser<T> {
             }
             if ( recordsParsed % PARSE_ALERT_FREQUENCY == 0 ) {
                 String message = "Parsed " + recordsParsed + " records ...";
-                ProgressManager.updateCurrentThreadsProgressJob( new ProgressData( 0, message ) );
                 log.debug( message );
             }
 

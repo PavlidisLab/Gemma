@@ -31,6 +31,8 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
@@ -42,8 +44,7 @@ import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.search.SearchResult;
 import ubic.gemma.search.SearchService;
-import ubic.gemma.search.SearchSettings;
-import ubic.gemma.web.controller.BaseController;
+import ubic.gemma.search.SearchSettings; 
 
 /**
  * For 'live searches' from the web interface.
@@ -52,7 +53,9 @@ import ubic.gemma.web.controller.BaseController;
  * @version $Id$
  */
 @Controller
-public class GenePickerController extends BaseController {
+public class GenePickerController {
+
+    private static Log log = LogFactory.getLog( GenePickerController.class );
 
     @Autowired
     private GeneService geneService = null;

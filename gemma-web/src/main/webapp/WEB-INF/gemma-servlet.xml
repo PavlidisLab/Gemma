@@ -72,7 +72,6 @@
 				<prop key="/expressionExperiment/upload.html">expressionDataFileUploadController</prop>
 				<prop key="/loadSimpleExpressionExperiment.html">expressionDataFileUploadController</prop>
 				<prop key="/getData.html">expressionExperimentDataFetchController</prop>
-				<prop key="/candidateGeneList*">candidateGeneListController</prop>
 				<prop key="/genome/bioSequence/*">bioSequenceController</prop>
 				<prop key="/checkJobProgress.html">taskCompletionController</prop>
 				<prop key="/searchCoexpression.html">coexpressionSearchController</prop>
@@ -122,6 +121,7 @@
 	<bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/admin/userManager.html" />
 	<bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/admin/indexer.html" />
 	<bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/admin/widgetTest.html" />
+	<bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/admin/taskTest.html" />
 
 	<!-- ==================================================== -->
 	<!-- Exception handler. -->
@@ -224,34 +224,6 @@
 
 	<bean id="fileUploadController" class="ubic.gemma.web.controller.common.auditAndSecurity.FileUploadController" />
 
-	<bean id="arrayDesignSequenceAddController" class="ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignSequenceAddController">
-
-		<property name="commandName">
-			<value>arrayDesignSequenceAddCommand</value>
-		</property>
-		<property name="commandClass">
-			<value>ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignSequenceAddCommand
-			</value>
-		</property>
-		<property name="formView">
-			<value>arrayDesignSequenceAdd</value>
-		</property>
-		<property name="successView">
-			<value>redirect:/arrayDesign/associateSequences.html</value>
-		</property>
-		<property name="arrayDesignService">
-			<ref bean="arrayDesignService" />
-		</property>
-		<property name="validator">
-			<ref bean="arrayDesignSequenceAddValidator" />
-		</property>
-		<property name="taxonService">
-			<ref bean="taxonService" />
-		</property>
-		<property name="arrayDesignSequenceProcessingService">
-			<ref bean="arrayDesignSequenceProcessingService" />
-		</property>
-	</bean>
 
 	<bean id="expressionExperimentFormController" class="ubic.gemma.web.controller.expression.experiment.ExpressionExperimentFormController">
 
@@ -771,6 +743,8 @@
 							<list>
 								<value>getProgressStatus</value>
 								<value>cancelJob</value>
+								<value>addEmailAlert</value>
+								<value>getSubmittedTasks</value>
 							</list>
 						</property>
 					</bean>
@@ -816,16 +790,16 @@
 						</property>
 					</bean>
 				</entry>
-				<entry key="CustomCompassIndexController">
+				<entry key="IndexService">
 					<bean class="org.directwebremoting.spring.CreatorConfig">
 						<property name="creator">
 							<bean class="org.directwebremoting.spring.BeanCreator">
-								<property name="bean" ref="indexController" />
+								<property name="bean" ref="indexService" />
 							</bean>
 						</property>
 						<property name="includes">
 							<list>
-								<value>run</value>
+								<value>index</value>
 							</list>
 						</property>
 					</bean>
@@ -1139,6 +1113,20 @@
 						</property>
 					</bean>
 				</entry>
+				<entry key="TestTaskController">
+					<bean class="org.directwebremoting.spring.CreatorConfig">
+						<property name="creator">
+							<bean class="org.directwebremoting.spring.BeanCreator">
+								<property name="bean" ref="testTaskController" />
+							</bean>
+						</property>
+						<property name="includes">
+							<list>
+								<value>run</value>
+							</list>
+						</property>
+					</bean>
+				</entry>
 				<entry key="FeedReader">
 					<bean class="org.directwebremoting.spring.CreatorConfig">
 						<property name="creator">
@@ -1411,7 +1399,7 @@
 						<property name="type" value="bean" />
 					</bean>
 				</entry>
-				<entry key="ubic.gemma.util.progress.ProgressData">
+				<entry key="ubic.gemma.job.progress.ProgressData">
 					<bean class="org.directwebremoting.spring.ConverterConfig">
 						<property name="type" value="bean" />
 					</bean>
@@ -1833,12 +1821,22 @@
 						<property name="type" value="bean" />
 					</bean>
 				</entry>
-				<entry key="ubic.gemma.grid.javaspaces.task.index.IndexerTaskCommand">
+					<entry key="ubic.gemma.job.TaskCommand">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="bean" />
+						<property name="excludes">
+							<list>
+								<value>securityContext</value>
+							</list>
+						</property>
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.tasks.maintenance.IndexerTaskCommand">
 					<bean class="org.directwebremoting.spring.ConverterConfig">
 						<property name="type" value="bean" />
 					</bean>
 				</entry>
-				<entry key="ubic.gemma.grid.javaspaces.task.expression.experiment.ExpressionExperimentLoadTaskCommand">
+				<entry key="ubic.gemma.tasks.analysis.expression.ExpressionExperimentLoadTaskCommand">
 					<bean class="org.directwebremoting.spring.ConverterConfig">
 						<property name="type" value="bean" />
 					</bean>

@@ -67,7 +67,8 @@ Gemma.DatasetGroupEditor = Ext.extend(Ext.Window, {
 									}],
 							split : true,
 							height : 200,
-							width : 400
+							width : 300,
+							minWidth : 200
 						});
 
 				/*
@@ -94,7 +95,7 @@ Gemma.DatasetGroupEditor = Ext.extend(Ext.Window, {
 							loadMask : {
 								msg : 'Searching ...'
 							},
-							width : 400,
+							minWidth : 200,
 							tbar : new Gemma.DataSetSearchAndGrabToolbar({
 										taxonSearch : true,
 										targetGrid : this.datasetGroupMembersGrid
@@ -114,6 +115,7 @@ Gemma.DatasetGroupEditor = Ext.extend(Ext.Window, {
 							collapsible : true,
 							collapseMode : 'mini',
 							height : 200,
+							width : 300,
 							title : "Available expression experiment sets",
 							displayGrid : this.datasetGroupMembersGrid,
 							tbar : new Gemma.DatasetGroupEditToolbar()

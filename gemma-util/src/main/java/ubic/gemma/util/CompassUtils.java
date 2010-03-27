@@ -50,8 +50,7 @@ public class CompassUtils {
     public static void deleteCompassLocks() {
         /*
          * FIXME lock directory is now the same as the indexes, by default.
-         */
-        log.debug( "Lucene index lock dir: " + FSDirectory.LOCK_DIR );
+         */ 
 
         Collection<File> lockFiles = FileUtils.listFiles( new File( FSDirectory.LOCK_DIR ), FileFilterUtils
                 .suffixFileFilter( "lock" ), null );
@@ -94,9 +93,8 @@ public class CompassUtils {
     public static synchronized void rebuildCompassIndex( CompassGpsInterfaceDevice gps ) {
         boolean wasRunningBefore = gps.isRunning();
 
-        log.info( "CompassGps was running? " + wasRunningBefore );
+        log.debug( "CompassGps was running? " + wasRunningBefore );
 
-        
         /*
          * Check state of device. If not running and you try to index, you will get a device exception.
          */
@@ -104,17 +102,15 @@ public class CompassUtils {
             enableIndexMirroring( gps );
         }
 
-        if (gps.getIndexCompass().getSearchEngineIndexManager().indexExists()){
-            if (wasRunningBefore)
-                gps.stop();
-            
+        if ( gps.getIndexCompass().getSearchEngineIndexManager().indexExists() ) {
+            if ( wasRunningBefore ) gps.stop();
+
             gps.getIndexCompass().getSearchEngineIndexManager().deleteIndex();
             log.info( "Deleting old index" );
-            
-            if (wasRunningBefore)
-                gps.start();
+
+            if ( wasRunningBefore ) gps.start();
         }
-        
+
         gps.getIndexCompass().getSearchEngineIndexManager().createIndex();
         log.info( "indexing now ... " );
         gps.index();
@@ -164,30 +160,10 @@ public class CompassUtils {
         log.info( "Clearing Cache.... " );
         compass.getSearchEngineIndexManager().clearCache();
 
-        // Oddly this creates some empty segmants that are just cruft.
-        // log.info("Creating index...");
-        // compass.getSearchEngineIndexManager().createIndex();
-
         log.info( "swapping index....." );
         FileUtils.copyDirectory( srcDir, targetDir );
 
         compass.getSearchEngineIndexManager().start();
-
-        // gps.getIndexCompass().getSearchEngineIndexManager().replaceIndex(
-        // gps.getIndexCompass().getSearchEngineIndexManager(),
-        // new SearchEngineIndexManager.ReplaceIndexCallback() {
-        // public void buildIndexIfNeeded()
-        // throws SearchEngineException {
-        // try{
-        // //Copy must be put in the call back. If not put here then the files just get removed. when replace index is
-        // called.
-        // FileUtils.copyDirectory(srcDir, targetDir);
-        // }
-        // catch(IOException ioe){
-        // log.error("Unable to copy" + srcDir.getAbsolutePath() + " to " + targetDir.getAbsolutePath());
-        // }
-        // }
-        // });
 
     }
 

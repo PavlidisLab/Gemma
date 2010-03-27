@@ -18,26 +18,19 @@
  */
 package ubic.gemma.web.controller.analysis.expression.coexpression.links;
 
-import javax.servlet.http.HttpServletRequest;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.servlet.ModelAndView;
-import org.springframework.web.servlet.view.RedirectView;
 
 import ubic.gemma.analysis.expression.coexpression.links.LinkAnalysisConfig;
-import ubic.gemma.analysis.expression.coexpression.links.LinkAnalysisService;
 import ubic.gemma.analysis.preprocess.filter.FilterConfig;
-import ubic.gemma.grid.javaspaces.TaskCommand;
-import ubic.gemma.grid.javaspaces.TaskResult;
-import ubic.gemma.grid.javaspaces.task.analysis.coexpression.links.LinkAnalysisTask;
-import ubic.gemma.grid.javaspaces.task.analysis.coexpression.links.LinkAnalysisTaskCommand;
-import ubic.gemma.grid.javaspaces.util.SpacesEnum;
+import ubic.gemma.job.AbstractTaskService;
+import ubic.gemma.job.BackgroundJob;
+import ubic.gemma.job.TaskCommand;
+import ubic.gemma.job.TaskResult;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.web.controller.BackgroundControllerJob;
-import ubic.gemma.web.controller.BaseControllerJob;
-import ubic.gemma.web.controller.grid.AbstractSpacesController;
+import ubic.gemma.tasks.analysis.coexp.LinkAnalysisTask;
+import ubic.gemma.tasks.analysis.coexp.LinkAnalysisTaskCommand;
 
 /**
  * A controller to preprocess expression data vectors.
@@ -46,49 +39,22 @@ import ubic.gemma.web.controller.grid.AbstractSpacesController;
  * @version $Id$
  */
 @Controller
-public class LinkAnalysisController extends AbstractSpacesController<ModelAndView> {
+public class LinkAnalysisController extends AbstractTaskService {
 
     /**
      * @author keshav
      */
-    private class LinkAnalysisJob extends BaseControllerJob<ModelAndView> {
+    private class LinkAnalysisJob extends BackgroundJob<LinkAnalysisTaskCommand> {
 
-        /**
-         * @param taskId
-         * @param commandObj
-         */
-        public LinkAnalysisJob( String taskId, Object commandObj ) {
-            super( taskId, commandObj );
+        public LinkAnalysisJob( LinkAnalysisTaskCommand commandObj ) {
+            super( commandObj );
         }
 
-        /*
-         * (non-Javadoc)
-         * @see java.util.concurrent.Callable#call()
-         */
-        public ModelAndView call() throws Exception {
-
-            LinkAnalysisTaskCommand linkAnalyisCommand = ( LinkAnalysisTaskCommand ) command;
-
-            super.initializeProgressJob( linkAnalyisCommand.getExpressionExperiment().getShortName() );
-
-            return processJob( linkAnalyisCommand );
-        }
-
-        /*
-         * (non-Javadoc)
-         * @see ubic.gemma.web.controller.BaseControllerJob#processJob(ubic.gemma.web.controller.BaseCommand)
-         */
         @Override
-        protected ModelAndView processJob( TaskCommand c ) {
-            LinkAnalysisTaskCommand lac = ( LinkAnalysisTaskCommand ) c;
-            expressionExperimentService.thawLite( lac.getExpressionExperiment() );
-            linkAnalysisService.process( lac.getExpressionExperiment(), lac.getFilterConfig(), lac
-                    .getLinkAnalysisConfig() );
-
-            return new ModelAndView( new RedirectView( "/Gemma" ) );
-
-            // throw new UnsupportedOperationException( "Cannot run locally at this time.  Run in a space." );
+        public TaskResult processJob() {
+            return linkAnalysisTask.execute( command );
         }
+
     }
 
     /**
@@ -99,48 +65,30 @@ public class LinkAnalysisController extends AbstractSpacesController<ModelAndVie
      */
     private class LinkAnalysisSpaceJob extends LinkAnalysisJob {
 
-        final LinkAnalysisTask taskProxy = ( LinkAnalysisTask ) updatedContext.getBean( "proxy" );
+        final LinkAnalysisTask taskProxy = ( LinkAnalysisTask ) getProxy();
 
-        /**
-         * @param taskId
-         * @param commandObj
-         */
-        public LinkAnalysisSpaceJob( String taskId, Object commandObj ) {
-            super( taskId, commandObj );
+        public LinkAnalysisSpaceJob( LinkAnalysisTaskCommand commandObj ) {
+            super( commandObj );
 
         }
 
-        /*
-         * (non-Javadoc)
-         * @seeubic.gemma.web.controller.analysis.expression.coexpression.links.LinkAnalysisController.LinkAnalysisJob#
-         * processJob(ubic.gemma.web.controller.BaseCommand)
-         */
         @Override
-        protected ModelAndView processJob( TaskCommand baseCommand ) {
-            assert this.taskId != null;
-            baseCommand.setTaskId( this.taskId );
-            LinkAnalysisTaskCommand vectorCommand = ( LinkAnalysisTaskCommand ) baseCommand;
-            process( vectorCommand );
-            return new ModelAndView( new RedirectView( "/Gemma" ) );
-        }
-
-        /**
-         * @param command
-         * @return
-         */
-        private TaskResult process( LinkAnalysisTaskCommand c ) {
-            expressionExperimentService.thawLite( c.getExpressionExperiment() );
-            TaskResult result = taskProxy.execute( c );
-            return result;
+        public TaskResult processJob() {
+            return taskProxy.execute( command );
         }
 
     }
 
     @Autowired
-    private ExpressionExperimentService expressionExperimentService = null;
+    LinkAnalysisTask linkAnalysisTask;
 
     @Autowired
-    private LinkAnalysisService linkAnalysisService = null;
+    private ExpressionExperimentService expressionExperimentService = null;
+
+    public LinkAnalysisController() {
+        super();
+        this.setBusinessInterface( LinkAnalysisTask.class );
+    }
 
     /**
      * AJAX entry point.
@@ -162,15 +110,11 @@ public class LinkAnalysisController extends AbstractSpacesController<ModelAndVie
         FilterConfig fc = new FilterConfig();
         LinkAnalysisTaskCommand cmd = new LinkAnalysisTaskCommand( null, ee, lac, fc );
 
-        return super.run( cmd, SpacesEnum.DEFAULT_SPACE.getSpaceUrl(), LinkAnalysisTask.class.getName(), true );
+        return super.run( cmd );
     }
 
     public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
         this.expressionExperimentService = expressionExperimentService;
-    }
-
-    public void setLinkAnalysisService( LinkAnalysisService linkAnalysisService ) {
-        this.linkAnalysisService = linkAnalysisService;
     }
 
     /*
@@ -178,8 +122,8 @@ public class LinkAnalysisController extends AbstractSpacesController<ModelAndVie
      * @see ubic.gemma.web.controller.grid.AbstractSpacesController#getRunner(java.lang.String, java.lang.Object)
      */
     @Override
-    protected BackgroundControllerJob<ModelAndView> getRunner( String jobId, Object command ) {
-        return new LinkAnalysisJob( jobId, command );
+    protected BackgroundJob<LinkAnalysisTaskCommand> getInProcessRunner( TaskCommand command ) {
+        return new LinkAnalysisJob( ( LinkAnalysisTaskCommand ) command );
     }
 
     /*
@@ -187,19 +131,8 @@ public class LinkAnalysisController extends AbstractSpacesController<ModelAndVie
      * @see ubic.gemma.web.controller.grid.AbstractSpacesController#getSpaceRunner(java.lang.String, java.lang.Object)
      */
     @Override
-    protected BackgroundControllerJob<ModelAndView> getSpaceRunner( String jobId, Object command ) {
-        return new LinkAnalysisSpaceJob( jobId, command );
-    }
-
-    /*
-     * (non-Javadoc)
-     * @seeorg.springframework.web.servlet.mvc.AbstractUrlViewController#getViewNameForRequest(javax.servlet.http.
-     * HttpServletRequest)
-     */
-    @Override
-    protected String getViewNameForRequest( HttpServletRequest arg0 ) {
-        // TODO Auto-generated method stub
-        return null;
+    protected BackgroundJob<LinkAnalysisTaskCommand> getSpaceRunner( TaskCommand command ) {
+        return new LinkAnalysisSpaceJob( ( LinkAnalysisTaskCommand ) command );
     }
 
 }

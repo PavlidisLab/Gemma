@@ -18,14 +18,9 @@
  */
 package ubic.gemma.ontology;
 
-import java.sql.SQLException;
-
 import ubic.gemma.model.common.description.DatabaseType;
 import ubic.gemma.model.common.description.ExternalDatabase;
-import ubic.gemma.util.ConfigUtils;
 
-import com.hp.hpl.jena.db.DBConnection;
-import com.hp.hpl.jena.db.IDBConnection;
 import com.hp.hpl.jena.ontology.Ontology;
 import com.hp.hpl.jena.rdf.model.Property;
 import com.hp.hpl.jena.rdf.model.RDFNode;

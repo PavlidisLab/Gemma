@@ -25,8 +25,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -34,12 +32,12 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
 import ubic.gemma.analysis.service.SampleRemoveService;
+import ubic.gemma.job.AbstractTaskService;
+import ubic.gemma.job.BackgroundJob;
+import ubic.gemma.job.TaskCommand;
+import ubic.gemma.job.TaskResult;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayService;
-import ubic.gemma.util.progress.ProgressJob;
-import ubic.gemma.util.progress.ProgressManager;
-import ubic.gemma.web.controller.BackgroundControllerJob;
-import ubic.gemma.web.controller.BackgroundProcessingMultiActionController;
 import ubic.gemma.web.util.EntityNotFoundException;
 
 /**
@@ -48,35 +46,25 @@ import ubic.gemma.web.util.EntityNotFoundException;
  */
 @Controller
 @RequestMapping("/bioAssay")
-public class BioAssayController extends BackgroundProcessingMultiActionController {
+public class BioAssayController extends AbstractTaskService {
 
-    /**
-     * Inner class used for switching bioassays to be missing values.
-     */
-    class RemoveBioAssayJob extends BackgroundControllerJob<ModelAndView> {
+    private class RemoveBioAssayJob extends BackgroundJob<TaskCommand> {
 
-        private BioAssay bioAssay;
-
-        public RemoveBioAssayJob( BioAssay bioAssay ) {
-            super();
-            this.bioAssay = bioAssay;
+        public RemoveBioAssayJob( TaskCommand command ) {
+            super( command );
         }
 
-        public ModelAndView call() throws Exception {
-
-            ProgressJob job = init( "Marking BioAssay: " + bioAssay.getName() + " as missing data" );provideAuthentication();
-
-            sampleRemoveService.markAsMissing( this.bioAssay );
-            saveMessage( "BioAssay  " + bioAssay.getName() + " marked as missing data." );
-            bioAssay = null;
-
-            ProgressManager.destroyProgressJob( job, true );
-            return new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html" ) );
-
+        @Override
+        public TaskResult processJob() {
+            BioAssay bioAssay = bioAssayService.load( command.getEntityId() );
+            if ( bioAssay == null ) {
+                throw new EntityNotFoundException( "BioAssay with id=" + command.getEntityId() + " not found" );
+            }
+            sampleRemoveService.markAsMissing( bioAssay );
+            return new TaskResult( command, new ModelAndView( new RedirectView(
+                    "/Gemma/arrays/showAllArrayDesigns.html" ) ) );
         }
     }
-
-    private static Log log = LogFactory.getLog( BioAssayController.class.getName() );
 
     @Autowired
     private BioAssayService bioAssayService = null;
@@ -106,11 +94,9 @@ public class BioAssayController extends BackgroundProcessingMultiActionControlle
             throw new EntityNotFoundException( "Identifier was invalid" );
         }
 
-        BioAssay bioAssay = bioAssayService.load( id );
-        if ( bioAssay == null ) {
-            throw new EntityNotFoundException( "BioAssay with id=" + id + " not found" );
-        }
-        return startJob( new RemoveBioAssayJob( bioAssay ) );
+        RemoveBioAssayJob job = new RemoveBioAssayJob( new TaskCommand( id ) );
+        super.startTask( job );
+        return new ModelAndView( new RedirectView( "/Gemma" ) ).addObject( "taskId", job.getTaskId() );
     }
 
     /**
@@ -130,7 +116,7 @@ public class BioAssayController extends BackgroundProcessingMultiActionControlle
      * @param errors
      * @return ModelAndView
      */
-    @RequestMapping(value = { "/showBioAssay.html" })
+    @RequestMapping("/showBioAssay.html")
     public ModelAndView show( HttpServletRequest request, HttpServletResponse response ) {
 
         log.debug( request.getParameter( "id" ) );
@@ -140,14 +126,11 @@ public class BioAssayController extends BackgroundProcessingMultiActionControlle
         try {
             id = Long.parseLong( request.getParameter( "id" ) );
         } catch ( NumberFormatException e ) {
-            saveMessage( request, identifierNotFound );
-            return new ModelAndView( "mainMenu.html" );
+            return new ModelAndView( "mainMenu.html" ).addObject( "message", identifierNotFound );
         }
 
         if ( id == null ) {
-            // should be a validation error, on 'submit'.
-            saveMessage( request, identifierNotFound );
-            return new ModelAndView( "mainMenu.html" );
+            return new ModelAndView( "mainMenu.html" ).addObject( "message", identifierNotFound );
         }
 
         BioAssay bioAssay = bioAssayService.load( id );
@@ -182,5 +165,15 @@ public class BioAssayController extends BackgroundProcessingMultiActionControlle
             }
         }
         return new ModelAndView( "bioAssays" ).addObject( "bioAssays", bioAssays );
+    }
+
+    @Override
+    protected BackgroundJob<TaskCommand> getInProcessRunner( TaskCommand command ) {
+        return null;
+    }
+
+    @Override
+    protected BackgroundJob<?> getSpaceRunner( TaskCommand command ) {
+        return null;
     }
 }

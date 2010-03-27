@@ -18,23 +18,17 @@
  */
 package ubic.gemma.web.controller.analysis.sequence;
 
-import javax.servlet.http.HttpServletRequest;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.servlet.ModelAndView;
-import org.springframework.web.servlet.view.RedirectView;
 
-import ubic.gemma.grid.javaspaces.TaskCommand;
-import ubic.gemma.grid.javaspaces.TaskResult;
-import ubic.gemma.grid.javaspaces.task.analysis.sequence.ArrayDesignRepeatScanTask;
-import ubic.gemma.grid.javaspaces.task.analysis.sequence.ArrayDesignRepeatScanTaskCommand;
-import ubic.gemma.grid.javaspaces.util.SpacesEnum;
+import ubic.gemma.job.AbstractTaskService;
+import ubic.gemma.job.BackgroundJob;
+import ubic.gemma.job.TaskCommand;
+import ubic.gemma.job.TaskResult;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
-import ubic.gemma.web.controller.BackgroundControllerJob;
-import ubic.gemma.web.controller.BaseControllerJob;
-import ubic.gemma.web.controller.grid.AbstractSpacesController;
+import ubic.gemma.tasks.analysis.sequence.ArrayDesignRepeatScanTask;
+import ubic.gemma.tasks.analysis.sequence.ArrayDesignRepeatScanTaskCommand;
 
 /**
  * A controller to run array design repeat scan either locally or in a space.
@@ -43,80 +37,25 @@ import ubic.gemma.web.controller.grid.AbstractSpacesController;
  * @version $Id$
  */
 @Controller
-public class ArrayDesignRepeatScanController extends AbstractSpacesController<ModelAndView> {
-
-    /**
-     * Regular (local) job.
-     */
-    private class ArrayDesignRepeatScanJob extends BaseControllerJob<ModelAndView> {
-
-        /**
-         * @param taskId
-         * @param commandObj
-         */
-        public ArrayDesignRepeatScanJob( String taskId, Object commandObj ) {
-            super( taskId, commandObj );
-        }
-
-        public ModelAndView call() throws Exception {
-
-            ArrayDesignRepeatScanTaskCommand repeatScanCommand = ( ( ArrayDesignRepeatScanTaskCommand ) command );
-
-            super.initializeProgressJob( repeatScanCommand.getArrayDesign().getShortName() );
-
-            return processJob( repeatScanCommand );
-
-        }
-
-        /*
-         * (non-Javadoc)
-         * @see ubic.gemma.web.controller.BaseControllerJob#processJob(ubic.gemma.web.controller.BaseCommand)
-         */
-        @Override
-        protected ModelAndView processJob( TaskCommand c ) {
-            throw new UnsupportedOperationException( "Cannot run locally at this time.  Run in a space." );
-        }
-    }
+public class ArrayDesignRepeatScanController extends AbstractTaskService {
 
     /**
      * Job that loads in a javaspace.
-     * 
-     * @author keshav
-     * @version $Id$
      */
-    private class ArrayDesignRepeatScanSpaceJob extends ArrayDesignRepeatScanJob {
-
-        final ArrayDesignRepeatScanTask taskProxy = ( ArrayDesignRepeatScanTask ) updatedContext.getBean( "proxy" );
+    private class ArrayDesignRepeatScanSpaceJob extends BackgroundJob<ArrayDesignRepeatScanTaskCommand> {
 
         /**
          * @param taskId
          * @param commandObj
          */
-        public ArrayDesignRepeatScanSpaceJob( String taskId, Object commandObj ) {
-            super( taskId, commandObj );
-
+        public ArrayDesignRepeatScanSpaceJob( ArrayDesignRepeatScanTaskCommand commandObj ) {
+            super( commandObj );
         }
 
-        /*
-         * (non-Javadoc)
-         * @see
-         * ubic.gemma.web.controller.analysis.sequence.ArrayDesignRepeatScanController.ArrayDesignRepeatScanJob#processJob
-         * (ubic.gemma.web.controller.BaseCommand)
-         */
         @Override
-        protected ModelAndView processJob( TaskCommand baseCommand ) {
-            baseCommand.setTaskId( this.taskId );
-            ArrayDesignRepeatScanTaskCommand c = ( ArrayDesignRepeatScanTaskCommand ) baseCommand;
-            process( c );
-            return new ModelAndView( new RedirectView( "/Gemma" ) );
-        }
-
-        /**
-         * @param command
-         * @return
-         */
-        private TaskResult process( ArrayDesignRepeatScanTaskCommand c ) {
-            TaskResult result = taskProxy.execute( c );
+        protected TaskResult processJob() {
+            ArrayDesignRepeatScanTask taskProxy = ( ArrayDesignRepeatScanTask ) getProxy();
+            TaskResult result = taskProxy.execute( command );
             return result;
         }
 
@@ -133,14 +72,11 @@ public class ArrayDesignRepeatScanController extends AbstractSpacesController<Mo
      * @throws Exception
      */
     public String run( Long id ) throws Exception {
-        /* this 'run' method is exported in the spring-beans.xml */
-
         ArrayDesign ad = arrayDesignService.load( id );
-        arrayDesignService.thawLite( ad );
 
         ArrayDesignRepeatScanTaskCommand cmd = new ArrayDesignRepeatScanTaskCommand( ad );
 
-        return super.run( cmd, SpacesEnum.DEFAULT_SPACE.getSpaceUrl(), ArrayDesignRepeatScanTask.class.getName(), true );
+        return super.run( cmd );
     }
 
     public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
@@ -152,8 +88,8 @@ public class ArrayDesignRepeatScanController extends AbstractSpacesController<Mo
      * @see ubic.gemma.web.controller.grid.AbstractSpacesController#getRunner(java.lang.String, java.lang.Object)
      */
     @Override
-    protected BackgroundControllerJob<ModelAndView> getRunner( String jobId, Object command ) {
-        return new ArrayDesignRepeatScanJob( jobId, command );
+    protected BackgroundJob<ArrayDesignRepeatScanTaskCommand> getInProcessRunner( TaskCommand command ) {
+        return null;
     }
 
     /*
@@ -161,19 +97,9 @@ public class ArrayDesignRepeatScanController extends AbstractSpacesController<Mo
      * @see ubic.gemma.web.controller.grid.AbstractSpacesController#getSpaceRunner(java.lang.String, java.lang.Object)
      */
     @Override
-    protected BackgroundControllerJob<ModelAndView> getSpaceRunner( String jobId, Object command ) {
-        return new ArrayDesignRepeatScanSpaceJob( jobId, command );
+    protected BackgroundJob<ArrayDesignRepeatScanTaskCommand> getSpaceRunner( TaskCommand command ) {
+        return new ArrayDesignRepeatScanSpaceJob( ( ArrayDesignRepeatScanTaskCommand ) command );
 
-    }
-
-    /*
-     * (non-Javadoc)
-     * @seeorg.springframework.web.servlet.mvc.AbstractUrlViewController#getViewNameForRequest(javax.servlet.http.
-     * HttpServletRequest)
-     */
-    @Override
-    protected String getViewNameForRequest( HttpServletRequest arg0 ) {
-        return "arrayDesignRepeatScan";
     }
 
 }

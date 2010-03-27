@@ -47,6 +47,11 @@ public class ExpressionExperimentSetValueObject implements Comparable<Expression
         this.expressionExperimentIds = new HashSet<Long>();
     }
 
+    public int compareTo( ExpressionExperimentSetValueObject arg0 ) {
+        if ( this.getName() == null || arg0.getName() == null ) return 0;
+        return this.getName().compareTo( arg0.getName() );
+    }
+
     public String getDescription() {
         return description;
     }
@@ -75,8 +80,16 @@ public class ExpressionExperimentSetValueObject implements Comparable<Expression
         return taxonName;
     }
 
+    public boolean isCurrentUserHasWritePermission() {
+        return currentUserHasWritePermission;
+    }
+
     public boolean isModifiable() {
         return modifiable;
+    }
+
+    public void setCurrentUserHasWritePermission( boolean currentUserHasWritePermission ) {
+        this.currentUserHasWritePermission = currentUserHasWritePermission;
     }
 
     public void setDescription( String description ) {
@@ -109,19 +122,6 @@ public class ExpressionExperimentSetValueObject implements Comparable<Expression
 
     public void setTaxonName( String taxonName ) {
         this.taxonName = taxonName;
-    }
-
-    public int compareTo( ExpressionExperimentSetValueObject arg0 ) {
-        if ( this.getName() == null || arg0.getName() == null ) return 0;
-        return this.getName().compareTo( arg0.getName() );
-    }
-
-    public void setCurrentUserHasWritePermission( boolean currentUserHasWritePermission ) {
-        this.currentUserHasWritePermission = currentUserHasWritePermission;
-    }
-
-    public boolean isCurrentUserHasWritePermission() {
-        return currentUserHasWritePermission;
     }
 
 }

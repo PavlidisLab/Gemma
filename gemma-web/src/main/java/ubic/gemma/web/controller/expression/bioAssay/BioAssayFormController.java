@@ -43,7 +43,7 @@ import ubic.gemma.web.controller.BaseFormController;
  */
 public class BioAssayFormController extends BaseFormController {
 
-      BioAssayService bioAssayService = null;
+    BioAssayService bioAssayService = null;
 
     ExternalDatabaseService externalDatabaseService = null;
 

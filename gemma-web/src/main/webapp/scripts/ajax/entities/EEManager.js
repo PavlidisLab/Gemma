@@ -96,7 +96,7 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 						this.relayEvents(k, ['done']);
 						k.handleWait(data, false);
 						k.on('done', function(payload) {
-									this.fireEvent('reportUpdated', payload)
+									this.fireEvent('reportUpdated', payload);
 								});
 					}.createDelegate(this)
 				});
@@ -112,7 +112,7 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 						k.handleWait(data, true);
 						this.relayEvents(k, ['done']);
 						k.on('done', function(payload) {
-									this.fireEvent('reportUpdated', payload)
+									this.fireEvent('reportUpdated', payload);
 								});
 					}.createDelegate(this)
 				});
@@ -129,7 +129,7 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 						this.relayEvents(k, ['done']);
 						k.handleWait(data, false);
 						k.on('done', function(payload) {
-									this.fireEvent('tagsUpdated', payload)
+									this.fireEvent('tagsUpdated', payload);
 								});
 					}.createDelegate(this)
 				});
@@ -196,7 +196,7 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 											if (btn == 'OK') {
 												w.hide();
 											}
-											})
+											});
 							} else {
 								w.hide();
 							}
@@ -221,7 +221,7 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 					buttons : Ext.Msg.YESNO,
 					fn : function(btn, text) {
 						if (btn == 'yes') {
-							var callParams = []
+							var callParams = [];
 							callParams.push(id);
 							Ext.getBody().mask();
 							callParams.push({
@@ -255,7 +255,7 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 					buttons : Ext.Msg.YESNO,
 					fn : function(btn, text) {
 						if (btn == 'yes') {
-							var callParams = []
+							var callParams = [];
 							callParams.push(id);
 							Ext.getBody().mask();
 							callParams.push({
@@ -265,7 +265,7 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 											this.relayEvents(k, ['done']);
 											Ext.getBody().unmask();
 											k.on('done', function(payload) {
-														this.fireEvent('link', payload)
+														this.fireEvent('link', payload);
 													});
 										}.createDelegate(this),
 										errorHandler : function(error) {
@@ -497,7 +497,7 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 							buttons : [{
 										text : 'Proceed',
 										handler : function(btn, text) {
-											var callParams = []
+											var callParams = [];
 											callParams.push(id);
 											Ext.getBody().mask();
 											callParams.push({
@@ -507,7 +507,7 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 															this.relayEvents(k, ['done']);
 															Ext.getBody().unmask();
 															k.on('done', function(payload) {
-																		this.fireEvent('differential', payload)
+																		this.fireEvent('differential', payload);
 																	});
 														}.createDelegate(this),
 														errorHandler : function(error) {
@@ -566,7 +566,7 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 					buttons : Ext.Msg.YESNO,
 					fn : function(btn, text) {
 						if (btn == 'yes') {
-							var callParams = []
+							var callParams = [];
 							callParams.push(id);
 							Ext.getBody().mask();
 							callParams.push({
@@ -576,7 +576,7 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 											this.relayEvents(k, ['done']);
 											Ext.getBody().unmask();
 											k.on('done', function(payload) {
-														this.fireEvent('processedVector', payload)
+														this.fireEvent('processedVector', payload);
 													});
 										}.createDelegate(this)
 									});

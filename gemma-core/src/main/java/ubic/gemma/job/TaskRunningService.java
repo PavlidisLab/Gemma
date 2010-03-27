@@ -1,0 +1,585 @@
+/*
+ * The Gemma project
+ * 
+ * Copyright (c) 2008 University of British Columbia
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+package ubic.gemma.job;
+
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.FutureTask;
+
+import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.time.DateUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.stereotype.Service;
+
+import ubic.gemma.job.grid.util.SpacesUtil;
+import ubic.gemma.job.grid.worker.SpacesBusyEntry;
+import ubic.gemma.job.progress.ProgressManager;
+import ubic.gemma.model.common.auditAndSecurity.User;
+import ubic.gemma.security.authentication.UserManager;
+import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.MailEngine;
+
+/**
+ * Handles the execution of tasks in threads that can be check by clients later.
+ * 
+ * @author pavlidis
+ * @version $Id$
+ */
+@Service
+public class TaskRunningService implements InitializingBean {
+
+    /**
+     * Use this to access the task id in web requests.
+     */
+    public final static String JOB_ATTRIBUTE = "taskId";
+
+    private class SubmittedTask {
+        private TaskCommand command;
+        private Future<?> future;
+
+        /**
+         * @return the command
+         */
+        public TaskCommand getCommand() {
+            return command;
+        }
+
+        public SubmittedTask( Future<?> future, TaskCommand command ) {
+            super();
+            this.future = future;
+            this.command = command;
+        }
+
+        public Future<?> getFuture() {
+            return future;
+        }
+    }
+
+    private static Log log = LogFactory.getLog( TaskRunningService.class.getName() );
+
+    /**
+     * How long we will queue a task before giving up and cancelling it.
+     */
+    private static final int MAX_QUEUING_MINUTES = 3600;
+
+    /**
+     * How long we will wait for a started task before giving up waiting for it. Tasks running longer than this will be
+     * cancelled. This does not include time spent queued.
+     */
+    private static final int MAX_RUNTIME_MINUTES = 60;
+
+    /**
+     * How long we will hold onto results after a task has finished before giving up.
+     */
+    private static final int MAX_TRACKING_MINUTES = 10;
+
+    /**
+     * How often we look for tasks to cleanup (milliseconds).
+     */
+    private static final int TASK_CLEANUP_FREQUENCY = 200000;
+
+    @Autowired
+    private MailEngine mailEngine;
+
+    @Autowired
+    private UserManager userService;
+
+    @Autowired
+    private SpacesUtil spaceUtil;
+
+    /**
+     * @return the cancelledTasks
+     */
+    public Collection<TaskCommand> getCancelledTasks() {
+        return cancelledTasks.values();
+    }
+
+    /**
+     * @return the failedTasks
+     */
+    public Collection<TaskResult> getFailedTasks() {
+        return failedTasks.values();
+    }
+
+    /**
+     * @return the finishedTasks
+     */
+    public Collection<TaskResult> getFinishedTasks() {
+        return finishedTasks.values();
+    }
+
+    /**
+     * @return the submittedTasks
+     */
+    public Collection<TaskCommand> getSubmittedTasks() {
+        Collection<TaskCommand> commands = new HashSet<TaskCommand>();
+        for ( SubmittedTask st : submittedTasks.values() ) {
+            commands.add( st.getCommand() );
+        }
+        return commands;
+    }
+
+    private final Map<String, TaskCommand> cancelledTasks = new ConcurrentHashMap<String, TaskCommand>();
+
+    private final Map<String, TaskResult> failedTasks = new ConcurrentHashMap<String, TaskResult>();
+
+    private final Map<String, TaskResult> finishedTasks = new ConcurrentHashMap<String, TaskResult>();
+
+    private final Map<String, SubmittedTask> submittedTasks = new ConcurrentHashMap<String, SubmittedTask>();
+
+    /**
+     * Tell the system that an email should be sent when the given task is completed (if it hasn't already finished).
+     * 
+     * @param taskId
+     */
+    public void addEmailAlert( String taskId ) {
+        if ( !this.submittedTasks.containsKey( taskId ) ) {
+            throw new IllegalArgumentException(
+                    "No such task is currently running. Maybe it finished already? No email will be sent." );
+        }
+
+        this.submittedTasks.get( taskId ).getCommand().setEmailAlert( true );
+
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
+     */
+    public void afterPropertiesSet() throws Exception {
+        /*
+         * Start a thread to monitor finished tasks that have not been retrieved
+         */
+        ExecutorService service = Executors.newSingleThreadExecutor();
+        service.submit( new FutureTask<Object>( new Callable<Object>() {
+            public Object call() throws Exception {
+
+                while ( true ) {
+
+                    try {
+                        Thread.sleep( TASK_CLEANUP_FREQUENCY );
+                    } catch ( InterruptedException e ) {
+                        log.info( "Stopping task monitor" );
+                        return null;
+                    }
+
+                    sweepUp();
+
+                }
+
+            }
+        } ) );
+
+        service.shutdown();
+    }
+
+    /**
+     * Signal that a task should be cancelled.
+     * 
+     * @param taskId
+     */
+    public synchronized void cancelTask( String taskId ) {
+        log.debug( "Cancelling " + taskId );
+        if ( submittedTasks.containsKey( taskId ) ) {
+            SubmittedTask toCancel = submittedTasks.get( taskId );
+            boolean cancelled = toCancel.getFuture().cancel( true );
+            if ( cancelled ) {
+                /*
+                 * Note that we do this notification stuff here, not in the callable that is watching it. Don't do it
+                 * twice.
+                 */
+                handleCancel( taskId, toCancel.getCommand() );
+            } else {
+                throw new RuntimeException( "Couldn't cancel " + taskId );
+            }
+        } else {
+            log.warn( "Attempt to cancel a task (" + taskId + ") that has not been submitted or is already gone." );
+            return;
+        }
+    }
+
+    /**
+     * Determine if a task is done. If it is done, the results is retrieved. Results can only be retrieved once, after
+     * which the service releases them.
+     * 
+     * @param taskId
+     * @return null if the task is still running or was cancelled, or the result object
+     */
+    public synchronized Object checkResult( String taskId ) throws Exception {
+        log.debug( "entering" );
+        if ( this.finishedTasks.containsKey( taskId ) ) {
+            log.debug( "Job is finished" );
+            return clearFinished( taskId );
+        } else if ( this.cancelledTasks.containsKey( taskId ) ) {
+            log.debug( "Job was cancelled" );
+            clearCancelled( taskId );
+            return null;
+        } else if ( this.failedTasks.containsKey( taskId ) ) {
+            clearFailed( taskId );
+            return null;
+        } else if ( this.submittedTasks.containsKey( taskId ) ) {
+            log.debug( "Job is apparently still running?" );
+            return null;
+        } else {
+            log.debug( "Job isn't running for " + taskId + " , we don't know what happened to it." );
+            return null;
+        }
+    }
+
+    /**
+     * Submit a task and track its progress. When it is finished, the results can be retrieved with checkResult(). Tasks
+     * can be cancelled with cancelTask().
+     * 
+     * @param job The job to run. The submissionTime of the task is set after this call. This does not mean that the job
+     *        has started - it might be queued.
+     * @throws ConflictingTaskException if the task is disallowed due to another conflicting task (e.g., two tasks of
+     *         the same type by the same user).
+     */
+    public synchronized void submitTask( BackgroundJob<? extends TaskCommand> job ) throws ConflictingTaskException {
+
+        checkEligibility( job );
+
+        final TaskCommand taskCommand = job.getCommand();
+        final String taskId = taskCommand.getTaskId();
+        log.debug( "Submitting " + taskId );
+        ProgressManager.createProgressJob( taskCommand );
+
+        // Run the task in its own thread.
+        ExecutorService service = Executors.newSingleThreadExecutor();
+
+        /*
+         * execute the job ...
+         */
+        final FutureTask<TaskResult> future = new FutureTask<TaskResult>( job );
+
+        taskCommand.setSubmissionTime();
+        Future<?> runningTask = service.submit( future );
+
+        submittedTasks.put( taskId, new SubmittedTask( runningTask, taskCommand ) );
+
+        // Wait for the task to complete in another thread.
+        ExecutorService waiting = Executors.newSingleThreadExecutor();
+        waiting.submit( new FutureTask<Object>( new Callable<Object>() {
+            public Object call() throws Exception {
+
+                TaskResult result = null;
+                try {
+                    result = future.get(); // Blocks.
+                    log.debug( "Got result " + result + " from task " + taskId );
+                    handleFinished( taskCommand, result );
+                    return result;
+                } catch ( CancellationException e ) {
+                    // I think this will never happen????
+                    log.warn( "Cancellation received for " + taskId );
+                    handleCancel( taskId, taskCommand );
+                } catch ( ExecutionException e ) {
+                    if ( e.getCause() instanceof InterruptedException ) {
+                        if ( cancelledTasks.containsKey( taskId ) ) {
+                            log.debug( "Looks like " + taskId + " was cancelled" );
+                        } else {
+                            /*
+                             * Don't call handleCancel - it was probably already called.
+                             */
+                            log.debug( taskId + " was interuppted."
+                                    + " Treating it as cancelled (assuming it was already handled)" );
+                        }
+                    } else {
+                        log.error( "Error thrown for " + taskId + ", stack trace follows:", e );
+                        handleFailed( taskCommand, e );
+                    }
+                } catch ( Exception e ) {
+                    log.error( "Error thrown for " + taskId + ", stack trace follows:", e );
+                    handleFailed( taskCommand, e );
+                }
+                return null;
+            }
+
+        } ) );
+
+        waiting.shutdown();
+        // we return immediately
+    }
+
+    /**
+     * Test whether the job can be run at this time. Checks for already-running tasks of the same type owned by the same
+     * user etc.
+     * 
+     * @param job
+     * @throws ConflictingTaskException
+     */
+    private void checkEligibility( BackgroundJob<? extends TaskCommand> job ) throws ConflictingTaskException {
+        TaskCommand command = job.getCommand();
+        String user = command.getSubmitter();
+
+        for ( String taskId : submittedTasks.keySet() ) {
+
+            SubmittedTask submittedTask = submittedTasks.get( taskId );
+            TaskCommand runningCommand = submittedTask.getCommand();
+
+            if ( runningCommand.getSubmitter().equals( user ) && runningCommand.getClass().equals( command.getClass() ) ) {
+
+                // same user has another task running of the same type ...
+
+                /*
+                 * This won't be filled in for the just-submitted space task ... but we'd like to check it.
+                 */
+                if ( command.getTaskInterface() != null ) {
+
+                    String intf = runningCommand.getTaskInterface();
+                    String method = runningCommand.getTaskMethod();
+
+                    if ( command.getTaskInterface().equals( intf ) && command.getTaskMethod().equals( method ) ) {
+                        throw new ConflictingTaskException( command, runningCommand );
+                    }
+
+                }
+
+                /*
+                 * Only matters if we don't have the interface information yet.
+                 */
+
+                if ( command.getEntityId() == null || command.getEntityId().equals( runningCommand.getEntityId() ) ) {
+                    // _probably_ this should be disallowed. But it is _possible_ that it's spurious -- really need the
+                    // exact job
+                    throw new ConflictingTaskException( command, runningCommand );
+                }
+
+            }
+
+        }
+
+    }
+
+    /**
+     * @param taskId
+     * @param toCancel
+     */
+    void handleCancel( String taskId, TaskCommand command ) {
+        cancelledTasks.put( taskId, command );
+        submittedTasks.remove( taskId );
+        ProgressManager.signalCancelled( taskId );
+    }
+
+    /**
+     * @param taskId
+     * @param e
+     */
+    void handleFailed( final TaskCommand command, Exception e ) {
+        TaskResult result = new TaskResult( command, null );
+        result.setFailed( true );
+        result.setException( e );
+        failedTasks.put( command.getTaskId(), result );
+        submittedTasks.remove( command.getTaskId() );
+
+        if ( command.isEmailAlert() ) {
+            this.emailNotifyCompletionOfTask( command.getTaskId(), result );
+        }
+
+        ProgressManager.signalFailed( command.getTaskId(), e );
+    }
+
+    /**
+     * @param taskId
+     * @param result
+     */
+    void handleFinished( final TaskCommand command, TaskResult result ) {
+        finishedTasks.put( command.getTaskId(), result );
+        submittedTasks.remove( command.getTaskId() );
+
+        if ( command.isEmailAlert() ) {
+            this.emailNotifyCompletionOfTask( command.getTaskId(), result );
+        }
+
+        ProgressManager.signalDone( command.getTaskId() );
+    }
+
+    /**
+     * Check the finish time. If it's too old, stop waiting for retrieval. Send an email if necessary. This isn't always
+     * that big of a deal, especially for tasks that run non-interactively.
+     * 
+     * @param taskId
+     */
+    private void checkFinishedTaskStatus( String taskId ) {
+        TaskResult o = finishedTasks.get( taskId );
+
+        Date time = o.getFinishTime();
+        if ( time.before( DateUtils.addHours( new Date(), MAX_TRACKING_MINUTES ) ) ) {
+            log.debug( "Finished task result not retrieved, timing out: " + taskId );
+            if ( o.isSendEmailIfNotRetrieved() ) {
+                emailNotifyCompletionOfTask( taskId, o );
+            }
+
+            finishedTasks.remove( taskId );
+        }
+    }
+
+    /**
+     * @param taskId
+     * @param date - start time (might be null)
+     */
+    private void checkSubmittedTaskStatus( String taskId, Date date ) {
+        SubmittedTask t = submittedTasks.get( taskId );
+
+        if ( date != null ) {
+            t.getCommand().setStartTime( date );
+        }
+
+        Date subTime = t.getCommand().getSubmissionTime();
+        Date startTime = t.getCommand().getStartTime();
+
+        if ( startTime == null ) {
+            log.info( "Job is still queued: " + taskId + " " + t.getCommand().getTaskInterface() );
+            if ( subTime.before( DateUtils.addMinutes( new Date(), -MAX_QUEUING_MINUTES ) ) ) {
+                log.warn( "Submitted task has been queued for too long, cancelling: " + taskId );
+                submittedTasks.get( taskId ).getCommand().setEmailAlert( true );
+                cancelTask( taskId );
+                return;
+            }
+
+        } else if ( startTime.before( DateUtils.addMinutes( new Date(), -MAX_RUNTIME_MINUTES ) ) ) {
+            log.warn( "Submitted task is taking too long to run, cancelling: " + taskId + " "
+                    + t.getCommand().getTaskInterface() );
+            submittedTasks.get( taskId ).getCommand().setEmailAlert( true );
+            cancelTask( taskId );
+        }
+    }
+
+    /**
+     * @param taskId
+     * @return
+     */
+    private void clearCancelled( String taskId ) throws Exception {
+        cancelledTasks.remove( taskId );
+        ProgressManager.signalCancelled( taskId );
+    }
+
+    /**
+     * @param taskId
+     * @throws Throwable
+     */
+    private void clearFailed( String taskId ) throws Exception {
+        TaskResult result = failedTasks.get( taskId );
+        failedTasks.remove( taskId );
+        Exception e = result.getException();
+        if ( e != null ) {
+            log.debug( "Job failed, rethrowing the exception: " + e.getMessage() );
+            throw e;
+        }
+
+    }
+
+    /**
+     * @param taskId
+     * @return
+     */
+    private Object clearFinished( Object taskId ) {
+        Object finished = finishedTasks.get( taskId );
+        finishedTasks.remove( taskId );
+        return finished;
+    }
+
+    /**
+     * @param taskId
+     * @param result. If the submitter is blank, this doesn't do anything.
+     */
+    private void emailNotifyCompletionOfTask( String taskId, TaskResult result ) {
+        if ( StringUtils.isNotBlank( result.getSubmitter() ) ) {
+            User user = userService.findByUserName( result.getSubmitter() );
+            String emailAddress = user.getEmail();
+            if ( emailAddress != null ) {
+                log.info( "Sending email notification to " + emailAddress );
+                SimpleMailMessage msg = new SimpleMailMessage();
+                msg.setTo( emailAddress );
+                msg.setFrom( ConfigUtils.getAdminEmailAddress() );
+                msg.setSubject( "Gemma task completed" );
+                msg.setText( "A job you started on Gemma is completed (taskid=" + taskId + ")" );
+                /*
+                 * TODO provide a link to something relevant something like:
+                 */
+                String url = "http://www.chibi.ubc.ca/Gemma/user/tasks.html?taskId=" + taskId;
+
+                mailEngine.send( msg );
+            }
+        }
+    }
+
+    /**
+     * Clean up tasks that are dead or whatever.
+     */
+    private void sweepUp() {
+        log.info( "Running task result cleanup" );
+
+        if ( finishedTasks.size() > 0 ) log.info( finishedTasks.size() + " finished tasks in the hold" );
+        if ( failedTasks.size() > 0 ) log.info( failedTasks.size() + " failed tasks in the hold" );
+        if ( submittedTasks.size() > 0 ) log.info( submittedTasks.size() + " started or queued tasks in the pipe" );
+        if ( cancelledTasks.size() > 0 ) log.info( cancelledTasks.size() + " cancelled tasks in the hold" );
+
+        /*
+         * This block is an attempt to figure out if our tasks are actually running on the grid. This might not be
+         * implemented!!
+         */
+        Map<String, Date> startTimes = new HashMap<String, Date>();
+        List<SpacesBusyEntry> busyWorkers = spaceUtil.getBusyWorkers();
+        for ( SpacesBusyEntry spacesBusyEntry : busyWorkers ) {
+            startTimes.put( spacesBusyEntry.currentTaskId, spacesBusyEntry.currentTaskStartTime );
+        }
+
+        for ( String taskId : submittedTasks.keySet() ) {
+            checkSubmittedTaskStatus( taskId, startTimes.get( taskId ) );
+        }
+
+        for ( String taskId : finishedTasks.keySet() ) {
+            checkFinishedTaskStatus( taskId );
+        }
+
+        for ( String taskId : failedTasks.keySet() ) {
+            TaskResult o = failedTasks.get( taskId );
+            Date time = o.getFinishTime();
+            if ( time.before( DateUtils.addMinutes( new Date(), -MAX_TRACKING_MINUTES ) ) ) {
+                log.warn( "Failed task result not retrieved, timing out: " + taskId );
+                failedTasks.remove( taskId );
+            }
+        }
+
+        for ( String taskId : cancelledTasks.keySet() ) {
+            TaskCommand o = cancelledTasks.get( taskId );
+            Date subTime = o.getSubmissionTime();
+            if ( subTime.before( DateUtils.addMinutes( new Date(), -MAX_TRACKING_MINUTES ) ) ) {
+                log.warn( "Cancelled task result not retrieved, timing out: " + taskId + " " + o.getTaskInterface() );
+                cancelledTasks.remove( taskId );
+            }
+        }
+    }
+
+}

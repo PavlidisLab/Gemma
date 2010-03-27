@@ -35,7 +35,6 @@ import ubic.gemma.model.common.auditAndSecurity.Organization;
 import ubic.gemma.model.common.auditAndSecurity.Person;
 import ubic.gemma.model.common.auditAndSecurity.PersonService;
 import ubic.gemma.model.common.auditAndSecurity.User;
-import ubic.gemma.model.common.auditAndSecurity.UserService;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.BibliographicReferenceService;
 import ubic.gemma.model.common.description.Characteristic;
@@ -113,9 +112,6 @@ abstract public class CommonPersister extends AbstractPersister {
 
     @Autowired
     protected UnitService unitService;
-
-    @Autowired
-    protected UserService userService;
 
     Map<Object, QuantitationType> quantitationTypeCache = new HashMap<Object, QuantitationType>();
 
@@ -267,13 +263,6 @@ abstract public class CommonPersister extends AbstractPersister {
      */
     public void setUnitService( UnitService unitService ) {
         this.unitService = unitService;
-    }
-
-    /**
-     * @param userService The userService to set.
-     */
-    public void setUserService( UserService userService ) {
-        this.userService = userService;
     }
 
     /**

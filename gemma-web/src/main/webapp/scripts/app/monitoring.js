@@ -1,10 +1,10 @@
 /**
- * Monitor hibernate
+ * Monitor hibernate, caches, etc.
  */
 Ext.onReady(function() {
 			// fire once immediately.
 			task();
-			window.setInterval(task, 10000);
+			window.setInterval(task, 60000);
 		});
 
 function task() {

@@ -21,86 +21,70 @@ package ubic.gemma.web.util;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 
-import ubic.gemma.util.progress.ProgressJob;
-import ubic.gemma.util.progress.ProgressManager;
-import ubic.gemma.web.controller.BackgroundControllerJob;
-import ubic.gemma.web.controller.BackgroundProcessingFormController;
+import ubic.gemma.job.AbstractTaskService;
+import ubic.gemma.job.BackgroundJob;
+import ubic.gemma.job.TaskCommand;
+import ubic.gemma.job.TaskResult;
 
 /**
- * Controller that does nothing except wait a while and return redirect to progress bar. Used for tests.
+ * Controller that does nothing except wait a while. Used for tests.
  * 
  * @author pavlidis
  * @version $Id$
  */
 @Controller
-public class MockLongJobController extends BackgroundProcessingFormController {
+public class MockLongJobController extends AbstractTaskService {
 
     /**
      * 
      */
     public static final int JOB_LENGTH = 2000;
 
-    /*
-     * (non-Javadoc)
-     * @see
-     * org.springframework.web.servlet.mvc.AbstractController#handleRequestInternal(javax.servlet.http.HttpServletRequest
-     * , javax.servlet.http.HttpServletResponse)
-     */
-    @Override
-    @RequestMapping("/mock.html")
-    protected ModelAndView handleRequestInternal( HttpServletRequest request, HttpServletResponse response )
-            throws Exception {
-
-        Object die = request.getAttribute( "throw" );
-        return startJob( die );
-
+    public String runJob( TaskCommand command ) {
+        return run( command );
     }
 
-    class WasteOfTime extends BackgroundControllerJob<ModelAndView> {
+    class WasteOfTime extends BackgroundJob<TaskCommand> {
 
-        Object die = null;
-
-        public WasteOfTime( String taskId, Object command ) {
-            super( taskId );
+        public WasteOfTime( TaskCommand command ) {
+            super( command );
             this.command = command;
-            this.die = command;
         }
 
-        public ModelAndView call() throws Exception {
-
-            ProgressJob job = init( "Doing something that will take a while" );
-            provideAuthentication();
+        @Override
+        public TaskResult processJob() {
 
             long millis = System.currentTimeMillis();
             while ( System.currentTimeMillis() - millis < JOB_LENGTH ) {
-                Thread.sleep( 500 );
-                log.info( "Doing sumpin', done in " + ( JOB_LENGTH - ( System.currentTimeMillis() - millis ) )
-                        + " milliseconds" );
-                // ProgressManager.updateCurrentThreadsProgressJob( "just sayin' hi" );
-                if ( this.die != null ) {
+                try {
+                    Thread.sleep( 500 );
+                } catch ( InterruptedException e ) {
+                }
+                // we're using this as a test to pass in a 'die' signal, abuse of api
+                if ( !this.command.getPersistJobDetails() ) {
                     throw new RuntimeException( "Exception thrown on purpose." );
                 }
             }
 
             log.info( "Done doin sumpin'" );
-            ProgressManager.destroyProgressJob( job, false );
 
             Map<String, Object> model = new HashMap<String, Object>();
             model.put( "answer", "42" );
-            return new ModelAndView( "view", model );
+            return new TaskResult( command, new ModelAndView( "view", model ) );
         }
 
     }
 
     @Override
-    protected BackgroundControllerJob<ModelAndView> getRunner( String taskId, Object command, MessageUtil messenger ) {
-        return new WasteOfTime( taskId, command );
+    protected BackgroundJob<TaskCommand> getInProcessRunner( TaskCommand command ) {
+        return new WasteOfTime( command );
+    }
+
+    @Override
+    protected BackgroundJob<?> getSpaceRunner( TaskCommand command ) {
+        return null;
     }
 }

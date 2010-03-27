@@ -25,11 +25,9 @@ import javax.servlet.http.HttpSessionEvent;
 import javax.servlet.http.HttpSessionListener;
 
 /**
- * UserCounterListener class used to count the current number of active users for the applications. Does this by
- * counting how many user objects are stuffed into the session. It also grabs these users and exposes them in the
- * servlet context.
+ * Count active sessions
  * <p>
- * Orignal idea from Appfuse.
+ * Orignal idea from Appfuse but probably doesn't resemble that any more. For counting authenticated users, see ????
  * 
  * @author keshav
  * @author pavlidis

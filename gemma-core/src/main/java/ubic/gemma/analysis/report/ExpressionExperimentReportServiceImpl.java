@@ -24,6 +24,7 @@ import java.io.FileOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -43,8 +44,6 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Service;
-
-import edu.emory.mathcs.backport.java.util.Arrays;
 
 import ubic.basecode.util.FileTools;
 import ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet;
@@ -185,7 +184,6 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
      * 
      * @return Map of EE ids to the most recent update.
      */
-    @SuppressWarnings("unchecked")
     public Map<Long, Date> fillEventInformation( Collection<ExpressionExperimentValueObject> vos ) {
 
         StopWatch timer = new StopWatch();

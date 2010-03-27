@@ -21,14 +21,11 @@ package ubic.gemma.web.controller.common.auditAndSecurity;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.mail.SimpleMailMessage;
 import org.springframework.security.authentication.encoding.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -36,10 +33,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
 
 import ubic.gemma.model.common.auditAndSecurity.User;
-import ubic.gemma.model.common.auditAndSecurity.UserService;
 import ubic.gemma.security.authentication.UserDetailsImpl;
 import ubic.gemma.security.authentication.UserManager;
-import ubic.gemma.util.ConfigUtils;
 import ubic.gemma.web.controller.BaseFormController;
 
 /**
@@ -57,9 +52,6 @@ public class UserListController extends BaseFormController {
     private UserManager userManager;
 
     @Autowired
-    private UserService userService;
-
-    @Autowired
     private PasswordEncoder passwordEncoder;
 
     /**
@@ -74,7 +66,7 @@ public class UserListController extends BaseFormController {
 
         Collection<UserValueObject> userValueObjects = new ArrayList<UserValueObject>();
 
-        Collection<User> users = userService.loadAll();
+        Collection<User> users = userManager.loadAll();
         for ( User u : users ) {
             UserValueObject uv = new UserValueObject( u );
             userValueObjects.add( uv );
@@ -88,7 +80,7 @@ public class UserListController extends BaseFormController {
         /*
          * FIXME: this lists all users, not the ones who are active.
          */
-        return new ModelAndView( "/admin/activeUsers", "users", userService.loadAll() );
+        return new ModelAndView( "/admin/activeUsers", "users", userManager.loadAll() );
     }
 
     /**
@@ -99,7 +91,7 @@ public class UserListController extends BaseFormController {
     public void saveUser( UserValueObject user ) {
 
         String userName = user.getUserName();
-        User u = userService.findByUserName( userName );
+        User u = userManager.findByUserName( userName );
 
         UserDetailsImpl userDetails;
 
@@ -120,51 +112,12 @@ public class UserListController extends BaseFormController {
          * change the permissions.
          */
 
-        if ( newUser ) {
-            /*
-             * FIXME: send the user an email message containing the account details and a confirmation link.
-             */
-            sendSignupConfirmationEmail( userDetails );
+        if ( newUser ) { 
             userManager.createUser( userDetails );
         } else {
             userManager.updateUser( userDetails );
         }
 
     }
-
-    /**
-     * Send an email to request signup confirmation.
-     * 
-     * @param request
-     * @param u
-     */
-    private void sendSignupConfirmationEmail( UserDetailsImpl u ) {
-
-        SimpleMailMessage mailMessage = new SimpleMailMessage();
-        mailMessage.setFrom( ConfigUtils.getAdminEmailAddress() );
-        mailMessage.setSubject( "An account was created for you on Gemma" );
-        try {
-            Map<String, Object> model = new HashMap<String, Object>();
-            model.put( "username", u.getUsername() );
-
-            /*
-             * FIXME: make this url configurable.
-             */
-            model.put( "confirmLink", "http://www.chibi.ubc.ca/Gemma/confirmRegistration.html?key="
-                    + u.getSignupToken() );
-            // model.put( "message", getText( "signup.email.message", request.getLocale() ) );
-
-            /*
-             * FIXME: make the template name configurable.
-             */
-            String templateName = "accountCreated.vm";
-            // sendEmail( u.getUsername(), u.getEmail(), templateName, model );
-            // this.saveMessage( request, "signup.email.sent", u.getEmail(),
-            // "A confirmation email was sent. Please check your mail and click the link it contains" );
-        } catch ( Exception e ) {
-            log.error( "Couldn't send email to " + u.getEmail(), e );
-        }
-
-    }
-
+ 
 }

@@ -29,12 +29,11 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
- 
 
-import ubic.gemma.util.progress.ProgressData;
-import ubic.gemma.util.progress.ProgressJob;
-import ubic.gemma.util.progress.ProgressManager;
-import ubic.gemma.util.progress.TaskRunningService; 
+import ubic.gemma.job.TaskCommand; 
+import ubic.gemma.job.progress.ProgressData;
+import ubic.gemma.job.progress.ProgressJob;
+import ubic.gemma.job.progress.ProgressManager;
 
 /**
  * This is created when a multipart request is received (via the CommonsMultipartMonitoredResolver). It starts of a
@@ -53,7 +52,6 @@ public class UploadListener implements OutputStreamListener {
     private long totalBytesRead = 0;
     private ProgressJob pJob;
     private String taskId;
- 
 
     /**
      * @param request
@@ -64,7 +62,7 @@ public class UploadListener implements OutputStreamListener {
         this.delay = debugDelay;
     }
 
-    public UploadListener( HttpServletRequest request ) { 
+    public UploadListener( HttpServletRequest request ) {
         this.totalToRead = request.getContentLength();
     }
 
@@ -73,14 +71,9 @@ public class UploadListener implements OutputStreamListener {
      * @see ubic.gemma.util.upload.OutputStreamListener#start()
      */
     public void start() {
-        this.taskId = TaskRunningService.generateTaskId();
-
-        this.pJob = ProgressManager.createProgressJob( taskId, "File Upload" );
-
+        this.pJob = ProgressManager.createProgressJob( new TaskCommand() );
         pJob.setForwardWhenDone( false );
-        pJob.updateProgress( new ProgressData( 0, "Uploading File..." ) );
-
-        log.debug( "Upload monitor started" );
+        log.info( "Upload started ..." );
     }
 
     /*
@@ -132,8 +125,7 @@ public class UploadListener implements OutputStreamListener {
      */
     public void done() {
         if ( pJob != null ) {
-            pJob.updateProgress( new ProgressData( 100, "Finished Uploading. Processing File...", true ) );
-            ProgressManager.destroyProgressJob( pJob );
+            log.info( "Finished Uploading. Processing File..." );
         }
     }
 

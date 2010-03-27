@@ -39,7 +39,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import ubic.gemma.analysis.sequence.SequenceManipulation;
+import ubic.gemma.analysis.sequence.SequenceManipulation;  
 import ubic.gemma.loader.genome.FastaCmd;
 import ubic.gemma.loader.genome.FastaParser;
 import ubic.gemma.loader.genome.ProbeSequenceParser;
@@ -59,8 +59,6 @@ import ubic.gemma.model.genome.biosequence.BioSequenceService;
 import ubic.gemma.model.genome.biosequence.PolymerType;
 import ubic.gemma.model.genome.biosequence.SequenceType;
 import ubic.gemma.persistence.PersisterHelper;
-import ubic.gemma.util.progress.ProgressData;
-import ubic.gemma.util.progress.ProgressManager;
 
 /**
  * Handles collapsing the sequences, attaching sequences to DesignElements, either from provided input or via a fetch.
@@ -1158,11 +1156,8 @@ public class ArrayDesignSequenceProcessingService {
     private int updateProgress( int totalThingsToDo, int howManyAreDone, int percentDoneLastTimeWeChecked ) {
         int newPercent = ( int ) Math.ceil( ( 100.00 * howManyAreDone / totalThingsToDo ) );
         if ( newPercent > percentDoneLastTimeWeChecked ) {
-            ProgressManager.updateCurrentThreadsProgressJob( new ProgressData( newPercent, howManyAreDone
-                    + " sequence+probes of " + totalThingsToDo + " processed." ) );
+            log.info( howManyAreDone + " sequence+probes of " + totalThingsToDo + " processed." );
         }
-
-        log.info( howManyAreDone + " sequence+probes of " + totalThingsToDo + " processed." );
 
         return newPercent;
     }

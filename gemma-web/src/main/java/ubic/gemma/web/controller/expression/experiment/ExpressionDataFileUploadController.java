@@ -25,17 +25,18 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import javax.servlet.http.HttpServletRequest;
-
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.servlet.ModelAndView;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.analysis.preprocess.ProcessedExpressionDataVectorCreateService;
+import ubic.gemma.job.AbstractTaskService;
+import ubic.gemma.job.BackgroundJob;
+import ubic.gemma.job.TaskCommand;
+import ubic.gemma.job.TaskResult;
 import ubic.gemma.loader.expression.simple.SimpleExpressionDataLoaderService;
 import ubic.gemma.model.common.quantitationtype.GeneralType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
@@ -45,10 +46,6 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.TaxonService;
-import ubic.gemma.util.progress.ProgressJob;
-import ubic.gemma.util.progress.ProgressManager;
-import ubic.gemma.web.controller.BackgroundControllerJob;
-import ubic.gemma.web.controller.grid.AbstractSpacesController;
 
 /**
  * Replaces SimpleExpressionExperimentLoadController
@@ -57,49 +54,45 @@ import ubic.gemma.web.controller.grid.AbstractSpacesController;
  * @version $Id$
  */
 @Controller
-public class ExpressionDataFileUploadController extends AbstractSpacesController {
+public class ExpressionDataFileUploadController extends AbstractTaskService {
 
-    class SimpleEELoadJob extends BackgroundControllerJob<Long> {
+    class SimpleEELoadJob extends BackgroundJob<SimpleExpressionExperimentLoadCommand> {
 
-        public SimpleEELoadJob( String taskId, Object commandObj ) {
-            super( taskId );
-            this.setCommand( commandObj );
+        public SimpleEELoadJob( SimpleExpressionExperimentLoadCommand commandObj ) {
+            super( commandObj );
         }
 
-        @SuppressWarnings("synthetic-access")
-        public Long call() throws Exception {
+        @Override
+        public TaskResult processJob() {
+            try {
+                File file = getFile( command );
 
-            SimpleExpressionExperimentLoadCommand commandObject = ( SimpleExpressionExperimentLoadCommand ) command;
+                populateCommandObject( command ); 
 
-            File file = getFile( commandObject );
+                InputStream stream = FileTools.getInputStreamFromPlainOrCompressedFile( file.getAbsolutePath() );
 
-            populateCommandObject( commandObject );
+                if ( stream == null ) {
+                    throw new IllegalStateException( "Could not read from file " + file );
+                }
 
-            ProgressJob job = init( "Loading data from " + file.getName() );
-            provideAuthentication();
+                /*
+                 * Main action here!
+                 */
+                scrub( command );
+                ExpressionExperiment result = simpleExpressionDataLoaderService.load( command, stream );
+                stream.close();
 
-            InputStream stream = FileTools.getInputStreamFromPlainOrCompressedFile( file.getAbsolutePath() );
+                log.info( "Preprocessing the data for analysis" );
+                processedExpressionDataVectorCreateService.computeProcessedExpressionData( result );
 
-            if ( stream == null ) {
-                throw new IllegalStateException( "Could not read from file " + file );
+                // In theory we could do the link analysis right away. However, when a data set has new array designs,
+                // we
+                // won't be ready yet.
+
+                return new TaskResult( command, result.getId() );
+            } catch ( IOException e ) {
+                throw new RuntimeException( e );
             }
-
-            /*
-             * Main action here!
-             */
-            scrub( commandObject );
-            ExpressionExperiment result = simpleExpressionDataLoaderService.load( commandObject, stream );
-            stream.close();
-
-            log.info( "Preprocessing the data for analysis" );
-            processedExpressionDataVectorCreateService.computeProcessedExpressionData( result );
-
-            ProgressManager.destroyProgressJob( job );
-
-            // In theory we could do the link analysis right away. However, when a data set has new array designs, we
-            // won't be ready yet.
-
-            return result.getId();
         }
 
         /**
@@ -139,30 +132,16 @@ public class ExpressionDataFileUploadController extends AbstractSpacesController
     /**
      *  
      */
-    class SimpleEEValidateJob extends BackgroundControllerJob<SimpleExpressionExperimentCommandValidation> {
+    class SimpleEEValidateJob extends BackgroundJob<SimpleExpressionExperimentLoadCommand> {
 
-        public SimpleEEValidateJob( String taskId, Object commandObj ) {
-            super( taskId );
-            this.setCommand( commandObj );
+        public SimpleEEValidateJob( SimpleExpressionExperimentLoadCommand commandObj ) {
+            super( commandObj );
         }
 
-        /*
-         * (non-Javadoc)
-         * @see java.util.concurrent.Callable#call()
-         */
-        public SimpleExpressionExperimentCommandValidation call() throws Exception {
-            ProgressJob job = init( "Validating" );
-            provideAuthentication();
-
-            /*
-             * Check that 1) Data file is basically valid and parseable 2) The array design matches the data files.
-             */
-            SimpleExpressionExperimentCommandValidation result = doValidate( ( SimpleExpressionExperimentLoadCommand ) this.command );
-
-            ProgressManager.destroyProgressJob( job );
-
-            return result;
-
+        @Override
+        public TaskResult processJob() {
+            SimpleExpressionExperimentCommandValidation result = doValidate( this.command );
+            return new TaskResult( command, result );
         }
     }
 
@@ -232,26 +211,16 @@ public class ExpressionDataFileUploadController extends AbstractSpacesController
     }
 
     @Override
-    protected BackgroundControllerJob getRunner( String jobId, Object command ) {
+    protected BackgroundJob<SimpleExpressionExperimentLoadCommand> getInProcessRunner( TaskCommand command ) {
         if ( ( ( SimpleExpressionExperimentLoadCommand ) command ).isValidateOnly() ) {
-            return new SimpleEEValidateJob( jobId, command );
+            return new SimpleEEValidateJob( ( SimpleExpressionExperimentLoadCommand ) command );
         }
-        return new SimpleEELoadJob( jobId, command );
+        return new SimpleEELoadJob( ( SimpleExpressionExperimentLoadCommand ) command );
     }
 
     @Override
-    protected BackgroundControllerJob<ModelAndView> getSpaceRunner( String jobId, Object command ) {
-        throw new UnsupportedOperationException( "Not implemented yet" );
-    }
-
-    /*
-     * (non-Javadoc)
-     * @seeorg.springframework.web.servlet.mvc.AbstractUrlViewController#getViewNameForRequest(javax.servlet.http.
-     * HttpServletRequest)
-     */
-    @Override
-    protected String getViewNameForRequest( HttpServletRequest request ) {
-        return "dataUpload";
+    protected BackgroundJob<SimpleExpressionExperimentLoadCommand> getSpaceRunner( TaskCommand command ) {
+        return null;
     }
 
     /**

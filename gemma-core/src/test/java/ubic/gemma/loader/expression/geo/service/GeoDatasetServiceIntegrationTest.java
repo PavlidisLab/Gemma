@@ -75,6 +75,7 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
     @SuppressWarnings("unchecked")
     @Test
     public void testFetchAndLoadGSE1133() throws Exception {
+
         String path = getTestFileBasePath();
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
                 + "gse1133Short" ) );

@@ -319,6 +319,10 @@ public class ExpressionExperimentFormController extends BaseFormController {
         auditTrailService.addUpdateEvent( ee, eventType, note );
     }
 
+    private String scrub( String s ) {
+        return StringEscapeUtils.escapeHtml( s );
+    }
+
     /**
      * @param request
      * @param expressionExperiment
@@ -626,10 +630,6 @@ public class ExpressionExperimentFormController extends BaseFormController {
                 quantitationTypeService.update( qType );
             }
         }
-    }
-
-    private String scrub( String s ) {
-        return StringEscapeUtils.escapeHtml( s );
     }
 
 }

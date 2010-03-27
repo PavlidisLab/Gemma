@@ -30,10 +30,10 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import ubic.gemma.job.progress.ProgressData;
+import ubic.gemma.job.progress.ProgressManager;
 import ubic.gemma.loader.util.parser.BasicLineMapParser;
 import ubic.gemma.model.genome.biosequence.BioSequence;
-import ubic.gemma.util.progress.ProgressData;
-import ubic.gemma.util.progress.ProgressManager;
 
 /**
  * Parse probes from a tabular file. First columnn = probe id; Second column = sequence name; Third column = seqeucne.
@@ -119,7 +119,6 @@ public class ProbeSequenceParser extends BasicLineMapParser<String, BioSequence>
 
             if ( ++linesParsed % PARSE_ALERT_FREQUENCY == 0 ) {
                 String message = "Parsed " + linesParsed + " lines ";
-                ProgressManager.updateCurrentThreadsProgressJob( new ProgressData( 0, message ) );
                 log.info( message );
             }
 

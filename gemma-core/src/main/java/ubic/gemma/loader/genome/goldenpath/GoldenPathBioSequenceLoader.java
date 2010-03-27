@@ -35,13 +35,13 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.externalDb.GoldenPathDumper;
+import ubic.gemma.job.progress.ProgressData;
+import ubic.gemma.job.progress.ProgressManager;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.ExternalDatabaseService;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.biosequence.BioSequenceService;
-import ubic.gemma.util.progress.ProgressData;
-import ubic.gemma.util.progress.ProgressManager;
 
 /**
  * Load a dump of a Goldenpath table. The input is expected to have just two columns: sequence identifier (accession)
@@ -234,7 +234,6 @@ public class GoldenPathBioSequenceLoader {
                     String progString = "Processed and loaded " + count + " sequences, last one was "
                             + sequence.getName() + " (" + secsperthousand + "s for last 1000, mean per 1000 ="
                             + String.format( "%.1f", meanspt ) + "s)";
-                    ProgressManager.updateCurrentThreadsProgressJob( new ProgressData( count, progString ) );
                     log.info( progString );
                     timer.reset();
                     timer.start();

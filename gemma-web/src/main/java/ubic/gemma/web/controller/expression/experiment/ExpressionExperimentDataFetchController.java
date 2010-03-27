@@ -30,14 +30,14 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
 import ubic.gemma.analysis.service.ExpressionDataFileService;
+import ubic.gemma.job.AbstractTaskService;
+import ubic.gemma.job.BackgroundJob;
+import ubic.gemma.job.TaskCommand;
+import ubic.gemma.job.TaskResult;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.util.progress.ProgressJob;
-import ubic.gemma.util.progress.ProgressManager;
-import ubic.gemma.web.controller.BackgroundControllerJob;
-import ubic.gemma.web.controller.BackgroundProcessingMultiActionController;
 import ubic.gemma.web.view.DownloadBinaryFileView;
 
 /**
@@ -48,30 +48,23 @@ import ubic.gemma.web.view.DownloadBinaryFileView;
  * @version $Id$
  */
 @Controller
-public class ExpressionExperimentDataFetchController extends BackgroundProcessingMultiActionController {
+public class ExpressionExperimentDataFetchController extends AbstractTaskService {
 
     // ==========================================================
-    class CoExpressionDataWriterJob extends BackgroundControllerJob<ModelAndView> {
+    class CoExpressionDataWriterJob extends BackgroundJob<ExpressionExperimentDataFetchCommand> {
 
-        public CoExpressionDataWriterJob( Long eeId ) {
-            super();
-            this.command = eeId;
+        public CoExpressionDataWriterJob( ExpressionExperimentDataFetchCommand eeId ) {
+            super( eeId );
         }
 
-        /*
-         * (non-Javadoc)
-         * @see java.util.concurrent.Callable#call()
-         */
-        public ModelAndView call() throws Exception {
-
-            ProgressJob job = init( "Fetching coexpression data" );
-            provideAuthentication();
+        @Override
+        public TaskResult processJob() {
 
             StopWatch watch = new StopWatch();
             watch.start();
 
             assert this.command != null;
-            Long eeId = ( Long ) this.command;
+            Long eeId = this.command.getExpressionExperimentId();
             ExpressionExperiment ee = expressionExperimentService.load( eeId );
 
             if ( ee == null ) {
@@ -81,7 +74,6 @@ public class ExpressionExperimentDataFetchController extends BackgroundProcessin
 
             File f = expressionDataFileService.writeOrLocateCoexpressionDataFile( ee, false );
 
-            ProgressManager.destroyProgressJob( job );
             watch.stop();
             log.debug( "Finished getting co-expression file; done in " + watch.getTime() + " milliseconds" );
 
@@ -89,7 +81,7 @@ public class ExpressionExperimentDataFetchController extends BackgroundProcessin
 
             ModelAndView mav = new ModelAndView( new RedirectView( url ) );
 
-            return mav;
+            return new TaskResult( command, mav );
 
         }
 
@@ -98,34 +90,26 @@ public class ExpressionExperimentDataFetchController extends BackgroundProcessin
     /**
      * @author keshav
      */
-    class DataWriterJob extends BackgroundControllerJob<ModelAndView> {
+    class DataWriterJob extends BackgroundJob<ExpressionExperimentDataFetchCommand> {
 
         public DataWriterJob( ExpressionExperimentDataFetchCommand command ) {
-            super();
-            this.command = command;
+            super( command );
         }
 
-        /*
-         * (non-Javadoc)
-         * @see java.util.concurrent.Callable#call()
-         */
-        public ModelAndView call() throws Exception {
-
-            ProgressJob job = init( "Fetching data" );
-            provideAuthentication();
+        @Override
+        public TaskResult processJob() {
 
             StopWatch watch = new StopWatch();
             watch.start();
 
             /* 'do yer thang' */
             assert this.command != null;
-            ExpressionExperimentDataFetchCommand ecommand = ( ExpressionExperimentDataFetchCommand ) this.command;
 
-            Long qtId = ecommand.getQuantitationTypeId();
-            Long eeId = ecommand.getExpressionExperimentId();
-            Long eedId = ecommand.getExperimentalDesignId();
-            String format = ecommand.getFormat();
-            boolean filtered = ecommand.isFilter();
+            Long qtId = command.getQuantitationTypeId();
+            Long eeId = command.getExpressionExperimentId();
+            Long eedId = command.getExperimentalDesignId();
+            String format = command.getFormat();
+            boolean filtered = command.isFilter();
 
             String usedFormat = "text";
 
@@ -209,8 +193,6 @@ public class ExpressionExperimentDataFetchController extends BackgroundProcessin
 
             assert f != null;
 
-            // 'done ma thang'
-            ProgressManager.destroyProgressJob( job );
             watch.stop();
             log.debug( "Finished writing and downloading a file; done in " + watch.getTime() + " milliseconds" );
 
@@ -218,34 +200,27 @@ public class ExpressionExperimentDataFetchController extends BackgroundProcessin
 
             ModelAndView mav = new ModelAndView( new RedirectView( url ) );
 
-            return mav;
+            return new TaskResult( command, mav );
 
         }
 
     }
 
     // ==========================================================
-    class DiffExpressionDataWriterJob extends BackgroundControllerJob<ModelAndView> {
+    class DiffExpressionDataWriterJob extends BackgroundJob<ExpressionExperimentDataFetchCommand> {
 
-        public DiffExpressionDataWriterJob( Long eeId ) {
-            super();
-            this.command = eeId;
+        public DiffExpressionDataWriterJob( ExpressionExperimentDataFetchCommand command ) {
+            super( command );
         }
 
-        /*
-         * (non-Javadoc)
-         * @see java.util.concurrent.Callable#call()
-         */
-        public ModelAndView call() throws Exception {
-
-            ProgressJob job = init( "Fetching diff ex data" );
-            provideAuthentication();
+        @Override
+        public TaskResult processJob() {
 
             StopWatch watch = new StopWatch();
             watch.start();
 
             assert this.command != null;
-            Long eeId = ( Long ) this.command;
+            Long eeId = this.command.getExpressionExperimentId();
             ExpressionExperiment ee = expressionExperimentService.load( eeId );
 
             if ( ee == null ) {
@@ -255,7 +230,6 @@ public class ExpressionExperimentDataFetchController extends BackgroundProcessin
 
             File f = expressionDataFileService.writeOrLocateDiffExpressionDataFile( ee, false );
 
-            ProgressManager.destroyProgressJob( job );
             watch.stop();
             log.debug( "Finished writing and downloading differential expression file; done in " + watch.getTime()
                     + " milliseconds" );
@@ -264,7 +238,7 @@ public class ExpressionExperimentDataFetchController extends BackgroundProcessin
 
             ModelAndView mav = new ModelAndView( new RedirectView( url ) );
 
-            return mav;
+            return new TaskResult( command, mav );
 
         }
 
@@ -303,9 +277,10 @@ public class ExpressionExperimentDataFetchController extends BackgroundProcessin
      * @return
      */
     public String getCoExpressionDataFile( Long eeId ) {
-        CoExpressionDataWriterJob runner = new CoExpressionDataWriterJob( eeId );
-        runner.setDoForward( false );
-        return ( String ) super.startJob( runner ).getModel().get( JOB_ATTRIBUTE );
+        ExpressionExperimentDataFetchCommand tc = new ExpressionExperimentDataFetchCommand();
+        tc.setExpressionExperimentId( eeId );
+        CoExpressionDataWriterJob runner = new CoExpressionDataWriterJob( tc );
+        return startTask( runner );
     }
 
     /**
@@ -318,8 +293,7 @@ public class ExpressionExperimentDataFetchController extends BackgroundProcessin
      */
     public String getDataFile( ExpressionExperimentDataFetchCommand command ) throws InterruptedException {
         DataWriterJob runner = new DataWriterJob( command );
-        runner.setDoForward( false );
-        return ( String ) super.startJob( runner ).getModel().get( JOB_ATTRIBUTE );
+        return startTask( runner );
     }
 
     /**
@@ -330,9 +304,10 @@ public class ExpressionExperimentDataFetchController extends BackgroundProcessin
      * @return
      */
     public String getDiffExpressionDataFile( Long eeId ) {
-        DiffExpressionDataWriterJob runner = new DiffExpressionDataWriterJob( eeId );
-        runner.setDoForward( false );
-        return ( String ) super.startJob( runner ).getModel().get( JOB_ATTRIBUTE );
+        ExpressionExperimentDataFetchCommand tc = new ExpressionExperimentDataFetchCommand();
+        tc.setExpressionExperimentId( eeId );
+        DiffExpressionDataWriterJob runner = new DiffExpressionDataWriterJob( tc );
+        return startTask( runner );
     }
 
     public void setExpressionDataFileService( ExpressionDataFileService expressionDataFileService ) {
@@ -347,6 +322,16 @@ public class ExpressionExperimentDataFetchController extends BackgroundProcessin
 
     public void setQuantitationTypeService( QuantitationTypeService quantitationTypeService ) {
         this.quantitationTypeService = quantitationTypeService;
+    }
+
+    @Override
+    protected BackgroundJob<?> getInProcessRunner( TaskCommand command ) {
+        return null;
+    }
+
+    @Override
+    protected BackgroundJob<?> getSpaceRunner( TaskCommand command ) {
+        return null;
     }
 
 }

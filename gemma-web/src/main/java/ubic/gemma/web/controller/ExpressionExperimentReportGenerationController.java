@@ -18,67 +18,42 @@
  */
 package ubic.gemma.web.controller;
 
-import javax.servlet.http.HttpServletRequest;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
-import ubic.gemma.analysis.report.ExpressionExperimentReportService;
-import ubic.gemma.grid.javaspaces.TaskCommand;
-import ubic.gemma.grid.javaspaces.TaskResult;
-import ubic.gemma.grid.javaspaces.task.expression.experiment.ExpressionExperimentReportTask;
-import ubic.gemma.grid.javaspaces.task.expression.experiment.ExpressionExperimentReportTaskCommand;
-import ubic.gemma.grid.javaspaces.util.SpacesEnum;
+import ubic.gemma.job.AbstractTaskService;
+import ubic.gemma.job.BackgroundJob;
+import ubic.gemma.job.TaskCommand;
+import ubic.gemma.job.TaskResult;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.web.controller.grid.AbstractSpacesController;
+import ubic.gemma.tasks.maintenance.ExpressionExperimentReportTask;
+import ubic.gemma.tasks.maintenance.ExpressionExperimentReportTaskCommand;
 
 /**
  * @author klc
  * @version $Id$ *
  */
 @Controller
-public class ExpressionExperimentReportGenerationController extends AbstractSpacesController<Boolean> {
+public class ExpressionExperimentReportGenerationController extends AbstractTaskService {
+
+    public ExpressionExperimentReportGenerationController() {
+        super();
+        this.setBusinessInterface( ExpressionExperimentReportTask.class );
+    }
 
     /**
      * @author klc
      */
-    private class ExpressionExperimentReportJob extends BaseControllerJob<Boolean> {
+    private class ExpressionExperimentReportJob extends BackgroundJob<ExpressionExperimentReportTaskCommand> {
 
-        /**
-         * @param taskId
-         * @param commandObj
-         */
-        public ExpressionExperimentReportJob( String taskId, Object commandObj ) {
-            super( taskId, commandObj );
+        public ExpressionExperimentReportJob( ExpressionExperimentReportTaskCommand commandObj ) {
+            super( commandObj );
         }
 
-        /*
-         * (non-Javadoc)
-         * @see java.util.concurrent.Callable#call()
-         */
-        public Boolean call() throws Exception {
-
-            ExpressionExperimentReportTaskCommand c = ( ExpressionExperimentReportTaskCommand ) this.command;
-
-            super.initializeProgressJob( c.getExpressionExperiment().getShortName() );
-
-            return processJob( c );
-        }
-
-        /*
-         * (non-Javadoc)
-         * @see ubic.gemma.web.controller.BaseControllerJob#processJob(ubic.gemma.web.controller.BaseCommand)
-         */
         @Override
-        protected Boolean processJob( TaskCommand c ) {
-            ExpressionExperimentReportTaskCommand vectorCommand = ( ExpressionExperimentReportTaskCommand ) c;
-
-            ExpressionExperiment ee = vectorCommand.getExpressionExperiment();
-            expressionExperimentReportService.generateSummaryObject( ee.getId() );
-            // expressionExperimentService.thawLite( ee );
-
-            return true;
+        protected TaskResult processJob() {
+            return expressionExperimentReportTask.execute( this.command );
         }
     }
 
@@ -88,55 +63,22 @@ public class ExpressionExperimentReportGenerationController extends AbstractSpac
      * @author keshav
      * @version $Id$
      */
-    private class ExpressionExperimentReportSpaceJob extends ExpressionExperimentReportJob {
+    private class ExpressionExperimentReportSpaceJob extends BackgroundJob<ExpressionExperimentReportTaskCommand> {
 
-        final ExpressionExperimentReportTask taskProxy = ( ExpressionExperimentReportTask ) updatedContext
-                .getBean( "proxy" );
-
-        /**
-         * @param taskId
-         * @param commandObj
-         */
-        public ExpressionExperimentReportSpaceJob( String taskId, Object commandObj ) {
-            super( taskId, commandObj );
+        public ExpressionExperimentReportSpaceJob( ExpressionExperimentReportTaskCommand commandObj ) {
+            super( commandObj );
         }
 
-        /**
-         * @param command
-         * @return
-         */
-        protected ExpressionExperimentReportTaskCommand createCommandObject(
-                ExpressionExperimentReportTaskCommand command ) {
-            return new ExpressionExperimentReportTaskCommand( taskId, command.getExpressionExperiment() );
-        }
-
-        /*
-         * (non-Javadoc)
-         * @seeubic.gemma.web.controller.analysis.preprocess.ProcessedExpressionDataVectorCreateController.
-         * ProcessedExpressionDataVectorCreateJob#processJob(ubic.gemma.web.controller.BaseCommand)
-         */
         @Override
-        protected Boolean processJob( TaskCommand baseCommand ) {
-            baseCommand.setTaskId( this.taskId );
-            ExpressionExperimentReportTaskCommand vectorCommand = ( ExpressionExperimentReportTaskCommand ) baseCommand;
-            process( vectorCommand );
-            return true;
-        }
-
-        /**
-         * @param command
-         * @return
-         */
-        private TaskResult process( ExpressionExperimentReportTaskCommand command ) {
-            ExpressionExperimentReportTaskCommand jsCommand = createCommandObject( command );
-            TaskResult result = taskProxy.execute( jsCommand );
-            return result;
+        protected TaskResult processJob() {
+            ExpressionExperimentReportTask taskProxy = ( ExpressionExperimentReportTask ) getProxy();
+            return taskProxy.execute( command );
         }
 
     }
 
     @Autowired
-    private ExpressionExperimentReportService expressionExperimentReportService = null;
+    private ExpressionExperimentReportTask expressionExperimentReportTask;
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService = null;
@@ -148,14 +90,15 @@ public class ExpressionExperimentReportGenerationController extends AbstractSpac
      * @return
      * @throws Exception
      */
-    public String run( Long id ) throws Exception {
-
+    public String run( Long id ) {
         ExpressionExperiment ee = expressionExperimentService.load( id );
+        if ( ee == null ) {
+            throw new IllegalArgumentException( "Could not access experiment with id=" + id );
+        }
 
         ExpressionExperimentReportTaskCommand cmd = new ExpressionExperimentReportTaskCommand( ee );
 
-        return super.run( cmd, SpacesEnum.DEFAULT_SPACE.getSpaceUrl(), ExpressionExperimentReportTask.class.getName(),
-                true );
+        return super.run( cmd );
     }
 
     /**
@@ -168,21 +111,8 @@ public class ExpressionExperimentReportGenerationController extends AbstractSpac
 
         ExpressionExperimentReportTaskCommand cmd = new ExpressionExperimentReportTaskCommand( true );
 
-        return super.run( cmd, SpacesEnum.DEFAULT_SPACE.getSpaceUrl(), ExpressionExperimentReportTask.class.getName(),
-                true );
+        return super.run( cmd );
 
-    }
-
-    /**
-     * @param expressionExperimentReportService
-     */
-    public void setExpressionExperimentReportService(
-            ExpressionExperimentReportService expressionExperimentReportService ) {
-        this.expressionExperimentReportService = expressionExperimentReportService;
-    }
-
-    public void setExpressionExperimentService( ExpressionExperimentService ees ) {
-        this.expressionExperimentService = ees;
     }
 
     /*
@@ -190,8 +120,8 @@ public class ExpressionExperimentReportGenerationController extends AbstractSpac
      * @see ubic.gemma.web.controller.grid.AbstractSpacesController#getRunner(java.lang.String, java.lang.Object)
      */
     @Override
-    protected BackgroundControllerJob<Boolean> getRunner( String jobId, Object command ) {
-        return new ExpressionExperimentReportJob( jobId, command );
+    protected BackgroundJob<ExpressionExperimentReportTaskCommand> getInProcessRunner( TaskCommand command ) {
+        return new ExpressionExperimentReportJob( ( ExpressionExperimentReportTaskCommand ) command );
     }
 
     /*
@@ -199,18 +129,8 @@ public class ExpressionExperimentReportGenerationController extends AbstractSpac
      * @see ubic.gemma.web.controller.grid.AbstractSpacesController#getSpaceRunner(java.lang.String, java.lang.Object)
      */
     @Override
-    protected BackgroundControllerJob<Boolean> getSpaceRunner( String jobId, Object command ) {
-        return new ExpressionExperimentReportSpaceJob( jobId, command );
-    }
-
-    /*
-     * (non-Javadoc)
-     * @seeorg.springframework.web.servlet.mvc.AbstractUrlViewController#getViewNameForRequest(javax.servlet.http.
-     * HttpServletRequest)
-     */
-    @Override
-    protected String getViewNameForRequest( HttpServletRequest arg0 ) {
-        return null;
+    protected BackgroundJob<ExpressionExperimentReportTaskCommand> getSpaceRunner( TaskCommand command ) {
+        return new ExpressionExperimentReportSpaceJob( ( ExpressionExperimentReportTaskCommand ) command );
     }
 
 }

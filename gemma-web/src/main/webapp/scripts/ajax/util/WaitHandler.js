@@ -26,10 +26,22 @@ Ext.namespace("Gemma");
  * @class Gemma.WaitHandler
  * @extends Ext.Component
  */
-Gemma.WaitHandler = Ext.extend(Ext.Component, {
-			initComponent : function() {
-				Gemma.WaitHandler.superclass.initComponent.call(this);
-				this.addEvents('done');
+Gemma.WaitHandler = Ext.extend(Ext.util.Observable, {
+
+			constructor : function(config) {
+				this.addEvents({
+							"done" : true,
+							"background" : true
+						});
+
+				// Copy configured listeners into *this* object so that the base class's
+				// constructor will add them.
+				if (config) {
+					this.listeners = config.listeners;
+				}
+
+				// Call our superclass constructor to complete construction process.
+				Gemma.WaitHandler.superclass.constructor.call(config)
 			},
 
 			/**
@@ -49,6 +61,10 @@ Gemma.WaitHandler = Ext.extend(Ext.Component, {
 				} catch (e) {
 					Ext.Msg.alert("Error", e);
 				}
+			},
+
+			handleGoBackground : function() {
+				this.fireEvent('background', this);
 			}
 
 		});
