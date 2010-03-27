@@ -37,7 +37,6 @@ import org.apache.commons.lang.RandomStringUtils;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springmodules.javaspaces.gigaspaces.GigaSpacesTemplate;
 
-import ubic.gemma.job.grid.util.SpaceMonitor;
 import ubic.gemma.job.grid.util.SpacesCancellationEntry;
 import ubic.gemma.util.AbstractSpringAwareCLI;
 
@@ -58,11 +57,10 @@ public class WorkerCLI extends AbstractSpringAwareCLI implements RemoteEventList
     public class ShutdownHook extends Thread {
         @Override
         public void run() {
-            log.info( "Worker shut down.  Cleaning up registered entries for this worker." );
+            log.info( "Worker shut down.  Cleaning up registered entries." );
 
             for ( SpacesCancellationEntry cancellationEntry : cancellationEntries ) {
                 try {
-
                     space.clear( cancellationEntry, null );
                 } catch ( Exception e ) {
                     log.warn( "Error clearing worker " + cancellationEntry.message + " from space: " + e.getMessage() );
@@ -73,7 +71,6 @@ public class WorkerCLI extends AbstractSpringAwareCLI implements RemoteEventList
             for ( SpacesRegistrationEntry registrationEntry : registrationEntries ) {
                 try {
                     space.clear( registrationEntry, null );
-
                 } catch ( Exception e ) {
                     log.warn( "Error clearing worker " + registrationEntry.message + " from space: " + e.getMessage() );
                 }
@@ -114,13 +111,15 @@ public class WorkerCLI extends AbstractSpringAwareCLI implements RemoteEventList
             Object taskId = entry.getFieldValue( "taskId" );
 
             /*
-             * Cancellation
+             * Cancellation. NOTE this assumes that the only notifications we get are about cancellations.
              */
             for ( CustomDelegatingWorker worker : workers ) {
                 if ( taskId.equals( worker.getCurrentTaskId() ) ) {
                     log.info( "Stopping execution of task: " + taskId );
-                    worker.stop(); // This just kills the thread! I don't think we should do this, as it means we're
-                    // shutting down anyway.
+                    /*
+                     * FIXME this kills the worker! Can't we just abort the current call?
+                     */
+                    worker.stop();
                 }
             }
 
@@ -155,12 +154,7 @@ public class WorkerCLI extends AbstractSpringAwareCLI implements RemoteEventList
         }
 
         /*
-         * Bit of a kludge. Really we should shut down the cronner. FIXME later.
-         */
-        ( ( SpaceMonitor ) this.getBean( "spaceMonitor" ) ).disable();
-
-        /*
-         * Important to ensure that threads get permissions from their context.
+         * Important to ensure that threads get permissions from their context - not global!
          */
         SecurityContextHolder.setStrategyName( SecurityContextHolder.MODE_INHERITABLETHREADLOCAL );
 
@@ -208,7 +202,6 @@ public class WorkerCLI extends AbstractSpringAwareCLI implements RemoteEventList
             this.workers.add( worker );
 
             String workerRegistrationId = RandomStringUtils.randomAlphanumeric( 8 ).toUpperCase() + "_" + workerName;
-
             worker.setRegistrationId( workerRegistrationId );
 
             /*
@@ -218,12 +211,11 @@ public class WorkerCLI extends AbstractSpringAwareCLI implements RemoteEventList
             registrationEntry.registrationId = workerRegistrationId;
             registrationEntry.message = workerName;
 
-            /* set up the cancellation entry for this worker */
-            SpacesCancellationEntry cancellationEntry = new SpacesCancellationEntry( workerRegistrationId );
+            /* register this as a listener for cancellation entries */
+            SpacesCancellationEntry cancellationEntry = new SpacesCancellationEntry();
+            cancellationEntry.registrationId = workerRegistrationId;
             template.addNotifyDelegatorListener( this, cancellationEntry, null, true, Lease.FOREVER,
                     NotifyModifiers.NOTIFY_ALL );
-
-            log.info( registrationEntry.message + " registered with space " + template.getUrl() );
 
             /*
              * Start.
@@ -231,10 +223,10 @@ public class WorkerCLI extends AbstractSpringAwareCLI implements RemoteEventList
             Thread itbThread = new Thread( worker );
             itbThread.start();
 
-            startHeartbeatThread( template, registrationEntry );
+            startHeartbeatThread( template, registrationEntry, worker );
 
-            log.info( "Worker " + registrationEntry.message + " started" );
-
+            log.info( registrationEntry.message + " registered with space " + template.getUrl() + "[WorkerId="
+                    + workerRegistrationId + "]" );
         }
 
     }
@@ -247,23 +239,42 @@ public class WorkerCLI extends AbstractSpringAwareCLI implements RemoteEventList
      * @param registrationEntry
      */
     private void startHeartbeatThread( final GigaSpacesTemplate template,
-            final SpacesRegistrationEntry registrationEntry ) {
+            final SpacesRegistrationEntry registrationEntry, final CustomDelegatingWorker worker ) {
 
-        final Long HEARTBEAT_FREQUENCY = 10000L;
+        /*
+         * How often we refresh the status of the worker. Don't make it too infrequent. If the worker dies at the
+         * beginning of the cycle, this is how long clients will still see its registration.
+         */
+        final Long HEARTBEAT_INTERVAL_MILLIS = 2000L;
+
+        /*
+         * A little extra time we allow the entry to live, so there is overlap
+         */
+        final Long WAIT = 100L;
 
         /*
          * Initialize
          */
-        template.write( registrationEntry, HEARTBEAT_FREQUENCY + 100 );
+        template.write( registrationEntry, HEARTBEAT_INTERVAL_MILLIS + WAIT );
 
         ExecutorService service = Executors.newSingleThreadExecutor();
         service.submit( new FutureTask<Object>( new Callable<Object>() {
             public Object call() throws Exception {
 
                 while ( true ) {
-                    Thread.sleep( HEARTBEAT_FREQUENCY - 100 );
-                    log.debug( "Refresh " + registrationEntry.message );
-                    template.update( registrationEntry, HEARTBEAT_FREQUENCY, 100 );
+                    Thread.sleep( HEARTBEAT_INTERVAL_MILLIS );
+                    if ( log.isDebugEnabled() )
+                        log.debug( "Refresh " + registrationEntry.message + " " + registrationEntry.registrationId );
+
+                    /*
+                     * Note: we fill in the taskid so we can tell the worker is 'busy'. This gets cleared out by
+                     * HEARTBEAT_INTERVAL_MILLIS milliseconds of the job finishing. So HEARTBEAT_INTERVAL_MILLIS should
+                     * be not too long. However, not that this has no impact on whether the worker is actually busy and
+                     * whether it will take jobs immediately or not.
+                     */
+                    registrationEntry.taskId = worker.getCurrentTaskId();
+
+                    template.update( registrationEntry, HEARTBEAT_INTERVAL_MILLIS + WAIT, 100 );
                 }
 
             }

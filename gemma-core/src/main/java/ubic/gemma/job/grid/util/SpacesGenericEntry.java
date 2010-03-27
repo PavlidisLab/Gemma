@@ -39,18 +39,42 @@ public class SpacesGenericEntry extends MetaDataEntry {
     private static final long serialVersionUID = 1L;
 
     /**
+     * Implemented to programmatically allow for indexing of attributes. This indexing speeds up read and take
+     * operations.
+     * 
+     * @return String[]
+     */
+    public static String[] __getSpaceIndexedFields() {
+        String[] indexedFields = { "message" };
+        return indexedFields;
+    }
+
+    /**
+     * Must be public for JavaSpaces reasons.
+     */
+    public String host = null;
+    /**
      * Must be public for JavaSpaces reasons.
      */
     public String message = null;
-    public String host = null;
+
+    /**
+     * Must be public for JavaSpaces reasons.
+     */
     public String registrationId = null;
 
     /**
-     * 
-     *
+     * Must be public for JavaSpaces reasons.
      */
-    public SpacesGenericEntry() {
+    public String taskId;
 
+    /**
+     * Added for conventional reasons. This is not needed since the field is public (required by JavaSpaces).
+     * 
+     * @return String
+     */
+    public String getHost() {
+        return host;
     }
 
     /**
@@ -65,30 +89,17 @@ public class SpacesGenericEntry extends MetaDataEntry {
     /**
      * Added for conventional reasons. This is not needed since the field is public (required by JavaSpaces).
      * 
-     * @param message
+     * @return Long
      */
-    public void setMessage( String message ) {
-        this.message = message;
+    public String getRegistrationId() {
+        return registrationId;
     }
 
     /**
-     * Implemented to programmatically allow for indexing of attributes. This indexing speeds up read and take
-     * operations.
-     * 
-     * @return String[]
+     * @return the taskId
      */
-    public static String[] __getSpaceIndexedFields() {
-        String[] indexedFields = { "message" };
-        return indexedFields;
-    }
-
-    /**
-     * Added for conventional reasons. This is not needed since the field is public (required by JavaSpaces).
-     * 
-     * @return String
-     */
-    public String getHost() {
-        return host;
+    public String getTaskId() {
+        return taskId;
     }
 
     /**
@@ -103,10 +114,10 @@ public class SpacesGenericEntry extends MetaDataEntry {
     /**
      * Added for conventional reasons. This is not needed since the field is public (required by JavaSpaces).
      * 
-     * @return Long
+     * @param message
      */
-    public String getRegistrationId() {
-        return registrationId;
+    public void setMessage( String message ) {
+        this.message = message;
     }
 
     /**
@@ -116,5 +127,12 @@ public class SpacesGenericEntry extends MetaDataEntry {
      */
     public void setRegistrationId( String registrationId ) {
         this.registrationId = registrationId;
+    }
+
+    /**
+     * @param taskId the taskId to set
+     */
+    public void setTaskId( String taskId ) {
+        this.taskId = taskId;
     }
 }

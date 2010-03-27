@@ -69,18 +69,20 @@ public class GridTaskInterceptor implements MethodInterceptor {
         String taskId = command.getTaskId();
 
         /*
+         * fill in the command information
+         */
+        command.setTaskInterface( invocation.getMethod().getDeclaringClass().getName() );
+        command.setTaskMethod( invocation.getMethod().getName() );
+        command.setWillRunOnGrid( true );
+
+        /*
          * register this "spaces client" to receive notifications (logging, basically)
          */
         SpacesJobObserver javaSpacesJobObserver = new SpacesJobObserver( taskId );
-
         SpacesProgressEntry entry = new SpacesProgressEntry();
         entry.setTaskId( taskId );
         javaSpaceTemplate.addNotifyDelegatorListener( javaSpacesJobObserver, entry, null, true, Lease.FOREVER,
                 NotifyModifiers.NOTIFY_UPDATE ); // if you use NOTIFY_ALL, wiping of entry causes repeated logging
-
-        command.setTaskInterface( invocation.getMethod().getDeclaringClass().getName() );
-        command.setTaskMethod( invocation.getMethod().getName() );
-        command.setWillRunOnGrid( true );
 
         /*
          * Here's how we figure out when the job has actually started.

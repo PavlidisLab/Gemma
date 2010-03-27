@@ -23,32 +23,7 @@ package ubic.gemma.job.grid.util;
  * @version $Id$
  */
 public class SpacesCancellationEntry extends SpacesGenericEntry {
-    public SpacesCancellationEntry() {
-    }
 
-    public SpacesCancellationEntry( String workerRegistrationId ) {
-        super();
-        this.workerRegistrationId = workerRegistrationId;
-    }
-
-    public String workerRegistrationId;
-
-    public String taskId = null;
-
-    public void setTaskId( String taskId ) {
-        this.taskId = taskId;
-    }
-
-    public String getTaskId() {
-        return taskId;
-    }
-
-    public void setWorkerRegistrationId( String workerRegistrationId ) {
-        this.workerRegistrationId = workerRegistrationId;
-    }
-
-    public String getWorkerRegistrationId() {
-        return workerRegistrationId;
-    }
+    public String taskId;
 
 }

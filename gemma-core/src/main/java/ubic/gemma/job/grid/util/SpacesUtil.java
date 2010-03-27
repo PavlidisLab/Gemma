@@ -25,6 +25,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import net.jini.core.entry.Entry;
 import net.jini.core.lease.Lease;
 
 import org.apache.commons.logging.Log;
@@ -36,7 +37,6 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 import org.springmodules.javaspaces.gigaspaces.GigaSpacesTemplate;
 
-import ubic.gemma.job.grid.worker.SpacesBusyEntry;
 import ubic.gemma.job.grid.worker.SpacesRegistrationEntry;
 import ubic.gemma.util.SpringContextUtil;
 
@@ -233,9 +233,9 @@ public class SpacesUtil implements ApplicationContextAware {
         IJSpace space = ( IJSpace ) template.getSpace();
         try {
             for ( SpacesRegistrationEntry e : this.getRegisteredWorkers() ) {
-
-                SpacesCancellationEntry cancellationEntry = new SpacesCancellationEntry( e.registrationId );
-                cancellationEntry.setTaskId( taskId );
+                SpacesCancellationEntry cancellationEntry = new SpacesCancellationEntry();
+                cancellationEntry.registrationId = e.registrationId;
+                cancellationEntry.taskId = taskId;
                 space.write( cancellationEntry, null, ENTRY_TTL );
             }
         } catch ( Exception e ) {
@@ -310,9 +310,9 @@ public class SpacesUtil implements ApplicationContextAware {
     /**
      * @return
      */
-    public List<SpacesBusyEntry> getBusyWorkers() {
+    public List<SpacesRegistrationEntry> getBusyWorkers() {
 
-        List<SpacesBusyEntry> workerEntries = new ArrayList<SpacesBusyEntry>();
+        List<SpacesRegistrationEntry> workerEntries = new ArrayList<SpacesRegistrationEntry>();
         if ( !isSpaceRunning() ) {
             return workerEntries;
         }
@@ -320,12 +320,15 @@ public class SpacesUtil implements ApplicationContextAware {
         try {
             IJSpace space = getSpace();
 
-            Object[] commandObjects = space.readMultiple( new SpacesBusyEntry(), null, 120000 /* magic number */);
+            Entry[] commandObjects = space
+                    .readMultiple( new SpacesRegistrationEntry(), null, 120000 /* magic number */);
 
-            workerEntries = new ArrayList<SpacesBusyEntry>();
+            workerEntries = new ArrayList<SpacesRegistrationEntry>();
             for ( int i = 0; i < commandObjects.length; i++ ) {
-                SpacesBusyEntry entry = ( SpacesBusyEntry ) commandObjects[i];
-                workerEntries.add( entry );
+                SpacesRegistrationEntry entry = ( SpacesRegistrationEntry ) commandObjects[i];
+                if ( entry.taskId != null ) {
+                    workerEntries.add( entry );
+                }
             }
         } catch ( Exception e ) {
             e.printStackTrace();
@@ -382,23 +385,7 @@ public class SpacesUtil implements ApplicationContextAware {
      * @return
      */
     public int numBusyWorkers() {
-        int count = 0;
-
-        if ( !isSpaceRunning() ) {
-            return count;
-        }
-
-        try {
-            IJSpace space = getSpace();
-            count = space.count( new SpacesBusyEntry(), null );
-            log.debug( "Number of busy workers: " + count );
-        } catch ( Exception e ) {
-            log.error( "Could not check for busy workers.  Assuming 0 workers are busy." );
-            e.printStackTrace();
-            return 0;
-        }
-
-        return count;
+        return this.getBusyWorkers().size();
     }
 
     /**
@@ -408,24 +395,7 @@ public class SpacesUtil implements ApplicationContextAware {
      * @return int
      */
     public int numIdleWorkers() {
-        int count = 0;
-
-        if ( !isSpaceRunning() ) {
-            log.error( "Space not started, Returning a count of 0 (idle workers)." );
-            return count;
-        }
-
-        try {
-            IJSpace space = getSpace();
-            count = space.count( new SpacesRegistrationEntry(), null );
-            log.debug( "Number of idle workers: " + count );
-        } catch ( Exception e ) {
-            log.error( "Could not check for idle workers.  Assuming 0 workers are idle." );
-            e.printStackTrace();
-            return 0;
-        }
-
-        return count;
+        return this.getRegisteredWorkers().size() - this.getBusyWorkers().size();
     }
 
     /*
@@ -474,11 +444,11 @@ public class SpacesUtil implements ApplicationContextAware {
 
         List<String> taskNames = new ArrayList<String>();
 
-        List<SpacesBusyEntry> busyEntries = this.getBusyWorkers();
+        List<SpacesRegistrationEntry> busyEntries = this.getBusyWorkers();
         if ( busyEntries == null ) {
             return taskNames;
         }
-        for ( SpacesBusyEntry entry : busyEntries ) {
+        for ( SpacesRegistrationEntry entry : busyEntries ) {
             String taskName = entry.getMessage();
             log.debug( "Can service task " + taskName + " later." );
             taskNames.add( taskName );

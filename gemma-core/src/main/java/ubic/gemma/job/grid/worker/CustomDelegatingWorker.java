@@ -33,13 +33,17 @@ import ubic.gemma.job.TaskCommand;
  * @author keshav, paul
  * @version $Id$
  * @see org.springmodules.javaspaces.DelegatingWorker
- * @see ubic.gemma.job.grid.GridmethodAdviceR
+ * @see ubic.gemma.job.grid.GridmethodAdvice
  */
 public class CustomDelegatingWorker extends DelegatingWorker {
 
+    @SuppressWarnings("unused")
     private static Log log = LogFactory.getLog( CustomDelegatingWorker.class );
 
-    String registrationId = null;
+    /**
+     * Id of this worker.
+     */
+    private String registrationId = null;
 
     /**
      * @param registrationId the registrationId to set
@@ -55,6 +59,9 @@ public class CustomDelegatingWorker extends DelegatingWorker {
         return registrationId;
     }
 
+    /**
+     * 
+     */
     private String currentTaskId = null;
 
     /*
@@ -79,19 +86,22 @@ public class CustomDelegatingWorker extends DelegatingWorker {
 
         this.currentTaskId = javaSpacesCommand.getTaskId();
 
+        /*
+         * security context should have been propagated by the GridmethodAdvice
+         */
         assert javaSpacesCommand.getSecurityContext() != null;
 
-        /*
-         * Note: security context should have been propagated by the GridmethodAdvice
-         */
-
-        MethodResultEntry result = super.invokeMethod( call, localDelegate );
-
-        // log.info( javaSpacesCommand.getSecurityContext().getAuthentication().getPrincipal() );
-
-        this.currentTaskId = null;
+        MethodResultEntry result;
+        try {
+            result = super.invokeMethod( call, localDelegate );
+        } catch ( RuntimeException e ) {
+            throw e;
+        } finally {
+            this.currentTaskId = null;
+        }
 
         return result;
+
     }
 
     public String getCurrentTaskId() {

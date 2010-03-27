@@ -23,6 +23,7 @@ import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 import org.springframework.beans.factory.BeanFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 
 import ubic.gemma.job.grid.util.SpacesUtil;
@@ -37,6 +38,9 @@ import ubic.gemma.util.SpringContextUtil;
  */
 public class SpacesUtilTest extends BaseSpringContextTest {
 
+    @Autowired
+    SpacesUtil spacesUtil;
+
     /**
      * Tests gigaspaces beans to the {@link org.springframework.beans.factory.BeanFactory}
      */
@@ -49,9 +53,7 @@ public class SpacesUtilTest extends BaseSpringContextTest {
         String gigaspacesTemplate = "gigaspacesTemplate";
         assertFalse( withoutGigaspacesCtx.containsBean( gigaspacesTemplate ) );
 
-        SpacesUtil gigaspacesUtil = ( SpacesUtil ) this.getBean( "spacesUtil" );
-
-        BeanFactory updatedCtx = gigaspacesUtil.addGemmaSpacesToApplicationContext();
+        BeanFactory updatedCtx = spacesUtil.addGemmaSpacesToApplicationContext();
 
         /* verify that we have the new gigaspaces beans */
         if ( !SpacesUtil.isSpaceRunning() )
@@ -100,10 +102,9 @@ public class SpacesUtilTest extends BaseSpringContextTest {
      */
     @Test
     public void testNumIdle() {
-        SpacesUtil gigaspacesUtil = ( SpacesUtil ) this.getBean( "spacesUtil" );
-        gigaspacesUtil.addGemmaSpacesToApplicationContext();
+        spacesUtil.addGemmaSpacesToApplicationContext();
 
-        int count = gigaspacesUtil.numIdleWorkers();
+        int count = spacesUtil.numIdleWorkers();
         assertTrue( count >= 0 );
 
     }

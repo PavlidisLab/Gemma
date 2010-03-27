@@ -274,8 +274,8 @@ public class ProgressManager {
     /**
      * @param jobInfoService the jobInfoService to set
      */
-    public void setJobInfoService( JobInfoService jobInfoService ) {
-        this.jobInfoService = jobInfoService;
+    public void setJobInfoService( JobInfoService j ) {
+        jobInfoService = j;
     }
 
     public static void setPayload( String taskId, Object payload ) {
@@ -290,8 +290,8 @@ public class ProgressManager {
     /**
      * @param userManager the userManager to set
      */
-    public void setUserManager( UserManager userManager ) {
-        this.userManager = userManager;
+    public void setUserManager( UserManager u ) {
+        userManager = u;
     }
 
     /**
@@ -435,7 +435,7 @@ public class ProgressManager {
      * 
      * @param progressJob
      */
-    public void cleanupJob( Object taskId ) {
+    public static void cleanupJob( Object taskId ) {
 
         ProgressJob progressJob = progressJobsByTaskId.get( taskId );
 

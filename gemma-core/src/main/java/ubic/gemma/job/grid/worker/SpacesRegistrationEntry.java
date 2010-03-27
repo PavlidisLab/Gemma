@@ -28,8 +28,4 @@ import ubic.gemma.job.grid.util.SpacesGenericEntry;
  */
 public class SpacesRegistrationEntry extends SpacesGenericEntry {
 
-    /**
-     * 
-     */
-    private static final long serialVersionUID = 1L;
 }

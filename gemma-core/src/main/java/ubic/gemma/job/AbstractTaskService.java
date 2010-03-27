@@ -124,8 +124,7 @@ public abstract class AbstractTaskService {
             } else {
                 job = getInProcessRunner( command );
                 if ( job == null ) {
-                    throw new TaskNotGridEnabledException( "No workers registered on grid for: " + taskName + " ("
-                            + taskId + ")" );
+                    throw new TaskNotGridEnabledException( "No workers registered on grid for jobs of type " + taskName );
                 }
             }
         } else {

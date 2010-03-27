@@ -45,8 +45,6 @@ public class ProgressStatusService {
     @Autowired
     private ProgressManager progressManager;
 
-    @Autowired
-    private SpacesUtil spacesUtil;
 
     @Autowired
     private TaskRunningService taskRunningService;
@@ -73,10 +71,7 @@ public class ProgressStatusService {
      */
     public boolean cancelJob( String taskId ) {
         try {
-            log.info( "Got cancellation for " + taskId );
-            spacesUtil.cancel( taskId );
             taskRunningService.cancelTask( taskId );
-            progressManager.cleanupJob( taskId );
         } catch ( Exception e ) {
             log.error( e, e );
             return false;

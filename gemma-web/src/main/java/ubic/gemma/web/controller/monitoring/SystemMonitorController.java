@@ -90,7 +90,6 @@ public class SystemMonitorController {
      * 
      * @return
      */
-
     public String getSpaceStatus() {
         StringBuilder buf = new StringBuilder();
 
@@ -109,17 +108,9 @@ public class SystemMonitorController {
         buf.append( "</p>" );
 
         if ( registeredWorkers != null ) {
-
-            // List<SpacesBusyEntry> busyWorkers = spacesUtil.getBusyWorkers();
-            //
-            // Set<String> status = new HashSet<String>();
-            // for ( SpacesBusyEntry e : busyWorkers ) {
-            // status.add( e.message );
-            // }
-
             buf.append( "\n<h2>Workers</h2>" );
             for ( SpacesRegistrationEntry e : registeredWorkers ) {
-                buf.append( e.message + "</br>\n" );
+                buf.append( e.message + ( e.taskId != null ? " Busy with task " + e.taskId : "" ) + "</br>\n" );
             }
         }
 
@@ -130,7 +121,7 @@ public class SystemMonitorController {
     }
 
     /**
-     * Used for external monitoring.
+     * Used for external monitoring (e.g. Nagios)
      * 
      * @param request
      * @param response
