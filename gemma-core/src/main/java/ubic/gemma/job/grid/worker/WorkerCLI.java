@@ -109,17 +109,21 @@ public class WorkerCLI extends AbstractSpringAwareCLI implements RemoteEventList
             EntryArrivedRemoteEvent arrivedRemoteEvent = ( EntryArrivedRemoteEvent ) remoteEvent;
             ExternalEntry entry = ( ExternalEntry ) arrivedRemoteEvent.getEntry( true );
             Object taskId = entry.getFieldValue( "taskId" );
+            assert taskId != null;
 
             /*
              * Cancellation. NOTE this assumes that the only notifications we get are about cancellations.
              */
-            for ( CustomDelegatingWorker worker : workers ) {
-                if ( taskId.equals( worker.getCurrentTaskId() ) ) {
-                    log.info( "Stopping execution of task: " + taskId );
-                    /*
-                     * FIXME this kills the worker! Can't we just abort the current call?
-                     */
-                    worker.stop();
+            if ( entry.m_ClassName.equals( SpacesCancellationEntry.class.getName() ) ) {
+                for ( CustomDelegatingWorker worker : workers ) {
+                    assert worker != null;
+                    if ( taskId.equals( worker.getCurrentTaskId() ) ) {
+                        log.info( "Stopping execution of task: " + taskId );
+                        /*
+                         * FIXME this kills the worker! Can't we just abort the current call?
+                         */
+                        worker.stop();
+                    }
                 }
             }
 

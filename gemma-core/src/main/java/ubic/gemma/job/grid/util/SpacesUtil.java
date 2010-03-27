@@ -20,8 +20,6 @@ package ubic.gemma.job.grid.util;
 
 import java.rmi.RemoteException;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -70,11 +68,10 @@ public class SpacesUtil implements ApplicationContextAware {
     private static Log log = LogFactory.getLog( SpacesUtil.class );
 
     /**
-     * First checks to see if the space is running at the given url. If the space is running, returns the
-     * {@link IJSpaceContainerAdmin}, which is useful to obtain space information such as the runtime configuration
-     * report. If the space is not running, returns null.
+     * First checks to see if the space. If the space is running, returns the {@link IJSpaceContainerAdmin}, which is
+     * useful to obtain space information such as the runtime configuration report. If the space is not running, returns
+     * null.
      * 
-     * @param url
      * @return {@link IJSpaceContainerAdmin}
      */
     public static IJSpaceContainerAdmin getContainerSpaceAdmin() {
@@ -91,10 +88,8 @@ public class SpacesUtil implements ApplicationContextAware {
     }
 
     /**
-     * First checks if the space is running at the given url. If it is running, returns the {@link StatisticsAdmin},
-     * which is useful for administration statistics. If the space is not running, returns null.
-     * 
-     * @param url
+     * First checks if the space is running. If it is running, returns the {@link StatisticsAdmin}, which is useful for
+     * administration statistics. If the space is not running, returns null.
      */
     public static StatisticsAdmin getStatisticsAdmin() {
         if ( !isSpaceRunning() ) {
@@ -111,9 +106,8 @@ public class SpacesUtil implements ApplicationContextAware {
     }
 
     /**
-     * Checks if space is running at specified url.
+     * Checks if space is running
      * 
-     * @param ctx
      * @return boolean
      */
     public static boolean isSpaceRunning() {
@@ -145,43 +139,44 @@ public class SpacesUtil implements ApplicationContextAware {
 
     /**
      * Logs the space statistics from the {@link StatisticsAdmin}.
-     * 
-     * @param url
      */
     @SuppressWarnings("unchecked")
     public static String logSpaceStatistics() {
+
+        if ( !isSpaceRunning() ) {
+            return "Space not running";
+        }
+
         StatisticsAdmin admin = getStatisticsAdmin();
 
-        if ( admin != null ) {
-            try {
-                if ( !admin.isStatisticsAvailable() ) {
-                    return "Space is running but there are no statistics available";
-                }
-            } catch ( RemoteException e ) {
-                return "Error while checking for statistics: " + e.getMessage();
+        try {
+            if ( !admin.isStatisticsAvailable() ) {
+                return "Space is running but there are no statistics available";
+            }
+        } catch ( RemoteException e ) {
+            return "Error while checking for statistics: " + e.getMessage();
+        }
+
+        try {
+            Map<Integer, StatisticsContext> statsMap = admin.getStatistics();
+
+            if ( statsMap.isEmpty() ) {
+                return "No statistics!";
             }
 
             StringBuilder buf = new StringBuilder();
-            try {
-                Map<Integer, StatisticsContext> statsMap = admin.getStatistics();
-                Collection<Integer> keys = statsMap.keySet();
-                Iterator<Integer> iter = keys.iterator();
-                while ( iter.hasNext() ) {
-                    StatisticsContext message = statsMap.get( iter.next() );
-                    buf.append( message + "\n" );
-                    log.debug( message );
-                }
-                if ( buf.length() == 0 ) {
-                    return "No statistics!";
-                }
-                return buf.toString();
-            } catch ( StatisticsNotAvailable e ) {
-                throw new RuntimeException( e );
-            } catch ( RemoteException e ) {
-                throw new RuntimeException( e );
+            for ( Integer key : statsMap.keySet() ) {
+                StatisticsContext message = statsMap.get( key );
+                buf.append( message + "\n" );
+                log.debug( message );
             }
+            return buf.toString();
+        } catch ( StatisticsNotAvailable e ) {
+            throw new RuntimeException( e );
+        } catch ( RemoteException e ) {
+            throw new RuntimeException( e );
         }
-        return "Space not running";
+
     }
 
     private static IJSpace getSpace() throws FinderException {
@@ -191,10 +186,9 @@ public class SpacesUtil implements ApplicationContextAware {
     private ApplicationContext applicationContext = null;
 
     /**
-     * First checks if the space is running at url. If space is running, adds the gigaspaces beans to the context if
-     * they do not exist. If the space is not running, returns the original context.
+     * If space is running, adds the gigaspaces beans to the context if they do not exist. If the space is not running,
+     * returns the original context.
      * 
-     * @param url
      * @return ApplicatonContext
      */
     public ApplicationContext addGemmaSpacesToApplicationContext() {
@@ -203,9 +197,18 @@ public class SpacesUtil implements ApplicationContextAware {
             throw new IllegalStateException( "Context is null. Service not correctly initialized" );
         }
 
+        if ( !isSpaceRunning() ) {
+            return this.applicationContext;
+        }
+
         if ( !contextContainsGigaspaces() ) {
-            this.applicationContext = SpringContextUtil.addResourceToContext( applicationContext,
-                    new ClassPathResource( SpringContextUtil.GRID_SPRING_BEAN_CONFIG ) );
+
+            try {
+                this.applicationContext = SpringContextUtil.addResourceToContext( applicationContext,
+                        new ClassPathResource( SpringContextUtil.GRID_SPRING_BEAN_CONFIG ) );
+            } catch ( Exception e ) {
+                return this.applicationContext;
+            }
 
             GigaSpacesTemplate gigaspacesTemplate = this.getGigaspacesTemplate();
             gigaspacesTemplate.getUrl().getURL();
@@ -218,7 +221,7 @@ public class SpacesUtil implements ApplicationContextAware {
     }
 
     /**
-     * Cancels the task.
+     * Cancels a task.
      * 
      * @param taskId
      */
@@ -249,7 +252,6 @@ public class SpacesUtil implements ApplicationContextAware {
      * depending on whether or not it is busy.
      * 
      * @param taskName The name of the task to be serviced.
-     * @param url The space url.
      * @return boolean
      */
     public boolean canServiceTask( String taskName ) {
@@ -269,13 +271,9 @@ public class SpacesUtil implements ApplicationContextAware {
      * Can service the task with taskName later.
      * 
      * @param taskName
-     * @param url
      * @return
      */
     public boolean canServiceTaskLater( String taskName ) {
-        /*
-         * FIXME this doesn't work - busy stuff.
-         */
         boolean serviceable = false;
 
         List<String> busyTasks = this.tasksThatCanBeServicedLater();
@@ -291,7 +289,6 @@ public class SpacesUtil implements ApplicationContextAware {
      * Can service the task with taskName now.
      * 
      * @param taskName
-     * @param url
      * @return
      */
     public boolean canServiceTaskNow( String taskName ) {
@@ -336,7 +333,14 @@ public class SpacesUtil implements ApplicationContextAware {
         return workerEntries;
     }
 
+    /**
+     * @return template or null if space is not running.
+     */
     public GigaSpacesTemplate getGigaspacesTemplate() {
+        if ( !isSpaceRunning() ) {
+            return null;
+        }
+        addGemmaSpacesToApplicationContext();
         return ( GigaSpacesTemplate ) applicationContext.getBean( GIGASPACES_TEMPLATE );
     }
 
@@ -351,7 +355,6 @@ public class SpacesUtil implements ApplicationContextAware {
     /**
      * Returns a list of all the workers that have registered themselves with the grid.
      * 
-     * @param url
      * @return List<SpacesGenericEntry>
      */
     public List<SpacesRegistrationEntry> getRegisteredWorkers() {
@@ -381,7 +384,6 @@ public class SpacesUtil implements ApplicationContextAware {
     /**
      * Returns the number of busy workers.
      * 
-     * @param url
      * @return
      */
     public int numBusyWorkers() {
@@ -391,7 +393,6 @@ public class SpacesUtil implements ApplicationContextAware {
     /**
      * Returns the number of idle workers.
      * 
-     * @param url
      * @return int
      */
     public int numIdleWorkers() {
@@ -412,7 +413,6 @@ public class SpacesUtil implements ApplicationContextAware {
      * Returns the list of tasks that can currently be serviced at the space url based on the currently registered
      * workers.
      * 
-     * @param url
      * @return List <String>
      */
     public List<String> tasksThatCanBeServiced() {
@@ -437,7 +437,6 @@ public class SpacesUtil implements ApplicationContextAware {
     /**
      * Returns a list of tasks that can be serviced later (are currently busy).
      * 
-     * @param url
      * @return
      */
     public List<String> tasksThatCanBeServicedLater() {

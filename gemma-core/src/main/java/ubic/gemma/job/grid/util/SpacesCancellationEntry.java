@@ -24,6 +24,4 @@ package ubic.gemma.job.grid.util;
  */
 public class SpacesCancellationEntry extends SpacesGenericEntry {
 
-    public String taskId;
-
 }

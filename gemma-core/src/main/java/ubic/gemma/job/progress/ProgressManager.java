@@ -452,7 +452,7 @@ public class ProgressManager {
         log.debug( "Completed cleanup of job: " + taskId );
     }
 
-    public ProgressJob getJob( String taskId ) {
+    public static ProgressJob getJob( String taskId ) {
         if ( taskId == null ) return null;
         return progressJobsByTaskId.get( taskId );
     }

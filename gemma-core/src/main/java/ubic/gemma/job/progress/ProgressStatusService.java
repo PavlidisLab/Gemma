@@ -29,7 +29,6 @@ import org.springframework.stereotype.Service;
 import ubic.gemma.job.TaskCommand;
 import ubic.gemma.job.TaskResult;
 import ubic.gemma.job.TaskRunningService;
-import ubic.gemma.job.grid.util.SpacesUtil;
 
 /**
  * This class exposes methods for AJAX calls.
@@ -43,10 +42,6 @@ public class ProgressStatusService {
     private static Log log = LogFactory.getLog( ProgressStatusService.class.getName() );
 
     @Autowired
-    private ProgressManager progressManager;
-
-
-    @Autowired
     private TaskRunningService taskRunningService;
 
     /**
@@ -55,7 +50,7 @@ public class ProgressStatusService {
      * @param taskId
      */
     public synchronized void addEmailAlert( String taskId ) {
-        ProgressJob job = progressManager.getJob( taskId );
+        ProgressJob job = ProgressManager.getJob( taskId );
         if ( job == null ) {
             throw new IllegalArgumentException( "Sorry, job has already completed? No email will be sent." );
         }
@@ -115,7 +110,7 @@ public class ProgressStatusService {
     public synchronized List<ProgressData> getProgressStatus( String taskId ) {
         List<ProgressData> statusObjects = new Vector<ProgressData>();
 
-        ProgressJob job = progressManager.getJob( taskId );
+        ProgressJob job = ProgressManager.getJob( taskId );
 
         if ( job == null ) {
 
@@ -149,7 +144,7 @@ public class ProgressStatusService {
                 if ( data.getForwardingURL() != null ) {
                     log.debug( "forward to " + data.getForwardingURL() );
                 }
-                progressManager.cleanupJob( taskId );
+                ProgressManager.cleanupJob( taskId );
                 isDone = true;
                 didCleanup = true;
                 // Do not break, even if the job is done. keep adding any stored data to the results.

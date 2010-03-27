@@ -47,6 +47,10 @@ public class SpacesUtilTest extends BaseSpringContextTest {
     @Test
     public void testAddGigaspacesToBeanFactory() {
 
+        if ( !SpacesUtil.isSpaceRunning() ) {
+            return;
+        }
+
         ApplicationContext withoutGigaspacesCtx = ( ApplicationContext ) SpringContextUtil.getApplicationContext( true,
                 true, false, false );
 
@@ -74,22 +78,6 @@ public class SpacesUtilTest extends BaseSpringContextTest {
     }
 
     /**
-     * Tests if space is running.
-     */
-    @Test
-    public void testIsSpaceRunning() {
-
-        boolean isRunning = SpacesUtil.isSpaceRunning();
-
-        if ( isRunning ) {
-            assertTrue( isRunning );
-        } else {
-            assertFalse( isRunning );
-        }
-
-    }
-
-    /**
      * Test logging space statistics.
      */
     @Test
@@ -102,6 +90,11 @@ public class SpacesUtilTest extends BaseSpringContextTest {
      */
     @Test
     public void testNumIdle() {
+
+        if ( !SpacesUtil.isSpaceRunning() ) {
+            return;
+        }
+
         spacesUtil.addGemmaSpacesToApplicationContext();
 
         int count = spacesUtil.numIdleWorkers();

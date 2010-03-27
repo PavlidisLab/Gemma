@@ -107,7 +107,7 @@ public class SpaceMonitor extends AbstractTaskService {
             String taskId;
             try {
                 taskId = this.run( new MonitorTaskCommand() );
-                status = " ----  Current submitted task: " + taskId;
+                status = " ----  Last submitted monitor task: " + taskId;
             } catch ( TaskNotGridEnabledException e ) {
                 this.lastStatusMessage = e.getMessage();
                 this.lastStatusWasOK = false;

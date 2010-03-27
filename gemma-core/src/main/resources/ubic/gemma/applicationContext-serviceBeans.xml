@@ -13,7 +13,7 @@
 
 
 	<!-- Configured here because autowiring doesn't work with static fields. -->
-	<bean id="progressManager" class="ubic.gemma.job.progress.ProgressManager" lazy-init="true">
+	<bean id="progressManager" class="ubic.gemma.job.progress.ProgressManager">
 		<property name="userManager" ref="userManager" />
 		<property name="jobInfoService" ref="jobInfoService" />
 	</bean>
