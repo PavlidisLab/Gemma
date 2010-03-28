@@ -82,8 +82,7 @@ public class SpaceMonitor extends AbstractTaskService {
      * @return true if everything is nominal. Note that this return value doesn't really do anything when triggered by
      *         quartz.
      */
-    public boolean ping() {
-
+    public boolean ping() { 
         if ( !enabled ) {
             this.lastStatusMessage = "";
             this.lastStatusWasOK = true;

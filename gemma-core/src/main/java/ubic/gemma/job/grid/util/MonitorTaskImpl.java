@@ -18,6 +18,8 @@
  */
 package ubic.gemma.job.grid.util;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.stereotype.Service;
 
 import ubic.gemma.job.TaskMethod;
@@ -31,6 +33,8 @@ import ubic.gemma.job.TaskResult;
  */
 @Service
 public class MonitorTaskImpl implements MonitorTask {
+
+    private static Log log = LogFactory.getLog( MonitorTaskImpl.class );
 
     /*
      * (non-Javadoc)
@@ -46,9 +50,14 @@ public class MonitorTaskImpl implements MonitorTask {
         /*
          * Task doesn't do anything. Just to prove we are alive.
          */
-        try {
-            Thread.sleep( command.getRunTimeMillis() );
-        } catch ( InterruptedException e ) {
+        for ( int i = 0; i < command.getRunTimeMillis() / 1000; i++ ) {
+            // log.info( command.getTaskId() );
+            try {
+                Thread.sleep( 1000 );
+            } catch ( InterruptedException e ) {
+                log.warn( "Job " + command.getTaskId() + " was interrupted" );
+                return new TaskResult( command, false );
+            }
         }
 
         return new TaskResult( command, true );

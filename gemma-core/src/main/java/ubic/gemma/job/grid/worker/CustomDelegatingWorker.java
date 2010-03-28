@@ -104,6 +104,9 @@ public class CustomDelegatingWorker extends DelegatingWorker {
 
     }
 
+    /**
+     * @return the id of the currently-running task, or null if there is no job being run.
+     */
     public String getCurrentTaskId() {
         return this.currentTaskId;
     }

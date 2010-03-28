@@ -20,10 +20,13 @@ package ubic.gemma.job.grid.worker;
 
 import java.rmi.RemoteException;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
 
 import net.jini.core.event.RemoteEvent;
@@ -46,6 +49,13 @@ import com.j_spaces.core.client.ExternalEntry;
 import com.j_spaces.core.client.NotifyModifiers;
 
 /**
+ * Generic tool for starting a remote worker. Multiple types of tasks (business interfaces) can be simultaneously
+ * handled by one running Worker, just think about memory requirements if multiple tasks are running at the same time.
+ * <p>
+ * Workers advertise their existence to the space by sending a short-lived registration entry. This entry also contains
+ * the current task id (or null) so it can be used to track which workers are doing what. Worker that have cancelled
+ * tasks get restarted.
+ * 
  * @author keshav
  * @version $Id$
  */
@@ -84,20 +94,28 @@ public class WorkerCLI extends AbstractSpringAwareCLI implements RemoteEventList
         b.doWork( args );
     }
 
-    /*
-     * (non-Javadoc)
-     * @see ubic.gemma.util.AbstractCLI#buildOptions()
-     */
-
     private Collection<SpacesCancellationEntry> cancellationEntries = new HashSet<SpacesCancellationEntry>();
 
     private Collection<SpacesRegistrationEntry> registrationEntries = new HashSet<SpacesRegistrationEntry>();
 
     private IJSpace space = null;
 
-    private Collection<CustomDelegatingWorker> workers = new HashSet<CustomDelegatingWorker>();
+    private GigaSpacesTemplate template;
 
     private String[] workerNames;
+
+    private Collection<CustomDelegatingWorker> workers = new HashSet<CustomDelegatingWorker>();
+
+    private Map<String, Future<?>> workerThreads = new HashMap<String, Future<?>>();
+
+    /*
+     * (non-Javadoc)
+     * @see ubic.gemma.util.AbstractSpringAwareCLI#getShortDesc()
+     */
+    @Override
+    public String getShortDesc() {
+        return "Start one or more worker threads for processing jobs sent by the compute grid";
+    }
 
     /*
      * (non-Javadoc)
@@ -108,21 +126,25 @@ public class WorkerCLI extends AbstractSpringAwareCLI implements RemoteEventList
         try {
             EntryArrivedRemoteEvent arrivedRemoteEvent = ( EntryArrivedRemoteEvent ) remoteEvent;
             ExternalEntry entry = ( ExternalEntry ) arrivedRemoteEvent.getEntry( true );
-            Object taskId = entry.getFieldValue( "taskId" );
-            assert taskId != null;
 
-            /*
-             * Cancellation. NOTE this assumes that the only notifications we get are about cancellations.
-             */
+            Object taskId = entry.getFieldValue( "taskId" );
+            Object registrationId = entry.getFieldValue( "registrationId" );
+            assert taskId != null;
+            assert registrationId != null;
+
+            log.debug( "Event " + entry );
+
             if ( entry.m_ClassName.equals( SpacesCancellationEntry.class.getName() ) ) {
                 for ( CustomDelegatingWorker worker : workers ) {
-                    assert worker != null;
-                    if ( taskId.equals( worker.getCurrentTaskId() ) ) {
-                        log.info( "Stopping execution of task: " + taskId );
-                        /*
-                         * FIXME this kills the worker! Can't we just abort the current call?
-                         */
-                        worker.stop();
+
+                    if ( worker.getCurrentTaskId() == null ) continue;
+
+                    if ( registrationId.equals( worker.getRegistrationId() )
+                            && taskId.equals( worker.getCurrentTaskId() ) ) {
+                        log
+                                .info( "Stopping execution of task: " + taskId + " running in "
+                                        + worker.getRegistrationId() );
+                        cancelCurrentJob( worker );
                     }
                 }
             }
@@ -181,6 +203,15 @@ public class WorkerCLI extends AbstractSpringAwareCLI implements RemoteEventList
 
         String workS = this.getOptionValue( "workers" );
         this.workerNames = workS.split( "," );
+        this.template = ( GigaSpacesTemplate ) this.getBean( "gigaspacesTemplate" );
+    }
+
+    /**
+     * @param worker
+     */
+    private synchronized void cancelCurrentJob( CustomDelegatingWorker worker ) {
+        stop( worker );
+        startWorkerThread( worker );
     }
 
     /**
@@ -189,48 +220,13 @@ public class WorkerCLI extends AbstractSpringAwareCLI implements RemoteEventList
      * @throws Exception
      */
     private void init() throws Exception {
-        GigaSpacesTemplate template = ( GigaSpacesTemplate ) this.getBean( "gigaspacesTemplate" );
+
         space = ( IJSpace ) template.getSpace();
+        ShutdownHook shutdownHook = new ShutdownHook();
+        Runtime.getRuntime().addShutdownHook( shutdownHook );
 
         for ( String workerName : workerNames ) {
-
-            ShutdownHook shutdownHook = new ShutdownHook();
-            Runtime.getRuntime().addShutdownHook( shutdownHook );
-
-            /*
-             * Pick up the worker
-             */
-
-            CustomDelegatingWorker worker = ( CustomDelegatingWorker ) this.getBean( workerName );
-
-            this.workers.add( worker );
-
-            String workerRegistrationId = RandomStringUtils.randomAlphanumeric( 8 ).toUpperCase() + "_" + workerName;
-            worker.setRegistrationId( workerRegistrationId );
-
-            /*
-             * Register
-             */
-            SpacesRegistrationEntry registrationEntry = new SpacesRegistrationEntry();
-            registrationEntry.registrationId = workerRegistrationId;
-            registrationEntry.message = workerName;
-
-            /* register this as a listener for cancellation entries */
-            SpacesCancellationEntry cancellationEntry = new SpacesCancellationEntry();
-            cancellationEntry.registrationId = workerRegistrationId;
-            template.addNotifyDelegatorListener( this, cancellationEntry, null, true, Lease.FOREVER,
-                    NotifyModifiers.NOTIFY_ALL );
-
-            /*
-             * Start.
-             */
-            Thread itbThread = new Thread( worker );
-            itbThread.start();
-
-            startHeartbeatThread( template, registrationEntry, worker );
-
-            log.info( registrationEntry.message + " registered with space " + template.getUrl() + "[WorkerId="
-                    + workerRegistrationId + "]" );
+            startWorker( workerName );
         }
 
     }
@@ -241,9 +237,10 @@ public class WorkerCLI extends AbstractSpringAwareCLI implements RemoteEventList
      * 
      * @param template
      * @param registrationEntry
+     * @return
      */
-    private void startHeartbeatThread( final GigaSpacesTemplate template,
-            final SpacesRegistrationEntry registrationEntry, final CustomDelegatingWorker worker ) {
+    private FutureTask<Object> startHeartbeatThread( final SpacesRegistrationEntry registrationEntry,
+            final CustomDelegatingWorker worker ) {
 
         /*
          * How often we refresh the status of the worker. Don't make it too infrequent. If the worker dies at the
@@ -252,7 +249,7 @@ public class WorkerCLI extends AbstractSpringAwareCLI implements RemoteEventList
         final Long HEARTBEAT_INTERVAL_MILLIS = 2000L;
 
         /*
-         * A little extra time we allow the entry to live, so there is overlap
+         * A little extra time we allow the entry to live, so there is overlap (milliseconds)
          */
         final Long WAIT = 100L;
 
@@ -262,7 +259,7 @@ public class WorkerCLI extends AbstractSpringAwareCLI implements RemoteEventList
         template.write( registrationEntry, HEARTBEAT_INTERVAL_MILLIS + WAIT );
 
         ExecutorService service = Executors.newSingleThreadExecutor();
-        service.submit( new FutureTask<Object>( new Callable<Object>() {
+        FutureTask<Object> heartBeatTask = new FutureTask<Object>( new Callable<Object>() {
             public Object call() throws Exception {
 
                 while ( true ) {
@@ -282,9 +279,92 @@ public class WorkerCLI extends AbstractSpringAwareCLI implements RemoteEventList
                 }
 
             }
-        } ) );
-
+        } );
+        service.submit( heartBeatTask );
         service.shutdown();
 
+        /*
+         * I think we don't need to restart these when a worker restarts so no reason to keep track.
+         */
+        return heartBeatTask;
+
+    }
+
+    /**
+     * @param template
+     * @param workerName bean name e.g. monitorWorker
+     */
+    private void startWorker( String workerName ) {
+        /*
+         * Pick up the worker
+         */
+
+        CustomDelegatingWorker worker = ( CustomDelegatingWorker ) this.getBean( workerName );
+
+        this.workers.add( worker );
+
+        String workerRegistrationId = RandomStringUtils.randomAlphanumeric( 8 ).toUpperCase() + "_" + workerName;
+        worker.setRegistrationId( workerRegistrationId );
+
+        /*
+         * Register
+         */
+        SpacesRegistrationEntry registrationEntry = new SpacesRegistrationEntry();
+        registrationEntry.registrationId = workerRegistrationId;
+        registrationEntry.message = workerName;
+
+        /* register this as a listener for cancellation entries */
+        SpacesCancellationEntry cancellationEntry = new SpacesCancellationEntry();
+        cancellationEntry.registrationId = workerRegistrationId;
+        template.addNotifyDelegatorListener( this, cancellationEntry, null, true, Lease.FOREVER,
+                NotifyModifiers.NOTIFY_ALL );
+
+        /*
+         * Start.
+         */
+        startWorkerThread( worker );
+
+        startHeartbeatThread( registrationEntry, worker );
+
+        log.info( registrationEntry.message + " registered with space " + template.getUrl() + " [WorkerId="
+                + workerRegistrationId + "]" );
+    }
+
+    /**
+     * Start or restart a worker.
+     * 
+     * @param worker
+     */
+    private void startWorkerThread( CustomDelegatingWorker worker ) {
+
+        String workerRegistrationId = worker.getRegistrationId();
+        assert !workerThreads.containsKey( workerRegistrationId ) || workerThreads.get( workerRegistrationId ).isDone();
+
+        ExecutorService service = Executors.newSingleThreadExecutor();
+        Future<?> future = service.submit( worker );
+        workerThreads.put( workerRegistrationId, future );
+        service.shutdown();
+    }
+
+    /**
+     * Abort (cancel) a worker. It can be restarted.
+     * 
+     * @param worker
+     */
+    private void stop( CustomDelegatingWorker worker ) {
+        Future<?> futureTask = this.workerThreads.get( worker.getRegistrationId() );
+        if ( !futureTask.isDone() ) {
+            boolean cancelled = futureTask.cancel( true );
+            if ( cancelled ) {
+                log.info( worker.getRegistrationId() + " cancelled:" + worker.getCurrentTaskId() );
+            } else {
+                /*
+                 * FIXME: tell the client?
+                 */
+                log.info( worker.getRegistrationId() + " not cancelled: " + worker.getCurrentTaskId() );
+            }
+        } else {
+            log.info( worker.getRegistrationId() + " was already done with " + worker.getCurrentTaskId() );
+        }
     }
 }

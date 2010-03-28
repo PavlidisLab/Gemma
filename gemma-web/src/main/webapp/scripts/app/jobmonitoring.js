@@ -24,12 +24,12 @@ Ext.onReady(function() {
 								}, {
 									header : "Submitted",
 									dataIndex : "submissionTime",
-									renderer : Ext.util.Format.dateRenderer('h:m:s'),
+									renderer : Ext.util.Format.dateRenderer('g:i:s l'),
 									width : 120
 								}, {
 									header : "Started",
 									dataIndex : "startTime",
-									renderer : Ext.util.Format.dateRenderer('h:m:s'),
+									renderer : Ext.util.Format.dateRenderer('g:i:s l'),
 									width : 120
 								}, {
 									header : "Runtime (s)",

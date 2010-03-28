@@ -304,8 +304,15 @@ public class TaskRunningService implements InitializingBean {
                     // I think this will never happen????
                     log.warn( "Cancellation received for " + taskId );
                     handleCancel( taskId, taskCommand );
+                } catch ( InterruptedException e ) {
+                    log.warn( "interruption received for " + taskId );
+                    handleCancel( taskId, taskCommand );
                 } catch ( ExecutionException e ) {
-                    if ( e.getCause() instanceof InterruptedException ) {
+                    /*
+                     * This is reached when a task is cancelled.
+                     */
+                    if ( e.getCause() instanceof InterruptedException
+                            || e.getCause().getCause() instanceof InterruptedException ) {
                         if ( cancelledTasks.containsKey( taskId ) ) {
                             log.debug( "Looks like " + taskId + " was cancelled" );
                         } else {
