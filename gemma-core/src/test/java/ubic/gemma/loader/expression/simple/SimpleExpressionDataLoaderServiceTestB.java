@@ -1,10 +1,11 @@
 package ubic.gemma.loader.expression.simple;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertNotNull;
 
 import java.io.InputStream;
 
 import org.apache.commons.lang.RandomStringUtils;
+import org.junit.Before;
 import org.junit.After;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,6 +42,12 @@ public class SimpleExpressionDataLoaderServiceTestB extends AbstractGeoServiceTe
 
     ExpressionExperiment ee;
 
+    @Before
+    public void setUp() throws Exception{
+        super.executeSqlScript( "/script/sql/add-fish-taxa.sql", false );
+    }
+    
+    
     @After
     public void tearDown() {
         if ( ee != null ) {
@@ -59,12 +66,12 @@ public class SimpleExpressionDataLoaderServiceTestB extends AbstractGeoServiceTe
          * Have to add ssal for this platform.
          */
 
-        Taxon salmon = taxonService.findByScientificName( "atlantic salmon" );
+        //Taxon salmon = taxonService.findByScientificName( "atlantic salmon" );
 
-        if ( salmon == null ) {
-            super.executeSqlScript( "/script/sql/add-fish-taxa.sql", false );
-            salmon = taxonService.findByCommonName( "atlantic salmon" );
-        }
+      // if ( salmon == null ) {
+           
+           Taxon salmon = taxonService.findByCommonName( "atlantic salmon" );
+      //  }
 
         assertNotNull( salmon );
 

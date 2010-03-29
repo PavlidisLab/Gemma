@@ -118,10 +118,10 @@ public class ExperimentalDesignImporterTestC extends AbstractGeoServiceTest {
 
         Taxon salmon = taxonService.findByScientificName( "atlantic salmon" );
 
-        if ( salmon == null ) {
+      //  if ( salmon == null ) {
             super.executeSqlScript( "/script/sql/add-fish-taxa.sql", false );
             salmon = taxonService.findByCommonName( "atlantic salmon" );
-        }
+      //  }
 
         assertNotNull( salmon );
 
