@@ -68,11 +68,6 @@ Gemma.ProgressWindow = Ext.extend(Ext.Window, {
 						}.createDelegate(this));
 
 				this.pBar.on('cancel', function(successfullyCancelled) {
-							if (successfullyCancelled) {
-								this.pBar.showAllMessages("Job was cancelled");
-							} else {
-								this.pBar.showAllMessages("Could not cancel");
-							}
 							this.destroy();
 						}.createDelegate(this));
 			}
@@ -95,30 +90,35 @@ Gemma.ProgressWidget = Ext.extend(Ext.Panel, {
 	resizable : false,
 	waiting : false,
 	noEmailOption : false,
-	layout : 'fit',
+	// layout : 'fit',
 	bodyBorder : false,
 	stateful : false,
 	id : "progressWidget-panel",
 
 	showAllMessages : function(t) {
 		if (!this.allMessages) {
-			Ext.Msg.alert("No messages", "No messages to display");
 			return;
 		}
 
 		var msgs = new Ext.Window({
+					id : 'all-messages-window',
 					title : t ? t : "Messages logged",
 					layout : 'fit',
 					closeAction : 'close',
 					items : [{
 								xtype : 'panel',
-								id : 'progress-messages-panel',
 								stateful : false,
-								height : 400,
+								height : 200,
 								autoScroll : true,
 								width : 400,
 								bodyStyle : 'padding:5px',
-								html : this.allMessages
+								html : "The following messages were generated:<br/>" + this.allMessages
+							}],
+					buttons : [{
+								text : "OK",
+								handler : function() {
+									Ext.getCmp('all-messages-window').close();
+								}
 							}]
 				});
 		msgs.show();
@@ -127,75 +127,71 @@ Gemma.ProgressWidget = Ext.extend(Ext.Panel, {
 	initComponent : function() {
 
 		this.progressBar = new Ext.ProgressBar({
-					style : 'font-weight:normal;font-size:smaller;',
 					width : 400,
-					height : 30,
 					text : "Initializing ..."
 				});
 
 		Ext.apply(this, {
-			items : [this.progressBar, {
-						xtype : 'checkbox',
-						boxLabel : 'Email me when done (at the address listed in your account)',
-						id : 'email-me-chk',
-						hidden : this.noEmailOption
-					}],
-			buttons : [{
-						text : "Logs",
-						tooltip : "Show log messages",
-						handler : function() {
-							this.showAllMessages("Messages so far");
-						},
-						scope : this
-					}, {
-						text : "Cancel Job",
-						tooltip : "Attempt to stop the job.",
-						handler : function() {
+					items : [this.progressBar],
+					buttons : [{
+								text : "Logs",
+								tooltip : "Show log messages",
+								handler : function() {
+									this.showAllMessages("Messages so far");
+								},
+								scope : this
+							}, {
+								text : "Cancel Job",
+								tooltip : "Attempt to stop the job.",
+								handler : function() {
 
-							Ext.Msg.show({
-										title : 'Cancel?',
-										msg : 'Are you sure?',
-										buttons : Ext.Msg.YESNO,
-										fn : function(btn) {
-											if (btn == 'yes') {
-												this.cancelJob();
-											}
-										}.createDelegate(this),
-										icon : Ext.MessageBox.QUESTION
-									});
+									Ext.Msg.show({
+												title : 'Cancel?',
+												msg : 'Are you sure?',
+												buttons : Ext.Msg.YESNO,
+												fn : function(btn) {
+													if (btn == 'yes') {
+														this.cancelJob();
+													}
+												}.createDelegate(this),
+												icon : Ext.MessageBox.QUESTION
+											});
 
-						},
-						scope : this
-					}, {
-						text : "Hide",
-						tooltip : "Hide the progress bar",
-						handler : function() {
-							Ext.Msg
-									.alert(
-											"Discontinuing monitoring",
-											"The job will continue to run. "
-													+ "You will not be able to run other jobs of the same type until it has finished.");
-							/*
-							 * Fixme: add link to job listing
-							 */
+								},
+								scope : this
+							}, {
+								text : "Hide",
+								tooltip : "Remove the progress bar and return to the page",
+								handler : function() {
+									/*
+									 * FIXME add link to job listing
+									 */
+									var k = Ext.Msg.show({
+												title : "Discontinuing monitoring",
+												msg : "The job will continue to run. You can get an email on completion. ",
+												buttons : {
+													ok : 'OK',
+													cancel : 'Email me'
+												},
+												fn : function(btn) {
+													if (btn == 'cancel') {
+														ProgressStatusService.addEmailAlert(this.taskId);
+													}
+												},
+												scope : this
+											});
 
-							var email = Ext.get('email-me-chk').getValue();
+									this.stopProgress();
+									if (this.ownerCt) { // ugly.
+										this.ownerCt.destroy();
+									} else {
+										this.destroy();
+									}
 
-							if (email) {
-								ProgressStatusService.addEmailAlert(this.taskId);
-							}
-
-							this.stopProgress();
-							if (this.ownerCt) {
-								this.ownerCt.destroy();
-							} else {
-								this.destroy();
-							}
-
-						},
-						scope : this
-					}]
-		});
+								},
+								scope : this
+							}]
+				});
 
 		Gemma.ProgressWidget.superclass.initComponent.call(this);
 
@@ -343,7 +339,6 @@ Gemma.ProgressWidget = Ext.extend(Ext.Panel, {
 	 * Private Send a cancel notification to the server.
 	 */
 	cancelJob : function() {
-		this.stopProgress();
 		var f = this.cancelCallback.createDelegate(this);
 		ProgressStatusService.cancelJob(this.taskId, f);
 	},
@@ -366,8 +361,13 @@ Gemma.ProgressWidget = Ext.extend(Ext.Panel, {
 	 * Private callback to handle cancellation @param {Object} data
 	 */
 	cancelCallback : function(successfullyCancelled) {
-		this.stopProgress(); // should already be stopped.
-		this.fireEvent('cancel', successfullyCancelled);
+		if (successfullyCancelled) {
+			this.stopProgress();
+			this.showAllMessages("Job was cancelled");
+			this.fireEvent('cancel', successfullyCancelled);
+		} else {
+			Ext.msg.Alert("Couldn't cancel", "Sorry, the job couldn't be cancelled.");
+		}
 	},
 
 	findTaskId : function() {
