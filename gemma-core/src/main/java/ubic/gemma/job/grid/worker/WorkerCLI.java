@@ -37,6 +37,7 @@ import net.jini.core.lease.Lease;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang.RandomStringUtils;
+import org.springframework.remoting.RemoteAccessException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springmodules.javaspaces.gigaspaces.GigaSpacesTemplate;
 
@@ -45,7 +46,9 @@ import ubic.gemma.util.AbstractSpringAwareCLI;
 
 import com.j_spaces.core.IJSpace;
 import com.j_spaces.core.client.EntryArrivedRemoteEvent;
+import com.j_spaces.core.client.EntryNotInSpaceException;
 import com.j_spaces.core.client.ExternalEntry;
+import com.j_spaces.core.client.NotifyDelegator;
 import com.j_spaces.core.client.NotifyModifiers;
 
 /**
@@ -108,6 +111,8 @@ public class WorkerCLI extends AbstractSpringAwareCLI implements RemoteEventList
 
     private Map<String, Future<?>> workerThreads = new HashMap<String, Future<?>>();
 
+    private Map<String, NotifyDelegator> workerCancellationNotifiers = new HashMap<String, NotifyDelegator>();
+
     /*
      * (non-Javadoc)
      * @see ubic.gemma.util.AbstractSpringAwareCLI#getShortDesc()
@@ -145,6 +150,7 @@ public class WorkerCLI extends AbstractSpringAwareCLI implements RemoteEventList
                                 .info( "Stopping execution of task: " + taskId + " running in "
                                         + worker.getRegistrationId() );
                         cancelCurrentJob( worker );
+                        return;
                     }
                 }
             }
@@ -246,7 +252,7 @@ public class WorkerCLI extends AbstractSpringAwareCLI implements RemoteEventList
          * How often we refresh the status of the worker. Don't make it too infrequent. If the worker dies at the
          * beginning of the cycle, this is how long clients will still see its registration.
          */
-        final Long HEARTBEAT_INTERVAL_MILLIS = 2000L;
+        final Long HEARTBEAT_INTERVAL_MILLIS = 5000L;
 
         /*
          * A little extra time we allow the entry to live, so there is overlap (milliseconds)
@@ -263,21 +269,39 @@ public class WorkerCLI extends AbstractSpringAwareCLI implements RemoteEventList
             public Object call() throws Exception {
 
                 while ( true ) {
-                    Thread.sleep( HEARTBEAT_INTERVAL_MILLIS );
-                    if ( log.isDebugEnabled() )
-                        log.debug( "Refresh " + registrationEntry.message + " " + registrationEntry.registrationId );
 
-                    /*
-                     * Note: we fill in the taskid so we can tell the worker is 'busy'. This gets cleared out by
-                     * HEARTBEAT_INTERVAL_MILLIS milliseconds of the job finishing. So HEARTBEAT_INTERVAL_MILLIS should
-                     * be not too long. However, not that this has no impact on whether the worker is actually busy and
-                     * whether it will take jobs immediately or not.
-                     */
-                    registrationEntry.taskId = worker.getCurrentTaskId();
+                    try {
+                        Thread.sleep( HEARTBEAT_INTERVAL_MILLIS );
+                        if ( log.isDebugEnabled() )
+                            log.debug( "Refresh " + registrationEntry.message + " " + registrationEntry.registrationId );
 
-                    template.update( registrationEntry, HEARTBEAT_INTERVAL_MILLIS + WAIT, 100 );
+                        /*
+                         * Note: we fill in the taskid so we can tell the worker is 'busy'. This gets cleared out by
+                         * HEARTBEAT_INTERVAL_MILLIS milliseconds of the job finishing. So HEARTBEAT_INTERVAL_MILLIS
+                         * should be not too long. However, not that this has no impact on whether the worker is
+                         * actually busy and whether it will take jobs immediately or not.
+                         */
+                        registrationEntry.taskId = worker.getCurrentTaskId();
+
+                        // Refresh the TTL for the entry.
+                        template
+                                .update( registrationEntry, HEARTBEAT_INTERVAL_MILLIS + WAIT, 500 /* ifexists timeout */);
+                    } catch ( RemoteAccessException e ) {
+                        if ( e.getCause() instanceof EntryNotInSpaceException ) {
+                            /*
+                             * Maybe we need more overlap...
+                             */
+                            log.warn( "Entry expired but worker is still alive, renewing" );
+                            template.write( registrationEntry, HEARTBEAT_INTERVAL_MILLIS + WAIT );
+                        }
+                    } catch ( Exception e ) {
+                        log.error( "Worker: " + worker.getRegistrationId() + " heartbeat error, stopping worker", e );
+                        worker.stop();
+                        return null;
+                    } finally {
+                        // .. maybe nothing to do here.
+                    }
                 }
-
             }
         } );
         service.submit( heartBeatTask );
@@ -316,8 +340,15 @@ public class WorkerCLI extends AbstractSpringAwareCLI implements RemoteEventList
         /* register this as a listener for cancellation entries */
         SpacesCancellationEntry cancellationEntry = new SpacesCancellationEntry();
         cancellationEntry.registrationId = workerRegistrationId;
-        template.addNotifyDelegatorListener( this, cancellationEntry, null, true, Lease.FOREVER,
-                NotifyModifiers.NOTIFY_ALL );
+        NotifyDelegator cancellationNotifier = template.addNotifyDelegatorListener( this, cancellationEntry, null,
+                true, Lease.FOREVER, NotifyModifiers.NOTIFY_ALL );
+        /*
+         * Currently this is not used. The idea is to clean up, but we probably don't need to - even after a
+         * cancel-restart cycle, this notifier can still be used. You will see one
+         * "Daemon Thread [NotifyDelegator:FifoDelegatorThread]" in your debugger for each worker you start, but this
+         * should not grow as the application runs.
+         */
+        workerCancellationNotifiers.put( workerRegistrationId, cancellationNotifier );
 
         /*
          * Start.
@@ -336,13 +367,14 @@ public class WorkerCLI extends AbstractSpringAwareCLI implements RemoteEventList
      * @param worker
      */
     private void startWorkerThread( CustomDelegatingWorker worker ) {
-
         String workerRegistrationId = worker.getRegistrationId();
+
         assert !workerThreads.containsKey( workerRegistrationId ) || workerThreads.get( workerRegistrationId ).isDone();
 
         ExecutorService service = Executors.newSingleThreadExecutor();
         Future<?> future = service.submit( worker );
         workerThreads.put( workerRegistrationId, future );
+
         service.shutdown();
     }
 
@@ -358,9 +390,6 @@ public class WorkerCLI extends AbstractSpringAwareCLI implements RemoteEventList
             if ( cancelled ) {
                 log.info( worker.getRegistrationId() + " cancelled:" + worker.getCurrentTaskId() );
             } else {
-                /*
-                 * FIXME: tell the client?
-                 */
                 log.info( worker.getRegistrationId() + " not cancelled: " + worker.getCurrentTaskId() );
             }
         } else {

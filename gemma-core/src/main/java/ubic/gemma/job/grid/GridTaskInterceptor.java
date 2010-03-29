@@ -31,11 +31,12 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springmodules.javaspaces.gigaspaces.GigaSpacesTemplate;
 
-import com.j_spaces.core.client.NotifyModifiers;
-
 import ubic.gemma.job.TaskCommand;
 import ubic.gemma.job.grid.util.SpacesJobObserver;
 import ubic.gemma.job.progress.grid.SpacesProgressEntry;
+
+import com.j_spaces.core.client.NotifyDelegator;
+import com.j_spaces.core.client.NotifyModifiers;
 
 /**
  * This runs on the client (master) before (around) the endpoint interceptor. See TaskMethodAdvice for the interceptor
@@ -46,7 +47,6 @@ import ubic.gemma.job.progress.grid.SpacesProgressEntry;
  */
 public class GridTaskInterceptor implements MethodInterceptor {
 
-    @SuppressWarnings("unused")
     private static Log log = LogFactory.getLog( GridTaskInterceptor.class );
 
     private GigaSpacesTemplate javaSpaceTemplate;
@@ -75,26 +75,59 @@ public class GridTaskInterceptor implements MethodInterceptor {
         command.setTaskMethod( invocation.getMethod().getName() );
         command.setWillRunOnGrid( true );
 
-        /*
-         * register this "spaces client" to receive notifications (logging, basically)
-         */
         SpacesJobObserver javaSpacesJobObserver = new SpacesJobObserver( taskId );
         SpacesProgressEntry entry = new SpacesProgressEntry();
         entry.setTaskId( taskId );
-        javaSpaceTemplate.addNotifyDelegatorListener( javaSpacesJobObserver, entry, null, true, Lease.FOREVER,
-                NotifyModifiers.NOTIFY_UPDATE ); // if you use NOTIFY_ALL, wiping of entry causes repeated logging
+
+        int millisPerMinute = 60 * 1000;
+
+        /*
+         * Note we should set the leases to be not Lease.FOREVER so that we eventually clean these up, even if something goes
+         * wrong in the regular cleanup phase.
+         */
+
+        /*
+         * Logging notifications
+         */
+        NotifyDelegator loggingNotifyDelegator = javaSpaceTemplate.addNotifyDelegatorListener( javaSpacesJobObserver,
+                entry, null , false, Lease.FOREVER, NotifyModifiers.NOTIFY_UPDATE );
 
         /*
          * Here's how we figure out when the job has actually started.
          */
-        javaSpaceTemplate.addNotifyDelegatorListener( new RemoteEventListener() {
-            public void notify( RemoteEvent arg0 ) throws UnknownEventException, RemoteException {
-                command.setStartTime();
-            }
-        }, entry, null, true, Lease.FOREVER, NotifyModifiers.NOTIFY_WRITE );
+        NotifyDelegator jobStartNotifyDelegator = javaSpaceTemplate.addNotifyDelegatorListener(
+                new RemoteEventListener() {
+                    public void notify( RemoteEvent arg0 ) throws UnknownEventException, RemoteException {
+                        log.debug( "got start" );
+                        command.setStartTime(); // we could cancel the notifydelegator here, but it's out of scope.
+                    }
+                }, entry, null, false, Lease.FOREVER, NotifyModifiers.NOTIFY_WRITE );
 
-        // all this does it put it in the space - the job has not actually started.
+        log.debug( "initialized, starting call" );
+
+        /*
+         * This blocks while the job gets run by the endpoint JavaSpaceInterceptor. If it queues, then it gets stuck
+         * here. See gigaspaces.xml where we have 'synchronous=true'.
+         */
         Object retVal = invocation.proceed();
+
+        log.debug( "job done" );
+
+        javaSpaceTemplate.clear( entry );
+
+        /*
+         * Remove the listeners - otherwise we leak threads. See
+         * http://www.gigaspaces.com/docs/JavaDoc/com/j_spaces/core/client/NotifyDelegator.html
+         */
+        loggingNotifyDelegator.getEventRegistration().getLease().cancel();
+        loggingNotifyDelegator.close();
+        loggingNotifyDelegator.finalize();
+        loggingNotifyDelegator = null;
+
+        jobStartNotifyDelegator.getEventRegistration().getLease().cancel();
+        jobStartNotifyDelegator.close();
+        jobStartNotifyDelegator.finalize();
+        jobStartNotifyDelegator = null;
 
         return retVal;
     }

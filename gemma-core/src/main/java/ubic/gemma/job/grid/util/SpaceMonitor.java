@@ -27,6 +27,7 @@ import org.springframework.stereotype.Service;
 
 import ubic.gemma.job.AbstractTaskService;
 import ubic.gemma.job.BackgroundJob;
+import ubic.gemma.job.ConflictingTaskException;
 import ubic.gemma.job.TaskCommand;
 import ubic.gemma.job.TaskResult;
 import ubic.gemma.job.progress.ProgressData;
@@ -43,7 +44,7 @@ import ubic.gemma.util.ConfigUtils;
 @Service
 public class SpaceMonitor extends AbstractTaskService {
 
-    private final static long TIMEOUT = 10000;
+    private final static long TIMEOUT_MILLIS = 10000;
 
     private Boolean enabled = true;
 
@@ -82,7 +83,7 @@ public class SpaceMonitor extends AbstractTaskService {
      * @return true if everything is nominal. Note that this return value doesn't really do anything when triggered by
      *         quartz.
      */
-    public boolean ping() { 
+    public boolean ping() {
         if ( !enabled ) {
             this.lastStatusMessage = "";
             this.lastStatusWasOK = true;
@@ -103,13 +104,20 @@ public class SpaceMonitor extends AbstractTaskService {
             /*
              * Start the task.
              */
-            String taskId;
+            String taskId = null;
             try {
-                taskId = this.run( new MonitorTaskCommand() );
+                MonitorTaskCommand command = new MonitorTaskCommand();
+                command.setMaxQueueMinutes( ( ( Long ) Math.max( TIMEOUT_MILLIS / 60000, 1 ) ).intValue() );
+                taskId = this.run( command );
                 status = " ----  Last submitted monitor task: " + taskId;
             } catch ( TaskNotGridEnabledException e ) {
                 this.lastStatusMessage = e.getMessage();
                 this.lastStatusWasOK = false;
+                return false;
+            } catch ( ConflictingTaskException e ) {
+                this.lastStatusMessage = e.getMessage() + " -- attempting to cancel the old task";
+                this.lastStatusWasOK = false;
+                taskRunningService.cancelTask( e.getCollidingCommand().getTaskId() );
                 return false;
             }
 
@@ -146,9 +154,10 @@ public class SpaceMonitor extends AbstractTaskService {
                     allIsWell = false;
                 }
 
-                if ( timer.getTime() > TIMEOUT ) {
+                if ( timer.getTime() > TIMEOUT_MILLIS ) {
                     allIsWell = false;
                     status = "Timed out: " + taskId;
+                    log.warn( taskId + " timed out, cancelling it just in case." );
                     taskRunningService.cancelTask( taskId );
                     break;
                 }

@@ -50,10 +50,11 @@ public class MonitorTaskImpl implements MonitorTask {
         /*
          * Task doesn't do anything. Just to prove we are alive.
          */
-        for ( int i = 0; i < command.getRunTimeMillis() / 1000; i++ ) {
-            // log.info( command.getTaskId() );
+        int millis = 1000;
+        for ( int i = 0; i < command.getRunTimeMillis() / millis; i++ ) {
+         //  log.info( command.getTaskId() + " "+ i );
             try {
-                Thread.sleep( 1000 );
+                Thread.sleep( millis );
             } catch ( InterruptedException e ) {
                 log.warn( "Job " + command.getTaskId() + " was interrupted" );
                 return new TaskResult( command, false );

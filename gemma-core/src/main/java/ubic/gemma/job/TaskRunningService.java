@@ -86,15 +86,15 @@ public class TaskRunningService implements InitializingBean {
     private static Log log = LogFactory.getLog( TaskRunningService.class.getName() );
 
     /**
-     * How long we will queue a task before giving up and cancelling it.
+     * How long we will queue a task before giving up and cancelling it (default value)
      */
-    private static final int MAX_QUEUING_MINUTES = 3600;
+    public static final int MAX_QUEUING_MINUTES = 60 * 2;
 
     /**
      * How long we will wait for a started task before giving up waiting for it. Tasks running longer than this will be
      * cancelled. This does not include time spent queued.
      */
-    private static final int MAX_RUNTIME_MINUTES = 60;
+    public static final int MAX_RUNTIME_MINUTES = 60;
 
     /**
      * How long we will hold onto results after a task has finished before giving up.
@@ -104,7 +104,7 @@ public class TaskRunningService implements InitializingBean {
     /**
      * How often we look for tasks to cleanup (milliseconds).
      */
-    private static final int TASK_CLEANUP_FREQUENCY = 200000;
+    private static final int TASK_CLEANUP_FREQUENCY = 60000; /* 1 minute */
 
     private final Map<String, TaskCommand> cancelledTasks = new ConcurrentHashMap<String, TaskCommand>();
 
@@ -129,6 +129,8 @@ public class TaskRunningService implements InitializingBean {
      * @param taskId
      */
     public void addEmailAlert( String taskId ) {
+        if ( taskId == null ) throw new IllegalArgumentException( "task id cannot be null" );
+
         if ( !this.submittedTasks.containsKey( taskId ) ) {
             throw new IllegalArgumentException(
                     "No such task is currently running. Maybe it finished already? No email will be sent." );
@@ -174,29 +176,57 @@ public class TaskRunningService implements InitializingBean {
      * 
      * @param taskId
      */
-    public synchronized void cancelTask( String taskId ) {
+    public synchronized boolean cancelTask( String taskId ) {
+        if ( taskId == null ) throw new IllegalArgumentException( "task id cannot be null" );
+
         log.debug( "Cancelling " + taskId );
+        boolean cancelled = false;
+
         if ( submittedTasks.containsKey( taskId ) ) {
-            log.info( "Got cancellation for " + taskId );
             SubmittedTask toCancel = submittedTasks.get( taskId );
-            boolean cancelled = toCancel.getFuture().cancel( true );
 
-            spacesUtil.cancel( taskId );
+            if ( toCancel.getCommand().isWillRunOnGrid() || spacesUtil.taskIsRunningOnGrid( taskId ) ) {
+                log.info( "Cancelling grid task " + taskId );
+                if ( spacesUtil.cancel( taskId ) ) {
+                    log.debug( "Space reports  " + taskId + "  is no longer alive" );
+                    cancelled = true;
+                    if ( !toCancel.getFuture().isDone() ) toCancel.getFuture().cancel( true );
+                }
 
-            ProgressManager.cleanupJob( taskId );
+                if ( !toCancel.getFuture().isDone() ) {
+                    log.debug( "Couldn't cancel but job is now done/stopped anyway" );
+                    cancelled = true;
+                    toCancel.getFuture().cancel( true );
+                }
+
+            } else {
+                log.info( "Cancelling local task  " + taskId );
+                cancelled = true;
+                if ( !toCancel.getFuture().isDone() ) toCancel.getFuture().cancel( true );
+            }
+
             if ( cancelled ) {
                 /*
                  * Note that we do this notification stuff here, not in the callable that is watching it. Don't do it
                  * twice.
                  */
+                if ( !toCancel.getFuture().isDone() ) {
+                    throw new RuntimeException( "Task " + taskId + " is still running despite apparent cancellation" );
+                }
+
                 handleCancel( taskId, toCancel.getCommand() );
+
             } else {
-                throw new RuntimeException( "Couldn't cancel " + taskId );
+                /*
+                 * This might be because the job doesn't really support cancellation, or could be some other problem.
+                 */
+                log.warn( "Couldn't cancel " + taskId );
             }
         } else {
             log.warn( "Attempt to cancel a task (" + taskId + ") that has not been submitted or is already gone." );
-            return;
         }
+
+        return cancelled;
     }
 
     /**
@@ -207,6 +237,8 @@ public class TaskRunningService implements InitializingBean {
      * @return null if the task is still running or was cancelled, or the result object
      */
     public synchronized Object checkResult( String taskId ) throws Exception {
+        if ( taskId == null ) throw new IllegalArgumentException( "task id cannot be null" );
+
         log.debug( "entering" );
         if ( this.finishedTasks.containsKey( taskId ) ) {
             log.debug( "Job is finished" );
@@ -341,49 +373,6 @@ public class TaskRunningService implements InitializingBean {
     }
 
     /**
-     * @param taskId
-     * @param toCancel
-     */
-    void handleCancel( String taskId, TaskCommand command ) {
-        cancelledTasks.put( taskId, command );
-        submittedTasks.remove( taskId );
-        ProgressManager.signalCancelled( taskId );
-    }
-
-    /**
-     * @param taskId
-     * @param e
-     */
-    void handleFailed( final TaskCommand command, Exception e ) {
-        TaskResult result = new TaskResult( command, null );
-        result.setFailed( true );
-        result.setException( e );
-        failedTasks.put( command.getTaskId(), result );
-        submittedTasks.remove( command.getTaskId() );
-
-        if ( command.isEmailAlert() ) {
-            this.emailNotifyCompletionOfTask( command.getTaskId(), result );
-        }
-
-        ProgressManager.signalFailed( command.getTaskId(), e );
-    }
-
-    /**
-     * @param taskId
-     * @param result
-     */
-    void handleFinished( final TaskCommand command, TaskResult result ) {
-        finishedTasks.put( command.getTaskId(), result );
-        submittedTasks.remove( command.getTaskId() );
-
-        if ( command.isEmailAlert() ) {
-            this.emailNotifyCompletionOfTask( command.getTaskId(), result );
-        }
-
-        ProgressManager.signalDone( command.getTaskId() );
-    }
-
-    /**
      * Test whether the job can be run at this time. Checks for already-running tasks of the same type owned by the same
      * user etc.
      * 
@@ -412,6 +401,7 @@ public class TaskRunningService implements InitializingBean {
                     String method = runningCommand.getTaskMethod();
 
                     if ( command.getTaskInterface().equals( intf ) && command.getTaskMethod().equals( method ) ) {
+                        checkSubmittedTaskStatus( runningCommand.getTaskId() );
                         throw new ConflictingTaskException( command, runningCommand );
                     }
 
@@ -424,6 +414,7 @@ public class TaskRunningService implements InitializingBean {
                 if ( command.getEntityId() == null || command.getEntityId().equals( runningCommand.getEntityId() ) ) {
                     // _probably_ this should be disallowed. But it is _possible_ that it's spurious -- really need the
                     // exact job
+                    checkSubmittedTaskStatus( runningCommand.getTaskId() );
                     throw new ConflictingTaskException( command, runningCommand );
                 }
 
@@ -454,8 +445,12 @@ public class TaskRunningService implements InitializingBean {
     }
 
     /**
+     * Check if a task has been running or queued for too long, and cancel it if necessary. Email alert will always be
+     * sent in that case.
+     * 
      * @param taskId
      * @param date - start time (might be null)
+     * @return boolean true if the task is till running, false if the task is now cancelled
      */
     private void checkSubmittedTaskStatus( String taskId ) {
         SubmittedTask t = submittedTasks.get( taskId );
@@ -464,16 +459,19 @@ public class TaskRunningService implements InitializingBean {
         Date startTime = t.getCommand().getStartTime();
 
         if ( startTime == null ) {
-            log.info( "Job is still queued: " + taskId + " " + t.getCommand().getTaskInterface() );
-            if ( subTime.before( DateUtils.addMinutes( new Date(), -MAX_QUEUING_MINUTES ) ) ) {
-                log.warn( "Submitted task has been queued for too long, cancelling: " + taskId );
+            log.debug( "Job is still queued: " + taskId + " " + t.getCommand().getTaskInterface() );
+            Integer maxQueueWait = t.getCommand().getMaxQueueMinutes();
+            assert maxQueueWait != null;
+            if ( subTime.before( DateUtils.addMinutes( new Date(), -maxQueueWait ) ) ) {
+                log.warn( "Submitted task has been queued for too long (max=" + maxQueueWait + "minutes), cancelling: "
+                        + taskId );
                 submittedTasks.get( taskId ).getCommand().setEmailAlert( true );
                 cancelTask( taskId );
                 return;
             }
 
         } else if ( startTime.before( DateUtils.addMinutes( new Date(), -MAX_RUNTIME_MINUTES ) ) ) {
-            log.warn( "Submitted task is taking too long to run, cancelling: " + taskId + " "
+            log.warn( "Running task is taking too long, cancelling: " + taskId + " "
                     + t.getCommand().getTaskInterface() );
             submittedTasks.get( taskId ).getCommand().setEmailAlert( true );
             cancelTask( taskId );
@@ -523,12 +521,14 @@ public class TaskRunningService implements InitializingBean {
             User user = userService.findByUserName( result.getSubmitter() );
             String emailAddress = user.getEmail();
             if ( emailAddress != null ) {
-                log.info( "Sending email notification to " + emailAddress );
+                log.debug( "Sending email notification to " + emailAddress );
                 SimpleMailMessage msg = new SimpleMailMessage();
                 msg.setTo( emailAddress );
                 msg.setFrom( ConfigUtils.getAdminEmailAddress() );
                 msg.setSubject( "Gemma task completed" );
-                msg.setText( "A job you started on Gemma is completed (taskid=" + taskId + ")" );
+                msg.setText( "A job you started on Gemma is completed (taskid=" + taskId + ")\n\nEvent logs:\n"
+                        + ProgressManager.getJob( taskId ).getJobInfo().getMessages() );
+
                 /*
                  * TODO provide a link to something relevant something like:
                  */
@@ -540,11 +540,54 @@ public class TaskRunningService implements InitializingBean {
     }
 
     /**
+     * @param taskId
+     * @param command
+     */
+    private void handleCancel( String taskId, TaskCommand command ) {
+        cancelledTasks.put( taskId, command );
+        submittedTasks.remove( taskId );
+        ProgressManager.signalCancelled( taskId );
+    }
+
+    /**
+     * @param taskId
+     * @param e
+     */
+    private void handleFailed( final TaskCommand command, Exception e ) {
+        TaskResult result = new TaskResult( command, null );
+        result.setFailed( true );
+        result.setException( e );
+        failedTasks.put( command.getTaskId(), result );
+        submittedTasks.remove( command.getTaskId() );
+
+        if ( command.isEmailAlert() ) {
+            this.emailNotifyCompletionOfTask( command.getTaskId(), result );
+        }
+
+        ProgressManager.signalFailed( command.getTaskId(), e );
+    }
+
+    /**
+     * @param taskId
+     * @param result
+     */
+    private void handleFinished( final TaskCommand command, TaskResult result ) {
+        finishedTasks.put( command.getTaskId(), result );
+        submittedTasks.remove( command.getTaskId() );
+
+        if ( command.isEmailAlert() ) {
+            this.emailNotifyCompletionOfTask( command.getTaskId(), result );
+        }
+
+        ProgressManager.signalDone( command.getTaskId() );
+    }
+
+    /**
      * Clean up leftover results from jobs that finished but have not had results picked up; or which have been queued
      * for too long.
      */
     private void sweepUp() {
-        log.info( "Running task result cleanup" );
+        log.debug( "Running task result cleanup" );
 
         if ( finishedTasks.size() > 0 ) log.info( finishedTasks.size() + " finished tasks in the hold" );
         if ( failedTasks.size() > 0 ) log.info( failedTasks.size() + " failed tasks in the hold" );
@@ -563,7 +606,7 @@ public class TaskRunningService implements InitializingBean {
             TaskResult o = failedTasks.get( taskId );
             Date time = o.getFinishTime();
             if ( time.before( DateUtils.addMinutes( new Date(), -MAX_TRACKING_MINUTES ) ) ) {
-                log.warn( "Failed task result not retrieved, timing out: " + taskId );
+                log.debug( "Failed task result not retrieved, timing out: " + taskId );
                 failedTasks.remove( taskId );
             }
         }
@@ -572,7 +615,7 @@ public class TaskRunningService implements InitializingBean {
             TaskCommand o = cancelledTasks.get( taskId );
             Date subTime = o.getSubmissionTime();
             if ( subTime.before( DateUtils.addMinutes( new Date(), -MAX_TRACKING_MINUTES ) ) ) {
-                log.warn( "Cancelled task result not retrieved, timing out: " + taskId + " " + o.getTaskInterface() );
+                log.debug( "Cancelled task result not retrieved, timing out: " + taskId + " " + o.getTaskInterface() );
                 cancelledTasks.remove( taskId );
             }
         }

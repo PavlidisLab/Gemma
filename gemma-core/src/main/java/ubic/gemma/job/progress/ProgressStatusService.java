@@ -50,11 +50,7 @@ public class ProgressStatusService {
      * @param taskId
      */
     public synchronized void addEmailAlert( String taskId ) {
-        ProgressJob job = ProgressManager.getJob( taskId );
-        if ( job == null ) {
-            throw new IllegalArgumentException( "Sorry, job has already completed? No email will be sent." );
-        }
-
+        if ( taskId == null ) throw new IllegalArgumentException( "task id cannot be null" );
         taskRunningService.addEmailAlert( taskId );
     }
 
@@ -65,13 +61,14 @@ public class ProgressStatusService {
      * @return true if cancelling was error-free, false otherwise.
      */
     public boolean cancelJob( String taskId ) {
+        if ( taskId == null ) throw new IllegalArgumentException( "task id cannot be null" );
+
         try {
-            taskRunningService.cancelTask( taskId );
+            return taskRunningService.cancelTask( taskId );
         } catch ( Exception e ) {
             log.error( e, e );
             return false;
         }
-        return true;
     }
 
     /**
@@ -108,13 +105,15 @@ public class ProgressStatusService {
      * @return
      */
     public synchronized List<ProgressData> getProgressStatus( String taskId ) {
+        if ( taskId == null ) throw new IllegalArgumentException( "task id cannot be null" );
+
         List<ProgressData> statusObjects = new Vector<ProgressData>();
 
         ProgressJob job = ProgressManager.getJob( taskId );
 
         if ( job == null ) {
 
-            log.debug( "It looks like job " + taskId + " has gone missing; assuming it is dead or finished already" );
+            log.warn( "It looks like job " + taskId + " has gone missing; assuming it is dead or finished already" );
 
             // We should assume it is dead.
             ProgressData data = new ProgressData();

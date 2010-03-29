@@ -80,7 +80,7 @@ public class SpacesJobObserver implements RemoteEventListener {
             /* updated the progress with message from notification */
             String message = ( String ) entry.getFieldValue( "message" );
             if ( StringUtils.isNotBlank( message ) ) {
-                log.info( message + " [Remote task: " + taskId + "]" );
+                if ( log.isDebugEnabled() ) log.debug( message + " [Remote task: " + taskId + "]" );
                 ProgressManager.updateJob( this.taskId, message );
             }
         } catch ( UnusableEntryException e ) {

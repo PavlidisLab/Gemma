@@ -32,7 +32,7 @@
 		<property name="javaSpaceTemplate" ref="gigaspacesTemplate" />
 		<property name="uidFactory" ref="gigaSpacesUidFactory" />
 		<property name="synchronous">
-			<value>true</value>
+			<value>true</value> <!-- When the interceptor executes, block: this is important so we can cleanup easily. See GridTaskInterceptor -->
 		</property>
 		<!--
 			The master will take the result from the space when it is available. This sets the time the master will wait for a

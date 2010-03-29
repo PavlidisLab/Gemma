@@ -123,15 +123,16 @@ public abstract class AbstractTaskService {
                 job = getSpaceRunner( command );
             } else {
                 job = getInProcessRunner( command );
-                if ( job == null ) {
-                    throw new TaskNotGridEnabledException( "No workers registered on grid for jobs of type " + taskName );
+                if ( job == null || !command.isAllowedToRunInProcess() ) {
+                    throw new TaskNotGridEnabledException( "No workers registered on grid for jobs of type " + taskName
+                            + " and can't run in-process." );
                 }
             }
         } else {
             job = getInProcessRunner( command );
-            if ( job == null ) {
+            if ( job == null || !command.isAllowedToRunInProcess() ) {
                 throw new TaskNotGridEnabledException(
-                        "This task must be run on the compute grid, which is not available. Please try again later." );
+                        "This task must be run on the compute grid, which is currently not available." );
             }
         }
 
@@ -154,7 +155,9 @@ public abstract class AbstractTaskService {
         try {
             taskRunningService.submitTask( job );
         } catch ( ConflictingTaskException e ) {
-            throw new RuntimeException( "Sorry, it looks like you already have a task like that running.", e );
+            throw new RuntimeException( "Sorry, it looks like you already have a task like that running (taskid="
+                    + e.getCollidingCommand().getTaskId() + ", submitted time="
+                    + e.getCollidingCommand().getSubmissionTime() + "  ) ", e );
         }
         return job.getTaskId();
     }

@@ -84,9 +84,20 @@ public class TaskCommand implements Serializable {
     private String taskMethod;
 
     /**
-     * If this task is going to run on the grid.
+     * If this task is going to run on the grid (that is, that the grid is apparently available and/or the job is
+     * actually running on the grid)
      */
     private boolean willRunOnGrid = false;
+
+    /**
+     * How long we will allow this task to be queued before giving up.
+     */
+    private Integer maxQueueMinutes = TaskRunningService.MAX_QUEUING_MINUTES;
+
+    /**
+     * Set to false to force this job to run on the grid (or to not run at all). Default = true
+     */
+    private Boolean allowedToRunInProcess = true;
 
     /**
      * The taskId is assigned on creation.
@@ -241,8 +252,45 @@ public class TaskCommand implements Serializable {
         this.taskMethod = taskMethod;
     }
 
+    /**
+     * @param willRunOnGrid
+     * @see willRunOnGrid
+     */
     public void setWillRunOnGrid( boolean willRunOnGrid ) {
         this.willRunOnGrid = willRunOnGrid;
+    }
+
+    /**
+     * How long we will allow this task to be queued before giving up. Default = TaskRunningService.MAX_QUEUING_MINUTES
+     * 
+     * @param maxQueueMinutes
+     * @see ubic.gemma.job.TaskRunningService.MAX_QUEUING_MINUTES
+     */
+    public void setMaxQueueMinutes( Integer maxQueueMinutes ) {
+        this.maxQueueMinutes = maxQueueMinutes;
+    }
+
+    /**
+     * @return
+     */
+    public Integer getMaxQueueMinutes() {
+        return maxQueueMinutes;
+    }
+
+    /**
+     * Set to false to force this job to run on the grid (or to not run at all). Default = true
+     * 
+     * @param allowedToRunInProcess
+     */
+    public void setAllowedToRunInProcess( Boolean allowedToRunInProcess ) {
+        this.allowedToRunInProcess = allowedToRunInProcess;
+    }
+
+    /**
+     * @return the allowedToRunInProcess
+     */
+    public Boolean isAllowedToRunInProcess() {
+        return allowedToRunInProcess;
     }
 
 }

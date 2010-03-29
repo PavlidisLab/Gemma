@@ -72,14 +72,12 @@ public class ProgressManager {
 
     /**
      * @param command
-     * @return Use this static method for creating ProgressJobs. if the currently running thread already has a progress
-     *         job assciated with it that progress job will be returned.
+     * @return Use this static method for creating ProgressJobs
      */
     public static ProgressJob createProgressJob( TaskCommand command ) {
 
         assert command.getTaskId() != null;
 
-        Collection<ProgressJob> usersJobs;
         ProgressJob newJob = null;
         String taskId = command.getTaskId();
 
@@ -96,35 +94,25 @@ public class ProgressManager {
             log.debug( "Already have job with key " + userId );
         }
 
-        usersJobs = progressJobs.get( userId );
+        JobInfo jobI = createnewJobInfo( taskId, command.toString() );
 
-        // No job currently assciated with this thread or the job assciated with the thread is no longer valid
-        if ( ( currentJob.get() == null ) || ( progressJobsByTaskId.get( currentJob.get() ) == null ) ) {
-            JobInfo jobI = createnewJobInfo( taskId, command.toString() );
-
-            if ( command.getPersistJobDetails() ) {
-                try {
-                    jobI = jobInfoService.create( jobI );
-                } catch ( Exception e ) {
-                    log.warn( "Unable to create jobinfo in database: " + e.getMessage() );
-                }
+        if ( command.getPersistJobDetails() ) {
+            try {
+                jobI = jobInfoService.create( jobI );
+            } catch ( Exception e ) {
+                log.warn( "Unable to create jobinfo in database: " + e.getMessage() );
             }
-
-            newJob = new ProgressJobImpl( jobI, command.toString() );
-            currentJob.set( taskId );
-
-            newJob.setPhase( 0 );
-
-            // keep track of these jobs
-            usersJobs.add( newJob ); // adds to the progressJobs collection
-            progressJobsByTaskId.put( taskId, newJob );
-        } else {
-            Object oldId = currentJob.get();
-            newJob = progressJobsByTaskId.get( oldId );
-
-            assert newJob != null : "newJob is unexpectedly null in progress Manager"; // This should not be the case!
-            newJob.setPhase( newJob.getPhase() + 1 );
         }
+
+        newJob = new ProgressJobImpl( jobI, command.toString() );
+        currentJob.set( taskId );
+
+        newJob.setPhase( 0 );
+
+        // keep track of these jobs
+        Collection<ProgressJob> usersJobs = progressJobs.get( userId );
+        usersJobs.add( newJob ); // adds to the progressJobs collection
+        progressJobsByTaskId.put( taskId, newJob );
 
         ProgressManager.dump();
 

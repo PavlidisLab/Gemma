@@ -21,14 +21,12 @@ package ubic.gemma.job;
 import org.apache.commons.lang.RandomStringUtils;
 
 /**
- * TODO Document Me
- * 
  * @author paul
  * @version $Id$
  */
 public class TaskUtils {
 
-    private static final int KEY_LENGTH = 32;
+    private static final int KEY_LENGTH = 16;
 
     /**
      * @return

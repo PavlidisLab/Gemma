@@ -221,14 +221,20 @@ public class SpacesUtil implements ApplicationContextAware {
     }
 
     /**
-     * Cancels a task.
+     * Attempt to cancel a task.
      * 
      * @param taskId
+     * @return true if the job was confirmed as cancelled or at least not running on the grid, false otherwise
      */
-    public void cancel( String taskId ) {
+    public boolean cancel( String taskId ) {
 
         if ( !isSpaceRunning() ) {
-            return;
+            return false;
+        }
+
+        if ( !taskIsRunningOnGrid( taskId ) ) {
+            log.debug( "Task  " + taskId + " is no longer (or perhaps was never) running on the grid." );
+            return true;
         }
 
         GigaSpacesTemplate template = getGigaspacesTemplate();
@@ -241,8 +247,32 @@ public class SpacesUtil implements ApplicationContextAware {
                 cancellationEntry.taskId = taskId;
                 space.write( cancellationEntry, null, ENTRY_TTL );
             }
+
+            // wait for confirmation - the task should be gone from the reg entry.
+            final int CANCEL_CHECK_TRIES = 6;
+            final int MILLIS_BETWEEN_CANCEL_CHECKS = 200;
+            for ( int i = 0; i < CANCEL_CHECK_TRIES; i++ ) {
+                Thread.sleep( MILLIS_BETWEEN_CANCEL_CHECKS * i );
+
+                boolean stillRunning = false;
+                List<SpacesRegistrationEntry> busyWorkers = this.getBusyWorkers();
+                for ( SpacesRegistrationEntry e : busyWorkers ) {
+                    if ( e.taskId.equals( taskId ) ) {
+                        stillRunning = true;
+                    }
+                }
+
+                if ( !stillRunning ) {
+                    log.debug( "Task " + taskId + " was successfullly cancelled" );
+                    return true;
+                }
+            }
+
+            return false;
+
         } catch ( Exception e ) {
-            throw new RuntimeException( "Could not cancel task " + taskId, e );
+            log.error( "Error when attempting to cancel task " + taskId, e );
+            return false;
         }
 
     }
@@ -407,6 +437,19 @@ public class SpacesUtil implements ApplicationContextAware {
     public void setApplicationContext( ApplicationContext applicationContext ) throws BeansException {
         this.applicationContext = applicationContext;
 
+    }
+
+    /**
+     * See if a worker is busy with the given task.
+     * 
+     * @param taskId
+     * @return true if the job is confirmed to be running on the grid, false otherwise
+     */
+    public boolean taskIsRunningOnGrid( String taskId ) {
+        for ( SpacesRegistrationEntry e : this.getRegisteredWorkers() ) {
+            if ( taskId.equals( e.getTaskId() ) ) return true;
+        }
+        return false;
     }
 
     /**
