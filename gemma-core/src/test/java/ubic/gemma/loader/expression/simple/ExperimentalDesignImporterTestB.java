@@ -100,7 +100,9 @@ public class ExperimentalDesignImporterTestB extends BaseSpringContextTest {
 
     @Before
     public void setup() throws Exception {
-
+      
+        super.executeSqlScript( "/script/sql/add-fish-taxa.sql", false );        
+                       
         InputStream data = this.getClass().getResourceAsStream(
                 "/data/loader/expression/head.Gill2007gemmaExpressionData.txt" );
 
@@ -111,12 +113,12 @@ public class ExperimentalDesignImporterTestB extends BaseSpringContextTest {
             Thread.sleep( 1000 );
             log.info( "Waiting for mgedontology to load" );
         }
-        Taxon salmon = Taxon.Factory.newInstance();
-        salmon.setCommonName( "salmonid" );
-        salmon.setIsSpecies( true );
-        salmon.setIsGenesUsable( true );
+//        Taxon salmon = Taxon.Factory.newInstance();
+//        salmon.setCommonName( "salmonid" );
+//        salmon.setIsSpecies( true );
+//        salmon.setIsGenesUsable( true );
         
-        salmon = taxonService.findOrCreate( salmon );
+        Taxon salmon = taxonService.findByCommonName( "salmonid" );
 
         // doesn't matter what it is for this test, but the test data are from salmon.
         assertNotNull( salmon );
