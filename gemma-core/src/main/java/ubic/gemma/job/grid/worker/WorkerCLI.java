@@ -341,7 +341,7 @@ public class WorkerCLI extends AbstractSpringAwareCLI implements RemoteEventList
         SpacesCancellationEntry cancellationEntry = new SpacesCancellationEntry();
         cancellationEntry.registrationId = workerRegistrationId;
         NotifyDelegator cancellationNotifier = template.addNotifyDelegatorListener( this, cancellationEntry, null,
-                true, Lease.FOREVER, NotifyModifiers.NOTIFY_ALL );
+                false, Lease.FOREVER, NotifyModifiers.NOTIFY_ALL );
         /*
          * Currently this is not used. The idea is to clean up, but we probably don't need to - even after a
          * cancel-restart cycle, this notifier can still be used. You will see one

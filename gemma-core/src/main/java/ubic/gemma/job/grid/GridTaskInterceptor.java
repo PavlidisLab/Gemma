@@ -82,15 +82,16 @@ public class GridTaskInterceptor implements MethodInterceptor {
         int millisPerMinute = 60 * 1000;
 
         /*
-         * Note we should set the leases to be not Lease.FOREVER so that we eventually clean these up, even if something goes
-         * wrong in the regular cleanup phase.
+         * Note we should set the leases to be not Lease.FOREVER so that we eventually clean these up, even if something
+         * goes wrong in the regular cleanup phase. Unforutnately this doesn't help with the thread leak. when fifo =true
          */
 
         /*
          * Logging notifications
          */
+        boolean forceOrderedLogging = false; // fifo
         NotifyDelegator loggingNotifyDelegator = javaSpaceTemplate.addNotifyDelegatorListener( javaSpacesJobObserver,
-                entry, null , false, Lease.FOREVER, NotifyModifiers.NOTIFY_UPDATE );
+                entry, null, forceOrderedLogging, Lease.FOREVER, NotifyModifiers.NOTIFY_UPDATE );
 
         /*
          * Here's how we figure out when the job has actually started.
@@ -99,7 +100,7 @@ public class GridTaskInterceptor implements MethodInterceptor {
                 new RemoteEventListener() {
                     public void notify( RemoteEvent arg0 ) throws UnknownEventException, RemoteException {
                         log.debug( "got start" );
-                        command.setStartTime(); // we could cancel the notifydelegator here, but it's out of scope.
+                        command.setStartTime();
                     }
                 }, entry, null, false, Lease.FOREVER, NotifyModifiers.NOTIFY_WRITE );
 
@@ -116,8 +117,9 @@ public class GridTaskInterceptor implements MethodInterceptor {
         javaSpaceTemplate.clear( entry );
 
         /*
-         * Remove the listeners - otherwise we leak threads. See
-         * http://www.gigaspaces.com/docs/JavaDoc/com/j_spaces/core/client/NotifyDelegator.html
+         * Remove the listeners - otherwise we leak resources. See
+         * http://www.gigaspaces.com/docs/JavaDoc/com/j_spaces/core/client/NotifyDelegator.html. However, this doesn't
+         * stop threads from leaking if we have fifo enabled for the notifier.
          */
         loggingNotifyDelegator.getEventRegistration().getLease().cancel();
         loggingNotifyDelegator.close();
