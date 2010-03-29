@@ -14,7 +14,7 @@
 				fieldLabel : 'Runtime',
 				name : 'runtime',
 				allowBlank : false,
-				value : 5000
+				value : 15000
 			}, {
 				xtype : 'checkbox',
 				fieldLabel : 'Force Local',
