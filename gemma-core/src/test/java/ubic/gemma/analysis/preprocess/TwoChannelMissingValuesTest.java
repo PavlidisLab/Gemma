@@ -27,6 +27,7 @@ import java.util.Collection;
 import java.util.zip.GZIPInputStream;
 
 import org.apache.commons.lang.RandomStringUtils;
+import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -58,7 +59,13 @@ public class TwoChannelMissingValuesTest extends BaseSpringContextTest {
 
     @Autowired
     DesignElementDataVectorService dedvService;
-
+    
+    @Before
+    public void setUp() throws Exception {
+        super.executeSqlScript( "/script/sql/add-fish-taxa.sql", false );        
+    }
+    
+    
     /**
      * @throws Exception
      */
