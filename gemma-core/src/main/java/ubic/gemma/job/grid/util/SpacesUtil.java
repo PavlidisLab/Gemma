@@ -208,20 +208,26 @@ public class SpacesUtil implements ApplicationContextAware {
             return this.applicationContext;
         }
 
-      //  if ( !contextContainsGigaspaces() ) {
+        if ( !contextContainsGigaspaces() ) {
             forceRefreshSpaceBeans();
-     //   }
+        }
 
         return this.applicationContext;
 
     }
 
     /**
-     * Refresh the gigaspaces configuration. This should be done if the space is restarted.
+     * Refresh the gigaspaces configuration. This should be done if the space is restarted. If the space is not running,
+     * this doesn't do anything.
      * 
      * @return
      */
     public void forceRefreshSpaceBeans() {
+
+        if ( !isSpaceRunning() ) {
+            return;
+        }
+
         try {
             this.applicationContext = SpringContextUtil.addResourceToContext( applicationContext,
                     new ClassPathResource( SpringContextUtil.GRID_SPRING_BEAN_CONFIG ) );

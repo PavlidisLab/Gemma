@@ -35,8 +35,8 @@ import ubic.gemma.job.progress.ProgressStatusService;
 import ubic.gemma.util.ConfigUtils;
 
 /**
- * Wire to the scheduler to periodically run a job that helps monitor the space. If the job runs successfully on the
- * grid getLastStatusWasOK() will return true.
+ * Wire to the scheduler to periodically run a job that helps monitor the space, and also recover if the space is
+ * restarted. If the job runs successfully on the grid getLastStatusWasOK() will return true.
  * 
  * @author paul
  * @version $Id$
@@ -51,6 +51,9 @@ public class SpaceMonitor extends AbstractTaskService {
     private String lastStatusMessage = "";
 
     private Boolean lastStatusWasOK = true;
+
+    @Autowired
+    private SpacesUtil spacesUtil;
 
     @Autowired
     private ProgressStatusService progressStatusService;
@@ -166,6 +169,14 @@ public class SpaceMonitor extends AbstractTaskService {
 
         this.lastStatusMessage = status;
         this.lastStatusWasOK = allIsWell;
+
+        if ( !allIsWell ) {
+            /*
+             * Perhaps we just need to refresh our connection.
+             */
+            spacesUtil.forceRefreshSpaceBeans();
+        }
+
         return allIsWell;
     }
 
