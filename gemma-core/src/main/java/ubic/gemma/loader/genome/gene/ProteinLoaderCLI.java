@@ -128,15 +128,15 @@ public class ProteinLoaderCLI {
             if ( cl.hasOption( 't' ) ) {
                 boolean isTest = Boolean.parseBoolean( cl.getOptionValue( 't' ) );
                 if ( isTest )
-                    ctx = SpringContextUtil.getApplicationContext( true, false, false, false );
+                    ctx = SpringContextUtil.getApplicationContext( true, false, false );
                 else
-                    ctx = SpringContextUtil.getApplicationContext( false, false, false, false );
+                    ctx = SpringContextUtil.getApplicationContext( false, false, false );
 
                 cli = new ProteinLoaderCLI();
             }
             // if no ctx is set, default to test environment.
             else {
-                ctx = SpringContextUtil.getApplicationContext( true, false, false, false );
+                ctx = SpringContextUtil.getApplicationContext( true, false, false );
                 cli = new ProteinLoaderCLI();
             }
 
@@ -145,8 +145,7 @@ public class ProteinLoaderCLI {
                 if ( cl.hasOption( 'p' ) ) {
                     username = cl.getOptionValue( 'u' );
                     password = cl.getOptionValue( 'p' );
-                    manAuthentication = ( ManualAuthenticationService ) ctx
-                            .getBean( "manualAuthenticationProcessing" );
+                    manAuthentication = ( ManualAuthenticationService ) ctx.getBean( "manualAuthenticationProcessing" );
                     manAuthentication.validateRequest( username, password );
                 }
             } else {
@@ -179,7 +178,7 @@ public class ProteinLoaderCLI {
     }
 
     public ProteinLoaderCLI() {
-        ctx = SpringContextUtil.getApplicationContext( false, false, false, false );
+        ctx = SpringContextUtil.getApplicationContext( false, false, false );
         geneDao = ( GeneDao ) ctx.getBean( "geneDao" );
         gpDao = ( GeneProductDao ) ctx.getBean( "geneProductDao" );
         // dbDao = ( ExternalDatabaseDao ) ctx.getBean( "externalDatabaseDao" ) ;

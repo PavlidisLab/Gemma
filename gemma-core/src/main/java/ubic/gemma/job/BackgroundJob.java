@@ -59,16 +59,26 @@ public abstract class BackgroundJob<T extends TaskCommand> implements Callable<T
      */
     public TaskResult call() throws Exception {
         /*
-         * Do any preprocessing here, like propgation of the security context (which we shouldn't need to do)
+         * Do any preprocessing here
          */
+        TaskResult result = new TaskResult( this.getCommand(), null );
+        try {
+            result = this.processJob();
 
-        TaskResult result = this.processJob();
+            /*
+             * Do any postprocessing here.
+             */
 
-        /*
-         * Do any postprocessing here.
-         */
-
+        } catch ( Exception e ) {
+            result.setFailed( true );
+            throw e; // cancellation for example.
+        } finally {
+            /*
+             * Do any cleanup here.
+             */
+        }
         return result;
+
     }
 
     public T getCommand() {

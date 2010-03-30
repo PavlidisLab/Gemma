@@ -98,6 +98,7 @@ public class SpacesUtil implements ApplicationContextAware {
         try {
             IJSpace space = getSpace();
             StatisticsAdmin admin = ( StatisticsAdmin ) space.getAdmin();
+
             return admin;
         } catch ( Exception e ) {
             throw new RuntimeException( e );
@@ -111,10 +112,16 @@ public class SpacesUtil implements ApplicationContextAware {
      * @return boolean
      */
     public static boolean isSpaceRunning() {
+
         try {
-            SpaceFinder.find( SpacesEnum.DEFAULT_SPACE.getSpaceUrl() );
+            IJSpace space = ( IJSpace ) SpaceFinder.find( SpacesEnum.DEFAULT_SPACE.getSpaceUrl() );
+            space.ping();
             return true;
         } catch ( FinderException e ) {
+            log.debug( "No space" );
+            return false;
+        } catch ( RemoteException e ) {
+            log.debug( "no ping" );
             return false;
         }
     }
@@ -201,23 +208,26 @@ public class SpacesUtil implements ApplicationContextAware {
             return this.applicationContext;
         }
 
-        if ( !contextContainsGigaspaces() ) {
-
-            try {
-                this.applicationContext = SpringContextUtil.addResourceToContext( applicationContext,
-                        new ClassPathResource( SpringContextUtil.GRID_SPRING_BEAN_CONFIG ) );
-            } catch ( Exception e ) {
-                return this.applicationContext;
-            }
-
-            GigaSpacesTemplate gigaspacesTemplate = this.getGigaspacesTemplate();
-            gigaspacesTemplate.getUrl().getURL();
-        }
-
-        log.debug( "Application context unchanged. Gigaspaces beans already exist." );
+      //  if ( !contextContainsGigaspaces() ) {
+            forceRefreshSpaceBeans();
+     //   }
 
         return this.applicationContext;
 
+    }
+
+    /**
+     * Refresh the gigaspaces configuration. This should be done if the space is restarted.
+     * 
+     * @return
+     */
+    public void forceRefreshSpaceBeans() {
+        try {
+            this.applicationContext = SpringContextUtil.addResourceToContext( applicationContext,
+                    new ClassPathResource( SpringContextUtil.GRID_SPRING_BEAN_CONFIG ) );
+        } catch ( Exception e ) {
+            log.error( e, e );
+        }
     }
 
     /**

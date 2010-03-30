@@ -4,7 +4,7 @@
 Ext.onReady(function() {
 			// fire once immediately.
 			task();
-			window.setInterval(task, 60000);
+			window.setInterval(task, 10000);
 		});
 
 function task() {

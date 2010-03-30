@@ -42,6 +42,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springmodules.javaspaces.gigaspaces.GigaSpacesTemplate;
 
 import ubic.gemma.job.grid.util.SpacesCancellationEntry;
+import ubic.gemma.job.grid.util.SpacesUtil;
 import ubic.gemma.util.AbstractSpringAwareCLI;
 
 import com.j_spaces.core.IJSpace;
@@ -97,21 +98,34 @@ public class WorkerCLI extends AbstractSpringAwareCLI implements RemoteEventList
         b.doWork( args );
     }
 
+    /*
+     * How often we refresh the status of the worker. Don't make it too infrequent. If the worker dies at the beginning
+     * of the cycle, this is how long clients will still see its registration.
+     */
+    final Long HEARTBEAT_INTERVAL_MILLIS = 5000L;
+
+    /*
+     * A little extra time we allow the entry to live, so there is overlap (milliseconds)
+     */
+    final Long WAIT = 1000L;
+
     private Collection<SpacesCancellationEntry> cancellationEntries = new HashSet<SpacesCancellationEntry>();
 
     private Collection<SpacesRegistrationEntry> registrationEntries = new HashSet<SpacesRegistrationEntry>();
 
     private IJSpace space = null;
 
+    private SpacesUtil spacesUtil;
+
     private GigaSpacesTemplate template;
+
+    private Map<String, NotifyDelegator> workerCancellationNotifiers = new HashMap<String, NotifyDelegator>();
 
     private String[] workerNames;
 
     private Collection<CustomDelegatingWorker> workers = new HashSet<CustomDelegatingWorker>();
 
     private Map<String, Future<?>> workerThreads = new HashMap<String, Future<?>>();
-
-    private Map<String, NotifyDelegator> workerCancellationNotifiers = new HashMap<String, NotifyDelegator>();
 
     /*
      * (non-Javadoc)
@@ -204,12 +218,15 @@ public class WorkerCLI extends AbstractSpringAwareCLI implements RemoteEventList
      */
     @Override
     protected void processOptions() {
-        this.setForceGigaSpacesOn( true );
         super.processOptions();
 
         String workS = this.getOptionValue( "workers" );
         this.workerNames = workS.split( "," );
+
+        this.spacesUtil = ( SpacesUtil ) this.getBean( "spacesUtil" );
+        this.ctx = this.spacesUtil.addGemmaSpacesToApplicationContext();
         this.template = ( GigaSpacesTemplate ) this.getBean( "gigaspacesTemplate" );
+
     }
 
     /**
@@ -243,21 +260,11 @@ public class WorkerCLI extends AbstractSpringAwareCLI implements RemoteEventList
      * 
      * @param template
      * @param registrationEntry
+     * @param workerName
      * @return
      */
     private FutureTask<Object> startHeartbeatThread( final SpacesRegistrationEntry registrationEntry,
-            final CustomDelegatingWorker worker ) {
-
-        /*
-         * How often we refresh the status of the worker. Don't make it too infrequent. If the worker dies at the
-         * beginning of the cycle, this is how long clients will still see its registration.
-         */
-        final Long HEARTBEAT_INTERVAL_MILLIS = 5000L;
-
-        /*
-         * A little extra time we allow the entry to live, so there is overlap (milliseconds)
-         */
-        final Long WAIT = 100L;
+            final CustomDelegatingWorker worker, final String workerName ) {
 
         /*
          * Initialize
@@ -268,48 +275,14 @@ public class WorkerCLI extends AbstractSpringAwareCLI implements RemoteEventList
         FutureTask<Object> heartBeatTask = new FutureTask<Object>( new Callable<Object>() {
             public Object call() throws Exception {
 
-                while ( true ) {
+                return workerCheckLoop( registrationEntry, worker, workerName );
 
-                    try {
-                        Thread.sleep( HEARTBEAT_INTERVAL_MILLIS );
-                        if ( log.isDebugEnabled() )
-                            log.debug( "Refresh " + registrationEntry.message + " " + registrationEntry.registrationId );
-
-                        /*
-                         * Note: we fill in the taskid so we can tell the worker is 'busy'. This gets cleared out by
-                         * HEARTBEAT_INTERVAL_MILLIS milliseconds of the job finishing. So HEARTBEAT_INTERVAL_MILLIS
-                         * should be not too long. However, not that this has no impact on whether the worker is
-                         * actually busy and whether it will take jobs immediately or not.
-                         */
-                        registrationEntry.taskId = worker.getCurrentTaskId();
-
-                        // Refresh the TTL for the entry.
-                        template
-                                .update( registrationEntry, HEARTBEAT_INTERVAL_MILLIS + WAIT, 500 /* ifexists timeout */);
-                    } catch ( RemoteAccessException e ) {
-                        if ( e.getCause() instanceof EntryNotInSpaceException ) {
-                            /*
-                             * Maybe we need more overlap...
-                             */
-                            log.warn( "Entry expired but worker is still alive, renewing" );
-                            template.write( registrationEntry, HEARTBEAT_INTERVAL_MILLIS + WAIT );
-                        }
-                    } catch ( Exception e ) {
-                        log.error( "Worker: " + worker.getRegistrationId() + " heartbeat error, stopping worker", e );
-                        worker.stop();
-                        return null;
-                    } finally {
-                        // .. maybe nothing to do here.
-                    }
-                }
             }
+
         } );
         service.submit( heartBeatTask );
         service.shutdown();
 
-        /*
-         * I think we don't need to restart these when a worker restarts so no reason to keep track.
-         */
         return heartBeatTask;
 
     }
@@ -319,6 +292,23 @@ public class WorkerCLI extends AbstractSpringAwareCLI implements RemoteEventList
      * @param workerName bean name e.g. monitorWorker
      */
     private void startWorker( String workerName ) {
+
+        /*
+         * In case we need a refresh of connection
+         */
+        while ( !SpacesUtil.isSpaceRunning() ) {
+            log.warn( "No space, waiting for it before trying to start " + workerName );
+            try {
+                Thread.sleep( 10000 );
+            } catch ( InterruptedException e ) {
+                log.error( "Bailing out" );
+                return;
+            }
+        }
+
+        this.ctx = spacesUtil.addGemmaSpacesToApplicationContext();
+        this.template = ( GigaSpacesTemplate ) this.getBean( "gigaspacesTemplate" );
+
         /*
          * Pick up the worker
          */
@@ -331,11 +321,17 @@ public class WorkerCLI extends AbstractSpringAwareCLI implements RemoteEventList
         worker.setRegistrationId( workerRegistrationId );
 
         /*
+         * Start.
+         */
+        startWorkerThread( worker );
+
+        /*
          * Register
          */
         SpacesRegistrationEntry registrationEntry = new SpacesRegistrationEntry();
         registrationEntry.registrationId = workerRegistrationId;
         registrationEntry.message = workerName;
+        startHeartbeatThread( registrationEntry, worker, workerName );
 
         /* register this as a listener for cancellation entries */
         SpacesCancellationEntry cancellationEntry = new SpacesCancellationEntry();
@@ -349,13 +345,6 @@ public class WorkerCLI extends AbstractSpringAwareCLI implements RemoteEventList
          * should not grow as the application runs.
          */
         workerCancellationNotifiers.put( workerRegistrationId, cancellationNotifier );
-
-        /*
-         * Start.
-         */
-        startWorkerThread( worker );
-
-        startHeartbeatThread( registrationEntry, worker );
 
         log.info( registrationEntry.message + " registered with space " + template.getUrl() + " [WorkerId="
                 + workerRegistrationId + "]" );
@@ -389,11 +378,96 @@ public class WorkerCLI extends AbstractSpringAwareCLI implements RemoteEventList
             boolean cancelled = futureTask.cancel( true );
             if ( cancelled ) {
                 log.info( worker.getRegistrationId() + " cancelled:" + worker.getCurrentTaskId() );
+
+                this.workerThreads.remove( worker.getRegistrationId() );
             } else {
                 log.info( worker.getRegistrationId() + " not cancelled: " + worker.getCurrentTaskId() );
             }
         } else {
             log.info( worker.getRegistrationId() + " was already done with " + worker.getCurrentTaskId() );
+            this.workerThreads.remove( worker.getRegistrationId() );
         }
+    }
+
+    /**
+     * @param registrationEntry
+     * @param worker
+     * @param workerName
+     * @return
+     * @throws InterruptedException
+     */
+    private Object workerCheckLoop( final SpacesRegistrationEntry registrationEntry,
+            final CustomDelegatingWorker worker, String workerName ) throws InterruptedException {
+        log.info( "Starting heartbeat for " + registrationEntry.registrationId );
+        while ( true ) {
+            try {
+                Thread.sleep( HEARTBEAT_INTERVAL_MILLIS );
+                if ( log.isDebugEnabled() )
+                    log.debug( "Refresh " + registrationEntry.message + " " + registrationEntry.registrationId );
+
+                /*
+                 * Note: we fill in the taskid so we can tell the worker is 'busy'. This gets cleared out by
+                 * HEARTBEAT_INTERVAL_MILLIS milliseconds of the job finishing. So HEARTBEAT_INTERVAL_MILLIS should be
+                 * not too long. However, not that this has no impact on whether the worker is actually busy and whether
+                 * it will take jobs immediately or not.
+                 */
+                registrationEntry.taskId = worker.getCurrentTaskId();
+
+                if ( this.workerThreads.get( worker.getRegistrationId() ).isDone() ) {
+                    log.warn( "Worker " + worker.getRegistrationId() + " is dead, trying to restart" );
+                    this.workers.remove( worker );
+                    startWorker( workerName );
+                    return null;
+                }
+
+                // Refresh the TTL for the entry and continue.
+                template.update( registrationEntry, HEARTBEAT_INTERVAL_MILLIS + WAIT, 500 /* ifexists timeout */);
+            } catch ( RemoteAccessException e ) {
+                if ( e.getCause() instanceof EntryNotInSpaceException ) {
+
+                    /*
+                     * Maybe we need more overlap...
+                     */
+                    log.warn( "Entry expired but worker is still alive, renewing" );
+                    template.write( registrationEntry, HEARTBEAT_INTERVAL_MILLIS + WAIT );
+                    // continue.
+                } else {
+
+                    /*
+                     * Try to reconnect to the space.
+                     */
+
+                    if ( !SpacesUtil.isSpaceRunning() ) {
+                        log.info( "Space is gone. Will try to restart the worker when it comes back." );
+                    }
+
+                    while ( !SpacesUtil.isSpaceRunning() ) {
+                        Thread.sleep( 10000 ); // could have maxretries.
+                        log.info( "Still no space, waiting  ..." );
+                    }
+
+                    /*
+                     * When this happens, the worker has died as well (always ?)
+                     */
+                    if ( this.workerThreads.get( worker.getRegistrationId() ).isDone() ) {
+                        log.warn( "Worker " + worker.getRegistrationId() + " is dead, trying to restart" );
+                        this.workers.remove( worker );
+                        startWorker( workerName );
+                        return null;
+                    } else {
+                        throw new IllegalStateException( "I wasn't expecting the worker to still be alive." );
+                    }
+                }
+
+            } catch ( Exception e ) {
+                log.error( "Worker: " + worker.getRegistrationId() + " heartbeat error, stopping worker", e );
+                worker.stop();
+                this.workers.remove( worker );
+                return null; // possibly restart?
+            } finally {
+                // .. maybe nothing to do here.
+            }
+        }
+
     }
 }

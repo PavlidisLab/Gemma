@@ -110,7 +110,7 @@ public class SystemMonitorController {
         if ( registeredWorkers != null ) {
             buf.append( "\n<h2>Workers</h2>" );
             for ( SpacesRegistrationEntry e : registeredWorkers ) {
-                buf.append( e.message + ( e.taskId != null ? " Busy with task " + e.taskId : "" ) + "</br>\n" );
+                buf.append( e.registrationId + ( e.taskId != null ? " Busy with task " + e.taskId : "" ) + "</br>\n" );
             }
         }
 

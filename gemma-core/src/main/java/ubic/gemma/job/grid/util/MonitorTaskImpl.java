@@ -52,7 +52,7 @@ public class MonitorTaskImpl implements MonitorTask {
          */
         int millis = 1000;
         for ( int i = 0; i < command.getRunTimeMillis() / millis; i++ ) {
-         //  log.info( command.getTaskId() + " "+ i );
+            // log.info( command.getTaskId() + " " + i );
             try {
                 Thread.sleep( millis );
             } catch ( InterruptedException e ) {

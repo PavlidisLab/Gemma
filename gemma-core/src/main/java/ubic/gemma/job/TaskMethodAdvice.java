@@ -70,8 +70,11 @@ public class TaskMethodAdvice implements ApplicationContextAware {
 
         SpacesProgressAppender appender = setup( pjp, command );
 
-        log.debug( "Starting task: " + pjp.getTarget().getClass().getSimpleName() + " ID: " + command.getTaskId()
-                + " User: " + SecurityContextHolder.getContext().getAuthentication().getPrincipal() );
+        assert SecurityContextHolder.getContext() != null;
+
+        if ( log.isDebugEnabled() )
+            log.debug( "Starting task: " + pjp.getTarget().getClass().getSimpleName() + " ID: " + command.getTaskId()
+                    + " User: " + SecurityContextHolder.getContext().getAuthentication().getPrincipal() );
 
         TaskResult result = ( TaskResult ) pjp.proceed();
 

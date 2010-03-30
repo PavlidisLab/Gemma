@@ -330,7 +330,9 @@ public class TaskRunningService implements InitializingBean {
                 try {
                     result = future.get(); // Blocks.
                     log.debug( "Got result " + result + " from task " + taskId );
+
                     handleFinished( taskCommand, result );
+
                     return result;
                 } catch ( CancellationException e ) {
                     // I think this will never happen????
@@ -519,7 +521,11 @@ public class TaskRunningService implements InitializingBean {
     private void emailNotifyCompletionOfTask( String taskId, TaskResult result ) {
         if ( StringUtils.isNotBlank( result.getSubmitter() ) ) {
             User user = userService.findByUserName( result.getSubmitter() );
+            assert user != null;
+
             String emailAddress = user.getEmail();
+            assert emailAddress != null;
+
             if ( emailAddress != null ) {
                 log.debug( "Sending email notification to " + emailAddress );
                 SimpleMailMessage msg = new SimpleMailMessage();

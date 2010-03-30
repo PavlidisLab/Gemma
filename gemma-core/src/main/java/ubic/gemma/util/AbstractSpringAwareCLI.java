@@ -28,7 +28,6 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
-import org.apache.commons.cli.Option;
 import org.apache.commons.lang.StringUtils;
 import org.quartz.impl.StdScheduler;
 import org.springframework.beans.factory.BeanFactory;
@@ -52,8 +51,6 @@ import ubic.gemma.security.authentication.ManualAuthenticationService;
  * @version $Id$
  */
 public abstract class AbstractSpringAwareCLI extends AbstractCLI {
-
-    private static final String GIGASPACES_ON = "gigaspacesOn";
 
     protected AuditTrailService auditTrailService;
 
@@ -85,15 +82,10 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
         this.ctx = ctx;
     }
 
-    public void setForceGigaSpacesOn( boolean forceGigaSpacesOn ) {
-        this.forceGigaSpacesOn = forceGigaSpacesOn;
-    }
-
     @Override
     protected void buildStandardOptions() {
         super.buildStandardOptions();
         addUserNameAndPasswordOptions();
-        addSpecialServiceOptions();
     }
 
     /**
@@ -287,8 +279,8 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
      */
     void createSpringContext() {
 
-        ctx = SpringContextUtil.getApplicationContext( hasOption( "testing" ), true, hasOption( GIGASPACES_ON )
-                || this.isForceGigaSpacesOn(), false, getAdditionalSpringConfigLocations() );
+        ctx = SpringContextUtil.getApplicationContext( hasOption( "testing" ), true, false,
+                getAdditionalSpringConfigLocations() );
 
         QuartzUtils.disableQuartzScheduler( ( StdScheduler ) this.getBean( "schedulerFactoryBean" ) );
 
@@ -299,12 +291,13 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
 
     }
 
-    private void addSpecialServiceOptions() {
-        Option gigaspacesOnOpt = new Option(
-                GIGASPACES_ON,
-                false,
-                "Use the compute grid for large jobs; by default the grid is not enabled for CLIs and ignores any relevant setting in your Gemma.properties file." );
-        options.addOption( gigaspacesOnOpt );
-    }
+    // private void addSpecialServiceOptions() {
+    // Option gigaspacesOnOpt = new Option(
+    // GIGASPACES_ON,
+    // false,
+    // "Use the compute grid for large jobs; by default the grid is not enabled for CLIs and ignores any relevant setting in your Gemma.properties file."
+    // );
+    // options.addOption( gigaspacesOnOpt );
+    // }
 
 }

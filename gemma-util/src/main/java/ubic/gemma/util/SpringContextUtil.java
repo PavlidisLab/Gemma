@@ -51,15 +51,14 @@ public class SpringContextUtil {
     /**
      * @param testing If true, it will get a test configured-BeanFactory
      * @param compassOn Include the compass (search) configuration. This is usually false for CLIs and tests.
-     * @param gigaspacesOn Include the gigaspaces (grid) configuration. This is usually false for CLIs and tests.
      * @param isWebApp If true, configuration specific to the web application will be included.
      * @param additionalConfigurationLocations, like "classpath*:/myproject/applicationContext-mine.xml"
      * @return BeanFactory or null if no context could be created.
      */
-    public static BeanFactory getApplicationContext( boolean testing, boolean compassOn, boolean gigaspacesOn,
-            boolean isWebApp, String[] additionalConfigurationLocations ) {
+    public static BeanFactory getApplicationContext( boolean testing, boolean compassOn, boolean isWebApp,
+            String[] additionalConfigurationLocations ) {
         if ( ctx == null ) {
-            String[] paths = getConfigLocations( testing, compassOn, gigaspacesOn, isWebApp );
+            String[] paths = getConfigLocations( testing, compassOn, isWebApp );
 
             if ( additionalConfigurationLocations != null ) {
                 paths = addPaths( additionalConfigurationLocations, paths );
@@ -99,9 +98,8 @@ public class SpringContextUtil {
      * @param isWebApp If true, configuration specific to the web application will be included.
      * @return BeanFactory or null if no context could be created.
      */
-    public static BeanFactory getApplicationContext( boolean testing, boolean compassOn, boolean gigaspacesOn,
-            boolean isWebApp ) {
-        return getApplicationContext( testing, compassOn, gigaspacesOn, isWebApp, new String[] {} );
+    public static BeanFactory getApplicationContext( boolean testing, boolean compassOn, boolean isWebApp ) {
+        return getApplicationContext( testing, compassOn, isWebApp, new String[] {} );
     }
 
     /**
@@ -110,15 +108,15 @@ public class SpringContextUtil {
      *         additional configuration paths.
      */
     public static BeanFactory getApplicationContext( String[] additionalConfigurationPaths ) {
-        return getApplicationContext( false, false, false, false, additionalConfigurationPaths );
+        return getApplicationContext( false, false, false, additionalConfigurationPaths );
     }
 
     /**
      * @return a minimally-configured standard BeanFactory: no Compass, no Gigaspaces, no Web config.
-     * @see getApplicationContext( boolean testing, boolean compassOn, boolean gigaspacesOn, boolean isWebApp)
+     * @see getApplicationContext( boolean testing, boolean compassOn , boolean isWebApp)
      */
     public static BeanFactory getApplicationContext() {
-        return getApplicationContext( false, false, false, false );
+        return getApplicationContext( false, false, false );
     }
 
     /**
@@ -127,7 +125,7 @@ public class SpringContextUtil {
      * @return
      */
     public static String[] getConfigLocations() {
-        return getConfigLocations( false, false, false, true );
+        return getConfigLocations( false, false, true );
     }
 
     /**
@@ -137,12 +135,11 @@ public class SpringContextUtil {
      * @return
      * @see getApplicationContext
      */
-    public static String[] getConfigLocations( boolean testing, boolean compassOn, boolean gigaspacesOn,
-            boolean isWebapp ) {
+    public static String[] getConfigLocations( boolean testing, boolean compassOn, boolean isWebapp ) {
         if ( testing ) {
             return getTestConfigLocations( compassOn, isWebapp );
         }
-        return getStandardConfigLocations( compassOn, gigaspacesOn, isWebapp );
+        return getStandardConfigLocations( compassOn, isWebapp );
 
     }
 
@@ -192,17 +189,12 @@ public class SpringContextUtil {
      * @param isWebapp
      * @return
      */
-    private static String[] getStandardConfigLocations( boolean compassOn, boolean gigaspacesOn, boolean isWebapp ) {
+    private static String[] getStandardConfigLocations( boolean compassOn, boolean isWebapp ) {
         List<String> paths = new ArrayList<String>();
         paths.add( "classpath*:ubic/gemma/dataSource.xml" );
 
         if ( compassOn ) {
             CompassUtils.turnOnCompass( false, paths );
-        }
-
-        if ( gigaspacesOn ) {
-            log.info( "************* Adding gigaspaces configuration ************" );
-            paths.add( GRID_SPRING_BEAN_CONFIG );
         }
 
         addCommonConfig( isWebapp, paths );
@@ -233,19 +225,19 @@ public class SpringContextUtil {
      * @return {@link ApplicationContext}
      */
     public static ApplicationContext addResourceToContext( ApplicationContext parentContext, ClassPathResource resource ) {
-        GenericWebApplicationContext genericCtx = new GenericWebApplicationContext();
-        XmlBeanDefinitionReader xmlReader = new XmlBeanDefinitionReader( genericCtx );
+        GenericWebApplicationContext spacesBeans = new GenericWebApplicationContext();
+        XmlBeanDefinitionReader xmlReader = new XmlBeanDefinitionReader( spacesBeans );
         xmlReader.loadBeanDefinitions( resource );
 
-        genericCtx.setParent( parentContext );
+        spacesBeans.setParent( parentContext );
 
-        CommonsConfigurationPropertyPlaceholderConfigurer configurationPropertyConfigurer = ( CommonsConfigurationPropertyPlaceholderConfigurer ) genericCtx
+        CommonsConfigurationPropertyPlaceholderConfigurer configurationPropertyConfigurer = ( CommonsConfigurationPropertyPlaceholderConfigurer ) spacesBeans
                 .getBean( "configurationPropertyConfigurer" );
-        configurationPropertyConfigurer.postProcessBeanFactory( genericCtx.getBeanFactory() );
+        configurationPropertyConfigurer.postProcessBeanFactory( spacesBeans.getBeanFactory() );
 
-        genericCtx.refresh();
+        spacesBeans.refresh();
 
-        return genericCtx;
+        return spacesBeans;
     }
 
 }

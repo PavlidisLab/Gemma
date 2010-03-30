@@ -52,7 +52,7 @@ public class SpacesUtilTest extends BaseSpringContextTest {
         }
 
         ApplicationContext withoutGigaspacesCtx = ( ApplicationContext ) SpringContextUtil.getApplicationContext( true,
-                true, false, false );
+                true, false );
 
         String gigaspacesTemplate = "gigaspacesTemplate";
         assertFalse( withoutGigaspacesCtx.containsBean( gigaspacesTemplate ) );

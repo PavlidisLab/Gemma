@@ -83,7 +83,8 @@ public class GridTaskInterceptor implements MethodInterceptor {
 
         /*
          * Note we should set the leases to be not Lease.FOREVER so that we eventually clean these up, even if something
-         * goes wrong in the regular cleanup phase. Unforutnately this doesn't help with the thread leak. when fifo =true
+         * goes wrong in the regular cleanup phase. Unforutnately this doesn't help with the thread leak. when fifo
+         * =true
          */
 
         /*
@@ -110,27 +111,33 @@ public class GridTaskInterceptor implements MethodInterceptor {
          * This blocks while the job gets run by the endpoint JavaSpaceInterceptor. If it queues, then it gets stuck
          * here. See gigaspaces.xml where we have 'synchronous=true'.
          */
-        Object retVal = invocation.proceed();
+        Object retVal = null;
+        try {
+            retVal = invocation.proceed();
+        } catch ( Exception e ) {
+            log.error( "Job threw an exception: " + e.getMessage() );
+            throw ( e );
+        } finally {
 
-        log.debug( "job done" );
+            log.debug( "job done" );
 
-        javaSpaceTemplate.clear( entry );
+            javaSpaceTemplate.clear( entry );
 
-        /*
-         * Remove the listeners - otherwise we leak resources. See
-         * http://www.gigaspaces.com/docs/JavaDoc/com/j_spaces/core/client/NotifyDelegator.html. However, this doesn't
-         * stop threads from leaking if we have fifo enabled for the notifier.
-         */
-        loggingNotifyDelegator.getEventRegistration().getLease().cancel();
-        loggingNotifyDelegator.close();
-        loggingNotifyDelegator.finalize();
-        loggingNotifyDelegator = null;
+            /*
+             * Remove the listeners - otherwise we leak resources. See
+             * http://www.gigaspaces.com/docs/JavaDoc/com/j_spaces/core/client/NotifyDelegator.html. However, this
+             * doesn't stop threads from leaking if we have fifo enabled for the notifier.
+             */
+            loggingNotifyDelegator.getEventRegistration().getLease().cancel();
+            loggingNotifyDelegator.close();
+            loggingNotifyDelegator.finalize();
+            loggingNotifyDelegator = null;
 
-        jobStartNotifyDelegator.getEventRegistration().getLease().cancel();
-        jobStartNotifyDelegator.close();
-        jobStartNotifyDelegator.finalize();
-        jobStartNotifyDelegator = null;
-
+            jobStartNotifyDelegator.getEventRegistration().getLease().cancel();
+            jobStartNotifyDelegator.close();
+            jobStartNotifyDelegator.finalize();
+            jobStartNotifyDelegator = null;
+        }
         return retVal;
     }
 
