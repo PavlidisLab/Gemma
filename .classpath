@@ -321,5 +321,10 @@
 	<classpathentry kind="var" path="M2_REPO/umls/mmtxProject/2.4C/mmtxProject-2.4C.jar"/>
 	<classpathentry kind="var" path="M2_REPO/chibi/GEOMMTx/1.0-SNAPSHOT/GEOMMTx-1.0-SNAPSHOT.jar"/>
 	<classpathentry kind="var" path="M2_REPO/baseCode/baseCode/1.0.7-SNAPSHOT/baseCode-1.0.7-SNAPSHOT.jar" sourcepath="/M2_REPO/baseCode/baseCode/1.0.7-SNAPSHOT/baseCode-1.0.7-SNAPSHOT-sources.jar"/>
+	<classpathentry kind="var" path="M2_REPO/RoSuDA/JRIEngine/0.5-0/JRIEngine-0.5-0.jar">
+		<attributes>
+			<attribute name="javadoc_location" value="http://www.rforge.net/org/docs/"/>
+		</attributes>
+	</classpathentry>
 	<classpathentry kind="output" path="build/Gemma/WEB-INF/classes"/>
 </classpath>
