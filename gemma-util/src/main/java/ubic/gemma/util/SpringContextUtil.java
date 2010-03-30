@@ -93,8 +93,7 @@ public class SpringContextUtil {
 
     /**
      * @param testing If true, it will get a test configured-BeanFactory
-     * @param compassOn Include the compass (search) configuration. This is usually false for CLIs and tests.
-     * @param gigaspacesOn Include the gigaspaces (grid) configuration. This is usually false for CLIs and tests.
+     * @param compassOn Include the compass (search) configuration. This is usually false for CLIs and tests. 
      * @param isWebApp If true, configuration specific to the web application will be included.
      * @return BeanFactory or null if no context could be created.
      */
@@ -104,7 +103,7 @@ public class SpringContextUtil {
 
     /**
      * @param additionalConfigurationPaths
-     * @return a minimally-configured standard BeanFactory: no Compass, no Gigaspaces, no Web config, but with the
+     * @return a minimally-configured standard BeanFactory: no Compass, no Web config, but with the
      *         additional configuration paths.
      */
     public static BeanFactory getApplicationContext( String[] additionalConfigurationPaths ) {
@@ -112,7 +111,7 @@ public class SpringContextUtil {
     }
 
     /**
-     * @return a minimally-configured standard BeanFactory: no Compass, no Gigaspaces, no Web config.
+     * @return a minimally-configured standard BeanFactory: no Compass, no Web config.
      * @see getApplicationContext( boolean testing, boolean compassOn , boolean isWebApp)
      */
     public static BeanFactory getApplicationContext() {

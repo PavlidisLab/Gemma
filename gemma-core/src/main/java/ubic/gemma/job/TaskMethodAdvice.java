@@ -25,13 +25,11 @@ import org.apache.log4j.Logger;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
-import org.springframework.beans.BeansException;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springmodules.javaspaces.gigaspaces.GigaSpacesTemplate;
 
 import ubic.gemma.job.grid.GridTaskInterceptor;
+import ubic.gemma.job.grid.util.SpacesUtil;
 import ubic.gemma.job.progress.grid.SpacesProgressAppender;
 
 /**
@@ -45,11 +43,11 @@ import ubic.gemma.job.progress.grid.SpacesProgressAppender;
  * @see GridTaskInterceptor
  */
 @Aspect
-public class TaskMethodAdvice implements ApplicationContextAware {
-
-    private ApplicationContext ctx;
+public class TaskMethodAdvice {
 
     private Log log = LogFactory.getLog( this.getClass() );
+
+    private SpacesUtil spacesUtil;
 
     /**
      * @param pjp - must have the TaskCommand as the first argument. To usee the grid, TaskCommand must have
@@ -70,8 +68,6 @@ public class TaskMethodAdvice implements ApplicationContextAware {
 
         SpacesProgressAppender appender = setup( pjp, command );
 
-        assert SecurityContextHolder.getContext() != null;
-
         if ( log.isDebugEnabled() )
             log.debug( "Starting task: " + pjp.getTarget().getClass().getSimpleName() + " ID: " + command.getTaskId()
                     + " User: " + SecurityContextHolder.getContext().getAuthentication().getPrincipal() );
@@ -85,13 +81,11 @@ public class TaskMethodAdvice implements ApplicationContextAware {
         return result;
     }
 
-    /*
-     * (non-Javadoc)
-     * @seeorg.springframework.context.ApplicationContextAware#setApplicationContext(org.springframework.context.
-     * ApplicationContext)
+    /**
+     * @param spacesUtil the spacesUtil to set
      */
-    public void setApplicationContext( ApplicationContext arg0 ) throws BeansException {
-        this.ctx = arg0;
+    public void setSpacesUtil( SpacesUtil spacesUtil ) {
+        this.spacesUtil = spacesUtil;
     }
 
     /**
@@ -111,13 +105,8 @@ public class TaskMethodAdvice implements ApplicationContextAware {
             return null;
         }
 
-        GigaSpacesTemplate gigaSpacesTemplate;
-        try {
-            gigaSpacesTemplate = ( GigaSpacesTemplate ) ctx.getBean( "gigaspacesTemplate" );
-        } catch ( BeansException e ) {
-            // not running with space configured.
-            return null;
-        }
+        GigaSpacesTemplate gigaSpacesTemplate = spacesUtil.getGigaspacesTemplate();
+        if ( gigaSpacesTemplate == null ) return null;
 
         /*
          * Security propagation.

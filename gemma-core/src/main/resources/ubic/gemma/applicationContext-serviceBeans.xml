@@ -31,8 +31,9 @@
 	</aop:config>
 
 	<!-- setup/teardown for long-running tasks. See also gigaspaces.xml -->
-
-	<bean id="taskMethodAdvice" class="ubic.gemma.job.TaskMethodAdvice" />
+	<bean id="taskMethodAdvice" class="ubic.gemma.job.TaskMethodAdvice">
+		<property name="spacesUtil" ref="spacesUtil" />
+	</bean>
 
 	<!--
 		see

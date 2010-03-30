@@ -41,7 +41,7 @@ public class SpacesProgressAppender extends ProgressAppender {
 
     private GigaSpacesTemplate gigaSpacesTemplate = null;
 
-    private String threadName;
+    private String threadName; 
 
     public SpacesProgressAppender( GigaSpacesTemplate gigaSpacesTemplate, String taskId ) {
         assert gigaSpacesTemplate != null;

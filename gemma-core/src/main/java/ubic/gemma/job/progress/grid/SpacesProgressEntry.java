@@ -30,29 +30,10 @@ import net.jini.core.event.RemoteEventListener;
  */
 public class SpacesProgressEntry extends SpacesGenericEntry {
 
-    /**
-     * 
-     */
     private static final long serialVersionUID = 1L;
 
-    public String taskId = null;
-
-    /**
-     * Added for conventional reasons. This is not needed since the field is public (required by JavaSpaces).
-     * 
-     * @return
-     */
-    public String getTaskId() {
-        return taskId;
+    public SpacesProgressEntry() {
+        super();
+        this.setFifo( true );
     }
-
-    /**
-     * Added for conventional reasons. This is not needed since the field is public (required by JavaSpaces).
-     * 
-     * @param taskId
-     */
-    public void setTaskId( String taskId ) {
-        this.taskId = taskId;
-    }
-
 }

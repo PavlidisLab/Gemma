@@ -76,8 +76,8 @@ public class GridTaskInterceptor implements MethodInterceptor {
         command.setWillRunOnGrid( true );
 
         SpacesJobObserver javaSpacesJobObserver = new SpacesJobObserver( taskId );
-        SpacesProgressEntry entry = new SpacesProgressEntry();
-        entry.setTaskId( taskId );
+        SpacesProgressEntry loggingEntryTemplate = new SpacesProgressEntry();
+        loggingEntryTemplate.setTaskId( taskId );
 
         int millisPerMinute = 60 * 1000;
 
@@ -92,7 +92,7 @@ public class GridTaskInterceptor implements MethodInterceptor {
          */
         boolean forceOrderedLogging = false; // fifo
         NotifyDelegator loggingNotifyDelegator = javaSpaceTemplate.addNotifyDelegatorListener( javaSpacesJobObserver,
-                entry, null, forceOrderedLogging, Lease.FOREVER, NotifyModifiers.NOTIFY_UPDATE );
+                loggingEntryTemplate, null, forceOrderedLogging, Lease.FOREVER, NotifyModifiers.NOTIFY_UPDATE );
 
         /*
          * Here's how we figure out when the job has actually started.
@@ -103,7 +103,7 @@ public class GridTaskInterceptor implements MethodInterceptor {
                         log.debug( "got start" );
                         command.setStartTime();
                     }
-                }, entry, null, false, Lease.FOREVER, NotifyModifiers.NOTIFY_WRITE );
+                }, loggingEntryTemplate, null, false, Lease.FOREVER, NotifyModifiers.NOTIFY_WRITE );
 
         log.debug( "initialized, starting call" );
 
@@ -121,7 +121,7 @@ public class GridTaskInterceptor implements MethodInterceptor {
 
             log.debug( "job done" );
 
-            javaSpaceTemplate.clear( entry );
+            javaSpaceTemplate.clear( loggingEntryTemplate );
 
             /*
              * Remove the listeners - otherwise we leak resources. See

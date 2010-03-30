@@ -230,6 +230,8 @@ public class WorkerCLI extends AbstractSpringAwareCLI implements RemoteEventList
     }
 
     /**
+     * Stop a worker -- effectively cancelling the job -- and then restart it.
+     * 
      * @param worker
      */
     private synchronized void cancelCurrentJob( CustomDelegatingWorker worker ) {
@@ -288,7 +290,8 @@ public class WorkerCLI extends AbstractSpringAwareCLI implements RemoteEventList
     }
 
     /**
-     * @param template
+     * Create and start a worker instance.
+     * 
      * @param workerName bean name e.g. monitorWorker
      */
     private void startWorker( String workerName ) {
@@ -390,6 +393,12 @@ public class WorkerCLI extends AbstractSpringAwareCLI implements RemoteEventList
     }
 
     /**
+     * Periodically refresh the lease on the registration entry, and restart the worker if possible when things go
+     * wrong. Note that I belatedly realized that this overlaps with functionality provided by Jini
+     * (http://www.gigaspaces.com/docs/JiniApi/net/jini/lease/LeaseRenewalManager.html), but that doesn't handle the
+     * worker restart. Switching to LeaseRenewalManager in the future might be a good idea if the worker restart issue
+     * can be handled.
+     * 
      * @param registrationEntry
      * @param worker
      * @param workerName

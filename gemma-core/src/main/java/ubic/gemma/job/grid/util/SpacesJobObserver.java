@@ -31,6 +31,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springmodules.javaspaces.gigaspaces.GigaSpacesTemplate;
 
 import ubic.gemma.job.progress.ProgressManager;
+import ubic.gemma.util.ConfigUtils;
 
 import com.j_spaces.core.client.EntryArrivedRemoteEvent;
 import com.j_spaces.core.client.ExternalEntry;
@@ -50,11 +51,18 @@ public class SpacesJobObserver implements RemoteEventListener {
     String taskId = null;
 
     /**
+     * Whether we should log messages in the usual fashion as well as updating the ProgressManager. If true, this means
+     * that all remote logging messages will appear in the client logs (e.g., catalina.out).
+     */
+    private boolean doLoggingToo = false;
+
+    /**
      * @param taskId
      */
     public SpacesJobObserver( String taskId ) {
         assert taskId != null;
         this.taskId = taskId;
+        this.doLoggingToo = ConfigUtils.getBoolean( "gemma.grid.poollogs", false );
     }
 
     /*
@@ -80,7 +88,9 @@ public class SpacesJobObserver implements RemoteEventListener {
             /* updated the progress with message from notification */
             String message = ( String ) entry.getFieldValue( "message" );
             if ( StringUtils.isNotBlank( message ) ) {
-                if ( log.isDebugEnabled() ) log.debug( message + " [Remote task: " + taskId + "]" );
+                if ( this.doLoggingToo ) {
+                    log.info( message + " [Remote task: " + taskId + "]" );
+                }
                 ProgressManager.updateJob( this.taskId, message );
             }
         } catch ( UnusableEntryException e ) {
