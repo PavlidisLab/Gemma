@@ -279,7 +279,6 @@ public class AuditEventDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
         // note: this is fast.
 
         org.hibernate.Query queryObject = super.getSession().createQuery( queryString );
-        queryObject.setCacheable( true );
         queryObject.setParameterList( "trails", atmap.keySet() );
 
         List qr = queryObject.list();
