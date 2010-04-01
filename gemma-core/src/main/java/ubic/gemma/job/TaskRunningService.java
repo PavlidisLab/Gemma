@@ -149,8 +149,7 @@ public class TaskRunningService implements InitializingBean {
          * Start a thread to monitor finished tasks that have not been retrieved
          */
         Thread sweepThread = new Thread( new Runnable() {
-
-            @Override
+ 
             public void run() {
                 while ( !Thread.interrupted() ) {
 

@@ -21,14 +21,12 @@ package ubic.gemma.analysis.expression.diff;
 import static org.junit.Assert.assertEquals;
 
 import java.util.Collection;
-import java.util.Iterator;
 
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
-import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 
 /**
  * Tests the two way anova analyzer with interactions.
@@ -75,13 +73,6 @@ public class TwoWayAnovaWithInteractionsAnalyzerTest extends BaseAnalyzerConfigu
         }
 
         configureMocks();
-
-        Iterator<ExperimentalFactor> iter = expressionExperiment.getExperimentalDesign().getExperimentalFactors()
-                .iterator();
-
-        ExperimentalFactor experimentalFactorA = iter.next();
-
-        ExperimentalFactor experimentalFactorB = iter.next();
 
         DifferentialExpressionAnalysis expressionAnalysis = analyzer.twoWayAnova( expressionExperiment,
                 experimentalFactorA, experimentalFactorB );

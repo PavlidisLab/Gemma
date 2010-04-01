@@ -130,7 +130,8 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
 
         rc.assign( pvalsName, pvaluesToUse );
         String qvalueCommand = ( "qvalue(" + pvalsName + ")$qvalues" );
-        double[] qvaluesFromR = rc.doubleArrayEval( qvalueCommand.toString() );
+
+        double[] qvaluesFromR = rc.doubleArrayEval( qvalueCommand );
 
         if ( qvaluesFromR == null ) {
             /*
@@ -140,7 +141,7 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
              * #3. So we try the other method.
              */
             qvalueCommand = "qvalue(" + pvalsName + ", method=\"bootstrap\"" + ")$qvalues";
-            qvaluesFromR = rc.doubleArrayEval( qvalueCommand.toString() );
+            qvaluesFromR = rc.doubleArrayEval( qvalueCommand );
 
             if ( qvaluesFromR == null ) {
                 String err = "Null qvalues were returned from R. No details about the problem, but probably pi0 was <= 0. Tried both fitting methods. Last attempted command was: "

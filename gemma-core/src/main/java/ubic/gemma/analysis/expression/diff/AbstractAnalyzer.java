@@ -22,6 +22,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.basecode.util.RClient;
 import ubic.basecode.util.RConnectionFactory;
+import ubic.basecode.util.RServeClient;
 import ubic.gemma.analysis.service.ExpressionDataMatrixService;
 
 /**
@@ -49,8 +50,8 @@ public abstract class AbstractAnalyzer {
      * Disconnect from R.
      */
     public void disconnectR() {
-        if ( rc != null ) {
-            rc.disconnect();
+        if ( rc != null && rc instanceof RServeClient ) {
+            ( ( RServeClient ) rc ).disconnect();
         }
     }
 

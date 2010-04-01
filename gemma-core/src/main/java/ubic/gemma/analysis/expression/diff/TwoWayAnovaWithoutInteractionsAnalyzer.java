@@ -31,7 +31,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
-import ubic.basecode.util.TwoWayAnovaResult;
+import ubic.basecode.util.r.type.TwoWayAnovaResult;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -153,18 +153,21 @@ public class TwoWayAnovaWithoutInteractionsAnalyzer extends AbstractTwoWayAnovaA
 
         String modelDeclaration = "x ~ " + factorA + "+" + factorB;
 
-        command.append( ", 1, function(x) {  tryCatch(anova(aov(" + modelDeclaration + ")), error=function(e) {e} )})" );
+        command.append( ", 1, function(x) { try(anova(aov(" + modelDeclaration + ")), silent=T )})" );
 
-        log.info( "Starting R analysis ...  " );
+        log.info( "Starting ANOVA ...  " );
         log.debug( command.toString() );
 
-        TwoWayAnovaResult anovaResult = rc.twoWayAnovaEvalWithLogging( command.toString() );
+        TwoWayAnovaResult anovaResult = rc.twoWayAnovaEvalWithLogging( command.toString(), false );
 
         if ( anovaResult == null ) throw new IllegalStateException( "No pvalues returned" );
 
         double[] pvalues = anovaResult.getPvalues();
-        double[] mainEffectAPvalues = new double[anovaResult.getPvalues().length / NUM_RESULTS_FROM_R];
-        double[] mainEffectBPvalues = new double[anovaResult.getPvalues().length / NUM_RESULTS_FROM_R];
+
+        // assert pvalues.length == namedMatrix.rows() * NUM_RESULTS_FROM_R;
+
+        double[] mainEffectAPvalues = new double[namedMatrix.rows()];
+        double[] mainEffectBPvalues = new double[namedMatrix.rows()];
         int j = 0;
         int k = 0;
         for ( int i = 0; i < pvalues.length; i++ ) {
@@ -188,9 +191,8 @@ public class TwoWayAnovaWithoutInteractionsAnalyzer extends AbstractTwoWayAnovaA
         writePValuesHistogram( anovaResult.getPvalues(), expressionExperiment, effects );
 
         disconnectR();
-        log.info( "R analysis done" );
+        log.info( "ANOVA done" );
         return createExpressionAnalysis( dmatrix, mainEffectAPvalues, mainEffectBPvalues, null, anovaResult
-                .getStatistics(), NUM_RESULTS_FROM_R, experimentalFactorA, experimentalFactorB, quantitationType,
-                expressionExperiment );
+                .getStatistics(), experimentalFactorA, experimentalFactorB, quantitationType, expressionExperiment );
     }
 }

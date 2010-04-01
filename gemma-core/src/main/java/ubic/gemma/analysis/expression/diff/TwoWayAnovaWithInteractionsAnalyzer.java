@@ -31,7 +31,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
-import ubic.basecode.util.TwoWayAnovaResult;
+import ubic.basecode.util.r.type.TwoWayAnovaResult;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -114,21 +114,20 @@ public class TwoWayAnovaWithInteractionsAnalyzer extends AbstractTwoWayAnovaAnal
 
         pvalueCommand.append( "apply(" );
         pvalueCommand.append( matrixName );
-        pvalueCommand.append( ", 1, function(x) { tryCatch( anova(aov(x ~ " + tfactsA + "*" + tfactsB
-                + ")), error=function(e) { e })}" );
+        pvalueCommand.append( ", 1, function(x) { try( anova(aov(x ~ " + tfactsA + "*" + tfactsB + ")), silent=T)}" );
         pvalueCommand.append( ")" );
 
         log.info( "Starting ANOVA ..." );
         log.debug( pvalueCommand.toString() );
 
-        TwoWayAnovaResult anovaResult = rc.twoWayAnovaEvalWithLogging( pvalueCommand.toString() );
+        TwoWayAnovaResult anovaResult = rc.twoWayAnovaEvalWithLogging( pvalueCommand.toString(), true );
 
         if ( anovaResult == null ) throw new IllegalStateException( "No pvalues returned" );
 
         double[] pvalues = anovaResult.getPvalues();
-        double[] mainEffectAPvalues = new double[anovaResult.getPvalues().length / NUM_RESULTS_FROM_R];
-        double[] mainEffectBPvalues = new double[anovaResult.getPvalues().length / NUM_RESULTS_FROM_R];
-        double[] interactionEffectPvalues = new double[anovaResult.getPvalues().length / NUM_RESULTS_FROM_R];
+        double[] mainEffectAPvalues = new double[namedMatrix.rows()];
+        double[] mainEffectBPvalues = new double[namedMatrix.rows()];
+        double[] interactionEffectPvalues = new double[namedMatrix.rows()];
         int j = 0;
         int k = 0;
         int l = 0;
@@ -156,9 +155,9 @@ public class TwoWayAnovaWithInteractionsAnalyzer extends AbstractTwoWayAnovaAnal
         writePValuesHistogram( anovaResult.getPvalues(), expressionExperiment, effects );
 
         disconnectR();
-        log.info( "R analysis done" );
+        log.info( "ANOVA done" );
         return createExpressionAnalysis( dmatrix, mainEffectAPvalues, mainEffectBPvalues, interactionEffectPvalues,
-                anovaResult.getStatistics(), NUM_RESULTS_FROM_R, experimentalFactorA, experimentalFactorB,
+                anovaResult.getStatistics(),  experimentalFactorA, experimentalFactorB,
                 quantitationType, expressionExperiment );
 
     }

@@ -500,7 +500,7 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
             cs.setArrayDesign( arrayDesign );
             vector.setDesignElement( cs );
 
-            double[] dvals = new double[biomaterials.size()];
+            double[] dvals = new double[bioMaterials.size()];
             for ( int j = 0; j < dvals.length; j++ ) {
 
                 if ( randomData.nextUniform( 0, 1 ) < FRACTION_MISSING_DATA ) {

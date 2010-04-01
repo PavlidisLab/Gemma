@@ -25,6 +25,7 @@ import org.apache.commons.logging.LogFactory;
 
 import ubic.basecode.util.RClient;
 import ubic.basecode.util.RConnectionFactory;
+import ubic.basecode.util.RServeClient;
 import ubic.gemma.util.ConfigUtils;
 
 /**
@@ -71,9 +72,11 @@ public abstract class RCommander {
             return;
         }
         rc.voidEval( " rm(list=ls())" ); // attempt to release all memory used by this connection.
-        log.debug( "Disconnecting from R..." );
-        rc.disconnect();
-        log.debug( "...disconnected" );
+
+        if ( rc instanceof RServeClient ) {
+            log.debug( "Disconnecting from R..." );
+            ( ( RServeClient ) rc ).disconnect();
+        }
     }
 
     @Override
