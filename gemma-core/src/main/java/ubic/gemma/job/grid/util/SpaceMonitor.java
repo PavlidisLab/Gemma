@@ -48,9 +48,13 @@ public class SpaceMonitor extends AbstractTaskService {
 
     private Boolean enabled = true;
 
-    private String lastStatusMessage = "";
+    private String lastStatusMessage = "Space monitor has not been run yet.";
 
     private Boolean lastStatusWasOK = true;
+
+    private Integer numberOfPings = 0;
+
+    private Integer numberOfBadPings = 0;
 
     @Autowired
     private SpacesUtil spacesUtil;
@@ -64,6 +68,11 @@ public class SpaceMonitor extends AbstractTaskService {
 
     public void disable() {
         this.enabled = false;
+    }
+
+    @Override
+    protected BackgroundJob<TaskCommand> getInProcessRunner( TaskCommand command ) {
+        return null;
     }
 
     /**
@@ -81,6 +90,30 @@ public class SpaceMonitor extends AbstractTaskService {
     }
 
     /**
+     * @return how many times ping has run so far.
+     */
+    public Integer getNumberOfPings() {
+        return numberOfPings;
+    }
+
+    public Integer getNumberOfBadPings() {
+        return numberOfBadPings;
+    }
+
+    @Override
+    protected BackgroundJob<MonitorTaskCommand> getSpaceRunner( TaskCommand command ) {
+        return new BackgroundJob<MonitorTaskCommand>( ( MonitorTaskCommand ) command ) {
+
+            @Override
+            public TaskResult processJob() {
+                MonitorTask task = ( MonitorTask ) getProxy();
+                this.getCommand().setPersistJobDetails( false );
+                return task.execute( this.getCommand() ); // makes the RMI call
+            }
+        };
+    }
+
+    /**
      * This will be fired by quartz. Sends notifications if the space isn't functioning as expected.
      * 
      * @return true if everything is nominal. Note that this return value doesn't really do anything when triggered by
@@ -88,7 +121,7 @@ public class SpaceMonitor extends AbstractTaskService {
      */
     public boolean ping() {
         if ( !enabled ) {
-            this.lastStatusMessage = "";
+            this.lastStatusMessage = "Monitor is disabled.";
             this.lastStatusWasOK = true;
             return true;
         }
@@ -116,11 +149,15 @@ public class SpaceMonitor extends AbstractTaskService {
             } catch ( TaskNotGridEnabledException e ) {
                 this.lastStatusMessage = e.getMessage();
                 this.lastStatusWasOK = false;
+                numberOfBadPings++;
+                numberOfPings++;
                 return false;
             } catch ( ConflictingTaskException e ) {
                 this.lastStatusMessage = e.getMessage() + " -- attempting to cancel the old task";
                 this.lastStatusWasOK = false;
                 taskRunningService.cancelTask( e.getCollidingCommand().getTaskId() );
+                numberOfBadPings++;
+                numberOfPings++;
                 return false;
             }
 
@@ -174,27 +211,12 @@ public class SpaceMonitor extends AbstractTaskService {
             /*
              * Perhaps we just need to refresh our connection.
              */
+            numberOfBadPings++;
             spacesUtil.forceRefreshSpaceBeans();
         }
 
+        numberOfPings++;
+
         return allIsWell;
-    }
-
-    @Override
-    protected BackgroundJob<TaskCommand> getInProcessRunner( TaskCommand command ) {
-        return null;
-    }
-
-    @Override
-    protected BackgroundJob<MonitorTaskCommand> getSpaceRunner( TaskCommand command ) {
-        return new BackgroundJob<MonitorTaskCommand>( ( MonitorTaskCommand ) command ) {
-
-            @Override
-            public TaskResult processJob() {
-                MonitorTask task = ( MonitorTask ) getProxy();
-                this.getCommand().setPersistJobDetails( false );
-                return task.execute( this.getCommand() ); // makes the RMI call
-            }
-        };
     }
 }

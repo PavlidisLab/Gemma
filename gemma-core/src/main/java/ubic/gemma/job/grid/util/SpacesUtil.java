@@ -422,7 +422,6 @@ public class SpacesUtil implements ApplicationContextAware {
             }
         } catch ( Exception e ) {
             e.printStackTrace();
-            return null;
         }
         return workerEntries;
     }

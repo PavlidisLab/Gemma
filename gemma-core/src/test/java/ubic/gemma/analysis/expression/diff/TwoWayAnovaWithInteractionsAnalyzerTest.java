@@ -95,7 +95,7 @@ public class TwoWayAnovaWithInteractionsAnalyzerTest extends BaseAnalyzerConfigu
                     .info( "*** Result set for factor: "
                             + resultSet.getExperimentalFactor()
                             + ".  If factor is null, the result set contains all results per probe or represents the results for the 'interaction' effect. ***" );
-            logResults( resultSet );
+            checkResults( resultSet );
         }
 
     }

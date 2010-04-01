@@ -25,8 +25,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashSet;
 
 import org.apache.commons.lang.RandomStringUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -37,10 +39,13 @@ import ubic.basecode.util.FileTools;
 import ubic.gemma.analysis.preprocess.ExpressionDataMatrixBuilder;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
+import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.FactorValue;
 
 /**
  * An abstract differential expression analyzer to be extended by analyzers which will make use of R. For example, see
@@ -52,6 +57,17 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAnalyzer {
 
     private Log log = LogFactory.getLog( this.getClass() );
+    private static Collection<String> controlGroupTerms = new HashSet<String>();
+
+    static {
+        /*
+         * FIXME: make this external.
+         */
+        controlGroupTerms.add( "control group" );
+        controlGroupTerms.add( "control_group" );
+        controlGroupTerms.add( "http://purl.org/nbirn/birnlex/ontology/BIRNLex-Investigation.owl#birnlex_2201"
+                .toLowerCase() );
+    }
 
     /**
      * Peform an analysis where the factors are determined (or guessed) automatically. If this cannot be unambiguously
@@ -127,9 +143,19 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
             qvaluesFromR = rc.doubleArrayEval( qvalueCommand.toString() );
 
             if ( qvaluesFromR == null ) {
-                throw new IllegalStateException(
-                        "Null qvalues were returned from R. No details about the problem, but probably pi0 was <= 0. Tried both fitting methods. Last attempted command was: "
-                                + qvalueCommand );
+                String err = "Null qvalues were returned from R. No details about the problem, but probably pi0 was <= 0. Tried both fitting methods. Last attempted command was: "
+                        + qvalueCommand;
+
+                String path = "";
+                try {
+                    path = savePvaluesForDebugging( pvaluesToUse );
+                } catch ( IOException e ) {
+                    throw new IllegalStateException( err + "; the pvalues could not be written to disk for debugging: "
+                            + e.getMessage() );
+                }
+                throw new IllegalStateException( err + ". The pvalues that caused the problem are saved in: " + path
+                        + "; try running in R: \nlibrary(qvalue);\nx<-read.table(\"" + path
+                        + "\", header=F);\nsummary(qvalues(x));\n" );
             }
         }
 
@@ -151,6 +177,21 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
             }
         }
         return qvalues;
+    }
+
+    /**
+     * @param pvaluesToUse
+     * @return
+     * @throws IOException
+     */
+    private String savePvaluesForDebugging( double[] pvaluesToUse ) throws IOException {
+        File f = File.createTempFile( "", "pvalues.txt" );
+        FileWriter w = new FileWriter( f );
+        for ( double d : pvaluesToUse ) {
+            w.write( d + "\n" );
+        }
+
+        return f.getPath();
     }
 
     /**
@@ -261,5 +302,37 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
             normalizedRanks[i] = ranks.get( i ) / ranks.size();
         }
         return normalizedRanks;
+    }
+
+    protected FactorValue determineControlGroup( Collection<FactorValue> factorValues ) {
+        FactorValue control = null;
+
+        for ( FactorValue factorValue : factorValues ) {
+            for ( Characteristic c : factorValue.getCharacteristics() ) {
+                if ( c instanceof VocabCharacteristic ) {
+                    String valueUri = ( ( VocabCharacteristic ) c ).getValueUri();
+                    if ( StringUtils.isNotBlank( valueUri ) && controlGroupTerms.contains( valueUri.toLowerCase() ) ) {
+
+                        if ( control != null ) {
+                            log.warn( "More than one control group found, cannot choose between " + valueUri );
+                            return null;
+                        }
+
+                        control = factorValue;
+                    }
+                } else if ( StringUtils.isNotBlank( c.getValue() )
+                        && controlGroupTerms.contains( c.getValue().toLowerCase() ) ) {
+                    if ( control != null ) {
+                        log.warn( "More than one control group found, cannot choose between " + c.getValue() );
+                        return null;
+                    }
+
+                    control = factorValue;
+                }
+
+            }
+        }
+
+        return control;
     }
 }

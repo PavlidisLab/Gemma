@@ -66,7 +66,7 @@ public class DifferentialExpressionAnalyzer implements ApplicationContextAware {
      */
     public DifferentialExpressionAnalysis analyze( ExpressionExperiment expressionExperiment ) {
 
-        AbstractDifferentialExpressionAnalyzer analyzer = determineAnalysis( expressionExperiment );
+        AbstractDifferentialExpressionAnalyzer analyzer = determineAnalysis( expressionExperiment, null );
         if ( analyzer == null ) {
             throw new RuntimeException( "Could not locate an appropriate analyzer" );
         }
@@ -85,7 +85,7 @@ public class DifferentialExpressionAnalyzer implements ApplicationContextAware {
     public DifferentialExpressionAnalysis analyze( ExpressionExperiment expressionExperiment,
             Collection<ExperimentalFactor> factors ) {
 
-        AbstractDifferentialExpressionAnalyzer analyzer = determineAnalysis( expressionExperiment );
+        AbstractDifferentialExpressionAnalyzer analyzer = determineAnalysis( expressionExperiment, factors );
 
         if ( analyzer == null ) {
             throw new RuntimeException( "Could not locate an appropriate analyzer" );
@@ -131,37 +131,38 @@ public class DifferentialExpressionAnalyzer implements ApplicationContextAware {
         }
 
         if ( type == null ) {
-            throw new IllegalArgumentException( "Must provide an analysis type" );
-        }
+            return determineAnalysis( expressionExperiment, factors );
+        } else {
 
-        switch ( type ) {
-            case OWA:
-                if ( factors.size() != 1 ) {
-                    throw new IllegalArgumentException( "Cannot run One-way ANOVA on more than one factor" );
-                }
-                return this.applicationContext.getBean( OneWayAnovaAnalyzer.class );
-            case TWA:
-                if ( factors.size() != 2 ) {
-                    throw new IllegalArgumentException( "Need exactly two factors to run two-way ANOVA" );
-                }
-                return this.applicationContext.getBean( TwoWayAnovaWithoutInteractionsAnalyzer.class );
-            case TWIA:
-                if ( factors.size() != 2 ) {
-                    throw new IllegalArgumentException( "Need exactly two factors to run two-way ANOVA" );
-                }
-                if ( !differentialExpressionAnalysisHelperService.blockComplete( expressionExperiment, factors ) ) {
-                    throw new IllegalArgumentException(
-                            "Experimental design must be block complete to run Two-way ANOVA with interactions" );
-                }
-                return this.applicationContext.getBean( TwoWayAnovaWithInteractionsAnalyzer.class );
+            switch ( type ) {
+                case OWA:
+                    if ( factors.size() != 1 ) {
+                        throw new IllegalArgumentException( "Cannot run One-way ANOVA on more than one factor" );
+                    }
+                    return this.applicationContext.getBean( OneWayAnovaAnalyzer.class );
+                case TWA:
+                    if ( factors.size() != 2 ) {
+                        throw new IllegalArgumentException( "Need exactly two factors to run two-way ANOVA" );
+                    }
+                    return this.applicationContext.getBean( TwoWayAnovaWithoutInteractionsAnalyzer.class );
+                case TWIA:
+                    if ( factors.size() != 2 ) {
+                        throw new IllegalArgumentException( "Need exactly two factors to run two-way ANOVA" );
+                    }
+                    if ( !differentialExpressionAnalysisHelperService.blockComplete( expressionExperiment, factors ) ) {
+                        throw new IllegalArgumentException(
+                                "Experimental design must be block complete to run Two-way ANOVA with interactions" );
+                    }
+                    return this.applicationContext.getBean( TwoWayAnovaWithInteractionsAnalyzer.class );
 
-            case TTEST:
-                if ( factors.size() != 1 ) {
-                    throw new IllegalArgumentException( "Cannot run t-test on more than one factor " );
-                }
-                return this.applicationContext.getBean( TTestAnalyzer.class );
-            default:
-                throw new IllegalArgumentException( "Analyses of that type are not yet supported" );
+                case TTEST:
+                    if ( factors.size() != 1 ) {
+                        throw new IllegalArgumentException( "Cannot run t-test on more than one factor " );
+                    }
+                    return this.applicationContext.getBean( TTestAnalyzer.class );
+                default:
+                    throw new IllegalArgumentException( "Analyses of that type are not yet supported" );
+            }
         }
     }
 
@@ -169,16 +170,26 @@ public class DifferentialExpressionAnalyzer implements ApplicationContextAware {
      * Determines the analysis to execute based on the experimental factors, factor values, and block design.
      * 
      * @param expressionExperiment
+     * @param factors which factors to use, or null if to use all from the experiment
      * @return an appropriate analyzer, or null if one could not be identified.
      */
-    public AbstractDifferentialExpressionAnalyzer determineAnalysis( ExpressionExperiment expressionExperiment ) {
+    public AbstractDifferentialExpressionAnalyzer determineAnalysis( ExpressionExperiment expressionExperiment,
+            Collection<ExperimentalFactor> experimentalFactors ) {
 
-        Collection<ExperimentalFactor> experimentalFactors = expressionExperiment.getExperimentalDesign()
-                .getExperimentalFactors();
+        if ( experimentalFactors == null ) {
+            experimentalFactors = expressionExperiment.getExperimentalDesign().getExperimentalFactors();
+        } else {
 
-        if ( colIsEmpty( experimentalFactors ) ) {
-            throw new RuntimeException(
-                    "Collection of experimental factors is either null or 0.  Cannot execute differential expression analysis." );
+            if ( colIsEmpty( experimentalFactors ) ) {
+                throw new IllegalArgumentException(
+                        "Collection of experimental factors is either null or 0.  Cannot execute differential expression analysis." );
+            }
+
+            for ( ExperimentalFactor experimentalFactor : experimentalFactors ) {
+                if ( !experimentalFactor.getExperimentalDesign().equals( expressionExperiment.getExperimentalDesign() ) ) {
+                    throw new IllegalArgumentException( "Factors must come from the experiment provided" );
+                }
+            }
         }
 
         if ( experimentalFactors.size() == EXPERIMENTAL_FACTOR_ONE ) {

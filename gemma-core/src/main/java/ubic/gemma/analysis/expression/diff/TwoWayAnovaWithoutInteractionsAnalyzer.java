@@ -155,7 +155,7 @@ public class TwoWayAnovaWithoutInteractionsAnalyzer extends AbstractTwoWayAnovaA
 
         command.append( ", 1, function(x) {  tryCatch(anova(aov(" + modelDeclaration + ")), error=function(e) {e} )})" );
 
-        log.info( "Starting R analysis ... please wait!" );
+        log.info( "Starting R analysis ...  " );
         log.debug( command.toString() );
 
         TwoWayAnovaResult anovaResult = rc.twoWayAnovaEvalWithLogging( command.toString() );

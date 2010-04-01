@@ -118,7 +118,7 @@ public class TwoWayAnovaWithInteractionsAnalyzer extends AbstractTwoWayAnovaAnal
                 + ")), error=function(e) { e })}" );
         pvalueCommand.append( ")" );
 
-        log.info( "Starting R analysis ... please wait!" );
+        log.info( "Starting ANOVA ..." );
         log.debug( pvalueCommand.toString() );
 
         TwoWayAnovaResult anovaResult = rc.twoWayAnovaEvalWithLogging( pvalueCommand.toString() );

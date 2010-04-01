@@ -21,6 +21,7 @@ package ubic.gemma.security.audit;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
+import java.util.List;
 import java.util.NoSuchElementException;
 
 import org.aspectj.lang.JoinPoint;
@@ -46,6 +47,8 @@ import org.springframework.transaction.support.TransactionCallbackWithoutResult;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import ubic.gemma.model.common.Auditable;
+import ubic.gemma.model.common.auditAndSecurity.AuditAction;
+import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailDao;
 import ubic.gemma.model.common.auditAndSecurity.User;
@@ -178,7 +181,17 @@ public class AuditAdvice extends HibernateDaoSupport {
 
         if ( at.getEvents().size() > 0 ) {
             // findOrCreate, or this can happen when we persist objects and then let this interceptor look at them again
-            // while persisting parent objects. Harmless.
+            // while persisting parent objects. Harmless. But make sure the first event is set as a 'create'.
+
+            if ( at.getEvents() instanceof List ) { // should be!
+                AuditEvent ae = ( ( List<AuditEvent> ) at.getEvents() ).get( 0 );
+                if ( !ae.getAction().equals( AuditAction.CREATE ) ) {
+                    log.info( "First event was not 'create', fixing it: " + d );
+                    ae.setAction( AuditAction.CREATE );
+                    auditTrailDao.update( at );
+                }
+            }
+
             return;
         }
 
@@ -309,6 +322,13 @@ public class AuditAdvice extends HibernateDaoSupport {
         if ( user != null ) {
             AuditTrail at = d.getAuditTrail();
             assert at != null;
+            if ( at.getEvents().size() == 0 ) {
+                log.warn( "No events!" );
+                return;
+            } else if ( at.getEvents().size() == 1 ) {
+                // making sure this gets initialized correctly.
+                at.getEvents().iterator().next().setAction( AuditAction.CREATE );
+            }
             auditTrailDao.update( at );
             if ( log.isDebugEnabled() )
                 log.debug( "Audited event: " + note + " on " + d.getClass().getSimpleName() + ":" + d.getId() + " by "

@@ -18,23 +18,23 @@
  */
 package ubic.gemma.analysis.expression.diff;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Iterator;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
- 
+
 import ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet;
+import ubic.gemma.model.analysis.expression.ProbeAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
-import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.FactorValue;
 
 /**
  * @author keshav
@@ -57,46 +57,9 @@ public class TTestAnalyzerTest extends BaseAnalyzerConfigurationTest {
 
     private Log log = LogFactory.getLog( this.getClass() );
 
-    private FactorValue factorValueA = null;
-
-    private FactorValue factorValueB = null;
-
-    /*
-     * (non-Javadoc)
-     * @see ubic.gemma.analysis.diff.BaseAnalyzerConfigurationTest#onSetUpInTransaction()
-     */
-    @Before
-    public void setupTTest() throws Exception {
-
-        /*
-         * Doing this here because the test experiment has 2 experimental factors, each with 2 factor values. To test
-         * the t-test, we only want to use one experimental factor and one factor value for each biomaterial.
-         */
-        Collection<FactorValue> factorValues = experimentalFactors.iterator().next().getFactorValues();
-        assertEquals( factorValues.size(), 2 );
-
-        Iterator<FactorValue> iter = factorValues.iterator();
-
-        factorValueA = iter.next();
-
-        factorValueB = iter.next();
-
-        int i = 0;
-        for ( BioMaterial m : biomaterials ) {
-            Collection<FactorValue> fvs = new HashSet<FactorValue>();
-            if ( i % 2 == 0 )
-                fvs.add( factorValueA );
-            else
-                fvs.add( factorValueB );
-
-            m.setFactorValues( fvs );
-            i++;
-        }
-    }
-
     /**
      * Tests the t-test with an {@link ExpressionExperiment}.
-     */ 
+     */
     @Test
     public void testTTestWithExpressionExperiment() throws Exception {
 
@@ -106,14 +69,43 @@ public class TTestAnalyzerTest extends BaseAnalyzerConfigurationTest {
         }
 
         configureMocks();
-        DifferentialExpressionAnalysis expressionAnalysis = analyzer.tTest( expressionExperiment, factorValueA, factorValueB );
+
+        Collection<ExperimentalFactor> factors = new HashSet<ExperimentalFactor>();
+        factors.add( super.experimentalFactorA );
+
+        DifferentialExpressionAnalysis expressionAnalysis = analyzer.run( expressionExperiment, factors );
+
         Collection<ExpressionAnalysisResultSet> resultSets = expressionAnalysis.getResultSets();
         ExpressionAnalysisResultSet resultSet = resultSets.iterator().next();
 
         int numResults = resultSet.getResults().size();
 
         assertEquals( numResults, NUM_DESIGN_ELEMENTS );
-        logResults( resultSet );
+        checkResults( resultSet );
+    }
+
+    /**
+     * @param resultSet
+     */
+    @Override
+    protected void checkResults( ExpressionAnalysisResultSet resultSet ) {
+
+        for ( DifferentialExpressionAnalysisResult r : resultSet.getResults() ) {
+            ProbeAnalysisResult probeAnalysisResult = ( ProbeAnalysisResult ) r;
+            CompositeSequence probe = probeAnalysisResult.getProbe();
+            Double pvalue = probeAnalysisResult.getPvalue();
+            log.debug( "probe: " + probe + "; p-value: " + pvalue );
+
+            if ( probe.getName().equals( "0" ) ) {
+                assertEquals( 9.16511e-8, pvalue, 0.0001 );
+            } else if ( probe.getName().equals( "16" ) ) {
+                assertTrue( pvalue == null );
+            } else if ( probe.getName().equals( "17" ) ) {
+                assertEquals( 2.7407e-7, pvalue, 0.00001 );
+            } else if ( probe.getName().equals( "75" ) ) {
+                assertEquals( 0.5700398, pvalue, 0.00001 );
+            }
+        }
     }
 
     /*

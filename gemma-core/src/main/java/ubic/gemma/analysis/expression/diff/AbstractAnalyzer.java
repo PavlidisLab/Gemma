@@ -18,8 +18,6 @@
  */
 package ubic.gemma.analysis.expression.diff;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.basecode.util.RClient;
@@ -33,8 +31,6 @@ import ubic.gemma.analysis.service.ExpressionDataMatrixService;
  * @version $Id$
  */
 public abstract class AbstractAnalyzer {
-
-    private Log log = LogFactory.getLog( this.getClass() );
 
     protected RClient rc = null;
 
@@ -54,7 +50,6 @@ public abstract class AbstractAnalyzer {
      */
     public void disconnectR() {
         if ( rc != null ) {
-            log.info( "Disconnecting R." );
             rc.disconnect();
         }
     }

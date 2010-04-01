@@ -74,27 +74,29 @@ public class AuditTrailDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
         }
 
         HibernateTemplate templ = this.getHibernateTemplate();
+
         templ.executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                session.update( auditable );
+                session.lock( auditable, LockMode.NONE ); // always a bit dicey
                 if ( !Hibernate.isInitialized( auditable ) ) Hibernate.initialize( auditable );
 
                 /*
-                 * Note: this should be done by the AuditAdvice, we just do it here in case we have turned that off for
-                 * some reason.
+                 * Note: this step should be done by the AuditAdvice when the entity was first created, so this is just
+                 * defensive.
                  */
                 if ( auditable.getAuditTrail() == null ) {
                     auditable.setAuditTrail( AuditTrail.Factory.newInstance() );
                 }
 
                 auditable.getAuditTrail().addEvent( auditEvent );
-                session.flush();
+
+                /*
+                 * When the session is flushed at the close of the transaction, we'll get the change
+                 */
                 return null;
             }
         } );
 
-        assert auditEvent.getId() != null;
-        assert auditable.getAuditTrail().getEvents().size() > 0;
         return auditEvent;
     }
 
@@ -139,7 +141,7 @@ public class AuditTrailDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
                         /*
                          * This can happen if was the result of an anonymous user's actions.
                          */
-                        log.debug( "No performer for audit event: id=" + ae.getId() + " - anonymous?");
+                        log.debug( "No performer for audit event: id=" + ae.getId() + " - anonymous?" );
                     }
                 }
                 session.evict( auditTrail );

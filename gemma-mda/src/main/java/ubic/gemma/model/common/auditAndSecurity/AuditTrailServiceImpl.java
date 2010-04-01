@@ -19,6 +19,7 @@
 package ubic.gemma.model.common.auditAndSecurity;
 
 import java.util.Calendar;
+import java.util.Date;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -75,7 +76,7 @@ public class AuditTrailServiceImpl extends ubic.gemma.model.common.auditAndSecur
     protected AuditEvent handleAddUpdateEvent( Auditable auditable, AuditEventType auditEventType, String note )
             throws Exception {
         AuditEvent auditEvent = AuditEvent.Factory.newInstance();
-        auditEvent.setDate( Calendar.getInstance().getTime() );
+        auditEvent.setDate( new Date() );
         auditEvent.setAction( AuditAction.UPDATE );
         auditEvent.setEventType( auditEventType );
         auditEvent.setNote( note );
@@ -86,7 +87,7 @@ public class AuditTrailServiceImpl extends ubic.gemma.model.common.auditAndSecur
     protected AuditEvent handleAddUpdateEvent( Auditable auditable, AuditEventType auditEventType, String note,
             String detail ) throws Exception {
         AuditEvent auditEvent = AuditEvent.Factory.newInstance();
-        auditEvent.setDate( Calendar.getInstance().getTime() );
+        auditEvent.setDate( new Date() );
         auditEvent.setAction( AuditAction.UPDATE );
         auditEvent.setEventType( auditEventType );
         auditEvent.setNote( note );
@@ -97,7 +98,7 @@ public class AuditTrailServiceImpl extends ubic.gemma.model.common.auditAndSecur
     @Override
     protected AuditEvent handleAddUpdateEvent( Auditable auditable, String note ) throws Exception {
         AuditEvent auditEvent = AuditEvent.Factory.newInstance();
-        auditEvent.setDate( Calendar.getInstance().getTime() );
+        auditEvent.setDate( new Date() );
         auditEvent.setAction( AuditAction.UPDATE );
         auditEvent.setNote( note );
         return this.getAuditTrailDao().addEvent( auditable, auditEvent );

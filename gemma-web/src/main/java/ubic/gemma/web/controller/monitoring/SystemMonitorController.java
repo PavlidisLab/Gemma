@@ -97,6 +97,8 @@ public class SystemMonitorController {
 
         String lastStatusMessage = spaceMonitor.getLastStatusMessage();
         Boolean lastStatusWasOK = spaceMonitor.getLastStatusWasOK();
+        Integer numPings = spaceMonitor.getNumberOfPings();
+        Integer numBadPings = spaceMonitor.getNumberOfBadPings();
 
         buf.append( "<p>" );
         if ( !lastStatusWasOK ) {
@@ -107,10 +109,12 @@ public class SystemMonitorController {
 
         buf.append( "</p>" );
 
+        buf.append( "<p>" + numBadPings + "/" + numPings + " bad pings</p>" );
+
         if ( registeredWorkers != null ) {
             buf.append( "\n<h2>Workers</h2>" );
             for ( SpacesRegistrationEntry e : registeredWorkers ) {
-                buf.append( e.registrationId + ( e.taskId != null ? " Busy with task " + e.taskId : "" ) + "</br>\n" );
+                buf.append( e.registrationId + ( e.taskId != null ? " Was busy with task " + e.taskId : "" ) + "</br>\n" );
             }
         }
 

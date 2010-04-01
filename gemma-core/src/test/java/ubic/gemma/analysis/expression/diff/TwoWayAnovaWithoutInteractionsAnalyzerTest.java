@@ -69,7 +69,7 @@ public class TwoWayAnovaWithoutInteractionsAnalyzerTest extends BaseAnalyzerConf
         for ( ExpressionAnalysisResultSet resultSet : resultSets ) {
             log.info( "*** Result set for factor: " + resultSet.getExperimentalFactor()
                     + ".  If factor is null, the result set contains all results per probe. ***" );
-            logResults( resultSet );
+            checkResults( resultSet );
         }
     }
 

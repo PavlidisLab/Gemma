@@ -37,6 +37,7 @@ import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisR
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorService;
+import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
@@ -64,6 +65,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
         } catch ( Exception e ) {
             throw new RuntimeException( e );
         }
+        System.exit( 0 );
     }
 
     private DifferentialExpressionAnalyzerService differentialExpressionAnalyzerService = null;
@@ -103,6 +105,8 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
         Option topOpt = OptionBuilder.withLongOpt( "top" ).hasArg( true ).withDescription(
                 "The top (most significant) results to display." ).create();
         super.addOption( topOpt );
+
+        super.addForceOption( null );
 
         // Option forceAnalysisOpt = OptionBuilder.hasArg( false ).withDescription( "Force the run." ).create( 'r' );
         // super.addOption( forceAnalysisOpt );
@@ -210,44 +214,11 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
      * @param ee
      */
     private void processExperiment( ExpressionExperiment ee ) {
-
-        Collection<ExperimentalFactor> factors = new HashSet<ExperimentalFactor>();
-
-        ExperimentalFactorService efs = ( ExperimentalFactorService ) this.getBean( "experimentalFactorService" );
-
+        DifferentialExpressionAnalysis results;
         try {
-            DifferentialExpressionAnalysis results = null;
-            if ( this.factorNames.size() > 0 ) {
-                if ( this.factorIds.size() > 0 ) {
-                    throw new IllegalArgumentException( "Please provide factor names or ids, not a mixture of each" );
-                }
-                Collection<ExperimentalFactor> experimentalFactors = ee.getExperimentalDesign()
-                        .getExperimentalFactors();
-                for ( ExperimentalFactor experimentalFactor : experimentalFactors ) {
-                    if ( factorNames.contains( experimentalFactor.getName() ) ) {
-                        factors.add( experimentalFactor );
-                    }
-                }
 
-                if ( factors.size() != factorNames.size() ) {
-                    throw new IllegalArgumentException( "Didn't find factors for all the provided factor names" );
-                }
-
-            } else if ( this.factorIds.size() > 0 ) {
-                for ( Long factorId : factorIds ) {
-                    if ( this.factorNames.size() > 0 ) {
-                        throw new IllegalArgumentException( "Please provide factor names or ids, not a mixture of each" );
-                    }
-                    ExperimentalFactor factor = efs.load( factorId );
-                    if ( factor == null ) {
-                        throw new IllegalArgumentException( "No factor for id=" + factorId );
-                    }
-                    if ( !factor.getExperimentalDesign().equals( ee.getExperimentalDesign() ) ) {
-                        throw new IllegalArgumentException( "Factor with id=" + factorId + " does not belong to " + ee );
-                    }
-                    factors.add( factor );
-                }
-            }
+            this.eeService.thawLite( ee );
+            Collection<ExperimentalFactor> factors = guessFactors( ee );
 
             if ( factors.size() > 0 ) {
                 if ( this.type != null ) {
@@ -274,6 +245,55 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
             log.error( e, e );
             errorObjects.add( ee + ": " + e.getMessage() );
         }
+
     }
 
+    /**
+     * Determine which factors to use if given from the command line.
+     * 
+     * @param ee
+     * @return
+     */
+    private Collection<ExperimentalFactor> guessFactors( ExpressionExperiment ee ) {
+        Collection<ExperimentalFactor> factors = new HashSet<ExperimentalFactor>();
+
+        ExperimentalFactorService efs = ( ExperimentalFactorService ) this.getBean( "experimentalFactorService" );
+        if ( this.factorNames.size() > 0 ) {
+            if ( this.factorIds.size() > 0 ) {
+                throw new IllegalArgumentException( "Please provide factor names or ids, not a mixture of each" );
+            }
+            Collection<ExperimentalFactor> experimentalFactors = ee.getExperimentalDesign().getExperimentalFactors();
+            for ( ExperimentalFactor experimentalFactor : experimentalFactors ) {
+
+                // has already implemented way of figuring out human-friendly name of factor value.
+                ExperimentalFactorValueObject fvo = new ExperimentalFactorValueObject( experimentalFactor );
+
+                if ( factorNames.contains( experimentalFactor.getName() ) ) {
+                    factors.add( experimentalFactor );
+                } else if ( fvo.getCategory() != null && factorNames.contains( fvo.getCategory() ) ) {
+                    factors.add( experimentalFactor );
+                }
+            }
+
+            if ( factors.size() != factorNames.size() ) {
+                throw new IllegalArgumentException( "Didn't find factors for all the provided factor names" );
+            }
+
+        } else if ( this.factorIds.size() > 0 ) {
+            for ( Long factorId : factorIds ) {
+                if ( this.factorNames.size() > 0 ) {
+                    throw new IllegalArgumentException( "Please provide factor names or ids, not a mixture of each" );
+                }
+                ExperimentalFactor factor = efs.load( factorId );
+                if ( factor == null ) {
+                    throw new IllegalArgumentException( "No factor for id=" + factorId );
+                }
+                if ( !factor.getExperimentalDesign().equals( ee.getExperimentalDesign() ) ) {
+                    throw new IllegalArgumentException( "Factor with id=" + factorId + " does not belong to " + ee );
+                }
+                factors.add( factor );
+            }
+        }
+        return factors;
+    }
 }

@@ -148,27 +148,32 @@ public class TaskRunningService implements InitializingBean {
         /*
          * Start a thread to monitor finished tasks that have not been retrieved
          */
-        ExecutorService service = Executors.newSingleThreadExecutor();
-        service.submit( new FutureTask<Object>( new Callable<Object>() {
-            public Object call() throws Exception {
+        Thread sweepThread = new Thread( new Runnable() {
 
-                while ( true ) {
+            @Override
+            public void run() {
+                while ( !Thread.interrupted() ) {
 
-                    try {
-                        Thread.sleep( TASK_CLEANUP_FREQUENCY );
-                    } catch ( InterruptedException e ) {
-                        log.info( "Stopping task monitor" );
-                        return null;
+                    synchronized ( this ) {
+                        try {
+                            this.wait( TASK_CLEANUP_FREQUENCY );
+                        } catch ( InterruptedException e ) {
+                            return;
+                        }
                     }
+                    Thread.yield();
 
                     sweepUp();
-
                 }
 
             }
-        } ) );
+        } );
 
-        service.shutdown();
+        sweepThread.setDaemon( true );
+        sweepThread.setName( "TaskSweepup" );
+
+        sweepThread.start();
+
     }
 
     /**

@@ -24,12 +24,14 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
+import ubic.basecode.util.r.type.HTest;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
@@ -67,11 +69,7 @@ import ubic.gemma.model.expression.experiment.FactorValue;
 @Scope(value = "prototype")
 public class TTestAnalyzer extends AbstractDifferentialExpressionAnalyzer {
 
-    private Log log = LogFactory.getLog( this.getClass() );
-
-    public TTestAnalyzer() {
-        super();
-    }
+    Log log = LogFactory.getLog( this.getClass() );
 
     /*
      * (non-Javadoc)
@@ -126,7 +124,6 @@ public class TTestAnalyzer extends AbstractDifferentialExpressionAnalyzer {
      * @param factorValueB
      * @return
      */
-    @SuppressWarnings("unchecked")
     protected DifferentialExpressionAnalysis tTest( ExpressionExperiment expressionExperiment,
             FactorValue factorValueA, FactorValue factorValueB ) {
 
@@ -142,12 +139,18 @@ public class TTestAnalyzer extends AbstractDifferentialExpressionAnalyzer {
         factorValues.add( factorValueA );
         factorValues.add( factorValueB );
 
+        FactorValue controlGroup = determineControlGroup( factorValues );
+
+        /*
+         * TODO: if non-null, use the control group to define the effect size in a sensible way.
+         */
+
         List<String> rFactors = DifferentialExpressionAnalysisHelperService.getRFactorsFromFactorValuesForOneWayAnova(
                 factorValues, samplesUsed );
 
         assert !rFactors.isEmpty();
 
-        DoubleMatrix namedMatrix = dmatrix.getMatrix();
+        DoubleMatrix<DesignElement, Integer> namedMatrix = dmatrix.getMatrix();
 
         QuantitationType quantitationType = dmatrix.getQuantitationTypes().iterator().next();
 
@@ -159,91 +162,99 @@ public class TTestAnalyzer extends AbstractDifferentialExpressionAnalyzer {
 
         String matrixName = rc.assignMatrix( namedMatrix );
 
-        /*
-         * FIXME this runs the analysis twice (for the p values and t-statistics). Wasteful.
-         */
-
         /* handle the p-values */
         StringBuffer pvalueCommand = new StringBuffer();
         pvalueCommand.append( "apply(" );
         pvalueCommand.append( matrixName );
-        pvalueCommand.append( ", 1, function(x) {t.test(x ~ " + factor + ")$p.value}" );
+        pvalueCommand.append( ", 1, function(x) try(t.test(x ~ " + factor + "), silent=T)" );
         pvalueCommand.append( ")" );
 
-        log.info( "Starting R analysis ... please wait!" );
-        log.debug( pvalueCommand.toString() );
+        log.info( "Starting t-test analysis ... " );
 
-        log.info( "Calculating p values.  R analysis started: " + pvalueCommand.toString() );
-        double[] pvalues = rc.doubleArrayEvalWithLogging( pvalueCommand.toString() );
+        try {
+            List<HTest> resultus = ( List<HTest> ) rc.listEvalWithLogging( HTest.class, pvalueCommand.toString() );
 
-        double[] ranks = computeRanks( pvalues );
+            List<Double> pvaluesl = new ArrayList<Double>();
+            List<Double> tstatistics = new ArrayList<Double>();
+            for ( HTest r : resultus ) {
+                pvaluesl.add( r.getPvalue() );
+                tstatistics.add( r.getStatistic() );
+            }
 
-        /* write out histogram */
-        writePValuesHistogram( pvalues, expressionExperiment, null );
+            double[] pvalues = new double[pvaluesl.size()];
+            int j = 0;
+            for ( Double d : pvaluesl ) {
+                pvalues[j] = d; // might be NaN
+                j++;
+            }
 
-        /* handle the t-statistics */
-        StringBuffer tstatisticCommand = new StringBuffer();
-        tstatisticCommand.append( "apply(" );
-        tstatisticCommand.append( matrixName );
-        tstatisticCommand.append( ", 1, function(x) {t.test(x ~ " + factor + ")$statistic}" );
-        tstatisticCommand.append( ")" );
+            double[] ranks = computeRanks( pvalues );
 
-        log.debug( tstatisticCommand.toString() );
+            /* write out histogram */
+            writePValuesHistogram( pvalues, expressionExperiment, null );
 
-        log.info( "Calculating t statistics.  R analysis started." );
-        double[] tstatistics = rc.doubleArrayEvalWithLogging( tstatisticCommand.toString() );
+            /* q-value */
+            double[] qvalues = super.getQValues( pvalues );
 
-        /* q-value */
-        double[] qvalues = super.getQValues( pvalues );
+            // TODO pass the DifferentialExpressionAnalysisConfig in (see LinkAnalysisService)
+            /* Create the expression analysis and pack the results. */
+            DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
+            DifferentialExpressionAnalysis expressionAnalysis = config.toAnalysis();
 
-        // TODO pass the DifferentialExpressionAnalysisConfig in (see LinkAnalysisService)
-        /* Create the expression analysis and pack the results. */
-        DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
-        DifferentialExpressionAnalysis expressionAnalysis = config.toAnalysis();
+            ExpressionExperimentSet eeSet = ExpressionExperimentSet.Factory.newInstance();
+            Collection<BioAssaySet> experimentsAnalyzed = new HashSet<BioAssaySet>();
+            experimentsAnalyzed.add( expressionExperiment );
+            eeSet.setExperiments( experimentsAnalyzed );
+            expressionAnalysis.setExpressionExperimentSetAnalyzed( eeSet );
 
-        ExpressionExperimentSet eeSet = ExpressionExperimentSet.Factory.newInstance();
-        Collection<BioAssaySet> experimentsAnalyzed = new HashSet<BioAssaySet>();
-        experimentsAnalyzed.add( expressionExperiment );
-        eeSet.setExperiments( experimentsAnalyzed );
-        expressionAnalysis.setExpressionExperimentSetAnalyzed( eeSet );
+            List<DifferentialExpressionAnalysisResult> analysisResults = new ArrayList<DifferentialExpressionAnalysisResult>();
 
-        List<DifferentialExpressionAnalysisResult> analysisResults = new ArrayList<DifferentialExpressionAnalysisResult>();
+            for ( int i = 0; i < dmatrix.rows(); i++ ) {
+                DesignElement de = dmatrix.getDesignElementForRow( i );
+                // FIXME maybe ProbeAnalysisResult should have a DesignElement to avoid type-casting
+                CompositeSequence cs = ( CompositeSequence ) de;
 
-        for ( int i = 0; i < dmatrix.rows(); i++ ) {
-            DesignElement de = dmatrix.getDesignElementForRow( i );
-            // FIXME maybe ProbeAnalysisResult should have a DesignElement to avoid type-casting
-            CompositeSequence cs = ( CompositeSequence ) de;
+                ProbeAnalysisResult probeAnalysisResult = ProbeAnalysisResult.Factory.newInstance();
+                probeAnalysisResult.setProbe( cs );
+                // Don't use NaN as we can't save that in the database.
+                probeAnalysisResult.setPvalue( Double.isNaN( pvaluesl.get( i ) ) ? null : pvaluesl.get( i ) );
+                probeAnalysisResult.setCorrectedPvalue( Double.isNaN( qvalues[i] ) ? null : qvalues[i] );
+                probeAnalysisResult.setScore( Double.isNaN( tstatistics.get( i ) ) ? null : tstatistics.get( i ) );
+                probeAnalysisResult.setQuantitationType( quantitationType );
+                probeAnalysisResult.setRank( Double.isNaN( ranks[i] ) ? null : ranks[i] );
 
-            ProbeAnalysisResult probeAnalysisResult = ProbeAnalysisResult.Factory.newInstance();
-            probeAnalysisResult.setProbe( cs );
-            // Don't use NaN as we can't save that in the database.
-            probeAnalysisResult.setPvalue( Double.isNaN( pvalues[i] ) ? null : pvalues[i] );
-            probeAnalysisResult.setCorrectedPvalue( Double.isNaN( qvalues[i] ) ? null : qvalues[i] );
-            probeAnalysisResult.setScore( Double.isNaN( tstatistics[i] ) ? null : tstatistics[i] );
-            probeAnalysisResult.setQuantitationType( quantitationType );
-            probeAnalysisResult.setRank( Double.isNaN( ranks[i] ) ? null : ranks[i] );
+                assert probeAnalysisResult.getPvalue() == null || !Double.isNaN( probeAnalysisResult.getPvalue() );
+                assert probeAnalysisResult.getCorrectedPvalue() == null
+                        || !Double.isNaN( probeAnalysisResult.getCorrectedPvalue() );
 
-            assert !Double.isNaN( probeAnalysisResult.getPvalue() );
-            assert !Double.isNaN( probeAnalysisResult.getCorrectedPvalue() );
+                analysisResults.add( probeAnalysisResult );
 
-            analysisResults.add( probeAnalysisResult );
+            }
+
+            Collection<ExpressionAnalysisResultSet> resultSets = new HashSet<ExpressionAnalysisResultSet>();
+            Collection<ExperimentalFactor> factors = new HashSet<ExperimentalFactor>();
+            factors.add( factorValueA.getExperimentalFactor() );
+            ExpressionAnalysisResultSet resultSet = ExpressionAnalysisResultSet.Factory.newInstance(
+                    expressionAnalysis, analysisResults, factors );
+            resultSets.add( resultSet );
+
+            expressionAnalysis.setResultSets( resultSets );
+
+            expressionAnalysis.setName( this.getClass().getSimpleName() );
+            expressionAnalysis.setDescription( "T-test for " + factorValueA + " vs " + factorValueB );
+
+            log.info( "R analysis done" );
+
+            return expressionAnalysis;
+
+        } catch ( Exception e ) {
+            log.error( "Error during t-test analysis on " + expressionExperiment.getShortName() );
+            log.error( "Factor= " + StringUtils.join( rFactors, "," ) );
+            log.error( dmatrix );
+            throw ( new RuntimeException( e ) );
+        } finally {
+            disconnectR();
         }
-
-        Collection<ExpressionAnalysisResultSet> resultSets = new HashSet<ExpressionAnalysisResultSet>();
-        Collection<ExperimentalFactor> factors = new HashSet<ExperimentalFactor>();
-        factors.add( factorValueA.getExperimentalFactor() );
-        ExpressionAnalysisResultSet resultSet = ExpressionAnalysisResultSet.Factory.newInstance( expressionAnalysis,
-                analysisResults, factors );
-        resultSets.add( resultSet );
-
-        expressionAnalysis.setResultSets( resultSets );
-
-        expressionAnalysis.setName( this.getClass().getSimpleName() );
-        expressionAnalysis.setDescription( "T-test for " + factorValueA + " vs " + factorValueB );
-        disconnectR();
-        log.info( "R analysis done" );
-
-        return expressionAnalysis;
     }
 
     /*

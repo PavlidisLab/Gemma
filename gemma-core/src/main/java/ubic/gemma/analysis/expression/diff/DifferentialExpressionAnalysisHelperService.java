@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -85,8 +86,8 @@ public class DifferentialExpressionAnalysisHelperService {
     }
 
     /**
-     * Returns the factors that can be used by R for a one way anova. This can also be used for t-tests. There
-     * requirement here is that there is only one factor value per biomaterial, and all factor values are from the same
+     * Returns the factors that can be used by R for a one way anova or t-test. There requirement here is that there is
+     * only one factor value per factor per biomaterial (of course), and all factor values are from the same
      * experimental factor.
      * <p>
      * FIXME use the ExperimentalFactor as the input, not the FactorValues.
@@ -100,8 +101,8 @@ public class DifferentialExpressionAnalysisHelperService {
 
         List<String> rFactors = new ArrayList<String>();
 
-        for ( BioMaterial sampleUsed : samplesUsed ) {
-            Collection<FactorValue> factorValuesFromBioMaterial = sampleUsed.getFactorValues();
+        for ( BioMaterial biomaterial : samplesUsed ) {
+            Collection<FactorValue> factorValuesFromBioMaterial = biomaterial.getFactorValues();
 
             /*
              * Actually, it's fine if there are multiple factorValues, so long as they are from different factors.
@@ -116,19 +117,24 @@ public class DifferentialExpressionAnalysisHelperService {
                 for ( FactorValue fv : factorValuesFromBioMaterial ) {
                     if ( seen != null && fv.getExperimentalFactor().equals( seen ) ) {
                         throw new RuntimeException( "There should only be one factorvalue per factor per biomaterial, "
-                                + sampleUsed + " had multiple values for " + seen );
+                                + biomaterial + " had multiple values for " + seen );
                     }
                     seen = fv.getExperimentalFactor();
                 }
             }
 
-            FactorValue fv = factorValuesFromBioMaterial.iterator().next();
-
-            for ( FactorValue f : factorValues ) {
-                if ( f.equals( fv ) ) {
-                    rFactors.add( fv.getId().toString() );
+            boolean found = false;
+            for ( FactorValue candidate : factorValuesFromBioMaterial ) {
+                if ( factorValues.contains( candidate ) ) {
+                    rFactors.add( candidate.getId() + "_f" );
+                    found = true;
                     break;
                 }
+            }
+
+            if ( !found ) {
+                throw new IllegalStateException( "No match for factorvalue on " + biomaterial
+                        + " among possible factorValues: " + StringUtils.join( factorValues, "\n" ) );
             }
         }
         return rFactors;
@@ -338,14 +344,26 @@ public class DifferentialExpressionAnalysisHelperService {
 
             Collection<FactorValue> factorValuesFromBioMaterial = m.getFactorValues();
 
-            if ( !factorValuePairings.contains( factorValuesFromBioMaterial ) ) {
-                throw new RuntimeException(
-                        "Biomaterial's factor values are not in one of the possible factor value pairings from the experimental factors.  Block design is neither complete nor incomplete.  It is just incorrect." );
+            if ( factorValuesFromBioMaterial.size() < experimentalFactors.size() ) {
+                log.warn( "Biomaterial must have at least " + experimentalFactors.size()
+                        + "factor value.  Incomplete block design. " + m );
+                return false;
             }
 
-            if ( factorValuesFromBioMaterial.size() < 2 ) {
-                log.warn( "Biomaterial must have more than 1 factor value.  Incomplete block design." );
-                return false;
+            /*
+             * Find a combination of factors used in the model that this biomaterial has.
+             */
+            boolean ok = false;
+            for ( Set<FactorValue> pairing : factorValuePairings ) {
+                if ( factorValuesFromBioMaterial.containsAll( pairing ) ) {
+                    ok = true;
+                    break;
+                }
+            }
+
+            if ( !ok ) {
+                throw new IllegalArgumentException(
+                        "Biomaterial does not have a combination of factors matching the model; design error?: " + m );
             }
 
             seenPairings.put( factorValuesFromBioMaterial, m );

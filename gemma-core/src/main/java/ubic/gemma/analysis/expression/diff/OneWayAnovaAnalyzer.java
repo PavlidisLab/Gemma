@@ -146,7 +146,8 @@ public class OneWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer 
     }
 
     /**
-     * @param matrix
+     * Remove rows that have incomplete data? Why don't other analyzers need this?
+     * 
      * @param rFactors
      * @return
      */
@@ -174,19 +175,21 @@ public class OneWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer 
 
                 if ( Double.isNaN( row[j] ) && !seenFactors.contains( rFactor ) ) {
 
-                    log.debug( "Looking for valid data points in row with factor " + rFactor + "." );
+                    if ( log.isDebugEnabled() )
+                        log.debug( "Looking for valid data points in row with factor " + rFactor + "." );
 
                     /* find all columns with the same factor as row[j] */
                     boolean skipRow = true;
                     for ( int k = 0; k < rFactors.size(); k++ ) {
-                        // TODO optimize this loop
+
                         if ( k == j ) continue;
 
                         if ( !Double.isNaN( row[k] ) ) {
 
                             if ( rFactors.get( k ).equals( rFactor ) ) {
                                 skipRow = false;
-                                log.debug( "Valid data point found for factor " + rFactor + "." );
+                                if ( log.isDebugEnabled() )
+                                    log.debug( "Valid data point found for factor " + rFactor + "." );
                                 break;
                             }
                         }
@@ -236,7 +239,12 @@ public class OneWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer 
                 .getBioMaterialsForBioAssays( dmatrix );
 
         List<String> rFactors = DifferentialExpressionAnalysisHelperService.getRFactorsFromFactorValuesForOneWayAnova(
-                experimentalFactor.getFactorValues(), samplesUsed );
+                factorValues, samplesUsed );
+
+        /*
+         * if possible sue this to compute effect sizes?
+         */
+        FactorValue controlGroup = determineControlGroup( factorValues );
 
         DoubleMatrix<DesignElement, Integer> filteredNamedMatrix = this.filterMatrix( dmatrix, rFactors );
 
@@ -259,7 +267,7 @@ public class OneWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer 
 
         pvalueBuf.append( "apply(" );
         pvalueBuf.append( matrixName );
-        pvalueBuf.append( ", 1, function(x) {anova(aov(x ~ " + factor + "))$Pr}" );
+        pvalueBuf.append( ", 1, function(x) {anova(aov(x ~ " + factor + ", contrasts=c(\"contr.treatment\")))$Pr}" );
         pvalueBuf.append( ")" );
 
         String pvalueCmd = pvalueBuf.toString() + "[1,]";
@@ -339,7 +347,6 @@ public class OneWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer 
 
         disconnectR();
 
-        log.info( "R analysis done" );
         return expressionAnalysis;
 
     }
