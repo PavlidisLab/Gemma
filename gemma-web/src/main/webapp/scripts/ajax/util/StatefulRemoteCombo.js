@@ -66,7 +66,7 @@ Gemma.StatefulRemoteCombo = Ext.extend(Ext.form.ComboBox, {
 			 * @return {}
 			 */
 			getSelected : function() {
-				if (this.getStore()) {
+				if (this.getStore() && this.view) {
 					var index = this.view.getSelectedIndexes()[0];
 					return this.getStore().getAt(index);
 				}

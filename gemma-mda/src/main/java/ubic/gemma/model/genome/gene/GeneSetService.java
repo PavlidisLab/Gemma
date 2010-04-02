@@ -84,7 +84,7 @@ public interface GeneSetService {
      * @param id
      * @return
      */
-    @Secured( { "GROUP_ADMIN", "AFTER_ACL_COLLECTION_READ" })
+    @Secured( { "GROUP_USER", "AFTER_ACL_COLLECTION_READ" })
     public Collection<GeneSet> loadAll();
 
     /**

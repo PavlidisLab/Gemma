@@ -21,6 +21,7 @@ public class GeneSetValueObject implements Serializable {
     private boolean publik;
     private boolean shared;
     private SidValueObject owner;
+    private Integer size;
 
     public static Collection<GeneSetValueObject> convert2ValueObjects( Collection<GeneSet> genesets ) {
         Collection<GeneSetValueObject> results = new HashSet<GeneSetValueObject>();
@@ -54,6 +55,7 @@ public class GeneSetValueObject implements Serializable {
         this.setId( id );
         this.setDescription( description );
         this.setGeneMembers( members );
+        this.setSize( members.size() );
 
     }
 
@@ -130,10 +132,14 @@ public class GeneSetValueObject implements Serializable {
      * @return
      */
     public Integer getSize() {
+        return this.size;
+    }
 
-        if ( this.geneMembers == null ) return null;
-
-        return this.geneMembers.size();
+    /**
+     * @param size
+     */
+    public void setSize( Integer size ) {
+        this.size = size;
     }
 
     /**

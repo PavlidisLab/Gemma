@@ -111,6 +111,9 @@ Gemma.GeneGroupPanel = Ext.extend(Ext.grid.EditorGridPanel, {
 						}, {
 							name : "isShared",
 							type : "boolean"
+						}, {
+							name : "size",
+							type : "int"
 						}])),
 
 		listeners : {
@@ -164,6 +167,13 @@ Gemma.GeneGroupPanel = Ext.extend(Ext.grid.EditorGridPanel, {
 					})
 				})
 			}, {
+				header : 'size',
+				sortable : true,
+				dataIndex : 'size',		
+				editable : false,
+				groupable : false,
+				tooltip : 'number of genes in group'
+			}, {
 				header : 'Flags',
 				sortable : true,
 				renderer : function(value, metadata, record, rowIndex,
@@ -206,7 +216,7 @@ Gemma.GeneGroupImporter = Ext.extend(Ext.Panel, {
 					region : 'east',
 					id : 'gene-chooser-panel'
 				});
-
+				
 		this.geneGroupPanel = new Gemma.GeneGroupPanel({
 					id : 'gene-group-panel',
 					region : 'center'
@@ -220,7 +230,7 @@ Gemma.GeneGroupImporter = Ext.extend(Ext.Panel, {
 
 		Ext.apply(this, {
 			layout : 'border',
-			width : "100%",
+			//width : "100%",
 			height : 400,
 			title : "Gene Group Manager",
 			tbar : {
@@ -241,6 +251,10 @@ Gemma.GeneGroupImporter = Ext.extend(Ext.Panel, {
 															groupname) {
 
 														refreshGeneGroupData();
+														Ext
+																.getCmp('gene-chooser-panel')
+																.getTopToolbar().geneCombo
+																.focus();
 
 													},
 													errorHandler : function(e) {
@@ -312,6 +326,9 @@ Gemma.GeneGroupImporter = Ext.extend(Ext.Panel, {
 								GeneSetController.deleteGeneGroup(groupId, {
 											callback : function() {
 												refreshGeneGroupData();
+												Ext
+														.getCmp('gene-chooser-panel')
+														.loadGenes([]);
 											},
 											errorHandler : function(e) {
 												Ext.Msg.alert('Sorry', e);

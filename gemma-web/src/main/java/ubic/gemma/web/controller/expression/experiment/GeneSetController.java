@@ -7,7 +7,6 @@
  * under the License.
  */
 
-
 package ubic.gemma.web.controller.expression.experiment;
 
 import java.util.Collection;
@@ -33,6 +32,7 @@ import ubic.gemma.web.controller.common.auditAndSecurity.SidValueObject;
 
 /**
  * Exposes GeneServices methods over ajax
+ * 
  * @author kelsey
  * @version $Id
  */
@@ -40,23 +40,21 @@ import ubic.gemma.web.controller.common.auditAndSecurity.SidValueObject;
 public class GeneSetController {
 
     @Autowired
-    private GeneSetService geneSetService= null;
-    
+    private GeneSetService geneSetService = null;
+
     @Autowired
-    private GeneService  geneService= null;
-    
+    private GeneService geneService = null;
+
     @Autowired
     private SecurityService securityService = null;
-    
+
     private static Log log = LogFactory.getLog( GeneSetController.class );
     private static final Double DEFAULT_SCORE = 0.0;
 
-    public GeneSetController(){
+    public GeneSetController() {
         super();
     }
-    
-    
-    
+
     /**
      * AJAX Creates a new gene group given a name for the group and the genes in the group
      * 
@@ -105,7 +103,7 @@ public class GeneSetController {
         if ( groupId == null ) return;
 
         GeneSet gset = geneSetService.load( groupId );
-        if ( gset != null )geneSetService.remove( gset );
+        if ( gset != null ) geneSetService.remove( gset );
 
     }
 
@@ -189,29 +187,33 @@ public class GeneSetController {
     public Collection<GeneSetValueObject> getUsersGeneGroups( boolean privateOnly ) {
         Collection<Securable> secs = new HashSet<Securable>();
 
-        Collection<GeneSet> geneSets = geneSetService.loadMyGeneSets();
+        Collection<GeneSet> geneSets = null;
         if ( privateOnly ) {
             try {
+                geneSets = geneSetService.loadMyGeneSets();
                 secs.addAll( securityService.choosePrivate( geneSets ) );
             } catch ( AccessDeniedException e ) {
                 // okay, they just aren't allowed to see those.
             }
         } else {
-            secs.addAll( geneSets );
+            // secs.addAll( geneSets );
+            secs.addAll( geneSetService.loadAll() );
         }
 
-        //Create valueobject (need to add security info or would move this out into the valueobject...
+        // Create valueobject (need to add security info or would move this out into the valueobject...
         Collection<GeneSetValueObject> result = new HashSet<GeneSetValueObject>();
-        for(Securable gs : secs){            
+        for ( Securable gs : secs ) {
 
-            GeneSetValueObject gsvo = new GeneSetValueObject((GeneSet) gs);
+            GeneSetValueObject gsvo = new GeneSetValueObject( ( GeneSet ) gs );
+            gsvo.setGeneMembers( null ); // For fear of to much data being passed back, client makes seperate call to
+                                         // get gene group memembers
             gsvo.setPublik( securityService.isPublic( gs ) );
-            gsvo.setShared( securityService.isShared( gs ) );      
+            gsvo.setShared( securityService.isShared( gs ) );
             gsvo.setOwner( new SidValueObject( securityService.getOwner( gs ) ) );
 
             result.add( gsvo );
         }
         return result;
     }
-    
+
 }

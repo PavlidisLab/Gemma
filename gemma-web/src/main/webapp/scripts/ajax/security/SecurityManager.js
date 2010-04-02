@@ -261,7 +261,7 @@ Gemma.SecurityManager.updateSecurityLink = function(elid, isPublic, isShared) {
 			: '';
 
 	Ext.DomHelper.overwrite(elid, icon + '&nbsp;' + sharedIcon);
-}
+};
 
 /**
  * Display an icon representing the security status. The icon is a link to the
