@@ -108,7 +108,7 @@ public class TwoWayAnovaWithoutInteractionsAnalyzerTest extends BaseAnalyzerConf
                     assertEquals( 418990.60, stat, 0.1 );
                     found = true;
                 } else if ( probe.getName().equals( "probe_97" ) ) { // id 1097
-                    assertEquals( 0.1567, pvalue, 0.00001 );
+                    assertEquals( 0.1567, pvalue, 0.001 );
                 }
 
             } else {
