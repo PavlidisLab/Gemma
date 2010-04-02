@@ -159,16 +159,16 @@ public class ExpressionDataStringMatrix extends BaseExpressionDataMatrix<String>
 
         int numRows = this.rowDesignElementMapByInteger.keySet().size();
 
-        StringMatrix<Integer, Integer> matrix = new StringMatrix<Integer, Integer>( numRows, maxSize );
+        StringMatrix<Integer, Integer> mat = new StringMatrix<Integer, Integer>( numRows, maxSize );
 
-        for ( int j = 0; j < matrix.columns(); j++ ) {
-            matrix.addColumnName( j );
+        for ( int j = 0; j < mat.columns(); j++ ) {
+            mat.addColumnName( j );
         }
 
         // initialize the matrix to "";
-        for ( int i = 0; i < matrix.rows(); i++ ) {
-            for ( int j = 0; j < matrix.columns(); j++ ) {
-                matrix.set( i, j, "" );
+        for ( int i = 0; i < mat.rows(); i++ ) {
+            for ( int j = 0; j < mat.columns(); j++ ) {
+                mat.set( i, j, "" );
             }
         }
 
@@ -181,7 +181,7 @@ public class ExpressionDataStringMatrix extends BaseExpressionDataMatrix<String>
             Integer rowIndex = this.rowElementMap.get( designElement );
             assert rowIndex != null;
 
-            matrix.addRowName( rowIndex );
+            mat.addRowName( rowIndex );
 
             byte[] bytes = vector.getData();
             String[] vals = bac.byteArrayToStrings( bytes );
@@ -190,22 +190,22 @@ public class ExpressionDataStringMatrix extends BaseExpressionDataMatrix<String>
             Collection<BioAssay> bioAssays = dimension.getBioAssays();
             assert bioAssays.size() == vals.length : "Expected " + vals.length + " got " + bioAssays.size();
 
-            Iterator it = bioAssays.iterator();
+            Iterator<BioAssay> it = bioAssays.iterator();
 
             for ( int j = 0; j < bioAssays.size(); j++ ) {
 
-                BioAssay bioAssay = ( BioAssay ) it.next();
+                BioAssay bioAssay = it.next();
                 Integer column = this.columnAssayMap.get( bioAssay );
 
                 assert column != null;
 
-                matrix.setByKeys( rowIndex, column, vals[j] );
+                mat.setByKeys( rowIndex, column, vals[j] );
             }
 
         }
 
-        log.debug( "Created a " + matrix.rows() + " x " + matrix.columns() + " matrix" );
-        return matrix;
+        log.debug( "Created a " + mat.rows() + " x " + mat.columns() + " matrix" );
+        return mat;
     }
 
     public int columns() {

@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.logging.Log;
@@ -38,9 +39,7 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
-import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.DesignElement;
-import ubic.gemma.model.genome.biosequence.BioSequence;
 
 /**
  * A data structure that holds a reference to the data for a given expression experiment. The data can be queried by row
@@ -123,9 +122,9 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#get(ubic.gemma.model.expression.designElement.DesignElement,
-     *      ubic.gemma.model.expression.bioAssay.BioAssay)
+     * @see
+     * ubic.gemma.datastructure.matrix.ExpressionDataMatrix#get(ubic.gemma.model.expression.designElement.DesignElement,
+     * ubic.gemma.model.expression.bioAssay.BioAssay)
      */
     public Double get( DesignElement designElement, BioAssay bioAssay ) {
         Integer i = this.rowElementMap.get( designElement );
@@ -143,17 +142,16 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#get(java.util.List, java.util.List)
      */
-    public Double[][] get( List designElements, List bioAssays ) {
+    public Double[][] get( List<DesignElement> designElements, List<BioAssay> bioAssays ) {
         throw new UnsupportedOperationException( "Sorry, not implemented yet" );
     }
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getColumn(ubic.gemma.model.expression.bioAssay.BioAssay)
+     * @see
+     * ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getColumn(ubic.gemma.model.expression.bioAssay.BioAssay)
      */
     public Double[] getColumn( BioAssay bioAssay ) {
         int index = this.columnAssayMap.get( bioAssay );
@@ -163,7 +161,6 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getColumn(java.lang.Integer)
      */
     public Double[] getColumn( Integer index ) {
@@ -178,16 +175,14 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getColumns(java.util.List)
      */
-    public Double[][] getColumns( List bioAssays ) {
+    public Double[][] getColumns( List<BioAssay> bioAssays ) {
         throw new UnsupportedOperationException( "Sorry, not implemented yet" );
     }
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getMatrix()
      */
     public Double[][] getRawMatrix() {
@@ -203,8 +198,9 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
 
     /*
      * (non-Javadoc)
-     * 
-     * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getRow(ubic.gemma.model.expression.designElement.DesignElement)
+     * @see
+     * ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getRow(ubic.gemma.model.expression.designElement.DesignElement
+     * )
      */
     public Double[] getRow( DesignElement designElement ) {
         Integer row = this.rowElementMap.get( designElement );
@@ -214,7 +210,6 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getRow(java.lang.Integer)
      */
     public Double[] getRow( Integer index ) {
@@ -224,9 +219,8 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getRows(java.util.List)
-     */ 
+     */
     public Double[][] getRows( List<DesignElement> designElements ) {
         if ( designElements == null ) {
             return null;
@@ -245,7 +239,6 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#rows()
      */
     public int rows() {
@@ -265,7 +258,6 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#set(int, int, java.lang.Object)
      */
     public void set( int row, int column, Double value ) {
@@ -295,7 +287,6 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
 
     /*
      * (non-Javadoc)
-     * 
      * @see java.lang.Object#toString()
      */
     @Override
@@ -319,24 +310,9 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
         }
         buf.append( "\n" );
 
-        boolean warned = false;
         for ( int j = 0; j < rows; j++ ) {
 
             buf.append( this.rowDesignElementMapByInteger.get( j ).getName() );
-            BioSequence biologicalCharacteristic = ( ( CompositeSequence ) this.rowDesignElementMapByInteger.get( j ) )
-                    .getBiologicalCharacteristic();
-            if ( biologicalCharacteristic != null ) {
-                try {
-                    // buf.append( " [" + biologicalCharacteristic.getName() + "]" );
-                } catch ( org.hibernate.LazyInitializationException e ) {
-                    if ( !warned ) {
-                        warned = true;
-                        log
-                                .warn( "Unable to print sequence data: information has not been retrieved from the database" );
-                    }
-                }
-            }
-
             for ( int i = 0; i < columns; i++ ) {
                 Double val = this.get( j, i );
                 if ( Double.isNaN( val ) ) {
@@ -368,20 +344,22 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
 
         int numRows = this.rowDesignElementMapByInteger.keySet().size();
 
-        DoubleMatrix<DesignElement, Integer> matrix = new DenseDoubleMatrix<DesignElement, Integer>( numRows, maxSize );
+        DoubleMatrix<DesignElement, Integer> mat = new DenseDoubleMatrix<DesignElement, Integer>( numRows, maxSize );
 
-        for ( int j = 0; j < matrix.columns(); j++ ) {
-            matrix.addColumnName( j );
+        for ( int j = 0; j < mat.columns(); j++ ) {
+            mat.addColumnName( j );
         }
 
         // initialize the matrix to -Infinity; this marks values that are not yet initialized.
-        for ( int i = 0; i < matrix.rows(); i++ ) {
-            for ( int j = 0; j < matrix.columns(); j++ ) {
-                matrix.set( i, j, Double.NEGATIVE_INFINITY );
+        for ( int i = 0; i < mat.rows(); i++ ) {
+            for ( int j = 0; j < mat.columns(); j++ ) {
+                mat.set( i, j, Double.NEGATIVE_INFINITY );
             }
         }
 
         ByteArrayConverter bac = new ByteArrayConverter();
+
+        Map<Integer, DesignElement> rowNames = new TreeMap<Integer, DesignElement>();
         for ( DesignElementDataVector vector : vectors ) {
 
             DesignElement designElement = vector.getDesignElement();
@@ -390,7 +368,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
             Integer rowIndex = this.rowElementMap.get( designElement );
             assert rowIndex != null;
 
-            matrix.addRowName( designElement );
+            rowNames.put( rowIndex, designElement );
 
             byte[] bytes = vector.getData();
             double[] vals = bac.byteArrayToDoubles( bytes );
@@ -418,22 +396,30 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
                     throw new IllegalArgumentException(
                             "Whoops, negative infinity is a special value, we can't have it in the data" );
                 }
-                matrix.set( rowIndex, column, vals[j] );
+                mat.set( rowIndex, column, vals[j] );
             }
 
         }
 
+        /*
+         * Note: these row names aren't that important unless we use the bare matrix.
+         */
+        for ( int i = 0; i < mat.rows(); i++ ) {
+            mat.addRowName( rowNames.get( i ) );
+        }
+        assert mat.getRowNames().size() == mat.rows();
+
         // fill in remaining missing values.
-        for ( int i = 0; i < matrix.rows(); i++ ) {
-            for ( int j = 0; j < matrix.columns(); j++ ) {
-                if ( matrix.get( i, j ) == Double.NEGATIVE_INFINITY ) {
+        for ( int i = 0; i < mat.rows(); i++ ) {
+            for ( int j = 0; j < mat.columns(); j++ ) {
+                if ( mat.get( i, j ) == Double.NEGATIVE_INFINITY ) {
                     // log.debug( "Missing value at " + i + " " + j );
-                    matrix.set( i, j, Double.NaN );
+                    mat.set( i, j, Double.NaN );
                 }
             }
         }
-        log.debug( "Created a " + matrix.rows() + " x " + matrix.columns() + " matrix" );
-        return matrix;
+        log.debug( "Created a " + mat.rows() + " x " + mat.columns() + " matrix" );
+        return mat;
     }
 
     /**
@@ -450,7 +436,8 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
 
         for ( DesignElementDataVector vector : vectors ) {
             if ( vector instanceof ProcessedExpressionDataVector ) {
-                this.ranks.put( vector.getDesignElement(), ( ( ProcessedExpressionDataVector ) vector ).getRankByMean() );
+                this.ranks
+                        .put( vector.getDesignElement(), ( ( ProcessedExpressionDataVector ) vector ).getRankByMean() );
             }
         }
 
