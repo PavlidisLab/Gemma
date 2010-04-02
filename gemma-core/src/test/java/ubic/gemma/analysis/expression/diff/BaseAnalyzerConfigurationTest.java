@@ -167,16 +167,7 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
     }
 
     /**
-     * The default test data configuration.
-     */
-    public void configureTestDataForTwoWayAnovaWithInteractions() {
-
-        /* this is the default configuration */
-        log.info( "This is the default configuration of the test data." );
-    }
-
-    /**
-     * Configure the test data for two way anova without interactions.
+     * Configure the test data for two way anova without interactions that isn't valid for a two-way. F
      * <p>
      * Removes the replicates.
      */
@@ -194,7 +185,7 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
 
         bioAssayDimension.setBioAssays( bioAssays );
 
-        List<BioMaterial> biomaterials = new ArrayList<BioMaterial>();
+        biomaterials = new ArrayList<BioMaterial>();
         for ( BioAssay b : bioAssayDimension.getBioAssays() ) {
             biomaterials.add( b.getSamplesUsed().iterator().next() );
         }
@@ -496,9 +487,11 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
             vector.setQuantitationType( quantitationType );
 
             CompositeSequence cs = CompositeSequence.Factory.newInstance();
-            cs.setName( String.valueOf( i ) );
+            cs.setName( "probe_" + i );
+            cs.setId( i + 1000L );
             cs.setArrayDesign( arrayDesign );
             vector.setDesignElement( cs );
+            vector.setId( i + 10000L );
 
             double[] dvals = new double[bioMaterials.size()];
             for ( int j = 0; j < dvals.length; j++ ) {

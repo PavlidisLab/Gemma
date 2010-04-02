@@ -95,7 +95,7 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
      *        NaN qvalues.
      * @return returns the qvalues (false discovery rates) for the pvalues using the method of Storey and Tibshirani.
      */
-    protected double[] getQValues( double[] pvalues ) {
+    protected double[] getQValues( Double[] pvalues ) {
 
         if ( pvalues == null || pvalues.length == 0 ) {
             throw new IllegalArgumentException( "No pvalues provided" );
@@ -104,13 +104,22 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
         if ( rc == null || !rc.isConnected() ) {
             connectToR();
         }
+        double[] qvalues = new double[pvalues.length];
 
         /* Create a list with only the p-values that are not Double.NaN */
         ArrayList<Double> pvaluesList = new ArrayList<Double>();
         for ( int i = 0; i < pvalues.length; i++ ) {
-            double pvalue = pvalues[i];
-            if ( pvalue < 0.0 || pvalue > 1.0 || Double.isNaN( pvalue ) ) continue;
+            qvalues[i] = Double.NaN; // initialize.
+
+            Double pvalue = pvalues[i];
+            if ( pvalue == null || pvalue < 0.0 || pvalue > 1.0 || Double.isNaN( pvalue ) ) continue;
             pvaluesList.add( pvalue );
+        }
+
+        if ( pvaluesList.isEmpty() ) {
+            // really you need >100 or something like that for this to make much sense.
+            log.warn( "No pvalues were valid numbers, returning null qvalues" );
+            return qvalues;
         }
 
         /* convert to primitive array */
@@ -137,8 +146,7 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
             /*
              * Qvalue will return an error in several conditions. 1)if the vector contains NaNs [we handle that
              * already]; 2) p-values are out of range 0-1 [we handle that too]; 3) pi0 [proportion of unchanged genes]
-             * <= 0; 4) other invalid arguments which we don't set anyway. I suspect the main cause of this is actually
-             * #3. So we try the other method.
+             * <= 0; 4) other invalid arguments which we don't set anyway. So we try the other method.
              */
             qvalueCommand = "qvalue(" + pvalsName + ", method=\"bootstrap\"" + ")$qvalues";
             qvaluesFromR = rc.doubleArrayEval( qvalueCommand );
@@ -167,7 +175,7 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
 
         /* Add the Double.NaN back in */
         int k = 0;
-        double[] qvalues = new double[pvalues.length];
+
         for ( int i = 0; i < qvalues.length; i++ ) {
             double pvalue = pvalues[i];
             if ( pvalue < 0.0 || pvalue > 1.0 || Double.isNaN( pvalue ) ) {
@@ -196,11 +204,11 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
     }
 
     /**
-     * @param pvalues
+     * @param pValues
      * @param expressionExperiment
      * @param effects ordered (for 2 way anova)
      */
-    protected void writePValuesHistogram( double[] pvalues, ExpressionExperiment expressionExperiment,
+    protected void writePValuesHistogram( Double[] pValues, ExpressionExperiment expressionExperiment,
             ArrayList<ExperimentalFactor> effects ) {
 
         File dir = DifferentialExpressionFileUtils.getBaseDifferentialDirectory( expressionExperiment.getShortName() );
@@ -218,7 +226,7 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
 
         String histFileName = expressionExperiment.getShortName() + DifferentialExpressionFileUtils.PVALUE_DIST_SUFFIX;
 
-        Collection<Histogram> hists = generateHistograms( histFileName, effects, 100, 0, 1, pvalues );
+        Collection<Histogram> hists = generateHistograms( histFileName, effects, 100, 0, 1, pValues );
 
         if ( hists == null || hists.isEmpty() ) {
             log.error( "Could not generate histogram.  Not writing to file" );
@@ -253,7 +261,7 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
      * @return
      */
     protected abstract Collection<Histogram> generateHistograms( String histFileName,
-            ArrayList<ExperimentalFactor> effects, int numBins, int min, int max, double[] pvalues );
+            ArrayList<ExperimentalFactor> effects, int numBins, int min, int max, Double[] pvalues );
 
     /**
      * Returns the preferred {@link QuantitationType}.

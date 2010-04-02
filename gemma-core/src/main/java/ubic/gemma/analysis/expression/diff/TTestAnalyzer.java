@@ -24,6 +24,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -191,10 +192,10 @@ public class TTestAnalyzer extends AbstractDifferentialExpressionAnalyzer {
             double[] ranks = computeRanks( pvalues );
 
             /* write out histogram */
-            writePValuesHistogram( pvalues, expressionExperiment, null );
+            writePValuesHistogram( ArrayUtils.toObject( pvalues ), expressionExperiment, null );
 
             /* q-value */
-            double[] qvalues = super.getQValues( pvalues );
+            double[] qvalues = super.getQValues( ArrayUtils.toObject( pvalues ) );
 
             // TODO pass the DifferentialExpressionAnalysisConfig in (see LinkAnalysisService)
             /* Create the expression analysis and pack the results. */
@@ -265,7 +266,7 @@ public class TTestAnalyzer extends AbstractDifferentialExpressionAnalyzer {
      */
     @Override
     protected Collection<Histogram> generateHistograms( String histFileName, ArrayList<ExperimentalFactor> effects,
-            int numBins, int min, int max, double[] pvalues ) {
+            int numBins, int min, int max, Double[] pvalues ) {
 
         if ( pvalues == null ) {
             return null;

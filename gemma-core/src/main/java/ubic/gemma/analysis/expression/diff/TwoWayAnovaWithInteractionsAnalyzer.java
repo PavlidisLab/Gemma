@@ -23,7 +23,10 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
+import org.apache.commons.collections.Transformer;
+import org.apache.commons.collections.TransformerUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -64,8 +67,6 @@ public class TwoWayAnovaWithInteractionsAnalyzer extends AbstractTwoWayAnovaAnal
 
     private Log log = LogFactory.getLog( this.getClass() );
 
-    private static final int NUM_RESULTS_FROM_R = 3;
-
     /*
      * (non-Javadoc)
      * @seeubic.gemma.analysis.diff.AbstractTwoWayAnovaAnalyzer#twoWayAnova(ubic.gemma.model.expression.experiment.
@@ -85,9 +86,7 @@ public class TwoWayAnovaWithInteractionsAnalyzer extends AbstractTwoWayAnovaAnal
 
         if ( factorValuesA.size() < 2 || factorValuesB.size() < 2 ) {
             throw new RuntimeException(
-                    "Two way anova requires 2 or more factor values per experimental factor.  Received "
-                            + factorValuesA.size() + " for either experimental factor " + experimentalFactorA.getName()
-                            + " or experimental factor " + experimentalFactorB.getName() + "." );
+                    "Two way anova requires 2 or more levels (factor values)  per experimental factor" );
         }
 
         ExpressionDataDoubleMatrix dmatrix = expressionDataMatrixService
@@ -107,7 +106,8 @@ public class TwoWayAnovaWithInteractionsAnalyzer extends AbstractTwoWayAnovaAnal
         String tfactsA = rc.assignFactor( rFactorsA );
         String tfactsB = rc.assignFactor( rFactorsB );
 
-        String matrixName = rc.assignMatrix( namedMatrix );
+        Transformer rowNameExtractor = TransformerUtils.invokerTransformer( "getId" );
+        String matrixName = rc.assignMatrix( namedMatrix, rowNameExtractor );
 
         /* p-values */
         StringBuffer pvalueCommand = new StringBuffer();
@@ -117,48 +117,50 @@ public class TwoWayAnovaWithInteractionsAnalyzer extends AbstractTwoWayAnovaAnal
         pvalueCommand.append( ", 1, function(x) { try( anova(aov(x ~ " + tfactsA + "*" + tfactsB + ")), silent=T)}" );
         pvalueCommand.append( ")" );
 
+        if ( log.isDebugEnabled() ) log.debug( namedMatrix );
+        if ( log.isDebugEnabled() ) log.debug( "factorA<-factor(c(" + StringUtils.join( rFactorsA, "," ) + "))" );
+        if ( log.isDebugEnabled() ) log.debug( "factorB<-factor(c(" + StringUtils.join( rFactorsB, "," ) + "))" );
+
         log.info( "Starting ANOVA ..." );
         log.debug( pvalueCommand.toString() );
 
-        TwoWayAnovaResult anovaResult = rc.twoWayAnovaEvalWithLogging( pvalueCommand.toString(), true );
+        Map<String, TwoWayAnovaResult> anovaResult = rc.twoWayAnovaEvalWithLogging( pvalueCommand.toString(), true );
 
         if ( anovaResult == null ) throw new IllegalStateException( "No pvalues returned" );
 
-        double[] pvalues = anovaResult.getPvalues();
-        double[] mainEffectAPvalues = new double[namedMatrix.rows()];
-        double[] mainEffectBPvalues = new double[namedMatrix.rows()];
-        double[] interactionEffectPvalues = new double[namedMatrix.rows()];
-        int j = 0;
-        int k = 0;
-        int l = 0;
-        for ( int i = 0; i < pvalues.length; i++ ) {
-            double p = pvalues[i];
-            if ( i % NUM_RESULTS_FROM_R == mainEffectAIndex ) {
-                mainEffectAPvalues[j] = p;
-                j++;
-            } else if ( i % NUM_RESULTS_FROM_R == mainEffectBIndex ) {
-                mainEffectBPvalues[k] = p;
-                k++;
-            } else if ( i % NUM_RESULTS_FROM_R == mainEffectInteractionIndex ) {
-                interactionEffectPvalues[l] = p;
-                l++;
-            } else {
-                throw new RuntimeException( "Too many pvalues for a given proble.  Should have " + NUM_RESULTS_FROM_R
-                        + " pvalues per proble." );
-            }
+        Double[] mainEffectAPvalues = new Double[namedMatrix.rows()];
+        Double[] mainEffectBPvalues = new Double[namedMatrix.rows()];
+        Double[] interactionEffectPvalues = new Double[namedMatrix.rows()];
+        int i = 0;
+
+        List<Double> d = new ArrayList<Double>();
+        for ( DesignElement el : namedMatrix.getRowNames() ) {
+
+            TwoWayAnovaResult twoWayAnovaResult = anovaResult.get( rowNameExtractor.transform( el ).toString() );
+
+            assert twoWayAnovaResult != null;
+
+            mainEffectAPvalues[i] = twoWayAnovaResult.getMainEffectAPval();
+            mainEffectBPvalues[i] = twoWayAnovaResult.getMainEffectBPval();
+            interactionEffectPvalues[i] = twoWayAnovaResult.getInteractionPval();
+
+            d.add( mainEffectAPvalues[i] );
+            d.add( mainEffectBPvalues[i] );
+            d.add( interactionEffectPvalues[i] );
+
+            i++;
         }
 
         /* write out histogram */
         ArrayList<ExperimentalFactor> effects = new ArrayList<ExperimentalFactor>();
         effects.add( experimentalFactorA );
         effects.add( experimentalFactorB );
-        writePValuesHistogram( anovaResult.getPvalues(), expressionExperiment, effects );
+        writePValuesHistogram( d.toArray( new Double[] {} ), expressionExperiment, effects );
 
         disconnectR();
         log.info( "ANOVA done" );
         return createExpressionAnalysis( dmatrix, mainEffectAPvalues, mainEffectBPvalues, interactionEffectPvalues,
-                anovaResult.getStatistics(),  experimentalFactorA, experimentalFactorB,
-                quantitationType, expressionExperiment );
+                anovaResult, experimentalFactorA, experimentalFactorB, quantitationType, expressionExperiment );
 
     }
 
@@ -170,7 +172,7 @@ public class TwoWayAnovaWithInteractionsAnalyzer extends AbstractTwoWayAnovaAnal
      */
     @Override
     protected Collection<Histogram> generateHistograms( String histFileName, ArrayList<ExperimentalFactor> effects,
-            int numBins, int min, int max, double[] pvalues ) {
+            int numBins, int min, int max, Double[] pvalues ) {
         Collection<Histogram> hists = new HashSet<Histogram>();
 
         histFileName = StringUtils.removeEnd( histFileName, DifferentialExpressionFileUtils.PVALUE_DIST_SUFFIX );
@@ -189,11 +191,16 @@ public class TwoWayAnovaWithInteractionsAnalyzer extends AbstractTwoWayAnovaAnal
         Histogram histInteraction = new Histogram( nameInteractions, numBins, min, max );
 
         for ( int i = 0; i < pvalues.length; i++ ) {
-            if ( i % maxResults == mainEffectAIndex ) histA.fill( pvalues[i] );
+            int sw = i % maxResults;
+            Double pvalue = pvalues[i];
 
-            if ( i % maxResults == mainEffectBIndex ) histB.fill( pvalues[i] );
+            if ( pvalue == null ) {
+                continue;
+            }
 
-            if ( i % maxResults == mainEffectInteractionIndex ) histInteraction.fill( pvalues[i] );
+            if ( sw == mainEffectAIndex ) histA.fill( pvalue );
+            if ( sw == mainEffectBIndex ) histB.fill( pvalue );
+            if ( sw == mainEffectInteractionIndex ) histInteraction.fill( pvalue );
         }
 
         hists.add( histA );

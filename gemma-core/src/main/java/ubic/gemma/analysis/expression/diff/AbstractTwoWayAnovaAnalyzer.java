@@ -23,7 +23,11 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
+import org.apache.commons.lang.ArrayUtils;
+
+import ubic.basecode.util.r.type.TwoWayAnovaResult;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.analysis.expression.ExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet;
@@ -54,168 +58,6 @@ public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractDifferentialEx
     protected final int mainEffectBIndex = 1;
     protected final int mainEffectInteractionIndex = 2;
     protected final int maxResults = 3;
-
-    /**
-     * Creates and returns an {@link ExpressionAnalysis} and fills in the expression analysis results.
-     * 
-     * @param dmatrix
-     * @param mainEffectAPvalues
-     * @param mainEffectBPvalues
-     * @param interactionEffectPvalues - null if no interactions.
-     * @param fStatistics
-     * @param experimentalFactorA
-     * @param experimentalFactorB
-     * @param quantitationType
-     * @param expressionExperiment
-     * @return
-     */
-    protected DifferentialExpressionAnalysis createExpressionAnalysis( ExpressionDataDoubleMatrix dmatrix,
-            double[] mainEffectAPvalues, double[] mainEffectBPvalues, double[] interactionEffectPvalues,
-            double[] fStatistics, ExperimentalFactor experimentalFactorA, ExperimentalFactor experimentalFactorB,
-            QuantitationType quantitationType, ExpressionExperiment expressionExperiment ) {
-
-        assert mainEffectAPvalues.length == mainEffectBPvalues.length;
-
-        int pvaluesPerExample = 2;
-
-        boolean withInteractions = interactionEffectPvalues != null;
-
-        if ( withInteractions ) {
-            assert interactionEffectPvalues != null && interactionEffectPvalues.length == mainEffectAPvalues.length;
-            pvaluesPerExample = 3;
-        }
-
-        assert mainEffectBPvalues.length == fStatistics.length / pvaluesPerExample;
-
-        Collection<ExpressionAnalysisResultSet> resultSets = new HashSet<ExpressionAnalysisResultSet>();
-
-        DifferentialExpressionAnalysis expressionAnalysis = configureAnalysisEntity( dmatrix );
-
-        /* All results for the first main effect */
-        List<DifferentialExpressionAnalysisResult> analysisResultsMainEffectA = new ArrayList<DifferentialExpressionAnalysisResult>();
-
-        /* All results for the second main effect */
-        List<DifferentialExpressionAnalysisResult> analysisResultsMainEffectB = new ArrayList<DifferentialExpressionAnalysisResult>();
-
-        /* Interaction effect */
-        List<DifferentialExpressionAnalysisResult> analysisResultsInteractionEffect = new ArrayList<DifferentialExpressionAnalysisResult>();
-
-        /* q-values */
-        double[] mainEffectAQvalues = super.getQValues( mainEffectAPvalues );
-        double[] mainEffectBQvalues = super.getQValues( mainEffectBPvalues );
-
-        double[] ranksA = computeRanks( mainEffectAPvalues );
-        double[] ranksB = computeRanks( mainEffectBPvalues );
-        double[] ranksI = new double[mainEffectAPvalues.length]; // temporary.
-
-        double[] interactionEffectQvalues = null;
-        if ( interactionEffectPvalues != null ) {
-            ranksI = computeRanks( interactionEffectPvalues );
-            interactionEffectQvalues = super.getQValues( interactionEffectPvalues );
-        }
-
-        int k = 0;// statistics
-        int l = 0;// main effect A
-        int m = 0;// main effect B
-        int n = 0;// interaction effect
-        for ( int i = 0; i < dmatrix.rows(); i++ ) {
-
-            CompositeSequence cs = ( CompositeSequence ) dmatrix.getDesignElementForRow( i );
-
-            for ( int j = 0; j < pvaluesPerExample; j++ ) {
-
-                ProbeAnalysisResult probeAnalysisResult = ProbeAnalysisResult.Factory.newInstance();
-                probeAnalysisResult.setProbe( cs );
-                probeAnalysisResult.setQuantitationType( quantitationType );
-
-                probeAnalysisResult.setScore( Double.isNaN( fStatistics[k] ) ? null : fStatistics[k] );
-                // probeAnalysisResult.setParameters( parameters );
-
-                if ( j % pvaluesPerExample == mainEffectAIndex ) {
-                    probeAnalysisResult
-                            .setPvalue( Double.isNaN( mainEffectAPvalues[l] ) ? null : mainEffectAPvalues[l] );
-                    probeAnalysisResult.setCorrectedPvalue( Double.isNaN( mainEffectAQvalues[l] ) ? null
-                            : mainEffectAQvalues[l] );
-                    probeAnalysisResult.setRank( Double.isNaN( ranksA[l] ) ? null : ranksA[l] );
-                    analysisResultsMainEffectA.add( probeAnalysisResult );
-                    l++;
-                } else if ( j % pvaluesPerExample == mainEffectBIndex ) {
-                    probeAnalysisResult
-                            .setPvalue( Double.isNaN( mainEffectBPvalues[m] ) ? null : mainEffectBPvalues[m] );
-                    probeAnalysisResult.setCorrectedPvalue( Double.isNaN( mainEffectBQvalues[m] ) ? null
-                            : mainEffectBQvalues[m] );
-                    probeAnalysisResult.setRank( Double.isNaN( ranksB[m] ) ? null : ranksB[m] );
-                    analysisResultsMainEffectB.add( probeAnalysisResult );
-                    m++;
-                } else if ( j % pvaluesPerExample == mainEffectInteractionIndex ) {
-                    if ( interactionEffectPvalues != null ) {
-                        probeAnalysisResult.setPvalue( Double.isNaN( interactionEffectPvalues[n] ) ? null
-                                : interactionEffectPvalues[n] );
-                        probeAnalysisResult.setRank( Double.isNaN( ranksI[n] ) ? null : ranksI[n] );
-                    }
-
-                    if ( interactionEffectQvalues != null ) {
-                        probeAnalysisResult.setCorrectedPvalue( Double.isNaN( interactionEffectQvalues[n] ) ? null
-                                : interactionEffectQvalues[n] );
-                    }
-                    analysisResultsInteractionEffect.add( probeAnalysisResult );
-                    n++;
-                }
-
-                k++;
-            }
-        }
-
-        /* main effects */
-        Collection<ExperimentalFactor> mainA = new HashSet<ExperimentalFactor>();
-        mainA.add( experimentalFactorA );
-        ExpressionAnalysisResultSet mainEffectResultSetA = ExpressionAnalysisResultSet.Factory.newInstance(
-                expressionAnalysis, analysisResultsMainEffectA, mainA );
-        resultSets.add( mainEffectResultSetA );
-
-        Collection<ExperimentalFactor> mainB = new HashSet<ExperimentalFactor>();
-        mainB.add( experimentalFactorB );
-        ExpressionAnalysisResultSet mainEffectResultSetB = ExpressionAnalysisResultSet.Factory.newInstance(
-                expressionAnalysis, analysisResultsMainEffectB, mainB );
-        resultSets.add( mainEffectResultSetB );
-
-        /* interaction effect */
-        if ( withInteractions ) {
-            Collection<ExperimentalFactor> interAB = new HashSet<ExperimentalFactor>();
-            interAB.add( experimentalFactorA );
-            interAB.add( experimentalFactorB );
-            ExpressionAnalysisResultSet interactionEffectResultSet = ExpressionAnalysisResultSet.Factory.newInstance(
-                    expressionAnalysis, analysisResultsInteractionEffect, interAB );
-            resultSets.add( interactionEffectResultSet );
-        }
-
-        expressionAnalysis.setResultSets( resultSets );
-
-        expressionAnalysis.setName( this.getClass().getSimpleName() );
-
-        expressionAnalysis.setDescription( "Two-way ANOVA for " + experimentalFactorA + " and " + experimentalFactorB
-                + ( withInteractions ? " with " : " without " ) + "interactions" );
-
-        return expressionAnalysis;
-    }
-
-    /**
-     * @param dmatrix
-     * @return
-     */
-    private DifferentialExpressionAnalysis configureAnalysisEntity( ExpressionDataDoubleMatrix dmatrix ) {
-        // TODO pass the DifferentialExpressionAnalysisConfig in (see LinkAnalysisService)
-        /* Create the expression analysis and pack the results. */
-        DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
-        DifferentialExpressionAnalysis expressionAnalysis = config.toAnalysis();
-
-        ExpressionExperimentSet eeSet = ExpressionExperimentSet.Factory.newInstance();
-        Collection<BioAssaySet> experimentsAnalyzed = new HashSet<BioAssaySet>();
-        experimentsAnalyzed.add( dmatrix.getExpressionExperiment() );
-        eeSet.setExperiments( experimentsAnalyzed );
-        expressionAnalysis.setExpressionExperimentSetAnalyzed( eeSet );
-        return expressionAnalysis;
-    }
 
     /*
      * (non-Javadoc)
@@ -253,6 +95,154 @@ public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractDifferentialEx
     }
 
     /**
+     * Creates and returns an {@link ExpressionAnalysis} and fills in the expression analysis results.
+     * 
+     * @param dmatrix
+     * @param mainEffectAPvalues
+     * @param mainEffectBPvalues
+     * @param interactionEffectPvalues - null if no interactions estimated.
+     * @param anovaResult
+     * @param experimentalFactorA
+     * @param experimentalFactorB
+     * @param quantitationType
+     * @param expressionExperiment
+     * @return
+     */
+    protected DifferentialExpressionAnalysis createExpressionAnalysis( ExpressionDataDoubleMatrix dmatrix,
+            Double[] mainEffectAPvalues, Double[] mainEffectBPvalues, Double[] interactionEffectPvalues,
+            Map<String, TwoWayAnovaResult> anovaResults, ExperimentalFactor experimentalFactorA,
+            ExperimentalFactor experimentalFactorB, QuantitationType quantitationType,
+            ExpressionExperiment expressionExperiment ) {
+
+        assert mainEffectAPvalues.length == mainEffectBPvalues.length;
+
+        int pvaluesPerExample = 2;
+
+        boolean withInteractions = interactionEffectPvalues != null;
+
+        if ( withInteractions ) {
+            assert interactionEffectPvalues.length == mainEffectAPvalues.length;
+            pvaluesPerExample = 3;
+        }
+
+        Collection<ExpressionAnalysisResultSet> resultSets = new HashSet<ExpressionAnalysisResultSet>();
+
+        DifferentialExpressionAnalysis expressionAnalysis = configureAnalysisEntity( dmatrix );
+
+        /* All results for the first main effect */
+        List<DifferentialExpressionAnalysisResult> analysisResultsMainEffectA = new ArrayList<DifferentialExpressionAnalysisResult>();
+
+        /* All results for the second main effect */
+        List<DifferentialExpressionAnalysisResult> analysisResultsMainEffectB = new ArrayList<DifferentialExpressionAnalysisResult>();
+
+        /* Interaction effect */
+        List<DifferentialExpressionAnalysisResult> analysisResultsInteractionEffect = new ArrayList<DifferentialExpressionAnalysisResult>();
+
+        /* q-values */
+        double[] mainEffectAQvalues = super.getQValues( mainEffectAPvalues );
+        double[] mainEffectBQvalues = super.getQValues( mainEffectBPvalues );
+        double[] interactionEffectQvalues = new double[mainEffectAPvalues.length]; // temporary.
+        if ( withInteractions ) {
+            interactionEffectQvalues = super.getQValues( interactionEffectPvalues );
+            assert interactionEffectQvalues.length == interactionEffectPvalues.length;
+        }
+
+        /* ranks */
+        double[] ranksA = computeRanks( ArrayUtils.toPrimitive( mainEffectAPvalues ) );
+        double[] ranksB = computeRanks( ArrayUtils.toPrimitive( mainEffectBPvalues ) );
+        double[] ranksI = new double[mainEffectAPvalues.length]; // temporary.
+        if ( withInteractions ) {
+            ranksI = computeRanks( ArrayUtils.toPrimitive( interactionEffectPvalues ) );
+        }
+
+        assert ranksA.length == mainEffectAPvalues.length;
+        assert ranksB.length == ranksA.length;
+
+        for ( int i = 0; i < dmatrix.rows(); i++ ) {
+
+            CompositeSequence cs = ( CompositeSequence ) dmatrix.getDesignElementForRow( i );
+
+            TwoWayAnovaResult twoWayAnovaResult = anovaResults.get( cs.getId() + "" );
+
+            for ( int j = 0; j < pvaluesPerExample; j++ ) {
+
+                ProbeAnalysisResult probeAnalysisResult = ProbeAnalysisResult.Factory.newInstance();
+                probeAnalysisResult.setProbe( cs );
+                probeAnalysisResult.setQuantitationType( quantitationType );
+
+                Double fstat = null;
+                switch ( j ) {
+                    case 0: {
+                        fstat = twoWayAnovaResult.getMainEffectAfVal();
+                        break;
+                    }
+                    case 1: {
+                        fstat = twoWayAnovaResult.getMainEffectBfVal();
+                        break;
+                    }
+                    case 2: {
+                        fstat = twoWayAnovaResult.getInteractionfVal();
+                        break;
+                    }
+                }
+
+                probeAnalysisResult.setScore( Double.isNaN( fstat ) ? null : fstat );
+
+                if ( j % pvaluesPerExample == mainEffectAIndex ) {
+                    probeAnalysisResult.setPvalue( nan2Null( mainEffectAPvalues[i] ) );
+                    probeAnalysisResult.setCorrectedPvalue( nan2Null( mainEffectAQvalues[i] ) );
+                    probeAnalysisResult.setRank( nan2Null( ranksA[i] ) );
+                    analysisResultsMainEffectA.add( probeAnalysisResult );
+
+                } else if ( j % pvaluesPerExample == mainEffectBIndex ) {
+                    probeAnalysisResult.setPvalue( nan2Null( mainEffectBPvalues[i] ) );
+                    probeAnalysisResult.setCorrectedPvalue( nan2Null( mainEffectBQvalues[i] ) );
+                    probeAnalysisResult.setRank( nan2Null( ranksB[i] ) );
+                    analysisResultsMainEffectB.add( probeAnalysisResult );
+
+                } else if ( withInteractions && j % pvaluesPerExample == mainEffectInteractionIndex ) {
+                    probeAnalysisResult.setPvalue( nan2Null( interactionEffectPvalues[i] ) );
+                    probeAnalysisResult.setRank( nan2Null( ranksI[i] ) );
+                    probeAnalysisResult.setCorrectedPvalue( nan2Null( interactionEffectQvalues[i] ) );
+                    analysisResultsInteractionEffect.add( probeAnalysisResult );
+                }
+            }
+        }
+
+        /* main effects */
+        Collection<ExperimentalFactor> mainA = new HashSet<ExperimentalFactor>();
+        mainA.add( experimentalFactorA );
+        ExpressionAnalysisResultSet mainEffectResultSetA = ExpressionAnalysisResultSet.Factory.newInstance(
+                expressionAnalysis, analysisResultsMainEffectA, mainA );
+        resultSets.add( mainEffectResultSetA );
+
+        Collection<ExperimentalFactor> mainB = new HashSet<ExperimentalFactor>();
+        mainB.add( experimentalFactorB );
+        ExpressionAnalysisResultSet mainEffectResultSetB = ExpressionAnalysisResultSet.Factory.newInstance(
+                expressionAnalysis, analysisResultsMainEffectB, mainB );
+        resultSets.add( mainEffectResultSetB );
+
+        /* interaction effect */
+        if ( withInteractions ) {
+            Collection<ExperimentalFactor> interAB = new HashSet<ExperimentalFactor>();
+            interAB.add( experimentalFactorA );
+            interAB.add( experimentalFactorB );
+            ExpressionAnalysisResultSet interactionEffectResultSet = ExpressionAnalysisResultSet.Factory.newInstance(
+                    expressionAnalysis, analysisResultsInteractionEffect, interAB );
+            resultSets.add( interactionEffectResultSet );
+        }
+
+        expressionAnalysis.setResultSets( resultSets );
+
+        expressionAnalysis.setName( this.getClass().getSimpleName() );
+
+        expressionAnalysis.setDescription( "Two-way ANOVA for " + experimentalFactorA + " and " + experimentalFactorB
+                + ( withInteractions ? " with " : " without " ) + "interactions" );
+
+        return expressionAnalysis;
+    }
+
+    /**
      * To be implemented by the two way anova analyzer.
      * <p>
      * See class level javadoc of two way anova anlayzer for R Call.
@@ -264,5 +254,27 @@ public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractDifferentialEx
      */
     protected abstract DifferentialExpressionAnalysis twoWayAnova( ExpressionExperiment expressionExperiment,
             ExperimentalFactor experimentalFactorA, ExperimentalFactor experimentalFactorB );
+
+    /**
+     * @param dmatrix
+     * @return
+     */
+    private DifferentialExpressionAnalysis configureAnalysisEntity( ExpressionDataDoubleMatrix dmatrix ) {
+        // TODO pass the DifferentialExpressionAnalysisConfig in (see LinkAnalysisService)
+        /* Create the expression analysis and pack the results. */
+        DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
+        DifferentialExpressionAnalysis expressionAnalysis = config.toAnalysis();
+
+        ExpressionExperimentSet eeSet = ExpressionExperimentSet.Factory.newInstance();
+        Collection<BioAssaySet> experimentsAnalyzed = new HashSet<BioAssaySet>();
+        experimentsAnalyzed.add( dmatrix.getExpressionExperiment() );
+        eeSet.setExperiments( experimentsAnalyzed );
+        expressionAnalysis.setExpressionExperimentSetAnalyzed( eeSet );
+        return expressionAnalysis;
+    }
+
+    private Double nan2Null( Double e ) {
+        return e == null || Double.isNaN( e ) ? null : e;
+    }
 
 }

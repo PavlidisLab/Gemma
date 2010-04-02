@@ -19,6 +19,7 @@
 package ubic.gemma.analysis.expression.diff;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import java.util.Collection;
 
@@ -26,7 +27,11 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet;
+import ubic.gemma.model.analysis.expression.ProbeAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 
 /**
  * Tests the two way anova analyzer with interactions.
@@ -35,25 +40,6 @@ import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
  * @version $Id$
  */
 public class TwoWayAnovaWithInteractionsAnalyzerTest extends BaseAnalyzerConfigurationTest {
-
-    /**
-     * The following has been confirmed with the results from the R console:
-     * <p>
-     * data (for one design element): 0.923, 0.823, 0.0894, 0.0632, 0.7038, 0.603, 0.839, 0.395
-     * <p>
-     * factor A: "pcp", "no pcp", "pcp", "no pcp", "no pcp", "pcp", "no pcp", "pcp"
-     * <p>
-     * factor B: "cerebellum", "amygdala", "amygdala", "amygdala", "cerebellum", "cerebellum", "cerebellum", "amygdala"
-     * <p>
-     * resulting p-value: 0.662
-     * <p>
-     * resulting p-value: 0.129
-     * <p>
-     * resulting p-value: 0.687
-     * <p>
-     * (Note: Because there are only two factor values ("pcp", "no pcp") this is really just a t-test but this was
-     * tested out on the R console the same one way anova call used in the {@link OneWayAnovaAnalyzer}).
-     */
 
     @Autowired
     TwoWayAnovaWithInteractionsAnalyzer analyzer = null;
@@ -83,12 +69,66 @@ public class TwoWayAnovaWithInteractionsAnalyzerTest extends BaseAnalyzerConfigu
 
         for ( ExpressionAnalysisResultSet resultSet : resultSets ) {
             log
-                    .info( "*** Result set for factor: "
+                    .debug( "*** Result set for factor: "
                             + resultSet.getExperimentalFactor()
                             + ".  If factor is null, the result set contains all results per probe or represents the results for the 'interaction' effect. ***" );
             checkResults( resultSet );
         }
 
+    }
+
+    /**
+     * @param resultSet
+     */
+    @Override
+    protected void checkResults( ExpressionAnalysisResultSet resultSet ) {
+
+        Collection<ExperimentalFactor> factors = resultSet.getExperimentalFactor();
+
+        for ( DifferentialExpressionAnalysisResult r : resultSet.getResults() ) {
+
+            ProbeAnalysisResult probeAnalysisResult = ( ProbeAnalysisResult ) r;
+            CompositeSequence probe = probeAnalysisResult.getProbe();
+            Double pvalue = probeAnalysisResult.getPvalue();
+            Double stat = probeAnalysisResult.getScore();
+
+            if ( pvalue != null ) assertNotNull( stat );
+            assertNotNull( probe );
+
+            log.debug( "probe: " + probe + "; p-value: " + pvalue + "; F=" + stat );
+
+            if ( factors.size() == 1 ) {
+
+                ExperimentalFactor f = factors.iterator().next();
+
+                if ( f.equals( super.experimentalFactorA ) ) {
+
+                    if ( probe.getName().equals( "probe_98" ) ) {
+                        assertEquals( 0.7485, pvalue, 0.001 );
+                    } else if ( probe.getName().equals( "probe_10" ) ) {
+                        assertEquals( 8.97e-08, pvalue, 0.00001 );
+                    } else if ( probe.getName().equals( "probe_4" ) ) {
+                        assertEquals( 0.00656, pvalue, 0.0001 );
+                    }
+
+                } else {
+                    if ( probe.getName().equals( "probe_98" ) ) {
+                        assertEquals( 0.7792, pvalue, 0.001 );
+                    } else if ( probe.getName().equals( "probe_10" ) ) {
+                        assertEquals( 0.08816, pvalue, 0.00001 );
+                    }
+
+                }
+
+            } else {
+                if ( probe.getName().equals( "probe_98" ) ) {
+                    assertEquals( 0.9585, pvalue, 0.001 );
+                } else if ( probe.getName().equals( "probe_10" ) ) {
+                    assertEquals( 0.11823, pvalue, 0.00001 );
+                }
+            }
+
+        }
     }
 
     /*

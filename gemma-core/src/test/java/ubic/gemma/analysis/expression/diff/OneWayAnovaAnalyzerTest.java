@@ -38,19 +38,6 @@ import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
  */
 public class OneWayAnovaAnalyzerTest extends BaseAnalyzerConfigurationTest {
 
-    /**
-     * The following has been confirmed with the results from the R console:
-     * <p>
-     * data (for one design element): 0.515, 0.0918, 0.478, 0.63, 0.0521, 0.4033, 0.2055, 0.1582
-     * <p>
-     * factor: "pcp", "no pcp", "pcp", "no pcp", "no pcp", "pcp", "no pcp", "pcp"
-     * <p>
-     * resulting p-value: 0.393
-     * <p>
-     * (Note: Because there are only two factor values ("pcp", "no pcp") this is really just a t-test but this was
-     * tested out on the R console the same one way anova call used in the {@link OneWayAnovaAnalyzer}).
-     */
-
     private Log log = LogFactory.getLog( this.getClass() );
 
     @Autowired

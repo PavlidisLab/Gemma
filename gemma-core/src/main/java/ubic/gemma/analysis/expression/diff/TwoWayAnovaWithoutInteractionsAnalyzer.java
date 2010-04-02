@@ -23,7 +23,11 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
+import org.apache.commons.collections.Transformer;
+import org.apache.commons.collections.TransformerUtils;
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -62,8 +66,6 @@ import ubic.gemma.model.expression.experiment.FactorValue;
 @Scope(value = "prototype")
 public class TwoWayAnovaWithoutInteractionsAnalyzer extends AbstractTwoWayAnovaAnalyzer {
 
-    private static final int NUM_RESULTS_FROM_R = 2;
-
     private Log log = LogFactory.getLog( this.getClass() );
 
     /*
@@ -74,7 +76,7 @@ public class TwoWayAnovaWithoutInteractionsAnalyzer extends AbstractTwoWayAnovaA
      */
     @Override
     protected Collection<Histogram> generateHistograms( String histFileName, ArrayList<ExperimentalFactor> effects,
-            int numBins, int min, int max, double[] pvalues ) {
+            int numBins, int min, int max, Double[] pvalues ) {
 
         Collection<Histogram> hists = new HashSet<Histogram>();
 
@@ -120,9 +122,7 @@ public class TwoWayAnovaWithoutInteractionsAnalyzer extends AbstractTwoWayAnovaA
 
         if ( factorValuesA.size() < 2 || factorValuesB.size() < 2 ) {
             throw new RuntimeException(
-                    "Two way anova requires 2 or more factor values per experimental factor.  Received "
-                            + factorValuesA.size() + " for either experimental factor " + experimentalFactorA.getName()
-                            + " or experimental factor " + experimentalFactorB.getName() + "." );
+                    "Two way anova requires 2 or more levels (factor values) per experimental factor" );
         }
 
         ExpressionDataDoubleMatrix dmatrix = expressionDataMatrixService
@@ -143,56 +143,62 @@ public class TwoWayAnovaWithoutInteractionsAnalyzer extends AbstractTwoWayAnovaA
         String factorA = rc.assignFactor( rFactorsA );
         String factorB = rc.assignFactor( rFactorsB );
 
-        String matrixName = rc.assignMatrix( namedMatrix );
-
-        /* p-values and F-statistics */
-        StringBuffer command = new StringBuffer();
-
-        command.append( "apply(" );
-        command.append( matrixName );
+        Transformer rowNameExtractor = TransformerUtils.invokerTransformer( "getId" );
+        String matrixName = rc.assignMatrix( namedMatrix, rowNameExtractor );
 
         String modelDeclaration = "x ~ " + factorA + "+" + factorB;
 
+        StringBuffer command = new StringBuffer();
+        command.append( "apply(" );
+        command.append( matrixName );
         command.append( ", 1, function(x) { try(anova(aov(" + modelDeclaration + ")), silent=T )})" );
 
         log.info( "Starting ANOVA ...  " );
-        log.debug( command.toString() );
 
-        TwoWayAnovaResult anovaResult = rc.twoWayAnovaEvalWithLogging( command.toString(), false );
+        if ( log.isDebugEnabled() ) {
+            log.debug( "factorA<-factor(c(" + StringUtils.join( rFactorsA, "," ) + "))" );
+            log.debug( "factorB<-factor(c(" + StringUtils.join( rFactorsB, "," ) + "))" );
+            log.debug( command );
+        }
+
+        Map<String, TwoWayAnovaResult> anovaResult = rc.twoWayAnovaEvalWithLogging( command.toString(), false );
 
         if ( anovaResult == null ) throw new IllegalStateException( "No pvalues returned" );
 
-        double[] pvalues = anovaResult.getPvalues();
+        Double[] mainEffectAPvalues = new Double[namedMatrix.rows()];
+        Double[] mainEffectBPvalues = new Double[namedMatrix.rows()];
 
-        // assert pvalues.length == namedMatrix.rows() * NUM_RESULTS_FROM_R;
+        int i = 0;
+        List<Double> d = new ArrayList<Double>();
+        for ( DesignElement el : namedMatrix.getRowNames() ) {
 
-        double[] mainEffectAPvalues = new double[namedMatrix.rows()];
-        double[] mainEffectBPvalues = new double[namedMatrix.rows()];
-        int j = 0;
-        int k = 0;
-        for ( int i = 0; i < pvalues.length; i++ ) {
-            double p = pvalues[i];
-            if ( i % NUM_RESULTS_FROM_R == mainEffectAIndex ) {
-                mainEffectAPvalues[j] = p;
-                j++;
-            } else if ( i % NUM_RESULTS_FROM_R == mainEffectBIndex ) {
-                mainEffectBPvalues[k] = p;
-                k++;
-            } else {
-                throw new RuntimeException( "Too many pvalues for a given probe.  Should have " + NUM_RESULTS_FROM_R
-                        + " pvalues per probe." );
+            TwoWayAnovaResult twoWayAnovaResult = anovaResult.get( rowNameExtractor.transform( el ).toString() );
+
+            assert twoWayAnovaResult != null;
+
+            if ( log.isDebugEnabled() ) {
+                log.debug( StringUtils.join( ArrayUtils.toObject( namedMatrix.getRowByName( el ) ), "," ) );
+                log.debug( "\n" + el + "\n" + twoWayAnovaResult + "\n\n" );
             }
+
+            mainEffectAPvalues[i] = twoWayAnovaResult.getMainEffectAPval();
+            mainEffectBPvalues[i] = twoWayAnovaResult.getMainEffectBPval();
+
+            d.add( mainEffectAPvalues[i] );
+            d.add( mainEffectBPvalues[i] );
+
+            i++;
         }
 
         /* write out histogram */
         ArrayList<ExperimentalFactor> effects = new ArrayList<ExperimentalFactor>();
         effects.add( experimentalFactorA );
         effects.add( experimentalFactorB );
-        writePValuesHistogram( anovaResult.getPvalues(), expressionExperiment, effects );
+        writePValuesHistogram( d.toArray( new Double[] {} ), expressionExperiment, effects );
 
         disconnectR();
         log.info( "ANOVA done" );
-        return createExpressionAnalysis( dmatrix, mainEffectAPvalues, mainEffectBPvalues, null, anovaResult
-                .getStatistics(), experimentalFactorA, experimentalFactorB, quantitationType, expressionExperiment );
+        return createExpressionAnalysis( dmatrix, mainEffectAPvalues, mainEffectBPvalues, null, anovaResult,
+                experimentalFactorA, experimentalFactorB, quantitationType, expressionExperiment );
     }
 }

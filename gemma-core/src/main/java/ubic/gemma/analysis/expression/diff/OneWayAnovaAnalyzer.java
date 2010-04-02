@@ -25,6 +25,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -126,7 +127,7 @@ public class OneWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer 
      */
     @Override
     protected Collection<Histogram> generateHistograms( String histFileName, ArrayList<ExperimentalFactor> effects,
-            int numBins, int min, int max, double[] pvalues ) {
+            int numBins, int min, int max, Double[] pvalues ) {
 
         histFileName = StringUtils.removeEnd( histFileName, DifferentialExpressionFileUtils.PVALUE_DIST_SUFFIX );
 
@@ -284,7 +285,7 @@ public class OneWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         /* write out histogram */
         ArrayList<ExperimentalFactor> effects = new ArrayList<ExperimentalFactor>();
         effects.add( experimentalFactor );
-        writePValuesHistogram( pvalues, expressionExperiment, effects );
+        writePValuesHistogram( ArrayUtils.toObject( pvalues ), expressionExperiment, effects );
 
         /* f-statistic */
         StringBuffer fStatisticBuf = new StringBuffer();
@@ -301,7 +302,7 @@ public class OneWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         double[] fstatistics = rc.doubleArrayEvalWithLogging( fStatisticCmd );
 
         /* q-value */
-        double[] qvalues = super.getQValues( pvalues );
+        double[] qvalues = super.getQValues( ArrayUtils.toObject( pvalues ) );
 
         /* Create the expression analysis and pack the results. */
         // TODO pass the DifferentialExpressionAnalysisConfig in (see LinkAnalysisService)

@@ -42,16 +42,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  */
 public class TTestAnalyzerTest extends BaseAnalyzerConfigurationTest {
 
-    /**
-     * The following has been confirmed with the results from the R console:
-     * <p>
-     * data (for one design element): 0.654, 0.277, 0.999, 0.0989, 0.963, 0.747, 0.726, 0.426
-     * <p>
-     * factor: "no pcp", "no pcp", "no pcp", "pcp", "pcp", "pcp", "no pcp", "pcp"
-     * <p>
-     * resulting p-value: 0.677
-     */
-
     @Autowired
     private TTestAnalyzer analyzer = null;
 
@@ -96,13 +86,13 @@ public class TTestAnalyzerTest extends BaseAnalyzerConfigurationTest {
             Double pvalue = probeAnalysisResult.getPvalue();
             log.debug( "probe: " + probe + "; p-value: " + pvalue );
 
-            if ( probe.getName().equals( "0" ) ) {
+            if ( probe.getName().equals( "probe_0" ) ) {
                 assertEquals( 9.16511e-8, pvalue, 0.0001 );
-            } else if ( probe.getName().equals( "16" ) ) {
+            } else if ( probe.getName().equals( "probe_16" ) ) {
                 assertTrue( pvalue == null );
-            } else if ( probe.getName().equals( "17" ) ) {
+            } else if ( probe.getName().equals( "probe_17" ) ) {
                 assertEquals( 2.7407e-7, pvalue, 0.00001 );
-            } else if ( probe.getName().equals( "75" ) ) {
+            } else if ( probe.getName().equals( "probe_75" ) ) {
                 assertEquals( 0.5700398, pvalue, 0.00001 );
             }
         }
