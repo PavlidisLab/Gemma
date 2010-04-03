@@ -25,10 +25,15 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.servlet.ModelAndView;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.util.FileTools;
@@ -56,7 +61,7 @@ import ubic.gemma.model.genome.TaxonService;
 @Controller
 public class ExpressionDataFileUploadController extends AbstractTaskService {
 
-    class SimpleEELoadJob extends BackgroundJob<SimpleExpressionExperimentLoadCommand> {
+    private class SimpleEELoadJob extends BackgroundJob<SimpleExpressionExperimentLoadCommand> {
 
         public SimpleEELoadJob( SimpleExpressionExperimentLoadCommand commandObj ) {
             super( commandObj );
@@ -67,7 +72,7 @@ public class ExpressionDataFileUploadController extends AbstractTaskService {
             try {
                 File file = getFile( command );
 
-                populateCommandObject( command ); 
+                populateCommandObject( command );
 
                 InputStream stream = FileTools.getInputStreamFromPlainOrCompressedFile( file.getAbsolutePath() );
 
@@ -132,7 +137,7 @@ public class ExpressionDataFileUploadController extends AbstractTaskService {
     /**
      *  
      */
-    class SimpleEEValidateJob extends BackgroundJob<SimpleExpressionExperimentLoadCommand> {
+    private class SimpleEEValidateJob extends BackgroundJob<SimpleExpressionExperimentLoadCommand> {
 
         public SimpleEEValidateJob( SimpleExpressionExperimentLoadCommand commandObj ) {
             super( commandObj );
@@ -197,6 +202,12 @@ public class ExpressionDataFileUploadController extends AbstractTaskService {
 
     public void setTaxonService( TaxonService taxonService ) {
         this.taxonService = taxonService;
+    }
+
+    @RequestMapping("/expressionExperiment/upload.html")
+    @SuppressWarnings("unused")
+    public ModelAndView show( HttpServletRequest request, HttpServletResponse response ) {
+        return new ModelAndView( "dataUpload" );
     }
 
     /**

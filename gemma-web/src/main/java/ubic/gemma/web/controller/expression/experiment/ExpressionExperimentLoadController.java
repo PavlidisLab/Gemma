@@ -23,6 +23,9 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -59,12 +62,17 @@ import ubic.gemma.tasks.analysis.expression.ExpressionExperimentLoadTaskCommand;
  *      loaded.
  */
 @Controller
-@RequestMapping("/admin/loadExpressionExperiment.html")
 public class ExpressionExperimentLoadController extends AbstractTaskService {
 
     public ExpressionExperimentLoadController() {
         super();
         this.setBusinessInterface( ExpressionExperimentLoadTask.class );
+    }
+
+    @RequestMapping("/admin/loadExpressionExperiment.html")
+    @SuppressWarnings("unused")
+    public ModelAndView show( HttpServletRequest request, HttpServletResponse response ) {
+        return new ModelAndView( "/admin/loadExpressionExperimentForm" );
     }
 
     /**

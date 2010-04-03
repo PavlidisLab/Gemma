@@ -109,7 +109,7 @@
 
 	<!-- ==================================================== -->
 	<!--
-		Mapping urls to views. List views here that are just jsps and that don't need a controller to generate the view.
+		Mapping urls to views. List views here that are just jsps and that don't need a controller.
 	-->
 	<!-- ==================================================== -->
 	<bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/register.html" />
@@ -121,9 +121,6 @@
 	<bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/admin/indexer.html" />
 	<bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/admin/widgetTest.html" />
 	<bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/admin/taskTest.html" />
-	<bean class="org.springframework.web.servlet.mvc.ParameterizableViewController" name="/expressionExperiment/upload.html">
-		<property name="viewName" value="dataUpload" />
-	</bean>
 
 
 	<!-- ==================================================== -->
