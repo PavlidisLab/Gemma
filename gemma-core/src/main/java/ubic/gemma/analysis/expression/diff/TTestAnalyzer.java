@@ -212,17 +212,17 @@ public class TTestAnalyzer extends AbstractDifferentialExpressionAnalyzer {
 
             for ( int i = 0; i < dmatrix.rows(); i++ ) {
                 DesignElement de = dmatrix.getDesignElementForRow( i );
-                // FIXME maybe ProbeAnalysisResult should have a DesignElement to avoid type-casting
                 CompositeSequence cs = ( CompositeSequence ) de;
 
                 ProbeAnalysisResult probeAnalysisResult = ProbeAnalysisResult.Factory.newInstance();
                 probeAnalysisResult.setProbe( cs );
+
                 // Don't use NaN as we can't save that in the database.
-                probeAnalysisResult.setPvalue( Double.isNaN( pvaluesl.get( i ) ) ? null : pvaluesl.get( i ) );
-                probeAnalysisResult.setCorrectedPvalue( Double.isNaN( qvalues[i] ) ? null : qvalues[i] );
-                probeAnalysisResult.setScore( Double.isNaN( tstatistics.get( i ) ) ? null : tstatistics.get( i ) );
+                probeAnalysisResult.setPvalue( nan2Null( pvaluesl.get( i ) ) );
+                probeAnalysisResult.setCorrectedPvalue( nan2Null( qvalues[i] ) );
+                probeAnalysisResult.setScore( nan2Null( tstatistics.get( i ) ) );
                 probeAnalysisResult.setQuantitationType( quantitationType );
-                probeAnalysisResult.setRank( Double.isNaN( ranks[i] ) ? null : ranks[i] );
+                probeAnalysisResult.setRank( nan2Null( ranks[i] ) );
 
                 assert probeAnalysisResult.getPvalue() == null || !Double.isNaN( probeAnalysisResult.getPvalue() );
                 assert probeAnalysisResult.getCorrectedPvalue() == null
@@ -244,7 +244,7 @@ public class TTestAnalyzer extends AbstractDifferentialExpressionAnalyzer {
             expressionAnalysis.setName( this.getClass().getSimpleName() );
             expressionAnalysis.setDescription( "T-test for " + factorValueA + " vs " + factorValueB );
 
-            log.info( "R analysis done" );
+            log.info( "T-tests done" );
 
             return expressionAnalysis;
 

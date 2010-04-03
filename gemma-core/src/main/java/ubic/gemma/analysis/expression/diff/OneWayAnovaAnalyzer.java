@@ -25,6 +25,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.collections.Transformer;
+import org.apache.commons.collections.TransformerUtils;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
@@ -35,6 +37,7 @@ import org.springframework.stereotype.Service;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.dataStructure.matrix.FastRowAccessDoubleMatrix;
+import ubic.basecode.util.r.type.OneWayAnovaResult;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
@@ -110,8 +113,7 @@ public class OneWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer 
             Collection<ExperimentalFactor> factors ) {
 
         if ( factors.size() != 1 ) {
-            throw new RuntimeException( "One way anova supports one experimental factor.  Received " + factors.size()
-                    + "." );
+            throw new RuntimeException( "One way anova supports one experimental factor.  Received " + factors.size() );
         }
 
         ExperimentalFactor factor = factors.iterator().next();
@@ -154,7 +156,7 @@ public class OneWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer 
      */
     private DoubleMatrix<DesignElement, Integer> filterMatrix( ExpressionDataDoubleMatrix matrix, List<String> rFactors ) {
 
-        ArrayList<double[]> filteredRows = new ArrayList<double[]>();
+        List<double[]> filteredRows = new ArrayList<double[]>();
 
         Collection<String> factorLevels = new HashSet<String>( rFactors );
 
@@ -162,6 +164,7 @@ public class OneWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer 
 
         filteredMatrixDesignElementIndexMap = new HashMap<Integer, DesignElement>();
 
+        List<DesignElement> rowNames = new ArrayList<DesignElement>();
         for ( int i = 0; i < matrixNamed.rows(); i++ ) {
 
             DesignElement de = matrix.getDesignElementForRow( i );
@@ -177,7 +180,7 @@ public class OneWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer 
                 if ( Double.isNaN( row[j] ) && !seenFactors.contains( rFactor ) ) {
 
                     if ( log.isDebugEnabled() )
-                        log.debug( "Looking for valid data points in row with factor " + rFactor + "." );
+                        log.debug( "Looking for valid data points in row with factor " + rFactor );
 
                     /* find all columns with the same factor as row[j] */
                     boolean skipRow = true;
@@ -190,7 +193,7 @@ public class OneWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer 
                             if ( rFactors.get( k ).equals( rFactor ) ) {
                                 skipRow = false;
                                 if ( log.isDebugEnabled() )
-                                    log.debug( "Valid data point found for factor " + rFactor + "." );
+                                    log.debug( "Valid data point found for factor " + rFactor );
                                 break;
                             }
                         }
@@ -201,6 +204,7 @@ public class OneWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer 
                 seenFactors.add( rFactor );
                 if ( seenFactors.size() == factorLevels.size() ) {// seen all factors?
                     filteredRows.add( row );
+                    rowNames.add( de );
                     filteredMatrixDesignElementIndexMap.put( filteredRows.indexOf( row ), de );
                     break;
                 }
@@ -213,7 +217,12 @@ public class OneWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer 
             ddata[i] = filteredRows.get( i );
         }
 
-        return new FastRowAccessDoubleMatrix<DesignElement, Integer>( ddata );
+        DoubleMatrix<DesignElement, Integer> filteredMatrix = new FastRowAccessDoubleMatrix<DesignElement, Integer>(
+                ddata );
+        filteredMatrix.setColumnNames( matrixNamed.getColNames() );
+        filteredMatrix.setRowNames( rowNames );
+
+        return filteredMatrix;
     }
 
     /**
@@ -231,7 +240,7 @@ public class OneWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         if ( factorValues.size() < 2 )
             throw new RuntimeException(
                     "One way anova requires 2 or more factor values (2 factor values is a t-test).  Received "
-                            + factorValues.size() + "." );
+                            + factorValues.size() );
 
         ExpressionDataDoubleMatrix dmatrix = expressionDataMatrixService
                 .getProcessedExpressionDataMatrix( expressionExperiment );
@@ -252,57 +261,44 @@ public class OneWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         QuantitationType quantitationType = dmatrix.getQuantitationTypes().iterator().next();
 
         String facts = rc.assignStringList( rFactors );
-
         String tfacts = "t(" + facts + ")";
-
         String factor = "factor(" + tfacts + ")";
 
-        String matrixName = rc.assignMatrix( filteredNamedMatrix );
+        Transformer rowNameExtractor = TransformerUtils.invokerTransformer( "getId" );
+        String matrixName = rc.assignMatrix( filteredNamedMatrix, rowNameExtractor );
 
-        /*
-         * FIXME this runs the analysis twice (for the p values and f-statistics). Wasteful.
-         */
+        StringBuilder buf = new StringBuilder();
+        buf.append( "apply(" );
+        buf.append( matrixName );
+        buf.append( ", 1, function(x) {try(anova(aov(x ~ " + factor + ")),silent=T)}" );
+        buf.append( ")" );
+        String pvalueCmd = buf.toString();
 
-        /* p-values */
-        StringBuffer pvalueBuf = new StringBuffer();
+        log.info( "Starting ANOVA analysis ..." );
+        log.debug( pvalueCmd );
 
-        pvalueBuf.append( "apply(" );
-        pvalueBuf.append( matrixName );
-        pvalueBuf.append( ", 1, function(x) {anova(aov(x ~ " + factor + ", contrasts=c(\"contr.treatment\")))$Pr}" );
-        pvalueBuf.append( ")" );
+        Map<String, OneWayAnovaResult> anovaResult = rc.oneWayAnovaEval( pvalueCmd );
 
-        String pvalueCmd = pvalueBuf.toString() + "[1,]";
+        Double[] pvalues = new Double[filteredNamedMatrix.rows()];
+        Double[] fstatistics = new Double[filteredNamedMatrix.rows()];
+        int i = 0;
+        for ( DesignElement el : filteredNamedMatrix.getRowNames() ) {
+            OneWayAnovaResult result = anovaResult.get( rowNameExtractor.transform( el ).toString() );
+            assert result != null;
+            pvalues[i] = result.getPval();
+            fstatistics[i] = result.getFVal();
+            i++;
+        }
 
-        log.info( "Starting R analysis ... please wait!" );
-        log.debug( pvalueCmd.toString() );
-
-        log.info( "Calculating p values.  R analysis started." );
-        double[] pvalues = rc.doubleArrayEvalWithLogging( pvalueCmd );
-        double[] ranks = computeRanks( pvalues );
-
-        if ( pvalues == null ) throw new IllegalStateException( "No pvalues returned" );
+        double[] ranks = computeRanks( ArrayUtils.toPrimitive( pvalues ) );
 
         /* write out histogram */
         ArrayList<ExperimentalFactor> effects = new ArrayList<ExperimentalFactor>();
         effects.add( experimentalFactor );
-        writePValuesHistogram( ArrayUtils.toObject( pvalues ), expressionExperiment, effects );
-
-        /* f-statistic */
-        StringBuffer fStatisticBuf = new StringBuffer();
-
-        fStatisticBuf.append( "apply(" );
-        fStatisticBuf.append( matrixName );
-        fStatisticBuf.append( ", 1, function(x) {anova(aov(x ~ " + factor + "))$F}" );
-        fStatisticBuf.append( ")" );
-
-        String fStatisticCmd = fStatisticBuf.toString() + "[1,]";
-        log.debug( fStatisticCmd.toString() );
-
-        log.info( "Calculating f statistics.  R analysis started." );
-        double[] fstatistics = rc.doubleArrayEvalWithLogging( fStatisticCmd );
+        writePValuesHistogram( pvalues, expressionExperiment, effects );
 
         /* q-value */
-        double[] qvalues = super.getQValues( ArrayUtils.toObject( pvalues ) );
+        double[] qvalues = super.getQValues( pvalues );
 
         /* Create the expression analysis and pack the results. */
         // TODO pass the DifferentialExpressionAnalysisConfig in (see LinkAnalysisService)
@@ -317,7 +313,7 @@ public class OneWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         expressionAnalysis.setExpressionExperimentSetAnalyzed( eeSet );
 
         List<DifferentialExpressionAnalysisResult> analysisResults = new ArrayList<DifferentialExpressionAnalysisResult>();
-        for ( int i = 0; i < filteredNamedMatrix.rows(); i++ ) {
+        for ( i = 0; i < filteredNamedMatrix.rows(); i++ ) {
 
             DesignElement de = filteredMatrixDesignElementIndexMap.get( i );
 
@@ -325,10 +321,10 @@ public class OneWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer 
 
             ProbeAnalysisResult probeAnalysisResult = ProbeAnalysisResult.Factory.newInstance();
             probeAnalysisResult.setProbe( cs );
-            probeAnalysisResult.setPvalue( Double.isNaN( pvalues[i] ) ? null : pvalues[i] );
-            probeAnalysisResult.setCorrectedPvalue( Double.isNaN( qvalues[i] ) ? null : qvalues[i] );
-            probeAnalysisResult.setScore( Double.isNaN( fstatistics[i] ) ? null : fstatistics[i] );
-            probeAnalysisResult.setRank( Double.isNaN( ranks[i] ) ? null : ranks[i] );
+            probeAnalysisResult.setPvalue( nan2Null( pvalues[i] ) );
+            probeAnalysisResult.setCorrectedPvalue( nan2Null( qvalues[i] ) );
+            probeAnalysisResult.setScore( nan2Null( fstatistics[i] ) );
+            probeAnalysisResult.setRank( nan2Null( ranks[i] ) );
             probeAnalysisResult.setQuantitationType( quantitationType );
 
             analysisResults.add( probeAnalysisResult );
@@ -345,6 +341,8 @@ public class OneWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer 
 
         expressionAnalysis.setName( this.getClass().getSimpleName() );
         expressionAnalysis.setDescription( "One-way ANOVA for " + experimentalFactor );
+
+        log.info( "ANOVA complete" );
 
         disconnectR();
 

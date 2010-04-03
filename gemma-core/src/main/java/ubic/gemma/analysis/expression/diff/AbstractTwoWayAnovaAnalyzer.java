@@ -273,8 +273,4 @@ public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractDifferentialEx
         return expressionAnalysis;
     }
 
-    private Double nan2Null( Double e ) {
-        return e == null || Double.isNaN( e ) ? null : e;
-    }
-
 }

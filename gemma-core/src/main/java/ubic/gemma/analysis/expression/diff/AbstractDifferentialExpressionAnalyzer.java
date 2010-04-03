@@ -344,4 +344,15 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
 
         return control;
     }
+
+    /**
+     * Needed to convert NaN to a value we can store in the database.
+     * 
+     * @param e
+     * @return
+     */
+    protected Double nan2Null( Double e ) {
+        return e == null || Double.isNaN( e ) ? null : e;
+    }
+
 }
