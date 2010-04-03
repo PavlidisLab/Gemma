@@ -69,7 +69,6 @@
 				<prop key="/experimentalDesign/*">experimentalDesignController</prop>
 				<prop key="/experimentalDesign/editExperimentalDesign.html">experimentalDesignFormController</prop>
 				<prop key="/expressionExperiment/editExpressionExperiment.html">expressionExperimentFormController</prop>
-				<prop key="/expressionExperiment/upload.html">expressionDataFileUploadController</prop>
 				<prop key="/loadSimpleExpressionExperiment.html">expressionDataFileUploadController</prop>
 				<prop key="/getData.html">expressionExperimentDataFetchController</prop>
 				<prop key="/genome/bioSequence/*">bioSequenceController</prop>
@@ -122,6 +121,10 @@
 	<bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/admin/indexer.html" />
 	<bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/admin/widgetTest.html" />
 	<bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/admin/taskTest.html" />
+	<bean class="org.springframework.web.servlet.mvc.ParameterizableViewController" name="/expressionExperiment/upload.html">
+		<property name="viewName" value="dataUpload" />
+	</bean>
+
 
 	<!-- ==================================================== -->
 	<!-- Exception handler. -->
@@ -1201,7 +1204,7 @@
 						</property>
 					</bean>
 				</entry>
-					<entry key="GeneSetController">
+				<entry key="GeneSetController">
 					<bean class="org.directwebremoting.spring.CreatorConfig">
 						<property name="creator">
 							<bean class="org.directwebremoting.spring.BeanCreator">
@@ -1209,7 +1212,7 @@
 							</bean>
 						</property>
 						<property name="includes">
-							<list>							
+							<list>
 								<value>createGeneGroup</value>
 								<value>deleteGeneGroup</value>
 								<value>getUsersGeneGroups</value>
@@ -1821,7 +1824,7 @@
 						<property name="type" value="bean" />
 					</bean>
 				</entry>
-					<entry key="ubic.gemma.job.TaskCommand">
+				<entry key="ubic.gemma.job.TaskCommand">
 					<bean class="org.directwebremoting.spring.ConverterConfig">
 						<property name="type" value="bean" />
 						<property name="excludes">
