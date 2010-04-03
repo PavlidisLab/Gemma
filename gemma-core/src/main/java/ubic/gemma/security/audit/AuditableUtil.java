@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
 
+import org.apache.commons.collections.Closure;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.Predicate;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -66,8 +67,45 @@ public class AuditableUtil {
 
         CollectionUtils.filter( valueObjects, new Predicate() {
             public boolean evaluate( Object vo ) {
-                boolean hasTrouble = trouble.get( ( ( ArrayDesignValueObject ) vo ).getId() ) != null;
-                return !hasTrouble;
+                ArrayDesignValueObject vo2 = ( ArrayDesignValueObject ) vo;
+                AuditEvent event = trouble.get( vo2.getId() );
+                if ( event != null ) {
+                    return false;
+                }
+                return true;
+            }
+        } );
+        int newSize = valueObjects.size();
+        if ( newSize != size ) {
+            assert newSize < size;
+        }
+    }
+
+    /**
+     * Fill in the value of 'troubled'
+     * 
+     * @param valueObjects
+     */
+    public void flagTroubledArrayDesigns( Collection<ArrayDesignValueObject> valueObjects ) {
+        if ( valueObjects == null || valueObjects.size() == 0 ) {
+            return;
+        }
+
+        Collection<Long> ids = new HashSet<Long>();
+        for ( ArrayDesignValueObject advo : valueObjects ) {
+            ids.add( advo.getId() );
+        }
+
+        int size = valueObjects.size();
+        final Map<Long, AuditEvent> trouble = arrayDesignService.getLastTroubleEvent( ids );
+
+        CollectionUtils.forAllDo( valueObjects, new Closure() {
+            public void execute( Object vo ) {
+                ArrayDesignValueObject vo2 = ( ArrayDesignValueObject ) vo;
+                AuditEvent event = trouble.get( vo2.getId() );
+                if ( event != null ) {
+                    vo2.setTroubled( true );
+                }
             }
         } );
         int newSize = valueObjects.size();

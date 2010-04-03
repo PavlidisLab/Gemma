@@ -73,6 +73,7 @@ import ubic.gemma.search.SearchResult;
 import ubic.gemma.search.SearchService;
 import ubic.gemma.search.SearchSettings;
 import ubic.gemma.security.SecurityService;
+import ubic.gemma.security.audit.AuditableUtil;
 import ubic.gemma.web.remote.EntityDelegator;
 import ubic.gemma.web.taglib.arrayDesign.ArrayDesignHtmlUtil;
 import ubic.gemma.web.taglib.displaytag.ArrayDesignValueObjectComparator;
@@ -108,7 +109,6 @@ public class ArrayDesignController extends AbstractTaskService {
                 ProgressManager.setPayload( taskId, report ); // FIXME do this via the TaskResult.
             }
 
-           
             return new TaskResult( command, new ModelAndView( new RedirectView(
                     "/Gemma/arrays/showAllArrayDesignStatistics.html" ) ) );
 
@@ -156,6 +156,9 @@ public class ArrayDesignController extends AbstractTaskService {
 
     @Autowired
     private AuditTrailService auditTrailService;
+
+    @Autowired
+    private AuditableUtil auditableUtil;
 
     @Autowired
     private CompositeSequenceService compositeSequenceService = null;
@@ -371,12 +374,8 @@ public class ArrayDesignController extends AbstractTaskService {
             boolean showOrphans ) {
         List<ArrayDesignValueObject> result = new ArrayList<ArrayDesignValueObject>();
 
-        /*
-         * TODO remove 'troubled' unless admin.
-         */
-
         // If no IDs are specified, then load all expressionExperiments and show the summary (if available)
-        if ( arrayDesignIds.isEmpty() ) {
+        if ( arrayDesignIds == null || arrayDesignIds.isEmpty() ) {
             result.addAll( arrayDesignService.loadAllValueObjects() );
         } else {// if ids are specified, then display only those arrayDesigns
             result.addAll( arrayDesignService.loadValueObjects( arrayDesignIds ) );
@@ -393,6 +392,14 @@ public class ArrayDesignController extends AbstractTaskService {
             }
         }
         result.removeAll( toHide );
+
+        // flag or remove troubled - these are not usable. If we're admin, show them anyway.
+        if ( SecurityService.isUserAdmin() ) {
+            auditableUtil.flagTroubledArrayDesigns( result );
+        } else {
+            auditableUtil.removeTroubledArrayDesigns( result );
+        }
+
         Collections.sort( result, new ArrayDesignValueObjectComparator() );
 
         return result;

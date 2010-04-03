@@ -1963,6 +1963,7 @@
 								<value>shortName</value>
 								<value>description</value>
 								<value>taxon</value>
+								<value>troubled</value>
 							</list>
 						</property>
 					</bean>

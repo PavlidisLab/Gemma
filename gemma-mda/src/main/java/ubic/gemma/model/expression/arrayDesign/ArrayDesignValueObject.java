@@ -52,6 +52,20 @@ public class ArrayDesignValueObject implements java.io.Serializable {
 
     private Boolean isMerged;
 
+    /**
+     * @return the troubled
+     */
+    public Boolean getTroubled() {
+        return troubled;
+    }
+
+    /**
+     * @param troubled the troubled to set
+     */
+    public void setTroubled( Boolean troubled ) {
+        this.troubled = troubled;
+    }
+
     private Boolean isMergee;
 
     private Boolean isSubsumed;
@@ -83,6 +97,8 @@ public class ArrayDesignValueObject implements java.io.Serializable {
     private String numProbesToProbeAlignedRegions;
 
     private String shortName;
+
+    private Boolean troubled = false;
 
     private String taxon;
 
