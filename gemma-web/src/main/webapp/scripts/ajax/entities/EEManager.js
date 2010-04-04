@@ -189,14 +189,15 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 						handler : function() {
 
 							var r = Ext.getCmp('annotator-grid').getEditedCharacteristics();
-							
+
 							if (r.length > 0) {
 								Ext.Msg.confirm("Unsaved changes",
-										"There are unsaved changes. Do you want to continue without saving?", function(btn, txt) {
+										"There are unsaved changes. Do you want to continue without saving?", function(
+												btn, txt) {
 											if (btn == 'OK') {
 												w.hide();
 											}
-											});
+										});
 							} else {
 								w.hide();
 							}
@@ -204,7 +205,7 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 							if (this.change) {
 								/* Update the display of the tags. */
 								this.fireEvent('tagsUpdated');
-							} 
+							}
 						},
 						scope : this
 					}]
@@ -468,7 +469,9 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 					analysisType = 'Two-way ANOVA without interactions';
 					customizable = true;
 				} else if (analysisInfo.type === 'TTEST') {
-					analysisType = 'T-test';
+					analysisType = 'T-test (two-sample)';
+				} else if (analysisInfo.type === 'OSTTEST') {
+					analysisType = 'T-test (one-sample)';
 				} else if (analysisInfo.type === 'OWA') {
 					analysisType = 'One-way ANOVA';
 				}

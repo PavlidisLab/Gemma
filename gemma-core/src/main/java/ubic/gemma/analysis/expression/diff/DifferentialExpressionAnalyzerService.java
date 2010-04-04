@@ -59,7 +59,7 @@ import ubic.gemma.persistence.PersisterHelper;
 public class DifferentialExpressionAnalyzerService {
 
     public enum AnalysisType {
-        OWA, TTEST, TWA, TWIA
+        OWA, TTEST, TWA, TWIA, OSTTEST
     }
 
     @Autowired

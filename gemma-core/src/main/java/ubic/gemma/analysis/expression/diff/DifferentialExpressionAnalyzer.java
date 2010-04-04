@@ -120,7 +120,7 @@ public class DifferentialExpressionAnalyzer implements ApplicationContextAware {
     /**
      * @param expressionExperiment
      * @param factors
-     * @param type
+     * @param type - preselected value rather than inferring it
      * @return
      */
     public AbstractDifferentialExpressionAnalyzer determineAnalysis( ExpressionExperiment expressionExperiment,
@@ -154,8 +154,13 @@ public class DifferentialExpressionAnalyzer implements ApplicationContextAware {
                                 "Experimental design must be block complete to run Two-way ANOVA with interactions" );
                     }
                     return this.applicationContext.getBean( TwoWayAnovaWithInteractionsAnalyzer.class );
-
                 case TTEST:
+                    if ( factors.size() != 1 ) {
+                        throw new IllegalArgumentException( "Cannot run t-test on more than one factor " );
+                    }
+                    return this.applicationContext.getBean( TTestAnalyzer.class );
+                case OSTTEST:
+                    // one sample t-test.
                     if ( factors.size() != 1 ) {
                         throw new IllegalArgumentException( "Cannot run t-test on more than one factor " );
                     }
@@ -201,8 +206,8 @@ public class DifferentialExpressionAnalyzer implements ApplicationContextAware {
                 throw new RuntimeException(
                         "Collection of factor values is either null or 0. Cannot execute differential expression analysis." );
             if ( factorValues.size() == FACTOR_VALUE_ONE ) {
-                throw new RuntimeException( experimentalFactors.size() + " experimental factor(s) with "
-                        + factorValues.size() + " factor value(s).  Cannot execute differential expression analysis." );
+                // one sample t-test.
+                return this.applicationContext.getBean( TTestAnalyzer.class );
             }
 
             else if ( factorValues.size() == FACTOR_VALUE_TWO ) {

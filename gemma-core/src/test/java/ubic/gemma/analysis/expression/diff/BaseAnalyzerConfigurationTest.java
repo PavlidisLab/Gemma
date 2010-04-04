@@ -133,14 +133,12 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
     /**
      * Configure the test data for one way anova.
      */
-    public void configureTestDataForOneWayAnova() throws Exception {
+    protected void configureTestDataForOneWayAnova() throws Exception {
 
         /*
-         * TODO This really configures it for a t-test, which is just a one way anova if there are only 2 factor values.
-         * Rename this to configureTestDataForTTest and create a separate method with test data for one way anova with 3
-         * (or more factor value).
+         * This really configures it for a t-test, which is just a one way anova if there are only 2 factor values
          */
-        log.info( "Configuring test data for one way anova." );
+        log.debug( "Configuring test data for one way anova." );
 
         List<BioMaterial> updatedBiomaterials = new ArrayList<BioMaterial>();
         for ( BioMaterial m : biomaterials ) {
@@ -159,7 +157,7 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
 
         biomaterials = updatedBiomaterials;
 
-        configureVectors( biomaterials );
+        configureVectors( biomaterials, null );
 
         experimentalFactors.remove( experimentalFactorA );
         experimentalDesign.setExperimentalFactors( experimentalFactors );
@@ -171,7 +169,7 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
      * <p>
      * Removes the replicates.
      */
-    public void configureTestDataForTwoWayAnovaWithoutInteractions() throws Exception {
+    protected void configureTestDataForTwoWayAnovaWithoutInteractions() throws Exception {
 
         log.info( "Configuring test data for two way anova without interactions." );
 
@@ -190,7 +188,7 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
             biomaterials.add( b.getSamplesUsed().iterator().next() );
         }
 
-        configureVectors( biomaterials );
+        configureVectors( biomaterials, null );
 
     }
 
@@ -432,7 +430,7 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
         bioAssayDimension.setName( "test bioassay dimension" );
         bioAssayDimension.setBioAssays( bioAssays );
 
-        configureVectors( biomaterials );
+        configureVectors( biomaterials, null );
     }
 
     /**
@@ -472,12 +470,19 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
     /**
      * @param numAssays
      */
-    private void configureVectors( List<BioMaterial> bioMaterials ) throws Exception {
+    protected void configureVectors( List<BioMaterial> bioMaterials, String resourcePath ) throws Exception {
         this.vectors = new HashSet<ProcessedExpressionDataVector>();
 
         DoubleMatrixReader r = new DoubleMatrixReader();
-        DoubleMatrix<String, String> dataMatrix = r.read( this.getClass().getResourceAsStream(
-                "/data/loader/aov.results-2-monocyte-data-bytime.bypat.data.sort" ) );
+
+        String path;
+        if ( resourcePath == null ) {
+            path = "/data/loader/aov.results-2-monocyte-data-bytime.bypat.data.sort";
+        } else {
+            path = resourcePath;
+        }
+
+        DoubleMatrix<String, String> dataMatrix = r.read( this.getClass().getResourceAsStream( path ) );
         RandomData randomData = new RandomDataImpl( new MersenneTwister( 0 ) ); // fixed seed
 
         Collection<CompositeSequence> compositeSequences = new HashSet<CompositeSequence>();
@@ -519,8 +524,7 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
 
             compositeSequences.add( cs );
         }
-
-        expressionExperiment.getProcessedExpressionDataVectors().addAll( vectors );
+        expressionExperiment.setProcessedExpressionDataVectors( vectors );
 
         arrayDesign.setCompositeSequences( compositeSequences );
     }

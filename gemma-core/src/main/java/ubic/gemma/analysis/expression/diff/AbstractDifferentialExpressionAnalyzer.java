@@ -140,7 +140,14 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
         rc.assign( pvalsName, pvaluesToUse );
         String qvalueCommand = ( "qvalue(" + pvalsName + ")$qvalues" );
 
-        double[] qvaluesFromR = rc.doubleArrayEval( qvalueCommand );
+        double[] qvaluesFromR = null;
+        Exception qve = null;
+        try {
+            qvaluesFromR = rc.doubleArrayEval( qvalueCommand );
+        } catch ( Exception e ) {
+            log.error( e, e );
+            qve = e;
+        }
 
         if ( qvaluesFromR == null ) {
             /*
@@ -148,12 +155,24 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
              * already]; 2) p-values are out of range 0-1 [we handle that too]; 3) pi0 [proportion of unchanged genes]
              * <= 0; 4) other invalid arguments which we don't set anyway. So we try the other method.
              */
-            qvalueCommand = "qvalue(" + pvalsName + ", method=\"bootstrap\"" + ")$qvalues";
-            qvaluesFromR = rc.doubleArrayEval( qvalueCommand );
+
+            qvalueCommand = "qvalue(" + pvalsName + ", pi0.method=\"bootstrap\")$qvalues";
+            try {
+                qvaluesFromR = rc.doubleArrayEval( qvalueCommand );
+            } catch ( Exception e ) {
+                log.error( e, e );
+                qve = e;
+            }
 
             if ( qvaluesFromR == null ) {
-                String err = "Null qvalues were returned from R. No details about the problem, but probably pi0 was <= 0. Tried both fitting methods. Last attempted command was: "
-                        + qvalueCommand;
+                String err = "";
+
+                if ( qve != null ) {
+                    err = "qvalue failed: " + qve.getMessage();
+                } else {
+                    err = "Null qvalues were returned from R. No details about the problem, but probably pi0 was <= 0. Tried both fitting methods. Last attempted command was: "
+                            + qvalueCommand;
+                }
 
                 String path = "";
                 try {
@@ -189,16 +208,19 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
     }
 
     /**
+     * Debugging tool. If qvalue failed, save the pvalues to a temporary file for inspection.
+     * 
      * @param pvaluesToUse
-     * @return
+     * @return path to file where the pvalues were saved
      * @throws IOException
      */
     private String savePvaluesForDebugging( double[] pvaluesToUse ) throws IOException {
-        File f = File.createTempFile( "", "pvalues.txt" );
+        File f = File.createTempFile( "qvalfail_", ".pvalues.txt" );
         FileWriter w = new FileWriter( f );
         for ( double d : pvaluesToUse ) {
             w.write( d + "\n" );
         }
+        w.close();
 
         return f.getPath();
     }

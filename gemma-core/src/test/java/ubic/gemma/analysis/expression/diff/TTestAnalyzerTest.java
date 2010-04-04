@@ -22,6 +22,7 @@ import static org.junit.Assert.*;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Iterator;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -32,9 +33,11 @@ import ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.ProbeAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.FactorValue;
 
 /**
  * @author keshav
@@ -71,15 +74,8 @@ public class TTestAnalyzerTest extends BaseAnalyzerConfigurationTest {
         int numResults = resultSet.getResults().size();
 
         assertEquals( numResults, NUM_DESIGN_ELEMENTS );
-        checkResults( resultSet );
-    }
 
-    /**
-     * @param resultSet
-     */
-    @Override
-    protected void checkResults( ExpressionAnalysisResultSet resultSet ) {
-
+        // check
         for ( DifferentialExpressionAnalysisResult r : resultSet.getResults() ) {
             ProbeAnalysisResult probeAnalysisResult = ( ProbeAnalysisResult ) r;
             CompositeSequence probe = probeAnalysisResult.getProbe();
@@ -96,6 +92,80 @@ public class TTestAnalyzerTest extends BaseAnalyzerConfigurationTest {
                 assertEquals( 0.5700398, pvalue, 0.00001 );
             }
         }
+    }
+
+    /*
+     * 
+     */
+    @Test
+    public void testOneSampleTtest() throws Exception {
+
+        if ( !connected ) {
+            log.warn( "Could not establish R connection.  Skipping test ..." );
+            return;
+        }
+
+        configureVectors( super.biomaterials, "/data/stat-tests/onesample-ttest-data.txt" );
+
+        configureMocks();
+
+        Collection<ExperimentalFactor> factors = new HashSet<ExperimentalFactor>();
+        factors.add( super.experimentalFactorA );
+
+        /*
+         * Remove factorValue from all the samples.
+         */
+        Iterator<FactorValue> iterator = experimentalFactorA.getFactorValues().iterator();
+        FactorValue toUse = iterator.next();
+        FactorValue toRemove = iterator.next();
+
+        experimentalFactorA.getFactorValues().remove( toRemove );
+        for ( BioMaterial bm : super.biomaterials ) {
+            bm.getFactorValues().remove( toRemove );
+            bm.getFactorValues().add( toUse );
+        }
+
+        quantitationType.setIsRatio( true ); // must be for one-sample to make sense.
+
+        DifferentialExpressionAnalysis expressionAnalysis = analyzer.run( expressionExperiment, factors );
+
+        Collection<ExpressionAnalysisResultSet> resultSets = expressionAnalysis.getResultSets();
+        ExpressionAnalysisResultSet resultSet = resultSets.iterator().next();
+
+        int numResults = resultSet.getResults().size();
+
+        assertEquals( numResults, NUM_DESIGN_ELEMENTS );
+
+        // check
+        for ( DifferentialExpressionAnalysisResult r : resultSet.getResults() ) {
+            ProbeAnalysisResult probeAnalysisResult = ( ProbeAnalysisResult ) r;
+            CompositeSequence probe = probeAnalysisResult.getProbe();
+            Double pvalue = probeAnalysisResult.getPvalue();
+            log.debug( "probe: " + probe + "; p-value: " + pvalue );
+
+            if ( probe.getName().equals( "probe_0" ) ) {
+                assertEquals( 0.03689, pvalue, 0.00001 );
+            } else if ( probe.getName().equals( "probe_16" ) ) {
+                assertEquals( 0.4238432, pvalue, 0.0001 );
+            } else if ( probe.getName().equals( "probe_17" ) ) {
+                assertEquals( 0.07875266, pvalue, 0.0001 );
+            } else if ( probe.getName().equals( "probe_75" ) ) {
+                assertEquals( 0.2266758, pvalue, 0.0001 );
+            } else if ( probe.getName().equals( "probe_94" ) ) {
+                assertEquals( 2.283678e-05, pvalue, 0.0001 );
+            }
+        }
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see
+     * ubic.gemma.analysis.expression.diff.BaseAnalyzerConfigurationTest#checkResults(ubic.gemma.model.analysis.expression
+     * .ExpressionAnalysisResultSet)
+     */
+    @Override
+    protected void checkResults( ExpressionAnalysisResultSet resultSet ) {
+        throw new UnsupportedOperationException( "Don't use this" );
     }
 
     /*

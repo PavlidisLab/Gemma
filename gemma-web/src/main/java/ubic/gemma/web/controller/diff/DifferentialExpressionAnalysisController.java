@@ -115,7 +115,11 @@ public class DifferentialExpressionAnalysisController extends AbstractTaskServic
              */
 
         } else if ( analyzer instanceof TTestAnalyzer ) {
-            result.setType( AnalysisType.TTEST );
+            if ( ee.getExperimentalDesign().getExperimentalFactors().iterator().next().getFactorValues().size() == 1 ) {
+                result.setType( AnalysisType.OSTTEST );
+            } else {
+                result.setType( AnalysisType.TTEST );
+            }
         } else if ( analyzer instanceof OneWayAnovaAnalyzer ) {
             result.setType( AnalysisType.OWA );
         } else if ( analyzer instanceof TwoWayAnovaWithInteractionsAnalyzer ) {
