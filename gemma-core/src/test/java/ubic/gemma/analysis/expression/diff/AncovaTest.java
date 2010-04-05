@@ -175,7 +175,7 @@ public class AncovaTest extends BaseAnalyzerConfigurationTest {
                 if ( pvalue != null ) assertNotNull( stat );
                 assertNotNull( probe );
 
-                log.info( "probe: " + probe + "; Factor="
+                log.debug( "probe: " + probe + "; Factor="
                         + resultSet.getExperimentalFactor().iterator().next().getName() + "; p-value: " + pvalue
                         + "; T=" + stat );
 
