@@ -65,12 +65,13 @@ public class OneWayAnovaAnalyzerTest extends BaseAnalyzerConfigurationTest {
         ExpressionAnalysisResultSet resultSet = resultSets.iterator().next();
         int numResults = resultSet.getResults().size();
 
-        assertEquals( numResults, 99 ); // we lose a row due to filtering
+        assertEquals( 100, numResults );
         checkResults( resultSet );
     }
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.analysis.diff.BaseAnalyzerConfigurationTest#configureMocks()
      */
     @Override

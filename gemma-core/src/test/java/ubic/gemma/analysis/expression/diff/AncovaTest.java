@@ -19,10 +19,10 @@
 
 package ubic.gemma.analysis.expression.diff;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 import java.util.Collection;
-import java.util.HashSet;
 
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,6 +39,8 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.FactorValue;
 
 /**
+ * Tests of ANCOVA: using linear models with mixtures of fixed level and continuous parameters.
+ * 
  * @author paul
  * @version $Id$
  */
@@ -48,6 +50,8 @@ public class AncovaTest extends BaseAnalyzerConfigurationTest {
     private AncovaAnalyzer analyzer;
 
     /**
+     * Two fixed-level parameters
+     * 
      * @throws Exception
      */
     @Test
