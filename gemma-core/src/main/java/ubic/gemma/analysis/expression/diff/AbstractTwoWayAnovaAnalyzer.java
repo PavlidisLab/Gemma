@@ -127,7 +127,7 @@ public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractDifferentialEx
 
         Collection<ExpressionAnalysisResultSet> resultSets = new HashSet<ExpressionAnalysisResultSet>();
 
-        DifferentialExpressionAnalysis expressionAnalysis = configureAnalysisEntity( dmatrix );
+        DifferentialExpressionAnalysis expressionAnalysis = super.initAnalysisEntity( expressionExperiment   );
 
         /* All results for the first main effect */
         List<DifferentialExpressionAnalysisResult> analysisResultsMainEffectA = new ArrayList<DifferentialExpressionAnalysisResult>();
@@ -254,23 +254,6 @@ public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractDifferentialEx
      */
     protected abstract DifferentialExpressionAnalysis twoWayAnova( ExpressionExperiment expressionExperiment,
             ExperimentalFactor experimentalFactorA, ExperimentalFactor experimentalFactorB );
-
-    /**
-     * @param dmatrix
-     * @return
-     */
-    private DifferentialExpressionAnalysis configureAnalysisEntity( ExpressionDataDoubleMatrix dmatrix ) {
-        // TODO pass the DifferentialExpressionAnalysisConfig in (see LinkAnalysisService)
-        /* Create the expression analysis and pack the results. */
-        DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
-        DifferentialExpressionAnalysis expressionAnalysis = config.toAnalysis();
-
-        ExpressionExperimentSet eeSet = ExpressionExperimentSet.Factory.newInstance();
-        Collection<BioAssaySet> experimentsAnalyzed = new HashSet<BioAssaySet>();
-        experimentsAnalyzed.add( dmatrix.getExpressionExperiment() );
-        eeSet.setExperiments( experimentsAnalyzed );
-        expressionAnalysis.setExpressionExperimentSetAnalyzed( eeSet );
-        return expressionAnalysis;
-    }
+ 
 
 }

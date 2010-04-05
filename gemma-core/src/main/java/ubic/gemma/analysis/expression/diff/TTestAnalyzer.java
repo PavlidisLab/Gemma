@@ -37,14 +37,12 @@ import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.util.r.type.HTest;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet;
-import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.ProbeAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.DesignElement;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
@@ -85,6 +83,7 @@ public class TTestAnalyzer extends AbstractDifferentialExpressionAnalyzer {
 
     /*
      * (non-Javadoc)
+     * 
      * @seeubic.gemma.analysis.diff.AbstractAnalyzer#getExpressionAnalysis(ubic.gemma.model.expression.experiment.
      * ExpressionExperiment)
      */
@@ -100,6 +99,7 @@ public class TTestAnalyzer extends AbstractDifferentialExpressionAnalyzer {
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.analysis.expression.diff.AbstractDifferentialExpressionAnalyzer#run(ubic.gemma.model.expression.experiment
      * .ExpressionExperiment, java.util.Collection)
@@ -134,12 +134,13 @@ public class TTestAnalyzer extends AbstractDifferentialExpressionAnalyzer {
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.analysis.expression.diff.AbstractDifferentialExpressionAnalyzer#generateHistograms(java.lang.String,
      * java.util.ArrayList, int, int, int, double[])
      */
     @Override
-    protected Collection<Histogram> generateHistograms( String histFileName, ArrayList<ExperimentalFactor> effects,
+    protected Collection<Histogram> generateHistograms( String histFileName, List<ExperimentalFactor> effects,
             int numBins, int min, int max, Double[] pvalues ) {
 
         if ( pvalues == null ) {
@@ -192,16 +193,7 @@ public class TTestAnalyzer extends AbstractDifferentialExpressionAnalyzer {
         /* q-value */
         double[] qvalues = super.getQValues( ArrayUtils.toObject( pvalues ) );
 
-        // TODO pass the DifferentialExpressionAnalysisConfig in (see LinkAnalysisService)
-        /* Create the expression analysis and pack the results. */
-        DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
-        DifferentialExpressionAnalysis expressionAnalysis = config.toAnalysis();
-
-        ExpressionExperimentSet eeSet = ExpressionExperimentSet.Factory.newInstance();
-        Collection<BioAssaySet> experimentsAnalyzed = new HashSet<BioAssaySet>();
-        experimentsAnalyzed.add( expressionExperiment );
-        eeSet.setExperiments( experimentsAnalyzed );
-        expressionAnalysis.setExpressionExperimentSetAnalyzed( eeSet );
+        DifferentialExpressionAnalysis expressionAnalysis = initAnalysisEntity( expressionExperiment );
 
         List<DifferentialExpressionAnalysisResult> analysisResults = new ArrayList<DifferentialExpressionAnalysisResult>();
 
@@ -265,6 +257,7 @@ public class TTestAnalyzer extends AbstractDifferentialExpressionAnalyzer {
      * @param factorValue
      * @return
      */
+    @SuppressWarnings("unchecked")
     private DifferentialExpressionAnalysis tTest( ExpressionExperiment expressionExperiment, FactorValue factorValue ) {
         connectToR();
 
@@ -327,6 +320,7 @@ public class TTestAnalyzer extends AbstractDifferentialExpressionAnalyzer {
      * @param factorValueB
      * @return
      */
+    @SuppressWarnings("unchecked")
     private DifferentialExpressionAnalysis tTest( ExpressionExperiment expressionExperiment, FactorValue factorValueA,
             FactorValue factorValueB ) {
 

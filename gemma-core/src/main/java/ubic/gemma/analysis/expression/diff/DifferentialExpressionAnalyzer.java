@@ -27,6 +27,7 @@ import org.springframework.stereotype.Service;
 
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService.AnalysisType;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
@@ -47,11 +48,6 @@ import ubic.gemma.model.expression.experiment.FactorValue;
 public class DifferentialExpressionAnalyzer implements ApplicationContextAware {
 
     private DifferentialExpressionAnalysisHelperService differentialExpressionAnalysisHelperService = new DifferentialExpressionAnalysisHelperService();
-    private int EXPERIMENTAL_FACTOR_ONE = 1;
-    private int EXPERIMENTAL_FACTOR_TWO = 2;
-
-    private int FACTOR_VALUE_ONE = 1;
-    private int FACTOR_VALUE_TWO = 2;
 
     /*
      * Note - we are context-aware so we can get prototype beans.
@@ -141,14 +137,10 @@ public class DifferentialExpressionAnalyzer implements ApplicationContextAware {
                     }
                     return this.applicationContext.getBean( OneWayAnovaAnalyzer.class );
                 case TWA:
-                    if ( factors.size() != 2 ) {
-                        throw new IllegalArgumentException( "Need exactly two factors to run two-way ANOVA" );
-                    }
+                    validateFactorsForTwoWayANOVA( factors );
                     return this.applicationContext.getBean( TwoWayAnovaWithoutInteractionsAnalyzer.class );
                 case TWIA:
-                    if ( factors.size() != 2 ) {
-                        throw new IllegalArgumentException( "Need exactly two factors to run two-way ANOVA" );
-                    }
+                    validateFactorsForTwoWayANOVA( factors );
                     if ( !differentialExpressionAnalysisHelperService.blockComplete( expressionExperiment, factors ) ) {
                         throw new IllegalArgumentException(
                                 "Experimental design must be block complete to run Two-way ANOVA with interactions" );
@@ -158,15 +150,38 @@ public class DifferentialExpressionAnalyzer implements ApplicationContextAware {
                     if ( factors.size() != 1 ) {
                         throw new IllegalArgumentException( "Cannot run t-test on more than one factor " );
                     }
+                    for ( ExperimentalFactor experimentalFactor : factors ) {
+                        if ( experimentalFactor.getFactorValues().size() < 2 ) {
+                            throw new IllegalArgumentException(
+                                    "Need at least two levels per factor to run two-sample t-test" );
+                        }
+                    }
                     return this.applicationContext.getBean( TTestAnalyzer.class );
                 case OSTTEST:
                     // one sample t-test.
                     if ( factors.size() != 1 ) {
                         throw new IllegalArgumentException( "Cannot run t-test on more than one factor " );
                     }
+                    for ( ExperimentalFactor experimentalFactor : factors ) {
+                        if ( experimentalFactor.getFactorValues().size() != 1 ) {
+                            throw new IllegalArgumentException(
+                                    "Need only one level for the factor for one-sample t-test" );
+                        }
+                    }
                     return this.applicationContext.getBean( TTestAnalyzer.class );
                 default:
                     throw new IllegalArgumentException( "Analyses of that type are not yet supported" );
+            }
+        }
+    }
+
+    private void validateFactorsForTwoWayANOVA( Collection<ExperimentalFactor> factors ) {
+        if ( factors.size() != 2 ) {
+            throw new IllegalArgumentException( "Need exactly two factors to run two-way ANOVA" );
+        }
+        for ( ExperimentalFactor experimentalFactor : factors ) {
+            if ( experimentalFactor.getFactorValues().size() < 2 ) {
+                throw new IllegalArgumentException( "Need at least two levels per factor to run ANOVA" );
             }
         }
     }
@@ -197,20 +212,20 @@ public class DifferentialExpressionAnalyzer implements ApplicationContextAware {
             }
         }
 
-        if ( experimentalFactors.size() == EXPERIMENTAL_FACTOR_ONE ) {
+        if ( experimentalFactors.size() == 1 ) {
 
             ExperimentalFactor experimentalFactor = experimentalFactors.iterator().next();
             Collection<FactorValue> factorValues = experimentalFactor.getFactorValues();
 
             if ( colIsEmpty( factorValues ) )
-                throw new RuntimeException(
+                throw new IllegalArgumentException(
                         "Collection of factor values is either null or 0. Cannot execute differential expression analysis." );
-            if ( factorValues.size() == FACTOR_VALUE_ONE ) {
+            if ( factorValues.size() == 1 ) {
                 // one sample t-test.
                 return this.applicationContext.getBean( TTestAnalyzer.class );
             }
 
-            else if ( factorValues.size() == FACTOR_VALUE_TWO ) {
+            else if ( factorValues.size() == 2 ) {
                 /*
                  * Return t-test analyzer. This can be taken care of by the one way anova, but keeping it separate for
                  * clarity.
@@ -228,14 +243,22 @@ public class DifferentialExpressionAnalyzer implements ApplicationContextAware {
 
         }
 
-        else if ( experimentalFactors.size() == EXPERIMENTAL_FACTOR_TWO ) {
-
+        else if ( experimentalFactors.size() == 2 ) {
+            /*
+             * Candidate for ANOVA
+             */
             for ( ExperimentalFactor f : experimentalFactors ) {
                 Collection<FactorValue> factorValues = f.getFactorValues();
-                if ( colIsEmpty( factorValues ) || factorValues.size() < FACTOR_VALUE_TWO ) {
-                    throw new RuntimeException( experimentalFactors.size() + " experimental factor(s) with "
-                            + factorValues.size()
-                            + " factor value(s).  Cannot execute differential expression analysis." );
+                if ( factorValues.size() == 1 ) {
+
+                    // check for a ratiometric quantitation type.
+                    for ( QuantitationType qt : expressionExperiment.getQuantitationTypes() ) {
+                        if ( qt.getIsPreferred() && qt.getIsRatio() ) {
+                            // TODO use ANOVA but treat the intercept as a factor.
+                        }
+                    }
+
+                    return null;
                 }
             }
             /* Check for block design and execute two way anova (with or without interactions). */

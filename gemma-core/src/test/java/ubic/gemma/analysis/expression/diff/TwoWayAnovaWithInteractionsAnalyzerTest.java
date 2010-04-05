@@ -104,27 +104,29 @@ public class TwoWayAnovaWithInteractionsAnalyzerTest extends BaseAnalyzerConfigu
                 if ( f.equals( super.experimentalFactorA ) ) {
 
                     if ( probe.getName().equals( "probe_98" ) ) {
-                        assertEquals( 0.7485, pvalue, 0.001 );
+                        assertEquals( 0.8769, pvalue, 0.001 );
                     } else if ( probe.getName().equals( "probe_10" ) ) {
-                        assertEquals( 8.97e-08, pvalue, 0.00001 );
+                        assertEquals( 5.158e-10, pvalue, 1e-12 );
                     } else if ( probe.getName().equals( "probe_4" ) ) {
-                        assertEquals( 0.00656, pvalue, 0.0001 );
+                        assertEquals( 0.0048, pvalue, 0.0001 );
                     }
 
                 } else {
                     if ( probe.getName().equals( "probe_98" ) ) {
-                        assertEquals( 0.7792, pvalue, 0.001 );
+                        assertEquals( 0.6888, pvalue, 0.001 );
                     } else if ( probe.getName().equals( "probe_10" ) ) {
-                        assertEquals( 0.08816, pvalue, 0.00001 );
+                        assertEquals( 0.07970, pvalue, 0.00001 );
                     }
 
                 }
 
             } else {
                 if ( probe.getName().equals( "probe_98" ) ) {
-                    assertEquals( 0.9585, pvalue, 0.001 );
+                    assertEquals( 0.7893, pvalue, 0.001 );
                 } else if ( probe.getName().equals( "probe_10" ) ) {
-                    assertEquals( 0.11823, pvalue, 0.00001 );
+                    assertEquals( 0.04514, pvalue, 0.00001 );
+                } else if ( probe.getName().equals( "probe_4" ) ) {
+                    assertEquals( null, pvalue );
                 }
             }
 
@@ -133,6 +135,7 @@ public class TwoWayAnovaWithInteractionsAnalyzerTest extends BaseAnalyzerConfigu
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.analysis.diff.BaseAnalyzerConfigurationTest#configureMocks()
      */
     @Override

@@ -26,26 +26,24 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.List;
 
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import cern.colt.list.DoubleArrayList;
-
 import ubic.basecode.math.Rank;
 import ubic.basecode.util.FileTools;
-import ubic.gemma.analysis.preprocess.ExpressionDataMatrixBuilder;
-import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
+import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.VocabCharacteristic;
-import ubic.gemma.model.common.quantitationtype.QuantitationType;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
+import cern.colt.list.DoubleArrayList;
 
 /**
  * An abstract differential expression analyzer to be extended by analyzers which will make use of R. For example, see
@@ -82,11 +80,25 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
      * Perform an analysis using the specified factor(s)
      * 
      * @param expressionExperiment
-     * @param factors
+     * @param factors If you care about the order the factors are included in the model, use a List
      * @return
      */
     public abstract DifferentialExpressionAnalysis run( ExpressionExperiment expressionExperiment,
             Collection<ExperimentalFactor> factors );
+
+    protected DifferentialExpressionAnalysis initAnalysisEntity( ExpressionExperiment expressionExperiment ) {
+        // TODO pass the DifferentialExpressionAnalysisConfig in (see LinkAnalysisService)
+        /* Create the expression analysis and pack the results. */
+        DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
+        DifferentialExpressionAnalysis expressionAnalysis = config.toAnalysis();
+
+        ExpressionExperimentSet eeSet = ExpressionExperimentSet.Factory.newInstance();
+        Collection<BioAssaySet> experimentsAnalyzed = new HashSet<BioAssaySet>();
+        experimentsAnalyzed.add( expressionExperiment );
+        eeSet.setExperiments( experimentsAnalyzed );
+        expressionAnalysis.setExpressionExperimentSetAnalyzed( eeSet );
+        return expressionAnalysis;
+    }
 
     /**
      * Calls the Q value function in R.
@@ -231,7 +243,7 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
      * @param effects ordered (for 2 way anova)
      */
     protected void writePValuesHistogram( Double[] pValues, ExpressionExperiment expressionExperiment,
-            ArrayList<ExperimentalFactor> effects ) {
+            List<ExperimentalFactor> effects ) {
 
         File dir = DifferentialExpressionFileUtils.getBaseDifferentialDirectory( expressionExperiment.getShortName() );
 
@@ -282,42 +294,8 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
      * @param pvalues
      * @return
      */
-    protected abstract Collection<Histogram> generateHistograms( String histFileName,
-            ArrayList<ExperimentalFactor> effects, int numBins, int min, int max, Double[] pvalues );
-
-    /**
-     * Returns the preferred {@link QuantitationType}.
-     * 
-     * @param vectors
-     * @return the first quantitation type that has 'isPreferred' == true, or null if none is found.
-     */
-    protected QuantitationType getPreferredQuantitationType( Collection<DesignElementDataVector> vectors ) {
-        QuantitationType qt = null;
-        for ( DesignElementDataVector vector : vectors ) {
-            qt = vector.getQuantitationType();
-            if ( qt.getIsPreferred() ) {
-                return qt;
-            }
-        }
-        log
-                .error( "Could not determine the preferred quantitation type.  Not sure what type to associate with the analysis result." );
-        return null;
-    }
-
-    /**
-     * Creates the matrix using the vectors. Masks the data for two color arrays.
-     * 
-     * @param vectorsToUse
-     * @return
-     */
-    protected ExpressionDataDoubleMatrix createMaskedMatrix( Collection<DesignElementDataVector> vectorsToUse ) {
-
-        ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( vectorsToUse );
-
-        ExpressionDataDoubleMatrix dmatrix = builder.getProcessedData();
-
-        return dmatrix;
-    }
+    protected abstract Collection<Histogram> generateHistograms( String histFileName, List<ExperimentalFactor> effects,
+            int numBins, int min, int max, Double[] pvalues );
 
     /**
      * @param pvalues

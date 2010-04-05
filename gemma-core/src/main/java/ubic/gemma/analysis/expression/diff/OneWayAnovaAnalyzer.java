@@ -57,24 +57,6 @@ import ubic.gemma.model.expression.experiment.FactorValue;
  * A one way anova implementation as described by P. Pavlidis, Methods 31 (2003) 282-289.
  * <p>
  * See http://www.bioinformatics.ubc.ca/pavlidis/lab/docs/reprints/anova-methods.pdf.
- * <p>
- * R Calls:
- * <p>
- * apply(matrix,1,function(x){anova(aov(x~factor))$Pr})
- * <p>
- * apply(matrix,1,function(x){anova(aov(x~factor))$F})
- * <p>
- * where factor is a vector that has first been transposed and then had factor() applied.
- * <p>
- * P values are obtained with:
- * <p>
- * results<-apply(matrix,1,function(x){anova(aov(x~factor))$Pr})
- * <p>
- * pvals<-results[1,]
- * <p>
- * Statistics are obtained in the same way.
- * <p>
- * qvalue(pvals)$qvalues
  * 
  * @author keshav
  * @version $Id$
@@ -89,6 +71,7 @@ public class OneWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer 
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.analysis.diff.AbstractDifferentialExpressionAnalyzer#getExpressionAnalysis(ubic.gemma.model.expression
      * .experiment.ExpressionExperiment)
@@ -104,6 +87,7 @@ public class OneWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer 
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.analysis.expression.diff.AbstractDifferentialExpressionAnalyzer#run(ubic.gemma.model.expression.experiment
      * .ExpressionExperiment, java.util.Collection)
@@ -123,12 +107,13 @@ public class OneWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer 
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.analysis.expression.diff.AbstractDifferentialExpressionAnalyzer#generateHistograms(java.lang.String,
      * java.util.ArrayList, int, int, int, double[])
      */
     @Override
-    protected Collection<Histogram> generateHistograms( String histFileName, ArrayList<ExperimentalFactor> effects,
+    protected Collection<Histogram> generateHistograms( String histFileName, List<ExperimentalFactor> effects,
             int numBins, int min, int max, Double[] pvalues ) {
 
         histFileName = StringUtils.removeEnd( histFileName, DifferentialExpressionFileUtils.PVALUE_DIST_SUFFIX );
@@ -252,7 +237,7 @@ public class OneWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer 
                 factorValues, samplesUsed );
 
         /*
-         * if possible sue this to compute effect sizes?
+         * if possible use this to order the samples to get effect size.
          */
         FactorValue controlGroup = determineControlGroup( factorValues );
 

@@ -24,9 +24,6 @@ import java.util.HashSet;
 import java.util.List;
 
 import org.apache.commons.lang.RandomStringUtils;
-import org.apache.commons.math.random.MersenneTwister;
-import org.apache.commons.math.random.RandomData;
-import org.apache.commons.math.random.RandomDataImpl;
 import org.easymock.classextension.EasyMock;
 import org.junit.Before;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -68,8 +65,6 @@ import ubic.gemma.testing.BaseSpringContextTest;
  */
 public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTest {
 
-    private static final double FRACTION_MISSING_DATA = 0.2;
-
     protected static final int NUM_DESIGN_ELEMENTS = 100;
 
     protected static final int NUM_BIOASSAYS = 8;
@@ -88,7 +83,7 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
 
     protected BioAssayDimension bioAssayDimension = null;
 
-    protected Collection<ExperimentalFactor> experimentalFactors = null;
+    protected List<ExperimentalFactor> experimentalFactors = null;
 
     protected ExperimentalFactor experimentalFactorA = null;
     protected ExperimentalFactor experimentalFactorB = null;
@@ -150,7 +145,7 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
                 }
                 updatedFactorValues.add( fv );
 
-                m.setFactorValues( updatedFactorValues );
+                m.getFactorValues().addAll( updatedFactorValues );
                 updatedBiomaterials.add( m );
             }
         }
@@ -194,6 +189,7 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.testing.BaseSpringContextTest#onSetUpInTransaction()
      */
     @Before
@@ -218,6 +214,7 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
         /* experimental factor "area" */
         experimentalFactorA = ExperimentalFactor.Factory.newInstance();
         experimentalFactorA.setName( "area" );
+        experimentalFactorA.setId( 5001L );
         factorValuesA = new HashSet<FactorValue>();
 
         FactorValue factorValueA1 = FactorValue.Factory.newInstance();
@@ -242,11 +239,12 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
 
         factorValuesA.add( factorValueA1 );
         factorValuesA.add( factorValueA2 );
-        experimentalFactorA.setFactorValues( factorValuesA );
+        experimentalFactorA.getFactorValues().addAll( factorValuesA );
 
         /* experimental factor "treat" */
         experimentalFactorB = ExperimentalFactor.Factory.newInstance();
         experimentalFactorB.setName( "treat" );
+        experimentalFactorB.setId( 5002L );
 
         factorValuesB = new HashSet<FactorValue>();
 
@@ -273,7 +271,7 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
         factorValuesB.add( factorValueB1 );
         factorValuesB.add( factorValueB2 );
 
-        experimentalFactorB.setFactorValues( factorValuesB );
+        experimentalFactorB.getFactorValues().addAll( factorValuesB );
 
         /* set up the biomaterials */
         biomaterials = new ArrayList<BioMaterial>();
@@ -284,11 +282,11 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
         Collection<FactorValue> factorValuesForBioMaterial0 = new HashSet<FactorValue>();
         factorValuesForBioMaterial0.add( factorValueA1 );
         factorValuesForBioMaterial0.add( factorValueB1 );
-        biomaterial0a.setFactorValues( factorValuesForBioMaterial0 );
+        biomaterial0a.getFactorValues().addAll( factorValuesForBioMaterial0 );
 
         biomaterial0b = BioMaterial.Factory.newInstance();
         biomaterial0b.setName( "0b" );
-        biomaterial0b.setFactorValues( factorValuesForBioMaterial0 );
+        biomaterial0b.getFactorValues().addAll( factorValuesForBioMaterial0 );
 
         // 2 replicates
         biomaterial1a = BioMaterial.Factory.newInstance();
@@ -296,11 +294,11 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
         Collection<FactorValue> factorValuesForBioMaterial1 = new HashSet<FactorValue>();
         factorValuesForBioMaterial1.add( factorValueA1 );
         factorValuesForBioMaterial1.add( factorValueB2 );
-        biomaterial1a.setFactorValues( factorValuesForBioMaterial1 );
+        biomaterial1a.getFactorValues().addAll( factorValuesForBioMaterial1 );
 
         biomaterial1b = BioMaterial.Factory.newInstance();
         biomaterial1b.setName( "1b" );
-        biomaterial1b.setFactorValues( factorValuesForBioMaterial1 );
+        biomaterial1b.getFactorValues().addAll( factorValuesForBioMaterial1 );
 
         // 2 replicates
         biomaterial2a = BioMaterial.Factory.newInstance();
@@ -308,11 +306,11 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
         Collection<FactorValue> factorValuesForBioMaterial2 = new HashSet<FactorValue>();
         factorValuesForBioMaterial2.add( factorValueA2 );
         factorValuesForBioMaterial2.add( factorValueB1 );
-        biomaterial2a.setFactorValues( factorValuesForBioMaterial2 );
+        biomaterial2a.getFactorValues().addAll( factorValuesForBioMaterial2 );
 
         biomaterial2b = BioMaterial.Factory.newInstance();
         biomaterial2b.setName( "2b" );
-        biomaterial2b.setFactorValues( factorValuesForBioMaterial2 );
+        biomaterial2b.getFactorValues().addAll( factorValuesForBioMaterial2 );
 
         // 2 replicates
         biomaterial3a = BioMaterial.Factory.newInstance();
@@ -320,11 +318,20 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
         Collection<FactorValue> factorValuesForBioMaterial3 = new HashSet<FactorValue>();
         factorValuesForBioMaterial3.add( factorValueA2 );
         factorValuesForBioMaterial3.add( factorValueB2 );
-        biomaterial3a.setFactorValues( factorValuesForBioMaterial3 );
+        biomaterial3a.getFactorValues().addAll( factorValuesForBioMaterial3 );
 
         biomaterial3b = BioMaterial.Factory.newInstance();
         biomaterial3b.setName( "3b" );
-        biomaterial3b.setFactorValues( factorValuesForBioMaterial3 );
+        biomaterial3b.getFactorValues().addAll( factorValuesForBioMaterial3 );
+
+        biomaterial0a.setId( 100000L );
+        biomaterial0b.setId( 100001L );
+        biomaterial1a.setId( 100002L );
+        biomaterial1b.setId( 100003L );
+        biomaterial2a.setId( 100004L );
+        biomaterial2b.setId( 100005L );
+        biomaterial3a.setId( 100006L );
+        biomaterial3b.setId( 100007L );
 
         biomaterials.add( biomaterial0a );
         biomaterials.add( biomaterial0b );
@@ -404,7 +411,7 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
 
         expressionExperiment.setBioAssays( bioAssays );
 
-        experimentalFactors = new HashSet<ExperimentalFactor>();
+        experimentalFactors = new ArrayList<ExperimentalFactor>();
         experimentalFactors.add( experimentalFactorA );
         experimentalFactors.add( experimentalFactorB );
 
@@ -477,13 +484,13 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
 
         String path;
         if ( resourcePath == null ) {
-            path = "/data/loader/aov.results-2-monocyte-data-bytime.bypat.data.sort";
+            path = "/data/stat-tests/anova-test-data.txt";
         } else {
             path = resourcePath;
         }
 
         DoubleMatrix<String, String> dataMatrix = r.read( this.getClass().getResourceAsStream( path ) );
-        RandomData randomData = new RandomDataImpl( new MersenneTwister( 0 ) ); // fixed seed
+        // RandomData randomData = new RandomDataImpl( new MersenneTwister( 0 ) ); // fixed seed - important!
 
         Collection<CompositeSequence> compositeSequences = new HashSet<CompositeSequence>();
         for ( int i = 0; i < NUM_DESIGN_ELEMENTS; i++ ) {
@@ -492,7 +499,7 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
             vector.setQuantitationType( quantitationType );
 
             CompositeSequence cs = CompositeSequence.Factory.newInstance();
-            cs.setName( "probe_" + i );
+            cs.setName( dataMatrix.getRowName( i ) );
             cs.setId( i + 1000L );
             cs.setArrayDesign( arrayDesign );
             vector.setDesignElement( cs );
@@ -501,20 +508,21 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
             double[] dvals = new double[bioMaterials.size()];
             for ( int j = 0; j < dvals.length; j++ ) {
 
-                if ( randomData.nextUniform( 0, 1 ) < FRACTION_MISSING_DATA ) {
-                    dvals[j] = Double.NaN;
-                } else if ( i < 20 ) {
-                    // make it a little more interesting
-                    if ( bioMaterials.get( j ).getFactorValues().contains( this.factorValuesA.iterator().next() ) ) {
-                        dvals[j] = dataMatrix.get( i, j ) + Math.abs( randomData.nextGaussian( 200, 1 ) );
-                    } else if ( bioMaterials.get( j ).getFactorValues().contains( this.factorValuesB.iterator().next() ) ) {
-                        dvals[j] = dataMatrix.get( i, j ) - Math.abs( randomData.nextGaussian( 4, 1 ) );
-                    } else {
-                        dvals[j] = dataMatrix.get( i, j );
-                    }
-                } else {
-                    dvals[j] = dataMatrix.get( i, j );
-                }
+                // if ( randomData.nextUniform( 0, 1 ) < FRACTION_MISSING_DATA ) {
+                // dvals[j] = Double.NaN;
+                // } else if ( i < 20 ) {
+                // // make it a little more interesting
+                // if ( bioMaterials.get( j ).getFactorValues().contains( this.factorValuesA.iterator().next() ) ) {
+                // dvals[j] = dataMatrix.get( i, j ) + Math.abs( randomData.nextGaussian( 200, 1 ) );
+                // } else if ( bioMaterials.get( j ).getFactorValues().contains( this.factorValuesB.iterator().next() )
+                // ) {
+                // dvals[j] = dataMatrix.get( i, j ) - Math.abs( randomData.nextGaussian( 4, 1 ) );
+                // } else {
+                // dvals[j] = dataMatrix.get( i, j );
+                // }
+                // } else {
+                dvals[j] = dataMatrix.get( i, j );
+                // }
             }
 
             byte[] bvals = bac.doubleArrayToBytes( dvals );

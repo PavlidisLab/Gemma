@@ -83,13 +83,13 @@ public class TTestAnalyzerTest extends BaseAnalyzerConfigurationTest {
             log.debug( "probe: " + probe + "; p-value: " + pvalue );
 
             if ( probe.getName().equals( "probe_0" ) ) {
-                assertEquals( 9.16511e-8, pvalue, 0.0001 );
-            } else if ( probe.getName().equals( "probe_16" ) ) {
+                assertEquals( 4.312e-10, pvalue, 1e-12 );
+            } else if ( probe.getName().equals( "probe_4" ) ) {
                 assertTrue( pvalue == null );
             } else if ( probe.getName().equals( "probe_17" ) ) {
-                assertEquals( 2.7407e-7, pvalue, 0.00001 );
+                assertEquals( 9.604e-11, pvalue, 1e-13 );
             } else if ( probe.getName().equals( "probe_75" ) ) {
-                assertEquals( 0.5700398, pvalue, 0.00001 );
+                assertEquals( 0.3523, pvalue, 0.001 );
             }
         }
     }
@@ -141,24 +141,28 @@ public class TTestAnalyzerTest extends BaseAnalyzerConfigurationTest {
             ProbeAnalysisResult probeAnalysisResult = ( ProbeAnalysisResult ) r;
             CompositeSequence probe = probeAnalysisResult.getProbe();
             Double pvalue = probeAnalysisResult.getPvalue();
+            Double stat = probeAnalysisResult.getScore();
             log.debug( "probe: " + probe + "; p-value: " + pvalue );
 
             if ( probe.getName().equals( "probe_0" ) ) {
-                assertEquals( 0.03689, pvalue, 0.00001 );
+                assertEquals( 0.03505, pvalue, 0.00001 );
             } else if ( probe.getName().equals( "probe_16" ) ) {
-                assertEquals( 0.4238432, pvalue, 0.0001 );
+                assertEquals( 0.03476, pvalue, 0.0001 );
             } else if ( probe.getName().equals( "probe_17" ) ) {
-                assertEquals( 0.07875266, pvalue, 0.0001 );
+                assertEquals( 0.03578, pvalue, 0.0001 );
             } else if ( probe.getName().equals( "probe_75" ) ) {
-                assertEquals( 0.2266758, pvalue, 0.0001 );
+                assertEquals( 0.8897, pvalue, 0.0001 );
+                assertEquals( -0.1507, stat, 0.0001 );
             } else if ( probe.getName().equals( "probe_94" ) ) {
-                assertEquals( 2.283678e-05, pvalue, 0.0001 );
+                assertEquals( 0.002717, pvalue, 0.0001 );
+                assertEquals( 6.6087, stat, 0.001 );
             }
         }
     }
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.analysis.expression.diff.BaseAnalyzerConfigurationTest#checkResults(ubic.gemma.model.analysis.expression
      * .ExpressionAnalysisResultSet)
@@ -170,6 +174,7 @@ public class TTestAnalyzerTest extends BaseAnalyzerConfigurationTest {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.analysis.diff.BaseAnalyzerConfigurationTest#configureMocks()
      */
     @Override

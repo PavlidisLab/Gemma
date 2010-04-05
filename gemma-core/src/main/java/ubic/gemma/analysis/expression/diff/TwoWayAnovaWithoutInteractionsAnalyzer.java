@@ -70,12 +70,13 @@ public class TwoWayAnovaWithoutInteractionsAnalyzer extends AbstractTwoWayAnovaA
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.analysis.expression.diff.AbstractDifferentialExpressionAnalyzer#generateHistograms(java.lang.String,
      * java.util.ArrayList, int, int, int, double[])
      */
     @Override
-    protected Collection<Histogram> generateHistograms( String histFileName, ArrayList<ExperimentalFactor> effects,
+    protected Collection<Histogram> generateHistograms( String histFileName, List<ExperimentalFactor> effects,
             int numBins, int min, int max, Double[] pvalues ) {
 
         Collection<Histogram> hists = new HashSet<Histogram>();
@@ -107,6 +108,7 @@ public class TwoWayAnovaWithoutInteractionsAnalyzer extends AbstractTwoWayAnovaA
 
     /*
      * (non-Javadoc)
+     * 
      * @seeubic.gemma.analysis.diff.AbstractTwoWayAnovaAnalyzer#twoWayAnova(ubic.gemma.model.expression.experiment.
      * ExpressionExperiment, ubic.gemma.model.expression.experiment.ExperimentalFactor,
      * ubic.gemma.model.expression.experiment.ExperimentalFactor)

@@ -69,6 +69,7 @@ public class TwoWayAnovaWithInteractionsAnalyzer extends AbstractTwoWayAnovaAnal
 
     /*
      * (non-Javadoc)
+     * 
      * @seeubic.gemma.analysis.diff.AbstractTwoWayAnovaAnalyzer#twoWayAnova(ubic.gemma.model.expression.experiment.
      * ExpressionExperiment, ubic.gemma.model.common.quantitationtype.QuantitationType,
      * ubic.gemma.model.expression.bioAssayData.BioAssayDimension,
@@ -152,7 +153,7 @@ public class TwoWayAnovaWithInteractionsAnalyzer extends AbstractTwoWayAnovaAnal
         }
 
         /* write out histogram */
-        ArrayList<ExperimentalFactor> effects = new ArrayList<ExperimentalFactor>();
+        List<ExperimentalFactor> effects = new ArrayList<ExperimentalFactor>();
         effects.add( experimentalFactorA );
         effects.add( experimentalFactorB );
         writePValuesHistogram( d.toArray( new Double[] {} ), expressionExperiment, effects );
@@ -166,12 +167,13 @@ public class TwoWayAnovaWithInteractionsAnalyzer extends AbstractTwoWayAnovaAnal
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.analysis.expression.diff.AbstractDifferentialExpressionAnalyzer#generateHistograms(java.lang.String,
      * java.util.ArrayList, int, int, int, double[])
      */
     @Override
-    protected Collection<Histogram> generateHistograms( String histFileName, ArrayList<ExperimentalFactor> effects,
+    protected Collection<Histogram> generateHistograms( String histFileName, List<ExperimentalFactor> effects,
             int numBins, int min, int max, Double[] pvalues ) {
         Collection<Histogram> hists = new HashSet<Histogram>();
 

@@ -104,20 +104,20 @@ public class TwoWayAnovaWithoutInteractionsAnalyzerTest extends BaseAnalyzerConf
             if ( f.equals( super.experimentalFactorA ) ) {
                 log.info( probe.getName() );
                 if ( probe.getName().equals( "probe_1" ) ) { // id=1001
-                    assertEquals( 0.0009837, pvalue, 0.001 );
-                    assertEquals( 418990.60, stat, 0.1 );
+                    assertEquals( 0.001814, pvalue, 0.00001 );
+                    assertEquals( 1.2311e+05, stat, 1 );
                     found = true;
                 } else if ( probe.getName().equals( "probe_97" ) ) { // id 1097
-                    assertEquals( 0.1567, pvalue, 0.001 );
+                    assertEquals( 0.3546, pvalue, 0.001 );
                 }
 
             } else {
                 if ( probe.getName().equals( "probe_1" ) ) {
-                    assertEquals( 0.0649223, pvalue, 0.001 );
-                    assertEquals( 95.49, stat, 0.1 );
+                    assertEquals( 0.501040, pvalue, 0.001 );
+                    assertEquals( 9.9350e-01, stat, 0.1 );
                     found = true;
                 } else if ( probe.getName().equals( "probe_97" ) ) {
-                    assertEquals( 0.8323, pvalue, 0.001 );
+                    assertEquals( 0.4449, pvalue, 0.001 );
                 }
 
             }
@@ -128,6 +128,7 @@ public class TwoWayAnovaWithoutInteractionsAnalyzerTest extends BaseAnalyzerConf
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.analysis.diff.BaseAnalyzerConfigurationTest#configureMocks()
      */
     @Override
