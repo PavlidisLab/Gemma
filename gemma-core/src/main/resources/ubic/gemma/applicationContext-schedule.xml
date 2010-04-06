@@ -30,7 +30,7 @@
 				<ref local="expressionExperimentReportTrigger" />
 				<ref local="whatsNewTrigger" />
 				<ref local="gene2CsUpdateTrigger" />
-				<ref local="viewTrigger" />
+				<!-- <ref local="viewTrigger" /> -->
 				<ref local="monitorSpaceTrigger" />
 			</list>
 		</property>
@@ -85,24 +85,25 @@
 		</property>
 	</bean>
 
+<!-- TODO make this work in the space, disabling until then.  
 	<bean id="viewTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
 		<property name="jobDetail">
 			<ref bean="viewJobDetail" />
 		</property>
 		<property name="cronExpression">
-			<value>0 15 1 10 * ?</value> <!-- on the 10th of each month -->
+			<value>0 15 1 10 * ?</value> 
 		</property>
 	</bean>
-
+-->
 	<bean id="monitorSpaceTrigger" class="org.springframework.scheduling.quartz.SimpleTriggerBean">
 		<property name="jobDetail">
 			<ref bean="monitorSpaceJobDetail" />
 		</property>
 		<property name="repeatInterval">
-			<value>10000</value>
+			<value>60000</value> <!-- check every minute -->
 		</property>
 
-		<property name="startDelay" value="10000" />
+		<property name="startDelay" value="180000" /> <!--  wait 3 mintues before begining -->
 	</bean>
 
 
@@ -153,6 +154,8 @@
 			<value>updateGene2CsEntries</value>
 		</property>
 	</bean>
+<!--
+	 
 	<bean id="viewJobDetail" class="ubic.gemma.security.authentication.SecureMethodInvokingJobDetailFactoryBean">
 		<property name="targetObject">
 			<ref bean="databaseViewGenerator" />
@@ -162,7 +165,7 @@
 			<value>runAll</value>
 		</property>
 	</bean>
-
+-->
 	<bean id="monitorSpaceJobDetail" class="ubic.gemma.security.authentication.SecureMethodInvokingJobDetailFactoryBean">
 		<property name="targetObject">
 			<ref bean="spaceMonitor" />
