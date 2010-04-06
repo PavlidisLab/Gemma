@@ -41,13 +41,58 @@ Gemma.GeneGroupPanel = Ext.extend(Ext.grid.EditorGridPanel, {
 						return;
 					}
 					var selectedGeneGroupId = sel.data.id;
+					var genePanel = Ext.getCmp('gene-chooser-panel');
+
+					// Need to store these for retrevial later else they might
+					// end up being for the row that just got selected (Love
+					// asyncronous languages!)
+					var currentGroupSize = genePanel.currentGroupSize;
+					var modifiedGroupSize = genePanel.getGeneIds().size();
+					// Figure out if we need to ask them to save their changes
+					// before navigating away from the group they began
+					// editing...
+					if (genePanel.currentGroupId) { // This is only relevant the
+													// 1st time something is
+													// selected
+						if (currentGroupSize != modifiedGroupSize) {
+							var gids = genePanel.getGeneIds();
+							var groupId = genePanel.currentGroupId;
+
+							var confirmSaveChanges = function(btn) {
+
+								if (btn == 'yes') {
+
+									GeneSetController.updateGeneGroup(groupId,
+											gids, {
+												callback : function(d) {
+													refreshGeneGroupData();
+												},
+												errorHandler : function(e) {
+													Ext.Msg.alert('Sorry', e);
+												}
+											});
+
+								}
+							};
+
+							Ext.Msg.show({
+								title : 'Save changes?',
+								msg : 'The gene group currently being viewed has been modified.  Would you like to save the changes before navigating away?',
+								buttons : Ext.Msg.YESNO,
+								fn : confirmSaveChanges,
+								animEl : 'elId',
+								icon : Ext.MessageBox.QUESTION
+							});
+
+						}
+					}
 					GeneSetController.getGenesInGroup(selectedGeneGroupId,
 							function(geneValueObjs) {
 
-								var genePanel = Ext
-										.getCmp('gene-chooser-panel');
 								// If no genes in gene set, enable taxon
 								// selction
+								genePanel.currentGroupId = selectedGeneGroupId;
+
 								if (!geneValueObjs
 										|| geneValueObjs.size() === 0) {
 									genePanel.getTopToolbar().taxonCombo
@@ -57,8 +102,12 @@ Gemma.GeneGroupPanel = Ext.extend(Ext.grid.EditorGridPanel, {
 											.setDisabled(false);
 									genePanel.fireEvent("taxonchanged", null);
 									genePanel.loadGenes([]);
+									genePanel.currentGroupSize = 0;
 									return;
 								}
+
+								genePanel.currentGroupSize = geneValueObjs
+										.size();
 
 								var geneIds = [];
 								var taxonId = geneValueObjs[0].taxonId;
@@ -82,9 +131,7 @@ Gemma.GeneGroupPanel = Ext.extend(Ext.grid.EditorGridPanel, {
 										.setTaxon(groupTaxon);
 								genePanel.getTopToolbar().taxonCombo
 										.setDisabled(true);
-
-								Ext.getCmp('gene-chooser-panel')
-										.loadGenes(geneIds);
+								genePanel.loadGenes(geneIds);
 							});
 				}
 			}
@@ -169,7 +216,7 @@ Gemma.GeneGroupPanel = Ext.extend(Ext.grid.EditorGridPanel, {
 			}, {
 				header : 'size',
 				sortable : true,
-				dataIndex : 'size',		
+				dataIndex : 'size',
 				editable : false,
 				groupable : false,
 				tooltip : 'number of genes in group'
@@ -205,18 +252,11 @@ Gemma.GeneGroupImporter = Ext.extend(Ext.Panel, {
 
 	initComponent : function() {
 
-		var refreshGeneGroupData = function() {
-			var showPrivateOnly = !Ext.getCmp("geneGroupData-show-public").pressed;
-			Ext.getCmp('gene-group-panel').getStore().load({
-						params : [showPrivateOnly]
-					});
-		};
-
 		this.geneChooserPanel = new Gemma.GeneGrid({
 					region : 'east',
 					id : 'gene-chooser-panel'
 				});
-				
+
 		this.geneGroupPanel = new Gemma.GeneGroupPanel({
 					id : 'gene-group-panel',
 					region : 'center'
@@ -230,7 +270,7 @@ Gemma.GeneGroupImporter = Ext.extend(Ext.Panel, {
 
 		Ext.apply(this, {
 			layout : 'border',
-			//width : "100%",
+			// width : "100%",
 			height : 400,
 			title : "Gene Group Manager",
 			tbar : {
@@ -362,3 +402,12 @@ Gemma.GeneGroupImporter = Ext.extend(Ext.Panel, {
 
 	}
 });
+
+
+//TODO  This code shoudl be encorperated into the widget so it can be reused and not have to exist as a static entity outside of the widget's scope
+refreshGeneGroupData = function() {
+	var showPrivateOnly = !Ext.getCmp("geneGroupData-show-public").pressed;
+	Ext.getCmp('gene-group-panel').getStore().load({
+				params : [showPrivateOnly]
+			});
+};
