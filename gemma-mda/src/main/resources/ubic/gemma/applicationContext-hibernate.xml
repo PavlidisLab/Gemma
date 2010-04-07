@@ -202,8 +202,6 @@
 				</value>
 				<value>classpath:ubic/gemma/model/association/LiteratureAssociation.hbm.xml
 				</value>
-				<value>classpath:ubic/gemma/model/association/ProteinProteinInteraction.hbm.xml
-				</value>
 				<value>classpath:ubic/gemma/model/analysis/Analysis.hbm.xml
 				</value>
 				<value>classpath:ubic/gemma/model/analysis/AnalysisResult.hbm.xml
@@ -220,7 +218,7 @@
 				</value>
 				<value>classpath:ubic/gemma/model/genome/gene/GeneSetMember.hbm.xml
 				</value>
-
+				<value>classpath:ubic/gemma/model/association/Gene2GeneProteinAssociation.hbm.xml   </value> 
 
 			</list>
 		</property>
