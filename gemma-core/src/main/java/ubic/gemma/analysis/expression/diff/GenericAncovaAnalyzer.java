@@ -1,7 +1,7 @@
 /*
  * The Gemma project
  * 
- * Copyright (c) 2006 University of British Columbia
+ * Copyright (c) 2010 University of British Columbia
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,23 +16,20 @@
  * limitations under the License.
  *
  */
+
 package ubic.gemma.analysis.expression.diff;
 
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
 /**
- * A two way anova implementation without interactions as described by P. Pavlidis, Methods 31 (2003) 282-289.
+ * Linear model analyzer that doesn't have any special constraints.
  * 
- * @author keshav
+ * @author paul
  * @version $Id$
- * @see AbstractTwoWayAnovaAnalyzer
  */
 @Service
 @Scope(value = "prototype")
-public class TwoWayAnovaWithoutInteractionsAnalyzer extends LinearModelAnalyzer {
+public class GenericAncovaAnalyzer extends LinearModelAnalyzer {
 
-    /*
-     * TODO check constraints
-     */
 }

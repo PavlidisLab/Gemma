@@ -379,10 +379,10 @@ public class ExperimentalDesignController extends BaseController {
      * @return a collection of FactorValueValueObjects
      */
     public Collection<FactorValueValueObject> getFactorValuesWithCharacteristics( EntityDelegator e ) {
-        if ( e == null || e.getId() == null ) return null;
+        Collection<FactorValueValueObject> result = new HashSet<FactorValueValueObject>();
+        if ( e == null || e.getId() == null ) return result;
         ExperimentalFactor ef = this.experimentalFactorService.load( e.getId() );
 
-        Collection<FactorValueValueObject> result = new HashSet<FactorValueValueObject>();
         for ( FactorValue value : ef.getFactorValues() ) {
             if ( value.getCharacteristics().size() > 0 ) {
                 for ( Characteristic c : value.getCharacteristics() ) {

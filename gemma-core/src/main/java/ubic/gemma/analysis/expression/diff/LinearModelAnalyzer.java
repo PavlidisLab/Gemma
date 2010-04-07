@@ -19,12 +19,14 @@
 package ubic.gemma.analysis.expression.diff;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.collections.Transformer;
 import org.apache.commons.collections.TransformerUtils;
@@ -32,8 +34,6 @@ import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Service;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.dataStructure.matrix.ObjectMatrix;
@@ -54,7 +54,8 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
 
 /**
- * Handles fitting linear models without interactions for more than 2 factors, which may be continuous or fixed.
+ * Handles fitting linear models with continuous or fixed-level covariates. Interactions can be included if a
+ * DifferentialExpressionAnalysisConfig is passed as an argument to 'run'.
  * <p>
  * One factor can be constant (the same value for all samples); such a factor will be analyzed by looking at the
  * intercept in the fitted model. This is only appropriate for 'non-reference' designs on ratiometric arrays.
@@ -62,22 +63,20 @@ import ubic.gemma.model.expression.experiment.FactorValue;
  * @author paul
  * @version $Id$
  */
-@Service
-@Scope(value = "prototype")
-public class AncovaAnalyzer extends AbstractDifferentialExpressionAnalyzer {
+public abstract class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer {
 
-    private static Log log = LogFactory.getLog( AncovaAnalyzer.class );
+    private static Log log = LogFactory.getLog( LinearModelAnalyzer.class );
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.analysis.expression.diff.AbstractDifferentialExpressionAnalyzer#run(ubic.gemma.model.expression.experiment
+     * .ExpressionExperiment)
+     */
     @Override
-    protected Collection<Histogram> generateHistograms( String histFileName, List<ExperimentalFactor> effects,
-            int numBins, int min, int max, Double[] pvalues ) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public DifferentialExpressionAnalysis run( ExpressionExperiment expressionExperiment ) {
-        throw new UnsupportedOperationException( "Currently you must choose factors for ANCOVA" );
+    public final DifferentialExpressionAnalysis run( ExpressionExperiment expressionExperiment ) {
+        return run( expressionExperiment, expressionExperiment.getExperimentalDesign().getExperimentalFactors() );
     }
 
     /*
@@ -88,8 +87,44 @@ public class AncovaAnalyzer extends AbstractDifferentialExpressionAnalyzer {
      * .ExpressionExperiment, java.util.Collection)
      */
     @Override
-    public DifferentialExpressionAnalysis run( ExpressionExperiment expressionExperiment,
+    public final DifferentialExpressionAnalysis run( ExpressionExperiment expressionExperiment,
             Collection<ExperimentalFactor> factors ) {
+
+        DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
+        config.setFactorsToInclude( factors );
+
+        return this.run( expressionExperiment, config );
+
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.analysis.expression.diff.AbstractDifferentialExpressionAnalyzer#run(ubic.gemma.model.expression.experiment
+     * .ExpressionExperiment, ubic.gemma.model.expression.experiment.ExperimentalFactor[])
+     */
+    @Override
+    public DifferentialExpressionAnalysis run( ExpressionExperiment expressionExperiment,
+            ExperimentalFactor... experimentalFactors ) {
+
+        DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
+        config.setFactorsToInclude( Arrays.asList( experimentalFactors ) );
+
+        return this.run( expressionExperiment, config );
+
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.analysis.expression.diff.AbstractDifferentialExpressionAnalyzer#run(ubic.gemma.model.expression.experiment
+     * .ExpressionExperiment, ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalysisConfig)
+     */
+    @Override
+    public DifferentialExpressionAnalysis run( ExpressionExperiment expressionExperiment,
+            DifferentialExpressionAnalysisConfig config ) {
         connectToR();
 
         assert rc != null;
@@ -105,16 +140,20 @@ public class AncovaAnalyzer extends AbstractDifferentialExpressionAnalyzer {
         List<BioMaterial> samplesUsed = DifferentialExpressionAnalysisHelperService
                 .getBioMaterialsForBioAssays( dmatrix );
 
+        Collection<ExperimentalFactor> factors = config.getFactorsToInclude();
+
         if ( samplesUsed.size() <= factors.size() ) {
             throw new IllegalArgumentException( "Must have more samples than factors" );
         }
 
         /*
+         * if possible use this to order the samples to get effect size - treatment contrasts.
+         */
+        // FactorValue controlGroup = determineControlGroup( factorValues );
+        /*
          * Assign the matrix in R.
          */
         DoubleMatrix<DesignElement, Integer> namedMatrix = dmatrix.getMatrix();
-        Transformer rowNameExtractor = TransformerUtils.invokerTransformer( "getId" );
-        String matrixName = rc.assignMatrix( namedMatrix, rowNameExtractor );
 
         /*
          * We need a list of factors...
@@ -126,11 +165,12 @@ public class AncovaAnalyzer extends AbstractDifferentialExpressionAnalyzer {
          * Create names we can use to refer to our factors in a predictable way, and see if we need the intercept.
          */
         ExperimentalFactor interceptFactor = null;
-        Map<String, ExperimentalFactor> factorNameMap = new LinkedHashMap<String, ExperimentalFactor>();
+        final Map<String, Collection<ExperimentalFactor>> factorNameMap = new LinkedHashMap<String, Collection<ExperimentalFactor>>();
         List<String> factorNames = new ArrayList<String>();
         for ( ExperimentalFactor experimentalFactor : factorList ) {
             String factName = "fact." + experimentalFactor.getId();
-            factorNameMap.put( factName, experimentalFactor );
+            factorNameMap.put( factName, new HashSet<ExperimentalFactor>() );
+            factorNameMap.get( factName ).add( experimentalFactor );
             factorNames.add( factName );
 
             /*
@@ -148,26 +188,56 @@ public class AncovaAnalyzer extends AbstractDifferentialExpressionAnalyzer {
         }
 
         /*
-         * Run the analysis
+         * Build our factor terms, with interactions handled specially.
          */
-        String factTerm = StringUtils.join( factorNameMap.keySet(), "+" );
-
+        List<String[]> interactionFactorLists = new ArrayList<String[]>();
         ObjectMatrix<String, String, Object> designMatrix = buildDesignMatrix( factors, samplesUsed, factorList,
                 factorNames );
-
         String designMatrixVar = rc.dataFrame( designMatrix );
-        String command = "apply(" + matrixName + ", 1, function(x) { try( summary(lm( x ~ " + factTerm + ", data="
-                + designMatrixVar + " )) , silent=T ) })";
-        Map<String, LinearModelSummary> rawResults = rc.linearModelEvalWithLogging( command );
+
+        String modelFormula = "";
+        if ( interceptFactor != null && factorList.size() == 1 ) {
+            // special case of one-sample t-test.
+            modelFormula = "x ~ 1 ,data=" + designMatrixVar;
+        } else {
+
+            String factTerm = StringUtils.join( factorNameMap.keySet(), "+" );
+
+            boolean hasInteractionTerms = !config.getInteractionsToInclude().isEmpty();
+            if ( hasInteractionTerms ) {
+                for ( Collection<ExperimentalFactor> interactionTerms : config.getInteractionsToInclude() ) {
+
+                    List<String> interactionFactorNames = new ArrayList<String>();
+                    for ( ExperimentalFactor factor : interactionTerms ) {
+                        interactionFactorNames.add( "fact." + factor.getId() ); // see above for naming convention.
+                    }
+
+                    factTerm = factTerm + " + " + StringUtils.join( interactionFactorNames, "*" ); // in the R statement
+                    interactionFactorLists.add( interactionFactorNames.toArray( new String[] {} ) );
+
+                    // In the coefficients table.
+                    String factTableLabel = StringUtils.join( interactionFactorNames, ":" );
+                    factorNameMap.put( factTableLabel, new HashSet<ExperimentalFactor>() );
+                    factorNameMap.get( factTableLabel ).addAll( interactionTerms );
+                }
+            }
+
+            modelFormula = "x ~ " + factTerm + ",data=" + designMatrixVar;
+        }
 
         if ( log.isDebugEnabled() ) {
             log.debug( namedMatrix );
-            log.debug( command );
             log.debug( designMatrix );
+            log.debug( modelFormula );
         }
 
+        final Transformer rowNameExtractor = TransformerUtils.invokerTransformer( "getId" );
+
+        final Map<String, LinearModelSummary> rawResults = runAnalysis( namedMatrix, factorNameMap, modelFormula,
+                rowNameExtractor );
+
         /*
-         * Initialize some other data structures we need.
+         * Initialize some data structures we need to hold results
          */
         DifferentialExpressionAnalysis expressionAnalysis = super.initAnalysisEntity( expressionExperiment );
         Map<String, List<DifferentialExpressionAnalysisResult>> resultLists = new HashMap<String, List<DifferentialExpressionAnalysisResult>>();
@@ -175,6 +245,11 @@ public class AncovaAnalyzer extends AbstractDifferentialExpressionAnalyzer {
         for ( String factorName : factorNameMap.keySet() ) {
             resultLists.put( factorName, new ArrayList<DifferentialExpressionAnalysisResult>() );
             pvaluesForQvalue.put( factorName, new ArrayList<Double>() );
+        }
+        for ( String[] fs : interactionFactorLists ) {
+            String intF = StringUtils.join( fs, ":" );
+            resultLists.put( intF, new ArrayList<DifferentialExpressionAnalysisResult>() );
+            pvaluesForQvalue.put( intF, new ArrayList<Double>() );
         }
 
         /*
@@ -190,15 +265,19 @@ public class AncovaAnalyzer extends AbstractDifferentialExpressionAnalyzer {
 
             for ( String factorName : factorNameMap.keySet() ) {
 
-                Double pvalue;
-                Double score;
+                if ( factorName.contains( ":" ) ) continue; // interaction - FIXME make this cleaner.
 
-                if ( interceptFactor != null && factorNameMap.get( factorName ).equals( interceptFactor ) ) {
+                Double pvalue = null;
+                Double score = null;
+
+                Collection<ExperimentalFactor> factorsForName = factorNameMap.get( factorName );
+                if ( interceptFactor != null && factorsForName.size() == 1
+                        && factorsForName.iterator().next().equals( interceptFactor ) ) {
                     pvalue = lm.getInterceptP();
                     score = lm.getInterceptT();
                 } else {
-                    pvalue = lm.getP( factorName );
-                    score = lm.getT( factorName );
+                    pvalue = lm.getMainEffectP( factorName );
+                    score = lm.getMainEffectT( factorName )[0]; // FIXME!!!! There can be multiple values.
                 }
 
                 ProbeAnalysisResult probeAnalysisResult = ProbeAnalysisResult.Factory.newInstance();
@@ -208,12 +287,33 @@ public class AncovaAnalyzer extends AbstractDifferentialExpressionAnalyzer {
                 probeAnalysisResult.setPvalue( nan2Null( pvalue ) );
 
                 // TODO get a directionality on the score:
-                // probeAnalysisResult.setUpRegulated( true );
+                // probeAnalysisResult.setUpRegulated( score > 0 );
                 probeAnalysisResult.setScore( nan2Null( score ) );
                 pvaluesForQvalue.get( factorName ).add( pvalue );
 
                 resultLists.get( factorName ).add( probeAnalysisResult );
 
+            }
+
+            for ( String[] fa : interactionFactorLists ) {
+
+                String intF = StringUtils.join( fa, ":" );
+                Double interactionEffectP = lm.getInteractionEffectP( fa );
+
+                // FIXME Double interactionEffectT = lm.getInteractionEffectT( fa )[0]; // ??? multiple ??
+
+                ProbeAnalysisResult probeAnalysisResult = ProbeAnalysisResult.Factory.newInstance();
+                probeAnalysisResult.setProbe( cs );
+                probeAnalysisResult.setQuantitationType( quantitationType );
+
+                probeAnalysisResult.setPvalue( nan2Null( interactionEffectP ) );
+
+                // TODO get a directionality on the score:
+                // probeAnalysisResult.setUpRegulated( score > 0 );
+                // probeAnalysisResult.setScore( nan2Null( interactionEffectT ) );
+                pvaluesForQvalue.get( intF ).add( interactionEffectP );
+
+                resultLists.get( intF ).add( probeAnalysisResult );
             }
 
         }
@@ -241,7 +341,7 @@ public class AncovaAnalyzer extends AbstractDifferentialExpressionAnalyzer {
         Collection<ExpressionAnalysisResultSet> resultSets = new HashSet<ExpressionAnalysisResultSet>();
         for ( String fName : resultLists.keySet() ) {
             Collection<ExperimentalFactor> factorsUsed = new HashSet<ExperimentalFactor>();
-            factorsUsed.add( factorNameMap.get( fName ) );
+            factorsUsed.addAll( factorNameMap.get( fName ) );
             ExpressionAnalysisResultSet resultSet = ExpressionAnalysisResultSet.Factory.newInstance(
                     expressionAnalysis, resultLists.get( fName ), factorsUsed );
             resultSets.add( resultSet );
@@ -253,16 +353,71 @@ public class AncovaAnalyzer extends AbstractDifferentialExpressionAnalyzer {
          */
         expressionAnalysis.setResultSets( resultSets );
         expressionAnalysis.setName( this.getClass().getSimpleName() );
-        expressionAnalysis.setDescription( "ANCOVA with " + factorNameMap.size() + " factors"
-                + ( interceptFactor == null ? "" : " with intercept treated as factor" ) );
-
-        /*
-         * TODO histograms.
-         */
+        expressionAnalysis.setDescription( "Linear model with " + factorNameMap.size() + " factors"
+                + ( interceptFactor == null ? "" : " with intercept treated as factor" )
+                + ( interactionFactorLists.isEmpty() ? "" : " with interaction" ) );
 
         disconnectR();
         return expressionAnalysis;
+    }
 
+    /**
+     * Important bit. Actually run the analysis.
+     * 
+     * @param namedMatrix
+     * @param factorNameMap
+     * @param modelFormula
+     * @param rowNameExtractor
+     * @return results
+     */
+    private Map<String, LinearModelSummary> runAnalysis( DoubleMatrix<DesignElement, Integer> namedMatrix,
+            final Map<String, Collection<ExperimentalFactor>> factorNameMap, String modelFormula,
+            final Transformer rowNameExtractor ) {
+        // important part.
+        // This can be parallelized very easily in principle but R is not threadsafe. this would have to
+        // be done via snow?
+        // int numThreads = 8;
+        // int rowsPerThread = ( int ) Math.ceil( namedMatrix.rows() / numThreads );
+        // int j = 0;
+        // int k = j + rowsPerThread;
+        final Map<String, LinearModelSummary> rawResults = new ConcurrentHashMap<String, LinearModelSummary>();
+        // ExecutorService service = Executors.newFixedThreadPool( numThreads );
+        // final String modelFormulaF = modelFormula;
+        // Collection<Future<?>> futures = new HashSet<Future<?>>();
+        // for ( int i = 0; i < numThreads; i++ ) {
+        //
+        // log.info( "Starting thread " + i );
+        // if ( k >= namedMatrix.rows() ) {
+        // k = namedMatrix.rows() - 1;
+        //
+        // /*
+        // * corner cases can fall through.
+        // */
+        // }
+        // final DoubleMatrix<DesignElement, Integer> chunk = namedMatrix.getRowRange( j, k );
+        // Future<?> future = service.submit( new Runnable() {
+        // public void run() {
+        String matrixName = rc.assignMatrix( namedMatrix, rowNameExtractor );
+        rawResults.putAll( rc.rowApplyLinearModelWithLogging( matrixName, modelFormula, factorNameMap.keySet().toArray(
+                new String[] {} ) ) );
+        // }
+        // } );
+        //
+        // futures.add( future );
+        //
+        // }
+        //
+        // service.shutdown();
+        // try {
+        // service.awaitTermination( 20, TimeUnit.MINUTES );
+        // Thread.sleep( 100 );
+        // log.info( "Analysis still running ..." );
+        // } catch ( InterruptedException e ) {
+        // throw new RuntimeException( "Analysis timed out or was terminated" );
+        // }
+
+        assert rawResults.size() == namedMatrix.rows();
+        return rawResults;
     }
 
     /**

@@ -92,6 +92,8 @@ public class DifferentialExpressionAnalysisController extends AbstractTaskServic
     private ExpressionExperimentService expressionExperimentService = null;
 
     /**
+     * Ajax method. Pick the analysis type when we want it to be completely automated.
+     * 
      * @param id
      * @return
      */
@@ -127,14 +129,13 @@ public class DifferentialExpressionAnalysisController extends AbstractTaskServic
         } else if ( analyzer instanceof TwoWayAnovaWithoutInteractionsAnalyzer ) {
             result.setType( AnalysisType.TWA );
         } else {
-            throw new UnsupportedOperationException( "Don't know how to handle analyzer of class: "
-                    + analyzer.getClass().getSimpleName() );
+            result.setType( AnalysisType.GENERICLM );
         }
         return result;
     }
 
     /**
-     * FIXME: used?
+     * Not used?
      * 
      * @param id
      * @param factorids
@@ -182,8 +183,7 @@ public class DifferentialExpressionAnalysisController extends AbstractTaskServic
         } else if ( analyzer instanceof TwoWayAnovaWithoutInteractionsAnalyzer ) {
             result.setType( AnalysisType.TWA );
         } else {
-            throw new UnsupportedOperationException( "Don't know how to handle analyzer of class: "
-                    + analyzer.getClass().getSimpleName() );
+            result.setType( AnalysisType.GENERICLM );
         }
         return result;
     }
@@ -233,6 +233,9 @@ public class DifferentialExpressionAnalysisController extends AbstractTaskServic
             }
         }
 
+        /*
+         * Note that the setup gets checked again later, so if the choice is not valid it's not the end of the world.
+         */
         AnalysisType type = null;
         if ( factors.size() == 2 ) {
             if ( includeInteractions ) {
@@ -243,8 +246,10 @@ public class DifferentialExpressionAnalysisController extends AbstractTaskServic
         } else if ( factors.size() == 1 ) {
 
             int numValues = factors.iterator().next().getFactorValues().size();
-            if ( numValues < 2 ) {
-                throw new IllegalArgumentException( "There must be at least two factor values" );
+            if ( numValues == 0 ) {
+                throw new IllegalArgumentException( "Factor must have at least one value" );
+            } else if ( numValues == 1 ) {
+                type = AnalysisType.OSTTEST;
             }
             if ( numValues == 2 ) {
                 type = AnalysisType.TTEST;
@@ -252,7 +257,7 @@ public class DifferentialExpressionAnalysisController extends AbstractTaskServic
                 type = AnalysisType.OWA;
             }
         } else {
-            throw new IllegalArgumentException( "You must choose at most 2 factors" );
+            type = AnalysisType.GENERICLM;
         }
 
         AbstractDifferentialExpressionAnalyzer analyzer = this.differentialExpressionAnalyzer.determineAnalysis( ee,
@@ -279,6 +284,7 @@ public class DifferentialExpressionAnalysisController extends AbstractTaskServic
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.web.controller.grid.AbstractSpacesController#getRunner(java.lang.String, java.lang.Object)
      */
     @Override
@@ -288,6 +294,7 @@ public class DifferentialExpressionAnalysisController extends AbstractTaskServic
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.web.controller.grid.AbstractSpacesController#getSpaceRunner(java.lang.String, java.lang.Object)
      */
     @Override

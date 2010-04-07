@@ -35,9 +35,6 @@ import ubic.basecode.util.RClient;
 import ubic.basecode.util.RConnectionFactory;
 import ubic.gemma.analysis.service.ExpressionDataMatrixService;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
-import ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet;
-import ubic.gemma.model.analysis.expression.ProbeAnalysisResult;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -209,6 +206,7 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
 
         expressionExperiment = ExpressionExperiment.Factory.newInstance();
         expressionExperiment.setName( "analysistest_" + RandomStringUtils.randomAlphanumeric( 12 ) );
+        expressionExperiment.setId( 100009L );
         expressionExperiment.setShortName( RandomStringUtils.randomAlphanumeric( 12 ) );
 
         /* experimental factor "area" */
@@ -462,17 +460,6 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
      * @throws Exception
      */
     protected abstract void configureMocks() throws Exception;
-
-    /**
-     * @param resultSet
-     */
-    protected void checkResults( ExpressionAnalysisResultSet resultSet ) {
-
-        for ( DifferentialExpressionAnalysisResult r : resultSet.getResults() ) {
-            ProbeAnalysisResult probeAnalysisResult = ( ProbeAnalysisResult ) r;
-            log.debug( "probe: " + probeAnalysisResult.getProbe() + "; p-value: " + probeAnalysisResult.getPvalue() );
-        }
-    }
 
     /**
      * @param numAssays

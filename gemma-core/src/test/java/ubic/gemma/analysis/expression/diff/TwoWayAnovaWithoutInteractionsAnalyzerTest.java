@@ -78,15 +78,12 @@ public class TwoWayAnovaWithoutInteractionsAnalyzerTest extends BaseAnalyzerConf
     /**
      * @param resultSet
      */
-    @Override
-    protected void checkResults( ExpressionAnalysisResultSet resultSet ) {
+    private void checkResults( ExpressionAnalysisResultSet resultSet ) {
 
         Collection<ExperimentalFactor> factors = resultSet.getExperimentalFactor();
         assertEquals( "Should not have an interaction term", 1, factors.size() );
 
         ExperimentalFactor f = factors.iterator().next();
-
-        log.info( "************  " + resultSet.getExperimentalFactor() );
 
         boolean found = false;
         for ( DifferentialExpressionAnalysisResult r : resultSet.getResults() ) {
@@ -105,7 +102,7 @@ public class TwoWayAnovaWithoutInteractionsAnalyzerTest extends BaseAnalyzerConf
                 log.info( probe.getName() );
                 if ( probe.getName().equals( "probe_1" ) ) { // id=1001
                     assertEquals( 0.001814, pvalue, 0.00001 );
-                    assertEquals( 1.2311e+05, stat, 1 );
+                    assertEquals( 287.061, stat, 0.001 );
                     found = true;
                 } else if ( probe.getName().equals( "probe_97" ) ) { // id 1097
                     assertEquals( 0.3546, pvalue, 0.001 );
@@ -114,7 +111,7 @@ public class TwoWayAnovaWithoutInteractionsAnalyzerTest extends BaseAnalyzerConf
             } else {
                 if ( probe.getName().equals( "probe_1" ) ) {
                     assertEquals( 0.501040, pvalue, 0.001 );
-                    assertEquals( 9.9350e-01, stat, 0.1 );
+                    assertEquals( 0.997, stat, 0.001 );
                     found = true;
                 } else if ( probe.getName().equals( "probe_97" ) ) {
                     assertEquals( 0.4449, pvalue, 0.001 );

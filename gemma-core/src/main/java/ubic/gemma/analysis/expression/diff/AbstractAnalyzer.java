@@ -47,9 +47,10 @@ public abstract class AbstractAnalyzer {
     }
 
     /**
-     * Disconnect from R.
+     * Disconnect from R, clean up objects. Good idea to call this at the end of any methods using R commands.
      */
     public void disconnectR() {
+        rc.voidEval( "rm(list = ls())" );
         if ( rc != null && rc instanceof RServeClient ) {
             ( ( RServeClient ) rc ).disconnect();
         }

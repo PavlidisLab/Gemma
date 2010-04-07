@@ -21,8 +21,12 @@ package ubic.gemma.analysis.expression.diff;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
 
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,7 +51,7 @@ import ubic.gemma.model.expression.experiment.FactorValue;
 public class AncovaTest extends BaseAnalyzerConfigurationTest {
 
     @Autowired
-    private AncovaAnalyzer analyzer;
+    private GenericAncovaAnalyzer analyzer;
 
     /**
      * Two fixed-level parameters
@@ -96,17 +100,17 @@ public class AncovaTest extends BaseAnalyzerConfigurationTest {
                 if ( f.equals( super.experimentalFactorA ) ) {
 
                     if ( probe.getName().equals( "probe_98" ) ) {
-                        assertEquals( 0.921, pvalue, 0.001 );
+                        assertEquals( 0.8572, pvalue, 0.001 );
                     } else if ( probe.getName().equals( "probe_10" ) ) {
                         assertEquals( 4.69e-11, pvalue, 1e-12 );
                     } else if ( probe.getName().equals( "probe_4" ) ) {
-                        assertEquals( 0.00506, pvalue, 0.0001 );
+                        assertEquals( 0.0048, pvalue, 0.0001 );
                         assertEquals( 125.746, stat, 0.001 );
                     }
 
                 } else {
                     if ( probe.getName().equals( "probe_98" ) ) {
-                        assertEquals( 0.642, pvalue, 0.001 );
+                        assertEquals( 0.6417, pvalue, 0.001 );
                     } else if ( probe.getName().equals( "probe_10" ) ) {
                         assertEquals( 0.196, pvalue, 0.001 );
                     }
@@ -151,7 +155,6 @@ public class AncovaTest extends BaseAnalyzerConfigurationTest {
 
             experimentalFactorC.getFactorValues().add( factorValueC );
         }
-
         expressionExperiment.getExperimentalDesign().getExperimentalFactors().add( experimentalFactorC );
 
         DifferentialExpressionAnalysis expressionAnalysis = analyzer.run( expressionExperiment, expressionExperiment
@@ -188,9 +191,9 @@ public class AncovaTest extends BaseAnalyzerConfigurationTest {
                 if ( f.equals( super.experimentalFactorA ) ) {
 
                     if ( probe.getName().equals( "probe_98" ) ) {
-                        assertEquals( 0.520018, pvalue, 0.001 );
+                        assertEquals( 0.8673, pvalue, 0.001 );
                     } else if ( probe.getName().equals( "probe_10" ) ) {
-                        assertEquals( 1.11e-06, pvalue, 1e-8 );
+                        assertEquals( 4.062e-09, pvalue, 1e-10 );
                     } else if ( probe.getName().equals( "probe_4" ) ) {
                         // too few samples
                         assertEquals( null, pvalue );
@@ -199,15 +202,15 @@ public class AncovaTest extends BaseAnalyzerConfigurationTest {
 
                 } else if ( f.equals( super.experimentalFactorB ) ) {
                     if ( probe.getName().equals( "probe_98" ) ) {
-                        assertEquals( 0.684442, pvalue, 0.001 );
+                        assertEquals( 0.6665, pvalue, 0.001 );
                     } else if ( probe.getName().equals( "probe_10" ) ) {
-                        assertEquals( 0.94301, pvalue, 0.001 );
+                        assertEquals( 0.2356, pvalue, 0.001 );
                         assertEquals( -0.076, stat, 0.001 );
                     }
                 } else {
                     // our new one.
                     if ( probe.getName().equals( "probe_98" ) ) {
-                        assertEquals( 0.497665, pvalue, 0.001 );
+                        assertEquals( 0.4977, pvalue, 0.001 );
                     } else if ( probe.getName().equals( "probe_10" ) ) {
                         assertEquals( 0.57347, pvalue, 0.001 );
                     }
@@ -217,17 +220,181 @@ public class AncovaTest extends BaseAnalyzerConfigurationTest {
         }
     }
 
-    /*
-     * (non-Javadoc)
+    /**
+     * Two fixed-level parameters, one of which has three levels
      * 
-     * @see
-     * ubic.gemma.analysis.expression.diff.BaseAnalyzerConfigurationTest#checkResults(ubic.gemma.model.analysis.expression
-     * .ExpressionAnalysisResultSet)
+     * @throws Exception
      */
-    @Override
-    protected void checkResults( ExpressionAnalysisResultSet resultSet ) {
-        throw new UnsupportedOperationException( "don't use this here" );
+    @Test
+    public void testAncovaC() throws Exception {
 
+        if ( !connected ) {
+            log.warn( "Could not establish R connection.  Skipping test ..." );
+            return;
+        }
+
+        configureMocks();
+
+        /*
+         * Add a factor with three levels (same one used in onewayanovaanalyzertest)
+         */
+        ExperimentalFactor experimentalFactorC = ExperimentalFactor.Factory.newInstance();
+        experimentalFactorC.setName( "groupash" );
+        experimentalFactorC.setId( 5399424551L );
+        expressionExperiment.getExperimentalDesign().getExperimentalFactors().add( experimentalFactorC );
+
+        for ( int i = 1; i <= 3; i++ ) {
+            FactorValue factorValueC = FactorValue.Factory.newInstance();
+            factorValueC.setId( 2000L + i );
+            factorValueC.setValue( i + "_group" );
+            factorValueC.setExperimentalFactor( experimentalFactorC );
+            experimentalFactorC.getFactorValues().add( factorValueC );
+        }
+
+        List<FactorValue> facV = new ArrayList<FactorValue>( experimentalFactorC.getFactorValues() );
+        for ( int i = 0; i < 8; i++ ) {
+            super.biomaterials.get( i ).getFactorValues().add( facV.get( i % 3 ) );
+        }
+
+        Collection<ExperimentalFactor> factors = new HashSet<ExperimentalFactor>();
+        factors.add( experimentalFactorC );
+        factors.add( experimentalFactorA );
+
+        DifferentialExpressionAnalysis expressionAnalysis = analyzer.run( expressionExperiment, factors );
+
+        assertNotNull( expressionAnalysis );
+
+        Collection<ExpressionAnalysisResultSet> resultSets = expressionAnalysis.getResultSets();
+
+        assertEquals( 2, resultSets.size() );
+
+        for ( ExpressionAnalysisResultSet resultSet : resultSets ) {
+
+            factors = resultSet.getExperimentalFactor();
+
+            assertEquals( 1, factors.size() );
+
+            for ( DifferentialExpressionAnalysisResult r : resultSet.getResults() ) {
+
+                ProbeAnalysisResult probeAnalysisResult = ( ProbeAnalysisResult ) r;
+                CompositeSequence probe = probeAnalysisResult.getProbe();
+                Double pvalue = probeAnalysisResult.getPvalue();
+                Double stat = probeAnalysisResult.getScore();
+
+                if ( pvalue != null ) assertNotNull( stat );
+                assertNotNull( probe );
+
+                log.debug( "probe: " + probe + "; p-value: " + pvalue + "; T=" + stat );
+
+                ExperimentalFactor f = factors.iterator().next();
+
+                if ( f.equals( super.experimentalFactorA ) ) {
+
+                    if ( probe.getName().equals( "probe_98" ) ) {
+                        assertEquals( 0.8060, pvalue, 0.001 );
+                    } else if ( probe.getName().equals( "probe_10" ) ) {
+                        assertEquals( 9.215e-09, pvalue, 1e-11 );
+                    } else if ( probe.getName().equals( "probe_4" ) ) {
+                        assertEquals( 0.006278, pvalue, 0.0001 );
+                        assertEquals( 95.118, stat, 0.001 );
+                    }
+
+                } else { // factor C
+                    if ( probe.getName().equals( "probe_98" ) ) {
+                        assertEquals( 0.2171, pvalue, 0.001 );
+                    } else if ( probe.getName().equals( "probe_10" ) ) {
+                        assertEquals( 0.9088, pvalue, 0.001 );
+                    }
+                }
+
+            }
+        }
+    }
+
+    /**
+     * Two factors with interactions.
+     * 
+     * @throws Exception
+     */
+    @Test
+    public void testAncovaE() throws Exception {
+
+        if ( !connected ) {
+            log.warn( "Could not establish R connection.  Skipping test ..." );
+            return;
+        }
+
+        configureMocks();
+
+        DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
+        config.getFactorsToInclude().add( this.experimentalFactorA );
+        config.getFactorsToInclude().add( this.experimentalFactorB );
+        config.getInteractionsToInclude().add( config.getFactorsToInclude() );
+
+        DifferentialExpressionAnalysis expressionAnalysis = analyzer.run( expressionExperiment, config );
+
+        assertNotNull( expressionAnalysis );
+
+        Collection<ExpressionAnalysisResultSet> resultSets = expressionAnalysis.getResultSets();
+
+        assertEquals( 3, resultSets.size() );
+        boolean foundInteractions = false;
+
+        for ( ExpressionAnalysisResultSet resultSet : resultSets ) {
+
+            Collection<ExperimentalFactor> factors = resultSet.getExperimentalFactor();
+
+            for ( DifferentialExpressionAnalysisResult r : resultSet.getResults() ) {
+
+                ProbeAnalysisResult probeAnalysisResult = ( ProbeAnalysisResult ) r;
+                CompositeSequence probe = probeAnalysisResult.getProbe();
+                Double pvalue = probeAnalysisResult.getPvalue();
+                Double stat = probeAnalysisResult.getScore();
+
+                // if ( pvalue != null ) assertNotNull( stat );
+                assertNotNull( probe );
+
+                log.debug( "probe: " + probe + "; p-value: " + pvalue + "; T=" + stat );
+                if ( factors.size() == 2 ) { // interaction
+                    foundInteractions = true;
+
+                    if ( probe.getName().equals( "probe_98" ) ) {
+                        assertEquals( 0.7893, pvalue, 0.001 );
+                    } else if ( probe.getName().equals( "probe_10" ) ) {
+                        assertEquals( 0.04514, pvalue, 0.0001 );
+                    } else if ( probe.getName().equals( "probe_4" ) ) {
+                        assertEquals( null, pvalue );
+                        assertEquals( null, stat );
+                    }
+
+                } else {
+
+                    ExperimentalFactor f = factors.iterator().next();
+
+                    assertNotNull( f );
+
+                    if ( f.equals( super.experimentalFactorA ) ) {
+                        if ( probe.getName().equals( "probe_98" ) ) {
+                            assertEquals( 0.8769, pvalue, 0.001 );
+                        } else if ( probe.getName().equals( "probe_10" ) ) {
+                            assertEquals( 5.158e-10, pvalue, 1e-12 );
+                        } else if ( probe.getName().equals( "probe_4" ) ) {
+                            assertEquals( 0.0048, pvalue, 0.0001 );
+                            assertEquals( 125.746, stat, 0.001 );
+                        }
+
+                    } else {
+                        if ( probe.getName().equals( "probe_98" ) ) {
+                            assertEquals( 0.6888, pvalue, 0.001 );
+                        } else if ( probe.getName().equals( "probe_10" ) ) {
+                            assertEquals( 0.07970, pvalue, 0.001 );
+                        }
+                    }
+                }
+
+            }
+            assertTrue( foundInteractions );
+        }
     }
 
     /*

@@ -21,16 +21,23 @@ package ubic.gemma.analysis.expression.diff;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
+import ubic.basecode.dataStructure.matrix.DoubleMatrix;
+import ubic.basecode.io.writer.MatrixWriter;
+import ubic.basecode.math.distribution.Histogram;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.model.analysis.expression.ExpressionAnalysis;
@@ -38,7 +45,6 @@ import ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionAnalysisEvent;
@@ -49,8 +55,8 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.PersisterHelper;
 
 /**
- * A spring loaded differential expression service to run the differential expression analysis (and persist the results
- * using the appropriate data access objects).
+ * Differential expression service to run the differential expression analysis (and persist the results using the
+ * appropriate data access objects).
  * 
  * @author keshav
  * @version $Id$
@@ -59,7 +65,7 @@ import ubic.gemma.persistence.PersisterHelper;
 public class DifferentialExpressionAnalyzerService {
 
     public enum AnalysisType {
-        OWA, TTEST, TWA, TWIA, OSTTEST
+        OWA, TTEST, TWA, TWIA, OSTTEST, GENERICLM
     }
 
     @Autowired
@@ -67,9 +73,6 @@ public class DifferentialExpressionAnalyzerService {
 
     @Autowired
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService = null;
-
-    @Autowired
-    private DifferentialExpressionResultService differentialExpressionResultService = null;
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService = null;
@@ -89,7 +92,9 @@ public class DifferentialExpressionAnalyzerService {
      * Delete the differential expression analysis for the experiment with shortName.
      * 
      * @param shortName
+     * @deprecated we want to only delete anlyses that match the one we're running now.
      */
+    @Deprecated
     public void delete( String shortName ) {
         ExpressionExperiment ee = expressionExperimentService.findByShortName( shortName );
         if ( ee == null ) {
@@ -105,6 +110,7 @@ public class DifferentialExpressionAnalyzerService {
      * 
      * @param expressionExperiment
      */
+    @Deprecated
     public void deleteOldAnalyses( ExpressionExperiment expressionExperiment ) {
         Collection<DifferentialExpressionAnalysis> diffAnalysis = differentialExpressionAnalysisService
                 .findByInvestigation( expressionExperiment );
@@ -212,41 +218,10 @@ public class DifferentialExpressionAnalyzerService {
 
         deleteOldAnalyses( expressionExperiment );
 
-        return persistAnalysis( expressionExperiment, diffExpressionAnalysis );
-    }
+        DifferentialExpressionAnalysis analysis = persistAnalysis( expressionExperiment, diffExpressionAnalysis );
 
-    public void setAuditTrailService( AuditTrailService auditTrailService ) {
-        this.auditTrailService = auditTrailService;
-    }
+        return analysis;
 
-    /**
-     * @param differentialExpressionAnalysisService
-     */
-    public void setDifferentialExpressionAnalysisService(
-            DifferentialExpressionAnalysisService differentialExpressionAnalysisService ) {
-        this.differentialExpressionAnalysisService = differentialExpressionAnalysisService;
-    }
-
-    /**
-     * @param differentialExpressionResultService the differentialExpressionResultService to set
-     */
-    public void setDifferentialExpressionResultService(
-            DifferentialExpressionResultService differentialExpressionResultService ) {
-        this.differentialExpressionResultService = differentialExpressionResultService;
-    }
-
-    /**
-     * @param expressionExperimentService
-     */
-    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
-        this.expressionExperimentService = expressionExperimentService;
-    }
-
-    /**
-     * @param persisterHelper
-     */
-    public void setPersisterHelper( PersisterHelper persisterHelper ) {
-        this.persisterHelper = persisterHelper;
     }
 
     /**
@@ -273,99 +248,193 @@ public class DifferentialExpressionAnalyzerService {
     }
 
     /**
-     * @param results
-     * @param expressionExperiment
-     * @param factorNames
+     * @param ee
+     * @throws IOException
      */
-    public void writePValuesHistogram( Collection<DifferentialExpressionAnalysisResult> results,
-            ExpressionExperiment expressionExperiment, String factorNames ) throws IOException {
-
-        File dir = DifferentialExpressionFileUtils.getBaseDifferentialDirectory( expressionExperiment.getShortName() );
-
-        FileTools.createDir( dir.toString() );
-
-        String histFileName = null;
-        if ( factorNames != null ) {
-            histFileName = expressionExperiment.getShortName() + "_" + factorNames
-                    + DifferentialExpressionFileUtils.PVALUE_DIST_SUFFIX;
-        } else {
-            histFileName = expressionExperiment.getShortName() + DifferentialExpressionFileUtils.PVALUE_DIST_SUFFIX;
-        }
-
-        Histogram hist = generateHistogram( histFileName, 100, 0, 1, results );
-
-        String path = dir + File.separator + hist.getName();
-
-        File outputFile = new File( path );
-        if ( outputFile.exists() ) {
-            outputFile.delete();
-        }
-
-        FileWriter out = new FileWriter( outputFile );
-        out.write( "# Differential Expression distribution\n" );
-        out.write( "# date=" + ( new Date() ) + "\n" );
-        out.write( "# exp=" + expressionExperiment + " " + expressionExperiment.getShortName() + "\n" );
-        out.write( "Bin\tCount\n" );
-        hist.writeToFile( out );
-        out.close();
-
-    }
-
-    /**
-     * @param experiments
-     */
-    public void writePValuesHistogram( ExpressionExperiment ee ) throws IOException {
-
-        String sep = "_";
+    public void updateScoreDistributionFiles( ExpressionExperiment ee ) throws IOException {
 
         Collection<ExpressionAnalysisResultSet> resultSets = this.getResultSets( ee );
 
         if ( resultSets.size() == 0 ) {
             log.info( "No result sets for experiment " + ee.getShortName()
                     + ".  The differential expression analysis may not have been run on this experiment yet." );
-        } else {
-            log.info( "Result sets for " + ee.getShortName() + ": " + resultSets.size() );
+            return;
         }
 
-        for ( ExpressionAnalysisResultSet resultSet : resultSets ) {
+        /*
+         * Organize by analysis.
+         */
+        Set<DifferentialExpressionAnalysis> analyses = new HashSet<DifferentialExpressionAnalysis>();
 
-            differentialExpressionResultService.thaw( resultSet );
+        log.info( "Diff analyses for " + ee.getShortName() + ": " + analyses.size() );
 
-            String factorNames = StringUtils.EMPTY;
-            Collection<ExperimentalFactor> factors = resultSet.getExperimentalFactor();
-            if ( factors.size() > 1 ) {
-                for ( ExperimentalFactor f : factors ) {
-                    factorNames += f.getName() + sep;
-                }
-                factorNames = StringUtils.removeEnd( factorNames, sep );
-            } else {
-                factorNames = factors.iterator().next().getName();
-            }
-            Collection<DifferentialExpressionAnalysisResult> results = resultSet.getResults();
-
-            this.writePValuesHistogram( results, ee, factorNames );
+        for ( ExpressionAnalysisResultSet expressionAnalysisResultSet : resultSets ) {
+            analyses.add( expressionAnalysisResultSet.getAnalysis() );
         }
+
+        for ( DifferentialExpressionAnalysis differentialExpressionAnalysis : analyses ) {
+            writeDistributions( ee, differentialExpressionAnalysis );
+        }
+
     }
 
     /**
-     * Generates a histogram for the given results.
+     * Print the p-value and score distributions
      * 
-     * @param histFileName
-     * @param numBins
-     * @param min
-     * @param max
-     * @param results
-     * @return
+     * @param expressionExperiment
+     * @param diffExpressionAnalysis
      */
-    private Histogram generateHistogram( String histFileName, int numBins, int min, int max,
-            Collection<DifferentialExpressionAnalysisResult> results ) {
+    protected void writeDistributions( ExpressionExperiment expressionExperiment,
+            DifferentialExpressionAnalysis diffExpressionAnalysis ) {
 
-        Histogram hist = new Histogram( histFileName, numBins, min, max );
-        for ( DifferentialExpressionAnalysisResult r : results ) {
-            hist.fill( r.getPvalue() );
+        /*
+         * write histograms
+         * 
+         * Of 1) pvalues, 2) scores, 3) qvalues
+         * 
+         * Put all pvalues in one file etc so we don't get 9 files for a 2x anova with interactions.
+         */
+
+        List<Histogram> pvalueHistograms = new ArrayList<Histogram>();
+        List<Histogram> qvalueHistograms = new ArrayList<Histogram>();
+        List<Histogram> scoreHistograms = new ArrayList<Histogram>();
+
+        List<ExpressionAnalysisResultSet> resultSetList = new ArrayList<ExpressionAnalysisResultSet>();
+        resultSetList.addAll( diffExpressionAnalysis.getResultSets() );
+
+        List<String> factorNames = new ArrayList<String>();
+
+        for ( ExpressionAnalysisResultSet resultSet : resultSetList ) {
+
+            String factorName = "";
+
+            // these will be headings on the
+            for ( ExperimentalFactor factor : resultSet.getExperimentalFactor() ) {
+                factorName = factorName + ( factorName.equals( "" ) ? "" : ":" ) + factor.getName();
+            }
+            factorNames.add( factorName );
+
+            Histogram pvalHist = new Histogram( factorName, 100, 0.0, 1.0 );
+            pvalueHistograms.add( pvalHist );
+
+            Histogram qvalHist = new Histogram( factorName, 100, 0.0, 1.0 );
+            qvalueHistograms.add( qvalHist );
+
+            Histogram scoreHist = new Histogram( factorName, 200, -20, 20 );
+            scoreHistograms.add( scoreHist );
+
+            for ( DifferentialExpressionAnalysisResult result : resultSet.getResults() ) {
+                qvalHist.fill( result.getCorrectedPvalue() );
+                scoreHist.fill( result.getScore() );
+                pvalHist.fill( result.getPvalue() );
+            }
+
         }
 
-        return hist;
+        DoubleMatrix<String, String> pvalueDists = new DenseDoubleMatrix<String, String>( 100, resultSetList.size() );
+        DoubleMatrix<String, String> qvalueDists = new DenseDoubleMatrix<String, String>( 100, resultSetList.size() );
+        DoubleMatrix<String, String> scoreDists = new DenseDoubleMatrix<String, String>( 200, resultSetList.size() );
+
+        int i = 0;
+        for ( Histogram h : pvalueHistograms ) {
+            if ( i == 0 ) {
+                pvalueDists.setRowNames( Arrays.asList( h.getBinEdgesStrings() ) );
+                pvalueDists.setColumnNames( factorNames );
+
+            }
+
+            double[] binHeights = h.getArray();
+            for ( int j = 0; j < binHeights.length; j++ ) {
+                pvalueDists.set( j, i, binHeights[j] );
+
+            }
+            i++;
+        }
+        i = 0;
+        for ( Histogram h : qvalueHistograms ) {
+            if ( i == 0 ) {
+                qvalueDists.setRowNames( Arrays.asList( h.getBinEdgesStrings() ) );
+                qvalueDists.setColumnNames( factorNames );
+            }
+            double[] binHeights = h.getArray();
+            for ( int j = 0; j < binHeights.length; j++ ) {
+                qvalueDists.set( j, i, binHeights[j] );
+            }
+            i++;
+        }
+        i = 0;
+        for ( Histogram h : scoreHistograms ) {
+            if ( i == 0 ) {
+                scoreDists.setRowNames( Arrays.asList( h.getBinEdgesStrings() ) );
+                scoreDists.setColumnNames( factorNames );
+            }
+            double[] binHeights = h.getArray();
+            for ( int j = 0; j < binHeights.length; j++ ) {
+                scoreDists.set( j, i, binHeights[j] );
+            }
+            i++;
+        }
+
+        saveDistributionMatrixToFile( "pvalues", pvalueDists, expressionExperiment, resultSetList );
+        saveDistributionMatrixToFile( "qvalues", qvalueDists, expressionExperiment, resultSetList );
+        saveDistributionMatrixToFile( "scores", scoreDists, expressionExperiment, resultSetList );
+
+    }
+
+    /**
+     * @param expressionExperiment
+     * @return the directory where the files should be written.
+     */
+    private File prepareDirectoryForDistributions( ExpressionExperiment expressionExperiment ) {
+        File dir = DifferentialExpressionFileUtils.getBaseDifferentialDirectory( expressionExperiment.getShortName() );
+        FileTools.createDir( dir.toString() );
+        return dir;
+    }
+
+    /**
+     * Print the distributions to a file.
+     * 
+     * @param extraSuffix eg qvalue, pvalue, score
+     * @param histograms each column is a histogram
+     * @param expressionExperiment
+     * @param resulstsets in the same order as columns in the
+     */
+    private void saveDistributionMatrixToFile( String extraSuffix, DoubleMatrix<String, String> histograms,
+            ExpressionExperiment expressionExperiment, List<ExpressionAnalysisResultSet> resultSetList ) {
+
+        Long analysisId = resultSetList.iterator().next().getAnalysis().getId();
+
+        File f = prepareDirectoryForDistributions( expressionExperiment );
+
+        String histFileName = expressionExperiment.getShortName() + ".an" + analysisId + "." + extraSuffix
+                + DifferentialExpressionFileUtils.PVALUE_DIST_SUFFIX;
+
+        File outputFile = new File( f, histFileName );
+
+        log.info( outputFile );
+        try {
+            FileWriter out = new FileWriter( outputFile, true /*
+                                                               * clobber, but usually won't since file names are per
+                                                               * analyssi
+                                                               */);
+            out.write( "# Gemma: differential expression statistics - " + extraSuffix + "\n" );
+            out.write( "# Generated=" + ( new Date() ) + "\n" );
+            out.write( "# If you use this file for your research, please cite the Gemma web site\n" );
+            out.write( "# exp=" + expressionExperiment.getId() + " " + expressionExperiment.getShortName() + " "
+                    + expressionExperiment.getName() + " \n" );
+
+            for ( ExpressionAnalysisResultSet resultSet : resultSetList ) {
+                Long resultSetId = resultSet.getId();
+                out.write( "# ResultSet id=" + resultSetId + ", analysisId=" + analysisId + "\n" );
+            }
+
+            MatrixWriter<String, String> writer = new MatrixWriter<String, String>( out );
+            writer.writeMatrix( histograms, true );
+
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
+        }
+
     }
 
     private DifferentialExpressionAnalysis persistAnalysis( ExpressionExperiment expressionExperiment,
@@ -383,6 +452,11 @@ public class DifferentialExpressionAnalyzerService {
          */
         auditTrailService.addUpdateEvent( expressionExperiment, DifferentialExpressionAnalysisEvent.Factory
                 .newInstance(), diffExpressionAnalysis.getDescription() );
+
+        /*
+         * Save histograms
+         */
+        writeDistributions( expressionExperiment, diffExpressionAnalysis );
 
         /*
          * Update the report

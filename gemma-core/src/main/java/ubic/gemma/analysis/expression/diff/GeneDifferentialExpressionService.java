@@ -20,7 +20,6 @@ import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultSer
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;

@@ -712,7 +712,17 @@ public class ExpressionExperimentController extends AbstractTaskService {
             // this taxon
             try {
                 Long tId = Long.parseLong( taxonId );
+
+                /*
+                 * TODO: handle case of multiple taxa or 'other'.
+                 */
+
                 Taxon taxon = taxonService.load( tId );
+
+                if ( taxon == null ) {
+                    return mav.addObject( "message", "Invalid taxon id" );
+                }
+
                 eeValObjectCol = this.getFilteredExpressionExperimentValueObjects( taxon, null, false );
                 mav.addObject( "showAll", false );
                 mav.addObject( "taxon", taxon );

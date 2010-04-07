@@ -56,6 +56,7 @@ public class DifferentialExpressionHistogramGeneratorCli extends ExpressionExper
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.util.AbstractSpringAwareCLI#getShortDesc()
      */
     @Override
@@ -65,8 +66,9 @@ public class DifferentialExpressionHistogramGeneratorCli extends ExpressionExper
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.apps.AbstractGeneExpressionExperimentManipulatingCLI#buildOptions()
-     */ 
+     */
     @Override
     protected void buildOptions() {
 
@@ -83,9 +85,10 @@ public class DifferentialExpressionHistogramGeneratorCli extends ExpressionExper
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.util.AbstractCLI#doWork(java.lang.String[])
      */
-    @Override 
+    @Override
     protected Exception doWork( String[] args ) {
 
         Exception err = processCommandLine( "Generate Histograms", args );
@@ -109,6 +112,7 @@ public class DifferentialExpressionHistogramGeneratorCli extends ExpressionExper
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.apps.AbstractGeneExpressionExperimentManipulatingCLI#processOptions()
      */
     @Override
@@ -121,7 +125,7 @@ public class DifferentialExpressionHistogramGeneratorCli extends ExpressionExper
      */
     private void processExperiment( ExpressionExperiment ee ) {
         try {
-            this.differentialExpressionAnalyzerService.writePValuesHistogram( ee );
+            this.differentialExpressionAnalyzerService.updateScoreDistributionFiles( ee );
 
             successObjects.add( ee.toString() );
 

@@ -1,7 +1,7 @@
 /*
  * The Gemma project
  * 
- * Copyright (c) 2006 University of British Columbia
+ * Copyright (c) 2006-2010 University of British Columbia
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,13 +20,10 @@ package ubic.gemma.analysis.expression.diff;
 
 import java.io.File;
 import java.io.FileWriter;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Date;
 import java.util.HashSet;
-import java.util.List;
 
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.lang.StringUtils;
@@ -34,7 +31,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.basecode.math.Rank;
-import ubic.basecode.util.FileTools;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.common.description.Characteristic;
@@ -54,9 +50,7 @@ import cern.colt.list.DoubleArrayList;
  */
 public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAnalyzer {
 
-    private Log log = LogFactory.getLog( this.getClass() );
     private static Collection<String> controlGroupTerms = new HashSet<String>();
-
     static {
         /*
          * FIXME: make this external.
@@ -67,9 +61,11 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
                 .toLowerCase() );
     }
 
+    private Log log = LogFactory.getLog( this.getClass() );
+
     /**
      * Peform an analysis where the factors are determined (or guessed) automatically. If this cannot be unambiguously
-     * determined, an exception will be thrown.
+     * determined, an exception will be thrown. (Default behaviour might be just to use all factors)
      * 
      * @param expressionExperiment
      * @return ExpressionAnalysis
@@ -86,18 +82,70 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
     public abstract DifferentialExpressionAnalysis run( ExpressionExperiment expressionExperiment,
             Collection<ExperimentalFactor> factors );
 
-    protected DifferentialExpressionAnalysis initAnalysisEntity( ExpressionExperiment expressionExperiment ) {
-        // TODO pass the DifferentialExpressionAnalysisConfig in (see LinkAnalysisService)
-        /* Create the expression analysis and pack the results. */
-        DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
-        DifferentialExpressionAnalysis expressionAnalysis = config.toAnalysis();
+    /**
+     * Perform an analysis using the specified factor(s), introduced in the order given.
+     * 
+     * @param expressionExperiment
+     * @param experimentalFactors
+     * @return
+     */
+    public abstract DifferentialExpressionAnalysis run( ExpressionExperiment expressionExperiment,
+            ExperimentalFactor... experimentalFactors );
 
-        ExpressionExperimentSet eeSet = ExpressionExperimentSet.Factory.newInstance();
-        Collection<BioAssaySet> experimentsAnalyzed = new HashSet<BioAssaySet>();
-        experimentsAnalyzed.add( expressionExperiment );
-        eeSet.setExperiments( experimentsAnalyzed );
-        expressionAnalysis.setExpressionExperimentSetAnalyzed( eeSet );
-        return expressionAnalysis;
+    /**
+     * @param expressionExperiment
+     * @param config
+     * @return
+     */
+    public abstract DifferentialExpressionAnalysis run( ExpressionExperiment expressionExperiment,
+            DifferentialExpressionAnalysisConfig config );
+
+    /**
+     * @param pvalues
+     * @return normalized ranks of the pvalues.
+     */
+    protected double[] computeRanks( double[] pvalues ) {
+        if ( pvalues == null ) throw new IllegalArgumentException( "Null pvalues" );
+        if ( pvalues.length == 0 ) throw new IllegalArgumentException( "Empty pvalues array" );
+        DoubleArrayList pvalDal = new DoubleArrayList( pvalues );
+        DoubleArrayList ranks = Rank.rankTransform( pvalDal );
+        double[] normalizedRanks = new double[ranks.size()];
+        for ( int i = 0; i < ranks.size(); i++ ) {
+            normalizedRanks[i] = ranks.get( i ) / ranks.size();
+        }
+        return normalizedRanks;
+    }
+
+    protected FactorValue determineControlGroup( Collection<FactorValue> factorValues ) {
+        FactorValue control = null;
+
+        for ( FactorValue factorValue : factorValues ) {
+            for ( Characteristic c : factorValue.getCharacteristics() ) {
+                if ( c instanceof VocabCharacteristic ) {
+                    String valueUri = ( ( VocabCharacteristic ) c ).getValueUri();
+                    if ( StringUtils.isNotBlank( valueUri ) && controlGroupTerms.contains( valueUri.toLowerCase() ) ) {
+
+                        if ( control != null ) {
+                            log.warn( "More than one control group found, cannot choose between " + valueUri );
+                            return null;
+                        }
+
+                        control = factorValue;
+                    }
+                } else if ( StringUtils.isNotBlank( c.getValue() )
+                        && controlGroupTerms.contains( c.getValue().toLowerCase() ) ) {
+                    if ( control != null ) {
+                        log.warn( "More than one control group found, cannot choose between " + c.getValue() );
+                        return null;
+                    }
+
+                    control = factorValue;
+                }
+
+            }
+        }
+
+        return control;
     }
 
     /**
@@ -219,130 +267,18 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
         return qvalues;
     }
 
-    /**
-     * Debugging tool. If qvalue failed, save the pvalues to a temporary file for inspection.
-     * 
-     * @param pvaluesToUse
-     * @return path to file where the pvalues were saved
-     * @throws IOException
-     */
-    private String savePvaluesForDebugging( double[] pvaluesToUse ) throws IOException {
-        File f = File.createTempFile( "qvalfail_", ".pvalues.txt" );
-        FileWriter w = new FileWriter( f );
-        for ( double d : pvaluesToUse ) {
-            w.write( d + "\n" );
-        }
-        w.close();
+    protected DifferentialExpressionAnalysis initAnalysisEntity( ExpressionExperiment expressionExperiment ) {
+        // TODO pass the DifferentialExpressionAnalysisConfig in (see LinkAnalysisService)
+        /* Create the expression analysis and pack the results. */
+        DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
+        DifferentialExpressionAnalysis expressionAnalysis = config.toAnalysis();
 
-        return f.getPath();
-    }
-
-    /**
-     * @param pValues
-     * @param expressionExperiment
-     * @param effects ordered (for 2 way anova)
-     */
-    protected void writePValuesHistogram( Double[] pValues, ExpressionExperiment expressionExperiment,
-            List<ExperimentalFactor> effects ) {
-
-        File dir = DifferentialExpressionFileUtils.getBaseDifferentialDirectory( expressionExperiment.getShortName() );
-
-        FileTools.createDir( dir.toString() );
-
-        File[] oldFiles = dir.listFiles( new FilenameFilter() {
-            public boolean accept( File d, String name ) {
-                return name.endsWith( DifferentialExpressionFileUtils.PVALUE_DIST_SUFFIX );
-            }
-        } );
-        for ( File file : oldFiles ) {
-            file.delete();
-        }
-
-        String histFileName = expressionExperiment.getShortName() + DifferentialExpressionFileUtils.PVALUE_DIST_SUFFIX;
-
-        Collection<Histogram> hists = generateHistograms( histFileName, effects, 100, 0, 1, pValues );
-
-        if ( hists == null || hists.isEmpty() ) {
-            log.error( "Could not generate histogram.  Not writing to file" );
-            return;
-        }
-
-        for ( Histogram hist : hists ) {
-            String path = dir + File.separator + hist.getName();
-
-            File outputFile = new File( path );
-            try {
-                FileWriter out = new FileWriter( outputFile, false ); // false = clobber.
-                out.write( "# Differential Expression distribution\n" );
-                out.write( "# date=" + ( new Date() ) + "\n" );
-                out.write( "# exp=" + expressionExperiment + " " + expressionExperiment.getShortName() + "\n" );
-                out.write( "Bin\tCount\n" );
-                hist.writeToFile( out );
-                out.close();
-            } catch ( IOException e ) {
-                throw new RuntimeException( e );
-            }
-        }
-    }
-
-    /**
-     * @param histFileName
-     * @param effects ordered
-     * @param numBins
-     * @param min
-     * @param max
-     * @param pvalues
-     * @return
-     */
-    protected abstract Collection<Histogram> generateHistograms( String histFileName, List<ExperimentalFactor> effects,
-            int numBins, int min, int max, Double[] pvalues );
-
-    /**
-     * @param pvalues
-     * @return normalized ranks of the pvalues.
-     */
-    protected double[] computeRanks( double[] pvalues ) {
-        if ( pvalues == null ) throw new IllegalArgumentException( "Null pvalues" );
-        if ( pvalues.length == 0 ) throw new IllegalArgumentException( "Empty pvalues array" );
-        DoubleArrayList pvalDal = new DoubleArrayList( pvalues );
-        DoubleArrayList ranks = Rank.rankTransform( pvalDal );
-        double[] normalizedRanks = new double[ranks.size()];
-        for ( int i = 0; i < ranks.size(); i++ ) {
-            normalizedRanks[i] = ranks.get( i ) / ranks.size();
-        }
-        return normalizedRanks;
-    }
-
-    protected FactorValue determineControlGroup( Collection<FactorValue> factorValues ) {
-        FactorValue control = null;
-
-        for ( FactorValue factorValue : factorValues ) {
-            for ( Characteristic c : factorValue.getCharacteristics() ) {
-                if ( c instanceof VocabCharacteristic ) {
-                    String valueUri = ( ( VocabCharacteristic ) c ).getValueUri();
-                    if ( StringUtils.isNotBlank( valueUri ) && controlGroupTerms.contains( valueUri.toLowerCase() ) ) {
-
-                        if ( control != null ) {
-                            log.warn( "More than one control group found, cannot choose between " + valueUri );
-                            return null;
-                        }
-
-                        control = factorValue;
-                    }
-                } else if ( StringUtils.isNotBlank( c.getValue() )
-                        && controlGroupTerms.contains( c.getValue().toLowerCase() ) ) {
-                    if ( control != null ) {
-                        log.warn( "More than one control group found, cannot choose between " + c.getValue() );
-                        return null;
-                    }
-
-                    control = factorValue;
-                }
-
-            }
-        }
-
-        return control;
+        ExpressionExperimentSet eeSet = ExpressionExperimentSet.Factory.newInstance();
+        Collection<BioAssaySet> experimentsAnalyzed = new HashSet<BioAssaySet>();
+        experimentsAnalyzed.add( expressionExperiment );
+        eeSet.setExperiments( experimentsAnalyzed );
+        expressionAnalysis.setExpressionExperimentSetAnalyzed( eeSet );
+        return expressionAnalysis;
     }
 
     /**
@@ -353,6 +289,24 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
      */
     protected Double nan2Null( Double e ) {
         return e == null || Double.isNaN( e ) ? null : e;
+    }
+
+    /**
+     * Debugging tool. If qvalue failed, save the pvalues to a temporary file for inspection.
+     * 
+     * @param pvaluesToUse
+     * @return path to file where the pvalues were saved
+     * @throws IOException
+     */
+    private String savePvaluesForDebugging( double[] pvaluesToUse ) throws IOException {
+        File f = File.createTempFile( "diffanalysisfail_", ".pvalues.txt" );
+        FileWriter w = new FileWriter( f );
+        for ( double d : pvaluesToUse ) {
+            w.write( d + "\n" );
+        }
+        w.close();
+
+        return f.getPath();
     }
 
 }

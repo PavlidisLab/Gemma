@@ -105,7 +105,7 @@ public class ExperimentalDesignVisualizationService {
 
         return result;
     }
-
+   
     /**
      * @param experiment
      * @param bd
@@ -145,7 +145,7 @@ public class ExperimentalDesignVisualizationService {
             Double i = 0.0;
             for ( FactorValue fv : ef.getFactorValues() ) {
                 i = i + 1.0;
-                fvV.put( fv, i ); // just for now
+                fvV.put( fv, i ); // just for now, a placeholder value.
             }
         }
 

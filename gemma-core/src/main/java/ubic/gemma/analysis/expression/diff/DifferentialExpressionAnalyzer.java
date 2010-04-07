@@ -169,6 +169,9 @@ public class DifferentialExpressionAnalyzer implements ApplicationContextAware {
                         }
                     }
                     return this.applicationContext.getBean( TTestAnalyzer.class );
+                case GENERICLM:
+
+                    return this.applicationContext.getBean( GenericAncovaAnalyzer.class );
                 default:
                     throw new IllegalArgumentException( "Analyses of that type are not yet supported" );
             }
@@ -191,7 +194,8 @@ public class DifferentialExpressionAnalyzer implements ApplicationContextAware {
      * 
      * @param expressionExperiment
      * @param factors which factors to use, or null if to use all from the experiment
-     * @return an appropriate analyzer, or null if one could not be identified.
+     * @return an appropriate analyzer
+     * @throws an exception if the experiment doesn't have a valid experimental design.
      */
     public AbstractDifferentialExpressionAnalyzer determineAnalysis( ExpressionExperiment expressionExperiment,
             Collection<ExperimentalFactor> experimentalFactors ) {
@@ -199,12 +203,12 @@ public class DifferentialExpressionAnalyzer implements ApplicationContextAware {
         if ( experimentalFactors == null ) {
             experimentalFactors = expressionExperiment.getExperimentalDesign().getExperimentalFactors();
         } else {
-
             if ( colIsEmpty( experimentalFactors ) ) {
                 throw new IllegalArgumentException(
-                        "Collection of experimental factors is either null or 0.  Cannot execute differential expression analysis." );
+                        "No experimental factors.  Cannot execute differential expression analysis." );
             }
 
+            // sanity check...
             for ( ExperimentalFactor experimentalFactor : experimentalFactors ) {
                 if ( !experimentalFactor.getExperimentalDesign().equals( expressionExperiment.getExperimentalDesign() ) ) {
                     throw new IllegalArgumentException( "Factors must come from the experiment provided" );
@@ -255,6 +259,7 @@ public class DifferentialExpressionAnalyzer implements ApplicationContextAware {
                     for ( QuantitationType qt : expressionExperiment.getQuantitationTypes() ) {
                         if ( qt.getIsPreferred() && qt.getIsRatio() ) {
                             // TODO use ANOVA but treat the intercept as a factor.
+
                         }
                     }
 
@@ -267,9 +272,12 @@ public class DifferentialExpressionAnalyzer implements ApplicationContextAware {
             }
             return this.applicationContext.getBean( TwoWayAnovaWithInteractionsAnalyzer.class );
 
+        } else {
+            /*
+             * FIXME we might want to catch other cases more carefully.
+             */
+            return this.applicationContext.getBean( GenericAncovaAnalyzer.class );
         }
-
-        return null;
     }
 
     /**
@@ -283,6 +291,7 @@ public class DifferentialExpressionAnalyzer implements ApplicationContextAware {
 
     /*
      * (non-Javadoc)
+     * 
      * @seeorg.springframework.context.ApplicationContextAware#setApplicationContext(org.springframework.context.
      * ApplicationContext)
      */

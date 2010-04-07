@@ -34,7 +34,7 @@ import org.apache.commons.logging.LogFactory;
 import ubic.basecode.dataStructure.Link;
 import ubic.basecode.math.CorrelationStats;
 import ubic.basecode.math.Stats;
-import ubic.gemma.analysis.expression.diff.Histogram;
+import ubic.basecode.math.distribution.Histogram;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;

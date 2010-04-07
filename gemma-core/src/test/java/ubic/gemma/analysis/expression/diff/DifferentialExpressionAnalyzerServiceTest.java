@@ -52,6 +52,7 @@ public class DifferentialExpressionAnalyzerServiceTest extends BaseSpringContext
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.testing.BaseSpringContextTest#onSetUpInTransaction()
      */
     @Before
@@ -98,7 +99,7 @@ public class DifferentialExpressionAnalyzerServiceTest extends BaseSpringContext
 
         Exception ex = null;
         try {
-            differentialExpressionAnalyzerService.writePValuesHistogram( ee );
+            differentialExpressionAnalyzerService.updateScoreDistributionFiles( ee );
         } catch ( IOException e ) {
             ex = e;
             e.printStackTrace();

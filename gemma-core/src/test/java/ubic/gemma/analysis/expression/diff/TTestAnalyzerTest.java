@@ -83,13 +83,13 @@ public class TTestAnalyzerTest extends BaseAnalyzerConfigurationTest {
             log.debug( "probe: " + probe + "; p-value: " + pvalue );
 
             if ( probe.getName().equals( "probe_0" ) ) {
-                assertEquals( 4.312e-10, pvalue, 1e-12 );
+                assertEquals( 1.48e-13, pvalue, 1e-15 );
             } else if ( probe.getName().equals( "probe_4" ) ) {
-                assertTrue( pvalue == null );
+                assertEquals( 0.0001523, pvalue, 0.000001 );
             } else if ( probe.getName().equals( "probe_17" ) ) {
-                assertEquals( 9.604e-11, pvalue, 1e-13 );
+                assertEquals( 8.832e-12, pvalue, 1e-15 );
             } else if ( probe.getName().equals( "probe_75" ) ) {
-                assertEquals( 0.3523, pvalue, 0.001 );
+                assertEquals( 0.2483, pvalue, 0.001 );
             }
         }
     }
@@ -158,18 +158,6 @@ public class TTestAnalyzerTest extends BaseAnalyzerConfigurationTest {
                 assertEquals( 6.6087, stat, 0.001 );
             }
         }
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.analysis.expression.diff.BaseAnalyzerConfigurationTest#checkResults(ubic.gemma.model.analysis.expression
-     * .ExpressionAnalysisResultSet)
-     */
-    @Override
-    protected void checkResults( ExpressionAnalysisResultSet resultSet ) {
-        throw new UnsupportedOperationException( "Don't use this" );
     }
 
     /*

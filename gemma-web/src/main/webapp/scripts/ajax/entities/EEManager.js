@@ -345,7 +345,7 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 									autoHeight : true,
 									items : [{
 												xtype : 'fieldset',
-												title : "Select up to 2 factor(s) to use",
+												title : "Select factor(s) to use",
 												autoHeight : true,
 												labelWidth : 200,
 												id : 'diff-ex-analysis-customize-factors'
@@ -388,8 +388,8 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 									}
 								}
 
-								if (factorsToUseIds.length < 1 || factorsToUseIds.length > 2) {
-									Ext.Msg.alert("Invalid selection", "Please pick 1 or 2 factors.");
+								if (factorsToUseIds.length < 1) {
+									Ext.Msg.alert("Invalid selection", "Please pick at least one factor.");
 									return;
 								}
 
@@ -460,7 +460,7 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 		 */
 		var cb = function(analysisInfo) {
 			if (analysisInfo.type) {
-				var customizable = false;
+				var customizable = true;
 				var analysisType = '';
 				if (analysisInfo.type === 'TWIA') {
 					analysisType = 'Two-way ANOVA with interactions';
@@ -474,6 +474,9 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 					analysisType = 'T-test (one-sample)';
 				} else if (analysisInfo.type === 'OWA') {
 					analysisType = 'One-way ANOVA';
+				} else {
+					analysisType = 'Generic ANOVA/ANCOVA'; // TODO: allow choice of the factors
+					customizable = true;
 				}
 
 				// ask for confirmation.

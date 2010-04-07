@@ -35,9 +35,9 @@ public class DifferentialExpressionFileUtils {
 
     private static String analysisStoragePath = ConfigUtils.getAnalysisStoragePath();
 
-    private static final String PVALUE_DIST = "diff" + File.separatorChar + "pvalueDist";
+    private static final String PVALUE_DIST = "diff" + File.separatorChar + "diffExStatDistributions";
 
-    public static final String PVALUE_DIST_SUFFIX = ".pvalueDist.txt";
+    public static final String PVALUE_DIST_SUFFIX = ".dist.txt";
 
     /**
      * @return
@@ -45,7 +45,6 @@ public class DifferentialExpressionFileUtils {
     public static File getBaseDifferentialDirectory( String shortName ) {
         File f = null;
         if ( shortName == null ) {
-
             f = new File( analysisStoragePath + File.separatorChar + PVALUE_DIST + File.separatorChar );
             log.debug( "No experiment name provided ... returning directory: " + f.toString() );
         } else {

@@ -31,13 +31,11 @@ import ubic.basecode.util.r.type.TwoWayAnovaResult;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.analysis.expression.ExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet;
-import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.ProbeAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
@@ -51,7 +49,9 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * 
  * @author keshav
  * @version $Id$
+ * @deprecated this functionality is now folded into the generic linearmodelanalyzer.
  */
+@Deprecated
 public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractDifferentialExpressionAnalyzer {
 
     protected final int mainEffectAIndex = 0;
@@ -61,6 +61,7 @@ public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractDifferentialEx
 
     /*
      * (non-Javadoc)
+     * 
      * @seeubic.gemma.analysis.diff.AbstractAnalyzer#getExpressionAnalysis(ubic.gemma.model.expression.experiment.
      * ExpressionExperiment)
      */
@@ -76,6 +77,7 @@ public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractDifferentialEx
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.analysis.expression.diff.AbstractDifferentialExpressionAnalyzer#run(ubic.gemma.model.expression.experiment
      * .ExpressionExperiment, java.util.Collection)
@@ -95,7 +97,8 @@ public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractDifferentialEx
     }
 
     /**
-     * Creates and returns an {@link ExpressionAnalysis} and fills in the expression analysis results.
+     * Creates and returns an {@link ExpressionAnalysis} and fills in the expression analysis results, writes the
+     * distributions.
      * 
      * @param dmatrix
      * @param mainEffectAPvalues
@@ -127,7 +130,7 @@ public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractDifferentialEx
 
         Collection<ExpressionAnalysisResultSet> resultSets = new HashSet<ExpressionAnalysisResultSet>();
 
-        DifferentialExpressionAnalysis expressionAnalysis = super.initAnalysisEntity( expressionExperiment   );
+        DifferentialExpressionAnalysis expressionAnalysis = super.initAnalysisEntity( expressionExperiment );
 
         /* All results for the first main effect */
         List<DifferentialExpressionAnalysisResult> analysisResultsMainEffectA = new ArrayList<DifferentialExpressionAnalysisResult>();
@@ -254,6 +257,5 @@ public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractDifferentialEx
      */
     protected abstract DifferentialExpressionAnalysis twoWayAnova( ExpressionExperiment expressionExperiment,
             ExperimentalFactor experimentalFactorA, ExperimentalFactor experimentalFactorB );
- 
 
 }

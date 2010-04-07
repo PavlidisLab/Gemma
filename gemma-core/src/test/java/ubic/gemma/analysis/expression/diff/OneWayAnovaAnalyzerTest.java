@@ -18,9 +18,12 @@
  */
 package ubic.gemma.analysis.expression.diff;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -28,7 +31,12 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet;
+import ubic.gemma.model.analysis.expression.ProbeAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
+import ubic.gemma.model.expression.experiment.FactorValue;
 
 /**
  * Tests the one way anova analyzer.
@@ -53,7 +61,6 @@ public class OneWayAnovaAnalyzerTest extends BaseAnalyzerConfigurationTest {
             log.warn( "Could not establish R connection.  Skipping test ..." );
             return;
         }
-        log.debug( "Testing OneWayAnova method in " + OneWayAnovaAnalyzer.class.getName() );
 
         super.configureTestDataForOneWayAnova();
 
@@ -66,7 +73,89 @@ public class OneWayAnovaAnalyzerTest extends BaseAnalyzerConfigurationTest {
         int numResults = resultSet.getResults().size();
 
         assertEquals( 100, numResults );
-        checkResults( resultSet );
+
+        /*
+         * Check we got the histograms - only happens during persisting.
+         */
+        // File dir = DifferentialExpressionFileUtils.getBaseDifferentialDirectory( expressionExperiment.getShortName()
+        // );
+        //
+        // File histFile = new File( dir, expressionExperiment.getShortName() + ".pvalues"
+        // + DifferentialExpressionFileUtils.PVALUE_DIST_SUFFIX );
+        // assertTrue( histFile.exists() );
+    }
+
+    @Test
+    public void testOnewayAnovaB() throws Exception {
+
+        if ( !connected ) {
+            log.warn( "Could not establish R connection.  Skipping test ..." );
+            return;
+        }
+
+        super.configureTestDataForOneWayAnova();
+
+        configureMocks();
+        /*
+         * Add a factor with three levels
+         */
+        ExperimentalFactor experimentalFactorC = ExperimentalFactor.Factory.newInstance();
+        experimentalFactorC.setName( "groupash" );
+        experimentalFactorC.setId( 5399424551L );
+        expressionExperiment.getExperimentalDesign().getExperimentalFactors().add( experimentalFactorC );
+
+        for ( int i = 1; i <= 3; i++ ) {
+            FactorValue factorValueC = FactorValue.Factory.newInstance();
+            factorValueC.setId( 2000L + i );
+            factorValueC.setValue( i + "_group" );
+            factorValueC.setExperimentalFactor( experimentalFactorC );
+            experimentalFactorC.getFactorValues().add( factorValueC );
+
+        }
+
+        List<FactorValue> facV = new ArrayList<FactorValue>( experimentalFactorC.getFactorValues() );
+        for ( int i = 0; i < 8; i++ ) {
+            super.biomaterials.get( i ).getFactorValues().add( facV.get( i % 3 ) );
+        }
+
+
+        Collection<ExperimentalFactor> factors = new HashSet<ExperimentalFactor>();
+        factors.add( experimentalFactorC );
+        DifferentialExpressionAnalysis expressionAnalysis = analyzer.run( expressionExperiment, factors );
+
+        Collection<ExpressionAnalysisResultSet> resultSets = expressionAnalysis.getResultSets();
+        ExpressionAnalysisResultSet resultSet = resultSets.iterator().next();
+        int numResults = resultSet.getResults().size();
+
+        assertEquals( 100, numResults );
+
+        factors = resultSet.getExperimentalFactor();
+
+        assertEquals( 1, factors.size() );
+
+        for ( DifferentialExpressionAnalysisResult r : resultSet.getResults() ) {
+
+            ProbeAnalysisResult probeAnalysisResult = ( ProbeAnalysisResult ) r;
+            CompositeSequence probe = probeAnalysisResult.getProbe();
+            Double pvalue = probeAnalysisResult.getPvalue();
+            Double stat = probeAnalysisResult.getScore();
+
+            if ( pvalue != null ) assertNotNull( stat );
+            assertNotNull( probe );
+
+            log.debug( "probe: " + probe + "; Factor=" + resultSet.getExperimentalFactor().iterator().next().getName()
+                    + "; p-value: " + pvalue + "; T=" + stat );
+
+            if ( probe.getName().equals( "probe_98" ) ) {
+                assertEquals( 0.1604, pvalue, 0.001 );
+            } else if ( probe.getName().equals( "probe_10" ) ) {
+                assertEquals( 0.8014, pvalue, 0.0001 );
+            } else if ( probe.getName().equals( "probe_4" ) ) {
+                assertEquals( 0.6531, pvalue, 0.0001 );
+            }
+
+        }
+
     }
 
     /*
