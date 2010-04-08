@@ -1,7 +1,9 @@
 <%@ include file="/common/taglibs.jsp"%>
 
-<jsp:useBean id="gene" scope="request" class="ubic.gemma.model.genome.GeneImpl" />
-<jsp:useBean id="representativeImages" scope="request" class="java.util.HashSet" />
+<jsp:useBean id="gene" scope="request"
+	class="ubic.gemma.model.genome.GeneImpl" />
+<jsp:useBean id="representativeImages" scope="request"
+	class="java.util.HashSet" />
 <head>
 	<jwr:script src='/scripts/ajax/ext/data/DwrProxy.js' />
 	<jwr:script src='/scripts/app/gene.detail.js' />
@@ -43,7 +45,8 @@
 		</c:if>
 			<c:if test="${not empty gene.taxon}">
 			[${gene.taxon.scientificName}]
-			 <input type="hidden" id="taxonScientificName" value="${gene.taxon.scientificName}" />
+			 <input type="hidden" id="taxonScientificName"
+					value="${gene.taxon.scientificName}" />
 			</c:if>
 
 		</c:if>
@@ -74,7 +77,8 @@
 				&nbsp;&nbsp;
 				<a title="NCBI Gene link"
 						href="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gene&cmd=Retrieve&dopt=full_report&list_uids=${gene.ncbiId}">
-						<img alt="NCBI Gene Link" src="<c:url value='/images/logo/ncbi.gif'/>" /> </a>
+						<img alt="NCBI Gene Link"
+							src="<c:url value='/images/logo/ncbi.gif'/>" /> </a>
 
 				</c:if>
 
@@ -90,8 +94,8 @@
 			</td>
 			<td valign="top">
 				${compositeSequenceCount} &nbsp;
-				<a href="/Gemma/gene/showCompositeSequences.html?id=${gene.id}"> <img
-						src="<c:url value='/images/magnifier.png'/>" /> </a>
+				<a href="/Gemma/gene/showCompositeSequences.html?id=${gene.id}">
+					<img src="<c:url value='/images/magnifier.png'/>" /> </a>
 			</td>
 		</tr>
 
@@ -106,7 +110,8 @@
 			onclick="showHelpTip(event, 'Top data sets in which the gene is Differentially expressed in; results are listed per probe so a data set may be listed more than once. Use the link at right for more detailed differential analysis'); return false"><img
 				src="/Gemma/images/help.png" /> </a> &nbsp;
 
-		<a id="diff-link" title="Go To Advanced Differential Expression Search with <%out.print( gene.getOfficialSymbol() );%>"
+		<a id="diff-link"
+			title="Go To Advanced Differential Expression Search with <%out.print( gene.getOfficialSymbol() );%>"
 			href="/Gemma/diff/diffExpressionSearch.html?g=<%out.print( gene.getId() );%>&thres=0.01&t=<%out.print( gene.getTaxon().getId() );%>&setName=All <%out.print( gene.getTaxon().getCommonName() );%>">
 			<img src="<c:url value='/images/icons/diff-ex.png'/>" /> </a>
 
@@ -123,7 +128,8 @@
 			onclick="showHelpTip(event, 'Top genes with which this gene is coexpressed. Use the link at right to go to a more detailed coexpression results'); return false"><img
 				src="/Gemma/images/help.png" /> </a> &nbsp;
 
-		<a id="coexpression-link" title="Do Advanced Coexpression Search with <%out.print( gene.getOfficialSymbol() );%>"
+		<a id="coexpression-link"
+			title="Do Advanced Coexpression Search with <%out.print( gene.getOfficialSymbol() );%>"
 			href="/Gemma/searchCoexpression.html?g=<%out.print( gene.getId() );%>&s=3&t=<%out.print( gene.getTaxon().getId() );%>&an=All <%out.print( gene.getTaxon().getCommonName() );%>">
 			<img src="<c:url value='/images/icons/co-ex.png'/>" /> </a>
 
@@ -142,8 +148,10 @@
 				onclick="showHelpTip(event, 'Below is a sampling of expression profile pictures from the allen brain atlas. Beside is a link to the allen brain atlas'); return false"><img
 					src="/Gemma/images/help.png" /> </a>
 
-			<a title='Go to Allen Brain Atlas details for <c:out value="${gene.officialSymbol}" />' href="${abaGeneUrl}"
-				target="_blank"> <img src="/Gemma/images/logo/aba-icon.png" height="20" width="20" /> </a>
+			<a
+				title='Go to Allen Brain Atlas details for <c:out value="${gene.officialSymbol}" />'
+				href="${abaGeneUrl}" target="_blank"> <img
+					src="/Gemma/images/logo/aba-icon.png" height="20" width="20" /> </a>
 		</h3>
 
 
@@ -155,9 +163,10 @@
 		<div style="valign: top" class="clearfix">
 			<c:forEach var="img" items="${representativeImages}">
 				<div style="cursor: pointer; float: left; padding: 8px">
-					<a title='Allen Brain Atlas Image for <c:out value="${gene.officialSymbol}"/>, click to enlarge '
-						onClick="Gemma.geneLinkOutPopUp( &#34; ${img.downloadExpressionPath} &#34; )"> <img
-							src="${img.expressionThumbnailUrl}" /> </a>
+					<a
+						title='Allen Brain Atlas Image for <c:out value="${gene.officialSymbol}"/>, click to enlarge '
+						onClick="Gemma.geneLinkOutPopUp( &#34; ${img.downloadExpressionPath} &#34; )">
+						<img src="${img.expressionThumbnailUrl}" /> </a>
 				</div>
 			</c:forEach>
 		</div>
@@ -183,17 +192,27 @@
 		<div id="geneproduct-grid"></div>
 	</div>
 
-
 	<c:if test="${not empty gene.description}">
-		<div style="width: 400px; font-size: smaller; margin: 3px; padding: 5px; background-color: #DDDDDD">
+		<div
+			style="width: 400px; font-size: smaller; margin: 3px; padding: 5px; background-color: #DDDDDD">
 			Notes: ${gene.description}
 		</div>
 	</c:if>
 
+	<div class="clearfix">
+		<h3>
+			<fmt:message key="gene.group" />
+		</h3>
+
+		<div id="gene-group-grid"></div>
+	</div>
+
 
 	<security:authorize access="hasRole('GROUP_ADMIN')">
 		<div id="auditTrail"></div>
-		<input type="hidden" name="auditableId" id="auditableId" value="${gene.id}" />
-		<input type="hidden" name="auditableClass" id="auditableClass" value="${gene.class.name}" />
+		<input type="hidden" name="auditableId" id="auditableId"
+			value="${gene.id}" />
+		<input type="hidden" name="auditableClass" id="auditableClass"
+			value="${gene.class.name}" />
 	</security:authorize>
 </body>

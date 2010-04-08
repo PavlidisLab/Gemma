@@ -206,7 +206,7 @@ public class GeneSetController {
 
             GeneSetValueObject gsvo = new GeneSetValueObject( ( GeneSet ) gs );
             gsvo.setGeneMembers( null ); // For fear of to much data being passed back, client makes seperate call to
-                                         // get gene group memembers
+            // get gene group memembers
             gsvo.setPublik( securityService.isPublic( gs ) );
             gsvo.setShared( securityService.isShared( gs ) );
             gsvo.setOwner( new SidValueObject( securityService.getOwner( gs ) ) );
@@ -214,6 +214,21 @@ public class GeneSetController {
             result.add( gsvo );
         }
         return result;
+    }
+
+    /**
+     * Given a Gemma Gene Id will find all gene groups that the current user is allowed to use
+     * 
+     * @param geneId
+     * @return collection of geneSetValueObject
+     */
+    public Collection<GeneSetValueObject> findGeneSetsByGene( Long geneId ) {
+
+        Gene gene = geneService.load( geneId );
+
+        Collection<GeneSet> genesets = this.geneSetService.findByGene( gene );
+
+        return GeneSetValueObject.convert2ValueObjects( genesets );
     }
 
 }

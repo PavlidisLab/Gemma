@@ -1215,6 +1215,7 @@
 								<value>getUsersGeneGroups</value>
 								<value>getGenesInGroup</value>
 								<value>updateGeneGroup</value>
+								<value>findGeneSetsByGene</value>								
 							</list>
 						</property>
 					</bean>

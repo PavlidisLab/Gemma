@@ -3,14 +3,17 @@
  * 
  * Copyright (c) 2008 University of British Columbia
  * 
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
  * 
  * http://www.apache.org/licenses/LICENSE-2.0
  * 
- * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
- * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
  * 
  */
 Ext.namespace('Gemma');
@@ -22,107 +25,168 @@ Gemma.MAX_DIFF_RESULTS = 75;
  * 
  */
 Gemma.GeneGOGrid = Ext.extend(Gemma.GemmaGridPanel, {
-			record : Ext.data.Record.create([{
-						name : "id",
-						type : "int"
+	record : Ext.data.Record.create([{
+				name : "id",
+				type : "int"
+			}, {
+				name : "termUri"
+			}, {
+				name : "termName"
+			}, {
+				name : "evidenceCode"
+			}]),
+
+	golink : function(d) {
+		var g = d.replace("_", ":");
+		return "<a target='_blank' href='http://amigo.geneontology.org/cgi-bin/amigo/go.cgi?view=details&query="
+				+ g + "'>" + g + "</a>";
+	},
+
+	initComponent : function() {
+		Ext.apply(this, {
+			columns : [{
+						header : "ID",
+						dataIndex : "termUri",
+						renderer : this.golink
 					}, {
-						name : "termUri"
+						header : "Term",
+						dataIndex : "termName"
 					}, {
-						name : "termName"
-					}, {
-						name : "evidenceCode"
-					}]),
+						header : "Evidence Code",
+						dataIndex : "evidenceCode"
+					}],
 
-			golink : function(d) {
-				var g = d.replace("_", ":");
-				return "<a target='_blank' href='http://amigo.geneontology.org/cgi-bin/amigo/go.cgi?view=details&query="
-						+ g + "'>" + g + "</a>";
-			},
-
-			initComponent : function() {
-				Ext.apply(this, {
-							columns : [{
-										header : "ID",
-										dataIndex : "termUri",
-										renderer : this.golink
-									}, {
-										header : "Term",
-										dataIndex : "termName"
-									}, {
-										header : "Evidence Code",
-										dataIndex : "evidenceCode"
-									}],
-
-							store : new Ext.data.Store({
-										proxy : new Ext.data.DWRProxy(GeneController.findGOTerms),
-										reader : new Ext.data.ListRangeReader({
-													id : "id"
-												}, this.record),
-										remoteSort : false
-									})
-						});
-
-				Gemma.GeneGOGrid.superclass.initComponent.call(this);
-
-				this.getStore().setDefaultSort('termUri');
-
-				this.getStore().load({
-							params : [this.geneid]
-						});
-			}
-
+			store : new Ext.data.Store({
+						proxy : new Ext.data.DWRProxy(GeneController.findGOTerms),
+						reader : new Ext.data.ListRangeReader({
+									id : "id"
+								}, this.record),
+						remoteSort : false
+					})
 		});
+
+		Gemma.GeneGOGrid.superclass.initComponent.call(this);
+
+		this.getStore().setDefaultSort('termUri');
+
+		this.getStore().load({
+					params : [this.geneid]
+				});
+	}
+
+});
 
 /**
  * 
  */
 Gemma.GeneProductGrid = Ext.extend(Gemma.GemmaGridPanel, {
 
-			record : Ext.data.Record.create([{
-						name : "id"
+	record : Ext.data.Record.create([{
+				name : "id"
+			}, {
+				name : "name"
+			}, {
+				name : "description"
+			}, {
+				name : "type",
+				convert : function(d) {
+					return d.value;
+				}.createDelegate()
+			}]),
+
+	initComponent : function() {
+		Ext.apply(this, {
+			columns : [{
+						header : "Name",
+						dataIndex : "name"
 					}, {
-						name : "name"
+						header : "Type",
+						dataIndex : "type"
 					}, {
-						name : "description"
-					}, {
-						name : "type",
-						convert : function(d) {
-							return d.value;
-						}.createDelegate()
-					}]),
+						header : "Description",
+						dataIndex : "description"
+					}],
 
-			initComponent : function() {
-				Ext.apply(this, {
-							columns : [{
-										header : "Name",
-										dataIndex : "name"
-									}, {
-										header : "Type",
-										dataIndex : "type"
-									}, {
-										header : "Description",
-										dataIndex : "description"
-									}],
-
-							store : new Ext.data.Store({
-										proxy : new Ext.data.DWRProxy(GeneController.getProducts),
-										reader : new Ext.data.ListRangeReader({
-													id : "id"
-												}, this.record),
-										remoteSort : false
-									})
-						});
-
-				Gemma.GeneProductGrid.superclass.initComponent.call(this);
-
-				this.getStore().setDefaultSort('type', 'name');
-
-				this.getStore().load({
-							params : [this.geneid]
-						});
-			}
-
+			store : new Ext.data.Store({
+						proxy : new Ext.data.DWRProxy(GeneController.getProducts),
+						reader : new Ext.data.ListRangeReader({
+									id : "id"
+								}, this.record),
+						remoteSort : false
+					})
 		});
+
+		Gemma.GeneProductGrid.superclass.initComponent.call(this);
+
+		this.getStore().setDefaultSort('type', 'name');
+
+		this.getStore().load({
+					params : [this.geneid]
+				});
+	}
+
+});
+
+Gemma.GeneGroupGrid = Ext.extend(Gemma.GemmaGridPanel, {
+
+	initComponent : function() {
+		Ext.apply(this, {
+			columns : [{
+						header : 'Name',
+						dataIndex : 'name',
+						editable : false,
+						groupable : false,
+						sortable : true
+					}, {
+						header : 'Description',
+						dataIndex : 'description',
+						editable : false,
+						groupable : false,
+						sortable : true
+					}, {
+						header : 'Owner',
+						hidden : true,
+						tooltip : 'Who owns the data',
+						dataIndex : 'owner',
+						groupable : true,
+						sortable : true
+					}, {
+						header : 'size',
+						sortable : true,
+						dataIndex : 'size',
+						editable : false,
+						groupable : false,
+						tooltip : 'number of genes in group'
+					}],
+			store : new Ext.data.Store({
+				proxy : new Ext.data.DWRProxy(GeneSetController.findGeneSetsByGene),
+				reader : new Ext.data.ListRangeReader({}, Ext.data.Record
+								.create([{
+											name : "id",
+											type : "int"
+										}, {
+											name : "name",
+											type : "string"
+										}, {
+											name : "description",
+											type : "string"
+										}, {
+											name : "owner"
+										}, {
+											name : "size",
+											type : "int"
+										}]))
+			})
+		});
+
+		Gemma.GeneGroupGrid.superclass.initComponent.call(this);
+
+		this.getStore().load({
+					params : [this.geneid]
+				});
+	}
+
+});
 
 Ext.onReady(function() {
 
@@ -145,6 +209,13 @@ Ext.onReady(function() {
 						height : 200,
 						width : 500
 					});
+					
+			var geneGroupGrid = new Gemma.GeneGroupGrid({
+					renderTo : "gene-group-grid",
+					geneid : geneid,
+					height : 200,
+					width : 500
+			})
 
 			// Coexpression grid.
 
@@ -170,39 +241,42 @@ Ext.onReady(function() {
 						height : 200,
 						renderTo : "diff-grid"
 					});
-// Hide Expression experiment full name				
-//			var eeNameColumnIndex = diffExGrid.getColumnModel().getIndexById('expressionExperimentName');
-//			diffExGrid.getColumnModel().setHidden(eeNameColumnIndex, true);
-			var visColumnIndex = diffExGrid.getColumnModel().getIndexById('visualize');
+			// Hide Expression experiment full name
+			// var eeNameColumnIndex =
+			// diffExGrid.getColumnModel().getIndexById('expressionExperimentName');
+			// diffExGrid.getColumnModel().setHidden(eeNameColumnIndex, true);
+			var visColumnIndex = diffExGrid.getColumnModel()
+					.getIndexById('visualize');
 			diffExGrid.getColumnModel().setHidden(visColumnIndex, false);
 
 			diffExGrid.getStore().load({
-						params : [geneid, Gemma.DIFF_THRESHOLD, Gemma.MAX_DIFF_RESULTS]
+						params : [geneid, Gemma.DIFF_THRESHOLD,
+								Gemma.MAX_DIFF_RESULTS]
 					});
 
 		});
 
 Gemma.geneLinkOutPopUp = function(abaImageUrl) {
 
-	if (abaImageUrl == null )
+	if (abaImageUrl == null)
 		return;
-	
+
 	var abaWindowId = "geneDetailsAbaWindow";
 	var win = Ext.getCmp(abaWindowId);
 	if (win != null) {
 		win.close();
 	}
-	
-	 win = new Ext.Window({
-		html : "<img src='" + abaImageUrl + "'>", 
-		id : abaWindowId, 
-		stateful : false, 
+
+	win = new Ext.Window({
+		html : "<img src='" + abaImageUrl + "'>",
+		id : abaWindowId,
+		stateful : false,
 		title : "<img height='15'  src='/Gemma/images/abaExpressionLegend.gif'>"
 			// ,
 			// width : 500,
 			// height : 400,
 			// autoScroll : true
-		});
+	});
 	win.show(this);
 
 };

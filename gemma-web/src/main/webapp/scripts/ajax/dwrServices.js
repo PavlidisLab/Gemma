@@ -580,6 +580,9 @@ GeneSetController.deleteGeneGroup = function(p0, callback) {
 GeneSetController.getUsersGeneGroups = function(p0, callback) {
 	dwr.engine._execute(GeneSetController._path, 'GeneSetController', 'getUsersGeneGroups', p0, callback);
 }
+GeneSetController.findGeneSetsByGene = function(p0, callback) {
+	dwr.engine._execute(GeneSetController._path, 'GeneSetController', 'findGeneSetsByGene', p0, callback);
+}
 // ====================================================================================
 if (SystemMonitorController == null)
 	var SystemMonitorController = {};
