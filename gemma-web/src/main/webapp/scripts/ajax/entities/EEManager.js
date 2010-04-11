@@ -413,7 +413,7 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 														});
 											}.createDelegate(this),
 											errorHandler : function(error) {
-												Ext.Msg.alert("Diff. Analysis failed", error);
+												Ext.Msg.alert("Differential exp. Analysis failed", error);
 												Ext.getBody().unmask();
 											}.createDelegate(this)
 										});
@@ -435,6 +435,7 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 			 * Create the checkboxes for user choice of factors.
 			 */
 			if (factors) {
+				var onlyOne = factors.length == 1;
 				for (var i = 0; i < factors.length; i++) {
 					var f = factors[i];
 					if (!f.name) {
@@ -444,10 +445,16 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 								fieldLabel : f.name,
 								labelWidth : 180,
 								id : f.id + '-factor-checkbox',
-								tooltip : f.name
+								tooltip : f.name,
+								checked : onlyOne
 							}));
 				}
 			}
+
+			/*
+			 * TODO: add radiobutton for subset, if there are more than one factor
+			 */
+
 			deasw.doLayout();
 			deasw.show();
 
@@ -460,7 +467,7 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 		 */
 		var cb = function(analysisInfo) {
 			if (analysisInfo.type) {
-				var customizable = true;
+				var customizable = false;
 				var analysisType = '';
 				if (analysisInfo.type === 'TWIA') {
 					analysisType = 'Two-way ANOVA with interactions';
@@ -475,7 +482,7 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 				} else if (analysisInfo.type === 'OWA') {
 					analysisType = 'One-way ANOVA';
 				} else {
-					analysisType = 'Generic ANOVA/ANCOVA'; // TODO: allow choice of the factors
+					analysisType = 'Generic ANOVA/ANCOVA';
 					customizable = true;
 				}
 
@@ -492,14 +499,14 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 							shim : true,
 							buttonAlign : "center",
 							width : 400,
-							height : 100,
+							height : 130,
 							minHeight : 80,
 							plain : true,
 							footer : true,
 							closable : true,
 							title : 'Differential expression analysis',
 							html : 'Please confirm. The analysis performed will be a ' + analysisType
-									+ '. Previous analysis results for this experiment will be deleted.',
+									+ '. If there is an existing analysis on the same factor(s), it will be deleted.',
 							buttons : [{
 										text : 'Proceed',
 										handler : function(btn, text) {
