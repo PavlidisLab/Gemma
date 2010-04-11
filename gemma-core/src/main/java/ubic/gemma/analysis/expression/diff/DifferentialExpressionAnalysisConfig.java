@@ -18,10 +18,11 @@
  */
 package ubic.gemma.analysis.expression.diff;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
@@ -37,12 +38,28 @@ import ubic.gemma.model.expression.experiment.FactorValue;
  */
 public class DifferentialExpressionAnalysisConfig {
 
-    private Collection<ExperimentalFactor> factorsToInclude = new LinkedHashSet<ExperimentalFactor>();
+    private List<ExperimentalFactor> factorsToInclude = new ArrayList<ExperimentalFactor>();
+
+    private ExperimentalFactor subsetFactor;
+
+    /**
+     * @return the subsetFactor
+     */
+    public ExperimentalFactor getSubsetFactor() {
+        return subsetFactor;
+    }
+
+    /**
+     * @param subsetFactor the subsetFactor to set
+     */
+    public void setSubsetFactor( ExperimentalFactor subsetFactor ) {
+        this.subsetFactor = subsetFactor;
+    }
 
     /**
      * @return the factorsToInclude
      */
-    public Collection<ExperimentalFactor> getFactorsToInclude() {
+    public List<ExperimentalFactor> getFactorsToInclude() {
         return factorsToInclude;
     }
 
@@ -50,7 +67,7 @@ public class DifferentialExpressionAnalysisConfig {
      * @param factorsToInclude the factorsToInclude to set
      */
     public void setFactorsToInclude( Collection<ExperimentalFactor> factorsToInclude ) {
-        this.factorsToInclude = factorsToInclude;
+        this.factorsToInclude = new ArrayList<ExperimentalFactor>( factorsToInclude );
     }
 
     /**

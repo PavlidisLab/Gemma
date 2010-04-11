@@ -57,21 +57,21 @@ public class ArrayDesignMapResultWrapper extends TableDecorator {
 
     public String getGeneList() {
         CompositeSequenceMapValueObject object = ( CompositeSequenceMapValueObject ) getCurrentRowObject();
-        Collection gVos = object.getGenes().values();
-        Collection gpVos = object.getGeneProducts().values();
+        Collection<GeneValueObject> gVos = object.getGenes().values();
+        Collection<GeneProductValueObject> gpVos = object.getGeneProducts().values();
 
         // get unique ID - compositeSequenceId
         // String compositeSequenceId = "cs" + object.getCompositeSequenceId();
 
         // associate genes with geneProducts
-        HashMap<Long, Collection> geneProducts = new HashMap<Long, Collection>();
+        HashMap<Long, Collection<GeneProductValueObject>> geneProducts = new HashMap<Long, Collection<GeneProductValueObject>>();
 
         for ( Object o2 : gpVos ) {
 
             GeneProductValueObject gpVo = ( GeneProductValueObject ) o2;
 
             if ( !geneProducts.containsKey( gpVo.getGeneId() ) ) {
-                Collection geneProductVos = new ArrayList<GeneProductValueObject>();
+                Collection<GeneProductValueObject> geneProductVos = new ArrayList<GeneProductValueObject>();
                 // geneProductVos.add( gpVo );
                 geneProducts.put( gpVo.getGeneId(), geneProductVos );
             } else {

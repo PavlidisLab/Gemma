@@ -19,6 +19,7 @@
 package ubic.gemma.datastructure.matrix;
 
 import java.text.NumberFormat;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -39,6 +40,7 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.DesignElement;
 
 /**
@@ -122,6 +124,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.datastructure.matrix.ExpressionDataMatrix#get(ubic.gemma.model.expression.designElement.DesignElement,
      * ubic.gemma.model.expression.bioAssay.BioAssay)
@@ -142,6 +145,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#get(java.util.List, java.util.List)
      */
     public Double[][] get( List<DesignElement> designElements, List<BioAssay> bioAssays ) {
@@ -150,6 +154,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getColumn(ubic.gemma.model.expression.bioAssay.BioAssay)
      */
@@ -161,6 +166,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getColumn(java.lang.Integer)
      */
     public Double[] getColumn( Integer index ) {
@@ -175,6 +181,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getColumns(java.util.List)
      */
     public Double[][] getColumns( List<BioAssay> bioAssays ) {
@@ -183,6 +190,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getMatrix()
      */
     public Double[][] getRawMatrix() {
@@ -198,6 +206,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getRow(ubic.gemma.model.expression.designElement.DesignElement
      * )
@@ -210,6 +219,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getRow(java.lang.Integer)
      */
     public Double[] getRow( Integer index ) {
@@ -219,6 +229,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getRows(java.util.List)
      */
     public Double[][] getRows( List<DesignElement> designElements ) {
@@ -239,6 +250,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#rows()
      */
     public int rows() {
@@ -258,6 +270,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#set(int, int, java.lang.Object)
      */
     public void set( int row, int column, Double value ) {
@@ -287,6 +300,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
 
     /*
      * (non-Javadoc)
+     * 
      * @see java.lang.Object#toString()
      */
     @Override
@@ -480,6 +494,68 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
             }
             i++;
         }
+    }
+
+    /**
+     * Create a matrix based on another one's selected columns. The results will be somewhat butchered - only a single
+     * BioAssayDimension and the ranks will be copied over (not recomputed based on the selected columns).
+     * 
+     * @param columnsToUse
+     * @param sourceMatrix
+     */
+    public ExpressionDataDoubleMatrix( List<BioMaterial> columnsToUse, ExpressionDataDoubleMatrix sourceMatrix ) {
+        init();
+        this.expressionExperiment = sourceMatrix.expressionExperiment;
+
+        this.matrix = new DenseDoubleMatrix<DesignElement, Integer>( sourceMatrix.rows(), columnsToUse.size() );
+        this.matrix.setRowNames( sourceMatrix.getMatrix().getRowNames() );
+
+        this.ranks = sourceMatrix.ranks; // not strictly correct if we are using subcolumns
+
+        List<Integer> columnIndices = new ArrayList<Integer>();
+        List<Integer> columnNames = new ArrayList<Integer>();
+        int k = 0;
+        List<BioAssay> bioAssays = new ArrayList<BioAssay>();
+        for ( BioMaterial bm : columnsToUse ) {
+            columnIndices.add( sourceMatrix.getColumnIndex( bm ) );
+            columnNames.add( k );
+            bioAssays.add( bm.getBioAssaysUsedIn().iterator().next() );
+            k++;
+        }
+
+        this.matrix.setColumnNames( columnNames );
+
+        /*
+         * fix the upper level column name maps.
+         */
+        BioAssayDimension reorderedDim = BioAssayDimension.Factory.newInstance();
+        reorderedDim.setBioAssays( bioAssays );
+
+        this.bioAssayDimensions.clear();
+
+        reorderedDim.setName( "Slice" );
+
+        int i = 0;
+        for ( ExpressionDataMatrixRowElement element : sourceMatrix.getRowElements() ) {
+            DesignElement designElement = element.getDesignElement();
+            super.addToRowMaps( i, designElement );
+
+            Double[] rowVals = sourceMatrix.getRow( designElement );
+
+            assert rowVals != null : "Source matrix does not have row for " + designElement;
+
+            for ( int j = 0; j < columnIndices.size(); j++ ) {
+                Double val = rowVals[columnIndices.get( j )];
+                set( i, j, val );
+            }
+            i++;
+
+            this.bioAssayDimensions.put( designElement, reorderedDim );
+
+        }
+
+        super.setUpColumnElements();
+
     }
 
     /**

@@ -24,6 +24,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.math.RandomUtils;
 import org.junit.Test;
 
@@ -66,6 +67,10 @@ public class ExpressionDataMatrixColumnSortTest extends BaseSpringContextTest {
                 fv.setId( ( long ) j * ( i + 1 ) );
                 fv.setExperimentalFactor( ef );
                 ef.getFactorValues().add( fv );
+
+                if ( j == 2 && i != 4 ) {
+                    fv.setValue( "control_group" );
+                }
 
                 if ( i == 4 ) {
                     Measurement m = Measurement.Factory.newInstance();
@@ -119,20 +124,10 @@ public class ExpressionDataMatrixColumnSortTest extends BaseSpringContextTest {
 
         assertEquals( 100, ordered.size() );
 
-    }
+        // for ( BioMaterial bioMaterial : ordered ) {
+        // log.info( bioMaterial + " .... " + StringUtils.join( bioMaterial.getFactorValues(), "  --- " ) );
+        // }
 
-    // public void testOrderByExperimentalDesignC() throws Exception {
-    //
-    // BioAssayDimensionService bads = ( BioAssayDimensionService ) this.getBean( "bioAssayDimensionService" );
-    // for ( long i = 1; i < 100; i++ ) {
-    // BioAssayDimension bad = bads.load( i );
-    // if ( bad != null ) {
-    // log.info( bad.getId() );
-    // EmptyExpressionMatrix mat = new EmptyExpressionMatrix( bad );
-    // List<BioMaterial> ordered = ExpressionDataMatrixColumnSort.orderByExperimentalDesign( mat );
-    // assertTrue( ordered.size() > 0 );
-    // }
-    // }
-    // }
+    }
 
 }

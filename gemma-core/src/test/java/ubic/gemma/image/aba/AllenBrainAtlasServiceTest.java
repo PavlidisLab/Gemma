@@ -49,7 +49,6 @@ public class AllenBrainAtlasServiceTest extends BaseSpringContextTest {
      * 
      * @throws Exception
      */
-    @SuppressWarnings("null")
     @Test
     public void testGetGeneCapitals() throws Exception {
         AbaGene gene = null;

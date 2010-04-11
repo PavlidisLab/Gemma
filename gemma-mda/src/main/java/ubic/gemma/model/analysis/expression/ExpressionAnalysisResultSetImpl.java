@@ -59,7 +59,7 @@ public class ExpressionAnalysisResultSetImpl extends ubic.gemma.model.analysis.e
             }
 
             count = 0;
-            for ( ExperimentalFactor ef : this.getExperimentalFactor() ) {
+            for ( ExperimentalFactor ef : this.getExperimentalFactors() ) {
                 buf.append( ef.getName() + "," );
                 count++;
             }

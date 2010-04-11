@@ -449,7 +449,7 @@ public class DifferentialExpressionResultDaoImpl extends
         }
 
         final String queryString = "select ef, r from ExpressionAnalysisResultSetImpl rs"
-                + " inner join rs.results r inner join rs.experimentalFactor ef where r in (:differentialExpressionAnalysisResults)";
+                + " inner join rs.results r inner join rs.experimentalFactors ef where r in (:differentialExpressionAnalysisResults)";
 
         String[] paramNames = { "differentialExpressionAnalysisResults" };
         Object[] objectValues = { differentialExpressionAnalysisResults };
@@ -491,7 +491,7 @@ public class DifferentialExpressionResultDaoImpl extends
             ProbeAnalysisResult differentialExpressionAnalysisResult ) throws Exception {
 
         final String queryString = "select ef from ExpressionAnalysisResultSetImpl rs"
-                + " inner join rs.results r inner join rs.experimentalFactor ef where r=:differentialExpressionAnalysisResult";
+                + " inner join rs.results r inner join rs.experimentalFactors ef where r=:differentialExpressionAnalysisResult";
 
         String[] paramNames = { "differentialExpressionAnalysisResult" };
         Object[] objectValues = { differentialExpressionAnalysisResult };

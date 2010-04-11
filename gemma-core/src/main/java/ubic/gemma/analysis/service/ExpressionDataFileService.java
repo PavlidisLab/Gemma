@@ -490,7 +490,7 @@ public class ExpressionDataFileService {
 
             // Generate a descrition of the factors involved "(factor1, factor2, ...., factorN)"
             String factorColumnName = new String( "(" );
-            for ( ExperimentalFactor ef : ears.getExperimentalFactor() ) {
+            for ( ExperimentalFactor ef : ears.getExperimentalFactors() ) {
                 factorColumnName += ef.getName() + ",";
             }
             factorColumnName = StringUtils.chomp( factorColumnName, "," ) + ")";

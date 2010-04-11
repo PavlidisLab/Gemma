@@ -55,6 +55,7 @@ public class CompositeSequenceServiceImpl extends
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.designElement.CompositeSequenceServiceBase#handleCreate(java.util.Collection)
      */
     @Override
@@ -65,6 +66,7 @@ public class CompositeSequenceServiceImpl extends
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.designElement.CompositeSequenceServiceBase#handleCreate(ubic.gemma.model.expression
      * .designElement.CompositeSequence)
@@ -81,6 +83,7 @@ public class CompositeSequenceServiceImpl extends
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.designElement.CompositeSequenceServiceBase#handleFindByBioSequence(ubic.gemma.model
      * .genome.biosequence.BioSequence)
@@ -92,6 +95,7 @@ public class CompositeSequenceServiceImpl extends
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.designElement.CompositeSequenceServiceBase#handleFindByBioSequenceName(java.lang.
      * String)
@@ -113,6 +117,7 @@ public class CompositeSequenceServiceImpl extends
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.designElement.CompositeSequenceServiceBase#handleFindByName(ubic.gemma.model.expression
      * .arrayDesign.ArrayDesign, java.lang.String)
@@ -124,9 +129,10 @@ public class CompositeSequenceServiceImpl extends
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.designElement.CompositeSequenceServiceBase#handleFindByName(java.lang.String)
      */
-    @Override 
+    @Override
     protected Collection<CompositeSequence> handleFindByName( String name ) throws Exception {
         return this.getCompositeSequenceDao().findByName( name );
     }
@@ -134,6 +140,7 @@ public class CompositeSequenceServiceImpl extends
     /*
      * Checks to see if the CompositeSequence exists in any of the array designs. If so, it is internally stored in the
      * collection of composite sequences as a {@link LinkedHashSet), preserving order based on insertion. (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.designElement.CompositeSequenceServiceBase#handleGetMatchingCompositeSequences(java
      * .lang.String[], java.util.Collection)
@@ -190,6 +197,7 @@ public class CompositeSequenceServiceImpl extends
 
     /*
      * (non-Javadoc)
+     * 
      * @seeubic.gemma.model.expression.designElement.CompositeSequenceServiceBase#handleGetRawSummary(ubic.gemma.model.
      * expression.arrayDesign.ArrayDesign)
      */
@@ -211,6 +219,7 @@ public class CompositeSequenceServiceImpl extends
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.designElement.CompositeSequenceServiceBase#handleLoad(java.lang.Long)
      */
     @Override
@@ -220,12 +229,13 @@ public class CompositeSequenceServiceImpl extends
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.designElement.CompositeSequenceServiceBase#handleLoadMultiple(java.util.Collection)
      */
     @Override
     protected Collection<CompositeSequence> handleLoadMultiple( Collection ids ) throws Exception {
-        return this.getCompositeSequenceDao().load( ids );
+        return ( Collection<CompositeSequence> ) this.getCompositeSequenceDao().load( ids );
     }
 
     @Override
@@ -236,6 +246,7 @@ public class CompositeSequenceServiceImpl extends
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.designElement.CompositeSequenceServiceBase#handleRemove(Collection)
      */
     @Override
@@ -264,6 +275,7 @@ public class CompositeSequenceServiceImpl extends
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.designElement.CompositeSequenceServiceBase#handleThaw(java.util.Collection)
      */
     @Override
@@ -273,6 +285,7 @@ public class CompositeSequenceServiceImpl extends
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.designElement.CompositeSequenceServiceBase#handleUpdate(ubic.gemma.model.expression
      * .designElement.CompositeSequence)

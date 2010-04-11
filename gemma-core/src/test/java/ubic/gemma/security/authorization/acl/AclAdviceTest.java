@@ -154,7 +154,7 @@ public class AclAdviceTest extends BaseSpringContextTest {
 
         ExpressionAnalysisResultSet resultSet = ExpressionAnalysisResultSet.Factory.newInstance();
         resultSet.setAnalysis( diffExpressionAnalysis );
-        resultSet.setExperimentalFactor( ee.getExperimentalDesign().getExperimentalFactors() );
+        resultSet.setExperimentalFactors( ee.getExperimentalDesign().getExperimentalFactors() );
 
         diffExpressionAnalysis.setExpressionExperimentSetAnalyzed( eeSet );
         diffExpressionAnalysis.getResultSets().add( resultSet );

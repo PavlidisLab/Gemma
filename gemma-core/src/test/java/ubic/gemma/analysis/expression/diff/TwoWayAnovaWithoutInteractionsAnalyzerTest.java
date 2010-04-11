@@ -36,7 +36,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 
 /**
- * Tests the two way anova analyzer.
+ * Tests the two way anova analyzer. See test/data/stat-tests/README.txt for R code.
  * 
  * @author keshav
  * @version $Id$
@@ -80,7 +80,7 @@ public class TwoWayAnovaWithoutInteractionsAnalyzerTest extends BaseAnalyzerConf
      */
     private void checkResults( ExpressionAnalysisResultSet resultSet ) {
 
-        Collection<ExperimentalFactor> factors = resultSet.getExperimentalFactor();
+        Collection<ExperimentalFactor> factors = resultSet.getExperimentalFactors();
         assertEquals( "Should not have an interaction term", 1, factors.size() );
 
         ExperimentalFactor f = factors.iterator().next();
@@ -91,7 +91,7 @@ public class TwoWayAnovaWithoutInteractionsAnalyzerTest extends BaseAnalyzerConf
             ProbeAnalysisResult probeAnalysisResult = ( ProbeAnalysisResult ) r;
             CompositeSequence probe = probeAnalysisResult.getProbe();
             Double pvalue = probeAnalysisResult.getPvalue();
-            Double stat = probeAnalysisResult.getScore();
+            Double stat = probeAnalysisResult.getEffectSize();
 
             if ( pvalue != null ) assertNotNull( stat );
             assertNotNull( probe );
@@ -99,19 +99,24 @@ public class TwoWayAnovaWithoutInteractionsAnalyzerTest extends BaseAnalyzerConf
             log.debug( "probe: " + probe + "; p-value: " + pvalue + "; F=" + stat );
 
             if ( f.equals( super.experimentalFactorA ) ) {
-                log.info( probe.getName() );
+
+                assertEquals( factorValueA2, resultSet.getBaselineGroup() );
+
                 if ( probe.getName().equals( "probe_1" ) ) { // id=1001
                     assertEquals( 0.001814, pvalue, 0.00001 );
-                    assertEquals( 287.061, stat, 0.001 );
+                    assertEquals( -287.061, stat, 0.001 );
                     found = true;
                 } else if ( probe.getName().equals( "probe_97" ) ) { // id 1097
                     assertEquals( 0.3546, pvalue, 0.001 );
                 }
 
             } else {
+
+                assertEquals( factorValueB2, resultSet.getBaselineGroup() );
+
                 if ( probe.getName().equals( "probe_1" ) ) {
                     assertEquals( 0.501040, pvalue, 0.001 );
-                    assertEquals( 0.997, stat, 0.001 );
+                    assertEquals( -0.997, stat, 0.001 );
                     found = true;
                 } else if ( probe.getName().equals( "probe_97" ) ) {
                     assertEquals( 0.4449, pvalue, 0.001 );

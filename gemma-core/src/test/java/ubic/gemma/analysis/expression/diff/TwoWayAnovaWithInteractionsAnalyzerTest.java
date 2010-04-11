@@ -34,8 +34,8 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 
 /**
- * Tests the two way anova analyzer with interactions.
- * 
+ * Tests the two way anova analyzer with interactions. See test/data/stat-tests/README.txt for R code.
+ *  
  * @author keshav
  * @version $Id$
  */
@@ -44,10 +44,6 @@ public class TwoWayAnovaWithInteractionsAnalyzerTest extends BaseAnalyzerConfigu
     @Autowired
     TwoWayAnovaWithInteractionsAnalyzer analyzer = null;
 
-    /**
-     * 
-     *
-     */
     @Test
     public void testTwoWayAnova() throws Exception {
 
@@ -68,13 +64,8 @@ public class TwoWayAnovaWithInteractionsAnalyzerTest extends BaseAnalyzerConfigu
         assertEquals( NUM_TWA_RESULT_SETS, resultSets.size() );
 
         for ( ExpressionAnalysisResultSet resultSet : resultSets ) {
-            log
-                    .debug( "*** Result set for factor: "
-                            + resultSet.getExperimentalFactor()
-                            + ".  If factor is null, the result set contains all results per probe or represents the results for the 'interaction' effect. ***" );
             checkResults( resultSet );
         }
-
     }
 
     /**
@@ -82,14 +73,15 @@ public class TwoWayAnovaWithInteractionsAnalyzerTest extends BaseAnalyzerConfigu
      */
     private void checkResults( ExpressionAnalysisResultSet resultSet ) {
 
-        Collection<ExperimentalFactor> factors = resultSet.getExperimentalFactor();
+        Collection<ExperimentalFactor> factors = resultSet.getExperimentalFactors();
 
         for ( DifferentialExpressionAnalysisResult r : resultSet.getResults() ) {
 
             ProbeAnalysisResult probeAnalysisResult = ( ProbeAnalysisResult ) r;
             CompositeSequence probe = probeAnalysisResult.getProbe();
             Double pvalue = probeAnalysisResult.getPvalue();
-            Double stat = probeAnalysisResult.getScore();
+            Double qvalue = probeAnalysisResult.getCorrectedPvalue();
+            Double stat = probeAnalysisResult.getEffectSize();
 
             // if ( pvalue != null ) assertNotNull( stat );
             assertNotNull( probe );
@@ -101,9 +93,10 @@ public class TwoWayAnovaWithInteractionsAnalyzerTest extends BaseAnalyzerConfigu
                 ExperimentalFactor f = factors.iterator().next();
 
                 if ( f.equals( super.experimentalFactorA ) ) {
-
+                    assertEquals( factorValueA2, resultSet.getBaselineGroup() );
                     if ( probe.getName().equals( "probe_98" ) ) {
                         assertEquals( 0.8769, pvalue, 0.001 );
+                        assertNotNull( qvalue );
                     } else if ( probe.getName().equals( "probe_10" ) ) {
                         assertEquals( 5.158e-10, pvalue, 1e-12 );
                     } else if ( probe.getName().equals( "probe_4" ) ) {
@@ -111,6 +104,7 @@ public class TwoWayAnovaWithInteractionsAnalyzerTest extends BaseAnalyzerConfigu
                     }
 
                 } else {
+                    assertEquals( factorValueB2, resultSet.getBaselineGroup() );
                     if ( probe.getName().equals( "probe_98" ) ) {
                         assertEquals( 0.6888, pvalue, 0.001 );
                     } else if ( probe.getName().equals( "probe_10" ) ) {
@@ -120,6 +114,7 @@ public class TwoWayAnovaWithInteractionsAnalyzerTest extends BaseAnalyzerConfigu
                 }
 
             } else {
+                assertEquals( null, resultSet.getBaselineGroup() );
                 if ( probe.getName().equals( "probe_98" ) ) {
                     assertEquals( 0.7893, pvalue, 0.001 );
                 } else if ( probe.getName().equals( "probe_10" ) ) {

@@ -39,7 +39,7 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.FactorValue;
 
 /**
- * Tests the one way anova analyzer.
+ * Tests the one way anova analyzer. See test/data/stat-tests/README.txt for R code.
  * 
  * @author keshav
  * @version $Id$
@@ -104,20 +104,24 @@ public class OneWayAnovaAnalyzerTest extends BaseAnalyzerConfigurationTest {
         experimentalFactorC.setId( 5399424551L );
         expressionExperiment.getExperimentalDesign().getExperimentalFactors().add( experimentalFactorC );
 
+        FactorValue controlGroup = null;
         for ( int i = 1; i <= 3; i++ ) {
-            FactorValue factorValueC = FactorValue.Factory.newInstance();
-            factorValueC.setId( 2000L + i );
-            factorValueC.setValue( i + "_group" );
-            factorValueC.setExperimentalFactor( experimentalFactorC );
-            experimentalFactorC.getFactorValues().add( factorValueC );
-
+            FactorValue f = FactorValue.Factory.newInstance();
+            f.setId( 2000L + i );
+            if ( i != 2 ) {
+                f.setValue( i + "_group" );
+            } else {
+                f.setValue( "control_group" );
+                controlGroup = f;
+            }
+            f.setExperimentalFactor( experimentalFactorC );
+            experimentalFactorC.getFactorValues().add( f );
         }
 
         List<FactorValue> facV = new ArrayList<FactorValue>( experimentalFactorC.getFactorValues() );
         for ( int i = 0; i < 8; i++ ) {
             super.biomaterials.get( i ).getFactorValues().add( facV.get( i % 3 ) );
         }
-
 
         Collection<ExperimentalFactor> factors = new HashSet<ExperimentalFactor>();
         factors.add( experimentalFactorC );
@@ -129,7 +133,9 @@ public class OneWayAnovaAnalyzerTest extends BaseAnalyzerConfigurationTest {
 
         assertEquals( 100, numResults );
 
-        factors = resultSet.getExperimentalFactor();
+        assertEquals( controlGroup, resultSet.getBaselineGroup() );
+
+        factors = resultSet.getExperimentalFactors();
 
         assertEquals( 1, factors.size() );
 
@@ -138,12 +144,12 @@ public class OneWayAnovaAnalyzerTest extends BaseAnalyzerConfigurationTest {
             ProbeAnalysisResult probeAnalysisResult = ( ProbeAnalysisResult ) r;
             CompositeSequence probe = probeAnalysisResult.getProbe();
             Double pvalue = probeAnalysisResult.getPvalue();
-            Double stat = probeAnalysisResult.getScore();
+            Double stat = probeAnalysisResult.getEffectSize();
 
             if ( pvalue != null ) assertNotNull( stat );
             assertNotNull( probe );
 
-            log.debug( "probe: " + probe + "; Factor=" + resultSet.getExperimentalFactor().iterator().next().getName()
+            log.debug( "probe: " + probe + "; Factor=" + resultSet.getExperimentalFactors().iterator().next().getName()
                     + "; p-value: " + pvalue + "; T=" + stat );
 
             if ( probe.getName().equals( "probe_98" ) ) {

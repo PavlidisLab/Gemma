@@ -4,14 +4,18 @@
 
 # Tests depend on them not changing.
 
-factor1<-factor(c("a","a","a","a","b","b","b","b"));
-factor2<-factor(c("c","c","d","d","c","c","d","d"));
-factor3<-factor(c("u","v","w", "u","v","w","u","v"))
+factor1<-factor(c("a","a","a","a","b_base","b_base","b_base","b_base"));
+factor2<-factor(c("c","c","d_base","d_base","c","c","d_base","d_base"));
+factor3<-factor(c("u","v","w_base", "u","v","w_base","u","v"))
+
+contrasts(factor1)<-contr.treatment(levels(factor1), base=2)
+contrasts(factor2)<-contr.treatment(levels(factor2), base=2)
+contrasts(factor3)<-contr.treatment(levels(factor3), base=3)
 
 dat<-read.table("anova-test-data.txt", header=T,row.names=1, sep='\t')
+ dm<-data.frame(factor1,factor2)
 
-
-ancova<-apply(dat, 1, function(x){lm(x ~ factor1+factor2)})
+ancova<-apply(dat, 1, function(x){lm(x ~ factor1+factor2 )})
 summary(ancova$probe_4)
 summary(ancova$probe_10)
 summary(ancova$probe_98)
@@ -73,15 +77,12 @@ anova(anovaB$probe_10)
 anova(anovaB$probe_98)
 
 # anova with more than 2 levels in one factor
-anovaC<-apply(dat, 1, function(x){lm(x ~ factor1+factor3)})
-summary(anovaC$probe_4)
-summary(anovaC$probe_10)
-summary(anovaC$probe_98)
-anova(anovaC$probe_4)
-anova(anovaC$probe_10)
-anova(anovaC$probe_98)
+contrasts(factor3)<-contr.treatment(levels(factor3), base=3)
+anovaD<-apply(dat, 1, function(x){lm(x ~ factor1+factor3)})
+summary(anovaD$probe_4)
+summary(anovaD$probe_10)
+summary(anovaD$probe_98) 
 
-# above but with call to summary.lm insteadl
 
 # two-sample ttest
 ttestd<-apply(dat, 1, function(x){try (lm(x ~ factor1), silent=T)})

@@ -282,7 +282,7 @@ public class DatabaseViewGenerator {
                 String factorName = new String();
                 String factorURI = new String();
 
-                for ( ExperimentalFactor ef : ears.getExperimentalFactor() ) {
+                for ( ExperimentalFactor ef : ears.getExperimentalFactors() ) {
                     factorName += ef.getName() + ",";
                     if ( ef.getCategory() instanceof VocabCharacteristic ) {
                         factorURI += ( ( VocabCharacteristic ) ef.getCategory() ).getCategoryUri() + ",";

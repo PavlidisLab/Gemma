@@ -204,7 +204,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
             for ( DifferentialExpressionAnalysisResult result : results ) {
                 ProbeAnalysisResult probeResult = ( ProbeAnalysisResult ) result;
                 log.debug( "probe: " + probeResult.getProbe().getName() + ", p-value: " + probeResult.getPvalue()
-                        + ", score: " + probeResult.getScore() );
+                        + ", score: " + probeResult.getEffectSize() );
             }
             log.debug( "Result set processed with " + results.size() + " results." );
         }

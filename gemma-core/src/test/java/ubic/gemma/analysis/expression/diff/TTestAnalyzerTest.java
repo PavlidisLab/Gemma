@@ -39,7 +39,7 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
 
-/**
+/**See test/data/stat-tests/README.txt for R code.
  * @author keshav
  * @version $Id$
  */
@@ -75,10 +75,13 @@ public class TTestAnalyzerTest extends BaseAnalyzerConfigurationTest {
 
         assertEquals( numResults, NUM_DESIGN_ELEMENTS );
 
+        assertEquals( factorValueA2, resultSet.getBaselineGroup() );
+
         // check
         for ( DifferentialExpressionAnalysisResult r : resultSet.getResults() ) {
             ProbeAnalysisResult probeAnalysisResult = ( ProbeAnalysisResult ) r;
             CompositeSequence probe = probeAnalysisResult.getProbe();
+
             Double pvalue = probeAnalysisResult.getPvalue();
             log.debug( "probe: " + probe + "; p-value: " + pvalue );
 
@@ -132,6 +135,8 @@ public class TTestAnalyzerTest extends BaseAnalyzerConfigurationTest {
         Collection<ExpressionAnalysisResultSet> resultSets = expressionAnalysis.getResultSets();
         ExpressionAnalysisResultSet resultSet = resultSets.iterator().next();
 
+        assertEquals( null, resultSet.getBaselineGroup() );
+
         int numResults = resultSet.getResults().size();
 
         assertEquals( numResults, NUM_DESIGN_ELEMENTS );
@@ -141,7 +146,7 @@ public class TTestAnalyzerTest extends BaseAnalyzerConfigurationTest {
             ProbeAnalysisResult probeAnalysisResult = ( ProbeAnalysisResult ) r;
             CompositeSequence probe = probeAnalysisResult.getProbe();
             Double pvalue = probeAnalysisResult.getPvalue();
-            Double stat = probeAnalysisResult.getScore();
+            Double stat = probeAnalysisResult.getEffectSize();
             log.debug( "probe: " + probe + "; p-value: " + pvalue );
 
             if ( probe.getName().equals( "probe_0" ) ) {

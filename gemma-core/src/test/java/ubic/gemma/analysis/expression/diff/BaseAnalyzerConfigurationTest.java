@@ -184,6 +184,10 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
 
     }
 
+    FactorValue factorValueB2;
+    FactorValue factorValueA1;
+    FactorValue factorValueA2;
+
     /*
      * (non-Javadoc)
      * 
@@ -215,7 +219,7 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
         experimentalFactorA.setId( 5001L );
         factorValuesA = new HashSet<FactorValue>();
 
-        FactorValue factorValueA1 = FactorValue.Factory.newInstance();
+        factorValueA1 = FactorValue.Factory.newInstance();
         factorValueA1.setId( 1001L );
         factorValueA1.setValue( "cerebellum" );
         Characteristic characteristicA1 = Characteristic.Factory.newInstance();
@@ -225,8 +229,8 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
         factorValueA1.setCharacteristics( characteristicsA1 );
         factorValueA1.setExperimentalFactor( experimentalFactorA );
 
-        FactorValue factorValueA2 = FactorValue.Factory.newInstance();
-        factorValueA2.setValue( "amygdala" );
+        factorValueA2 = FactorValue.Factory.newInstance();
+        factorValueA2.setValue( "amygdala" ); // this will automatically be set as the baseline
         factorValueA2.setId( 1002L );
         Characteristic characteristicA2 = Characteristic.Factory.newInstance();
         characteristicA2.setValue( factorValueA2.getValue() );
@@ -247,7 +251,7 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
         factorValuesB = new HashSet<FactorValue>();
 
         FactorValue factorValueB1 = FactorValue.Factory.newInstance();
-        factorValueB1.setValue( "no pcp" );
+        factorValueB1.setValue( "pcp" );
         factorValueB1.setId( 1003L );
         Characteristic characteristicB1 = Characteristic.Factory.newInstance();
         characteristicB1.setValue( factorValueB1.getValue() );
@@ -256,8 +260,8 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
         factorValueB1.setCharacteristics( characteristicsB1 );
         factorValueB1.setExperimentalFactor( experimentalFactorB );
 
-        FactorValue factorValueB2 = FactorValue.Factory.newInstance();
-        factorValueB2.setValue( "pcp" );
+        factorValueB2 = FactorValue.Factory.newInstance();
+        factorValueB2.setValue( "control_group" );
         factorValueB2.setId( 1004L );
         Characteristic characteristicB2 = Characteristic.Factory.newInstance();
         characteristicB2.setValue( factorValueB2.getValue() );
@@ -353,6 +357,7 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
         Collection<BioMaterial> samplesUsed0b = new HashSet<BioMaterial>();
         samplesUsed0b.add( biomaterial0b );
         bioAssay0b.getSamplesUsed().addAll( samplesUsed0b );
+
         bioAssay0b.setArrayDesignUsed( arrayDesign );
 
         bioAssay1a = BioAssay.Factory.newInstance();
@@ -406,6 +411,15 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
         bioAssays.add( bioAssay2b );
         bioAssays.add( bioAssay3a );
         bioAssays.add( bioAssay3b );
+
+        biomaterial0a.getBioAssaysUsedIn().add( bioAssay0a );
+        biomaterial0b.getBioAssaysUsedIn().add( bioAssay0b );
+        biomaterial1a.getBioAssaysUsedIn().add( bioAssay1a );
+        biomaterial1b.getBioAssaysUsedIn().add( bioAssay1b );
+        biomaterial2a.getBioAssaysUsedIn().add( bioAssay2a );
+        biomaterial2b.getBioAssaysUsedIn().add( bioAssay2b );
+        biomaterial3a.getBioAssaysUsedIn().add( bioAssay3a );
+        biomaterial3b.getBioAssaysUsedIn().add( bioAssay3b );
 
         expressionExperiment.setBioAssays( bioAssays );
 

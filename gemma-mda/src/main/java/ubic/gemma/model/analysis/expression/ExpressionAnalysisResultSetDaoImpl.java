@@ -49,7 +49,7 @@ public class ExpressionAnalysisResultSetDaoImpl extends
         this.getHibernateTemplate().executeWithNativeSession( new HibernateCallback<Object>() {
             public Object doInHibernate( Session session ) throws HibernateException {
                 session.lock( resultSet, LockMode.NONE );
-                for ( ExperimentalFactor factor : resultSet.getExperimentalFactor() ) {
+                for ( ExperimentalFactor factor : resultSet.getExperimentalFactors() ) {
                     Hibernate.initialize( factor );
                 }
 
@@ -68,7 +68,7 @@ public class ExpressionAnalysisResultSetDaoImpl extends
         this.getHibernateTemplate().executeWithNativeSession( new HibernateCallback<Object>() {
             public Object doInHibernate( Session session ) throws HibernateException {
                 session.lock( resultSet, LockMode.NONE );
-                for ( ExperimentalFactor factor : resultSet.getExperimentalFactor() ) {
+                for ( ExperimentalFactor factor : resultSet.getExperimentalFactors() ) {
                     Hibernate.initialize( factor );
                 }
 

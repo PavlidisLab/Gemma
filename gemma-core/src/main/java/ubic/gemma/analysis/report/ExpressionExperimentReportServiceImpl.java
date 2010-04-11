@@ -505,7 +505,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
             DifferentialExpressionSummaryValueObject desvo = new DifferentialExpressionSummaryValueObject();
             differentialExpressionResultService.thawLite( par ); // need the thaw for the experimental factor
             desvo.setThreshold( threshold );
-            desvo.setExperimentalFactors( par.getExperimentalFactor() );
+            desvo.setExperimentalFactors( par.getExperimentalFactors() );
             desvo.setResultSetId( par.getId() );
 
             long probesThatMetThreshold = differentialExpressionAnalysisService.countProbesMeetingThreshold( par,

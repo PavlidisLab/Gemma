@@ -145,10 +145,10 @@ public interface ExpressionDataMatrix<T> {
     public T[][] getRows( List<DesignElement> designElements );
 
     /**
-     * Access a submatrix
+     * Access a submatrix slice by columns
      * 
      * @param bioAssays
-     * @return T[][]
+     * @return
      */
     public T[][] getColumns( List<BioAssay> bioAssays );
 

@@ -50,16 +50,8 @@ import cern.colt.list.DoubleArrayList;
  */
 public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAnalyzer {
 
-    private static Collection<String> controlGroupTerms = new HashSet<String>();
-    static {
-        /*
-         * FIXME: make this external.
-         */
-        controlGroupTerms.add( "control group" );
-        controlGroupTerms.add( "control_group" );
-        controlGroupTerms.add( "http://purl.org/nbirn/birnlex/ontology/BIRNLex-Investigation.owl#birnlex_2201"
-                .toLowerCase() );
-    }
+  
+  
 
     private Log log = LogFactory.getLog( this.getClass() );
 
@@ -81,6 +73,17 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
      */
     public abstract DifferentialExpressionAnalysis run( ExpressionExperiment expressionExperiment,
             Collection<ExperimentalFactor> factors );
+
+    /**
+     * Perform an analysis using the specified factor(s), on subsets of the data as defined by the subsetFactor.
+     * 
+     * @param expressionExperiment
+     * @param subsetFactor
+     * @param factors
+     * @return
+     */
+    public abstract DifferentialExpressionAnalysis run( ExpressionExperiment expressionExperiment,
+            ExperimentalFactor subsetFactor, Collection<ExperimentalFactor> factors );
 
     /**
      * Perform an analysis using the specified factor(s), introduced in the order given.
@@ -114,38 +117,6 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
             normalizedRanks[i] = ranks.get( i ) / ranks.size();
         }
         return normalizedRanks;
-    }
-
-    protected FactorValue determineControlGroup( Collection<FactorValue> factorValues ) {
-        FactorValue control = null;
-
-        for ( FactorValue factorValue : factorValues ) {
-            for ( Characteristic c : factorValue.getCharacteristics() ) {
-                if ( c instanceof VocabCharacteristic ) {
-                    String valueUri = ( ( VocabCharacteristic ) c ).getValueUri();
-                    if ( StringUtils.isNotBlank( valueUri ) && controlGroupTerms.contains( valueUri.toLowerCase() ) ) {
-
-                        if ( control != null ) {
-                            log.warn( "More than one control group found, cannot choose between " + valueUri );
-                            return null;
-                        }
-
-                        control = factorValue;
-                    }
-                } else if ( StringUtils.isNotBlank( c.getValue() )
-                        && controlGroupTerms.contains( c.getValue().toLowerCase() ) ) {
-                    if ( control != null ) {
-                        log.warn( "More than one control group found, cannot choose between " + c.getValue() );
-                        return null;
-                    }
-
-                    control = factorValue;
-                }
-
-            }
-        }
-
-        return control;
     }
 
     /**

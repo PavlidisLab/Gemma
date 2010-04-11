@@ -255,7 +255,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
             for ( FactorAssociatedAnalysisResultSet fars : analysis.getResultSets() ) {
                 // FIXME includes factors making up interaction terms, but shouldn't
                 // matter, because they will be included as main effects too. If not, this will be wrong!
-                factors.addAll( fars.getExperimentalFactor() );
+                factors.addAll( fars.getExperimentalFactors() );
             }
 
             filteredEeIds.add( id );

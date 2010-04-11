@@ -20,6 +20,8 @@ package ubic.gemma.model.expression.designElement;
 
 import java.util.Collection;
 
+import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
+
 import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.genome.Gene;
 
@@ -31,8 +33,7 @@ import ubic.gemma.model.genome.Gene;
  * 
  * @see ubic.gemma.model.expression.designElement.CompositeSequence
  */
-public abstract class CompositeSequenceDaoBase extends
-        ubic.gemma.model.expression.designElement.DesignElementDaoImpl<CompositeSequence> implements
+public abstract class CompositeSequenceDaoBase extends HibernateDaoSupport implements
         ubic.gemma.model.expression.designElement.CompositeSequenceDao {
 
     /**

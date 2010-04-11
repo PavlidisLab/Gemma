@@ -55,7 +55,7 @@ public class DifferentialExpressionAnalyzer implements ApplicationContextAware {
     private ApplicationContext applicationContext;
 
     /**
-     * Initiates the differential expression analysis (this is the entry point).
+     * Initiates the differential expression analysi
      * 
      * @param expressionExperiment
      * @return
@@ -73,7 +73,7 @@ public class DifferentialExpressionAnalyzer implements ApplicationContextAware {
     }
 
     /**
-     * Initiates the differential expression analysis (this is the entry point).
+     * Initiates the differential expression analysis
      * 
      * @param expressionExperiment
      * @return
@@ -94,19 +94,41 @@ public class DifferentialExpressionAnalyzer implements ApplicationContextAware {
     }
 
     /**
-     * Initiates the differential expression analysis (this is the entry point).
+     * Initiates the differential expression analysis
      * 
      * @param expressionExperiment
      * @return
      */
     public DifferentialExpressionAnalysis analyze( ExpressionExperiment expressionExperiment,
+            ExperimentalFactor subsetFactor, Collection<ExperimentalFactor> factors, AnalysisType type ) {
+
+        AbstractDifferentialExpressionAnalyzer analyzer = determineAnalysis( expressionExperiment, subsetFactor, factors, type );
+
+        DifferentialExpressionAnalysis analysis = analyzer.run( expressionExperiment, subsetFactor, factors );
+
+        return analysis;
+
+    }
+
+    /**
+     * @param expressionExperiment
+     * @param subsetFactor
+     * @param factors
+     * @param type
+     * @return
+     */
+    private AbstractDifferentialExpressionAnalyzer determineAnalysis( ExpressionExperiment expressionExperiment,
+            ExperimentalFactor subsetFactor, Collection<ExperimentalFactor> factors, AnalysisType type ) {
+        
+        throw new UnsupportedOperationException();
+        
+    }
+
+    public DifferentialExpressionAnalysis analyze( ExpressionExperiment expressionExperiment,
             Collection<ExperimentalFactor> factors, AnalysisType type ) {
 
         AbstractDifferentialExpressionAnalyzer analyzer = determineAnalysis( expressionExperiment, factors, type );
 
-        /*
-         * FIXME make sure the selected type is compatible with the factors.
-         */
         DifferentialExpressionAnalysis analysis = analyzer.run( expressionExperiment, factors );
 
         return analysis;
@@ -203,7 +225,7 @@ public class DifferentialExpressionAnalyzer implements ApplicationContextAware {
         if ( experimentalFactors == null ) {
             experimentalFactors = expressionExperiment.getExperimentalDesign().getExperimentalFactors();
         } else {
-            if ( colIsEmpty( experimentalFactors ) ) {
+            if ( experimentalFactors.isEmpty() ) {
                 throw new IllegalArgumentException(
                         "No experimental factors.  Cannot execute differential expression analysis." );
             }
@@ -221,7 +243,7 @@ public class DifferentialExpressionAnalyzer implements ApplicationContextAware {
             ExperimentalFactor experimentalFactor = experimentalFactors.iterator().next();
             Collection<FactorValue> factorValues = experimentalFactor.getFactorValues();
 
-            if ( colIsEmpty( factorValues ) )
+            if ( factorValues.isEmpty() )
                 throw new IllegalArgumentException(
                         "Collection of factor values is either null or 0. Cannot execute differential expression analysis." );
             if ( factorValues.size() == 1 ) {
@@ -278,15 +300,6 @@ public class DifferentialExpressionAnalyzer implements ApplicationContextAware {
              */
             return this.applicationContext.getBean( GenericAncovaAnalyzer.class );
         }
-    }
-
-    /**
-     * @param col
-     * @return
-     */
-    private boolean colIsEmpty( Collection<? extends Object> col ) {
-        if ( col == null || col.isEmpty() ) return true;
-        return false;
     }
 
     /*

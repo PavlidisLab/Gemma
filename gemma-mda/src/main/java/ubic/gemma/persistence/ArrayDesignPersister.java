@@ -36,7 +36,6 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
-import ubic.gemma.model.expression.designElement.ReporterService;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.biosequence.BioSequenceImpl;
@@ -64,9 +63,6 @@ abstract public class ArrayDesignPersister extends GenomePersister {
     @Autowired
     protected CompositeSequenceService compositeSequenceService;
 
-    @Autowired
-    protected ReporterService reporterService;
-
     private Map<String, ArrayDesign> arrayDesignCache = new HashMap<String, ArrayDesign>();
 
     Map<String, CompositeSequence> designElementCache = new HashMap<String, CompositeSequence>();
@@ -87,6 +83,7 @@ abstract public class ArrayDesignPersister extends GenomePersister {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.loader.util.persister.Persister#persist(java.lang.Object)
      */
     @Override
@@ -105,6 +102,7 @@ abstract public class ArrayDesignPersister extends GenomePersister {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.persistence.CommonPersister#persistOrUpdate(java.lang.Object)
      */
     @Override
@@ -125,13 +123,6 @@ abstract public class ArrayDesignPersister extends GenomePersister {
      */
     public void setCompositeSequenceService( CompositeSequenceService compositeSequenceService ) {
         this.compositeSequenceService = compositeSequenceService;
-    }
-
-    /**
-     * @param reporterService The reporterService to set.
-     */
-    public void setReporterService( ReporterService reporterService ) {
-        this.reporterService = reporterService;
     }
 
     /**

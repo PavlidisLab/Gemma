@@ -189,7 +189,7 @@ public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractDifferentialEx
                     }
                 }
 
-                probeAnalysisResult.setScore( Double.isNaN( fstat ) ? null : fstat );
+                probeAnalysisResult.setEffectSize( Double.isNaN( fstat ) ? null : fstat );
 
                 if ( j % pvaluesPerExample == mainEffectAIndex ) {
                     probeAnalysisResult.setPvalue( nan2Null( mainEffectAPvalues[i] ) );
@@ -215,13 +215,13 @@ public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractDifferentialEx
         /* main effects */
         Collection<ExperimentalFactor> mainA = new HashSet<ExperimentalFactor>();
         mainA.add( experimentalFactorA );
-        ExpressionAnalysisResultSet mainEffectResultSetA = ExpressionAnalysisResultSet.Factory.newInstance(
+        ExpressionAnalysisResultSet mainEffectResultSetA = ExpressionAnalysisResultSet.Factory.newInstance(null,
                 expressionAnalysis, analysisResultsMainEffectA, mainA );
         resultSets.add( mainEffectResultSetA );
 
         Collection<ExperimentalFactor> mainB = new HashSet<ExperimentalFactor>();
         mainB.add( experimentalFactorB );
-        ExpressionAnalysisResultSet mainEffectResultSetB = ExpressionAnalysisResultSet.Factory.newInstance(
+        ExpressionAnalysisResultSet mainEffectResultSetB = ExpressionAnalysisResultSet.Factory.newInstance(null,
                 expressionAnalysis, analysisResultsMainEffectB, mainB );
         resultSets.add( mainEffectResultSetB );
 
@@ -230,7 +230,7 @@ public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractDifferentialEx
             Collection<ExperimentalFactor> interAB = new HashSet<ExperimentalFactor>();
             interAB.add( experimentalFactorA );
             interAB.add( experimentalFactorB );
-            ExpressionAnalysisResultSet interactionEffectResultSet = ExpressionAnalysisResultSet.Factory.newInstance(
+            ExpressionAnalysisResultSet interactionEffectResultSet = ExpressionAnalysisResultSet.Factory.newInstance(null,
                     expressionAnalysis, analysisResultsInteractionEffect, interAB );
             resultSets.add( interactionEffectResultSet );
         }

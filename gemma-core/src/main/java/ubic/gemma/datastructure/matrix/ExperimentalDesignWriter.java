@@ -76,7 +76,7 @@ public class ExperimentalDesignWriter {
         }
 
         List<BioMaterial> orderedBioMaterials = ExpressionDataMatrixColumnSort
-                .orderByExperimentalDesign( new ArrayList<BioMaterial>( bioMaterials.keySet() ) );
+                .orderByExperimentalDesign( new ArrayList<BioMaterial>( bioMaterials.keySet() ), null );
 
         Collection<ExperimentalFactor> efs = ed.getExperimentalFactors();
 
