@@ -11,9 +11,6 @@ import java.util.Collection;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import ubic.gemma.job.progress.ProgressData;
-import ubic.gemma.job.progress.ProgressManager;
-
 /**
  * Abstract record-based parser. Records are defined by lines starting with a given record separator. The default record
  * separator is ">".

@@ -30,8 +30,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.basecode.util.FileTools;
-import ubic.gemma.job.progress.ProgressData;
-import ubic.gemma.job.progress.ProgressManager;
 
 /**
  * A line parser that produces a Map instead of a Collection. Subclasses must provide a method to generate keys, which

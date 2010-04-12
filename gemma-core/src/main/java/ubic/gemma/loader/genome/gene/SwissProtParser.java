@@ -31,9 +31,9 @@ import ubic.gemma.loader.util.parser.RecordParser;
  * @author pavlidis
  * @version $Id$
  */
-public class SwissProtParser extends RecordParser {
+public class SwissProtParser extends RecordParser<Object> {
 
-      Collection<Object> results = new HashSet<Object>();
+    Collection<Object> results = new HashSet<Object>();
 
     public SwissProtParser() {
         this.setRecordSeparator( "//" );
@@ -45,7 +45,7 @@ public class SwissProtParser extends RecordParser {
     }
 
     @Override
-    public Collection getResults() {
+    public Collection<Object> getResults() {
         return results;
     }
 

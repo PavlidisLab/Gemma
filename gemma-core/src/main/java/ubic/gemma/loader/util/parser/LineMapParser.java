@@ -23,9 +23,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
-import ubic.gemma.job.progress.ProgressData;
-import ubic.gemma.job.progress.ProgressManager;
-
 /**
  * The difference between this class and BasicLineMapParser is more flexibility in how keys are provided. The
  * parseOneLine method that is implemented must handle adding the data to the Map.

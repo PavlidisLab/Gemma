@@ -109,6 +109,7 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.util.AbstractCLI#buildOptions()
      */
     @SuppressWarnings("static-access")
@@ -172,6 +173,7 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.util.AbstractCLI#doWork(java.lang.String[])
      */
     @Override
@@ -188,7 +190,7 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
             } else if ( processAllADs ) {
                 processAllADs();
             } else if ( batchFileName != null ) {
-                processBatchFile( this.batchFileName );
+                processBatchFile();
             } else if ( this.taxonName != null ) {
                 processGenesForTaxon();
             } else {
@@ -290,10 +292,10 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
      * @param fileName
      * @throws IOException used for batch processing
      */
-    protected void processBatchFile( String fileName ) throws IOException {
+    protected void processBatchFile() throws IOException {
 
-        log.info( "Loading platforms to annotate from " + fileName );
-        InputStream is = new FileInputStream( fileName );
+        log.info( "Loading platforms to annotate from " + this.batchFileName );
+        InputStream is = new FileInputStream( this.batchFileName );
         BufferedReader br = new BufferedReader( new InputStreamReader( is ) );
 
         String line = null;

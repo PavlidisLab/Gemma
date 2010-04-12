@@ -38,7 +38,6 @@ import ubic.gemma.model.genome.gene.GeneProductType;
  * <pre>
  *             taxon\t ncbi_gene_id\t ncbi_prot_id
  * </pre>
- * 
  * <hr>
  * 
  * @author anshu
@@ -64,7 +63,7 @@ public class ProteinFileParser extends BasicLineParser<GeneProduct> {
      * (non-Javadoc)
      * 
      * @see ubic.gemma.loader.loaderutils.LineParser#parseOneLine(java.lang.String)
-     */ 
+     */
     public GeneProduct parseOneLine( String line ) {
         log.debug( line );
         String[] fields = StringUtils.splitPreserveAllTokens( line, '\t' );
@@ -102,7 +101,7 @@ public class ProteinFileParser extends BasicLineParser<GeneProduct> {
      * 
      */
     public void removeAll() {
-        Collection col = gpDao.loadAll();
+        Collection<? extends GeneProduct> col = gpDao.loadAll();
         gpDao.remove( col );
     }
 

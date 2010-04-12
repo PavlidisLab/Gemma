@@ -40,7 +40,7 @@ import ubic.gemma.loader.util.parser.BasicLineParser;
  * @version $Id$
  * @see NCBIGene2Accession
  */
-public class NcbiGene2AccessionParser extends BasicLineParser implements QueuingParser {
+public class NcbiGene2AccessionParser extends BasicLineParser<NCBIGene2Accession> implements QueuingParser {
 
     /**
      * 
@@ -74,9 +74,10 @@ public class NcbiGene2AccessionParser extends BasicLineParser implements Queuing
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.loader.loaderutils.LineParser#parseOneLine(java.lang.String)
      */
-    public Object parseOneLine( String line ) {
+    public NCBIGene2Accession parseOneLine( String line ) {
         String[] fields = StringUtils.splitPreserveAllTokens( line, '\t' );
 
         if ( fields.length != NCBI_GENE2ACCESSION_FIELDS_PER_ROW ) {
@@ -220,6 +221,7 @@ public class NcbiGene2AccessionParser extends BasicLineParser implements Queuing
     /*
      * (non-Javadoc) This has been overriden to add postprocessing to the gene2accession file. This involves adding the
      * last gene that had accessions (if available) and adding the remaining genes without accessions
+     * 
      * @see ubic.gemma.loader.util.parser.BasicLineParser#parse(java.io.InputStream)
      */
     @Override
@@ -248,8 +250,8 @@ public class NcbiGene2AccessionParser extends BasicLineParser implements Queuing
         }
     }
 
-    @Override 
-    protected void addResult( Object obj ) {
+    @Override
+    protected void addResult( NCBIGene2Accession obj ) {
         count++;
         // results.add( ( NCBIGene2Accession ) obj );
         // no-op - save memory as we use a queue instead.

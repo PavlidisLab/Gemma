@@ -43,7 +43,7 @@ public class ParserAndLoaderTools {
      * 
      * @param loader
      * @param col
-     */ 
+     */
     public static final void loadDatabase( Persister loader, Collection<?> col ) {
         assert ( loader != null );
         assert ( col != null );
@@ -99,7 +99,7 @@ public class ParserAndLoaderTools {
      * 
      * @param debug
      */
-    public static void debugMap( Map map ) {
+    public static void debugMap( Map<?, ?> map ) {
         if ( log.isDebugEnabled() ) {
             log.info( "Map contains: " );
 

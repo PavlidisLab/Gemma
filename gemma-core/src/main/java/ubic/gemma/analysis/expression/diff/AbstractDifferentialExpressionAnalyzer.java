@@ -26,19 +26,15 @@ import java.util.Collection;
 import java.util.HashSet;
 
 import org.apache.commons.lang.RandomStringUtils;
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.basecode.math.Rank;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
-import ubic.gemma.model.common.description.Characteristic;
-import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.FactorValue;
 import cern.colt.list.DoubleArrayList;
 
 /**

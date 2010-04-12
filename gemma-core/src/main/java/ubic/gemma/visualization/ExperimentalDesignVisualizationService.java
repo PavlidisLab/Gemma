@@ -105,7 +105,7 @@ public class ExperimentalDesignVisualizationService {
 
         return result;
     }
-   
+
     /**
      * @param experiment
      * @param bd
@@ -374,7 +374,7 @@ public class ExperimentalDesignVisualizationService {
      */
     private void writeImage( ColorMatrix<String, String> matrix, File outputfile ) throws IOException {
         log.info( outputfile );
-        MatrixDisplay writer = new MatrixDisplay( matrix );
+        MatrixDisplay<String, String> writer = new MatrixDisplay<String, String>( matrix );
         writer.setCellSize( new Dimension( 18, 18 ) );
         writer.saveImage( matrix, outputfile.getAbsolutePath(), true, true );
     }

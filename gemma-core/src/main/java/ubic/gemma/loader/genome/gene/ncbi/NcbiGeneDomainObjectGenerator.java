@@ -224,7 +224,7 @@ public class NcbiGeneDomainObjectGenerator {
     }
 
     // not used at all
-    public Collection<?> generate( String accession ) {
+    public Collection<?> generate( @SuppressWarnings("unused") String accession ) {
         throw new UnsupportedOperationException();
     }
 

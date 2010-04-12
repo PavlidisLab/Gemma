@@ -37,6 +37,6 @@ public interface QueuingParser {
      * @param queue
      * @throws IOException
      */
-    public void parse( InputStream inputStream, BlockingQueue queue ) throws IOException;
+    public void parse( InputStream inputStream, BlockingQueue<?> queue ) throws IOException;
 
 }

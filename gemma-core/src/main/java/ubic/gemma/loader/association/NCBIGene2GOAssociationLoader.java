@@ -33,8 +33,6 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import ubic.basecode.util.FileTools;
-import ubic.gemma.job.progress.ProgressData;
-import ubic.gemma.job.progress.ProgressManager;
 import ubic.gemma.model.association.Gene2GOAssociation;
 import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.persistence.PersisterHelper;
