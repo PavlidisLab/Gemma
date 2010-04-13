@@ -23,7 +23,8 @@ Gemma.ProgressWindow = Ext.extend(Ext.Window, {
 			resizable : false,
 			collapsible : false,
 			autoHeight : true,
-			autoWidth : true,
+			// autoWidth : true,
+			width : 400,
 			id : "progressWidget-window",
 
 			initComponent : function() {
@@ -104,6 +105,7 @@ Gemma.ProgressWidget = Ext.extend(Ext.Panel, {
 					id : 'all-messages-window',
 					title : t ? t : "Messages logged",
 					layout : 'fit',
+					width : 420,
 					closeAction : 'close',
 					items : [{
 								xtype : 'panel',
@@ -361,12 +363,14 @@ Gemma.ProgressWidget = Ext.extend(Ext.Panel, {
 	 * Private callback to handle cancellation @param {Object} data
 	 */
 	cancelCallback : function(successfullyCancelled) {
-		if (successfullyCancelled) {
-			this.stopProgress();
-			this.showAllMessages("Job was cancelled");
-			this.fireEvent('cancel', successfullyCancelled);
-		} else {
+
+		this.stopProgress();
+		this.fireEvent('cancel', successfullyCancelled);
+
+		if (!successfullyCancelled) {
 			Ext.Msg.alert("Couldn't cancel", "Sorry, the job couldn't be cancelled.");
+		} else {
+			this.showAllMessages("Job was cancelled");
 		}
 	},
 
