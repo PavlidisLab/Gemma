@@ -54,6 +54,7 @@ public abstract class AbstractAnalyzer {
         if ( rc != null && rc instanceof RServeClient ) {
             ( ( RServeClient ) rc ).disconnect();
         }
+        rc = null;
     }
 
     /**

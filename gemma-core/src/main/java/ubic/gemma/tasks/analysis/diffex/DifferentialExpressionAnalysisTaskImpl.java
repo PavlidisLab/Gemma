@@ -55,7 +55,7 @@ public class DifferentialExpressionAnalysisTaskImpl implements DifferentialExpre
 
         DifferentialExpressionAnalysis results = doAnalysis( command );
 
-        /* Don't send the full analysis to space space. Instead, create a minimal result. */
+        /* Don't send the full analysis to the space. Instead, create a minimal result. */
         DifferentialExpressionAnalysis minimalResult = DifferentialExpressionAnalysis.Factory.newInstance();
         minimalResult.setName( results.getName() );
         minimalResult.setDescription( results.getDescription() );

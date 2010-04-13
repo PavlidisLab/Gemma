@@ -260,6 +260,7 @@ public class DifferentialExpressionAnalysisController extends AbstractTaskServic
             type = AnalysisType.GENERICLM;
         }
 
+        log.info( "Determining analysis type" );
         AbstractDifferentialExpressionAnalyzer analyzer = this.differentialExpressionAnalyzer.determineAnalysis( ee,
                 factors, type );
 
@@ -271,6 +272,7 @@ public class DifferentialExpressionAnalysisController extends AbstractTaskServic
         cmd.setAnalysisType( type );
         cmd.setFactors( factors );
 
+        log.info( "Initializing analysis" );
         return super.run( cmd );
     }
 

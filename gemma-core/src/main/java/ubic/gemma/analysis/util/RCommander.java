@@ -59,7 +59,7 @@ public abstract class RCommander {
         if ( rc == null || !rc.isConnected() ) {
             throw new IOException( "Could not get an R connection" );
         }
-        log.info( "Got R connection: " + rc.getClass() );
+        log.debug( "Got R connection: " + rc.getClass() );
     }
 
     /**

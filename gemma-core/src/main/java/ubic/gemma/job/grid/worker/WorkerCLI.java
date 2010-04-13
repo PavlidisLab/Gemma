@@ -102,12 +102,12 @@ public class WorkerCLI extends AbstractSpringAwareCLI implements RemoteEventList
      * How often we refresh the status of the worker. Don't make it too infrequent. If the worker dies at the beginning
      * of the cycle, this is how long clients will still see its registration.
      */
-    final Long HEARTBEAT_INTERVAL_MILLIS = 5000L;
+    final Long HEARTBEAT_INTERVAL_MILLIS = 15000L;
 
     /*
      * A little extra time we allow the entry to live, so there is overlap (milliseconds)
      */
-    final Long WAIT = 1000L;
+    final Long WAIT = 10000L;
 
     private Collection<SpacesCancellationEntry> cancellationEntries = new HashSet<SpacesCancellationEntry>();
 

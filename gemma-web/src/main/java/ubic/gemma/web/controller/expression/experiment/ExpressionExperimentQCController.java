@@ -27,8 +27,10 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -234,11 +236,15 @@ public class ExpressionExperimentQCController extends BaseController {
             IOException {
         Collection<File> fs = this.locatePvalueDistFiles( ee );
 
-        Collection<XYSeries> results = new HashSet<XYSeries>();
+        /*
+         * new format is to have just one file.
+         */
 
-        for ( File f : fs ) {
-            XYSeries series = new XYSeries( ee.getId(), true, true );
-            BufferedReader in = new BufferedReader( new FileReader( f ) );
+        List<XYSeries> results = new ArrayList<XYSeries>();
+
+        if ( fs.size() == 1 ) {
+
+            BufferedReader in = new BufferedReader( new FileReader( fs.iterator().next() ) );
             while ( in.ready() ) {
                 String line = in.readLine().trim();
                 if ( line.startsWith( "#" ) ) continue;
@@ -246,13 +252,44 @@ public class ExpressionExperimentQCController extends BaseController {
                 if ( split.length < 2 ) continue;
                 try {
                     double x = Double.parseDouble( split[0] );
-                    double y = Double.parseDouble( split[1] );
-                    series.add( x, y );
+
+                    for ( int i = 1; i < split.length; i++ ) {
+                        double y = Double.parseDouble( split[i] );
+
+                        if ( results.size() < i ) {
+                            results.add( new XYSeries( ee.getId(), true, true ) );
+                        }
+
+                        results.get( i - 1 ).add( x, y );
+                    }
+
                 } catch ( NumberFormatException e ) {
                     // line wasn't useable.. no big deal. Heading is included.
                 }
             }
-            results.add( series );
+
+        } else {
+            /*
+             * old format, one file per series.
+             */
+            for ( File f : fs ) {
+                XYSeries series = new XYSeries( ee.getId(), true, true );
+                BufferedReader in = new BufferedReader( new FileReader( f ) );
+                while ( in.ready() ) {
+                    String line = in.readLine().trim();
+                    if ( line.startsWith( "#" ) ) continue;
+                    String[] split = StringUtils.split( line );
+                    if ( split.length < 2 ) continue;
+                    try {
+                        double x = Double.parseDouble( split[0] );
+                        double y = Double.parseDouble( split[1] );
+                        series.add( x, y );
+                    } catch ( NumberFormatException e ) {
+                        // line wasn't useable.. no big deal. Heading is included.
+                    }
+                }
+                results.add( series );
+            }
         }
         return results;
     }

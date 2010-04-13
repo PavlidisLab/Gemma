@@ -27,11 +27,16 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.FutureTask;
 
 import org.apache.commons.collections.Transformer;
 import org.apache.commons.collections.TransformerUtils;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -470,12 +475,41 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
 
         final Map<String, LinearModelSummary> rawResults = new ConcurrentHashMap<String, LinearModelSummary>();
 
-        String matrixName = rc.assignMatrix( namedMatrix, rowNameExtractor );
+        final String matrixName = rc.assignMatrix( namedMatrix, rowNameExtractor );
 
-        Map<String, LinearModelSummary> res = rc.rowApplyLinearModelWithLogging( matrixName, modelFormula,
-                factorNameMap.keySet().toArray( new String[] {} ) );
+        ExecutorService service = Executors.newSingleThreadExecutor();
 
-        rawResults.putAll( res );
+        Future<?> submit = service.submit( new FutureTask<Object>( new Runnable() {
+
+            public void run() {
+                Map<String, LinearModelSummary> res = rc.rowApplyLinearModel( matrixName, modelFormula, factorNameMap
+                        .keySet().toArray( new String[] {} ) );
+
+                rawResults.putAll( res );
+            }
+        }, null ) );
+
+        StopWatch timer = new StopWatch();
+        timer.start();
+        long lasttime = 0;
+        while ( !submit.isDone() ) {
+            try {
+                Thread.sleep( 1000 );
+
+                if ( timer.getTime() - lasttime > 60000 ) {
+
+                    log
+                            .info( String.format( "Analysis running, %.1f minutes elapsed ...",
+                                    timer.getTime() / 60000.00 ) );
+                }
+
+                lasttime = timer.getTime();
+
+            } catch ( InterruptedException e ) {
+                log.warn( "Analysis interrupted!" );
+                return rawResults;
+            }
+        }
 
         assert rawResults.size() == namedMatrix.rows();
         return rawResults;
