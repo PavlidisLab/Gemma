@@ -27,6 +27,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -75,7 +76,6 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
 
     /*
      * (non-Javadoc)
-     * 
      * @see
      * ubic.gemma.analysis.expression.diff.AbstractDifferentialExpressionAnalyzer#run(ubic.gemma.model.expression.experiment
      * .ExpressionExperiment)
@@ -87,7 +87,6 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
 
     /*
      * (non-Javadoc)
-     * 
      * @see
      * ubic.gemma.analysis.expression.diff.AbstractDifferentialExpressionAnalyzer#run(ubic.gemma.model.expression.experiment
      * .ExpressionExperiment, java.util.Collection)
@@ -123,7 +122,6 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
 
     /*
      * (non-Javadoc)
-     * 
      * @see
      * ubic.gemma.analysis.expression.diff.AbstractDifferentialExpressionAnalyzer#run(ubic.gemma.model.expression.experiment
      * .ExpressionExperiment, ubic.gemma.model.expression.experiment.ExperimentalFactor[])
@@ -141,7 +139,6 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
 
     /*
      * (non-Javadoc)
-     * 
      * @see
      * ubic.gemma.analysis.expression.diff.AbstractDifferentialExpressionAnalyzer#run(ubic.gemma.model.expression.experiment
      * .ExpressionExperiment, ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalysisConfig)
@@ -479,38 +476,47 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
 
         ExecutorService service = Executors.newSingleThreadExecutor();
 
-        Future<?> submit = service.submit( new FutureTask<Object>( new Runnable() {
-
+        Future<?> job = service.submit( new FutureTask<Object>( new Runnable() {
             public void run() {
                 Map<String, LinearModelSummary> res = rc.rowApplyLinearModel( matrixName, modelFormula, factorNameMap
                         .keySet().toArray( new String[] {} ) );
 
                 rawResults.putAll( res );
             }
-        }, null ) );
+        }, true ) );
 
         StopWatch timer = new StopWatch();
         timer.start();
         long lasttime = 0;
-        while ( !submit.isDone() ) {
+
+        double updateIntervalMillis = 60000.00;
+        while ( !job.isDone() ) {
             try {
                 Thread.sleep( 1000 );
 
-                if ( timer.getTime() - lasttime > 60000 ) {
-
+                if ( timer.getTime() - lasttime > updateIntervalMillis ) {
                     log
                             .info( String.format( "Analysis running, %.1f minutes elapsed ...",
                                     timer.getTime() / 60000.00 ) );
+                    lasttime = timer.getTime();
                 }
-
-                lasttime = timer.getTime();
 
             } catch ( InterruptedException e ) {
                 log.warn( "Analysis interrupted!" );
                 return rawResults;
             }
         }
-
+        try {
+            job.get();
+        } catch ( InterruptedException e ) {
+            throw new RuntimeException( e );
+        } catch ( ExecutionException e ) {
+            throw new RuntimeException( e );
+        }
+        if ( timer.getTime() > updateIntervalMillis ) {
+            log.info( String.format( "Analysis finished in %.1f minutes.", timer.getTime() / 60000.00 ) );
+        }
+        service.shutdown();
         assert rawResults.size() == namedMatrix.rows();
         return rawResults;
     }
