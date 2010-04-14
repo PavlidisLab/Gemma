@@ -34,6 +34,7 @@ Gemma.GeneGroupPanel = Ext.extend(Ext.grid.EditorGridPanel, {
 			'selectionChange' : {
 				fn : function(selmod) {
 
+					var modifiedRecords = selmod.getModifiedRecords();
 					var sel = selmod.getSelected();
 
 					if (!sel) {
@@ -343,56 +344,19 @@ Gemma.GeneGroupImporter = Ext.extend(Ext.Panel, {
 								}, {
 									icon : "/Gemma/images/icons/group_delete.png",
 									tooltip : "Delete a group",
-
-									handler : function() {
-
-										var sel = Ext.getCmp('gene-group-panel').getSelectionModel().getSelected();
-										var groupId = sel.get("id");
-										var groupName = sel.get("name");
-
-										var processResult = function(btn) {
-
-											if (btn == 'yes') {
-
-												var loadMask = new Ext.LoadMask(Ext.getCmp("gene-group-panel").getEl(),
-														{
-															msg : "Saving changes..."
-														});
-												loadMask.show();
-
-												GeneSetController.deleteGeneGroup(groupId, {
-															callback : function() {
-																refreshGeneGroupData();
-
-																Ext.getCmp('gene-chooser-panel').currentGroupId = null;
-																Ext.getCmp('gene-group-panel').getSelectionModel()
-																		.selectFirstRow();
-																loadMask.hide();
-															},
-															errorHandler : function(e) {
-																Ext.Msg.alert('Sorry', e);
-															}
-														});
-											}
-										};
-
-										Ext.Msg.show({
-													title : 'Are you sure?',
-													msg : 'The group "' + groupName + " with id " + groupId
-															+ '" will be permanently deleted. This cannot be undone.',
-													buttons : Ext.Msg.YESNO,
-													fn : processResult,
-													animEl : 'elId',
-													icon : Ext.MessageBox.QUESTION
-												});
-
-									}
+									handler : function() {deleteGeneGroup();}
 								}]
 							},// toolbar
 							items : [this.geneGroupPanel, this.geneChooserPanel]
 						});
 
 				Gemma.GeneGroupImporter.superclass.initComponent.call(this);
+
+				this.geneGroupPanel.on("keypress", function(e) {
+							if (e.getCharCode() == Ext.EventObject.DELETE) {
+								deleteGeneGroup();
+							}
+						}, this);
 
 				refreshGeneGroupData();
 
@@ -404,17 +368,60 @@ Gemma.GeneGroupImporter = Ext.extend(Ext.Panel, {
 refreshGeneGroupData = function(groupId) {
 	var showPrivateOnly = !Ext.getCmp("geneGroupData-show-public").pressed;
 	Ext.getCmp('gene-group-panel').getStore().load({
-				params : [showPrivateOnly], 
-				callback : function(){	//for selecting the desired row
-					console.log(groupId);
-					if (!groupId){
+				params : [showPrivateOnly],
+				callback : function() {
+					// for selecting the desired row, if given groupid given
+					if (!groupId)
 						return;
-					}
-					
+
 					var groupPanel = Ext.getCmp('gene-group-panel');
-					var row = groupPanel.getStore().findExact(id,groupId);
+					var row = groupPanel.getStore().findExact("id", groupId);
 					groupPanel.getSelectionModel().selectRow(row, false);
-				
+
 				}
 			});
+};
+
+deleteGeneGroup = function() {
+
+	var sel = Ext.getCmp('gene-group-panel').getSelectionModel().getSelected();
+	if (!sel) return;
+	
+	var groupId = sel.get("id");
+	var groupName = sel.get("name");
+
+	var processResult = function(btn) {
+
+		if (btn == 'yes') {
+
+			var loadMask = new Ext.LoadMask(Ext.getCmp("gene-group-panel").getEl(), {
+						msg : "Saving changes..."
+					});
+			loadMask.show();
+
+			GeneSetController.deleteGeneGroup(groupId, {
+						callback : function() {
+							refreshGeneGroupData();
+
+							Ext.getCmp('gene-chooser-panel').currentGroupId = null;
+							Ext.getCmp('gene-group-panel').getSelectionModel().selectFirstRow();
+							loadMask.hide();
+						},
+						errorHandler : function(e) {
+							Ext.Msg.alert('Sorry', e);
+						}
+					});
+		}
+	};
+
+	Ext.Msg.show({
+				title : 'Are you sure?',
+				msg : 'The group "' + groupName + " with id " + groupId
+						+ '" will be permanently deleted. This cannot be undone.',
+				buttons : Ext.Msg.YESNO,
+				fn : processResult,
+				animEl : 'elId',
+				icon : Ext.MessageBox.QUESTION
+			});
+
 };
