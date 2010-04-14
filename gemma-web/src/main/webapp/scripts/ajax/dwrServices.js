@@ -568,8 +568,8 @@ GeneSetController._path = '/Gemma/dwr';
 GeneSetController.getGenesInGroup = function(p0, callback) {
 	dwr.engine._execute(GeneSetController._path, 'GeneSetController', 'getGenesInGroup', p0, callback);
 }
-GeneSetController.updateGeneGroup = function(p0, p1, callback) {
-	dwr.engine._execute(GeneSetController._path, 'GeneSetController', 'updateGeneGroup', p0, p1, callback);
+GeneSetController.updateGeneGroup = function(p0, p1, p2, callback) {
+	dwr.engine._execute(GeneSetController._path, 'GeneSetController', 'updateGeneGroup', p0, p1,p2, callback);
 }
 GeneSetController.createGeneGroup = function(p0, p1, callback) {
 	dwr.engine._execute(GeneSetController._path, 'GeneSetController', 'createGeneGroup', p0, p1, callback);

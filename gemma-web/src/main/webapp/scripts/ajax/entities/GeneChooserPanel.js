@@ -14,7 +14,7 @@ Ext.namespace('Gemma');
  * 
  * @type Number
  */
-Gemma.MAX_GENES_PER_QUERY = 100;
+Gemma.MAX_GENES_PER_QUERY = 1000;
 
 /**
  * Table of genes with toolbar for searching.

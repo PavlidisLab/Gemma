@@ -72,7 +72,7 @@ public class GenePickerController {
     @Autowired
     private ArrayDesignService arrayDesignService;
 
-    private static final int MAX_GENES_PER_QUERY = 20;
+    private static final int MAX_GENES_PER_QUERY = 1000;
 
     private static Comparator<Taxon> TAXON_COMPARATOR = new Comparator<Taxon>() {
         public int compare( Taxon o1, Taxon o2 ) {
@@ -196,10 +196,18 @@ public class GenePickerController {
             SearchSettings settings = SearchSettings.GeneSearch( line, taxon );
             List<SearchResult> geneSearchResults = searchService.search( settings ).get( Gene.class );
 
-            // FIXME try not to add more than one gene per query.
-
+            
             // FIXME try to inform the user if there are some that don't have
             // results.
+            if (geneSearchResults == null || geneSearchResults.isEmpty()){
+                log.warn( "No gene results for gene with id: " + line );
+            }
+
+            // FIXME try not to add more than one gene per query.
+            if (geneSearchResults.size() > 1){
+                log.warn(geneSearchResults.size() + " genes found for query id = " + line + ". Genes found are: " + geneSearchResults + ". Adding all");
+            }
+
             for ( SearchResult sr : geneSearchResults ) {
                 genes.add( ( Gene ) sr.getResultObject() );
             }

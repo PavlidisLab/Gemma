@@ -163,9 +163,9 @@ Gemma.SecurityManager.managePermissions = function(elid, clazz, id) {
 				handler : function(b, e) {
 
 					var loadMask = new Ext.LoadMask(sp.getEl(), {
-								msg : "Saving changes..."
-							});
-					loadMask.show();
+										msg : "Saving changes..."
+									});
+							loadMask.show();
 
 					securityInfo.publiclyReadable = Ext
 							.getCmp('public-checkbox').getValue();

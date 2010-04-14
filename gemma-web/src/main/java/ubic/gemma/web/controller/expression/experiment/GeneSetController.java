@@ -62,7 +62,7 @@ public class GeneSetController {
      * @param genes
      * @return
      */
-    public String createGeneGroup( String name, Collection<Long> geneIds ) {
+    public Long createGeneGroup( String name, Collection<Long> geneIds ) {
 
         if ( name == null || name.isEmpty() ) return null;
 
@@ -73,7 +73,7 @@ public class GeneSetController {
         if ( geneIds == null || geneIds.isEmpty() ) {
             gset = geneSetService.create( gset );
             this.securityService.makePrivate( gset );
-            return gset.getName();
+            return gset.getId();
         }
 
         Collection<Gene> genes = geneService.loadMultiple( geneIds );
@@ -90,7 +90,7 @@ public class GeneSetController {
         gset = geneSetService.create( gset );
         this.securityService.makePrivate( gset );
 
-        return gset.getName();
+        return gset.getId();
     }
 
     /**
@@ -133,9 +133,13 @@ public class GeneSetController {
      * @param groupId
      * @param geneIds
      */
-    public void updateGeneGroup( Long groupId, Collection<Long> geneIds ) {
+    public void updateGeneGroup( Long groupId, String description,  Collection<Long> geneIds ) {
 
         GeneSet gset = geneSetService.load( groupId );
+        if(gset == null){
+            log.warn("Atempt to update a group that doesn't exist. ID =  " + groupId);
+            return;
+        }
         Collection<GeneSetMember> updatedGenelist = new HashSet<GeneSetMember>(); // Creating a new gene list indirectly
         // allows for
         // easy deletion of gene group members
@@ -172,6 +176,7 @@ public class GeneSetController {
         }
 
         gset.setMembers( updatedGenelist );
+        gset.setDescription( description );
         geneSetService.update( gset );
 
         return;

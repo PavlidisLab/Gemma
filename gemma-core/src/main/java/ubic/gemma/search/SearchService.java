@@ -241,6 +241,7 @@ public class SearchService implements InitializingBean {
 
     /*
      * (non-Javadoc)
+     * 
      * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
      */
     public void afterPropertiesSet() throws Exception {
@@ -746,7 +747,7 @@ public class SearchService implements InitializingBean {
      * @param settings
      * @return SearchResults of CharcteristicObjects. Typically to be useful one needs to retrieve the 'parents'
      *         (entities which have been 'tagged' with the term) of those Characteristics
-     */ 
+     */
     private Collection<SearchResult> characteristicSearchWithChildren( Collection<Class<?>> classes,
             SearchSettings settings ) {
 
@@ -774,7 +775,7 @@ public class SearchService implements InitializingBean {
      * @param matches
      * @param query
      * @return
-     */  
+     */
     private Collection<SearchResult> characteristicSearchWord( Collection<Class<?>> classes,
             Map<SearchResult, String> matches, String query ) {
 
@@ -1566,7 +1567,12 @@ public class SearchService implements InitializingBean {
             } catch ( SecurityException e ) {
                 throw new RuntimeException( e );
             } catch ( NoSuchMethodException e ) {
-                throw new RuntimeException( e );
+                /*
+                 * In case of a programming error where the results don't have a taxon at all, we assume we should
+                 * filter them out but issue a warning.
+                 */
+                toRemove.add( sr );
+                log.warn( "No getTaxon method for: " + o.getClass() + ".  Filtering from results. Error was: " + e );
             } catch ( IllegalArgumentException e ) {
                 throw new RuntimeException( e );
             } catch ( IllegalAccessException e ) {
@@ -1625,7 +1631,9 @@ public class SearchService implements InitializingBean {
 
         if ( combinedGeneList.size() == 0 ) {
             Collection<SearchResult> geneCsList = databaseCompositeSequenceSearch( settings );
-            combinedGeneList.addAll( geneCsList );
+            for ( SearchResult res : geneCsList ) {
+                if ( res.getResultClass().isAssignableFrom( Gene.class ) ) combinedGeneList.add( res );
+            }
         }
 
         filterByTaxon( settings, combinedGeneList );
@@ -1642,7 +1650,7 @@ public class SearchService implements InitializingBean {
      * @param classes Which classes of entities to look for
      * @param cs
      * @return
-     */ 
+     */
     private Collection<SearchResult> getAnnotatedEntities( Collection<Class<?>> classes, Collection<Characteristic> cs ) {
 
         Map<Characteristic, Object> characterstic2entity = characteristicService.getParents( cs );
@@ -1863,14 +1871,14 @@ public class SearchService implements InitializingBean {
      * @param classes
      * @param searchString
      * @return
-     */ 
+     */
     private Collection<SearchResult> ontologySearchAnnotatedObject( Collection<Class<?>> classes,
             SearchSettings settings ) {
 
         /*
          * Direct search.
          */
-        Collection<SearchResult> results = new HashSet<SearchResult>(); 
+        Collection<SearchResult> results = new HashSet<SearchResult>();
 
         /*
          * Include children in ontologies, if any. This can be slow if there are a lot of children.
