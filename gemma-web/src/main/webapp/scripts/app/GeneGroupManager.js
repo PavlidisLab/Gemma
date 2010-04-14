@@ -34,6 +34,8 @@ Gemma.GeneGroupPanel = Ext.extend(Ext.grid.EditorGridPanel, {
 			'selectionChange' : {
 				fn : function(selmod) {
 
+					if (!selmod) return;
+					
 					var modifiedRecords = selmod.getModifiedRecords();
 					var sel = selmod.getSelected();
 
