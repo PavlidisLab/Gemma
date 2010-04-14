@@ -18,6 +18,7 @@
  */
 package ubic.gemma.job.progress.grid;
 
+import net.jini.core.entry.Entry;
 import net.jini.core.lease.Lease;
 
 import org.apache.log4j.Level;
@@ -41,7 +42,7 @@ public class SpacesProgressAppender extends ProgressAppender {
 
     private GigaSpacesTemplate gigaSpacesTemplate = null;
 
-    private String threadName; 
+    private String threadName;
 
     public SpacesProgressAppender( GigaSpacesTemplate gigaSpacesTemplate, String taskId ) {
         assert gigaSpacesTemplate != null;
@@ -78,7 +79,15 @@ public class SpacesProgressAppender extends ProgressAppender {
         }
 
         if ( event.getLevel().isGreaterOrEqual( Level.INFO ) && event.getMessage() != null ) {
-            this.entry = ( SpacesProgressEntry ) gigaSpacesTemplate.read( entry, SpacesUtil.WAIT_TIMEOUT );
+            Entry entryObj = gigaSpacesTemplate.read( entry, SpacesUtil.WAIT_TIMEOUT );
+
+            if ( !( entryObj instanceof SpacesProgressEntry ) ) {
+                System.err.println( "WARNING: Wrong type of entry in progress appender: "
+                        + entryObj.getClass().getName() );
+                return;
+            }
+
+            this.entry = ( SpacesProgressEntry ) entryObj;
 
             if ( entry != null ) {
                 // System.err.println( entry.taskId + " >>>" + event.getMessage() );
