@@ -371,9 +371,14 @@ public class DifferentialExpressionAnalyzerService {
             scoreHistograms.add( scoreHist );
 
             for ( DifferentialExpressionAnalysisResult result : resultSet.getResults() ) {
-                qvalHist.fill( result.getCorrectedPvalue() );
-                scoreHist.fill( result.getEffectSize() );
-                pvalHist.fill( result.getPvalue() );
+                Double correctedPvalue = result.getCorrectedPvalue();
+                if ( correctedPvalue != null ) qvalHist.fill( correctedPvalue );
+
+                Double effectSize = result.getEffectSize();
+                if ( effectSize != null ) scoreHist.fill( effectSize );
+
+                Double pvalue = result.getPvalue();
+                if ( pvalue != null ) pvalHist.fill( pvalue );
             }
 
         }
