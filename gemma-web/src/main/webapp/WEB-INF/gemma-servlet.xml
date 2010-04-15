@@ -813,7 +813,7 @@
 						</property>
 						<property name="includes">
 							<list>
-								<value>run</value>
+								<value>load</value>
 							</list>
 						</property>
 					</bean>

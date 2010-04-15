@@ -377,7 +377,7 @@ public class ExpressionExperimentLoadController extends AbstractTaskService {
      * @param command
      * @return
      */
-    public String run( ExpressionExperimentLoadTaskCommand command ) {
+    public String load( ExpressionExperimentLoadTaskCommand command ) {
         // remove stray whitespace.
         command.setAccession( StringUtils.strip( command.getAccession() ) );
 
@@ -385,7 +385,7 @@ public class ExpressionExperimentLoadController extends AbstractTaskService {
             throw new IllegalArgumentException( "Must provide an accession" );
         }
 
-        return run( command );
+        return super.run( command );
     }
 
     /**

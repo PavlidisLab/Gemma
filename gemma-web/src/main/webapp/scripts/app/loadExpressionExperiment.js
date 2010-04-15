@@ -71,7 +71,7 @@ function submitForm() {
 
 	uploadButton.disable();
 
-	ExpressionExperimentLoadController.run.apply(this, callParams);
+	ExpressionExperimentLoadController.load.apply(this, callParams);
 
 };
 

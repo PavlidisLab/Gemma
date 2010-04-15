@@ -387,14 +387,11 @@ ExpressionExperimentDataFetchController.getCoExpressionDataFile = function(p0, c
 if (ExpressionExperimentLoadController == null)
 	var ExpressionExperimentLoadController = {};
 ExpressionExperimentLoadController._path = '/Gemma/dwr';
-ExpressionExperimentLoadController.run = function(p0, callback) {
-	dwr.engine._execute(ExpressionExperimentLoadController._path, 'ExpressionExperimentLoadController', 'run', p0,
+ExpressionExperimentLoadController.load = function(p0, callback) {
+	dwr.engine._execute(ExpressionExperimentLoadController._path, 'ExpressionExperimentLoadController', 'load', p0,
 			callback);
 }
-ExpressionExperimentLoadController.run = function(p0, callback) {
-	dwr.engine._execute(ExpressionExperimentLoadController._path, 'ExpressionExperimentLoadController', 'run', p0,
-			callback);
-}
+
 // ====================================================================================
 if (ExpressionExperimentSetController == null)
 	var ExpressionExperimentSetController = {};
