@@ -44,7 +44,7 @@ import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.search.SearchResult;
 import ubic.gemma.search.SearchService;
-import ubic.gemma.search.SearchSettings; 
+import ubic.gemma.search.SearchSettings;
 
 /**
  * For 'live searches' from the web interface.
@@ -194,22 +194,36 @@ public class GenePickerController {
             }
             line = StringUtils.strip( line );
             SearchSettings settings = SearchSettings.GeneSearch( line, taxon );
-            List<SearchResult> geneSearchResults = searchService.search( settings ).get( Gene.class );
+            List<SearchResult> geneSearchResults = searchService.search( settings ).get( Gene.class );  //drops predicted gene results....
 
-            
-            // FIXME try to inform the user if there are some that don't have
-            // results.
-            if (geneSearchResults == null || geneSearchResults.isEmpty()){
+            // FIXME inform the user (on the client!) if there are some that don't have results.
+            if ( geneSearchResults == null || geneSearchResults.isEmpty() ) {
                 log.warn( "No gene results for gene with id: " + line );
-            }
+            } else if ( geneSearchResults.size() == 1 ) { // Just one result so add it
+                genes.add( ( Gene ) geneSearchResults.iterator().next().getResultObject() );
 
-            // FIXME try not to add more than one gene per query.
-            if (geneSearchResults.size() > 1){
-                log.warn(geneSearchResults.size() + " genes found for query id = " + line + ". Genes found are: " + geneSearchResults + ". Adding all");
-            }
+            } else { // Many results need to find best if possible
+                Collection<Gene> notExactMatch = new HashSet<Gene>();
+                Boolean foundMatch = false;
 
-            for ( SearchResult sr : geneSearchResults ) {
-                genes.add( ( Gene ) sr.getResultObject() );
+                // Usually if there is more than 1 results the search term was a official symbol and picked up matches
+                // like grin1, grin2, grin3, grin (given the search term was grin)
+                for ( SearchResult sr : geneSearchResults ) {
+                    Gene srGene = ( Gene ) sr.getResultObject();
+                    if ( srGene.getOfficialSymbol().equalsIgnoreCase( line ) ) {
+                        genes.add( srGene );
+                        foundMatch = true;
+                        break; // found so return
+                    } else
+                        notExactMatch.add( srGene );
+                }
+
+                // if no exact match found add all of them and toss a warning
+                if ( !foundMatch ) {
+                    log.warn( notExactMatch.size() + " genes found for query id = " + line + ". Genes found are: "
+                            + notExactMatch + ". Adding all" );
+                    genes.addAll( notExactMatch );
+                }
             }
 
         }
