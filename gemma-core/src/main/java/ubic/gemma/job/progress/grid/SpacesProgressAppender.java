@@ -81,6 +81,10 @@ public class SpacesProgressAppender extends ProgressAppender {
         if ( event.getLevel().isGreaterOrEqual( Level.INFO ) && event.getMessage() != null ) {
             Entry entryObj = gigaSpacesTemplate.read( entry, SpacesUtil.WAIT_TIMEOUT );
 
+            if ( entryObj == null ) {
+                return;
+            }
+
             if ( !( entryObj instanceof SpacesProgressEntry ) ) {
                 System.err.println( "WARNING: Wrong type of entry in progress appender: "
                         + entryObj.getClass().getName() );
@@ -89,11 +93,10 @@ public class SpacesProgressAppender extends ProgressAppender {
 
             this.entry = ( SpacesProgressEntry ) entryObj;
 
-            if ( entry != null ) {
-                // System.err.println( entry.taskId + " >>>" + event.getMessage() );
-                entry.setMessage( event.getMessage().toString() );
-                gigaSpacesTemplate.update( entry, Lease.FOREVER, SpacesUtil.WAIT_TIMEOUT );
-            }
+            // System.err.println( entry.taskId + " >>>" + event.getMessage() );
+            entry.setMessage( event.getMessage().toString() );
+            gigaSpacesTemplate.update( entry, Lease.FOREVER, SpacesUtil.WAIT_TIMEOUT );
+
         }
     }
 
