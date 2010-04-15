@@ -7,6 +7,11 @@ Ext.BLANK_IMAGE_URL = '/Gemma/images/default/s.gif';
  * @author klc
  * @version $Id$
  */
+
+
+
+
+
 Ext.onReady(function() {
 
 			Ext.QuickTips.init();
@@ -36,12 +41,12 @@ Gemma.GeneGroupPanel = Ext.extend(Ext.grid.EditorGridPanel, {
 
 					if (!selmod) return;
 					
-					var modifiedRecords = selmod.getModifiedRecords();
 					var sel = selmod.getSelected();
 
 					if (!sel) {
 						return;
 					}
+					
 					var selectedGeneGroupId = sel.data.id;
 					var genePanel = Ext.getCmp('gene-chooser-panel');
 
@@ -163,7 +168,15 @@ Gemma.GeneGroupPanel = Ext.extend(Ext.grid.EditorGridPanel, {
 					}
 				}
 			}),
+			
 	columns : [{
+				header : 'Id',
+				dataIndex : 'id',
+				editable : false,
+				groupable : false,
+				sortable : true, 
+				hidden : true
+			},{
 				header : 'Name',
 				dataIndex : 'name',
 				editable : false,
@@ -279,8 +292,9 @@ Gemma.GeneGroupImporter = Ext.extend(Ext.Panel, {
 																		var genePanel = Ext
 																				.getCmp('gene-chooser-panel');
 																		genePanel.currentGroupId = null;
-																		genePanel.loadGenes([]);
 																		refreshGeneGroupData(groupId);
+																		genePanel.loadGenes([]);
+
 																		genePanel.getTopToolbar().geneCombo.focus();
 
 																	},
@@ -301,8 +315,6 @@ Gemma.GeneGroupImporter = Ext.extend(Ext.Panel, {
 										var rec = Ext.getCmp("gene-group-panel").getSelectionModel().getSelected();
 										if (rec) {
 
-											// update description field if necessary
-											// console.log(rec.data.description);
 
 											// Update the genes incase they changed also. Can
 											// only update the genes for 1 list.
@@ -369,13 +381,14 @@ Gemma.GeneGroupImporter = Ext.extend(Ext.Panel, {
 // not have to exist as a static entity outside of the widget's scope
 refreshGeneGroupData = function(groupId) {
 	var showPrivateOnly = !Ext.getCmp("geneGroupData-show-public").pressed;
-	Ext.getCmp('gene-group-panel').getStore().load({
+	var store = Ext.getCmp('gene-group-panel').getStore();
+	store.load({
 				params : [showPrivateOnly],
 				callback : function() {
 					// for selecting the desired row, if given groupid given
-					if (!groupId)
+					if (!groupId){
 						return;
-
+					}
 					var groupPanel = Ext.getCmp('gene-group-panel');
 					var row = groupPanel.getStore().findExact("id", groupId);
 					groupPanel.getSelectionModel().selectRow(row, false);
@@ -427,3 +440,71 @@ deleteGeneGroup = function() {
 			});
 
 };
+
+//=================================================
+//Widgets for managing gene group
+//=================================================
+//Given a gene displays which group it is in. 
+
+Gemma.GeneGroupGrid = Ext.extend(Gemma.GemmaGridPanel, {
+
+	initComponent : function() {
+		Ext.apply(this, {
+			columns : [{
+						header : 'Name',
+						dataIndex : 'name',
+						editable : false,
+						groupable : false,
+						sortable : true
+					}, {
+						header : 'Description',
+						dataIndex : 'description',
+						editable : false,
+						groupable : false,
+						sortable : true
+					}, {
+						header : 'Owner',
+						hidden : true,
+						tooltip : 'Who owns the data',
+						dataIndex : 'owner',
+						groupable : true,
+						sortable : true
+					}, {
+						header : 'size',
+						sortable : true,
+						dataIndex : 'size',
+						editable : false,
+						groupable : false,
+						tooltip : 'number of genes in group'
+					}],
+			store : new Ext.data.Store({
+				proxy : new Ext.data.DWRProxy(GeneSetController.findGeneSetsByGene),
+				reader : new Ext.data.ListRangeReader({}, Ext.data.Record
+								.create([{
+											name : "id",
+											type : "int"
+										}, {
+											name : "name",
+											type : "string"
+										}, {
+											name : "description",
+											type : "string"
+										}, {
+											name : "owner"
+										}, {
+											name : "size",
+											type : "int"
+										}]))
+			})
+		});
+
+		Gemma.GeneGroupGrid.superclass.initComponent.call(this);
+
+		this.getStore().load({
+					params : [this.geneid]
+				});
+	}
+
+});
+
+//Same as above but displays the groups in a dataview 

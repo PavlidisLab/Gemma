@@ -30,7 +30,8 @@
 
 	<title><c:if test="${not empty gene.officialSymbol}">
 			<jsp:getProperty name="gene" property="officialSymbol" />
-		</c:if> <fmt:message key="gene.details" /></title>
+		</c:if> <fmt:message key="gene.details" />
+	</title>
 </head>
 <body>
 
@@ -85,6 +86,20 @@
 
 			</td>
 		</tr>
+		<tr>
+			<td>
+				<div class="clearfix"/>
+					<b>
+						<fmt:message key="gene.group" />
+					</b>
+			</td>
+			<td>
+				<div id="gene-group-grid"></div>
+			</td>
+		</tr>
+		</div>
+
+
 		<tr>
 			<td align="right" valign="top">
 				<b>Probes</b> &nbsp;
@@ -199,13 +214,6 @@
 		</div>
 	</c:if>
 
-	<div class="clearfix">
-		<h3>
-			<fmt:message key="gene.group" />
-		</h3>
-
-		<div id="gene-group-grid"></div>
-	</div>
 
 
 	<security:authorize access="hasRole('GROUP_ADMIN')">

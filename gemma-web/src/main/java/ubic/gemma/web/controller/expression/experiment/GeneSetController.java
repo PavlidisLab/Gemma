@@ -147,6 +147,7 @@ public class GeneSetController {
         // Create the empty gene group
         if ( geneIds == null || geneIds.isEmpty() ) {
             gset.setMembers( updatedGenelist );
+            gset.setDescription( description );
             geneSetService.update( gset );
             return;
         }
