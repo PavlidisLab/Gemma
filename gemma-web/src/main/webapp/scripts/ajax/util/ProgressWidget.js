@@ -368,7 +368,8 @@ Gemma.ProgressWidget = Ext.extend(Ext.Panel, {
 		this.fireEvent('cancel', successfullyCancelled);
 
 		if (!successfullyCancelled) {
-			Ext.Msg.alert("Couldn't cancel", "Sorry, the job couldn't be cancelled.");
+			Ext.Msg.alert("Couldn't cancel",
+					"Sorry, the job couldn't be cancelled; perhaps it finished or was cancelled already?");
 		} else {
 			this.showAllMessages("Job was cancelled");
 		}
