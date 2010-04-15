@@ -94,36 +94,11 @@ public class DifferentialExpressionAnalyzer implements ApplicationContextAware {
     }
 
     /**
-     * Initiates the differential expression analysis
-     * 
      * @param expressionExperiment
-     * @return
-     */
-    public DifferentialExpressionAnalysis analyze( ExpressionExperiment expressionExperiment,
-            ExperimentalFactor subsetFactor, Collection<ExperimentalFactor> factors, AnalysisType type ) {
-
-        AbstractDifferentialExpressionAnalyzer analyzer = determineAnalysis( expressionExperiment, subsetFactor, factors, type );
-
-        DifferentialExpressionAnalysis analysis = analyzer.run( expressionExperiment, subsetFactor, factors );
-
-        return analysis;
-
-    }
-
-    /**
-     * @param expressionExperiment
-     * @param subsetFactor
      * @param factors
      * @param type
      * @return
      */
-    private AbstractDifferentialExpressionAnalyzer determineAnalysis( ExpressionExperiment expressionExperiment,
-            ExperimentalFactor subsetFactor, Collection<ExperimentalFactor> factors, AnalysisType type ) {
-        
-        throw new UnsupportedOperationException();
-        
-    }
-
     public DifferentialExpressionAnalysis analyze( ExpressionExperiment expressionExperiment,
             Collection<ExperimentalFactor> factors, AnalysisType type ) {
 
