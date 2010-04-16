@@ -120,7 +120,7 @@ public class ArrayDesignRepeatScanCli extends ArrayDesignSequenceManipulatingCli
 
                 log.info( "============== Start processing: " + design + " ==================" );
                 try {
-                    arrayDesignService.thawLite( design );
+                    design = arrayDesignService.thawLite( design );
                     processArrayDesign( design );
                     successObjects.add( design.getName() );
                     audit( design, "" );

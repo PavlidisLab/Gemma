@@ -57,20 +57,20 @@ public class DesignElementDataVectorServiceTest extends BaseSpringContextTest {
 
     @Autowired
     ExpressionExperimentService expressionExperimentService;
-    
+
     ExpressionExperiment newee = null;
-    
+
     DesignElementDataVector dedv;
-    
+
     @Autowired
     protected GeoDatasetService geoService;
-    
+
     @Autowired
     ArrayDesignService arrayDesignService;
-    
+
     @Autowired
     TaxonService taxonService;
-    
+
     @Autowired
     CompositeSequenceService compositeSequenceService;
 
@@ -132,7 +132,7 @@ public class DesignElementDataVectorServiceTest extends BaseSpringContextTest {
         int i = 0;
         ArrayDesign ad = newee.getBioAssays().iterator().next().getArrayDesignUsed();
         Taxon taxon = taxonService.findByCommonName( "mouse" );
-        this.arrayDesignService.thawLite( ad );
+        ad = this.arrayDesignService.thawLite( ad );
         Collection<Gene> genes = new HashSet<Gene>();
         for ( CompositeSequence cs : ad.getCompositeSequences() ) {
             if ( i >= 10 ) break;

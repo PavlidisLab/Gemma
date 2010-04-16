@@ -128,8 +128,9 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
     @Test
     public void testCascadeCreateCompositeSequences() {
         ad = ( ArrayDesign ) persisterHelper.persist( ad );
+
         ad = arrayDesignService.find( ad );
-        arrayDesignService.thawLite( ad );
+        ad = arrayDesignService.thawLite( ad );
         CompositeSequence cs = ad.getCompositeSequences().iterator().next();
 
         assertNotNull( cs.getId() );
@@ -309,7 +310,7 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
     @Test
     public void testGetTaxon() {
         ad = ( ArrayDesign ) persisterHelper.persist( ad );
-        Taxon tax = arrayDesignService.getTaxon( ad.getId() );
+        Taxon tax = arrayDesignService.getTaxa( ad.getId() ).iterator().next();
         assertEquals( DEFAULT_TAXON, tax.getScientificName() );
     }
 

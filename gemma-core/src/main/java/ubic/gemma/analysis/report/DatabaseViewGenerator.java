@@ -164,7 +164,7 @@ public class DatabaseViewGenerator {
 
             // TODO could cache the arrayDesigns to make faster, thawing ad is time consuming
             for ( ArrayDesign ad : ads ) {
-                arrayDesignService.thawLite( ad );
+                ad = arrayDesignService.thawLite( ad );
                 if ( ad.getDesignProvider() == null ) {
                     log.debug( "Array Design: " + ad.getShortName()
                             + " has no design provoider assoicated with it. Skipping" );

@@ -354,6 +354,10 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 												labelWidth : 200,
 												autoHeight : true,
 												hidden : !canDoInteractions,
+												/*
+												 * FIXME hide this if we have more than 2 factors -- basically where
+												 * we're not going to bother supporting interactions.
+												 */
 												items : [{
 															xtype : 'checkbox',
 															id : 'diff-ex-analysis-customize-include-interactions-checkbox',

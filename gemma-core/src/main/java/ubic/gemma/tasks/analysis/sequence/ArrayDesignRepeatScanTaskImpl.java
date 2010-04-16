@@ -47,6 +47,7 @@ public class ArrayDesignRepeatScanTaskImpl implements ArrayDesignRepeatScanTask 
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.grid.javaspaces.task.analysis.sequence.ArrayDesignRepeatScanTask#execute(ubic.gemma.grid.javaspaces
      * .analysis .sequence.SpacesArrayDesignRepeatScanCommand)
@@ -56,7 +57,7 @@ public class ArrayDesignRepeatScanTaskImpl implements ArrayDesignRepeatScanTask 
 
         ArrayDesign ad = command.getArrayDesign();
 
-        arrayDesignService.thawLite( ad );
+        ad = arrayDesignService.thawLite( ad );
 
         Collection<BioSequence> sequences = ArrayDesignSequenceAlignmentService.getSequences( ad );
         RepeatScan scanner = new RepeatScan();

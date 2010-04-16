@@ -84,6 +84,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.util.AbstractCLI#buildOptions()
      */
     @SuppressWarnings("static-access")
@@ -117,6 +118,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.util.AbstractCLI#doWork(java.lang.String[])
      */
     @Override
@@ -292,7 +294,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
 
         log.info( "============== Start processing: " + design + " ==================" );
         try {
-            arrayDesignService.thawLite( design );
+            design = arrayDesignService.thawLite( design );
             arrayDesignSequenceAlignmentService.processArrayDesign( design, true );
             successObjects.add( design.getName() );
             audit( design, "Part of a batch job; BLAT score threshold was " + this.blatScoreThreshold );

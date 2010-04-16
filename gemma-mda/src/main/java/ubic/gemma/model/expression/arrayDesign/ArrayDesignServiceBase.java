@@ -781,9 +781,9 @@ public abstract class ArrayDesignServiceBase implements ubic.gemma.model.express
     /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#thaw(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
-    public void thaw( final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
+    public ArrayDesign thaw( final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
         try {
-            this.handleThaw( arrayDesign );
+            return this.handleThaw( arrayDesign );
         } catch ( Throwable th ) {
             throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
                     "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.thaw(ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign)' --> "
@@ -794,9 +794,9 @@ public abstract class ArrayDesignServiceBase implements ubic.gemma.model.express
     /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#thawLite(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
-    public void thawLite( final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
+    public ArrayDesign thawLite( final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
         try {
-            this.handleThawLite( arrayDesign );
+            return this.handleThawLite( arrayDesign );
         } catch ( Throwable th ) {
             throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
                     "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.thawLite(ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign)' --> "
@@ -1172,13 +1172,13 @@ public abstract class ArrayDesignServiceBase implements ubic.gemma.model.express
     /**
      * Performs the core logic for {@link #thaw(ubic.gemma.model.expression.arrayDesign.ArrayDesign)}
      */
-    protected abstract void handleThaw( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign )
+    protected abstract ArrayDesign handleThaw( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign )
             throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #thawLite(ubic.gemma.model.expression.arrayDesign.ArrayDesign)}
      */
-    protected abstract void handleThawLite( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign )
+    protected abstract ArrayDesign handleThawLite( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign )
             throws java.lang.Exception;
 
     /**

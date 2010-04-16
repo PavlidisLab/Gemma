@@ -61,7 +61,7 @@ public class ArrayDesignSequenceAlignmentServiceIntegrationTest extends Abstract
         }
 
         ArrayDesignSequenceProcessingService app = ( ArrayDesignSequenceProcessingService ) getBean( "arrayDesignSequenceProcessingService" );
-        arrayDesignService.thawLite( ad );
+       ad = arrayDesignService.thawLite( ad );
         try {
             app.processArrayDesign( ad, new String[] { "testblastdb", "testblastdbPartTwo" }, ConfigUtils
                     .getString( "gemma.home" )

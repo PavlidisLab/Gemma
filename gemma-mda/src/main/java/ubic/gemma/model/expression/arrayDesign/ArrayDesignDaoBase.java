@@ -142,8 +142,8 @@ public abstract class ArrayDesignDaoBase extends HibernateDaoSupport implements 
         if ( arrayDesign == null ) {
             throw new IllegalArgumentException( "ArrayDesign.create - 'arrayDesign' can not be null" );
         }
-         this.getHibernateTemplate().save( arrayDesign );
-         return arrayDesign;
+        this.getHibernateTemplate().save( arrayDesign );
+        return arrayDesign;
     }
 
     /**
@@ -172,7 +172,6 @@ public abstract class ArrayDesignDaoBase extends HibernateDaoSupport implements 
         }
     }
 
-    
     public ArrayDesign find( final java.lang.String queryString,
             final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -227,7 +226,7 @@ public abstract class ArrayDesignDaoBase extends HibernateDaoSupport implements 
     /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#findByName(int, java.lang.String, java.lang.String)
      */
-    
+
     public ArrayDesign findByName( final java.lang.String queryString, final java.lang.String name ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
         java.util.List<Object> args = new java.util.ArrayList<Object>();
@@ -259,7 +258,7 @@ public abstract class ArrayDesignDaoBase extends HibernateDaoSupport implements 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#findByShortName(int, java.lang.String,
      *      java.lang.String)
      */
-    
+
     public ArrayDesign findByShortName( final java.lang.String queryString, final java.lang.String shortName ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
         java.util.List<Object> args = new java.util.ArrayList<Object>();
@@ -284,7 +283,7 @@ public abstract class ArrayDesignDaoBase extends HibernateDaoSupport implements 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#findOrCreate(int, java.lang.String,
      *      ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
-    
+
     public ArrayDesign findOrCreate( final java.lang.String queryString,
             final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -806,9 +805,9 @@ public abstract class ArrayDesignDaoBase extends HibernateDaoSupport implements 
     /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#thaw(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
-    public void thaw( final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
+    public ArrayDesign thaw( final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
         try {
-            this.handleThaw( arrayDesign );
+            return this.handleThaw( arrayDesign );
         } catch ( Throwable th ) {
             throw new java.lang.RuntimeException(
                     "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignDao.thaw(ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign)' --> "
@@ -819,9 +818,9 @@ public abstract class ArrayDesignDaoBase extends HibernateDaoSupport implements 
     /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#thawLite(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
-    public void thawLite( final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
+    public ArrayDesign thawLite( final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
         try {
-            this.handleThawLite( arrayDesign );
+            return this.handleThawLite( arrayDesign );
         } catch ( Throwable th ) {
             throw new java.lang.RuntimeException(
                     "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignDao.thawLite(ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign)' --> "
@@ -1120,13 +1119,13 @@ public abstract class ArrayDesignDaoBase extends HibernateDaoSupport implements 
     /**
      * Performs the core logic for {@link #thaw(ubic.gemma.model.expression.arrayDesign.ArrayDesign)}
      */
-    protected abstract void handleThaw( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign )
+    protected abstract ArrayDesign handleThaw( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign )
             throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #thawLite(ubic.gemma.model.expression.arrayDesign.ArrayDesign)}
      */
-    protected abstract void handleThawLite( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign )
+    protected abstract ArrayDesign handleThawLite( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign )
             throws java.lang.Exception;
 
     /**

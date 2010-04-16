@@ -458,7 +458,7 @@ public class ExpressionDataFileService {
      * @param file
      * @param ee
      * @throws IOException
-     */ 
+     */
     private void writeDiffExpressionData( File file, ExpressionExperiment ee ) throws IOException {
 
         Collection<ExpressionAnalysisResultSet> results = differentialExpressionAnalysisService.getResultSets( ee );
@@ -624,7 +624,7 @@ public class ExpressionDataFileService {
     private Map<Long, Collection<Gene>> getGeneAnnotations( Collection<ArrayDesign> ads ) {
         Map<Long, Collection<Gene>> annots = new HashMap<Long, Collection<Gene>>();
         for ( ArrayDesign arrayDesign : ads ) {
-            arrayDesignService.thawLite( arrayDesign );
+            arrayDesign = arrayDesignService.thawLite( arrayDesign );
             annots.putAll( ArrayDesignAnnotationService.readAnnotationFile( arrayDesign ) );
         }
         return annots;
@@ -637,7 +637,7 @@ public class ExpressionDataFileService {
     private Map<Long, String[]> getGeneAnnotationsAsStrings( Collection<ArrayDesign> ads ) {
         Map<Long, String[]> annots = new HashMap<Long, String[]>();
         for ( ArrayDesign arrayDesign : ads ) {
-            arrayDesignService.thawLite( arrayDesign );
+            arrayDesign = arrayDesignService.thawLite( arrayDesign );
             annots.putAll( ArrayDesignAnnotationService.readAnnotationFileAsString( arrayDesign ) );
         }
         return annots;

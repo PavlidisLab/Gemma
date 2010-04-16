@@ -69,7 +69,7 @@ public abstract class AbstractArrayDesignProcessingTest extends BaseSpringContex
                         true, true, false, false, true );
                 
                 ad = ads.iterator().next();
-                arrayDesignService.thawLite( ad );
+              ad =  arrayDesignService.thawLite( ad );
                 
             } catch ( Exception e ) {
                 if ( e.getCause() instanceof FileNotFoundException ) {

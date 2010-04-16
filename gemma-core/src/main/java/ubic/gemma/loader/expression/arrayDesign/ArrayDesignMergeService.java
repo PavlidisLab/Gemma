@@ -88,7 +88,7 @@ public class ArrayDesignMergeService {
         // make map of biosequence -> design elements for all the array designs. But watch out for biosequences that
         // appear more than once per array design.
         Map<BioSequence, Collection<CompositeSequence>> globalBsMap = new HashMap<BioSequence, Collection<CompositeSequence>>();
-        arrayDesignService.thawLite( arrayDesign );
+        arrayDesign = arrayDesignService.thawLite( arrayDesign );
 
         /*
          * TODO: gracefully handle this situation. Bug 1681

@@ -41,6 +41,7 @@ import org.springframework.mail.SimpleMailMessage;
 import org.springframework.stereotype.Service;
 
 import ubic.gemma.job.grid.util.SpacesUtil;
+import ubic.gemma.job.progress.ProgressJob;
 import ubic.gemma.job.progress.ProgressManager;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.security.authentication.UserManager;
@@ -142,6 +143,7 @@ public class TaskRunningService implements InitializingBean {
 
     /*
      * (non-Javadoc)
+     * 
      * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
      */
     public void afterPropertiesSet() throws Exception {
@@ -149,7 +151,7 @@ public class TaskRunningService implements InitializingBean {
          * Start a thread to monitor finished tasks that have not been retrieved
          */
         Thread sweepThread = new Thread( new Runnable() {
- 
+
             public void run() {
                 while ( !Thread.interrupted() ) {
 
@@ -189,7 +191,7 @@ public class TaskRunningService implements InitializingBean {
         if ( submittedTasks.containsKey( taskId ) ) {
             SubmittedTask toCancel = submittedTasks.get( taskId );
 
-            if ( toCancel.getCommand().isWillRunOnGrid() || spacesUtil.taskIsRunningOnGrid( taskId ) ) {
+            if ( toCancel.getCommand().isWillRunOnGrid() || SpacesUtil.taskIsRunningOnGrid( taskId ) ) {
                 log.info( "Cancelling grid task " + taskId );
                 if ( spacesUtil.cancel( taskId ) ) {
                     log.debug( "Space reports  " + taskId + "  is no longer alive" );
@@ -480,6 +482,8 @@ public class TaskRunningService implements InitializingBean {
             log.warn( "Running task is taking too long, cancelling: " + taskId + " "
                     + t.getCommand().getTaskInterface() );
             submittedTasks.get( taskId ).getCommand().setEmailAlert( true );
+            ProgressManager.updateJob( taskId, "The job took too long to run, so it was cancelled after "
+                    + MAX_RUNTIME_MINUTES + " minutes." );
             cancelTask( taskId );
         }
     }
@@ -536,8 +540,15 @@ public class TaskRunningService implements InitializingBean {
                 msg.setTo( emailAddress );
                 msg.setFrom( ConfigUtils.getAdminEmailAddress() );
                 msg.setSubject( "Gemma task completed" );
-                msg.setText( "A job you started on Gemma is completed (taskid=" + taskId + ")\n\nEvent logs:\n"
-                        + ProgressManager.getJob( taskId ).getJobInfo().getMessages() );
+                ProgressJob job = ProgressManager.getJob( taskId );
+
+                String messages = "";
+                if ( job != null ) {
+                    messages = "Event logs:\n";
+                    messages = messages + job.getJobInfo().getMessages();
+                }
+
+                msg.setText( "A job you started on Gemma is completed (taskid=" + taskId + ")\n\n" + messages + "\n" );
 
                 /*
                  * TODO provide a link to something relevant something like:

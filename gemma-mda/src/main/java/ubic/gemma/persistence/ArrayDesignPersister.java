@@ -278,7 +278,7 @@ abstract public class ArrayDesignPersister extends GenomePersister {
             log.info( "Array Design " + arrayDesign + " already exists, returning..." );
         }
 
-        arrayDesignService.thawLite( existing );
+        existing = arrayDesignService.thawLite( existing );
         return existing;
 
     }
@@ -367,7 +367,6 @@ abstract public class ArrayDesignPersister extends GenomePersister {
                     "Thread was terminated during the final stage of persisting the arraydesign. " + this.getClass() );
         }
 
-        arrayDesignService.thawLite( arrayDesign );
         return arrayDesign;
     }
 

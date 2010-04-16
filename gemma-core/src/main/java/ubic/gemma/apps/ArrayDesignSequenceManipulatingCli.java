@@ -182,7 +182,7 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractSpringA
     }
 
     protected void unlazifyArrayDesign( ArrayDesign arrayDesign ) {
-        arrayDesignService.thawLite( arrayDesign );
+        arrayDesign = arrayDesignService.thawLite( arrayDesign );
     }
 
     /**

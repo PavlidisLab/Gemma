@@ -56,7 +56,7 @@ public class ArrayDesignProbeMapperServiceIntegrationTest extends AbstractArrayD
         ArrayDesignSequenceProcessingService app = ( ArrayDesignSequenceProcessingService ) getBean( "arrayDesignSequenceProcessingService" );
 
         try {
-            this.arrayDesignService.thawLite( ad );
+        ad =    this.arrayDesignService.thawLite( ad );
             app.processArrayDesign( ad, new String[] { "testblastdb", "testblastdbPartTwo" }, ConfigUtils
                     .getString( "gemma.home" )
                     + "/gemma-core/src/test/resources/data/loader/genome/blast", false );

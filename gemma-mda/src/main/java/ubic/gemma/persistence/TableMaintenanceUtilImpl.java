@@ -91,6 +91,7 @@ public class TableMaintenanceUtilImpl implements TableMaintenenceUtil {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.persistence.TableMaintenenceUtilI#updateGene2CsEntries()
      */
     public void updateGene2CsEntries() {
@@ -123,7 +124,7 @@ public class TableMaintenanceUtilImpl implements TableMaintenenceUtil {
                 Collection<Auditable> updatedObj = auditEventService.getUpdatedSinceDate( status.getLastUpdate() );
                 for ( Auditable a : updatedObj ) {
                     if ( a instanceof ArrayDesign ) {
-                        arrayDesignService.thawLite( ( ArrayDesign ) a );
+                        a = arrayDesignService.thawLite( ( ArrayDesign ) a );
                         for ( AuditEvent ae : a.getAuditTrail().getEvents() ) {
                             if ( ae.getEventType() != null && ae.getEventType() instanceof ArrayDesignGeneMappingEvent
                                     && ae.getDate().after( status.getLastUpdate() ) ) {

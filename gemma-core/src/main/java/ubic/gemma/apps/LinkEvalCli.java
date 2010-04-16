@@ -122,6 +122,7 @@ public class LinkEvalCli extends AbstractSpringAwareCLI {
 
         /*
          * (non-Javadoc)
+         * 
          * @see java.lang.Comparable#compareTo(java.lang.Object)
          */
         public int compareTo( GenePair o2 ) {
@@ -131,6 +132,7 @@ public class LinkEvalCli extends AbstractSpringAwareCLI {
 
         /*
          * (non-Javadoc)
+         * 
          * @see java.lang.Object#equals(java.lang.Object)
          */
         @Override
@@ -220,6 +222,7 @@ public class LinkEvalCli extends AbstractSpringAwareCLI {
 
         /*
          * (non-Javadoc)
+         * 
          * @see java.lang.Object#hashCode()
          */
         @Override
@@ -554,6 +557,7 @@ public class LinkEvalCli extends AbstractSpringAwareCLI {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.util.AbstractCLI#doWork(java.lang.String[])
      */
     @Override
@@ -566,7 +570,7 @@ public class LinkEvalCli extends AbstractSpringAwareCLI {
         buf.append( "" );
 
         this.arrayDesign = arrayDesignService.findByShortName( adShortName );
-        arrayDesignService.thawLite( this.arrayDesign );
+        this.arrayDesign = arrayDesignService.thawLite( this.arrayDesign );
         if ( this.arrayDesign == null ) {
             System.out.println( "Array design " + adShortName + " not found" );
             System.exit( 0 );

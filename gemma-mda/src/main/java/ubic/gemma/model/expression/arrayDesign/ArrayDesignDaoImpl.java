@@ -47,16 +47,12 @@ import org.springframework.orm.hibernate3.HibernateTemplate;
 import org.springframework.stereotype.Repository;
 
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
-import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
-import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
-import ubic.gemma.model.genome.biosequence.BioSequenceImpl;
 import ubic.gemma.util.BusinessKey;
-import ubic.gemma.util.EntityUtils;
 import ubic.gemma.util.NativeQueryUtils;
 
 /**
@@ -82,6 +78,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#find(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
@@ -114,6 +111,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
     /*
      * (non-Javadoc)
+     * 
      * @seeubic.gemma.model.expression.arrayDesign.ArrayDesignDao#findOrCreate(ubic.gemma.model.expression.arrayDesign.
      * ArrayDesign)
      */
@@ -130,6 +128,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#getPerTaxonCount()
      */
     public Map<Taxon, Integer> getPerTaxonCount() {
@@ -178,6 +177,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleCompositeSequenceWithoutBioSequences(ubic.gemma
      * .model.expression.arrayDesign.ArrayDesign)
@@ -193,6 +193,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleCompositeSequenceWithoutBlatResults(ubic.gemma
      * .model.expression.arrayDesign.ArrayDesign)
@@ -218,6 +219,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleCompositeSequenceWithoutGenes(ubic.gemma.model
      * .expression.arrayDesign.ArrayDesign)
@@ -241,6 +243,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleCountAll()
      */
     @Override
@@ -251,6 +254,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleDeleteAlignmentData(ubic.gemma.model.expression
      * .arrayDesign.ArrayDesign)
@@ -299,6 +303,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleLoadCompositeSequences(java.lang.Long)
      */
     @SuppressWarnings("unchecked")
@@ -310,6 +315,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleGetAuditEvents(java.util.Collection)
      */
     @SuppressWarnings("unchecked")
@@ -347,6 +353,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleGetExpressionExperimentsById(long)
      */
     @SuppressWarnings("unchecked")
@@ -361,6 +368,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleGetTaxon(java.lang.Long)
      */
     @SuppressWarnings("unchecked")
@@ -376,6 +384,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleGetTaxon(java.lang.Long)
      */
     @Override
@@ -528,6 +537,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleLoadCompositeSequences(java.lang.Long)
      */
     @SuppressWarnings("unchecked")
@@ -539,6 +549,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleLoadFully(java.lang.Long)
      */
     @SuppressWarnings("unchecked")
@@ -572,6 +583,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleLoadMultiple(java.util.Collection)
      */
     @SuppressWarnings("unchecked")
@@ -585,6 +597,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleLoadValueObjects(java.util.Collection)
      */
     @Override
@@ -618,6 +631,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleNumAllCompositeSequenceWithBioSequences()
      */
     @Override
@@ -629,6 +643,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleNumAllCompositeSequenceWithBioSequences(java
      * .util.Collection)
@@ -643,6 +658,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleNumAllCompositeSequenceWithBlatResults()
      */
     @Override
@@ -654,6 +670,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleNumAllCompositeSequenceWithBlatResults(java.
      * util.Collection)
@@ -671,6 +688,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleNumAllCompositeSequenceWithGenes()
      */
     @Override
@@ -683,6 +701,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
     /*
      * (non-Javadoc)
+     * 
      * @seeubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleNumAllCompositeSequenceWithGenes(java.util.
      * Collection)
      */
@@ -701,6 +720,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleNumAllGenes()
      */
     @Override
@@ -713,6 +733,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleNumAllGenes(java.util.Collection)
      */
     @SuppressWarnings("unchecked")
@@ -730,6 +751,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleNumBioSequencesById(long)
      */
     @Override
@@ -741,6 +763,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleNumBlatResultsById(long)
      */
     @Override
@@ -753,6 +776,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleNumCompositeSequences(java.lang.Long)
      */
     @Override
@@ -764,6 +788,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleNumCompositeSequenceWithBioSequence(ubic.gemma
      * .model.expression.arrayDesign.ArrayDesign)
@@ -777,6 +802,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleNumCompositeSequenceWithBlatResults()
      */
     @Override
@@ -788,6 +814,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleNumCompositeSequenceWithGenes(ubic.gemma.model
      * .expression.arrayDesign.ArrayDesign)
@@ -818,6 +845,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleNumGeneProductsById(long)
      */
     @Override
@@ -830,6 +858,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleNumReporters(java.lang.Long)
      */
     @Override
@@ -865,13 +894,13 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
     }
 
     @Override
-    protected void handleThaw( final ArrayDesign arrayDesign ) throws Exception {
-        this.thaw( arrayDesign, true );
+    protected ArrayDesign handleThaw( final ArrayDesign arrayDesign ) throws Exception {
+        return this.thaw( arrayDesign, true );
     }
 
     @Override
-    protected void handleThawLite( final ArrayDesign arrayDesign ) throws Exception {
-        this.thaw( arrayDesign, false );
+    protected ArrayDesign handleThawLite( final ArrayDesign arrayDesign ) throws Exception {
+        return this.thaw( arrayDesign, false );
     }
 
     @Override
@@ -1107,104 +1136,6 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
     }
 
     /**
-     * @return Map of ArrayDesign id to Taxon string for ValueObjects.
-     */
-    @SuppressWarnings("unchecked")
-    private Map<Long, String> getFullArrayToTaxonMap() {
-
-        StopWatch timer = new StopWatch();
-        timer.start();
-
-        final String csString = "select distinct taxon, ad from ArrayDesignImpl "
-                + "as ad inner join ad.compositeSequences as cs inner join cs.biologicalCharacteristic as bioC inner join bioC.taxon as taxon";
-        org.hibernate.Query csQueryObject = super.getSession().createQuery( csString );
-        csQueryObject.setCacheable( true );
-
-        List csList = csQueryObject.list();
-
-        Map<ArrayDesign, Collection<String>> raw = new HashMap<ArrayDesign, Collection<String>>();
-        Taxon t = null;
-        for ( Object object : csList ) {
-            Object[] oa = ( Object[] ) object;
-            t = ( Taxon ) oa[0];
-            ArrayDesign ad = ( ArrayDesign ) oa[1];
-
-            if ( !raw.containsKey( ad ) ) {
-                raw.put( ad, new TreeSet<String>() );
-            }
-
-            if ( t.getCommonName() != null ) {
-                raw.get( ad ).add( t.getCommonName() );
-            }
-
-        }
-
-        Map<Long, String> arrayToTaxon = new HashMap<Long, String>();
-        for ( ArrayDesign ad : raw.keySet() ) {
-            String taxonListString = StringUtils.join( raw.get( ad ), "; " );
-            arrayToTaxon.put( ad.getId(), taxonListString );
-        }
-
-        if ( timer.getTime() > 1000 ) {
-            log.info( "Get array design taxa: " + timer.getTime() + "ms" );
-        }
-
-        return arrayToTaxon;
-    }
-
-    /**
-     * @return Map of ArrayDesign id to Taxon string for ValueObjects.
-     */
-    @SuppressWarnings("unchecked")
-    private Map<Long, String> getFullArrayToTaxonMap( Collection<Long> ids ) {
-        Map<Long, String> arrayToTaxon = new HashMap<Long, String>();
-
-        StopWatch timer = new StopWatch();
-        timer.start();
-
-        Collection<? extends ArrayDesign> arrayDesigns = this.load( ids );
-
-        if ( timer.getTime() > 1000 ) {
-            log.info( "Get array designs before getting taxa: " + timer.getTime() + "ms" );
-        }
-
-        // Warning: this can run very slowly, so cacheing it is crucial.
-        for ( ArrayDesign ad : arrayDesigns ) {
-
-            final String csString = "select distinct taxon from ArrayDesignImpl "
-                    + "as ad inner join ad.compositeSequences as cs inner join cs.biologicalCharacteristic as bioC inner join bioC.taxon as taxon"
-                    + " where ad = :ad";
-            org.hibernate.Query csQueryObject = super.getSession().createQuery( csString );
-            csQueryObject.setParameter( "ad", ad );
-            csQueryObject.setCacheable( true );
-            csQueryObject.setReadOnly( true );
-
-            List csList = csQueryObject.list();
-
-            if ( csList.size() == 0 ) {
-                continue;
-            }
-            Collection<String> taxonSet = new TreeSet();
-            Taxon t = null;
-            for ( Object object : csList ) {
-                t = ( Taxon ) object;
-                if ( t.getCommonName() != null ) {
-                    taxonSet.add( t.getCommonName() );
-                }
-            }
-            String taxonListString = StringUtils.join( taxonSet, "; " );
-            arrayToTaxon.put( ad.getId(), taxonListString );
-
-        }
-
-        if ( timer.getTime() > 1000 ) {
-            log.info( "Get array design taxa: " + timer.getTime() + "ms" );
-        }
-
-        return arrayToTaxon;
-    }
-
-    /**
      * Process query results for handleLoadAllValueObjects or handleLoadValueObjects
      * 
      * @param eeCounts
@@ -1251,102 +1182,122 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
      * @param deep Whether to thaw the biosequence associations (genes).
      * @throws Exception
      */
-    private void thaw( final ArrayDesign arrayDesign, final boolean deep ) throws Exception {
+    private ArrayDesign thaw( ArrayDesign arrayDesign, final boolean deep ) throws Exception {
 
-        if ( deep ) {
-            throw new UnsupportedOperationException( "Are you sure you need to deeply thaw that ArrayDesign" );
+        if ( arrayDesign.getId() == null ) {
+            throw new IllegalArgumentException( "Cannot thaw a non-persistent array design" );
         }
 
-        if ( arrayDesign == null ) return;
-        if ( arrayDesign.getId() == null ) return;
-        HibernateTemplate templ = this.getHibernateTemplate();
-        final int FETCH_SIZE = 400;
-        templ.setFetchSize( FETCH_SIZE );
+        List<?> res = this
+                .getHibernateTemplate()
+                .findByNamedParam(
+                        "select a from ArrayDesignImpl a join fetch"
+                                + " a.compositeSequences c left "
+                                + " join fetch c.biologicalCharacteristic "
+                                + "left join fetch a.subsumedArrayDesigns "
+                                + " left join fetch a.mergees  left join fetch a.designProvider"
+                                + " join fetch a.auditTrail trail join fetch trail.events left join fetch a.externalReferences "
+                                + "where a.id=:adid", "adid", arrayDesign.getId() );
 
-        Session session = this.getSession();
-
-        long lastTime = 0;
-        // The following are VERY important for performance. (actually not so sure anymore as we now have the
-        // transaction
-        // marked 'readonly' for this method)
-        CacheMode oldCacheMode = session.getCacheMode();
-        session.setCacheMode( CacheMode.IGNORE ); // Don't hit the secondary cache
-
-        EntityUtils.attach( session, arrayDesign, ArrayDesignImpl.class, arrayDesign.getId() );
-
-        if ( log.isDebugEnabled() ) log.debug( "Thawing " + arrayDesign + " ..." );
-
-        arrayDesign.getLocalFiles().size();
-        for ( DatabaseEntry d : arrayDesign.getExternalReferences() ) {
-            session.update( d );
-            session.evict( d );
+        if ( res.size() == 0 ) {
+            throw new IllegalArgumentException( "No array design with id=" + arrayDesign.getId() + " could be loaded." );
         }
 
-        if ( arrayDesign.getAuditTrail() != null ) arrayDesign.getAuditTrail().getEvents().size();
+        return ( ArrayDesign ) res.iterator().next();
 
-        if ( arrayDesign.getDesignProvider() != null ) {
-            session.update( arrayDesign.getDesignProvider() );
-            AuditTrail auditTrail = arrayDesign.getDesignProvider().getAuditTrail();
-            if ( auditTrail != null ) {
-                session.update( auditTrail );
-                auditTrail.getEvents().size();
-            }
-        }
-
-        if ( arrayDesign.getMergees() != null ) arrayDesign.getMergees().size();
-
-        if ( arrayDesign.getSubsumedArrayDesigns() != null ) arrayDesign.getSubsumedArrayDesigns().size();
-
-        if ( arrayDesign.getCompositeSequences() == null ) return;
-
-        // / if we got this far, we have to thaw the probes.
-
-        log.debug( "Loading CS proxies for " + arrayDesign + " ..." );
-        int numToDo = arrayDesign.getCompositeSequences().size();
-        if ( numToDo > LOGGING_UPDATE_EVENT_COUNT )
-            log.info( "Must thaw " + ( deep ? " (deep) " : " (lite) " ) + numToDo
-                    + " composite sequence associations ..." );
-
-        StopWatch timer = new StopWatch();
-        timer.start();
-        int i = 0;
-
-        for ( CompositeSequence cs : arrayDesign.getCompositeSequences() ) {
-
-            if ( ++i % LOGGING_UPDATE_EVENT_COUNT == 0 ) {
-                if ( timer.getTime() - lastTime > 5000 ) {
-                    log.info( arrayDesign.getShortName() + " CS assoc thaw progress: " + i + "/" + numToDo + " ... ("
-                            + timer.getTime() / 1000 + "s elapsed)" );
-                    lastTime = timer.getTime();
-                }
-            }
-
-            if ( log.isDebugEnabled() ) log.debug( "Processing: " + cs );
-            if ( cs.getId() != null ) session.lock( cs, LockMode.NONE );
-
-            BioSequence bs = cs.getBiologicalCharacteristic();
-            if ( bs != null && session.get( BioSequenceImpl.class, bs.getId() ) == null ) {
-                session.lock( bs, LockMode.NONE );
-                if ( !Hibernate.isInitialized( bs ) ) {
-                    Hibernate.initialize( bs );
-                    session.evict( bs );
-                }
-            }
-
-            session.evict( cs );
-
-            // temporary code: more logging if we're getting really slow.
-            if ( i % 500 == 0 && timer.getTime() > 2e5 ) {
-                log.info( "Slow thaw: Last processed: " + cs + "," + i + "/" + numToDo );
-            }
-
-        }
-
-        if ( timer.getTime() > 5000 )
-            log.info( arrayDesign.getShortName() + ": CS assoc thaw done (" + timer.getTime() / 1000 + "s elapsed)" );
-
-        session.setCacheMode( oldCacheMode );
+        // if ( deep ) {
+        // throw new UnsupportedOperationException( "Are you sure you need to deeply thaw that ArrayDesign" );
+        // }
+        //
+        // if ( arrayDesign == null ) return;
+        // if ( arrayDesign.getId() == null ) return;
+        // HibernateTemplate templ = this.getHibernateTemplate();
+        // final int FETCH_SIZE = 400;
+        // templ.setFetchSize( FETCH_SIZE );
+        //
+        // Session session = this.getSession();
+        //
+        // long lastTime = 0;
+        // // The following are VERY important for performance. (actually not so sure anymore as we now have the
+        // // transaction
+        // // marked 'readonly' for this method)
+        // CacheMode oldCacheMode = session.getCacheMode();
+        // session.setCacheMode( CacheMode.IGNORE ); // Don't hit the secondary cache
+        //
+        // EntityUtils.attach( session, arrayDesign, ArrayDesignImpl.class, arrayDesign.getId() );
+        //
+        // if ( log.isDebugEnabled() ) log.debug( "Thawing " + arrayDesign + " ..." );
+        //
+        // arrayDesign.getLocalFiles().size();
+        // for ( DatabaseEntry d : arrayDesign.getExternalReferences() ) {
+        // session.update( d );
+        // session.evict( d );
+        // }
+        //
+        // if ( arrayDesign.getAuditTrail() != null ) arrayDesign.getAuditTrail().getEvents().size();
+        //
+        // if ( arrayDesign.getDesignProvider() != null ) {
+        // session.update( arrayDesign.getDesignProvider() );
+        // AuditTrail auditTrail = arrayDesign.getDesignProvider().getAuditTrail();
+        // if ( auditTrail != null ) {
+        // session.update( auditTrail );
+        // auditTrail.getEvents().size();
+        // }
+        // }
+        //
+        // if ( arrayDesign.getMergees() != null ) arrayDesign.getMergees().size();
+        //
+        // if ( arrayDesign.getSubsumedArrayDesigns() != null ) arrayDesign.getSubsumedArrayDesigns().size();
+        //
+        // if ( arrayDesign.getCompositeSequences() == null ) return;
+        //
+        // // / if we got this far, we have to thaw the probes.
+        //
+        // log.debug( "Loading CS proxies for " + arrayDesign + " ..." );
+        // int numToDo = arrayDesign.getCompositeSequences().size();
+        // if ( numToDo > LOGGING_UPDATE_EVENT_COUNT )
+        // log.info( "Must thaw " + ( deep ? " (deep) " : " (lite) " ) + numToDo
+        // + " composite sequence associations ..." );
+        //
+        // StopWatch timer = new StopWatch();
+        // timer.start();
+        // int i = 0;
+        //
+        // for ( CompositeSequence cs : arrayDesign.getCompositeSequences() ) {
+        //
+        // if ( ++i % LOGGING_UPDATE_EVENT_COUNT == 0 ) {
+        // if ( timer.getTime() - lastTime > 5000 ) {
+        // log.info( arrayDesign.getShortName() + " CS assoc thaw progress: " + i + "/" + numToDo + " ... ("
+        // + timer.getTime() / 1000 + "s elapsed)" );
+        // lastTime = timer.getTime();
+        // }
+        // }
+        //
+        // if ( log.isDebugEnabled() ) log.debug( "Processing: " + cs );
+        // if ( cs.getId() != null ) session.lock( cs, LockMode.NONE );
+        //
+        // BioSequence bs = cs.getBiologicalCharacteristic();
+        // if ( bs != null && session.get( BioSequenceImpl.class, bs.getId() ) == null ) {
+        // session.lock( bs, LockMode.NONE );
+        // if ( !Hibernate.isInitialized( bs ) ) {
+        // Hibernate.initialize( bs );
+        // session.evict( bs );
+        // }
+        // }
+        //
+        // session.evict( cs );
+        //
+        // // temporary code: more logging if we're getting really slow.
+        // if ( i % 500 == 0 && timer.getTime() > 2e5 ) {
+        // log.info( "Slow thaw: Last processed: " + cs + "," + i + "/" + numToDo );
+        // }
+        //
+        // }
+        //
+        // if ( timer.getTime() > 5000 )
+        // log.info( arrayDesign.getShortName() + ": CS assoc thaw done (" + timer.getTime() / 1000 + "s elapsed)" );
+        //
+        // session.setCacheMode( oldCacheMode );
 
     }
-
 }

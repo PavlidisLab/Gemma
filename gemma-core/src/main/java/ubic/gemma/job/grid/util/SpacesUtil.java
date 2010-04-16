@@ -257,7 +257,7 @@ public class SpacesUtil implements ApplicationContextAware {
 
         IJSpace space = ( IJSpace ) template.getSpace();
         try {
-            for ( SpacesRegistrationEntry e : this.getRegisteredWorkers() ) {
+            for ( SpacesRegistrationEntry e : getRegisteredWorkers() ) {
                 SpacesCancellationEntry cancellationEntry = new SpacesCancellationEntry();
                 cancellationEntry.registrationId = e.registrationId;
                 cancellationEntry.taskId = taskId;
@@ -403,7 +403,7 @@ public class SpacesUtil implements ApplicationContextAware {
      * 
      * @return List<SpacesGenericEntry>
      */
-    public List<SpacesRegistrationEntry> getRegisteredWorkers() {
+    public static List<SpacesRegistrationEntry> getRegisteredWorkers() {
 
         List<SpacesRegistrationEntry> workerEntries = new ArrayList<SpacesRegistrationEntry>();
         if ( !isSpaceRunning() ) {
@@ -441,11 +441,12 @@ public class SpacesUtil implements ApplicationContextAware {
      * @return int
      */
     public int numIdleWorkers() {
-        return this.getRegisteredWorkers().size() - this.getBusyWorkers().size();
+        return getRegisteredWorkers().size() - this.getBusyWorkers().size();
     }
 
     /*
      * (non-Javadoc)
+     * 
      * @seeorg.springframework.context.ApplicationContextAware#setApplicationContext(org.springframework.context.
      * ApplicationContext)
      */
@@ -460,8 +461,8 @@ public class SpacesUtil implements ApplicationContextAware {
      * @param taskId
      * @return true if the job is confirmed to be running on the grid, false otherwise
      */
-    public boolean taskIsRunningOnGrid( String taskId ) {
-        for ( SpacesRegistrationEntry e : this.getRegisteredWorkers() ) {
+    public static boolean taskIsRunningOnGrid( String taskId ) {
+        for ( SpacesRegistrationEntry e : getRegisteredWorkers() ) {
             if ( taskId.equals( e.getTaskId() ) ) return true;
         }
         return false;
@@ -477,7 +478,7 @@ public class SpacesUtil implements ApplicationContextAware {
 
         List<String> taskNames = new ArrayList<String>();
 
-        List<SpacesRegistrationEntry> workerEntries = this.getRegisteredWorkers();
+        List<SpacesRegistrationEntry> workerEntries = getRegisteredWorkers();
 
         if ( workerEntries == null ) {
             return taskNames;

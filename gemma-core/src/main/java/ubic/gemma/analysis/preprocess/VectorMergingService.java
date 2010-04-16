@@ -176,7 +176,7 @@ public class VectorMergingService extends ExpressionExperimentVectorManipulating
         }
 
         ArrayDesign arrayDesign = arrayDesigns.iterator().next();
-        arrayDesignService.thawLite( arrayDesign );
+        arrayDesign = arrayDesignService.thawLite( arrayDesign );
 
         log.info( qts.size() + " quantitation types" );
 

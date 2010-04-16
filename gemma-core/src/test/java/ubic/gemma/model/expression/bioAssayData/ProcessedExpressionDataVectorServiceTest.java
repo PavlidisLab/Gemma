@@ -138,7 +138,7 @@ public class ProcessedExpressionDataVectorServiceTest extends BaseSpringContextT
         int i = 0;
         ArrayDesign ad = ee.getBioAssays().iterator().next().getArrayDesignUsed();
         Taxon taxon = this.getTaxon( "mouse" );
-        this.arrayDesignService.thawLite( ad );
+        ad = this.arrayDesignService.thawLite( ad );
         Collection<Gene> genes = new HashSet<Gene>();
         for ( CompositeSequence cs : ad.getCompositeSequences() ) {
             if ( i >= 10 ) break;

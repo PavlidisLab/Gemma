@@ -187,8 +187,7 @@ public interface ArrayDesignService {
      * @return The Set of Taxons for array design.
      */
     public java.util.Collection<Taxon> getTaxa( Long id );
-    
-    
+
     /**
      * Return the taxon for the array design. This can be misleading if the array uses multiple taxa: this method will
      * return the first one found.
@@ -200,7 +199,6 @@ public interface ArrayDesignService {
      */
     @Deprecated
     public Taxon getTaxon( Long id );
-    
 
     /**
      * 
@@ -400,13 +398,13 @@ public interface ArrayDesignService {
      * 
      */
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    public void thaw( ArrayDesign arrayDesign );
+    public ArrayDesign thaw( ArrayDesign arrayDesign );
 
     /**
      * Perform a less intensive thaw of an array design.
      */
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    public void thawLite( ArrayDesign arrayDesign );
+    public ArrayDesign thawLite( ArrayDesign arrayDesign );
 
     /**
      * 

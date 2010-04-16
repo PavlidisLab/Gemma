@@ -35,8 +35,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.externalDb.GoldenPathDumper;
-import ubic.gemma.job.progress.ProgressData;
-import ubic.gemma.job.progress.ProgressManager;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.ExternalDatabaseService;
 import ubic.gemma.model.genome.Taxon;

@@ -202,7 +202,7 @@ public class ArrayExpressLoadServiceIntegrationTest extends BaseSpringContextTes
         for ( BioAssay ba : expressionExperiment.getBioAssays() ) {
             if ( ad == null ) {
                 ArrayDesignService ads = ( ArrayDesignService ) this.getBean( "arrayDesignService" );
-                ads.thawLite( ba.getArrayDesignUsed() );
+             ad =   ads.thawLite( ba.getArrayDesignUsed() );
                 for ( CompositeSequence cs : ba.getArrayDesignUsed().getCompositeSequences() ) {
                     probeNames.add( cs.getName() );
                 }

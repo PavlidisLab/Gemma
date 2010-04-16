@@ -91,6 +91,7 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getBioAssayForColumn(int)
      */
     public Collection<BioAssay> getBioAssaysForColumn( int index ) {
@@ -99,6 +100,7 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getBioMaterialForColumn(int)
      */
     public BioMaterial getBioMaterialForColumn( int index ) {
@@ -107,6 +109,7 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.datastructure.matrix.ExpressionDataMatrix#columns(ubic.gemma.model.expression.designElement.DesignElement
      * )
@@ -130,6 +133,7 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getRowElements()
      */
     public List<ExpressionDataMatrixRowElement> getRowElements() {
@@ -144,6 +148,7 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getRowElement(int)
      */
     public ExpressionDataMatrixRowElement getRowElement( int index ) {
@@ -152,6 +157,7 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getDesignElementForRow(int)
      */
     public DesignElement getDesignElementForRow( int index ) {
@@ -160,6 +166,7 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
 
     /*
      * (non-Javadoc)
+     * 
      * @seeubic.gemma.datastructure.matrix.ExpressionDataMatrix#getColumnIndex(ubic.gemma.model.expression.biomaterial.
      * BioMaterial)
      */
@@ -177,6 +184,7 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
 
     /*
      * (non-Javadoc)
+     * 
      * @seeubic.gemma.datastructure.matrix.ExpressionDataMatrix#getRowIndex(ubic.gemma.model.expression.designElement.
      * DesignElement)
      */
@@ -187,29 +195,29 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
     }
 
     /**
-     * @param expressionExperiment
-     * @param quantitationTypes
+     * @param ee
+     * @param qTypes
      * @return
      */
-    protected Collection<DesignElementDataVector> selectVectors( ExpressionExperiment expressionExperiment,
-            Collection<QuantitationType> quantitationTypes ) {
+    protected Collection<DesignElementDataVector> selectVectors( ExpressionExperiment ee,
+            Collection<QuantitationType> qTypes ) {
         Collection<DesignElementDataVector> selected = new HashSet<DesignElementDataVector>();
-        Collection<RawExpressionDataVector> vectors = expressionExperiment.getRawExpressionDataVectors();
-        this.quantitationTypes.addAll( quantitationTypes );
-        for ( QuantitationType type : quantitationTypes ) {
+        Collection<RawExpressionDataVector> vectors = ee.getRawExpressionDataVectors();
+        this.quantitationTypes.addAll( qTypes );
+        for ( QuantitationType type : qTypes ) {
             selected.addAll( this.selectVectors( type, vectors ) );
         }
         return selected;
     }
 
     /**
-     * @param expressionExperiment
+     * @param ee
      * @param quantitationType
      * @return Collection<DesignElementDataVector>
      */
-    protected Collection<DesignElementDataVector> selectVectors( ExpressionExperiment expressionExperiment,
+    protected Collection<DesignElementDataVector> selectVectors( ExpressionExperiment ee,
             QuantitationType quantitationType ) {
-        Collection<RawExpressionDataVector> vectors = expressionExperiment.getRawExpressionDataVectors();
+        Collection<RawExpressionDataVector> vectors = ee.getRawExpressionDataVectors();
         return selectVectors( quantitationType, vectors );
     }
 
@@ -254,12 +262,11 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
         return vectorSort;
     }
 
-    protected Collection<DesignElementDataVector> selectVectors( ExpressionExperiment expressionExperiment,
-            List<QuantitationType> quantitationTypes ) {
+    protected Collection<DesignElementDataVector> selectVectors( ExpressionExperiment ee, List<QuantitationType> qTypes ) {
 
-        Collection<RawExpressionDataVector> vectors = expressionExperiment.getRawExpressionDataVectors();
-        this.quantitationTypes.addAll( quantitationTypes );
-        Collection<DesignElementDataVector> vectorsOfInterest = selectVectors( vectors, quantitationTypes );
+        Collection<RawExpressionDataVector> vectors = ee.getRawExpressionDataVectors();
+        this.quantitationTypes.addAll( qTypes );
+        Collection<DesignElementDataVector> vectorsOfInterest = selectVectors( vectors, qTypes );
 
         return vectorsOfInterest;
     }
@@ -267,17 +274,17 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
     /**
      * @param vectors
      * @param bioAssayDimensions
-     * @param quantitationTypes
+     * @param qTypes
      * @return
      */
     protected Collection<DesignElementDataVector> selectVectors( Collection<? extends DesignElementDataVector> vectors,
-            List<QuantitationType> quantitationTypes ) {
-        this.quantitationTypes.addAll( quantitationTypes );
+            List<QuantitationType> qTypes ) {
+        this.quantitationTypes.addAll( qTypes );
         List<DesignElementDataVector> sorted = sortVectorsByDesignElement( vectors );
         Collection<DesignElementDataVector> vectorsOfInterest = new LinkedHashSet<DesignElementDataVector>();
         int rowIndex = 0;
-        for ( int qTypeIndex = 0; qTypeIndex < quantitationTypes.size(); qTypeIndex++ ) {
-            QuantitationType soughtType = quantitationTypes.get( qTypeIndex );
+        for ( int qTypeIndex = 0; qTypeIndex < qTypes.size(); qTypeIndex++ ) {
+            QuantitationType soughtType = qTypes.get( qTypeIndex );
             for ( DesignElementDataVector vector : sorted ) {
                 QuantitationType vectorQuantitationType = vector.getQuantitationType();
                 if ( vectorQuantitationType.equals( soughtType ) ) {
@@ -337,15 +344,15 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
     }
 
     protected Collection<DesignElementDataVector> selectVectors( Collection<? extends DesignElementDataVector> vectors,
-            Collection<QuantitationType> quantitationTypes ) {
-        this.quantitationTypes.addAll( quantitationTypes );
+            Collection<QuantitationType> qTypes ) {
+        this.quantitationTypes.addAll( qTypes );
 
         Collection<DesignElementDataVector> vectorsOfInterest = new LinkedHashSet<DesignElementDataVector>();
         int i = 0;
 
         for ( DesignElementDataVector vector : vectors ) {
             QuantitationType vectorQuantitationType = vector.getQuantitationType();
-            if ( quantitationTypes.contains( vectorQuantitationType ) ) {
+            if ( qTypes.contains( vectorQuantitationType ) ) {
                 if ( this.expressionExperiment == null ) this.expressionExperiment = vector.getExpressionExperiment();
                 vectorsOfInterest.add( vector );
                 DesignElement designElement = vector.getDesignElement();
@@ -521,7 +528,7 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
     private void getBioMaterialGroupsForAssays( Map<BioMaterial, Collection<BioAssay>> bioMaterialMap,
             Collection<Collection<BioMaterial>> bioMaterialGroups, Collection<BioAssay> bioAssays ) {
         for ( BioAssay ba : bioAssays ) {
-            log.debug( "      " + ba );
+            if ( log.isDebugEnabled() ) log.debug( "      " + ba );
             Collection<BioMaterial> bioMaterials = ba.getSamplesUsed();
 
             if ( !alreadySeenGroup( bioMaterialGroups, bioMaterials ) ) {
@@ -529,7 +536,7 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
             }
 
             for ( BioMaterial material : bioMaterials ) {
-                log.debug( "           " + material );
+                if ( log.isDebugEnabled() ) log.debug( "           " + material );
                 if ( !bioMaterialMap.containsKey( material ) ) {
                     bioMaterialMap.put( material, new HashSet<BioAssay>() );
                 }
@@ -571,6 +578,7 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getBioAssayDimension()
      */
     public BioAssayDimension getBioAssayDimension( DesignElement designElement ) {
@@ -583,6 +591,7 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getQuantitationTypes()
      */
     public Collection<QuantitationType> getQuantitationTypes() {

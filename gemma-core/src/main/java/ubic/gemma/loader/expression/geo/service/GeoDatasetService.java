@@ -589,7 +589,7 @@ public class GeoDatasetService extends AbstractGeoService {
         } else {
             log.info( "Platform " + rawGEOPlatform
                     + " exists in Gemma, checking for correct probe names and re-matching if necessary ..." );
-            arrayDesignService.thawLite( existing );
+            existing = arrayDesignService.thawLite( existing );
 
             String columnWithGeoNames = null;
             columnWithGeoNames = getGEOIDColumnName( rawGEOPlatform, geoArrayDesign, columnWithGeoNames );

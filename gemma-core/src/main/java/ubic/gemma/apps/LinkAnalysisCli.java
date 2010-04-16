@@ -100,6 +100,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.apps.ExpressionExperimentManipulatingCLI#buildOptions()
      */
     @SuppressWarnings("static-access")
@@ -237,7 +238,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
                         + taxon );
             }
             log.debug( taxon + "is used" );
-            arrayDesignService.thawLite( arrayDesign );
+            arrayDesign = arrayDesignService.thawLite( arrayDesign );
 
             Collection<ProcessedExpressionDataVector> dataVectors = new HashSet<ProcessedExpressionDataVector>();
 

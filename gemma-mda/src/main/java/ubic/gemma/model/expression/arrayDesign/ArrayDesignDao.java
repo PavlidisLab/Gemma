@@ -324,14 +324,14 @@ public interface ArrayDesignDao extends BaseDao<ArrayDesign> {
      * Unlazify associations of this object.
      * </p>
      */
-    public void thaw( ArrayDesign arrayDesign );
+    public ArrayDesign thaw( ArrayDesign arrayDesign );
 
     /**
      * <p>
      * Perform a less intensive thaw of an array design.
      * </p>
      */
-    public void thawLite( ArrayDesign arrayDesign );
+    public ArrayDesign thawLite( ArrayDesign arrayDesign );
 
     /**
      * <p>

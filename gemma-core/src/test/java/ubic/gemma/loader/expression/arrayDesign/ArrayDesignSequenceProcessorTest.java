@@ -179,9 +179,9 @@ public class ArrayDesignSequenceProcessorTest extends BaseSpringContextTest {
 
         final Collection<ArrayDesign> ads = ( Collection<ArrayDesign> ) geoService.fetchAndLoad( "GPL226", true, true,
                 false, false, true );
-        
+
         result = ads.iterator().next();
-        arrayDesignService.thawLite( result );
+        result = arrayDesignService.thawLite( result );
         // have to specify taxon as this has two taxons in it
         InputStream f = this.getClass().getResourceAsStream( "/data/loader/expression/arrayDesign/identifierTest.txt" );
         Collection<BioSequence> res = app.processArrayDesign( result, f, new String[] { "testblastdb",
@@ -207,8 +207,8 @@ public class ArrayDesignSequenceProcessorTest extends BaseSpringContextTest {
         final Collection<ArrayDesign> ads = ( Collection<ArrayDesign> ) geoService.fetchAndLoad( "GPL226", true, true,
                 false, false, true );
         result = ads.iterator().next();
-        
-        arrayDesignService.thawLite( result );
+
+        result = arrayDesignService.thawLite( result );
         try {
             Collection<BioSequence> res = app.processArrayDesign( result, new String[] { "testblastdb",
                     "testblastdbPartTwo" }, ConfigUtils.getString( "gemma.home" )
@@ -230,7 +230,7 @@ public class ArrayDesignSequenceProcessorTest extends BaseSpringContextTest {
     public void testMultiTaxonArray() throws Exception {
         // This array design has not taxon so unless taxon provided will throw an exception
         ArrayDesign ad = testHelper.getTestPersistentArrayDesign( 10, false, false );
-        
+
         // as taxon provided do not check array design
         try {
             app.validateTaxon( taxon, ad );

@@ -97,7 +97,7 @@ public class ArrayDesignProbeMapperController extends AbstractTaskService {
     public String run( Long id ) throws Exception {
 
         ArrayDesign ad = arrayDesignService.load( id );
-        arrayDesignService.thaw( ad );
+        ad = arrayDesignService.thaw( ad );
 
         ArrayDesignProbeMapTaskCommand cmd = new ArrayDesignProbeMapTaskCommand();
         cmd.setArrayDesign( ad );
@@ -107,6 +107,7 @@ public class ArrayDesignProbeMapperController extends AbstractTaskService {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.web.controller.grid.AbstractSpacesController#getRunner(java.lang.String, java.lang.Object)
      */
     @Override
@@ -116,6 +117,7 @@ public class ArrayDesignProbeMapperController extends AbstractTaskService {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.web.controller.grid.AbstractSpacesController#getSpaceRunner(java.lang.String, java.lang.Object)
      */
     @Override

@@ -39,7 +39,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import ubic.gemma.analysis.sequence.SequenceManipulation;  
+import ubic.gemma.analysis.sequence.SequenceManipulation;
 import ubic.gemma.loader.genome.FastaCmd;
 import ubic.gemma.loader.genome.FastaParser;
 import ubic.gemma.loader.genome.ProbeSequenceParser;
@@ -674,7 +674,7 @@ public class ArrayDesignSequenceProcessingService {
         }
         taxon = validateTaxon( taxon, arrayDesign );
         // hibernate initilisation error being thrown
-        arrayDesignService.thawLite( arrayDesign );
+        arrayDesign = arrayDesignService.thawLite( arrayDesign );
         checkForCompositeSequences( arrayDesign );
 
         FastaParser fastaParser = new FastaParser();

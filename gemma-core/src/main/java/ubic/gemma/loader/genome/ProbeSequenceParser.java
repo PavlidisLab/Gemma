@@ -30,8 +30,6 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import ubic.gemma.job.progress.ProgressData;
-import ubic.gemma.job.progress.ProgressManager;
 import ubic.gemma.loader.util.parser.BasicLineMapParser;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 
@@ -52,6 +50,7 @@ public class ProbeSequenceParser extends BasicLineMapParser<String, BioSequence>
 
     /*
      * (non-Javadoc)
+     * 
      * @see baseCode.io.reader.BasicLineMapParser#parseOneLine(java.lang.String)
      */
     @Override
@@ -71,9 +70,9 @@ public class ProbeSequenceParser extends BasicLineMapParser<String, BioSequence>
         if ( sArray.length == 0 ) {
             return null;
         }
-        
-        if (sArray.length != 3) {
-            throw new IllegalArgumentException("Expected 3 fields: probe name, sequence name, sequence; line=" + line);
+
+        if ( sArray.length != 3 ) {
+            throw new IllegalArgumentException( "Expected 3 fields: probe name, sequence name, sequence; line=" + line );
         }
 
         String probeId = sArray[0].trim();
@@ -136,6 +135,7 @@ public class ProbeSequenceParser extends BasicLineMapParser<String, BioSequence>
 
     /*
      * (non-Javadoc)
+     * 
      * @see baseCode.io.reader.BasicLineMapParser#getKey(java.lang.Object)
      */
     @Override

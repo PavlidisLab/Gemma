@@ -50,6 +50,7 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleCompositeSequenceWithoutBioSequences(ubic
      * .gemma.model.expression.arrayDesign.ArrayDesign)
@@ -62,6 +63,7 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleCompositeSequenceWithoutBlatResults(ubic
      * .gemma.model.expression.arrayDesign.ArrayDesign)
@@ -74,6 +76,7 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleCompositeSequenceWithoutGenes(ubic.gemma
      * .model.expression.arrayDesign.ArrayDesign)
@@ -91,6 +94,7 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleCreate(ubic.gemma.model.expression.arrayDesign
      * .ArrayDesign)
@@ -143,6 +147,7 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.arrayDesign.handleGetAllAssociatedBioAssays(long)
      */
     @Override
@@ -153,6 +158,7 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleGetCompositeSequenceCount(ubic.gemma.model
      * .expression.arrayDesign.ArrayDesign)
@@ -165,6 +171,7 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleGetExpressionExperimentsById(long)
      */
     @Override
@@ -175,6 +182,7 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleGetLastAnnotationFile(java.util.Collection)
      */
@@ -193,6 +201,7 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleGetLastGeneMapping(java.util.Collection)
      */
@@ -224,6 +233,7 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleGetLastSequenceAnalysis(java.util.Collection
      * )
@@ -242,6 +252,7 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleGetLastSequenceUpdate(java.util.Collection)
      */
@@ -259,6 +270,7 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleGetLastTroubleEvent(java.util.Collection)
      */
@@ -291,6 +303,7 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleGetLastValidationEvent(java.util.Collection)
      */
@@ -325,6 +338,7 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleGetReporterCount(ubic.gemma.model.expression
      * .arrayDesign.ArrayDesign)
@@ -336,6 +350,7 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.arrayDesign.handleGetTaxa(long)
      */
     @Override
@@ -345,6 +360,7 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#getPerTaxonCount()
      */
     public Map<Taxon, Integer> getPerTaxonCount() {
@@ -353,6 +369,7 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.arrayDesign.handleGetTaxon(long)
      */
     @Override
@@ -383,6 +400,7 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleLoad(long)
      */
     @Override
@@ -400,6 +418,7 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleLoadAllValueObjects()
      */
     @Override
@@ -409,6 +428,7 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleLoadCompositeSequences(ubic.gemma.model.
      * expression.arrayDesign.ArrayDesign)
@@ -420,6 +440,7 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleLoadFully(java.lang.Long)
      */
     @Override
@@ -434,6 +455,7 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleLoadValueObjects(java.util.Collection)
      */
     @Override
@@ -443,6 +465,7 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleNumAllCompositeSequenceWithBioSequences()
      */
@@ -453,6 +476,7 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleNumAllCompositeSequenceWithBioSequences(
      * java.util.Collection)
@@ -464,6 +488,7 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleNumAllCompositeSequenceWithBlatResults()
      */
@@ -474,6 +499,7 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleNumAllCompositeSequenceWithBlatResults(java
      * .util.Collection)
@@ -485,6 +511,7 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleNumAllCompositeSequenceWithGenes()
      */
     @Override
@@ -494,6 +521,7 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleNumAllCompositeSequenceWithGenes(java.util
      * .Collection)
@@ -505,6 +533,7 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleNumAllGenes()
      */
     @Override
@@ -514,6 +543,7 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleNumAllGenes(java.util.Collection)
      */
     @Override
@@ -523,6 +553,7 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleNumBioSequencesById(long)
      */
     @Override
@@ -532,6 +563,7 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleNumBlatResultsById(long)
      */
     @Override
@@ -541,6 +573,7 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleNumCompositeSequenceWithBioSequences(ubic
      * .gemma.model.expression.arrayDesign.ArrayDesign)
@@ -552,6 +585,7 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleNumCompositeSequenceWithBlatResults(ubic
      * .gemma.model.expression.arrayDesign.ArrayDesign)
@@ -563,6 +597,7 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleNumCompositeSequenceWithGenes(ubic.gemma
      * .model.expression.arrayDesign.ArrayDesign)
@@ -574,6 +609,7 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleNumCompositeSequenceWithPredictedGenes(ubic
      * .gemma.model.expression.arrayDesign.ArrayDesign)
@@ -585,6 +621,7 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleNumCompositeSequenceWithProbeAlignedRegion
      * (ubic.gemma.model.expression.arrayDesign.ArrayDesign)
@@ -596,6 +633,7 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleNumGeneProductsById(long)
      */
     @Override
@@ -619,13 +657,13 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
     }
 
     @Override
-    protected void handleThaw( ArrayDesign arrayDesign ) throws Exception {
-        this.getArrayDesignDao().thaw( arrayDesign );
+    protected ArrayDesign handleThaw( ArrayDesign arrayDesign ) throws Exception {
+        return this.getArrayDesignDao().thaw( arrayDesign );
     }
 
     @Override
-    protected void handleThawLite( ArrayDesign arrayDesign ) throws Exception {
-        this.getArrayDesignDao().thawLite( arrayDesign );
+    protected ArrayDesign handleThawLite( ArrayDesign arrayDesign ) throws Exception {
+        return this.getArrayDesignDao().thawLite( arrayDesign );
     }
 
     /**
@@ -638,6 +676,7 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
 
     /*
      * (non-Javadoc)
+     * 
      * @seeubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleUpdateSubsumingStatus(ubic.gemma.model.
      * expression.arrayDesign.ArrayDesign, ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
