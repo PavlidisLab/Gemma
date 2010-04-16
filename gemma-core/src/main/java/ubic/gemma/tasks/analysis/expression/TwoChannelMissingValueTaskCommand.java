@@ -75,26 +75,14 @@ public class TwoChannelMissingValueTaskCommand extends TaskCommand {
     }
 
     /**
-     * @param taskId
-     * @param expressionExperiment
-     */
-    public TwoChannelMissingValueTaskCommand( String taskId, ExpressionExperiment expressionExperiment ) {
-        super();
-        this.setTaskId( taskId );
-        this.expressionExperiment = expressionExperiment;
-    }
-
-    /**
-     * @param taskId
      * @param expressionExperiment
      * @param s2n
      * @param extraMissingValueIndictors
      * @see TwoChannelMissingValues for parameterization details.
      */
-    public TwoChannelMissingValueTaskCommand( String taskId, ExpressionExperiment expressionExperiment, double s2n,
+    public TwoChannelMissingValueTaskCommand( ExpressionExperiment expressionExperiment, double s2n,
             Collection<Double> extraMissingValueIndictors ) {
         super();
-        this.setTaskId( taskId );
         this.s2n = s2n;
         this.extraMissingValueIndicators = extraMissingValueIndictors;
         this.expressionExperiment = expressionExperiment;

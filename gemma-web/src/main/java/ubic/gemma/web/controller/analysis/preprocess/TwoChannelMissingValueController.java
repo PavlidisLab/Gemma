@@ -86,15 +86,13 @@ public class TwoChannelMissingValueController extends AbstractTaskService {
      * @throws Exception
      */
     public String run( Long id ) throws Exception {
-        /* this 'run' method is exported in the spring-beans.xml */
-
         ExpressionExperiment ee = expressionExperimentService.load( id );
 
         if ( ee == null ) {
             throw new IllegalArgumentException( "Cannot access experiment with id=" + id );
         }
 
-        TwoChannelMissingValueTaskCommand cmd = new TwoChannelMissingValueTaskCommand( null, ee );
+        TwoChannelMissingValueTaskCommand cmd = new TwoChannelMissingValueTaskCommand( ee );
 
         return super.run( cmd );
     }
