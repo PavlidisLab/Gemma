@@ -24,6 +24,7 @@ import java.util.Map;
 
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.InvalidDataAccessResourceUsageException;
 
 import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.common.description.DatabaseEntry;
@@ -95,6 +96,7 @@ abstract public class GenomePersister extends CommonPersister {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.loader.util.persister.Persister#persist(java.lang.Object)
      */
     @Override
@@ -119,6 +121,7 @@ abstract public class GenomePersister extends CommonPersister {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.persistence.CommonPersister#persistOrUpdate(java.lang.Object)
      */
     @Override
@@ -683,8 +686,22 @@ abstract public class GenomePersister extends CommonPersister {
 
         chromosome.setSequence( persistBioSequence( chromosome.getSequence() ) );
         chromosome.setTaxon( persistTaxon( chromosome.getTaxon() ) );
-        chromosome = chromosomeService.findOrCreate( chromosome );
+        try {
+            chromosome = chromosomeService.findOrCreate( chromosome );
+        } catch ( InvalidDataAccessResourceUsageException e ) {
+            /*
+             * Probably we got multiple. Try another way.
+             */
+            log.warn( "Bad find results for: " + chromosome + " (multiple?), working around" );
+            Collection<Chromosome> existing = chromosomeService.find( chromosome.getName(), chromosome.getTaxon() );
 
+            if ( existing.isEmpty() ) {
+                chromosome = chromosomeService.create( chromosome );
+            } else {
+                chromosome = existing.iterator().next();
+            }
+
+        }
         seenChromosomes.put( key, chromosome );
 
         return chromosome;

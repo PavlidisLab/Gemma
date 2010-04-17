@@ -78,7 +78,7 @@ public class BusinessKey {
         /*
          * Test whether ANY of the associated external references match any of the given external references.
          */
-        if ( arrayDesign.getPrimaryTaxon() != null && arrayDesign.getPrimaryTaxon().getId() != null) {
+        if ( arrayDesign.getPrimaryTaxon() != null && arrayDesign.getPrimaryTaxon().getId() != null ) {
             queryObject.add( Restrictions.eq( "primaryTaxon", arrayDesign.getPrimaryTaxon() ) );
         }
 
@@ -137,7 +137,7 @@ public class BusinessKey {
         if ( bioMaterial.getSourceTaxon() != null ) {
             queryObject.add( Restrictions.eq( "sourceTaxon", bioMaterial.getSourceTaxon() ) );
         }
-        
+
     }
 
     /**
@@ -192,6 +192,12 @@ public class BusinessKey {
     public static void addRestrictions( Criteria queryObject, Chromosome chromosome ) {
         queryObject.add( Restrictions.eq( "name", chromosome.getName() ) );
         attachCriteria( queryObject, chromosome.getTaxon(), "taxon" );
+        if ( chromosome.getAssemblyDatabase() != null ) {
+            attachCriteria( queryObject, chromosome.getAssemblyDatabase(), "assemblyDatabase" );
+        }
+        if ( chromosome.getSequence() != null ) {
+            attachCriteria( queryObject, chromosome.getSequence(), "sequence" );
+        }
     }
 
     /**
@@ -207,31 +213,6 @@ public class BusinessKey {
 
         if ( StringUtils.isNotBlank( contact.getName() ) )
             queryObject.add( Restrictions.eq( "name", contact.getName() ) );
-
-        if ( StringUtils.isNotBlank( contact.getAddress() ) )
-            queryObject.add( Restrictions.eq( "address", contact.getAddress() ) );
-
-        if ( StringUtils.isNotBlank( contact.getPhone() ) )
-            queryObject.add( Restrictions.eq( "phone", contact.getPhone() ) );
-
-    }
-
-    /**
-     * @param queryObject
-     * @param contact
-     */
-    public static void addRestrictions( Criteria queryObject, Person contact ) {
-        if ( StringUtils.isNotBlank( contact.getEmail() ) ) {
-            // email is unique.
-            queryObject.add( Restrictions.eq( "email", contact.getEmail() ) );
-            return;
-        }
-
-        if ( StringUtils.isNotBlank( contact.getName() ) )
-            queryObject.add( Restrictions.eq( "name", contact.getName() ) );
-
-        if ( StringUtils.isNotBlank( contact.getName() ) )
-            queryObject.add( Restrictions.eq( "lastName", contact.getFullName() ) );
 
         if ( StringUtils.isNotBlank( contact.getAddress() ) )
             queryObject.add( Restrictions.eq( "address", contact.getAddress() ) );
@@ -305,6 +286,31 @@ public class BusinessKey {
     public static void addRestrictions( Criteria queryObject, Gene2GOAssociation gene2GOAssociation ) {
         attachCriteria( queryObject, gene2GOAssociation.getGene(), "gene" );
         attachCriteria( queryObject, gene2GOAssociation.getOntologyEntry(), "ontologyEntry" );
+    }
+
+    /**
+     * @param queryObject
+     * @param contact
+     */
+    public static void addRestrictions( Criteria queryObject, Person contact ) {
+        if ( StringUtils.isNotBlank( contact.getEmail() ) ) {
+            // email is unique.
+            queryObject.add( Restrictions.eq( "email", contact.getEmail() ) );
+            return;
+        }
+
+        if ( StringUtils.isNotBlank( contact.getName() ) )
+            queryObject.add( Restrictions.eq( "name", contact.getName() ) );
+
+        if ( StringUtils.isNotBlank( contact.getName() ) )
+            queryObject.add( Restrictions.eq( "lastName", contact.getFullName() ) );
+
+        if ( StringUtils.isNotBlank( contact.getAddress() ) )
+            queryObject.add( Restrictions.eq( "address", contact.getAddress() ) );
+
+        if ( StringUtils.isNotBlank( contact.getPhone() ) )
+            queryObject.add( Restrictions.eq( "phone", contact.getPhone() ) );
+
     }
 
     /**
@@ -584,12 +590,6 @@ public class BusinessKey {
         }
     }
 
-    public static void checkValidKey( Unit unit ) {
-        if ( unit == null || StringUtils.isBlank( unit.getUnitNameCV() ) ) {
-            throw new IllegalArgumentException( unit + " did not have a valid key" );
-        }
-    }
-
     /**
      * @param bioSequence
      */
@@ -689,6 +689,12 @@ public class BusinessKey {
                 log.error( "Localfile without valid key: localURL=" + localFile.getLocalURL() + " remoteUrL="
                         + localFile.getRemoteURL() + " size=" + localFile.getSize() );
             throw new IllegalArgumentException( "localFile was null or had no valid business keys" );
+        }
+    }
+
+    public static void checkValidKey( Unit unit ) {
+        if ( unit == null || StringUtils.isBlank( unit.getUnitNameCV() ) ) {
+            throw new IllegalArgumentException( unit + " did not have a valid key" );
         }
     }
 
@@ -819,23 +825,6 @@ public class BusinessKey {
 
     /**
      * @param session
-     * @param unit
-     * @return
-     */
-    public static Criteria createQueryObject( Session session, Unit unit ) {
-        Criteria queryObject = session.createCriteria( Unit.class );
-
-        if ( unit.getId() != null ) {
-            queryObject.add( Restrictions.eq( "id", unit.getId() ) );
-        } else if ( unit.getUnitNameCV() != null ) {
-            queryObject.add( Restrictions.eq( "unitNameCV", unit.getUnitNameCV() ) );
-        }
-
-        return queryObject;
-    }
-
-    /**
-     * @param session
      * @param bioAssay
      * @return
      */
@@ -844,13 +833,6 @@ public class BusinessKey {
         checkKey( bioAssay );
         addRestrictions( queryObject, bioAssay );
         return queryObject;
-    }
-
-    private static void checkKey( BioAssay bioAssay ) {
-        if ( bioAssay.getId() == null && bioAssay.getAccession() == null ) {
-            throw new IllegalArgumentException( "Bioassay must have id or accession" );
-        }
-
     }
 
     /**
@@ -877,6 +859,23 @@ public class BusinessKey {
     }
 
     /**
+     * @param session
+     * @param unit
+     * @return
+     */
+    public static Criteria createQueryObject( Session session, Unit unit ) {
+        Criteria queryObject = session.createCriteria( Unit.class );
+
+        if ( unit.getId() != null ) {
+            queryObject.add( Restrictions.eq( "id", unit.getId() ) );
+        } else if ( unit.getUnitNameCV() != null ) {
+            queryObject.add( Restrictions.eq( "unitNameCV", unit.getUnitNameCV() ) );
+        }
+
+        return queryObject;
+    }
+
+    /**
      * @param queryObject
      * @param describable
      */
@@ -884,11 +883,37 @@ public class BusinessKey {
         if ( describable.getName() != null ) queryObject.add( Restrictions.eq( "name", describable.getName() ) );
     }
 
+    /**
+     * @param queryobject
+     * @param assemblyDatabase
+     */
+    private static void addRestrictions( Criteria queryobject, ExternalDatabase assemblyDatabase ) {
+        if ( assemblyDatabase.getId() != null ) {
+            queryobject.add( Restrictions.eq( "id", assemblyDatabase.getId() ) );
+            return;
+        }
+
+        if ( StringUtils.isNotBlank( assemblyDatabase.getName() ) ) {
+            addNameRestriction( queryobject, assemblyDatabase );
+        }
+
+    }
+
     private static void attachCriteria( Criteria queryObject, DatabaseEntry databaseEntry ) {
 
         queryObject.add( Restrictions.eq( "accession", databaseEntry.getAccession() ) ).createCriteria(
                 "externalDatabase" ).add( Restrictions.eq( "name", databaseEntry.getExternalDatabase().getName() ) );
 
+    }
+
+    /**
+     * @param queryObject
+     * @param assemblyDatabase
+     * @param propertyName
+     */
+    private static void attachCriteria( Criteria queryObject, ExternalDatabase assemblyDatabase, String propertyName ) {
+        Criteria innerQuery = queryObject.createCriteria( propertyName );
+        addRestrictions( innerQuery, assemblyDatabase );
     }
 
     /**
@@ -916,6 +941,13 @@ public class BusinessKey {
     private static void attachCriteria( Criteria queryObject, VocabCharacteristic ontologyEntry, String propertyName ) {
         Criteria innerQuery = queryObject.createCriteria( propertyName );
         addRestrictions( innerQuery, ontologyEntry );
+    }
+
+    private static void checkKey( BioAssay bioAssay ) {
+        if ( bioAssay.getId() == null && bioAssay.getAccession() == null ) {
+            throw new IllegalArgumentException( "Bioassay must have id or accession" );
+        }
+
     }
 
     /**

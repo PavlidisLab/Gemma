@@ -37,6 +37,13 @@ public interface ChromosomeService {
     public Collection<Chromosome> find( String name, Taxon taxon );
 
     /**
+     * @param chromosome
+     * @return
+     */
+    @Secured( { "GROUP_USER" })
+    public Chromosome create( Chromosome chromosome );
+
+    /**
      * 
      */
     public ubic.gemma.model.genome.Chromosome find( ubic.gemma.model.genome.Chromosome chromosome );

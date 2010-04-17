@@ -1,7 +1,7 @@
 /*
  * The Gemma project.
  * 
- * Copyright (c) 2006 University of British Columbia
+ * Copyright (c) 2006-2010 University of British Columbia
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,6 +43,7 @@ public class ChromosomeDaoImpl extends ubic.gemma.model.genome.ChromosomeDaoBase
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.ChromosomeDaoBase#find(ubic.gemma.model.genome.Chromosome)
      */
     @Override
@@ -53,7 +54,7 @@ public class ChromosomeDaoImpl extends ubic.gemma.model.genome.ChromosomeDaoBase
             Criteria queryObject = super.getSession().createCriteria( Chromosome.class );
             BusinessKey.addRestrictions( queryObject, chromosome );
 
-            java.util.List results = queryObject.list();
+            java.util.List<?> results = queryObject.list();
             Object result = null;
             if ( results != null ) {
                 if ( results.size() > 1 ) {
@@ -71,6 +72,7 @@ public class ChromosomeDaoImpl extends ubic.gemma.model.genome.ChromosomeDaoBase
         }
     }
 
+    @SuppressWarnings("unchecked")
     public Collection<Chromosome> find( String name, Taxon taxon ) {
         if ( StringUtils.isBlank( name ) ) {
             throw new IllegalArgumentException( "Name cannot be blank" );
@@ -83,9 +85,8 @@ public class ChromosomeDaoImpl extends ubic.gemma.model.genome.ChromosomeDaoBase
         List<Chromosome> results = this.getHibernateTemplate().findByNamedParam( q, new String[] { "n", "t" },
                 new Object[] { name, taxon } );
 
-        if (results == null || results.isEmpty()) 
-            return null;
-        
+        if ( results == null || results.isEmpty() ) return null;
+
         return results;
     }
 
@@ -99,7 +100,7 @@ public class ChromosomeDaoImpl extends ubic.gemma.model.genome.ChromosomeDaoBase
         return create( chromosome );
     }
 
-    private String debug( List results ) {
+    private String debug( List<?> results ) {
         StringBuilder buf = new StringBuilder();
         for ( Object object : results ) {
             buf.append( object + "\n" );

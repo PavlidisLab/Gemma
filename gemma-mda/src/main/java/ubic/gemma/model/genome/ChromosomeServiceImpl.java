@@ -1,7 +1,7 @@
 /*
  * The Gemma project.
  * 
- * Copyright (c) 2006 University of British Columbia
+ * Copyright (c) 2006-2010 University of British Columbia
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@ import org.springframework.stereotype.Service;
 
 /**
  * @see ubic.gemma.model.genome.ChromosomeService
+ * @version $Id$
  */
 @Service
 public class ChromosomeServiceImpl extends ubic.gemma.model.genome.ChromosomeServiceBase {
@@ -49,6 +50,16 @@ public class ChromosomeServiceImpl extends ubic.gemma.model.genome.ChromosomeSer
             throws java.lang.Exception {
         return this.getChromosomeDao().findOrCreate( chromosome );
 
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.genome.ChromosomeService#create(ubic.gemma.model.genome.Chromosome)
+     */
+    @Override
+    public Chromosome create( Chromosome chromosome ) {
+        return this.getChromosomeDao().create( chromosome );
     }
 
 }
