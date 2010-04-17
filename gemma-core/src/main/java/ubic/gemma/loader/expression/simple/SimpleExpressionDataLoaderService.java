@@ -300,7 +300,7 @@ public class SimpleExpressionDataLoaderService {
             if ( existing != null ) {
                 log.info( "Array Design exists" );
                 if ( arrayDesignService != null ) {
-                    arrayDesignService.thawLite( existing );
+                    existing = arrayDesignService.thawLite( existing );
                 }
                 existingDesigns.add( existing );
             } else {
