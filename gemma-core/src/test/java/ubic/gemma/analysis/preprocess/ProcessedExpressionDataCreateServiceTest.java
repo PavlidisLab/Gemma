@@ -67,19 +67,14 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
             this.ee = ( ExpressionExperiment ) e.getData();
         }
 
-        
-
         eeService.thawLite( ee );
-
-        
 
         Collection<ProcessedExpressionDataVector> preferredVectors = processedExpressionDataVectorCreateService
                 .computeProcessedExpressionData( ee );
 
-        
-
         for ( ProcessedExpressionDataVector d : preferredVectors ) {
             assertTrue( d.getQuantitationType().getIsMaskedPreferred() );
+            assertTrue( ee.getQuantitationTypes().contains( d.getQuantitationType() ) );
             assertNotNull( d.getRankByMean() );
             assertNotNull( d.getRankByMax() );
         }
