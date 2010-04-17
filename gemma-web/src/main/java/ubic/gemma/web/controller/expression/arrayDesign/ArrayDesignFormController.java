@@ -74,7 +74,7 @@ public class ArrayDesignFormController extends BaseFormController {
             return processFormSubmission( request, response, command, errors );
         }
 
-        existing = arrayDesignService.thawLite( existing );
+        // existing = arrayDesignService.thawLite( existing );
         existing.setDescription( ad.getDescription() );
         existing.setName( ad.getName() );
         existing.setShortName( ad.getShortName() );
