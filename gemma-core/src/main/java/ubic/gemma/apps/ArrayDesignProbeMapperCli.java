@@ -89,7 +89,6 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.util.AbstractCLI#buildOptions()
      */
     @SuppressWarnings("static-access")
@@ -176,7 +175,6 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.util.AbstractCLI#doWork(java.lang.String[])
      */
     @Override
@@ -202,7 +200,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
                 return null;
             }
 
-            unlazifyArrayDesign( arrayDesign );
+            arrayDesign = unlazifyArrayDesign( arrayDesign );
             if ( directAnnotationInputFileName != null ) {
                 try {
                     File f = new File( this.directAnnotationInputFileName );
@@ -363,7 +361,6 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
 
     /*
      * See 'configure' for how the other options are handled. (non-Javadoc)
-     * 
      * @see ubic.gemma.apps.ArrayDesignSequenceManipulatingCli#processOptions()
      */
     @Override

@@ -72,7 +72,7 @@ public class ArrayDesignSubsumptionTesterCli extends ArrayDesignSequenceManipula
             return null;
         }
 
-        unlazifyArrayDesign( arrayDesign );
+        arrayDesign = unlazifyArrayDesign( arrayDesign );
 
         for ( String otherArrayDesigName : otherArrayDesignNames ) {
             ArrayDesign otherArrayDesign = locateArrayDesign( otherArrayDesigName );
@@ -86,7 +86,7 @@ public class ArrayDesignSubsumptionTesterCli extends ArrayDesignSequenceManipula
                 bail( ErrorCode.INVALID_OPTION );
             }
 
-            unlazifyArrayDesign( otherArrayDesign );
+            otherArrayDesign = unlazifyArrayDesign( otherArrayDesign );
 
             Boolean aSubsumeso = this.arrayDesignService.updateSubsumingStatus( arrayDesign, otherArrayDesign );
 

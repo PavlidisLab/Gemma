@@ -492,8 +492,8 @@ public class ArrayDesignSequenceProcessingService {
             if ( taxaOnArray.size() == 1 && taxaOnArray.iterator().next() != null ) {
                 return taxaOnArray.iterator().next();
             }
-            throw new IllegalArgumentException( taxaOnArray.size() + " taxon found for " + arrayDesign
-                    + "please specifiy which taxon to run" );
+            throw new IllegalArgumentException( taxaOnArray.size() + " taxa found for " + arrayDesign
+                    + "please specify which taxon to run" );
         }
         return taxon;
     }

@@ -109,7 +109,6 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.util.AbstractCLI#buildOptions()
      */
     @SuppressWarnings("static-access")
@@ -173,7 +172,6 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.util.AbstractCLI#doWork(java.lang.String[])
      */
     @Override
@@ -527,7 +525,7 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
             return;
         }
 
-        unlazifyArrayDesign( ad );
+        ad = unlazifyArrayDesign( ad );
         Collection<CompositeSequence> compositeSequences = ad.getCompositeSequences();
         log.info( "Starting genes specificity" );
 

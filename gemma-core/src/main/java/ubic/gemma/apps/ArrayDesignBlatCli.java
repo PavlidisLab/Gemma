@@ -84,7 +84,6 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.util.AbstractCLI#buildOptions()
      */
     @SuppressWarnings("static-access")
@@ -118,7 +117,6 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.util.AbstractCLI#doWork(java.lang.String[])
      */
     @Override
@@ -139,7 +137,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
                 return null;
             }
 
-            unlazifyArrayDesign( arrayDesign );
+            arrayDesign = unlazifyArrayDesign( arrayDesign );
             Collection<BlatResult> persistedResults;
             try {
                 if ( this.blatResultFile != null ) {

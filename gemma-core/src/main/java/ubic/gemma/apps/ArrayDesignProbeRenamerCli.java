@@ -73,7 +73,7 @@ public class ArrayDesignProbeRenamerCli extends ArrayDesignSequenceManipulatingC
         }
 
         ArrayDesign arrayDesign = this.locateArrayDesign( this.arrayDesignName );
-        unlazifyArrayDesign( arrayDesign );
+        arrayDesign = unlazifyArrayDesign( arrayDesign );
 
         ArrayDesignProbeRenamingService arrayDesignProbeRenamingService = ( ArrayDesignProbeRenamingService ) this
                 .getBean( "arrayDesignProbeRenamingService" );

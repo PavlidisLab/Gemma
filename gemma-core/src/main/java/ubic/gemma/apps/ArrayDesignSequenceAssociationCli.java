@@ -137,7 +137,7 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
 
             ArrayDesign arrayDesign = locateArrayDesign( arrayDesignName );
 
-            unlazifyArrayDesign( arrayDesign );
+            arrayDesign = unlazifyArrayDesign( arrayDesign );
 
             if ( arrayDesign == null ) {
                 log.error( "No arrayDesign " + arrayDesignName + " found" );

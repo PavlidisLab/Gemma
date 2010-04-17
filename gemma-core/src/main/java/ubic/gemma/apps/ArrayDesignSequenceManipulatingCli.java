@@ -181,8 +181,8 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractSpringA
         userManager = ( UserManager ) this.getBean( "userManager" );
     }
 
-    protected void unlazifyArrayDesign( ArrayDesign arrayDesign ) {
-        arrayDesign = arrayDesignService.thawLite( arrayDesign );
+    protected ArrayDesign unlazifyArrayDesign( ArrayDesign arrayDesign ) {
+        return arrayDesignService.thawLite( arrayDesign );
     }
 
     /**

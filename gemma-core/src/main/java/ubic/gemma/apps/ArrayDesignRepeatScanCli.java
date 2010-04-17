@@ -92,7 +92,7 @@ public class ArrayDesignRepeatScanCli extends ArrayDesignSequenceManipulatingCli
                 return null;
             }
 
-            unlazifyArrayDesign( arrayDesign );
+            arrayDesign = unlazifyArrayDesign( arrayDesign );
 
             processArrayDesign( arrayDesign );
 
@@ -156,7 +156,7 @@ public class ArrayDesignRepeatScanCli extends ArrayDesignSequenceManipulatingCli
     }
 
     private void processArrayDesign( ArrayDesign design ) {
-        unlazifyArrayDesign( design );
+        design = unlazifyArrayDesign( design );
 
         // no taxon is passed to this method so all sequences will be retrieved even for multi taxon arrays
         Collection<BioSequence> sequences = ArrayDesignSequenceAlignmentService.getSequences( design );
