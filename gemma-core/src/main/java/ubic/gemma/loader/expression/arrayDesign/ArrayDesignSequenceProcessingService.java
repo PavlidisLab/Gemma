@@ -667,14 +667,15 @@ public class ArrayDesignSequenceProcessingService {
     public Collection<BioSequence> processArrayDesign( ArrayDesign arrayDesign, InputStream sequenceFile,
             SequenceType sequenceType, Taxon taxon ) throws IOException {
 
+        arrayDesign = arrayDesignService.thawLite( arrayDesign );
+
         if ( sequenceType.equals( SequenceType.AFFY_PROBE ) ) {
             return this.processAffymetrixDesign( arrayDesign, sequenceFile, taxon, true );
         } else if ( sequenceType.equals( SequenceType.OLIGO ) ) {
             return this.processOligoDesign( arrayDesign, sequenceFile, taxon );
         }
         taxon = validateTaxon( taxon, arrayDesign );
-        // hibernate initilisation error being thrown
-        arrayDesign = arrayDesignService.thawLite( arrayDesign );
+
         checkForCompositeSequences( arrayDesign );
 
         FastaParser fastaParser = new FastaParser();
