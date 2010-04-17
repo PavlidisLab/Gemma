@@ -108,7 +108,7 @@ public class LinkAnalysisController extends AbstractTaskService {
 
         LinkAnalysisConfig lac = new LinkAnalysisConfig();
         FilterConfig fc = new FilterConfig();
-        LinkAnalysisTaskCommand cmd = new LinkAnalysisTaskCommand( null, ee, lac, fc );
+        LinkAnalysisTaskCommand cmd = new LinkAnalysisTaskCommand( ee, lac, fc );
 
         return super.run( cmd );
     }
@@ -119,6 +119,7 @@ public class LinkAnalysisController extends AbstractTaskService {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.web.controller.grid.AbstractSpacesController#getRunner(java.lang.String, java.lang.Object)
      */
     @Override
@@ -128,6 +129,7 @@ public class LinkAnalysisController extends AbstractTaskService {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.web.controller.grid.AbstractSpacesController#getSpaceRunner(java.lang.String, java.lang.Object)
      */
     @Override

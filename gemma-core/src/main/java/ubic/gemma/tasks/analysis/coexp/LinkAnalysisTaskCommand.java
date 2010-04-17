@@ -38,7 +38,7 @@ public class LinkAnalysisTaskCommand extends TaskCommand {
     private static final long serialVersionUID = 1L;
     /**
      * 
-     */    
+     */
     private ExpressionExperiment expressionExperiment;
     private FilterConfig filterConfig;
     private LinkAnalysisConfig linkAnalysisConfig;
@@ -46,9 +46,8 @@ public class LinkAnalysisTaskCommand extends TaskCommand {
     /**
      * @param taskId
      */
-    public LinkAnalysisTaskCommand( String taskId, ExpressionExperiment ee, LinkAnalysisConfig lac, FilterConfig fg ) {
+    public LinkAnalysisTaskCommand( ExpressionExperiment ee, LinkAnalysisConfig lac, FilterConfig fg ) {
         super();
-        this.setTaskId( taskId );
         this.expressionExperiment = ee;
         this.filterConfig = fg;
         this.linkAnalysisConfig = lac;
