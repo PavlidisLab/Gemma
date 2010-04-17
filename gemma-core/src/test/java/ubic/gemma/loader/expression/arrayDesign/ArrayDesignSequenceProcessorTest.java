@@ -241,7 +241,7 @@ public class ArrayDesignSequenceProcessorTest extends BaseSpringContextTest {
             app.validateTaxon( null, ad );
             fail();
         } catch ( IllegalArgumentException e ) {
-            assertTrue( e.getMessage().contains( "please specifiy which taxon to run" ) );
+            assertTrue( "Got: " + e.getMessage(), e.getMessage().contains( "please specify which taxon to run" ) );
         }
 
     }
