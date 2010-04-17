@@ -223,12 +223,12 @@ public class MatrixWriter<T> {
 
             String symbols = "";
 
-            if ( geneStrings.length > 1 ) {
+            if ( geneStrings.length > 1 && geneStrings[1] != null ) {
                 symbols = geneStrings[1];
             }
 
             String names = "";
-            if ( geneStrings.length > 2 ) {
+            if ( geneStrings.length > 2 && geneStrings[2] != null ) {
                 names = geneStrings[2];
             }
 
