@@ -66,6 +66,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorDao#createProcessedDataVectors(ubic.gemma
      * .model.expression.experiment.ExpressionExperiment)
@@ -134,6 +135,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         Collection<DesignElement> seenDes = new HashSet<DesignElement>();
         QuantitationType preferredMaskedDataQuantitationType = getPreferredMaskedDataQuantitationType( preferredDataVectors
                 .iterator().next().getQuantitationType() );
+
         Collection<ProcessedExpressionDataVector> result = new ArrayList<ProcessedExpressionDataVector>();
         for ( DoubleVectorValueObject dvvo : maskedVectorObjects ) {
 
@@ -158,6 +160,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         this.getHibernateTemplate().lock( expressionExperiment, LockMode.READ );
         Hibernate.initialize( expressionExperiment.getProcessedExpressionDataVectors() );
         expressionExperiment.setProcessedExpressionDataVectors( new HashSet<ProcessedExpressionDataVector>( results ) );
+        expressionExperiment.getQuantitationTypes().add( preferredMaskedDataQuantitationType );
 
         this.getHibernateTemplate().update( expressionExperiment );
 
@@ -183,6 +186,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorDao#getProcessedDataMatrix(ubic.gemma.model
      * .expression.experiment.ExpressionExperiment, java.util.Collection)
@@ -265,6 +269,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorDao#getProcessedVectors(ubic.gemma.model
      * .expression.experiment.ExpressionExperiment)
@@ -303,6 +308,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorDao#getRanks(java.util.Collection,
      * java.util.Collection, ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorDao.RankMethod)
      */
@@ -360,6 +366,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorDao#getRanks(ubic.gemma.model.expression
      * .experiment.ExpressionExperiment, java.util.Collection,
@@ -413,6 +420,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorDao#getRanks(ubic.gemma.model.expression
      * .experiment.ExpressionExperiment,
