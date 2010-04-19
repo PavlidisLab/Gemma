@@ -350,6 +350,7 @@ Gemma.GeneGroupImporter = Ext.extend(Ext.Panel, {
 								}, {
 									tooltip : "Show/hide public data",
 									id : "geneGroupData-show-public",
+									pressed: true,
 									enableToggle : true,
 									icon : "/Gemma/images/icons/world_add.png",
 									handler : function() {

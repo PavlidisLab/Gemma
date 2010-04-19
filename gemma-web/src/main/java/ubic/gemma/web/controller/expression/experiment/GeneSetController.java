@@ -193,16 +193,22 @@ public class GeneSetController {
     public Collection<GeneSetValueObject> getUsersGeneGroups( boolean privateOnly ) {
         Collection<Securable> secs = new HashSet<Securable>();
 
+        Boolean isAnonymous = securityService.isUserAnonymous();
+        
         Collection<GeneSet> geneSets = null;
-        if ( privateOnly ) {
+        
+        if (isAnonymous){
+            secs.addAll( geneSetService.loadAll() );
+        }
+        else if ( privateOnly ) {
             try {
                 geneSets = geneSetService.loadMyGeneSets();
                 secs.addAll( securityService.choosePrivate( geneSets ) );
             } catch ( AccessDeniedException e ) {
                 // okay, they just aren't allowed to see those.
             }
+            
         } else {
-            // secs.addAll( geneSets );
             secs.addAll( geneSetService.loadAll() );
         }
 
