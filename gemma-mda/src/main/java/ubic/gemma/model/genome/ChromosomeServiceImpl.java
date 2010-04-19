@@ -57,7 +57,6 @@ public class ChromosomeServiceImpl extends ubic.gemma.model.genome.ChromosomeSer
      * 
      * @see ubic.gemma.model.genome.ChromosomeService#create(ubic.gemma.model.genome.Chromosome)
      */
-    @Override
     public Chromosome create( Chromosome chromosome ) {
         return this.getChromosomeDao().create( chromosome );
     }

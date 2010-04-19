@@ -46,7 +46,6 @@ public class ChromosomeDaoImpl extends ubic.gemma.model.genome.ChromosomeDaoBase
      * 
      * @see ubic.gemma.model.genome.ChromosomeDaoBase#find(ubic.gemma.model.genome.Chromosome)
      */
-    @Override
     public Chromosome find( Chromosome chromosome ) {
         try {
 
@@ -90,7 +89,6 @@ public class ChromosomeDaoImpl extends ubic.gemma.model.genome.ChromosomeDaoBase
         return results;
     }
 
-    @Override
     public Chromosome findOrCreate( Chromosome chromosome ) {
         Chromosome existing = this.find( chromosome );
         if ( existing != null ) {
