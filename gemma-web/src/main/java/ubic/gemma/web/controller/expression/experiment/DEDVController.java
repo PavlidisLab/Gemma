@@ -97,6 +97,7 @@ public class DEDVController {
     @Autowired
     private DifferentialExpressionResultService differentialExpressionResultService;
 
+    @SuppressWarnings("unused")
     @Autowired
     private ExperimentalDesignVisualizationService experimentalDesignVisualizationService;
 
@@ -1034,6 +1035,9 @@ public class DEDVController {
         timer.start();
         Map<ExpressionExperiment, Collection<DoubleVectorValueObject>> vvoMap = new HashMap<ExpressionExperiment, Collection<DoubleVectorValueObject>>();
         // Organize by expression experiment
+        if (dedvs == null || dedvs.isEmpty())
+                return null;
+        
         for ( DoubleVectorValueObject dvvo : dedvs ) {
             ExpressionExperiment ee = dvvo.getExpressionExperiment();
             if ( !vvoMap.containsKey( ee ) ) {
