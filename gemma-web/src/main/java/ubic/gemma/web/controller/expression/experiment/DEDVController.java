@@ -1036,7 +1036,7 @@ public class DEDVController {
         Map<ExpressionExperiment, Collection<DoubleVectorValueObject>> vvoMap = new HashMap<ExpressionExperiment, Collection<DoubleVectorValueObject>>();
         // Organize by expression experiment
         if (dedvs == null || dedvs.isEmpty())
-                return null;
+                return  new VisualizationValueObject[1];
         
         for ( DoubleVectorValueObject dvvo : dedvs ) {
             ExpressionExperiment ee = dvvo.getExpressionExperiment();

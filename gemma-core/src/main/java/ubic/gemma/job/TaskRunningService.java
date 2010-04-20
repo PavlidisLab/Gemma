@@ -246,7 +246,7 @@ public class TaskRunningService implements InitializingBean {
      * @param taskId
      * @return null if the task is still running or was cancelled, or the result object
      */
-    public synchronized Object checkResult( String taskId ) throws Exception {
+    public synchronized TaskResult checkResult( String taskId ) throws Exception {
         if ( taskId == null ) throw new IllegalArgumentException( "task id cannot be null" );
 
         log.debug( "entering" );
@@ -538,8 +538,8 @@ public class TaskRunningService implements InitializingBean {
      * @param taskId
      * @return
      */
-    private Object clearFinished( Object taskId ) {
-        Object finished = finishedTasks.get( taskId );
+    private TaskResult clearFinished( Object taskId ) {
+        TaskResult finished = finishedTasks.get( taskId );
         finishedTasks.remove( taskId );
         return finished;
     }

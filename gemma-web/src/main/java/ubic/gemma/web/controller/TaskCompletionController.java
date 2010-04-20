@@ -46,14 +46,14 @@ public class TaskCompletionController {
      * @return
      */
     public Object checkResult( String taskId ) throws Exception {
-        Object result = taskRunningService.checkResult( taskId );
+        TaskResult result = taskRunningService.checkResult( taskId );
 
         if ( result == null ) return null;
 
-        if ( result instanceof TaskResult ) {
-            result = ( ( TaskResult ) result ).getAnswer();
-        } else if ( result instanceof ModelAndView ) {
-            View view = ( ( ModelAndView ) result ).getView();
+        Object answer = result.getAnswer();
+              
+        if ( answer instanceof ModelAndView ) {
+            View view = ( ( ModelAndView ) answer ).getView();
             if ( view instanceof RedirectView ) {
                 return ( ( RedirectView ) view ).getUrl();
             }
