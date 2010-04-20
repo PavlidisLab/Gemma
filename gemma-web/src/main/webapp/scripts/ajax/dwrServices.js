@@ -555,9 +555,6 @@ SecurityController.getGroupMembers = function(p0, callback) {
 SecurityController.getAvailablePrincipalSids = function(callback) {
 	dwr.engine._execute(SecurityController._path, 'SecurityController', 'getAvailablePrincipalSids', callback);
 }
-SecurityController.getUsersGeneGroups = function(p0, callback) {
-	dwr.engine._execute(SecurityController._path, 'SecurityController', 'getUsersGeneGroups', p0, callback);
-}
 //==============================================================================
 if (GeneSetController == null)
 	var GeneSetController = {};

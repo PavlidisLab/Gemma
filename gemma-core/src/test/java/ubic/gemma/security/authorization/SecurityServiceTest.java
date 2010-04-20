@@ -83,7 +83,7 @@ public class SecurityServiceTest extends BaseSpringContextTest {
 
     @Autowired
     private UserManager userManager;
-    
+
     @Autowired
     private MutableAclService mutableAclService;
 
@@ -91,6 +91,7 @@ public class SecurityServiceTest extends BaseSpringContextTest {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.BaseDependencyInjectionSpringContextTest#onSetUpInTransaction()
      */
     @Before
@@ -248,6 +249,14 @@ public class SecurityServiceTest extends BaseSpringContextTest {
         } catch ( AccessDeniedException ok ) {
 
         }
+        try {
+            securityService.deleteGroup( groupName );
+            fail( "Should have gotten 'access denied'" );
+        } catch ( AccessDeniedException ok ) {
+
+        }
+        this.runAsUser( username );
+        securityService.deleteGroup( groupName );
 
     }
 
@@ -281,142 +290,138 @@ public class SecurityServiceTest extends BaseSpringContextTest {
             return null;
         }
     }
-    
-    
+
     /**
-     * Tests that the same ACL can not be added to a securable object.  
+     * Tests that the same ACL can not be added to a securable object.
      * 
      * @throws Exception
      */
     @Test
     public void testDuplicateAcesNotAddedOnPrivateExpressionExperiment() throws Exception {
-        //make private experiment
-        ExpressionExperiment ee = super.getTestPersistentBasicExpressionExperiment();       
+        // make private experiment
+        ExpressionExperiment ee = super.getTestPersistentBasicExpressionExperiment();
         securityService.makePrivate( ee );
-        //add user and add the user to the group
+        // add user and add the user to the group
         String username = "salmonid" + randomName();
         String groupName = "fish" + randomName();
         makeUser( username );
-        securityService.makeOwnedByUser( ee, username );            
+        securityService.makeOwnedByUser( ee, username );
         assertTrue( securityService.isEditableByUser( ee, username ) );
         this.runAsUser( username );
-                
+
         securityService.createGroup( groupName );
-       
+
         MutableAcl acl = getAcl( ee );
         int numberOfAces = acl.getEntries().size();
-        
-        securityService.makeReadableByGroup( ee, groupName );        
-        MutableAcl aclAfterReadableAdded = getAcl( ee );
-        assertEquals(numberOfAces +1, aclAfterReadableAdded.getEntries().size());
-        
-        securityService.makeWriteableByGroup( ee, groupName );                            
-        MutableAcl aclAfterWritableAdded = getAcl( ee );
-        assertEquals(numberOfAces+2, aclAfterWritableAdded.getEntries().size());
-        
-        //this time the acl there and should not be added again 
-        securityService.makeReadableByGroup( ee, groupName );        
-        MutableAcl aclAfterReadableAddedAgain = getAcl( ee );
-        assertEquals(numberOfAces +2, aclAfterReadableAddedAgain.getEntries().size());
-        
-        //check writable too
-        securityService.makeWriteableByGroup( ee, groupName );                            
-        MutableAcl aclAfterWritableAddedAgain = getAcl( ee );
-        assertEquals(numberOfAces+2, aclAfterWritableAddedAgain.getEntries().size());
-        
 
-    }    
-    
-    
+        securityService.makeReadableByGroup( ee, groupName );
+        MutableAcl aclAfterReadableAdded = getAcl( ee );
+        assertEquals( numberOfAces + 1, aclAfterReadableAdded.getEntries().size() );
+
+        securityService.makeWriteableByGroup( ee, groupName );
+        MutableAcl aclAfterWritableAdded = getAcl( ee );
+        assertEquals( numberOfAces + 2, aclAfterWritableAdded.getEntries().size() );
+
+        // this time the acl there and should not be added again
+        securityService.makeReadableByGroup( ee, groupName );
+        MutableAcl aclAfterReadableAddedAgain = getAcl( ee );
+        assertEquals( numberOfAces + 2, aclAfterReadableAddedAgain.getEntries().size() );
+
+        // check writable too
+        securityService.makeWriteableByGroup( ee, groupName );
+        MutableAcl aclAfterWritableAddedAgain = getAcl( ee );
+        assertEquals( numberOfAces + 2, aclAfterWritableAddedAgain.getEntries().size() );
+
+    }
+
     /**
-     * Tests an unlikely scenario?? but if there is an acl that was duplicated
-     * with same principal, permission and object then both acls can be deleted.  
+     * Tests an unlikely scenario?? but if there is an acl that was duplicated with same principal, permission and
+     * object then both acls can be deleted.
      * 
      * @throws Exception
      */
     @Test
     public void testRemoveMultipleAcesFromPrivateExpressionExperiment() throws Exception {
-        //make private experiment
-        ExpressionExperiment ee = super.getTestPersistentBasicExpressionExperiment();       
+        // make private experiment
+        ExpressionExperiment ee = super.getTestPersistentBasicExpressionExperiment();
         securityService.makePrivate( ee );
-        
-        //add user and add the user to a group
-        String username = "salmonid" ;
+
+        // add user and add the user to a group
+        String username = "salmonid";
         String groupName = "fish" + randomName();
         makeUser( username );
-        securityService.makeOwnedByUser( ee, username );            
+        securityService.makeOwnedByUser( ee, username );
         assertTrue( securityService.isEditableByUser( ee, username ) );
-        this.runAsUser( username );                
+        this.runAsUser( username );
         securityService.createGroup( groupName );
-       
-        //get the basic acls
-        MutableAcl acl = getAcl( ee );           
-        int numberOfAces = acl.getEntries().size();        
-        
-        //make readable by group add first acl read for grouo and check added
-        securityService.makeReadableByGroup( ee, groupName );        
+
+        // get the basic acls
+        MutableAcl acl = getAcl( ee );
+        int numberOfAces = acl.getEntries().size();
+
+        // make readable by group add first acl read for grouo and check added
+        securityService.makeReadableByGroup( ee, groupName );
         MutableAcl aclAfterReadableAdded = getAcl( ee );
-        assertEquals(numberOfAces +1, aclAfterReadableAdded.getEntries().size());       
-        
-        //force the addition of  duplicate ACL read, fish group on the same experiment
-        List<GrantedAuthority> groupAuthorities = userManager.findGroupAuthorities( groupName );            
+        assertEquals( numberOfAces + 1, aclAfterReadableAdded.getEntries().size() );
+
+        // force the addition of duplicate ACL read, fish group on the same experiment
+        List<GrantedAuthority> groupAuthorities = userManager.findGroupAuthorities( groupName );
         GrantedAuthority ga = groupAuthorities.get( 0 );
         aclAfterReadableAdded.insertAce( aclAfterReadableAdded.getEntries().size(), BasePermission.READ,
                 new GrantedAuthoritySid( userManager.getRolePrefix() + ga ), true );
         mutableAclService.updateAcl( aclAfterReadableAdded );
-        MutableAcl aclAfterReadableAddedDuplicate = getAcl( ee );        
-        assertEquals(numberOfAces +2, aclAfterReadableAddedDuplicate.getEntries().size());    
-        
-        //delete the acl now and check removed both
+        MutableAcl aclAfterReadableAddedDuplicate = getAcl( ee );
+        assertEquals( numberOfAces + 2, aclAfterReadableAddedDuplicate.getEntries().size() );
+
+        // delete the acl now and check removed both
         securityService.makeUnreadableByGroup( ee, groupName );
         MutableAcl aclAfterReadableAddedDuplicateRemoval = getAcl( ee );
-        assertEquals(numberOfAces, aclAfterReadableAddedDuplicateRemoval.getEntries().size());  
-        List<AccessControlEntry> entriesAfterDelete =  aclAfterReadableAddedDuplicateRemoval.getEntries();       
-        assertEquals(numberOfAces, entriesAfterDelete.size());    
-       
-        //also check that the right acls  check the principals
+        assertEquals( numberOfAces, aclAfterReadableAddedDuplicateRemoval.getEntries().size() );
+        List<AccessControlEntry> entriesAfterDelete = aclAfterReadableAddedDuplicateRemoval.getEntries();
+        assertEquals( numberOfAces, entriesAfterDelete.size() );
+
+        // also check that the right acls check the principals
         Collection<String> principals = new ArrayList<String>();
-        principals.add("GrantedAuthoritySid[GROUP_ADMIN]"  );
-        principals.add("GrantedAuthoritySid[GROUP_AGENT]"  );
-        principals.add("PrincipalSid[salmonid]"  );
-        principals.add("PrincipalSid[salmonid]" );
-        
-       for(AccessControlEntry accessControl:entriesAfterDelete){
-           Sid sid = accessControl.getSid();
-           assertTrue(principals.contains( sid.toString() ));
-           //remove it once in case found in case of duplicates
-           principals.remove( sid.toString()  );           
-       }       
-       //clean up the groups
-       userManager.deleteGroup( groupName );
-       //userManager.deleteUser( username );
-    }            
+        principals.add( "GrantedAuthoritySid[GROUP_ADMIN]" );
+        principals.add( "GrantedAuthoritySid[GROUP_AGENT]" );
+        principals.add( "PrincipalSid[salmonid]" );
+        principals.add( "PrincipalSid[salmonid]" );
+
+        for ( AccessControlEntry accessControl : entriesAfterDelete ) {
+            Sid sid = accessControl.getSid();
+            assertTrue( principals.contains( sid.toString() ) );
+            // remove it once in case found in case of duplicates
+            principals.remove( sid.toString() );
+        }
+        // clean up the groups
+        userManager.deleteGroup( groupName );
+        // userManager.deleteUser( username );
+    }
+
     /**
-     * Test to ensure that on creation of principal using a username that does not exist in system exception is 
-     * thrown. Principal ids are created in these method calls on SecurityService.
+     * Test to ensure that on creation of principal using a username that does not exist in system exception is thrown.
+     * Principal ids are created in these method calls on SecurityService.
      */
     @Test
-    public void testSetPrincialSID(){
+    public void testSetPrincialSID() {
         String username = "first_" + randomName();
-        ExpressionExperiment ee = super.getTestPersistentBasicExpressionExperiment();       
+        ExpressionExperiment ee = super.getTestPersistentBasicExpressionExperiment();
         securityService.makePrivate( ee );
-        
+
         try {
             securityService.setOwner( ee, username );
             fail();
         } catch ( Exception e ) {
-           
+
         }
-        
+
         try {
             securityService.makeOwnedByUser( ee, username );
             fail();
         } catch ( Exception e ) {
-            
-        }              
-                
-    }   
-    
-    
+
+        }
+
+    }
 
 }

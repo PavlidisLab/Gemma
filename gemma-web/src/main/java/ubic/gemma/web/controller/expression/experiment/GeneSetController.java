@@ -133,11 +133,11 @@ public class GeneSetController {
      * @param groupId
      * @param geneIds
      */
-    public void updateGeneGroup( Long groupId, String description,  Collection<Long> geneIds ) {
+    public void updateGeneGroup( Long groupId, String description, Collection<Long> geneIds ) {
 
         GeneSet gset = geneSetService.load( groupId );
-        if(gset == null){
-            log.warn("Atempt to update a group that doesn't exist. ID =  " + groupId);
+        if ( gset == null ) {
+            log.warn( "Atempt to update a group that doesn't exist. ID =  " + groupId );
             return;
         }
         Collection<GeneSetMember> updatedGenelist = new HashSet<GeneSetMember>(); // Creating a new gene list indirectly
@@ -193,21 +193,20 @@ public class GeneSetController {
     public Collection<GeneSetValueObject> getUsersGeneGroups( boolean privateOnly ) {
         Collection<Securable> secs = new HashSet<Securable>();
 
-        Boolean isAnonymous = securityService.isUserAnonymous();
-        
+        Boolean isAnonymous = SecurityService.isUserAnonymous();
+
         Collection<GeneSet> geneSets = null;
-        
-        if (isAnonymous){
+
+        if ( isAnonymous ) {
             secs.addAll( geneSetService.loadAll() );
-        }
-        else if ( privateOnly ) {
+        } else if ( privateOnly ) {
             try {
                 geneSets = geneSetService.loadMyGeneSets();
                 secs.addAll( securityService.choosePrivate( geneSets ) );
             } catch ( AccessDeniedException e ) {
                 // okay, they just aren't allowed to see those.
             }
-            
+
         } else {
             secs.addAll( geneSetService.loadAll() );
         }

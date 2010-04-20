@@ -48,12 +48,6 @@ import ubic.gemma.web.controller.BaseFormController;
  * @author paul
  * @version $Id$
  */
-/**
- * TODO Document Me
- * 
- * @author paul
- * @version $Id$
- */
 public class ExpressionExperimentSetController extends BaseFormController {
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
     private ExpressionExperimentService expressionExperimentService;

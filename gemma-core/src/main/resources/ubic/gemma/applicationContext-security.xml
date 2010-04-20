@@ -267,7 +267,7 @@
 	</bean>
 
 	<!-- Service that handles CRUD operations on ACLs.  -->
-	<bean id="aclService" class="org.springframework.security.acls.jdbc.JdbcMutableAclService">
+	<bean id="aclService" class="ubic.gemma.security.authorization.acl.AclService">
 		<constructor-arg ref="dataSource" />
 		<constructor-arg ref="lookupStrategy" />
 		<constructor-arg ref="aclCache" />

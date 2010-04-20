@@ -34,13 +34,14 @@ import org.springframework.security.acls.model.Sid;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 
+import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
+import ubic.gemma.model.analysis.expression.ExpressionExperimentSetService;
 import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis;
 import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisService;
 import ubic.gemma.model.common.Describable;
 import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.model.genome.gene.GeneSetService;
 import ubic.gemma.security.SecurityService;
@@ -64,19 +65,19 @@ public class SecurityController {
     private ExpressionExperimentService expressionExperimentService = null;
 
     @Autowired
+    private ExpressionExperimentSetService expressionExperimentSetService;
+
+    @Autowired
     private GeneCoexpressionAnalysisService geneCoexpressionAnalysisService;
+
+    @Autowired
+    private GeneSetService geneSetService = null;
 
     @Autowired
     private SecurityService securityService = null;
 
     @Autowired
     private UserManager userManager = null;
-
-    @Autowired
-    private GeneSetService geneSetService = null;
-
-    @Autowired
-    private GeneService geneService = null;
 
     /**
      * AJAX
@@ -125,17 +126,13 @@ public class SecurityController {
     public void deleteGroup( String groupName ) {
 
         if ( !this.getGroupsUserCanEdit().contains( groupName ) ) {
-            throw new IllegalArgumentException( "You don't have permission to delete that group" );
+            throw new IllegalArgumentException( "You don't have permission to modify that group" );
         }
-
         /*
-         * FIXME: make sure this isn't one of the special groups.
+         * Additional checks for ability to delete group handled by ss.
          */
+
         securityService.deleteGroup( groupName );
-
-        /*
-         * TODO: delete all ACEs associated with this group.
-         */
     }
 
     /**
@@ -168,28 +165,6 @@ public class SecurityController {
     }
 
     /**
-     * AJAX, but administrator-only!geneCoexpressionAnalysisService
-     * 
-     * @return
-     */
-    public Collection<SidValueObject> getAvailableSids() {
-        List<SidValueObject> results = new ArrayList<SidValueObject>();
-        try {
-            for ( Sid s : securityService.getAvailableSids() ) {
-                SidValueObject sv = new SidValueObject( s );
-
-                results.add( sv );
-            }
-        } catch ( AccessDeniedException e ) {
-            results.clear();
-        }
-
-        Collections.sort( results );
-
-        return results;
-    }
-
-    /**
      * Return a list of principals that is users
      * 
      * @return SidValueObjects
@@ -212,16 +187,40 @@ public class SecurityController {
     }
 
     /**
+     * AJAX, but administrator-only!geneCoexpressionAnalysisService
+     * 
+     * @return
+     */
+    public Collection<SidValueObject> getAvailableSids() {
+        List<SidValueObject> results = new ArrayList<SidValueObject>();
+        try {
+            for ( Sid s : securityService.getAvailableSids() ) {
+                SidValueObject sv = new SidValueObject( s );
+
+                results.add( sv );
+            }
+        } catch ( AccessDeniedException e ) {
+            results.clear();
+        }
+
+        Collections.sort( results );
+
+        return results;
+    }
+
+    /**
      * @param groupName
      * @return
      */
     public Collection<UserValueObject> getGroupMembers( String groupName ) {
+        Collection<UserValueObject> result = new HashSet<UserValueObject>();
+
+        // happens if user is not in any displayed groups.
         if ( StringUtils.isBlank( groupName ) ) {
-            throw new IllegalArgumentException( "Group name cannot be blank" );
+            return result;
         }
         List<String> usersInGroup = userManager.findUsersInGroup( groupName );
 
-        Collection<UserValueObject> result = new HashSet<UserValueObject>();
         for ( String userName : usersInGroup ) {
             UserDetails details = userManager.loadUserByUsername( userName );
 
@@ -270,7 +269,8 @@ public class SecurityController {
     /**
      * AJAX
      * 
-     * @param currentGroup A specific group that we're focusing on. Can be null
+     * @param currentGroup A specific group that we're focusing on. Can be null. Used to populate client-side checkboxes
+     *        to show permissions.
      * @param privateOnly Only show data that are private (non-publicly readable); otherwise show all the data for the
      *        user. This option is probably of most use to administrators.
      * @return
@@ -285,11 +285,13 @@ public class SecurityController {
         secs.addAll( getUsersAnalyses( privateOnly ) );
 
         Collection<SecurityInfoValueObject> result = securables2VOs( secs, currentGroup );
-        // Add gene groups
-        result.addAll( getUsersGeneGroups( privateOnly ) );
+
+        result.addAll( securables2VOs( getUsersGeneGroups( privateOnly ), currentGroup ) );
+
+        result.addAll( securables2VOs( getUsersExperimentSets( privateOnly ), currentGroup ) );
 
         /*
-         * TODO: add other types of securables here.
+         * add other types of securables here.
          */
 
         return result;
@@ -299,41 +301,20 @@ public class SecurityController {
      * @param privateOnly
      * @return
      */
-    private Collection<Securable> getUsersAnalyses( boolean privateOnly ) {
+    public Collection<Securable> getUsersGeneGroups( boolean privateOnly ) {
         Collection<Securable> secs = new HashSet<Securable>();
 
-        Collection<GeneCoexpressionAnalysis> analyses = geneCoexpressionAnalysisService.loadMyAnalyses();
+        Collection<GeneSet> geneSets = geneSetService.loadMyGeneSets();
         if ( privateOnly ) {
             try {
-                secs.addAll( securityService.choosePrivate( analyses ) );
+                secs.addAll( securityService.choosePrivate( geneSets ) );
             } catch ( AccessDeniedException e ) {
                 // okay, they just aren't allowed to see those.
             }
         } else {
-            secs.addAll( analyses );
+            secs.addAll( geneSets );
         }
 
-        return secs;
-    }
-
-    /**
-     * @param privateOnly
-     * @return
-     */
-    private Collection<Securable> getUsersExperiments( boolean privateOnly ) {
-        Collection<ExpressionExperiment> ees = expressionExperimentService.loadMyExpressionExperiments();
-
-        Collection<Securable> secs = new HashSet<Securable>();
-
-        if ( privateOnly ) {
-            try {
-                secs.addAll( securityService.choosePrivate( ees ) );
-            } catch ( AccessDeniedException e ) {
-                // okay, they just aren't allowed to see those.
-            }
-        } else {
-            secs.addAll( ees );
-        }
         return secs;
     }
 
@@ -444,13 +425,6 @@ public class SecurityController {
     }
 
     /**
-     * @param securityService
-     */
-    public void setSecurityService( SecurityService securityService ) {
-        this.securityService = securityService;
-    }
-
-    /**
      * @param geneSetService
      */
     public void setGeneSetService( GeneSetService geneSetService ) {
@@ -458,14 +432,17 @@ public class SecurityController {
     }
 
     /**
+     * @param securityService
+     */
+    public void setSecurityService( SecurityService securityService ) {
+        this.securityService = securityService;
+    }
+
+    /**
      * @param userManager the userManager to set
      */
     public void setUserManager( UserManager userManager ) {
         this.userManager = userManager;
-    }
-
-    public void setGeneService( GeneService geneService ) {
-        this.geneService = geneService;
     }
 
     /**
@@ -489,7 +466,8 @@ public class SecurityController {
             if ( settings.getOwner().isPrincipal() ) {
                 securityService.makeOwnedByUser( s, settings.getOwner().getAuthority() );
             } else {
-                throw new UnsupportedOperationException( "Sorry, not supported!" );
+                // throw new UnsupportedOperationException( "Sorry, not supported - user is " + settings.getOwner() );
+                log.warn( "Can't make user " + settings.getOwner() + " owner, not implemented" );
                 // securityService.makeOwnedByGroup( s, settings.getOwner().getAuthority() );
             }
         } catch ( AccessDeniedException e ) {
@@ -587,29 +565,6 @@ public class SecurityController {
         }
     }
 
-    /*
-     * AJAX exposed method
-     * @param privateOnly
-     * @return
-     */
-    public Collection<SecurityInfoValueObject> getUsersGeneGroups( boolean privateOnly ) {
-        Collection<Securable> secs = new HashSet<Securable>();
-
-        Collection<GeneSet> geneSets = geneSetService.loadMyGeneSets();
-        if ( privateOnly ) {
-            try {
-                secs.addAll( securityService.choosePrivate( geneSets ) );
-            } catch ( AccessDeniedException e ) {
-                // okay, they just aren't allowed to see those.
-            }
-        } else {
-            secs.addAll( geneSets );
-        }
-
-        Collection<SecurityInfoValueObject> result = securables2VOs( secs, null );
-        return result;
-    }
-
     /**
      * @return groups the user can edit (not just the ones they are in!)
      */
@@ -654,6 +609,68 @@ public class SecurityController {
             throw new IllegalArgumentException( "Entity does not exist or user does not have access." );
         }
         return s;
+    }
+
+    /**
+     * @param privateOnly
+     * @return
+     */
+    private Collection<Securable> getUsersAnalyses( boolean privateOnly ) {
+        Collection<Securable> secs = new HashSet<Securable>();
+
+        Collection<GeneCoexpressionAnalysis> analyses = geneCoexpressionAnalysisService.loadMyAnalyses();
+        if ( privateOnly ) {
+            try {
+                secs.addAll( securityService.choosePrivate( analyses ) );
+            } catch ( AccessDeniedException e ) {
+                // okay, they just aren't allowed to see those.
+            }
+        } else {
+            secs.addAll( analyses );
+        }
+
+        return secs;
+    }
+
+    /**
+     * @param privateOnly
+     * @return
+     */
+    private Collection<Securable> getUsersExperiments( boolean privateOnly ) {
+        Collection<ExpressionExperiment> ees = expressionExperimentService.loadMyExpressionExperiments();
+
+        Collection<Securable> secs = new HashSet<Securable>();
+
+        if ( privateOnly ) {
+            try {
+                secs.addAll( securityService.choosePrivate( ees ) );
+            } catch ( AccessDeniedException e ) {
+                // okay, they just aren't allowed to see those.
+            }
+        } else {
+            secs.addAll( ees );
+        }
+        return secs;
+    }
+
+    /**
+     * @param privateOnly
+     * @return
+     */
+    private Collection<Securable> getUsersExperimentSets( boolean privateOnly ) {
+        Collection<Securable> secs = new HashSet<Securable>();
+
+        Collection<ExpressionExperimentSet> analyses = expressionExperimentSetService.loadMySets();
+        if ( privateOnly ) {
+            try {
+                secs.addAll( securityService.choosePrivate( analyses ) );
+            } catch ( AccessDeniedException e ) {
+                // okay, they just aren't allowed to see those.
+            }
+        } else {
+            secs.addAll( analyses );
+        }
+        return secs;
     }
 
     /**

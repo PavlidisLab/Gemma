@@ -42,7 +42,6 @@ import org.springframework.security.acls.domain.PrincipalSid;
 import org.springframework.security.acls.model.AccessControlEntry;
 import org.springframework.security.acls.model.Acl;
 import org.springframework.security.acls.model.MutableAcl;
-import org.springframework.security.acls.model.MutableAclService;
 import org.springframework.security.acls.model.NotFoundException;
 import org.springframework.security.acls.model.ObjectIdentity;
 import org.springframework.security.acls.model.ObjectIdentityRetrievalStrategy;
@@ -63,6 +62,7 @@ import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.model.common.auditAndSecurity.UserGroup;
 import ubic.gemma.security.authentication.UserManager;
+import ubic.gemma.security.authorization.acl.AclService;
 import ubic.gemma.util.AuthorityConstants;
 
 /**
@@ -135,7 +135,7 @@ public class SecurityService {
     }
 
     @Autowired
-    private MutableAclService aclService;
+    private AclService aclService;
 
     private Log log = LogFactory.getLog( SecurityService.class );
 
@@ -282,7 +282,7 @@ public class SecurityService {
          * Nice if we can get around this uniqueness constraint...but I guess it's not easy.
          */
         if ( userManager.groupExists( groupName ) ) {
-            throw new IllegalArgumentException( "A group already exists with that name" );
+            throw new IllegalArgumentException( "A group already exists with that name: " + groupName );
         }
 
         /*
@@ -301,13 +301,36 @@ public class SecurityService {
 
     /**
      * @param groupName
-     */
+     */ 
+    @Transactional
     public void deleteGroup( String groupName ) {
+
+        if ( !userManager.groupExists( groupName ) ) {
+            throw new IllegalArgumentException( "No group with that name: " + groupName );
+        }
+
         /*
-         * FIXME this doesn't clean up everything.
+         * make sure this isn't one of the special groups - Administrators, Users, Agents
          */
+        if ( groupName.equalsIgnoreCase( "Administrator" ) || groupName.equalsIgnoreCase( "Users" )
+                || groupName.equalsIgnoreCase( "Agents" ) ) {
+            throw new IllegalArgumentException( "Cannot delete that group, it is required for system operation." );
+        }
+
+        if ( !isOwnedByCurrentUser( userManager.findGroupByName( groupName ) ) ) {
+            throw new IllegalArgumentException( "Only the owner of a group can delete it" );
+        }
+
+        String authority = getGroupAuthorityNameFromGroupName( groupName );
 
         userManager.deleteGroup( groupName );
+
+        /*
+         * clean up acls that use this group...do that last!
+         */
+
+        aclService.deleteSid( new GrantedAuthoritySid( authority ) );
+
     }
 
     /**
@@ -555,23 +578,23 @@ public class SecurityService {
         requiredPermissions.clear();
         requiredPermissions.add( BasePermission.ADMINISTRATION );
         return hasPermission( s, requiredPermissions, userName );
-    } 
-    
+    }
+
     /**
      * @param s
      * @return true if the current user can edit the securable
      */
     @Secured("ACL_SECURABLE_READ")
-    public boolean isEditable( Securable s) {
-        
-        if (!isUserLoggedIn()) {
+    public boolean isEditable( Securable s ) {
+
+        if ( !isUserLoggedIn() ) {
             return false;
         }
-        
+
         String currentUser = this.userManager.getCurrentUsername();
-        
+
         List<Permission> requiredPermissions = new ArrayList<Permission>();
-        
+
         requiredPermissions.add( BasePermission.WRITE );
         if ( hasPermission( s, requiredPermissions, currentUser ) ) {
             return true;
@@ -734,13 +757,13 @@ public class SecurityService {
         if ( acl.getOwner().equals( userName ) ) {
             return;
         }
-        
+
         // make sure user exists and is enabled.
         UserDetails user = this.userManager.loadUserByUsername( userName );
         if ( !user.isEnabled() || !user.isAccountNonExpired() || !user.isAccountNonLocked() ) {
             throw new IllegalArgumentException( "User  " + userName + " has a disabled account" );
         }
-        
+
         acl.setOwner( new PrincipalSid( userName ) );
         aclService.updateAcl( acl );
 
@@ -851,7 +874,7 @@ public class SecurityService {
     public void makeReadableByGroup( Securable s, String groupName ) throws AccessDeniedException {
         Collection<String> groups = checkForGroupAccessByCurrentuser( groupName );
 
-        if ( !groups.contains( groupName ) && !isUserAdmin()  ) {
+        if ( !groups.contains( groupName ) && !isUserAdmin() ) {
             throw new AccessDeniedException( "User doesn't have access to that group" );
         }
 
@@ -872,14 +895,10 @@ public class SecurityService {
      */
     @Secured("ACL_SECURABLE_EDIT")
     @Transactional
-    public void makeUnreadableByGroup( Securable s, String groupName ) throws AccessDeniedException {       
-        removeGrantedAuthority( s, BasePermission.READ, getGroupAuthorityNameFromGroupName(groupName) );
-        removeGrantedAuthority( s, BasePermission.WRITE, getGroupAuthorityNameFromGroupName(groupName) );
+    public void makeUnreadableByGroup( Securable s, String groupName ) throws AccessDeniedException {
+        removeGrantedAuthority( s, BasePermission.READ, getGroupAuthorityNameFromGroupName( groupName ) );
+        removeGrantedAuthority( s, BasePermission.WRITE, getGroupAuthorityNameFromGroupName( groupName ) );
     }
-    
-       
-    
-    
 
     /**
      * Remove write permissions. Leaves read permissions, if present.
@@ -891,23 +910,22 @@ public class SecurityService {
     @Secured("ACL_SECURABLE_EDIT")
     @Transactional
     public void makeUnwriteableByGroup( Securable s, String groupName ) throws AccessDeniedException {
-        removeGrantedAuthority( s, BasePermission.WRITE, getGroupAuthorityNameFromGroupName(groupName) );
+        removeGrantedAuthority( s, BasePermission.WRITE, getGroupAuthorityNameFromGroupName( groupName ) );
     }
-    
-    
+
     /**
      * From the group name get the authority which should be underscored with GROUP_
+     * 
      * @param The group name e.g. fish
      * @return The authority e.g. GROUP_FISH_...
-     * 
      */
-    private String getGroupAuthorityNameFromGroupName(String groupName){
+    private String getGroupAuthorityNameFromGroupName( String groupName ) {
         Collection<String> groups = checkForGroupAccessByCurrentuser( groupName );
 
         if ( !groups.contains( groupName ) && !isUserAdmin() ) {
             throw new AccessDeniedException( "User doesn't have access to that group" );
         }
-        
+
         List<GrantedAuthority> groupAuthorities = userManager.findGroupAuthorities( groupName );
 
         if ( groupAuthorities == null || groupAuthorities.isEmpty() ) {
@@ -919,12 +937,9 @@ public class SecurityService {
         }
 
         GrantedAuthority ga = groupAuthorities.get( 0 );
-        String authority = userManager.getRolePrefix() + (ga.getAuthority());
+        String authority = userManager.getRolePrefix() + ( ga.getAuthority() );
         return authority;
     }
-    
-    
-    
 
     /**
      * Adds write (and read) permissions.
@@ -945,14 +960,14 @@ public class SecurityService {
         if ( isEditableByGroup( s, groupName ) ) {
             return;
         }
-        //Bug 1835: Duplicate ACLS were added to an object for group read access as part of writable
-        //only add read access if not there already.
-       
-       if(!(isReadableByGroup(s, groupName))){
+        // Bug 1835: Duplicate ACLS were added to an object for group read access as part of writable
+        // only add read access if not there already.
+
+        if ( !( isReadableByGroup( s, groupName ) ) ) {
             addGroupAuthority( s, BasePermission.READ, groupName );
-       }
+        }
         addGroupAuthority( s, BasePermission.WRITE, groupName );
-        
+
     }
 
     /**
@@ -1006,9 +1021,6 @@ public class SecurityService {
         this.aclService.updateAcl( a );
 
     }
-    
-    
-    
 
     /**
      * Provide permission to the given group on the given securable.
@@ -1270,9 +1282,9 @@ public class SecurityService {
     }
 
     /**
-     * Wrapper method that calls removeOneGrantedAuthority to ensure that only one acl at a time is updated.
-     * A bit clunky but it ensures that the code is called as a complete unit, that is an update is performed
-     * and the array retrieved again after update.
+     * Wrapper method that calls removeOneGrantedAuthority to ensure that only one acl at a time is updated. A bit
+     * clunky but it ensures that the code is called as a complete unit, that is an update is performed and the array
+     * retrieved again after update.
      * 
      * @param The object to remove the permissions from
      * @param permission Permission to change.
@@ -1280,26 +1292,25 @@ public class SecurityService {
      */
     private void removeGrantedAuthority( Securable object, Permission permission, String authority ) {
         int numberOfAclsToRemove = 1;
-        //for 0 or 1 acls should only call once
-        for(int i=0;  i <numberOfAclsToRemove; i++){
-            log.info("Removing acl from " + authority);
-            numberOfAclsToRemove  = removeOneGrantedAuthority(object, permission, authority);
+        // for 0 or 1 acls should only call once
+        for ( int i = 0; i < numberOfAclsToRemove; i++ ) {
+            log.info( "Removing acl from " + authority );
+            numberOfAclsToRemove = removeOneGrantedAuthority( object, permission, authority );
         }
-       
+
     }
-    
-    
+
     /**
      * Method removes just one acl and then informs calling method the number of acls to remove
      * 
      * @param object The object to remove the permissions from
      * @param permission The permission to remove
-     * @param authority  e.g. "GROUP_JOESLAB"
-     * @return Number of acl records that need removing 
+     * @param authority e.g. "GROUP_JOESLAB"
+     * @return Number of acl records that need removing
      */
-    private int removeOneGrantedAuthority(Securable object, Permission permission, String authority){  
+    private int removeOneGrantedAuthority( Securable object, Permission permission, String authority ) {
         int numberAclsToRemove = 0;
-        
+
         MutableAcl acl = getAcl( object );
 
         if ( acl == null ) {
@@ -1322,21 +1333,19 @@ public class SecurityService {
                 }
             }
         }
-                
+
         if ( toremove.isEmpty() ) {
             log.warn( "No changes, didn't remove: " + authority );
-        } 
-        else if(toremove.size() >= 1) {
-            
-            numberAclsToRemove = toremove.size(); 
-            //take the first acl
+        } else if ( toremove.size() >= 1 ) {
+
+            numberAclsToRemove = toremove.size();
+            // take the first acl
             acl.deleteAce( toremove.iterator().next() );
             aclService.updateAcl( acl );
         }
-             
-        return numberAclsToRemove;       
-        
-    }    
-    
+
+        return numberAclsToRemove;
+
+    }
 
 }

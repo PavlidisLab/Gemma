@@ -32,14 +32,14 @@ public interface ExpressionExperimentSetService {
      * 
      */
     @Secured( { "GROUP_USER" })
-    public ubic.gemma.model.analysis.expression.ExpressionExperimentSet create(
-            ubic.gemma.model.analysis.expression.ExpressionExperimentSet expressionExperimentSet );
+    public ExpressionExperimentSet create(
+            ExpressionExperimentSet expressionExperimentSet );
 
     /**
      * 
      */
     @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    public void delete( ubic.gemma.model.analysis.expression.ExpressionExperimentSet expressionExperimentSet );
+    public void delete( ExpressionExperimentSet expressionExperimentSet );
 
     /**
      * 
@@ -53,13 +53,13 @@ public interface ExpressionExperimentSetService {
      */
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public java.util.Collection<ExpressionAnalysis> getAnalyses(
-            ubic.gemma.model.analysis.expression.ExpressionExperimentSet expressionExperimentSet );
+            ExpressionExperimentSet expressionExperimentSet );
 
     /**
      * 
      */
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    public ubic.gemma.model.analysis.expression.ExpressionExperimentSet load( java.lang.Long id );
+    public ExpressionExperimentSet load( java.lang.Long id );
 
     /**
      * 
@@ -74,6 +74,12 @@ public interface ExpressionExperimentSetService {
     public Collection<ExpressionExperimentSet> loadAllMultiExperimentSets();
 
     /**
+     * @return sets belonging to current user -- only if they have more than one experiment!
+     */
+    @Secured( { "GROUP_USER", "AFTER_ACL_FILTER_MY_DATA" })
+    public Collection<ExpressionExperimentSet> loadMySets();
+
+    /**
      * <p>
      * Load all ExpressionExperimentSets that belong to the given user.
      * </p>
@@ -86,6 +92,6 @@ public interface ExpressionExperimentSetService {
      * 
      */
     @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    public void update( ubic.gemma.model.analysis.expression.ExpressionExperimentSet expressionExperimentSet );
+    public void update( ExpressionExperimentSet expressionExperimentSet );
 
 }

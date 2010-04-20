@@ -21,7 +21,7 @@ package ubic.gemma.model.analysis.expression;
 import java.util.Collection;
 
 import org.apache.commons.lang.StringUtils;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Service; 
 
 /**
  * @version $Id$
@@ -111,6 +111,14 @@ public class ExpressionExperimentSetServiceImpl extends
         }
 
         this.getExpressionExperimentSetDao().update( expressionExperimentSet );
+    }
+
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.analysis.expression.ExpressionExperimentSetService#loadMySets()
+     */
+    @Override
+    public Collection<ExpressionExperimentSet> loadMySets() {
+       return this.getExpressionExperimentSetDao().loadAllMultiExperimentSets();
     }
 
 }
