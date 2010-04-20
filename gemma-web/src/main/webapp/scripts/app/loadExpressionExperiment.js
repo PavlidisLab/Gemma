@@ -1,10 +1,11 @@
 /**
  * Loading of data from GEO or ArrayExpress
+ * 
  * @author paul
- * @version $Id$ 
+ * @version $Id$
  */
- 
- var uploadButton;
+
+var uploadButton;
 var arrayDesignCombo;
 Ext.onReady(function() {
 			uploadButton = new Ext.Button({
@@ -99,43 +100,23 @@ function handleSuccess(taskId) {
 					taskId : taskId
 				});
 
-		var w = new Ext.Window({
-					modal : true,
-					closable : false,
-					width : 500,
-					items : [p],
-					buttons : [{
-								id : 'cancel-button',
-								handler : function() {
-									p.cancelJob();
-								},
-								text : 'Cancel'
-							}]
-				});
-
 		p.on('done', function(payload) {
 					// this.onDoneLoading(payload);
-					w.hide('upload-button');
-					w.destroy();
 					p.destroy();
 					window.location = payload;
 				}.createDelegate(this));
 
 		p.on('fail', function(payload) {
-					w.hide('upload-button');
-					w.destroy();
 					p.destroy();
 					handleFailure(payload);
 				});
 
 		p.on('cancel', function() {
-					w.hide();
-					w.destroy();
 					p.destroy();
 					reset();
 				});
 
-		w.show('upload-button');
+		p.show('upload-button');
 
 		p.startProgress();
 	} catch (e) {

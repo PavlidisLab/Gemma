@@ -47,7 +47,7 @@
 				</td>
 			</tr>
 			<tr>
-				<td colspan=2 align='center' class='small'>
+				<td colspan='2' align='center' class='small'>
 					(as of ${summary.dateCached})
 				</td>
 			</tr>

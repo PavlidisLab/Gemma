@@ -40,6 +40,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.stereotype.Service;
 
+import ubic.gemma.job.grid.util.SpaceMonitor;
 import ubic.gemma.job.grid.util.SpacesUtil;
 import ubic.gemma.job.progress.ProgressJob;
 import ubic.gemma.job.progress.ProgressManager;
@@ -118,6 +119,9 @@ public class TaskRunningService implements InitializingBean {
 
     @Autowired
     private SpacesUtil spacesUtil;
+
+    @Autowired
+    private SpaceMonitor spaceMonitor;
 
     private final Map<String, SubmittedTask> submittedTasks = new ConcurrentHashMap<String, SubmittedTask>();
 
@@ -457,30 +461,48 @@ public class TaskRunningService implements InitializingBean {
      * sent in that case.
      * 
      * @param taskId
-     * @param date - start time (might be null)
-     * @return boolean true if the task is till running, false if the task is now cancelled
      */
     private void checkSubmittedTaskStatus( String taskId ) {
         SubmittedTask t = submittedTasks.get( taskId );
 
-        Date subTime = t.getCommand().getSubmissionTime();
-        Date startTime = t.getCommand().getStartTime();
+        TaskCommand command = t.getCommand();
+        Date subTime = command.getSubmissionTime();
+        Date startTime = command.getStartTime();
 
-        if ( startTime == null ) {
-            log.debug( "Job is still queued: " + taskId + " " + t.getCommand().getTaskInterface() );
-            Integer maxQueueWait = t.getCommand().getMaxQueueMinutes();
+        boolean willRunOnGrid = command.isWillRunOnGrid();
+
+        if ( willRunOnGrid ) {
+            /*
+             * Make sure the grid hasn't failed on us.
+             */
+            if ( !SpacesUtil.isSpaceRunning() || !spaceMonitor.getLastStatusWasOK() ) {
+                if ( startTime == null || !SpacesUtil.taskIsRunningOnGrid( taskId ) ) {
+                    ProgressManager.updateJob( taskId, "The compute grid has failed, job is not running, aborting" );
+                    submittedTasks.get( taskId ).getCommand().setEmailAlert( true );
+                    cancelTask( taskId );
+                } else {
+                    log.warn( "Possible grid problem for job " + taskId );
+                }
+            }
+        } else if ( startTime == null ) {
+            log.debug( "Job is still queued: " + taskId + " " + command.getTaskInterface() );
+            Integer maxQueueWait = command.getMaxQueueMinutes();
             assert maxQueueWait != null;
             if ( subTime.before( DateUtils.addMinutes( new Date(), -maxQueueWait ) ) ) {
                 log.warn( "Submitted task has been queued for too long (max=" + maxQueueWait + "minutes), cancelling: "
                         + taskId );
+
+                ProgressManager.updateJob( taskId,
+                        "The job was queued for too long, so it was cancelled after waiting up to " + maxQueueWait
+                                + " minutes." );
+
                 submittedTasks.get( taskId ).getCommand().setEmailAlert( true );
                 cancelTask( taskId );
                 return;
             }
 
         } else if ( startTime.before( DateUtils.addMinutes( new Date(), -MAX_RUNTIME_MINUTES ) ) ) {
-            log.warn( "Running task is taking too long, cancelling: " + taskId + " "
-                    + t.getCommand().getTaskInterface() );
+            log.warn( "Running task is taking too long, cancelling: " + taskId + " " + command.getTaskInterface() );
             submittedTasks.get( taskId ).getCommand().setEmailAlert( true );
             ProgressManager.updateJob( taskId, "The job took too long to run, so it was cancelled after "
                     + MAX_RUNTIME_MINUTES + " minutes." );

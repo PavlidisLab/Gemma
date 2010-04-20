@@ -41,7 +41,6 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.util.StringUtils;
 import org.springframework.web.context.ServletContextAware;
-import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.multipart.MultipartException;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
@@ -64,13 +63,19 @@ public class CommonsMultipartMonitoredResolver implements MultipartResolver, Ser
 
     private File uploadTempDir;
 
+    /*
+     * This is set in gemma-servlet.xml where this bean is configured.
+     */
     private long sizeMax = 4194304L;
 
     protected final Log logger = LogFactory.getLog( getClass() );
 
     public void cleanupMultipart( MultipartHttpServletRequest request ) {
-        Map multipartFiles = request.getFileMap();
-        for ( Iterator it = multipartFiles.values().iterator(); it.hasNext(); ) {
+
+        if ( request instanceof FailedMultipartHttpServletRequest ) return;
+
+        Map<String, MultipartFile> multipartFiles = request.getFileMap();
+        for ( Iterator<MultipartFile> it = multipartFiles.values().iterator(); it.hasNext(); ) {
             CommonsMultipartFile file = ( CommonsMultipartFile ) it.next();
             if ( logger.isDebugEnabled() ) {
                 logger.debug( "Cleaning up multipart file [" + file.getName() + "] with original filename ["
@@ -89,6 +94,7 @@ public class CommonsMultipartMonitoredResolver implements MultipartResolver, Ser
      * that can be used to check progress of the upload.
      * 
      * @see UploadListener for the attached listener.
+     * 
      * @see org.springframework.web.multipart.MultipartResolver#resolveMultipart(javax.servlet.http.HttpServletRequest)
      */
     @SuppressWarnings("unchecked")
@@ -134,8 +140,8 @@ public class CommonsMultipartMonitoredResolver implements MultipartResolver, Ser
                     // multipart file field
                     MultipartFile file = new CommonsMultipartFile( fileItem );
                     multipartFiles.set( file.getName(), file );
-//                    multipartParams.put( "size", new String[] { ( new Long( file.getSize() ) ).toString() } );
-//                    multipartParams.put( "file", new String[] { file.getOriginalFilename() } );
+                    // multipartParams.put( "size", new String[] { ( new Long( file.getSize() ) ).toString() } );
+                    // multipartParams.put( "file", new String[] { file.getOriginalFilename() } );
                     if ( logger.isDebugEnabled() ) {
                         logger.debug( "Found multipart file [" + file.getName() + "] of size " + file.getSize()
                                 + " bytes with original filename [" + file.getOriginalFilename() + "]" );
@@ -144,9 +150,12 @@ public class CommonsMultipartMonitoredResolver implements MultipartResolver, Ser
             }
             return new DefaultMultipartHttpServletRequest( request, multipartFiles, multipartParams );
         } catch ( FileUploadBase.SizeLimitExceededException ex ) {
-            throw new MaxUploadSizeExceededException( this.fileUpload.getSizeMax(), ex );
+            /*
+             * Don't throw an exception - we want to return JSON.
+             */
+            return new FailedMultipartHttpServletRequest( request, ex.getMessage() );
         } catch ( FileUploadException ex ) {
-            throw new MultipartException( "Could not parse multipart request", ex );
+            return new FailedMultipartHttpServletRequest( request, ex.getMessage() );
         }
     }
 

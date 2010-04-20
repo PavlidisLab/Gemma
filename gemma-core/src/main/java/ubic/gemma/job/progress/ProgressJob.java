@@ -69,10 +69,6 @@ public interface ProgressJob {
 
     public abstract void failed( Throwable cause );
 
-    public abstract int getPhase();
-
-    public abstract void setPhase( int phase );
-
     public abstract JobInfo getJobInfo();
 
     public abstract String getTaskId();
@@ -80,10 +76,6 @@ public interface ProgressJob {
     public abstract String getForwardingURL();
 
     public abstract void setForwardingURL( String forwardingURL );
-
-    public abstract void setPayload( Object payload );
-
-    public abstract Object getPayload();
 
     public boolean forwardWhenDone();
 

@@ -576,12 +576,24 @@ public class SearchService implements InitializingBean {
         StopWatch watch = startTiming();
         String searchString = settings.getQuery();
         Collection<SearchResult> results = new HashSet<SearchResult>();
+      
+        
         ArrayDesign shortNameResult = arrayDesignService.findByShortName( searchString );
         if ( shortNameResult != null ) {
             results.add( new SearchResult( shortNameResult, 1.0 ) );
         } else {
             ArrayDesign nameResult = arrayDesignService.findByName( searchString );
             if ( nameResult != null ) results.add( new SearchResult( nameResult, 1.0 ) );
+        }
+
+        Collection<ArrayDesign> altNameResults = arrayDesignService.findByAlternateName( searchString );
+        for ( ArrayDesign arrayDesign : altNameResults ) {
+            results.add( new SearchResult( arrayDesign, 0.9 ) );
+        }
+
+        Collection<ArrayDesign> manufacturerResults = arrayDesignService.findByManufacturer( searchString );
+        for ( ArrayDesign arrayDesign : manufacturerResults ) {
+            results.add( new SearchResult( arrayDesign, 0.9 ) );
         }
 
         results.addAll( compassArrayDesignSearch( settings ) );
@@ -593,6 +605,10 @@ public class SearchService implements InitializingBean {
         } else {
             probes = probeResults;
         }
+        
+        
+        
+        
 
         for ( SearchResult r : probes ) {
             CompositeSequence cs = ( CompositeSequence ) r.getResultObject();
@@ -1509,6 +1525,20 @@ public class SearchService implements InitializingBean {
 
             if ( settings.isUseCharacteristics() ) {
                 results.addAll( characteristicExpressionExperimentSearch( settings ) );
+            }
+        }
+
+        /*
+         * Find data sets that match the platform -- TODO make this do something intelligent with GPL570 + brain.
+         */
+        Collection<SearchResult> matchingPlatforms = arrayDesignSearch( settings, null );
+        for ( SearchResult adRes : matchingPlatforms ) {
+            if ( adRes.getResultObject() instanceof ArrayDesign ) {
+                ArrayDesign ad = ( ArrayDesign ) adRes.getResultObject();
+                Collection<ExpressionExperiment> expressionExperiments = this.arrayDesignService
+                        .getExpressionExperiments( ad );
+                if ( expressionExperiments.size() > 0 )
+                    results.addAll( dbHitsToSearchResult( expressionExperiments ) );
             }
         }
 

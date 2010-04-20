@@ -45,6 +45,7 @@ public class ExceptionTag extends TagSupport {
 
     /*
      * (non-Javadoc)
+     * 
      * @see javax.servlet.jsp.tagext.TagSupport#doEndTag()
      */
     @Override
@@ -54,6 +55,7 @@ public class ExceptionTag extends TagSupport {
 
     /*
      * (non-Javadoc)
+     * 
      * @see javax.servlet.jsp.tagext.TagSupport#doStartTag()
      */
     @Override
@@ -73,8 +75,8 @@ public class ExceptionTag extends TagSupport {
                     }
                     buf.append( "</div>" );
                 }
-                //To make sure error doesn't get swallowed.                
-                log.error( this.exception );
+                // To make sure error doesn't get swallowed.
+                log.error( this.exception, this.exception );
             }
 
             pageContext.getOut().print( buf.toString() );

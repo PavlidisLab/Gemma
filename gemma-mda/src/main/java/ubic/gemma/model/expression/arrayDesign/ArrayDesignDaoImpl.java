@@ -1204,100 +1204,21 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         }
 
         return ( ArrayDesign ) res.iterator().next();
+    }
 
-        // if ( deep ) {
-        // throw new UnsupportedOperationException( "Are you sure you need to deeply thaw that ArrayDesign" );
-        // }
-        //
-        // if ( arrayDesign == null ) return;
-        // if ( arrayDesign.getId() == null ) return;
-        // HibernateTemplate templ = this.getHibernateTemplate();
-        // final int FETCH_SIZE = 400;
-        // templ.setFetchSize( FETCH_SIZE );
-        //
-        // Session session = this.getSession();
-        //
-        // long lastTime = 0;
-        // // The following are VERY important for performance. (actually not so sure anymore as we now have the
-        // // transaction
-        // // marked 'readonly' for this method)
-        // CacheMode oldCacheMode = session.getCacheMode();
-        // session.setCacheMode( CacheMode.IGNORE ); // Don't hit the secondary cache
-        //
-        // EntityUtils.attach( session, arrayDesign, ArrayDesignImpl.class, arrayDesign.getId() );
-        //
-        // if ( log.isDebugEnabled() ) log.debug( "Thawing " + arrayDesign + " ..." );
-        //
-        // arrayDesign.getLocalFiles().size();
-        // for ( DatabaseEntry d : arrayDesign.getExternalReferences() ) {
-        // session.update( d );
-        // session.evict( d );
-        // }
-        //
-        // if ( arrayDesign.getAuditTrail() != null ) arrayDesign.getAuditTrail().getEvents().size();
-        //
-        // if ( arrayDesign.getDesignProvider() != null ) {
-        // session.update( arrayDesign.getDesignProvider() );
-        // AuditTrail auditTrail = arrayDesign.getDesignProvider().getAuditTrail();
-        // if ( auditTrail != null ) {
-        // session.update( auditTrail );
-        // auditTrail.getEvents().size();
-        // }
-        // }
-        //
-        // if ( arrayDesign.getMergees() != null ) arrayDesign.getMergees().size();
-        //
-        // if ( arrayDesign.getSubsumedArrayDesigns() != null ) arrayDesign.getSubsumedArrayDesigns().size();
-        //
-        // if ( arrayDesign.getCompositeSequences() == null ) return;
-        //
-        // // / if we got this far, we have to thaw the probes.
-        //
-        // log.debug( "Loading CS proxies for " + arrayDesign + " ..." );
-        // int numToDo = arrayDesign.getCompositeSequences().size();
-        // if ( numToDo > LOGGING_UPDATE_EVENT_COUNT )
-        // log.info( "Must thaw " + ( deep ? " (deep) " : " (lite) " ) + numToDo
-        // + " composite sequence associations ..." );
-        //
-        // StopWatch timer = new StopWatch();
-        // timer.start();
-        // int i = 0;
-        //
-        // for ( CompositeSequence cs : arrayDesign.getCompositeSequences() ) {
-        //
-        // if ( ++i % LOGGING_UPDATE_EVENT_COUNT == 0 ) {
-        // if ( timer.getTime() - lastTime > 5000 ) {
-        // log.info( arrayDesign.getShortName() + " CS assoc thaw progress: " + i + "/" + numToDo + " ... ("
-        // + timer.getTime() / 1000 + "s elapsed)" );
-        // lastTime = timer.getTime();
-        // }
-        // }
-        //
-        // if ( log.isDebugEnabled() ) log.debug( "Processing: " + cs );
-        // if ( cs.getId() != null ) session.lock( cs, LockMode.NONE );
-        //
-        // BioSequence bs = cs.getBiologicalCharacteristic();
-        // if ( bs != null && session.get( BioSequenceImpl.class, bs.getId() ) == null ) {
-        // session.lock( bs, LockMode.NONE );
-        // if ( !Hibernate.isInitialized( bs ) ) {
-        // Hibernate.initialize( bs );
-        // session.evict( bs );
-        // }
-        // }
-        //
-        // session.evict( cs );
-        //
-        // // temporary code: more logging if we're getting really slow.
-        // if ( i % 500 == 0 && timer.getTime() > 2e5 ) {
-        // log.info( "Slow thaw: Last processed: " + cs + "," + i + "/" + numToDo );
-        // }
-        //
-        // }
-        //
-        // if ( timer.getTime() > 5000 )
-        // log.info( arrayDesign.getShortName() + ": CS assoc thaw done (" + timer.getTime() / 1000 + "s elapsed)" );
-        //
-        // session.setCacheMode( oldCacheMode );
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#findByManufacturer(java.lang.String)
+     */
+    @SuppressWarnings("unchecked")
+    public Collection<ArrayDesign> findByManufacturer( String queryString ) {
+        if ( StringUtils.isBlank( queryString ) ) {
+            return new HashSet<ArrayDesign>();
+        }
+        return this.getHibernateTemplate().find(
+                "select ad from ArrayDesignImpl ad inner join ad.designProvider n where n.name like ?",
+                queryString + "%" );
 
     }
 }

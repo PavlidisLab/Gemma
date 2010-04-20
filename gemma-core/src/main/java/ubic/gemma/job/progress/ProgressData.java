@@ -27,20 +27,11 @@ public class ProgressData implements Serializable {
     private static final long serialVersionUID = -4303625064082352461L;
 
     private int percent = 0;
-    private String description = "Default";
+    private String description = "";
     private boolean done = false;
     private String forwardingURL;
     private String taskId;
     private boolean failed = false;
-    private Object payload;
-
-    public Object getPayload() {
-        return payload;
-    }
-
-    public void setPayload( Object payload ) {
-        this.payload = payload;
-    }
 
     public boolean isFailed() {
         return failed;

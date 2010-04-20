@@ -734,4 +734,14 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
         }
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#findByManufacturer(java.lang.String)
+     */
+    @Override
+    public Collection<ArrayDesign> findByManufacturer( String searchString ) {
+        return this.getArrayDesignDao().findByManufacturer( searchString );
+    }
+
 }

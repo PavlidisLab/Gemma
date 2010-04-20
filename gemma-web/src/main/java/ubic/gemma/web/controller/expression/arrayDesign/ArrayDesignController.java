@@ -57,7 +57,6 @@ import ubic.gemma.job.AbstractTaskService;
 import ubic.gemma.job.BackgroundJob;
 import ubic.gemma.job.TaskCommand;
 import ubic.gemma.job.TaskResult;
-import ubic.gemma.job.progress.ProgressManager;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.expression.arrayDesign.AlternateName;
@@ -100,17 +99,15 @@ public class ArrayDesignController extends AbstractTaskService {
         public TaskResult processJob() {
 
             if ( this.command.getEntityId() == null ) {
-                log.info( "Generated summary for all platforms" );
+                log.info( "Generating summary for all platforms" );
                 arrayDesignReportService.generateArrayDesignReport();
+                return new TaskResult( command, new ModelAndView( new RedirectView(
+                        "/Gemma/arrays/showAllArrayDesignStatistics.html" ) ) );
             } else {
-                log.info( "Generating summary for specified platform" );
                 ArrayDesignValueObject report = arrayDesignReportService.generateArrayDesignReport( this.command
                         .getEntityId() );
-                ProgressManager.setPayload( taskId, report ); // FIXME do this via the TaskResult.
+                return new TaskResult( command, report );
             }
-
-            return new TaskResult( command, new ModelAndView( new RedirectView(
-                    "/Gemma/arrays/showAllArrayDesignStatistics.html" ) ) );
 
         }
     }
@@ -545,7 +542,14 @@ public class ArrayDesignController extends AbstractTaskService {
         if ( sId != null ) {
             String[] idList = StringUtils.split( sId, ',' );
             for ( int i = 0; i < idList.length; i++ ) {
-                ids.add( new Long( idList[i] ) );
+                try {
+                    ids.add( new Long( idList[i] ) );
+                } catch ( NumberFormatException e ) {
+                    // just keep going
+                }
+            }
+            if ( ids.isEmpty() ) {
+                throw new IllegalArgumentException( "No valid ids in " + sId );
             }
         }
 

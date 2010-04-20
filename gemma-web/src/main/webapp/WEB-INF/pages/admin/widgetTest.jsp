@@ -81,6 +81,11 @@
 			renderTo : 'factorValueCombo'
 		});
 
+		 new Gemma.FileUploadForm({
+			title : 'Upload your data file',
+			renderTo : 'fileUpload'
+		});
+
 		new Gemma.CharacteristicCombo( {
 			renderTo : 'charCombo',
 			listeners : {
@@ -104,6 +109,7 @@
 		v.allMessages = "Here are some messages for you, widget test.";
 
 	});
+	
 </script>
 
 	<style type="text/css">
@@ -194,6 +200,13 @@
 	AuditTrailGrid
 </h2>
 <div class="widget" id="atGrid"></div>
+
+<h2>
+	FilesUpload
+</h2>
+<div class="widget" id="fileUpload"></div>
+
+
 
 
 <h2>

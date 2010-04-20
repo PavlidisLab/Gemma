@@ -347,4 +347,10 @@ public interface ArrayDesignDao extends BaseDao<ArrayDesign> {
      */
     public Map<Taxon, Integer> getPerTaxonCount();
 
+    /**
+     * @param searchString
+     * @return
+     */
+    public Collection<ArrayDesign> findByManufacturer( String searchString );
+
 }

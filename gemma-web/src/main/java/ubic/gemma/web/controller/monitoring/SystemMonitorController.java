@@ -53,9 +53,6 @@ public class SystemMonitorController {
     @Autowired
     SpaceMonitor spaceMonitor;
 
-    @Autowired
-    SpacesUtil spacesUtil;
-
     /**
      * Flush (clear) all caches. Expose to AJAX
      */
@@ -93,7 +90,7 @@ public class SystemMonitorController {
     public String getSpaceStatus() {
         StringBuilder buf = new StringBuilder();
 
-        List<SpacesRegistrationEntry> registeredWorkers = spacesUtil.getRegisteredWorkers();
+        List<SpacesRegistrationEntry> registeredWorkers = SpacesUtil.getRegisteredWorkers();
 
         String lastStatusMessage = spaceMonitor.getLastStatusMessage();
         Boolean lastStatusWasOK = spaceMonitor.getLastStatusWasOK();
@@ -114,7 +111,8 @@ public class SystemMonitorController {
         if ( registeredWorkers != null ) {
             buf.append( "\n<h2>Workers</h2>" );
             for ( SpacesRegistrationEntry e : registeredWorkers ) {
-                buf.append( e.registrationId + ( e.taskId != null ? " Was busy with task " + e.taskId : "" ) + "</br>\n" );
+                buf.append( e.registrationId + ( e.taskId != null ? " Was busy with task " + e.taskId : "" )
+                        + "</br>\n" );
             }
         }
 

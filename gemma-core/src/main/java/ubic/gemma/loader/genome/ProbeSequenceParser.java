@@ -34,7 +34,7 @@ import ubic.gemma.loader.util.parser.BasicLineMapParser;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 
 /**
- * Parse probes from a tabular file. First columnn = probe id; Second column = sequence name; Third column = seqeucne.
+ * Parse probes from a tabular file. First columnn = probe id; Second column = sequence name; Third column = sequence.
  * <p>
  * This is designed primarily to deal with oligonucleotide arrays that have sequence names different from the probe
  * names.

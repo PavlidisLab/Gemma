@@ -52,15 +52,14 @@ public class TaskCompletionController {
 
         if ( result instanceof TaskResult ) {
             result = ( ( TaskResult ) result ).getAnswer();
-        }
-
-        if ( result instanceof ModelAndView ) {
+        } else if ( result instanceof ModelAndView ) {
             View view = ( ( ModelAndView ) result ).getView();
             if ( view instanceof RedirectView ) {
                 return ( ( RedirectView ) view ).getUrl();
             }
             return null;
         }
+
         return result;
     }
 

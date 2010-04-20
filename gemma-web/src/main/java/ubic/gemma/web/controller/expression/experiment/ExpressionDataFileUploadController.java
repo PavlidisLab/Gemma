@@ -244,6 +244,8 @@ public class ExpressionDataFileUploadController extends AbstractTaskService {
         ExpressionExperiment existing = expressionExperimentService.findByShortName( ed.getShortName() );
         SimpleExpressionExperimentCommandValidation result = new SimpleExpressionExperimentCommandValidation();
 
+        log.info( "Checking for valid name and files" );
+
         result.setShortNameIsUnique( existing == null );
 
         String localPath = ed.getServerFilePath();
@@ -265,7 +267,8 @@ public class ExpressionDataFileUploadController extends AbstractTaskService {
 
         if ( arrayDesignIds.isEmpty() ) {
             result.setArrayDesignMatchesDataFile( false );
-            result.setDataFileFormatProblemMessage( "Array design must be provided" );
+            result.setArrayDesignMismatchProblemMessage( "Array design must be provided" );
+            return result;
         }
 
         DoubleMatrix<String, String> parse = null;
@@ -282,10 +285,11 @@ public class ExpressionDataFileUploadController extends AbstractTaskService {
 
         if ( parse != null ) {
 
+            log.info( "Checking if probe labels match design" );
+
             result.setNumRows( parse.rows() );
             result.setNumColumns( parse.columns() );
 
-            assert arrayDesignIds.size() == 1;
             Long arrayDesignId = arrayDesignIds.iterator().next();
 
             ArrayDesign design = arrayDesignService.load( arrayDesignId );
@@ -294,6 +298,7 @@ public class ExpressionDataFileUploadController extends AbstractTaskService {
             // check that the probes can be matched up...
             int numRowsMatchingArrayDesign = 0;
             int numRowsNotMatchingArrayDesign = 0;
+            int i = 0;
             List<String> mismatches = new ArrayList<String>();
             for ( CompositeSequence cs : design.getCompositeSequences() ) {
                 if ( parse.containsRowName( cs.getName() ) ) {
@@ -301,6 +306,9 @@ public class ExpressionDataFileUploadController extends AbstractTaskService {
                 } else {
                     numRowsNotMatchingArrayDesign++;
                     mismatches.add( cs.getName() );
+                }
+                if ( ++i % 2000 == 0 ) {
+                    log.info( i + " probes checked, " + numRowsMatchingArrayDesign + " match" );
                 }
             }
 

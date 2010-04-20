@@ -29,6 +29,11 @@ import ubic.gemma.job.TaskCommand;
 public class MonitorTaskCommand extends TaskCommand {
 
     private int runTimeMillis = 2000;
+    
+    public MonitorTaskCommand() {
+        this.setPersistJobDetails( false );
+    }
+    
 
     /**
      * Set to tell the job to throw an exception.

@@ -53,6 +53,9 @@ Ext.extend(Ext.data.ListRangeReader, Ext.data.JsonReader, {
 			},
 
 			readRecords : function(o) {
+				if (!o) {
+					return; // FIXME happens in Exp. Design editor on edit/add factor.
+				}
 				this.jsonData = o;
 				if (o.metaData) {
 					this.onMetaChange(o.metaData);

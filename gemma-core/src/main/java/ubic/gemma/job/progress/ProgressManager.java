@@ -107,8 +107,6 @@ public class ProgressManager {
         newJob = new ProgressJobImpl( jobI, command.toString() );
         currentJob.set( taskId );
 
-        newJob.setPhase( 0 );
-
         // keep track of these jobs
         Collection<ProgressJob> usersJobs = progressJobs.get( userId );
         usersJobs.add( newJob ); // adds to the progressJobs collection
@@ -173,7 +171,6 @@ public class ProgressManager {
 
         String toForwardTo = getForwardingUrl( progressJob, doForward );
         ProgressData progressData = new ProgressData( progressJob.getTaskId(), 100, "Job completed.", true );
-        progressData.setPayload( progressJob.getPayload() );// must be a better way.
         progressData.setForwardingURL( toForwardTo );
         progressJob.updateProgress( progressData );
         progressJob.done();
@@ -264,15 +261,6 @@ public class ProgressManager {
      */
     public void setJobInfoService( JobInfoService j ) {
         jobInfoService = j;
-    }
-
-    public static void setPayload( String taskId, Object payload ) {
-        ProgressJob job = progressJobsByTaskId.get( taskId );
-        if ( job == null ) {
-            throw new IllegalArgumentException( "No task found with id=" + taskId );
-        } else {
-            job.setPayload( payload );
-        }
     }
 
     /**

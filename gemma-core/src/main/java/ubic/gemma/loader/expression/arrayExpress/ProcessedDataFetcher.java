@@ -83,6 +83,7 @@ public class ProcessedDataFetcher extends FtpArchiveFetcher {
         String dirName = identifier.replaceFirst( "-\\d+", "" );
         dirName = dirName.replace( "E-", "" );
         String seekFile = remoteBaseDir + "/" + dirName + "/" + identifier + "/" + identifier + PROCESSED_DATA_SUFFIX;
+        log.info( "Seeking " + seekFile );
         return seekFile;
     }
 

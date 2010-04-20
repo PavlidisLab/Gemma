@@ -18,6 +18,7 @@
  */
 package ubic.gemma.model.expression.arrayDesign;
 
+import java.util.Collection;
 import java.util.Map;
 
 import org.springframework.security.access.annotation.Secured;
@@ -418,5 +419,12 @@ public interface ArrayDesignService {
      */
     @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
     public Boolean updateSubsumingStatus( ArrayDesign candidateSubsumer, ArrayDesign candidateSubsumee );
+
+    /**
+     * @param searchString
+     * @return
+     */
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    public Collection<ArrayDesign> findByManufacturer( String searchString );
 
 }

@@ -163,7 +163,7 @@ Gemma.DatasetUploadTool = Ext.extend(Ext.util.Observable, {
 			},
 
 			onValidated : function(result) {
-				// console.log(result);
+
 				if (result.valid) {
 
 					/*
@@ -185,12 +185,12 @@ Gemma.DatasetUploadTool = Ext.extend(Ext.util.Observable, {
 							});
 
 				} else {
-
+					console.log(result);
 					/*
 					 * Display a summary of the problems
 					 */
 
-					var summary = "";
+					var summary = "Problems: ";
 
 					if (!result.shortNameIsUnique) {
 						summary = "The short name you selected already has been used;";

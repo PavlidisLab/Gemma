@@ -128,7 +128,6 @@ public class ProgressStatusService {
         // normal situation: deal with accumulated results.
         Queue<ProgressData> pd = job.getProgressData();
 
-        boolean isDone = false;
         boolean didCleanup = false;
         while ( !pd.isEmpty() ) {
             ProgressData data = pd.poll();
@@ -138,13 +137,12 @@ public class ProgressStatusService {
 
             statusObjects.add( data );
 
-            if ( !didCleanup && ( isDone || data.isDone() ) ) {
+            if ( !didCleanup && data.isDone() ) {
                 log.debug( "Job " + taskId + " is done" );
                 if ( data.getForwardingURL() != null ) {
                     log.debug( "forward to " + data.getForwardingURL() );
                 }
                 ProgressManager.cleanupJob( taskId );
-                isDone = true;
                 didCleanup = true;
                 // Do not break, even if the job is done. keep adding any stored data to the results.
             }

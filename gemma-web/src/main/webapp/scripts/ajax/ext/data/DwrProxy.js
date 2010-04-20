@@ -114,9 +114,8 @@ Ext.extend(Ext.ux.data.DwrProxy, Ext.data.DataProxy, {
 				var dwrArgs = apiActionHandler.getDwrArgsFunction.call(apiActionHandler.getDwrArgsScope, request, this
 								.getRecordDataArray(records), this.getRecordDataBeforeUpdateArray(records))
 						|| [];
-						
 
-				dwrArgs.push(this.createCallback(request)); 
+				dwrArgs.push(this.createCallback(request));
 				apiActionHandler.dwrFunction.apply(Object, dwrArgs); // the scope for calling the dwrFunction doesn't
 				// matter, so we simply set it to Object.
 			},
@@ -161,16 +160,16 @@ Ext.extend(Ext.ux.data.DwrProxy, Ext.data.DataProxy, {
 			 *            request The arguments passed to {@link #doRequest}.
 			 * @private
 			 */
-			createCallback : function(request) { 
+			createCallback : function(request) {
 				return {
-					callback : function(response) {  
+					callback : function(response) {
 						if (request.action === Ext.data.Api.actions.read) {
 							this.onRead(request, response);
 						} else {
 							this.onWrite(request, response);
 						}
 					}.createDelegate(this),
-					exceptionHandler : function(message, exception) { 
+					exceptionHandler : function(message, exception) {
 						// The event is supposed to pass the response, but since DWR doesn't provide that to us, we pass
 						// the message.
 						this.handleResponseException(request, message, exception);
@@ -200,10 +199,12 @@ Ext.extend(Ext.ux.data.DwrProxy, Ext.data.DataProxy, {
 				} catch (e) {
 					return this.handleResponseException(request, response, e);
 				}
-				if (readDataBlock.success === false) {
-					this.fireEvent("exception", this, 'remote', request.action, request.options, response, null);
-				} else { 
-					this.fireEvent("load", this, request, request.options);
+				if (readDataBlock) {
+					if (readDataBlock.success === false) {
+						this.fireEvent("exception", this, 'remote', request.action, request.options, response, null);
+					} else {
+						this.fireEvent("load", this, request, request.options);
+					}
 				}
 				// The callback will usually be store.loadRecords.
 				request.callback.call(request.scope, readDataBlock, request.options, readDataBlock.success);
@@ -234,7 +235,7 @@ Ext.extend(Ext.ux.data.DwrProxy, Ext.data.DataProxy, {
 					this.fireEvent("write", this, request.action, readDataBlock.data, readDataBlock, request.records,
 							request.options);
 				}
-				// store.onCreateRecords or onUpdateRecords or onDestroyRecords. 
+				// store.onCreateRecords or onUpdateRecords or onDestroyRecords.
 				request.callback.call(request.scope, readDataBlock.data, readDataBlock, readDataBlock.success);
 			},
 

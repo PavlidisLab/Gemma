@@ -21,16 +21,14 @@ package ubic.gemma.web.controller.expression.experiment;
 import java.util.Collection;
 import java.util.HashSet;
 
-import ubic.gemma.job.TaskCommand;
-
 /**
  * Stores information about the validation status of an attempted expression experiment load.
  * 
  * @author Paul
  * @version $Id$
  */
-public class SimpleExpressionExperimentCommandValidation extends TaskCommand {
-
+public class SimpleExpressionExperimentCommandValidation {
+    
     private boolean quantitationTypeIsValid = true;
 
     private boolean shortNameIsUnique = true;

@@ -34,14 +34,13 @@ public class ProgressJobImpl extends Observable implements ProgressJob {
 
     protected Queue<ProgressData> pData;
     protected JobInfo jInfo; // this obj is persisted to DB
-    protected int currentPhase;
     protected String forwardingURL;
     protected String taskId;
-    protected Object payload = null;
     boolean forwardWhenDone = true;
 
     /*
      * (non-Javadoc)
+     * 
      * @see java.lang.Object#toString()
      */
     @Override
@@ -61,7 +60,6 @@ public class ProgressJobImpl extends Observable implements ProgressJob {
         this.jInfo = info;
         assert info.getTaskId() != null;
         this.taskId = info.getTaskId();
-        currentPhase = 0;
     }
 
     /**
@@ -114,6 +112,7 @@ public class ProgressJobImpl extends Observable implements ProgressJob {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.util.progress.ProgressJob#updateProgress(java.lang.String)
      */
     public void updateProgress( String newDescription ) {
@@ -146,18 +145,6 @@ public class ProgressJobImpl extends Observable implements ProgressJob {
         notifyObservers( pData );
     }
 
-    public int getPhase() {
-        return currentPhase;
-    }
-
-    public void setPhase( int phase ) {
-        if ( phase < 0 ) return;
-
-        if ( phase > jInfo.getPhases() ) jInfo.setPhases( phase );
-
-        currentPhase = phase;
-    }
-
     public JobInfo getJobInfo() {
         return this.jInfo;
     }
@@ -185,16 +172,6 @@ public class ProgressJobImpl extends Observable implements ProgressJob {
 
     public String getTaskId() {
         return this.taskId;
-    }
-
-    public Object getPayload() {
-        return payload;
-
-    }
-
-    public void setPayload( Object payload ) {
-        this.payload = payload;
-
     }
 
     public boolean forwardWhenDone() {
