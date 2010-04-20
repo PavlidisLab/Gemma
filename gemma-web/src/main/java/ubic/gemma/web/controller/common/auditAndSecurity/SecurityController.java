@@ -283,12 +283,12 @@ public class SecurityController {
 
         // Add Analyses
         secs.addAll( getUsersAnalyses( privateOnly ) );
-
+        
+        // Add gene groups
+        secs.addAll( getUsersGeneGroups( privateOnly ) );
+        
         Collection<SecurityInfoValueObject> result = securables2VOs( secs, currentGroup );
-
-        result.addAll( securables2VOs( getUsersGeneGroups( privateOnly ), currentGroup ) );
-
-        result.addAll( securables2VOs( getUsersExperimentSets( privateOnly ), currentGroup ) );
+        
 
         /*
          * add other types of securables here.

@@ -278,7 +278,7 @@ Gemma.GeneGroupImporter = Ext.extend(Ext.Panel, {
 							tbar : {
 								items : [{
 									tooltip : "Create New Group",
-									icon : "/Gemma/images/icons/group_add.png",
+									icon : "/Gemma/images/icons/add.png",
 									id : 'geneimportgroup-save-btn',
 									handler : function(b, e) {
 
@@ -292,9 +292,8 @@ Gemma.GeneGroupImporter = Ext.extend(Ext.Panel, {
 																		var genePanel = Ext
 																				.getCmp('gene-chooser-panel');
 																		genePanel.currentGroupId = null;
+																		
 																		refreshGeneGroupData(groupId);
-																		genePanel.loadGenes([]);
-
 																		genePanel.getTopToolbar().geneCombo.focus();
 
 																	},
@@ -308,7 +307,7 @@ Gemma.GeneGroupImporter = Ext.extend(Ext.Panel, {
 									}
 								}, {
 									tooltip : "Save changes",
-									icon : "/Gemma/images/icons/database_save.png",
+									icon : "/Gemma/images/icons/disk.png",
 									id : 'manager-data-panel-save-btn',
 									handler : function(b, e) {
 
@@ -357,7 +356,7 @@ Gemma.GeneGroupImporter = Ext.extend(Ext.Panel, {
 										refreshGeneGroupData();
 									}
 								}, {
-									icon : "/Gemma/images/icons/group_delete.png",
+									icon : "/Gemma/images/icons/delete.png",
 									tooltip : "Delete a group",
 									handler : function() {deleteGeneGroup();}
 								}]
@@ -380,19 +379,28 @@ Gemma.GeneGroupImporter = Ext.extend(Ext.Panel, {
 
 // TODO This code shoudl be encorperated into the widget so it can be reused and
 // not have to exist as a static entity outside of the widget's scope
+		
+//FIXME: selecting a different groupId then the currently selected one doesn't work for large groups.
+// disabling till a proper fix is found.
+
 refreshGeneGroupData = function(groupId) {
 	var showPrivateOnly = !Ext.getCmp("geneGroupData-show-public").pressed;
 	var store = Ext.getCmp('gene-group-panel').getStore();
 	store.load({
 				params : [showPrivateOnly],
-				callback : function() {
+				callback : function(data) {
 					// for selecting the desired row, if given groupid given
 					if (!groupId){
 						return;
 					}
-					var groupPanel = Ext.getCmp('gene-group-panel');
-					var row = groupPanel.getStore().findExact("id", groupId);
-					groupPanel.getSelectionModel().selectRow(row, false);
+					//FIXME: this doesn't work because for data that takes awhile to load.  
+					//Callback returns prematurley, data isn't done loading, if the following code 
+					//selects an empty record which loads instantly, by then the previous load finishes and the 
+					//wrong info is shown in the gene panel but the correct group is seleted....
+					
+//					var groupPanel = Ext.getCmp('gene-group-panel');
+//					var row = groupPanel.getStore().findExact("id", groupId);
+//					groupPanel.getSelectionModel().selectRow(row, false);
 
 				}
 			});
