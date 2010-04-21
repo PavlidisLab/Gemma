@@ -639,6 +639,8 @@ public class SecurityController {
             s = geneCoexpressionAnalysisService.load( ed.getId() );
         } else if ( GeneSet.class.isAssignableFrom( clazz ) ) {
             s = geneSetService.load( ed.getId() );
+        } else if ( ExpressionExperimentSet.class.isAssignableFrom( clazz ) ) {
+            s = expressionExperimentSetService.load( ed.getId() );
         } else {
             throw new UnsupportedOperationException( clazz + " not supported by security controller yet" );
         }
