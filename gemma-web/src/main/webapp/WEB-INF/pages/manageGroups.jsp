@@ -17,19 +17,20 @@
 
 	<p>
 		For additional controls on which groups can view or edit your data sets, visit the
-		<a href="<c:url value="/expressionExperiment/showAllExpressionExperimentLinkSummaries.html" />">Data Manager</a>.
-		
-		If you want to Manage Gene Groups go to the  <a href="<c:url value="/geneGroupManager.html" />">Gene Group Manager</a>.
+		<a href="<c:url value="/expressionExperiment/showAllExpressionExperimentLinkSummaries.html" />">Data Manager</a>. If
+		you want to manage Gene Groups go to the
+		<a href="<c:url value="/geneGroupManager.html" />">Gene Group Manager</a>. To manage Expression Dataset Groups go to
+		the
+		<a href="<c:url value="/expressionExperimentSetManager.html" />">Dataset Group Manager</a>.
 	</p>
-
 
 	<div id='manageGroups-div'>
 	</div>
-	
-	
+
+
 	<div id='errorMessage' style='width: 500px; margin-bottom: 1em;'></div>
-	
-	
-	
-	
+
+
+
+
 </body>
