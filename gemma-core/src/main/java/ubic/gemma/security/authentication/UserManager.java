@@ -33,6 +33,61 @@ import ubic.gemma.model.common.auditAndSecurity.UserGroup;
 public interface UserManager extends UserDetailsManager, GroupManager {
 
     /**
+     * @param email
+     * @param username
+     * @param newPassword - encoded
+     * @return the confirmation token they will need to use.
+     */
+    public String changePasswordForUser( String email, String username, String newPassword );
+
+    /**
+     * @return list of all available usernames.
+     */
+    public Collection<String> findAllUsers();
+
+    /**
+     * @param emailAddress
+     * @return
+     */
+    public User findbyEmail( String emailAddress );
+
+    /**
+     * @param emailAddress
+     * @return
+     */
+    public User findByEmail( String emailAddress );
+
+    /**
+     * Need a passthrough method to userService else we get a circular dependancy issue at runtime startup.
+     * 
+     * @param userName
+     * @return
+     */
+    public User findByUserName( String userName );
+
+    /**
+     * Need a passthrough method to userService else we get a circular dependancy issue at runtime startup.
+     * 
+     * @param name
+     * @return
+     */
+    public UserGroup findGroupByName( String name );
+
+    /**
+     * @param username
+     * @return names of groups the user is in.
+     */
+    public Collection<String> findGroupsForUser( String username );
+
+    /**
+     * Generate a token that can be used to check if the user's email is valid.
+     * 
+     * @param username
+     * @return
+     */
+    public String generateSignupToken( String username );
+
+    /**
      * @return the current user, or null if anonymous
      */
     public User getCurrentUser();
@@ -45,18 +100,6 @@ public interface UserManager extends UserDetailsManager, GroupManager {
     public String getRolePrefix();
 
     /**
-     * @param emailAddress
-     * @return
-     */
-    public boolean userWithEmailExists( String emailAddress );
-
-    /**
-     * @param username
-     * @return names of groups the user is in.
-     */
-    public Collection<String> findGroupsForUser( String username );
-
-    /**
      * @param name
      * @return
      */
@@ -65,10 +108,9 @@ public interface UserManager extends UserDetailsManager, GroupManager {
     /**
      * Need a passthrough method to userService else we get a circular dependancy issue at runtime startup.
      * 
-     * @param userName
      * @return
      */
-    public User findByUserName( String userName );
+    public Collection<User> loadAll();
 
     /**
      * Sign in the user identified
@@ -79,17 +121,10 @@ public interface UserManager extends UserDetailsManager, GroupManager {
     public void reauthenticate( String userName, String password );
 
     /**
-     * Generate a token that can be used to check if the user's email is valid.
-     * 
-     * @param username
+     * @param emailAddress
      * @return
      */
-    public String generateSignupToken( String username );
-
-    /**
-     * @return list of all available usernames.
-     */
-    public Collection<String> findAllUsers();
+    public boolean userWithEmailExists( String emailAddress );
 
     /**
      * Validate the token.
@@ -99,28 +134,5 @@ public interface UserManager extends UserDetailsManager, GroupManager {
      * @return true if okay, false otherwise
      */
     public boolean validateSignupToken( String username, String key );
-
-    /**
-     * @param email
-     * @param username
-     * @param newPassword - encoded
-     * @return the confirmation token they will need to use.
-     */
-    public String changePasswordForUser( String email, String username, String newPassword );
-
-    /**
-     * Need a passthrough method to userService else we get a circular dependancy issue at runtime startup.
-     * 
-     * @param name
-     * @return
-     */
-    public UserGroup findGroupByName( String name );
-
-    /**
-     * Need a passthrough method to userService else we get a circular dependancy issue at runtime startup.
-     * 
-     * @return
-     */
-    public Collection<User> loadAll();
 
 }

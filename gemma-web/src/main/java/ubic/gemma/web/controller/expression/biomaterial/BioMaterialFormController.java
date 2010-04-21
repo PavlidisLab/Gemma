@@ -7,7 +7,7 @@ import java.util.Map;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
- 
+
 import org.springframework.validation.BindException;
 import org.springframework.web.bind.ServletRequestUtils;
 import org.springframework.web.servlet.ModelAndView;
@@ -23,7 +23,7 @@ import ubic.gemma.web.controller.BaseFormController;
  * @version $Id$
  */
 public class BioMaterialFormController extends BaseFormController {
- 
+
     BioMaterialService bioMaterialService = null;
 
     ExternalDatabaseService externalDatabaseService = null;
@@ -131,7 +131,7 @@ public class BioMaterialFormController extends BaseFormController {
 
         Long id = Long.parseLong( id_param );
 
-        if ( !id.equals( null ) )
+        if (  id != null )
             ba = bioMaterialService.load( id );
         else
             ba = BioMaterial.Factory.newInstance();
@@ -143,7 +143,7 @@ public class BioMaterialFormController extends BaseFormController {
      * @param request
      * @return Map
      */
-    @Override 
+    @Override
     protected Map<String, Collection<ExternalDatabase>> referenceData( HttpServletRequest request ) {
         Collection<ExternalDatabase> edCol = externalDatabaseService.loadAll();
         Map<String, Collection<ExternalDatabase>> edMap = new HashMap<String, Collection<ExternalDatabase>>();

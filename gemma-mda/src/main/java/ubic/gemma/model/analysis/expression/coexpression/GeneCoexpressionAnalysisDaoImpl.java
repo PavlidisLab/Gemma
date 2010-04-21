@@ -63,6 +63,7 @@ public class GeneCoexpressionAnalysisDaoImpl extends
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.analysis.GeneCoexpressionAnalysisDaoBase#remove(ubic.gemma.model.analysis.GeneCoexpressionAnalysis
      * )
@@ -79,16 +80,11 @@ public class GeneCoexpressionAnalysisDaoImpl extends
                 break;
             }
         }
-
-        this.getHibernateTemplate().flush();
-
-        // this was failing?; added previous flush statement to fix (?)
-        this.remove( geneCoexpressionAnalysis );
-
     }
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.analysis.AnalysisDaoImpl#handleFindByInvestigation(ubic.gemma.model.analysis.Investigation)
      */
     @Override
@@ -100,6 +96,7 @@ public class GeneCoexpressionAnalysisDaoImpl extends
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.analysis.AnalysisDaoImpl#handleFindByInvestigations(java.util.Collection)
      */
     @Override

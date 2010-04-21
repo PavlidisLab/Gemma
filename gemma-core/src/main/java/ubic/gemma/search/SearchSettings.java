@@ -68,7 +68,7 @@ public class SearchSettings {
      * @param query
      * @return
      */
-    public static SearchSettings ArrayDesignSearch( String query ) {
+    public static SearchSettings arrayDesignSearch( String query ) {
         SearchSettings s = new SearchSettings( query );
         s.setGeneralSearch( false );
         s.noSearches();
@@ -82,7 +82,7 @@ public class SearchSettings {
      * @param query
      * @return
      */
-    public static SearchSettings GeneSearch( String query, Taxon taxon ) {
+    public static SearchSettings geneSearch( String query, Taxon taxon ) {
         SearchSettings s = new SearchSettings( query );
         s.setGeneralSearch( false );
         s.noSearches();
@@ -97,7 +97,7 @@ public class SearchSettings {
      * @param query
      * @return
      */
-    public static SearchSettings CompositeSequenceSearch( String query, ArrayDesign arrayDesign ) {
+    public static SearchSettings compositeSequenceSearch( String query, ArrayDesign arrayDesign ) {
         SearchSettings s = new SearchSettings( query );
         s.setGeneralSearch( false );
         s.noSearches();
@@ -112,7 +112,7 @@ public class SearchSettings {
      * @param query
      * @return
      */
-    public static SearchSettings ExpressionExperimentSearch( String query ) {
+    public static SearchSettings expressionExperimentSearch( String query ) {
         SearchSettings s = new SearchSettings( query );
         s.setGeneralSearch( false );
         s.noSearches();

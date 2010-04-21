@@ -35,6 +35,7 @@ import ubic.basecode.dataStructure.Link;
 import ubic.basecode.math.CorrelationStats;
 import ubic.basecode.math.Stats;
 import ubic.basecode.math.distribution.Histogram;
+import ubic.gemma.analysis.expression.coexpression.links.LinkAnalysisConfig.SingularThreshold;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -352,7 +353,7 @@ public class LinkAnalysis {
         // value.
 
         // choose cut points, with one independent criterion or the most stringent criteria
-        if ( config.getSingularThreshold().equals( "none" ) ) {
+        if ( config.getSingularThreshold().equals( SingularThreshold.none ) ) {
             config.setUpperTailCut( Math.max( scoreAtP, cdfUpperCutScore ) );
             if ( config.getUpperTailCut() == scoreAtP ) {
                 config.setUpperCdfCutUsed( false );
@@ -369,7 +370,7 @@ public class LinkAnalysis {
             } else if ( config.getLowerTailCut() == cdfLowerCutScore ) {
                 config.setLowerCdfCutUsed( true );
             }
-        } else if ( config.getSingularThreshold().equals( "fwe" ) ) {
+        } else if ( config.getSingularThreshold().equals( SingularThreshold.fwe ) ) {
             config.setUpperTailCut( scoreAtP );
             log.info( "Final upper cut is " + form.format( config.getUpperTailCut() ) );
             if ( !config.isAbsoluteValue() ) {
@@ -378,7 +379,7 @@ public class LinkAnalysis {
             }
             config.setUpperCdfCutUsed( false );
             config.setLowerCdfCutUsed( false );
-        } else if ( config.getSingularThreshold().equals( "cdfCut" ) ) {
+        } else if ( config.getSingularThreshold().equals( SingularThreshold.cdfcut ) ) {
             config.setUpperTailCut( cdfUpperCutScore );
             log.info( "Final upper cut is " + form.format( config.getUpperTailCut() ) );
             if ( !config.isAbsoluteValue() ) {

@@ -33,6 +33,7 @@
 			<Item name="UserMenu" title="menu.user" description="Edit profile" page="/userProfile.html" />
 			<Item name="GroupMenu" title="menu.groups" description="Manage groups" page="/manageGroups.html" />
 			<Item name="GeneGroupMenu" title="menu.geneGroups" description="Manage gene groups" page="/geneGroupManager.html" />
+			<Item name="DataSetGroupMenu" title="menu.dataGroups" description="Manage data groups" page="/expressionExperimentSetManager.html" />
 			
 		</Menu>
 		<Menu name="ResourcesMenu" title="resourcesMenu.title">

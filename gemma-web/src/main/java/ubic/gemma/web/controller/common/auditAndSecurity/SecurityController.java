@@ -29,6 +29,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.mail.SimpleMailMessage;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.acls.model.Sid;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -40,6 +41,7 @@ import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysi
 import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisService;
 import ubic.gemma.model.common.Describable;
 import ubic.gemma.model.common.auditAndSecurity.Securable;
+import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.gene.GeneSet;
@@ -48,6 +50,8 @@ import ubic.gemma.security.SecurityService;
 import ubic.gemma.security.authentication.UserDetailsImpl;
 import ubic.gemma.security.authentication.UserManager;
 import ubic.gemma.util.AuthorityConstants;
+import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.MailEngine;
 import ubic.gemma.web.remote.EntityDelegator;
 
 /**
@@ -58,6 +62,8 @@ import ubic.gemma.web.remote.EntityDelegator;
  */
 @Controller
 public class SecurityController {
+
+    private static final String GROUP_MANAGER_URL = "http://www.chibi.ubc.ca/Gemma/manageGroups.html";
 
     private static Log log = LogFactory.getLog( SecurityController.class );
 
@@ -79,6 +85,9 @@ public class SecurityController {
     @Autowired
     private UserManager userManager = null;
 
+    @Autowired
+    private MailEngine mailEngine;
+
     /**
      * AJAX
      * 
@@ -88,18 +97,47 @@ public class SecurityController {
      */
     public boolean addUserToGroup( String userName, String groupName ) {
 
+        User userTakingAction = userManager.getCurrentUser();
+
+        User u;
         if ( userManager.userExists( userName ) ) {
+            u = userManager.findByUserName( userName );
+            if ( !u.getEnabled() ) {
+                throw new IllegalArgumentException( "Sorry, that user's account is not enabled." );
+            }
+
             securityService.addUserToGroup( userName, groupName );
         } else if ( userManager.userWithEmailExists( userName ) ) {
-            /*
-             * Have to send them an invitation...
-             */
-            throw new UnsupportedOperationException( "Sorry, you need the username" );
+            u = userManager.findByEmail( userName );
+            if ( !u.getEnabled() ) {
+                throw new IllegalArgumentException( "Sorry, that user's account is not enabled." );
+            }
+
+            String uname = u.getUserName();
+            securityService.addUserToGroup( uname, groupName );
+        } else {
+            throw new IllegalArgumentException( "Sorry, there is no matching user." );
         }
 
         /*
-         * TODO: send the user an email.
+         * send the user an email.
          */
+        String emailAddress = u.getEmail();
+        if ( StringUtils.isNotBlank( emailAddress ) ) {
+            log.debug( "Sending email notification to " + emailAddress );
+            SimpleMailMessage msg = new SimpleMailMessage();
+            msg.setTo( emailAddress );
+            msg.setFrom( ConfigUtils.getAdminEmailAddress() );
+            msg.setSubject( "You have been added to a group on Gemma" );
+
+            msg.setText( userTakingAction.getUserName() + " has added you to the group '" + groupName
+                    + "'.\nTo view groups you belong to, visit " + GROUP_MANAGER_URL
+                    + "\n\nIf you believe you received this email in error, contact "
+                    + ConfigUtils.getAdminEmailAddress() + "." );
+
+            mailEngine.send( msg );
+        }
+
         return true;
     }
 
@@ -144,7 +182,7 @@ public class SecurityController {
         Collection<String> editableGroups = getGroupsUserCanEdit();
         Collection<String> groupsUserIsIn = getGroupsForCurrentUser();
 
-        Collection<String> allGroups = new HashSet<String>();
+        Collection<String> allGroups = null;
         try {
             // administrator...
             allGroups = userManager.findAllGroups();
@@ -283,12 +321,12 @@ public class SecurityController {
 
         // Add Analyses
         secs.addAll( getUsersAnalyses( privateOnly ) );
-        
-        // Add gene groups
-        secs.addAll( getUsersGeneGroups( privateOnly ) );
-        
+
         Collection<SecurityInfoValueObject> result = securables2VOs( secs, currentGroup );
-        
+
+        result.addAll( securables2VOs( getUsersGeneGroups( privateOnly ), currentGroup ) );
+
+        result.addAll( securables2VOs( getUsersExperimentSets( privateOnly ), currentGroup ) );
 
         /*
          * add other types of securables here.

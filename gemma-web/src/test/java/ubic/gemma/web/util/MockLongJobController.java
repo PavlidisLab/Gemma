@@ -47,7 +47,7 @@ public class MockLongJobController extends AbstractTaskService {
         return run( command );
     }
 
-    class WasteOfTime extends BackgroundJob<TaskCommand> {
+    static class WasteOfTime extends BackgroundJob<TaskCommand> {
 
         public WasteOfTime( TaskCommand command ) {
             super( command );

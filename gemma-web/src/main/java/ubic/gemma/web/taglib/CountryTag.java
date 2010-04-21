@@ -196,7 +196,7 @@ public class CountryTag extends TagSupport {
     /**
      * Class to compare LabelValues using their labels with locale-sensitive behaviour.
      */
-    public class LabelValueComparator implements Comparator<LabelValue> {
+    public static class LabelValueComparator implements Comparator<LabelValue> {
         private Comparator<Object> c;
 
         /**

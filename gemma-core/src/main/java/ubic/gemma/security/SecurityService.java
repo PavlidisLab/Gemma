@@ -301,7 +301,7 @@ public class SecurityService {
 
     /**
      * @param groupName
-     */ 
+     */
     @Transactional
     public void deleteGroup( String groupName ) {
 
@@ -754,7 +754,12 @@ public class SecurityService {
     public void makeOwnedByUser( Securable s, String userName ) {
         MutableAcl acl = getAcl( s );
 
-        if ( acl.getOwner().equals( userName ) ) {
+        Sid owner = acl.getOwner();
+        if ( owner != null && owner instanceof PrincipalSid
+                && ( ( PrincipalSid ) owner ).getPrincipal().equals( userName ) ) {
+            /*
+             * Already owned by the given user -- note we don't check if the user exists here.
+             */
             return;
         }
 

@@ -302,7 +302,7 @@ public class ArrayDesignController extends AbstractTaskService {
                     "message", "No search criteria provided" );
         }
 
-        Collection<SearchResult> searchResults = searchService.search( SearchSettings.ArrayDesignSearch( filter ) )
+        Collection<SearchResult> searchResults = searchService.search( SearchSettings.arrayDesignSearch( filter ) )
                 .get( ArrayDesign.class );
 
         if ( ( searchResults == null ) || ( searchResults.size() == 0 ) ) {

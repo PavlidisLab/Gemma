@@ -89,6 +89,7 @@ public class AssayViewTag extends TagSupport {
 
     /*
      * (non-Javadoc)
+     * 
      * @see javax.servlet.jsp.tagext.TagSupport#doEndTag()
      */
     @Override
@@ -98,6 +99,7 @@ public class AssayViewTag extends TagSupport {
 
     /*
      * (non-Javadoc)
+     * 
      * @see javax.servlet.jsp.tagext.TagSupport#doStartTag()
      */
     @SuppressWarnings("unchecked")
@@ -364,7 +366,7 @@ public class AssayViewTag extends TagSupport {
      * @author pavlidis
      * @version $Id$
      */
-    class BioMaterialComparator implements Comparator<BioMaterial> {
+    static class BioMaterialComparator implements Comparator<BioMaterial> {
 
         public int compare( BioMaterial arg0, BioMaterial arg1 ) {
             BioMaterial obj0 = arg0;

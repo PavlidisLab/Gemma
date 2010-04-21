@@ -240,7 +240,7 @@ public class RepeatScan {
             BufferedReader br = new BufferedReader( new InputStreamReader( is ) );
             String nothingFound = "There were no repetitive sequences detected";
             String line = br.readLine();
-            if ( line.startsWith( nothingFound ) ) {
+            if ( line == null || line.startsWith( nothingFound ) ) {
                 log.info( "There were no repeats found" );
             } else {
                 log.warn( "Something might have gone wrong with repeatmasking. The output file reads: " + line );

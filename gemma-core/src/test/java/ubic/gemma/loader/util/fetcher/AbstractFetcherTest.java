@@ -33,10 +33,11 @@ import ubic.gemma.model.common.description.LocalFile;
  */
 public class AbstractFetcherTest extends TestCase {
 
-    class TestFetcher extends AbstractFetcher {
+    static class TestFetcher extends AbstractFetcher {
 
         /*
          * (non-Javadoc)
+         * 
          * @see ubic.gemma.loader.util.fetcher.Fetcher#fetch(java.lang.String)
          */
         public Collection<LocalFile> fetch( String identifier ) {
@@ -49,6 +50,7 @@ public class AbstractFetcherTest extends TestCase {
 
         /*
          * (non-Javadoc)
+         * 
          * @see ubic.gemma.loader.util.fetcher.AbstractFetcher#formLocalFilePath(java.lang.String, java.io.File)
          */
         @Override
@@ -58,6 +60,7 @@ public class AbstractFetcherTest extends TestCase {
 
         /*
          * (non-Javadoc)
+         * 
          * @see ubic.gemma.loader.util.fetcher.AbstractFetcher#formRemoteFilePath(java.lang.String)
          */
         @Override
@@ -67,6 +70,7 @@ public class AbstractFetcherTest extends TestCase {
 
         /*
          * (non-Javadoc)
+         * 
          * @see ubic.gemma.loader.util.fetcher.AbstractFetcher#initConfig()
          */
         @Override
@@ -116,6 +120,7 @@ public class AbstractFetcherTest extends TestCase {
 
     /*
      * (non-Javadoc)
+     * 
      * @see junit.framework.TestCase#tearDown()
      */
     @Override

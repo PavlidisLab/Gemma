@@ -83,7 +83,7 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
     /**
      * @author keshav
      */
-    class ExpressionExperimentVisualizationCookie extends ConfigurationCookie {
+    static class ExpressionExperimentVisualizationCookie extends ConfigurationCookie {
 
         public ExpressionExperimentVisualizationCookie( ExpressionExperimentVisualizationCommand command ) {
 
@@ -133,7 +133,7 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
      * @param errors
      * @return ModelAndView
      * @throws Exception
-     */ 
+     */
     @Override
     public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
             BindException errors ) throws Exception {
@@ -215,7 +215,7 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
      * @param errors
      * @return ModelAndView
      * @throws Exception
-     */ 
+     */
     @Override
     public ModelAndView processFormSubmission( HttpServletRequest request, HttpServletResponse response,
             Object command, BindException errors ) throws Exception {
@@ -314,7 +314,7 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
      * @param expressionExperiment
      * @param quantitationType
      * @return Collection<DesignElementDataVector>
-     */ 
+     */
     protected Collection<DesignElementDataVector> getVectors( Object command, BindException errors,
             ExpressionExperimentVisualizationCommand eevc, ExpressionExperiment expressionExperiment,
             QuantitationType quantitationType ) {
@@ -444,7 +444,7 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
     /**
      * @param expressionDataMatrix
      * @return
-     */ 
+     */
     private Map<CompositeSequence, Collection<Gene>> getGenes( ExpressionDataDoubleMatrix expressionDataMatrix ) {
         Collection<CompositeSequence> css = new HashSet<CompositeSequence>();
         for ( ExpressionDataMatrixRowElement el : expressionDataMatrix.getRowElements() ) {

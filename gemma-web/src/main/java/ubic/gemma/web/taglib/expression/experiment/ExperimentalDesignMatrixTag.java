@@ -151,7 +151,7 @@ public class ExperimentalDesignMatrixTag extends TagSupport {
 
     }
 
-    class FactorValueVectorComparator implements Comparator<FactorValueVector> {
+    static class FactorValueVectorComparator implements Comparator<FactorValueVector> {
         List<ExperimentalFactor> factors;
 
         public FactorValueVectorComparator( List<ExperimentalFactor> factors ) {

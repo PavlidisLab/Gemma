@@ -137,7 +137,7 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
             Collection<FactorValue> fvs = m.getFactorValues();
             Collection<FactorValue> updatedFactorValues = new HashSet<FactorValue>();
             for ( FactorValue fv : fvs ) {
-                if ( fv.getExperimentalFactor().getName() != experimentalFactorB.getName() ) {
+                if ( !fv.getExperimentalFactor().getName().equals( experimentalFactorB.getName() ) ) {
                     continue;
                 }
                 updatedFactorValues.add( fv );

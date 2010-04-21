@@ -167,7 +167,7 @@ public class CompositeSequenceController extends BaseController {
          */
         ArrayDesign arrayDesign = loadArrayDesign( arrayDesignId );
 
-        Map<Class<?>, List<SearchResult>> search = searchService.search( SearchSettings.CompositeSequenceSearch(
+        Map<Class<?>, List<SearchResult>> search = searchService.search( SearchSettings.compositeSequenceSearch(
                 searchString, arrayDesign ) );
 
         Collection<CompositeSequence> css = new HashSet<CompositeSequence>();

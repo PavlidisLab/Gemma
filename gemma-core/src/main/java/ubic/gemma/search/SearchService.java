@@ -388,7 +388,7 @@ public class SearchService implements InitializingBean {
             if ( query.length() < MINIMUM_EE_QUERY_LENGTH ) return eeIds;
 
             // Initial list
-            List<SearchResult> results = this.search( SearchSettings.ExpressionExperimentSearch( query ), false ).get(
+            List<SearchResult> results = this.search( SearchSettings.expressionExperimentSearch( query ), false ).get(
                     ExpressionExperiment.class );
             for ( SearchResult result : results ) {
                 eeIds.add( result.getId() );

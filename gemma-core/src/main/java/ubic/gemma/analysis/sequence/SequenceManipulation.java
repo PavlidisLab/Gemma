@@ -207,7 +207,7 @@ public class SequenceManipulation {
         // If strand is null we don't bother looking at it; if the strands don't match we return 0
         PhysicalLocation gpPhysicalLocation = geneProduct.getPhysicalLocation();
         if ( strand != null && gpPhysicalLocation != null && gpPhysicalLocation.getStrand() != null
-                && gpPhysicalLocation.getStrand() != strand ) {
+                && !gpPhysicalLocation.getStrand().equals( strand ) ) {
             return 0;
         }
 
@@ -432,7 +432,7 @@ public class SequenceManipulation {
         }
 
         if ( a.getNucleotideLength() == null && b.getNucleotideLength() == null ) {
-            if ( a.getNucleotide() == b.getNucleotide() ) {
+            if ( a.getNucleotide().equals( b.getNucleotide() ) ) {
                 return 1;
             }
             return 0;

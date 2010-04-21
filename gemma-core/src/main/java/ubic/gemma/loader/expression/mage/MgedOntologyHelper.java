@@ -711,7 +711,7 @@ public class MgedOntologyHelper {
 
     }
 
-    class InstanceInformation {
+    static class InstanceInformation {
         public ClassInformation classInfo;
         public String className;
         public String name;

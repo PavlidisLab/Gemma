@@ -363,7 +363,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractSpring
     private Set<BioAssaySet> findExpressionExperimentsByQuery( String query ) {
         Set<BioAssaySet> ees = new HashSet<BioAssaySet>();
         Collection<SearchResult> eeSearchResults = searchService.search(
-                SearchSettings.ExpressionExperimentSearch( query ) ).get( ExpressionExperiment.class );
+                SearchSettings.expressionExperimentSearch( query ) ).get( ExpressionExperiment.class );
 
         log.info( ees.size() + " Expression experiments matched '" + query + "'" );
 

@@ -99,8 +99,7 @@ import cern.colt.list.ObjectArrayList;
 @Service
 public class LinkAnalysisService {
 
-    // a closure would be just the thing here.
-    private class Creator {
+    private static class Creator {
 
         Method m;
         private Object[] arg;

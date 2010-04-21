@@ -160,7 +160,7 @@ public class GenePickerController {
         if ( taxonId != null ) {
             taxon = taxonService.load( taxonId );
         }
-        SearchSettings settings = SearchSettings.GeneSearch( query, taxon );
+        SearchSettings settings = SearchSettings.geneSearch( query, taxon );
         List<SearchResult> geneSearchResults = searchService.search( settings ).get( Gene.class );
 
         Collection<Gene> genes = new HashSet<Gene>();
@@ -193,7 +193,7 @@ public class GenePickerController {
                 break;
             }
             line = StringUtils.strip( line );
-            SearchSettings settings = SearchSettings.GeneSearch( line, taxon );
+            SearchSettings settings = SearchSettings.geneSearch( line, taxon );
             List<SearchResult> geneSearchResults = searchService.search( settings ).get( Gene.class );  //drops predicted gene results....
 
             // FIXME inform the user (on the client!) if there are some that don't have results.

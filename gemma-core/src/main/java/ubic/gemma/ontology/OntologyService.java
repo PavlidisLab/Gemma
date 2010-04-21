@@ -75,7 +75,7 @@ import com.hp.hpl.jena.util.iterator.ExtendedIterator;
 public class OntologyService implements InitializingBean {
 
     // Private class for sorting Characteristics
-    class TermComparator implements Comparator<Characteristic> {
+    static class TermComparator implements Comparator<Characteristic> {
 
         String comparator;
 

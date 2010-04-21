@@ -76,7 +76,7 @@ import ubic.gemma.model.expression.designElement.*;
  */
 public class LinkEvalCli extends AbstractSpringAwareCLI {
 
-    class GeneComparator implements Comparator<Gene> {
+    static class GeneComparator implements Comparator<Gene> {
 
         public int compare( Gene g1, Gene g2 ) {
 
@@ -103,7 +103,7 @@ public class LinkEvalCli extends AbstractSpringAwareCLI {
         public void addFirstGene( Gene g ) {
             List<Gene> firstGenes = this.get( 0 );
             for ( Gene firstGene : firstGenes ) {
-                if ( firstGene.getId() == g.getId() ) {
+                if ( firstGene.getId().equals( g.getId() ) ) {
                     return;
                 }
             }
@@ -113,7 +113,7 @@ public class LinkEvalCli extends AbstractSpringAwareCLI {
         public void addSecondGene( Gene g ) {
             List<Gene> secondGenes = this.get( 1 );
             for ( Gene secondGene : secondGenes ) {
-                if ( secondGene.getId() == g.getId() ) {
+                if ( secondGene.getId().equals( g.getId() ) ) {
                     return;
                 }
             }
@@ -1357,8 +1357,6 @@ public class LinkEvalCli extends AbstractSpringAwareCLI {
                 continue;
             }
 
-            assert genePair.getFirstGenes().size() > 0 && genePair.getSecondGenes().size() > 0;
-
             geneMap.add( genePair );
 
             if ( geneMap.size() % 50000 == 0 ) {
@@ -1688,7 +1686,7 @@ public class LinkEvalCli extends AbstractSpringAwareCLI {
 
                 for ( Gene g1 : genes1 ) {
                     for ( Gene g2 : genes2 ) {
-                        if ( g1.getId() == g2.getId() ) continue;
+                        if ( g1.getId().equals( g2.getId() ) ) continue;
                         double score = 0.0;
 
                         if ( metric.equals( GoMetric.Metric.cosine ) || metric.equals( GoMetric.Metric.kappa ) ) {

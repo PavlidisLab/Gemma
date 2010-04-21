@@ -98,6 +98,7 @@ public class UserManagerImpl implements UserManager {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.security.authentication.UserManagerI#addGroupAuthority(java.lang.String,
      * org.springframework.security.core.GrantedAuthority)
      */
@@ -122,6 +123,7 @@ public class UserManagerImpl implements UserManager {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.security.authentication.UserManagerI#addUserToGroup(java.lang.String, java.lang.String)
      */
     @Transactional
@@ -133,6 +135,7 @@ public class UserManagerImpl implements UserManager {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.security.authentication.UserManagerI#changePassword(java.lang.String, java.lang.String)
      */
     @Transactional
@@ -163,6 +166,7 @@ public class UserManagerImpl implements UserManager {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.security.authentication.UserManager#changePasswordForUser(java.lang.String, java.lang.String)
      */
     @Transactional
@@ -204,6 +208,7 @@ public class UserManagerImpl implements UserManager {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.security.authentication.UserManagerI#createGroup(java.lang.String, java.util.List)
      */
     @Transactional
@@ -215,12 +220,13 @@ public class UserManagerImpl implements UserManager {
             g.getAuthorities().add( GroupAuthority.Factory.newInstance( ga.getAuthority() ) );
         }
 
-        g = userService.create( g );
+        userService.create( g );
 
     }
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.security.authentication.UserManagerI#createUser(org.springframework.security.core.userdetails.UserDetails
      * )
@@ -270,6 +276,7 @@ public class UserManagerImpl implements UserManager {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.security.authentication.UserManagerI#deleteGroup(java.lang.String)
      */
     @Transactional
@@ -281,6 +288,7 @@ public class UserManagerImpl implements UserManager {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.security.authentication.UserManagerI#deleteUser(java.lang.String)
      */
     @Transactional
@@ -294,6 +302,7 @@ public class UserManagerImpl implements UserManager {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.security.authentication.UserManagerI#findAllGroups()
      */
     @Transactional(readOnly = true)
@@ -321,6 +330,27 @@ public class UserManagerImpl implements UserManager {
 
     /*
      * (non-Javadoc)
+     * 
+     * @see ubic.gemma.security.authentication.UserManager#findbyEmail(java.lang.String)
+     */
+    @Secured( { "GROUP_USER", "RUN_AS_ADMIN" })
+    public User findbyEmail( String emailAddress ) {
+        return findByEmail( emailAddress );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.security.authentication.UserManager#findbyEmail(java.lang.String)
+     */
+    @Secured( { "GROUP_USER", "RUN_AS_ADMIN" })
+    public User findByEmail( String emailAddress ) {
+        return userService.findByEmail( emailAddress );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.security.authentication.UserManager#findByUserName(java.lang.String)
      */
     public User findByUserName( String userName ) {
@@ -329,6 +359,7 @@ public class UserManagerImpl implements UserManager {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.security.authentication.UserManagerI#findGroupAuthorities(java.lang.String)
      */
     @Transactional(readOnly = true)
@@ -351,6 +382,7 @@ public class UserManagerImpl implements UserManager {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.security.authentication.UserManager#findGroupByName(java.lang.String)
      */
     public UserGroup findGroupByName( String name ) {
@@ -359,6 +391,7 @@ public class UserManagerImpl implements UserManager {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.security.authentication.UserManagerI#findGroupsForUser(java.lang.String)
      */
     @Transactional(readOnly = true)
@@ -383,6 +416,7 @@ public class UserManagerImpl implements UserManager {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.security.authentication.UserManagerI#findUsersInGroup(java.lang.String)
      */
     @Transactional(readOnly = true)
@@ -402,6 +436,7 @@ public class UserManagerImpl implements UserManager {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.security.authentication.UserManager#generateSignupToken(java.lang.String)
      */
     public String generateSignupToken( String username ) {
@@ -410,6 +445,7 @@ public class UserManagerImpl implements UserManager {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.security.authentication.UserManagerI#getCurrentUser()
      */
     public User getCurrentUser() {
@@ -444,6 +480,7 @@ public class UserManagerImpl implements UserManager {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.security.authentication.UserManagerI#isEnableAuthorities()
      */
     public boolean isEnableAuthorities() {
@@ -452,6 +489,7 @@ public class UserManagerImpl implements UserManager {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.security.authentication.UserManagerI#isEnableGroups()
      */
     public boolean isEnableGroups() {
@@ -460,6 +498,7 @@ public class UserManagerImpl implements UserManager {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.security.authentication.UserManager#loadAll()
      */
     public Collection<User> loadAll() {
@@ -468,6 +507,7 @@ public class UserManagerImpl implements UserManager {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.security.authentication.UserManagerI#loadUserByUsername(java.lang.String)
      */
     @Transactional(readOnly = true)
@@ -503,6 +543,7 @@ public class UserManagerImpl implements UserManager {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.security.authentication.UserManagerI#loggedIn()
      */
     public boolean loggedIn() {
@@ -515,6 +556,7 @@ public class UserManagerImpl implements UserManager {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.security.authentication.UserManagerI#reauthenticate(java.lang.String, java.lang.String)
      */
     public void reauthenticate( String username, String password ) {
@@ -530,6 +572,7 @@ public class UserManagerImpl implements UserManager {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.security.authentication.UserManagerI#removeGroupAuthority(java.lang.String,
      * org.springframework.security.core.GrantedAuthority)
      */
@@ -544,6 +587,7 @@ public class UserManagerImpl implements UserManager {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.security.authentication.UserManagerI#removeUserFromGroup(java.lang.String, java.lang.String)
      */
     @Transactional
@@ -562,6 +606,7 @@ public class UserManagerImpl implements UserManager {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.security.authentication.UserManagerI#renameGroup(java.lang.String, java.lang.String)
      */
     @Transactional
@@ -584,6 +629,7 @@ public class UserManagerImpl implements UserManager {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.security.authentication.UserManagerI#setEnableAuthorities(boolean)
      */
     public void setEnableAuthorities( boolean enableAuthorities ) {
@@ -592,6 +638,7 @@ public class UserManagerImpl implements UserManager {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.security.authentication.UserManagerI#setEnableGroups(boolean)
      */
     public void setEnableGroups( boolean enableGroups ) {
@@ -600,6 +647,7 @@ public class UserManagerImpl implements UserManager {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.security.authentication.UserManagerI#setRolePrefix(java.lang.String)
      */
     public void setRolePrefix( String rolePrefix ) {
@@ -622,6 +670,7 @@ public class UserManagerImpl implements UserManager {
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.security.authentication.UserManager#updateUser(org.springframework.security.core.userdetails.UserDetails
      * )
@@ -646,6 +695,7 @@ public class UserManagerImpl implements UserManager {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.security.authentication.UserManagerI#userExists(java.lang.String)
      */
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "RUN_AS_ADMIN" })
@@ -655,6 +705,7 @@ public class UserManagerImpl implements UserManager {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.security.authentication.UserManager#userWithEmailExists(java.lang.String)
      */
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "RUN_AS_ADMIN" })
@@ -664,6 +715,7 @@ public class UserManagerImpl implements UserManager {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.security.authentication.UserManager#validateSignupToken(java.lang.String, java.lang.String)
      */
     @Transactional
@@ -699,6 +751,7 @@ public class UserManagerImpl implements UserManager {
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * org.springframework.security.provisioning.JdbcUserDetailsManager#updateUser(org.springframework.security.core
      * .userdetails.UserDetails)
@@ -731,6 +784,7 @@ public class UserManagerImpl implements UserManager {
 
     /*
      * (non-Javadoc)
+     * 
      * @see org.springframework.security.core.userdetails.jdbc.JdbcDaoImpl#loadGroupAuthorities(java.lang.String)
      */
     protected List<GrantedAuthority> loadGroupAuthorities( String username ) {
@@ -750,6 +804,7 @@ public class UserManagerImpl implements UserManager {
 
     /*
      * (non-Javadoc)
+     * 
      * @see org.springframework.security.core.userdetails.jdbc.JdbcDaoImpl#loadUserAuthorities(java.lang.String)
      */
     protected List<GrantedAuthority> loadUserAuthorities( @SuppressWarnings("unused") String username ) {
@@ -758,6 +813,7 @@ public class UserManagerImpl implements UserManager {
 
     /*
      * (non-Javadoc)
+     * 
      * @see org.springframework.security.core.userdetails.jdbc.JdbcDaoImpl#loadUsersByUsername(java.lang.String)
      */
     @Transactional

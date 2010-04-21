@@ -1302,11 +1302,8 @@ public class GeoConverter implements Converter<Object, Object> {
         result.setCategoryUri( MgedOntologyService.MGED_ONTO_BASE_URL + "#ReplicateDescriptionType" );
         result.setEvidenceCode( GOEvidenceCode.IIA );
         ExternalDatabase mged = ExternalDatabase.Factory.newInstance();
-
-        if ( !repType.equals( VariableType.other ) ) {
-            mged.setName( "MGED Ontology" );
-            mged.setType( DatabaseType.ONTOLOGY );
-        }
+        mged.setName( "MGED Ontology" );
+        mged.setType( DatabaseType.ONTOLOGY );
 
         if ( repType.equals( ReplicationType.biologicalReplicate ) ) {
             result.setValue( "biological_replicate" );
@@ -1321,7 +1318,7 @@ public class GeoConverter implements Converter<Object, Object> {
             // term to distinguish
             // these.
         } else {
-            throw new IllegalStateException();
+            throw new IllegalStateException( "Unhandled replication type: " + repType );
         }
 
         return result;
@@ -2065,12 +2062,12 @@ public class GeoConverter implements Converter<Object, Object> {
 
         ExperimentalFactor experimentalFactor = ExperimentalFactor.Factory.newInstance();
         experimentalFactor.setName( geoSubSet.getType().toString() );
-        Characteristic term = convertVariableType( geoSubSet.getType() );
+        VocabCharacteristic term = convertVariableType( geoSubSet.getType() );
         term.setDescription( "Converted from GEO subset " + geoSubSet.getGeoAccession() );
         term.setValue( term.getCategory() );
-        if ( term instanceof VocabCharacteristic ) {
-            ( ( VocabCharacteristic ) term ).setValueUri( ( ( VocabCharacteristic ) term ).getCategoryUri() );
-        }
+
+        term.setValueUri( term.getCategoryUri() );
+
         experimentalFactor.setCategory( term );
         experimentalFactor.setDescription( "Converted from GEO subset " + geoSubSet.getGeoAccession() );
 
@@ -2777,7 +2774,7 @@ public class GeoConverter implements Converter<Object, Object> {
 
         // If there are multiple taxa on array
         else if ( platformTaxa.size() > 1 ) {
-            log.info(  platformTaxa.size() + " taxa in GEO platform" );
+            log.info( platformTaxa.size() + " taxa in GEO platform" );
             // check if they share a common parent taxon to use as primary taxa.
             Collection<Taxon> parentTaxa = new HashSet<Taxon>();
             for ( Taxon platformTaxon : platformTaxa ) {

@@ -27,7 +27,7 @@ import cern.colt.matrix.DoubleMatrix1D;
 import cern.colt.matrix.DoubleMatrix2D;
 import cern.colt.matrix.impl.DenseDoubleMatrix1D;
 import cern.colt.matrix.impl.DenseDoubleMatrix2D;
-import cern.colt.matrix.linalg.Algebra; 
+import cern.colt.matrix.linalg.Algebra;
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.math.DescriptiveWithMissing;
@@ -185,6 +185,36 @@ public class ExpressionDataSVD {
 
             public int getRowIndex() {
                 return rowIndex;
+            }
+
+            /*
+             * (non-Javadoc)
+             * 
+             * @see java.lang.Object#hashCode()
+             */
+            @Override
+            public int hashCode() {
+                final int prime = 31;
+                int result = 1;
+                result = prime * result + ( ( norm == null ) ? 0 : norm.hashCode() );
+                return result;
+            }
+
+            /*
+             * (non-Javadoc)
+             * 
+             * @see java.lang.Object#equals(java.lang.Object)
+             */
+            @Override
+            public boolean equals( Object obj ) {
+                if ( this == obj ) return true;
+                if ( obj == null ) return false;
+                if ( getClass() != obj.getClass() ) return false;
+                NormCmp other = ( NormCmp ) obj;
+                if ( norm == null ) {
+                    if ( other.norm != null ) return false;
+                } else if ( !norm.equals( other.norm ) ) return false;
+                return true;
             }
 
             public NormCmp( int rowIndex, Double norm ) {

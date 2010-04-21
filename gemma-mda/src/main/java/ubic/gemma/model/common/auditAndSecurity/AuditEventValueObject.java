@@ -68,7 +68,7 @@ public class AuditEventValueObject implements java.io.Serializable {
     }
 
     public String getActionName() {
-        if ( this.getAction().equals( AuditAction.CREATE ) ) {
+        if ( this.getAction().equals( "C" ) ) {
             return "Create";
         }
         return "Update";

@@ -59,7 +59,7 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
     /**
      * For storing information about gene results that are cached.
      */
-    private class GeneCached {
+    private static class GeneCached {
         long analysisId;
         long geneId;
 
@@ -71,6 +71,7 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
 
         /*
          * (non-Javadoc)
+         * 
          * @see java.lang.Object#equals(java.lang.Object)
          */
         @Override
@@ -86,6 +87,7 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
 
         /*
          * (non-Javadoc)
+         * 
          * @see java.lang.Object#hashCode()
          */
         @Override
@@ -118,6 +120,7 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
     /*
      * Implementation note: we need the sourceAnalysis because although we normally have only one analysis per taxon,
      * when reanalyses are in progress there can be more than one temporarily. (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionDaoBase#handleFindCoexpressionRelationships(java
      * .util.Collection, ubic.gemma.model.analysis.Analysis, int)
@@ -223,6 +226,7 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
     /*
      * Implementation note: we need the sourceAnalysis because although we normally have only one analysis per taxon,
      * when reanalyses are in progress there can be more than one temporarily. (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionDaoBase#handleFindInterCoexpressionRelationships
      * (java.util.Collection, ubic.gemma.model.analysis.Analysis, int)
@@ -325,6 +329,7 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
 
     /*
      * (non-Javadoc)
+     * 
      * @see org.springframework.dao.support.DaoSupport#initDao()
      */
     @Override

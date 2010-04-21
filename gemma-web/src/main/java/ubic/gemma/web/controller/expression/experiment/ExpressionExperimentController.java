@@ -349,7 +349,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
         }
 
         Map<Class<?>, List<SearchResult>> searchResultsMap = searchService.search( SearchSettings
-                .ExpressionExperimentSearch( searchString ) );
+                .expressionExperimentSearch( searchString ) );
 
         assert searchResultsMap != null;
 
