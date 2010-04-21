@@ -245,7 +245,7 @@ public class StringProteinLoadCli extends AbstractSpringAwareCLI {
         } else {
             for ( Taxon taxonGemma : this.taxonService.loadAll() ) {
                 // only those taxon that are species and have usable genes should be processed
-                if (taxonGemma !=null &&  taxonGemma.getIsSpecies() && taxonGemma.getIsGenesUsable() ) {
+                if (taxonGemma !=null &&  taxonGemma.getIsSpecies() && taxonGemma.getIsGenesUsable() && !(taxonGemma.getCommonName().isEmpty()) ) {
                     taxa.add( taxonGemma );
                 }
             }
