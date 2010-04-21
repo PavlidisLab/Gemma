@@ -186,6 +186,36 @@ public class CoexpressionValueObjectExt implements Comparable<CoexpressionValueO
         this.containsMyData = containsMyData;
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see java.lang.Object#hashCode()
+     */
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ( ( sortKey == null ) ? 0 : sortKey.hashCode() );
+        return result;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see java.lang.Object#equals(java.lang.Object)
+     */
+    @Override
+    public boolean equals( Object obj ) {
+        if ( this == obj ) return true;
+        if ( obj == null ) return false;
+        if ( getClass() != obj.getClass() ) return false;
+        CoexpressionValueObjectExt other = ( CoexpressionValueObjectExt ) obj;
+        if ( sortKey == null ) {
+            if ( other.sortKey != null ) return false;
+        } else if ( !sortKey.equals( other.sortKey ) ) return false;
+        return true;
+    }
+
     public int compareTo( CoexpressionValueObjectExt arg0 ) {
         return this.getSortKey().compareTo( arg0.getSortKey() );
     }

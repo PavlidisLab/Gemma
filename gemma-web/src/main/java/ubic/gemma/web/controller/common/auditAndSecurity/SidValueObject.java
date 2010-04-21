@@ -58,6 +58,38 @@ public class SidValueObject implements Comparable<SidValueObject> {
         return this.authority.compareTo( arg0.getAuthority() );
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see java.lang.Object#hashCode()
+     */
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ( ( authority == null ) ? 0 : authority.hashCode() );
+        result = prime * result + ( principal ? 1231 : 1237 );
+        return result;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see java.lang.Object#equals(java.lang.Object)
+     */
+    @Override
+    public boolean equals( Object obj ) {
+        if ( this == obj ) return true;
+        if ( obj == null ) return false;
+        if ( getClass() != obj.getClass() ) return false;
+        SidValueObject other = ( SidValueObject ) obj;
+        if ( authority == null ) {
+            if ( other.authority != null ) return false;
+        } else if ( !authority.equals( other.authority ) ) return false;
+        if ( principal != other.principal ) return false;
+        return true;
+    }
+
     public String getAuthority() {
         return authority;
     }

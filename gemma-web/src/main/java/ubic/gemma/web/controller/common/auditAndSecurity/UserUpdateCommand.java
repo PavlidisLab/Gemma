@@ -61,14 +61,21 @@ public class UserUpdateCommand {
         return user;
     }
 
-    /**
-     * @param object
-     * @return
-     * @see ubic.gemma.model.common.auditAndSecurity.User#equals(java.lang.Object)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see java.lang.Object#equals(java.lang.Object)
      */
     @Override
-    public boolean equals( Object object ) {
-        return this.user.equals( object );
+    public boolean equals( Object obj ) {
+        if ( this == obj ) return true;
+        if ( obj == null ) return false;
+        if ( getClass() != obj.getClass() ) return false;
+        UserUpdateCommand other = ( UserUpdateCommand ) obj;
+        if ( user == null ) {
+            if ( other.user != null ) return false;
+        } else if ( !user.equals( other.user ) ) return false;
+        return true;
     }
 
     /**
@@ -265,13 +272,17 @@ public class UserUpdateCommand {
         return this.user.getUserName();
     }
 
-    /**
-     * @return
-     * @see ubic.gemma.model.common.auditAndSecurity.User#hashCode()
+    /*
+     * (non-Javadoc)
+     * 
+     * @see java.lang.Object#hashCode()
      */
     @Override
     public int hashCode() {
-        return this.user.hashCode();
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ( ( user == null ) ? 0 : user.hashCode() );
+        return result;
     }
 
     /**
