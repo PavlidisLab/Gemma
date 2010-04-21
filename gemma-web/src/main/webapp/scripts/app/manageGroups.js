@@ -538,7 +538,7 @@ Ext.onReady(function() {
 					sortable : true,
 					renderer : function(value, metaData, record, rowIndex,
 							colIndex, store) {
-						return value.replace(/.*\./, '');
+						return value.replace(/.*\./, '').replace("Impl", '').replace(/([A-Z])/g, ' $1');
 					}
 				}, {
 					header : 'ShortName',
