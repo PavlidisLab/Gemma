@@ -33,7 +33,7 @@ import ubic.gemma.loader.protein.biomart.model.BioMartEnsembleNcbi;
 import ubic.gemma.model.genome.Taxon;
 
 /**
- * Tests that the parsing of a BioMart file. Tests one line can be parsed and whole files. Some error conditions are
+ * Tests the parsing of a BioMart file. Tests one line can be parsed and whole files. Some error conditions are
  * tested for too.
  * 
  * @author ldonnison
