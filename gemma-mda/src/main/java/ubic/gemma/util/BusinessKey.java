@@ -33,6 +33,7 @@ import org.hibernate.criterion.Disjunction;
 import org.hibernate.criterion.Restrictions;
 
 import ubic.gemma.model.association.Gene2GOAssociation;
+import ubic.gemma.model.association.Gene2GeneProteinAssociation;
 import ubic.gemma.model.common.Describable;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.auditAndSecurity.Person;
@@ -957,5 +958,34 @@ public class BusinessKey {
         // TODO Auto-generated method stub
 
     }
+    
+    /**
+     * The search can be on the first gene and second gene. This query assumes that the order is known
+     * @param queryObject
+     * @param gene2GeneProteinAssociation association to query
+     */
+    public static void createQueryObject( Criteria queryObject, Gene2GeneProteinAssociation gene2GeneProteinAssociation ) {
+        if ( gene2GeneProteinAssociation.getId() != null ) {
+            queryObject.add( Restrictions.eq( "id", gene2GeneProteinAssociation.getId() ) );
+        } else if ( StringUtils.isNotBlank( gene2GeneProteinAssociation.getFirstGene().getNcbiId() ) && StringUtils.isNotBlank( gene2GeneProteinAssociation.getSecondGene().getNcbiId() )){
+            queryObject.add( Restrictions.eq( "firstGene", gene2GeneProteinAssociation.getFirstGene() ) );
+            queryObject.add( Restrictions.eq( "secondGene", gene2GeneProteinAssociation.getSecondGene() ) );
+        }       
+    }
+    
+
+    
+    /**
+     * Check that gene 1 and gene 2 are set
+     * @param gene2GeneProteinAssociation
+     */
+    public static void checkKey( Gene2GeneProteinAssociation gene2GeneProteinAssociation ) {
+        if ( gene2GeneProteinAssociation == null || gene2GeneProteinAssociation.getFirstGene() == null
+                || gene2GeneProteinAssociation.getSecondGene() == null ) {
+            throw new IllegalArgumentException( "Gene 1 and Gene 2 were not set : "
+                    + gene2GeneProteinAssociation );
+        }
+    }   
+    
 
 }

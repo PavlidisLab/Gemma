@@ -31,6 +31,8 @@ import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.model.association.Gene2GOAssociation;
 import ubic.gemma.model.association.Gene2GOAssociationService;
+import ubic.gemma.model.association.Gene2GeneProteinAssociation;
+import ubic.gemma.model.association.Gene2GeneProteinAssociationService;
 
 /**
  * Persist objects like Gene2GOAssociation.
@@ -54,6 +56,10 @@ public abstract class RelationshipPersister extends ExpressionPersister {
 
     @Autowired
     private ExpressionExperimentSetService expressionExperimentSetService;
+    
+    @Autowired
+    private Gene2GeneProteinAssociationService gene2GeneProteinAssociationService;
+    
 
     public RelationshipPersister( SessionFactory sessionFactory ) {
         super( sessionFactory );
@@ -77,6 +83,9 @@ public abstract class RelationshipPersister extends ExpressionPersister {
             return persistGeneCoexpressionAnalysis( ( GeneCoexpressionAnalysis ) entity );
         } else if ( entity instanceof ExpressionExperimentSet ) {
             return persistExpressionExperimentSet( ( ExpressionExperimentSet ) entity );
+        }
+        else if ( entity instanceof Gene2GeneProteinAssociation ) {
+            return persistGene2GeneProteinAssociation( ( Gene2GeneProteinAssociation ) entity );
         }
         return super.persist( entity );
 
@@ -114,6 +123,10 @@ public abstract class RelationshipPersister extends ExpressionPersister {
 
     public void setProbeCoexpressionAnalysisService( ProbeCoexpressionAnalysisService probeCoexpressionAnalysisService ) {
         this.probeCoexpressionAnalysisService = probeCoexpressionAnalysisService;
+    }
+    
+    public void setGene2GeneProteinAssociationService( Gene2GeneProteinAssociationService gene2GeneProteinAssociationService ) {
+        this.gene2GeneProteinAssociationService = gene2GeneProteinAssociationService;
     }
 
     /**
@@ -178,5 +191,26 @@ public abstract class RelationshipPersister extends ExpressionPersister {
 
         return probeCoexpressionAnalysisService.create( entity );
     }
+    
+    
+    /**
+     * The persisting method for Gene2GeneProteinAssociation which validates the the Gene2GeneProteinAssociation
+     * does not already exist in the system. If it does then the persisted object is returned
+     * @param entity Gene2GeneProteinAssociation the object to persist
+     * @return Gene2GeneProteinAssociation the persisted object
+     */
+    protected Gene2GeneProteinAssociation persistGene2GeneProteinAssociation( Gene2GeneProteinAssociation gene2GeneProteinAssociation ) {
+        if ( gene2GeneProteinAssociation == null ) return null;
+        if ( !isTransient( gene2GeneProteinAssociation ) ) return gene2GeneProteinAssociation;         
+   
+            Gene2GeneProteinAssociation existingGene2GeneProteinAssociation = gene2GeneProteinAssociationService.find( gene2GeneProteinAssociation );
+
+            if ( existingGene2GeneProteinAssociation != null ) {
+                if ( log.isDebugEnabled() ) log.debug( "existingGene2GeneProteinAssociation exists, will not update" );
+                return existingGene2GeneProteinAssociation;
+            }
+            log.debug( "New existingGene2GeneProteinAssociation: " + existingGene2GeneProteinAssociation );        
+            return gene2GeneProteinAssociationService.create( gene2GeneProteinAssociation );
+    }    
 
 }
