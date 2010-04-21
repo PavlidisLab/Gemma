@@ -35,6 +35,7 @@ import org.springframework.security.acls.model.Sid;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 
+import ubic.gemma.model.analysis.Analysis;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSetService;
 import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis;
@@ -504,9 +505,7 @@ public class SecurityController {
             if ( settings.getOwner().isPrincipal() ) {
                 securityService.makeOwnedByUser( s, settings.getOwner().getAuthority() );
             } else {
-                // throw new UnsupportedOperationException( "Sorry, not supported - user is " + settings.getOwner() );
                 log.warn( "Can't make user " + settings.getOwner() + " owner, not implemented" );
-                // securityService.makeOwnedByGroup( s, settings.getOwner().getAuthority() );
             }
         } catch ( AccessDeniedException e ) {
             // okay, only works if you are administrator.
@@ -780,7 +779,6 @@ public class SecurityController {
             vo.setOwner( new SidValueObject( owners.get( s ) ) );
 
             vo.setGroupsThatCanRead( groupsThatCanRead == null ? new HashSet<String>() : groupsThatCanRead );
-
             vo.setGroupsThatCanWrite( groupsThatCanWrite == null ? new HashSet<String>() : groupsThatCanWrite );
 
             vo.setEntityClazz( s.getClass().getName() );
@@ -790,14 +788,24 @@ public class SecurityController {
                 vo.setCurrentGroupCanWrite( groupsThatCanWrite != null && groupsThatCanWrite.contains( currentGroup ) );
             }
 
-            if ( Describable.class.isAssignableFrom( s.getClass() ) ) {
-                // vo.setEntityDescription( ( ( Describable ) s ).getDescription() );
-                vo.setEntityName( ( ( Describable ) s ).getName() );
-            }
-
             if ( ExpressionExperiment.class.isAssignableFrom( s.getClass() ) ) {
                 vo.setEntityShortName( ( ( ExpressionExperiment ) s ).getShortName() );
+                vo.setEntityName( ( ( ExpressionExperiment ) s ).getName() );
+            } else if ( Describable.class.isAssignableFrom( s.getClass() ) ) {
+                vo.setEntityShortName( ( ( Describable ) s ).getName() );
+                vo.setEntityName( ( ( Describable ) s ).getDescription() );
             }
+
+            // else if ( ExpressionExperimentSet.class.isAssignableFrom( s.getClass() ) ) {
+            // vo.setEntityShortName( ( ( ExpressionExperimentSet ) s ).getName() );
+            // vo.setEntityName( ( ( ExpressionExperimentSet ) s ).getDescription() );
+            // } else if ( GeneSet.class.isAssignableFrom( s.getClass() ) ) {
+            // vo.setEntityShortName( ( ( GeneSet ) s ).getName() );
+            // vo.setEntityName( ( ( GeneSet ) s ).getDescription() );
+            // } else if ( Analysis.class.isAssignableFrom( s.getClass() ) ) {
+            // vo.setEntityShortName( ( ( Analysis ) s ).getName() );
+            // vo.setEntityName( ( ( Analysis ) s ).getDescription() );
+            // }
 
             result.add( vo );
             // if ( ++i > 10 ) break; // TESTING
