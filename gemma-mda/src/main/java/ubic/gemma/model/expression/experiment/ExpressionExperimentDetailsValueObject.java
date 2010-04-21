@@ -44,6 +44,10 @@ public class ExpressionExperimentDetailsValueObject extends
     private String primaryCitation;
 
     private Collection<ArrayDesignValueObject> arrayDesigns;
+    
+    private String parentTaxon;
+    
+    private Long parentTaxonId;
 
     public ExpressionExperimentDetailsValueObject() {
         super();
@@ -114,6 +118,22 @@ public class ExpressionExperimentDetailsValueObject extends
 
     public void setSecondaryExternalUri( java.lang.String secondaryExternalUri ) {
         this.secondaryExternalUri = secondaryExternalUri;
+    }
+
+    public void setParentTaxon( String parentTaxon ) {
+        this.parentTaxon = parentTaxon;
+    }
+
+    public String getParentTaxon() {
+        return parentTaxon;
+    }
+
+    public void setParentTaxonId( Long parentTaxonId ) {
+        this.parentTaxonId = parentTaxonId;
+    }
+
+    public Long getParentTaxonId() {
+        return parentTaxonId;
     }
 
 }

@@ -48,7 +48,6 @@ import ubic.gemma.job.AbstractTaskService;
 import ubic.gemma.job.BackgroundJob;
 import ubic.gemma.job.TaskCommand;
 import ubic.gemma.job.TaskResult;
-import ubic.gemma.job.progress.ProgressManager;
 import ubic.gemma.loader.entrez.pubmed.PubMedSearch;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
@@ -570,6 +569,16 @@ public class ExpressionExperimentController extends AbstractTaskService {
         ExpressionExperimentValueObject initialResult = initialResults.iterator().next();
         ExpressionExperimentDetailsValueObject finalResult = new ExpressionExperimentDetailsValueObject( initialResult );
 
+        // Set the parent taxon
+        Taxon taxon = taxonService.load( initialResult.getTaxonId() );
+        if ( taxon.getParentTaxon() != null ) {
+            finalResult.setParentTaxon( taxon.getParentTaxon().getCommonName() );
+            finalResult.setParentTaxonId( taxon.getParentTaxon().getId() );
+        } else {
+            finalResult.setParentTaxonId( taxon.getId() );
+            finalResult.setParentTaxon( taxon.getCommonName() );
+        }
+        
         Collection<ArrayDesign> arrayDesignsUsed = expressionExperimentService.getArrayDesignsUsed( ee );
         Collection<Long> adids = new HashSet<Long>();
         for ( ArrayDesign ad : arrayDesignsUsed ) {

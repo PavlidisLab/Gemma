@@ -490,9 +490,10 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 					id : e.id
 				});
 
+				console.log(e);
 		var vizPanel = new Gemma.EEDetailsVisualizationWidget({
 					renderTo : 'visualization',
-					taxon : e.taxon
+					taxon : e.parentTaxon
 				});
 
 		/*
