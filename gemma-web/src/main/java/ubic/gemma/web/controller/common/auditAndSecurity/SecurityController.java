@@ -766,20 +766,26 @@ public class SecurityController {
 
         // int i = 0; // TESTING
         for ( Securable s : securables ) {
+
+            Collection<String> groupsThatCanRead = groupsReadableBy.get( s );
+            Collection<String> groupsThatCanWrite = groupsEditableBy.get( s );
+
             SecurityInfoValueObject vo = new SecurityInfoValueObject( s );
             vo.setCurrentGroup( currentGroup );
             vo.setAvailableGroups( groupsForCurrentUser );
             vo.setPubliclyReadable( !privacy.get( s ) );
             vo.setShared( sharedness.get( s ) );
             vo.setOwner( new SidValueObject( owners.get( s ) ) );
-            vo.setGroupsThatCanRead( groupsReadableBy.get( s ) );
-            vo.setGroupsThatCanWrite( groupsEditableBy.get( s ) );
+
+            vo.setGroupsThatCanRead( groupsThatCanRead == null ? new HashSet<String>() : groupsThatCanRead );
+
+            vo.setGroupsThatCanWrite( groupsThatCanWrite == null ? new HashSet<String>() : groupsThatCanWrite );
 
             vo.setEntityClazz( s.getClass().getName() );
 
             if ( currentGroup != null ) {
-                vo.setCurrentGroupCanRead( groupsReadableBy.get( s ).contains( currentGroup ) );
-                vo.setCurrentGroupCanWrite( groupsEditableBy.get( s ).contains( currentGroup ) );
+                vo.setCurrentGroupCanRead( groupsThatCanRead != null && groupsThatCanRead.contains( currentGroup ) );
+                vo.setCurrentGroupCanWrite( groupsThatCanWrite != null && groupsThatCanWrite.contains( currentGroup ) );
             }
 
             if ( Describable.class.isAssignableFrom( s.getClass() ) ) {
