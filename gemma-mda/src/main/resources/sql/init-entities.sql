@@ -31,7 +31,7 @@ insert into AUDIT_TRAIL VALUES (10);
 insert into AUDIT_TRAIL VALUES (11);  
 insert into AUDIT_TRAIL VALUES (12);  
 insert into AUDIT_TRAIL VALUES (13);  
-
+insert into AUDIT_TRAIL VALUES (14);
 
 
 -- username=administrator: id = 1, password = 'administrator', audit trail #1 using salt=username ('administrator')
@@ -52,7 +52,7 @@ insert into AUDIT_EVENT VALUES (10, @n, 'C', 'From init script', '', 1, NULL, 10
 insert into AUDIT_EVENT VALUES (11, @n, 'C', 'From init script', '', 1, NULL, 11, 0); 
 insert into AUDIT_EVENT VALUES (12, @n, 'C', 'From init script', '', 1, NULL, 12, 0); 
 insert into AUDIT_EVENT VALUES (13, @n, 'C', 'From init script', '', 1, NULL, 13, 0);
-
+insert into AUDIT_EVENT VALUES (14, @n, 'C', 'From init script', '', 1, NULL, 14, 0);
 
 
 -- username=gemmaAgent: id = 2, password = 'gemmaAgent', audit trail #2, using salt={username}
@@ -82,6 +82,7 @@ insert into TAXON (SCIENTIFIC_NAME,COMMON_NAME,NCBI_ID,IS_SPECIES,IS_GENES_USABL
 insert into TAXON (SCIENTIFIC_NAME,COMMON_NAME,NCBI_ID,IS_SPECIES,IS_GENES_USABLE) values ("Drosophila melanogaster","fly","7227",1,0);
 insert into TAXON (SCIENTIFIC_NAME,COMMON_NAME,NCBI_ID,IS_SPECIES,IS_GENES_USABLE) values ("Caenorhabditis elegans","worm","6239",1,0);
 
+
 -- external databases
 insert into EXTERNAL_DATABASE (NAME, DESCRIPTION, WEB_URI, FTP_URI, AUDIT_TRAIL_FK, TYPE) values ("PubMed", "PubMed database from NCBI", "http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=PubMed", "ftp://ftp.ncbi.nlm.nih.gov/pubmed/", 6, "LITERATURE");
 insert into EXTERNAL_DATABASE (NAME, DESCRIPTION,  WEB_URI, FTP_URI, AUDIT_TRAIL_FK, TYPE) values ("GO", "Gene Ontology database", "http://www.godatabase.org/dev/database/", "http://archive.godatabase.org", 7, "ONTOLOGY");
@@ -91,7 +92,7 @@ insert into EXTERNAL_DATABASE (NAME, DESCRIPTION,  WEB_URI, FTP_URI, AUDIT_TRAIL
 insert into EXTERNAL_DATABASE (NAME, DESCRIPTION,  WEB_URI, FTP_URI, AUDIT_TRAIL_FK, TYPE) values ("Entrez Gene", "NCBI Gene database", "http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gene", "ftp://ftp.ncbi.nih.gov/gene/", 11, "SEQUENCE");
 insert into EXTERNAL_DATABASE (NAME, DESCRIPTION,  WEB_URI, FTP_URI, AUDIT_TRAIL_FK, TYPE) values ("Ensembl", "EMBL - EBI/Sanger Institute genome annotations", "http://www.ensembl.org/", "ftp://ftp.ensembl.org/pub/", 12, "GENOME");
 insert into EXTERNAL_DATABASE (NAME, DESCRIPTION,  WEB_URI, FTP_URI, AUDIT_TRAIL_FK, TYPE) values ("OBO_REL", "Open Biomedical Ontologies Relationships", "http://www.obofoundry.org/ro/", "", 13, "ONTOLOGY");
-
+insert into EXTERNAL_DATABASE (NAME, DESCRIPTION,  WEB_URI, FTP_URI, AUDIT_TRAIL_FK, TYPE) values ("STRING", "STRING - Known and Predicted Protein-Protein Interactions", "http://string-db.org/version_8_2/newstring_cgi/show_network_section.pl?identifiers=", "", 14, "PROTEIN");
 
 -- denormalized table joining genes and compositeSequences
 create table GENE2CS (
