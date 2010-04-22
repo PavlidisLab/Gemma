@@ -81,13 +81,20 @@ public class GenePickerController {
     };
 
     /**
-     * @param geneIds
-     * @return
+     * AJAX
+     * 
+     * @param collection of <long> geneIds
+     * @return collection of gene entity objects
      */
     public Collection<Gene> getGenes( Collection<Long> geneIds ) {
         return geneService.loadMultiple( geneIds );
     }
 
+    /**
+     * AJAX
+     * 
+     * @return a collection of the taxa in gemma (whether usable or not)
+     */
     public Collection<Taxon> getTaxa() {
         SortedSet<Taxon> taxa = new TreeSet<Taxon>( TAXON_COMPARATOR );
         for ( Taxon taxon : taxonService.loadAll() ) {
@@ -97,7 +104,9 @@ public class GenePickerController {
     }
 
     /**
-     * @return Taxon that are species.
+     * AJAX
+     * 
+     * @return Taxon that are species. (only returns usable taxa)
      */
     public Collection<Taxon> getTaxaSpecies() {
         SortedSet<Taxon> taxaSpecies = new TreeSet<Taxon>( TAXON_COMPARATOR );
@@ -110,6 +119,8 @@ public class GenePickerController {
     }
 
     /**
+     * AJAX
+     * 
      * @return Taxon that have genes loaded into Gemma and that should be used
      */
     public Collection<Taxon> getTaxaWithGenes() {
@@ -123,6 +134,8 @@ public class GenePickerController {
     }
 
     /**
+     * AJAX
+     * 
      * @return collection of taxa that have expression experiments available.
      */
     public Collection<Taxon> getTaxaWithDatasets() {
@@ -139,7 +152,9 @@ public class GenePickerController {
     }
 
     /**
-     * @return
+     * AJAX
+     * 
+     * @return List of taxa with array designs in gemma
      */
     public Collection<Taxon> getTaxaWithArrays() {
         Set<Taxon> taxaWithDatasets = new TreeSet<Taxon>( TAXON_COMPARATOR );
@@ -150,9 +165,11 @@ public class GenePickerController {
     }
 
     /**
+     * AJAX
+     * 
      * @param query
      * @param taxonId
-     * @return
+     * @return Collection of Gene entity objects
      */
     public Collection<Gene> searchGenes( String query, Long taxonId ) {
 
@@ -172,11 +189,11 @@ public class GenePickerController {
     }
 
     /**
-     * Search for multiple genes at once. This attempts to limit the number of genes per query to only one.
+     * AJAX Search for multiple genes at once. This attempts to limit the number of genes per query to only one.
      * 
      * @param query A list of gene names (symbols), one per line.
      * @param taxonId
-     * @return
+     * @return colleciton of gene entity objects
      * @throws IOException
      */
     public Collection<Gene> searchMultipleGenes( String query, Long taxonId ) throws IOException {
@@ -194,7 +211,9 @@ public class GenePickerController {
             }
             line = StringUtils.strip( line );
             SearchSettings settings = SearchSettings.geneSearch( line, taxon );
-            List<SearchResult> geneSearchResults = searchService.search( settings ).get( Gene.class );  //drops predicted gene results....
+            List<SearchResult> geneSearchResults = searchService.search( settings ).get( Gene.class ); // drops
+                                                                                                       // predicted gene
+                                                                                                       // results....
 
             // FIXME inform the user (on the client!) if there are some that don't have results.
             if ( geneSearchResults == null || geneSearchResults.isEmpty() ) {
