@@ -309,6 +309,9 @@ public class StringBiomartGene2GeneProteinLoaderTest extends BaseSpringContextTe
 
             Collection<Gene2GeneProteinAssociation> associations = gene2GeneProteinAssociationService.loadAll();
             assertEquals( 1, associations.size() );
+          
+           
+            
             this.gene2GeneProteinAssociationService.deleteAll( associations );
             associations = gene2GeneProteinAssociationService.loadAll();
             assertTrue( associations.isEmpty() );
@@ -339,6 +342,21 @@ public class StringBiomartGene2GeneProteinLoaderTest extends BaseSpringContextTe
 
             Collection<Gene2GeneProteinAssociation> associations = gene2GeneProteinAssociationService.loadAll();
             assertEquals( 3, associations.size() );
+            
+            for(Gene gene: genesZebra){
+                Collection<Gene2GeneProteinAssociation> interactionsForGene =  this.gene2GeneProteinAssociationService.findProteinInteractionsForGene( gene );
+                
+                if(gene.getName().equals( "zgc:153184" )){
+                    assertEquals(2, interactionsForGene.size());
+                }
+                if(gene.getName().equals( "appl1" )){
+                    assertEquals(2, interactionsForGene.size());
+                }
+                if(gene.getName().equals( "LOC568371" )){
+                    assertEquals(2, interactionsForGene.size());
+                }
+            }
+                        
             this.gene2GeneProteinAssociationService.deleteAll( associations );
             associations = gene2GeneProteinAssociationService.loadAll();
             assertTrue( associations.isEmpty() );
