@@ -81,7 +81,6 @@ Gemma.FileUploadForm = Ext.extend(Ext.Panel, {
 
 																}.createDelegate(this),
 																failure : function(form, a) {
-																	console.log(a);
 																	Ext.Msg.alert('Failure',
 																			'Problem with processing of file on the server: '
 																					+ a.result.error);

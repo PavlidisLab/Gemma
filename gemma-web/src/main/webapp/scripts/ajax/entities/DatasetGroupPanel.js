@@ -315,7 +315,6 @@ Gemma.DatasetGroupEditToolbar = Ext.extend(Ext.Toolbar, {
 					this.resetBut.disable();
 					this.commitBut.disable();
 					this.cloneBut.enable();
-					console.log("!!");
 					this.ownerCt.getSelectionModel().fireEvent("rowselect", this.ownerCt.getSelectionModel(),
 							this.ownerCt.getStore().indexOf(this.getCurrentSet()), this.getCurrentSet());
 				}

@@ -106,7 +106,6 @@ Gemma.ArrayDesignCombo = Ext.extend(Gemma.StatefulRemoteCombo, {
 
 		this.taxon = taxon;
 		if (this.getArrayDesign() && this.getArrayDesign().taxon && this.getArrayDesign().taxon.id != taxon.id) {
-			console.log("reset");
 			this.reset();
 		}
 		this.applyFilter(taxon);

@@ -31,7 +31,6 @@ Ext.onReady(function() {
 						window.location = target;
 					},
 					failure : function(form, action) {
-						console.log(action);
 						var msg;
 						if (action.failureType === 'client') {
 							msg = "Invalid form";

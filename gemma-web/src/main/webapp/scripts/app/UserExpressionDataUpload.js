@@ -185,7 +185,6 @@ Gemma.DatasetUploadTool = Ext.extend(Ext.util.Observable, {
 							});
 
 				} else {
-					console.log(result);
 					/*
 					 * Display a summary of the problems
 					 */
@@ -475,7 +474,6 @@ Ext.onReady(function() {
 
 					taxonArrayCombo.setTaxon(parent.id);
 					arrayDesignCombo.taxonChanged(parent);
-					console.log(parent);
 				} else {
 					Ext.Msg.alert("Sorry", "There are no arrays for that taxon");
 				}

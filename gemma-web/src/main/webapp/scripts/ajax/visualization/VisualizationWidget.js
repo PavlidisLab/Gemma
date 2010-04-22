@@ -941,7 +941,6 @@ Gemma.VisualizationWithThumbsWindow = Ext.extend(Ext.Window, {
 		 * Tell thumbnails where to put the legend. Currently it's in the body of the graph.
 		 */
 		// this.on('show', function(cmp) {
-		// console.log("yay");
 		// cmp.zoomLegendId = cmp.getBottomToolbar().id;
 		// cmp.zoomPanel.legendDiv = cmp.zoomLegendId;
 		// cmp.thumbnailPanel.legendDiv = cmp.zoomLegendId;
