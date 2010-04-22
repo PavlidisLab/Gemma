@@ -27,12 +27,13 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 import org.hibernate.Hibernate;
+import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
-import ubic.gemma.model.common.description.DatabaseEntry;
+import ubic.gemma.model.genome.Gene;
 import ubic.gemma.util.BusinessKey;
 import ubic.gemma.util.EntityUtils;
 
@@ -220,6 +221,35 @@ public class Gene2GeneProteinAssociationDaoImpl extends Gene2GeneProteinAssociat
             throw super.convertHibernateAccessException( ex );
         }
     }  
+    
+    
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.association.Gene2GeneProteinAssociationDao#findProteinInteractionsForGene(ubic.gemma.model.association.Gene2GeneProteinAssociation)
+     */
+    @SuppressWarnings("unchecked")
+    public Collection<Gene2GeneProteinAssociation> findProteinInteractionsForGene(Gene gene ) {
+
+        try {
+            
+            String queryStr = "from Gene2GeneProteinAssociationImpl where :gene = firstGene.id or :gene = secondGene.id";
+            Query queryObject = super.getSession().createQuery(queryStr)
+                          .setLong("gene",gene.getId());                   
+            java.util.List results = queryObject.list();
+           
+            if ( results != null ) {
+                return results;
+            }else{
+                log.debug( "No interactions found for gene " + gene.getId() );
+                return null;
+            }
+            
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+    }  
+    
+    
+    
     
     
     

@@ -22,6 +22,8 @@ import java.util.Collection;
 
 import org.springframework.security.access.annotation.Secured;
 
+import ubic.gemma.model.genome.Gene;
+
 
 /**
  * Service class for Gene2GeneProteinAssociation classes.
@@ -80,7 +82,13 @@ public interface Gene2GeneProteinAssociationService{
      */
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     public void thaw(Gene2GeneProteinAssociation association );
-    
+
+
+    /**
+     * Finds Gene2GeneProteinAssociation for a given gene
+     */
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    Collection<Gene2GeneProteinAssociation> findProteinInteractionsForGene( Gene gene );    
     
 
 }

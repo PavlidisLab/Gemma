@@ -4,6 +4,8 @@ import java.util.Collection;
 
 import org.springframework.stereotype.Service;
 
+import ubic.gemma.model.genome.Gene;
+
 
 /**
  * 
@@ -32,6 +34,12 @@ public class Gene2GeneProteinAssociationServiceImpl extends
     protected Gene2GeneProteinAssociation handleFind( Gene2GeneProteinAssociation gene2GeneProteinAssociation ) {
         return this.gene2GeneProteinAssociationDao().find( gene2GeneProteinAssociation );
     }   
+    
+    @Override
+    protected Collection<Gene2GeneProteinAssociation> handleFindProteinInteractionsForGene( Gene gene ) {
+        return this.gene2GeneProteinAssociationDao().findProteinInteractionsForGene( gene );
+    } 
+            
     
     @SuppressWarnings("unchecked")
     @Override

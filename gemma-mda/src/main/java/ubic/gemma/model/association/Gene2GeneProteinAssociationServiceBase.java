@@ -22,6 +22,8 @@ import java.util.Collection;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
+import ubic.gemma.model.genome.Gene;
+
 /**
  * <p>
  * Spring Service base class for <code>ubic.gemma.model.analysis.expression.Gene2GeneProteinAssociationService</code>,
@@ -133,6 +135,22 @@ public abstract class Gene2GeneProteinAssociationServiceBase implements
         }
 
     }
+    
+    /**
+     * @see ubic.gemma.model.association.Gene2GeneProteinAssociationService#handleThaw()
+     */
+    public Collection<Gene2GeneProteinAssociation> findProteinInteractionsForGene( Gene gene ) {
+        try {
+            return this.handleFindProteinInteractionsForGene( gene );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.association.Gene2GeneProteinAssociationServiceException(
+                    "Error performing 'ubic.gemma.model.association.Gene2GeneProteinAssociationServiceBase.findProteinInteractionsForGene(ubic.gemma.model.association.Gene)' --> "
+                            + th, th );
+        }
+
+    }       
+    
+    
 
     /**
      * Sets the reference to <code>gene2GeneProteinAssociation</code>'s DAO.
@@ -193,6 +211,12 @@ public abstract class Gene2GeneProteinAssociationServiceBase implements
      * Performs the core logic for {@link #thaw(ubic.gemma.model.association.Gene2GeneProteinAssociation)}
      */
     protected abstract  void handleThaw( Gene2GeneProteinAssociation associations )  throws java.lang.Exception;
+    
+    /**
+     * 
+      Performs the core logic for {@link #findProteinInteractionsForGene(ubic.gemma.model.genome.Gene)}
+      */
+    protected abstract Collection<Gene2GeneProteinAssociation> handleFindProteinInteractionsForGene( Gene gene ) throws java.lang.Exception;
     
 
 }
