@@ -36,5 +36,11 @@ public interface GeneSetDao extends BaseDao<GeneSet> {
      * @return
      */
     Collection<GeneSet> findByGene( Gene gene );
+    
+    /**
+     * @param name  uses the given name to do a name* search in the db
+     * @return a collection of geneSets that match the given search term. 
+     */
+    Collection<GeneSet> findByName( String name);
 
 }

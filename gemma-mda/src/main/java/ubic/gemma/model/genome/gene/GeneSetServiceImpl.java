@@ -66,6 +66,15 @@ public class GeneSetServiceImpl implements GeneSetService {
         return this.geneSetDao.findByGene( gene );
     }
 
+    
+    /**
+     * @param gene
+     * @return
+     */
+    public Collection<GeneSet> findByName( String name ) {
+        return this.geneSetDao.findByName( name );
+    }
+
     /*
      * (non-Javadoc)
      * @see ubic.gemma.model.genome.gene.GeneSetService#load(java.util.Collection)

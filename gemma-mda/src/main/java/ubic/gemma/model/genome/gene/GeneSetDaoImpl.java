@@ -85,6 +85,17 @@ public class GeneSetDaoImpl extends HibernateDaoSupport implements GeneSetDao {
 
     /*
      * (non-Javadoc)
+     * @see ubic.gemma.model.genome.gene.GeneSetDao#findByGene(ubic.gemma.model.genome.Gene)
+     */
+    @SuppressWarnings("unchecked")
+    public Collection<GeneSet> findByName( String name ) {
+        return this.getHibernateTemplate().findByNamedParam(
+                "select gs from GeneSetImpl gs where gs.name like :name order by gs.name", "name", name );
+    }
+
+    
+    /*
+     * (non-Javadoc)
      * @see ubic.gemma.persistence.BaseDao#load(java.util.Collection)
      */
     @SuppressWarnings("unchecked")

@@ -135,5 +135,7 @@ public interface GeneSetService {
     public Collection<GeneSet> loadMyGeneSets();
     
 
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    public Collection<GeneSet> findByName(String name);
 
 }
