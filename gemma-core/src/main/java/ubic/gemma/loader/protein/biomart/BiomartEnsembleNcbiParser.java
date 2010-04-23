@@ -42,7 +42,6 @@ import ubic.gemma.model.genome.Taxon;
  * @author ldonnison
  * @version $Id$
  */
-
 public class BiomartEnsembleNcbiParser extends LineMapParser<String, BioMartEnsembleNcbi> {
     private static final char FIELD_DELIM = '\t';
 
