@@ -165,7 +165,7 @@ public class GenePickerController {
     }
 
     /**
-     * AJAX
+     * AJAX (used by GeneCombo.js)
      * 
      * @param query
      * @param taxonId
