@@ -30,6 +30,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang.StringUtils;
+import org.directwebremoting.extend.AccessDeniedException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -53,6 +54,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueService;
 import ubic.gemma.model.expression.experiment.FactorValueValueObject;
+import ubic.gemma.security.SecurityService;
 import ubic.gemma.util.AnchorTagUtil;
 import ubic.gemma.web.controller.BaseController;
 import ubic.gemma.web.remote.EntityDelegator;
@@ -88,6 +90,9 @@ public class ExperimentalDesignController extends BaseController {
 
     @Autowired
     private FactorValueService factorValueService = null;
+
+    @Autowired
+    private SecurityService securityService = null;
 
     /**
      * AJAX
@@ -502,6 +507,7 @@ public class ExperimentalDesignController extends BaseController {
         mnv.addObject( "hasPopulatedDesign", experimentalDesign.getExperimentalFactors().size() > 0 );
         mnv.addObject( "experimentalDesign", experimentalDesign );
         mnv.addObject( "expressionExperiment", ee );
+        mnv.addObject( "currentUserCanEdit", securityService.isEditable( ee ) );
         mnv.addObject( "expressionExperimentUrl", AnchorTagUtil.getExpressionExperimentUrl( ee.getId() ) );
 
         return mnv;
@@ -591,6 +597,14 @@ public class ExperimentalDesignController extends BaseController {
             FactorValue fv = this.factorValueService.load( fvID );
             if ( fv == null ) {
                 throw new IllegalArgumentException( "Could not load factorvalue with id=" + fvID );
+            }
+
+            if ( !securityService.isEditable( fv ) ) {
+                /*
+                 * We do this instead of the interceptor because Characteristics are not securable, and we really don't
+                 * want them to be.
+                 */
+                throw new AccessDeniedException( "Access is denied" );
             }
 
             Long charId = fvvo.getCharId(); // this is optional. Maybe we're actually adding a characteristic for the
