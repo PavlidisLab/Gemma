@@ -84,7 +84,7 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 						renderer : this.visStyler.createDelegate(this),
 						tooltip : "Link for visualizing raw data",
 						sortable : false,
-						width : 30
+						width : 35
 
 					}, {
 						id : 'found',
@@ -97,11 +97,20 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 						id : 'support',
 						header : "Support",
 						dataIndex : "supportKey",
-						width : 75,
+						width : 70,
 						renderer : this.supportStyler.createDelegate(this),
 						tooltip : "# of Datasets that confirm coexpression",
 						sortable : true
-					}]
+					}, {
+						id : 'gene2GeneProteinAssociationStringUrl',
+						header : "PPI",
+						dataIndex : "gene2GeneProteinAssociationStringUrl",
+						width : 30,
+						renderer : this.proteinlinkStyler.createDelegate(this),
+						tooltip : "Evidence for Protein Protein Interactions from external sources",
+						sortable : true
+					}
+				]
 		} else {
 			columns = [{
 						id : 'query',
@@ -126,7 +135,7 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 						renderer : this.visStyler.createDelegate(this),
 						tooltip : "Link for visualizing raw data",
 						sortable : false,
-						width : 30
+						width : 35
 
 					}, {
 						id : 'found',
@@ -143,7 +152,17 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 						renderer : this.supportStyler.createDelegate(this),
 						tooltip : "# of Datasets that confirm coexpression",
 						sortable : true
-					}, {
+					},{
+						id : 'gene2GeneProteinAssociationStringUrl',
+						header : "PPI",
+						dataIndex : "gene2GeneProteinAssociationStringUrl",
+						width : 30,
+						renderer : this.proteinlinkStyler.createDelegate(this),
+						tooltip : "Evidence for Protein Protein Interactions from external sources",
+						sortable : true
+					},	
+					
+					{
 						id : 'go',
 						header : "GO Overlap",
 						dataIndex : "goSim",
@@ -400,6 +419,9 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 			}, {
 				name : "supportingExperiments"
 			}, {
+				name : "gene2GeneProteinAssociationStringUrl",
+				type : "string"	
+			},	{
 				name : "containsMyData",
 				type : "boolean"
 			}]),
@@ -413,6 +435,20 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 						'<span onClick="{0}" id="aba-{1}-button"><img height=15 width =15 src="/Gemma/images/logo/aba-icon.png" ext:qtip="Link to expression data from the Allen Brain Atlas for {2}" /> </span>',
 						call, value.officialSymbol, value.officialSymbol);
 	},
+	
+	//link for protein interactions
+	proteinlinkStyler : function(value, metadata, record, row, col, ds) {
+	
+		var d = record.data;		
+		if (d.gene2GeneProteinAssociationStringUrl) {
+			return String
+			.format(
+					'<span> <a href="{0}"  target="_blank" class="external"><img "src="/Gemma/images/logo/string_logo.gif" ext:qtip="Click to view evidence from STRING for protein protein interaction" /></a> </span>',
+					d.gene2GeneProteinAssociationStringUrl);
+		}	
+		
+	},
+	
 
 	/**
 	 * 

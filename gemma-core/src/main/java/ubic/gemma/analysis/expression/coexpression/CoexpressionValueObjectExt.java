@@ -47,6 +47,8 @@ public class CoexpressionValueObjectExt implements Comparable<CoexpressionValueO
     private String datasetVector;
     private Boolean containsMyData;
     private Collection<Long> supportingExperiments;
+    private String gene2GeneProteinAssociationStringUrl;
+        
 
     public Gene getQueryGene() {
         return queryGene;
@@ -198,7 +200,22 @@ public class CoexpressionValueObjectExt implements Comparable<CoexpressionValueO
         result = prime * result + ( ( sortKey == null ) ? 0 : sortKey.hashCode() );
         return result;
     }
+    
+    /**
+     * @return the gene2GeneProteinAssociationStringUrl
+     */
+    public String getGene2GeneProteinAssociationStringUrl() {
+        return gene2GeneProteinAssociationStringUrl;
+    }
 
+    /**
+     * @param gene2GeneProteinAssociationStringUrl the gene2GeneProteinAssociationStringUrl to set
+     */
+    public void setGene2GeneProteinAssociationStringUrl( String gene2GeneProteinAssociationStringUrl ) {
+        this.gene2GeneProteinAssociationStringUrl = gene2GeneProteinAssociationStringUrl;
+    }
+    
+    
     /*
      * (non-Javadoc)
      * 
@@ -219,5 +236,9 @@ public class CoexpressionValueObjectExt implements Comparable<CoexpressionValueO
     public int compareTo( CoexpressionValueObjectExt arg0 ) {
         return this.getSortKey().compareTo( arg0.getSortKey() );
     }
+    
+   
+    
+    
 
 }
