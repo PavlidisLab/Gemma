@@ -131,7 +131,7 @@ public class Probe2ProbeCoexpressionServiceTest extends BaseSpringContextTest {
     public void testHandleDeleteLinksExpressionExperiment() throws Exception {
         ppcs.deleteLinks( ee );
         Integer countLinks = ppcs.countLinks( ee );
-        assertEquals( 0, countLinks.intValue() );
+        assertEquals( null, countLinks );
     }
 
     /**
