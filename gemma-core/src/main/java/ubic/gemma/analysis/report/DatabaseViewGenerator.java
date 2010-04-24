@@ -279,8 +279,8 @@ public class DatabaseViewGenerator {
                 differentialExpressionResultService.thaw( ears );
 
                 // Get the factor category name
-                String factorName = new String();
-                String factorURI = new String();
+                String factorName = "";
+                String factorURI = "";
 
                 for ( ExperimentalFactor ef : ears.getExperimentalFactors() ) {
                     factorName += ef.getName() + ",";

@@ -31,7 +31,7 @@ import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService;
 
-/** 
+/**
  * @author pavlidis
  * @version $Id$
  */
@@ -83,12 +83,12 @@ public abstract class ExpressionExperimentVectorManipulatingService {
         if ( representation.equals( PrimitiveType.BOOLEAN ) ) {
             boolean[] convertedDat = converter.byteArrayToBooleans( rawDat );
             for ( boolean b : convertedDat ) {
-                data.add( new Boolean( b ) );
+                data.add( Boolean.valueOf( b ) );
             }
         } else if ( representation.equals( PrimitiveType.CHAR ) ) {
             char[] convertedDat = converter.byteArrayToChars( rawDat );
             for ( char b : convertedDat ) {
-                data.add( new Character( b ) );
+                data.add( Character.valueOf( b ) );
             }
         } else if ( representation.equals( PrimitiveType.DOUBLE ) ) {
             double[] convertedDat = converter.byteArrayToDoubles( rawDat );
@@ -98,12 +98,12 @@ public abstract class ExpressionExperimentVectorManipulatingService {
         } else if ( representation.equals( PrimitiveType.INT ) ) {
             int[] convertedDat = converter.byteArrayToInts( rawDat );
             for ( int b : convertedDat ) {
-                data.add( new Integer( b ) );
+                data.add( Integer.valueOf( b ) );
             }
         } else if ( representation.equals( PrimitiveType.LONG ) ) {
             long[] convertedDat = converter.byteArrayToLongs( rawDat );
             for ( long b : convertedDat ) {
-                data.add( new Long( b ) );
+                data.add( Long.valueOf( b ) );
             }
         } else if ( representation.equals( PrimitiveType.STRING ) ) {
             String[] convertedDat = converter.byteArrayToStrings( rawDat );
