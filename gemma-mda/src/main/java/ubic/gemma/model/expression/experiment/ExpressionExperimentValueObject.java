@@ -39,17 +39,17 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
 
     private String accession;
 
-    private long arrayDesignCount;
+    private Integer arrayDesignCount;
 
-    private long bioAssayCount;
+    private Integer bioAssayCount;
 
-    private Long bioMaterialCount = null;
+    private Integer bioMaterialCount = null;
 
     private String clazz;
 
-    private Long coexpressionLinkCount = null;
+    private Integer coexpressionLinkCount = null;
 
-    private boolean currentUserHasWritePermission = false;
+    private Boolean currentUserHasWritePermission = false;
 
     private Date dateArrayDesignLastUpdated;
 
@@ -67,7 +67,7 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
 
     private Date dateProcessedDataVectorComputation;
 
-    private long designElementDataVectorCount;
+    private Integer designElementDataVectorCount;
 
     private String differentialAnalysisEventType;
 
@@ -81,7 +81,7 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
 
     private String externalUri;
 
-    private boolean hasBothIntensities = false;
+    private Boolean hasBothIntensities = false;
 
     private Boolean hasEitherIntensity = false;
 
@@ -91,7 +91,7 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
 
     private String investigators;
 
-    private boolean isPublic = true;
+    private Boolean isPublic = true;
 
     private boolean isShared = false;
 
@@ -111,11 +111,11 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
 
     private String processedDataVectorComputationEventType;
 
-    private Long processedExpressionVectorCount = null;
+    private Integer processedExpressionVectorCount = null;
 
     private Integer pubmedId;
 
-    private Long rawCoexpressionLinkCount = null;
+    private Integer rawCoexpressionLinkCount = null;
 
     private Collection<AuditEventValueObject> sampleRemovedFlags;
 
@@ -166,18 +166,18 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
     }
 
     public ExpressionExperimentValueObject( Long id, String name, String externalDatabase, String externalUri,
-            String source, String accession, long bioAssayCount, String taxon, Long taxonId, Long bioMaterialCount,
-            long designElementDataVectorCount, long arrayDesignCount, String shortName, String linkAnalysisEventType,
+            String source, String accession, Integer bioAssayCount, String taxon, Long taxonId, Integer bioMaterialCount,
+            Integer designElementDataVectorCount, Integer arrayDesignCount, String shortName, String linkAnalysisEventType,
             Date dateArrayDesignLastUpdated, AuditEventValueObject validatedFlag, String technologyType,
             boolean hasBothIntensities, Integer numAnnotations, Integer numPopulatedFactors,
             Date dateDifferentialAnalysis, String differentialAnalysisEventType,
             Collection<AuditEventValueObject> sampleRemovedFlags, boolean isPublic,
             boolean currentUserHasWritePermission, String clazz, Long sourceExperiment,
             Long differentialExpressionAnalysisId, Integer pubmedId, String investigators, String owner,
-            Date dateCreated, AuditEventValueObject troubleFlag, Long coexpressionLinkCount,
+            Date dateCreated, AuditEventValueObject troubleFlag, Integer coexpressionLinkCount,
             String processedDataVectorComputationEventType, String missingValueAnalysisEventType,
-            Date dateLinkAnalysis, Long rawCoexpressionLinkCount, Date dateProcessedDataVectorComputation,
-            Date dateMissingValueAnalysis, Long processedExpressionVectorCount, Date dateLastUpdated, Date dateCached,
+            Date dateLinkAnalysis, Integer rawCoexpressionLinkCount, Date dateProcessedDataVectorComputation,
+            Date dateMissingValueAnalysis, Integer processedExpressionVectorCount, Date dateLastUpdated, Date dateCached,
             Boolean hasProbeSpecificForQueryGene, Double minPvalue, Boolean hasEitherIntensity,
             Collection<DifferentialExpressionSummaryValueObject> probeIds, Long experimentalDesign ) {
         this.id = id;
@@ -305,21 +305,21 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
     /**
      * 
      */
-    public long getArrayDesignCount() {
+    public Integer getArrayDesignCount() {
         return this.arrayDesignCount;
     }
 
     /**
      * 
      */
-    public long getBioAssayCount() {
+    public Integer getBioAssayCount() {
         return this.bioAssayCount;
     }
 
     /**
      * 
      */
-    public Long getBioMaterialCount() {
+    public Integer getBioMaterialCount() {
         return this.bioMaterialCount;
     }
 
@@ -335,7 +335,7 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
     /**
      * 
      */
-    public Long getCoexpressionLinkCount() {
+    public Integer getCoexpressionLinkCount() {
         return this.coexpressionLinkCount;
     }
 
@@ -404,7 +404,7 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
     /**
      * 
      */
-    public long getDesignElementDataVectorCount() {
+    public Integer getDesignElementDataVectorCount() {
         return this.designElementDataVectorCount;
     }
 
@@ -539,7 +539,7 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
     /**
      * 
      */
-    public Long getProcessedExpressionVectorCount() {
+    public Integer getProcessedExpressionVectorCount() {
         return this.processedExpressionVectorCount;
     }
 
@@ -556,7 +556,7 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
      * filtering/stringency was applied.
      * </p>
      */
-    public Long getRawCoexpressionLinkCount() {
+    public Integer getRawCoexpressionLinkCount() {
         return this.rawCoexpressionLinkCount;
     }
 
@@ -670,15 +670,15 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
         this.accession = accession;
     }
 
-    public void setArrayDesignCount( long arrayDesignCount ) {
+    public void setArrayDesignCount( Integer arrayDesignCount ) {
         this.arrayDesignCount = arrayDesignCount;
     }
 
-    public void setBioAssayCount( long bioAssayCount ) {
+    public void setBioAssayCount( Integer bioAssayCount ) {
         this.bioAssayCount = bioAssayCount;
     }
 
-    public void setBioMaterialCount( Long bioMaterialCount ) {
+    public void setBioMaterialCount( Integer bioMaterialCount ) {
         this.bioMaterialCount = bioMaterialCount;
     }
 
@@ -686,7 +686,7 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
         this.clazz = clazz;
     }
 
-    public void setCoexpressionLinkCount( Long coexpressionLinkCount ) {
+    public void setCoexpressionLinkCount( Integer coexpressionLinkCount ) {
         this.coexpressionLinkCount = coexpressionLinkCount;
     }
 
@@ -729,7 +729,7 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
         this.dateProcessedDataVectorComputation = dateProcessedDataVectorComputation;
     }
 
-    public void setDesignElementDataVectorCount( long designElementDataVectorCount ) {
+    public void setDesignElementDataVectorCount( Integer designElementDataVectorCount ) {
         this.designElementDataVectorCount = designElementDataVectorCount;
     }
 
@@ -813,7 +813,7 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
         this.processedDataVectorComputationEventType = processedDataVectorComputationEventType;
     }
 
-    public void setProcessedExpressionVectorCount( Long processedExpressionVectorCount ) {
+    public void setProcessedExpressionVectorCount( Integer processedExpressionVectorCount ) {
         this.processedExpressionVectorCount = processedExpressionVectorCount;
     }
 
@@ -828,7 +828,7 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
         this.pubmedId = pubmedId;
     }
 
-    public void setRawCoexpressionLinkCount( Long rawCoexpressionLinkCount ) {
+    public void setRawCoexpressionLinkCount( Integer rawCoexpressionLinkCount ) {
         this.rawCoexpressionLinkCount = rawCoexpressionLinkCount;
     }
 

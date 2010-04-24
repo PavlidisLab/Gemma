@@ -104,11 +104,11 @@ public class MultipleCoexpressionTypeValueObject {
         return expressionExperiments.values();
     }
 
-    public Long getLinkCountForEE( Long id ) {
+    public Integer getLinkCountForEE( Long id ) {
 
         ExpressionExperimentValueObject eeVo = expressionExperiments.get( id );
 
-        if ( ( eeVo == null ) || ( eeVo.getCoexpressionLinkCount() == null ) ) return ( long ) 0;
+        if ( ( eeVo == null ) || ( eeVo.getCoexpressionLinkCount() == null ) ) return 0;
 
         return eeVo.getCoexpressionLinkCount();
 
@@ -140,11 +140,11 @@ public class MultipleCoexpressionTypeValueObject {
      * @param id
      * @return an int representing the raw number of links a given ee contributed to the coexpression search
      */
-    public Long getRawLinkCountForEE( Long id ) {
+    public Integer getRawLinkCountForEE( Long id ) {
 
         ExpressionExperimentValueObject eeVo = expressionExperiments.get( id );
 
-        if ( ( eeVo == null ) || ( eeVo.getRawCoexpressionLinkCount() == null ) ) return ( long ) 0;
+        if ( ( eeVo == null ) || ( eeVo.getRawCoexpressionLinkCount() == null ) ) return 0;
 
         return eeVo.getRawCoexpressionLinkCount();
     }

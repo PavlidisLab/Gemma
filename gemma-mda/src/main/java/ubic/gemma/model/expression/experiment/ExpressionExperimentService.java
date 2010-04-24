@@ -199,13 +199,13 @@ public interface ExpressionExperimentService {
      * Counts the number of biomaterials associated with this expression experiment.
      */
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    public long getBioMaterialCount( ExpressionExperiment expressionExperiment );
+    public Integer getBioMaterialCount( ExpressionExperiment expressionExperiment );
 
     /**
      * @param id
      * @return
      */
-    public long getDesignElementDataVectorCountById( long id );
+    public Integer getDesignElementDataVectorCountById( long id );
 
     /**
      * Find vectors constrained to the given quantitation type and design elements. Returns vectors for all experiments
@@ -298,7 +298,7 @@ public interface ExpressionExperimentService {
      * Counts the number of ProcessedExpressionDataVectors.
      */
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    public long getProcessedExpressionVectorCount( ExpressionExperiment expressionExperiment );
+    public Integer getProcessedExpressionVectorCount( ExpressionExperiment expressionExperiment );
 
     /**
      * Function to get a count of an expressionExperiment's designelementdatavectors, grouped by quantitation type

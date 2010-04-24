@@ -340,7 +340,7 @@ public abstract class ExpressionExperimentServiceBase implements ExpressionExper
     /**
      * @see ExpressionExperimentService#getBioMaterialCount(ExpressionExperiment)
      */
-    public long getBioMaterialCount( final ExpressionExperiment expressionExperiment ) {
+    public Integer getBioMaterialCount( final ExpressionExperiment expressionExperiment ) {
         try {
             return this.handleGetBioMaterialCount( expressionExperiment );
         } catch ( Throwable th ) {
@@ -353,7 +353,7 @@ public abstract class ExpressionExperimentServiceBase implements ExpressionExper
     /**
      * @see ExpressionExperimentService#getDesignElementDataVectorCountById(long)
      */
-    public long getDesignElementDataVectorCountById( final long id ) {
+    public Integer getDesignElementDataVectorCountById( final long id ) {
         try {
             return this.handleGetDesignElementDataVectorCountById( id );
         } catch ( Throwable th ) {
@@ -543,7 +543,7 @@ public abstract class ExpressionExperimentServiceBase implements ExpressionExper
     /**
      * @see ExpressionExperimentService#getPreferredDesignElementDataVectorCount(ExpressionExperiment)
      */
-    public long getProcessedExpressionVectorCount( final ExpressionExperiment expressionExperiment ) {
+    public Integer getProcessedExpressionVectorCount( final ExpressionExperiment expressionExperiment ) {
         try {
             return this.handleGetProcessedExpressionVectorCount( expressionExperiment );
         } catch ( Throwable th ) {
@@ -952,13 +952,13 @@ public abstract class ExpressionExperimentServiceBase implements ExpressionExper
     /**
      * Performs the core logic for {@link #getBioMaterialCount(ExpressionExperiment)}
      */
-    protected abstract long handleGetBioMaterialCount( ExpressionExperiment expressionExperiment )
+    protected abstract Integer handleGetBioMaterialCount( ExpressionExperiment expressionExperiment )
             throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #getDesignElementDataVectorCountById(long)}
      */
-    protected abstract long handleGetDesignElementDataVectorCountById( long id ) throws java.lang.Exception;
+    protected abstract Integer handleGetDesignElementDataVectorCountById( long id ) throws java.lang.Exception;
 
     /**
      * Performs the core logic for
@@ -1036,7 +1036,7 @@ public abstract class ExpressionExperimentServiceBase implements ExpressionExper
     /**
      * Performs the core logic for {@link #getPreferredDesignElementDataVectorCount(ExpressionExperiment)}
      */
-    protected abstract long handleGetProcessedExpressionVectorCount( ExpressionExperiment expressionExperiment )
+    protected abstract Integer handleGetProcessedExpressionVectorCount( ExpressionExperiment expressionExperiment )
             throws java.lang.Exception;
 
     /**

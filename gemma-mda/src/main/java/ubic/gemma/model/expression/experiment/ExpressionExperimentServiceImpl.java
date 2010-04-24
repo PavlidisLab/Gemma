@@ -345,12 +345,12 @@ public class ExpressionExperimentServiceImpl extends
      * .expression.experiment.ExpressionExperiment)
      */
     @Override
-    protected long handleGetBioMaterialCount( ExpressionExperiment expressionExperiment ) throws Exception {
+    protected Integer handleGetBioMaterialCount( ExpressionExperiment expressionExperiment ) throws Exception {
         return this.getExpressionExperimentDao().getBioMaterialCount( expressionExperiment );
     }
 
     @Override
-    protected long handleGetDesignElementDataVectorCountById( long id ) throws Exception {
+    protected Integer handleGetDesignElementDataVectorCountById( long id ) throws Exception {
         return this.getExpressionExperimentDao().getDesignElementDataVectorCountById( id );
     }
 
@@ -518,7 +518,7 @@ public class ExpressionExperimentServiceImpl extends
      * (ubic.gemma.model.expression.experiment.ExpressionExperiment)
      */
     @Override
-    protected long handleGetProcessedExpressionVectorCount( ExpressionExperiment expressionExperiment )
+    protected Integer handleGetProcessedExpressionVectorCount( ExpressionExperiment expressionExperiment )
             throws Exception {
         return this.getExpressionExperimentDao().getProcessedExpressionVectorCount( expressionExperiment );
     }

@@ -743,7 +743,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
 
         eeVo.setDiffExpressedProbes( getDiffExpressedProbes( tempEe, CUT_OFF ) );
 
-        Long numLinks = probe2ProbeCoexpressionService.countLinks( tempEe ).longValue();
+        Integer numLinks = probe2ProbeCoexpressionService.countLinks( tempEe );
         log.debug( numLinks + " links." );
         eeVo.setCoexpressionLinkCount( numLinks );
 

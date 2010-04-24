@@ -92,6 +92,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#find(ubic.gemma.model.expression.experiment
      * .ExpressionExperiment)
@@ -127,6 +128,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
 
     /*
      * (non-Javadoc)
+     * 
      * @seeubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#findByAccession(ubic.gemma.model.common.
      * description.DatabaseEntry)
      */
@@ -157,6 +159,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
 
     /*
      * (non-Javadoc)
+     * 
      * @seeubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#findOrCreate(ubic.gemma.model.expression.
      * experiment.ExpressionExperiment)
      */
@@ -177,6 +180,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.experiment.ExpressionExperimentDao#getArrayDesignsUsed(ubic.gemma.model.expression
      * .experiment.ExpressionExperiment)
@@ -194,6 +198,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.experiment.ExpressionExperimentDao#getProcessedDataVectors(ubic.gemma.model.expression
      * .experiment.ExpressionExperiment)
@@ -206,6 +211,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
 
     /*
      * Override to take advantage of query cache. (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#loadAll()
      */
     @SuppressWarnings("unchecked")
@@ -232,6 +238,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#remove(ubic.gemma.model.expression.experiment
      * .ExpressionExperiment)
@@ -393,6 +400,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleFindByBibliographicReference(java.lang
      * .Long)
@@ -451,6 +459,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleFindByExpressedGene(ubic.gemma.model
      * .genome.Gene, java.lang.Double)
@@ -535,6 +544,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleFindByGene(ubic.gemma.model.genome.Gene)
      */
@@ -572,6 +582,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleFindByParentTaxon(ubic.gemma.model.genome
      * . Taxon)
@@ -602,6 +613,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleFindByTaxon(ubic.gemma.model.genome.
      * Taxon)
@@ -617,6 +629,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleGetAnnotationCounts(java.util.Collection
      * )
@@ -645,6 +658,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleGetArrayDesignAuditEvents(java.util.
      * Collection)
@@ -686,6 +700,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleGetLastLinkAnalysis(java.util.Collection
      * )
@@ -728,13 +743,14 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#getQuantitationTypeCountById(ubic.gemma.model
      * .expression.experiment.ExpressionExperiment)
      */
     @SuppressWarnings("unchecked")
     @Override
-    protected long handleGetBioAssayCountById( long Id ) {
+    protected Integer handleGetBioAssayCountById( long Id ) {
         final String queryString = "select count(ba) from ExpressionExperimentImpl ee "
                 + "inner join ee.bioAssays dedv where ee.id = :ee";
         List list = getHibernateTemplate().findByNamedParam( queryString, "ee", Id );
@@ -742,31 +758,33 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
             log.warn( "No vectors for experiment with id " + Id );
             return 0;
         }
-        return ( Long ) list.iterator().next();
+        return ( ( Long ) list.iterator().next() ).intValue();
     }
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleGetBioMaterialCount(ubic.gemma.model
      * .expression.experiment.ExpressionExperiment)
      */
     @Override
-    protected long handleGetBioMaterialCount( ExpressionExperiment expressionExperiment ) throws Exception {
+    protected Integer handleGetBioMaterialCount( ExpressionExperiment expressionExperiment ) throws Exception {
         final String queryString = "select count(distinct sample) from ExpressionExperimentImpl as ee "
                 + "inner join ee.bioAssays as ba " + "inner join ba.samplesUsed as sample where ee.id = :eeId ";
         List<?> result = getHibernateTemplate().findByNamedParam( queryString, "eeId", expressionExperiment.getId() );
-        return ( Long ) result.iterator().next();
+        return ( ( Long ) result.iterator().next() ).intValue();
     }
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleGetDesignElementDataVectorCountById(
      * long)
      */
     @Override
-    protected long handleGetDesignElementDataVectorCountById( long Id ) {
+    protected Integer handleGetDesignElementDataVectorCountById( long Id ) {
 
         /*
          * Note that this gets the count of RAW vectors.
@@ -780,12 +798,13 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
             log.warn( "No vectors for experiment with id " + Id );
             return 0;
         }
-        return ( Long ) list.iterator().next();
+        return ( ( Long ) list.iterator().next() ).intValue();
 
     }
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleGetDesignElementDataVectors(ubic.gemma
      * .model.expression.experiment.ExpressionExperiment, java.util.Collection)
@@ -805,6 +824,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleGetDesignElementDataVectors(java.util
      * .Collection, ubic.gemma.model.common.quantitationtype.QuantitationType)
@@ -825,6 +845,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
 
     /*
      * (non-Javadoc)
+     * 
      * @seeubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleGetLastArrayDesignUpdate(java.util.
      * Collection, java.lang.Class)
      */
@@ -896,6 +917,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleGetLastArrayDesignUpdate(ubic.gemma.
      * model.expression.experiment.ExpressionExperiment, java.lang.Class)
@@ -941,6 +963,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleGetPerTaxonCount()
      */
     @SuppressWarnings("unchecked")
@@ -985,6 +1008,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
 
     /*
      * (non-Javadoc)
+     * 
      * @seeubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleGetPopulatedFactorCounts(java.util.
      * Collection)
      */
@@ -1015,22 +1039,24 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleGetPreferredDesignElementDataVectorCount
      * (ubic.gemma.model.expression.experiment.ExpressionExperiment)
      */
     @Override
     @SuppressWarnings("unchecked")
-    protected long handleGetProcessedExpressionVectorCount( ExpressionExperiment expressionExperiment )
+    protected Integer handleGetProcessedExpressionVectorCount( ExpressionExperiment expressionExperiment )
             throws Exception {
         final String queryString = "select count(v) from ProcessedExpressionDataVectorImpl v  where v.expressionExperiment = :ee ";
 
         List result = getHibernateTemplate().findByNamedParam( queryString, "ee", expressionExperiment );
-        return ( Long ) result.iterator().next();
+        return ( ( Long ) result.iterator().next() ).intValue();
     }
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#getQuantitationTypeCountById(ubic.gemma.model
      * .expression.experiment.ExpressionExperiment)
@@ -1085,6 +1111,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleGetSampleRemovalEvents(java.util.Collection
      * )
@@ -1113,6 +1140,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleGetSamplingOfVectors(ubic.gemma.model
      * .common.quantitationtype.QuantitationType, java.lang.Integer)
@@ -1132,6 +1160,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleGetSubSets(ubic.gemma.model.expression
      * .experiment.ExpressionExperiment)
@@ -1146,6 +1175,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleGetTaxon(java.lang.Long)
      */
     @SuppressWarnings("unchecked")
@@ -1160,6 +1190,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleLoad(java.util.Collection)
      */
     @SuppressWarnings("unchecked")
@@ -1195,6 +1226,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleLoadAllValueObjects()
      */
     @Override
@@ -1204,6 +1236,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleLoadValueObjects(java.util.Collection)
      */
@@ -1275,8 +1308,8 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
                 v.setAccession( ( String ) res[5] );
                 v.setTaxon( ( String ) res[6] );
                 v.setTaxonId( ( Long ) res[7] );
-                v.setBioAssayCount( ( Long ) res[8] );
-                v.setArrayDesignCount( ( Long ) res[9] );
+                v.setBioAssayCount( ( ( Long ) res[8] ).intValue() );
+                v.setArrayDesignCount( ( ( Long ) res[9] ).intValue() );
                 v.setShortName( ( String ) res[10] );
                 v.setDateCreated( ( ( Date ) res[11] ) );
                 if ( res[12] != null ) v.setTechnologyType( ( ( TechnologyType ) res[12] ).toString() );
@@ -1297,6 +1330,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleThaw(ubic.gemma.model.expression.experiment
      * .ExpressionExperiment, boolean)

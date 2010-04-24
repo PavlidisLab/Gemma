@@ -84,7 +84,7 @@ public class ExperimentNumSamplesEndpoint extends AbstractGemmaEndpoint {
             return buildBadResponse( document, msg );
         }
 
-        Long bmCount = expressionExperimentService.getBioMaterialCount( ee );
+        Integer bmCount = expressionExperimentService.getBioMaterialCount( ee );
 
         // build collection to pass to wrapper
         Collection<String> values = new HashSet<String>();

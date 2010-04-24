@@ -360,11 +360,11 @@ public class CoexpressedGenesDetails {
      * @param id
      * @return
      */
-    public Long getLinkCountForEE( Long id ) {
+    public Integer getLinkCountForEE( Long id ) {
 
         ExpressionExperimentValueObject eeVo = expressionExperiments.get( id );
 
-        if ( eeVo == null || eeVo.getCoexpressionLinkCount() == null ) return 0L;
+        if ( eeVo == null || eeVo.getCoexpressionLinkCount() == null ) return 0;
 
         return eeVo.getCoexpressionLinkCount();
 
@@ -403,12 +403,12 @@ public class CoexpressedGenesDetails {
      * @param id
      * @return an int representing the raw number of links a given ee contributed to the coexpression search
      */
-    public Long getRawLinkCountForEE( Long id ) {
+    public Integer getRawLinkCountForEE( Long id ) {
 
         ExpressionExperimentValueObject eeVo = expressionExperiments.get( id );
 
         if ( eeVo == null || eeVo.getRawCoexpressionLinkCount() == null ) {
-            return ( long ) 0;
+            return 0;
         }
 
         return eeVo.getRawCoexpressionLinkCount();
@@ -675,7 +675,7 @@ public class CoexpressedGenesDetails {
             assert eeVo != null;
 
             if ( eeVo.getCoexpressionLinkCount() == null ) {
-                eeVo.setCoexpressionLinkCount( new Long( 1 ) );
+                eeVo.setCoexpressionLinkCount( 1 );
             } else {
                 eeVo.setCoexpressionLinkCount( eeVo.getCoexpressionLinkCount() + 1 );
             }
@@ -738,7 +738,7 @@ public class CoexpressedGenesDetails {
             assert eeVo != null;
 
             if ( eeVo.getRawCoexpressionLinkCount() == null ) {
-                eeVo.setRawCoexpressionLinkCount( new Long( 1 ) );
+                eeVo.setRawCoexpressionLinkCount( 1 );
             } else {
                 eeVo.setRawCoexpressionLinkCount( eeVo.getRawCoexpressionLinkCount() + 1 );
             }

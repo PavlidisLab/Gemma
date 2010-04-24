@@ -176,7 +176,7 @@ public interface ExpressionExperimentDao extends BioAssaySetDao<ExpressionExperi
     /**
      * 
      */
-    public long getBioAssayCountById( long id );
+    public Integer getBioAssayCountById( long id );
 
     /**
      * Retrieve the BioAssayDimensions for the study.
@@ -189,12 +189,12 @@ public interface ExpressionExperimentDao extends BioAssaySetDao<ExpressionExperi
     /**
      * 
      */
-    public long getBioMaterialCount( ExpressionExperiment expressionExperiment );
+    public Integer getBioMaterialCount( ExpressionExperiment expressionExperiment );
 
     /**
      * 
      */
-    public long getDesignElementDataVectorCountById( long id );
+    public Integer getDesignElementDataVectorCountById( long id );
 
     /**
      * 
@@ -252,7 +252,7 @@ public interface ExpressionExperimentDao extends BioAssaySetDao<ExpressionExperi
     /**
      * 
      */
-    public long getProcessedExpressionVectorCount( ExpressionExperiment expressionExperiment );
+    public Integer getProcessedExpressionVectorCount( ExpressionExperiment expressionExperiment );
 
     /**
      * <p>

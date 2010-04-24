@@ -27,10 +27,10 @@ public class CoexpressionDatasetValueObject {
     private Long id;
     private String queryGene;
     private Boolean probeSpecificForQueryGene;
-    private Long arrayDesignCount;
-    private Long bioAssayCount;
-    private Long rawCoexpressionLinkCount;
-    private Long coexpressionLinkCount;
+    private Integer arrayDesignCount;
+    private Integer bioAssayCount;
+    private Integer rawCoexpressionLinkCount;
+    private Integer coexpressionLinkCount;
     
     public Long getId() {
         return id;
@@ -56,35 +56,35 @@ public class CoexpressionDatasetValueObject {
         this.probeSpecificForQueryGene = probeSpecificForQueryGene;
     }
     
-    public Long getArrayDesignCount() {
+    public Integer getArrayDesignCount() {
         return arrayDesignCount;
     }
     
-    public void setArrayDesignCount( Long arrayDesignCount ) {
+    public void setArrayDesignCount( Integer arrayDesignCount ) {
         this.arrayDesignCount = arrayDesignCount;
     }
     
-    public Long getBioAssayCount() {
+    public Integer getBioAssayCount() {
         return bioAssayCount;
     }
     
-    public void setBioAssayCount( Long bioAssayCount ) {
+    public void setBioAssayCount( Integer bioAssayCount ) {
         this.bioAssayCount = bioAssayCount;
     }
     
-    public Long getRawCoexpressionLinkCount() {
+    public Integer getRawCoexpressionLinkCount() {
         return rawCoexpressionLinkCount;
     }
     
-    public void setRawCoexpressionLinkCount( Long rawCoexpressionLinkCount ) {
+    public void setRawCoexpressionLinkCount( Integer rawCoexpressionLinkCount ) {
         this.rawCoexpressionLinkCount = rawCoexpressionLinkCount;
     }
     
-    public Long getCoexpressionLinkCount() {
+    public Integer getCoexpressionLinkCount() {
         return coexpressionLinkCount;
     }
     
-    public void setCoexpressionLinkCount( Long coexpressionLinkCount ) {
+    public void setCoexpressionLinkCount( Integer coexpressionLinkCount ) {
         this.coexpressionLinkCount = coexpressionLinkCount;
     }
         

@@ -617,7 +617,7 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     /**
      * @see ExpressionExperimentDao#getBioAssayCountById(long)
      */
-    public long getBioAssayCountById( final long id ) {
+    public Integer getBioAssayCountById( final long id ) {
         try {
             return this.handleGetBioAssayCountById( id );
         } catch ( Throwable th ) {
@@ -629,7 +629,7 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     /**
      * @see ExpressionExperimentDao#getBioMaterialCount(ExpressionExperiment)
      */
-    public long getBioMaterialCount( final ExpressionExperiment expressionExperiment ) {
+    public Integer getBioMaterialCount( final ExpressionExperiment expressionExperiment ) {
         try {
             return this.handleGetBioMaterialCount( expressionExperiment );
         } catch ( Throwable th ) {
@@ -642,7 +642,7 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     /**
      * @see ExpressionExperimentDao#getDesignElementDataVectorCountById(long)
      */
-    public long getDesignElementDataVectorCountById( final long id ) {
+    public Integer getDesignElementDataVectorCountById( final long id ) {
         try {
             return this.handleGetDesignElementDataVectorCountById( id );
         } catch ( Throwable th ) {
@@ -750,7 +750,7 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     /**
      * @see ExpressionExperimentDao#getPreferredDesignElementDataVectorCount(ExpressionExperiment)
      */
-    public long getProcessedExpressionVectorCount( final ExpressionExperiment expressionExperiment ) {
+    public Integer getProcessedExpressionVectorCount( final ExpressionExperiment expressionExperiment ) {
         try {
             return this.handleGetProcessedExpressionVectorCount( expressionExperiment );
         } catch ( Throwable th ) {
@@ -1158,17 +1158,17 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     /**
      * Performs the core logic for {@link #getBioAssayCountById(long)}
      */
-    protected abstract long handleGetBioAssayCountById( long id ) throws Exception;
+    protected abstract Integer handleGetBioAssayCountById( long id ) throws Exception;
 
     /**
      * Performs the core logic for {@link #getBioMaterialCount(ExpressionExperiment)}
      */
-    protected abstract long handleGetBioMaterialCount( ExpressionExperiment expressionExperiment ) throws Exception;
+    protected abstract Integer handleGetBioMaterialCount( ExpressionExperiment expressionExperiment ) throws Exception;
 
     /**
      * Performs the core logic for {@link #getDesignElementDataVectorCountById(long)}
      */
-    protected abstract long handleGetDesignElementDataVectorCountById( long id ) throws Exception;
+    protected abstract Integer handleGetDesignElementDataVectorCountById( long id ) throws Exception;
 
     /**
      * Performs the core logic for
@@ -1216,7 +1216,7 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     /**
      * Performs the core logic for {@link #getProcessedExpressionVectorCount(ExpressionExperiment)}
      */
-    protected abstract long handleGetProcessedExpressionVectorCount( ExpressionExperiment expressionExperiment )
+    protected abstract Integer handleGetProcessedExpressionVectorCount( ExpressionExperiment expressionExperiment )
             throws Exception;
 
     /**
