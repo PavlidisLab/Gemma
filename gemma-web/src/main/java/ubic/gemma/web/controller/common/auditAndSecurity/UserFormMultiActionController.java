@@ -102,14 +102,6 @@ public class UserFormMultiActionController extends BaseController {
 
             boolean changed = false;
 
-            // if ( StringUtils.isNotBlank( firstname ) ) {
-            // changed = true;
-            // }
-            //
-            // if ( StringUtils.isNotBlank( lastname ) ) {
-            // changed = true;
-            // }
-
             if ( StringUtils.isNotBlank( email ) && !user.getEmail().equals( email ) ) {
                 if ( !email.matches( "/^(\\w+)([-+.][\\w]+)*@(\\w[-\\w]*\\.){1,5}([A-Za-z]){2,4}$/;" ) ) {
                     jsonText = "{success:false,message:'The email address does not look valid'}";
@@ -129,12 +121,10 @@ public class UserFormMultiActionController extends BaseController {
             }
 
             if ( changed ) {
-                saveMessage( request, "Changes saved." );
                 userManager.updateUser( user );
-            } else {
-                saveMessage( request, "No changes recorded" );
             }
 
+            saveMessage( request, "Changes saved." );
             jsonText = "{success:true}";
 
         } catch ( Exception e ) {
