@@ -1684,7 +1684,7 @@ public class GeoConverter implements Converter<Object, Object> {
             for ( GeoSample sample : series.getSamples() ) {
                 assert sample.getPlatforms().size() > 0 : sample + " has no platform";
                 assert sample.getPlatforms().size() == 1 : sample + " has multiple platforms: "
-                        + sample.getPlatforms().toArray();
+                        + StringUtils.join( sample.getPlatforms().toArray(), "," );
                 String organism = sample.getPlatforms().iterator().next().getOrganisms().iterator().next();
                 if ( organisms.get( organism ) == null ) {
                     organisms.put( organism, new HashSet<GeoData>() );
@@ -1714,7 +1714,7 @@ public class GeoConverter implements Converter<Object, Object> {
             for ( GeoSample sample : series.getSamples() ) {
                 assert sample.getPlatforms().size() > 0 : sample + " has no platform";
                 assert sample.getPlatforms().size() == 1 : sample + " has multiple platforms: "
-                        + sample.getPlatforms().toArray();
+                        + StringUtils.join( sample.getPlatforms().toArray(), "," );
                 GeoPlatform platform = sample.getPlatforms().iterator().next();
 
                 if ( platforms.get( platform ) == null ) {

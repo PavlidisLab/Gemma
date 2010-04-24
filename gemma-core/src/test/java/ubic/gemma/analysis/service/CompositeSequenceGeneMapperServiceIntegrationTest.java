@@ -71,19 +71,14 @@ public class CompositeSequenceGeneMapperServiceIntegrationTest extends AbstractG
     ArrayDesignService arrayDesignService = null;
 
     @Autowired
-    ExpressionExperimentService expressionExperimentService = null;
-
-    @Autowired
     AbstractGeoService geoService = null;
 
     @Autowired
     TaxonService taxonService = null;
 
-    static ArrayDesign ad = null;
+    ArrayDesign ad = null;
 
     String arrayAccession = "GPL96";
-
-    String eeShortName = "GSE994";
 
     String csName = "117_at";// "218120_s_at";
 
@@ -112,7 +107,7 @@ public class CompositeSequenceGeneMapperServiceIntegrationTest extends AbstractG
                     true, true, false, false, true );
             ad = ads.iterator().next();
 
-        ad =    arrayDesignService.thawLite( ad );
+            ad = arrayDesignService.thawLite( ad );
 
             loadData();
 

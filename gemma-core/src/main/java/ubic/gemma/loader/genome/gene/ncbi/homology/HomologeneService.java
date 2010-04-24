@@ -99,7 +99,7 @@ public class HomologeneService {
         if ( homologues == null || homologues.isEmpty() ) return null;
 
         for ( Gene g : homologues ) {
-            if ( g.getTaxon().getId() == taxon.getId() ) return g;
+            if ( g.getTaxon().getId().equals( taxon.getId() ) ) return g;
 
         }
 

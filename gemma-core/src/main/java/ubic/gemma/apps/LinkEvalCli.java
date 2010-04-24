@@ -92,7 +92,7 @@ public class LinkEvalCli extends AbstractSpringAwareCLI {
 
     }
 
-    class GenePair extends ArrayList<List<Gene>> implements Comparable<GenePair> {
+    static class GenePair extends ArrayList<List<Gene>> implements Comparable<GenePair> {
 
         public GenePair() {
             super( 0 );
@@ -284,7 +284,7 @@ public class LinkEvalCli extends AbstractSpringAwareCLI {
 
     }
 
-    class ProbeComparator implements Comparator<CompositeSequence> {
+    static class ProbeComparator implements Comparator<CompositeSequence> {
 
         public int compare( CompositeSequence o1, CompositeSequence o2 ) {
 

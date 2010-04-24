@@ -81,7 +81,7 @@ public class ExperimentIdEndpoint extends AbstractGemmaEndpoint {
         ExpressionExperiment ee = expressionExperimentService.findByShortName( eeName );
 
         if ( ee == null ) {
-            String msg = "No Expression Experiment with short name, " + ee + " can be found.";
+            String msg = "No Expression Experiment with short name, " + eeName + " can be found.";
             return buildBadResponse( document, msg );
         }
 

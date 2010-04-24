@@ -13,6 +13,7 @@
 
 <input type="hidden" id="expressionExperimentID" value="${expressionExperiment.id}" />
 <input type="hidden" id="experimentalDesignID" value="${experimentalDesign.id}" />
+<input type="hidden" id="currentUserCanEdit" value="${currentUserCanEdit}" />
 
 <div id="messages" style="margin: 10px; width: 400px"></div>
 

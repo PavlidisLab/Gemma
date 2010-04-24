@@ -310,7 +310,7 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 							'ubic.gemma.model.expression.experiment.ExpressionExperimentImpl', ee.id, ee.isPublic);
 		}
 
-		return result;
+		return result || "No flags";
 
 	},
 

@@ -78,6 +78,7 @@ public class MageMLPreprocessor implements Preprocessor {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.loader.loaderutils.Preprocessor#preprocess(java.util.List,
      * ubic.gemma.loader.expression.mage.BioAssayDimensions)
      */
@@ -90,7 +91,9 @@ public class MageMLPreprocessor implements Preprocessor {
         log.info( "Preprocessing the data ..." );
 
         int i = 0;
-        if ( whichQuantitationType >= 0 ) i = whichQuantitationType;
+        if ( whichQuantitationType >= 0 ) {
+            i = whichQuantitationType;
+        }
         while ( true ) {
             if ( whichQuantitationType < 0 || !( whichQuantitationType >= 0 && i != whichQuantitationType ) ) {
                 try {
@@ -290,6 +293,7 @@ public class MageMLPreprocessor implements Preprocessor {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.loader.expression.mage.RawDataParser#setSelector(int)
      */
     public void setSelector( RawDataParser rdp, int selector ) {

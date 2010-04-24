@@ -87,6 +87,9 @@ public class GenePickerController {
      * @return collection of gene entity objects
      */
     public Collection<Gene> getGenes( Collection<Long> geneIds ) {
+        if ( geneIds == null || geneIds.size() == 0 ) {
+            return new HashSet<Gene>();
+        }
         return geneService.loadMultiple( geneIds );
     }
 
@@ -212,8 +215,8 @@ public class GenePickerController {
             line = StringUtils.strip( line );
             SearchSettings settings = SearchSettings.geneSearch( line, taxon );
             List<SearchResult> geneSearchResults = searchService.search( settings ).get( Gene.class ); // drops
-                                                                                                       // predicted gene
-                                                                                                       // results....
+            // predicted gene
+            // results....
 
             // FIXME inform the user (on the client!) if there are some that don't have results.
             if ( geneSearchResults == null || geneSearchResults.isEmpty() ) {

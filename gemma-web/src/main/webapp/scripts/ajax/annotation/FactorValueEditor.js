@@ -467,7 +467,7 @@ Gemma.FactorValueToolbar = Ext.extend(Ext.Toolbar, {
 
 				if (this.editable) {
 					this.characteristicToolbar = new Gemma.FactorValueCharacteristicToolbar({
-								id : 'fv-char-toolbar',
+								id : 'fv-char-toolbar'
 							//	renderTo : this.getEl().createChild()
 							});
 					this.ownerCt.add(this.characteristicToolbar);

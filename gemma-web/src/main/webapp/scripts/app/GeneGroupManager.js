@@ -97,45 +97,50 @@ Gemma.GeneGroupPanel = Ext.extend(Ext.grid.EditorGridPanel, {
 
 					GeneSetController.getGenesInGroup(selectedGeneGroupId, function(geneValueObjs) {
 
-								// If no genes in gene set, enable taxon
-								// selction
-								genePanel.currentGroupId = selectedGeneGroupId;
+						// If no genes in gene set, enable taxon
+						// selction
+						genePanel.currentGroupId = selectedGeneGroupId;
 
-								if (!geneValueObjs || geneValueObjs.size() === 0) {
-									genePanel.getTopToolbar().taxonCombo.reset();
-									genePanel.getTopToolbar().geneCombo.reset();
-									genePanel.getTopToolbar().taxonCombo.setDisabled(false);
-									genePanel.fireEvent("taxonchanged", null);
-									genePanel.loadGenes([]);
-									genePanel.currentGroupSize = 0;
-									return;
+						if (!geneValueObjs || geneValueObjs.size() === 0) {
+							genePanel.getTopToolbar().taxonCombo.reset();
+							genePanel.getTopToolbar().geneCombo.reset();
+							genePanel.getTopToolbar().taxonCombo.setDisabled(false);
+							genePanel.fireEvent("taxonchanged", null);
+							genePanel.loadGenes([]);
+							genePanel.currentGroupSize = 0;
+							loadMask.hide();
+						} else {
+
+							genePanel.currentGroupSize = geneValueObjs.size();
+
+							var geneIds = [];
+							var taxonId = geneValueObjs[0].taxonId;
+							for (var i = 0; i < geneValueObjs.length; i++) {
+								if (taxonId != geneValueObjs[0].taxonId) {
+									Ext.Msg
+											.alert(
+													'Sorry.  Gene groups do not support mixed taxa. Please remove this gene group',
+													response);
 								}
+								geneIds.push(geneValueObjs[i].id);
+							}
 
-								genePanel.currentGroupSize = geneValueObjs.size();
+							var groupTaxon = {
+								id : taxonId,
+								commonName : geneValueObjs[0].taxonName
+							};
+							genePanel.getTopToolbar().taxonCombo.setTaxon(groupTaxon);
+							genePanel.getTopToolbar().geneCombo.setTaxon(groupTaxon);
+							genePanel.getTopToolbar().taxonCombo.setDisabled(true);
+							/*
+							 * Don't hide the mask until we return so the user can't click another group.
+							 */
+							genePanel.loadGenes(geneIds, function() {
+										loadMask.hide();
+									});
+						}
 
-								var geneIds = [];
-								var taxonId = geneValueObjs[0].taxonId;
-								for (var i = 0; i < geneValueObjs.length; i++) {
-									if (taxonId != geneValueObjs[0].taxonId) {
-										Ext.Msg
-												.alert(
-														'Sorry.  Gene groups do not support mixed taxa. Please remove this gene group',
-														response);
-									}
-									geneIds.push(geneValueObjs[i].id);
-								}
-
-								var groupTaxon = {
-									id : taxonId,
-									commonName : geneValueObjs[0].taxonName
-								};
-								genePanel.getTopToolbar().taxonCombo.setTaxon(groupTaxon);
-								genePanel.getTopToolbar().geneCombo.setTaxon(groupTaxon);
-								genePanel.getTopToolbar().taxonCombo.setDisabled(true);
-								genePanel.loadGenes(geneIds, function() {
-											loadMask.hide();
-										});
-							});
+					});
 				}
 			}
 		}
@@ -260,12 +265,14 @@ Gemma.GeneGroupImporter = Ext.extend(Ext.Panel, {
 
 				this.geneChooserPanel = new Gemma.GeneGrid({
 							region : 'east',
+							split : true,
 							id : 'gene-chooser-panel'
 						});
 
 				this.geneGroupPanel = new Gemma.GeneGroupPanel({
 							id : 'gene-group-panel',
-							region : 'center'
+							region : 'center',
+							split : true
 						});
 
 				Ext.apply(this.geneChooserPanel.getTopToolbar().taxonCombo, {
@@ -458,70 +465,5 @@ deleteGeneGroup = function() {
 			});
 
 };
-
-// =================================================
-// Widgets for managing gene group
-// =================================================
-// Given a gene displays which group it is in.
-
-Gemma.GeneGroupGrid = Ext.extend(Gemma.GemmaGridPanel, {
-
-			initComponent : function() {
-				Ext.apply(this, {
-							columns : [{
-										header : 'Name',
-										dataIndex : 'name',
-										editable : false,
-										groupable : false,
-										sortable : true
-									}, {
-										header : 'Description',
-										dataIndex : 'description',
-										editable : false,
-										groupable : false,
-										sortable : true
-									}, {
-										header : 'Owner',
-										hidden : true,
-										tooltip : 'Who owns the data',
-										dataIndex : 'owner',
-										groupable : true,
-										sortable : true
-									}, {
-										header : 'size',
-										sortable : true,
-										dataIndex : 'size',
-										editable : false,
-										groupable : false,
-										tooltip : 'number of genes in group'
-									}],
-							store : new Ext.data.Store({
-										proxy : new Ext.data.DWRProxy(GeneSetController.findGeneSetsByGene),
-										reader : new Ext.data.ListRangeReader({}, Ext.data.Record.create([{
-															name : "id",
-															type : "int"
-														}, {
-															name : "name",
-															type : "string"
-														}, {
-															name : "description",
-															type : "string"
-														}, {
-															name : "owner"
-														}, {
-															name : "size",
-															type : "int"
-														}]))
-									})
-						});
-
-				Gemma.GeneGroupGrid.superclass.initComponent.call(this);
-
-				this.getStore().load({
-							params : [this.geneid]
-						});
-			}
-
-		});
 
 // Same as above but displays the groups in a dataview

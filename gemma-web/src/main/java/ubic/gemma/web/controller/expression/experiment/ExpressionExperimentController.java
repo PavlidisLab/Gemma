@@ -25,6 +25,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -125,8 +126,6 @@ public class ExpressionExperimentController extends AbstractTaskService {
     }
 
     private class RemovePubMed extends BackgroundJob<TaskCommand> {
-
-        Long eeId;
 
         public RemovePubMed( TaskCommand command ) {
             super( command );
@@ -578,12 +577,14 @@ public class ExpressionExperimentController extends AbstractTaskService {
             finalResult.setParentTaxonId( taxon.getId() );
             finalResult.setParentTaxon( taxon.getCommonName() );
         }
-        
+
         Collection<ArrayDesign> arrayDesignsUsed = expressionExperimentService.getArrayDesignsUsed( ee );
         Collection<Long> adids = new HashSet<Long>();
         for ( ArrayDesign ad : arrayDesignsUsed ) {
             adids.add( ad.getId() );
         }
+
+        finalResult.setCurrentUserHasWritePermission( securityService.isEditable( ee ) );
 
         finalResult.setArrayDesigns( arrayDesignService.loadValueObjects( adids ) );
 
@@ -778,7 +779,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
         usersData = this.getFilteredExpressionExperimentValueObjects( null,
                 EntityUtils.getIds( expressionExperiments ), true );
 
-        Long numExpressionExperiments = new Long( expressionExperiments.size() );
+        Long numExpressionExperiments = Long.valueOf( expressionExperiments.size() );
 
         mav.addObject( "expressionExperiments", expressionExperiments );
 
@@ -1127,6 +1128,21 @@ public class ExpressionExperimentController extends AbstractTaskService {
 
         Collection<ExpressionExperimentValueObject> valueObjs = expressionExperimentService.loadValueObjects( ids );
 
+        if ( SecurityService.isUserAdmin() ) {
+            for ( ExpressionExperimentValueObject vo : valueObjs ) {
+                vo.setCurrentUserHasWritePermission( true );
+            }
+        } else if ( SecurityService.isUserLoggedIn() ) {
+            Map<Long, Boolean> canEdit = new HashMap<Long, Boolean>();
+            for ( ExpressionExperiment ee : securedEEs ) {
+                canEdit.put( ee.getId(), securityService.isEditable( ee ) );
+            }
+            for ( ExpressionExperimentValueObject vo : valueObjs ) {
+                if ( !canEdit.containsKey( vo.getId() ) ) continue;
+                vo.setCurrentUserHasWritePermission( canEdit.get( vo.getId() ) );
+            }
+        }
+
         if ( timer.getTime() > 1000 ) {
             log.info( "Value objects in " + timer.getTime() + "ms" );
         }
@@ -1161,7 +1177,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
                 if ( taxon != null ) {
                     securedEEs = expressionExperimentService.findByTaxon( taxon );
                 } else if ( eeIds == null ) {
-                    securedEEs = expressionExperimentService.loadMyExpressionExperiments();
+                    securedEEs = expressionExperimentService.loadMySharedExpressionExperiments();
                 } else {
                     securedEEs = expressionExperimentService.loadMultiple( eeIds );
                 }

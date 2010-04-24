@@ -31,7 +31,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.security.SecurityService;
 import ubic.gemma.security.authentication.UserDetailsImpl;
 import ubic.gemma.security.authentication.UserManager;
@@ -51,9 +50,6 @@ public class SecurityControllerTest extends BaseSpringWebTest {
     private ExpressionExperiment ee;
 
     private Long eeId;
-
-    @Autowired
-    private ExpressionExperimentService expressionExperimentService;
 
     @Autowired
     private SecurityController securityController;

@@ -44,7 +44,13 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 			}, {
 				name : "numPopulatedFactors"
 			}, {
-				name : "isPublic"
+				name : "isPublic",
+				type : "boolean"
+			}, {
+				name : "isShared",
+				type : "boolean"
+			}, {
+				name : "currentUserHasWritePermission"
 			}, {
 				name : "sourceExperiment"
 			}, {
@@ -54,7 +60,8 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 			}, {
 				name : "validatedFlag"
 			}, {
-				name : "troubleFlag"
+				name : "troubleFlag",
+				type : "object"
 			}, {
 				name : "missingValueAnalysisEventType"
 			}, {
@@ -138,7 +145,7 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 
 	},
 
-	tagger : function(id, taxonId) {
+	tagger : function(id, taxonId, canEdit) {
 		var annotator = new Ext.Panel({
 					id : 'annotator-wrap',
 					collapsible : false,
@@ -153,7 +160,7 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 								readParams : [{
 											id : id
 										}],
-								editable : this.editable,
+								editable : canEdit,
 								showParent : false,
 								mgedTermKey : "experiment",
 								taxonId : taxonId,

@@ -29,11 +29,13 @@ import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
 import ubic.gemma.model.association.GOEvidenceCode;
+import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicService;
 import ubic.gemma.model.common.description.VocabCharacteristic;
@@ -45,6 +47,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueService;
+import ubic.gemma.security.SecurityService;
 import ubic.gemma.util.AnchorTagUtil;
 import ubic.gemma.web.controller.expression.experiment.AnnotationValueObject;
 import ubic.gemma.web.remote.JsonReaderResponse;
@@ -77,6 +80,9 @@ public class CharacteristicBrowserController {
 
     @Autowired
     private FactorValueService factorValueService;
+
+    @Autowired
+    private SecurityService securityService;
 
     /**
      * @param valuePrefix
@@ -315,6 +321,15 @@ public class CharacteristicBrowserController {
              * class.
              */
             Object parent = charToParent.get( cFromDatabase );
+
+            /*
+             * Check needed because Characteristics are not securable.
+             */
+            if ( parent != null && Securable.class.isAssignableFrom( parent.getClass() )
+                    && !securityService.isEditable( ( Securable ) parent ) ) {
+                throw new AccessDeniedException( "Access is denied" );
+            }
+
             if ( vcFromClient != null && vcFromDatabase == null ) {
                 vcFromDatabase = ( VocabCharacteristic ) characteristicService.create( VocabCharacteristic.Factory
                         .newInstance( null, null, cFromDatabase.getValue(), cFromDatabase.getCategory(), cFromDatabase

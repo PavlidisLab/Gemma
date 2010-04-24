@@ -156,6 +156,38 @@ public class SecurityService {
     }
 
     /**
+     * @param securables
+     * @return
+     */
+    public Map<Securable, Boolean> areNonPublicButReadableByCurrentUser( Collection<? extends Securable> securables ) {
+
+        Map<Securable, Boolean> result = new HashMap<Securable, Boolean>();
+
+        for ( Securable s : securables ) {
+            result.put( s, false );
+        }
+
+        Collection<Securable> privateOnes = this.choosePrivate( securables );
+
+        if ( privateOnes.isEmpty() ) return result;
+
+        String currentUsername = userManager.getCurrentUsername();
+
+        for ( Securable s : privateOnes ) {
+            try {
+                if ( this.isViewableByUser( s, currentUsername ) ) {
+                    result.put( s, true );
+                }
+            } catch ( AccessDeniedException e ) {
+                // ok
+            }
+        }
+
+        return result;
+
+    }
+
+    /**
      * A securable is considered "owned" if 1) the user is the actual owner assigned in the ACL or 2) the user is an
      * administrator. In other words, for an administrator, the value will always be true.
      * 

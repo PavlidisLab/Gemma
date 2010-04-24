@@ -101,7 +101,7 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
 
     }
 
-    private class SupportComparator implements Comparator<Gene2GeneCoexpression> {
+    static private class SupportComparator implements Comparator<Gene2GeneCoexpression> {
         public int compare( Gene2GeneCoexpression o1, Gene2GeneCoexpression o2 ) {
             return -o1.getNumDataSets().compareTo( o2.getNumDataSets() );
         }

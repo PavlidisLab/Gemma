@@ -1248,35 +1248,6 @@ gemma.max.fileupload.size.bytes=
 						</property>
 					</bean>
 				</entry>
-				
-				<!-- Security beans. I don't like these being here so this is just temporary until I can figure out why they are getting serialized to the client. 
-				<entry key="org.springframework.security.core.context.SecurityContext">
-					<bean class="org.directwebremoting.spring.ConverterConfig">
-						<property name="type" value="bean" />
-					</bean>
-				</entry>
-				<entry key="org.springframework.security.core.Authentication">
-					<bean class="org.directwebremoting.spring.ConverterConfig">
-						<property name="type" value="bean" />
-					</bean>
-				</entry>
-				<entry key="org.springframework.security.core.authority.GrantedAuthorityImpl">
-					<bean class="org.directwebremoting.spring.ConverterConfig">
-						<property name="type" value="bean" />
-					</bean>
-				</entry>
-				<entry key="org.springframework.security.web.authentication.WebAuthenticationDetails">
-					<bean class="org.directwebremoting.spring.ConverterConfig">
-						<property name="type" value="bean" />
-					</bean>
-				</entry>
-				<entry key="ubic.gemma.security.authentication.UserDetailsImpl">
-					<bean class="org.directwebremoting.spring.ConverterConfig">
-						<property name="type" value="bean" />
-					</bean>
-				</entry>
-				-->
-				
 				<entry key="ubic.gemma.web.remote.JsonReaderResponse">
 					<bean class="org.directwebremoting.spring.ConverterConfig">
 						<property name="type" value="bean" />
@@ -1737,23 +1708,11 @@ gemma.max.fileupload.size.bytes=
 				<entry key="ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject">
 					<bean class="org.directwebremoting.spring.ConverterConfig">
 						<property name="type" value="bean" />
-						<!--
-							<property name="includes"> <list> <value>id</value> <value>name</value> <value>shortName</value>
-							<value>description</value> <value>probeSpecificForQueryGene</value> <value>arrayDesignCount</value>
-							<value>bioAssayCount</value> <value>rawCoexpressionLinkCount</value> <value>coexpressionLinkCount</value>
-							<value>externalUri</value> <value>differentialExpressionAnalysisId</value> </list> </property>
-						-->
 					</bean>
 				</entry>
 				<entry key="ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject">
 					<bean class="org.directwebremoting.spring.ConverterConfig">
 						<property name="type" value="bean" />
-						<!--
-							<property name="includes"> <list> <value>id</value> <value>name</value> <value>shortName</value>
-							<value>description</value> <value>probeSpecificForQueryGene</value> <value>arrayDesignCount</value>
-							<value>bioAssayCount</value> <value>rawCoexpressionLinkCount</value> <value>coexpressionLinkCount</value>
-							<value>externalUri</value> <value>differentialExpressionAnalysisId</value> </list> </property>
-						-->
 					</bean>
 				</entry>
 				<entry key="ubic.gemma.web.controller.expression.experiment.ExpressionExperimentSetValueObject">

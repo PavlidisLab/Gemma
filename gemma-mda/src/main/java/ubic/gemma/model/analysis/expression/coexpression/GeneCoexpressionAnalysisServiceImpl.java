@@ -38,6 +38,24 @@ public class GeneCoexpressionAnalysisServiceImpl extends
         ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisServiceBase {
 
     /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.analysis.AnalysisService#loadMyAnalyses()
+     */
+    public Collection<GeneCoexpressionAnalysis> loadMyAnalyses() {
+        return loadEnabled();
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.analysis.AnalysisService#loadMySharedAnalyses()
+     */
+    public Collection<GeneCoexpressionAnalysis> loadMySharedAnalyses() {
+        return loadEnabled();
+    }
+
+    /*
      * @see
      * ubic.gemma.model.analysis.GeneCoexpressionAnalysisService#create(ubic.gemma.model.analysis.GeneCoexpressionAnalysis
      * )
@@ -71,6 +89,7 @@ public class GeneCoexpressionAnalysisServiceImpl extends
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.analysis.GeneCoexpressionAnalysisServiceBase#handleFindByParentTaxon(ubic.gemma.model.genome
      * .Taxon)
@@ -82,6 +101,7 @@ public class GeneCoexpressionAnalysisServiceImpl extends
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.analysis.GeneCoexpressionAnalysisServiceBase#handleFindByTaxon(ubic.gemma.model.genome.Taxon)
      */
@@ -136,6 +156,7 @@ public class GeneCoexpressionAnalysisServiceImpl extends
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.analysis.AnalysisServiceImpl#handleLoadAll()
      */
     @Override
@@ -154,8 +175,11 @@ public class GeneCoexpressionAnalysisServiceImpl extends
         this.getGeneCoexpressionAnalysisDao().update( geneCoExpressionAnalysis );
     }
 
+    /**
+     * @return
+     */
     @SuppressWarnings("unchecked")
-    public Collection<GeneCoexpressionAnalysis> loadMyAnalyses() {
+    private Collection<GeneCoexpressionAnalysis> loadEnabled() {
         Collection<GeneCoexpressionAnalysis> all = ( Collection<GeneCoexpressionAnalysis> ) this
                 .getGeneCoexpressionAnalysisDao().loadAll();
 

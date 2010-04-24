@@ -39,17 +39,17 @@ import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.security.SecurityService;
 
 /**
- * Filter out public {@link Securables}s, leaving only ones that the user owns and can edit. This is used for the
- * "my data" list. Data sets that are only readable are omitted.
+ * Filter out public {@link Securables}s, leaving only ones that the user specifically can view but aren't public. This
+ * includes data sets that are read-only for the user, e.g. shared by another user
  * 
  * @author keshav
  * @version $Id$
  * @see AfterInvocationProvider
  */
-public class AclAfterFilterCollectionForMyData extends AbstractAclProvider {
+public class AclAfterFilterCollectionForMyPrivateData extends AbstractAclProvider {
 
-    public AclAfterFilterCollectionForMyData( AclService aclService, List<Permission> requirePermission ) {
-        super( aclService, "AFTER_ACL_FILTER_MY_DATA", requirePermission );
+    public AclAfterFilterCollectionForMyPrivateData( AclService aclService, List<Permission> requirePermission ) {
+        super( aclService, "AFTER_ACL_FILTER_MY_PRIVATE_DATA", requirePermission );
     }
 
     private Log log = LogFactory.getLog( this.getClass() );
@@ -114,7 +114,9 @@ public class AclAfterFilterCollectionForMyData extends AbstractAclProvider {
                 /*
                  * Do it like this cuz it's wayyyy faster.
                  */
-                Map<Securable, Boolean> ownership = securityService.areOwnedByCurrentUser( securablesToFilter );
+                // Map<Securable, Boolean> ownership = securityService.areOwnedByCurrentUser( securablesToFilter );
+                Map<Securable, Boolean> ownership = securityService
+                        .areNonPublicButReadableByCurrentUser( securablesToFilter );
 
                 for ( Securable s : ownership.keySet() ) {
                     if ( !ownership.containsKey( s ) || !ownership.get( s ) ) {

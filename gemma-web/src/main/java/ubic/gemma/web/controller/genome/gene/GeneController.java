@@ -332,7 +332,7 @@ public class GeneController extends BaseController {
         final Taxon mouseTaxon = this.taxonService.findByCommonName( "mouse" );
         Gene mouseGene = gene;
         // Get alan brain atalas represntative images
-        if ( gene.getTaxon().getId() != mouseTaxon.getId() ) {
+        if ( gene.getTaxon().getId().equals( mouseTaxon.getId() ) ) {
             mouseGene = this.homologeneService.getHomologue( gene, mouseTaxon );
         }
 

@@ -143,7 +143,7 @@ public class GeneCoexpressionEndpoint extends AbstractGemmaEndpoint {
 
             Taxon taxon = taxonService.load( Long.parseLong( taxonId ) );
             if ( taxon == null ) {
-                String msg = "No taxon with id, " + taxon + ", can be found.";
+                String msg = "No taxon with id, " + taxonId + ", can be found.";
                 return buildBadResponse( document, msg );
             }
 

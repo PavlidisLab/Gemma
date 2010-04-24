@@ -100,18 +100,18 @@ public class CommonsMultipartMonitoredResolver implements MultipartResolver, Ser
     @SuppressWarnings("unchecked")
     public MultipartHttpServletRequest resolveMultipart( HttpServletRequest request ) throws MultipartException {
         String enc = determineEncoding( request );
-        ServletFileUpload upload = this.newFileUpload( request );
-        DiskFileItemFactory newFactory = ( DiskFileItemFactory ) upload.getFileItemFactory();
-        upload.setSizeMax( sizeMax );
+        this.fileUpload = this.newFileUpload( request );
+        DiskFileItemFactory newFactory = ( DiskFileItemFactory ) fileUpload.getFileItemFactory();
+        fileUpload.setSizeMax( sizeMax );
         newFactory.setRepository( this.uploadTempDir );
-        upload.setHeaderEncoding( enc );
+        fileUpload.setHeaderEncoding( enc );
 
         try {
             MultiValueMap<String, MultipartFile> multipartFiles = new LinkedMultiValueMap<String, MultipartFile>();
             Map multipartParams = new HashMap();
 
             // Extract multipart files and multipart parameters.
-            List fileItems = upload.parseRequest( request );
+            List fileItems = fileUpload.parseRequest( request );
             for ( Iterator it = fileItems.iterator(); it.hasNext(); ) {
                 FileItem fileItem = ( FileItem ) it.next();
                 if ( fileItem.isFormField() ) {
@@ -160,37 +160,6 @@ public class CommonsMultipartMonitoredResolver implements MultipartResolver, Ser
     }
 
     /**
-     * Set the default character encoding to use for parsing requests, to be applied to headers of individual parts and
-     * to form fields. Default is ISO-8859-1, according to the Servlet spec.
-     * <p>
-     * If the request specifies a character encoding itself, the request encoding will override this setting. This also
-     * allows for generically overriding the character encoding in a filter that invokes the
-     * ServletRequest.setCharacterEncoding method.
-     * 
-     * @param defaultEncoding the character encoding to use
-     * @see #determineEncoding
-     * @see javax.servlet.ServletRequest#getCharacterEncoding
-     * @see javax.servlet.ServletRequest#setCharacterEncoding
-     * @see WebUtils#DEFAULT_CHARACTER_ENCODING
-     * @see org.apache.commons.fileupload.FileUploadBase#setHeaderEncoding
-     */
-    public void setDefaultEncoding( String defaultEncoding ) {
-        this.defaultEncoding = defaultEncoding;
-        this.fileUpload.setHeaderEncoding( defaultEncoding );
-    }
-
-    /**
-     * Set the maximum allowed size (in bytes) before uploads are written to disk. Uploaded files will still be received
-     * past this amount, but they will not be stored in memory. Default is 10240, according to Commons FileUpload.
-     * 
-     * @param maxInMemorySize the maximum in memory size allowed
-     * @see org.apache.commons.fileupload.FileUpload#setSizeThreshold
-     */
-    public void setMaxInMemorySize( int maxInMemorySize ) {
-        ( ( DiskFileItemFactory ) this.fileUpload.getFileItemFactory() ).setSizeThreshold( maxInMemorySize );
-    }
-
-    /**
      * Set the maximum allowed size (in bytes) before uploads are refused. -1 indicates no limit (the default).
      * 
      * @param maxUploadSize the maximum upload size allowed
@@ -207,21 +176,6 @@ public class CommonsMultipartMonitoredResolver implements MultipartResolver, Ser
         if ( this.uploadTempDir == null ) {
             this.uploadTempDir = WebUtils.getTempDir( servletContext );
         }
-    }
-
-    /**
-     * Set the temporary directory where uploaded files get stored. Default is the servlet container's temporary
-     * directory for the web application.
-     * 
-     * @see org.springframework.web.util.WebUtils#TEMP_DIR_CONTEXT_ATTRIBUTE
-     */
-    public void setUploadTempDir( Resource uploadTempDir ) throws IOException {
-        if ( !uploadTempDir.exists() && !uploadTempDir.getFile().mkdirs() ) {
-            throw new IllegalArgumentException( "Given uploadTempDir [" + uploadTempDir + "] could not be created" );
-        }
-        this.uploadTempDir = uploadTempDir.getFile();
-        ( ( DiskFileItemFactory ) this.fileUpload.getFileItemFactory() ).setRepository( uploadTempDir.getFile() );
-
     }
 
     /**

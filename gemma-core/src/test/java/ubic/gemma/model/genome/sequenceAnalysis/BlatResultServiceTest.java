@@ -27,7 +27,6 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.model.genome.biosequence.BioSequence;
-import ubic.gemma.model.genome.biosequence.BioSequenceService;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
@@ -41,11 +40,9 @@ public class BlatResultServiceTest extends BaseSpringContextTest {
     @Autowired
     BlatResultService blatResultService;
 
-    @Autowired
-    BioSequenceService bioSequenceService;
-
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.testing.BaseTransactionalSpringContextTest#onSetUpInTransaction()
      */
     @Before

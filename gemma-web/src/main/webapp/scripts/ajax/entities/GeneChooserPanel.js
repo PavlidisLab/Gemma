@@ -65,6 +65,10 @@ Gemma.GeneGrid = Ext.extend(Ext.grid.GridPanel, {
 			 *            args
 			 */
 			loadGenes : function(geneIds, callback, args) {
+				if (!geneIds || geneIds.length == 0) {
+					return;
+				}
+
 				GenePickerController.getGenes(geneIds, function(genes) {
 							var geneData = [];
 							for (var i = 0; i < genes.length; ++i) {
@@ -190,7 +194,7 @@ Gemma.GeneGrid = Ext.extend(Ext.grid.GridPanel, {
 							msg : "Loading genes..."
 						});
 				loadMask.show();
-				
+
 				var taxonId = taxon.id;
 				var text = e.geneNames;
 				GenePickerController.searchMultipleGenes(text, taxonId, function(genes) {
@@ -215,7 +219,7 @@ Gemma.GeneGrid = Ext.extend(Ext.grid.GridPanel, {
 							}
 							this.getStore().loadData(geneData, true);
 							loadMask.hide();
-							
+
 						}.createDelegate(this));
 			},
 
@@ -528,7 +532,8 @@ Gemma.GeneImportPanel = Ext.extend(Ext.Window, {
 									}],
 							buttons : [{
 										text : 'Cancel',
-										handler : this.hide.createDelegate(this, [], true)
+										handler : this.hide,
+										scope : this
 									}, {
 										text : 'OK',
 										handler : this.onCommit,

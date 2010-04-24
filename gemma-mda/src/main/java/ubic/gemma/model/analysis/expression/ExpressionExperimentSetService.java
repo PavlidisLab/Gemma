@@ -32,8 +32,7 @@ public interface ExpressionExperimentSetService {
      * 
      */
     @Secured( { "GROUP_USER" })
-    public ExpressionExperimentSet create(
-            ExpressionExperimentSet expressionExperimentSet );
+    public ExpressionExperimentSet create( ExpressionExperimentSet expressionExperimentSet );
 
     /**
      * 
@@ -52,8 +51,7 @@ public interface ExpressionExperimentSetService {
      * expressionexperimentset should be disallowed.
      */
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    public java.util.Collection<ExpressionAnalysis> getAnalyses(
-            ExpressionExperimentSet expressionExperimentSet );
+    public java.util.Collection<ExpressionAnalysis> getAnalyses( ExpressionExperimentSet expressionExperimentSet );
 
     /**
      * 
@@ -93,5 +91,11 @@ public interface ExpressionExperimentSetService {
      */
     @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
     public void update( ExpressionExperimentSet expressionExperimentSet );
+
+    /**
+     * @return
+     */
+    @Secured( { "GROUP_USER", "AFTER_ACL_FILTER_MY_PRIVATE_DATA" })
+    public Collection<ExpressionExperimentSet> loadMySharedSets();
 
 }

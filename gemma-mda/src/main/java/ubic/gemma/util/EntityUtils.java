@@ -128,15 +128,6 @@ public class EntityUtils {
     }
 
     /**
-     * Replaces a proxy with an implementation. If target is not an instanceof HibernateProxy, target is unchanged.
-     * 
-     * @param target The object to be unproxied.
-     */
-    public static void unProxy( Object target ) {
-        target = getImplementationForProxy( target );
-    }
-
-    /**
      * Put the given entity into the Session, with LockMode.NONE
      * <p>
      * Based on idea from {@link https://forum.hibernate.org/viewtopic.php?p=2284826#p2284826}

@@ -58,7 +58,7 @@ import ubic.gemma.util.MailEngine;
 @Service
 public class TaskRunningService implements InitializingBean {
 
-    private class SubmittedTask {
+    private static class SubmittedTask {
         private TaskCommand command;
         private Future<?> future;
 

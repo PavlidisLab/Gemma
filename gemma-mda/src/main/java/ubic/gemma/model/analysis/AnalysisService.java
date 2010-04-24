@@ -104,7 +104,7 @@ public interface AnalysisService<T extends Analysis> {
 
     /**
      * Returns the {@link Analyses}s for the currently logged in {@link User} - i.e, ones for which the current user has
-     * specific read permissions on (as opposed to analyses which are public) and which are "Enabled". Important: This
+     * specific write permissions on (as opposed to analyses which are public) and which are "Enabled". Important: This
      * method will return all analyses if security is not enabled.
      * <p>
      * Implementation note: Via a methodInvocationFilter. See AclAfterFilterCollectionForMyData for
@@ -115,4 +115,16 @@ public interface AnalysisService<T extends Analysis> {
     @Secured( { "GROUP_USER", "AFTER_ACL_FILTER_MY_DATA" })
     public Collection<T> loadMyAnalyses();
 
+    /**
+     * Returns the {@link Analyses}s for the currently logged in {@link User} - i.e, ones for which the current user has
+     * specific read permissions on (as opposed to analyses which are public) and which are "Enabled". Important: This
+     * method will return all analyses if security is not enabled.
+     * <p>
+     * Implementation note: Via a methodInvocationFilter. See AclAfterFilterCollectionForMyPrivateData for
+     * processConfigAttribute. (in Gemma-core)
+     * 
+     * @return
+     */
+    @Secured( { "GROUP_USER", "AFTER_ACL_FILTER_MY_SHARED_DATA" })
+    public Collection<T> loadMySharedAnalyses();
 }

@@ -10,6 +10,11 @@
 		Manage Gene Groups
 	</h2>
 
+	<p>
+		You can create a group of genes to be used in searches and analyses. This interface allows you to create gene groups,
+		modify them, and control who else can see them.
+	</p>
+
 	<div id='genesetCreation-div'>
 	</div>
 

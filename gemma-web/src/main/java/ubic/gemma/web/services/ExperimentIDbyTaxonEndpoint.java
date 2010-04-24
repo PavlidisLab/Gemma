@@ -88,7 +88,7 @@ public class ExperimentIDbyTaxonEndpoint extends AbstractGemmaEndpoint {
         // Get EE matched with Taxon
         Taxon tax = taxonService.load( Long.parseLong( taxonId ) );
         if ( tax == null ) {
-            String msg = "No taxon with id, " + tax + " can be found.";
+            String msg = "No taxon with id, " + taxonId + " can be found.";
             return buildBadResponse( document, msg );
         }
 

@@ -130,7 +130,7 @@ public class MgedOntologyHelper {
         String withoutPluralS = null;
         if ( retName == null && ontEntryName.endsWith( "s" ) ) {
             withoutPluralS = ontEntryName.substring( 0, ontEntryName.length() - 1 );
-            query = new String( referingClassName + withoutPluralS );
+            query = referingClassName + withoutPluralS;
             if ( classExists( query ) ) {
                 retName = query;
             }
@@ -551,15 +551,7 @@ public class MgedOntologyHelper {
 
     }
 
-    /**
-     * <hr>
-     * <p>
-     * Copyright (c) 2004-2006 University of British Columbia
-     * 
-     * @author pavlidis
-     * @version $Id$
-     */
-    private class ClassInformation {
+    private static class ClassInformation {
         private Collection<InstanceInformation> instances = new HashSet<InstanceInformation>();
         private String name;
 
@@ -601,11 +593,11 @@ public class MgedOntologyHelper {
                 return null;
             }
 
-            Iterator it = instances.iterator();
+            Iterator<InstanceInformation> it = instances.iterator();
             Collection<String> names = new HashSet<String>();
 
             while ( it.hasNext() ) {
-                InstanceInformation instance = ( InstanceInformation ) it.next();
+                InstanceInformation instance = it.next();
                 names.add( instance.name );
             }
 
@@ -858,7 +850,7 @@ public class MgedOntologyHelper {
         }
     }
 
-    class PathStack {
+    static class PathStack {
         private List<String> list = new ArrayList<String>();
 
         public boolean endsWith( String ending ) {
@@ -909,7 +901,7 @@ public class MgedOntologyHelper {
         }
     }
 
-    class PropertyInformation {
+    static class PropertyInformation {
         public Collection<String> enumValues;
         public boolean isPrimitive = false;
         public String name;

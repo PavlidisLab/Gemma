@@ -20,8 +20,6 @@ package ubic.gemma.model.genome.gene;
 
 import java.util.Collection;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -39,10 +37,9 @@ public class GeneSetServiceImpl implements GeneSetService {
     @Autowired
     private GeneSetDao geneSetDao = null;
 
-    private static Log log = LogFactory.getLog( GeneSetServiceImpl.class );
-
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.gene.GeneSetService#create(java.util.Collection)
      */
     @SuppressWarnings("unchecked")
@@ -52,6 +49,7 @@ public class GeneSetServiceImpl implements GeneSetService {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.gene.GeneSetService#create(ubic.gemma.model.genome.gene.GeneSet)
      */
     public GeneSet create( GeneSet geneset ) {
@@ -60,6 +58,7 @@ public class GeneSetServiceImpl implements GeneSetService {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.gene.GeneSetService#findByGene(ubic.gemma.model.genome.Gene)
      */
     public Collection<GeneSet> findByGene( Gene gene ) {
@@ -77,6 +76,7 @@ public class GeneSetServiceImpl implements GeneSetService {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.gene.GeneSetService#load(java.util.Collection)
      */
     @SuppressWarnings("unchecked")
@@ -87,6 +87,7 @@ public class GeneSetServiceImpl implements GeneSetService {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.gene.GeneSetService#load(java.lang.Long)
      */
     public GeneSet load( Long id ) {
@@ -95,6 +96,7 @@ public class GeneSetServiceImpl implements GeneSetService {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.gene.GeneSetService#loadAll()
      */
     @SuppressWarnings("unchecked")
@@ -104,6 +106,7 @@ public class GeneSetServiceImpl implements GeneSetService {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.gene.GeneSetService#remove(java.util.Collection)
      */
     public void remove( Collection<GeneSet> sets ) {
@@ -112,6 +115,7 @@ public class GeneSetServiceImpl implements GeneSetService {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.gene.GeneSetService#remove(ubic.gemma.model.genome.gene.GeneSet)
      */
     public void remove( GeneSet geneset ) {
@@ -124,6 +128,7 @@ public class GeneSetServiceImpl implements GeneSetService {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.gene.GeneSetService#update(java.util.Collection)
      */
     public void update( Collection<GeneSet> sets ) {
@@ -133,6 +138,7 @@ public class GeneSetServiceImpl implements GeneSetService {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.gene.GeneSetService#update(ubic.gemma.model.genome.gene.GeneSet)
      */
     public void update( GeneSet geneset ) {
@@ -142,12 +148,14 @@ public class GeneSetServiceImpl implements GeneSetService {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.gene.GeneSetService#loadMyGeneSets()
      */
-    @SuppressWarnings("unchecked")
     public Collection<GeneSet> loadMyGeneSets() {
-        return ( Collection<GeneSet> ) this.geneSetDao.loadAll();
-
+        return loadAll();
     }
 
+    public Collection<GeneSet> loadMySharedGeneSets() {
+        return loadAll();
+    }
 }

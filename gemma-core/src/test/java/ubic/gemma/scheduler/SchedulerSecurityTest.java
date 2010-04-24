@@ -20,7 +20,7 @@ package ubic.gemma.scheduler;
 
 import java.lang.reflect.InvocationTargetException;
 
-import org.apache.commons.lang.RandomStringUtils; 
+import org.apache.commons.lang.RandomStringUtils;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.annotation.ExpectedException;
@@ -47,8 +47,6 @@ public class SchedulerSecurityTest extends BaseSpringContextTest {
 
     @Autowired
     ManualAuthenticationService manualAuthenticationService;
-
-    String regularUser;
 
     /**
      * Tests whether we can run a secured method that has been granted to GROUP_AGENT

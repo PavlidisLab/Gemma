@@ -507,7 +507,7 @@ public class ExperimentalDesignController extends BaseController {
         mnv.addObject( "hasPopulatedDesign", experimentalDesign.getExperimentalFactors().size() > 0 );
         mnv.addObject( "experimentalDesign", experimentalDesign );
         mnv.addObject( "expressionExperiment", ee );
-        mnv.addObject( "currentUserCanEdit", securityService.isEditable( ee ) );
+        mnv.addObject( "currentUserCanEdit", securityService.isEditable( ee ) ? "true" : "" );
         mnv.addObject( "expressionExperimentUrl", AnchorTagUtil.getExpressionExperimentUrl( ee.getId() ) );
 
         return mnv;

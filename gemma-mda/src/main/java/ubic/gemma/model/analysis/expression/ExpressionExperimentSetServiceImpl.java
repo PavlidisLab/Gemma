@@ -120,5 +120,10 @@ public class ExpressionExperimentSetServiceImpl extends
     public Collection<ExpressionExperimentSet> loadMySets() {
        return this.getExpressionExperimentSetDao().loadAllMultiExperimentSets();
     }
+    
+    @Override
+    public Collection<ExpressionExperimentSet> loadMySharedSets() {
+       return this.getExpressionExperimentSetDao().loadAllMultiExperimentSets();
+    }
 
 }

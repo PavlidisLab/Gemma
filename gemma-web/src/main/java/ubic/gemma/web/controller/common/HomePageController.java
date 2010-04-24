@@ -18,8 +18,8 @@
  */
 package ubic.gemma.web.controller.common;
 
-import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -58,6 +58,18 @@ public class HomePageController {
 
     private ModelAndView mav = new ModelAndView();
 
+    private Taxon otherTaxa;
+
+    public HomePageController() {
+        otherTaxa = Taxon.Factory.newInstance();
+        otherTaxa.setId( -1L );
+        otherTaxa.setCommonName( "Other" );
+        otherTaxa.setScientificName( "Other" );
+        otherTaxa.setAbbreviation( "Other" );
+        otherTaxa.setIsGenesUsable( false );
+        otherTaxa.setIsSpecies( false );
+    }
+
     @RequestMapping("/mainMenu.html")
     @Monitored(minTimeToReport = 10)
     public ModelAndView showHomePage() throws Exception {
@@ -80,12 +92,24 @@ public class HomePageController {
 
         long bioAssayCount = bioAssayService.countAll();
         long arrayDesignCount = arrayDesignService.countAll();
+
         Map<Taxon, Long> eesPerTaxon = expressionExperimentService.getPerTaxonCount();
         long expressionExperimentCount = 0;
-        Collection<Long> values = eesPerTaxon.values();
-        for ( Long count : values ) {
-            expressionExperimentCount += count;
+        long otherTaxaEECount = 0;
+        for ( Iterator<Taxon> it = eesPerTaxon.keySet().iterator(); it.hasNext(); ) {
+            Taxon t = it.next();
+            Long c = eesPerTaxon.get( t );
+            // TODO problem with this is we want to make a link to them.
+            if ( c < 10 ) {
+                otherTaxaEECount += c;
+                // it.remove();
+            }
+            expressionExperimentCount += c;
         }
+        if ( otherTaxaEECount > 0 ) {
+            // eesPerTaxon.put( otherTaxa, otherTaxaEECount );
+        }
+
         WhatsNew wn = whatsNewService.retrieveReport();
 
         stats.put( "bioAssayCount", bioAssayCount );

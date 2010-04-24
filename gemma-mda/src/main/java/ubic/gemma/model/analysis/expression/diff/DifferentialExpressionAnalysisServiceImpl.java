@@ -98,6 +98,7 @@ public class DifferentialExpressionAnalysisServiceImpl extends
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.analysis.AnalysisServiceBase#handleFindByName(java.lang.String)
      */
     @Override
@@ -172,6 +173,7 @@ public class DifferentialExpressionAnalysisServiceImpl extends
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisServiceBase#handleFindExperimentsWithAnalyses
      * (ubic.gemma.model.genome.Gene)
@@ -204,6 +206,7 @@ public class DifferentialExpressionAnalysisServiceImpl extends
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisServiceBase#handleThaw(java.util.Collection
      * )
@@ -220,7 +223,12 @@ public class DifferentialExpressionAnalysisServiceImpl extends
 
     @SuppressWarnings("unchecked")
     public Collection<DifferentialExpressionAnalysis> loadMyAnalyses() {
-        return ( Collection<DifferentialExpressionAnalysis> ) this.getDifferentialExpressionAnalysisDao().loadAll();
+        return this.loadAll();
+    }
+
+    @SuppressWarnings("unchecked")
+    public Collection<DifferentialExpressionAnalysis> loadMySharedAnalyses() {
+        return this.loadAll();
     }
 
 }

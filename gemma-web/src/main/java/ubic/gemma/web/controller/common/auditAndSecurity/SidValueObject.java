@@ -18,6 +18,8 @@
  */
 package ubic.gemma.web.controller.common.auditAndSecurity;
 
+import java.io.Serializable;
+
 import org.springframework.security.acls.domain.GrantedAuthoritySid;
 import org.springframework.security.acls.domain.PrincipalSid;
 import org.springframework.security.acls.model.Sid;
@@ -26,7 +28,7 @@ import org.springframework.security.acls.model.Sid;
  * @author paul
  * @version $Id$
  */
-public class SidValueObject implements Comparable<SidValueObject> {
+public class SidValueObject implements Comparable<SidValueObject>, Serializable {
 
     private static final String rolePrefix = "GROUP_";
 

@@ -369,7 +369,7 @@ public interface ExpressionExperimentService {
 
     /**
      * Returns the {@link ExpressionExperiment}s for the currently logged in {@link User} - i.e, ones for which the
-     * current user has specific read permissions on (as opposed to data sets which are public). Important: This method
+     * current user has specific write permissions on (as opposed to data sets which are public). Important: This method
      * will return all experiments if security is not enabled.
      * <p>
      * Implementation note: Via a methodInvocationFilter. See AclAfterFilterCollectionForMyData for
@@ -379,6 +379,20 @@ public interface ExpressionExperimentService {
      */
     @Secured( { "GROUP_USER", "AFTER_ACL_FILTER_MY_DATA" })
     public Collection<ExpressionExperiment> loadMyExpressionExperiments();
+
+    /**
+     * * Returns the {@link ExpressionExperiment}s for the currently logged in {@link User} - i.e, ones for which the
+     * current user has specific READ permissions on (as opposed to data sets which are public). Important: This method
+     * will return all experiments if security is not enabled.
+     * <p>
+     * Implementation note: Via a methodInvocationFilter. See AclAfterFilterCollectionForMyPrivateData for
+     * processConfigAttribute. (in Gemma-core)
+     * 
+     * @return
+     * @return
+     */
+    @Secured( { "GROUP_USER", "AFTER_ACL_FILTER_MY_PRIVATE_DATA" })
+    public Collection<ExpressionExperiment> loadMySharedExpressionExperiments();
 
     /**
      * TODO SECURE: How to secure value objects, should take a secured EE or a collection of secured EE's....?

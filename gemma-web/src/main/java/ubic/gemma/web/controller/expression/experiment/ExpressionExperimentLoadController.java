@@ -128,10 +128,6 @@ public class ExpressionExperimentLoadController extends AbstractTaskService {
                 TaskResult result = eeTaskProxy.execute( cmd );
                 return result;
             } catch ( Exception e ) {
-                if ( e instanceof InterruptedException ) {
-                    log.info( "Job was cancelled" );
-                    return null;
-                }
                 throw new RuntimeException( e );
             }
         }
@@ -159,6 +155,7 @@ public class ExpressionExperimentLoadController extends AbstractTaskService {
 
         /*
          * (non-Javadoc)
+         * 
          * @see java.util.concurrent.Callable#call()
          */
         @Override
@@ -241,7 +238,7 @@ public class ExpressionExperimentLoadController extends AbstractTaskService {
                     doSampleMatching, aggressiveQtRemoval, splitIncompatiblePlatforms, allowSuperSeriesLoad );
 
             if ( result == null ) {
-                return processGeoLoadResult( result );
+                throw new RuntimeException( "No results were returned (cancelled or failed)" );
             }
 
             postProcess( result );
@@ -267,8 +264,9 @@ public class ExpressionExperimentLoadController extends AbstractTaskService {
             }
 
             String list = "";
-            for ( ExpressionExperiment ee : result )
+            for ( ExpressionExperiment ee : result ) {
                 list += ee.getId() + ",";
+            }
             return new TaskResult( command, new ModelAndView( new RedirectView(
                     "/Gemma/expressionExperiment/showAllExpressionExperiments.html?ids=" + list ) ) );
         }
@@ -424,6 +422,7 @@ public class ExpressionExperimentLoadController extends AbstractTaskService {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.web.controller.grid.AbstractSpacesController#getRunner(java.lang.String, java.lang.Object)
      */
     @Override
@@ -434,6 +433,7 @@ public class ExpressionExperimentLoadController extends AbstractTaskService {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.web.controller.grid.AbstractSpacesController#getSpaceRunner(java.lang.String, java.lang.Object)
      */
     @Override

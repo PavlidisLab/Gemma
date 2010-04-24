@@ -111,6 +111,7 @@ public class ExpressionExperimentAnnotator implements InitializingBean {
 
     /*
      * (non-Javadoc)
+     * 
      * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
      */
     public void afterPropertiesSet() throws Exception {
@@ -171,6 +172,7 @@ public class ExpressionExperimentAnnotator implements InitializingBean {
 
     /*
      * (non-Javadoc)
+     * 
      * @seeubic.gemma.annotation.geommtx.ExpressionExperimentAnnotator#annotate(ubic.gemma.model.expression.experiment.
      * ExpressionExperiment, boolean)
      */
@@ -451,7 +453,7 @@ public class ExpressionExperimentAnnotator implements InitializingBean {
         if ( text2Owl == null ) return;
 
         // a bit strange here, since it takes in the root
-        model = text2Owl.processText( text, thisResource );
+        text2Owl.processText( text, thisResource );
     }
 
     /**

@@ -31,25 +31,19 @@ public class PubMedSearcherTest extends AbstractCLITestCase {
      * Test method for {@link ubic.gemma.loader.entrez.pubmed.PubMedSearcher#main(java.lang.String[])}.
      */
     public final void testMain() throws Exception {
-        try {
-            Exception result = p.doWork( new String[] {"-testing", "-v", "3", "hippocampus", "diazepam", "juvenile" } );
-            if ( result != null ) {
-                if ( result instanceof java.net.UnknownHostException ) {
-                    log.warn( "Test skipped because of UnknownHostException" );
-                    return;
-                } else if ( result.getMessage().contains( "code: 503" ) ) {
-                    log.warn( "Test skipped because of a 502 from NCBI" );
-                    return;
-                }
-                fail( result.getMessage() );
-            }
-        } catch ( Exception e ) {
-            if ( e instanceof java.net.UnknownHostException ) {
+
+        Exception result = p.doWork( new String[] { "-testing", "-v", "3", "hippocampus", "diazepam", "juvenile" } );
+        if ( result != null ) {
+            if ( result instanceof java.net.UnknownHostException ) {
                 log.warn( "Test skipped because of UnknownHostException" );
                 return;
+            } else if ( result.getMessage().contains( "code: 503" ) ) {
+                log.warn( "Test skipped because of a 502 from NCBI" );
+                return;
             }
-            throw e;
+            fail( result.getMessage() );
         }
+
     }
 
 }

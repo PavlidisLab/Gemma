@@ -78,6 +78,8 @@ public class NcbiGeneHistory {
      */
     @Override
     public boolean equals( Object obj ) {
+        if ( obj == null ) return false;
+        if ( obj instanceof NcbiGeneHistory ) return false;
         return ( ( NcbiGeneHistory ) obj ).getCurrentId().equals( this.getCurrentId() );
     }
 

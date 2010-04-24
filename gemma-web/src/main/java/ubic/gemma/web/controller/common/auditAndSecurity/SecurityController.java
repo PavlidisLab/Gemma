@@ -35,7 +35,6 @@ import org.springframework.security.acls.model.Sid;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 
-import ubic.gemma.model.analysis.Analysis;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSetService;
 import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis;
@@ -343,7 +342,7 @@ public class SecurityController {
     public Collection<Securable> getUsersGeneGroups( boolean privateOnly ) {
         Collection<Securable> secs = new HashSet<Securable>();
 
-        Collection<GeneSet> geneSets = geneSetService.loadMyGeneSets();
+        Collection<GeneSet> geneSets = geneSetService.loadMySharedGeneSets();
         if ( privateOnly ) {
             try {
                 secs.addAll( securityService.choosePrivate( geneSets ) );
@@ -657,7 +656,7 @@ public class SecurityController {
     private Collection<Securable> getUsersAnalyses( boolean privateOnly ) {
         Collection<Securable> secs = new HashSet<Securable>();
 
-        Collection<GeneCoexpressionAnalysis> analyses = geneCoexpressionAnalysisService.loadMyAnalyses();
+        Collection<GeneCoexpressionAnalysis> analyses = geneCoexpressionAnalysisService.loadMySharedAnalyses();
         if ( privateOnly ) {
             try {
                 secs.addAll( securityService.choosePrivate( analyses ) );
@@ -676,7 +675,7 @@ public class SecurityController {
      * @return
      */
     private Collection<Securable> getUsersExperiments( boolean privateOnly ) {
-        Collection<ExpressionExperiment> ees = expressionExperimentService.loadMyExpressionExperiments();
+        Collection<ExpressionExperiment> ees = expressionExperimentService.loadMySharedExpressionExperiments();
 
         Collection<Securable> secs = new HashSet<Securable>();
 
@@ -699,7 +698,7 @@ public class SecurityController {
     private Collection<Securable> getUsersExperimentSets( boolean privateOnly ) {
         Collection<Securable> secs = new HashSet<Securable>();
 
-        Collection<ExpressionExperimentSet> analyses = expressionExperimentSetService.loadMySets();
+        Collection<ExpressionExperimentSet> analyses = expressionExperimentSetService.loadMySharedSets();
         if ( privateOnly ) {
             try {
                 secs.addAll( securityService.choosePrivate( analyses ) );
@@ -724,6 +723,7 @@ public class SecurityController {
          */
         boolean isPublic = securityService.isPublic( s );
         boolean isShared = securityService.isShared( s );
+        boolean canWrite = securityService.isEditable( s );
 
         SecurityInfoValueObject result = new SecurityInfoValueObject( s );
 
@@ -733,6 +733,7 @@ public class SecurityController {
         result.setGroupsThatCanWrite( securityService.getGroupsEditableBy( s ) );
         result.setShared( isShared );
         result.setOwner( new SidValueObject( securityService.getOwner( s ) ) );
+        result.setCurrentUserCanwrite( canWrite );
 
         if ( Describable.class.isAssignableFrom( s.getClass() ) ) {
             result.setEntityDescription( ( ( Describable ) s ).getDescription() );
@@ -795,17 +796,6 @@ public class SecurityController {
                 vo.setEntityShortName( ( ( Describable ) s ).getName() );
                 vo.setEntityName( ( ( Describable ) s ).getDescription() );
             }
-
-            // else if ( ExpressionExperimentSet.class.isAssignableFrom( s.getClass() ) ) {
-            // vo.setEntityShortName( ( ( ExpressionExperimentSet ) s ).getName() );
-            // vo.setEntityName( ( ( ExpressionExperimentSet ) s ).getDescription() );
-            // } else if ( GeneSet.class.isAssignableFrom( s.getClass() ) ) {
-            // vo.setEntityShortName( ( ( GeneSet ) s ).getName() );
-            // vo.setEntityName( ( ( GeneSet ) s ).getDescription() );
-            // } else if ( Analysis.class.isAssignableFrom( s.getClass() ) ) {
-            // vo.setEntityShortName( ( ( Analysis ) s ).getName() );
-            // vo.setEntityName( ( ( Analysis ) s ).getDescription() );
-            // }
 
             result.add( vo );
             // if ( ++i > 10 ) break; // TESTING

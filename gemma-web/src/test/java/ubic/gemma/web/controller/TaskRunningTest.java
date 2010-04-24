@@ -43,9 +43,6 @@ import ubic.gemma.web.util.MockLongJobController;
 public class TaskRunningTest extends BaseSpringWebTest {
 
     @Autowired
-    TaskCompletionController taskCheckController;
-
-    @Autowired
     ProgressStatusService progressStatusService;
 
     @Autowired

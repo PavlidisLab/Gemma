@@ -35,6 +35,12 @@ Gemma.DatasetGroupStore = function(config) {
 				name : "modifiable",
 				type : 'boolean'
 			}, {
+				name : "publik",
+				type : 'boolean'
+			}, {
+				name : "shared",
+				type : 'boolean'
+			}, {
 				name : "currentUserHasWritePermission",
 				type : 'boolean'
 			}]);

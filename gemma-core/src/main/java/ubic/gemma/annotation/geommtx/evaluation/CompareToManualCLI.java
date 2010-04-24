@@ -942,14 +942,8 @@ public class CompareToManualCLI extends AbstractSpringAwareCLI {
 
             log.info( "Saved manual annotations" );
         } catch ( Exception e ) {
-            log.info( "cannot save CUI mappings" );
-            e.printStackTrace();
-            System.exit( 1 );
+            throw new RuntimeException( "cannot save CUI mappings" );
         }
-    }
-
-    private void writeExperimentTitles() {
-        writeExperimentTitles( SetupParameters.getString( "gemma.annotator.gemmaTitles" ) );
     }
 
     private void writeExperimentTitles( String filename ) {

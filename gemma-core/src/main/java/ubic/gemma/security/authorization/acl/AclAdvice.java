@@ -191,7 +191,7 @@ public class AclAdvice extends HibernateDaoSupport {
              * objects missed earlier in a persist cycle. E.g. BioMaterial
              */
             try {
-                parentAcl = maybeSetParentACL( object, acl, parentAcl );
+                maybeSetParentACL( object, acl, parentAcl );
                 return acl;
             } catch ( NotFoundException nfe ) {
                 log.error( nfe, nfe );

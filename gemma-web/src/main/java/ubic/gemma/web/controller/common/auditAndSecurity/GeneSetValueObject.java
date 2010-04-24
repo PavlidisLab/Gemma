@@ -1,3 +1,21 @@
+/*
+ * The Gemma project
+ * 
+ * Copyright (c) 2010 University of British Columbia
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
 package ubic.gemma.web.controller.common.auditAndSecurity;
 
 import java.io.Serializable;
@@ -7,21 +25,18 @@ import java.util.HashSet;
 import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.model.genome.gene.GeneSetMember;
 
+/**
+ * Represents a Gene group gene set.
+ * 
+ * @author kelsey
+ * @version $Id$
+ */
 public class GeneSetValueObject implements Serializable {
 
     /**
      * 
      */
     private static final long serialVersionUID = 6212231006289412683L;
-
-    private String name;
-    private Long id;
-    private String description;
-    private Collection<GeneSetMember> geneMembers;
-    private boolean publik;
-    private boolean shared;
-    private SidValueObject owner;
-    private Integer size;
 
     public static Collection<GeneSetValueObject> convert2ValueObjects( Collection<GeneSet> genesets ) {
         Collection<GeneSetValueObject> results = new HashSet<GeneSetValueObject>();
@@ -33,11 +48,34 @@ public class GeneSetValueObject implements Serializable {
         return results;
     }
 
+    private boolean currentUserHasWritePermission = false;
+    private String description;
+    private Collection<GeneSetMember> geneMembers;
+    private Long id;
+
+    private String name;
+
+    private SidValueObject owner;
+
+    private boolean publik;
+
+    private boolean shared;
+    private Integer size;
+
     /**
      * Null constructor to satisfy java bean contract
      */
     public GeneSetValueObject() {
         super();
+    }
+
+    /**
+     * Constructor to build value object from GeneSet
+     * 
+     * @param gs
+     */
+    public GeneSetValueObject( GeneSet gs ) {
+        this( gs.getId(), gs.getName(), gs.getDescription(), gs.getMembers() );
     }
 
     /**
@@ -76,33 +114,17 @@ public class GeneSetValueObject implements Serializable {
     }
 
     /**
-     * Constructor to build value object from GeneSet
-     * 
-     * @param gs
+     * @return
      */
-    public GeneSetValueObject( GeneSet gs ) {
-        this( gs.getId(), gs.getName(), gs.getDescription(), gs.getMembers() );
-    }
-
-    /**
-     * @param name
-     */
-    public void setName( String name ) {
-        this.name = name;
+    public String getDescription() {
+        return description;
     }
 
     /**
      * @return
      */
-    public String getName() {
-        return name;
-    }
-
-    /**
-     * @param id
-     */
-    public void setId( Long id ) {
-        this.id = id;
+    public Collection<GeneSetMember> getGeneMembers() {
+        return geneMembers;
     }
 
     /**
@@ -113,17 +135,14 @@ public class GeneSetValueObject implements Serializable {
     }
 
     /**
-     * @param description
-     */
-    public void setDescription( String description ) {
-        this.description = description;
-    }
-
-    /**
      * @return
      */
-    public String getDescription() {
-        return description;
+    public String getName() {
+        return name;
+    }
+
+    public SidValueObject getOwner() {
+        return owner;
     }
 
     /**
@@ -136,10 +155,32 @@ public class GeneSetValueObject implements Serializable {
     }
 
     /**
-     * @param size
+     * @return the currentUserHasWritePermission
      */
-    public void setSize( Integer size ) {
-        this.size = size;
+    public boolean isCurrentUserHasWritePermission() {
+        return currentUserHasWritePermission;
+    }
+
+    public boolean isPublik() {
+        return this.publik;
+    }
+
+    public boolean isShared() {
+        return this.shared;
+    }
+
+    /**
+     * @param currentUserHasWritePermission the currentUserHasWritePermission to set
+     */
+    public void setCurrentUserHasWritePermission( boolean currentUserHasWritePermission ) {
+        this.currentUserHasWritePermission = currentUserHasWritePermission;
+    }
+
+    /**
+     * @param description
+     */
+    public void setDescription( String description ) {
+        this.description = description;
     }
 
     /**
@@ -150,34 +191,36 @@ public class GeneSetValueObject implements Serializable {
     }
 
     /**
-     * @return
+     * @param id
      */
-    public Collection<GeneSetMember> getGeneMembers() {
-        return geneMembers;
+    public void setId( Long id ) {
+        this.id = id;
     }
 
-    public void setPublik( boolean isPublic ) {
-        this.publik = isPublic;
-    }
-
-    public boolean isPublik() {
-        return this.publik;
-    }
-
-    public void setShared( boolean isShared ) {
-        this.shared = isShared;
-    }
-
-    public boolean isShared() {
-        return this.shared;
+    /**
+     * @param name
+     */
+    public void setName( String name ) {
+        this.name = name;
     }
 
     public void setOwner( SidValueObject owner ) {
         this.owner = owner;
     }
 
-    public SidValueObject getOwner() {
-        return owner;
+    public void setPublik( boolean isPublic ) {
+        this.publik = isPublic;
+    }
+
+    public void setShared( boolean isShared ) {
+        this.shared = isShared;
+    }
+
+    /**
+     * @param size
+     */
+    public void setSize( Integer size ) {
+        this.size = size;
     }
 
 }

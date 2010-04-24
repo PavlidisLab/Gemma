@@ -27,37 +27,62 @@ import java.util.HashSet;
  */
 public class ExpressionExperimentSetValueObject implements Comparable<ExpressionExperimentSetValueObject> {
 
-    private Long id;
-    private String name;
-    private String description;
-    private Collection<Long> expressionExperimentIds;
-    private Integer numExperiments;
+    private boolean currentUserHasWritePermission = false;
+
+    private boolean publik;
+
+    private boolean shared;
 
     /**
-     * If modifying the set is contrained by existing analyses.
+     * @return the publik
+     */
+    public boolean isPublik() {
+        return publik;
+    }
+
+    /**
+     * @param publik the publik to set
+     */
+    public void setPublik( boolean publik ) {
+        this.publik = publik;
+    }
+
+    /**
+     * @return the shared
+     */
+    public boolean isShared() {
+        return shared;
+    }
+
+    /**
+     * @param shared the shared to set
+     */
+    public void setShared( boolean shared ) {
+        this.shared = shared;
+    }
+
+    private String description;
+    private Collection<Long> expressionExperimentIds;
+    private Long id;
+    /**
+     * If modifying the set is constrained by existing analyses.
      */
     private boolean modifiable;
 
-    private String taxonName;
+    private String name;
+
+    private Integer numExperiments;
     private Long taxonId;
 
-    private boolean currentUserHasWritePermission = false;
+    private String taxonName;
 
     public ExpressionExperimentSetValueObject() {
         this.expressionExperimentIds = new HashSet<Long>();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see java.lang.Object#hashCode()
-     */
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ( ( id == null ) ? 0 : id.hashCode() );
-        return result;
+    public int compareTo( ExpressionExperimentSetValueObject arg0 ) {
+        if ( this.getName() == null || arg0.getName() == null ) return 0;
+        return this.getName().compareTo( arg0.getName() );
     }
 
     /*
@@ -75,11 +100,6 @@ public class ExpressionExperimentSetValueObject implements Comparable<Expression
             if ( other.id != null ) return false;
         } else if ( !id.equals( other.id ) ) return false;
         return true;
-    }
-
-    public int compareTo( ExpressionExperimentSetValueObject arg0 ) {
-        if ( this.getName() == null || arg0.getName() == null ) return 0;
-        return this.getName().compareTo( arg0.getName() );
     }
 
     public String getDescription() {
@@ -108,6 +128,19 @@ public class ExpressionExperimentSetValueObject implements Comparable<Expression
 
     public String getTaxonName() {
         return taxonName;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see java.lang.Object#hashCode()
+     */
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ( ( id == null ) ? 0 : id.hashCode() );
+        return result;
     }
 
     public boolean isCurrentUserHasWritePermission() {

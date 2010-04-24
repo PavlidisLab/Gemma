@@ -5,7 +5,7 @@ Ext.namespace('Gemma');
  */
 Gemma.BioMaterialEditor = function(config) {
 	return {
-		
+
 		firstInitDone : false,
 		originalConfig : config,
 		expressionExperiment : {
@@ -132,10 +132,10 @@ Gemma.BioMaterialGrid = Ext.extend(Gemma.GemmaGridPanel, {
 			 * contains all the possible values for this factor.
 			 */
 			var rend = null;
-			
-			//if (!continuous) {
-				rend = this.createValueRenderer();
-			//}/
+
+			// if (!continuous) {
+			rend = this.createValueRenderer();
+			// }/
 
 			/*
 			 * Define the column for this particular factor.
@@ -231,10 +231,12 @@ Gemma.BioMaterialGrid = Ext.extend(Gemma.GemmaGridPanel, {
 					columns : this.createColumns(this.factors)
 				});
 
-		this.tbar = new Gemma.BioMaterialToolbar({
-					edId : this.edId,
-					editable : this.editable
-				});
+		if (this.editable) {
+			this.tbar = new Gemma.BioMaterialToolbar({
+						edId : this.edId,
+						editable : this.editable
+					});
+		}
 
 		Gemma.BioMaterialGrid.superclass.initComponent.call(this);
 

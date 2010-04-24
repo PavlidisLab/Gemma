@@ -129,7 +129,11 @@ public class ProbeCoexpressionAnalysisServiceImpl extends
 
     @SuppressWarnings("unchecked")
     public Collection<ProbeCoexpressionAnalysis> loadMyAnalyses() {
-        return ( Collection<ProbeCoexpressionAnalysis> ) this.getProbeCoexpressionAnalysisDao().loadAll();
+        return loadAll();
     }
 
+    @SuppressWarnings("unchecked")
+    public Collection<ProbeCoexpressionAnalysis> loadMySharedAnalyses() {
+        return loadAll();
+    }
 }

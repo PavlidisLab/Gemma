@@ -130,7 +130,11 @@ public interface CharacteristicService {
     public Characteristic load( java.lang.Long id );
 
     /**
+     * Note that Characteristics are not Securable. Thus make sure the current user has write access to the associated
+     * object.
      * 
+     * @param c
+     * @see SecurityService.isEditable
      */
     @Secured( { "GROUP_USER" })
     public void update( Characteristic c );

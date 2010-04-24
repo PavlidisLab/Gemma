@@ -84,7 +84,7 @@ Ext.onReady(function() {
 
 			var eeId = Ext.get("expressionExperimentID").getValue();
 			var edId = Ext.get("experimentalDesignID").getValue();
-			var editable = Ext.get('loggedIn').getValue();
+			var editable = Ext.get('currentUserCanEdit').getValue() === 'true';
 
 			/*
 			 * TODO: load up the MGED terms, experimental design and factor values ahead of time. We end up doing it

@@ -46,30 +46,32 @@ public class SecurityInfoValueObject {
     private Boolean currentGroupCanRead = false;
 
     private Boolean currentGroupCanWrite = false;
+    
+    private Boolean currentUserCanwrite = false;
 
     private String entityClazz;
-   
+
     private String entityDescription;
 
     private Long entityId;
    
     private String entityName;
-   
+
     private String entityShortName;
-  
+   
     private Collection<String> groupsThatCanRead = new HashSet<String>();
-  
+   
     private Collection<String> groupsThatCanWrite = new HashSet<String>();
   
     private boolean isPubliclyReadable;
   
     private boolean isShared;
-
+  
     /**
      * Principal who owns the data. Can be null.
      */
     private SidValueObject owner;
-
+  
     public SecurityInfoValueObject() {
     }
 
@@ -87,6 +89,13 @@ public class SecurityInfoValueObject {
 
     public String getCurrentGroup() {
         return currentGroup;
+    }
+
+    /**
+     * @return the currentUserCanwrite
+     */
+    public Boolean getCurrentUserCanwrite() {
+        return currentUserCanwrite;
     }
 
     /**
@@ -172,6 +181,13 @@ public class SecurityInfoValueObject {
 
     public void setCurrentGroupCanWrite( boolean currentGroupCanWrite ) {
         this.currentGroupCanWrite = currentGroupCanWrite;
+    }
+
+    /**
+     * @param currentUserCanwrite the currentUserCanwrite to set
+     */
+    public void setCurrentUserCanwrite( Boolean currentUserCanwrite ) {
+        this.currentUserCanwrite = currentUserCanwrite;
     }
 
     /**
