@@ -18,8 +18,6 @@
  */
 package ubic.gemma.web.taglib.displaytag.expression.bioAssay;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.displaytag.decorator.TableDecorator;
 
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
@@ -34,8 +32,6 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
  * @version $Id$
  */
 public class BioAssayWrapper extends TableDecorator {
-
-    Log log = LogFactory.getLog( this.getClass() );
 
     /**
      * @return String
@@ -66,8 +62,10 @@ public class BioAssayWrapper extends TableDecorator {
 
         // FIXME wire to AJAX call.
         // confirmAction is stored in global.js
-        return "<form action=\"/Gemma/bioAssay/markBioAssayOutlier.html?id=" + object.getId()
-                + "\" onSubmit=\"return confirmAction('Are you sure you want to flag Bioassay " + object.getName()
+        return "<form action=\"/Gemma/bioAssay/markBioAssayOutlier.html?id="
+                + object.getId()
+                + "\" onSubmit=\"return confirmAction('Are you sure you want to flag Bioassay "
+                + object.getName()
                 + " as an outlier?')\" method=\"post\"><input title=\"Mark this sample as an outlier.\"  type=\"submit\"  value=\"Outlier\" /></form>";
 
     }

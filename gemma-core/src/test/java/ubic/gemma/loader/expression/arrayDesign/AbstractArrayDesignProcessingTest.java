@@ -38,7 +38,7 @@ import ubic.gemma.testing.BaseSpringContextTest;
  */
 public abstract class AbstractArrayDesignProcessingTest extends BaseSpringContextTest {
 
-    static ArrayDesign ad;
+    ArrayDesign ad;
 
     @Autowired
     ArrayDesignService arrayDesignService;
@@ -51,6 +51,7 @@ public abstract class AbstractArrayDesignProcessingTest extends BaseSpringContex
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.testing.BaseSpringContextTest#onSetUp()
      */
     @SuppressWarnings("unchecked")
@@ -67,10 +68,10 @@ public abstract class AbstractArrayDesignProcessingTest extends BaseSpringContex
             try {
                 final Collection<ArrayDesign> ads = ( Collection<ArrayDesign> ) geoService.fetchAndLoad( ACCESSION,
                         true, true, false, false, true );
-                
+
                 ad = ads.iterator().next();
-              ad =  arrayDesignService.thawLite( ad );
-                
+                ad = arrayDesignService.thawLite( ad );
+
             } catch ( Exception e ) {
                 if ( e.getCause() instanceof FileNotFoundException ) {
                     log.warn( "problem with initializing array design for test: " + e.getCause().getMessage() );

@@ -26,8 +26,6 @@ import javax.servlet.http.HttpServletResponse;
 
 import net.sf.json.JSONObject;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.springframework.web.servlet.View;
 
 /**
@@ -35,9 +33,6 @@ import org.springframework.web.servlet.View;
  * @version $Id$
  */
 public class JSONView implements View {
-
-    Log log = LogFactory.getLog( this.getClass() );
-
     private String docType = "text/html";
 
     /**
@@ -54,6 +49,7 @@ public class JSONView implements View {
 
     /*
      * (non-Javadoc)
+     * 
      * @see org.springframework.web.servlet.View#getContentType()
      */
     public String getContentType() {
@@ -62,6 +58,7 @@ public class JSONView implements View {
 
     /*
      * (non-Javadoc)
+     * 
      * @see org.springframework.web.servlet.View#render(java.util.Map, javax.servlet.http.HttpServletRequest,
      * javax.servlet.http.HttpServletResponse)
      */
@@ -71,14 +68,14 @@ public class JSONView implements View {
         JSONObject jso = JSONObject.fromObject( map );
         response.setContentType( this.docType );
         Writer writer = response.getWriter();
-        
-        //Need to wrap json in html tags or the proxy server will wrap in <p></p> tags. 
-        //will work in test enviroment (with or without wrapping json)
-        //only problematic on production (no proxy in test enviroment)      
-        //This is specifically for extjs and uploading a file.
-        //Other frameworks might not like this. 
-        
-        writer.write( "<html><body>"  + jso.toString() + "</body></html>" );
+
+        // Need to wrap json in html tags or the proxy server will wrap in <p></p> tags.
+        // will work in test enviroment (with or without wrapping json)
+        // only problematic on production (no proxy in test enviroment)
+        // This is specifically for extjs and uploading a file.
+        // Other frameworks might not like this.
+
+        writer.write( "<html><body>" + jso.toString() + "</body></html>" );
         writer.close();
 
     }

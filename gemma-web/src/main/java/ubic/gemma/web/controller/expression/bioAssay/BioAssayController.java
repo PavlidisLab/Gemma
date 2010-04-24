@@ -69,7 +69,7 @@ public class BioAssayController extends AbstractTaskService {
     @Autowired
     private BioAssayService bioAssayService = null;
 
-    private final String identifierNotFound = "You must provide a valid BioAssay identifier";
+    private static final String identifierNotFound = "You must provide a valid BioAssay identifier";
 
     @Autowired
     private SampleRemoveService sampleRemoveService;

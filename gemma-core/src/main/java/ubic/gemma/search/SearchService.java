@@ -576,8 +576,7 @@ public class SearchService implements InitializingBean {
         StopWatch watch = startTiming();
         String searchString = settings.getQuery();
         Collection<SearchResult> results = new HashSet<SearchResult>();
-      
-        
+
         ArrayDesign shortNameResult = arrayDesignService.findByShortName( searchString );
         if ( shortNameResult != null ) {
             results.add( new SearchResult( shortNameResult, 1.0 ) );
@@ -605,10 +604,6 @@ public class SearchService implements InitializingBean {
         } else {
             probes = probeResults;
         }
-        
-        
-        
-        
 
         for ( SearchResult r : probes ) {
             CompositeSequence cs = ( CompositeSequence ) r.getResultObject();
@@ -714,19 +709,15 @@ public class SearchService implements InitializingBean {
         if ( biomaterials.size() > 0 ) {
             Collection<ExpressionExperiment> ees = expressionExperimentService.findByBioMaterials( biomaterials );
             for ( ExpressionExperiment ee : ees ) {
-                if ( !results.contains( ee ) ) {
-                    results.add( new SearchResult( ee, INDIRECT_DB_HIT_PENALTY, "BioMaterial characteristic" ) );
-                }
+                results.add( new SearchResult( ee, INDIRECT_DB_HIT_PENALTY, "BioMaterial characteristic" ) );
             }
         }
 
         if ( factorValues.size() > 0 ) {
             Collection<ExpressionExperiment> ees = expressionExperimentService.findByFactorValues( factorValues );
             for ( ExpressionExperiment ee : ees ) {
-                if ( !results.contains( ee ) ) {
-                    if ( log.isDebugEnabled() ) log.debug( ee );
-                    results.add( new SearchResult( ee, INDIRECT_DB_HIT_PENALTY, "Factor characteristic" ) );
-                }
+                if ( log.isDebugEnabled() ) log.debug( ee );
+                results.add( new SearchResult( ee, INDIRECT_DB_HIT_PENALTY, "Factor characteristic" ) );
             }
         }
 

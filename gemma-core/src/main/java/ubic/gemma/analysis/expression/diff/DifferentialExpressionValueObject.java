@@ -116,9 +116,9 @@ public class DifferentialExpressionValueObject {
     public String toString() {
         StringBuilder buf = new StringBuilder();
 
-        if ( gene == null ) buf.append( "-\t" );
-
-        if ( StringUtils.isNotBlank( gene.getOfficialSymbol() ) ) {
+        if ( gene == null ) {
+            buf.append( "-\t" );
+        } else if ( StringUtils.isNotBlank( gene.getOfficialSymbol() ) ) {
             buf.append( gene.getOfficialSymbol() );
         } else if ( StringUtils.isNotBlank( gene.getOfficialName() ) ) {
             buf.append( gene.getOfficialName() );

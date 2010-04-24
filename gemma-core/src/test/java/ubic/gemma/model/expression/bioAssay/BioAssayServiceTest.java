@@ -38,7 +38,7 @@ import ubic.gemma.testing.BaseSpringContextTest;
  */
 public class BioAssayServiceTest extends BaseSpringContextTest {
 
-    private static BioAssay ba;
+    private BioAssay ba;
 
     @Autowired
     private BioAssayService bioAssayService;

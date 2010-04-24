@@ -55,6 +55,7 @@ public class AclAfterInvocationMapFilteringProvider extends AbstractAclProvider 
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * org.springframework.security.access.AfterInvocationProvider#decide(org.springframework.security.core.Authentication
      * , java.lang.Object, java.util.Collection, java.lang.Object)
@@ -92,27 +93,27 @@ public class AclAfterInvocationMapFilteringProvider extends AbstractAclProvider 
 
                 while ( collectionIter.hasNext() ) {
                     Object domainObject = collectionIter.next();
-
-                    if ( !Securable.class.isAssignableFrom( domainObject.getClass() ) ) {
-                        throw new IllegalArgumentException( "Expected a map with keys as Securables, got "
-                                + domainObject.getClass() );
-                    }
-
                     boolean hasPermission = false;
-
                     if ( domainObject == null ) {
                         hasPermission = true;
+                        continue;
                     } else {
+
+                        if ( !Securable.class.isAssignableFrom( domainObject.getClass() ) ) {
+                            throw new IllegalArgumentException( "Expected a map with keys as Securables, got "
+                                    + domainObject.getClass() );
+                        }
+
                         hasPermission = hasPermission( authentication, domainObject );
-                    }
 
-                    Object value = map.get( domainObject );
+                        Object value = map.get( domainObject );
 
-                    /*
-                     * Check the VALUE as well.
-                     */
-                    if ( value != null && Securable.class.isAssignableFrom( value.getClass() ) ) {
-                        hasPermission = hasPermission( authentication, value ) && hasPermission;
+                        /*
+                         * Check the VALUE as well.
+                         */
+                        if ( value != null && Securable.class.isAssignableFrom( value.getClass() ) ) {
+                            hasPermission = hasPermission( authentication, value ) && hasPermission;
+                        }
                     }
 
                     if ( !hasPermission ) {

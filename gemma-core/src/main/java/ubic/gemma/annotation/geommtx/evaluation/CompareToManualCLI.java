@@ -119,8 +119,6 @@ public class CompareToManualCLI extends AbstractSpringAwareCLI {
 
     HashSet<String> originalMMTxIDs;
 
-    boolean specificLabels = false;
-
     public CompareToManualCLI() {
         labels = new HashMap<String, String>();
     }

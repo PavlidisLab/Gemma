@@ -34,8 +34,6 @@ public class DifferentialExpressionAnalyzerTest extends BaseAnalyzerConfiguratio
     @Autowired
     DifferentialExpressionAnalyzer analysis = null;
 
-    DifferentialExpressionAnalysisHelperService differentialExpressionAnalysisHelperService = new DifferentialExpressionAnalysisHelperService();
-
     /**
      * * Tests determineAnalysis.
      * <p>
@@ -79,6 +77,7 @@ public class DifferentialExpressionAnalyzerTest extends BaseAnalyzerConfiguratio
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.analysis.diff.BaseAnalyzerConfigurationTest#configureMocks()
      */
     @Override

@@ -18,8 +18,6 @@
  */
 package ubic.gemma.web.taglib.displaytag;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.displaytag.decorator.TableDecorator;
 
 import ubic.gemma.model.common.description.Characteristic;
@@ -36,8 +34,6 @@ import ubic.gemma.ontology.providers.GeneOntologyService;
  * @version $Id$
  */
 public class OntologyWrapper extends TableDecorator {
-
-    Log log = LogFactory.getLog( this.getClass() );
 
     public String getAccession() {
         Characteristic oe = ( Characteristic ) getCurrentRowObject();

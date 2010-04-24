@@ -22,8 +22,6 @@ import java.util.ArrayList;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.displaytag.decorator.TableDecorator;
 
 import ubic.gemma.model.common.description.DatabaseEntry;
@@ -40,8 +38,6 @@ import ubic.gemma.search.SearchResult;
  * @version $Id $
  */
 public class GeneFinderWrapper extends TableDecorator {
-
-    Log log = LogFactory.getLog( this.getClass() );
 
     /**
      * @return String

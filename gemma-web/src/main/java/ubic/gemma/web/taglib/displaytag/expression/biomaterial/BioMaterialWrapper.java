@@ -19,9 +19,6 @@
 package ubic.gemma.web.taglib.displaytag.expression.biomaterial;
 
 import java.util.Collection;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.displaytag.decorator.TableDecorator;
 
 import ubic.gemma.model.common.description.Characteristic;
@@ -38,8 +35,6 @@ import ubic.gemma.model.expression.experiment.FactorValue;
  * @version $Id$
  */
 public class BioMaterialWrapper extends TableDecorator {
-
-    Log log = LogFactory.getLog( this.getClass() );
 
     /**
      * @return String
@@ -60,10 +55,10 @@ public class BioMaterialWrapper extends TableDecorator {
 
         for ( FactorValue value : factorValues ) {
             if ( value.getCharacteristics().size() > 0 ) {
-                for(Characteristic c :  value.getCharacteristics()) {
+                for ( Characteristic c : value.getCharacteristics() ) {
                     factorValueString += c.getValue() + "<br>";
                 }
-                
+
             } else {
                 factorValueString += value.getValue() + "<br>";
             }

@@ -18,8 +18,6 @@
  */
 package ubic.gemma.web.taglib.displaytag.expression.experiment;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.displaytag.decorator.TableDecorator;
 
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
@@ -34,8 +32,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
  * @version $Id$
  */
 public class ExpressionExperimentSubSetWrapper extends TableDecorator {
-
-    Log log = LogFactory.getLog( this.getClass() );
 
     /**
      * @return String
@@ -54,7 +50,8 @@ public class ExpressionExperimentSubSetWrapper extends TableDecorator {
      */
     public String getBioAssaySize() {
         ExpressionExperimentSubSet object = ( ExpressionExperimentSubSet ) getCurrentRowObject();
-        return "<a href=\"showExpressionExperimentSubSet.html?id=" + object.getId() + "\"> " + object.getBioAssays().size() + "</a>";
+        return "<a href=\"showExpressionExperimentSubSet.html?id=" + object.getId() + "\"> "
+                + object.getBioAssays().size() + "</a>";
     }
 
 }

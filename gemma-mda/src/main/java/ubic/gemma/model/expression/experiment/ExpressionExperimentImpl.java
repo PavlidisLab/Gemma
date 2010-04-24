@@ -34,10 +34,12 @@ public class ExpressionExperimentImpl extends ubic.gemma.model.expression.experi
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.experiment.ExpressionExperiment#equals(java.lang.Object)
      */
     @Override
     public boolean equals( Object object ) {
+        if ( object == null ) return false;
         if ( !this.getClass().equals( object.getClass() ) ) {
             return false;
         }
@@ -52,6 +54,7 @@ public class ExpressionExperimentImpl extends ubic.gemma.model.expression.experi
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.experiment.ExpressionExperiment#hashCode()
      */
     @Override
@@ -68,6 +71,7 @@ public class ExpressionExperimentImpl extends ubic.gemma.model.expression.experi
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.common.DescribableImpl#toString()
      */
     @Override

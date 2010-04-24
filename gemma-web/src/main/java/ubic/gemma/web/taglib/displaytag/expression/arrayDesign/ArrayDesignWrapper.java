@@ -22,8 +22,6 @@ import java.util.Date;
 
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.displaytag.decorator.TableDecorator;
 
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
@@ -39,8 +37,6 @@ import ubic.gemma.web.taglib.arrayDesign.ArrayDesignHtmlUtil;
  * @version $Id$
  */
 public class ArrayDesignWrapper extends TableDecorator {
-
-    Log log = LogFactory.getLog( this.getClass() );
 
     public String getColor() {
         ArrayDesignValueObject object = ( ArrayDesignValueObject ) getCurrentRowObject();

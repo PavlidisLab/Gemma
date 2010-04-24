@@ -30,7 +30,6 @@ import org.springframework.stereotype.Service;
 
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneService;
 
@@ -46,9 +45,6 @@ public class CompositeSequenceGeneMapperService {
 
     @Autowired
     GeneService geneService;
-
-    @Autowired
-    CompositeSequenceService compositeSequenceService;
 
     /**
      * @param officialSymbols
@@ -108,13 +104,6 @@ public class CompositeSequenceGeneMapperService {
      */
     public void setGeneService( GeneService geneService ) {
         this.geneService = geneService;
-    }
-
-    /**
-     * @param compositeSequenceService The compositeSequenceService to set.
-     */
-    public void setCompositeSequenceService( CompositeSequenceService compositeSequenceService ) {
-        this.compositeSequenceService = compositeSequenceService;
     }
 
 }

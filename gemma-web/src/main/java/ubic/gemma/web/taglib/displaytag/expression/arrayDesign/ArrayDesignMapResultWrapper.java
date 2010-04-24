@@ -23,8 +23,6 @@ import java.util.Collection;
 import java.util.HashMap;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.displaytag.decorator.TableDecorator;
 
 import ubic.gemma.analysis.sequence.CompositeSequenceMapValueObject;
@@ -40,8 +38,6 @@ import ubic.gemma.model.genome.gene.GeneValueObject;
  * @author joseph
  */
 public class ArrayDesignMapResultWrapper extends TableDecorator {
-
-    Log log = LogFactory.getLog( this.getClass() );
 
     public String getCompositeSequenceNameLink() {
         if ( getCurrentRowObject() == null ) return "";

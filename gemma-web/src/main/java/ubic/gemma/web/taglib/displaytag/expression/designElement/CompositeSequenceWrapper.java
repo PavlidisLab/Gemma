@@ -22,8 +22,6 @@ import java.text.NumberFormat;
 import java.util.Collection;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.displaytag.decorator.TableDecorator;
 
 import ubic.gemma.analysis.sequence.GeneMappingSummary;
@@ -47,8 +45,6 @@ public class CompositeSequenceWrapper extends TableDecorator {
     static {
         nf.setMaximumFractionDigits( 3 );
     }
-
-    Log log = LogFactory.getLog( this.getClass() );
 
     /**
      * @return

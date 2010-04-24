@@ -26,7 +26,6 @@ import java.util.Collection;
 
 import org.junit.Test;
 
-import ubic.gemma.apps.Blat;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.util.ConfigUtils;
 
@@ -37,7 +36,6 @@ import ubic.gemma.util.ConfigUtils;
  * @version $Id$
  */
 public class ArrayDesignSequenceAlignmentServiceIntegrationTest extends AbstractArrayDesignProcessingTest {
-    Blat blat = new Blat();
 
     /**
      * Test method for
@@ -61,7 +59,7 @@ public class ArrayDesignSequenceAlignmentServiceIntegrationTest extends Abstract
         }
 
         ArrayDesignSequenceProcessingService app = ( ArrayDesignSequenceProcessingService ) getBean( "arrayDesignSequenceProcessingService" );
-       ad = arrayDesignService.thawLite( ad );
+        ad = arrayDesignService.thawLite( ad );
         try {
             app.processArrayDesign( ad, new String[] { "testblastdb", "testblastdbPartTwo" }, ConfigUtils
                     .getString( "gemma.home" )

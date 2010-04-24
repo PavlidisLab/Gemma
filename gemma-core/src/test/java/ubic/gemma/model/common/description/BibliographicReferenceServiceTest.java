@@ -37,10 +37,9 @@ import ubic.gemma.testing.BaseSpringContextTest;
 public class BibliographicReferenceServiceTest extends BaseSpringContextTest {
 
     @Autowired
-    private BibliographicReferenceService bibliographicReferenceService = null;
+    private BibliographicReferenceService bibliographicReferenceService;
     private DatabaseEntry de = null;
     private BibliographicReference testBibRef = null;
-    ExternalDatabase ed = null;
 
     /*
      * Call to create should persist the BibliographicReference and DatabaseEntry (cascade=all).

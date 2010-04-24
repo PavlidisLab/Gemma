@@ -21,11 +21,8 @@ package ubic.gemma.loader.genome.gene.ncbi;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.BlockingQueue;
-
 import org.apache.commons.lang.StringUtils;
 
-import ubic.gemma.loader.genome.gene.ncbi.model.NCBIGeneInfo;
 import ubic.gemma.loader.genome.gene.ncbi.model.NcbiGeneHistory;
 import ubic.gemma.loader.util.parser.BasicLineMapParser;
 
@@ -40,8 +37,6 @@ import ubic.gemma.loader.util.parser.BasicLineMapParser;
 public class NcbiGeneHistoryParser extends BasicLineMapParser<String, NcbiGeneHistory> {
 
     private static final int GENE_HISTORY_FILE_NUM_FIELDS = 5;
-    BlockingQueue<NcbiGeneHistory> queue = null;
-    Map<String, NCBIGeneInfo> geneInfo = null;
 
     Map<String, NcbiGeneHistory> id2history = new HashMap<String, NcbiGeneHistory>();
 

@@ -52,28 +52,28 @@ public class DifferentialExpressionResultDaoImpl extends
 
     private Log log = LogFactory.getLog( this.getClass() );
 
-    private final String fetchResultsByGeneAndExperimentsQuery = "select distinct e, r"
+    private static final String fetchResultsByGeneAndExperimentsQuery = "select distinct e, r"
             + " from DifferentialExpressionAnalysisImpl a, BioSequence2GeneProductImpl bs2gp"
             + " inner join a.expressionExperimentSetAnalyzed eesa inner join eesa.experiments e  "
             + " inner join a.resultSets rs inner join rs.results r inner join r.probe p "
             + "inner join p.biologicalCharacteristic bs inner join bs2gp.geneProduct gp inner join gp.gene g"
             + " where bs2gp.bioSequence=bs and g=:gene and e in (:experimentsAnalyzed)";
 
-    private final String fetchResultsByGene = "select distinct e, r"
+    private static final String fetchResultsByGene = "select distinct e, r"
             + " from DifferentialExpressionAnalysisImpl a, BioSequence2GeneProductImpl bs2gp"
             + " inner join a.expressionExperimentSetAnalyzed eesa inner join eesa.experiments e  "
             + " inner join a.resultSets rs inner join rs.results r inner join r.probe p "
             + "inner join p.biologicalCharacteristic bs inner join bs2gp.geneProduct gp inner join gp.gene g"
             + " where bs2gp.bioSequence=bs and g=:gene";
 
-    private final String fetchResultsByExperimentsQuery = "select distinct e, r"
+    private static final String fetchResultsByExperimentsQuery = "select distinct e, r"
             + " from DifferentialExpressionAnalysisImpl a, BioSequence2GeneProductImpl bs2gp"
             + " inner join a.expressionExperimentSetAnalyzed eesa inner join eesa.experiments e  "
             + " inner join a.resultSets rs inner join rs.results r inner join r.probe p "
             + "inner join p.biologicalCharacteristic bs inner join bs2gp.geneProduct gp inner join gp.gene g"
             + " where bs2gp.bioSequence=bs and e in (:experimentsAnalyzed)";
 
-    private final String fetchResultsByResultSetQuery = "select distinct rs, r"
+    private static final String fetchResultsByResultSetQuery = "select distinct rs, r"
             + " from DifferentialExpressionAnalysisImpl a, BioSequence2GeneProductImpl bs2gp"
             + " inner join a.expressionExperimentSetAnalyzed eesa inner join eesa.experiments e  "
             + " inner join a.resultSets rs inner join rs.results r inner join r.probe p "
@@ -87,6 +87,7 @@ public class DifferentialExpressionResultDaoImpl extends
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao#findResultsForGeneInExperiments(ubic
      * .gemma.model.genome.Gene )
@@ -124,6 +125,7 @@ public class DifferentialExpressionResultDaoImpl extends
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao#findResultsForGeneInExperiments(ubic
      * .gemma.model.genome.Gene, java.util.Collection)
@@ -222,6 +224,7 @@ public class DifferentialExpressionResultDaoImpl extends
 
     /*
      * (non-Javadoc)
+     * 
      * @seeubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao#
      * findResultsForGeneInExperimentsMetThreshold(ubic.gemma.model.genome.Gene, double, integer)
      */
@@ -277,6 +280,7 @@ public class DifferentialExpressionResultDaoImpl extends
 
     /*
      * (non-Javadoc)
+     * 
      * @seeubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao#
      * findResultsForGeneInExperimentsMetThreshold(ubic.gemma.model.genome.Gene, java.util.Collection, double, Integer)
      */
@@ -433,6 +437,7 @@ public class DifferentialExpressionResultDaoImpl extends
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.analysis.DifferentialExpressionAnalysisResultDaoBase#handleGetExperimentalFactors
      * (java.util.Collection)
@@ -481,6 +486,7 @@ public class DifferentialExpressionResultDaoImpl extends
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.analysis.DifferentialExpressionAnalysisResultDaoBase#handleGetExperimentalFactors
      * (ubic.gemma.model.expression.analysis.DifferentialExpressionAnalysisResult)

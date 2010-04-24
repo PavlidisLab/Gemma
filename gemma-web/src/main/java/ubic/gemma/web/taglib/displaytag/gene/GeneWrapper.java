@@ -18,8 +18,6 @@
  */
 package ubic.gemma.web.taglib.displaytag.gene;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.displaytag.decorator.TableDecorator;
 
 import ubic.gemma.model.common.description.DatabaseEntry;
@@ -35,9 +33,6 @@ import ubic.gemma.model.genome.Gene;
  * @version $Id $
  */
 public class GeneWrapper extends TableDecorator {
-
-    Log log = LogFactory.getLog( this.getClass() );
-
     /**
      * @return String
      */

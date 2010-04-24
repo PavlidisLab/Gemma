@@ -54,6 +54,7 @@ public class AclAfterInvocationMapValueFilteringProvider extends AbstractAclProv
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * org.springframework.security.access.AfterInvocationProvider#decide(org.springframework.security.core.Authentication
      * , java.lang.Object, java.util.Collection, java.lang.Object)
@@ -93,9 +94,9 @@ public class AclAfterInvocationMapValueFilteringProvider extends AbstractAclProv
 
                     boolean hasPermission = false;
 
-                    if ( !Securable.class.isAssignableFrom( domainObject.getClass() ) ) {
+                    if ( domainObject == null ) {
                         hasPermission = true;
-                    } else if ( domainObject == null ) {
+                    } else if ( !Securable.class.isAssignableFrom( domainObject.getClass() ) ) {
                         hasPermission = true;
                     } else {
                         hasPermission = hasPermission( authentication, domainObject );

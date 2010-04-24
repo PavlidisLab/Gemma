@@ -33,23 +33,20 @@ import ubic.gemma.testing.BaseSpringContextTest;
  * <li>Remote bimart file, local string file multi taxon
  * </ul>
  * The only scenario not tested is downloading from string website simply too long recommended usage is to use local
- * file. As is downloads a file from biomart any changes in biomart interface will be picked up.
- * Should add some more error scenarios.
+ * file. As is downloads a file from biomart any changes in biomart interface will be picked up. Should add some more
+ * error scenarios.
  * 
  * @author ldonnison
  * @version $Id$
  */
 public class StringBiomartGene2GeneProteinLoaderTest extends BaseSpringContextTest {
     GeneService geneService = null;
-    TaxonService taxonService = null;
-    ExternalDatabaseService externalDatabaseService = null;
     DatabaseEntryService databaseService = null;
     StringBiomartGene2GeneProteinAssociationLoader stringBiomartGene2GeneProteinAssociationLoader = null;
 
     private Gene2GeneProteinAssociationService gene2GeneProteinAssociationService;
 
     Collection<Taxon> taxa = null;
-    Taxon human = null;
     Taxon rat = null;
     Taxon zebraFish = null;
 
@@ -58,9 +55,6 @@ public class StringBiomartGene2GeneProteinLoaderTest extends BaseSpringContextTe
 
     Collection<Gene> genesRat = null;
     Collection<Gene2GeneProteinAssociation> geneAssociationRat = null;
-
-    Collection<Gene> genesHuman = null;
-    Collection<Gene2GeneProteinAssociation> geneAssociationHuman = null;
 
     @Before
     public void setUp() throws Exception {
@@ -309,9 +303,7 @@ public class StringBiomartGene2GeneProteinLoaderTest extends BaseSpringContextTe
 
             Collection<Gene2GeneProteinAssociation> associations = gene2GeneProteinAssociationService.loadAll();
             assertEquals( 1, associations.size() );
-          
-           
-            
+
             this.gene2GeneProteinAssociationService.deleteAll( associations );
             associations = gene2GeneProteinAssociationService.loadAll();
             assertTrue( associations.isEmpty() );
@@ -342,21 +334,22 @@ public class StringBiomartGene2GeneProteinLoaderTest extends BaseSpringContextTe
 
             Collection<Gene2GeneProteinAssociation> associations = gene2GeneProteinAssociationService.loadAll();
             assertEquals( 3, associations.size() );
-            
-            for(Gene gene: genesZebra){
-                Collection<Gene2GeneProteinAssociation> interactionsForGene =  this.gene2GeneProteinAssociationService.findProteinInteractionsForGene( gene );
-                
-                if(gene.getName().equals( "zgc:153184" )){
-                    assertEquals(2, interactionsForGene.size());
+
+            for ( Gene gene : genesZebra ) {
+                Collection<Gene2GeneProteinAssociation> interactionsForGene = this.gene2GeneProteinAssociationService
+                        .findProteinInteractionsForGene( gene );
+
+                if ( gene.getName().equals( "zgc:153184" ) ) {
+                    assertEquals( 2, interactionsForGene.size() );
                 }
-                if(gene.getName().equals( "appl1" )){
-                    assertEquals(2, interactionsForGene.size());
+                if ( gene.getName().equals( "appl1" ) ) {
+                    assertEquals( 2, interactionsForGene.size() );
                 }
-                if(gene.getName().equals( "LOC568371" )){
-                    assertEquals(2, interactionsForGene.size());
+                if ( gene.getName().equals( "LOC568371" ) ) {
+                    assertEquals( 2, interactionsForGene.size() );
                 }
             }
-                        
+
             this.gene2GeneProteinAssociationService.deleteAll( associations );
             associations = gene2GeneProteinAssociationService.loadAll();
             assertTrue( associations.isEmpty() );

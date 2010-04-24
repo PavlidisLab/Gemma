@@ -43,7 +43,6 @@ import ubic.gemma.loader.expression.arrayExpress.ArrayExpressLoadService;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.loader.expression.geo.service.GeoDatasetService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
@@ -355,9 +354,6 @@ public class ExpressionExperimentLoadController extends AbstractTaskService {
     GeoDatasetService geoDatasetService;
 
     @Autowired
-    ArrayDesignService arrayDesignService;
-
-    @Autowired
     ArrayExpressLoadService arrayExpressLoadService;
 
     @Autowired
@@ -384,13 +380,6 @@ public class ExpressionExperimentLoadController extends AbstractTaskService {
         }
 
         return super.run( command );
-    }
-
-    /**
-     * @param arrayDesignService the arrayDesignService to set
-     */
-    public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
-        this.arrayDesignService = arrayDesignService;
     }
 
     /**
