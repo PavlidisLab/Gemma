@@ -231,12 +231,13 @@ Gemma.BioMaterialGrid = Ext.extend(Gemma.GemmaGridPanel, {
 					columns : this.createColumns(this.factors)
 				});
 
-		if (this.editable) {
-			this.tbar = new Gemma.BioMaterialToolbar({
-						edId : this.edId,
-						editable : this.editable
-					});
-		}
+		/*
+		 * Always show the toolbar, for regular user functions like toggleExpand
+		 */
+		this.tbar = new Gemma.BioMaterialToolbar({
+					edId : this.edId,
+					editable : this.editable
+				});
 
 		Gemma.BioMaterialGrid.superclass.initComponent.call(this);
 
