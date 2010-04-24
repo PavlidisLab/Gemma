@@ -239,6 +239,7 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 
 		var params = {}
 		this.visDiffWindow = new Gemma.VisualizationWithThumbsWindow({
+					thumbnails : false,
 					readMethod : DEDVController.getDEDVForDiffExVisualizationByThreshold,
 					title : "Top diff. ex. probes for " + factorDetails,
 					downloadLink : String.format("/Gemma/dedv/downloadDEDV.html?ee={0}&rs={1}&thresh={2}", eeid,
