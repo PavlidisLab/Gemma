@@ -405,6 +405,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.analysis.report.ExpressionExperimentReportService#generateSummaryObject(java.lang.Long)
      */
     @SuppressWarnings("unchecked")
@@ -420,6 +421,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.analysis.report.ExpressionExperimentReportService#generateSummaryObjects()
      */
     @Secured( { "GROUP_AGENT" })
@@ -431,6 +433,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.analysis.report.ExpressionExperimentReportService#generateSummaryObjects(java.util.Collection)
      */
     public Collection<ExpressionExperimentValueObject> generateSummaryObjects( Collection<Long> ids ) {
@@ -444,6 +447,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.analysis.report.ExpressionExperimentReportService#retrieveSummaryObjects(java.util.Collection)
      */
     public Collection<ExpressionExperimentValueObject> retrieveSummaryObjects( Collection<Long> ids ) {
@@ -497,6 +501,10 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
     private Collection<DifferentialExpressionSummaryValueObject> getDiffExpressedProbes( ExpressionExperiment ee,
             double threshold ) {
 
+        /*
+         * TODO: handle multiple analyses properly.
+         */
+
         Collection<ExpressionAnalysisResultSet> results = differentialExpressionAnalysisService.getResultSets( ee );
         Collection<DifferentialExpressionSummaryValueObject> summaries = new ArrayList<DifferentialExpressionSummaryValueObject>();
 
@@ -512,7 +520,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
                     threshold );
             desvo.setNumberOfDiffExpressedProbes( probesThatMetThreshold );
 
-            log.info( "Probes that met threshold in result set - " + par.getId() + " : " + probesThatMetThreshold );
+            log.debug( "Probes that met threshold in result set - " + par.getId() + " : " + probesThatMetThreshold );
             summaries.add( desvo );
 
         }
@@ -735,7 +743,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
 
         eeVo.setDiffExpressedProbes( getDiffExpressedProbes( tempEe, CUT_OFF ) );
 
-        long numLinks = probe2ProbeCoexpressionService.countLinks( tempEe ).longValue();
+        Long numLinks = probe2ProbeCoexpressionService.countLinks( tempEe ).longValue();
         log.debug( numLinks + " links." );
         eeVo.setCoexpressionLinkCount( numLinks );
 

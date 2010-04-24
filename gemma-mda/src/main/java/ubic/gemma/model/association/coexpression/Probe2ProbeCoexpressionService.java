@@ -41,7 +41,7 @@ public interface Probe2ProbeCoexpressionService {
 
     /**
      * @param expressionExperiment
-     * @return number of coexpression links for the given experiments.
+     * @return number of coexpression links for the given experiments or null if the analysis has not been run
      */
     public java.lang.Integer countLinks(
             ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment );

@@ -20,12 +20,12 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 		this.addEvents({
 					"ready" : true
 				});
-		//if no permissions hasWritePermission is no set.
-		
-		if((Ext.get("hasWritePermission")) && Ext.get("hasWritePermission").getValue() == 'true'){
-			this.editable = 'true';			
+		// if no permissions hasWritePermission is no set.
+
+		if ((Ext.get("hasWritePermission")) && Ext.get("hasWritePermission").getValue() == 'true') {
+			this.editable = 'true';
 		}
-		
+
 		/*
 		 * Load the EE information via an ajax call.
 		 */
@@ -174,11 +174,9 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 	},
 	renderCoExpressionLinkCount : function(ee) {
 
-		if (ee.coexpressionLinkCount == null)
-			return "Unavailable";
-
-		if (ee.coexpressionLinkCount == 0)
-			return "None";
+		if (ee.coexpressionLinkCount == null) {
+			return "Unavailable"; // analysis not run.
+		}
 
 		var downloadCoExpressionDataLink = String
 				.format(
@@ -270,6 +268,8 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 			logo = '/Gemma/images/logo/arrayExpressTiny.png';
 			result = '<a target="_blank" href="http://www.ebi.ac.uk/microarray-as/aer/result?queryFor=Experiment&eAccession='
 					+ ee.accession + '"><img src="' + logo + '"/></a>';
+		} else {
+			result = "Direct upload";
 		}
 
 		return result;
@@ -290,7 +290,7 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 					+ '&nbsp;&nbsp<a href="/Gemma/expressionExperiment/showBioAssaysFromExpressionExperiment.html?id='
 					+ ee.id + '"><img src="/Gemma/images/icons/magnifier.png"/></a>';
 		}
-		return ''+result; // hack for possible problem with extjs 3.1 - bare number not displayed, coerce to string.
+		return '' + result; // hack for possible problem with extjs 3.1 - bare number not displayed, coerce to string.
 	},
 
 	renderStatus : function(ee) {
@@ -434,7 +434,7 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 			return '<span style="color:#CCF;">NA</span>';
 		}
 	},
-	renderProcessedExpressionVectorCount : function(e){
+	renderProcessedExpressionVectorCount : function(e) {
 		return e.processedExpressionVectorCount ? e.processedExpressionVectorCount : ' [count not available] ';
 	},
 
@@ -500,8 +500,8 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 		 */
 		new Gemma.MGEDCombo({});
 
-		var taggerurl = '<a href="#" onClick="return Ext.getCmp(\'eemanager\').tagger(' + e.id
-				+ ',' + e.taxonId +')"><img src="/Gemma/images/icons/pencil.png" alt="view tags" title="view tags"/></a>';
+		var taggerurl = '<a href="#" onClick="return Ext.getCmp(\'eemanager\').tagger(' + e.id + ',' + e.taxonId
+				+ ')"><img src="/Gemma/images/icons/pencil.png" alt="view tags" title="view tags"/></a>';
 
 		tagView = new Gemma.AnnotationDataView({
 					readParams : [{
@@ -726,11 +726,17 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 						html : 'Profiles:'
 					}, {
 						id : 'processedExpressionVectorCount-region',
-						html : '<div id="downloads"> ' + this.renderProcessedExpressionVectorCount(e) + '&nbsp;&nbsp;'
-						+ '<i>Downloads:</i> &nbsp;&nbsp; <a title="click to download the tab delimited data" href="#" onClick="fetchData(true,' + e.id  + ', \'text\', null, null)">Filtered</a> &nbsp;&nbsp;'
-						+ '<a href="#" title="click to download the tab delimited data" onClick="fetchData(false,' + e.id + ', \'text\', null, null)">Unfiltered</a> &nbsp;&nbsp;' 
-						+ '<a class="helpLink" href="?" onclick="showHelpTip(event, \'Tab-delimited data file for this experiment. The filtered version corresponds to what is used in most Gemma analyses, removing some probes. Unfiltered includes all probes\'); return false"> <img src="/Gemma/images/help.png" /> </a>' 
-						+ '</div>',
+						html : '<div id="downloads"> '
+								+ this.renderProcessedExpressionVectorCount(e)
+								+ '&nbsp;&nbsp;'
+								+ '<i>Downloads:</i> &nbsp;&nbsp; <a title="click to download the tab delimited data" href="#" onClick="fetchData(true,'
+								+ e.id
+								+ ', \'text\', null, null)">Filtered</a> &nbsp;&nbsp;'
+								+ '<a href="#" title="click to download the tab delimited data" onClick="fetchData(false,'
+								+ e.id
+								+ ', \'text\', null, null)">Unfiltered</a> &nbsp;&nbsp;'
+								+ '<a class="helpLink" href="?" onclick="showHelpTip(event, \'Tab-delimited data file for this experiment. The filtered version corresponds to what is used in most Gemma analyses, removing some probes. Unfiltered includes all probes\'); return false"> <img src="/Gemma/images/help.png" /> </a>'
+								+ '</div>',
 						width : 400
 					}, {
 						html : 'Array designs:'

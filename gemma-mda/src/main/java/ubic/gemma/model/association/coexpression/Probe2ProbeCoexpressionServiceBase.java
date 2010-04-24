@@ -22,6 +22,8 @@ import java.util.Collection;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
+import ubic.gemma.model.common.auditAndSecurity.AuditEventDao;
+
 /**
  * <p>
  * Spring Service base class for <code>ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService</code>,
@@ -29,12 +31,16 @@ import org.springframework.beans.factory.annotation.Autowired;
  * </p>
  * 
  * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService
+ * @version $Id$
  */
 public abstract class Probe2ProbeCoexpressionServiceBase implements
         ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService {
 
     @Autowired
     private ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDao probe2ProbeCoexpressionDao;
+
+    @Autowired
+    private AuditEventDao auditEventDao;
 
     /**
      * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService#countLinks(ubic.gemma.model.expression.experiment.ExpressionExperiment)
@@ -74,8 +80,6 @@ public abstract class Probe2ProbeCoexpressionServiceBase implements
         }
     }
 
-    protected abstract void handleRemove( Collection expressions );
-
     public void delete( Probe2ProbeCoexpression p2p ) {
         try {
             this.handleRemove( p2p );
@@ -85,8 +89,6 @@ public abstract class Probe2ProbeCoexpressionServiceBase implements
                             + th, th );
         }
     }
-
-    protected abstract void handleRemove( Probe2ProbeCoexpression p2p );
 
     /**
      * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService#deleteLinks(ubic.gemma.model.expression.experiment.ExpressionExperiment)
@@ -99,6 +101,13 @@ public abstract class Probe2ProbeCoexpressionServiceBase implements
                     "Error performing 'ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService.deleteLinks(ubic.gemma.model.expression.experiment.ExpressionExperiment ee)' --> "
                             + th, th );
         }
+    }
+
+    /**
+     * @return the auditEventDao
+     */
+    public AuditEventDao getAuditEventDao() {
+        return auditEventDao;
     }
 
     /**
@@ -314,5 +323,9 @@ public abstract class Probe2ProbeCoexpressionServiceBase implements
      */
     protected abstract void handlePrepareForShuffling( java.util.Collection ees, java.lang.String taxon,
             boolean filterNonSpecific ) throws java.lang.Exception;
+
+    protected abstract void handleRemove( Collection expressions );
+
+    protected abstract void handleRemove( Probe2ProbeCoexpression p2p );
 
 }

@@ -24,10 +24,10 @@ import java.util.Map;
 
 import org.springframework.stereotype.Service;
 
+import ubic.gemma.model.common.auditAndSecurity.eventType.LinkAnalysisEvent;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.model.genome.Taxon;
 
 /**
  * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService
@@ -55,7 +55,17 @@ public class Probe2ProbeCoexpressionServiceImpl extends
 
     @Override
     protected Integer handleCountLinks( ExpressionExperiment expressionExperiment ) throws Exception {
-        return this.getProbe2ProbeCoexpressionDao().countLinks( expressionExperiment );
+        Integer count = this.getProbe2ProbeCoexpressionDao().countLinks( expressionExperiment );
+        if ( count == 0
+                && this.getAuditEventDao().getLastEvent( expressionExperiment, LinkAnalysisEvent.class ) == null ) {
+            /*
+             * analysis has not been run, so reporting zero would be misleading. I only check in case of count == 0 to
+             * avoid problems in case the link count > 0 but the audit event is missing for some reason: we still report
+             * an accurate count.
+             */
+            return null;
+        }
+        return count;
     }
 
     /**
@@ -68,6 +78,7 @@ public class Probe2ProbeCoexpressionServiceImpl extends
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionServiceBase#handleDeleteLinks(ubic.gemma.model
      * .expression.experiment.ExpressionExperiment)
