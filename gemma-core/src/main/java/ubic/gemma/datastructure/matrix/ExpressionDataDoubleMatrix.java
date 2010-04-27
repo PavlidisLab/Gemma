@@ -535,6 +535,8 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
 
         reorderedDim.setName( "Slice" );
 
+        this.getQuantitationTypes().addAll( sourceMatrix.getQuantitationTypes() );
+
         int i = 0;
         for ( ExpressionDataMatrixRowElement element : sourceMatrix.getRowElements() ) {
             DesignElement designElement = element.getDesignElement();

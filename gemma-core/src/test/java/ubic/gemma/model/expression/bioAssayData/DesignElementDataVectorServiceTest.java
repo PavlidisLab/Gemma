@@ -42,7 +42,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
@@ -67,9 +66,6 @@ public class DesignElementDataVectorServiceTest extends BaseSpringContextTest {
 
     @Autowired
     ArrayDesignService arrayDesignService;
-
-    @Autowired
-    TaxonService taxonService;
 
     @Autowired
     CompositeSequenceService compositeSequenceService;

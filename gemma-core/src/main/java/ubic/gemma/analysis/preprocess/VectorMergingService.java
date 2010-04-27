@@ -41,7 +41,6 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentVe
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayService;
@@ -86,9 +85,6 @@ public class VectorMergingService extends ExpressionExperimentVectorManipulating
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
-
-    @Autowired
-    private ArrayDesignService arrayDesignService;
 
     @Autowired
     private BioAssayDimensionService bioAssayDimensionService;
@@ -174,9 +170,6 @@ public class VectorMergingService extends ExpressionExperimentVectorManipulating
         if ( arrayDesigns.size() > 1 ) {
             throw new IllegalArgumentException( "Cannot cope with more than one platform" );
         }
-
-        ArrayDesign arrayDesign = arrayDesigns.iterator().next();
-        arrayDesign = arrayDesignService.thawLite( arrayDesign );
 
         log.info( qts.size() + " quantitation types" );
 
@@ -295,10 +288,6 @@ public class VectorMergingService extends ExpressionExperimentVectorManipulating
     private void audit( ExpressionExperiment ee, String note ) {
         AuditEventType eventType = ExpressionExperimentVectorMergeEvent.Factory.newInstance();
         auditTrailService.addUpdateEvent( ee, eventType, note );
-    }
-
-    public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
-        this.arrayDesignService = arrayDesignService;
     }
 
     public void setBioAssayDimensionService( BioAssayDimensionService bioAssayDimensionService ) {
