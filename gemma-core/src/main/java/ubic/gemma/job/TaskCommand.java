@@ -39,6 +39,28 @@ import org.springframework.security.core.context.SecurityContextHolder;
 public class TaskCommand implements Serializable {
 
     /**
+     * How long we will wait for a started task before giving up waiting for it. Tasks running longer than this will be
+     * cancelled. This does not include time spent queued.
+     */
+    public static final int MAX_RUNTIME_MINUTES = 60;
+
+    private int maxRuntime = MAX_RUNTIME_MINUTES;
+
+    /**
+     * @return the maxRuntime in minutes
+     */
+    public int getMaxRuntime() {
+        return maxRuntime;
+    }
+
+    /**
+     * @param maxRuntime the maxRuntime to set (in minutes) before we bail. Default is MAX_RUNTIME_MINUTES
+     */
+    public void setMaxRuntime( int maxRuntime ) {
+        this.maxRuntime = maxRuntime;
+    }
+
+    /**
      * Should an email be sent to the user when the job is done?
      */
     private boolean emailAlert = false;

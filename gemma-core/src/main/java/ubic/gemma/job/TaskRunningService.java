@@ -93,12 +93,6 @@ public class TaskRunningService implements InitializingBean {
     public static final int MAX_QUEUING_MINUTES = 60 * 2;
 
     /**
-     * How long we will wait for a started task before giving up waiting for it. Tasks running longer than this will be
-     * cancelled. This does not include time spent queued.
-     */
-    public static final int MAX_RUNTIME_MINUTES = 60;
-
-    /**
      * How long we will hold onto results after a task has finished before giving up.
      */
     private static final int MAX_TRACKING_MINUTES = 10;
@@ -480,11 +474,14 @@ public class TaskRunningService implements InitializingBean {
                     ProgressManager.updateJob( taskId, "The compute grid has failed, job is not running, aborting" );
                     submittedTasks.get( taskId ).getCommand().setEmailAlert( true );
                     cancelTask( taskId );
+                    return;
                 } else {
                     log.warn( "Possible grid problem for job " + taskId );
                 }
             }
-        } else if ( startTime == null ) {
+        }
+
+        if ( startTime == null ) {
             log.debug( "Job is still queued: " + taskId + " " + command.getTaskInterface() );
             Integer maxQueueWait = command.getMaxQueueMinutes();
             assert maxQueueWait != null;
@@ -501,11 +498,11 @@ public class TaskRunningService implements InitializingBean {
                 return;
             }
 
-        } else if ( startTime.before( DateUtils.addMinutes( new Date(), -MAX_RUNTIME_MINUTES ) ) ) {
+        } else if ( startTime.before( DateUtils.addMinutes( new Date(), -command.getMaxRuntime() ) ) ) {
             log.warn( "Running task is taking too long, cancelling: " + taskId + " " + command.getTaskInterface() );
             submittedTasks.get( taskId ).getCommand().setEmailAlert( true );
             ProgressManager.updateJob( taskId, "The job took too long to run, so it was cancelled after "
-                    + MAX_RUNTIME_MINUTES + " minutes." );
+                    + command.getMaxRuntime() + " minutes." );
             cancelTask( taskId );
         }
     }
