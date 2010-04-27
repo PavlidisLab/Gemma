@@ -28,6 +28,8 @@ import ubic.gemma.job.TaskCommand;
 
 public class IndexerTaskCommand extends TaskCommand {
 
+    private static final int INDEXER_MAX_RUNTIME = 120; //Minutes
+
     private static final long serialVersionUID = -8994831072852393919L;
 
     private boolean compassOn = false;
@@ -46,6 +48,7 @@ public class IndexerTaskCommand extends TaskCommand {
 
     public IndexerTaskCommand() {
         super();
+        this.setMaxRuntime( INDEXER_MAX_RUNTIME );
     }
 
     public boolean isCompassOn() {
