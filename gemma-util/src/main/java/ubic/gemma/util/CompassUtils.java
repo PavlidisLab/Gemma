@@ -50,7 +50,7 @@ public class CompassUtils {
     public static void deleteCompassLocks() {
         /*
          * FIXME lock directory is now the same as the indexes, by default.
-         */ 
+         */
 
         Collection<File> lockFiles = FileUtils.listFiles( new File( FSDirectory.LOCK_DIR ), FileFilterUtils
                 .suffixFileFilter( "lock" ), null );
@@ -90,7 +90,7 @@ public class CompassUtils {
      * @param gps
      * @throws IOException
      */
-    public static synchronized void rebuildCompassIndex( CompassGpsInterfaceDevice gps ) {
+    public static synchronized boolean rebuildCompassIndex( CompassGpsInterfaceDevice gps ) {
         boolean wasRunningBefore = gps.isRunning();
 
         log.debug( "CompassGps was running? " + wasRunningBefore );
@@ -113,15 +113,31 @@ public class CompassUtils {
 
         gps.getIndexCompass().getSearchEngineIndexManager().createIndex();
         log.info( "indexing now ... " );
-        gps.index();
+        try {
+            gps.index();
+        } catch ( Exception e ) {
+            String bodyText = "Failed to build Index. Error is:  " + e;
+            log.warn( bodyText );
+            return false;
+        }
+
         log.info( "Indexing done. Now Optimizing index" );
-        gps.getIndexCompass().getSearchEngineOptimizer().optimize();
+        try {
+            gps.getIndexCompass().getSearchEngineOptimizer().optimize();
+        } catch ( Exception e ) {
+            String bodyText = "Failed to optimize Index. Error is:  " + e;
+            log.warn( bodyText );
+            return false;
+            // mailEngine.sendAdminMessage(bodyText, "Failed optimizing");
+        }
+
         log.info( "Optimizing complete" );
         /* Return state of device */
         if ( !wasRunningBefore ) {
             disableIndexMirroring( gps );
         }
 
+        return true;
     }
 
     /**

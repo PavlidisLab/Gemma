@@ -23,6 +23,7 @@ import java.util.Map;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.velocity.app.VelocityEngine;
@@ -117,5 +118,26 @@ public class MailEngine {
         helper.addAttachment( attachmentName, resource );
 
         ( ( JavaMailSenderImpl ) mailSender ).send( message );
+    }
+
+    /**
+     * Sends a message to the gemma administrator as defined in the Gemma.properties file
+     * @param bodyText
+     * @param subject
+     */
+    public void sendAdminMessage( String bodyText, String subject ) {
+
+        if ( ( bodyText == null ) && ( subject == null ) ) {
+            log.warn( "Not sending empty email, both subject and body are null" );
+            return;
+        }
+
+        log.info( "Sending email notification to administrator regarding: " + subject );
+        SimpleMailMessage msg = new SimpleMailMessage();
+        msg.setTo( ConfigUtils.getAdminEmailAddress() );
+        msg.setFrom( ConfigUtils.getAdminEmailAddress() );
+        msg.setSubject( subject );
+        msg.setText( bodyText );
+        this.send( msg );
     }
 }

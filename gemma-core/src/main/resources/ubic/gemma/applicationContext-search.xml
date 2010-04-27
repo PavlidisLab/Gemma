@@ -47,6 +47,9 @@
 		<property name="compassBibliographic">
 			<ref bean="compassBibliographic" />
 		</property>
+		<property name="mailEngine">
+			<ref bean="mailEngine" /> 
+		</property>		
 	</bean>
 
 	<bean id="indexService" class="ubic.gemma.search.IndexServiceImpl">

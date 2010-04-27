@@ -28,6 +28,7 @@ import org.compass.gps.spi.CompassGpsInterfaceDevice;
 
 import ubic.gemma.job.TaskMethod;
 import ubic.gemma.util.CompassUtils;
+import ubic.gemma.util.MailEngine;
 
 /**
  * @author klc
@@ -66,6 +67,8 @@ public class IndexerTaskImpl implements IndexerTask {
     private SingleCompassGps expressionGps;
 
     private SingleCompassGps geneGps;
+
+    private MailEngine mailEngine;
 
     private Log log = LogFactory.getLog( this.getClass().getName() );
 
@@ -198,17 +201,31 @@ public class IndexerTaskImpl implements IndexerTask {
         return compass.getSettings().getSetting( PATH_PROPERTY ).replaceFirst( FILE, "" ) + PATH_SUFFIX;
     }
 
+    /**
+     * @param mailEngine
+     */
+    public void setMailEngine( MailEngine mailEngine ) {
+        this.mailEngine = mailEngine;
+    }
+
     private void rebuildIndex( CompassGpsInterfaceDevice device, String whatIndexingMsg ) {
 
         StopWatch timer = new StopWatch();
         timer.start();
         log.info( "Rebuilding " + whatIndexingMsg );
 
-        CompassUtils.rebuildCompassIndex( device );
+        Boolean success = CompassUtils.rebuildCompassIndex( device );
 
-        log.info( "Finished rebuilding " + whatIndexingMsg + ".  Took (ms): " + timer.getTime() );
-        log.info( " \n " );
+        // If failed send an email to administrator
+        if ( !success ) {
+            mailEngine.sendAdminMessage( "Failed to index " + whatIndexingMsg, "Failed to index " + whatIndexingMsg
+                    + ".  See logs for details" );
+            log.info( "Failed rebuilding index for " + whatIndexingMsg + ".  Took (ms): " + timer.getTime() );
 
+        } else {
+            log.info( "Finished rebuilding " + whatIndexingMsg + ".  Took (ms): " + timer.getTime() );
+            log.info( " \n " );
+        }
     }
 
 }
