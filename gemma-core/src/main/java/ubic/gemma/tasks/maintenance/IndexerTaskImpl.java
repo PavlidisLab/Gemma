@@ -75,11 +75,6 @@ public class IndexerTaskImpl implements IndexerTask {
     public IndexerResult execute( IndexerTaskCommand command ) {
         IndexerResult result = new IndexerResult( command );
 
-        if ( command.isIndexGene() ) {
-            rebuildIndex( geneGps, "Gene index" );
-            result.setPathToGeneIndex( getIndexPath( compassGene ) );
-
-        }
         if ( command.isIndexEE() ) {
             rebuildIndex( expressionGps, "Expression Experiment index" );
             result.setPathToExpresionIndex( getIndexPath( compassExpression ) );
@@ -95,13 +90,20 @@ public class IndexerTaskImpl implements IndexerTask {
             result.setPathToBibliographicIndex( getIndexPath( compassBibliographic ) );
 
         }
+        if ( command.isIndexBioSequence() ) {
+            rebuildIndex( biosequenceGps, "Biosequence Reference Index" );
+            result.setPathToBiosequenceIndex( getIndexPath( compassBiosequence ) );
+
+        }
+
         if ( command.isIndexProbe() ) {
             rebuildIndex( probeGps, "Probe Reference Index" );
             result.setPathToProbeIndex( getIndexPath( compassProbe ) );
         }
-        if ( command.isIndexBioSequence() ) {
-            rebuildIndex( biosequenceGps, "Biosequence Reference Index" );
-            result.setPathToBiosequenceIndex( getIndexPath( compassBiosequence ) );
+
+        if ( command.isIndexGene() ) {
+            rebuildIndex( geneGps, "Gene index" );
+            result.setPathToGeneIndex( getIndexPath( compassGene ) );
 
         }
         return result;
