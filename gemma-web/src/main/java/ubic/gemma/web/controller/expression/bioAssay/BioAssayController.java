@@ -116,7 +116,7 @@ public class BioAssayController extends AbstractTaskService {
      * @param errors
      * @return ModelAndView
      */
-    @RequestMapping("/showBioAssay.html")
+    @RequestMapping(value = { "/showBioAssay.html", "/" })
     public ModelAndView show( HttpServletRequest request, HttpServletResponse response ) {
 
         log.debug( request.getParameter( "id" ) );

@@ -368,8 +368,9 @@ public class ExpressionExperimentController extends AbstractTaskService {
         }
 
         String list = "";
-        for ( SearchResult ee : searchResults )
+        for ( SearchResult ee : searchResults ) {
             list += ee.getId() + ",";
+        }
 
         return new ModelAndView( new RedirectView( "/Gemma/expressionExperiment/showAllExpressionExperiments.html?id="
                 + list ) ).addObject( "message", "Search Criteria: " + searchString + "; " + searchResults.size()
@@ -867,7 +868,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
             mav.addObject( "bioMaterialIdList", buf.toString().replaceAll( ",$", "" ) );
         }
 
-        Long numBioMaterials = new Long( bioMaterials.size() );
+        Integer numBioMaterials = bioMaterials.size();
         mav.addObject( "numBioMaterials", numBioMaterials );
         mav.addObject( "bioMaterials", bioMaterials );
 
@@ -880,7 +881,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
      * @param errors
      * @return ModelAndView
      */
-    @RequestMapping("/showExpressionExperiment.html")
+    @RequestMapping( { "/showExpressionExperiment.html", "/" })
     public ModelAndView showExpressionExperiment( HttpServletRequest request, HttpServletResponse response ) {
 
         StopWatch timer = new StopWatch();
