@@ -1,26 +1,20 @@
- # Example unix shell script to start workers
+# Example unix shell script to start workers
 # $Id$
 
 # This script uses the following environment variables, which you must define here or in your profile.
-# GEMMA_LIB="/gemmaData/lib/Gemma"
+# JSLIBDIR="/space/gemmaData/lib"
+GIGASPACEJAR=/usr/local/tomcat/GigaSpacesCommunity5.2/lib/JSpaces.jar
 
-JSLIBDIR="/home/kelsey/apps/GigaSpacesCommunity5.2/lib"
-GEMMA_USER=administrator
-GEMMA_PWD=$1
-WORKER_CLASS=$2
-VMARGS=$3
-APPARGS=$4
+JARS=$(echo ${GEMMA_LIB}/* | tr ' ' ':')
 
-CP=`cat ${GEMMA_LIB}/CLASSPATH`
+# monitorWorker, etc.
+WORKERS=$@
 
-JAVACMD="${JAVA_HOME}/bin/java"
+JAVACMD="${JAVA_HOME}/bin/java $JAVA_OPTS"
 
-#Not necessary.  Also means every worker needs an installation of gigaspaces avaliable for it. 
-#. ${JSHOMEDIR}/bin/setenv.sh
-#JARS="${JSHOMEDIR}${CPS}${JSHOMEDIR}/lib/JSpaces.jar${CPS}${COMMON_JARS}${CPS}$CP"; export JARS
 
-$JAVACMD $VMARGS -Dcom.gs.home=$GEMMA_LIB -Dehcache.disk.store.dir=$HOME/scratch \
--classpath "${CP}:/home/kelsey/apps/GigaSpacesCommunity5.2/lib/JSpaces.jar" ubic.gemma.grid.javaspaces.worker.$WORKER_CLASS \
--u $GEMMA_USER -p $GEMMA_PWD -gigaspacesOn $APPARGS
+CMD="$JAVACMD $JAVA_OPTS -classpath $GIGASPACEJAR:${GEMMA_LIB}:${JARS} ubic.gemma.job.grid.worker.WorkerCLI -workers  $WORKERS"
+$CMD
+
 
 
