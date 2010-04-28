@@ -1091,8 +1091,8 @@ public class GeneCoexpressionService {
                         && proteinInteraction.getFirstGene().getId() != null ) {
                     // can append extra details to link if required this formating code should be somewhere else?
                     ProteinLinkOutFormatter proteinFormatter = new ProteinLinkOutFormatter();
-                    String proteinProteinIdUrl = proteinFormatter
-                            .getStringProteinProteinInteractionLink( proteinInteraction.getDatabaseEntry() );
+                    String proteinProteinIdUrl = proteinFormatter.getStringProteinProteinInteractionLinkGemmaDefault( 
+                            proteinInteraction.getDatabaseEntry() );
                     if ( proteinInteraction.getFirstGene().getId().equals( gene.getId() ) ) {
                         stringUrlsMappedByGeneID.put( proteinInteraction.getSecondGene().getId(), proteinProteinIdUrl );
                     } else {
