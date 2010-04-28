@@ -92,5 +92,10 @@ public class IndexerResult extends TaskResult {
     public void setPathToProbeIndex( String pathToProbeIndex ) {
         this.pathToProbeIndex = pathToProbeIndex;
     }
+    
+    public String toString(){
+        
+        return "Probe path: " + pathToProbeIndex + " Gene path: " + pathToGeneIndex + " EE path: " + pathToExpresionIndex + " AD path " + pathToArrayIndex;
+    }
 
 }
