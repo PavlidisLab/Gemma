@@ -184,6 +184,10 @@ public class GenePickerController {
         List<SearchResult> geneSearchResults = searchService.search( settings ).get( Gene.class );
 
         Collection<Gene> genes = new HashSet<Gene>();
+        if ( geneSearchResults == null || geneSearchResults.isEmpty() ) {
+            log.info( "No Genes for search: " + query + " taxon=" + taxonId );
+            return genes;
+        }
         for ( SearchResult sr : geneSearchResults ) {
             genes.add( ( Gene ) sr.getResultObject() );
         }
