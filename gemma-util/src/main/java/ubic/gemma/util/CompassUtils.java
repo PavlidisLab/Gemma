@@ -149,6 +149,7 @@ public class CompassUtils {
      */
     public static synchronized void swapCompassIndex( InternalCompass compass, String pathToIndex ) throws IOException {
 
+        log.info("Attempting to swap indexes. From " + pathToIndex);
         final File srcDir = new File( pathToIndex );
         String engineSetting = compass.getSettings().getSetting( "compass.engine.connection" );
 
@@ -156,6 +157,7 @@ public class CompassUtils {
 
         final File targetDir = new File( engineSetting.replaceFirst( "file:", "" ) + "/index/" );
 
+        log.info( "Swapping to: " + targetDir );
         // Validate that the new indexes exist and can read from them
         if ( !srcDir.canRead() ) {
             log.error( "Unable to read from specified directory: " + srcDir.getAbsolutePath() );
