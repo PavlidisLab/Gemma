@@ -48,25 +48,30 @@ public class ProteinLinkOutFormatterTest {
         entry.setAccession( accession );
     }
    
-
+    /**
+     * Test that a base url for string can be appended with a paramter to lower confi
+     * */
     @Test
     public void testGetStringProteinProteinInteractionLinkFormatted() {
         String urlForString = formatter.getStringProteinProteinInteractionLinkGemmaDefault( entry );    
         String defaultUrl = (baseFormattedUrl.concat("&required_score=150"));
         assertEquals(defaultUrl, urlForString);
-        System.out.println(defaultUrl);
     }
-
+    
+    
+    /**
+     * Test that a url for string can be further customised
+     */
     @Test
     public void testGetStringProteinProteinInteractionLinkDefault() {
         String urlForString = formatter.getStringProteinProteinInteractionLinkFormatted( entry, "20", "420" );
         String defaultUrl = (baseFormattedUrl.concat( "&limit=20" ).concat("&required_score=420"));
-        assertEquals(defaultUrl, urlForString);
-        System.out.println(defaultUrl);
-        
-        
+        assertEquals(defaultUrl, urlForString);   
     }
-
+    
+    /**
+     * Test given a byte array can be mapped to evidence codes
+     */
     @Test
     public void testGetEvidenceDisplayText() {
         byte[] bytes = new byte[]{0,0,0,0,1,0,1};
