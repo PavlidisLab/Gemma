@@ -73,8 +73,9 @@ public class DifferentialExpressionAnalysisDaoImpl extends
         for ( Object o : qresult ) {
 
             count = ( Long ) o;
-            log.info( "Found " + count + " differentially expressed genes in result set (" + ears.getId()
-                    + ") at a threshold of " + threshold );
+            if ( log.isDebugEnabled() )
+                log.debug( "Found " + count + " differentially expressed genes in result set (" + ears.getId()
+                        + ") at a threshold of " + threshold );
 
         }
         return count;
@@ -89,8 +90,9 @@ public class DifferentialExpressionAnalysisDaoImpl extends
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.analysis.DifferentialExpressionAnalysisDaoBase#handleThaw(java.util.Collection)
-     */ 
+     */
     @Override
     public void handleThaw( final Collection<DifferentialExpressionAnalysis> expressionAnalyses ) throws Exception {
         for ( DifferentialExpressionAnalysis ea : expressionAnalyses ) {
@@ -102,6 +104,7 @@ public class DifferentialExpressionAnalysisDaoImpl extends
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDaoBase#handleFind(ubic.gemma.model.genome
      * .Gene, ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet, double)
@@ -124,6 +127,7 @@ public class DifferentialExpressionAnalysisDaoImpl extends
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.analysis.AnalysisDaoBase#handleFindByInvestigation(ubic.gemma.model.analysis.Investigation)
      */
     @SuppressWarnings("unchecked")
@@ -136,6 +140,7 @@ public class DifferentialExpressionAnalysisDaoImpl extends
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDaoBase#handleFindByInvestigationIds(
      * java.util.Collection)
@@ -159,6 +164,7 @@ public class DifferentialExpressionAnalysisDaoImpl extends
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.analysis.AnalysisDaoBase#handleFindByInvestigations(java.util.Collection)
      */
     @Override
@@ -184,6 +190,7 @@ public class DifferentialExpressionAnalysisDaoImpl extends
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.analysis.AnalysisDaoBase#handleFindByTaxon(ubic.gemma.model.genome.Taxon)
      */
     @SuppressWarnings("unchecked")
@@ -198,6 +205,7 @@ public class DifferentialExpressionAnalysisDaoImpl extends
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.analysis.AnalysisDaoBase#handleFindByTaxon(ubic.gemma.model.genome.Taxon)
      */
     @SuppressWarnings("unchecked")
@@ -211,6 +219,7 @@ public class DifferentialExpressionAnalysisDaoImpl extends
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDaoBase#handleFindExperimentsWithAnalyses
      * (ubic.gemma.model.genome.Gene)
@@ -305,6 +314,7 @@ public class DifferentialExpressionAnalysisDaoImpl extends
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDaoBase#handleGetResultSets(ubic.gemma
      * .model.expression.experiment.ExpressionExperiment)
@@ -320,6 +330,7 @@ public class DifferentialExpressionAnalysisDaoImpl extends
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDaoBase#handleThaw(ubic.gemma.model.analysis
      * .expression.diff.DifferentialExpressionAnalysis)
