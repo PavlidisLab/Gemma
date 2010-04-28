@@ -109,6 +109,7 @@ public class IndexerTaskImpl implements IndexerTask {
             result.setPathToGeneIndex( getIndexPath( compassGene ) );
 
         }
+        log.info( "Indexing Finished. Returning result to space. Result is: " + result );
         return result;
 
     }
@@ -224,7 +225,6 @@ public class IndexerTaskImpl implements IndexerTask {
 
         } else {
             log.info( "Finished rebuilding " + whatIndexingMsg + ".  Took (ms): " + timer.getTime() );
-            log.info( " \n " );
         }
     }
 
