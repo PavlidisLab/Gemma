@@ -26,6 +26,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import ubic.gemma.loader.protein.StringProteinInteractionEvidenceCodeEnum;
 import ubic.gemma.loader.protein.string.model.StringProteinProteinInteraction;
 import ubic.gemma.loader.util.parser.BasicLineParser;
 import ubic.gemma.loader.util.parser.FileFormatException;
@@ -152,15 +153,16 @@ public class StringProteinProteinInteractionFileParser extends BasicLineParser<S
                 throw new FileFormatException( "This line does not contain valid number " );
             }
         }
-
-        stringProteinProteinInteraction.setNeighborhood( Integer.valueOf( fields[2] ) );
-        stringProteinProteinInteraction.setFusion( Integer.valueOf( fields[3] ) );
-        stringProteinProteinInteraction.setCooccurence( Integer.valueOf( fields[4] ) );
-        stringProteinProteinInteraction.setCoexpression( Integer.valueOf( fields[5] ) );
-        stringProteinProteinInteraction.setExperimental( Integer.valueOf( fields[6] ) );
-        stringProteinProteinInteraction.setDatabase( Integer.valueOf( fields[7] ) );
-        stringProteinProteinInteraction.setTextmining( Integer.valueOf( fields[8] ) );
-        stringProteinProteinInteraction.setCombined_score( Integer.valueOf( fields[9] ) );
+        
+        stringProteinProteinInteraction.addEvidenceCodeScoreToMap(StringProteinInteractionEvidenceCodeEnum.NEIGHBORHOOD, Integer.valueOf( fields[2] ));
+        stringProteinProteinInteraction.addEvidenceCodeScoreToMap(StringProteinInteractionEvidenceCodeEnum.GENEFUSION, Integer.valueOf( fields[3] ));
+        stringProteinProteinInteraction.addEvidenceCodeScoreToMap(StringProteinInteractionEvidenceCodeEnum.COOCCURENCE, Integer.valueOf( fields[4] ));
+        stringProteinProteinInteraction.addEvidenceCodeScoreToMap(StringProteinInteractionEvidenceCodeEnum.COEXPRESSION, Integer.valueOf( fields[5] ));
+        stringProteinProteinInteraction.addEvidenceCodeScoreToMap(StringProteinInteractionEvidenceCodeEnum.EXPERIMENTAL, Integer.valueOf( fields[6] ));
+        stringProteinProteinInteraction.addEvidenceCodeScoreToMap(StringProteinInteractionEvidenceCodeEnum.DATABASE, Integer.valueOf( fields[7] ));
+        stringProteinProteinInteraction.addEvidenceCodeScoreToMap(StringProteinInteractionEvidenceCodeEnum.TEXTMINING, Integer.valueOf( fields[8] ));
+                
+        stringProteinProteinInteraction.setCombined_score( Double.valueOf( fields[9] ) );
         return stringProteinProteinInteraction;
     }
 

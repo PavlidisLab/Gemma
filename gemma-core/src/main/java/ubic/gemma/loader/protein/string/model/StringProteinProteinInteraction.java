@@ -19,6 +19,13 @@
 package ubic.gemma.loader.protein.string.model;
 
 import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
+
+
+import ubic.gemma.loader.protein.StringProteinInteractionEvidenceCodeEnum;
+
+
 
 /**
  * Value object that represents the data in a record/line in the string protein interaction file
@@ -35,16 +42,17 @@ public class StringProteinProteinInteraction implements Serializable{
     
     private  String protein1 =null;
     private  String protein2 = null;
-    private Integer ncbiTaxonId =0;   
-    private Integer neighborhood =0;
-    private Integer fusion =0;
-    private Integer cooccurence =0;
-    private Integer coexpression =0;
-    private Integer experimental =0;
-    private Integer database =0;
-    private Integer textmining  =0;
-    private Integer combined_score =0;
+    private Integer ncbiTaxonId =0;
     
+    /** Combined score of the interacton any value below 04. is considered a low confidence interaction*/
+    private Double combined_score =0.0;  
+    
+    /** Map of the enum evidence value and the score for that particular evidence*/
+    private Map<StringProteinInteractionEvidenceCodeEnum, Integer> mapEvidenceCodeScores= null;
+    
+    /** Evidence vectorbit representing neighborhood, geneFusion, cooccurence, coexpression, experimental, database and textmining
+     * A 0 represents no evidence and 1 evidence */
+    byte[] evidenceVector = new byte[]{0,0,0,0,0,0,0};
     
     /**
      * Constructor these two fields should not be null as they are used to establish equality.
@@ -54,7 +62,8 @@ public class StringProteinProteinInteraction implements Serializable{
      */
     public StringProteinProteinInteraction(String protein1, String protein2){
         this.protein1 =protein1;
-        this.protein2 =protein2;        
+        this.protein2 =protein2;
+        mapEvidenceCodeScores = new HashMap<StringProteinInteractionEvidenceCodeEnum, Integer>();
     }
     
     
@@ -81,20 +90,14 @@ public class StringProteinProteinInteraction implements Serializable{
         
         if((protein1.equals(proteinOneOtherObj) && (protein2.equals(proteinTwoOtherObj)))){
             return true;
-        }
-        //account scenario where they have been flipped
-       // if((protein2.equals(proteinOneOtherObj) && (protein1.equals(proteinTwoOtherObj)))){
-          //  return true; 
-       // }        
+        }            
         else{
             return false;
         }        
     }
     
     /**
-     * Create a hash of the two proteins
-     * 
-     * This method is called when using HashSet as in the parser
+     * Create a hash of the two proteins; this method is called when using HashSet as in the parser.
      */
     @Override
     public int hashCode(){
@@ -131,114 +134,61 @@ public class StringProteinProteinInteraction implements Serializable{
     public void setProtein2( String protein2 ) {
         this.protein2 = protein2;
     }
+     
+       
     /**
-     * @return the neighborhood
-     */
-    public Integer getNeighborhood() {
-        return neighborhood;
-    }
-    /**
-     * @param neighborhood the neighborhood to set
-     */
-    public void setNeighborhood( Integer neighborhood ) {
-        this.neighborhood = neighborhood;
-    }
-    /**
-     * @return the fusion
-     */
-    public Integer getFusion() {
-        return fusion;
-    }
-    /**
-     * @param fusion the fusion to set
-     */
-    public void setFusion( Integer fusion ) {
-        this.fusion = fusion;
-    }
-    /**
-     * @return the cooccurence
-     */
-    public Integer getCooccurence() {
-        return cooccurence;
-    }
-    /**
-     * @param cooccurence the cooccurence to set
-     */
-    public void setCooccurence( Integer cooccurence ) {
-        this.cooccurence = cooccurence;
-    }
-    /**
-     * @return the coexpression
-     */
-    public Integer getCoexpression() {
-        return coexpression;
-    }
-    /**
-     * @param coexpression the coexpression to set
-     */
-    public void setCoexpression( Integer coexpression ) {
-        this.coexpression = coexpression;
-    }
-    /**
-     * @return the experimental
-     */
-    public Integer getExperimental() {
-        return experimental;
-    }
-    /**
-     * @param experimental the experimental to set
-     */
-    public void setExperimental( Integer experimental ) {
-        this.experimental = experimental;
-    }
-    /**
-     * @return the database
-     */
-    public Integer getDatabase() {
-        return database;
-    }
-    /**
-     * @param database the database to set
-     */
-    public void setDatabase( Integer database ) {
-        this.database = database;
-    }
-    /**
-     * @return the textmining
-     */
-    public Integer getTextmining() {
-        return textmining;
-    }
-    /**
-     * @param textmining the textmining to set
-     */
-    public void setTextmining( Integer textmining ) {
-        this.textmining = textmining;
-    }
-    /**
+     * The total score for this interaction.
      * @return the combined_score
      */
-    public Integer getCombined_score() {
+    public Double getCombined_score() {
         return combined_score;
     }
     /**
+     * Total score of the interaction
      * @param combined_score the combined_score to set
      */
-    public void setCombined_score( Integer combined_score ) {
+    public void setCombined_score( Double combined_score ) {
         this.combined_score = combined_score;
     }
     
     /**
-     * @return the ncbiTaxonId
+     * @return NCBI id of the taxon in this interaction that is the taxon of the two genes
      */
     public Integer getNcbiTaxonId() {
         return ncbiTaxonId;
     }
     /**
-     * @param ncbiTaxonId the ncbiTaxonId to set
+     * 
+     * @param ncbiTaxonId NCBI id of the taxon in this interaction that is the taxon of the two genes
      */
     public void setNcbiTaxonId( Integer ncbiTaxonId ) {
         this.ncbiTaxonId = ncbiTaxonId;
     }
+    
+    /**
+     * For a given evidence add the score
+     * @param evidenceCode What type of evidence there is for this interaction
+     * @param score If greater than 0 then evidence for that factor
+     */
+    public void addEvidenceCodeScoreToMap(StringProteinInteractionEvidenceCodeEnum evidenceCode, Integer score){
+        mapEvidenceCodeScores.put(evidenceCode, score);
+    } 
+    
+    
+    /**
+     * Updates the evidenceVector with the particular evidence
+     * @return byte representing the 7 different types of evidence as a 0 or 1 depending on whether they give evidence for this interaction
+     */
+    public byte[] getEvidenceVector(){
+        //Go throught the map of enums that hold the different types of evidences and get the score
+        //if a score is greater than 0 then set the byte array to 1 at the position which records that particular evidence 
+        for(StringProteinInteractionEvidenceCodeEnum evidence: mapEvidenceCodeScores.keySet() ){
+            //if the score is greater than 0 then update array with that evidence that is set a flag of 1;
+            if(mapEvidenceCodeScores.get( evidence ) >0){
+                evidenceVector[evidence.getPositionInArray()] = 1;
+            }          
+        }     
+        return evidenceVector;        
+    }  
 
 }

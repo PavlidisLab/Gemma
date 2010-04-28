@@ -152,6 +152,8 @@ public class StringBiomartProteinConverter implements Converter<Object, Object> 
                             .newInstance();
                     gene2GeneProteinAssociation.setDatabaseEntry( this
                             .getDataBaseEntry( stringProteinProteinInteraction ) );
+                    gene2GeneProteinAssociation.setConfidenceScore(stringProteinProteinInteraction.getCombined_score());
+                    gene2GeneProteinAssociation.setEvidenceVector( stringProteinProteinInteraction.getEvidenceVector() );
                     gene2GeneProteinAssociation.setFirstGene( geneProtein1 );
                     gene2GeneProteinAssociation.setSecondGene( geneProtein2 );
                     gene2GeneProteinAssociations.add( gene2GeneProteinAssociation );
@@ -159,7 +161,8 @@ public class StringBiomartProteinConverter implements Converter<Object, Object> 
             }
         }
         return gene2GeneProteinAssociations;
-    }
+    } 
+    
 
     /**
      * One ensemblProteinID can map to multiple ncbi genes. This method takes the ensembl gene and creates a collection
