@@ -49,7 +49,7 @@ import ubic.gemma.persistence.PersisterHelper;
  * objects. For biomart these value objects(BioMartEnsembleNcbi) are grouped into a map keyed on ensembl peptide id. For
  * string these value objects StringProteinProteinInteraction are grouped into arrays held in a map keyed on taxon. Then
  * one taxon at a time StringBiomartProteinConverter converts them into gemma objects using the BioMartEnsembleNcbi map
- * to find the perptide ids corresponding ncbi gene. The generated gemma objects Gene2GeneProteinAssociation are then
+ * to find the perptide ids corresponding to the ncbi gene. The generated gemma objects Gene2GeneProteinAssociation are then
  * loaded. It is done taxon by taxon due to the risk of GC memory errors.
  * 
  * @author ldonnison
@@ -165,7 +165,7 @@ public class StringBiomartGene2GeneProteinAssociationLoader {
 
     /**
      * Validate input parameters before processing with parsing and fetching. Should have been done already but should
-     * not rely on calling class. Ensure that there are some valid taxa and that all files are ready to be processed
+     * not rely on calling class. Ensure that there are some valid taxa and that all files are ready to be processed.
      * 
      * @param stringProteinFileNameLocal The name of the string file on the local system
      * @param stringProteinFileNameRemote The name of the string file on the remote system (just in case the string name
