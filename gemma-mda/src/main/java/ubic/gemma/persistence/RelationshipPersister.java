@@ -202,15 +202,8 @@ public abstract class RelationshipPersister extends ExpressionPersister {
     protected Gene2GeneProteinAssociation persistGene2GeneProteinAssociation( Gene2GeneProteinAssociation gene2GeneProteinAssociation ) {
         if ( gene2GeneProteinAssociation == null ) return null;
         if ( !isTransient( gene2GeneProteinAssociation ) ) return gene2GeneProteinAssociation;         
-   
-            Gene2GeneProteinAssociation existingGene2GeneProteinAssociation = gene2GeneProteinAssociationService.find( gene2GeneProteinAssociation );
-
-            if ( existingGene2GeneProteinAssociation != null ) {
-                if ( log.isDebugEnabled() ) log.debug( "existingGene2GeneProteinAssociation exists, will not update" );
-                return existingGene2GeneProteinAssociation;
-            }
-            log.debug( "New existingGene2GeneProteinAssociation: " + existingGene2GeneProteinAssociation );        
-            return gene2GeneProteinAssociationService.create( gene2GeneProteinAssociation );
+            
+        return gene2GeneProteinAssociationService.createOrUpdate( gene2GeneProteinAssociation );
     }    
 
 }

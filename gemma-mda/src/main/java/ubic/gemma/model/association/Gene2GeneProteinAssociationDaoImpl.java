@@ -86,17 +86,42 @@ public class Gene2GeneProteinAssociationDaoImpl extends Gene2GeneProteinAssociat
     /* (non-Javadoc)
      * @see ubic.gemma.persistence.BaseDao#create(java.lang.Object)
      */
-    public Gene2GeneProteinAssociation create( final Gene2GeneProteinAssociation Gene2GeneProteinAssociation ) {
-        if ( Gene2GeneProteinAssociation == null ) {
+    public Gene2GeneProteinAssociation create( final Gene2GeneProteinAssociation gene2GeneProteinAssociation ) {
+        if ( gene2GeneProteinAssociation == null ) {
             throw new IllegalArgumentException( "Gene2GeneProteinAssociation.create - 'Gene2GeneProteinAssociation' can not be null" );
         }
-        this.getHibernateTemplate().save( Gene2GeneProteinAssociation );
+        this.getHibernateTemplate().save( gene2GeneProteinAssociation );
         
        
-        return Gene2GeneProteinAssociation;
+        return gene2GeneProteinAssociation;
     }
-
-   
+    
+    
+    /* (non-Javadoc)
+     * @see ubic.gemma.persistence.BaseDao#createOrUpdate(java.lang.Object)
+     */
+    public Gene2GeneProteinAssociation createOrUpdate( final Gene2GeneProteinAssociation gene2GeneProteinAssociation ) {
+        if ( gene2GeneProteinAssociation == null ) {
+            throw new IllegalArgumentException( "Gene2GeneProteinAssociation.createOrUpdate - 'Gene2GeneProteinAssociation' can not be null" );
+        }
+        Gene2GeneProteinAssociation gene2GeneProteinAssociationExisting = this.find( gene2GeneProteinAssociation );
+        //does not exist in db there are no two genes with interaction stored
+        if(gene2GeneProteinAssociationExisting == null){
+            this.create(gene2GeneProteinAssociation);            
+        }else{
+            //check if this is really an update such that the confidence score, evidence vector or the url has changed as such update other wise just 
+            //return the record from the db.
+            gene2GeneProteinAssociationExisting.setConfidenceScore( gene2GeneProteinAssociation.getConfidenceScore() );
+            gene2GeneProteinAssociationExisting.getDatabaseEntry().setAccession( gene2GeneProteinAssociation.getDatabaseEntry().getAccession() );
+            gene2GeneProteinAssociationExisting.getDatabaseEntry().setUri( gene2GeneProteinAssociation.getDatabaseEntry().getUri() );
+            gene2GeneProteinAssociationExisting.setEvidenceVector( gene2GeneProteinAssociation.getEvidenceVector() );
+            this.update(gene2GeneProteinAssociationExisting);
+            log.debug ( "Existing record updating with id " + gene2GeneProteinAssociationExisting.getId() );
+        }  
+            
+        return gene2GeneProteinAssociation;
+    }
+    
     /* (non-Javadoc)
      * @see ubic.gemma.persistence.BaseDao#load(java.lang.Long)
      */

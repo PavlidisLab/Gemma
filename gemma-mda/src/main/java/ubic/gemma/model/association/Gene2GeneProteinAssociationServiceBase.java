@@ -51,6 +51,23 @@ public abstract class Gene2GeneProteinAssociationServiceBase implements
                             + th, th );
         }
     }
+    
+    /**
+     * @see ubic.gemma.model.association.Gene2GeneProteinAssociationService#create(ubic.gemma.model.association.Gene2GeneProteinAssociation)
+     */
+    public ubic.gemma.model.association.Gene2GeneProteinAssociation createOrUpdate(
+            final ubic.gemma.model.association.Gene2GeneProteinAssociation gene2GeneProteinAssociation ) {
+        try {
+            return this.handleCreateOrUpdate( gene2GeneProteinAssociation );
+        } catch ( Throwable th ) {
+            throw new ubic.gemma.model.association.Gene2GeneProteinAssociationServiceException(
+                    "Error performing 'ubic.gemma.model.association.Gene2GeneProteinAssociationServiceBase.createOrUpdate(ubic.gemma.model.association.Gene2GeneProteinAssociation)' --> "
+                            + th, th );
+        }
+    }
+    
+    
+    
 
     /**
      * @see ubic.gemma.model.association.Gene2GeneProteinAssociationService#update(ubic.gemma.model.association.Gene2GeneProteinAssociation)
@@ -173,6 +190,14 @@ public abstract class Gene2GeneProteinAssociationServiceBase implements
     protected abstract ubic.gemma.model.association.Gene2GeneProteinAssociation handleCreate(
             ubic.gemma.model.association.Gene2GeneProteinAssociation gene2GeneProteinAssociation )
             throws java.lang.Exception;
+    
+    
+    /**
+     * Performs the core logic for {@link #createOUpdate(ubic.gemma.model.association.Gene2GeneProteinAssociation)}
+     */
+    protected abstract ubic.gemma.model.association.Gene2GeneProteinAssociation handleCreateOrUpdate(
+            ubic.gemma.model.association.Gene2GeneProteinAssociation gene2GeneProteinAssociation )
+            throws java.lang.Exception;        
 
     /**
      * Performs the core logic for {@link #update(ubic.gemma.model.association.Gene2GeneProteinAssociation)}
@@ -217,6 +242,10 @@ public abstract class Gene2GeneProteinAssociationServiceBase implements
       Performs the core logic for {@link #findProteinInteractionsForGene(ubic.gemma.model.genome.Gene)}
       */
     protected abstract Collection<Gene2GeneProteinAssociation> handleFindProteinInteractionsForGene( Gene gene ) throws java.lang.Exception;
+    
+    
+    
+
     
 
 }

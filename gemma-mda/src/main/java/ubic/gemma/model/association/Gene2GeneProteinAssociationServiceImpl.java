@@ -23,6 +23,13 @@ public class Gene2GeneProteinAssociationServiceImpl extends
             throws Exception {
         return this.gene2GeneProteinAssociationDao().create( gene2GeneProteinAssociation );
     }
+    
+    @Override
+    protected Gene2GeneProteinAssociation handleCreateOrUpdate( Gene2GeneProteinAssociation gene2GeneProteinAssociation )
+            throws Exception {
+        return this.gene2GeneProteinAssociationDao().createOrUpdate( gene2GeneProteinAssociation );
+    }
+    
 
     @Override
     protected void handleUpdate( Gene2GeneProteinAssociation gene2GeneProteinAssociation )

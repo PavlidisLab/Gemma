@@ -38,7 +38,16 @@ public interface Gene2GeneProteinAssociationService{
      */
     @Secured( { "GROUP_ADMIN" })
     public Gene2GeneProteinAssociation create( Gene2GeneProteinAssociation gene2GeneProteinAssociation );
-
+    
+    
+    /**
+     * Create or update a gene2geneProteinAssociation
+     */
+    @Secured( { "GROUP_ADMIN" })
+    public Gene2GeneProteinAssociation createOrUpdate( Gene2GeneProteinAssociation gene2GeneProteinAssociation );
+    
+    
+    
     
     /**
      * Update the gene2geneProteinAssociation
