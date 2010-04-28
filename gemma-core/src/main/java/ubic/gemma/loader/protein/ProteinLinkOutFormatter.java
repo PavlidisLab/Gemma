@@ -18,72 +18,149 @@
  */
 package ubic.gemma.loader.protein;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import ubic.gemma.model.common.description.DatabaseEntry;
 
 /**
- * This class concentrates functionality for formating url links
- * to external websites which provide protein protein interaction data.
+ * This class concentrates functionality for formating url links to external websites which provide protein protein
+ * interaction data. It also provides functionality to format information relating to string within gemma such as
+ * evidence codes.
  * <p>
- * For example the string url can be appended with:
- * &limit=20 which increases the number of links dispayed on the string page.  
+ * For example the string url can be appended with: &limit=20 which increases the number of links dispayed on the string
+ * page or &required_score=700 to increase the confidence before displaying the interacton.
  * 
  * @author ldonnison
  * @version $Id$
  */
 public class ProteinLinkOutFormatter {
+
+    /** Name of parameter to pass in link to STRING to limit the number of interactions shown on string page */
+    private static final String LIMITPARAMETER = "&limit=";
+
+    /** Confidence of score before displaying on STRING page */
+    private static final String REQUIREDCONFIDENCE = "&required_score=";
     
-    /**  Default number of interactions displayed by string. */
-    private Integer numberOflinksToDisplayOnStringPage = 10;
-    
-    /**Name of parameter to pass in link to string */
-    private static String limitParameter= "&limit=";
-    
+    /** */
+    private static final String DEFAULTCONFIDENCE= "150";
+
+    /** Equals sign for url */
+    private static final String EQUALSINURL = "=";
+
+    /** Plural extension */
+    private static final String PLURALEXTENSION = "s";
+
+    private static final String EVIDENCESPACER = ":";
+
+    private static Log log = LogFactory.getLog( ProteinLinkOutFormatter.class );
+
     /**
-     * Method that creates a string url. The url is stored in the db as two parts
-     * which need merging together that it url and accession id.
-     * For a protein protein interaction there is no id so instead the id
-     * has been strored as two ensembl protein ids merged together. The url has been stored 
-     * in db as if only protein id is being passed as such to actually pass the two ids a s has to be added to the url.
-     * identifier >identifiers. Thus s is added to the url.    
+     * Method that creates a string url. The url is stored in the db as two parts which need merging together that it
+     * url and accession id. For a protein protein interaction there is no id so instead the id has been strored as two
+     * ensembl protein ids merged together. The url has been stored in db as if only protein id is being passed as such
+     * to actually pass the two ids a s has to be added to the url. identifier >identifiers. Thus s is added to the url.
+     * 
+     * @param baseUrl
+     * @return Formated url
+     */
+    public String getBaseUrl( DatabaseEntry entry ) {
+        String uri = entry.getUri();
+        String accession = entry.getAccession();
+        String baseUri = "";
+
+        if ( uri != null && !uri.isEmpty() && accession != null && !accession.isEmpty() ) {
+            if ( uri.endsWith( EQUALSINURL ) ) {
+                baseUri = ( uri.replaceFirst( EQUALSINURL, PLURALEXTENSION + EQUALSINURL ) );
+            } else {
+                baseUri = uri.concat( PLURALEXTENSION + EQUALSINURL );
+            }
+            baseUri = baseUri.concat(accession);
+        }
+        return baseUri;
+    }
+
+    /**
+     * Get the default STRING url for for gemma, which sets the confidence level low.
      * 
      * @param entry Database entry representing protein protein interaction
      * @return String formated url.
      */
-    public String getStringProteinProteinInteractionLink(DatabaseEntry entry){  
-        if(entry.getUri().endsWith( "=" )){
-             return (entry.getUri().replaceFirst( "=", "s=" )).concat(entry.getAccession());
-        }else{
-            return entry.getUri().concat("s").concat(entry.getAccession());  
-        }             
-    }
-    
-    /**
-     * Method to format url for string protein protein interaction.
-     * Different parameters can be queried for, such as increasing number of links displayed on string page.
-     * This method allows that number to be changed.
-     * 
-     * @param baseUrl reprsesenting base string url 
-     * @param Number of links to display on page
-     * @return String appended with extra value
-     */
-    public String addStringProteinProteinInteractionsLinkedNumberDefined(String baseURL, Integer numberOfLinksToDisplayOnString){      
-        return baseURL.concat(limitParameter).concat( Integer.toString( numberOfLinksToDisplayOnString) );       
-    }
-        
-    
-    /**
-     * @return the numberOflinksToDisplayOnStringPage
-     */
-    public Integer getNumberOflinksToDisplayOnStringPage() {
-        return numberOflinksToDisplayOnStringPage;
+    public String getStringProteinProteinInteractionLinkGemmaDefault( DatabaseEntry entry ) {
+
+        String finalUrl = getBaseUrl( entry );
+        if ( finalUrl != null && !finalUrl.isEmpty() ) {
+            finalUrl =finalUrl.concat( addStringRequiredConfidence( DEFAULTCONFIDENCE ) );
+        }
+        return finalUrl;
     }
 
     /**
-     *  
-     * @param numberOflinksToDisplayOnStringPage the numberOflinksToDisplayOnStringPage to set
+     * Method that creates a formatted STRING url with extra parameters appended
+     * 
+     * @param entry Database entry representing protein protein interaction
+     * @return String formated url.
      */
-    public void setNumberOflinksToDisplayOnStringPage( Integer numberOflinksToDisplayOnStringPage ) {
-        this.numberOflinksToDisplayOnStringPage = numberOflinksToDisplayOnStringPage;
-    }    
+    public String getStringProteinProteinInteractionLinkFormatted( DatabaseEntry entry,
+            String numberOfInteractionsToShowOnStringPage, String requiredConfidenceOfScore ) {
+        String finalUrl = getBaseUrl( entry );
+        if ( numberOfInteractionsToShowOnStringPage != null ) {
+            finalUrl = finalUrl.concat( addStringInteractionsShown( numberOfInteractionsToShowOnStringPage ) );
+        }
+        if ( requiredConfidenceOfScore != null ) {
+            finalUrl = finalUrl.concat( addStringRequiredConfidence( requiredConfidenceOfScore ) );
+        }
+
+        return finalUrl;
+    }
+
+    /**
+     * Method to format url for string protein protein interaction. Different parameters can be queried for, such as
+     * increasing number of links displayed on string page. This method allows that number to be changed.
+     * 
+     * @param baseUrl reprsesenting base string url
+     * @param Number of links to display on page
+     * @return String appended with extra value
+     */
+    public String addStringInteractionsShown( String numberOfInteractionsToShowOnStringPage ) {
+        return LIMITPARAMETER.concat( numberOfInteractionsToShowOnStringPage );
+    }
+
+    /**
+     * Method to format url for string protein protein interaction. Different parameters can be queried for, such as
+     * increasing number of links displayed on string page. This method allows that number to be changed.
+     * 
+     * @param baseUrl reprsesenting base string url
+     * @param Number of links to display on page
+     * @return String appended with extra value
+     */
+    public String addStringRequiredConfidence( String requiredConfidenceOfScore ) {
+        return REQUIREDCONFIDENCE.concat( requiredConfidenceOfScore );
+    }
+
+    /**
+     * Convert a byte representing the evidence as stored in db to a textural display of evidence.
+     * e.g {0,1,0,0,0,1,0} > GeneFusion:Database
+     * 
+     * @param bytes byte array representing evidence
+     * @return Formated text of evidence
+     */
+    public String getEvidenceDisplayText( byte[] bytes ) throws Exception {
+
+        StringBuffer evidenceString = new StringBuffer();
+        if ( bytes != null && bytes.length == StringProteinInteractionEvidenceCodeEnum.values().length ) {
+            for ( StringProteinInteractionEvidenceCodeEnum currentEvidence : StringProteinInteractionEvidenceCodeEnum
+                    .values() ) {
+                // if the byte at that particular position is 1 then that means that there is evidence for that
+                if ( ( bytes[currentEvidence.getPositionInArray()] ) == 1 ) {
+                    evidenceString.append( currentEvidence.getDisplayText() ).append( EVIDENCESPACER );
+                }
+            }
+            return evidenceString.substring( 0, ( evidenceString.lastIndexOf( EVIDENCESPACER ) ) );
+        } else {
+            log.info( "The byte array provided was not the correct size " );
+        }
+        return evidenceString.toString();
+    }
 
 }
