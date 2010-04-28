@@ -71,7 +71,7 @@ public class StringProteinProteinInteractionObjectGenerator {
 
     /**
      * Main method to call to generate StringProteinProteinInteraction objects. If the file is remote fetch it and
-     * unarchive it and then set the local file stringProteinInteractionFileLocal to the newly downloaded file. * Then
+     * unarchive it and then set the local file stringProteinInteractionFileLocal to the newly downloaded file.
      * 
      * @param validTaxa Taxon to generate StringProteinProteinInteraction from string (String has many taxon).
      * @return Collection of StringProteinProteinInteraction objects specific for the taxa that were provided, held in a
@@ -91,7 +91,7 @@ public class StringProteinProteinInteractionObjectGenerator {
         // this is a bit ugly as reads string file for every taxon
         // however when I did it in one big go I got java.lang.OutOfMemoryError: Java heap space
         for ( Taxon taxon : validTaxa ) {
-            log.info( "calling taxon " + taxon);
+            log.info( "calling taxon " + taxon );
             Collection<Taxon> taxa = new ArrayList<Taxon>();
             taxa.add( taxon );
             stringProteinProteinInteractions = this.parseProteinStringFileInteraction( taxa );
@@ -122,7 +122,7 @@ public class StringProteinProteinInteractionObjectGenerator {
      * StringProteinProteinInteraction
      * 
      * @param taxa Taxa to find records for.
-     * @return StringProteinProteinInteraction representing lines in the string file. *
+     * @return StringProteinProteinInteraction representing lines in the string file.
      */
     public Collection<StringProteinProteinInteraction> parseProteinStringFileInteraction( Collection<Taxon> taxa ) {
         try {
