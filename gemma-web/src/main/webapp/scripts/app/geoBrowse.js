@@ -170,6 +170,6 @@ function load(accession) {
 		src : '/Gemma/images/default/tree/loading.gif'
 	});
 	Ext.DomHelper.append("messages", "&nbsp;Submitting job...");
-	ExpressionExperimentLoadController.run.apply(this, callParams);
+	ExpressionExperimentLoadController.load.apply(this, callParams);
 
 }
