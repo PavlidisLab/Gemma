@@ -1,8 +1,26 @@
+/*
+ * The Gemma project
+ * 
+ * Copyright (c) 2010 University of British Columbia
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+
 package ubic.gemma.loader.protein;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+
+import static org.junit.Assert.*;
 
 import java.io.File;
 import java.net.URL;
@@ -74,6 +92,9 @@ public class StringBiomartGene2GeneProteinLoaderTest extends BaseSpringContextTe
         taxa = getTaxonToProcess();
         getTestPeristentGenesZebra();
         getTestPeristentGenesRat();
+        //make sure all the data is cleared out before starting
+        this.gene2GeneProteinAssociationService.deleteAll( gene2GeneProteinAssociationService.loadAll() );
+        assertTrue( gene2GeneProteinAssociationService.loadAll().isEmpty() );
 
     }
 
@@ -223,7 +244,8 @@ public class StringBiomartGene2GeneProteinLoaderTest extends BaseSpringContextTe
     }
 
     /**
-     * Tests that two taxons can be processed at same time. NOTE it does get the files from the biomart site
+     * Tests that two taxons can be processed at same time. NOTE it does get the files from the biomart site.
+     * It also checks that the byte representing the evidence code is stored correctly.
      */
     @Test
     public void testDoLoadRemoteBiomartFileLocalStringFileMultipleTaxon() {
@@ -231,6 +253,7 @@ public class StringBiomartGene2GeneProteinLoaderTest extends BaseSpringContextTe
         URL fileNameStringmouseURL = this.getClass().getResource( fileNameStringmouse );
         int counterAssociationsSavedZebra = 0;
         int counterAssociationsSavedRat = 0;
+
         try {
             stringBiomartGene2GeneProteinAssociationLoader.load( new File( fileNameStringmouseURL.getFile() ), null,
                     null, getTaxonToProcess() );
@@ -243,37 +266,55 @@ public class StringBiomartGene2GeneProteinLoaderTest extends BaseSpringContextTe
                 gene2GeneProteinAssociationService.thaw( association );
                 this.geneService.thaw( association.getSecondGene() );
                 String taxonScientificName = association.getSecondGene().getTaxon().getScientificName();
-
+                ProteinLinkOutFormatter formatter = new ProteinLinkOutFormatter();
                 if ( taxonScientificName.equals( zebraFish.getScientificName() ) ) {
                     assertEquals( "751652", association.getSecondGene().getNcbiId() );
-                    if ( !( association.getFirstGene().getNcbiId().equals( "571540" ) || association.getFirstGene()
-                            .getNcbiId().equals( "568371" ) ) ) {
-                        fail();
-                    } else {
+                    if ( association.getFirstGene().getNcbiId().equals( "571540" ) ) {
+                        byte[] array = new byte[] { 0, 0, 1, 0, 1, 1, 1 };
                         String asscession = ( databaseService.find( association.getDatabaseEntry() ) ).getAccession();
                         assertTrue( asscession.contains( "%0D7955." ) );
                         log.info( "Assesion for zebra fish " + asscession );
+                        Double associationScore = association.getConfidenceScore();
+                        assertEquals( new Double( 180 ), associationScore );
+                        assertArrayEquals( array, association.getEvidenceVector() );
                         counterAssociationsSavedZebra++;
+                        byte[] arrayBytes= association.getEvidenceVector();                        
+                    
+                        String formatedEvidence = formatter.getEvidenceDisplayText ( arrayBytes );
+                        assertEquals("Coocurrence:Experimental:Database:TextMining", formatedEvidence);
+                        
+                    } else if ( association.getFirstGene().getNcbiId().equals( "568371" ) ) {
+                        byte[] array = new byte[] { 1, 1, 1, 1, 1, 1, 1 };
+                        String asscession = ( databaseService.find( association.getDatabaseEntry() ) ).getAccession();
+                        assertTrue( asscession.contains( "%0D7955." ) );
+                        log.info( "Assesion for zebra fish " + asscession );
+                        Double associationScore = association.getConfidenceScore();
+                        assertEquals( new Double( 200 ), associationScore );
+                        assertArrayEquals( array, association.getEvidenceVector() );
+                        
+                        byte[] arrayBytes= association.getEvidenceVector();                        
+                        String formatedEvidence = formatter.getEvidenceDisplayText ( arrayBytes );
+                        assertEquals("Neighbourhood:GeneFusion:Coocurrence:Coexpression:Experimental:Database:TextMining", formatedEvidence);
+                        counterAssociationsSavedZebra++;
+                    } else {
+                        fail();
                     }
 
                 }// rat
-                else if ( !( taxonScientificName.equals( rat.getScientificName() ) ) ) {
-                    fail();
-                } else {
+                else if ( taxonScientificName.equals( rat.getScientificName() ) ) {
                     // should be same accession number both entries as these two map to one ensembl
                     String asscession = association.getDatabaseEntry().getAccession();
                     assertTrue( asscession.contains( "%0D10116.ENSRN" ) );
                     log.info( "Assesion for rat  " + asscession );
                     counterAssociationsSavedRat++;
+                } else {
+                    fail();
                 }
 
             }
             assertEquals( 2, counterAssociationsSavedRat );
             assertEquals( 2, counterAssociationsSavedZebra );
             // delete the newly entered records
-            this.gene2GeneProteinAssociationService.deleteAll( associations );
-            associations = gene2GeneProteinAssociationService.loadAll();
-            assertTrue( associations.isEmpty() );
 
         } catch ( Exception e ) {
             System.out.println( "error is" + e );

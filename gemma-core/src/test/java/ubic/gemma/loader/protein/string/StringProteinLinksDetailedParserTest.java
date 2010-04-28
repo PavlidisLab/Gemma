@@ -18,7 +18,7 @@
  */
 package ubic.gemma.loader.protein.string;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -76,20 +76,17 @@ public class StringProteinLinksDetailedParserTest {
      */
     @Test
     public void testParseOneValidLine() {
-        String line = "10090.ENSMUSP00000000201 10090.ENSMUSP00000000153 707 0 1 2 3 4 172 742";
+        String line = "10090.ENSMUSP00000000201 10090.ENSMUSP00000000153 707 0 10 2 3 0 0 222";
                                                 
         StringProteinProteinInteraction stringProteinProteinInteraction = parser.parseOneLine( line );
         assertTrue( stringProteinProteinInteraction.getNcbiTaxonId().equals( 10090 ));        
         assertEquals("10090.ENSMUSP00000000153", stringProteinProteinInteraction.getProtein1());   
         assertEquals("10090.ENSMUSP00000000201", stringProteinProteinInteraction.getProtein2());          
-        assertTrue(stringProteinProteinInteraction.getNeighborhood( ).equals( 707));
-        assertTrue(stringProteinProteinInteraction.getFusion( ).equals(0 ));
-        assertTrue(stringProteinProteinInteraction.getCooccurence().equals(1 ));
-        assertTrue(stringProteinProteinInteraction.getCoexpression( ).equals(2 ));
-        assertTrue(stringProteinProteinInteraction.getExperimental( ).equals(3 ));
-        assertTrue(stringProteinProteinInteraction.getDatabase().equals(4 ));
-        assertTrue(stringProteinProteinInteraction.getTextmining( ).equals(172 ));
-        assertTrue(stringProteinProteinInteraction.getCombined_score().equals(742 ));    
+        
+        byte[] arrayStored =  stringProteinProteinInteraction.getEvidenceVector();
+        byte[] array = new byte[]{1,0,1,1,1,0,0};
+        assertArrayEquals("Compare bit vector",array, arrayStored);   
+        assertEquals(new Double(222), stringProteinProteinInteraction.getCombined_score());
                         
     }
     
