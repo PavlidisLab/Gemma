@@ -234,11 +234,9 @@ public class HomologeneService {
 
         }, "Homologene_load_thread" );
 
-        synchronized ( running ) {
-            if ( running.get() ) return;
-            loadThread.setDaemon( true ); // So vm doesn't wait on these threads to shutdown (if shutting down)
-            loadThread.start();
-        }
+        if ( running.get() ) return;
+        loadThread.setDaemon( true ); // So vm doesn't wait on these threads to shutdown (if shutting down)
+        loadThread.start();
 
     }
 

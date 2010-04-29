@@ -93,7 +93,7 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
             PhysicalLocation block = PhysicalLocation.Factory.newInstance();
             block.setChromosome( chromosome );
             block.setNucleotide( exonStart );
-            block.setNucleotideLength( new Integer( exonSize ) );
+            block.setNucleotideLength( exonSize );
             block.setBin( SequenceBinUtils.binFromRange( ( int ) exonStart, ( int ) ( exonStart + exonSize ) ) );
             blocks.add( block );
         }
@@ -272,10 +272,10 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
             int center = SequenceManipulation.findCenter( starts, sizes );
             if ( geneLoc.getStrand().equals( "+" ) ) {
                 // then the 3' end is at the 'end'. : >>>>>>>>>>>>>>>>>>>>>*>>>>> (* is where we might be)
-                blatAssociation.setThreePrimeDistance( new Long( Math.max( 0, geneEnd - center ) ) );
+                blatAssociation.setThreePrimeDistance( ( long ) Math.max( 0, geneEnd - center ) );
             } else if ( geneProduct.getPhysicalLocation().getStrand().equals( "-" ) ) {
                 // then the 3' end is at the 'start'. : <<<*<<<<<<<<<<<<<<<<<<<<<<<
-                blatAssociation.setThreePrimeDistance( new Long( Math.max( 0, center - geneStart ) ) );
+                blatAssociation.setThreePrimeDistance( ( long ) Math.max( 0, center - geneStart ) );
             } else {
                 throw new IllegalArgumentException( "Strand wasn't '+' or '-'" );
             }
@@ -982,8 +982,6 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
 
         assert exonStartsInts.length == exonEndsInts.length;
 
-        // GeneProduct gp = GeneProduct.Factory.newInstance();
-
         for ( int i = 0; i < exonEndsInts.length; i++ ) {
             int exonStart = exonStartsInts[i];
             int exonEnd = exonEndsInts[i];
@@ -992,8 +990,8 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
             exon.setChromosome( chrom );
             assert chrom.getTaxon() != null;
 
-            exon.setNucleotide( new Long( exonStart ) );
-            exon.setNucleotideLength( new Integer( exonEnd - exonStart ) );
+            exon.setNucleotide( ( long ) exonStart );
+            exon.setNucleotideLength( exonEnd - exonStart );
             exon.setBin( SequenceBinUtils.binFromRange( exonStart, exonEnd ) );
             exons.add( exon );
         }

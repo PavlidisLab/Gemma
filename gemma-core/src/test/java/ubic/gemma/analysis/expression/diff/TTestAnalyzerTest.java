@@ -39,7 +39,9 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
 
-/**See test/data/stat-tests/README.txt for R code.
+/**
+ * See test/data/stat-tests/README.txt for R code.
+ * 
  * @author keshav
  * @version $Id$
  */
@@ -148,6 +150,8 @@ public class TTestAnalyzerTest extends BaseAnalyzerConfigurationTest {
             Double pvalue = probeAnalysisResult.getPvalue();
             Double stat = probeAnalysisResult.getEffectSize();
             log.debug( "probe: " + probe + "; p-value: " + pvalue );
+
+            assertNotNull( pvalue );
 
             if ( probe.getName().equals( "probe_0" ) ) {
                 assertEquals( 0.03505, pvalue, 0.00001 );

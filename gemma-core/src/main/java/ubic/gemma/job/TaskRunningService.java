@@ -628,7 +628,7 @@ public class TaskRunningService implements InitializingBean {
      */
     private void sweepUp() {
         log.debug( "Running task result cleanup" );
-
+        
         if ( finishedTasks.size() > 0 ) log.info( finishedTasks.size() + " finished tasks in the hold" );
         if ( failedTasks.size() > 0 ) log.info( failedTasks.size() + " failed tasks in the hold" );
         if ( submittedTasks.size() > 0 ) log.info( submittedTasks.size() + " started or queued tasks in the pipe" );

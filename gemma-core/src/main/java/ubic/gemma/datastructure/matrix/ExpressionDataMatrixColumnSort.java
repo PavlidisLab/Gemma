@@ -62,6 +62,10 @@ public class ExpressionDataMatrixColumnSort {
         controlGroupTerms.add( "untreated" );
         controlGroupTerms.add( "baseline" );
         controlGroupTerms.add( "control_group" );
+        controlGroupTerms.add( "wild_type" );
+        controlGroupTerms.add( "wild type" );
+        controlGroupTerms.add( "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#wild_type".toLowerCase() );
+
         controlGroupTerms.add( "http://purl.org/nbirn/birnlex/ontology/BIRNLex-Investigation.owl#birnlex_2201"
                 .toLowerCase() );
     }

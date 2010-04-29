@@ -68,6 +68,7 @@ public class MageMLConverter extends AbstractMageTool implements Converter<Objec
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.loader.loaderutils.Converter#convert(java.util.Collection)
      */
     public Collection<Object> convert( Collection<Object> objects ) {
@@ -130,6 +131,7 @@ public class MageMLConverter extends AbstractMageTool implements Converter<Objec
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.loader.loaderutils.Converter#convert(java.lang.Object)
      */
     public Object convert( Object mageObject ) {
@@ -139,6 +141,7 @@ public class MageMLConverter extends AbstractMageTool implements Converter<Objec
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.loader.expression.mage.MageMLConverter#getBioAssayQuantitationTypeDimension(org.biomage.BioAssay.BioAssay
      * )
@@ -172,7 +175,7 @@ public class MageMLConverter extends AbstractMageTool implements Converter<Objec
             if ( !tally.containsKey( clazz ) ) {
                 tally.put( clazz, new Integer( 0 ) );
             }
-            tally.put( clazz, new Integer( ( tally.get( clazz ) ).intValue() + 1 ) );
+            tally.put( clazz, tally.get( clazz ) + 1 );
         }
 
         for ( String clazz : tally.keySet() ) {

@@ -103,6 +103,7 @@ public class AffyProbeReader extends BasicLineMapParser<String, CompositeSequenc
 
     /*
      * (non-Javadoc)
+     * 
      * @see baseCode.io.reader.BasicLineParser#parseOneLine(java.lang.String)
      */
     @Override
@@ -205,7 +206,7 @@ public class AffyProbeReader extends BasicLineMapParser<String, CompositeSequenc
         BioSequence immobChar = BioSequence.Factory.newInstance();
         immobChar.setSequence( sequence );
         immobChar.setIsApproximateLength( false );
-        immobChar.setLength( new Long( sequence.length() ) );
+        immobChar.setLength( ( long ) sequence.length() );
         immobChar.setType( SequenceType.AFFY_PROBE );
         immobChar.setPolymerType( PolymerType.DNA );
 
@@ -230,6 +231,7 @@ public class AffyProbeReader extends BasicLineMapParser<String, CompositeSequenc
 
     /*
      * (non-Javadoc)
+     * 
      * @see baseCode.io.reader.BasicLineMapParser#getKey(java.lang.Object)
      */
     @Override

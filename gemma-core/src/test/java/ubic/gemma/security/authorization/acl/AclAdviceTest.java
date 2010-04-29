@@ -41,7 +41,6 @@ import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExperimentalDesignService;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
-import ubic.gemma.model.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.testing.BaseSpringContextTest;
@@ -66,9 +65,6 @@ public class AclAdviceTest extends BaseSpringContextTest {
 
     @Autowired
     ExperimentalDesignService experimentalDesignService;
-
-    @Autowired
-    ExperimentalFactorService experimentalFactorService;
 
     @Autowired
     ExpressionExperimentService expressionExperimentService;

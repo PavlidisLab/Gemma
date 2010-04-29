@@ -67,6 +67,7 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.loader.loaderutils.Converter#convert(java.util.Collection)
      */
     public Collection<Object> convert( Collection<Object> sourceDomainObjects ) {
@@ -79,6 +80,7 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.loader.loaderutils.Converter#convert(java.lang.Object)
      */
     public Gene convert( NCBIGeneInfo info ) {
@@ -103,7 +105,7 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
         gene.setDescription( "Imported from NCBI gene; Nomenclature status: " + info.getNomenclatureStatus() );
 
         Taxon t = Taxon.Factory.newInstance();
-        t.setNcbiId( new Integer( info.getTaxId() ) );
+        t.setNcbiId( info.getTaxId() );
         t.setIsGenesUsable( false );
         t.setIsSpecies( true );
         gene.setTaxon( t );
@@ -143,6 +145,7 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.loader.loaderutils.Converter#convert(java.lang.Object)
      */
     @SuppressWarnings("unchecked")
@@ -238,7 +241,7 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
         }
         if ( acc.getStartPosition() != null ) {
             pl.setNucleotide( acc.getStartPosition() );
-            pl.setNucleotideLength( new Long( Math.abs( acc.getEndPosition() - acc.getStartPosition() ) ).intValue() );
+            pl.setNucleotideLength( ( int ) Math.abs( acc.getEndPosition() - acc.getStartPosition() ) );
             pl.setBin( SequenceBinUtils.binFromRange( acc.getStartPosition().intValue(), acc.getEndPosition()
                     .intValue() ) );
         }

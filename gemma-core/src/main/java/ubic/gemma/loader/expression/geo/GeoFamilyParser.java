@@ -154,6 +154,7 @@ public class GeoFamilyParser implements Parser<Object> {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.loader.loaderutils.Parser#getResults()
      */
     public Collection<Object> getResults() {
@@ -164,6 +165,7 @@ public class GeoFamilyParser implements Parser<Object> {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.loader.loaderutils.Parser#parse(java.io.File)
      */
     public void parse( File f ) throws IOException {
@@ -174,6 +176,7 @@ public class GeoFamilyParser implements Parser<Object> {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.loader.loaderutils.Parser#parse(java.io.InputStream)
      */
     public void parse( InputStream is ) throws IOException {
@@ -241,6 +244,7 @@ public class GeoFamilyParser implements Parser<Object> {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.loader.loaderutils.Parser#parse(java.lang.String)
      */
     public void parse( String fileName ) throws IOException {
@@ -981,7 +985,7 @@ public class GeoFamilyParser implements Parser<Object> {
         } else if ( startsWithIgnoreCase( line, "!dataset_table_end" ) ) {
             this.inDatasetTable = false;
         } else if ( startsWithIgnoreCase( line, "!dataset_channel_count" ) ) {
-            datasetSet( currentDatasetAccession, "channelCount", new Integer( Integer.parseInt( value ) ) );
+            datasetSet( currentDatasetAccession, "channelCount", Integer.parseInt( value ) );
         } else {
             log.error( "Unknown flag in dataset: " + line );
         }
@@ -1374,7 +1378,7 @@ public class GeoFamilyParser implements Parser<Object> {
             for ( int i = 0; i < numExtraChannelsNeeded; i++ ) {
                 results.getSampleMap().get( currentSampleAccession ).addChannel();
             }
-            sampleSet( currentSampleAccession, "channelCount", new Integer( Integer.parseInt( value ) ) );
+            sampleSet( currentSampleAccession, "channelCount", Integer.parseInt( value ) );
         } else if ( startsWithIgnoreCase( line, "!Sample_source_name" ) ) {
             int channel = extractChannelNumber( line );
             sampleChannelSet( currentSampleAccession, "sourceName", channel, value );
@@ -1565,7 +1569,7 @@ public class GeoFamilyParser implements Parser<Object> {
         } else if ( startsWithIgnoreCase( line, "!Series_web_link" ) ) {
             // seriesSet( currentSeriesAccession, "platformId", value );
         } else if ( startsWithIgnoreCase( line, "!Series_variable_" ) ) {
-            Integer variableId = new Integer( extractVariableNumber( line ) );
+            Integer variableId = extractVariableNumber( line );
             GeoVariable v = new GeoVariable();
             v.setType( GeoVariable.convertStringToType( value ) );
             results.getSeriesMap().get( currentSeriesAccession ).addToVariables( variableId, v );
@@ -1585,7 +1589,7 @@ public class GeoFamilyParser implements Parser<Object> {
      * @param value
      */
     private void parseSeriesVariableRepeatsSampleListLine( String line, String value ) {
-        Integer variableId = new Integer( extractVariableNumber( line ) );
+        Integer variableId = extractVariableNumber( line );
         GeoReplication var = currentSeries().getReplicates().get( variableId );
         Collection<String> samples = Arrays.asList( StringUtils.split( value, ", " ) );
         for ( String string : samples ) {
@@ -1600,7 +1604,7 @@ public class GeoFamilyParser implements Parser<Object> {
      * @param value
      */
     private void parseSeriesVariableSampleListLine( String line, String value ) {
-        Integer variableId = new Integer( extractVariableNumber( line ) );
+        Integer variableId = extractVariableNumber( line );
         GeoVariable var = currentSeries().getVariables().get( variableId );
         Collection<String> samples = Arrays.asList( StringUtils.split( value, "," ) );
         for ( String string : samples ) {

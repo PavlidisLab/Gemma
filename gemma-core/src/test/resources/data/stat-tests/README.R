@@ -16,8 +16,11 @@ contrasts(factor2)<-contr.treatment(levels(factor2), base=2)
 contrasts(factor3)<-contr.treatment(levels(factor3), base=3)
 
 dat<-read.table("anova-test-data.txt", header=T,row.names=1, sep='\t')
- dm<-data.frame(factor1,factor2)
+osttdat<-read.table("onesample-ttest-data.txt", header=T, row.names=1, sep='\t')
 
+dm<-data.frame(factor1,factor2)
+
+# basic anova
 ancova<-apply(dat, 1, function(x){lm(x ~ factor1+factor2 )})
 summary(ancova$probe_4)
 summary(ancova$probe_10)
@@ -45,8 +48,9 @@ owanova$probe_4
 owanova$probe_10
 owanova$probe_98
 
-osttdat<-read.table("onesample-ttest-data.txt", header=T, row.names=1, sep='\t')
+# one sample t-test
 osttest<-apply(osttdat, 1, function(x){lm(x ~ 1)})
+osttest<-rowTtest(osttdat);
 summary(osttest$probe_4)
 summary(osttest$probe_10)
 summary(osttest$probe_16)
@@ -84,7 +88,7 @@ contrasts(factor3)<-contr.treatment(levels(factor3), base=3)
 anovaD<-apply(dat, 1, function(x){lm(x ~ factor1+factor3)})
 summary(anovaD$probe_4)
 summary(anovaD$probe_10)
-summary(anovaD$probe_98) 
+summary(anovaD$probe_98)  
 
 
 # two-sample ttest
@@ -97,3 +101,58 @@ anova(ttestd$probe_0)
 anova(ttestd$probe_4)
 anova(ttestd$probe_10)
 anova(ttestd$probe_98)
+
+
+#######################
+# Faster regular lm - see linearModels.R
+######################
+ 
+system.time(x<-rowlm(~ factor1+factor2,dat))
+summary(x[[1]]);
+anova(x[[1]]);
+ 
+ # compare to
+system.time(x<-apply(dat, 1, function(x){lm(x ~ factor1+factor3)}))
+ 
+nomis<-read.table("../testdata.txt", header=T, row.names=1, sep='\t')
+factorV<-factor(c("a","a","a","a","a","a","b_base","b_base","b_base","b_base","b_base","b_base"));
+rowlm(~factorV,nomis)
+
+
+
+
+#################
+## Limma
+#################
+
+# load the data as above.
+library(limma)
+
+# two-sample ttest, treatment contrast
+design<-model.matrix(~factor1)
+fit <- lmFit(dat, design)
+fit <- eBayes(fit)
+topTable(fit, coef="factor1b_base", number=Inf)
+fit$t["probe_0",2]
+fit$t["probe_4",2]
+fit$t["probe_10",2]
+fit$t["probe_98",2]
+fit$p.value["probe_0",2]
+fit$p.value["probe_4",2]
+fit$p.value["probe_10",2]
+fit$p.value["probe_98",2]
+
+# basic two-way anova
+
+# ancova with continuous covariate
+
+# one way anoava
+design<-model.matrix(~factor3)
+fit <- lmFit(dat, design)
+fit <- eBayes(fit)
+# contrasts....
+topTable(fit, coef="w_base", number=Inf)
+
+# one sample t-test
+
+# anova with more than 2 levels in one factor

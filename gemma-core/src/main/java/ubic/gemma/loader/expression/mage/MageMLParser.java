@@ -94,6 +94,7 @@ public class MageMLParser extends AbstractMageTool implements Parser<Object> {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.loader.loaderutils.Parser#iterator()
      */
     public Collection<Object> getResults() {
@@ -102,6 +103,7 @@ public class MageMLParser extends AbstractMageTool implements Parser<Object> {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.loader.loaderutils.Parser#parse(java.io.File)
      */
     public void parse( File f ) throws IOException {
@@ -159,9 +161,9 @@ public class MageMLParser extends AbstractMageTool implements Parser<Object> {
         for ( Object element : mageDomainObjects ) {
             String clazz = element.getClass().getName();
             if ( !tally.containsKey( clazz ) ) {
-                tally.put( clazz, new Integer( 0 ) );
+                tally.put( clazz, 0 );
             }
-            tally.put( clazz, new Integer( ( tally.get( clazz ) ).intValue() + 1 ) );
+            tally.put( clazz, tally.get( clazz ) + 1 );
         }
 
         for ( String clazz : tally.keySet() ) {

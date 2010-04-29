@@ -98,8 +98,7 @@ public class GeneOntologyService implements InitializingBean {
     private static final AtomicBoolean running = new AtomicBoolean( false );
 
     // map of uris to terms
-    private static Map<String, OntologyTerm> uri2Term;
-
+    private static Map<String, OntologyTerm> uri2Term = new HashMap<String, OntologyTerm>();
     private static Map<String, GOAspect> term2Aspect = new HashMap<String, GOAspect>();
 
     /**
@@ -233,6 +232,7 @@ public class GeneOntologyService implements InitializingBean {
 
     /*
      * (non-Javadoc)
+     * 
      * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
      */
     public void afterPropertiesSet() throws Exception {
@@ -700,7 +700,7 @@ public class GeneOntologyService implements InitializingBean {
      * @param newTerms
      */
     private void addTerms( Collection<OntologyResource> newTerms ) {
-        if ( uri2Term == null ) uri2Term = new HashMap<String, OntologyTerm>();
+
         for ( OntologyResource term : newTerms ) {
             if ( term.getUri() == null ) continue;
             if ( term instanceof OntologyTerm ) {
@@ -865,10 +865,8 @@ public class GeneOntologyService implements InitializingBean {
 
         } );
 
-        synchronized ( running ) {
-            if ( running.get() ) return;
-            loadThread.start();
-        }
+        if ( running.get() ) return;
+        loadThread.start();
 
     }
 

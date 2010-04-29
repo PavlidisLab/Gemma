@@ -67,13 +67,11 @@ public class GeoConverterTest extends BaseSpringContextTest {
 
     ByteArrayConverter bac = new ByteArrayConverter();
 
-     
     @Before
     public void setUp() throws Exception {
-        super.executeSqlScript( "/script/sql/add-fish-taxa.sql", false );        
+        super.executeSqlScript( "/script/sql/add-fish-taxa.sql", false );
     }
-    
-    
+
     /**
      * GSE2388 is an example of where the array and sample taxon do not match. This test checks that the biomaterial and
      * array taxons are set correctly.
@@ -85,7 +83,6 @@ public class GeoConverterTest extends BaseSpringContextTest {
     @Transactional
     public void testArrayTaxonDifferentToSampleTaxon() throws Exception {
 
-              
         Taxon rainbowTrout = taxonService.findByAbbreviation( "omyk" );
         assertNotNull( rainbowTrout );
         Taxon atlanticSalm = taxonService.findByAbbreviation( "ssal" );
@@ -479,7 +476,7 @@ public class GeoConverterTest extends BaseSpringContextTest {
             if ( ads.containsKey( b.getArrayDesignUsed() ) ) {
                 ads.put( b.getArrayDesignUsed(), ads.get( b.getArrayDesignUsed() ) + 1 );
             } else {
-                ads.put( b.getArrayDesignUsed(), new Integer( 1 ) );
+                ads.put( b.getArrayDesignUsed(), 1 );
             }
         }
         assertEquals( 4, ads.size() );
@@ -640,11 +637,11 @@ public class GeoConverterTest extends BaseSpringContextTest {
     @Transactional
     public void testMultipleTaxaIdentifiedBYAbbreviationsOnArrayWithOrganismColumn() throws Exception {
 
-       // Taxon t = taxonService.findByScientificName( "Salmonidae" );
+        // Taxon t = taxonService.findByScientificName( "Salmonidae" );
 
-       // if ( t == null ) {
-          //  super.executeSqlScript( "/script/sql/add-fish-taxa.sql", false );
-   //     }
+        // if ( t == null ) {
+        // super.executeSqlScript( "/script/sql/add-fish-taxa.sql", false );
+        // }
 
         Taxon rainbowTroat = taxonService.findByAbbreviation( "omyk" );
         Taxon whiteFish = taxonService.findByAbbreviation( "cclu" );

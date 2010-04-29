@@ -131,7 +131,6 @@ public class TaskMethodAdvice {
     /**
      * @param result
      * @param spacesProgressAppender
-     * @param busy
      */
     private void wrapup( TaskResult result, SpacesProgressAppender spacesProgressAppender ) {
 

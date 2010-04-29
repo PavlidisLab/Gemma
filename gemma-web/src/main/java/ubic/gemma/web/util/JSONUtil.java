@@ -33,8 +33,6 @@ import javax.servlet.http.HttpServletResponseWrapper;
  */
 public class JSONUtil {
 
-    @SuppressWarnings("unused")
-    private HttpServletRequest request = null;
     private HttpServletResponse response = null;
 
     /**
@@ -43,7 +41,6 @@ public class JSONUtil {
      */
     public JSONUtil( HttpServletRequest request, HttpServletResponse response ) {
         super();
-        this.request = request;
         this.response = response;
     }
 

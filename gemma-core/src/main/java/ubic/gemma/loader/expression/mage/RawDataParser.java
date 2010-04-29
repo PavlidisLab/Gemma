@@ -113,6 +113,7 @@ public class RawDataParser implements FileCombiningParser {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.loader.loaderutils.Parser#getResults()
      */
     public Collection<Object> getResults() {
@@ -145,6 +146,7 @@ public class RawDataParser implements FileCombiningParser {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.loader.loaderutils.FileCombiningParser#parse(java.util.List)
      */
     public void parse( List<File> files ) throws IOException {
@@ -160,6 +162,7 @@ public class RawDataParser implements FileCombiningParser {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.loader.loaderutils.LineParser#parseOneLine(java.lang.String)
      */
     public Object parseOneLine( String line ) {
@@ -377,17 +380,17 @@ public class RawDataParser implements FileCombiningParser {
                     if ( data.equals( NAN_STRING ) )
                         matrixToAddTo.addDataToRow( de, qt, exp, Boolean.FALSE );
                     else
-                        matrixToAddTo.addDataToRow( de, qt, exp, new Boolean( data ) );
+                        matrixToAddTo.addDataToRow( de, qt, exp, Boolean.parseBoolean( data ) );
                 } else if ( pt.equals( PrimitiveType.DOUBLE ) ) {
                     if ( data.equals( NAN_STRING ) )
-                        matrixToAddTo.addDataToRow( de, qt, exp, new Double( Double.NaN ) );
+                        matrixToAddTo.addDataToRow( de, qt, exp, Double.NaN );
                     else
-                        matrixToAddTo.addDataToRow( de, qt, exp, new Double( data ) );
+                        matrixToAddTo.addDataToRow( de, qt, exp, Double.parseDouble( data ) );
                 } else if ( pt.equals( PrimitiveType.INT ) ) {
                     if ( data.equals( NAN_STRING ) )
-                        matrixToAddTo.addDataToRow( de, qt, exp, new Integer( 0 ) );
+                        matrixToAddTo.addDataToRow( de, qt, exp, 0 );
                     else
-                        matrixToAddTo.addDataToRow( de, qt, exp, new Integer( data ) );
+                        matrixToAddTo.addDataToRow( de, qt, exp, Integer.parseInt( data ) );
                 } else {
                     if ( data.equals( NAN_STRING ) )
                         matrixToAddTo.addDataToRow( de, qt, exp, "" );

@@ -179,7 +179,7 @@ public class NcbiGeneDomainObjectGenerator {
             if ( !taxaCount.containsKey( geneInfo.getTaxId() ) ) {
                 taxaCount.put( new Integer( geneInfo.getTaxId() ), new Integer( 0 ) );
             }
-            taxaCount.put( new Integer( geneInfo.getTaxId() ), taxaCount.get( geneInfo.getTaxId() ) + 1 );
+            taxaCount.put( geneInfo.getTaxId(), taxaCount.get( geneInfo.getTaxId() ) + 1 );
             geneInfoMap.put( geneInfo.getGeneId(), geneInfo );
         }
         supportedTaxaWithNCBIGenes = new HashSet<Taxon>();

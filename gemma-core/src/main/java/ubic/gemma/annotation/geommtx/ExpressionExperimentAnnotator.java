@@ -162,11 +162,10 @@ public class ExpressionExperimentAnnotator implements InitializingBean {
             }
         }, "MMTX initialization" );
 
-        synchronized ( initializing ) {
-            if ( initializing.get() ) return; // no need to start it, we already finished, somehow
-            loadThread.setDaemon( true ); // So vm doesn't wait on these threads to shutdown (if shutting down)
-            loadThread.start();
-        }
+        if ( initializing.get() ) return; // no need to start it, we already finished, somehow
+        loadThread.setDaemon( true ); // So vm doesn't wait on these threads to shutdown (if shutting down)
+        loadThread.start();
+
         log.info( "Started MMTX initialization" );
     }
 

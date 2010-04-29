@@ -68,6 +68,7 @@ public class PredictedCharacteristicFactory implements InitializingBean {
 
     /*
      * (non-Javadoc)
+     * 
      * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
      */
     public void afterPropertiesSet() throws Exception {
@@ -96,10 +97,10 @@ public class PredictedCharacteristicFactory implements InitializingBean {
                 try {
                     labels = LabelLoader.readLabels();
                 } catch ( Exception e ) {
-                   log.error(e,e);
-                   initializing.set(false);
-                   ready.set(false);
-                   return;
+                    log.error( e, e );
+                    initializing.set( false );
+                    ready.set( false );
+                    return;
                 }
 
                 initializing.set( false );
@@ -107,11 +108,10 @@ public class PredictedCharacteristicFactory implements InitializingBean {
             }
         }, "MMTX initialization" );
 
-        synchronized ( initializing ) {
-            if ( initializing.get() ) return; // no need to start it, we already finished, somehow
-            loadThread.setDaemon( true ); // So vm doesn't wait on these threads to shutdown (if shutting down)
-            loadThread.start();
-        }
+        if ( initializing.get() ) return; // no need to start it, we already finished, somehow
+        loadThread.setDaemon( true ); // So vm doesn't wait on these threads to shutdown (if shutting down)
+        loadThread.start();
+
         log.info( "Started Label initialization" );
 
     }
