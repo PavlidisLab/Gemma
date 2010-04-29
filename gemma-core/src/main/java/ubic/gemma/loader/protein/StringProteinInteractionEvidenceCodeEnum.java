@@ -20,7 +20,7 @@ package ubic.gemma.loader.protein;
 /**
  * 
  * Enum that represents the 7 different types of possible evidence that string uses to state if two proteins have an interaction.
- * The enum stores the position of the evidence in the byte array which stores this data in the db. The eunum also holds text that
+ * The enum stores the position of the evidence in the byte array which stores this data in the db. The enuum also holds text that
  * should be displayed when that evidence is refered to in GEMMA.
  * 
  * @author ldonnison

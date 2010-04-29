@@ -49,7 +49,7 @@ public class ProteinLinkOutFormatterTest {
     }
    
     /**
-     * Test that a base url for string can be appended with a paramter to lower confi
+     * Test that a base url for string can be appended with a parameter to lower confidence
      * */
     @Test
     public void testGetStringProteinProteinInteractionLinkFormatted() {
