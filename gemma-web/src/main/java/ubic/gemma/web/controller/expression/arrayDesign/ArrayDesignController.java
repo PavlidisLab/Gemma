@@ -563,7 +563,7 @@ public class ArrayDesignController extends AbstractTaskService {
         arrayDesignReportService.fillEventInformation( valueObjects );
         arrayDesignReportService.fillInSubsumptionInfo( valueObjects );
 
-        Long numArrayDesigns = new Long( valueObjects.size() );
+        int numArrayDesigns = valueObjects.size() ;
         ModelAndView mav = new ModelAndView( "arrayDesigns" );
         mav.addObject( "showMergees", showMergees );
         mav.addObject( "showOrphans", showOrphans );
@@ -582,7 +582,7 @@ public class ArrayDesignController extends AbstractTaskService {
      * @param errors
      * @return
      */
-    @RequestMapping("/showArrayDesign.html")
+    @RequestMapping( { "/showArrayDesign.html", "/" })
     public ModelAndView showArrayDesign( HttpServletRequest request, HttpServletResponse response ) {
         String name = request.getParameter( "name" );
         String idStr = request.getParameter( "id" );
@@ -608,9 +608,9 @@ public class ArrayDesignController extends AbstractTaskService {
         }
         long id = arrayDesign.getId();
 
-        Long numCompositeSequences = new Long( arrayDesignService.getCompositeSequenceCount( arrayDesign ) );
+        Integer numCompositeSequences = arrayDesignService.getCompositeSequenceCount( arrayDesign );
         Collection<ExpressionExperiment> ee = arrayDesignService.getExpressionExperiments( arrayDesign );
-        Long numExpressionExperiments = new Long( ee.size() );
+        int numExpressionExperiments = ee.size();
 
         Collection<Taxon> t = arrayDesignService.getTaxa( id );
 

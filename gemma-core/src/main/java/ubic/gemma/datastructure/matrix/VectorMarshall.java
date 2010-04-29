@@ -52,27 +52,27 @@ public class VectorMarshall {
         if ( representation.equals( PrimitiveType.BOOLEAN ) ) {
             boolean[] convertedDat = converter.byteArrayToBooleans( rawDat );
             for ( boolean b : convertedDat ) {
-                data.add( new Boolean( b ) );
+                data.add( b );
             }
         } else if ( representation.equals( PrimitiveType.CHAR ) ) {
             char[] convertedDat = converter.byteArrayToChars( rawDat );
             for ( char b : convertedDat ) {
-                data.add( new Character( b ) );
+                data.add( b );
             }
         } else if ( representation.equals( PrimitiveType.DOUBLE ) ) {
             double[] convertedDat = converter.byteArrayToDoubles( rawDat );
             for ( double b : convertedDat ) {
-                data.add( new Double( b ) );
+                data.add( b );
             }
         } else if ( representation.equals( PrimitiveType.INT ) ) {
             int[] convertedDat = converter.byteArrayToInts( rawDat );
             for ( int b : convertedDat ) {
-                data.add( new Integer( b ) );
+                data.add( b );
             }
         } else if ( representation.equals( PrimitiveType.LONG ) ) {
             long[] convertedDat = converter.byteArrayToLongs( rawDat );
             for ( long b : convertedDat ) {
-                data.add( new Long( b ) );
+                data.add( b );
             }
         } else if ( representation.equals( PrimitiveType.STRING ) ) {
             String[] convertedDat = converter.byteArrayToStrings( rawDat );
