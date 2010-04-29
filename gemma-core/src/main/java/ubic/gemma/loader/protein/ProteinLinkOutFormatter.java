@@ -21,6 +21,7 @@ package ubic.gemma.loader.protein;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import ubic.gemma.model.association.Gene2GeneProteinAssociationServiceException;
 import ubic.gemma.model.common.description.DatabaseEntry;
 
 /**
@@ -41,9 +42,9 @@ public class ProteinLinkOutFormatter {
 
     /** Confidence of score before displaying on STRING page */
     private static final String REQUIREDCONFIDENCE = "&required_score=";
-    
-    /** */
-    private static final String DEFAULTCONFIDENCE= "150";
+
+    /** Gemma default confidence score to use for displaying string links that is display all links with low confidence */
+    private static final String DEFAULTCONFIDENCE = "150";
 
     /** Equals sign for url */
     private static final String EQUALSINURL = "=";
@@ -51,6 +52,7 @@ public class ProteinLinkOutFormatter {
     /** Plural extension */
     private static final String PLURALEXTENSION = "s";
 
+    /** spacer to use to seperate evidence codes for display */
     private static final String EVIDENCESPACER = ":";
 
     private static Log log = LogFactory.getLog( ProteinLinkOutFormatter.class );
@@ -75,7 +77,7 @@ public class ProteinLinkOutFormatter {
             } else {
                 baseUri = uri.concat( PLURALEXTENSION + EQUALSINURL );
             }
-            baseUri = baseUri.concat(accession);
+            baseUri = baseUri.concat( accession );
         }
         return baseUri;
     }
@@ -90,7 +92,7 @@ public class ProteinLinkOutFormatter {
 
         String finalUrl = getBaseUrl( entry );
         if ( finalUrl != null && !finalUrl.isEmpty() ) {
-            finalUrl =finalUrl.concat( addStringRequiredConfidence( DEFAULTCONFIDENCE ) );
+            finalUrl = finalUrl.concat( addStringRequiredConfidence( DEFAULTCONFIDENCE ) );
         }
         return finalUrl;
     }
@@ -139,28 +141,49 @@ public class ProteinLinkOutFormatter {
     }
 
     /**
-     * Convert a byte representing the evidence as stored in db to a textural display of evidence.
-     * e.g {0,1,0,0,0,1,0} > GeneFusion:Database
+     * Convert a byte representing the evidence as stored in db to a textural display of evidence. e.g {0,1,0,0,0,1,0} >
+     * GeneFusion:Database
      * 
      * @param bytes byte array representing evidence
      * @return Formated text of evidence
      */
-    public String getEvidenceDisplayText( byte[] bytes ) throws Exception {
+    public String getEvidenceDisplayText( byte[] bytes ) {
 
-        StringBuffer evidenceString = new StringBuffer();
-        if ( bytes != null && bytes.length == StringProteinInteractionEvidenceCodeEnum.values().length ) {
-            for ( StringProteinInteractionEvidenceCodeEnum currentEvidence : StringProteinInteractionEvidenceCodeEnum
-                    .values() ) {
-                // if the byte at that particular position is 1 then that means that there is evidence for that
-                if ( ( bytes[currentEvidence.getPositionInArray()] ) == 1 ) {
-                    evidenceString.append( currentEvidence.getDisplayText() ).append( EVIDENCESPACER );
+        StringBuffer evidenceString;
+        try {
+            evidenceString = new StringBuffer();
+            if ( bytes != null && bytes.length == StringProteinInteractionEvidenceCodeEnum.values().length ) {
+                for ( StringProteinInteractionEvidenceCodeEnum currentEvidence : StringProteinInteractionEvidenceCodeEnum
+                        .values() ) {
+                    // if the byte at that particular position is 1 then that means that there is evidence
+                    if ( ( bytes[currentEvidence.getPositionInArray()] ) == 1 ) {
+                        evidenceString.append( currentEvidence.getDisplayText() ).append( EVIDENCESPACER );
+                    }
                 }
+                return evidenceString.substring( 0, ( evidenceString.lastIndexOf( EVIDENCESPACER ) ) );
+            } else {
+                log.warn( "The byte array provided was not the correct size for the protein protein interaction" );
             }
-            return evidenceString.substring( 0, ( evidenceString.lastIndexOf( EVIDENCESPACER ) ) );
-        } else {
-            log.info( "The byte array provided was not the correct size " );
+        } catch ( Exception e ) {
+            // should really be a more specific exception
+            throw new RuntimeException( "Bit Vector representing evidence codes for proteins was at error " + e );
         }
         return evidenceString.toString();
+    }
+
+    /**
+     * Confidence score as parsed from string file is not a percentage instead a number e.g. 150 in percentage that is
+     * 0.150
+     * 
+     * @param confidenceScore As parsed by string file
+     * @return Formatted confidence percentage as displayed by string
+     */
+    public String getConfidenceScoreAsPercentage( Double confidenceScore ) {
+        String confidenceScoreAsDisplayedInString = null;
+        if ( confidenceScore != null && confidenceScore != 0 ) {
+            confidenceScoreAsDisplayedInString = Double.toString( confidenceScore / 1000 );
+        }
+        return confidenceScoreAsDisplayedInString;
     }
 
 }
