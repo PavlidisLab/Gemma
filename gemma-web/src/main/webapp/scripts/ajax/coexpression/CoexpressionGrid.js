@@ -421,7 +421,13 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 			}, {
 				name : "gene2GeneProteinAssociationStringUrl",
 				type : "string"	
+			}, {
+				name : "gene2GeneProteinInteractionEvidence",
+				type : "string"	
 			},	{
+				name : "gene2GeneProteinInteractionConfidenceScore",
+				type : "string"	
+			}, 	{
 				name : "containsMyData",
 				type : "boolean"
 			}]),
@@ -439,12 +445,14 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 	//link for protein interactions
 	proteinlinkStyler : function(value, metadata, record, row, col, ds) {
 	
-		var d = record.data;		
+		var d = record.data;	
+		
+				
 		if (d.gene2GeneProteinAssociationStringUrl) {
 			return String
 			.format(
-					'<span> <a href="{0}"  target="_blank" class="external"><img "src="/Gemma/images/logo/string_logo.gif" ext:qtip="Click to view evidence from STRING for protein protein interaction" /></a> </span>',
-					d.gene2GeneProteinAssociationStringUrl);
+					'<span> <a href="{0}"  target="_blank" class="external"><img "src="/Gemma/images/logo/string_logo.gif" ext:qtip="Click to view the protein protein interaction obtained from {1} evidence with a combined association score of {2} from STRING" /></a> </span>',
+					d.gene2GeneProteinAssociationStringUrl, d.gene2GeneProteinInteractionEvidence, d.gene2GeneProteinInteractionConfidenceScore);
 		}	
 		
 	},
