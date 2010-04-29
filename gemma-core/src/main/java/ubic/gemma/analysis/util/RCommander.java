@@ -23,9 +23,9 @@ import java.io.IOException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import ubic.basecode.util.RClient;
-import ubic.basecode.util.RConnectionFactory;
-import ubic.basecode.util.RServeClient;
+import ubic.basecode.util.r.RClient;
+import ubic.basecode.util.r.RConnectionFactory;
+import ubic.basecode.util.r.RServeClient;
 import ubic.gemma.util.ConfigUtils;
 
 /**

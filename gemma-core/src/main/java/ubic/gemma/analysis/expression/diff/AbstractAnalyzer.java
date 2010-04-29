@@ -20,9 +20,9 @@ package ubic.gemma.analysis.expression.diff;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
-import ubic.basecode.util.RClient;
-import ubic.basecode.util.RConnectionFactory;
-import ubic.basecode.util.RServeClient;
+import ubic.basecode.util.r.RClient;
+import ubic.basecode.util.r.RConnectionFactory;
+import ubic.basecode.util.r.RServeClient;
 import ubic.gemma.analysis.service.ExpressionDataMatrixService;
 
 /**

@@ -22,7 +22,7 @@ import java.io.IOException;
 import java.util.List;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
-import ubic.basecode.util.RServeClient;
+import ubic.basecode.util.r.RServeClient;
 
 /**
  * Object used by the marray bioconductor package. See marrayRaw, marrayInfo, marrayLayout in the package documentations
