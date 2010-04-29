@@ -94,15 +94,15 @@ public class IndexServiceImpl extends AbstractTaskService implements IndexServic
                 if ( this.command.isIndexGene() )
                     CompassUtils.swapCompassIndex( compassGene, result.getPathToGeneIndex() );
                 if ( this.command.isIndexEE() )
-                    CompassUtils.swapCompassIndex( compassExpression, result.getPathToGeneIndex() );
+                    CompassUtils.swapCompassIndex( compassExpression, result.getPathToExpressionIndex() );
                 if ( this.command.isIndexAD() )
-                    CompassUtils.swapCompassIndex( compassArray, result.getPathToGeneIndex() );
+                    CompassUtils.swapCompassIndex( compassArray, result.getPathToArrayIndex() );
                 if ( this.command.isIndexBibRef() )
-                    CompassUtils.swapCompassIndex( compassBibliographic, result.getPathToGeneIndex() );
+                    CompassUtils.swapCompassIndex( compassBibliographic, result.getPathToBibliographicIndex() );
                 if ( this.command.isIndexBioSequence() )
-                    CompassUtils.swapCompassIndex( compassBiosequence, result.getPathToGeneIndex() );
+                    CompassUtils.swapCompassIndex( compassBiosequence, result.getPathToBiosequenceIndex() );
                 if ( this.command.isIndexProbe() )
-                    CompassUtils.swapCompassIndex( compassProbe, result.getPathToGeneIndex() );
+                    CompassUtils.swapCompassIndex( compassProbe, result.getPathToProbeIndex() );
             } catch ( IOException e ) {
                 throw new RuntimeException( e );
             }
@@ -132,6 +132,7 @@ public class IndexServiceImpl extends AbstractTaskService implements IndexServic
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.search.IndexService#index(ubic.gemma.grid.javaspaces.task.index.IndexerTaskCommand)
      */
     public String index( IndexerTaskCommand command ) {
@@ -140,6 +141,7 @@ public class IndexServiceImpl extends AbstractTaskService implements IndexServic
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.search.IndexService#indexAll()
      */
     public String indexAll() {
@@ -150,6 +152,7 @@ public class IndexServiceImpl extends AbstractTaskService implements IndexServic
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.search.IndexService#indexArrayDesigns()
      */
     public String indexArrayDesigns() {
@@ -160,6 +163,7 @@ public class IndexServiceImpl extends AbstractTaskService implements IndexServic
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.search.IndexService#indexBibligraphicReferences()
      */
     public String indexBibligraphicReferences() {
@@ -170,6 +174,7 @@ public class IndexServiceImpl extends AbstractTaskService implements IndexServic
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.search.IndexService#indexBioSequences()
      */
     public String indexBioSequences() {
@@ -180,6 +185,7 @@ public class IndexServiceImpl extends AbstractTaskService implements IndexServic
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.search.IndexService#indexExpressionExperiments()
      */
     public String indexExpressionExperiments() {
@@ -190,6 +196,7 @@ public class IndexServiceImpl extends AbstractTaskService implements IndexServic
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.search.IndexService#indexGenes()
      */
     public String indexGenes() {
@@ -200,6 +207,7 @@ public class IndexServiceImpl extends AbstractTaskService implements IndexServic
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.search.IndexService#indexProbes()
      */
     public String indexProbes() {
@@ -259,6 +267,7 @@ public class IndexServiceImpl extends AbstractTaskService implements IndexServic
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.grid.javaspaces.AbstractSpacesProgressService#getRunner(ubic.gemma.grid.javaspaces.TaskCommand)
      */
     @Override
@@ -268,6 +277,7 @@ public class IndexServiceImpl extends AbstractTaskService implements IndexServic
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.web.controller.javaspaces.gigaspaces.AbstractGigaSpacesFormController#getSpaceRunner(java.lang.String,
      * org.springframework.security.core.context.SecurityContext, javax.servlet.http.HttpServletRequest,
