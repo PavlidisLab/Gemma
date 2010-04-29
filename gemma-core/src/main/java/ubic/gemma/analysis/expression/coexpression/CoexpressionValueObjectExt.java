@@ -48,6 +48,38 @@ public class CoexpressionValueObjectExt implements Comparable<CoexpressionValueO
     private Boolean containsMyData;
     private Collection<Long> supportingExperiments;
     private String gene2GeneProteinAssociationStringUrl;
+    private String gene2GeneProteinInteractionConfidenceScore;
+    /**
+     * @return the gene2GeneProteinInteractionConfidenceScore
+     */
+    public String getGene2GeneProteinInteractionConfidenceScore() {
+        return gene2GeneProteinInteractionConfidenceScore;
+    }
+
+    /**
+     * @param gene2GeneProteinInteractionConfidenceScore the gene2GeneProteinInteractionConfidenceScore to set
+     */
+    public void setGene2GeneProteinInteractionConfidenceScore( String gene2GeneProteinInteractionConfidenceScore ) {
+        this.gene2GeneProteinInteractionConfidenceScore = gene2GeneProteinInteractionConfidenceScore;
+    }
+
+    /**
+     * @return the gene2GeneProteinInteractionEvidence
+     */
+    public String getGene2GeneProteinInteractionEvidence() {
+        return gene2GeneProteinInteractionEvidence;
+    }
+
+    /**
+     * @param gene2GeneProteinInteractionEvidence the gene2GeneProteinInteractionEvidence to set
+     */
+    public void setGene2GeneProteinInteractionEvidence( String gene2GeneProteinInteractionEvidence ) {
+        this.gene2GeneProteinInteractionEvidence = gene2GeneProteinInteractionEvidence;
+    }
+
+    private String gene2GeneProteinInteractionEvidence;
+    
+   
         
 
     public Gene getQueryGene() {
