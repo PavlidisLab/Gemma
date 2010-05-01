@@ -24,6 +24,7 @@ import ubic.basecode.util.r.RClient;
 import ubic.basecode.util.r.RConnectionFactory;
 import ubic.basecode.util.r.RServeClient;
 import ubic.gemma.analysis.service.ExpressionDataMatrixService;
+import ubic.gemma.util.ConfigUtils;
 
 /**
  * An abstract analyzer to be extended by analyzers which will make use of R.
@@ -42,8 +43,14 @@ public abstract class AbstractAnalyzer {
      * Connect to R.
      */
     public void connectToR() {
-        rc = RConnectionFactory.getRConnection();
-        if ( rc == null ) throw new RuntimeException( "R connection was not established" );
+
+        if ( rc != null && !rc.isConnected() && rc instanceof RServeClient ) {
+            ( ( RServeClient ) rc ).connect();
+        } else {
+            String hostname = ConfigUtils.getString( "gemma.rserve.hostname", "localhost" );
+            rc = RConnectionFactory.getRConnection( hostname );
+            if ( rc == null ) throw new RuntimeException( "R connection was not established" );
+        }
     }
 
     /**

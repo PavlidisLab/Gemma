@@ -27,11 +27,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.FutureTask;
 
 import org.apache.commons.collections.Transformer;
 import org.apache.commons.collections.TransformerUtils;
@@ -76,7 +73,6 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
 
     /*
      * (non-Javadoc)
-     * 
      * @see
      * ubic.gemma.analysis.expression.diff.AbstractDifferentialExpressionAnalyzer#run(ubic.gemma.model.expression.experiment
      * .ExpressionExperiment)
@@ -88,7 +84,6 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
 
     /*
      * (non-Javadoc)
-     * 
      * @see
      * ubic.gemma.analysis.expression.diff.AbstractDifferentialExpressionAnalyzer#run(ubic.gemma.model.expression.experiment
      * .ExpressionExperiment, java.util.Collection)
@@ -106,7 +101,6 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
 
     /*
      * (non-Javadoc)
-     * 
      * @see
      * ubic.gemma.analysis.expression.diff.AbstractDifferentialExpressionAnalyzer#run(ubic.gemma.model.expression.experiment
      * .ExpressionExperiment, ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalysisConfig)
@@ -262,6 +256,10 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
         final Map<String, LinearModelSummary> rawResults = runAnalysis( namedMatrix, label2Factors, modelFormula,
                 rowNameExtractor );
 
+        if ( rawResults.size() == 0 ) {
+            throw new IllegalStateException( "Got no results from the analysis" );
+        }
+
         /*
          * Initialize some data structures we need to hold results
          */
@@ -281,6 +279,7 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
         /*
          * Create result objects for each model fit. Keeping things in order is important.
          */
+        boolean warned = false;
         for ( DesignElement el : namedMatrix.getRowNames() ) {
 
             CompositeSequence cs = ( CompositeSequence ) el;
@@ -289,7 +288,12 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
 
             if ( log.isDebugEnabled() ) log.debug( el.getName() + "\n" + lm );
 
-            assert lm != null;
+            if ( lm == null && !warned ) {
+                // FIXME this usuall y means we got nothing.
+                log.warn( "No result for " + el + ", further warnings suppressed" );
+                warned = true;
+                continue;
+            }
 
             for ( String factorName : label2Factors.keySet() ) {
 
@@ -306,11 +310,7 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
                 } else {
                     pvalue = lm.getMainEffectP( factorName );
                     Double[] mainEffectT = lm.getMainEffectT( factorName );
-                    
-                    /*
-                     * If this is a one-sample t-test, this gets botched up.
-                     */
-                    
+
                     if ( mainEffectT != null && mainEffectT.length > 0 ) score = mainEffectT[0]; // Note: there will be
                     // multiple values if
                     // there are more
@@ -365,8 +365,8 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
 
             int i = 0;
             for ( DifferentialExpressionAnalysisResult pr : resultLists.get( fName ) ) {
-                pr.setCorrectedPvalue( qvalues[i] );
-                pr.setRank( ranks[i] );
+                pr.setCorrectedPvalue( nan2Null( qvalues[i] ) );
+                pr.setRank( nan2Null( ranks[i] ) );
                 i++;
             }
         }
@@ -395,7 +395,7 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
          */
         expressionAnalysis.setResultSets( resultSets );
         expressionAnalysis.setName( this.getClass().getSimpleName() );
-        expressionAnalysis.setDescription( "Linear model with " + label2Factors.size() + " factors"
+        expressionAnalysis.setDescription( "Linear model with " + config.getFactorsToInclude().size() + " factors"
                 + ( interceptFactor == null ? "" : " with intercept treated as factor" )
                 + ( interactionFactorLists.isEmpty() ? "" : " with interaction" ) );
 
@@ -405,7 +405,6 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
 
     /*
      * (non-Javadoc)
-     * 
      * @see
      * ubic.gemma.analysis.expression.diff.AbstractDifferentialExpressionAnalyzer#run(ubic.gemma.model.expression.experiment
      * .ExpressionExperiment, ubic.gemma.model.expression.experiment.ExperimentalFactor[])
@@ -593,17 +592,24 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
         final Map<String, LinearModelSummary> rawResults = new ConcurrentHashMap<String, LinearModelSummary>();
 
         final String matrixName = rc.assignMatrix( namedMatrix, rowNameExtractor );
-
         ExecutorService service = Executors.newSingleThreadExecutor();
 
-        Future<?> job = service.submit( new FutureTask<Object>( new Runnable() {
+        service.execute( new Runnable() {
             public void run() {
-                Map<String, LinearModelSummary> res = rc.rowApplyLinearModel( matrixName, modelFormula, factorNameMap
-                        .keySet().toArray( new String[] {} ) );
-
-                rawResults.putAll( res );
+                Throwable thrown = null;
+                try {
+                    Map<String, LinearModelSummary> res = rc.rowApplyLinearModel( matrixName, modelFormula,
+                            factorNameMap.keySet().toArray( new String[] {} ) );
+                    rawResults.putAll( res );
+                } catch ( Exception e ) {
+                    thrown = e;
+                } finally {
+                    if ( thrown != null ) {
+                        log.info( thrown );
+                    }
+                }
             }
-        }, true ) );
+        } );
 
         service.shutdown();
 
@@ -612,7 +618,7 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
         long lasttime = 0;
 
         double updateIntervalMillis = 60000.00;
-        while ( !job.isDone() ) {
+        while ( !service.isTerminated() ) {
             try {
                 Thread.sleep( 1000 );
 
@@ -629,13 +635,6 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
             }
         }
 
-        try {
-            job.get();
-        } catch ( InterruptedException e ) {
-            throw new RuntimeException( e );
-        } catch ( ExecutionException e ) {
-            throw new RuntimeException( e );
-        }
         if ( timer.getTime() > updateIntervalMillis ) {
             log.info( String.format( "Analysis finished in %.1f minutes.", timer.getTime() / 60000.00 ) );
         }

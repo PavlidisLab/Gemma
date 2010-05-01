@@ -46,9 +46,6 @@ import cern.colt.list.DoubleArrayList;
  */
 public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAnalyzer {
 
-  
-  
-
     private Log log = LogFactory.getLog( this.getClass() );
 
     /**
@@ -249,13 +246,14 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
     }
 
     /**
-     * Needed to convert NaN to a value we can store in the database.
+     * Needed to convert NaN or infinity values to a value we can store in the database.
      * 
      * @param e
      * @return
      */
     protected Double nan2Null( Double e ) {
-        return e == null || Double.isNaN( e ) ? null : e;
+        return e == null || Double.isNaN( e ) || e == Double.NEGATIVE_INFINITY || e == Double.POSITIVE_INFINITY ? null
+                : e;
     }
 
     /**
