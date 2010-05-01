@@ -336,8 +336,7 @@ public class DEDVController {
 
         if ( givenThreshold != null ) {
             threshold = givenThreshold;
-            log.warn( "Threshold specified not using default value: " + givenThreshold );
-
+            log.debug( "Threshold specified not using default value: " + givenThreshold );
         }
 
         Collection<DoubleVectorValueObject> dedvs = getDiffExVectors( eeId, resultSetId, threshold );
