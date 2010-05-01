@@ -30,7 +30,7 @@ import javax.servlet.http.HttpServletRequest;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import ubic.gemma.job.TaskCommand; 
+import ubic.gemma.job.TaskCommand;
 import ubic.gemma.job.progress.ProgressData;
 import ubic.gemma.job.progress.ProgressJob;
 import ubic.gemma.job.progress.ProgressManager;
@@ -68,6 +68,7 @@ public class UploadListener implements OutputStreamListener {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.util.upload.OutputStreamListener#start()
      */
     public void start() {
@@ -78,6 +79,7 @@ public class UploadListener implements OutputStreamListener {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.util.upload.OutputStreamListener#bytesRead(int)
      */
     public void bytesRead( int bytesRead ) {
@@ -92,7 +94,7 @@ public class UploadListener implements OutputStreamListener {
         }
 
         this.totalBytesRead = totalBytesRead + bytesRead;
-        int newPercent = ( new Double( ( ( double ) totalBytesRead / totalToRead ) * 100.00 ) ).intValue();
+        int newPercent = ( int ) ( ( ( double ) totalBytesRead / totalToRead ) * 100.00 );
         if ( newPercent > oldPercent + 5 || newPercent == 100 ) {
             if ( pJob != null ) {
                 pJob.updateProgress( newPercent );
@@ -113,6 +115,7 @@ public class UploadListener implements OutputStreamListener {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.util.upload.OutputStreamListener#error(java.lang.String)
      */
     public void error( String message ) {
@@ -121,6 +124,7 @@ public class UploadListener implements OutputStreamListener {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.util.upload.OutputStreamListener#done()
      */
     public void done() {

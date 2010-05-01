@@ -562,7 +562,7 @@ public class ProbeMapper {
 
         pl.setChromosome( chrom );
         pl.setNucleotide( blatResult.getTargetStart() );
-        pl.setNucleotideLength( ( new Long( blatResult.getTargetEnd() - blatResult.getTargetStart() ) ).intValue() );
+        pl.setNucleotideLength( ( int ) ( blatResult.getTargetEnd() - blatResult.getTargetStart() ) );
         pl.setStrand( blatResult.getStrand() );
         pl.setBin( SequenceBinUtils.binFromRange( pl.getNucleotide().intValue(), pl.getNucleotide().intValue()
                 + pl.getNucleotideLength().intValue() ) );
