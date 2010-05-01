@@ -360,7 +360,73 @@ public class ExpressionExperimentQCController extends BaseController {
         }
 
         String[] fileNames = directory.list();
-        String suffix = DifferentialExpressionFileUtils.PVALUE_DIST_SUFFIX;
+        String suffix = ".pvalues" + DifferentialExpressionFileUtils.PVALUE_DIST_SUFFIX;
+        for ( String fileName : fileNames ) {
+            if ( !fileName.endsWith( suffix ) ) {
+                continue;
+            }
+            File f = new File( directory.getAbsolutePath() + File.separatorChar + fileName );
+            files.add( f );
+        }
+
+        if ( files.isEmpty() ) {
+            /*
+             * Try old format - one file per resultset for backwards compatibility.
+             */
+            suffix = DifferentialExpressionFileUtils.PVALUE_DIST_SUFFIX;
+            for ( String fileName : fileNames ) {
+                if ( !fileName.endsWith( suffix ) ) {
+                    continue;
+                }
+                File f = new File( directory.getAbsolutePath() + File.separatorChar + fileName );
+                files.add( f );
+            }
+        }
+
+        return files;
+    }
+
+    /**
+     * @param ee
+     * @return
+     */
+    private Collection<File> locateEffectSizeDistFiles( ExpressionExperiment ee ) {
+        String shortName = ee.getShortName();
+
+        Collection<File> files = new HashSet<File>();
+        File directory = DifferentialExpressionFileUtils.getBaseDifferentialDirectory( shortName );
+        if ( !directory.exists() ) {
+            return files;
+        }
+
+        String[] fileNames = directory.list();
+        String suffix = ".scores" + DifferentialExpressionFileUtils.PVALUE_DIST_SUFFIX;
+        for ( String fileName : fileNames ) {
+            if ( !fileName.endsWith( suffix ) ) {
+                continue;
+            }
+            File f = new File( directory.getAbsolutePath() + File.separatorChar + fileName );
+            files.add( f );
+        }
+
+        return files;
+    }
+
+    /**
+     * @param ee
+     * @return
+     */
+    private Collection<File> locateCorrectedPvalueDistFiles( ExpressionExperiment ee ) {
+        String shortName = ee.getShortName();
+
+        Collection<File> files = new HashSet<File>();
+        File directory = DifferentialExpressionFileUtils.getBaseDifferentialDirectory( shortName );
+        if ( !directory.exists() ) {
+            return files;
+        }
+
+        String[] fileNames = directory.list();
+        String suffix = ".qvalues" + DifferentialExpressionFileUtils.PVALUE_DIST_SUFFIX;
         for ( String fileName : fileNames ) {
             if ( !fileName.endsWith( suffix ) ) {
                 continue;
