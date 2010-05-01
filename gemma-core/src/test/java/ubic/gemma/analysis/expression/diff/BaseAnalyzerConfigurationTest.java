@@ -52,6 +52,7 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.testing.BaseSpringContextTest;
+import ubic.gemma.util.ConfigUtils;
 
 /**
  * Other tests can extend this class if they want an expression experiment with complete block design and biological
@@ -190,13 +191,12 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.testing.BaseSpringContextTest#onSetUpInTransaction()
      */
     @Before
     public void setup() throws Exception {
 
-        rc = RConnectionFactory.getRConnection();
+        rc = RConnectionFactory.getRConnection( ConfigUtils.getString( "gemma.rserve.hostname", "localhost" ) );
         if ( rc != null && rc.isConnected() ) {
             connected = true;
         }
