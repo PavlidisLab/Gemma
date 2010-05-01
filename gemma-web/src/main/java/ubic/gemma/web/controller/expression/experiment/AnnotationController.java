@@ -22,12 +22,14 @@ import java.util.Collection;
 import java.util.HashSet;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
 import ubic.gemma.annotation.geommtx.ExpressionExperimentAnnotator;
+import ubic.gemma.job.AbstractTaskService;
+import ubic.gemma.job.BackgroundJob;
+import ubic.gemma.job.TaskCommand;
+import ubic.gemma.job.TaskResult;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicService;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -37,6 +39,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.ontology.OntologyService;
+import ubic.gemma.tasks.analysis.expression.AutoTaggerTask;
 
 /**
  * Controller for methods involving annotation of experiments (and potentially other things); delegates to
@@ -47,12 +50,28 @@ import ubic.gemma.ontology.OntologyService;
  * @see ubic.gemma.web.controller.common.CharacteristicBrowserController for related methods.
  */
 @Controller
-public class AnnotationController {
+public class AnnotationController extends AbstractTaskService {
 
-    private static Log log = LogFactory.getLog( AnnotationController.class );
+    private class TaggerJob extends BackgroundJob<TaskCommand> {
+
+        public TaggerJob( TaskCommand commandObj ) {
+            super( commandObj );
+        }
+
+        @Override
+        protected TaskResult processJob() {
+            return autoTagTask.execute( this.command );
+        }
+    }
 
     @Autowired
-    private ExpressionExperimentAnnotator expressionExperimentAnnotator;
+    private AutoTaggerTask autoTagTask;
+
+    @Autowired
+    private BioMaterialService bioMaterialService;
+
+    @Autowired
+    private CharacteristicService characteristicService;
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
@@ -61,38 +80,23 @@ public class AnnotationController {
     private OntologyService ontologyService;
 
     @Autowired
-    private CharacteristicService characteristicService;
-
-    @Autowired
     private TaxonService taxonService;
-
-    @Autowired
-    private BioMaterialService bioMaterialService;
 
     /**
      * @param eeId
-     * @return
+     * @return taskId
      */
-    public Collection<Characteristic> autoTag( Long eeId ) {
+    public String autoTag( Long eeId ) {
 
         if ( eeId == null ) {
             throw new IllegalArgumentException( "Id cannot be null" );
         }
 
-        ExpressionExperiment ee = expressionExperimentService.load( eeId );
-
-        if ( ee == null ) {
-            throw new IllegalArgumentException( "No experiment with id=" + eeId + " could be loaded" );
-        }
-
         if ( !ExpressionExperimentAnnotator.ready() ) {
-            throw new RuntimeException( "The auto-tagger is not available." );
+            throw new RuntimeException( "Sorry, the auto-tagger is not available." );
         }
 
-        /*
-         * TODO: put this in a background job, because it is slow.
-         */
-        return expressionExperimentAnnotator.annotate( ee, false );
+        return this.run( new TaskCommand( eeId ) );
     }
 
     public void createBiomaterialTag( Characteristic vc, Long id ) {
@@ -178,6 +182,26 @@ public class AnnotationController {
             characteristicService.delete( id );
         }
 
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.job.AbstractTaskService#getInProcessRunner(ubic.gemma.job.TaskCommand)
+     */
+    @Override
+    protected BackgroundJob<?> getInProcessRunner( TaskCommand command ) {
+        return new TaggerJob( command );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.job.AbstractTaskService#getSpaceRunner(ubic.gemma.job.TaskCommand)
+     */
+    @Override
+    protected BackgroundJob<?> getSpaceRunner( TaskCommand command ) {
+        return null;
     }
 
 }
