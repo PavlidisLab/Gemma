@@ -33,6 +33,7 @@ import ubic.gemma.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.loader.entrez.pubmed.PubMedXMLFetcher;
 import ubic.gemma.loader.expression.geo.DatasetCombiner;
 import ubic.gemma.loader.expression.geo.GeoConverter;
+import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.loader.expression.geo.GeoSampleCorrespondence;
 import ubic.gemma.loader.expression.geo.model.GeoData;
 import ubic.gemma.loader.expression.geo.model.GeoDataset;
@@ -95,7 +96,10 @@ public class GeoDatasetService extends AbstractGeoService {
          */
         GeoConverter geoConverter = ( GeoConverter ) this.beanFactory.getBean( "geoConverter" );
 
-        geoDomainObjectGenerator.intialize();
+        if ( this.geoDomainObjectGenerator == null ) {
+            this.geoDomainObjectGenerator = new GeoDomainObjectGenerator();
+        }
+
         geoDomainObjectGenerator.setProcessPlatformsOnly( loadPlatformOnly );
         geoDomainObjectGenerator.setDoSampleMatching( doSampleMatching && !splitIncompatiblePlatforms );
         geoDomainObjectGenerator.setAggressiveQtRemoval( aggressiveQuantitationTypeRemoval );
