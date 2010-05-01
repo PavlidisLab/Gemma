@@ -55,7 +55,7 @@ public class ProcessedDataFetcher extends FtpArchiveFetcher {
     public Collection<LocalFile> getProcessedDataFile( Collection<LocalFile> files ) {
         Collection<LocalFile> result = new HashSet<LocalFile>();
         for ( LocalFile file : files ) {
-            if ( file.getLocalURL().toString().contains( "processed-data" ) ) {
+            if ( file.getLocalURL().toString().contains( PROCESSED_DATA_SUFFIX ) ) {
                 result.add( file );
             }
         }

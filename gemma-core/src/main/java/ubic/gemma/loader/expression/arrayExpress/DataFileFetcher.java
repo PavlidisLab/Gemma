@@ -48,7 +48,7 @@ public class DataFileFetcher extends FtpArchiveFetcher {
         super();
         this.setExcludePattern( MAGE_ML_SUFFIX_A );
         this.setExcludePattern( MAGE_ML_SUFFIX_B );
-        initArchiveHandler( "gzip" );
+        initArchiveHandler( "tar.gz" );
     }
 
     @Override
@@ -69,7 +69,7 @@ public class DataFileFetcher extends FtpArchiveFetcher {
      */
     public LocalFile getMageMlFile( Collection<LocalFile> files ) {
         for ( LocalFile file : files ) {
-            if ( file.getLocalURL().toString().endsWith( ".xml" ) ) {
+            if ( file.getLocalURL().toString().contains( ".xml" ) ) {
                 return file;
             }
         }
@@ -127,7 +127,6 @@ public class DataFileFetcher extends FtpArchiveFetcher {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.loader.util.fetcher.FtpFetcher#setNetDataSourceUtil()
      */
     @Override
