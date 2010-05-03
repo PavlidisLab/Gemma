@@ -28,7 +28,7 @@ import ubic.gemma.job.TaskCommand;
 
 public class IndexerTaskCommand extends TaskCommand {
 
-    private static final int INDEXER_MAX_RUNTIME = 180; //Minutes
+    private static final int INDEXER_MAX_RUNTIME = 300; //Minutes
 
     private static final long serialVersionUID = -8994831072852393919L;
 
