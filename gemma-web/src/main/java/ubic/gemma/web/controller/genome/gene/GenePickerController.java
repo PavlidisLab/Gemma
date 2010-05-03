@@ -230,6 +230,8 @@ public class GenePickerController {
 
             } else { // Many results need to find best if possible
                 Collection<Gene> notExactMatch = new HashSet<Gene>();
+                Collection<Gene> sameTaxonMatch = new HashSet<Gene>();
+
                 Boolean foundMatch = false;
 
                 // Usually if there is more than 1 results the search term was a official symbol and picked up matches
@@ -240,15 +242,23 @@ public class GenePickerController {
                         genes.add( srGene );
                         foundMatch = true;
                         break; // found so return
+                    } else if ( srGene.getTaxon().equals( taxon ) ) {
+                        sameTaxonMatch.add( srGene );
                     } else
                         notExactMatch.add( srGene );
                 }
 
-                // if no exact match found add all of them and toss a warning
+                // if no exact match found add all of them of the same taxon and toss a warning
                 if ( !foundMatch ) {
-                    log.warn( notExactMatch.size() + " genes found for query id = " + line + ". Genes found are: "
-                            + notExactMatch + ". Adding all" );
-                    genes.addAll( notExactMatch );
+
+                    if ( !sameTaxonMatch.isEmpty() ) {
+                        genes.addAll( sameTaxonMatch );
+                        log.warn( sameTaxonMatch.size() + " genes found for query id = " + line + ". Genes found are: "
+                                + sameTaxonMatch + ". Adding All" );
+                    } else {
+                        log.warn( notExactMatch.size() + " genes found for query id = " + line + ". Genes found are: "
+                                + notExactMatch + ". Adding None" );
+                    }
                 }
             }
 
