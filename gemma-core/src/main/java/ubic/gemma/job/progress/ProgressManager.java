@@ -104,7 +104,7 @@ public class ProgressManager {
             }
         }
 
-        newJob = new ProgressJobImpl( jobI, command.toString() );
+        newJob = new ProgressJobImpl( jobI, "" ); // don't log the task name, see bug 1919.
         currentJob.set( taskId );
 
         // keep track of these jobs
