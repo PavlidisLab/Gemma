@@ -33,8 +33,7 @@ public class SequenceSimilaritySearchResultImpl extends
      */
     @Override
     public java.lang.String toString() {
-        // @todo implement public java.lang.String toString()
-        return null;
+        return this.getId().toString();
     }
 
 }

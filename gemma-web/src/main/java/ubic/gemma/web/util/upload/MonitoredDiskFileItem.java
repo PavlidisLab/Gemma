@@ -47,8 +47,8 @@ public class MonitoredDiskFileItem extends DiskFileItem {
 
     private static Log log = LogFactory.getLog( MonitoredDiskFileItem.class.getName() );
 
-    private MonitoredOutputStream mos = null;
-    private OutputStreamListener listener;
+    transient private MonitoredOutputStream mos = null;
+    transient private OutputStreamListener listener;
 
     /**
      * @param fieldName

@@ -18,8 +18,8 @@
  */
 package ubic.gemma.loader.expression.geo;
 
-import java.util.Collection;
-import java.util.HashMap;
+import java.io.Serializable;
+import java.util.Collection; 
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -36,14 +36,9 @@ import org.apache.commons.lang.StringUtils;
  * @author pavlidis
  * @version $Id$
  */
-public class GeoSampleCorrespondence {
+public class GeoSampleCorrespondence implements Serializable {
 
     Collection<Set<String>> sets = new LinkedHashSet<Set<String>>();
-
-    /**
-     * Keeps track of which datasets already have a match involving a given sample
-     */
-    Map<String, Collection<String>> datasetMapping = new HashMap<String, Collection<String>>();
 
     private Map<String, String> accToTitle;
     private Map<String, String> accToDataset;

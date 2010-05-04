@@ -210,6 +210,7 @@ public class DatasetCombiner {
     public static Collection<String> findGDSforGSE( String seriesAccession ) {
         URL url = null;
         Collection<String> associatedDatasetAccessions = new HashSet<String>();
+        InputStream is = null;
         try {
 
             Pattern pat = Pattern.compile( "(GDS\\d+)\\srecord" );
@@ -218,7 +219,7 @@ public class DatasetCombiner {
 
             URLConnection conn = url.openConnection();
             conn.connect();
-            InputStream is = conn.getInputStream();
+            is = conn.getInputStream();
             BufferedReader br = new BufferedReader( new InputStreamReader( is ) );
             String line = null;
             while ( ( line = br.readLine() ) != null ) {
@@ -246,7 +247,6 @@ public class DatasetCombiner {
                     }
                 }
             }
-            is.close();
             return associatedDatasetAccessions;
         } catch ( MalformedURLException e ) {
             throw new RuntimeException( "Invalid URL " + url, e );
@@ -254,6 +254,12 @@ public class DatasetCombiner {
             throw new RuntimeException( "Could not connect to remote server", e );
         } catch ( IOException e ) {
             throw new RuntimeException( "Could not get data from remote server", e );
+        } finally {
+            if ( is != null ) try {
+                is.close();
+            } catch ( IOException e ) {
+                throw new RuntimeException( "Could not close stream", e );
+            }
         }
     }
 
@@ -811,7 +817,7 @@ public class DatasetCombiner {
      * @param trimmedTarget
      * @return
      */
-    private double computeDistance( String trimmedTest, String trimmedTarget ) {
+    private int computeDistance( String trimmedTest, String trimmedTarget ) {
 
         return StringDistance.editDistance( trimmedTarget, trimmedTest );
 

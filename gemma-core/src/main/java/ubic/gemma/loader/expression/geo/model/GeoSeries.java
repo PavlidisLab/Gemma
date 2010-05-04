@@ -34,20 +34,20 @@ import ubic.gemma.loader.expression.geo.GeoSampleCorrespondence;
  */
 public class GeoSeries extends GeoData {
 
-    String summary = "";
-    String overallDesign = "";
-    Collection<String> keyWords;
-    Collection<String> pubmedIds;
-    GeoValues values;
-    Collection<String> webLinks;
-    Collection<GeoContact> contributers;
-    Map<Integer, GeoVariable> variables;
-    Map<Integer, GeoReplication> replicates;
-    GeoSampleCorrespondence sampleCorrespondence;
-    Collection<GeoDataset> dataSets;
-    Collection<GeoSample> samples;
-    String supplementaryFile = "";
-    String lastUpdateDate = "";
+    private String summary = "";
+    private String overallDesign = "";
+    private Collection<String> keyWords;
+    private Collection<String> pubmedIds;
+    private GeoValues values;
+    private Collection<String> webLinks;
+    private Collection<GeoContact> contributers;
+    private Map<Integer, GeoVariable> variables;
+    private Map<Integer, GeoReplication> replicates;
+    private GeoSampleCorrespondence sampleCorrespondence;
+    private Collection<GeoDataset> dataSets;
+    private Collection<GeoSample> samples;
+    private String supplementaryFile = "";
+    private String lastUpdateDate = "";
     boolean isSuperSeries = false;
     boolean isSubSeries = false;
     private Collection<String> subSeries;
@@ -101,7 +101,6 @@ public class GeoSeries extends GeoData {
     }
 
     /**
-     * 
      * @param id in format "1239954" or "1239954,2194919", etc. The latter will be split into two.
      */
     public void addToPubmedIds( String id ) {

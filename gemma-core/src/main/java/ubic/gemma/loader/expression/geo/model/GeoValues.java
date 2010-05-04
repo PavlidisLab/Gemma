@@ -18,6 +18,7 @@
  */
 package ubic.gemma.loader.expression.geo.model;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -49,7 +50,7 @@ import org.apache.commons.logging.LogFactory;
  * @author pavlidis
  * @version $Id$
  */
-public class GeoValues {
+public class GeoValues implements Serializable {
 
     private static Log log = LogFactory.getLog( GeoValues.class.getName() );
 
@@ -309,13 +310,6 @@ public class GeoValues {
     }
 
     /**
-     * @return
-     */
-    public GeoSample[] getSampleDimension( GeoPlatform platform, String quantitationType ) {
-        return ( GeoSample[] ) sampleDimensions.get( platform ).get( quantitationType ).toArray();
-    }
-
-    /**
      * Get the indices of the data for a set of samples - this can be used to get a slice of the data. This is
      * inefficient but shouldn't need to be called all that frequently.
      * 
@@ -416,6 +410,7 @@ public class GeoValues {
 
     /*
      * (non-Javadoc)
+     * 
      * @see java.lang.Object#toString()
      */
     @Override

@@ -60,6 +60,7 @@ public class GridTaskInterceptor implements MethodInterceptor {
 
     /*
      * (non-Javadoc)
+     * 
      * @see org.aopalliance.intercept.MethodInterceptor#invoke(org.aopalliance.intercept.MethodInvocation)
      */
     public Object invoke( MethodInvocation invocation ) throws Throwable {
@@ -130,12 +131,12 @@ public class GridTaskInterceptor implements MethodInterceptor {
              */
             loggingNotifyDelegator.getEventRegistration().getLease().cancel();
             loggingNotifyDelegator.close();
-            loggingNotifyDelegator.finalize();
+            // loggingNotifyDelegator.finalize();
             loggingNotifyDelegator = null;
 
             jobStartNotifyDelegator.getEventRegistration().getLease().cancel();
             jobStartNotifyDelegator.close();
-            jobStartNotifyDelegator.finalize();
+            // jobStartNotifyDelegator.finalize();
             jobStartNotifyDelegator = null;
         }
         return retVal;

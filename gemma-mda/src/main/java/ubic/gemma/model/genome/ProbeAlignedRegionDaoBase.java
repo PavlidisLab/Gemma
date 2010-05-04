@@ -35,23 +35,6 @@ import ubic.gemma.model.genome.gene.GeneValueObject;
 public abstract class ProbeAlignedRegionDaoBase extends HibernateDaoSupport implements
         ubic.gemma.model.genome.ProbeAlignedRegionDao {
 
-    /**
-     * This anonymous transformer is designed to transform entities or report query results (which result in an array of
-     * objects) to {@link ubic.gemma.model.genome.gene.GeneValueObject} using the Jakarta Commons-Collections
-     * Transformation API.
-     */
-    protected org.apache.commons.collections.Transformer GENEVALUEOBJECT_TRANSFORMER = new org.apache.commons.collections.Transformer() {
-        public Object transform( Object input ) {
-            Object result = null;
-            if ( input instanceof ubic.gemma.model.genome.Gene ) {
-                result = toGeneValueObject( ( ubic.gemma.model.genome.ProbeAlignedRegion ) input );
-            } else if ( input instanceof Object[] ) {
-                result = toGeneValueObject( ( Object[] ) input );
-            }
-            return result;
-        }
-    };
-
     protected final org.apache.commons.collections.Transformer GeneValueObjectToEntityTransformer = new org.apache.commons.collections.Transformer() {
         public Object transform( Object input ) {
             return geneValueObjectToEntity( ( ubic.gemma.model.genome.gene.GeneValueObject ) input );
@@ -619,15 +602,6 @@ public abstract class ProbeAlignedRegionDaoBase extends HibernateDaoSupport impl
     }
 
     /**
-     * @see ubic.gemma.model.genome.GeneDao#toGeneValueObjectCollection(java.util.Collection)
-     */
-    public final void toGeneValueObjectCollection( java.util.Collection<? extends ProbeAlignedRegion> entities ) {
-        if ( entities != null ) {
-            org.apache.commons.collections.CollectionUtils.transform( entities, GENEVALUEOBJECT_TRANSFORMER );
-        }
-    }
-
-    /**
      * @see ubic.gemma.model.common.SecurableDao#update(java.util.Collection)
      */
 
@@ -659,28 +633,6 @@ public abstract class ProbeAlignedRegionDaoBase extends HibernateDaoSupport impl
     }
 
     /**
-     * Default implementation for transforming the results of a report query into a value object. This implementation
-     * exists for convenience reasons only. It needs only be overridden in the {@link GeneDaoImpl} class if you intend
-     * to use reporting queries.
-     * 
-     * @see ubic.gemma.model.genome.GeneDao#toGeneValueObject(ubic.gemma.model.genome.Gene)
-     */
-    protected ubic.gemma.model.genome.gene.GeneValueObject toGeneValueObject( Object[] row ) {
-        ubic.gemma.model.genome.gene.GeneValueObject target = null;
-        if ( row != null ) {
-            final int numberOfObjects = row.length;
-            for ( int ctr = 0; ctr < numberOfObjects; ctr++ ) {
-                final Object object = row[ctr];
-                if ( object instanceof ubic.gemma.model.genome.PredictedGene ) {
-                    target = toGeneValueObject( ( ubic.gemma.model.genome.ProbeAlignedRegion ) object );
-                    break;
-                }
-            }
-        }
-        return target;
-    }
-
-    /**
      * Transforms a collection of entities using the
      * {@link #transformEntity(int,ubic.gemma.model.genome.ProbeAlignedRegion)} method. This method does not instantiate
      * a new collection.
@@ -695,14 +647,7 @@ public abstract class ProbeAlignedRegionDaoBase extends HibernateDaoSupport impl
 
     protected void transformEntities( final int transform,
             final java.util.Collection<? extends ProbeAlignedRegion> entities ) {
-        switch ( transform ) {
-            case ubic.gemma.model.genome.GeneDao.TRANSFORM_GENEVALUEOBJECT:
-                toGeneValueObjectCollection( entities );
-                break;
-            case TRANSFORM_NONE: // fall-through
-            default:
-                // do nothing;
-        }
+        // no op, remove this
     }
 
     /**

@@ -76,7 +76,7 @@ import ubic.gemma.model.expression.designElement.*;
  */
 public class LinkEvalCli extends AbstractSpringAwareCLI {
 
-    static class GeneComparator implements Comparator<Gene> {
+    private static class GeneComparator implements Comparator<Gene> {
 
         public int compare( Gene g1, Gene g2 ) {
 
@@ -92,7 +92,7 @@ public class LinkEvalCli extends AbstractSpringAwareCLI {
 
     }
 
-    static class GenePair extends ArrayList<List<Gene>> implements Comparable<GenePair> {
+    private static class GenePair extends ArrayList<List<Gene>> implements Comparable<GenePair> {
 
         public GenePair() {
             super( 0 );
@@ -284,7 +284,7 @@ public class LinkEvalCli extends AbstractSpringAwareCLI {
 
     }
 
-    static class ProbeComparator implements Comparator<CompositeSequence> {
+    private static class ProbeComparator implements Comparator<CompositeSequence> {
 
         public int compare( CompositeSequence o1, CompositeSequence o2 ) {
 
@@ -325,11 +325,11 @@ public class LinkEvalCli extends AbstractSpringAwareCLI {
         }
     }
 
-    DoubleMatrix<Long, String> geneVectorMatrix = new SparseRaggedDoubleMatrix<Long, String>();
+    private DoubleMatrix<Long, String> geneVectorMatrix = new SparseRaggedDoubleMatrix<Long, String>();
 
-    Map<String, Integer> GOcountMap = new HashMap<String, Integer>();
+    private Map<String, Integer> GOcountMap = new HashMap<String, Integer>();
 
-    Map<String, Double> GOProbMap = new HashMap<String, Double>();
+    private Map<String, Double> GOProbMap = new HashMap<String, Double>();
 
     private String adShortName = "";// holds inputted string indicating array design short name
 
@@ -413,7 +413,7 @@ public class LinkEvalCli extends AbstractSpringAwareCLI {
 
     private List<CompositeSequence> secondProbes;
 
-    Map<CompositeSequence, Collection<Gene>> probemap;
+    private Map<CompositeSequence, Collection<Gene>> probemap;
 
     private boolean selectSubset = false;
 
