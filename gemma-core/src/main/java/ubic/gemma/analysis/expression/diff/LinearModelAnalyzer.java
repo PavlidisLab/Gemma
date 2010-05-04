@@ -27,8 +27,10 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import org.apache.commons.collections.Transformer;
 import org.apache.commons.collections.TransformerUtils;
@@ -73,6 +75,7 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.analysis.expression.diff.AbstractDifferentialExpressionAnalyzer#run(ubic.gemma.model.expression.experiment
      * .ExpressionExperiment)
@@ -84,6 +87,7 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.analysis.expression.diff.AbstractDifferentialExpressionAnalyzer#run(ubic.gemma.model.expression.experiment
      * .ExpressionExperiment, java.util.Collection)
@@ -101,6 +105,7 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.analysis.expression.diff.AbstractDifferentialExpressionAnalyzer#run(ubic.gemma.model.expression.experiment
      * .ExpressionExperiment, ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalysisConfig)
@@ -288,10 +293,12 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
 
             if ( log.isDebugEnabled() ) log.debug( el.getName() + "\n" + lm );
 
-            if ( lm == null && !warned ) {
-                // FIXME this usuall y means we got nothing.
-                log.warn( "No result for " + el + ", further warnings suppressed" );
-                warned = true;
+            if ( lm == null ) {
+                if ( !warned ) {
+                    // FIXME this usuall y means we got nothing.
+                    log.warn( "No result for " + el + ", further warnings suppressed" );
+                    warned = true;
+                }
                 continue;
             }
 
@@ -405,6 +412,7 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.analysis.expression.diff.AbstractDifferentialExpressionAnalyzer#run(ubic.gemma.model.expression.experiment
      * .ExpressionExperiment, ubic.gemma.model.expression.experiment.ExperimentalFactor[])
@@ -594,20 +602,13 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
         final String matrixName = rc.assignMatrix( namedMatrix, rowNameExtractor );
         ExecutorService service = Executors.newSingleThreadExecutor();
 
-        service.execute( new Runnable() {
+        Future<?> f = service.submit( new Runnable() {
             public void run() {
-                Throwable thrown = null;
-                try {
-                    Map<String, LinearModelSummary> res = rc.rowApplyLinearModel( matrixName, modelFormula,
-                            factorNameMap.keySet().toArray( new String[] {} ) );
-                    rawResults.putAll( res );
-                } catch ( Exception e ) {
-                    thrown = e;
-                } finally {
-                    if ( thrown != null ) {
-                        log.info( thrown );
-                    }
-                }
+
+                Map<String, LinearModelSummary> res = rc.rowApplyLinearModel( matrixName, modelFormula, factorNameMap
+                        .keySet().toArray( new String[] {} ) );
+                rawResults.putAll( res );
+
             }
         } );
 
@@ -618,7 +619,7 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
         long lasttime = 0;
 
         double updateIntervalMillis = 60000.00;
-        while ( !service.isTerminated() ) {
+        while ( !f.isDone() ) {
             try {
                 Thread.sleep( 1000 );
 
@@ -639,7 +640,17 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
             log.info( String.format( "Analysis finished in %.1f minutes.", timer.getTime() / 60000.00 ) );
         }
 
-        assert rawResults.size() == namedMatrix.rows();
+        try {
+            f.get();
+        } catch ( InterruptedException e ) {
+            log.warn( "Job was interrupted" );
+            return rawResults;
+        } catch ( ExecutionException e ) {
+            throw new RuntimeException( e );
+        }
+
+        assert rawResults.size() == namedMatrix.rows() : "expected " + namedMatrix.rows() + " results, got "
+                + rawResults.size();
         return rawResults;
     }
 
