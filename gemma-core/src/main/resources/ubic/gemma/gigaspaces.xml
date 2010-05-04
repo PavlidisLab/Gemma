@@ -93,6 +93,9 @@
 					ubic.gemma.tasks.analysis.sequence.ArrayDesignRepeatScanTask
 				</value>
 				<value>
+					ubic.gemma.tasks.analysis.expression.AutoTaggerTask
+				</value>
+				<value>
 					ubic.gemma.job.grid.util.MonitorTask
 				</value>
 			</list>
@@ -208,6 +211,18 @@
 		<property name="businessInterface">
 			<value>
 				ubic.gemma.tasks.analysis.sequence.ArrayDesignRepeatScanTask
+			</value>
+		</property>
+	</bean>
+
+	<bean id="autoTaggerWorker" class="ubic.gemma.job.grid.worker.CustomDelegatingWorker" scope="prototype">
+		<property name="javaSpaceTemplate" ref="gigaspacesTemplate" />
+		<property name="delegate">
+			<ref bean="autoTaggerTask" />
+		</property>
+		<property name="businessInterface">
+			<value>
+				ubic.gemma.tasks.analysis.expression.AutoTaggerTask
 			</value>
 		</property>
 	</bean>

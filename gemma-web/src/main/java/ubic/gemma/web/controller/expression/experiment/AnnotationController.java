@@ -64,6 +64,19 @@ public class AnnotationController extends AbstractTaskService {
         }
     }
 
+    private class TaggerSpaceJob extends BackgroundJob<TaskCommand> {
+
+        public TaggerSpaceJob( TaskCommand commandObj ) {
+            super( commandObj );
+        }
+
+        @Override
+        protected TaskResult processJob() {
+            AutoTaggerTask taskProxy = ( AutoTaggerTask ) getProxy();
+            return taskProxy.execute( command );
+        }
+    }
+
     @Autowired
     private AutoTaggerTask autoTagTask;
 
@@ -201,7 +214,7 @@ public class AnnotationController extends AbstractTaskService {
      */
     @Override
     protected BackgroundJob<?> getSpaceRunner( TaskCommand command ) {
-        return null;
+        return new TaggerSpaceJob( command );
     }
 
 }
