@@ -51,7 +51,7 @@ public class TaskCompletionController {
         if ( result == null ) return null;
 
         Object answer = result.getAnswer();
-              
+
         if ( answer instanceof ModelAndView ) {
             View view = ( ( ModelAndView ) answer ).getView();
             if ( view instanceof RedirectView ) {
@@ -60,7 +60,11 @@ public class TaskCompletionController {
             return null;
         }
 
-        return result;
+        if ( answer instanceof Exception ) {
+            throw ( Exception ) answer;
+        }
+
+        return answer;
     }
 
 }
