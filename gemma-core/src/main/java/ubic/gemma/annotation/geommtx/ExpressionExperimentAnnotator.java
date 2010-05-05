@@ -188,6 +188,8 @@ public class ExpressionExperimentAnnotator implements InitializingBean {
             return new HashSet<Characteristic>();
         }
 
+        log.info( "Annotating: " + e );
+
         expressionExperimentService.thawLite( e );
 
         long time = System.currentTimeMillis();
@@ -197,6 +199,7 @@ public class ExpressionExperimentAnnotator implements InitializingBean {
         Set<String> predictedAnnotations;
 
         // go through each text source one by one
+        log.info( "Initialized ..." );
 
         annotateAll( model, e );
 
@@ -284,19 +287,19 @@ public class ExpressionExperimentAnnotator implements InitializingBean {
      * @param experiment
      */
     private void annotateAll( Model model, ExpressionExperiment experiment ) {
-        log.debug( "getName()" );
+        log.info( "Examining name" );
         annotateName( model, experiment );
 
-        log.debug( "Description" );
+        log.info( "Examining description (might take a while)" );
         annotateDescription( model, experiment );
 
-        log.debug( "Publications" );
+        log.info( "Examining publications" );
         annotateReferences( model, experiment );
 
-        log.debug( "Experimental design" );
+        log.info( "Examining experimental design" );
         annotateExperimentalDesign( model, experiment );
 
-        log.debug( "BioAssays" );
+        log.info( "Examining bioAssays" );
         annotateBioAssays( model, experiment );
     }
 
@@ -400,10 +403,10 @@ public class ExpressionExperimentAnnotator implements InitializingBean {
         if ( ref != null ) {
             String nameSpaceBase = "primaryReference/" + ref.getId() + "/";
 
-            log.info( "in title doRDF" );
+            log.debug( "in title doRDF" );
             doRDF( model, experiment.getId(), ref.getTitle(), nameSpaceBase + "title" );
             if ( ref.getAbstractText() != null ) {
-                log.info( "in abstract doRDF" );
+                log.debug( "in abstract doRDF" );
                 doRDF( model, experiment.getId(), ref.getAbstractText(), nameSpaceBase + "abstract" );
             }
         }
@@ -437,8 +440,9 @@ public class ExpressionExperimentAnnotator implements InitializingBean {
      */
     private void doRDF( Model model, Long eeId, String text, String desc ) {
         if ( text.equals( "" ) ) return;
-        text = text.replaceAll( "Source GEO sample is GSM[0-9]+", "" );
-        text = text.replaceAll( "Last updated [(]according to GEO[)].+[\\d]{4}", "" );
+        String textToProcess = text;
+        textToProcess = textToProcess.replaceAll( "Source GEO sample is GSM[0-9]+", "" );
+        textToProcess = textToProcess.replaceAll( "Last updated [(]according to GEO[)].+[\\d]{4}", "" );
 
         String cleanText = desc.replaceAll( "[()]", "" );
         String thisObjectURI = gemmaNamespace + cleanText;
@@ -452,7 +456,7 @@ public class ExpressionExperimentAnnotator implements InitializingBean {
         if ( text2Owl == null ) return;
 
         // a bit strange here, since it takes in the root
-        text2Owl.processText( text, thisResource );
+        text2Owl.processText( textToProcess, thisResource );
     }
 
     /**
