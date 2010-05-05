@@ -1203,6 +1203,8 @@ public class GeoFamilyParser implements Parser<Object> {
             platformSupplementaryFileSet( currentPlatformAccession, value );
         } else if ( startsWithIgnoreCase( line, "!Platform_pubmed_id" ) ) {
             // do nothing. for now.
+        } else if ( startsWithIgnoreCase( line, "!Platform_relation" ) ) {
+            // no op for now. Links to other platforms this is derived from.
         } else {
             log.error( "Unknown flag in platform: " + line );
         }
@@ -1467,6 +1469,8 @@ public class GeoFamilyParser implements Parser<Object> {
             sampleTypeSet( currentSampleAccession, value );
         } else if ( startsWithIgnoreCase( line, "!Sample_comment" ) ) {
             // noop.
+        } else if ( startsWithIgnoreCase( line, "!Sample_taxid_ch" ) ) {
+            // noop.
         } else {
             log.error( "Unknown flag in sample: " + line );
         }
@@ -1579,6 +1583,10 @@ public class GeoFamilyParser implements Parser<Object> {
             seriesLastUpdateDate( currentSeriesAccession, value );
         } else if ( startsWithIgnoreCase( line, "!Series_citation" ) ) {
             // no-op. This should be redundant with the pubmed info and is hard to parse anyway
+        } else if ( startsWithIgnoreCase( line, "!Series_platform_taxid" ) ) {
+            // no-op for now
+        } else if ( startsWithIgnoreCase( line, "!Series_sample_taxid" ) ) {
+            // no-op for now.
         } else {
             log.error( "Unknown flag in series: " + line );
         }
