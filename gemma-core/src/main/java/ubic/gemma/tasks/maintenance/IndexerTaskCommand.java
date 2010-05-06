@@ -79,13 +79,20 @@ public class IndexerTaskCommand extends TaskCommand {
         return indexProbe;
     }
 
+   
+    /**
+     * Indexing of probes and BioSequences sometimes bails because of the size of the index created. 
+     * Also their data rarely changes so there is not much value in indexing it every week. 
+     * Indexing of probes and biosequences can still be triggered manually.  
+     * @param all
+     */
     public void setAll( boolean all ) {
         setIndexAD( all );
         setIndexBibRef( all );
-        setIndexBioSequence( all );
+        setIndexBioSequence( false );
         setIndexEE( all );
         setIndexGene( all );
-        setIndexProbe( all );
+        setIndexProbe( false );
     }
 
     public void setCompassOn( boolean compassOn ) {
