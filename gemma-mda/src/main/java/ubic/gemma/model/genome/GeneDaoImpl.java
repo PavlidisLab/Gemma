@@ -89,6 +89,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.GeneDaoBase#find(ubic.gemma.model.genome.Gene)
      */
     @SuppressWarnings("unchecked")
@@ -134,12 +135,27 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.GeneDao#find(ubic.gemma.model.genome.PhysicalLocation)
      */
     public Collection<Gene> find( PhysicalLocation physicalLocation ) {
         return findByPosition( physicalLocation.getChromosome(), physicalLocation.getNucleotide(), physicalLocation
                 .getNucleotide()
                 + physicalLocation.getNucleotideLength(), physicalLocation.getStrand() );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.genome.GeneDao#findByOfficialNameInexact(java.lang.String)
+     */
+    @SuppressWarnings( { "unchecked" })
+    public Collection<Gene> findByOfficialNameInexact( String officialName ) {
+        final String query = "from GeneImpl g where g.officialName like :officialName order by g.officialName";
+        org.hibernate.Query queryObject = this.getSession( false ).createQuery( query );
+        queryObject.setParameter( "officialName", officialName );
+        queryObject.setMaxResults( MAX_RESULTS );
+        return queryObject.list();
     }
 
     /**
@@ -157,12 +173,13 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.GeneDao#findNearest(ubic.gemma.model.genome.PhysicalLocation)
      */
     public RelativeLocationData findNearest( PhysicalLocation physicalLocation, boolean useStrand ) {
 
-        //FIXME  Should return a collection of relativeLocationData in the case of ties
-        
+        // FIXME Should return a collection of relativeLocationData in the case of ties
+
         if ( physicalLocation.getNucleotide() == null ) {
             throw new IllegalArgumentException( "Locations must have a nucleotide position" );
         }
@@ -298,6 +315,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.GeneDaoBase#findOrCreate(ubic.gemma.model.genome.Gene)
      */
     @Override
@@ -313,6 +331,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.GeneDao#geneValueObjectToEntity(ubic.gemma.model.genome.gene.GeneValueObject)
      */
     public Gene geneValueObjectToEntity( GeneValueObject geneValueObject ) {
@@ -403,6 +422,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.GeneDaoBase#handleGetCoexpressedGenes(java.util.Collection, java.util.Collection,
      * java.lang.Integer, boolean)
      */
@@ -588,6 +608,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
     /*
      * Gets all the CompositeSequences related to the gene identified by the given gene and arrayDesign. (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.GeneDaoBase#handleGetCompositeSequences(ubic.gemma.model.genome.Gene,
      * ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
@@ -629,6 +650,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.GeneDaoBase#handleGetGenesByTaxon(ubic.gemma.model.genome.Taxon)
      */
     @SuppressWarnings("unchecked")
@@ -645,6 +667,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.GeneDaoBase#handleGetMicroRnaByTaxon(ubic.gemma.model.genome.Taxon)
      */
     @SuppressWarnings("unchecked")
@@ -662,6 +685,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.GeneDaoBase#handleLoadKnownGenes(ubic.gemma.model.genome.Taxon)
      */
     @SuppressWarnings("unchecked")
@@ -680,6 +704,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.GeneDaoBase#handleLoad(java.util.Collection)
      */
     @SuppressWarnings("unchecked")
@@ -718,6 +743,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.GeneDaoBase#handleLoadPredictedGenes(ubic.gemma.model.genome.Taxon)
      */
     @SuppressWarnings("unchecked")
@@ -732,6 +758,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.GeneDaoBase#handleLoadProbeAlignedRegions(ubic.gemma.model.genome.Taxon)
      */
     @SuppressWarnings("unchecked")

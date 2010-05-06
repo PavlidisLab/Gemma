@@ -214,6 +214,12 @@ public interface GeneDao extends ubic.gemma.model.genome.ChromosomeFeatureDao<Ge
     public java.util.Collection<Gene> findByOfficialSymbolInexact( String queryString, java.lang.String officialSymbol );
 
     /**
+     * @param officialName
+     * @return
+     */
+    public Collection<Gene> findByOfficialNameInexact( String officialName );
+
+    /**
      * Find the Genes closest to the given location. If the location is in a gene(s), they will be returned. Otherwise a
      * single gene closest to the location will be returned, except in the case of ties in which more than one will be
      * returned.

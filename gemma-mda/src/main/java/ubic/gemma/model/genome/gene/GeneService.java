@@ -99,6 +99,12 @@ public interface GeneService {
     public Collection<Gene> findByOfficialName( String officialName );
 
     /**
+     * @param officialName
+     * @return
+     */
+    public Collection<Gene> findByOfficialNameInexact( String officialName );
+
+    /**
      * @param officialSymbol
      * @return
      */

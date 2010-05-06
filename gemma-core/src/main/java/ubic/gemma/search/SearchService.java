@@ -1200,17 +1200,18 @@ public class SearchService implements InitializingBean {
         StopWatch watch = startTiming();
 
         Map<ExpressionExperiment, String> results = new HashMap<ExpressionExperiment, String>();
-        ExpressionExperiment ee = expressionExperimentService.findByName( settings.getQuery() );
+        String query = StringEscapeUtils.unescapeJava( settings.getQuery() );
+        ExpressionExperiment ee = expressionExperimentService.findByName( query );
         if ( ee != null ) {
             results.put( ee, ee.getName() );
         } else {
-            ee = expressionExperimentService.findByShortName( settings.getQuery() );
+            ee = expressionExperimentService.findByShortName( query );
             if ( ee != null ) {
                 results.put( ee, ee.getShortName() );
             } else {
                 try {
                     // maybe user put in a primary key value.
-                    ee = expressionExperimentService.load( new Long( settings.getQuery() ) );
+                    ee = expressionExperimentService.load( new Long( query ) );
                     if ( ee != null ) results.put( ee, ee.getId().toString() );
                 } catch ( NumberFormatException e ) {
                     // no-op - it's not an ID.
@@ -1240,7 +1241,7 @@ public class SearchService implements InitializingBean {
         if ( !settings.isUseDatabase() ) return new HashSet<SearchResult>();
 
         StopWatch watch = startTiming();
-        String searchString = settings.getQuery();
+        String searchString = StringEscapeUtils.unescapeJava( settings.getQuery() );
         if ( StringUtils.isBlank( searchString ) ) return new HashSet<SearchResult>();
 
         Collection<SearchResult> results = new HashSet<SearchResult>();
@@ -1290,9 +1291,20 @@ public class SearchService implements InitializingBean {
                 inexactString = inexactString + "%";
             }
             geneSet.addAll( geneService.findByOfficialSymbolInexact( inexactString ) );
+
         } else {
             // case 3: string is long enough, and user did not ask for wildcard.
             geneSet.addAll( geneService.findByOfficialSymbol( exactString ) );
+        }
+
+        if ( searchString.length() > 2 && geneSet.isEmpty() ) {
+            if ( !inexactString.endsWith( "%" ) ) {
+                /*
+                 * Now, always use a wildcard.
+                 */
+                inexactString = inexactString + "%";
+            }
+            geneSet.addAll( geneService.findByOfficialNameInexact( inexactString ) );
         }
 
         /*
@@ -1301,7 +1313,7 @@ public class SearchService implements InitializingBean {
          */
 
         /*
-         * If we found a match using official symbol, don't bother with this
+         * If we found a match using official symbol or name, don't bother with this
          */
         if ( geneSet.isEmpty() ) {
             geneSet.addAll( geneService.findByAlias( exactString ) );
