@@ -1224,6 +1224,7 @@ gemma.max.fileupload.size.bytes=
 								<value>getGenesInGroup</value>
 								<value>updateGeneGroup</value>
 								<value>findGeneSetsByGene</value>
+								<value>findGeneSetsByName</value>
 							</list>
 						</property>
 					</bean>

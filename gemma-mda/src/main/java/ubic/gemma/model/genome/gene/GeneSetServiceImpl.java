@@ -19,11 +19,14 @@
 package ubic.gemma.model.genome.gene;
 
 import java.util.Collection;
+import java.util.HashSet;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import ubic.gemma.model.association.Gene2GOAssociationService;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.Taxon;
 
 /**
  * Service for managing gene sets
@@ -36,6 +39,9 @@ public class GeneSetServiceImpl implements GeneSetService {
 
     @Autowired
     private GeneSetDao geneSetDao = null;
+
+    @Autowired
+    private Gene2GOAssociationService gene2GoService = null;
 
     /*
      * (non-Javadoc)
@@ -65,7 +71,6 @@ public class GeneSetServiceImpl implements GeneSetService {
         return this.geneSetDao.findByGene( gene );
     }
 
-    
     /**
      * @param gene
      * @return
@@ -157,5 +162,20 @@ public class GeneSetServiceImpl implements GeneSetService {
 
     public Collection<GeneSet> loadMySharedGeneSets() {
         return loadAll();
+    }
+
+    public GeneSet findByGoId( String name, Taxon taxon ) {
+         Collection<Gene> genes = this.gene2GoService.findByGOTerm( name, taxon );
+         GeneSet transientGeneSet = GeneSet.Factory.newInstance();
+         transientGeneSet.setName( name );
+         Collection<GeneSetMember> members = new HashSet<GeneSetMember>();
+         for ( Gene gene : genes ) {
+             GeneSetMember gmember = GeneSetMember.Factory.newInstance();
+             gmember.setGene( gene );
+             members.add( gmember );            
+        }
+         
+         transientGeneSet.setMembers( members );
+         return transientGeneSet;
     }
 }

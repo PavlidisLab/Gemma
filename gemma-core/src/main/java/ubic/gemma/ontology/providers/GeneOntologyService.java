@@ -680,7 +680,7 @@ public class GeneOntologyService implements InitializingBean {
      * @param is
      * @throws IOException
      */
-    protected void loadTermsInNameSpace( InputStream is ) {
+    public void loadTermsInNameSpace( InputStream is ) {
         Collection<OntologyResource> terms = OntologyLoader.initialize( null, OntologyLoader.loadMemoryModel( is, null,
                 OntModelSpec.OWL_MEM ) );
         addTerms( terms );

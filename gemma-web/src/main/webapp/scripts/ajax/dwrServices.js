@@ -577,6 +577,9 @@ GeneSetController.getUsersGeneGroups = function(p0, callback) {
 GeneSetController.findGeneSetsByGene = function(p0, callback) {
 	dwr.engine._execute(GeneSetController._path, 'GeneSetController', 'findGeneSetsByGene', p0, callback);
 }
+GeneSetController.findGeneSetsByName = function(p0,p1, callback) {
+	dwr.engine._execute(GeneSetController._path, 'GeneSetController', 'findGeneSetsByName', p0, p1, callback);
+}
 // ====================================================================================
 if (SystemMonitorController == null)
 	var SystemMonitorController = {};

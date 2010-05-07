@@ -90,7 +90,7 @@ public class GeneSetDaoImpl extends HibernateDaoSupport implements GeneSetDao {
     @SuppressWarnings("unchecked")
     public Collection<GeneSet> findByName( String name ) {
         return this.getHibernateTemplate().findByNamedParam(
-                "select gs from GeneSetImpl gs where gs.name like :name order by gs.name", "name", name );
+                "select gs from GeneSetImpl gs where gs.name like :name order by gs.name", "name", name + "%" );
     }
 
     

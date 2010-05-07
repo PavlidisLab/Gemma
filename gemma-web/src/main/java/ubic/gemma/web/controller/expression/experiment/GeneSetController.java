@@ -9,6 +9,7 @@
 
 package ubic.gemma.web.controller.expression.experiment;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 
@@ -20,6 +21,8 @@ import org.springframework.stereotype.Controller;
 
 import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.model.genome.gene.GeneSetImpl;
@@ -47,7 +50,10 @@ public class GeneSetController {
 
     @Autowired
     private SecurityService securityService = null;
-
+    
+    @Autowired
+    private TaxonService taxonService = null;
+    
     private static Log log = LogFactory.getLog( GeneSetController.class );
     private static final Double DEFAULT_SCORE = 0.0;
 
@@ -240,6 +246,24 @@ public class GeneSetController {
         Collection<GeneSet> genesets = this.geneSetService.findByGene( gene );
 
         return GeneSetValueObject.convert2ValueObjects( genesets );
+    }
+    
+    
+    public Collection<GeneSetValueObject> findGeneSetsByName(String name, Long taxonId){
+        
+        if (name == null || taxonId == null) return new ArrayList<GeneSetValueObject>();
+        
+        Collection<GeneSet> foundGeneSets = this.geneSetService.findByName( name );
+
+        Taxon tax = taxonService.load(taxonId);
+        if (tax == null){
+            log.warn( "Can't find matching go groups for search term: " + name + "because no valid taxon found for taxon id = " + taxonId );
+            return GeneSetValueObject.convert2ValueObjects( foundGeneSets ); 
+        }
+
+        GeneSet goSet = this.geneSetService.findByGoId( name, tax);
+        foundGeneSets.add( goSet );
+        return GeneSetValueObject.convert2ValueObjects( foundGeneSets );
     }
 
 }

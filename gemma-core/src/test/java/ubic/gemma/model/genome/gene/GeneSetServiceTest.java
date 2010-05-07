@@ -23,13 +23,19 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import java.io.InputStream;
 import java.util.Collection;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import ubic.gemma.model.association.Gene2GOAssociation;
+import ubic.gemma.model.association.Gene2GOAssociationService;
+import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.ontology.providers.GeneOntologyService;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
@@ -41,13 +47,35 @@ public class GeneSetServiceTest extends BaseSpringContextTest {
     private Gene g = null;
     private Gene g3 = null;
 
+    static private final String GOTERM_INDB = "GO_0000310";
+    static private final String GOTERM_QUERY = "GO:0000310";
+
     @Autowired
     GeneSetService geneSetService;
 
+    @Autowired
+    GeneOntologyService geneOntologyService;
+
+    @Autowired
+    Gene2GOAssociationService gene2GoService;
+
     @Before
     public void setUp() throws Exception {
+
+        InputStream is = this.getClass().getResourceAsStream( "/data/loader/ontology/molecular-function.test.owl" );
+        assert is != null;
+        geneOntologyService.loadTermsInNameSpace( is );
+        log.info( "Ready to test" );
+
         g = this.getTestPeristentGene();
         g3 = this.getTestPeristentGene();
+
+    }
+
+    @After
+    public void tearDown() throws Exception {
+
+        gene2GoService.removeAll();
     }
 
     /**
@@ -97,6 +125,47 @@ public class GeneSetServiceTest extends BaseSpringContextTest {
 
         Collection<GeneSet> foundSets = geneSetService.findByGene( g );
         assertTrue( foundSets.size() > 0 );
+    }
+
+    @Test
+    public void testFindByName() {
+        GeneSetMember gmember = GeneSetMember.Factory.newInstance();
+        gmember.setGene( g );
+        gmember.setScore( 0.22 );
+
+        GeneSet gset = GeneSet.Factory.newInstance();
+        gset.setName( "FindTest" );
+        gset.getMembers().add( gmember );
+
+        gset = geneSetService.create( gset );
+        assertNotNull( gset.getId() );
+        assertNotNull( gset.getMembers().iterator().next().getId() );
+
+        assertEquals( g, gset.getMembers().iterator().next().getGene() );
+
+        Collection<GeneSet> foundSets = geneSetService.findByName( "Find" );
+        assertTrue( foundSets.size() > 0 );
+
+    }
+
+    @Test
+    public void testFindByGoId() {
+
+        Gene2GOAssociation g2Go1 = Gene2GOAssociation.Factory.newInstance();
+        VocabCharacteristic oe = VocabCharacteristic.Factory.newInstance();
+        oe.setValueUri( GeneOntologyService.BASE_GO_URI + GOTERM_INDB );
+        oe.setValue( GOTERM_INDB );
+        g2Go1.setOntologyEntry( oe );
+        g2Go1.setGene( g );
+        gene2GoService.create( g2Go1 );
+
+        Gene2GOAssociation g2Go2 = Gene2GOAssociation.Factory.newInstance();
+        g2Go2.setOntologyEntry( oe );
+        g2Go2.setGene( g3 );
+        gene2GoService.create( g2Go2 );
+
+        GeneSet gset = this.geneSetService.findByGoId( GOTERM_QUERY, g3.getTaxon() );
+        assertTrue( gset.getMembers().size() == 2 );
     }
 
     /**

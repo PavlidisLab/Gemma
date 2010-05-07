@@ -24,6 +24,7 @@ import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.userdetails.User;
 
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.Taxon;
 
 /**
  * Service for managing gene sets
@@ -63,6 +64,10 @@ public interface GeneSetService {
 
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public Collection<GeneSet> findByName(String name);
+    
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY"})
+    public GeneSet findByGoId(String name, Taxon taxon);
+    
     
     /**
      * Load all the genesets with the given IDs
