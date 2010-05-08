@@ -130,17 +130,20 @@ public class DifferentialExpressionAnalyzerService {
      * @param factors
      */
     public void deleteOldAnalyses( ExpressionExperiment expressionExperiment, Collection<ExperimentalFactor> factors ) {
-        Collection<DifferentialExpressionAnalysis> diffAnalysis = differentialExpressionAnalysisService
+        Collection<DifferentialExpressionAnalysis> diffAnalyses = differentialExpressionAnalysisService
                 .findByInvestigation( expressionExperiment );
 
-        if ( diffAnalysis == null || diffAnalysis.isEmpty() ) {
+        if ( diffAnalyses == null || diffAnalyses.isEmpty() ) {
             log.info( "No differential expression analyses to delete for " + expressionExperiment.getShortName() );
             return;
         }
 
-        for ( DifferentialExpressionAnalysis de : diffAnalysis ) {
+        this.differentialExpressionAnalysisService.thaw( diffAnalyses );
+
+        for ( DifferentialExpressionAnalysis de : diffAnalyses ) {
 
             Collection<ExperimentalFactor> factorsInAnalysis = new HashSet<ExperimentalFactor>();
+
             for ( ExpressionAnalysisResultSet resultSet : de.getResultSets() ) {
                 factorsInAnalysis.addAll( resultSet.getExperimentalFactors() );
             }
