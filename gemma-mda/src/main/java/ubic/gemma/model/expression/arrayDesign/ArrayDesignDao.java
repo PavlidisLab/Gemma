@@ -328,13 +328,6 @@ public interface ArrayDesignDao extends BaseDao<ArrayDesign> {
 
     /**
      * <p>
-     * Perform a less intensive thaw of an array design.
-     * </p>
-     */
-    public ArrayDesign thawLite( ArrayDesign arrayDesign );
-
-    /**
-     * <p>
      * Test whether the candidateSubsumer subsumes the candidateSubsumee. If so, the array designs are updated to
      * reflect this fact. The boolean value returned indicates whether there was indeed a subsuming relationship found.
      * </p>

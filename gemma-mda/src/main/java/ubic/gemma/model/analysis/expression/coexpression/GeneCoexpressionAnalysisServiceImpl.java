@@ -192,4 +192,27 @@ public class GeneCoexpressionAnalysisServiceImpl extends
         return all;
     }
 
+    @Override
+    public GeneCoexpressionAnalysis findCurrent( Taxon taxon ) {
+        Collection<GeneCoexpressionAnalysis> analyses = null;
+        if ( taxon.getIsSpecies() ) {
+            analyses = findByTaxon( taxon );
+        } else {
+            analyses = findByParentTaxon( taxon );
+        }
+
+        if ( analyses.size() == 0 ) {
+            return null;
+        }
+
+        for ( GeneCoexpressionAnalysis a : analyses ) {
+            if ( a.getEnabled() ) {
+                return a;
+            }
+        }
+
+        return null;
+
+    }
+
 }

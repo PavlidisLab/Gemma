@@ -29,6 +29,7 @@ import java.util.Map;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.Predicate;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -328,7 +329,8 @@ public class GeneCoexpressionService {
             }
 
             Collection<Gene2GeneCoexpression> g2gs = gg2gs.get( queryGene );
-            Map<Long, Gene2GeneProteinAssociation> proteinInteractionMap = this.getGene2GeneProteinAssociationForQueryGene( queryGene );
+            Map<Long, Gene2GeneProteinAssociation> proteinInteractionMap = this
+                    .getGene2GeneProteinAssociationForQueryGene( queryGene );
 
             assert g2gs != null;
 
@@ -343,9 +345,10 @@ public class GeneCoexpressionService {
                 cvo.setFoundGene( foundGene );
 
                 if ( proteinInteractionMap != null && !( proteinInteractionMap.isEmpty() ) ) {
-                    Gene2GeneProteinAssociation gene2GeneProteinAssociation = proteinInteractionMap.get( foundGene.getId() );
-                    addProteinDetailsToValueObject(gene2GeneProteinAssociation, cvo);
-                    
+                    Gene2GeneProteinAssociation gene2GeneProteinAssociation = proteinInteractionMap.get( foundGene
+                            .getId() );
+                    addProteinDetailsToValueObject( gene2GeneProteinAssociation, cvo );
+
                 }
 
                 /*
@@ -470,7 +473,8 @@ public class GeneCoexpressionService {
             // map of interaactions
             // and if so get the value for the url.
             if ( proteinInteractionsForQueryGene != null && !( proteinInteractionsForQueryGene.isEmpty() ) ) {
-                Gene2GeneProteinAssociation proteinProteinInteraction = proteinInteractionsForQueryGene.get( cvo.getGeneId() );
+                Gene2GeneProteinAssociation proteinProteinInteraction = proteinInteractionsForQueryGene.get( cvo
+                        .getGeneId() );
                 this.addProteinDetailsToValueObject( proteinProteinInteraction, ecvo );
             }
             /*
@@ -650,7 +654,7 @@ public class GeneCoexpressionService {
      * Get coexpression results using a pure gene2gene query (without visiting the probe2probe tables. This is generally
      * faster, probably even if we're only interested in data from a subset of the exeriments.
      * 
-     * @param eeSetId the base expression experimnent set to refer to for analysis results.
+     * @param eeSetId the base expression experimnent set to refer to for analysis results -
      * @param eeIds Experiments to limit the results to (can be null)
      * @param queryGenes
      * @param stringency
@@ -661,9 +665,37 @@ public class GeneCoexpressionService {
     private CoexpressionMetaValueObject getFilteredCannedAnalysisResults( Long eeSetId, Collection<Long> eeIds,
             Collection<Gene> queryGenes, int stringency, int maxResults, boolean queryGenesOnly ) {
 
-        ExpressionExperimentSet baseSet = expressionExperimentSetService.load( eeSetId );
+        if ( queryGenes.isEmpty() ) {
+            throw new IllegalArgumentException( "No genes in query" );
+        }
 
-        if ( baseSet == null ) {
+        /*
+         * assuming they are all the same.
+         */
+        Taxon taxon = queryGenes.iterator().next().getTaxon();
+
+        /*
+         * The live analysis for this taxon
+         */
+        GeneCoexpressionAnalysis currentAnalysis = geneCoexpressionAnalysisService.findCurrent( taxon );
+
+        if ( currentAnalysis == null ) {
+            return null;
+        }
+
+        ExpressionExperimentSet baseSet = currentAnalysis.getExpressionExperimentSetAnalyzed();
+
+        /*
+         * We get this prior to filtering so it matches the vectors stored with the analysis.
+         */
+        Map<Integer, Long> positionToIDMap = GeneLinkCoexpressionAnalyzer.getPositionToIdMap( getIds( baseSet ) );
+
+        /*
+         * FIXME: we should provide this OR the eeIds to query.
+         */
+        ExpressionExperimentSet desiredSet = expressionExperimentSetService.load( eeSetId );
+
+        if ( desiredSet == null ) {
             throw new IllegalArgumentException( "No such expressionexperiment set with id=" + eeSetId );
         }
 
@@ -673,19 +705,14 @@ public class GeneCoexpressionService {
         Map<Gene, Collection<Gene2GeneCoexpression>> gg2gs = getRawCoexpression( queryGenes, stringency, maxResults,
                 queryGenesOnly );
 
-        Collection<Long> eeIdsFromAnalysis = getIds( baseSet );
-
-        /*
-         * We get this prior to filtering so it matches the vectors stored with the analysis.
-         */
-        Map<Integer, Long> positionToIDMap = GeneLinkCoexpressionAnalyzer.getPositionToIdMap( eeIdsFromAnalysis );
+        Collection<Long> eeIdsFromAnalysisToUse = getIds( desiredSet );
 
         /*
          * Now we get the data sets we area actually concerned with.
          */
         Collection<Long> eeIdsTouse = null;
         if ( eeIds == null ) {
-            eeIdsTouse = eeIdsFromAnalysis;
+            eeIdsTouse = eeIdsFromAnalysisToUse;
         } else {
             eeIdsTouse = eeIds;
         }
@@ -733,7 +760,8 @@ public class GeneCoexpressionService {
             HashMap<Gene, Collection<Gene2GeneCoexpression>> foundGenes = new HashMap<Gene, Collection<Gene2GeneCoexpression>>();
 
             // for queryGene get the interactions
-            Map<Long, Gene2GeneProteinAssociation> proteinInteractionMap = this.getGene2GeneProteinAssociationForQueryGene( queryGene );
+            Map<Long, Gene2GeneProteinAssociation> proteinInteractionMap = this
+                    .getGene2GeneProteinAssociationForQueryGene( queryGene );
 
             for ( Gene2GeneCoexpression g2g : g2gs ) {
                 Gene foundGene = g2g.getFirstGene().equals( queryGene ) ? g2g.getSecondGene() : g2g.getFirstGene();
@@ -761,8 +789,8 @@ public class GeneCoexpressionService {
 
                 // set the interaction if none null will be put
                 if ( proteinInteractionMap != null && !( proteinInteractionMap.isEmpty() ) ) {
-                    Gene2GeneProteinAssociation assoication= proteinInteractionMap.get( foundGene.getId());
-                    this.addProteinDetailsToValueObject( assoication, cvo );                   
+                    Gene2GeneProteinAssociation assoication = proteinInteractionMap.get( foundGene.getId() );
+                    this.addProteinDetailsToValueObject( assoication, cvo );
                 }
 
                 Collection<Long> testingDatasets = GeneLinkCoexpressionAnalyzer.getTestedExperimentIds( g2g,
@@ -1087,7 +1115,7 @@ public class GeneCoexpressionService {
                         && proteinInteraction.getSecondGene().getId() != null
                         && proteinInteraction.getFirstGene().getId() != null ) {
                     // can append extra details to link if required this formating code should be somewhere else?
-                    
+
                     if ( proteinInteraction.getFirstGene().getId().equals( gene.getId() ) ) {
                         stringUrlsMappedByGeneID.put( proteinInteraction.getSecondGene().getId(), proteinInteraction );
                     } else {
@@ -1099,8 +1127,7 @@ public class GeneCoexpressionService {
         return stringUrlsMappedByGeneID;
 
     }
-    
-    
+
     /**
      * Adds the protein protein interaction data to the value object, that is the url link for string the evidence for
      * that interaction and the confidenence score.
@@ -1109,29 +1136,29 @@ public class GeneCoexpressionService {
      * @param cvo The value object used to display coexpression data
      */
     public void addProteinDetailsToValueObject( Gene2GeneProteinAssociation proteinProteinInteraction,
-            CoexpressionValueObjectExt cvo )  {
-        
-        if(proteinProteinInteraction !=null){
+            CoexpressionValueObjectExt cvo ) {
+
+        if ( proteinProteinInteraction != null ) {
             ProteinLinkOutFormatter proteinFormatter = new ProteinLinkOutFormatter();
             String proteinProteinIdUrl = proteinFormatter
                     .getStringProteinProteinInteractionLinkGemmaDefault( proteinProteinInteraction.getDatabaseEntry() );
-    
-            String evidenceText = proteinFormatter.getEvidenceDisplayText( proteinProteinInteraction.getEvidenceVector() );
-            
-            String confidenceText = proteinFormatter.getConfidenceScoreAsPercentage( proteinProteinInteraction.getConfidenceScore() );
-            
-            log.debug( "A coexpression link in GEMMA has a interaction in STRING " + proteinProteinIdUrl + " evidence of "
-                    + evidenceText );
-    
+
+            String evidenceText = proteinFormatter.getEvidenceDisplayText( proteinProteinInteraction
+                    .getEvidenceVector() );
+
+            String confidenceText = proteinFormatter.getConfidenceScoreAsPercentage( proteinProteinInteraction
+                    .getConfidenceScore() );
+
+            log.debug( "A coexpression link in GEMMA has a interaction in STRING " + proteinProteinIdUrl
+                    + " evidence of " + evidenceText );
+
             cvo.setGene2GeneProteinAssociationStringUrl( proteinProteinIdUrl );
-            cvo.setGene2GeneProteinInteractionConfidenceScore(  confidenceText );
-            cvo.setGene2GeneProteinInteractionEvidence(  evidenceText );
+            cvo.setGene2GeneProteinInteractionConfidenceScore( confidenceText );
+            cvo.setGene2GeneProteinInteractionEvidence( evidenceText );
         }
 
     }
-    
-    
-    
+
     /**
      * Remove data sets that are 'troubled' and sort the list.
      * 

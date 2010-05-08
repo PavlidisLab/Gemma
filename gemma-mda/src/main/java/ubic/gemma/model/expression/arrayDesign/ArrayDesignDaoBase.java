@@ -816,19 +816,6 @@ public abstract class ArrayDesignDaoBase extends HibernateDaoSupport implements 
     }
 
     /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#thawLite(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
-     */
-    public ArrayDesign thawLite( final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
-        try {
-            return this.handleThawLite( arrayDesign );
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignDao.thawLite(ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
      * @see ubic.gemma.model.common.SecurableDao#update(java.util.Collection)
      */
     public void update( final java.util.Collection<? extends ArrayDesign> entities ) {
@@ -1120,12 +1107,6 @@ public abstract class ArrayDesignDaoBase extends HibernateDaoSupport implements 
      * Performs the core logic for {@link #thaw(ubic.gemma.model.expression.arrayDesign.ArrayDesign)}
      */
     protected abstract ArrayDesign handleThaw( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign )
-            throws java.lang.Exception;
-
-    /**
-     * Performs the core logic for {@link #thawLite(ubic.gemma.model.expression.arrayDesign.ArrayDesign)}
-     */
-    protected abstract ArrayDesign handleThawLite( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign )
             throws java.lang.Exception;
 
     /**

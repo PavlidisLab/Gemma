@@ -47,6 +47,7 @@ import org.springframework.orm.hibernate3.HibernateCallback;
 import org.springframework.stereotype.Repository;
 
 import ubic.basecode.util.BatchIterator;
+import ubic.gemma.model.analysis.CoexpressionProbe;
 import ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -138,6 +139,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
     /*
      * (non-Javadoc) This should be faster than doing it one at a time; uses the "DML-style" syntax. This implementation
      * assumes all the links in the collection are of the same class!F
+     * 
      * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpression#remove(java.util.Collection)
      */
     @SuppressWarnings("unchecked")
@@ -191,6 +193,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
 
     /*
      * (non-Javadoc)
+     * 
      * @seeubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDao#getCoexpressedProbes(java.util.
      * Collection, java.util.Collection, ubic.gemma.model.expression.experiment.ExpressionExperiment, java.lang.String)
      */
@@ -214,6 +217,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoBase#handleCountLinks(ubic.gemma.model.expression
      * .experiment.ExpressionExperiment)
@@ -243,6 +247,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoBase#handleCreate(java.util.Collection)
      */
     @Override
@@ -270,6 +275,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
 
     /*
      * (non-Javadoc)
+     * 
      * @seeubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoBase#handleDeleteLinks(ubic.gemma.model.
      * expression.experiment.ExpressionExperiment)
      */
@@ -326,6 +332,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoBase#handleGetExpressionExperimentsLinkTestedIn
      * (ubic.gemma.model.genome.Gene, java.util.Collection, boolean)
@@ -362,6 +369,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoBase#handleGetExpressionExperimentsLinkTestedIn
      * (ubic.gemma.model.genome.Gene, ubic.gemma.model.genome.Gene, java.util.Collection, boolean)
@@ -391,6 +399,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoBase#handleGetExpressionExperimentsTestedIn
      * (java.util.Collection, java.util.Collection, boolean)
@@ -406,7 +415,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
         }
 
         String queryString = "select distinct pu,ees from ProbeCoexpressionAnalysisImpl pca inner join pca.expressionExperimentSetAnalyzed eesa"
-                + " inner join eesa.experiments ees inner join pca.probesUsed pu where pu.id in (:probes) and ees in (:ees)";
+                + " inner join eesa.experiments ees inner join pca.probesUsed pu inner join fetch pu.probe where pu.id in (:probes) and ees in (:ees)";
 
         Map<Long, Collection<BioAssaySet>> result = new HashMap<Long, Collection<BioAssaySet>>();
 
@@ -433,7 +442,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
 
         for ( Object o : eesre ) {
             Object[] ol = ( Object[] ) o;
-            CompositeSequence c = ( CompositeSequence ) ol[0];
+            CoexpressionProbe c = ( CoexpressionProbe ) ol[0];
             BioAssaySet e = ( BioAssaySet ) ol[1];
 
             /*
@@ -441,7 +450,17 @@ public class Probe2ProbeCoexpressionDaoImpl extends
              */
             assert expressionExperiments.contains( e );
 
-            Collection<Long> geneIds = cs2genes.get( c.getId() );
+            Long probeId = c.getProbe().getId();
+
+            if ( !cs2genes.containsKey( probeId ) ) {
+                /*
+                 * This means that, while there is coexpression for the probe, there no gene mapping.
+                 */
+                if ( log.isDebugEnabled() ) log.debug( "No probe to gene map for probe id=" + probeId );
+                continue;
+            }
+
+            Collection<Long> geneIds = cs2genes.get( probeId );
             for ( Long id : geneIds ) {
                 if ( !result.containsKey( id ) ) {
                     result.put( id, new HashSet<BioAssaySet>() );
@@ -460,6 +479,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoBase#handleGetGenesTestedBy(ubic.gemma.model
      * .expression.experiment.ExpressionExperiment, boolean)
@@ -492,6 +512,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoBase#handleGetProbeCoExpression(ubic.gemma
      * .model.expression.experiment.ExpressionExperiment, java.lang.String, boolean)
@@ -506,6 +527,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
 
     /*
      * (non-Javadoc)
+     * 
      * @seeubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoBase#handleGetVectorsForLinks(java.util.
      * Collection, java.util.Collection)
      */
@@ -561,6 +583,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoBase#handleGetVectorsForLinks(ubic.gemma.
      * model.genome.Gene, java.util.Collection)
@@ -602,6 +625,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoBase#handlePrepareForShuffling(java.util.
      * Collection, java.lang.String, boolean)

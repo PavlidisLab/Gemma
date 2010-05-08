@@ -57,7 +57,6 @@ public class Gene2GeneCoexpressionGeneratorCli extends ExpressionExperimentManip
         }
     }
 
-    private GeneCoexpressionAnalysisService geneCoexpressionAnalysisService;
     private GeneLinkCoexpressionAnalyzer geneVoteAnalyzer;
     private Collection<Gene> toUseGenes;
     private int toUseStringency;
@@ -92,6 +91,7 @@ public class Gene2GeneCoexpressionGeneratorCli extends ExpressionExperimentManip
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.util.AbstractCLI#doWork(java.lang.String[])
      */
     @Override
@@ -190,7 +190,6 @@ public class Gene2GeneCoexpressionGeneratorCli extends ExpressionExperimentManip
 
     private void initSpringBeans() {
         geneVoteAnalyzer = ( GeneLinkCoexpressionAnalyzer ) this.getBean( "geneLinkCoexpressionAnalyzer" );
-        geneCoexpressionAnalysisService = ( GeneCoexpressionAnalysisService ) this
-                .getBean( "geneCoexpressionAnalysisService" );
+
     }
 }

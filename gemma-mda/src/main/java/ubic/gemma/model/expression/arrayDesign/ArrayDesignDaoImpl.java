@@ -76,6 +76,104 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         return this.load( id );
     }
 
+    /**
+     * 
+     */
+    private void debug( List<? extends Object> results ) {
+        for ( Object ad : results ) {
+            log.error( ad );
+        }
+
+    }
+
+    /**
+     * @param arrayDesign
+     * @throws Exception
+     */
+    @SuppressWarnings("unchecked")
+    private ArrayDesign doThaw( ArrayDesign arrayDesign ) throws Exception {
+
+        if ( arrayDesign.getId() == null ) {
+            throw new IllegalArgumentException( "Cannot thaw a non-persistent array design" );
+        }
+
+        /*
+         * Thaw basic stuff
+         */
+        StopWatch timer = new StopWatch();
+        timer.start();
+
+        List<?> res = this
+                .getHibernateTemplate()
+                .findByNamedParam(
+                        "select a from ArrayDesignImpl a "
+                                + "left join fetch a.subsumedArrayDesigns "
+                                + " left join fetch a.mergees  left join fetch a.designProvider"
+                                + " join fetch a.auditTrail trail join fetch trail.events left join fetch a.externalReferences "
+                                + "where a.id=:adid", "adid", arrayDesign.getId() );
+
+        if ( res.size() == 0 ) {
+            throw new IllegalArgumentException( "No array design with id=" + arrayDesign.getId() + " could be loaded." );
+        }
+        ArrayDesign result = ( ArrayDesign ) res.iterator().next();
+
+        if ( timer.getTime() > 1000 ) {
+            log.info( "Thaw array design stage 1: " + timer.getTime() + "ms" );
+        }
+
+        timer.stop();
+        timer.reset();
+        timer.start();
+
+        /*
+         * Thaw the composite sequences.
+         */
+
+        Hibernate.initialize( result.getCompositeSequences() );
+
+        if ( timer.getTime() > 1000 ) {
+            log.info( "Thaw array design stage 2: " + timer.getTime() + "ms" );
+        }
+        timer.stop();
+        timer.reset();
+        timer.start();
+
+        /*
+         * Thaw the biosequences in batches
+         */
+        // if ( deep ) {
+        Collection<CompositeSequence> thawed = new HashSet<CompositeSequence>();
+        Collection<CompositeSequence> batch = new HashSet<CompositeSequence>();
+        for ( CompositeSequence cs : result.getCompositeSequences() ) {
+            batch.add( cs );
+            if ( batch.size() == 1000 ) {
+                if ( timer.getTime() > 10000 ) {
+                    log.info( "Batch : " + timer.getTime() );
+                }
+
+                List<?> bb = thawBatchOfProbes( batch );
+                thawed.addAll( ( Collection<? extends CompositeSequence> ) bb );
+
+                batch.clear();
+            }
+        }
+
+        if ( !batch.isEmpty() ) {
+
+            List<?> bb = thawBatchOfProbes( batch );
+            thawed.addAll( ( Collection<? extends CompositeSequence> ) bb );
+        }
+
+        result.getCompositeSequences().clear();
+        result.getCompositeSequences().addAll( thawed );
+
+        if ( timer.getTime() > 1000 ) {
+            log.info( "Thaw array design stage 3: " + timer.getTime() );
+        }
+
+        return result;
+    }
+
     /*
      * (non-Javadoc)
      * 
@@ -112,6 +210,22 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
     /*
      * (non-Javadoc)
      * 
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#findByManufacturer(java.lang.String)
+     */
+    @SuppressWarnings("unchecked")
+    public Collection<ArrayDesign> findByManufacturer( String queryString ) {
+        if ( StringUtils.isBlank( queryString ) ) {
+            return new HashSet<ArrayDesign>();
+        }
+        return this.getHibernateTemplate().find(
+                "select ad from ArrayDesignImpl ad inner join ad.designProvider n where n.name like ?",
+                queryString + "%" );
+
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
      * @seeubic.gemma.model.expression.arrayDesign.ArrayDesignDao#findOrCreate(ubic.gemma.model.expression.arrayDesign.
      * ArrayDesign)
      */
@@ -124,6 +238,159 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         }
         log.debug( "Creating new arrayDesign: " + arrayDesign.getName() );
         return create( arrayDesign );
+    }
+
+    /**
+     * @return
+     */
+    private Map<Long, String> getArrayToPrimaryTaxonMap() {
+
+        StopWatch timer = new StopWatch();
+        timer.start();
+
+        final String csString = "select  ad.primaryTaxon, ad from ArrayDesignImpl ad ";
+        org.hibernate.Query csQueryObject = super.getSession().createQuery( csString );
+        csQueryObject.setReadOnly( true );
+        csQueryObject.setCacheable( true );
+
+        List<?> csList = csQueryObject.list();
+
+        Map<ArrayDesign, Collection<String>> raw = new HashMap<ArrayDesign, Collection<String>>();
+        Taxon t = null;
+        for ( Object object : csList ) {
+            Object[] oa = ( Object[] ) object;
+            t = ( Taxon ) oa[0];
+            ArrayDesign ad = ( ArrayDesign ) oa[1];
+
+            if ( !raw.containsKey( ad ) ) {
+                raw.put( ad, new TreeSet<String>() );
+            }
+
+            if ( t.getCommonName() != null ) {
+                raw.get( ad ).add( t.getCommonName() );
+            }
+
+        }
+
+        Map<Long, String> arrayToTaxon = new HashMap<Long, String>();
+        for ( ArrayDesign ad : raw.keySet() ) {
+            String taxonListString = StringUtils.join( raw.get( ad ), "; " );
+            arrayToTaxon.put( ad.getId(), taxonListString );
+        }
+
+        if ( timer.getTime() > 1000 ) {
+            log.info( "Get array design taxa: " + timer.getTime() + "ms" );
+        }
+
+        return arrayToTaxon;
+
+    }
+
+    /**
+     * @param ids
+     * @return
+     */
+    private Map<Long, String> getArrayToPrimaryTaxonMap( Collection<Long> ids ) {
+
+        StopWatch timer = new StopWatch();
+        timer.start();
+
+        final String csString = "select  ad.primaryTaxon, ad from ArrayDesignImpl ad where ad.id in (:ids)";
+        org.hibernate.Query csQueryObject = super.getSession().createQuery( csString );
+        csQueryObject.setReadOnly( true );
+        csQueryObject.setCacheable( true );
+
+        csQueryObject.setParameterList( "ids", ids );
+
+        List<?> csList = csQueryObject.list();
+
+        Map<ArrayDesign, Collection<String>> raw = new HashMap<ArrayDesign, Collection<String>>();
+        Taxon t = null;
+        for ( Object object : csList ) {
+            Object[] oa = ( Object[] ) object;
+            t = ( Taxon ) oa[0];
+            ArrayDesign ad = ( ArrayDesign ) oa[1];
+
+            if ( !raw.containsKey( ad ) ) {
+                raw.put( ad, new TreeSet<String>() );
+            }
+
+            if ( t.getCommonName() != null ) {
+                raw.get( ad ).add( t.getCommonName() );
+            }
+
+        }
+
+        Map<Long, String> arrayToTaxon = new HashMap<Long, String>();
+        for ( ArrayDesign ad : raw.keySet() ) {
+            String taxonListString = StringUtils.join( raw.get( ad ), "; " );
+            arrayToTaxon.put( ad.getId(), taxonListString );
+        }
+
+        if ( timer.getTime() > 1000 ) {
+            log.info( "Get array design taxa: " + timer.getTime() + "ms" );
+        }
+
+        return arrayToTaxon;
+
+    }
+
+    /**
+     * Gets the number of expression experiments per ArrayDesign
+     * 
+     * @return Map
+     */
+    @SuppressWarnings("unchecked")
+    private Map<Long, Integer> getExpressionExperimentCountMap() {
+        final String queryString = "select ad.id, count(distinct ee) from   "
+                + " ExpressionExperimentImpl ee inner join ee.bioAssays bas inner join bas.arrayDesignUsed ad group by ad";
+
+        Map<Long, Integer> eeCount = new HashMap<Long, Integer>();
+        List<Object[]> list = getHibernateTemplate().find( queryString );
+
+        // Bug 1549: for unknown reasons, this method sometimes returns only a single record (or no records)
+        log.info( list.size() + " rows from getExpressionExperimentCountMap query" );
+
+        for ( Object[] o : list ) {
+            Long id = ( Long ) o[0];
+            Integer count = ( ( Long ) o[1] ).intValue();
+            eeCount.put( id, count );
+        }
+
+        return eeCount;
+    }
+
+    /**
+     * Gets the number of expression experiments per ArrayDesign
+     * 
+     * @return Map
+     */
+    @SuppressWarnings("unchecked")
+    private Map<Long, Integer> getExpressionExperimentCountMap( Collection<Long> arrayDesignIds ) {
+
+        Map<Long, Integer> result = new HashMap<Long, Integer>();
+
+        if ( arrayDesignIds == null || arrayDesignIds.isEmpty() ) {
+            return result;
+        }
+        final String queryString = "select ad.id, count(distinct ee) from   "
+                + " ExpressionExperimentImpl ee inner join ee.bioAssays bas inner join bas.arrayDesignUsed ad  where ad.id in (:ids) group by ad ";
+
+        List<Object[]> list = getHibernateTemplate().findByNamedParam( queryString, "ids", arrayDesignIds );
+
+        // Bug 1549: for unknown reasons, this method sometimes returns only a single record (or no records)
+        if ( arrayDesignIds.size() > 1 && list.size() != arrayDesignIds.size() ) {
+            log.info( list.size() + " rows from getExpressionExperimentCountMap query for " + arrayDesignIds.size()
+                    + " ids" );
+        }
+
+        for ( Object[] o : list ) {
+            Long id = ( Long ) o[0];
+            Integer count = ( ( Long ) o[1] ).intValue();
+            result.put( id, count );
+        }
+
+        return result;
     }
 
     /*
@@ -153,26 +420,6 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
         return result;
 
-    }
-
-    @Override
-    public void remove( final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
-        if ( arrayDesign == null ) {
-            throw new IllegalArgumentException( "ArrayDesign.remove - 'arrayDesign' can not be null" );
-        }
-
-        this.getHibernateTemplate().executeWithNativeSession( new HibernateCallback<Object>() {
-            public Object doInHibernate( Session session ) throws HibernateException {
-                session.lock( arrayDesign, LockMode.NONE );
-                Hibernate.initialize( arrayDesign.getMergees() );
-                Hibernate.initialize( arrayDesign.getSubsumedArrayDesigns() );
-                arrayDesign.getMergees().clear();
-                arrayDesign.getSubsumedArrayDesigns().clear();
-                return null;
-            }
-        } );
-
-        this.getHibernateTemplate().delete( arrayDesign );
     }
 
     /*
@@ -895,12 +1142,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
     @Override
     protected ArrayDesign handleThaw( final ArrayDesign arrayDesign ) throws Exception {
-        return this.thaw( arrayDesign, true );
-    }
-
-    @Override
-    protected ArrayDesign handleThawLite( final ArrayDesign arrayDesign ) throws Exception {
-        return this.thaw( arrayDesign, false );
+        return this.doThaw( arrayDesign );
     }
 
     @Override
@@ -973,169 +1215,6 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
     }
 
     /**
-     * 
-     */
-    private void debug( List<? extends Object> results ) {
-        for ( Object ad : results ) {
-            log.error( ad );
-        }
-
-    }
-
-    /**
-     * @return
-     */
-    private Map<Long, String> getArrayToPrimaryTaxonMap() {
-
-        StopWatch timer = new StopWatch();
-        timer.start();
-
-        final String csString = "select  ad.primaryTaxon, ad from ArrayDesignImpl ad ";
-        org.hibernate.Query csQueryObject = super.getSession().createQuery( csString );
-        csQueryObject.setReadOnly( true );
-        csQueryObject.setCacheable( true );
-
-        List<?> csList = csQueryObject.list();
-
-        Map<ArrayDesign, Collection<String>> raw = new HashMap<ArrayDesign, Collection<String>>();
-        Taxon t = null;
-        for ( Object object : csList ) {
-            Object[] oa = ( Object[] ) object;
-            t = ( Taxon ) oa[0];
-            ArrayDesign ad = ( ArrayDesign ) oa[1];
-
-            if ( !raw.containsKey( ad ) ) {
-                raw.put( ad, new TreeSet<String>() );
-            }
-
-            if ( t.getCommonName() != null ) {
-                raw.get( ad ).add( t.getCommonName() );
-            }
-
-        }
-
-        Map<Long, String> arrayToTaxon = new HashMap<Long, String>();
-        for ( ArrayDesign ad : raw.keySet() ) {
-            String taxonListString = StringUtils.join( raw.get( ad ), "; " );
-            arrayToTaxon.put( ad.getId(), taxonListString );
-        }
-
-        if ( timer.getTime() > 1000 ) {
-            log.info( "Get array design taxa: " + timer.getTime() + "ms" );
-        }
-
-        return arrayToTaxon;
-
-    }
-
-    /**
-     * @param ids
-     * @return
-     */
-    private Map<Long, String> getArrayToPrimaryTaxonMap( Collection<Long> ids ) {
-
-        StopWatch timer = new StopWatch();
-        timer.start();
-
-        final String csString = "select  ad.primaryTaxon, ad from ArrayDesignImpl ad where ad.id in (:ids)";
-        org.hibernate.Query csQueryObject = super.getSession().createQuery( csString );
-        csQueryObject.setReadOnly( true );
-        csQueryObject.setCacheable( true );
-
-        csQueryObject.setParameterList( "ids", ids );
-
-        List<?> csList = csQueryObject.list();
-
-        Map<ArrayDesign, Collection<String>> raw = new HashMap<ArrayDesign, Collection<String>>();
-        Taxon t = null;
-        for ( Object object : csList ) {
-            Object[] oa = ( Object[] ) object;
-            t = ( Taxon ) oa[0];
-            ArrayDesign ad = ( ArrayDesign ) oa[1];
-
-            if ( !raw.containsKey( ad ) ) {
-                raw.put( ad, new TreeSet<String>() );
-            }
-
-            if ( t.getCommonName() != null ) {
-                raw.get( ad ).add( t.getCommonName() );
-            }
-
-        }
-
-        Map<Long, String> arrayToTaxon = new HashMap<Long, String>();
-        for ( ArrayDesign ad : raw.keySet() ) {
-            String taxonListString = StringUtils.join( raw.get( ad ), "; " );
-            arrayToTaxon.put( ad.getId(), taxonListString );
-        }
-
-        if ( timer.getTime() > 1000 ) {
-            log.info( "Get array design taxa: " + timer.getTime() + "ms" );
-        }
-
-        return arrayToTaxon;
-
-    }
-
-    /**
-     * Gets the number of expression experiments per ArrayDesign
-     * 
-     * @return Map
-     */
-    @SuppressWarnings("unchecked")
-    private Map<Long, Integer> getExpressionExperimentCountMap() {
-        final String queryString = "select ad.id, count(distinct ee) from   "
-                + " ExpressionExperimentImpl ee inner join ee.bioAssays bas inner join bas.arrayDesignUsed ad group by ad";
-
-        Map<Long, Integer> eeCount = new HashMap<Long, Integer>();
-        List<Object[]> list = getHibernateTemplate().find( queryString );
-
-        // Bug 1549: for unknown reasons, this method sometimes returns only a single record (or no records)
-        log.info( list.size() + " rows from getExpressionExperimentCountMap query" );
-
-        for ( Object[] o : list ) {
-            Long id = ( Long ) o[0];
-            Integer count = ( ( Long ) o[1] ).intValue();
-            eeCount.put( id, count );
-        }
-
-        return eeCount;
-    }
-
-    /**
-     * Gets the number of expression experiments per ArrayDesign
-     * 
-     * @return Map
-     */
-    @SuppressWarnings("unchecked")
-    private Map<Long, Integer> getExpressionExperimentCountMap( Collection<Long> arrayDesignIds ) {
-
-        Map<Long, Integer> result = new HashMap<Long, Integer>();
-
-        if ( arrayDesignIds == null || arrayDesignIds.isEmpty() ) {
-            return result;
-        }
-        final String queryString = "select ad.id, count(distinct ee) from   "
-                + " ExpressionExperimentImpl ee inner join ee.bioAssays bas inner join bas.arrayDesignUsed ad  where ad.id in (:ids) group by ad ";
-
-        List<Object[]> list = getHibernateTemplate().findByNamedParam( queryString, "ids", arrayDesignIds );
-
-        // Bug 1549: for unknown reasons, this method sometimes returns only a single record (or no records)
-        if ( arrayDesignIds.size() > 1 && list.size() != arrayDesignIds.size() ) {
-            log.info( list.size() + " rows from getExpressionExperimentCountMap query for " + arrayDesignIds.size()
-                    + " ids" );
-        }
-
-        for ( Object[] o : list ) {
-            Long id = ( Long ) o[0];
-            Integer count = ( ( Long ) o[1] ).intValue();
-            result.put( id, count );
-        }
-
-        return result;
-    }
-
-    /**
      * Process query results for handleLoadAllValueObjects or handleLoadValueObjects
      * 
      * @param eeCounts
@@ -1177,48 +1256,30 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         return result;
     }
 
-    /**
-     * @param arrayDesign
-     * @param deep Whether to thaw the biosequence associations (genes).
-     * @throws Exception
-     */
-    private ArrayDesign thaw( ArrayDesign arrayDesign, final boolean deep ) throws Exception {
-
-        if ( arrayDesign.getId() == null ) {
-            throw new IllegalArgumentException( "Cannot thaw a non-persistent array design" );
+    @Override
+    public void remove( final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
+        if ( arrayDesign == null ) {
+            throw new IllegalArgumentException( "ArrayDesign.remove - 'arrayDesign' can not be null" );
         }
 
-        List<?> res = this
-                .getHibernateTemplate()
-                .findByNamedParam(
-                        "select a from ArrayDesignImpl a join fetch"
-                                + " a.compositeSequences c left "
-                                + " join fetch c.biologicalCharacteristic "
-                                + "left join fetch a.subsumedArrayDesigns "
-                                + " left join fetch a.mergees  left join fetch a.designProvider"
-                                + " join fetch a.auditTrail trail join fetch trail.events left join fetch a.externalReferences "
-                                + "where a.id=:adid", "adid", arrayDesign.getId() );
+        this.getHibernateTemplate().executeWithNativeSession( new HibernateCallback<Object>() {
+            public Object doInHibernate( Session session ) throws HibernateException {
+                session.lock( arrayDesign, LockMode.NONE );
+                Hibernate.initialize( arrayDesign.getMergees() );
+                Hibernate.initialize( arrayDesign.getSubsumedArrayDesigns() );
+                arrayDesign.getMergees().clear();
+                arrayDesign.getSubsumedArrayDesigns().clear();
+                return null;
+            }
+        } );
 
-        if ( res.size() == 0 ) {
-            throw new IllegalArgumentException( "No array design with id=" + arrayDesign.getId() + " could be loaded." );
-        }
-
-        return ( ArrayDesign ) res.iterator().next();
+        this.getHibernateTemplate().delete( arrayDesign );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#findByManufacturer(java.lang.String)
-     */
-    @SuppressWarnings("unchecked")
-    public Collection<ArrayDesign> findByManufacturer( String queryString ) {
-        if ( StringUtils.isBlank( queryString ) ) {
-            return new HashSet<ArrayDesign>();
-        }
-        return this.getHibernateTemplate().find(
-                "select ad from ArrayDesignImpl ad inner join ad.designProvider n where n.name like ?",
-                queryString + "%" );
-
+    private List<?> thawBatchOfProbes( Collection<CompositeSequence> batch ) {
+        List<?> bb = this.getHibernateTemplate().findByNamedParam(
+                "select cs from CompositeSequenceImpl cs join fetch cs.biologicalCharacteristic where cs in (:batch)",
+                "batch", batch );
+        return bb;
     }
 }

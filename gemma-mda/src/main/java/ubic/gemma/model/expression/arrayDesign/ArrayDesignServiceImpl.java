@@ -663,7 +663,8 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
 
     @Override
     protected ArrayDesign handleThawLite( ArrayDesign arrayDesign ) throws Exception {
-        return this.getArrayDesignDao().thawLite( arrayDesign );
+        // thawLite is deprecated.
+        return this.getArrayDesignDao().thaw( arrayDesign );
     }
 
     /**

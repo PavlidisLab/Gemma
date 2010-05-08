@@ -208,6 +208,9 @@ public class CoexpressionSearchController extends BaseFormController {
         }
 
         if ( eeSetId != null && !searchOptions.isForceProbeLevelSearch() && ( eeSetId >= 0 && !searchOptions.isDirty() ) ) {
+            /*
+             * Important bit.
+             */
             result = geneCoexpressionService.coexpressionSearch( eeSetId, genes, searchOptions.getStringency(),
                     MAX_RESULTS, searchOptions.getQueryGenesOnly() );
         } else {
@@ -267,6 +270,7 @@ public class CoexpressionSearchController extends BaseFormController {
 
     /*
      * Handle case of text export of the results.
+     * 
      * @seeorg.springframework.web.servlet.mvc.AbstractFormController#handleRequestInternal(javax.servlet.http.
      * HttpServletRequest, javax.servlet.http.HttpServletResponse)
      */

@@ -48,6 +48,7 @@ public class ArrayDesignMapSummaryCli extends ArrayDesignSequenceManipulatingCli
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.util.AbstractCLI#doWork(java.lang.String[])
      */
     @Override
@@ -58,9 +59,9 @@ public class ArrayDesignMapSummaryCli extends ArrayDesignSequenceManipulatingCli
 
         ArrayDesign arrayDesign = locateArrayDesign( arrayDesignName );
 
-        unlazifyArrayDesign( arrayDesign );
+        ArrayDesign thawed = unlazifyArrayDesign( arrayDesign );
 
-        Collection<CompositeSequenceMapSummary> results = arrayDesignMapResultService.summarizeMapResults( arrayDesign );
+        Collection<CompositeSequenceMapSummary> results = arrayDesignMapResultService.summarizeMapResults( thawed );
 
         System.out.println( CompositeSequenceMapSummary.header() );
         for ( CompositeSequenceMapSummary summary : results ) {

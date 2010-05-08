@@ -117,6 +117,9 @@ public class GridTaskInterceptor implements MethodInterceptor {
             retVal = invocation.proceed();
         } catch ( Exception e ) {
             log.error( "Job threw an exception: " + e.getMessage() );
+            /*
+             * FIXME: if cancellation, don't be so noisy.
+             */
             throw ( e );
         } finally {
 

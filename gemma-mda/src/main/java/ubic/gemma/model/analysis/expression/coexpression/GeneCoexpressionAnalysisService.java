@@ -21,6 +21,7 @@ package ubic.gemma.model.analysis.expression.coexpression;
 import org.springframework.security.access.annotation.Secured;
 
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.genome.Taxon;
 
 /**
  * @version $Id$
@@ -51,6 +52,8 @@ public interface GeneCoexpressionAnalysisService extends
      * 
      */
     public void thaw( GeneCoexpressionAnalysis geneCoexpressionAnalysis );
+
+    public GeneCoexpressionAnalysis findCurrent( Taxon taxon );
 
     /**
      * 

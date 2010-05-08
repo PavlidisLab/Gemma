@@ -19,6 +19,7 @@
 
 package ubic.gemma.model.expression.bioAssayData;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -87,9 +88,13 @@ public class ProcessedExpressionDataVectorServiceTest extends BaseSpringContextT
         }
 
         Collection<Gene> genes = getGeneAssociatedWithEe( ees.iterator().next() );
-        processedDataVectorService.createProcessedDataVectors( ees.iterator().next() );
+        Collection<ProcessedExpressionDataVector> createProcessedDataVectors = processedDataVectorService
+                .createProcessedDataVectors( ees.iterator().next() );
+
+        assertEquals( 40, createProcessedDataVectors.size() );
         Collection<DoubleVectorValueObject> v = processedDataVectorService.getProcessedDataArrays( ees, genes );
-        assertTrue( 40 <= v.size() ); // might get 41 if state of system after tests is a bit off.
+        assertTrue( "got " + v.size() + ", expected at least 40", 40 <= v.size() ); // might get 41 if state of system
+        // after tests is a bit off.
     }
 
     /**
@@ -138,7 +143,7 @@ public class ProcessedExpressionDataVectorServiceTest extends BaseSpringContextT
         int i = 0;
         ArrayDesign ad = ee.getBioAssays().iterator().next().getArrayDesignUsed();
         Taxon taxon = this.getTaxon( "mouse" );
-        ad = this.arrayDesignService.thawLite( ad );
+        ad = this.arrayDesignService.thaw( ad );
         Collection<Gene> genes = new HashSet<Gene>();
         for ( CompositeSequence cs : ad.getCompositeSequences() ) {
             if ( i >= 10 ) break;

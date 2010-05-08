@@ -119,6 +119,7 @@ public class GeneOntologyService implements InitializingBean {
      * @return Usual formatted GO id, e.g., GO:0039392
      */
     public static String asRegularGoId( OntologyTerm term ) {
+        if ( term == null ) return null;
         String uri = term.getUri();
         return asRegularGoId( uri );
     }

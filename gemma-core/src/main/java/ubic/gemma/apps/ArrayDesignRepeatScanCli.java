@@ -156,10 +156,10 @@ public class ArrayDesignRepeatScanCli extends ArrayDesignSequenceManipulatingCli
     }
 
     private void processArrayDesign( ArrayDesign design ) {
-        design = unlazifyArrayDesign( design );
+        ArrayDesign thawed = unlazifyArrayDesign( design );
 
         // no taxon is passed to this method so all sequences will be retrieved even for multi taxon arrays
-        Collection<BioSequence> sequences = ArrayDesignSequenceAlignmentService.getSequences( design );
+        Collection<BioSequence> sequences = ArrayDesignSequenceAlignmentService.getSequences( thawed );
 
         RepeatScan scanner = new RepeatScan();
         Collection<BioSequence> altered;
@@ -172,12 +172,12 @@ public class ArrayDesignRepeatScanCli extends ArrayDesignSequenceManipulatingCli
         log.info( "Saving..." );
         bsService.update( altered );
         if ( this.inputFileName != null ) {
-            audit( design, "Repeat scan data from file: " + inputFileName + ", updated " + altered.size()
+            audit( thawed, "Repeat scan data from file: " + inputFileName + ", updated " + altered.size()
                     + " sequences." );
         } else {
-            audit( design, "Repeat scan done, updated " + altered.size() + " sequences." );
+            audit( thawed, "Repeat scan done, updated " + altered.size() + " sequences." );
         }
-        log.info( "Done with " + design );
+        log.info( "Done with " + thawed );
     }
 
 }

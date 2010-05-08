@@ -109,6 +109,7 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.util.AbstractCLI#buildOptions()
      */
     @SuppressWarnings("static-access")
@@ -172,6 +173,7 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.util.AbstractCLI#doWork(java.lang.String[])
      */
     @Override
@@ -225,15 +227,15 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
          * FIXME: first Check if file exists.
          */
 
-        unlazifyArrayDesign( arrayDesign );
+        ArrayDesign thawed = unlazifyArrayDesign( arrayDesign );
 
-        Collection<CompositeSequence> compositeSequences = arrayDesign.getCompositeSequences();
+        Collection<CompositeSequence> compositeSequences = thawed.getCompositeSequences();
 
         Map<CompositeSequence, Collection<BioSequence2GeneProduct>> genesWithSpecificity = compositeSequenceService
                 .getGenesWithSpecificity( compositeSequences );
 
         log.info( "Preparing file" );
-        return processCompositeSequences( arrayDesign, fileBaseName, outputType, genesWithSpecificity );
+        return processCompositeSequences( thawed, fileBaseName, outputType, genesWithSpecificity );
 
     }
 

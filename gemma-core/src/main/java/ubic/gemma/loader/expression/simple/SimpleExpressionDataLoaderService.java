@@ -143,6 +143,11 @@ public class SimpleExpressionDataLoaderService {
         for ( ArrayDesign design : arrayDesigns ) {
             log.info( "Processing " + design );
             DoubleMatrix<String, String> subMatrix = getSubMatrixForArrayDesign( matrix, usedDesignElements, design );
+
+            if ( subMatrix == null ) {
+                throw new IllegalStateException( "Got a null matix" );
+            }
+
             BioAssayDimension bad = convertBioAssayDimension( experiment, design, taxon, subMatrix );
             Collection<RawExpressionDataVector> vectors = convertDesignElementDataVectors( experiment, bad, design,
                     quantitationType, subMatrix );
@@ -194,6 +199,10 @@ public class SimpleExpressionDataLoaderService {
                 usedDesignElements.add( object );
                 designElements.add( object );
             }
+        }
+
+        if ( usedDesignElements.size() == 0 ) {
+            throw new IllegalArgumentException( "No design elements matched?" );
         }
 
         log.info( "Found " + rows.size() + " data rows for " + design );

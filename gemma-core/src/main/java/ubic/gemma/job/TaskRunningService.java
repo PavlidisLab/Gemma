@@ -348,6 +348,9 @@ public class TaskRunningService implements InitializingBean {
                 } catch ( ExecutionException e ) {
                     /*
                      * This is reached when a task is cancelled.
+                     * 
+                     * FIXME if it's a space task, we don't get this, the cause is a jspaces exception...need to fix
+                     * this, we get an ugly stack trace in the logs.
                      */
                     if ( e.getCause() instanceof InterruptedException
                             || e.getCause().getCause() instanceof InterruptedException ) {
@@ -475,9 +478,9 @@ public class TaskRunningService implements InitializingBean {
                     submittedTasks.get( taskId ).getCommand().setEmailAlert( true );
                     cancelTask( taskId );
                     return;
-                } else {
-                    log.warn( "Possible grid problem for job " + taskId );
                 }
+                log.warn( "Possible grid problem for job " + taskId );
+
             }
         }
 
@@ -551,7 +554,6 @@ public class TaskRunningService implements InitializingBean {
             assert user != null;
 
             String emailAddress = user.getEmail();
-            assert emailAddress != null;
 
             if ( emailAddress != null ) {
                 log.debug( "Sending email notification to " + emailAddress );
@@ -628,7 +630,7 @@ public class TaskRunningService implements InitializingBean {
      */
     private void sweepUp() {
         log.debug( "Running task result cleanup" );
-        
+
         if ( finishedTasks.size() > 0 ) log.info( finishedTasks.size() + " finished tasks in the hold" );
         if ( failedTasks.size() > 0 ) log.info( failedTasks.size() + " failed tasks in the hold" );
         if ( submittedTasks.size() > 0 ) log.info( submittedTasks.size() + " started or queued tasks in the pipe" );

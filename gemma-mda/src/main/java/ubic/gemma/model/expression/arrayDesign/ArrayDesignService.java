@@ -403,7 +403,10 @@ public interface ArrayDesignService {
 
     /**
      * Perform a less intensive thaw of an array design.
+     * 
+     * @deprecated This does the same thing as 'thaw'.
      */
+    @Deprecated
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     public ArrayDesign thawLite( ArrayDesign arrayDesign );
 

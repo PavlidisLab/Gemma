@@ -46,7 +46,7 @@ public class ArrayDesignSequenceProcessorFastacmdTest extends AbstractArrayDesig
             log.warn( "Array design configuration failed, skipping test" );
             return;
         }
-        ad = arrayDesignService.thawLite( ad );
+        ad = arrayDesignService.thaw( ad );
         ArrayDesignSequenceProcessingService app = ( ArrayDesignSequenceProcessingService ) getBean( "arrayDesignSequenceProcessingService" );
         try {
             // finally the real business. There are 243 sequences on the array.
