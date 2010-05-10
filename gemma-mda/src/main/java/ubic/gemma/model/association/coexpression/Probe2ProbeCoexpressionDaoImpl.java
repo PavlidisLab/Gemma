@@ -359,7 +359,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
         // Locate analyses which use these probes, return the expression experiments
         String queryString = "select distinct ees from ProbeCoexpressionAnalysisImpl pca inner join"
                 + " pca.expressionExperimentSetAnalyzed eesa inner join eesa.experiments ees"
-                + " inner join pca.probesUsed pu where ees in (:ees) and pu in (:probes)";
+                + " inner join pca.probesUsed pu inner join pu.probe p where ees in (:ees) and p in (:probes)";
         List result = this.getHibernateTemplate().findByNamedParam( queryString, new String[] { "ees", "probes" },
                 new Object[] { expressionExperiments, probes } );
 
