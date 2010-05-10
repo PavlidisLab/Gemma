@@ -42,6 +42,12 @@ import ubic.gemma.testing.BaseSpringContextTest;
  */
 public class ExpressionDataMatrixColumnSortTest extends BaseSpringContextTest {
 
+    @Test
+    public void testDummy() {
+        
+    }
+    
+ 
     public void testOrderByExperimentalDesignB() throws Exception {
 
         BioAssayDimension bad = BioAssayDimension.Factory.newInstance();
@@ -117,6 +123,8 @@ public class ExpressionDataMatrixColumnSortTest extends BaseSpringContextTest {
         }
 
         EmptyExpressionMatrix mat = new EmptyExpressionMatrix( bad );
+
+        assertEquals( 100, mat.columns() );
 
         List<BioMaterial> ordered = ExpressionDataMatrixColumnSort.orderByExperimentalDesign( mat );
 
