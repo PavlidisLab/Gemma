@@ -261,7 +261,7 @@ public class UserManagerImpl implements UserManager {
         UserGroup g = loadGroup( USER_GROUP_NAME );
         userService.addUserToGroup( g, u );
 
-        user = new UserDetailsImpl( u );
+        //user = new UserDetailsImpl( u );
         //
         // if ( !loggedIn() && user.isEnabled() ) {
         //
