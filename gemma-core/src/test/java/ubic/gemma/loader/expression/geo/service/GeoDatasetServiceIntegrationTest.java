@@ -64,9 +64,6 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
     ExpressionExperiment ee;
 
     @Autowired
-    ArrayDesignService adService;
-
-    @Autowired
     private DesignElementDataVectorService designElementDataVectorService;
 
     /**
