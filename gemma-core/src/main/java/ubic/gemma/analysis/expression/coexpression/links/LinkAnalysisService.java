@@ -558,6 +558,11 @@ public class LinkAnalysisService {
         Map<CompositeSequence, ProcessedExpressionDataVector> p2v = getProbe2VectorMap( dataVectors );
         la.analyze();
 
+        if ( Thread.currentThread().isInterrupted() ) {
+            log.info( "Cancelled." );
+            return;
+        }
+
         // output
         if ( linkAnalysisConfig.isUseDb() && !linkAnalysisConfig.isTextOut() ) {
 

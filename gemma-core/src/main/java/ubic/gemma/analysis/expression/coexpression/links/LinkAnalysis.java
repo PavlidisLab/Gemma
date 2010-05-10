@@ -104,6 +104,11 @@ public class LinkAnalysis {
         log.info( "Current Options: \n" + this.config );
         this.calculateDistribution();
 
+        if ( Thread.currentThread().isInterrupted() ) {
+            log.info( "Cancelled." );
+            return;
+        }
+
         this.getLinks();
 
         if ( expressionExperiment != null ) {// input is not from expression data file
