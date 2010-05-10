@@ -19,15 +19,12 @@
 
 package ubic.gemma.apps;
 
-import java.util.List;
-
-import ubic.gemma.datastructure.matrix.ExpressionDataMatrixColumnSort;
-import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.analysis.preprocess.ProcessedExpressionDataVectorCreateService;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
- * Use to
+ * Use to change the order of the values to match the experimental design.
  * 
  * @author paul
  * @version $Id$
@@ -40,7 +37,7 @@ public class OrderVectorsByDesignCli extends ExpressionExperimentManipulatingCLI
         Exception e = c.doWork( args );
 
         if ( e != null ) {
-            // ...
+            throw ( new RuntimeException( e ) );
         }
     }
 
@@ -52,41 +49,18 @@ public class OrderVectorsByDesignCli extends ExpressionExperimentManipulatingCLI
     @Override
     protected Exception doWork( String[] args ) {
         super.processCommandLine( "OrderVectorsByDesign", args );
+        ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService = ( ProcessedExpressionDataVectorCreateService ) getBean( "processedExpressionDataVectorCreateService" );
 
         for ( BioAssaySet ee : this.expressionExperiments ) {
 
             if ( !( ee instanceof ExpressionExperiment ) ) {
                 continue;
             }
-
-            ExpressionExperiment ee2 = ( ExpressionExperiment ) ee;
-            this.eeService.thawLite( ee2 );
-
-            if ( ee2.getExperimentalDesign().getExperimentalFactors().size() == 0 ) {
-                log.info( ee + " does not have a populated experimental design, skipping" );
-                continue;
-            }
-
-            List<BioMaterial> start = null;
-
-            /*
-             * Get the biomaterials. Go by bioassaydimension
-             */
-
-            List<BioMaterial> orderByExperimentalDesign = ExpressionDataMatrixColumnSort.orderByExperimentalDesign(
-                    start, ee2.getExperimentalDesign().getExperimentalFactors() );
-
-            /*
-             * Update the processed vectors.
-             */
-
-            /*
-             * Recreate the processed vectors
-             */
+            this.eeService.thawLite( ( ExpressionExperiment ) ee );
+            processedExpressionDataVectorCreateService.reorderByDesign( ( ExpressionExperiment ) ee );
 
         }
 
-        // TODO Auto-generated method stub
         return null;
     }
 

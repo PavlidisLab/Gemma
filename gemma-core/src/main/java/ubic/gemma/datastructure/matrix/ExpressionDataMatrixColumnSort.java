@@ -27,6 +27,7 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
@@ -151,7 +152,7 @@ public class ExpressionDataMatrixColumnSort {
             return start;
         }
 
-        Map<FactorValue, Collection<BioMaterial>> fv2bms = buildFv2BmMap( start );
+        Map<FactorValue, List<BioMaterial>> fv2bms = buildFv2BmMap( start );
 
         ExperimentalFactor simplest = chooseSimplestFactor( start, factors );
 
@@ -166,8 +167,12 @@ public class ExpressionDataMatrixColumnSort {
         List<BioMaterial> ordered = orderByFactor( simplest, fv2bms, start,
                 new HashMap<ExperimentalFactor, Collection<BioMaterial>>() );
 
+        if ( factors.size() == 1 ) {
+            return ordered;
+        }
+
         /*
-         * Recurse in and order each chunk
+         * Recurse in and order each chunk. First split it up, but retaining the order we just made.
          */
         LinkedHashMap<FactorValue, List<BioMaterial>> chunks = chunkOnFactor( simplest, ordered );
 
@@ -232,18 +237,40 @@ public class ExpressionDataMatrixColumnSort {
      * @param bms
      * @return
      */
-    private static Map<FactorValue, Collection<BioMaterial>> buildFv2BmMap( Collection<BioMaterial> bms ) {
-        Map<FactorValue, Collection<BioMaterial>> fv2bms = new HashMap<FactorValue, Collection<BioMaterial>>();
+    private static Map<FactorValue, List<BioMaterial>> buildFv2BmMap( Collection<BioMaterial> bms ) {
+        Map<FactorValue, List<BioMaterial>> fv2bms = new HashMap<FactorValue, List<BioMaterial>>();
         for ( BioMaterial bm : bms ) {
             Collection<FactorValue> factorValues = bm.getFactorValues();
             for ( FactorValue fv : factorValues ) {
                 if ( !fv2bms.containsKey( fv ) ) {
-                    fv2bms.put( fv, new HashSet<BioMaterial>() );
+                    fv2bms.put( fv, new ArrayList<BioMaterial>() );
                 }
                 fv2bms.get( fv ).add( bm );
             }
         }
+
+        for ( Entry<FactorValue, List<BioMaterial>> e : fv2bms.entrySet() ) {
+
+            List<BioMaterial> biomaterials = e.getValue();
+            sortBioMaterials( biomaterials );
+
+        }
+
         return fv2bms;
+    }
+
+    /**
+     * Organize by id, because the order we got the samples in the first place is a reasonable fallback.
+     * 
+     * @param biomaterials
+     */
+    private static void sortBioMaterials( List<BioMaterial> biomaterials ) {
+        Collections.sort( biomaterials, new Comparator<BioMaterial>() {
+            @Override
+            public int compare( BioMaterial o1, BioMaterial o2 ) {
+                return o1.getId().compareTo( o2.getId() );
+            }
+        } );
     }
 
     /**
@@ -298,8 +325,19 @@ public class ExpressionDataMatrixColumnSort {
 
         LinkedHashMap<FactorValue, List<BioMaterial>> chunks = new LinkedHashMap<FactorValue, List<BioMaterial>>();
 
-        for ( FactorValue fv : ef.getFactorValues() ) {
-            chunks.put( fv, new ArrayList<BioMaterial>() );
+        /*
+         * Get the factor values in the order we have things right now
+         */
+        for ( BioMaterial bm : bms ) {
+            for ( FactorValue fv : bm.getFactorValues() ) {
+                if ( !ef.getFactorValues().contains( fv ) ) {
+                    continue;
+                }
+                if ( chunks.keySet().contains( fv ) ) {
+                    continue;
+                }
+                chunks.put( fv, new ArrayList<BioMaterial>() );
+            }
         }
 
         /*
@@ -399,19 +437,28 @@ public class ExpressionDataMatrixColumnSort {
 
     /**
      * @param ef
-     * @param fv2bms
-     * @param bms
+     * @param fv2bms map of factorValues to lists of biomaterials that have that factorValue.
+     * @param bms Chunk of biomaterials to organize.
      * @param doneFactors
      * @return order list, or null if there was a problem.
      */
-    private static List<BioMaterial> orderByFactor( ExperimentalFactor ef,
-            Map<FactorValue, Collection<BioMaterial>> fv2bms, List<BioMaterial> bms,
-            HashMap<ExperimentalFactor, Collection<BioMaterial>> doneFactors ) {
+    private static List<BioMaterial> orderByFactor( ExperimentalFactor ef, Map<FactorValue, List<BioMaterial>> fv2bms,
+            List<BioMaterial> bms, Map<ExperimentalFactor, Collection<BioMaterial>> doneFactors ) {
 
         if ( bms.size() == 1 ) return bms;
 
         log.debug( "Ordering " + bms.size() + " biomaterials by " + ef );
+
+        sortBioMaterials( bms ); // probably redundant.
+
         List<FactorValue> factorValues = new ArrayList<FactorValue>( ef.getFactorValues() );
+
+        if ( factorValues.size() < 2 ) {
+            /*
+             * Not strictly disallowed, but useless.
+             */
+            return bms;
+        }
 
         sortIfMeasurement( factorValues );
         sortByControl( factorValues );
@@ -457,7 +504,7 @@ public class ExpressionDataMatrixColumnSort {
      * @param chunks map of factor values to chunks goes here
      * @param organized the results go here
      */
-    private static void organizeByFactorValues( Map<FactorValue, Collection<BioMaterial>> fv2bms,
+    private static void organizeByFactorValues( Map<FactorValue, List<BioMaterial>> fv2bms,
             List<BioMaterial> bioMaterialChunk, List<FactorValue> factorValues,
             LinkedHashMap<FactorValue, List<BioMaterial>> chunks, List<BioMaterial> organized ) {
         Collection<BioMaterial> seenBioMaterials = new HashSet<BioMaterial>();
@@ -473,7 +520,7 @@ public class ExpressionDataMatrixColumnSort {
             }
 
             // all in entire experiment, so we might not want them all as we may just be processing a small chunk.
-            Collection<BioMaterial> biomsforfv = fv2bms.get( fv );
+            List<BioMaterial> biomsforfv = fv2bms.get( fv );
 
             for ( BioMaterial bioMaterial : biomsforfv ) {
                 if ( bioMaterialChunk.contains( bioMaterial ) ) {
@@ -529,7 +576,9 @@ public class ExpressionDataMatrixColumnSort {
             @Override
             public int compare( FactorValue o1, FactorValue o2 ) {
                 if ( isBaselineCondition( o1 ) ) {
-                    if ( isBaselineCondition( o2 ) ) {
+                    if ( o2.getIsBaseline() == null ) {
+                        return -1;
+                    } else if ( isBaselineCondition( o2 ) ) {
                         return 0;
                     }
                     return -1;
@@ -537,7 +586,6 @@ public class ExpressionDataMatrixColumnSort {
                     return 1;
                 }
                 return 0;
-
             }
         } );
 
