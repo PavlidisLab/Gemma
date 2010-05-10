@@ -107,6 +107,7 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDaoBase#handleThaw(java.util.Collection)
      */
     @SuppressWarnings("unchecked")
