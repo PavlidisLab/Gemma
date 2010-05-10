@@ -87,14 +87,18 @@ public class ProcessedExpressionDataVectorServiceTest extends BaseSpringContextT
             return;
         }
 
-        Collection<Gene> genes = getGeneAssociatedWithEe( ees.iterator().next() );
+        ExpressionExperiment ee = ees.iterator().next();
+
         Collection<ProcessedExpressionDataVector> createProcessedDataVectors = processedDataVectorService
-                .createProcessedDataVectors( ees.iterator().next() );
+                .createProcessedDataVectors( ee );
 
         assertEquals( 40, createProcessedDataVectors.size() );
-        Collection<DoubleVectorValueObject> v = processedDataVectorService.getProcessedDataArrays( ees, genes );
-        assertTrue( "got " + v.size() + ", expected at least 40", 40 <= v.size() ); // might get 41 if state of system
-        // after tests is a bit off.
+        Collection<DoubleVectorValueObject> v = processedDataVectorService.getProcessedDataArrays( ee );
+        assertEquals( 40, v.size() );
+
+        Collection<Gene> genes = getGeneAssociatedWithEe( ee );
+        v = processedDataVectorService.getProcessedDataArrays( ees, genes );
+        assertTrue( "got " + v.size() + ", expected at least 40", 40 <= v.size() );
     }
 
     /**
@@ -112,8 +116,7 @@ public class ProcessedExpressionDataVectorServiceTest extends BaseSpringContextT
             Collection<ExpressionExperiment> results = geoService.fetchAndLoad( "GSE432", false, true, false, false,
                     false );
             newee = results.iterator().next();
-            newee.setShortName( RandomStringUtils.randomAlphabetic( 12 ) );
-            expressionExperimentService.update( newee );
+
             TwoChannelMissingValues tcmv = ( TwoChannelMissingValues ) this.getBean( "twoChannelMissingValues" );
             tcmv.computeMissingValues( newee, 1.5, null );
             // No masked preferred computation.
@@ -126,7 +129,8 @@ public class ProcessedExpressionDataVectorServiceTest extends BaseSpringContextT
             throw e;
         }
 
-        assertNotNull( newee );
+        newee.setShortName( RandomStringUtils.randomAlphabetic( 12 ) );
+        expressionExperimentService.update( newee );
 
         this.expressionExperimentService.thawLite( newee );
 
@@ -140,32 +144,38 @@ public class ProcessedExpressionDataVectorServiceTest extends BaseSpringContextT
      * @return
      */
     private Collection<Gene> getGeneAssociatedWithEe( ExpressionExperiment ee ) {
-        int i = 0;
-        ArrayDesign ad = ee.getBioAssays().iterator().next().getArrayDesignUsed();
-        Taxon taxon = this.getTaxon( "mouse" );
-        ad = this.arrayDesignService.thaw( ad );
+        Collection<ArrayDesign> ads = this.expressionExperimentService.getArrayDesignsUsed( ee );
         Collection<Gene> genes = new HashSet<Gene>();
-        for ( CompositeSequence cs : ad.getCompositeSequences() ) {
-            if ( i >= 10 ) break;
-            Gene g = this.getTestPeristentGene();
-            BlatAssociation blata = BlatAssociation.Factory.newInstance();
-            blata.setGeneProduct( g.getProducts().iterator().next() );
-            BlatResult br = BlatResult.Factory.newInstance();
-            BioSequence bs = cs.getBiologicalCharacteristic();
-            if ( bs == null ) {
-                bs = BioSequence.Factory.newInstance();
+        for ( ArrayDesign ad : ads ) {
+            Taxon taxon = this.getTaxon( "mouse" );
+            ad = this.arrayDesignService.thaw( ad );
+
+            for ( CompositeSequence cs : ad.getCompositeSequences() ) {
+                Gene g = this.getTestPeristentGene();
+                BlatAssociation blata = BlatAssociation.Factory.newInstance();
+                blata.setGeneProduct( g.getProducts().iterator().next() );
+                BlatResult br = BlatResult.Factory.newInstance();
+                BioSequence bs = BioSequence.Factory.newInstance();
                 bs.setName( RandomStringUtils.random( 10 ) );
                 bs.setTaxon( taxon );
                 bs = ( BioSequence ) persisterHelper.persist( bs );
+
+                assertNotNull( bs );
+
                 cs.setBiologicalCharacteristic( bs );
                 compositeSequenceService.update( cs );
+
+                cs = compositeSequenceService.load( cs.getId() );
+
+                assertNotNull( cs.getBiologicalCharacteristic() );
+
+                br.setQuerySequence( bs );
+                blata.setBlatResult( br );
+                blata.setBioSequence( bs );
+                persisterHelper.persist( blata );
+                genes.add( g );
             }
 
-            br.setQuerySequence( bs );
-            blata.setBlatResult( br );
-            blata.setBioSequence( bs );
-            persisterHelper.persist( blata );
-            genes.add( g );
         }
         return genes;
     }

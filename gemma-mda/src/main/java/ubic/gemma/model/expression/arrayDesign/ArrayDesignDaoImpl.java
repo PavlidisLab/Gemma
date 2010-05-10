@@ -1278,7 +1278,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
     private List<?> thawBatchOfProbes( Collection<CompositeSequence> batch ) {
         List<?> bb = this.getHibernateTemplate().findByNamedParam(
-                "select cs from CompositeSequenceImpl cs join fetch cs.biologicalCharacteristic where cs in (:batch)",
+                "select cs from CompositeSequenceImpl cs left join fetch cs.biologicalCharacteristic where cs in (:batch)",
                 "batch", batch );
         return bb;
     }
