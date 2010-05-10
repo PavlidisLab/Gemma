@@ -60,6 +60,7 @@ import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.expression.biomaterial.BioMaterialImpl;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
@@ -813,12 +814,26 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
     @Override
     protected Collection<DesignElementDataVector> handleGetDesignElementDataVectors( Collection quantitationTypes )
             throws Exception {
+
+        if ( quantitationTypes.isEmpty() ) {
+            throw new IllegalArgumentException( "Must provide at least one quantitation type" );
+        }
+
         // NOTE this essentially does a partial thaw.
-        final String queryString = "select dev from RawExpressionDataVectorImpl dev"
+        String queryString = "select dev from RawExpressionDataVectorImpl dev"
                 + " inner join fetch dev.bioAssayDimension bd "
                 + " inner join fetch dev.designElement de inner join fetch dev.quantitationType where dev.quantitationType in (:qts) ";
 
         List results = getHibernateTemplate().findByNamedParam( queryString, "qts", quantitationTypes );
+
+        if ( results.isEmpty() ) {
+            queryString = "select dev from ProcessedExpressionDataVectorImpl dev"
+                    + " inner join fetch dev.bioAssayDimension bd "
+                    + " inner join fetch dev.designElement de inner join fetch dev.quantitationType where dev.quantitationType in (:qts) ";
+
+            results.addAll( getHibernateTemplate().findByNamedParam( queryString, "qts", quantitationTypes ) );
+        }
+
         return results;
     }
 
@@ -1391,6 +1406,8 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
                 // FIXME this often causes a "collection is not associated with any session" error ... but if we don't
                 // thaw it we get lazy exceptions later.
                 try {
+                    EntityUtils.attach( session, bm, BioMaterialImpl.class, bm.getId() );
+
                     Hibernate.initialize( bm.getBioAssaysUsedIn() );
                     Hibernate.initialize( bm.getFactorValues() );
                     Hibernate.initialize( bm.getTreatments() );
