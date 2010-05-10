@@ -126,6 +126,8 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
         }
         result.setExpressionExperiment( this.expressionExperiment );
         result.setBioAssayDimension( this.bioAssayDimension );
+        assert this.bioAssayDimension != null;
+        assert this.bioAssayDimension.getBioAssays().size() > 0;
         if ( updatedQuantitationType == null ) {
             result.setQuantitationType( this.quantitationType );
         } else {
@@ -135,5 +137,4 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
         result.setData( byteArrayConverter.doubleArrayToBytes( this.data ) );
         return result;
     }
-
 }
