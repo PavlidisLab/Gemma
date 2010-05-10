@@ -82,6 +82,8 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
 
         // We need to commit or we can end up with 'object exists in session'
         this.getHibernateTemplate().flush();
+        this.getHibernateTemplate().clear();
+
         expressionExperiment.setProcessedExpressionDataVectors( null );
         this.getHibernateTemplate().update( expressionExperiment );
         this.getHibernateTemplate().flush();
@@ -605,10 +607,10 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
 
     /**
      * @param ees
-     * @param genes
-     * @param results
-     * @param needToSearch
-     * @param genesToSearch
+     * @param genes that might have cached results
+     * @param results from the cache will be put here
+     * @param needToSearch experiments that need to be searched (not fully cached)
+     * @param genesToSearch that stll need to be searched (not in cache)
      */
     @SuppressWarnings("unchecked")
     private void checkCache( Collection<ExpressionExperiment> ees, Collection<Gene> genes,
@@ -626,6 +628,9 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
                     genesToSearch.add( g );
                 }
             }
+            /*
+             * This experiment is not fully cached for the genes in question.
+             */
             if ( genesToSearch.size() > 0 ) {
                 needToSearch.add( ee );
             }
