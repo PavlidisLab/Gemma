@@ -88,7 +88,7 @@ public class GeoConverterTest extends BaseSpringContextTest {
         Taxon atlanticSalm = taxonService.findByAbbreviation( "ssal" );
         assertNotNull( atlanticSalm );
         InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
-                "/data/loader/expression/geo/GSE2388.soft.gz" ) );
+                "/data/loader/expression/geo/GSE2388_family.soft.gz" ) );
         GeoFamilyParser parser = new GeoFamilyParser();
         parser.parse( is );
 
@@ -281,7 +281,7 @@ public class GeoConverterTest extends BaseSpringContextTest {
     @Test
     public void testConvertGSE3791() throws Exception {
         InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
-                "/data/loader/expression/geo/gse3791Short/GSE3791.soft.gz" ) );
+                "/data/loader/expression/geo/gse3791Short/GSE3791_family.soft.gz" ) );
         GeoFamilyParser parser = new GeoFamilyParser();
         parser.parse( is );
         GeoSeries series = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSeriesMap().get( "GSE3791" );
@@ -303,7 +303,7 @@ public class GeoConverterTest extends BaseSpringContextTest {
     @Test
     public void testConvertGSE404() throws Exception {
         InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
-                "/data/loader/expression/geo/gse404Short/GSE404.soft.gz" ) );
+                "/data/loader/expression/geo/gse404Short/GSE404_family.soft.gz" ) );
         GeoFamilyParser parser = new GeoFamilyParser();
         parser.parse( is );
         GeoSeries series = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSeriesMap().get( "GSE404" );
@@ -541,7 +541,7 @@ public class GeoConverterTest extends BaseSpringContextTest {
     public void testIllegalArgumentExceptionChannel1Channel2taxonDifferent() throws Exception {
         try {
             InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
-                    "/data/loader/expression/geo/GSE4047.soft.gz" ) );
+                    "/data/loader/expression/geo/GSE4047_family.soft.gz" ) );
             GeoFamilyParser parser = new GeoFamilyParser();
             parser.parse( is );
             GeoSeries series = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSeriesMap().get(
@@ -654,7 +654,7 @@ public class GeoConverterTest extends BaseSpringContextTest {
         // gc.clear();
 
         InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
-                "/data/loader/expression/geo/GPL2899.soft.gz" ) );
+                "/data/loader/expression/geo/GPL2899_family.soft.gz" ) );
         GeoFamilyParser parser = new GeoFamilyParser();
         // parse only the plaform
         parser.setProcessPlatformsOnly( true );
