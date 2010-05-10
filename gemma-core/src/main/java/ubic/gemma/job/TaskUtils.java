@@ -18,6 +18,9 @@
  */
 package ubic.gemma.job;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import org.apache.commons.lang.RandomStringUtils;
 
 /**
@@ -28,11 +31,30 @@ public class TaskUtils {
 
     private static final int KEY_LENGTH = 16;
 
+    private static Set<String> usedIds = new HashSet<String>();
+
+    private static int MAX_ATTEMPTS = 1000;
+
     /**
-     * @return
+     * @return a unique (since the JVM was started) task id.
      */
     public static String generateTaskId() {
-        return RandomStringUtils.randomAlphanumeric( KEY_LENGTH ).toUpperCase();
+        /*
+         * Ensure we have a unique id.
+         */
+        int keepTrying = 0;
+        while ( ++keepTrying < MAX_ATTEMPTS ) {
+            String id = RandomStringUtils.randomAlphanumeric( KEY_LENGTH ).toUpperCase();
+            if ( usedIds.isEmpty() || !usedIds.contains( id ) ) {
+                usedIds.add( id );
+                return id;
+            }
+        }
+
+        /*
+         * Just in case ...
+         */
+        throw new IllegalStateException( "Failed to find a unique task id in " + MAX_ATTEMPTS + " iterations" );
     }
 
 }
