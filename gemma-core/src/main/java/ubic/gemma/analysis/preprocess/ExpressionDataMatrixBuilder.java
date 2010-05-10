@@ -159,6 +159,9 @@ public class ExpressionDataMatrixBuilder {
             if ( qType.getIsPreferred() ) {
                 log.info( "Preferred=" + qType );
                 neededQtTypes.add( qType );
+            } else if ( qType.getIsMaskedPreferred() ) {
+                log.info( "Masked preferred=" + qType );
+                neededQtTypes.add( qType );
             } else if ( ChannelUtils.isBackgroundChannelA( name ) ) {
                 neededQtTypes.add( qType );
                 log.info( "Background A=" + qType );
@@ -289,6 +292,10 @@ public class ExpressionDataMatrixBuilder {
         if ( dimMap.keySet().size() > 0 ) {
             result.addAll( dimMap.values() );
             return result;
+        }
+
+        if ( this.vectors.isEmpty() ) {
+            throw new IllegalStateException( "No vectors, no bioassay dimensions" );
         }
 
         log.debug( "Checking all vectors to get bioAssayDimensions" );
