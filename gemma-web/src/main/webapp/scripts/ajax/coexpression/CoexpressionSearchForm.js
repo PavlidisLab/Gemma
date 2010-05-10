@@ -268,7 +268,10 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 					tag : 'span',
 					html : "&nbsp;&nbsp;" + msg
 				});
-		this.loadMask.hide();
+		this.returnFromSearch({
+					errorState : msg
+				});
+
 	},
 
 	clearError : function() {

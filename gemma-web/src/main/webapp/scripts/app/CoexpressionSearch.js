@@ -112,11 +112,14 @@ Ext.onReady(function() {
 	 */
 	searchPanel.on("aftersearch", function(panel, result) {
 
+		Ext.DomHelper.overwrite('summarypanel', "");
+		
 		/*
 		 * Report any errors.
 		 */
 		if (result.errorState) {
 			Ext.DomHelper.overwrite('coexpression-messages', result.errorState);
+			knownGeneGrid.getStore().removeAll();
 			return;
 		}
 
@@ -128,7 +131,7 @@ Ext.onReady(function() {
 			}
 		}
 
-		Ext.DomHelper.overwrite('summarypanel', "");
+		
 		summaryPanel = new Gemma.CoexpressionSummaryGrid({
 					genes : result.queryGenes,
 					renderTo : "summarypanel",
