@@ -130,6 +130,11 @@ import ubic.gemma.util.ReflectionUtil;
 public class SearchService implements InitializingBean {
 
     /**
+     * 
+     */
+    private static final int MAX_IN_MEMORY_INDEX_HITS = 1000;
+
+    /**
      * Key for internal in-memory on-the-fly indexes
      */
     private static final String INDEX_KEY = "content";
@@ -1429,22 +1434,18 @@ public class SearchService implements InitializingBean {
          * This is purely debugging.
          */
         if ( parentMap.size() > 0 ) {
-            // if ( log.isDebugEnabled() ) log.debug( "Found " + parentMap.size() + " owners for
-            // characteristics:"
-            // );
-            for ( Object obj : parentMap.values() ) {
-                if ( obj instanceof Auditable ) {
-                    if ( log.isDebugEnabled() ) {
-                        // log.debug( " Owner Id: " + ( ( Auditable ) obj ).getId() + " Owner Class: " +
-                        // obj.getClass()
-                        // );
-                    }
-                } else {
-                    if ( log.isDebugEnabled() ) {
-                        // log.debug( " Owner : " + obj.toString() + " Owner Class: " + obj.getClass() );
-                    }
-                }
-            }
+            if ( log.isDebugEnabled() ) log.debug( "Found " + parentMap.size() + " owners for    characteristics:" );
+            // for ( Object obj : parentMap.values() ) {
+            // if ( obj instanceof Auditable ) {
+            // if ( log.isDebugEnabled() ) {
+            // log.debug( " Owner Id: " + ( ( Auditable ) obj ).getId() + " Owner Class: " + obj.getClass() );
+            // }
+            // } else {
+            // if ( log.isDebugEnabled() ) {
+            // log.debug( " Owner : " + obj.toString() + " Owner Class: " + obj.getClass() );
+            // }
+            // }
+            // }
         }
     }
 
@@ -1463,7 +1464,7 @@ public class SearchService implements InitializingBean {
             Map<String, Collection<SearchResult>> invertedMatches = new HashMap<String, Collection<SearchResult>>();
             Directory idx = indexCharacteristicHits( matches, invertedMatches );
             IndexSearcher searcher = new IndexSearcher( idx );
-            TopDocCollector hc = new TopDocCollector( 1000 );
+            TopDocCollector hc = new TopDocCollector( MAX_IN_MEMORY_INDEX_HITS );
             searcher.search( parsedQuery, hc );
 
             TopDocs topDocs = hc.topDocs();
