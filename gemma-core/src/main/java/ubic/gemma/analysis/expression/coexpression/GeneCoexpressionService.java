@@ -121,10 +121,9 @@ public class GeneCoexpressionService {
     private Gene2GeneProteinAssociationService gene2GeneProteinAssociationService = null;
 
     /**
-     * Perform a "custom" analysis, using an ad-hoc set of expreriments. Note that if possible, the query will be done
-     * using results from an ExpressionExperimentSet.
+     * Main entry point. Note that if possible, the query will be done using results from an ExpressionExperimentSet.
      * 
-     * @param eeIds Expression experiments to consider
+     * @param inputEeIds Expression experiments to consider
      * @param genes Genes to find coexpression for
      * @param stringency Minimum support level
      * @param queryGenesOnly Whether to return only coexpression among the query genes (assuming there are more than
@@ -133,10 +132,12 @@ public class GeneCoexpressionService {
      *        debugging feature. If false, searches will be done using 'canned' results if possible.
      * @return
      */
-    public CoexpressionMetaValueObject coexpressionSearch( Collection<Long> eeIds, Collection<Gene> genes,
+    public CoexpressionMetaValueObject coexpressionSearch( Collection<Long> inputEeIds, Collection<Gene> genes,
             int stringency, int maxResults, boolean queryGenesOnly, boolean forceProbeLevelSearch ) {
 
-        if ( eeIds == null ) eeIds = new HashSet<Long>();
+        Collection<Long> eeIds = inputEeIds;
+
+        if ( inputEeIds == null ) eeIds = new HashSet<Long>();
         Collection<BioAssaySet> ees = getPossibleExpressionExperiments( genes );
 
         if ( ees.isEmpty() ) {
@@ -181,8 +182,17 @@ public class GeneCoexpressionService {
             ExpressionExperimentSet eeSet = geneCoexpressionAnalysisService.findCurrent( taxon )
                     .getExpressionExperimentSetAnalyzed();
 
+            /*
+             * debugging
+             */
+            // List<Long> eeSetIds = getIds( eeSet );
+            // for ( Long id : eeIds ) {
+            // if ( !eeSetIds.contains( id ) ) {
+            // log.info( "EEset does not have: " + id );
+            // }
+            // }
             if ( eeSet != null && getIds( eeSet ).containsAll( eeIds ) ) {
-                log.info( "Using canned analysis to conduct customized analysis" );
+                log.debug( "Using canned analysis to conduct customized analysis" );
                 return getFilteredCannedAnalysisResults( eeIds, genes, stringency, maxResults, queryGenesOnly );
             }
         }
@@ -253,30 +263,6 @@ public class GeneCoexpressionService {
         }
 
         return result;
-    }
-
-    /**
-     * This is the entry point for queries starting from a preset ExpressionExperimentSet.
-     * 
-     * @param eeSetId expressionExperimentSetId
-     * @param genes Genes to find coexpression for
-     * @param stringency Minimum support level
-     * @param queryGenesOnly Whether to return only coexpression among the query genes (assuming there are more than
-     *        one). Otherwise, coexpression with genes 'external' to the queries will be returned.
-     * @param queryGenesOnly
-     * @return
-     */
-    public CoexpressionMetaValueObject coexpressionSearch( Long eeSetId, Collection<Gene> queryGenes, int stringency,
-            int maxResults, boolean queryGenesOnly ) {
-
-        ExpressionExperimentSet eeSet = this.expressionExperimentSetService.load( eeSetId );
-        if ( eeSet == null ) {
-            throw new IllegalArgumentException( "NO such eeset" );
-        }
-
-        Collection<Long> eeIds = this.getIds( eeSet );
-
-        return getFilteredCannedAnalysisResults( eeIds, queryGenes, stringency, maxResults, queryGenesOnly );
     }
 
     /**
@@ -949,6 +935,7 @@ public class GeneCoexpressionService {
     private List<Long> getIds( ExpressionExperimentSet expressionExperimentSet ) {
         List<Long> ids = new ArrayList<Long>( expressionExperimentSet.getExperiments().size() );
         for ( BioAssaySet dataset : expressionExperimentSet.getExperiments() ) {
+            // log.info( dataset.getId() );
             ids.add( dataset.getId() );
         }
         return ids;

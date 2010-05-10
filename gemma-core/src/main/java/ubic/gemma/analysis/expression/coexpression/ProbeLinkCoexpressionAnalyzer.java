@@ -142,18 +142,18 @@ public class ProbeLinkCoexpressionAnalyzer {
     /**
      * @param gene
      * @param ees Collection of ExpressionExperiments that will be considered.
-     * @param stringency A positive non-zero integer. If a value less than or equal to zero is entered, the value 1 will
-     *        be silently used.
+     * @param inputStringency A positive non-zero integer. If a value less than or equal to zero is entered, the value 1
+     *        will be silently used.
      * @param knownGenesOnly if false, 'predicted genes' and 'probe aligned regions' will be populated.
      * @param limit The maximum number of results that will be fully populated. Set to 0 to fill all (batch mode)
      * @see ubic.gemma.model.genome.GeneDao.getCoexpressedGenes
      * @see ubic.gemma.model.analysis.expression.coexpression.CoexpressionCollectionValueObject
      * @return Fully initialized CoexpressionCollectionValueObject.
      */
-    public CoexpressionCollectionValueObject linkAnalysis( Gene gene, Collection<BioAssaySet> ees, int stringency,
+    public CoexpressionCollectionValueObject linkAnalysis( Gene gene, Collection<BioAssaySet> ees, int inputStringency,
             boolean knownGenesOnly, int limit ) {
 
-        if ( stringency <= 0 ) stringency = 1;
+        int stringency = inputStringency <= 0 ? 1 : inputStringency;
 
         if ( log.isDebugEnabled() )
             log.debug( "Link query for " + gene.getName() + " stringency=" + stringency + " knowngenesonly?="
