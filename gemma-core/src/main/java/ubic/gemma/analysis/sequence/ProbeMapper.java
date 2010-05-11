@@ -551,11 +551,15 @@ public class ProbeMapper {
 
         chrom.setTaxon( taxon );
         if ( chrom.getId() == null ) {
-            Chromosome foundChrom = chromosomeService.find( chrom );
-            if ( foundChrom == null )
-                chrom = chromosomeService.findOrCreate( chrom ); // typically only during tests.
-            else
-                chrom = foundChrom;
+            Collection<Chromosome> chromosomes = chromosomeService.find( chrom.getName(), taxon );
+            if ( chromosomes.size() > 1 ) {
+                log.warn( "More than one chromosome matches " + chrom.getName() + " " + taxon );
+            }
+            if ( chromosomes.size() > 0 ) {
+                chrom = chromosomes.iterator().next();
+            } else {
+                chrom = chromosomeService.findOrCreate( chrom ); // typically only during tests, but see bug 1936
+            }
         }
 
         assert chrom.getId() != null;
