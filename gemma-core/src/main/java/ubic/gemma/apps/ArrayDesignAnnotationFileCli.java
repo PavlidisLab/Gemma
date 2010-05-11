@@ -512,7 +512,9 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
 
     }
 
-    private void processOneAD( ArrayDesign ad ) throws IOException {
+    private void processOneAD( ArrayDesign inputAd ) throws IOException {
+        ArrayDesign ad = unlazifyArrayDesign( inputAd );
+
         log.info( "Processing AD: " + ad.getName() );
 
         String shortFileBaseName = ad.getShortName() + ArrayDesignAnnotationService.NO_PARENTS_FILE_SUFFIX;
@@ -527,7 +529,6 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
             return;
         }
 
-        ad = unlazifyArrayDesign( ad );
         Collection<CompositeSequence> compositeSequences = ad.getCompositeSequences();
         log.info( "Starting genes specificity" );
 
