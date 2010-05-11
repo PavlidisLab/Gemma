@@ -29,6 +29,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang.StringUtils;
+import org.hibernate.proxy.HibernateProxy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.WebDataBinder;
@@ -142,6 +143,7 @@ public class CompositeSequenceController extends BaseController {
             return new HashSet<GeneMappingSummary>();
         }
         CompositeSequence cs = compositeSequenceService.load( csd.getId() );
+
         return this.getGeneMappingSummary( cs );
     }
 
@@ -182,6 +184,7 @@ public class CompositeSequenceController extends BaseController {
                 }
             }
         }
+
         return getSummaries( css );
     }
 
@@ -253,6 +256,10 @@ public class CompositeSequenceController extends BaseController {
                 blatResult = BlatResult.Factory.newInstance();
                 blatResult.setQuerySequence( bs );
                 blatResult.setId( bs.getId() );
+            }
+
+            if ( blatResult == null ) {
+                continue;
             }
 
             if ( results.containsKey( blatResult ) ) {
