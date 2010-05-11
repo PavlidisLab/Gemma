@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.List;
 
 import org.hibernate.Criteria;
+import org.hibernate.Hibernate;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -42,6 +43,7 @@ public class BlatResultDaoImpl extends ubic.gemma.model.genome.sequenceAnalysis.
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.genome.sequenceAnalysis.BlatResultDaoBase#find(ubic.gemma.model.genome.biosequence.BioSequence)
      */
@@ -60,7 +62,7 @@ public class BlatResultDaoImpl extends ubic.gemma.model.genome.sequenceAnalysis.
             for ( Object object : results ) {
                 BlatResult br = ( BlatResult ) object;
                 if ( br.getTargetChromosome() != null ) {
-                    br.getTargetChromosome().getName(); // to initialize the proxies.
+                    Hibernate.initialize( br.getTargetChromosome() );
                 }
                 br.getQuerySequence();
             }
@@ -71,6 +73,7 @@ public class BlatResultDaoImpl extends ubic.gemma.model.genome.sequenceAnalysis.
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.genome.sequenceAnalysis.BlatResultDaoBase#findOrCreate(ubic.gemma.model.genome.sequenceAnalysis
      * .BlatResult)
@@ -91,6 +94,7 @@ public class BlatResultDaoImpl extends ubic.gemma.model.genome.sequenceAnalysis.
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlatResultDaoBase#handleLoad(java.util.Collection)
      */
     @Override
