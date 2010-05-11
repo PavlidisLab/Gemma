@@ -77,8 +77,6 @@ public class AuditTrailDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
 
         templ.executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                session.lock( auditable, LockMode.NONE ); // always a bit dicey
-                if ( !Hibernate.isInitialized( auditable ) ) Hibernate.initialize( auditable );
 
                 /*
                  * Note: this step should be done by the AuditAdvice when the entity was first created, so this is just
@@ -86,6 +84,8 @@ public class AuditTrailDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
                  */
                 if ( auditable.getAuditTrail() == null ) {
                     auditable.setAuditTrail( AuditTrail.Factory.newInstance() );
+                } else {
+                    Hibernate.initialize( auditable.getAuditTrail() );
                 }
 
                 auditable.getAuditTrail().addEvent( auditEvent );
