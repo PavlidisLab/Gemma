@@ -257,8 +257,9 @@
     <cache name="ubic.gemma.model.common.auditAndSecurity.AuditTrailImpl" maxElementsInMemory="1200" eternal="false"
      timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false"/>
     
-    <cache name="ubic.gemma.model.common.auditAndSecurity.AuditTrailImpl.events" maxElementsInMemory="10000" eternal="false"
-     timeToIdleSeconds="1200" timeToLiveSeconds="200" overflowToDisk="false"/>
+    <!--  we would disable this entirely, not so easy with AndroMDA -->
+     <cache name="ubic.gemma.model.common.auditAndSecurity.AuditTrailImpl.events" maxElementsInMemory="1" eternal="false"
+     timeToIdleSeconds="0" timeToLiveSeconds="0" overflowToDisk="false"/> 
     
     <cache name="ubic.gemma.model.common.auditAndSecurity.UserRoleImpl" maxElementsInMemory="10000" eternal="false"
      timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false"/>
@@ -464,8 +465,9 @@
     <cache name="ubic.gemma.model.expression.experiment.ExperimentalDesignImpl" maxElementsInMemory="10000" eternal="false"
      timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false"/>
     
+      <!--  we would disable this entirely, not so easy with AndroMDA -->
     <cache name="ubic.gemma.model.expression.experiment.ExperimentalDesignImpl.experimentalFactors"
-     maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false"/>
+     maxElementsInMemory="1" eternal="false" timeToIdleSeconds="0" timeToLiveSeconds="0" overflowToDisk="false"/>
     
     <cache name="ubic.gemma.model.expression.experiment.ExperimentalDesignImpl.types" maxElementsInMemory="10000"
      eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false"/>
@@ -473,8 +475,9 @@
     <cache name="ubic.gemma.model.expression.experiment.ExperimentalFactorImpl" maxElementsInMemory="10000" eternal="false"
      timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false"/>
     
-    <cache name="ubic.gemma.model.expression.experiment.ExperimentalFactorImpl.factorValues" maxElementsInMemory="10000"
-     eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false"/>
+      <!--  we would disable this entirely, not so easy with AndroMDA -->
+    <cache name="ubic.gemma.model.expression.experiment.ExperimentalFactorImpl.factorValues" maxElementsInMemory="1"
+     eternal="false" timeToIdleSeconds="0" timeToLiveSeconds="0" overflowToDisk="false"/>
     
     <cache name="ubic.gemma.model.expression.experiment.ExperimentalFactorImpl.annotations" maxElementsInMemory="10000"
      eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false"/>
