@@ -26,6 +26,7 @@ import java.util.List;
 
 import org.apache.commons.lang.math.RandomUtils;
 import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.model.common.measurement.Measurement;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
@@ -33,6 +34,7 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
+import ubic.gemma.model.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.testing.BaseSpringContextTest;
 
@@ -42,12 +44,10 @@ import ubic.gemma.testing.BaseSpringContextTest;
  */
 public class ExpressionDataMatrixColumnSortTest extends BaseSpringContextTest {
 
+    @Autowired
+    ExperimentalFactorService experimentalFactorService;
+
     @Test
-    public void testDummy() {
-        
-    }
-    
- 
     public void testOrderByExperimentalDesignB() throws Exception {
 
         BioAssayDimension bad = BioAssayDimension.Factory.newInstance();
