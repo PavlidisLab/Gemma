@@ -41,6 +41,7 @@ import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.hibernate.collection.PersistentCollection;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.orm.hibernate3.HibernateCallback;
 import org.springframework.orm.hibernate3.HibernateTemplate;
@@ -141,7 +142,6 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         /*
          * Thaw the biosequences in batches
          */
-        // if ( deep ) {
         Collection<CompositeSequence> thawed = new HashSet<CompositeSequence>();
         Collection<CompositeSequence> batch = new HashSet<CompositeSequence>();
         for ( CompositeSequence cs : result.getCompositeSequences() ) {
@@ -166,6 +166,12 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
         result.getCompositeSequences().clear();
         result.getCompositeSequences().addAll( thawed );
+
+        /*
+         * This is a bit ugly, but necessary to avoid 'dirty collection' errors later.
+         */
+        if ( result.getCompositeSequences() instanceof PersistentCollection )
+            ( ( PersistentCollection ) result.getCompositeSequences() ).clearDirty();
 
         if ( timer.getTime() > 1000 ) {
             log.info( "Thaw array design stage 3: " + timer.getTime() );
@@ -1277,9 +1283,11 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
     }
 
     private List<?> thawBatchOfProbes( Collection<CompositeSequence> batch ) {
-        List<?> bb = this.getHibernateTemplate().findByNamedParam(
-                "select cs from CompositeSequenceImpl cs left join fetch cs.biologicalCharacteristic where cs in (:batch)",
-                "batch", batch );
+        List<?> bb = this
+                .getHibernateTemplate()
+                .findByNamedParam(
+                        "select cs from CompositeSequenceImpl cs left join fetch cs.biologicalCharacteristic where cs in (:batch)",
+                        "batch", batch );
         return bb;
     }
 }

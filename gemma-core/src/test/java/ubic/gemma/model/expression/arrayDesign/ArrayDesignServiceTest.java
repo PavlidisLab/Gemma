@@ -35,9 +35,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.orm.hibernate3.HibernateObjectRetrievalFailureException;
 import org.springframework.transaction.annotation.Transactional;
 
+import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
-import ubic.gemma.model.common.description.ExternalDatabaseService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.designElement.Reporter;
@@ -61,7 +61,7 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
     ArrayDesignService arrayDesignService;
 
     @Autowired
-    ExternalDatabaseService externalDatabaseService;
+    AuditTrailService auditTrailService;
 
     @Autowired
     BioSequenceService bioSequenceService;
@@ -130,7 +130,7 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
         ad = ( ArrayDesign ) persisterHelper.persist( ad );
 
         ad = arrayDesignService.find( ad );
-        ad = arrayDesignService.thawLite( ad );
+        ad = arrayDesignService.thaw( ad );
         CompositeSequence cs = ad.getCompositeSequences().iterator().next();
 
         assertNotNull( cs.getId() );
@@ -387,6 +387,26 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
         Integer actualValue = arrayDesignService.getReporterCount( ad );
         Integer expectedValue = 3;
         assertEquals( expectedValue, actualValue );
+    }
+
+    /**
+     * Test for bug 1939 - dirty collection error after thaw.
+     * 
+     * @throws Exception
+     */
+    @Test
+    public void testThaw() throws Exception {
+        ad = super.getTestPersistentArrayDesign( 100, true );
+
+        ad = arrayDesignService.load( ad.getId() );
+
+        ad = arrayDesignService.thaw( ad );
+
+        auditTrailService.addUpdateEvent( ad, "testing" );
+
+        for ( CompositeSequence cs : ad.getCompositeSequences() ) {
+            cs.getBiologicalCharacteristic().getName();
+        }
     }
 
     @Test
