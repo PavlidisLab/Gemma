@@ -143,9 +143,9 @@ Gemma.ProbeDetailsGrid = Ext.extend(Ext.grid.GridPanel, {
 
 		for (var i in data) {
 			if (data[i].id) {
-				res = res
-						+ "<a title='View gene details (opens new window)' target='_blank' href='/Gemma/gene/showGene.html?id="
-						+ data[i].id + "'>" + data[i].officialSymbol + "</a><br />";
+				res = res +
+						"<a title='View gene details (opens new window)' target='_blank' href='/Gemma/gene/showGene.html?id=" +
+						data[i].id + "'>" + data[i].officialSymbol + "</a><br />";
 			}
 		}
 		return res;
@@ -161,10 +161,10 @@ Gemma.ProbeDetailsGrid = Ext.extend(Ext.grid.GridPanel, {
 		var organism = d.targetChromosome.taxon;
 		var database = this.getDb(organism);
 		if (database) {
-			var link = "http://genome.ucsc.edu/cgi-bin/hgTracks?org=" + organism + "&pix=850&db=" + database
-					+ "&hgt.customText=" + Gemma.GEMMA_BASE_URL + "blatTrack.html?id=" + d.id;
-			res = res + "&nbsp;<a title='Genome browser view (opens in new window)' target='_blank' href='" + link
-					+ "'><img src='" + Gemma.UCSC_ICON + "' /></a>";
+			var link = "http://genome.ucsc.edu/cgi-bin/hgTracks?org=" + organism + "&pix=850&db=" + database +
+					"&hgt.customText=" + Gemma.GEMMA_BASE_URL + "blatTrack.html?id=" + d.id;
+			res = res + "&nbsp;<a title='Genome browser view (opens in new window)' target='_blank' href='" + link +
+					"'><img src='" + Gemma.UCSC_ICON + "' /></a>";
 		}
 		return res;
 	},
@@ -289,8 +289,8 @@ Gemma.ProbeDetailsGrid = Ext.extend(Ext.grid.GridPanel, {
 
 			dh.append("sequence-info", {
 				tag : 'li',
-				html : "Sequence: <div ext:qtip='Bases in lower-case were masked by RepeatMasker' class='clob' style='margin:3px;height:30px;font-size:smaller;font-style:courier'>"
-						+ seq.sequence + "</div>"
+				html : "Sequence: <div ext:qtip='Bases in lower-case were masked by RepeatMasker' class='clob' style='margin:3px;height:30px;font-size:smaller;font-style:courier'>" +
+						seq.sequence + "</div>"
 			});
 
 			if (seq.sequenceDatabaseEntry && Ext.get("probe-sequence-name")) {
@@ -299,8 +299,8 @@ Gemma.ProbeDetailsGrid = Ext.extend(Ext.grid.GridPanel, {
 							id : "ncbiLink",
 							target : "_blank",
 							title : "view at NCBI",
-							href : "http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=Nucleotide&cmd=search&term="
-									+ seq.sequenceDatabaseEntry.accession,
+							href : "http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=Nucleotide&cmd=search&term=" +
+									seq.sequenceDatabaseEntry.accession,
 							html : "<img src ='" + Gemma.NCBI_ICON + "'/>",
 							"ext:qtip" : "View sequence at NCBI"
 						});
@@ -352,8 +352,8 @@ Gemma.ProbeGrid = Ext.extend(Ext.grid.GridPanel, {
 	},
 
 	arraylink : function(data, metadata, record, row, column, store) {
-		return "<a href='/Gemma/arrays/showArrayDesign.html?id=" + record.get("arrayDesignId") + "'>"
-				+ record.get("arrayDesignName") + "</a>";
+		return "<a href='/Gemma/arrays/showArrayDesign.html?id=" + record.get("arrayDesignId") + "'>" +
+				record.get("arrayDesignName") + "</a>";
 	},
 
 	// CompositeSequenceMapValueObject
@@ -372,9 +372,9 @@ Gemma.ProbeGrid = Ext.extend(Ext.grid.GridPanel, {
 		var count = 0;
 		for (var g in d) {
 			if (d[g].id) {
-				r = r
-						+ "&nbsp;<a  title='View gene details (opens new window)' target='_blank' href='/Gemma/gene/showGene.html?id="
-						+ d[g].id + "'>" + d[g].officialSymbol + "</a>,";
+				r = r +
+						"&nbsp;<a  title='View gene details (opens new window)' target='_blank' href='/Gemma/gene/showGene.html?id=" +
+						d[g].id + "'>" + d[g].officialSymbol + "</a>,";
 				++count;
 			}
 		}
@@ -556,7 +556,7 @@ Gemma.ProbeGrid = Ext.extend(Ext.grid.GridPanel, {
 		var query = Ext.getCmp('search-field').getValue();
 
 		// swap out table proxy, temporarily.
-		this.getBottomToolbar().changePage(0);
+		// this.getBottomToolbar().changePage(0);
 		var oldprox = this.getStore().proxy;
 		this.getStore().proxy = new Ext.data.DWRProxy(CompositeSequenceController.search);
 
@@ -658,8 +658,8 @@ Gemma.ProbeGrid = Ext.extend(Ext.grid.GridPanel, {
 				});
 		Ext.DomHelper.overwrite("messages", {
 					tag : 'span',
-					html : "There was an error while loading data: " + exception
-							+ "<br />. Try again or contact the webmaster."
+					html : "There was an error while loading data: " + exception +
+							"<br />. Try again or contact the webmaster."
 				});
 	}
 
