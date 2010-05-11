@@ -65,6 +65,9 @@ Gemma.ProgressWindow = Ext.extend(Ext.Window, {
 				this.pBar.on('fail', function(message) {
 							this.pBar.allMessages = message + "<br/><br/>Other messages:<br/>" + this.pBar.allMessages;
 							this.pBar.showAllMessages("Job failed!");
+							if (this.errorHandler){ 
+								this.errorHandler(message);
+							}
 							this.destroy();
 						}.createDelegate(this));
 

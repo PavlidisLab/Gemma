@@ -76,15 +76,15 @@ function submitForm() {
 
 };
 
-function handleFailure(data, e) {
-	Ext.DomHelper.overwrite("messages", {
-				tag : 'img',
-				src : '/Gemma/images/icons/warning.png'
-			});
-	Ext.DomHelper.append("messages", {
-				tag : 'span',
-				html : "&nbsp;There was an error while loading data:<br/>" + data
-			});
+function handleFailure(data) {
+	// Ext.DomHelper.overwrite("messages", {
+	// tag : 'img',
+	// src : '/Gemma/images/icons/warning.png'
+	// });
+	// Ext.DomHelper.append("messages", {
+	// tag : 'span',
+	// html : "&nbsp;There was an error while loading data:<br/>" + data
+	// });
 	uploadButton.enable();
 };
 
@@ -96,31 +96,17 @@ function handleSuccess(taskId) {
 	try {
 		Ext.DomHelper.overwrite("messages", "");
 
-		var p = new Gemma.ProgressWidget({
-					taskId : taskId
-				});
-
-		p.on('done', function(payload) {
-					// this.onDoneLoading(payload);
-					p.destroy();
-					window.location = payload;
-				}.createDelegate(this));
-
-		p.on('fail', function(payload) {
-					p.destroy();
-					handleFailure(payload);
-				});
-
-		p.on('cancel', function() {
-					p.destroy();
-					reset();
+		var p = new Gemma.ProgressWindow({
+					taskId : taskId,
+					callback : function(p) {
+						window.location = p
+					},
+					errorHandler : handleFailure
 				});
 
 		p.show('upload-button');
-
-		p.startProgress();
 	} catch (e) {
-		handleFailure(data, e);
+		handleFailure(e);
 		return;
 	}
 };

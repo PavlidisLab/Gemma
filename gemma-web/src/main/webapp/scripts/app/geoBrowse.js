@@ -84,29 +84,13 @@ function handleLoadSuccess(taskId) {
 	try {
 		Ext.DomHelper.overwrite("messages", "");
 
-		var p = new Gemma.ProgressWidget({
-					taskId : taskId
-				});
-
-		p.on('done', function(payload) { 
-					p.destroy();
-					document.location.reload(true); // user will get a warning, but that's okay.
-					Ext.DomHelper.overwrite("messages", "Successfully loaded.");
-				}.createDelegate(this));
-
-		p.on('fail', function(payload) {
-					p.destroy();
-					handleFailure(payload);
-				});
-
-		p.on('cancel', function() {
-					p.destroy();
-					reset();
+		var p = new Gemma.ProgressWindow({
+					taskId : taskId,
+					errorHandler : handleFailure
 				});
 
 		p.show('upload-button');
 
-		p.startProgress();
 	} catch (e) {
 		handleFailure(data, e);
 		return;
