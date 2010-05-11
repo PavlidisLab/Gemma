@@ -9,7 +9,7 @@ Ext.namespace('Gemma');
 Gemma.FactorValueGrid = Ext.extend(Gemma.GemmaGridPanel, {
 
 	loadMask : true,
-	
+
 	taxonId : null,
 
 	record : Ext.data.Record.create([{
@@ -342,8 +342,14 @@ Gemma.FactorValueGrid = Ext.extend(Gemma.GemmaGridPanel, {
 		this.experimentalFactor.id = efId;
 		this.store.rejectChanges(); // reset.
 
-		this.refresh([this.experimentalFactor]); // causes a load.
+		if (efId === null) {
+			this.store.removeAll();
+		} else {
+			// console.log(efId);
+			this.refresh([this.experimentalFactor]); // causes a load.
+		}
 		this.getTopToolbar().setExperimentalFactor(efId);
+
 	},
 
 	setExperimentalFactor : function(efId) {
@@ -467,19 +473,22 @@ Gemma.FactorValueToolbar = Ext.extend(Ext.Toolbar, {
 
 				if (this.editable) {
 					this.characteristicToolbar = new Gemma.FactorValueCharacteristicToolbar({
-								id : 'fv-char-toolbar'
-							//	renderTo : this.getEl().createChild()
-							});
+						id : 'fv-char-toolbar'
+							// renderTo : this.getEl().createChild()
+						});
 					this.ownerCt.add(this.characteristicToolbar);
 				}
 			},
 
 			setExperimentalFactor : function(efId) {
 				this.efId = efId;
-				this.createFactorValueButton.enable();
+				if (efId != null) {
+					this.createFactorValueButton.enable();
+				}
 				if (this.characteristicToolbar) {
 					this.characteristicToolbar.setExperimentalFactor(efId);
 				}
+
 			}
 
 		});

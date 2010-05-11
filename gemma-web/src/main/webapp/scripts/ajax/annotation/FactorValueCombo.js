@@ -88,6 +88,12 @@ Gemma.FactorValueCombo = Ext.extend(Ext.form.ComboBox, {
 			},
 
 			setExperimentalFactor : function(efId, callback) {
+
+				if (efId == null) {
+					this.store.removeAll();
+					return;
+				}
+
 				var options = {
 					params : [{
 								id : efId,

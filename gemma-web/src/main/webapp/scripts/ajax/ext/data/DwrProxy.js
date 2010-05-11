@@ -190,7 +190,6 @@ Ext.extend(Ext.ux.data.DwrProxy, Ext.data.DataProxy, {
 			 * @private
 			 */
 			onRead : function(request, response) {
-				var readDataBlock;
 				try {
 					// Call readRecords() instead of read because read() will attempt to decode JSON to create an
 					// Object,
@@ -199,13 +198,20 @@ Ext.extend(Ext.ux.data.DwrProxy, Ext.data.DataProxy, {
 				} catch (e) {
 					return this.handleResponseException(request, response, e);
 				}
-				if (readDataBlock) {
-					if (readDataBlock.success === false) {
-						this.fireEvent("exception", this, 'remote', request.action, request.options, response, null);
-					} else {
-						this.fireEvent("load", this, request, request.options);
+
+				if (readDataBlock == undefined) {
+					readDataBlock = {
+						success : true,
+						data : []
 					}
 				}
+
+				if (readDataBlock.success === false) {
+					this.fireEvent("exception", this, 'remote', request.action, request.options, response, null);
+				} else {
+					this.fireEvent("load", this, request, request.options);
+				}
+
 				// The callback will usually be store.loadRecords.
 				request.callback.call(request.scope, readDataBlock, request.options, readDataBlock.success);
 			},
@@ -228,7 +234,15 @@ Ext.extend(Ext.ux.data.DwrProxy, Ext.data.DataProxy, {
 				} catch (e) {
 					return this.handleResponseException(request, response, e);
 				}
-				if (readDataBlock.success === false) {
+
+				if (readDataBlock == undefined) {
+					readDataBlock = {
+						success : true,
+						data : []
+					}
+				}
+
+				if (readDataBlock && readDataBlock.success === false) {
 					this.fireEvent("exception", this, 'remote', request.action, request.options, response,
 							request.records);
 				} else {
