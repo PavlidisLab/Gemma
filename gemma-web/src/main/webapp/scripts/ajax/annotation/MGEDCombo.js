@@ -1,9 +1,11 @@
 Ext.namespace("Gemma");
 
 /**
+ * Dropdown menu of MGED categories to use in annotations
  * 
  * @class Gemma.MGEDCombo
  * @extends Ext.form.ComboBox
+ * @version $Id$
  */
 Gemma.MGEDCombo = Ext.extend(Ext.form.ComboBox, {
 
@@ -49,9 +51,15 @@ Gemma.MGEDCombo = Ext.extend(Ext.form.ComboBox, {
 
 				Gemma.MGEDCombo.superclass.initComponent.call(this);
 
-				// this.tpl = new Ext.XTemplate('<tpl for="."><div ext:qtip="{comment}<br/>{uri}"
-				// class="x-combo-list-item">{term}</div></tpl>');
-				// this.tpl.compile();
+				// so that tabbing away still results in a 'select'. I wish there was a better way to do this.
+				this.on("change", function(combo) {
+							if (this.getValue()) {
+								var ix = this.getStore().find("term", this.getValue());
+								var rec = this.getStore().getAt(ix);
+								this.select(ix, true);
+								this.fireEvent('select', this, rec, ix);
+							}
+						});
 
 				this.on("select", function(combo, record, index) {
 							this.selectedTerm = record.data;
