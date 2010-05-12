@@ -112,8 +112,7 @@ Ext.extend(Ext.ux.data.DwrProxy, Ext.data.DataProxy, {
 				}
 
 				var dwrArgs = apiActionHandler.getDwrArgsFunction.call(apiActionHandler.getDwrArgsScope, request, this
-								.getRecordDataArray(records), this.getRecordDataBeforeUpdateArray(records))
-						|| [];
+								.getRecordDataArray(records), this.getRecordDataBeforeUpdateArray(records)) || [];
 
 				dwrArgs.push(this.createCallback(request));
 				apiActionHandler.dwrFunction.apply(Object, dwrArgs); // the scope for calling the dwrFunction doesn't
@@ -199,11 +198,11 @@ Ext.extend(Ext.ux.data.DwrProxy, Ext.data.DataProxy, {
 					return this.handleResponseException(request, response, e);
 				}
 
-				if (readDataBlock == undefined) {
+				if (readDataBlock === undefined) {
 					readDataBlock = {
 						success : true,
 						data : []
-					}
+					};
 				}
 
 				if (readDataBlock.success === false) {
@@ -235,11 +234,11 @@ Ext.extend(Ext.ux.data.DwrProxy, Ext.data.DataProxy, {
 					return this.handleResponseException(request, response, e);
 				}
 
-				if (readDataBlock == undefined) {
+				if (readDataBlock === undefined) {
 					readDataBlock = {
 						success : true,
 						data : []
-					}
+					};
 				}
 
 				if (readDataBlock && readDataBlock.success === false) {
