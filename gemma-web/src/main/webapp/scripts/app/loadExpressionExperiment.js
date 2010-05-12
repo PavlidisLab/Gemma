@@ -77,14 +77,14 @@ function submitForm() {
 };
 
 function handleFailure(data) {
-	// Ext.DomHelper.overwrite("messages", {
-	// tag : 'img',
-	// src : '/Gemma/images/icons/warning.png'
-	// });
-	// Ext.DomHelper.append("messages", {
-	// tag : 'span',
-	// html : "&nbsp;There was an error while loading data:<br/>" + data
-	// });
+	Ext.DomHelper.overwrite("messages", {
+				tag : 'img',
+				src : '/Gemma/images/icons/warning.png'
+			});
+	Ext.DomHelper.append("messages", {
+				tag : 'span',
+				html : data
+			});
 	uploadButton.enable();
 };
 

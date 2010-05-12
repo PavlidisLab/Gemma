@@ -257,7 +257,7 @@ public abstract class AbstractFetcher implements Fetcher {
                 }
 
                 // double check...
-                if ( future.isCancelled() ) {
+                if ( future.isCancelled() || future.isDone() ) {
                     return false;
                 }
 

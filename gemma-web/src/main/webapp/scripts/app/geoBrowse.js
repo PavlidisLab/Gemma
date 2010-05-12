@@ -86,7 +86,11 @@ function handleLoadSuccess(taskId) {
 
 		var p = new Gemma.ProgressWindow({
 					taskId : taskId,
-					errorHandler : handleFailure
+					errorHandler : handleFailure,
+					callback : function(){
+						document.location.reload(true);
+						Ext.DomHelper.overwrite("messages", "Successfully loaded");
+					}
 				});
 
 		p.show('upload-button');

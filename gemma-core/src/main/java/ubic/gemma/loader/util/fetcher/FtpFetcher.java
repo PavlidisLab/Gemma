@@ -122,15 +122,26 @@ public abstract class FtpFetcher extends AbstractFetcher {
              * Note: this block can trigger if you cancel.
              */
 
-            if ( force || !allowUseExisting || existingFile == null )
+            if ( force || !allowUseExisting || existingFile == null ) {
                 throw new RuntimeException( "Cancelled, or couldn't fetch " + seekFile
                         + ", make sure the file exists on the remote server.", e );
+            }
+
+            if ( Thread.currentThread().isInterrupted() ) {
+                throw new CancellationException();
+            }
 
             log.warn( "Cancelled, or couldn't fetch " + seekFile + ", make sure the file exists on the remote server.,"
                     + e + ", using existing file" );
             Collection<LocalFile> fallback = getExistingFile( existingFile, seekFile );
             return fallback;
 
+        } finally {
+            try {
+                if ( ftpClient.isConnected() ) ftpClient.disconnect();
+            } catch ( IOException e ) {
+                throw new RuntimeException( "Could not disconnect: " + e.getMessage() );
+            }
         }
     }
 

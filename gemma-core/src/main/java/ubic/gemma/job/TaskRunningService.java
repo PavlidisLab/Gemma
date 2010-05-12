@@ -353,7 +353,9 @@ public class TaskRunningService implements InitializingBean {
                      * this, we get an ugly stack trace in the logs.
                      */
                     if ( e.getCause() instanceof InterruptedException
-                            || e.getCause().getCause() instanceof InterruptedException ) {
+                            || e.getCause().getCause() instanceof InterruptedException
+                            || e.getCause() instanceof CancellationException
+                            || e.getCause().getCause() instanceof CancellationException ) {
                         if ( cancelledTasks.containsKey( taskId ) ) {
                             log.debug( "Looks like " + taskId + " was cancelled" );
                         } else {
