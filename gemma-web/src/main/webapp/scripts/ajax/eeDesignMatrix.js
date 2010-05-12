@@ -6,6 +6,9 @@
  * @type
  */
 var DesignMatrix = {
+	
+	
+	
 	build : function(rows) {
 
 		var factors = rows[0].factors;
@@ -19,15 +22,16 @@ var DesignMatrix = {
 				});
 
 		for (var i = 0; i < factors.length; ++i) {
+			var fn =  factors[i] ;  
 			record.push({
-						name : factors[i],
+						name : cleanName(fn),
 						type : "string"
 					});
 			columns.push({
-						header : factors[i],
-						dataIndex : factors[i],
+						header : fn,
+						dataIndex : cleanName(fn),
 						sortable : "true",
-						tooltip : factors[i]
+						tooltip : fn
 					});
 		}
 
@@ -72,3 +76,7 @@ var DesignMatrix = {
 		ExpressionExperimentController.getDesignMatrixRows(entityDelegator, this.build);
 	}
 };
+
+function cleanName(string) {
+		return string.replace(/[\'\s]/g, "_");
+}
