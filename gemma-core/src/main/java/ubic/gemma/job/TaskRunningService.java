@@ -481,7 +481,8 @@ public class TaskRunningService implements InitializingBean {
                     cancelTask( taskId );
                     return;
                 }
-                log.warn( "Possible grid problem for job " + taskId );
+                log.warn( "Possible grid problem for job " + taskId
+                        + " -- space monitor reports bad status or space is not running." );
 
             }
         }
