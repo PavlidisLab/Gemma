@@ -171,7 +171,7 @@ public class SpaceMonitor extends AbstractTaskService {
                 for ( ProgressData progressData : progressStatus ) {
                     if ( progressData.isDone() || progressData.isFailed() ) {
                         try {
-                            TaskResult result = ( TaskResult ) taskRunningService.checkResult( taskId );
+                            TaskResult result = taskRunningService.checkResult( taskId );
                             if ( result == null || !result.getRanInSpace() ) {
                                 status = "Task " + taskId + " returned bad status - space may not be accepting jobs: "
                                         + progressData.getDescription();

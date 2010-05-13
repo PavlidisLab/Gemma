@@ -67,34 +67,40 @@ public class SpacesJobObserver implements RemoteEventListener {
 
     /*
      * (non-Javadoc)
+     * 
      * @see net.jini.core.event.RemoteEventListener#notify(net.jini.core.event.RemoteEvent)
      */
     public void notify( RemoteEvent remoteEvent ) throws UnknownEventException, RemoteException {
 
-        EntryArrivedRemoteEvent arrivedRemoteEvent = ( EntryArrivedRemoteEvent ) remoteEvent;
+        if ( remoteEvent instanceof EntryArrivedRemoteEvent ) {
 
-        ExternalEntry entry;
-        try {
-            entry = ( ExternalEntry ) arrivedRemoteEvent.getEntry( true );
+            EntryArrivedRemoteEvent arrivedRemoteEvent = ( EntryArrivedRemoteEvent ) remoteEvent;
 
-            if ( log.isDebugEnabled() ) {
-                log.debug( "Event: " + arrivedRemoteEvent );
-                log.debug( "Entry: " + entry );
-                log.debug( "Id: " + arrivedRemoteEvent.getID() );
-                log.debug( "Sequence number: " + arrivedRemoteEvent.getSequenceNumber() );
-                log.debug( "notify type: " + arrivedRemoteEvent.getNotifyType() );
-            }
+            ExternalEntry entry;
+            try {
+                entry = ( ExternalEntry ) arrivedRemoteEvent.getEntry( true );
 
-            /* updated the progress with message from notification */
-            String message = ( String ) entry.getFieldValue( "message" );
-            if ( StringUtils.isNotBlank( message ) ) {
-                if ( this.doLoggingToo ) {
-                    log.info( message + " [Remote task: " + taskId + "]" );
+                if ( log.isDebugEnabled() ) {
+                    log.debug( "Event: " + arrivedRemoteEvent );
+                    log.debug( "Entry: " + entry );
+                    log.debug( "Id: " + arrivedRemoteEvent.getID() );
+                    log.debug( "Sequence number: " + arrivedRemoteEvent.getSequenceNumber() );
+                    log.debug( "notify type: " + arrivedRemoteEvent.getNotifyType() );
                 }
-                ProgressManager.updateJob( this.taskId, message );
+
+                /* updated the progress with message from notification */
+                String message = ( String ) entry.getFieldValue( "message" );
+                if ( StringUtils.isNotBlank( message ) ) {
+                    if ( this.doLoggingToo ) {
+                        log.info( message + " [Remote task: " + taskId + "]" );
+                    }
+                    ProgressManager.updateJob( this.taskId, message );
+                }
+            } catch ( UnusableEntryException e ) {
+                log.warn( e );
             }
-        } catch ( UnusableEntryException e ) {
-            log.warn( e );
+        } else {
+            log.warn( "Don't know how to deal with a " + remoteEvent.getClass().getName() );
         }
 
     }
