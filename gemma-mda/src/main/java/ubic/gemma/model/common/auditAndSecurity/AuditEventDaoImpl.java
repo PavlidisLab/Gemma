@@ -330,7 +330,6 @@ public class AuditEventDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
                 + "and et.class in (" + StringUtils.join( classes, "," ) + ") order by event.date desc ";
 
         org.hibernate.Query queryObject = super.getSession().createQuery( queryString );
-        queryObject.setCacheable( true );
         queryObject.setParameterList( "trails", atmap.keySet() );
 
         List<?> qr = queryObject.list();
