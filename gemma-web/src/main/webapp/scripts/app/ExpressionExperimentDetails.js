@@ -42,7 +42,7 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 		var name = nField.getValue();
 
 		var entity = {
-			id : this.eeId
+			entityId : this.eeId
 		};
 
 		if (shortName != snField.originalValue) {

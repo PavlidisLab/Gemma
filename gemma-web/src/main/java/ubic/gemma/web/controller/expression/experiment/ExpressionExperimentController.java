@@ -161,10 +161,10 @@ public class ExpressionExperimentController extends AbstractTaskService {
         @Override
         public TaskResult processJob() {
 
-            ExpressionExperiment ee = expressionExperimentService.load( command.getEntityId() );
+            Long entityId = command.getEntityId();
+            ExpressionExperiment ee = expressionExperimentService.load( entityId );
             if ( ee == null )
-                throw new IllegalArgumentException( "Cannot locate or access experiment with id="
-                        + command.getEntityId() );
+                throw new IllegalArgumentException( "Cannot locate or access experiment with id=" + entityId );
 
             if ( StringUtils.isNotBlank( command.getShortName() ) && !command.getShortName().equals( ee.getShortName() ) ) {
                 if ( expressionExperimentService.findByShortName( command.getShortName() ) != null ) {
@@ -990,6 +990,9 @@ public class ExpressionExperimentController extends AbstractTaskService {
      * @return
      */
     public String updateBasics( UpdateEEDetailsCommand command ) {
+        if ( command.getEntityId() == null ) {
+            throw new IllegalArgumentException( "Id cannot be null" );
+        }
         UpdateBasics runner = new UpdateBasics( command );
         startTask( runner );
         return runner.getTaskId();
