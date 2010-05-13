@@ -88,20 +88,47 @@ public class IndexServiceImpl extends AbstractTaskService implements IndexServic
             /*
              * When the rebuild is done in another JVM, in the client the index must be 'swapped' to refer to the new
              * one.
+             * 
+             * Put in multiple try catch blocks so that if one swapping fails they all don't fail :)
              */
 
             try {
-                if ( this.command.isIndexGene() )
+                if ( this.command.isIndexGene() && result.getPathToGeneIndex() != null )
                     CompassUtils.swapCompassIndex( compassGene, result.getPathToGeneIndex() );
-                if ( this.command.isIndexEE() )
+            } catch ( IOException e ) {
+                throw new RuntimeException( e );
+            }
+
+            try {
+                if ( this.command.isIndexEE() && result.getPathToExpressionIndex() != null )
                     CompassUtils.swapCompassIndex( compassExpression, result.getPathToExpressionIndex() );
-                if ( this.command.isIndexAD() )
+            } catch ( IOException e ) {
+                throw new RuntimeException( e );
+            }
+
+            try {
+                if ( this.command.isIndexAD() && result.getPathToArrayIndex() != null )
                     CompassUtils.swapCompassIndex( compassArray, result.getPathToArrayIndex() );
-                if ( this.command.isIndexBibRef() )
+
+            } catch ( IOException e ) {
+                throw new RuntimeException( e );
+            }
+
+            try {
+                if ( this.command.isIndexBibRef() && result.getPathToBibliographicIndex() != null )
                     CompassUtils.swapCompassIndex( compassBibliographic, result.getPathToBibliographicIndex() );
-                if ( this.command.isIndexBioSequence() )
+            } catch ( IOException e ) {
+                throw new RuntimeException( e );
+            }
+
+            try {
+                if ( this.command.isIndexBioSequence() && result.getPathToBiosequenceIndex() != null )
                     CompassUtils.swapCompassIndex( compassBiosequence, result.getPathToBiosequenceIndex() );
-                if ( this.command.isIndexProbe() )
+            } catch ( IOException e ) {
+                throw new RuntimeException( e );
+            }
+            try {
+                if ( this.command.isIndexProbe() && result.getPathToProbeIndex() != null )
                     CompassUtils.swapCompassIndex( compassProbe, result.getPathToProbeIndex() );
             } catch ( IOException e ) {
                 throw new RuntimeException( e );

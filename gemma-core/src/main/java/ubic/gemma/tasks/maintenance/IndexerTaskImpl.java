@@ -79,35 +79,45 @@ public class IndexerTaskImpl implements IndexerTask {
         IndexerResult result = new IndexerResult( command );
 
         if ( command.isIndexEE() ) {
-            rebuildIndex( expressionGps, "Expression Experiment index" );
-            result.setPathToExpresionIndex( getIndexPath( compassExpression ) );
+            if ( rebuildIndex( expressionGps, "Expression Experiment index" ) )
+                result.setPathToExpresionIndex( getIndexPath( compassExpression ) );
+            else
+                result.setPathToExpresionIndex( null );
 
         }
         if ( command.isIndexAD() ) {
-            rebuildIndex( arrayGps, "Array Design index" );
-            result.setPathToArrayIndex( getIndexPath( compassArray ) );
+            if ( rebuildIndex( arrayGps, "Array Design index" ) )
+                result.setPathToArrayIndex( getIndexPath( compassArray ) );
+            else
+                result.setPathToArrayIndex( null );
 
         }
         if ( command.isIndexBibRef() ) {
-            rebuildIndex( bibliographicGps, "Bibliographic Reference Index" );
+            if (rebuildIndex( bibliographicGps, "Bibliographic Reference Index" ))
             result.setPathToBibliographicIndex( getIndexPath( compassBibliographic ) );
+            else
+                result.setPathToBibliographicIndex( null );
 
         }
         if ( command.isIndexBioSequence() ) {
-            rebuildIndex( biosequenceGps, "Biosequence Reference Index" );
+            if (rebuildIndex( biosequenceGps, "Biosequence Reference Index" ))
             result.setPathToBiosequenceIndex( getIndexPath( compassBiosequence ) );
-
+            else
+                result.setPathToBiosequenceIndex( null );
         }
 
         if ( command.isIndexProbe() ) {
-            rebuildIndex( probeGps, "Probe Reference Index" );
+            if (rebuildIndex( probeGps, "Probe Reference Index" ))
             result.setPathToProbeIndex( getIndexPath( compassProbe ) );
+            else
+                result.setPathToProbeIndex( null );
         }
 
         if ( command.isIndexGene() ) {
-            rebuildIndex( geneGps, "Gene index" );
+            if (rebuildIndex( geneGps, "Gene index" ))
             result.setPathToGeneIndex( getIndexPath( compassGene ) );
-
+            else
+                result.setPathToGeneIndex( null );
         }
         log.info( "Indexing Finished. Returning result to space. Result is: " + result );
         return result;
@@ -209,7 +219,7 @@ public class IndexerTaskImpl implements IndexerTask {
         this.mailEngine = mailEngine;
     }
 
-    private void rebuildIndex( CompassGpsInterfaceDevice device, String whatIndexingMsg ) {
+    private Boolean rebuildIndex( CompassGpsInterfaceDevice device, String whatIndexingMsg ) {
 
         StopWatch timer = new StopWatch();
         timer.start();
@@ -226,6 +236,9 @@ public class IndexerTaskImpl implements IndexerTask {
         } else {
             log.info( "Finished rebuilding " + whatIndexingMsg + ".  Took (ms): " + timer.getTime() );
         }
+
+        return success;
+
     }
 
 }
