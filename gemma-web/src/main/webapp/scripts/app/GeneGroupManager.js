@@ -62,12 +62,13 @@ Gemma.GeneGroupPanel = Ext.extend(Ext.grid.EditorGridPanel, {
 						if (currentGroupSize != modifiedGroupSize) {
 							var gids = genePanel.getGeneIds();
 							var groupId = genePanel.currentGroupId;
+							var groupDescription = sel.data.description;
 
 							var confirmSaveChanges = function(btn) {
 
 								if (btn == 'yes') {
 
-									GeneSetController.updateGeneGroup(groupId, gids, {
+									GeneSetController.updateGeneGroup(groupId, groupDescription, gids, {
 												callback : function(d) {
 													refreshGeneGroupData();
 												},
