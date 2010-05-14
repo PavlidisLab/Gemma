@@ -29,6 +29,7 @@ Gemma.BioMaterialEditor = function(config) {
 
 						this.grid = new Gemma.BioMaterialGrid(config);
 						this.grid.init = this.init.createDelegate(this);
+						this.loadMask.hide();
 					}.createDelegate(this));
 		},
 
@@ -36,6 +37,12 @@ Gemma.BioMaterialEditor = function(config) {
 		 * Gets called on startup but also when a refresh is needed.
 		 */
 		init : function() {
+
+			this.loadMask = new Ext.LoadMask(Ext.getBody(), {
+						msg : "Please wait..."
+					});
+			this.loadMask.show();
+
 			if (this.grid) {
 				try {
 					this.grid.destroy();
@@ -44,7 +51,7 @@ Gemma.BioMaterialEditor = function(config) {
 
 			}
 
-			firstInitDone = true;
+			this.firstInitDone = true;
 			ExperimentalDesignController.getBioMaterials(this.expressionExperiment, this.firstCallback
 							.createDelegate(this));
 		}
@@ -146,9 +153,9 @@ Gemma.BioMaterialGrid = Ext.extend(Gemma.GemmaGridPanel, {
 			}
 
 			// text used for header of the column.
-			var label = factor.description ? factor.description : factor.name
-					+ (factor.name == factor.description || factor.description == "" ? "" : " (" + factor.description
-							+ ")");
+			var label = factor.description ? factor.description : factor.name +
+					(factor.name == factor.description || factor.description == "" ? "" : " (" + factor.description +
+							")");
 
 			columns.push({
 						id : factorId,
@@ -259,6 +266,8 @@ Gemma.BioMaterialGrid = Ext.extend(Gemma.GemmaGridPanel, {
 										this.init();
 									}
 								}.createDelegate(this));
+					} else {
+						this.init();
 					}
 
 				}, this);

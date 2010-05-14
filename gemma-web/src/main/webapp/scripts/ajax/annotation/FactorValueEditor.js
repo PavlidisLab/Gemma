@@ -10,6 +10,10 @@ Gemma.FactorValueGrid = Ext.extend(Gemma.GemmaGridPanel, {
 
 	loadMask : true,
 
+	viewConfig : {
+		forceFit : false
+	},
+
 	taxonId : null,
 
 	record : Ext.data.Record.create([{
@@ -83,7 +87,8 @@ Gemma.FactorValueGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				}, {
 					header : "Category",
 					dataIndex : "category",
-					renderer : this.categoryStyler
+					renderer : this.categoryStyler,
+					width : 120
 				}, {
 					header : "Value",
 					dataIndex : "value",
@@ -138,8 +143,8 @@ Gemma.FactorValueGrid = Ext.extend(Gemma.GemmaGridPanel, {
 		 * The checkboxes defined here require that this.form be set: a <form> element wrapping the div that this goes
 		 * in. Clumsy but it works.
 		 */
-		var groupTextTpl = this.editable ? '<input id="{[ values.rs[0].data.id ]}" type="checkbox"'
-				+ ' name="selectedFactorValues" value="{[ values.rs[0].data.id ]}" />&nbsp;&nbsp; ' : '';
+		var groupTextTpl = this.editable ? '<input id="{[ values.rs[0].data.id ]}" type="checkbox"' +
+				' name="selectedFactorValues" value="{[ values.rs[0].data.id ]}" />&nbsp;&nbsp; ' : '';
 		groupTextTpl = groupTextTpl + '{[ values.rs[0].data.factorValue ]}';
 
 		this.view = new Ext.grid.GroupingView({
@@ -186,7 +191,6 @@ Gemma.FactorValueGrid = Ext.extend(Gemma.GemmaGridPanel, {
 					});
 
 			this.getSelectionModel().on("selectionchange", function(model) {
-						// console.log("selection");
 						var selected = model.getSelections();
 						this.revertButton.disable();
 						for (var i = 0; i < selected.length; ++i) {
@@ -196,11 +200,19 @@ Gemma.FactorValueGrid = Ext.extend(Gemma.GemmaGridPanel, {
 							}
 						}
 						if (selected.length > 0) {
-							this.deleteFactorValueButton.enable();
 							this.characteristicToolbar.deleteButton.enable();
 						} else {
-							this.deleteFactorValueButton.disable();
 							this.characteristicToolbar.deleteButton.disable();
+						}
+					}, this.getTopToolbar());
+
+			this.on('groupclick', function(grid, groupField, groupValue, e) {
+						var el = Ext.get(grid.getView().getGroupId(groupValue));
+						var cb = el.dom.getElementsByTagName('input')[0]
+						if (cb.checked) {
+							this.deleteFactorValueButton.enable();
+						} else {
+							this.deleteFactorValueButton.disable();
 						}
 					}, this.getTopToolbar());
 
@@ -421,7 +433,7 @@ Gemma.FactorValueToolbar = Ext.extend(Ext.Toolbar, {
 							text : "Delete",
 							id : 'factor-value-delete-button',
 							tooltip : "Delete checked factor values",
-							disabled : false,
+							disabled : true,
 							handler : function() {
 								this.fireEvent("delete");
 							}.createDelegate(this)
@@ -439,7 +451,7 @@ Gemma.FactorValueToolbar = Ext.extend(Ext.Toolbar, {
 						});
 
 				this.revertButton = new Ext.Toolbar.Button({
-							text : "undo",
+							text : "Undo",
 							id : 'factor-value-undo-button',
 							tooltip : "Undo changes to selected factor values",
 							disabled : true,
@@ -473,11 +485,11 @@ Gemma.FactorValueToolbar = Ext.extend(Ext.Toolbar, {
 
 				if (this.editable) {
 					this.characteristicToolbar = new Gemma.FactorValueCharacteristicToolbar({
-						id : 'fv-char-toolbar'
-							// renderTo : this.getEl().createChild()
-						});
-					this.ownerCt.add(this.characteristicToolbar);
+								id : 'fv-char-toolbar',
+								renderTo : this.ownerCt.tbar
+							});
 				}
+
 			},
 
 			setExperimentalFactor : function(efId) {

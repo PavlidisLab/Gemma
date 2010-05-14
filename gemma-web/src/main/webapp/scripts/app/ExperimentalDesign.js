@@ -38,11 +38,11 @@ var showDesignUploadForm = function() {
 			collapsed : false,
 			frame : false,
 			border : true,
-			html : '<p>Experimental design submission works in two phases. '
-					+ 'First you must upload your design file (file format instructions'
-					+ ' <a target="_blank" href="http://www.chibi.ubc.ca/faculty/pavlidis/wiki/display/gemma/Experimental+Design+Upload">here</a>). '
-					+ 'Then click "submit". If your file format is invalid or does not match the properties of the '
-					+ 'experiment the design is intended for, you will see an error message.</p>'
+			html : '<p>Experimental design submission works in two phases. ' +
+					'First you must upload your design file (file format instructions' +
+					' <a target="_blank" href="http://www.chibi.ubc.ca/faculty/pavlidis/wiki/display/gemma/Experimental+Design+Upload">here</a>). ' +
+					'Then click "submit". If your file format is invalid or does not match the properties of the ' +
+					'experiment the design is intended for, you will see an error message.</p>'
 		}, uploadForm],
 		buttons : [{
 					id : 'submit-design-button',
@@ -68,10 +68,7 @@ var submitDesign = function() {
 				callback : function() {
 					Ext.getCmp('experimental-design-upload-form-window').close();
 					Ext.Msg.alert("Success", "Design imported.");
-					Ext.getCmp('experimental-factor-grid').getStore().reload();
-					// Ext.getCmp('factor-value-grid').getStore().reload(); // should have started out empty anyway.
-					// biomaterial-grid-panel was not available to initialise gets initialised on tabchange
-					// Ext.getCmp('biomaterial-grid-panel').init();
+					Ext.getCmp('experimental-factor-grid').getStore().reload(); 
 
 				}
 			});
@@ -89,67 +86,57 @@ Ext.onReady(function() {
 			/*
 			 * TODO: load up the MGED terms, experimental design and factor values ahead of time. We end up doing it
 			 * about 4 times each. Create the panel in the callback.
-			 */
-
-			/*
-			 * TODO make sure we've got an eeId and display a prominent error message if we don't...
-			 */
-
-			var bioMaterialEditor = new Gemma.BioMaterialEditor({
-						renderTo : "bioMaterialsPanel",
-						id : 'biomaterial-grid-panel',
-						eeId : eeId,
-						edId : edId,
-						viewConfig : {
-			// forceFit : true
-						},
-						height : 740,
-						width : 1000,
-						editable : editable
-					});
+			 */ 
 
 			/*
 			 * If we init before the tab is rendered, then the scroll bars don't show up.
-			 */
-			// bioMaterialEditor.init();
+			 */ 
 			var experimentalFactorGrid = new Gemma.ExperimentalFactorGrid({
 						id : 'experimental-factor-grid',
 						title : "Experimental Factors",
-						region : 'center',
+						region : 'north',
 						edId : edId,
 						editable : editable,
+						split : true,
+						// north items must have height.
 						height : 200
 					});
 
 			var factorValueGrid = new Gemma.FactorValueGrid({
 						title : "Factor Values",
-						region : 'south',
+						region : 'center',
 						id : 'factor-value-grid',
 						form : 'factorValueForm', // hack
 						split : true,
 						edId : edId,
-						editable : editable,
-						width : 1000,
-						height : 500
+						height : 470,
+						editable : editable
 					});
 
 			var efPanel = new Ext.Panel({
 						layout : 'border',
-						height : 750,
-						width : 1000,
+						height : 670,
 						renderTo : "experimentalFactorPanel",
 						items : [experimentalFactorGrid, factorValueGrid]
 					});
 
+			var bioMaterialEditor = new Gemma.BioMaterialEditor({
+						renderTo : "bioMaterialsPanel",
+						id : 'biomaterial-grid-panel',
+						height : 670,
+						eeId : eeId,
+						edId : edId,
+						viewConfig : {
+							forceFit : true
+						},
+						editable : editable
+					});
+
 			var tabPanel = new Ext.TabPanel({
 						renderTo : "experimentalDesignPanel",
-						height : 800,
-						width : 1000,
-						defaults : {
-							layout : 'fit'
-						},
 						layoutOnTabChange : false,
 						activeTab : 0,
+						height : 700,
 						items : [{
 									contentEl : "experimentalFactorPanel",
 									title : "Design setup"
@@ -179,14 +166,16 @@ Ext.onReady(function() {
 			experimentalFactorGrid.on("experimentalfactorselected", function(factor) {
 
 						if (factor.get("type") == "Continuous") {
+
 							factorValueGrid
 									.setTitle("Continuous values not displayed here, see the 'sample details' tab");
-
 							factorValueGrid.disable();
+
 						} else {
 							factorValueGrid.enable();
 							factorValueGrid.setTitle("Factor values for : " + factor.get("name"));
 							factorValueGrid.setExperimentalFactor(factor.get("id"));
+
 						}
 					});
 
