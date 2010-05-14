@@ -22,6 +22,7 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashSet;
 
+import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.model.genome.gene.GeneSetMember;
 
@@ -61,6 +62,7 @@ public class GeneSetValueObject implements Serializable {
 
     private boolean shared;
     private Integer size;
+    private Taxon taxon;
 
     /**
      * Null constructor to satisfy java bean contract

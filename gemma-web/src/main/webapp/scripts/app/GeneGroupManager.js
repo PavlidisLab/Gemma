@@ -281,6 +281,8 @@ Gemma.GeneGroupImporter = Ext.extend(Ext.Panel, {
 							stateful : false,
 							stateEvents : []
 						});
+						
+				//add widget for searching for gene groups (or go terms)
 
 				Ext.apply(this, {
 							id : "gene-manager-panel",

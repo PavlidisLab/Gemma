@@ -36,6 +36,11 @@
 		k = new Gemma.GeneCombo( {
 			renderTo : 'genecombo'
 		});
+		
+		k = new Gemma.GeneGroupCombo({
+			renderTo : 'genegroupcombo'
+		});
+		
 		k = new Gemma.TaxonCombo( {
 			renderTo : 'taxoncombo'
 		});
@@ -163,6 +168,10 @@
 </h2>
 <div class="widget" id="genecombo"></div>
 
+<h2>
+	Gene Group Combo
+</h2>
+<div class="widget" id="genegroupcombo"></div>
 
 
 <h2>
