@@ -208,7 +208,7 @@ Gemma.FactorValueGrid = Ext.extend(Gemma.GemmaGridPanel, {
 
 			this.on('groupclick', function(grid, groupField, groupValue, e) {
 						var el = Ext.get(grid.getView().getGroupId(groupValue));
-						var cb = el.dom.getElementsByTagName('input')[0]
+						var cb = el.dom.getElementsByTagName('input')[0];
 						if (cb.checked) {
 							this.deleteFactorValueButton.enable();
 						} else {
@@ -283,11 +283,11 @@ Gemma.FactorValueGrid = Ext.extend(Gemma.GemmaGridPanel, {
 
 			this.getTopToolbar().on("undo", this.revertSelected.createDelegate(this), this);
 
-			this.getTopToolbar().on("toggleExpand", function() {
-						this.getView().toggleAllGroups();
-					}.createDelegate(this), this);
-
 		}
+
+		this.getTopToolbar().on("toggleExpand", function() {
+					this.getView().toggleAllGroups();
+				}.createDelegate(this), this);
 
 		if (this.experimentalFactor.id) {
 			this.store.load({
