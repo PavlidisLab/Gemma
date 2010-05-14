@@ -246,7 +246,12 @@ public class AllenBrainAtlasService {
      */
     public AbaGene getGene( String givenGene ) throws IOException {
         AbaGene result = getGene( givenGene, false );
-        if ( result == null ) return getGene( givenGene, true );
+        if ( result == null ) {
+            result = getGene( givenGene, true );
+        }
+        if ( result == null ) {
+            log.info( givenGene + " not found in aba" );
+        }
         return result;
     }
 
@@ -276,11 +281,6 @@ public class AllenBrainAtlasService {
         } catch ( SAXException se ) {
             log.warn( se );
         } catch ( FileNotFoundException fnfe ) {
-
-            if ( log.isDebugEnabled() )
-                log.debug( gene + " gene not found in aba . Error thrown because cachefile not created: " + fnfe );
-
-            log.info( gene + " not found in aba" );
 
             return null;
 
@@ -640,7 +640,7 @@ public class AllenBrainAtlasService {
     }
 
     /**
-     * The allen brain atlas website 1st letter of gene symbol is capatilized, rest are not (webservice is case
+     * The allen brain atlas website 1st letter of gene symbol is capatalized, rest are not (webservice is case
      * sensitive)
      * 
      * @param geneName
