@@ -55,7 +55,6 @@ public class ProgressAppender extends AppenderSkeleton {
     @Override
     protected void append( LoggingEvent event ) {
         if ( !event.getThreadName().equals( this.threadName ) ) {
-            System.err.println( "Crossed logging" );
             return;
         }
 

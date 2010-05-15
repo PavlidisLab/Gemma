@@ -65,8 +65,7 @@ public class SpacesProgressAppender extends ProgressAppender {
          * there is nothing else to distinguish them within the JVM - all logging events go here. This works but it
          * isn't perfect: logging from child threads will be lost.
          */
-        if ( !event.getThreadName().equals( this.getThreadName() ) ) {
-            System.err.println( "Crossed logging in SpacesProgressAppender" );
+        if ( !event.getThreadName().equals( this.getThreadName() ) ) { 
             return;
         }
 

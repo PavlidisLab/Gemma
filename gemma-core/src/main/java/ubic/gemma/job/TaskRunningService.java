@@ -554,6 +554,7 @@ public class TaskRunningService implements InitializingBean {
     private void emailNotifyCompletionOfTask( String taskId, TaskResult result ) {
         if ( StringUtils.isNotBlank( result.getSubmitter() ) ) {
             User user = userService.findByUserName( result.getSubmitter() );
+
             assert user != null;
 
             String emailAddress = user.getEmail();
@@ -572,7 +573,8 @@ public class TaskRunningService implements InitializingBean {
                     messages = messages + job.getJobInfo().getMessages();
                 }
 
-                msg.setText( "A job you started on Gemma is completed (taskid=" + taskId + ")\n\n" + messages + "\n" );
+                msg.setText( "A job you started on Gemma is completed (taskid=" + taskId + ", "
+                        + result.getTaskInterface() + ")\n\n" + messages + "\n" );
 
                 /*
                  * TODO provide a link to something relevant something like:
