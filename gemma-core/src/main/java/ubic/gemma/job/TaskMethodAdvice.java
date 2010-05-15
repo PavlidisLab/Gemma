@@ -124,8 +124,7 @@ public class TaskMethodAdvice {
         SpacesProgressAppender javaSpacesAppender = new SpacesProgressAppender( gigaSpacesTemplate, command.getTaskId() );
         Logger logger = LogManager.getLogger( "ubic.gemma" );
         Logger baseCodeLogger = LogManager.getLogger( "ubic.basecode" );
-        log.info( baseCodeLogger.getLevel() + " is the basecode logging level" );
-        baseCodeLogger.setLevel( Level.INFO );
+        log.debug( baseCodeLogger.getLevel() + " is the basecode logging level" );
         javaSpacesAppender.setThreshold( Level.INFO );
         logger.addAppender( javaSpacesAppender );
         baseCodeLogger.addAppender( javaSpacesAppender );
