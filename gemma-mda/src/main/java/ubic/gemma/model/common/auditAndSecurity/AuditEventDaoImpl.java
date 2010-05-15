@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
@@ -255,6 +256,7 @@ public class AuditEventDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.common.AuditableDaoBase#handleGetLastAuditEvent(java.util.Collection,
      * ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType)
      */
@@ -306,6 +308,7 @@ public class AuditEventDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.common.auditAndSecurity.AuditEventDao#getLastEvents(java.util.Collection,
      * java.util.Collection)
      */
@@ -420,6 +423,7 @@ public class AuditEventDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.common.auditAndSecurity.AuditEventDao#getLastOutstandingTroubleEvent(java.util.Collection)
      */
     public AuditEvent getLastOutstandingTroubleEvent( Collection<AuditEvent> events ) {
@@ -428,6 +432,7 @@ public class AuditEventDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.common.auditAndSecurity.AuditEventDao#getLastOutstandingTroubleEvents(java.util.Collection)
      */
     public Map<Auditable, AuditEvent> getLastOutstandingTroubleEvents( Collection<? extends Auditable> auditables ) {
@@ -451,14 +456,13 @@ public class AuditEventDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
 
         for ( Auditable a : auditables ) {
 
-            if ( a instanceof ExpressionExperiment ) {
-                ees.add( ( ExpressionExperiment ) a );
-            }
-
             Map<Auditable, AuditEvent> trouble = lastEvents.get( TroubleStatusFlagEvent.class );
 
             if ( !trouble.containsKey( a ) ) {
-                // no trouble!
+                // no trouble! but we should check the array designs later.
+                if ( a instanceof ExpressionExperiment ) {
+                    ees.add( ( ExpressionExperiment ) a );
+                }
                 continue;
             }
 
@@ -485,9 +489,13 @@ public class AuditEventDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
             Map<ArrayDesign, Collection<ExpressionExperiment>> ads = CommonQueries.getArrayDesignsUsed( ees, this
                     .getSession() );
 
-            // recurse...
             Map<Auditable, AuditEvent> arrayDesignTrouble = getLastOutstandingTroubleEvents( ads.keySet() );
 
+            for ( Entry<Auditable, AuditEvent> e : arrayDesignTrouble.entrySet() ) {
+                for ( ExpressionExperiment ee : ads.get( e.getKey() ) ) {
+                    results.put( ee, e.getValue() );
+                }
+            }
             results.putAll( arrayDesignTrouble );
 
         }
