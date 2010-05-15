@@ -42,16 +42,9 @@ public class SpacesProgressAppender extends ProgressAppender {
 
     private GigaSpacesTemplate gigaSpacesTemplate = null;
 
-    private String threadName;
-
     public SpacesProgressAppender( GigaSpacesTemplate gigaSpacesTemplate, String taskId ) {
         assert gigaSpacesTemplate != null;
         assert taskId != null;
-
-        /*
-         * This has to be set at construction time.
-         */
-        this.threadName = Thread.currentThread().getName();
 
         this.gigaSpacesTemplate = gigaSpacesTemplate;
         this.entry = new SpacesProgressEntry();
@@ -72,9 +65,8 @@ public class SpacesProgressAppender extends ProgressAppender {
          * there is nothing else to distinguish them within the JVM - all logging events go here. This works but it
          * isn't perfect: logging from child threads will be lost.
          */
-        if ( !event.getThreadName().equals( this.threadName ) ) {
-            // System.err.println( "Wrong thread: " + event.getMessage() + " [" + this.threadName + " != "
-            // + event.getThreadName() + "]" );
+        if ( !event.getThreadName().equals( this.getThreadName() ) ) {
+            System.err.println( "Crossed logging in SpacesProgressAppender" );
             return;
         }
 
@@ -86,7 +78,7 @@ public class SpacesProgressAppender extends ProgressAppender {
             }
 
             if ( !( entryObj instanceof SpacesProgressEntry ) ) {
-                System.err.println( "WARNING: Wrong type of entry in progress appender: "
+                System.err.println( "WARNING: Wrong type of entry in SpacesProgressAppenderr: "
                         + entryObj.getClass().getName() );
                 return;
             }

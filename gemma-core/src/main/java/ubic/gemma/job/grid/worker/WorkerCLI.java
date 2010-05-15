@@ -44,6 +44,7 @@ import org.springmodules.javaspaces.gigaspaces.GigaSpacesTemplate;
 import ubic.gemma.job.grid.util.SpacesCancellationEntry;
 import ubic.gemma.job.grid.util.SpacesUtil;
 import ubic.gemma.util.AbstractSpringAwareCLI;
+import ubic.gemma.util.ConfigUtils;
 
 import com.j_spaces.core.IJSpace;
 import com.j_spaces.core.client.EntryArrivedRemoteEvent;
@@ -129,6 +130,7 @@ public class WorkerCLI extends AbstractSpringAwareCLI implements RemoteEventList
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.util.AbstractSpringAwareCLI#getShortDesc()
      */
     @Override
@@ -138,6 +140,7 @@ public class WorkerCLI extends AbstractSpringAwareCLI implements RemoteEventList
 
     /*
      * (non-Javadoc)
+     * 
      * @see net.jini.core.event.RemoteEventListener#notify(net.jini.core.event.RemoteEvent)
      */
     public void notify( RemoteEvent remoteEvent ) throws UnknownEventException, RemoteException {
@@ -190,6 +193,7 @@ public class WorkerCLI extends AbstractSpringAwareCLI implements RemoteEventList
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.util.AbstractCLI#doWork(java.lang.String[])
      */
     @Override
@@ -214,6 +218,7 @@ public class WorkerCLI extends AbstractSpringAwareCLI implements RemoteEventList
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.util.AbstractSpringAwareCLI#processOptions()
      */
     @Override
@@ -435,11 +440,22 @@ public class WorkerCLI extends AbstractSpringAwareCLI implements RemoteEventList
                 if ( e.getCause() instanceof EntryNotInSpaceException ) {
 
                     /*
+                     * If we're out of memory, we're in trouble.
+                     */
+                    long freeBytes = Runtime.getRuntime().freeMemory();
+                    if ( freeBytes < 1024L * 1024 * ConfigUtils.getInt( "gemma.grid.minworkermemory" ) ) {
+                        log.fatal( "Insufficient memory left (" + freeBytes + " bytes), panicking " );
+                        System.exit( 1 ); // ???
+                    }
+                    /*
                      * Maybe we need more overlap...
                      */
                     log.warn( "Entry expired but worker is still alive, renewing" );
+
+                    log.info( freeBytes + " bytes remaining" );
+
                     template.write( registrationEntry, HEARTBEAT_INTERVAL_MILLIS + WAIT );
-                    // continue.
+
                 } else {
 
                     /*
