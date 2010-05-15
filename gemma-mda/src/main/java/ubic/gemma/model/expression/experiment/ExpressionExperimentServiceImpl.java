@@ -37,7 +37,7 @@ import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.auditAndSecurity.eventType.LinkAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.MissingValueAnalysisEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.ProcessedVectorComputationEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.ProcessedVectorComputationEvent; 
 import ubic.gemma.model.common.auditAndSecurity.eventType.ValidatedFlagEvent;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.DatabaseEntry;
@@ -439,21 +439,12 @@ public class ExpressionExperimentServiceImpl extends
         timer.start();
         Collection<ExpressionExperiment> ees = this.loadMultiple( ids );
 
+        // this checks the array designs, too.
         Map<Auditable, AuditEvent> directEvents = this.getAuditEventDao().getLastOutstandingTroubleEvents( ees );
 
         Map<Long, AuditEvent> troubleMap = new HashMap<Long, AuditEvent>();
         for ( Auditable a : directEvents.keySet() ) {
             troubleMap.put( a.getId(), directEvents.get( a ) );
-        }
-
-        /*
-         * if there was no trouble on the expression experiment, check the component array designs...slower...
-         */
-        Collection<Long> checkAd = new HashSet<Long>();
-        for ( Long id : ids ) {
-            if ( !troubleMap.containsKey( id ) ) {
-                checkAd.add( id );
-            }
         }
 
         return troubleMap;
