@@ -584,10 +584,9 @@ public class ExpressionExperimentController extends AbstractTaskService {
         for ( ArrayDesign ad : arrayDesignsUsed ) {
             adids.add( ad.getId() );
         }
+        finalResult.setArrayDesigns( arrayDesignService.loadValueObjects( adids ) );
 
         finalResult.setCurrentUserHasWritePermission( securityService.isEditable( ee ) );
-
-        finalResult.setArrayDesigns( arrayDesignService.loadValueObjects( adids ) );
 
         /*
          * populate the publication and author information
@@ -924,7 +923,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
 
         mav.addObject( "expressionExperiment", expressionExperiment );
 
-        getEventsOfInterest( expressionExperiment, mav );
+        // getEventsOfInterest( expressionExperiment, mav ); // not needed, we fetch these later.
 
         Collection<Characteristic> characteristics = expressionExperiment.getCharacteristics();
         mav.addObject( "characteristics", characteristics );
