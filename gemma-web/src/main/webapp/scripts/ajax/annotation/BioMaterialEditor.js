@@ -1,62 +1,67 @@
 Ext.namespace('Gemma');
 
+Gemma.BioMaterialEditor = function(config) {
+	this.originalConfig = config;
+	this.expressionExperiment = {
+		id : config.eeId,
+		classDelegatingFor : "ExpressionExperiment"
+	};
+
+	Gemma.BioMaterialEditor.superclass.constructor.call(this, config);
+}
+
 /**
  * Grid with list of biomaterials for editing experimental design parameters.
  */
-Gemma.BioMaterialEditor = function(config) {
-	return {
+Ext.extend(Gemma.BioMaterialEditor, Ext.Panel, {
 
-		firstInitDone : false,
-		originalConfig : config,
-		expressionExperiment : {
-			id : config.eeId,
-			classDelegatingFor : "ExpressionExperiment"
-		},
+			firstInitDone : false,
 
-		/**
-		 * We make two ajax calls; the first gets the biomaterials, the second gets the experimentalfactors. These are
-		 * run in succession so both values can be given to the BioMaterialGrid constructor.
-		 */
-		firstCallback : function(data) {
+			/*
+			 * We make two ajax calls; the first gets the biomaterials, the second gets the experimentalfactors. These
+			 * are run in succession so both values can be given to the BioMaterialGrid constructor. We could make a
+			 * method that gets them both at once...
+			 */
+			firstCallback : function(data) {
 
-			// second ajax call.
-			ExperimentalDesignController.getExperimentalFactors(this.expressionExperiment, function(factorData) {
-						config = {
-							factors : factorData,
-							bioMaterials : data
-						};
-						Ext.apply(config, this.originalConfig);
+				// second ajax call.
+				ExperimentalDesignController.getExperimentalFactors(this.expressionExperiment, function(factorData) {
+							config = {
+								factors : factorData,
+								bioMaterials : data
+							};
+							Ext.apply(config, this.originalConfig);
 
-						this.grid = new Gemma.BioMaterialGrid(config);
-						this.grid.init = this.init.createDelegate(this);
-						this.loadMask.hide();
-					}.createDelegate(this));
-		},
+							this.grid = new Gemma.BioMaterialGrid(config);
+							this.grid.init = this.init.createDelegate(this);
 
-		/**
-		 * Gets called on startup but also when a refresh is needed.
-		 */
-		init : function() {
+							this.add(this.grid);
 
-			this.loadMask = new Ext.LoadMask(Ext.getBody(), {
-						msg : "Please wait..."
-					});
-			this.loadMask.show();
+							this.loadMask.hide();
 
-			if (this.grid) {
-				try {
-					this.grid.destroy();
-				} catch (e) {
-				}
+							this.doLayout(false, true);
 
+							this.firstInitDone = true;
+
+						}.createDelegate(this));
+			},
+
+			/**
+			 * Gets called on startup but also when a refresh is needed.
+			 */
+			init : function() {
+				var loadMaskTarget = this.el != null ? this.el : Ext.getBody();
+
+				this.loadMask = new Ext.LoadMask(loadMaskTarget, {
+							msg : "Please wait..."
+						});
+
+				this.loadMask.show();
+				ExperimentalDesignController.getBioMaterials(this.expressionExperiment, this.firstCallback
+								.createDelegate(this));
 			}
 
-			this.firstInitDone = true;
-			ExperimentalDesignController.getBioMaterials(this.expressionExperiment, this.firstCallback
-							.createDelegate(this));
-		}
-	};
-};
+		});
 
 Gemma.BioMaterialGrid = Ext.extend(Gemma.GemmaGridPanel, {
 

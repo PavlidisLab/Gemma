@@ -68,7 +68,7 @@ var submitDesign = function() {
 				callback : function() {
 					Ext.getCmp('experimental-design-upload-form-window').close();
 					Ext.Msg.alert("Success", "Design imported.");
-					Ext.getCmp('experimental-factor-grid').getStore().reload(); 
+					Ext.getCmp('experimental-factor-grid').getStore().reload();
 
 				}
 			});
@@ -86,11 +86,11 @@ Ext.onReady(function() {
 			/*
 			 * TODO: load up the MGED terms, experimental design and factor values ahead of time. We end up doing it
 			 * about 4 times each. Create the panel in the callback.
-			 */ 
+			 */
 
 			/*
 			 * If we init before the tab is rendered, then the scroll bars don't show up.
-			 */ 
+			 */
 			var experimentalFactorGrid = new Gemma.ExperimentalFactorGrid({
 						id : 'experimental-factor-grid',
 						title : "Experimental Factors",
@@ -149,10 +149,12 @@ Ext.onReady(function() {
 			/*
 			 * Only initialize once we are viewing the tab to help ensure the scroll bars are rendered right away.
 			 */
-			tabPanel.on('tabchange', function(panel, tab) {
+			var refreshNeeded = false;
 
-						if (!bioMaterialEditor.firstInitDone && tab.contentEl == 'bioMaterialsPanel') {
+			tabPanel.on('tabchange', function(panel, tab) {
+						if (refreshNeeded || !bioMaterialEditor.firstInitDone && tab.contentEl == 'bioMaterialsPanel') {
 							bioMaterialEditor.init();
+							refreshNeeded = false;
 						}
 					});
 
@@ -160,7 +162,7 @@ Ext.onReady(function() {
 						factorValueGrid.enable();
 						factorValueGrid.setTitle("Factor values");
 						factorValueGrid.setExperimentalFactor(null);
-
+						refreshNeeded = true;
 					});
 
 			experimentalFactorGrid.on("experimentalfactorselected", function(factor) {
@@ -180,18 +182,15 @@ Ext.onReady(function() {
 					});
 
 			factorValueGrid.on("factorvaluecreate", function(fvgrid, fvs) {
-						if (bioMaterialEditor.grid != null)
-							bioMaterialEditor.grid.reloadFactorValues();
+						refreshNeeded = true;
 					});
 
 			factorValueGrid.on("factorvaluechange", function(fvgrid, fvs) {
-						if (bioMaterialEditor.grid != null)
-							bioMaterialEditor.grid.reloadFactorValues();
+						refreshNeeded = true;
 					});
 
 			factorValueGrid.on("factorvaluedelete", function(fvgrid, fvs) {
-						if (bioMaterialEditor.grid != null)
-							bioMaterialEditor.grid.reloadFactorValues();
+						refreshNeeded = true;
 					});
 
 		});
