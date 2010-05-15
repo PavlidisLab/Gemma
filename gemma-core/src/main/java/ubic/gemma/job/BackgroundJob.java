@@ -23,8 +23,12 @@ import java.util.concurrent.Callable;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
+
+import ubic.gemma.job.progress.ProgressAppender;
 
 /**
  * Implements a long-running task in its own thread. Implementations simply implement processJob.
@@ -55,6 +59,7 @@ public abstract class BackgroundJob<T extends TaskCommand> implements Callable<T
 
     /*
      * (non-Javadoc)
+     * 
      * @see java.util.concurrent.Callable#call()
      */
     public TaskResult call() throws Exception {
@@ -62,7 +67,14 @@ public abstract class BackgroundJob<T extends TaskCommand> implements Callable<T
          * Do any preprocessing here
          */
         TaskResult result = new TaskResult( this.getCommand(), null );
+        ProgressAppender javaSpacesAppender = null;
         try {
+            javaSpacesAppender = new ProgressAppender();
+            Logger logger = LogManager.getLogger( "ubic.gemma" );
+            Logger baseCodeLogger = LogManager.getLogger( "ubic.basecode" );
+            logger.addAppender( javaSpacesAppender );
+            baseCodeLogger.addAppender( javaSpacesAppender );
+
             result = this.processJob();
 
             /*
@@ -76,6 +88,12 @@ public abstract class BackgroundJob<T extends TaskCommand> implements Callable<T
             /*
              * Do any cleanup here.
              */
+            if ( javaSpacesAppender != null ) {
+                Logger logger = LogManager.getLogger( "ubic.gemma" );
+                Logger baseCodeLogger = LogManager.getLogger( "ubic.basecode" );
+                logger.removeAppender( javaSpacesAppender );
+                baseCodeLogger.removeAppender( javaSpacesAppender );
+            }
         }
         return result;
 

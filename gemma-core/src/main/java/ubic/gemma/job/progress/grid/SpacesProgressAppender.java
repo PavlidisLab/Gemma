@@ -78,7 +78,7 @@ public class SpacesProgressAppender extends ProgressAppender {
             }
 
             if ( !( entryObj instanceof SpacesProgressEntry ) ) {
-                System.err.println( "WARNING: Wrong type of entry in SpacesProgressAppenderr: "
+                System.err.println( "WARNING: Wrong type of entry in SpacesProgressAppender: "
                         + entryObj.getClass().getName() );
                 return;
             }
