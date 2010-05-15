@@ -141,9 +141,7 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
         }
 
         if ( pvaluesList.isEmpty() ) {
-            // really you need >100 or something like that for this to make much sense.
-            log.warn( "No pvalues were valid numbers, returning null qvalues" );
-            return qvalues;
+            throw new IllegalArgumentException( "No pvalues were valid numbers, returning null qvalues" );
         }
 
         /* convert to primitive array */
