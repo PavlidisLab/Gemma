@@ -829,11 +829,6 @@ Ext.onReady(function() {
 
 			var eePanel = new Gemma.EEPanel(Ext.get("eeId").getValue());
 
-			new Ext.Viewport({
-						items : [eePanel],
-						autoScroll : true
-					});
-
 			eePanel.on("ready", function(panel) {
 						setTimeout(function() {
 									Ext.get('loading').remove();
