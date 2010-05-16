@@ -45,7 +45,7 @@ public class ExperimentQCTag extends TagSupport {
 
     enum Size {
         small, large
-    };
+    }
 
     /**
      * The id of the EE to display QC info required="true" rtexprvalue="true"
@@ -102,6 +102,7 @@ public class ExperimentQCTag extends TagSupport {
 
     /*
      * (non-Javadoc)
+     * 
      * @see javax.servlet.jsp.tagext.TagSupport#doStartTag()
      */
     @Override
@@ -116,9 +117,10 @@ public class ExperimentQCTag extends TagSupport {
         buf.append( "<table border=\"0\" cellspacing=\"4\" style=\"background-color:#DDDDDD\" >" );
 
         buf.append( "<tr><th valign=\"top\" align=\"center\"><strong>Sample correlation (black &le; "
-                + ExpressionDataSampleCorrelation.HI_CONTRAST_COR_THRESH + ")</strong></th>"
-                + "<th valign=\"top\" align=\"center\"><strong>PCA</strong></th>"
-                + "<th valign=\"top\" align=\"center\"><strong>Node degree</strong></th>"
+                + ExpressionDataSampleCorrelation.HI_CONTRAST_COR_THRESH
+                + ")</strong></th>"
+                // + "<th valign=\"top\" align=\"center\"><strong>PCA</strong></th>"
+                // + "<th valign=\"top\" align=\"center\"><strong>Node degree</strong></th>"
                 + "<th valign=\"top\" align=\"center\"><strong>Probe correlation</strong</th>"
                 + "<th valign=\"top\" align=\"center\"><strong>Pvalue distributions</strong></th>" + "</tr>" );
 
@@ -146,26 +148,33 @@ public class ExperimentQCTag extends TagSupport {
                     .append( "<li><a title=\"Download a file containing the raw correlation matrix data\" class=\"newpage\"  target=\"_blank\"  href=\"visualizeCorrMat.html?id="
                             + this.eeid + "&text=1\">Get data</a></li>" );
 
+            buf
+                    .append( "<li><a  href=\"/Gemma/expressionExperiment/refreshCorrMatrix.html?id="
+                            + this.eeid
+                            + "\" ><img src=\"/Gemma/images/icons/arrow_refresh_small.png\"  title=\"refresh\" alt=\"refresh\" /></span>" );
+
             buf.append( "</ul></td>" );
         } else {
             buf.append( placeHolder );
         }
-
-        if ( hasPCAFile ) {
-            buf
-                    .append( "<td style=\"margin:3px;padding:2px;background-color:#EEEEEE\" valign='top'><img alt='PCA' src=\"visualizePCA.html?id="
-                            + this.eeid + "\" /></td>" );
-        } else {
-            buf.append( placeHolder );
-        }
-
-        if ( hasNodeDegreeDistFile ) {
-            buf
-                    .append( "<td style=\"margin:3px;padding:2px;background-color:#EEEEEE\" valign='top'><img alt='Node degree dist' src=\"visualizeNodeDegreeDist.html?id="
-                            + this.eeid + "\" /></td>" );
-        } else {
-            buf.append( placeHolder );
-        }
+        //
+        // if ( hasPCAFile ) {
+        // buf
+        // .append(
+        // "<td style=\"margin:3px;padding:2px;background-color:#EEEEEE\" valign='top'><img alt='PCA' src=\"visualizePCA.html?id="
+        // + this.eeid + "\" /></td>" );
+        // } else {
+        // buf.append( placeHolder );
+        // }
+        //
+        // if ( hasNodeDegreeDistFile ) {
+        // buf
+        // .append(
+        // "<td style=\"margin:3px;padding:2px;background-color:#EEEEEE\" valign='top'><img alt='Node degree dist' src=\"visualizeNodeDegreeDist.html?id="
+        // + this.eeid + "\" /></td>" );
+        // } else {
+        // buf.append( placeHolder );
+        // }
 
         if ( hasCorrDistFile ) {
             buf
@@ -194,6 +203,7 @@ public class ExperimentQCTag extends TagSupport {
 
     /*
      * (non-Javadoc)
+     * 
      * @see javax.servlet.jsp.tagext.TagSupport#doEndTag()
      */
     @Override
