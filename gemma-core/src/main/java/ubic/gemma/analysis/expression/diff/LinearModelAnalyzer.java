@@ -113,301 +113,309 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
     @Override
     public DifferentialExpressionAnalysis run( ExpressionExperiment expressionExperiment,
             DifferentialExpressionAnalysisConfig config ) {
-        connectToR();
 
-        assert rc != null;
+        try {
+            connectToR();
 
-        /*
-         * Initialize our matrix and factor lists...
-         */
-        ExpressionDataDoubleMatrix dmatrix = expressionDataMatrixService
-                .getProcessedExpressionDataMatrix( expressionExperiment );
+            assert rc != null;
 
-        List<BioMaterial> samplesUsed = DifferentialExpressionAnalysisHelperService
-                .getBioMaterialsForBioAssays( dmatrix );
+            /*
+             * Initialize our matrix and factor lists...
+             */
+            ExpressionDataDoubleMatrix dmatrix = expressionDataMatrixService
+                    .getProcessedExpressionDataMatrix( expressionExperiment );
 
-        List<ExperimentalFactor> factors = config.getFactorsToInclude();
+            List<BioMaterial> samplesUsed = DifferentialExpressionAnalysisHelperService
+                    .getBioMaterialsForBioAssays( dmatrix );
 
-        if ( samplesUsed.size() <= factors.size() ) {
-            throw new IllegalArgumentException( "Must have more samples than factors" );
-        }
+            List<ExperimentalFactor> factors = config.getFactorsToInclude();
 
-        /*
-         * Figure out control groups, Reorder the matrix, samplesused also has to be reorganized. this puts the control
-         * samples up front if possible.
-         */
-        samplesUsed = ExpressionDataMatrixColumnSort.orderByExperimentalDesign( samplesUsed, factors );
-        dmatrix = new ExpressionDataDoubleMatrix( samplesUsed, dmatrix );
-
-        Map<ExperimentalFactor, FactorValue> baselineConditions = ExpressionDataMatrixColumnSort
-                .getBaselineLevels( factors );
-        Collection<FactorValue> factorValuesOfFirstSample = samplesUsed.iterator().next().getFactorValues();
-        for ( ExperimentalFactor factor : factors ) {
-            if ( !baselineConditions.containsKey( factor ) ) {
-
-                for ( FactorValue biomf : factorValuesOfFirstSample ) {
-                    /*
-                     * the first biomaterial has the values used as baseline in R.
-                     */
-                    if ( biomf.getExperimentalFactor().equals( factor ) ) {
-                        log.debug( "Using default baseline for " + factor + ": " + biomf );
-                        baselineConditions.put( factor, biomf );
-                    }
-                }
-            }
-        }
-
-        /*
-         * TODO make subsets if requested. ( we can do subsets with the model with x / y notation)
-         */
-        ExperimentalFactor subsetFactor = config.getSubsetFactor();
-
-        if ( subsetFactor != null ) {
-            if ( config.getFactorsToInclude().contains( subsetFactor ) ) {
-                throw new IllegalArgumentException(
-                        "You cannot analyze a factor and use it for subsetting at the same time." );
-            }
-
-            Map<FactorValue, List<BioMaterial>> subSetSamples = new HashMap<FactorValue, List<BioMaterial>>();
-            for ( FactorValue fv : subsetFactor.getFactorValues() ) {
-                if ( fv.getMeasurement() != null ) {
-                    throw new IllegalArgumentException( "You cannot subset on a continuous factor (has a Measurement)" );
-                }
-
-                subSetSamples.put( fv, new ArrayList<BioMaterial>() );
-            }
-
-            for ( BioMaterial sample : samplesUsed ) {
-                for ( FactorValue fv : sample.getFactorValues() ) {
-                    if ( fv.getExperimentalFactor().equals( subsetFactor ) ) {
-                        subSetSamples.get( fv ).add( sample );
-                    }
-                }
-            }
-
-            Map<FactorValue, ExpressionDataDoubleMatrix> subMatrices = new HashMap<FactorValue, ExpressionDataDoubleMatrix>();
-            for ( FactorValue fv : subSetSamples.keySet() ) {
-                List<BioMaterial> samplesInSubset = subSetSamples.get( fv );
-                samplesInSubset = ExpressionDataMatrixColumnSort.orderByExperimentalDesign( samplesInSubset, config
-                        .getFactorsToInclude() );
-                ExpressionDataDoubleMatrix subMatrix = new ExpressionDataDoubleMatrix( samplesUsed, dmatrix );
-                subMatrices.put( fv, subMatrix );
+            if ( samplesUsed.size() <= factors.size() ) {
+                throw new IllegalArgumentException( "Must have more samples than factors" );
             }
 
             /*
-             * Now use the subMatrices - EESubSet?
+             * Figure out control groups, Reorder the matrix, samplesused also has to be reorganized. this puts the
+             * control samples up front if possible.
              */
-        }
+            samplesUsed = ExpressionDataMatrixColumnSort.orderByExperimentalDesign( samplesUsed, factors );
+            dmatrix = new ExpressionDataDoubleMatrix( samplesUsed, dmatrix );
 
-        ExperimentalFactor interceptFactor = null;
-        final Map<String, Collection<ExperimentalFactor>> label2Factors = new LinkedHashMap<String, Collection<ExperimentalFactor>>();
-        QuantitationType quantitationType = dmatrix.getQuantitationTypes().iterator().next();
+            Map<ExperimentalFactor, FactorValue> baselineConditions = ExpressionDataMatrixColumnSort
+                    .getBaselineLevels( factors );
+            Collection<FactorValue> factorValuesOfFirstSample = samplesUsed.iterator().next().getFactorValues();
+            for ( ExperimentalFactor factor : factors ) {
+                if ( !baselineConditions.containsKey( factor ) ) {
 
-        for ( ExperimentalFactor experimentalFactor : factors ) {
-
-            label2Factors.put( nameForR( experimentalFactor ), new HashSet<ExperimentalFactor>() );
-            label2Factors.get( nameForR( experimentalFactor ) ).add( experimentalFactor );
+                    for ( FactorValue biomf : factorValuesOfFirstSample ) {
+                        /*
+                         * the first biomaterial has the values used as baseline in R.
+                         */
+                        if ( biomf.getExperimentalFactor().equals( factor ) ) {
+                            log.debug( "Using default baseline for " + factor + ": " + biomf );
+                            baselineConditions.put( factor, biomf );
+                        }
+                    }
+                }
+            }
 
             /*
-             * Check if we need to treat the intercept as a fator.
+             * TODO make subsets if requested. ( we can do subsets with the model with x / y notation)
              */
-            interceptFactor = checkIfNeedToTreatAsIntercept( experimentalFactor, quantitationType, interceptFactor );
+            ExperimentalFactor subsetFactor = config.getSubsetFactor();
 
-        }
+            if ( subsetFactor != null ) {
+                if ( config.getFactorsToInclude().contains( subsetFactor ) ) {
+                    throw new IllegalArgumentException(
+                            "You cannot analyze a factor and use it for subsetting at the same time." );
+                }
 
-        /*
-         * Build our factor terms, with interactions handled specially.(TODO: subsets...)
-         */
-        List<String[]> interactionFactorLists = new ArrayList<String[]>();
-        ObjectMatrix<String, String, Object> designMatrix = buildFactorsInR( factors, samplesUsed, baselineConditions );
-
-        setupFactors( designMatrix, baselineConditions );
-
-        String modelFormula = "";
-        boolean oneSampleTtest = interceptFactor != null && factors.size() == 1;
-        if ( oneSampleTtest ) {
-            // special case of one-sample t-test.
-            modelFormula = " ";
-        } else {
-
-            String factTerm = StringUtils.join( label2Factors.keySet(), "+" );
-
-            boolean hasInteractionTerms = !config.getInteractionsToInclude().isEmpty();
-            if ( hasInteractionTerms ) {
-                for ( Collection<ExperimentalFactor> interactionTerms : config.getInteractionsToInclude() ) {
-
-                    List<String> interactionFactorNames = new ArrayList<String>();
-                    for ( ExperimentalFactor factor : interactionTerms ) {
-                        interactionFactorNames.add( nameForR( factor ) ); // see above for naming convention.
+                Map<FactorValue, List<BioMaterial>> subSetSamples = new HashMap<FactorValue, List<BioMaterial>>();
+                for ( FactorValue fv : subsetFactor.getFactorValues() ) {
+                    if ( fv.getMeasurement() != null ) {
+                        throw new IllegalArgumentException(
+                                "You cannot subset on a continuous factor (has a Measurement)" );
                     }
 
-                    factTerm = factTerm + " + " + StringUtils.join( interactionFactorNames, "*" ); // in the R statement
-                    interactionFactorLists.add( interactionFactorNames.toArray( new String[] {} ) );
-
-                    // In the ANOVA table.
-                    String factTableLabel = StringUtils.join( interactionFactorNames, ":" );
-                    label2Factors.put( factTableLabel, new HashSet<ExperimentalFactor>() );
-                    label2Factors.get( factTableLabel ).addAll( interactionTerms );
+                    subSetSamples.put( fv, new ArrayList<BioMaterial>() );
                 }
+
+                for ( BioMaterial sample : samplesUsed ) {
+                    for ( FactorValue fv : sample.getFactorValues() ) {
+                        if ( fv.getExperimentalFactor().equals( subsetFactor ) ) {
+                            subSetSamples.get( fv ).add( sample );
+                        }
+                    }
+                }
+
+                Map<FactorValue, ExpressionDataDoubleMatrix> subMatrices = new HashMap<FactorValue, ExpressionDataDoubleMatrix>();
+                for ( FactorValue fv : subSetSamples.keySet() ) {
+                    List<BioMaterial> samplesInSubset = subSetSamples.get( fv );
+                    samplesInSubset = ExpressionDataMatrixColumnSort.orderByExperimentalDesign( samplesInSubset, config
+                            .getFactorsToInclude() );
+                    ExpressionDataDoubleMatrix subMatrix = new ExpressionDataDoubleMatrix( samplesUsed, dmatrix );
+                    subMatrices.put( fv, subMatrix );
+                }
+
+                /*
+                 * Now use the subMatrices - EESubSet?
+                 */
             }
 
-            modelFormula = " ~ " + factTerm;
-        }
+            ExperimentalFactor interceptFactor = null;
+            final Map<String, Collection<ExperimentalFactor>> label2Factors = new LinkedHashMap<String, Collection<ExperimentalFactor>>();
+            QuantitationType quantitationType = dmatrix.getQuantitationTypes().iterator().next();
 
-        DoubleMatrix<DesignElement, Integer> namedMatrix = dmatrix.getMatrix();
+            for ( ExperimentalFactor experimentalFactor : factors ) {
 
-        final Transformer rowNameExtractor = TransformerUtils.invokerTransformer( "getId" );
+                label2Factors.put( nameForR( experimentalFactor ), new HashSet<ExperimentalFactor>() );
+                label2Factors.get( nameForR( experimentalFactor ) ).add( experimentalFactor );
 
-        final Map<String, LinearModelSummary> rawResults = runAnalysis( namedMatrix, label2Factors, modelFormula,
-                rowNameExtractor );
+                /*
+                 * Check if we need to treat the intercept as a fator.
+                 */
+                interceptFactor = checkIfNeedToTreatAsIntercept( experimentalFactor, quantitationType, interceptFactor );
 
-        if ( rawResults.size() == 0 ) {
-            throw new IllegalStateException( "Got no results from the analysis" );
-        }
-
-        /*
-         * Initialize some data structures we need to hold results
-         */
-        DifferentialExpressionAnalysis expressionAnalysis = super.initAnalysisEntity( expressionExperiment );
-        Map<String, List<DifferentialExpressionAnalysisResult>> resultLists = new HashMap<String, List<DifferentialExpressionAnalysisResult>>();
-        Map<String, List<Double>> pvaluesForQvalue = new HashMap<String, List<Double>>();
-        for ( String factorName : label2Factors.keySet() ) {
-            resultLists.put( factorName, new ArrayList<DifferentialExpressionAnalysisResult>() );
-            pvaluesForQvalue.put( factorName, new ArrayList<Double>() );
-        }
-        for ( String[] fs : interactionFactorLists ) {
-            String intF = StringUtils.join( fs, ":" );
-            resultLists.put( intF, new ArrayList<DifferentialExpressionAnalysisResult>() );
-            pvaluesForQvalue.put( intF, new ArrayList<Double>() );
-        }
-
-        /*
-         * Create result objects for each model fit. Keeping things in order is important.
-         */
-        boolean warned = false;
-        for ( DesignElement el : namedMatrix.getRowNames() ) {
-
-            CompositeSequence cs = ( CompositeSequence ) el;
-
-            LinearModelSummary lm = rawResults.get( rowNameExtractor.transform( el ).toString() );
-
-            if ( log.isDebugEnabled() ) log.debug( el.getName() + "\n" + lm );
-
-            if ( lm == null ) {
-                if ( !warned ) {
-                    // FIXME this usuall y means we got nothing.
-                    log.warn( "No result for " + el + ", further warnings suppressed" );
-                    warned = true;
-                }
-                continue;
             }
 
+            /*
+             * Build our factor terms, with interactions handled specially.(TODO: subsets...)
+             */
+            List<String[]> interactionFactorLists = new ArrayList<String[]>();
+            ObjectMatrix<String, String, Object> designMatrix = buildFactorsInR( factors, samplesUsed,
+                    baselineConditions );
+
+            setupFactors( designMatrix, baselineConditions );
+
+            String modelFormula = "";
+            boolean oneSampleTtest = interceptFactor != null && factors.size() == 1;
+            if ( oneSampleTtest ) {
+                // special case of one-sample t-test.
+                modelFormula = " ";
+            } else {
+
+                String factTerm = StringUtils.join( label2Factors.keySet(), "+" );
+
+                boolean hasInteractionTerms = !config.getInteractionsToInclude().isEmpty();
+                if ( hasInteractionTerms ) {
+                    for ( Collection<ExperimentalFactor> interactionTerms : config.getInteractionsToInclude() ) {
+
+                        List<String> interactionFactorNames = new ArrayList<String>();
+                        for ( ExperimentalFactor factor : interactionTerms ) {
+                            interactionFactorNames.add( nameForR( factor ) ); // see above for naming convention.
+                        }
+
+                        factTerm = factTerm + " + " + StringUtils.join( interactionFactorNames, "*" ); // in the R
+                        // statement
+                        interactionFactorLists.add( interactionFactorNames.toArray( new String[] {} ) );
+
+                        // In the ANOVA table.
+                        String factTableLabel = StringUtils.join( interactionFactorNames, ":" );
+                        label2Factors.put( factTableLabel, new HashSet<ExperimentalFactor>() );
+                        label2Factors.get( factTableLabel ).addAll( interactionTerms );
+                    }
+                }
+
+                modelFormula = " ~ " + factTerm;
+            }
+
+            DoubleMatrix<DesignElement, Integer> namedMatrix = dmatrix.getMatrix();
+
+            final Transformer rowNameExtractor = TransformerUtils.invokerTransformer( "getId" );
+
+            final Map<String, LinearModelSummary> rawResults = runAnalysis( namedMatrix, label2Factors, modelFormula,
+                    rowNameExtractor );
+
+            if ( rawResults.size() == 0 ) {
+                throw new IllegalStateException( "Got no results from the analysis" );
+            }
+
+            /*
+             * Initialize some data structures we need to hold results
+             */
+            DifferentialExpressionAnalysis expressionAnalysis = super.initAnalysisEntity( expressionExperiment );
+            Map<String, List<DifferentialExpressionAnalysisResult>> resultLists = new HashMap<String, List<DifferentialExpressionAnalysisResult>>();
+            Map<String, List<Double>> pvaluesForQvalue = new HashMap<String, List<Double>>();
             for ( String factorName : label2Factors.keySet() ) {
+                resultLists.put( factorName, new ArrayList<DifferentialExpressionAnalysisResult>() );
+                pvaluesForQvalue.put( factorName, new ArrayList<Double>() );
+            }
+            for ( String[] fs : interactionFactorLists ) {
+                String intF = StringUtils.join( fs, ":" );
+                resultLists.put( intF, new ArrayList<DifferentialExpressionAnalysisResult>() );
+                pvaluesForQvalue.put( intF, new ArrayList<Double>() );
+            }
 
-                if ( factorName.contains( ":" ) ) continue; // interaction, a bit ugly but this is the R way
+            /*
+             * Create result objects for each model fit. Keeping things in order is important.
+             */
+            boolean warned = false;
+            for ( DesignElement el : namedMatrix.getRowNames() ) {
 
-                Double pvalue = null;
-                Double score = null;
+                CompositeSequence cs = ( CompositeSequence ) el;
 
-                Collection<ExperimentalFactor> factorsForName = label2Factors.get( factorName );
-                if ( interceptFactor != null && factorsForName.size() == 1
-                        && factorsForName.iterator().next().equals( interceptFactor ) ) {
-                    pvalue = lm.getInterceptP();
-                    score = lm.getInterceptT();
-                } else {
-                    pvalue = lm.getMainEffectP( factorName );
-                    Double[] mainEffectT = lm.getMainEffectT( factorName );
+                LinearModelSummary lm = rawResults.get( rowNameExtractor.transform( el ).toString() );
 
-                    if ( mainEffectT != null && mainEffectT.length > 0 ) score = mainEffectT[0]; // Note: there will be
-                    // multiple values if
-                    // there are more
-                    // than 2 levels in a non-ordered factor.
+                if ( log.isDebugEnabled() ) log.debug( el.getName() + "\n" + lm );
+
+                if ( lm == null ) {
+                    if ( !warned ) {
+                        // FIXME this usuall y means we got nothing.
+                        log.warn( "No result for " + el + ", further warnings suppressed" );
+                        warned = true;
+                    }
+                    continue;
                 }
 
-                ProbeAnalysisResult probeAnalysisResult = ProbeAnalysisResult.Factory.newInstance();
-                probeAnalysisResult.setProbe( cs );
-                probeAnalysisResult.setQuantitationType( quantitationType );
+                for ( String factorName : label2Factors.keySet() ) {
 
-                probeAnalysisResult.setPvalue( nan2Null( pvalue ) );
+                    if ( factorName.contains( ":" ) ) continue; // interaction, a bit ugly but this is the R way
 
-                // get a directionality on the score:
-                probeAnalysisResult.setUpRegulated( score != null && score > 0 );
-                probeAnalysisResult.setEffectSize( nan2Null( score ) );
-                pvaluesForQvalue.get( factorName ).add( pvalue );
+                    Double pvalue = null;
+                    Double score = null;
 
-                resultLists.get( factorName ).add( probeAnalysisResult );
+                    Collection<ExperimentalFactor> factorsForName = label2Factors.get( factorName );
+                    if ( interceptFactor != null && factorsForName.size() == 1
+                            && factorsForName.iterator().next().equals( interceptFactor ) ) {
+                        pvalue = lm.getInterceptP();
+                        score = lm.getInterceptT();
+                    } else {
+                        pvalue = lm.getMainEffectP( factorName );
+                        Double[] mainEffectT = lm.getMainEffectT( factorName );
+
+                        if ( mainEffectT != null && mainEffectT.length > 0 ) score = mainEffectT[0]; // Note: there will
+                        // be
+                        // multiple values if
+                        // there are more
+                        // than 2 levels in a non-ordered factor.
+                    }
+
+                    ProbeAnalysisResult probeAnalysisResult = ProbeAnalysisResult.Factory.newInstance();
+                    probeAnalysisResult.setProbe( cs );
+                    probeAnalysisResult.setQuantitationType( quantitationType );
+
+                    probeAnalysisResult.setPvalue( nan2Null( pvalue ) );
+
+                    // get a directionality on the score:
+                    probeAnalysisResult.setUpRegulated( score != null && score > 0 );
+                    probeAnalysisResult.setEffectSize( nan2Null( score ) );
+                    pvaluesForQvalue.get( factorName ).add( pvalue );
+
+                    resultLists.get( factorName ).add( probeAnalysisResult );
+
+                }
+
+                for ( String[] fa : interactionFactorLists ) {
+
+                    String intF = StringUtils.join( fa, ":" );
+                    Double interactionEffectP = lm.getInteractionEffectP( fa );
+
+                    ProbeAnalysisResult probeAnalysisResult = ProbeAnalysisResult.Factory.newInstance();
+                    probeAnalysisResult.setProbe( cs );
+                    probeAnalysisResult.setQuantitationType( quantitationType );
+
+                    probeAnalysisResult.setPvalue( nan2Null( interactionEffectP ) );
+
+                    // FIXME interactions are not that straightforward.
+                    // Double interactionEffectT = lm.getInteractionEffectT( fa )[0]; there can be more than 1.
+                    // probeAnalysisResult.setUpRegulated( interactionEffectT > 0 );
+                    // probeAnalysisResult.setScore( nan2Null( interactionEffectT ) );
+
+                    pvaluesForQvalue.get( intF ).add( interactionEffectP );
+
+                    resultLists.get( intF ).add( probeAnalysisResult );
+                }
+            }
+
+            /*
+             * qvalues and ranks, requires second pass over the result objects.
+             */
+            for ( String fName : pvaluesForQvalue.keySet() ) {
+                List<Double> pvals = pvaluesForQvalue.get( fName );
+
+                double[] qvalues = super.getQValues( pvals.toArray( new Double[] {} ) );
+                double[] ranks = super.computeRanks( ArrayUtils.toPrimitive( pvals.toArray( new Double[] {} ) ) );
+
+                int i = 0;
+                for ( DifferentialExpressionAnalysisResult pr : resultLists.get( fName ) ) {
+                    pr.setCorrectedPvalue( nan2Null( qvalues[i] ) );
+                    pr.setRank( nan2Null( ranks[i] ) );
+                    i++;
+                }
+            }
+
+            /*
+             * Result sets
+             */
+            Collection<ExpressionAnalysisResultSet> resultSets = new HashSet<ExpressionAnalysisResultSet>();
+            for ( String fName : resultLists.keySet() ) {
+                Collection<ExperimentalFactor> factorsUsed = new HashSet<ExperimentalFactor>();
+                factorsUsed.addAll( label2Factors.get( fName ) );
+
+                FactorValue baselineGroup = null;
+                if ( !oneSampleTtest && factorsUsed.size() == 1 /* interaction */) {
+                    baselineGroup = baselineConditions.get( factorsUsed.iterator().next() );
+                }
+
+                ExpressionAnalysisResultSet resultSet = ExpressionAnalysisResultSet.Factory.newInstance( baselineGroup,
+                        expressionAnalysis, resultLists.get( fName ), factorsUsed );
+                resultSets.add( resultSet );
 
             }
 
-            for ( String[] fa : interactionFactorLists ) {
-
-                String intF = StringUtils.join( fa, ":" );
-                Double interactionEffectP = lm.getInteractionEffectP( fa );
-
-                ProbeAnalysisResult probeAnalysisResult = ProbeAnalysisResult.Factory.newInstance();
-                probeAnalysisResult.setProbe( cs );
-                probeAnalysisResult.setQuantitationType( quantitationType );
-
-                probeAnalysisResult.setPvalue( nan2Null( interactionEffectP ) );
-
-                // FIXME interactions are not that straightforward.
-                // Double interactionEffectT = lm.getInteractionEffectT( fa )[0]; there can be more than 1.
-                // probeAnalysisResult.setUpRegulated( interactionEffectT > 0 );
-                // probeAnalysisResult.setScore( nan2Null( interactionEffectT ) );
-
-                pvaluesForQvalue.get( intF ).add( interactionEffectP );
-
-                resultLists.get( intF ).add( probeAnalysisResult );
-            }
+            /*
+             * Complete analysis config
+             */
+            expressionAnalysis.setResultSets( resultSets );
+            expressionAnalysis.setName( this.getClass().getSimpleName() );
+            expressionAnalysis.setDescription( "Linear model with " + config.getFactorsToInclude().size() + " factors"
+                    + ( interceptFactor == null ? "" : " with intercept treated as factor" )
+                    + ( interactionFactorLists.isEmpty() ? "" : " with interaction" ) );
+            return expressionAnalysis;
+        } finally {
+            disconnectR();
         }
 
-        /*
-         * qvalues and ranks, requires second pass over the result objects.
-         */
-        for ( String fName : pvaluesForQvalue.keySet() ) {
-            List<Double> pvals = pvaluesForQvalue.get( fName );
-
-            double[] qvalues = super.getQValues( pvals.toArray( new Double[] {} ) );
-            double[] ranks = super.computeRanks( ArrayUtils.toPrimitive( pvals.toArray( new Double[] {} ) ) );
-
-            int i = 0;
-            for ( DifferentialExpressionAnalysisResult pr : resultLists.get( fName ) ) {
-                pr.setCorrectedPvalue( nan2Null( qvalues[i] ) );
-                pr.setRank( nan2Null( ranks[i] ) );
-                i++;
-            }
-        }
-
-        /*
-         * Result sets
-         */
-        Collection<ExpressionAnalysisResultSet> resultSets = new HashSet<ExpressionAnalysisResultSet>();
-        for ( String fName : resultLists.keySet() ) {
-            Collection<ExperimentalFactor> factorsUsed = new HashSet<ExperimentalFactor>();
-            factorsUsed.addAll( label2Factors.get( fName ) );
-
-            FactorValue baselineGroup = null;
-            if ( !oneSampleTtest && factorsUsed.size() == 1 /* interaction */) {
-                baselineGroup = baselineConditions.get( factorsUsed.iterator().next() );
-            }
-
-            ExpressionAnalysisResultSet resultSet = ExpressionAnalysisResultSet.Factory.newInstance( baselineGroup,
-                    expressionAnalysis, resultLists.get( fName ), factorsUsed );
-            resultSets.add( resultSet );
-
-        }
-
-        /*
-         * Complete analysis config
-         */
-        expressionAnalysis.setResultSets( resultSets );
-        expressionAnalysis.setName( this.getClass().getSimpleName() );
-        expressionAnalysis.setDescription( "Linear model with " + config.getFactorsToInclude().size() + " factors"
-                + ( interceptFactor == null ? "" : " with intercept treated as factor" )
-                + ( interactionFactorLists.isEmpty() ? "" : " with interaction" ) );
-
-        disconnectR();
-        return expressionAnalysis;
     }
 
     /*
