@@ -44,7 +44,11 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
 import ubic.basecode.ontology.model.OntologyResource;
+import ubic.gemma.analysis.preprocess.filter.FilterConfig;
 import ubic.gemma.analysis.report.ExpressionExperimentReportService;
+import ubic.gemma.analysis.service.ExpressionDataMatrixService;
+import ubic.gemma.analysis.stats.ExpressionDataSampleCorrelation;
+import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.job.AbstractTaskService;
 import ubic.gemma.job.BackgroundJob;
 import ubic.gemma.job.TaskCommand;
@@ -67,6 +71,8 @@ import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
+import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorService;
@@ -870,9 +876,10 @@ public class ExpressionExperimentController extends AbstractTaskService {
         if ( expressionExperiment == null ) {
             throw new EntityNotFoundException( id + " not found" );
         }
-
         request.setAttribute( "id", id );
         ModelAndView mv = new ModelAndView( "bioAssays" ).addObject( "bioAssays", expressionExperiment.getBioAssays() );
+
+        addQCInfo( expressionExperiment, mv );
         mv.addObject( "expressionExperiment", expressionExperiment );
         return mv;
     }
@@ -926,6 +933,45 @@ public class ExpressionExperimentController extends AbstractTaskService {
         return mav;
     }
 
+    @RequestMapping("/refreshCorrMatrix.html")
+    public ModelAndView updateCorrelationMatrix( HttpServletRequest request, HttpServletResponse response ) {
+        ExpressionExperiment expressionExperiment;
+
+        /*
+         * TODO make this an ajax call.
+         */
+        Long id = null;
+
+        if ( request.getParameter( "id" ) == null ) {
+            throw new IllegalArgumentException( "Must provide an id" );
+
+        }
+        try {
+            id = Long.parseLong( request.getParameter( "id" ) );
+        } catch ( NumberFormatException e ) {
+            throw new IllegalArgumentException( "You must provide a valid numerical identifier" );
+        }
+        expressionExperiment = expressionExperimentService.load( id );
+        if ( expressionExperiment == null ) {
+            throw new IllegalArgumentException( "Unable to access experiment with id=" + id );
+        }
+
+        Collection<ProcessedExpressionDataVector> vectors = processedExpressionDataVectorService
+                .getProcessedDataVectors( expressionExperiment );
+
+        ExpressionDataDoubleMatrix datamatrix = expressionDataMatrixService.getFilteredMatrix( expressionExperiment,
+                new FilterConfig(), vectors );
+        ExpressionDataSampleCorrelation.process( datamatrix, expressionExperiment );
+
+        return showExpressionExperiment( request, response );
+
+    }
+
+    @Autowired
+    ProcessedExpressionDataVectorService processedExpressionDataVectorService;
+    @Autowired
+    ExpressionDataMatrixService expressionDataMatrixService;
+
     /**
      * @param request
      * @param response
@@ -938,7 +984,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
         StopWatch timer = new StopWatch();
         timer.start();
 
-        ExpressionExperimentImpl expressionExperiment;
+        ExpressionExperiment expressionExperiment;
         List<Long> ids = new ArrayList<Long>();
         Long id = null;
 
@@ -947,8 +993,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
             String shortName = request.getParameter( "shortName" );
 
             if ( StringUtils.isNotBlank( shortName ) ) {
-                expressionExperiment = ( ExpressionExperimentImpl ) expressionExperimentService
-                        .findByShortName( shortName );
+                expressionExperiment = expressionExperimentService.findByShortName( shortName );
 
             } else {
                 return redirectHome( request );
@@ -961,11 +1006,11 @@ public class ExpressionExperimentController extends AbstractTaskService {
             } catch ( NumberFormatException e ) {
                 throw new IllegalArgumentException( "You must provide a valid numerical identifier" );
             }
-            expressionExperiment = ( ExpressionExperimentImpl ) expressionExperimentService.load( id );
+            expressionExperiment = expressionExperimentService.load( id );
         }
 
         if ( expressionExperiment == null ) {
-            return redirectHome( request );
+            throw new IllegalArgumentException( "Unable to access experiment with id=" + id );
         }
 
         id = expressionExperiment.getId();
@@ -1048,14 +1093,13 @@ public class ExpressionExperimentController extends AbstractTaskService {
         if ( command.getEntityId() == null ) {
             throw new IllegalArgumentException( "Id cannot be null" );
         }
-        
+
         /*
          * This should be fast so I'm not using a background task.
          */
-        
+
         // UpdateBasics runner = new UpdateBasics( command );
         // startTask( runner );
-
         Long entityId = command.getEntityId();
         ExpressionExperiment ee = expressionExperimentService.load( entityId );
         if ( ee == null )
