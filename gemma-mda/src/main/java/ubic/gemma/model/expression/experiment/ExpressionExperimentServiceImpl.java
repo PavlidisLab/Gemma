@@ -37,7 +37,7 @@ import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.auditAndSecurity.eventType.LinkAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.MissingValueAnalysisEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.ProcessedVectorComputationEvent; 
+import ubic.gemma.model.common.auditAndSecurity.eventType.ProcessedVectorComputationEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ValidatedFlagEvent;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.DatabaseEntry;
@@ -690,6 +690,26 @@ public class ExpressionExperimentServiceImpl extends
     @Override
     public Collection<ExpressionExperiment> loadMySharedExpressionExperiments() {
         return loadAll();
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentService#loadLackingEvent(java.lang.Class)
+     */
+    @Override
+    public Collection<ExpressionExperiment> loadLackingEvent( Class<? extends AuditEventType> eventType ) {
+        return this.getExpressionExperimentDao().loadLackingEvent( eventType );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentService#loadWithEvent(java.lang.Class)
+     */
+    @Override
+    public Collection<ExpressionExperiment> loadWithEvent( Class<? extends AuditEventType> eventType ) {
+        return this.getExpressionExperimentDao().loadWithEvent( eventType );
     }
 
 }

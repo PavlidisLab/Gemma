@@ -342,4 +342,16 @@ public interface ExpressionExperimentDao extends BioAssaySetDao<ExpressionExperi
      */
     public void toExpressionExperimentValueObjectCollection( Collection<ExpressionExperiment> entities );
 
+    /**
+     * @param eventType
+     * @return
+     */
+    public Collection<ExpressionExperiment> loadWithEvent( Class<? extends AuditEventType> eventType );
+
+    /**
+     * @param eventType
+     * @return
+     */
+    public Collection<ExpressionExperiment> loadLackingEvent( Class<? extends AuditEventType> eventType );
+
 }

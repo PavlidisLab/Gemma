@@ -55,6 +55,8 @@ import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisS
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
+import ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionAnalysisEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.LinkAnalysisEvent;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.BibliographicReferenceService;
 import ubic.gemma.model.common.description.Characteristic;
@@ -630,10 +632,11 @@ public class ExpressionExperimentController extends AbstractTaskService {
      * @param taxonId can be null
      * @param sIds - ids
      * @param limit If >0, get the most recently updated N experiments, where N <= limit.
+     * @param filter if non-null, limit data sets to ones meeting criteria.
      * @return
      */
     public Collection<ExpressionExperimentValueObject> loadStatusSummaries( Long taxonId, Collection<Long> ids,
-            Integer limit ) {
+            Integer limit, Integer filter ) {
         StopWatch timer = new StopWatch();
         timer.start();
 
@@ -676,6 +679,8 @@ public class ExpressionExperimentController extends AbstractTaskService {
         timer.reset();
         timer.start();
 
+        if ( filter != null && filter > 0 ) eeValObjectCol = applyFilter( eeValObjectCol, filter );
+
         List<ExpressionExperimentValueObject> result = getRecentlyUpdated( recentDateInfo, eeValObjectCol, limit );
 
         if ( timer.getTime() > 1000 ) {
@@ -683,6 +688,51 @@ public class ExpressionExperimentController extends AbstractTaskService {
         }
 
         return result;
+    }
+
+    /**
+     * Filter based on criteria of which events etc. the data sets have.
+     * 
+     * @param eeValObjectCol
+     * @param filter
+     * @return
+     */
+    private Collection<ExpressionExperimentValueObject> applyFilter(
+            Collection<ExpressionExperimentValueObject> eeValObjectCol, Integer filter ) {
+        Collection<ExpressionExperimentValueObject> filtered = new HashSet<ExpressionExperimentValueObject>();
+        Collection<ExpressionExperiment> eesToKeep = null;
+        if ( filter == 1 ) {
+            eesToKeep = expressionExperimentService.loadLackingEvent( DifferentialExpressionAnalysisEvent.class );
+        } else if ( filter == 2 ) {
+            eesToKeep = expressionExperimentService.loadLackingEvent( LinkAnalysisEvent.class );
+        } else if ( filter == 3 ) {
+            eesToKeep = expressionExperimentService.loadWithEvent( DifferentialExpressionAnalysisEvent.class );
+        } else if ( filter == 4 ) {
+            eesToKeep = expressionExperimentService.loadWithEvent( LinkAnalysisEvent.class );
+            /*
+             * TODO support more filters, and use an enumeration.
+             */
+        } else {
+            throw new IllegalArgumentException( "Unknown filter: " + filter );
+        }
+
+        if ( eesToKeep != null ) {
+            if ( eesToKeep.isEmpty() ) {
+                return filtered;
+            }
+            Map<Long, Object> idMap = EntityUtils.getIdMap( eesToKeep );
+            for ( ExpressionExperimentValueObject eevo : eeValObjectCol ) {
+                if ( idMap.containsKey( eevo.getId() ) ) {
+                    filtered.add( eevo );
+                }
+            }
+
+            return filtered;
+
+        }
+
+        // temporary.
+        return eeValObjectCol;
     }
 
     /**

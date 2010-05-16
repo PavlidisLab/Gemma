@@ -1549,9 +1549,39 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
                 results.put( id, new HashSet<QuantitationType>() );
             }
             results.get( id ).add( qt );
-
         }
         return results;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDao#loadLackingEvent(java.lang.Class)
+     */
+    public Collection<ExpressionExperiment> loadLackingEvent( Class<? extends AuditEventType> eventType ) {
+        /*
+         * I cannot figure out a way to do this with a left join in HQL.
+         */
+        Collection<ExpressionExperiment> allEEs = this.loadAll();
+        allEEs.removeAll( loadWithEvent( eventType ) );
+        return allEEs;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDao#loadWithEvent(java.lang.Class)
+     */
+    @SuppressWarnings("unchecked")
+    public Collection<ExpressionExperiment> loadWithEvent( Class<? extends AuditEventType> eventType ) {
+        String className = eventType.getSimpleName().endsWith( "Impl" ) ? eventType.getSimpleName() : eventType
+                .getSimpleName()
+                + "Impl";
+        return this
+                .getHibernateTemplate()
+                .findByNamedParam(
+                        "select distinct e from ExpressionExperimentImpl e join e.auditTrail a join a.events ae join ae.eventType t where t.class = :type ",
+                        "type", className );
     }
 
 }
