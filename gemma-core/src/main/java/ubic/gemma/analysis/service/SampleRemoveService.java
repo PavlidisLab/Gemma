@@ -35,6 +35,7 @@ import ubic.gemma.analysis.stats.ExpressionDataSampleCorrelation;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
+import ubic.gemma.model.common.auditAndSecurity.eventType.ProcessedVectorComputationEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.SampleRemovalEvent;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -183,6 +184,9 @@ public class SampleRemoveService extends ExpressionExperimentVectorManipulatingS
         for ( BioAssay ba : assaysToRemove ) {
             audit( ba, "Sample " + ba.getName() + " marked as missing data." );
         }
+
+        auditTrailService.addUpdateEvent( expExp, ProcessedVectorComputationEvent.Factory.newInstance(),
+                "Updated as part of outlier handling." );
 
         auditTrailService.addUpdateEvent( expExp, SampleRemovalEvent.Factory.newInstance(), assaysToRemove.size()
                 + " flagged as outliers: " + StringUtils.join( assaysToRemove, "," ) );
