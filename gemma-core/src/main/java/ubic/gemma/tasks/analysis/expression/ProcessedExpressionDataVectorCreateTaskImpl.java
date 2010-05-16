@@ -24,6 +24,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import ubic.gemma.analysis.preprocess.ProcessedExpressionDataVectorCreateService;
+import ubic.gemma.analysis.preprocess.filter.FilterConfig;
+import ubic.gemma.analysis.service.ExpressionDataMatrixService;
+import ubic.gemma.analysis.stats.ExpressionDataSampleCorrelation;
+import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.job.TaskMethod;
 import ubic.gemma.job.TaskResult;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
@@ -39,10 +43,14 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 public class ProcessedExpressionDataVectorCreateTaskImpl implements ProcessedExpressionDataVectorCreateTask {
 
     @Autowired
-    private ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService = null;
+    private ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService;
+
+    @Autowired
+    private ExpressionDataMatrixService expressionDataMatrixService;
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.grid.javaspaces.task.analysis.preprocess.ProcessedExpressionDataVectorCreateTask#execute(ubic.gemma
      * .grid .javaspaces.analysis.preprocess.SpacesProcessedExpressionDataVectorCreateCommand)
@@ -54,6 +62,13 @@ public class ProcessedExpressionDataVectorCreateTaskImpl implements ProcessedExp
 
         Collection<ProcessedExpressionDataVector> processedVectors = processedExpressionDataVectorCreateService
                 .computeProcessedExpressionData( ee );
+
+        /*
+         * Update the correlation heatmaps.
+         */
+        ExpressionDataDoubleMatrix datamatrix = expressionDataMatrixService.getFilteredMatrix( ee, new FilterConfig(),
+                processedVectors );
+        ExpressionDataSampleCorrelation.process( datamatrix, ee );
 
         TaskResult result = new TaskResult( command, processedVectors.size() );
 

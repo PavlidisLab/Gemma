@@ -70,6 +70,7 @@ public class ExpressionExperimentLoadTaskImpl implements ExpressionExperimentLoa
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.grid.javaspaces.SpacesTask#execute(java.lang.Object)
      */
     @SuppressWarnings("unchecked")
@@ -149,21 +150,37 @@ public class ExpressionExperimentLoadTaskImpl implements ExpressionExperimentLoa
         log.info( "Postprocessing ..." );
         for ( ExpressionExperiment ee : ees ) {
 
-            Collection<ArrayDesign> arrayDesignsUsed = eeService.getArrayDesignsUsed( ee );
-            if ( arrayDesignsUsed.size() > 1 ) {
-                log.warn( "Skipping postprocessing because experiment uses "
-                        + "multiple array types. Please check valid entry and run postprocessing separately." );
-            }
-
-            ArrayDesign arrayDesignUsed = arrayDesignsUsed.iterator().next();
-            processForMissingValues( ee, arrayDesignUsed );
-            Collection<ProcessedExpressionDataVector> dataVectors = processedExpressionDataVectorCreateService
-                    .computeProcessedExpressionData( ee );
-
-            ExpressionDataDoubleMatrix datamatrix = expressionDataMatrixService.getFilteredMatrix( ee,
-                    new FilterConfig(), dataVectors );
-            ExpressionDataSampleCorrelation.process( datamatrix, ee );
+            postProcess( ee );
         }
+    }
+
+    /**
+     * @param ee
+     */
+    private void postProcess( ExpressionExperiment ee ) {
+        Collection<ArrayDesign> arrayDesignsUsed = eeService.getArrayDesignsUsed( ee );
+        if ( arrayDesignsUsed.size() > 1 ) {
+            log.warn( "Skipping postprocessing because experiment uses "
+                    + "multiple array types. Please check valid entry and run postprocessing separately." );
+        }
+
+        ArrayDesign arrayDesignUsed = arrayDesignsUsed.iterator().next();
+        processForMissingValues( ee, arrayDesignUsed );
+        processForSampleCorrelation( ee );
+    }
+
+    /**
+     * Create the heatmaps used to judge similarity among samples.
+     * 
+     * @param ee
+     */
+    private void processForSampleCorrelation( ExpressionExperiment ee ) {
+        Collection<ProcessedExpressionDataVector> dataVectors = processedExpressionDataVectorCreateService
+                .computeProcessedExpressionData( ee );
+
+        ExpressionDataDoubleMatrix datamatrix = expressionDataMatrixService.getFilteredMatrix( ee, new FilterConfig(),
+                dataVectors );
+        ExpressionDataSampleCorrelation.process( datamatrix, ee );
     }
 
     /**

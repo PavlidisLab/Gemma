@@ -24,32 +24,37 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import ubic.gemma.analysis.preprocess.filter.FilterConfig;
+import ubic.gemma.analysis.stats.ExpressionDataSampleCorrelation;
+import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.auditAndSecurity.eventType.SampleRemovalEvent;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
-import ubic.gemma.model.common.quantitationtype.QuantitationType;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayService;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 
 /**
  * Service for removing sample(s) from an expression experiment. This can be done in the interest of quality control.
  * <p>
- * NOTE currently this does not actually remove the samples. It just replaces the data with "missing values". This means
- * the data are not recoverable. The reason we don't simply mark it as missing in the "absent-present" data (and leave
- * the regular data alone) is that for many data sets we either 1) don't already have an absent-present data type or 2)
- * the absent-present data is not used in analysis. We will probably change this behavior to preserve the data in
- * question.
+ * NOTE currently this does not actually remove the samples. It just replaces the data in the processed data with
+ * "missing values". This means the data are only recoverable by regenerating the processed data from the raw data (note
+ * that in previous version, the raw data was modified as well).
+ * <p>
+ * The reason we don't simply mark it as missing in the "absent-present" data (and leave the regular data alone) is that
+ * for many data sets we either 1) don't already have an absent-present data type or 2) the absent-present data is not
+ * used in analysis. We will probably change this behavior to preserve the data in question.
  * <p>
  * In the meantime, this should be used very judiciously!
  * 
@@ -69,6 +74,9 @@ public class SampleRemoveService extends ExpressionExperimentVectorManipulatingS
 
     @Autowired
     ExpressionExperimentService expressionExperimentService;
+
+    @Autowired
+    ExpressionDataMatrixService expressionDataMatrixService;
 
     public void setBioAssayService( BioAssayService bioAssayService ) {
         this.bioAssayService = bioAssayService;
@@ -107,11 +115,11 @@ public class SampleRemoveService extends ExpressionExperimentVectorManipulatingS
     }
 
     /**
-     * This does not actually remove the sample; rather, it sets all values to "missing".
+     * This does not actually remove the sample; rather, it sets all values to "missing" in the processed data.
      * 
      * @param expExp
      * @param assaysToRemove
-     */ 
+     */
     public void markAsMissing( ExpressionExperiment expExp, Collection<BioAssay> assaysToRemove ) {
 
         if ( assaysToRemove == null || assaysToRemove.size() == 0 ) return;
@@ -119,72 +127,65 @@ public class SampleRemoveService extends ExpressionExperimentVectorManipulatingS
         // thaw vectors for each QT
         expressionExperimentService.thawLite( expExp );
 
-        Collection<QuantitationType> qts = expressionExperimentService.getQuantitationTypes( expExp );
+        Collection<ProcessedExpressionDataVector> oldVectors = processedExpressionDataVectorService
+                .getProcessedDataVectors( expExp );
 
-        Collection<ArrayDesign> arrayDesigns = expressionExperimentService.getArrayDesignsUsed( expExp );
-
-        if ( arrayDesigns.size() > 1 ) {
-            throw new IllegalArgumentException( "Cannot cope with more than one platform: merge vectors first!" );
+        if ( oldVectors.isEmpty() ) {
+            throw new IllegalArgumentException(
+                    "The data set must have processed data first before outliers can be marked." );
         }
 
         Collection<BioAssayDimension> dims = new HashSet<BioAssayDimension>();
-        for ( QuantitationType type : qts ) {
-            log.info( "Marking outlier for " + type + "; loading vectors ..." );
-            Collection<? extends DesignElementDataVector> oldVectors = getVectorsForOneQuantitationType( type );
-            PrimitiveType representation = type.getRepresentation();
 
-            int count = 0;
-            for ( DesignElementDataVector vector : oldVectors ) {
+        int count = 0;
+        for ( DesignElementDataVector vector : oldVectors ) {
 
-                BioAssayDimension bad = vector.getBioAssayDimension();
-                dims.add( bad );
-                List<BioAssay> vectorAssays = ( List<BioAssay> ) bad.getBioAssays();
+            BioAssayDimension bad = vector.getBioAssayDimension();
 
-                if ( !CollectionUtils.containsAny( vectorAssays, assaysToRemove ) ) continue;
+            assert vector.getQuantitationType().getRepresentation().equals( PrimitiveType.DOUBLE );
 
-                LinkedList<Object> data = new LinkedList<Object>();
-                convertFromBytes( data, representation, vector );
+            dims.add( bad );
+            List<BioAssay> vectorAssays = ( List<BioAssay> ) bad.getBioAssays();
 
-                // now set data as missing.
-                int i = 0;
-                for ( BioAssay vecAs : vectorAssays ) {
-                    if ( assaysToRemove.contains( vecAs ) ) {
+            if ( !CollectionUtils.containsAny( vectorAssays, assaysToRemove ) ) continue;
 
-                        if ( representation.equals( PrimitiveType.DOUBLE ) ) {
-                            data.set( i, Double.NaN );
-                        } else if ( representation.equals( PrimitiveType.BOOLEAN ) ) {
-                            data.set( i, Boolean.FALSE );
-                        } else if ( representation.equals( PrimitiveType.INT ) ) {
-                            data.set( i, 0 );
-                        } else if ( representation.equals( PrimitiveType.STRING ) ) {
-                            data.set( i, "" );
-                        } else {
-                            throw new UnsupportedOperationException(
-                                    "Don't know how to make a missing value placeholder for " + representation
-                                            + " QT =" + type );
-                        }
-                    }
-                    i++;
+            LinkedList<Object> data = new LinkedList<Object>();
+            convertFromBytes( data, PrimitiveType.DOUBLE, vector );
+
+            // now set data as missing.
+            int i = 0;
+            for ( BioAssay vecAs : vectorAssays ) {
+                if ( assaysToRemove.contains( vecAs ) ) {
+                    data.set( i, Double.NaN );
                 }
-
-                // convert it back.
-                byte[] newDataAr = converter.toBytes( data.toArray() );
-                vector.setData( newDataAr );
-                if ( ++count % 5000 == 0 ) {
-                    log.info( "Edited " + count + " vectors ... " );
-                }
+                i++;
             }
 
-            log.info( "Committing changes to " + oldVectors.size() + " vectors" );
-
-            designElementDataVectorService.update( oldVectors );
-
+            // convert it back.
+            byte[] newDataAr = converter.toBytes( data.toArray() );
+            vector.setData( newDataAr );
+            if ( ++count % 5000 == 0 ) {
+                log.info( "Edited " + count + " vectors ... " );
+            }
         }
 
-        log.info( "Logging event." );
+        log.info( "Committing changes to " + oldVectors.size() + " vectors" );
+
+        designElementDataVectorService.update( oldVectors );
+
+        /*
+         * Update the correlation heatmaps.
+         */
+        ExpressionDataDoubleMatrix datamatrix = expressionDataMatrixService.getFilteredMatrix( expExp,
+                new FilterConfig(), oldVectors );
+        ExpressionDataSampleCorrelation.process( datamatrix, expExp );
+
         for ( BioAssay ba : assaysToRemove ) {
             audit( ba, "Sample " + ba.getName() + " marked as missing data." );
         }
+
+        auditTrailService.addUpdateEvent( expExp, SampleRemovalEvent.Factory.newInstance(), assaysToRemove.size()
+                + " flagged as outliers: " + StringUtils.join( assaysToRemove, "," ) );
     }
 
     public void setAuditTrailService( AuditTrailService auditTrailService ) {

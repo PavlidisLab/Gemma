@@ -1,7 +1,7 @@
 Ext.namespace("Gemma");
 
 /**
- * Create a progress window, and fire a 'done' event when done.
+ * Create a progress window or throbber, and fire a 'done' event when done.
  * <p>
  * Here is an example of using it:
  * 
@@ -11,9 +11,11 @@ Ext.namespace("Gemma");
  * ...
  * callParams.push({
  * 			callback : function(data) { // set this is a callback to your ajax call. Data will be the task id
- * 				var k = new Gemma.WaitHandler(); // instantiate
+ * 				var k = new Gemma.WaitHandler({
+ * 					throbberEl : myThrobberElId // optional place to show the throbber; otherwise popup progress bar is shown.
+ * 				}); // instantiate
  * 				this.relayEvents(k, ['done']); // make sure events make it out
- * 				k.handleWait(data, false); // start wait
+ * 				k.handleWait(data, false ); 
  * 				k.on('done', function(payload) {
  * 							this.handleSucess(payload); // you define this.
  * 						});
@@ -28,6 +30,8 @@ Ext.namespace("Gemma");
  */
 Gemma.WaitHandler = Ext.extend(Ext.util.Observable, {
 
+			throbberEl : null,
+
 			constructor : function(config) {
 				this.addEvents({
 							"done" : true,
@@ -38,6 +42,7 @@ Gemma.WaitHandler = Ext.extend(Ext.util.Observable, {
 				// constructor will add them.
 				if (config) {
 					this.listeners = config.listeners;
+					this.throbberEl = config.throbberEl;
 				}
 
 				// Call our superclass constructor to complete construction process.
@@ -54,10 +59,30 @@ Gemma.WaitHandler = Ext.extend(Ext.util.Observable, {
 								callback : function(data) {
 									this.fireEvent('done', data);
 								}.createDelegate(this),
+								errorHandler : function(data) {
+									this.fireEvent('done', data);
+								}.createDelegate(this),
 								showAllMessages : showAllMessages
 							});
 
-					p.show();
+					if (this.throbberEl !== null) {
+						/*
+						 * Doesn't work quite right ... implemented for 'report' update.
+						 */
+						var el = Ext.get(this.throbberEl);
+
+						var id = Ext.id();
+						Ext.DomHelper.append(this.throbberEl, '<span id="' + id +
+										'"><img src="/Gemma/images/default/tree/loading.gif"/></span>');
+
+						this.on('done', function(data) {
+									Ext.DomHelper.overwrite(id, "");
+								});
+
+						p.start();
+					} else {
+						p.show();
+					}
 				} catch (e) {
 					Ext.Msg.alert("Error", e);
 				}

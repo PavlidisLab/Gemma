@@ -1046,7 +1046,7 @@ public class LinkEvalCli extends AbstractSpringAwareCLI {
 
             geneVectorMatrix = goMetric.createVectorMatrix( geneGoMap, weight );
 
-            this.saveCacheToDisk( ( DoubleMatrix ) geneVectorMatrix, VECTOR_MATRIX );
+            this.saveCacheToDisk( geneVectorMatrix, VECTOR_MATRIX );
         }
 
     }

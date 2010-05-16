@@ -41,7 +41,33 @@ Gemma.ProgressWindow = Ext.extend(Ext.Window, {
 
 				this.addEvents('success', 'failed');
 
-				this.on('show', this.pBar.startProgress.createDelegate(this.pBar));
+				this.on('show', this.start, this);
+			},
+
+			start : function() {
+				this.pBar.on('done', function(payload) {
+							if (this.callback) {
+								this.callback(payload);
+							}
+						}, this);
+
+				this.pBar.on('fail', function(message) {
+							if (this.errorHandler) {
+								this.errorHandler(message);
+							}
+						}, this);
+
+				this.pBar.on('cancel', function(successfullyCancelled) {
+							if (this.errorHandler) {
+								if (successfullyCancelled) {
+									this.errorHandler("Job was cancelled");
+								} else {
+									this.errorHandler("Could not be cancelled?");
+								}
+							}
+						}, this);
+
+				this.pBar.startProgress();
 			},
 
 			afterRender : function(a, b) {
@@ -57,28 +83,15 @@ Gemma.ProgressWindow = Ext.extend(Ext.Window, {
 										},
 										scope : this
 									});
-							if (this.callback) {
-								this.callback(payload);
-							}
 						}.createDelegate(this));
 
 				this.pBar.on('fail', function(message) {
 							this.pBar.allMessages = message + "<br/><br/>Other messages:<br/>" + this.pBar.allMessages;
 							this.pBar.showAllMessages("Job failed!");
-							if (this.errorHandler) {
-								this.errorHandler(message);
-							}
 							this.destroy();
 						}.createDelegate(this));
 
 				this.pBar.on('cancel', function(successfullyCancelled) {
-							if (this.errorHandler) {
-								if (successfullyCancelled) {
-									this.errorHandler("Job was cancelled");
-								} else {
-									this.errorHandler("Could not be cancelled?");
-								}
-							}
 							this.destroy();
 						}.createDelegate(this));
 			}

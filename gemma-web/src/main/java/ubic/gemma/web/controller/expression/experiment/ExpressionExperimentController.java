@@ -153,43 +153,43 @@ public class ExpressionExperimentController extends AbstractTaskService {
 
     }
 
-    private class UpdateBasics extends BackgroundJob<UpdateEEDetailsCommand> {
-
-        public UpdateBasics( UpdateEEDetailsCommand command ) {
-            super( command );
-
-        }
-
-        @Override
-        public TaskResult processJob() {
-
-            Long entityId = command.getEntityId();
-            ExpressionExperiment ee = expressionExperimentService.load( entityId );
-            if ( ee == null )
-                throw new IllegalArgumentException( "Cannot locate or access experiment with id=" + entityId );
-
-            if ( StringUtils.isNotBlank( command.getShortName() ) && !command.getShortName().equals( ee.getShortName() ) ) {
-                if ( expressionExperimentService.findByShortName( command.getShortName() ) != null ) {
-                    throw new IllegalArgumentException( "An experiment with short name '" + command.getShortName()
-                            + "' already exists" );
-                }
-                ee.setShortName( command.getShortName() );
-            }
-            if ( StringUtils.isNotBlank( command.getName() ) && !command.getName().equals( ee.getName() ) ) {
-                ee.setName( command.getName() );
-            }
-            if ( StringUtils.isNotBlank( command.getDescription() )
-                    && !command.getDescription().equals( ee.getDescription() ) ) {
-                ee.setDescription( command.getDescription() );
-            }
-
-            log.info( "Updating ..." );
-            expressionExperimentService.update( ee );
-
-            ExpressionExperimentDetailsValueObject eeDetails = loadExpressionExperimentDetails( ee.getId() );
-            return new TaskResult( command, eeDetails );
-        }
-    }
+    // private class UpdateBasics extends BackgroundJob<UpdateEEDetailsCommand> {
+    //
+    // public UpdateBasics( UpdateEEDetailsCommand command ) {
+    // super( command );
+    //
+    // }
+    //
+    // @Override
+    // public TaskResult processJob() {
+    //
+    // Long entityId = command.getEntityId();
+    // ExpressionExperiment ee = expressionExperimentService.load( entityId );
+    // if ( ee == null )
+    // throw new IllegalArgumentException( "Cannot locate or access experiment with id=" + entityId );
+    //
+    // if ( StringUtils.isNotBlank( command.getShortName() ) && !command.getShortName().equals( ee.getShortName() ) ) {
+    // if ( expressionExperimentService.findByShortName( command.getShortName() ) != null ) {
+    // throw new IllegalArgumentException( "An experiment with short name '" + command.getShortName()
+    // + "' already exists" );
+    // }
+    // ee.setShortName( command.getShortName() );
+    // }
+    // if ( StringUtils.isNotBlank( command.getName() ) && !command.getName().equals( ee.getName() ) ) {
+    // ee.setName( command.getName() );
+    // }
+    // if ( StringUtils.isNotBlank( command.getDescription() )
+    // && !command.getDescription().equals( ee.getDescription() ) ) {
+    // ee.setDescription( command.getDescription() );
+    // }
+    //
+    // log.info( "Updating ..." );
+    // expressionExperimentService.update( ee );
+    //
+    // ExpressionExperimentDetailsValueObject eeDetails = loadExpressionExperimentDetails( ee.getId() );
+    // return new TaskResult( command, eeDetails );
+    // }
+    // }
 
     private class UpdatePubMed extends BackgroundJob<UpdatePubMedCommand> {
 
@@ -921,6 +921,8 @@ public class ExpressionExperimentController extends AbstractTaskService {
         mav.addObject( "numBioMaterials", numBioMaterials );
         mav.addObject( "bioMaterials", bioMaterials );
 
+        addQCInfo( expressionExperiment, mav );
+
         return mav;
     }
 
@@ -990,12 +992,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
         mav.addObject( "eeId", id );
         mav.addObject( "eeClass", ExpressionExperiment.class.getName() );
 
-        mav.addObject( "hasCorrDistFile", ExpressionExperimentQCUtils.hasCorrDistFile( expressionExperiment ) );
-        mav.addObject( "hasCorrMatFile", ExpressionExperimentQCUtils.hasCorrMatFile( expressionExperiment ) );
-        mav.addObject( "hasPvalueDistFiles", ExpressionExperimentQCUtils.hasPvalueDistFiles( expressionExperiment ) );
-        mav.addObject( "hasPCAFile", ExpressionExperimentQCUtils.hasPCAFile( expressionExperiment ) );
-        mav.addObject( "hasNodeDegreeDistFile", ExpressionExperimentQCUtils
-                .hasNodeDegreeDistFile( expressionExperiment ) );
+        addQCInfo( expressionExperiment, mav );
 
         boolean isPrivate = securityService.isPrivate( expressionExperiment );
         mav.addObject( "isPrivate", isPrivate );
@@ -1005,6 +1002,15 @@ public class ExpressionExperimentController extends AbstractTaskService {
         }
 
         return mav;
+    }
+
+    private void addQCInfo( ExpressionExperiment expressionExperiment, ModelAndView mav ) {
+        mav.addObject( "hasCorrDistFile", ExpressionExperimentQCUtils.hasCorrDistFile( expressionExperiment ) );
+        mav.addObject( "hasCorrMatFile", ExpressionExperimentQCUtils.hasCorrMatFile( expressionExperiment ) );
+        mav.addObject( "hasPvalueDistFiles", ExpressionExperimentQCUtils.hasPvalueDistFiles( expressionExperiment ) );
+        mav.addObject( "hasPCAFile", ExpressionExperimentQCUtils.hasPCAFile( expressionExperiment ) );
+        mav.addObject( "hasNodeDegreeDistFile", ExpressionExperimentQCUtils
+                .hasNodeDegreeDistFile( expressionExperiment ) );
     }
 
     /**
@@ -1036,15 +1042,47 @@ public class ExpressionExperimentController extends AbstractTaskService {
      * AJAX
      * 
      * @param command
-     * @return
+     * @return updated value object
      */
-    public String updateBasics( UpdateEEDetailsCommand command ) {
+    public ExpressionExperimentDetailsValueObject updateBasics( UpdateEEDetailsCommand command ) {
         if ( command.getEntityId() == null ) {
             throw new IllegalArgumentException( "Id cannot be null" );
         }
-        UpdateBasics runner = new UpdateBasics( command );
-        startTask( runner );
-        return runner.getTaskId();
+        
+        /*
+         * This should be fast so I'm not using a background task.
+         */
+        
+        // UpdateBasics runner = new UpdateBasics( command );
+        // startTask( runner );
+
+        Long entityId = command.getEntityId();
+        ExpressionExperiment ee = expressionExperimentService.load( entityId );
+        if ( ee == null )
+            throw new IllegalArgumentException( "Cannot locate or access experiment with id=" + entityId );
+
+        if ( StringUtils.isNotBlank( command.getShortName() ) && !command.getShortName().equals( ee.getShortName() ) ) {
+            if ( expressionExperimentService.findByShortName( command.getShortName() ) != null ) {
+                throw new IllegalArgumentException( "An experiment with short name '" + command.getShortName()
+                        + "' already exists, you must use a unique name" );
+            }
+            ee.setShortName( command.getShortName() );
+        }
+        if ( StringUtils.isNotBlank( command.getName() ) && !command.getName().equals( ee.getName() ) ) {
+            ee.setName( command.getName() );
+        }
+        if ( StringUtils.isNotBlank( command.getDescription() )
+                && !command.getDescription().equals( ee.getDescription() ) ) {
+            ee.setDescription( command.getDescription() );
+        }
+
+        log.info( "Updating " + ee );
+        expressionExperimentService.update( ee );
+
+        ExpressionExperimentDetailsValueObject eeDetails = loadExpressionExperimentDetails( ee.getId() );
+
+        // return runner.getTaskId();
+        return eeDetails;
     }
 
     /**

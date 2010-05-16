@@ -94,12 +94,21 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 				name : "differentialAnalysisEventType"
 			}]),
 
-	updateEEReport : function(id) {
+	/**
+	 * 
+	 * @param {}
+	 *            id
+	 * @param {}
+	 *            throbberEl optional element to show the throbber. If omitted, a popup progressbar is shown.
+	 */
+	updateEEReport : function(id, throbberEl) {
 		var callParams = [];
 		callParams.push(id);
 		callParams.push({
 					callback : function(data) {
-						var k = new Gemma.WaitHandler();
+						var k = new Gemma.WaitHandler({
+									throbberEl : throbberEl
+								});
 						this.relayEvents(k, ['done']);
 						k.handleWait(data, false);
 						k.on('done', function(payload) {
@@ -184,12 +193,11 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 						text : 'Help',
 						handler : function() {
 							Ext.Msg
-									.alert(
-											"Help with tagging",
-											"Select a 'category' for the term; then enter a term, "
-													+ "choosing from existing terms if possible. "
-													+ "Click 'create' to save it. You can also edit existing terms;"
-													+ " click 'save' to make the change stick, or 'delete' to remove a selected tag.");
+									.alert("Help with tagging",
+											"Select a 'category' for the term; then enter a term, " +
+													"choosing from existing terms if possible. " +
+													"Click 'create' to save it. You can also edit existing terms;" +
+													" click 'save' to make the change stick, or 'delete' to remove a selected tag.");
 						}
 					}, {
 						text : 'Done',
@@ -516,8 +524,8 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 							footer : true,
 							closable : true,
 							title : 'Differential expression analysis',
-							html : 'Please confirm. The analysis performed will be a ' + analysisType
-									+ '. If there is an existing analysis on the same factor(s), it will be deleted.',
+							html : 'Please confirm. The analysis performed will be a ' + analysisType +
+									'. If there is an existing analysis on the same factor(s), it will be deleted.',
 							buttons : [{
 										text : 'Proceed',
 										handler : function(btn, text) {
@@ -618,7 +626,7 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 		Gemma.EEManager.superclass.initComponent.call(this);
 
 		this.addEvents('done', 'reportUpdated', 'differential', 'missingValue', 'link', 'processedVector', 'deleted',
-				'tagsUpdated', 'updated', 'pubmedUpdated', 'pubmedRemove');
+				'tagsUpdated', 'updated');
 
 		this.save = function(id, fields) {
 			/*

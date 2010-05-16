@@ -80,7 +80,7 @@ public class BioAssayController extends AbstractTaskService {
      * @return
      */
     @RequestMapping("markBioAssayOutlier.html")
-    public ModelAndView markBioAssayOutlier( HttpServletRequest request, HttpServletResponse response ) {
+    public String markBioAssayOutlier( HttpServletRequest request, HttpServletResponse response ) {
         String stringId = request.getParameter( "id" );
         if ( stringId == null ) {
             // should be a validation error.
@@ -95,8 +95,7 @@ public class BioAssayController extends AbstractTaskService {
         }
 
         RemoveBioAssayJob job = new RemoveBioAssayJob( new TaskCommand( id ) );
-        super.startTask( job );
-        return new ModelAndView( new RedirectView( "/Gemma" ) ).addObject( "taskId", job.getTaskId() );
+        return super.startTask( job );
     }
 
     /**

@@ -66,7 +66,7 @@ public class ExpressionExperimentQCUtils {
      * @param ee
      * @return
      */
-    public static boolean hasNodeDegreeDistFile( ExpressionExperimentImpl ee ) {
+    public static boolean hasNodeDegreeDistFile( ExpressionExperiment ee ) {
         if ( ee == null ) return false;
         String shortName = ee.getShortName();
         // TODO implement
@@ -81,7 +81,7 @@ public class ExpressionExperimentQCUtils {
      * @param ee
      * @return
      */
-    public static boolean hasPCAFile( ExpressionExperimentImpl ee ) {
+    public static boolean hasPCAFile( ExpressionExperiment ee ) {
         if ( ee == null ) return false;
         String shortName = ee.getShortName();
         // TODO implement
