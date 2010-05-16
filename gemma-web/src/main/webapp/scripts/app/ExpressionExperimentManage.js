@@ -269,7 +269,7 @@ Ext.onReady(function() {
 		dataIndex : 'shortName',
 		renderer : shortNameRenderer,
 		locked : true
-/* LockingGridView */
+			/* LockingGridView */
 		}, {
 		header : 'Name',
 		sortable : true,
@@ -415,7 +415,9 @@ Ext.onReady(function() {
 				filterMode : filterMode,
 				ids : ids,
 				colModel : new Ext.ux.grid.LockingColumnModel(columns),
-				view : new Ext.ux.grid.LockingGridView(),
+				view : new Ext.ux.grid.LockingGridView({
+							syncHeights : true
+						}),
 				rowExpander : rowExpander,
 				plugins : rowExpander
 
