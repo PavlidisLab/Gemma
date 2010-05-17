@@ -596,9 +596,9 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 		// // window.location.reload(true);
 		// });
 
-		// manager.on('differential', function() {
-		// window.location.reload(true);
-		// });
+		 manager.on('differential', function() {
+					window.location.reload(true);
+				});
 		// manager.on('processedVector', function() {
 		// window.location.reload(true);
 		// });

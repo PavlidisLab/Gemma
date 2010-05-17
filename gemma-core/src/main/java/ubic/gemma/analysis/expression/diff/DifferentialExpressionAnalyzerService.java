@@ -112,7 +112,7 @@ public class DifferentialExpressionAnalyzerService {
                 .findByInvestigation( expressionExperiment );
 
         if ( diffAnalysis == null || diffAnalysis.isEmpty() ) {
-            log.info( "No differential expression analyses to delete for " + expressionExperiment.getShortName() );
+            log.debug( "No differential expression analyses to delete for " + expressionExperiment.getShortName() );
             return;
         }
 
@@ -120,6 +120,8 @@ public class DifferentialExpressionAnalyzerService {
             log.info( "Deleting old differential expression analysis for experiment "
                     + expressionExperiment.getShortName() );
             differentialExpressionAnalysisService.delete( de );
+
+            deleteOldDistributionMatrices( expressionExperiment, de );
         }
     }
 
@@ -153,6 +155,11 @@ public class DifferentialExpressionAnalyzerService {
                 log.info( "Deleting old differential expression analysis for experiment "
                         + expressionExperiment.getShortName() );
                 differentialExpressionAnalysisService.delete( de );
+
+                /*
+                 * Delete the old statistic distributions.
+                 */
+                deleteOldDistributionMatrices( expressionExperiment, de );
             }
         }
     }
@@ -436,6 +443,53 @@ public class DifferentialExpressionAnalyzerService {
 
     }
 
+    /**
+     * Remove old files which will otherwise be cruft.
+     * 
+     * @param ee
+     * @param analysis
+     */
+    private void deleteOldDistributionMatrices( ExpressionExperiment ee, DifferentialExpressionAnalysis analysis ) {
+
+        File f = prepareDirectoryForDistributions( ee );
+
+        boolean deleted = false;
+
+        String histFileName = cleanShortName( ee ) + ".an" + analysis.getId() + "." + "pvalues"
+                + DifferentialExpressionFileUtils.PVALUE_DIST_SUFFIX;
+        File oldf = new File( f, histFileName );
+        if ( oldf.exists() ) {
+            deleted = oldf.delete();
+            if ( !deleted ) {
+                log.warn( "Could not delete: " + oldf );
+            }
+        }
+
+        histFileName = cleanShortName( ee ) + ".an" + analysis.getId() + "." + "qvalues"
+                + DifferentialExpressionFileUtils.PVALUE_DIST_SUFFIX;
+        oldf = new File( f, histFileName );
+        if ( oldf.exists() ) {
+            deleted = oldf.delete();
+            if ( !deleted ) {
+                log.warn( "Could not delete: " + oldf );
+            }
+        }
+        histFileName = cleanShortName( ee ) + ".an" + analysis.getId() + "." + "scores"
+                + DifferentialExpressionFileUtils.PVALUE_DIST_SUFFIX;
+        oldf = new File( f, histFileName );
+        if ( oldf.exists() ) {
+            deleted = oldf.delete();
+            if ( !deleted ) {
+                log.warn( "Could not delete: " + oldf );
+            }
+        }
+    }
+
+    /**
+     * @param expressionExperiment
+     * @param diffExpressionAnalysis
+     * @return
+     */
     private DifferentialExpressionAnalysis persistAnalysis( ExpressionExperiment expressionExperiment,
             DifferentialExpressionAnalysis diffExpressionAnalysis ) {
         ExpressionExperimentSet eeSet = ExpressionExperimentSet.Factory.newInstance();
@@ -476,6 +530,16 @@ public class DifferentialExpressionAnalyzerService {
     }
 
     /**
+     * Avoid getting file names with spaces etc.
+     * 
+     * @param ee
+     * @return
+     */
+    private String cleanShortName( ExpressionExperiment ee ) {
+        return ee.getShortName().replaceAll( "[\\s\'\";,]", "_" );
+    }
+
+    /**
      * Print the distributions to a file.
      * 
      * @param extraSuffix eg qvalue, pvalue, score
@@ -490,12 +554,12 @@ public class DifferentialExpressionAnalyzerService {
 
         File f = prepareDirectoryForDistributions( expressionExperiment );
 
-        String histFileName = expressionExperiment.getShortName() + ".an" + analysisId + "." + extraSuffix
+        String histFileName = cleanShortName( expressionExperiment ) + ".an" + analysisId + "." + extraSuffix
                 + DifferentialExpressionFileUtils.PVALUE_DIST_SUFFIX;
 
         File outputFile = new File( f, histFileName );
 
-        log.info( outputFile );
+        // log.info( outputFile );
         try {
             FileWriter out = new FileWriter( outputFile, true /*
                                                                * clobber, but usually won't since file names are per
@@ -520,5 +584,4 @@ public class DifferentialExpressionAnalyzerService {
         }
 
     }
-
 }

@@ -178,7 +178,7 @@ public class ExpressionDataMatrixColumnSort {
             return ordered;
         }
 
-        log.info( "Factors: " + factors.size() );
+        log.debug( "Factors: " + factors.size() );
 
         /*
          * Recurse in and order each chunk. First split it up, but retaining the order we just made.
