@@ -78,7 +78,6 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentImpl;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetService;
@@ -707,6 +706,11 @@ public class ExpressionExperimentController extends AbstractTaskService {
             Collection<ExpressionExperimentValueObject> eeValObjectCol, Integer filter ) {
         Collection<ExpressionExperimentValueObject> filtered = new HashSet<ExpressionExperimentValueObject>();
         Collection<ExpressionExperiment> eesToKeep = null;
+        
+        /*
+         * FIXME it might be faster to include the EEs as an argument to these methods, as a constraint.
+         */
+        
         if ( filter == 1 ) {
             eesToKeep = expressionExperimentService.loadLackingEvent( DifferentialExpressionAnalysisEvent.class );
         } else if ( filter == 2 ) {
