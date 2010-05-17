@@ -32,6 +32,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.lang.time.DateUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -349,13 +350,14 @@ public class TaskRunningService implements InitializingBean {
                     /*
                      * This is reached when a task is cancelled.
                      * 
-                     * FIXME if it's a space task, we don't get this, the cause is a jspaces exception...need to fix
-                     * this, we get an ugly stack trace in the logs.
+                     * If it's from the grid, it's down three levels...
                      */
+
                     if ( e.getCause() instanceof InterruptedException
                             || e.getCause().getCause() instanceof InterruptedException
                             || e.getCause() instanceof CancellationException
-                            || e.getCause().getCause() instanceof CancellationException ) {
+                            || e.getCause().getCause() instanceof CancellationException
+                            || ExceptionUtils.getFullStackTrace( e ).contains( "InterruptedException" ) ) {
                         if ( cancelledTasks.containsKey( taskId ) ) {
                             log.debug( "Looks like " + taskId + " was cancelled" );
                         } else {
@@ -474,16 +476,19 @@ public class TaskRunningService implements InitializingBean {
             /*
              * Make sure the grid hasn't failed on us.
              */
-            if ( !SpacesUtil.isSpaceRunning() || !spaceMonitor.getLastStatusWasOK() ) {
+            if ( !SpacesUtil.isSpaceRunning() ) {
                 if ( startTime == null || !SpacesUtil.taskIsRunningOnGrid( taskId ) ) {
-                    ProgressManager.updateJob( taskId, "The compute grid has failed, job is not running, aborting" );
+                    ProgressManager.updateJob( taskId, "The compute grid has failed? Cancelling task " + taskId );
                     submittedTasks.get( taskId ).getCommand().setEmailAlert( true );
                     cancelTask( taskId );
                     return;
                 }
-                log.warn( "Possible grid problem for job " + taskId
-                        + " -- space monitor reports bad status or space is not running." );
-
+            }
+            if ( !spaceMonitor.getLastStatusWasOK() ) {
+                /*
+                 * This generates false positives.
+                 */
+                log.warn( "Possible grid problem for job " + taskId + " -- space monitor reports bad status " );
             }
         }
 
