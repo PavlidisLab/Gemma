@@ -22,6 +22,7 @@ import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.tagext.TagSupport;
 
 import ubic.gemma.analysis.stats.ExpressionDataSampleCorrelation;
+import ubic.gemma.security.SecurityService;
 
 /**
  * @author paul
@@ -148,11 +149,13 @@ public class ExperimentQCTag extends TagSupport {
                     .append( "<li><a title=\"Download a file containing the raw correlation matrix data\" class=\"newpage\"  target=\"_blank\"  href=\"visualizeCorrMat.html?id="
                             + this.eeid + "&text=1\">Get data</a></li>" );
 
-            buf
-                    .append( "<li><a  href=\"/Gemma/expressionExperiment/refreshCorrMatrix.html?id="
-                            + this.eeid
-                            + "\" ><img src=\"/Gemma/images/icons/arrow_refresh_small.png\"  title=\"refresh\" alt=\"refresh\" /></span>" );
-
+            /* Need to have a security check before showing this. */
+            // buf
+            // .append( "<li><a  href=\"/Gemma/expressionExperiment/refreshCorrMatrix.html?id="
+            // + this.eeid
+            // +
+            // "\" ><img src=\"/Gemma/images/icons/arrow_refresh_small.png\"  title=\"refresh\" alt=\"refresh\" /></span>"
+            // );
             buf.append( "</ul></td>" );
         } else {
             buf.append( placeHolder );
