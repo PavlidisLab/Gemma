@@ -77,7 +77,7 @@ public class BioAssayController extends AbstractTaskService {
     /**
      * @param request
      * @param response
-     * @return
+     * @return taskId
      */
     @RequestMapping("markBioAssayOutlier.html")
     public String markBioAssayOutlier( HttpServletRequest request, HttpServletResponse response ) {
