@@ -13,7 +13,7 @@
 	version: $Id$
 -->
 <compass-core-mapping package="ubic.gemma.model">
-	<class name="genome.GeneImpl" alias="gene" root="true">
+	<class name="genome.GeneImpl" alias="gene" root="true"  support-unmarshall="false">
 		<id name="id" />
 		<property name="name">
 			<meta-data>name</meta-data>
@@ -43,7 +43,7 @@
 			<meta-data>description</meta-data>
 		</property>
 	</class>
-	<class name="genome.TaxonImpl" alias="taxon" root="false">
+	<class name="genome.TaxonImpl" alias="taxon" root="false"  support-unmarshall="false">
 		<id name="id" />
 		<property name="scientificName">
 			<meta-data>scientific name</meta-data>
@@ -58,7 +58,7 @@
 			<meta-data>ncbi id</meta-data>
 		</property>
 	</class>
-	<class name="common.description.BibliographicReferenceImpl" alias="bibliographicReference" root="false">
+	<class name="common.description.BibliographicReferenceImpl" alias="bibliographicReference" root="false"  support-unmarshall="false">
 		<id name="id" />
 		<property name="name">
 			<meta-data>name</meta-data>
