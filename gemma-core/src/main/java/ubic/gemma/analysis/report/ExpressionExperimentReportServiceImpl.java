@@ -222,12 +222,11 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
         Map<Securable, Boolean> privacyInfo = securityService.arePrivate( ees );
         Map<Securable, Boolean> sharingInfo = securityService.areShared( ees );
 
-        Date mostRecentDate = new Date( 0 );
-
         /*
          * add in the last events of interest for all eeVos This step is remarkably slow.
          */
         for ( ExpressionExperimentValueObject eeVo : vos ) {
+            Date mostRecentDate = new Date( 0 );
             Long id = eeVo.getId();
 
             ExpressionExperiment ee = eemap.get( id );
@@ -341,7 +340,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
                 }
             }
 
-            results.put( ee.getId(), mostRecentDate );
+            if ( mostRecentDate.after( new Date( 0 ) ) ) results.put( ee.getId(), mostRecentDate );
         }
 
         if ( timer.getTime() > 1000 ) log.info( "Retrieving audit events took " + timer.getTime() + "ms" );

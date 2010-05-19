@@ -33,7 +33,6 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -57,8 +56,6 @@ import ubic.gemma.loader.entrez.pubmed.PubMedSearch;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
-import ubic.gemma.model.common.auditAndSecurity.AuditEventService;
-import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.LinkAnalysisEvent;
 import ubic.gemma.model.common.description.BibliographicReference;
@@ -271,11 +268,6 @@ public class ExpressionExperimentController extends AbstractTaskService {
 
     private static final Boolean AJAX = true;
 
-    /*
-     * If this is too long, tooltips break.
-     */
-    private static final int MAX_EVENT_DESCRIPTION_LENGTH = 200;
-
     private static final int TRIM_SIZE = 220;
 
     @Autowired
@@ -283,12 +275,6 @@ public class ExpressionExperimentController extends AbstractTaskService {
 
     @Autowired
     private AuditableUtil auditableUtil;
-
-    @Autowired
-    private AuditEventService auditEventService;
-
-    @Autowired
-    private AuditTrailService auditTrailService;
 
     @Autowired
     private BibliographicReferenceService bibliographicReferenceService;
@@ -1024,8 +1010,6 @@ public class ExpressionExperimentController extends AbstractTaskService {
 
         mav.addObject( "expressionExperiment", expressionExperiment );
 
-        // getEventsOfInterest( expressionExperiment, mav ); // not needed, we fetch these later.
-
         Collection<Characteristic> characteristics = expressionExperiment.getCharacteristics();
         mav.addObject( "characteristics", characteristics );
 
@@ -1159,10 +1143,9 @@ public class ExpressionExperimentController extends AbstractTaskService {
         if ( citation.getAuthorList() != null ) {
             String[] authors = StringUtils.split( citation.getAuthorList(), ";" );
             // if there are multiple authors, only display the first author
-            if ( authors.length == 0 ) {
-            } else if ( authors.length == 1 ) {
+            if ( authors.length == 1 ) {
                 buf.append( authors[0] + " " );
-            } else {
+            } else if ( authors.length > 0 ) {
                 buf.append( authors[0] + " et al. " );
             }
         } else {
@@ -1214,38 +1197,6 @@ public class ExpressionExperimentController extends AbstractTaskService {
             eeValObjectCol = this.getFilteredExpressionExperimentValueObjects( null, ids, filterDataByUser );
         }
         return eeValObjectCol;
-    }
-
-    /**
-     * Trouble, validation, sample removal.
-     * 
-     * @param expressionExperiment
-     * @param mav
-     */
-    private void getEventsOfInterest( ExpressionExperiment expressionExperiment, ModelAndView mav ) {
-        AuditEvent troubleEvent = getLastTroubleEvent( expressionExperiment );
-        if ( troubleEvent != null ) {
-            mav.addObject( "troubleEvent", troubleEvent );
-            auditEventService.thaw( troubleEvent );
-            mav.addObject( "troubleEventDescription", StringUtils.abbreviate( StringEscapeUtils.escapeXml( troubleEvent
-                    .toString() ), MAX_EVENT_DESCRIPTION_LENGTH ) );
-        }
-        AuditEvent validatedEvent = getLastValidationEvent( expressionExperiment );
-        if ( validatedEvent != null ) {
-            mav.addObject( "validatedEvent", validatedEvent );
-            auditEventService.thaw( validatedEvent );
-            mav.addObject( "validatedEventDescription", StringUtils.abbreviate( StringEscapeUtils
-                    .escapeXml( validatedEvent.toString() ), MAX_EVENT_DESCRIPTION_LENGTH ) );
-        }
-
-        Collection<AuditEvent> sampleRemovalEvents = this.getSampleRemovalEvents( expressionExperiment );
-        if ( sampleRemovalEvents.size() > 0 ) {
-            AuditEvent event = sampleRemovalEvents.iterator().next();
-            mav.addObject( "samplesRemoved", event ); // todo: handle multiple
-            auditEventService.thaw( event );
-            mav.addObject( "samplesRemovedDescription", StringUtils.abbreviate( StringEscapeUtils.escapeXml( event
-                    .toString() ), MAX_EVENT_DESCRIPTION_LENGTH ) );
-        }
     }
 
     /**
@@ -1354,29 +1305,6 @@ public class ExpressionExperimentController extends AbstractTaskService {
     }
 
     /**
-     * @param ee
-     * @return
-     */
-    private AuditEvent getLastTroubleEvent( ExpressionExperiment ee ) {
-        // Why doesn't this use expressionExperimentService.getLastTroubleEvent
-        // ???
-        AuditEvent event = auditTrailService.getLastTroubleEvent( ee );
-        if ( event != null ) return event;
-
-        // See if array design have trouble.
-        for ( Object o : expressionExperimentService.getArrayDesignsUsed( ee ) ) {
-            event = auditTrailService.getLastTroubleEvent( ( ArrayDesign ) o );
-            if ( event != null ) return event;
-        }
-
-        return null;
-    }
-
-    private AuditEvent getLastValidationEvent( ExpressionExperiment ee ) {
-        return auditTrailService.getLastValidationEvent( ee );
-    }
-
-    /**
      * @param recentDateInfo
      * @param expressionExperiments
      * @param limit Only this many will be returned (ties at the cutoff date will result in more), or all of them, but
@@ -1401,13 +1329,6 @@ public class ExpressionExperimentController extends AbstractTaskService {
         dates.addAll( recentDateInfo.values() );
         Collections.sort( dates );
 
-        if ( timer.getTime() > 1000 ) {
-            log.info( "Date sort: " + timer.getTime() + "ms" );
-        }
-
-        timer.reset();
-        timer.start();
-
         Date cutoff = null;
         int j = 0;
         for ( int i = dates.size() - 1; i >= 0; i-- ) {
@@ -1419,11 +1340,10 @@ public class ExpressionExperimentController extends AbstractTaskService {
         }
 
         Collection<Long> keepers = new HashSet<Long>();
-        j = 0;
-        for ( Long v : recentDateInfo.keySet() ) {
-            Date d = recentDateInfo.get( v );
+        for ( Long eeId : recentDateInfo.keySet() ) {
+            Date d = recentDateInfo.get( eeId );
             if ( d.after( cutoff ) || d.equals( cutoff ) ) {
-                keepers.add( v );
+                keepers.add( eeId );
             }
             if ( keepers.size() >= limit ) break;
         }
@@ -1446,7 +1366,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
      * Updates the value objects with event information and summaries
      * 
      * @param expressionExperiments
-     * @return most recently changed information
+     * @return most recently changed information: Map of EE ID to date of last update (or create)
      */
     private Map<Long, Date> getReportData( Collection<ExpressionExperimentValueObject> expressionExperiments ) {
 
@@ -1466,24 +1386,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
                 }
             }
         }
-
-        assert eventDates.size() == expressionExperiments.size();
         return eventDates;
-    }
-
-    /**
-     * @param ee
-     * @return
-     */
-    private Collection<AuditEvent> getSampleRemovalEvents( ExpressionExperiment ee ) {
-        Collection<ExpressionExperiment> ees = new HashSet<ExpressionExperiment>();
-        ees.add( ee );
-        Map<ExpressionExperiment, Collection<AuditEvent>> evMap = expressionExperimentService
-                .getSampleRemovalEvents( ees );
-        if ( evMap.containsKey( ee ) ) {
-            return evMap.get( ee );
-        }
-        return new HashSet<AuditEvent>();
     }
 
     /**
