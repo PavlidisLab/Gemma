@@ -60,7 +60,8 @@ public class ProgressAppender extends AppenderSkeleton {
         }
 
         if ( event.getLevel().isGreaterOrEqual( Level.INFO ) && event.getMessage() != null ) {
-            ProgressManager.updateCurrentThreadsProgressJob( event.getMessage().toString() );
+            boolean updated = ProgressManager.updateCurrentThreadsProgressJob( event.getMessage().toString() );
+            if ( !updated ) System.err.println( "Failed to log update. No job for thread?" );
         }
     }
 
