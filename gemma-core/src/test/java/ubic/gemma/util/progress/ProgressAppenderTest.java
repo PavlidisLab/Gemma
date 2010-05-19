@@ -18,8 +18,11 @@
  */
 package ubic.gemma.util.progress;
 
+import java.util.Enumeration;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.log4j.Appender;
 import org.apache.log4j.Level;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
@@ -34,6 +37,9 @@ import ubic.gemma.job.progress.ProgressManager;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
+ * For this test to work you should have the appender configured in log4j.properties. If not it will be set up
+ * programatically.
+ * 
  * @author pavlidis
  * @version $Id$
  */
@@ -45,23 +51,35 @@ public class ProgressAppenderTest extends BaseSpringContextTest {
     Level oldLevel;
 
     Logger log4jLogger;
-    ProgressAppender progressAppender;
+
     // important for this test!
     private static Log log = LogFactory.getLog( ProgressAppenderTest.class.getName() );
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.testing.BaseSpringContextTest#onSetUpInTransaction()
      */
+    @SuppressWarnings("unchecked")
     @Before
     public void setup() throws Exception {
 
         String loggerName = "ubic.gemma";
         log4jLogger = LogManager.exists( loggerName );
 
-        progressAppender = new ProgressAppender();
-        log4jLogger.addAppender( progressAppender );
+        Enumeration<Appender> appenders = log4jLogger.getAllAppenders();
+
+        Appender progressAppender = null;
+        for ( ; appenders.hasMoreElements(); ) {
+            Appender appender = appenders.nextElement();
+            if ( appender instanceof ProgressAppender ) {
+                progressAppender = appender;
+            }
+        }
+
+        if ( progressAppender == null ) {
+            log.warn( "There is no progress appender configured; adding one for test" );
+            log4jLogger.addAppender( new ProgressAppender("randomtaskidF") );
+        }
 
         oldLevel = log4jLogger.getLevel();
 
@@ -72,14 +90,12 @@ public class ProgressAppenderTest extends BaseSpringContextTest {
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.testing.BaseSpringContextTest#onTearDownInTransaction()
      */
     @After
     public void teardown() throws Exception {
         ProgressManager.destroyProgressJob( job );
         log4jLogger.setLevel( oldLevel );
-        log4jLogger.removeAppender( progressAppender );
     }
 
     @Test

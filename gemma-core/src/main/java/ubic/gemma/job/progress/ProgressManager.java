@@ -214,40 +214,6 @@ public class ProgressManager {
     }
 
     /**
-     * Increase the progress state of the job by 1 percent.
-     * 
-     * @return true if there is a progress job.
-     */
-    public static boolean nudgeCurrentThreadsProgressJob() {
-        ProgressJob threadsJob = null;
-
-        if ( currentJob.get() == null ) return false;
-
-        Object id = currentJob.get();
-        threadsJob = progressJobsByTaskId.get( id );
-        threadsJob.nudgeProgress();
-        return true;
-    }
-
-    /**
-     * Increase the progress state of the job by 1 percent and update the description
-     * 
-     * @param message The new description for the job.
-     * @return true if there is a progress job.
-     */
-    public static boolean nudgeCurrentThreadsProgressJob( String message ) {
-        ProgressJob threadsJob = null;
-
-        if ( currentJob.get() == null ) return false;
-
-        Object id = currentJob.get();
-        threadsJob = progressJobsByTaskId.get( id );
-        threadsJob.nudgeProgress();
-        // threadsJob.setDescription( message );
-        return true;
-    }
-
-    /**
      * @param taskId
      * @param string
      */
@@ -304,57 +270,6 @@ public class ProgressManager {
             return;
         }
         destroyFailedProgressJob( job, false, cause );
-    }
-
-    /**
-     * This will send an update to the current threads progress job, if it has one. Should be used for adding progress
-     * updates with minimal intrusion into objects that are long running.
-     * 
-     * @param pData a progress data instance.
-     * @return true if the thread had a progress job already and it was successful in updating it, false otherwise.
-     */
-    public static boolean updateCurrentThreadsProgressJob( ProgressData pData ) {
-
-        ProgressJob threadsJob = null;
-
-        if ( currentJob.get() == null ) return false;
-
-        Object id = currentJob.get();
-        threadsJob = progressJobsByTaskId.get( id );
-
-        if ( threadsJob == null ) {
-            log.debug( "Current threads job id not found in active job list. Current threads job id is invalid. id =: "
-                    + id );
-            return false;
-        }
-        if ( pData == null )
-            threadsJob.nudgeProgress();
-        else
-            threadsJob.updateProgress( pData );
-
-        return true;
-    }
-
-    /**
-     * @param message
-     * @return
-     */
-    public static boolean updateCurrentThreadsProgressJob( String message ) {
-
-        ProgressJob threadsJob = null;
-
-        if ( currentJob.get() == null ) {
-            return false;
-        }
-
-        Object id = currentJob.get();
-        threadsJob = progressJobsByTaskId.get( id );
-
-        if ( threadsJob == null ) return false;
-
-        threadsJob.updateProgress( message );
-
-        return true;
     }
 
     /**

@@ -61,19 +61,27 @@ public abstract class BackgroundJob<T extends TaskCommand> implements Callable<T
      * (non-Javadoc)
      * 
      * @see java.util.concurrent.Callable#call()
+     * 
+     * @see TaskMethodAdvice
      */
     public TaskResult call() throws Exception {
         /*
          * Do any preprocessing here
          */
         TaskResult result = new TaskResult( this.getCommand(), null );
-        ProgressAppender javaSpacesAppender = null;
+        ProgressAppender logAppender = null;
         try {
-            javaSpacesAppender = new ProgressAppender();
-            Logger logger = LogManager.getLogger( "ubic.gemma" );
-            Logger baseCodeLogger = LogManager.getLogger( "ubic.basecode" );
-            logger.addAppender( javaSpacesAppender );
-            baseCodeLogger.addAppender( javaSpacesAppender );
+
+            if ( !this.command.isWillRunOnGrid() ) {
+                /*
+                 * Set up a local logger. On the grid, logging is set up by the TaskMethodAdvice
+                 */
+                logAppender = new ProgressAppender( this.taskId );
+                Logger logger = LogManager.getLogger( "ubic.gemma" );
+                Logger baseCodeLogger = LogManager.getLogger( "ubic.basecode" );
+                logger.addAppender( logAppender );
+                baseCodeLogger.addAppender( logAppender );
+            }
 
             result = this.processJob();
 
@@ -88,11 +96,11 @@ public abstract class BackgroundJob<T extends TaskCommand> implements Callable<T
             /*
              * Do any cleanup here.
              */
-            if ( javaSpacesAppender != null ) {
+            if ( logAppender != null ) {
                 Logger logger = LogManager.getLogger( "ubic.gemma" );
                 Logger baseCodeLogger = LogManager.getLogger( "ubic.basecode" );
-                logger.removeAppender( javaSpacesAppender );
-                baseCodeLogger.removeAppender( javaSpacesAppender );
+                logger.removeAppender( logAppender );
+                baseCodeLogger.removeAppender( logAppender );
             }
         }
         return result;

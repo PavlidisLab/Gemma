@@ -45,6 +45,7 @@ import com.j_spaces.core.client.ExternalEntry;
  * 
  * @author keshav
  * @version $Id$
+ * @see SpacesProgressAppender
  */
 public class SpacesJobObserver implements RemoteEventListener {
     private Log log = LogFactory.getLog( this.getClass() );

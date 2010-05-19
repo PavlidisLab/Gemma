@@ -22,7 +22,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.log4j.Level;
 import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger; 
+import org.apache.log4j.Logger;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -42,6 +42,7 @@ import ubic.gemma.job.progress.grid.SpacesProgressAppender;
  * @author paul
  * @version $Id$
  * @see GridTaskInterceptor
+ * @see BackgroundJob
  */
 @Aspect
 public class TaskMethodAdvice {
@@ -123,8 +124,6 @@ public class TaskMethodAdvice {
         SpacesProgressAppender javaSpacesAppender = new SpacesProgressAppender( gigaSpacesTemplate, command.getTaskId() );
         Logger logger = LogManager.getLogger( "ubic.gemma" );
         Logger baseCodeLogger = LogManager.getLogger( "ubic.basecode" );
-        log.debug( baseCodeLogger.getLevel() + " is the basecode logging level" );
-        javaSpacesAppender.setThreshold( Level.INFO );
         logger.addAppender( javaSpacesAppender );
         baseCodeLogger.addAppender( javaSpacesAppender );
 

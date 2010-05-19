@@ -25,6 +25,7 @@ import org.apache.log4j.Level;
 import org.apache.log4j.spi.LoggingEvent;
 import org.springmodules.javaspaces.gigaspaces.GigaSpacesTemplate;
 
+import ubic.gemma.job.grid.util.SpacesJobObserver;
 import ubic.gemma.job.grid.util.SpacesUtil;
 import ubic.gemma.job.progress.ProgressAppender;
 
@@ -35,6 +36,7 @@ import ubic.gemma.job.progress.ProgressAppender;
  * 
  * @author keshav
  * @version $Id$
+ * @see SpacesJobObserver
  */
 public class SpacesProgressAppender extends ProgressAppender {
 
@@ -43,6 +45,7 @@ public class SpacesProgressAppender extends ProgressAppender {
     private GigaSpacesTemplate gigaSpacesTemplate = null;
 
     public SpacesProgressAppender( GigaSpacesTemplate gigaSpacesTemplate, String taskId ) {
+        super( taskId );
         assert gigaSpacesTemplate != null;
         assert taskId != null;
 
@@ -55,17 +58,7 @@ public class SpacesProgressAppender extends ProgressAppender {
     @Override
     protected void append( LoggingEvent event ) {
 
-        /*
-         * Important: this method gets events from all threads.
-         */
-
-        /*
-         * Thus we handle the case where there are multiple workers in the same JVM, and they are all logginig things.
-         * Each 'worker' runs in its own thread, and if we don't check this, we get logging going across workers since
-         * there is nothing else to distinguish them within the JVM - all logging events go here. This works but it
-         * isn't perfect: logging from child threads will be lost.
-         */
-        if ( !event.getThreadName().equals( this.getThreadName() ) ) { 
+        if ( event.getMDC( "taskId" ) == null || !event.getMDC( "taskId" ).equals( this.taskId ) ) {
             return;
         }
 

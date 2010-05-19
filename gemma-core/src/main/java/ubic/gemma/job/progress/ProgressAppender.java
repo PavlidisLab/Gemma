@@ -20,6 +20,7 @@ package ubic.gemma.job.progress;
 
 import org.apache.log4j.AppenderSkeleton;
 import org.apache.log4j.Level;
+import org.apache.log4j.MDC;
 import org.apache.log4j.spi.LoggingEvent;
 
 /**
@@ -30,22 +31,16 @@ import org.apache.log4j.spi.LoggingEvent;
  */
 public class ProgressAppender extends AppenderSkeleton {
 
-    public ProgressAppender() {
+    public ProgressAppender( String taskId ) {
         super();
         /*
          * This has to be set at construction time.
          */
-        this.threadName = Thread.currentThread().getName();
+        this.taskId = taskId;
+        MDC.put( "taskId", taskId );
     }
 
-    private String threadName;
-
-    /**
-     * @return the threadName
-     */
-    public String getThreadName() {
-        return threadName;
-    }
+    protected String taskId;
 
     /*
      * (non-Javadoc)
@@ -54,14 +49,13 @@ public class ProgressAppender extends AppenderSkeleton {
      */
     @Override
     protected void append( LoggingEvent event ) {
-        if ( !event.getThreadName().equals( this.threadName ) ) {
-            System.err.println( this.threadName + " !=" + event.getThreadName() );
+
+        if ( event.getMDC( "taskId" ) == null || !event.getMDC( "taskId" ).equals( this.taskId ) ) {
             return;
         }
 
         if ( event.getLevel().isGreaterOrEqual( Level.INFO ) && event.getMessage() != null ) {
-            boolean updated = ProgressManager.updateCurrentThreadsProgressJob( event.getMessage().toString() );
-            if ( !updated ) System.err.println( "Failed to log update. No job for thread?" );
+            ProgressManager.updateJob( this.taskId, event.getMessage().toString() );
         }
     }
 
