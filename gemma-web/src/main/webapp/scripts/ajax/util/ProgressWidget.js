@@ -23,6 +23,7 @@ Gemma.ProgressWindow = Ext.extend(Ext.Window, {
 			resizable : false,
 			collapsible : false,
 			autoHeight : true,
+
 			// autoWidth : true,
 			width : 400,
 			id : "progressWidget-window",
@@ -39,9 +40,11 @@ Gemma.ProgressWindow = Ext.extend(Ext.Window, {
 
 				Gemma.ProgressWindow.superclass.initComponent.call(this);
 
-				this.addEvents('success', 'failed');
+				this.addEvents('done', 'fail');
 
 				this.on('show', this.start, this);
+
+				this.relayEvents(this.pBar, ['done', 'fail']);
 			},
 
 			start : function() {

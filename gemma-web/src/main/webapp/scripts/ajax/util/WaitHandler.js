@@ -35,6 +35,7 @@ Gemma.WaitHandler = Ext.extend(Ext.util.Observable, {
 			constructor : function(config) {
 				this.addEvents({
 							"done" : true,
+							"fail" : true,
 							"background" : true
 						});
 
@@ -60,7 +61,7 @@ Gemma.WaitHandler = Ext.extend(Ext.util.Observable, {
 									this.fireEvent('done', data);
 								}.createDelegate(this),
 								errorHandler : function(data) {
-									this.fireEvent('done', data);
+									this.fireEvent('fail', data);
 								}.createDelegate(this),
 								showAllMessages : showAllMessages
 							});
@@ -72,8 +73,8 @@ Gemma.WaitHandler = Ext.extend(Ext.util.Observable, {
 						var el = Ext.get(this.throbberEl);
 
 						var id = Ext.id();
-						Ext.DomHelper.append(this.throbberEl, '<span id="' + id +
-										'"><img src="/Gemma/images/default/tree/loading.gif"/></span>');
+						Ext.DomHelper.append(this.throbberEl, '<span id="' + id
+										+ '"><img src="/Gemma/images/default/tree/loading.gif"/></span>');
 
 						this.on('done', function(data) {
 									Ext.DomHelper.overwrite(id, "");
