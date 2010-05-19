@@ -281,12 +281,17 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
 
             final Transformer rowNameExtractor = TransformerUtils.invokerTransformer( "getId" );
 
+            /*
+             * Run the analysis in R.
+             */
             final Map<String, LinearModelSummary> rawResults = runAnalysis( namedMatrix, label2Factors, modelFormula,
                     rowNameExtractor );
 
             if ( rawResults.size() == 0 ) {
                 throw new IllegalStateException( "Got no results from the analysis" );
             }
+            
+            log.info("Post-processing");
 
             /*
              * Initialize some data structures we need to hold results
@@ -630,10 +635,9 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
 
         Future<?> f = service.submit( new Runnable() {
             public void run() {
-
-                Map<String, LinearModelSummary> res = rc.rowApplyLinearModel( matrixName, modelFormula, factorNameMap
-                        .keySet().toArray( new String[] {} ) );
-                rawResults.putAll( res );
+                 Map<String, LinearModelSummary> res = rc.rowApplyLinearModel( matrixName, modelFormula, factorNameMap
+                         .keySet().toArray( new String[] {} ) );
+                 rawResults.putAll( res );
 
             }
         } );
