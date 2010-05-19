@@ -344,7 +344,7 @@ public class ProgressManager {
         ProgressJob threadsJob = null;
 
         if ( currentJob.get() == null ) {
-            log.warn( "No job running in thread: " + Thread.currentThread().getName() );
+            log.debug( "No job running in thread: " + Thread.currentThread().getName() );
             return false;
         }
 
