@@ -41,6 +41,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.tasks.analysis.diffex.DifferentialExpressionAnalysisTask;
 import ubic.gemma.tasks.analysis.diffex.DifferentialExpressionAnalysisTaskCommand;
+import ubic.gemma.util.ConfigUtils;
 
 /**
  * A controller to run differential expression analysis either locally or in a space.
@@ -66,24 +67,34 @@ public class DifferentialExpressionAnalysisController extends AbstractTaskServic
 
         final DifferentialExpressionAnalysisTask taskProxy = ( DifferentialExpressionAnalysisTask ) getProxy();
 
-        /**
-         * @param taskId
-         * @param commandObj
-         */
         public DiffAnalysisSpaceJob( DifferentialExpressionAnalysisTaskCommand commandObj ) {
             super( commandObj );
-
         }
 
-        /**
-         * @return
-         */
         @Override
         public TaskResult processJob() {
             return taskProxy.execute( command );
         }
 
     }
+
+    /**
+     * Local task.
+     */
+    private class DiffAnalysisJob extends BackgroundJob<DifferentialExpressionAnalysisTaskCommand> {
+        public DiffAnalysisJob( DifferentialExpressionAnalysisTaskCommand commandObj ) {
+            super( commandObj );
+        }
+
+        @Override
+        public TaskResult processJob() {
+            return differentialExpressionAnalysisTask.execute( command );
+        }
+
+    }
+
+    @Autowired
+    private DifferentialExpressionAnalysisTask differentialExpressionAnalysisTask;
 
     @Autowired
     private DifferentialExpressionAnalyzer differentialExpressionAnalyzer;
@@ -271,6 +282,7 @@ public class DifferentialExpressionAnalysisController extends AbstractTaskServic
         DifferentialExpressionAnalysisTaskCommand cmd = new DifferentialExpressionAnalysisTaskCommand( ee );
         cmd.setAnalysisType( type );
         cmd.setFactors( factors );
+        cmd.setIncludeInteractions( includeInteractions );
 
         log.info( "Initializing analysis" );
         return super.run( cmd );
@@ -291,7 +303,11 @@ public class DifferentialExpressionAnalysisController extends AbstractTaskServic
      */
     @Override
     protected BackgroundJob<DifferentialExpressionAnalysisTaskCommand> getInProcessRunner( TaskCommand command ) {
-        return null;
+        if ( ConfigUtils.getBoolean( "gemma.grid.gridonly.diff" ) ) {
+            return null;
+        }
+        return new DiffAnalysisJob( ( DifferentialExpressionAnalysisTaskCommand ) command );
+
     }
 
     /*

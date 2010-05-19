@@ -31,6 +31,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.tasks.analysis.coexp.LinkAnalysisTask;
 import ubic.gemma.tasks.analysis.coexp.LinkAnalysisTaskCommand;
+import ubic.gemma.util.ConfigUtils;
 
 /**
  * A controller to preprocess expression data vectors.
@@ -134,6 +135,9 @@ public class LinkAnalysisController extends AbstractTaskService {
      */
     @Override
     protected BackgroundJob<LinkAnalysisTaskCommand> getSpaceRunner( TaskCommand command ) {
+        if ( ConfigUtils.getBoolean( "gemma.grid.gridonly.coexp" ) ) {
+            return null;
+        }
         return new LinkAnalysisSpaceJob( ( LinkAnalysisTaskCommand ) command );
     }
 
