@@ -19,6 +19,7 @@
 package ubic.gemma.analysis.service;
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -113,17 +114,6 @@ public abstract class ExpressionExperimentVectorManipulatingService {
         } else {
             throw new UnsupportedOperationException( "Don't know how to handle " + representation );
         }
-    }
-
-    /**
-     * @param expExp
-     * @param type
-     * @return
-     */
-    protected Collection<? extends DesignElementDataVector> getVectorsForOneQuantitationType( QuantitationType type ) {
-        Collection<? extends DesignElementDataVector> vectorsForQt = designElementDataVectorService.find( type );
-        designElementDataVectorService.thaw( vectorsForQt );
-        return vectorsForQt;
     }
 
     public void setDesignElementDataVectorService( DesignElementDataVectorService designElementDataVectorService ) {
