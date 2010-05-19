@@ -34,7 +34,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.auditAndSecurity.ContactService;
-import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -55,15 +54,12 @@ public class ExpressionExperimentServiceTest extends BaseSpringContextTest {
     @Autowired
     ExpressionExperimentService expressionExperimentService;
 
-    private static final String EE_NAME = RandomStringUtils.randomAlphanumeric( 20 );
-    static ContactService cs = null;
-    static ExpressionExperiment ee = null;
-    static ExternalDatabase ed;
-    static String accession;
-    static String contactName;
-    static BibliographicReference primary;
-    static BibliographicReference other;
-    static boolean persisted = false;
+    private static final String EE_NAME = RandomStringUtils.randomAlphanumeric( 20 ); 
+    ExpressionExperiment ee = null;
+    ExternalDatabase ed;
+    String accession;
+    String contactName;
+    boolean persisted = false;
 
     /**
      * @exception Exception
@@ -80,8 +76,7 @@ public class ExpressionExperimentServiceTest extends BaseSpringContextTest {
             ed = accessionEntry.getExternalDatabase();
             ee.setAccession( accessionEntry );
 
-            Contact c = this.getTestPersistentContact();
-            contactName = c.getName();
+            Contact c = this.getTestPersistentContact(); 
             ee.setOwner( c );
 
             expressionExperimentService.update( ee );
