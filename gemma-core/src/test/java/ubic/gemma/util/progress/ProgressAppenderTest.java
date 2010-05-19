@@ -18,11 +18,8 @@
  */
 package ubic.gemma.util.progress;
 
-import java.util.Enumeration;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.log4j.Appender;
 import org.apache.log4j.Level;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
@@ -37,9 +34,6 @@ import ubic.gemma.job.progress.ProgressManager;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
- * For this test to work you should have the appender configured in log4j.properties. If not it will be set up
- * programatically.
- * 
  * @author pavlidis
  * @version $Id$
  */
