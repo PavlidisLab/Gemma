@@ -21,6 +21,7 @@ package ubic.gemma.model.expression.bioAssayData;
 import org.springframework.security.access.annotation.Secured;
 
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 
 /**
  * @author Paul
@@ -36,33 +37,41 @@ public interface DesignElementDataVectorService {
     /**
      * 
      */
-    @Secured( { "GROUP_ADMIN" })
+    @Secured( { "GROUP_USER" })
     public java.util.Collection<? extends DesignElementDataVector> create(
             java.util.Collection<? extends DesignElementDataVector> vectors );
 
     /**
      * 
      */
+    @Secured( { "GROUP_ADMIN" })
     public java.util.Collection<? extends DesignElementDataVector> find(
             java.util.Collection<QuantitationType> quantitationTypes );
 
     /**
      * 
      */
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_DATAVECTOR_COLLECTION_READ" })
     public java.util.Collection<? extends DesignElementDataVector> find(
             ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType );
 
     /**
      * 
      */
-    public java.util.Collection<? extends DesignElementDataVector> find(
-            ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign,
-            ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType );
+    @Secured( { "GROUP_ADMIN" })
+    public java.util.Collection<? extends DesignElementDataVector> find( ArrayDesign arrayDesign,
+            QuantitationType quantitationType );
+
+    /**
+     * @param bioAssayDimension
+     * @return any vectors that reference the given bioAssayDimensin
+     */
+    public java.util.Collection<? extends DesignElementDataVector> find( BioAssayDimension bioAssayDimension );
 
     /**
      * 
      */
-    public ubic.gemma.model.expression.bioAssayData.DesignElementDataVector load( java.lang.Long id );
+    public DesignElementDataVector load( java.lang.Long id );
 
     /**
      * 
@@ -105,7 +114,7 @@ public interface DesignElementDataVectorService {
      * Thaws associations of the given DesignElementDataVector
      * </p>
      */
-    public void thaw( RawExpressionDataVector designElementDataVector );
+    public void thaw( DesignElementDataVector designElementDataVector );
 
     /**
      * <p>
@@ -121,6 +130,6 @@ public interface DesignElementDataVectorService {
      * </p>
      */
     @Secured( { "GROUP_USER" })
-    public void update( RawExpressionDataVector dedv );
+    public void update( DesignElementDataVector dedv );
 
 }

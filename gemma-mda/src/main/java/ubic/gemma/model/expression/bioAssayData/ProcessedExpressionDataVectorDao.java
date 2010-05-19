@@ -22,6 +22,7 @@ package ubic.gemma.model.expression.bioAssayData;
 import java.util.Collection;
 import java.util.Map;
 
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -72,6 +73,10 @@ public interface ProcessedExpressionDataVectorDao extends DesignElementDataVecto
 
     public Collection<ProcessedExpressionDataVector> getProcessedVectors( ExpressionExperiment expressionExperiment,
             Integer limit );
+
+    public Collection<ProcessedExpressionDataVector> find( QuantitationType quantitationType );
+
+    public Collection<ProcessedExpressionDataVector> find( Collection<QuantitationType> quantitationType );
 
     public Map<ExpressionExperiment, Map<Gene, Collection<Double>>> getRanks(
             Collection<ExpressionExperiment> expressionExperiments, Collection<Gene> genes, RankMethod method );

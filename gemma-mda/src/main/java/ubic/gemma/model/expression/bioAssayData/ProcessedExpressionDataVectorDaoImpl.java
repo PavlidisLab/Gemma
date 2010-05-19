@@ -64,6 +64,55 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         super.setSessionFactory( sessionFactory );
     }
 
+    /**
+     * @param newResults
+     */
+    private void cacheResults( Collection<DoubleVectorValueObject> newResults ) {
+        /*
+         * Break up by gene and EE to cache collections of vectors for EE-gene combos.
+         */
+        Map<Long, Map<Gene, Collection<DoubleVectorValueObject>>> mapForCache = makeCacheMap( newResults );
+
+        for ( Long eeid : mapForCache.keySet() ) {
+            Cache cache = this.processedDataVectorCache.getCache( eeid );
+            for ( Gene g : mapForCache.get( eeid ).keySet() ) {
+                cache.put( new Element( g, mapForCache.get( eeid ).get( g ) ) );
+            }
+        }
+    }
+
+    /**
+     * @param ees
+     * @param genes that might have cached results
+     * @param results from the cache will be put here
+     * @param needToSearch experiments that need to be searched (not fully cached)
+     * @param genesToSearch that stll need to be searched (not in cache)
+     */
+    @SuppressWarnings("unchecked")
+    private void checkCache( Collection<ExpressionExperiment> ees, Collection<Gene> genes,
+            Collection<DoubleVectorValueObject> results, Collection<ExpressionExperiment> needToSearch,
+            Collection<Gene> genesToSearch ) {
+        for ( ExpressionExperiment ee : ees ) {
+            Cache cache = processedDataVectorCache.getCache( ee.getId() );
+            for ( Gene g : genes ) {
+                Element element = cache.get( g );
+                if ( element != null ) {
+                    Collection<DoubleVectorValueObject> obs = ( Collection<DoubleVectorValueObject> ) element
+                            .getObjectValue();
+                    results.addAll( obs );
+                } else {
+                    genesToSearch.add( g );
+                }
+            }
+            /*
+             * This experiment is not fully cached for the genes in question.
+             */
+            if ( genesToSearch.size() > 0 ) {
+                needToSearch.add( ee );
+            }
+        }
+    }
+
     /*
      * (non-Javadoc)
      * 
@@ -172,6 +221,63 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
 
     }
 
+    @SuppressWarnings("unchecked")
+    public Collection<ProcessedExpressionDataVector> find( Collection<QuantitationType> quantitationTypes ) {
+        final String queryString = "select dev from ProcessedExpressionDataVectorImpl dev   where  "
+                + "  dev.quantitationType in ( :quantitationTypes) ";
+        return this.getHibernateTemplate().findByNamedParam( queryString, "quantitationTypes", quantitationTypes );
+
+    }
+
+    @SuppressWarnings("unchecked")
+    public Collection<ProcessedExpressionDataVector> find( QuantitationType quantitationType ) {
+        final String queryString = "select dev from ProcessedExpressionDataVectorImpl dev   where  "
+                + "  dev.quantitationType = :quantitationType ";
+        return this.getHibernateTemplate().findByNamedParam( queryString, "quantitationType", quantitationType );
+
+    }
+
+    /**
+     * @param ee
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    protected Collection<RawExpressionDataVector> getMissingValueVectors( ExpressionExperiment ee ) {
+        final String queryString = "select dedv from RawExpressionDataVectorImpl dedv "
+                + "inner join dedv.quantitationType q where q.type = 'PRESENTABSENT'"
+                + " and dedv.expressionExperiment  = :ee ";
+        return this.getHibernateTemplate().findByNamedParam( queryString, "ee", ee );
+    }
+
+    /**
+     * @param ee
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    protected Collection<RawExpressionDataVector> getPreferredDataVectors( ExpressionExperiment ee ) {
+        final String queryString = "select dedv from RawExpressionDataVectorImpl dedv inner join dedv.quantitationType q "
+                + " where q.isPreferred = true  and dedv.expressionExperiment = :ee ";
+        return this.getHibernateTemplate().findByNamedParam( queryString, "ee", ee );
+    }
+
+    private QuantitationType getPreferredMaskedDataQuantitationType( QuantitationType preferredQt ) {
+        QuantitationType present = QuantitationType.Factory.newInstance();
+        present.setName( preferredQt.getName() + " - Masked " );
+        present.setDescription( "Data masked with missing values (Computed by Gemma)" );
+        present.setGeneralType( preferredQt.getGeneralType() );
+        present.setIsBackground( preferredQt.getIsBackground() );
+        present.setRepresentation( preferredQt.getRepresentation() );
+        present.setScale( preferredQt.getScale() );
+        present.setIsPreferred( false ); // I think this is the right thing to do.
+        present.setIsMaskedPreferred( true );
+        present.setIsBackgroundSubtracted( preferredQt.getIsBackgroundSubtracted() );
+        present.setIsNormalized( preferredQt.getIsNormalized() );
+        present.setIsRatio( preferredQt.getIsRatio() );
+        present.setType( preferredQt.getType() );
+        Long id = ( Long ) this.getHibernateTemplate().save( present );
+        return this.getHibernateTemplate().load( QuantitationTypeImpl.class, id );
+    }
+
     public Collection<DoubleVectorValueObject> getProcessedDataArrays(
             Collection<ExpressionExperiment> expressionExperiments, Collection<Gene> genes ) {
         return this.handleGetProcessedExpressionDataArrays( expressionExperiments, genes, true );
@@ -267,6 +373,33 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
 
         return results;
 
+    }
+
+    /**
+     * @return the processedDataVectorCache
+     */
+    protected ProcessedDataVectorCache getProcessedDataVectorCache() {
+        return processedDataVectorCache;
+    }
+
+    /**
+     * @param ees
+     * @param cs2gene Map of probe to genes.
+     * @return
+     */
+    private Map<ProcessedExpressionDataVector, Collection<Gene>> getProcessedVectors(
+            Collection<ExpressionExperiment> ees, Map<CompositeSequence, Collection<Gene>> cs2gene ) {
+
+        final String queryString;
+        if ( ees == null || ees.size() == 0 ) {
+            queryString = "select distinct dedv, dedv.designElement from ProcessedExpressionDataVectorImpl dedv fetch all properties"
+                    + " inner join dedv.designElement de where dedv.designElement in ( :cs )  ";
+        } else {
+            queryString = "select distinct dedv, dedv.designElement from ProcessedExpressionDataVectorImpl dedv fetch all properties"
+                    + " inner join dedv.designElement de "
+                    + " where dedv.designElement in (:cs ) and dedv.expressionExperiment in ( :ees )";
+        }
+        return getVectorsForProbesInExperiments( ees, cs2gene, queryString );
     }
 
     /*
@@ -503,79 +636,6 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         return resultnew;
     }
 
-    /**
-     * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDao#load(int, java.lang.Long)
-     */
-
-    public ProcessedExpressionDataVector load( final java.lang.Long id ) {
-        if ( id == null ) {
-            throw new IllegalArgumentException( "ProcessedExpressionDataVector.load - 'id' can not be null" );
-        }
-        return this.getHibernateTemplate().get( ProcessedExpressionDataVectorImpl.class, id );
-
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDao#loadAll()
-     */
-    public java.util.Collection<? extends ProcessedExpressionDataVector> loadAll() {
-        return this.getHibernateTemplate().loadAll( ProcessedExpressionDataVectorImpl.class );
-    }
-
-    @Override
-    public void remove( ProcessedExpressionDataVector designElementDataVector ) {
-        this.getHibernateTemplate().delete( designElementDataVector );
-
-    }
-
-    public void removeProcessedDataVectors( final ExpressionExperiment expressionExperiment ) {
-        /*
-         * If the experiment already has them, delete them.
-         */
-        Collection<ProcessedExpressionDataVector> oldVectors = this.getProcessedVectors( expressionExperiment );
-        if ( oldVectors.size() > 0 ) {
-            log.info( "Removing old processed vectors" );
-            this.remove( oldVectors );
-        }
-    }
-
-    /**
-     * @param processedDataVectorCache the processedDataVectorCache to set
-     */
-    public void setProcessedDataVectorCache( ProcessedDataVectorCache processedDataVectorCache ) {
-        this.processedDataVectorCache = processedDataVectorCache;
-    }
-
-    /**
-     * @param ee
-     * @return
-     */
-    @SuppressWarnings("unchecked")
-    protected Collection<RawExpressionDataVector> getMissingValueVectors( ExpressionExperiment ee ) {
-        final String queryString = "select dedv from RawExpressionDataVectorImpl dedv "
-                + "inner join dedv.quantitationType q where q.type = 'PRESENTABSENT'"
-                + " and dedv.expressionExperiment  = :ee ";
-        return this.getHibernateTemplate().findByNamedParam( queryString, "ee", ee );
-    }
-
-    /**
-     * @param ee
-     * @return
-     */
-    @SuppressWarnings("unchecked")
-    protected Collection<RawExpressionDataVector> getPreferredDataVectors( ExpressionExperiment ee ) {
-        final String queryString = "select dedv from RawExpressionDataVectorImpl dedv inner join dedv.quantitationType q "
-                + " where q.isPreferred = true  and dedv.expressionExperiment = :ee ";
-        return this.getHibernateTemplate().findByNamedParam( queryString, "ee", ee );
-    }
-
-    /**
-     * @return the processedDataVectorCache
-     */
-    protected ProcessedDataVectorCache getProcessedDataVectorCache() {
-        return processedDataVectorCache;
-    }
-
     @Override
     protected Integer handleCountAll() throws Exception {
         final String query = "select count(*) from ProcessedExpressionDataVectorImpl";
@@ -586,93 +646,6 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }
-    }
-
-    /**
-     * @param newResults
-     */
-    private void cacheResults( Collection<DoubleVectorValueObject> newResults ) {
-        /*
-         * Break up by gene and EE to cache collections of vectors for EE-gene combos.
-         */
-        Map<Long, Map<Gene, Collection<DoubleVectorValueObject>>> mapForCache = makeCacheMap( newResults );
-
-        for ( Long eeid : mapForCache.keySet() ) {
-            Cache cache = this.processedDataVectorCache.getCache( eeid );
-            for ( Gene g : mapForCache.get( eeid ).keySet() ) {
-                cache.put( new Element( g, mapForCache.get( eeid ).get( g ) ) );
-            }
-        }
-    }
-
-    /**
-     * @param ees
-     * @param genes that might have cached results
-     * @param results from the cache will be put here
-     * @param needToSearch experiments that need to be searched (not fully cached)
-     * @param genesToSearch that stll need to be searched (not in cache)
-     */
-    @SuppressWarnings("unchecked")
-    private void checkCache( Collection<ExpressionExperiment> ees, Collection<Gene> genes,
-            Collection<DoubleVectorValueObject> results, Collection<ExpressionExperiment> needToSearch,
-            Collection<Gene> genesToSearch ) {
-        for ( ExpressionExperiment ee : ees ) {
-            Cache cache = processedDataVectorCache.getCache( ee.getId() );
-            for ( Gene g : genes ) {
-                Element element = cache.get( g );
-                if ( element != null ) {
-                    Collection<DoubleVectorValueObject> obs = ( Collection<DoubleVectorValueObject> ) element
-                            .getObjectValue();
-                    results.addAll( obs );
-                } else {
-                    genesToSearch.add( g );
-                }
-            }
-            /*
-             * This experiment is not fully cached for the genes in question.
-             */
-            if ( genesToSearch.size() > 0 ) {
-                needToSearch.add( ee );
-            }
-        }
-    }
-
-    private QuantitationType getPreferredMaskedDataQuantitationType( QuantitationType preferredQt ) {
-        QuantitationType present = QuantitationType.Factory.newInstance();
-        present.setName( preferredQt.getName() + " - Masked " );
-        present.setDescription( "Data masked with missing values (Computed by Gemma)" );
-        present.setGeneralType( preferredQt.getGeneralType() );
-        present.setIsBackground( preferredQt.getIsBackground() );
-        present.setRepresentation( preferredQt.getRepresentation() );
-        present.setScale( preferredQt.getScale() );
-        present.setIsPreferred( false ); // I think this is the right thing to do.
-        present.setIsMaskedPreferred( true );
-        present.setIsBackgroundSubtracted( preferredQt.getIsBackgroundSubtracted() );
-        present.setIsNormalized( preferredQt.getIsNormalized() );
-        present.setIsRatio( preferredQt.getIsRatio() );
-        present.setType( preferredQt.getType() );
-        Long id = ( Long ) this.getHibernateTemplate().save( present );
-        return this.getHibernateTemplate().load( QuantitationTypeImpl.class, id );
-    }
-
-    /**
-     * @param ees
-     * @param cs2gene Map of probe to genes.
-     * @return
-     */
-    private Map<ProcessedExpressionDataVector, Collection<Gene>> getProcessedVectors(
-            Collection<ExpressionExperiment> ees, Map<CompositeSequence, Collection<Gene>> cs2gene ) {
-
-        final String queryString;
-        if ( ees == null || ees.size() == 0 ) {
-            queryString = "select distinct dedv, dedv.designElement from ProcessedExpressionDataVectorImpl dedv fetch all properties"
-                    + " inner join dedv.designElement de where dedv.designElement in ( :cs )  ";
-        } else {
-            queryString = "select distinct dedv, dedv.designElement from ProcessedExpressionDataVectorImpl dedv fetch all properties"
-                    + " inner join dedv.designElement de "
-                    + " where dedv.designElement in (:cs ) and dedv.expressionExperiment in ( :ees )";
-        }
-        return getVectorsForProbesInExperiments( ees, cs2gene, queryString );
     }
 
     /**
@@ -730,6 +703,25 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
 
         return results;
 
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDao#load(int, java.lang.Long)
+     */
+
+    public ProcessedExpressionDataVector load( final java.lang.Long id ) {
+        if ( id == null ) {
+            throw new IllegalArgumentException( "ProcessedExpressionDataVector.load - 'id' can not be null" );
+        }
+        return this.getHibernateTemplate().get( ProcessedExpressionDataVectorImpl.class, id );
+
+    }
+
+    /**
+     * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDao#loadAll()
+     */
+    public java.util.Collection<? extends ProcessedExpressionDataVector> loadAll() {
+        return this.getHibernateTemplate().loadAll( ProcessedExpressionDataVectorImpl.class );
     }
 
     /**
@@ -806,6 +798,30 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         }
 
         return unpackedData;
+    }
+
+    @Override
+    public void remove( ProcessedExpressionDataVector designElementDataVector ) {
+        this.getHibernateTemplate().delete( designElementDataVector );
+
+    }
+
+    public void removeProcessedDataVectors( final ExpressionExperiment expressionExperiment ) {
+        /*
+         * If the experiment already has them, delete them.
+         */
+        Collection<ProcessedExpressionDataVector> oldVectors = this.getProcessedVectors( expressionExperiment );
+        if ( oldVectors.size() > 0 ) {
+            log.info( "Removing old processed vectors" );
+            this.remove( oldVectors );
+        }
+    }
+
+    /**
+     * @param processedDataVectorCache the processedDataVectorCache to set
+     */
+    public void setProcessedDataVectorCache( ProcessedDataVectorCache processedDataVectorCache ) {
+        this.processedDataVectorCache = processedDataVectorCache;
     }
 
     /**

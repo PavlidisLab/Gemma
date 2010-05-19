@@ -21,6 +21,7 @@
 package ubic.gemma.model.expression.bioAssayData;
 
 import java.util.Collection;
+import java.util.HashSet;
 
 import org.springframework.stereotype.Service;
 
@@ -62,31 +63,31 @@ public class DesignElementDataVectorServiceImpl extends
     }
 
     @Override
-    protected Collection<RawExpressionDataVector> handleFind( ArrayDesign arrayDesign, QuantitationType quantitationType )
-            throws Exception {
+    protected Collection<? extends DesignElementDataVector> handleFind( ArrayDesign arrayDesign,
+            QuantitationType quantitationType ) throws Exception {
         return this.getRawExpressionDataVectorDao().find( arrayDesign, quantitationType );
     }
 
     @Override
-    protected Collection<RawExpressionDataVector> handleFind( Collection<QuantitationType> quantitationTypes )
+    protected Collection<? extends DesignElementDataVector> handleFind( Collection<QuantitationType> quantitationTypes )
             throws Exception {
-        return this.getRawExpressionDataVectorDao().find( quantitationTypes );
-    }
-
-    /*
-     * (non-Javadoc)
-     * @see
-     * ubic.gemma.model.expression.bioAssayData.RawExpressionDataVectorServiceBase#handleFindAllForMatrix(ubic.gemma
-     * .model.expression.experiment.ExpressionExperiment, ubic.gemma.model.common.quantitationtype.QuantitationType,
-     * ubic.gemma.model.expression.designElement.DesignElement)
-     */
-    @Override
-    protected Collection<RawExpressionDataVector> handleFind( QuantitationType quantitationType ) throws Exception {
-        return this.getRawExpressionDataVectorDao().find( quantitationType );
+        Collection<DesignElementDataVector> results = new HashSet<DesignElementDataVector>();
+        results.addAll( this.getRawExpressionDataVectorDao().find( quantitationTypes ) );
+        results.addAll( this.getProcessedExpressionDataVectorDao().find( quantitationTypes ) );
+        return results;
     }
 
     @Override
-    protected RawExpressionDataVector handleLoad( Long id ) throws Exception {
+    protected Collection<? extends DesignElementDataVector> handleFind( QuantitationType quantitationType )
+            throws Exception {
+        Collection<DesignElementDataVector> results = new HashSet<DesignElementDataVector>();
+        results.addAll( this.getRawExpressionDataVectorDao().find( quantitationType ) );
+        results.addAll( this.getProcessedExpressionDataVectorDao().find( quantitationType ) );
+        return results;
+    }
+
+    @Override
+    protected DesignElementDataVector handleLoad( Long id ) throws Exception {
         return this.getRawExpressionDataVectorDao().load( id );
     }
 
@@ -106,13 +107,20 @@ public class DesignElementDataVectorServiceImpl extends
     }
 
     @Override
-    protected void handleRemove( RawExpressionDataVector designElementDataVector ) throws Exception {
-        this.getRawExpressionDataVectorDao().remove( designElementDataVector );
+    protected void handleRemove( DesignElementDataVector dedv ) throws Exception {
+        if ( dedv instanceof RawExpressionDataVector ) {
+            this.getRawExpressionDataVectorDao().remove( ( RawExpressionDataVector ) dedv );
+        } else if ( dedv instanceof ProcessedExpressionDataVector ) {
+            this.getProcessedExpressionDataVectorDao().remove( ( ProcessedExpressionDataVector ) dedv );
+        } else {
+            throw new UnsupportedOperationException( "Don't know how to process a " + dedv.getClass().getName() );
+        }
 
     }
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.bioAssayData.RawExpressionDataVectorServiceBase#handleRemoveDataForCompositeSequence
      * (ubic.gemma.model.expression.designElement.CompositeSequence)
@@ -124,6 +132,7 @@ public class DesignElementDataVectorServiceImpl extends
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.bioAssayData.RawExpressionDataVectorServiceBase#handleRemoveDataForQuantitationType
      * (ubic.gemma.model.expression.experiment.ExpressionExperiment,
@@ -146,9 +155,13 @@ public class DesignElementDataVectorServiceImpl extends
 
     }
 
+    @SuppressWarnings("unchecked")
     @Override
-    protected void handleThaw( RawExpressionDataVector designElementDataVector ) throws Exception {
-        this.getRawExpressionDataVectorDao().thaw( designElementDataVector );
+    protected void handleThaw( DesignElementDataVector dedv ) throws Exception {
+        if ( dedv instanceof RawExpressionDataVector )
+            this.getRawExpressionDataVectorDao().thaw( ( Collection<? extends DesignElementDataVector> ) dedv );
+        else if ( dedv instanceof ProcessedExpressionDataVector )
+            this.getProcessedExpressionDataVectorDao().thaw( ( Collection<? extends DesignElementDataVector> ) dedv );
     }
 
     @SuppressWarnings("unchecked")
@@ -163,14 +176,23 @@ public class DesignElementDataVectorServiceImpl extends
 
         if ( vectorClass.equals( RawExpressionDataVector.class ) ) {
             this.getRawExpressionDataVectorDao().update( ( Collection<RawExpressionDataVector> ) vectors );
-        } else {
+        } else if ( vectorClass.equals( ProcessedExpressionDataVector.class ) ) {
             this.getProcessedExpressionDataVectorDao().update( ( Collection<ProcessedExpressionDataVector> ) vectors );
+        } else {
+            throw new UnsupportedOperationException( "Don't know how to process  " + vectorClass.getName() );
         }
     }
 
+    @SuppressWarnings("unchecked")
     @Override
-    protected void handleUpdate( RawExpressionDataVector dedv ) throws Exception {
-        this.getRawExpressionDataVectorDao().update( dedv );
+    protected void handleUpdate( DesignElementDataVector dedv ) throws Exception {
+        if ( dedv instanceof RawExpressionDataVector ) {
+            this.getRawExpressionDataVectorDao().update( ( Collection<RawExpressionDataVector> ) dedv );
+        } else if ( dedv instanceof ProcessedExpressionDataVector ) {
+            this.getProcessedExpressionDataVectorDao().update( ( Collection<ProcessedExpressionDataVector> ) dedv );
+        } else {
+            throw new UnsupportedOperationException( "Don't know how to process a " + dedv.getClass().getName() );
+        }
     }
 
     /**
@@ -189,6 +211,11 @@ public class DesignElementDataVectorServiceImpl extends
             }
         }
         return vectorClass;
+    }
+
+    @Override
+    public Collection<? extends DesignElementDataVector> find( BioAssayDimension bioAssayDimension ) {
+        return this.getRawExpressionDataVectorDao().find( bioAssayDimension );
     }
 
 }

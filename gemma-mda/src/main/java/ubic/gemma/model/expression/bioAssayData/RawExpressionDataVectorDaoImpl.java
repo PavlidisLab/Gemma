@@ -47,6 +47,7 @@ public class RawExpressionDataVectorDaoImpl extends DesignElementDataVectorDaoIm
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDao#find(ubic.gemma.model.expression.arrayDesign
      * .ArrayDesign, ubic.gemma.model.common.quantitationtype.QuantitationType)
@@ -112,6 +113,7 @@ public class RawExpressionDataVectorDaoImpl extends DesignElementDataVectorDaoIm
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDao#find(ubic.gemma.model.expression.bioAssayData
      * .DesignElementDataVector)
@@ -176,6 +178,7 @@ public class RawExpressionDataVectorDaoImpl extends DesignElementDataVectorDaoIm
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDaoBase#handleRemoveDataForCompositeSequence(
      * ubic.gemma.model.expression.designElement.CompositeSequence)
@@ -239,6 +242,21 @@ public class RawExpressionDataVectorDaoImpl extends DesignElementDataVectorDaoIm
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    public Collection<? extends DesignElementDataVector> find( BioAssayDimension bioAssayDimension ) {
+        Collection<? extends DesignElementDataVector> results = new HashSet<DesignElementDataVector>();
+
+        results
+                .addAll( this.getHibernateTemplate().findByNamedParam(
+                        "select d from RawExpressionDataVectorImpl d where d.bioAssayDimension = :bad", "bad",
+                        bioAssayDimension ) );
+        results.addAll( this.getHibernateTemplate().findByNamedParam(
+                "select d from ProcessedExpressionDataVectorImpl d where d.bioAssayDimension = :bad", "bad",
+                bioAssayDimension ) );
+        return results;
+
     }
 
 }

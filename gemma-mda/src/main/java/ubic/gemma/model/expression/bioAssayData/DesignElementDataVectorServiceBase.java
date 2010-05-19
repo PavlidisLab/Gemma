@@ -69,7 +69,7 @@ public abstract class DesignElementDataVectorServiceBase implements
     /**
      * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService#find(java.util.Collection)
      */
-    public java.util.Collection<RawExpressionDataVector> find(
+    public java.util.Collection<? extends DesignElementDataVector> find(
             final java.util.Collection<QuantitationType> quantitationTypes ) {
         try {
             return this.handleFind( quantitationTypes );
@@ -83,7 +83,7 @@ public abstract class DesignElementDataVectorServiceBase implements
     /**
      * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService#find(ubic.gemma.model.common.quantitationtype.QuantitationType)
      */
-    public java.util.Collection<RawExpressionDataVector> find(
+    public java.util.Collection<? extends DesignElementDataVector> find(
             final ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType ) {
         try {
             return this.handleFind( quantitationType );
@@ -98,7 +98,7 @@ public abstract class DesignElementDataVectorServiceBase implements
      * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService#find(ubic.gemma.model.expression.arrayDesign.ArrayDesign,
      *      ubic.gemma.model.common.quantitationtype.QuantitationType)
      */
-    public java.util.Collection<RawExpressionDataVector> find(
+    public java.util.Collection<? extends DesignElementDataVector> find(
             final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign,
             final ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType ) {
         try {
@@ -120,7 +120,7 @@ public abstract class DesignElementDataVectorServiceBase implements
     /**
      * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService#load(java.lang.Long)
      */
-    public ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector load( final java.lang.Long id ) {
+    public DesignElementDataVector load( final java.lang.Long id ) {
         try {
             return this.handleLoad( id );
         } catch ( Throwable th ) {
@@ -216,7 +216,7 @@ public abstract class DesignElementDataVectorServiceBase implements
     /**
      * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService#thaw(ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector)
      */
-    public void thaw( final ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector designElementDataVector ) {
+    public void thaw( final DesignElementDataVector designElementDataVector ) {
         try {
             this.handleThaw( designElementDataVector );
         } catch ( Throwable th ) {
@@ -242,12 +242,12 @@ public abstract class DesignElementDataVectorServiceBase implements
     /**
      * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService#update(ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector)
      */
-    public void update( final ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector dedv ) {
+    public void update( final DesignElementDataVector dedv ) {
         try {
             this.handleUpdate( dedv );
         } catch ( Throwable th ) {
             throw new ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorServiceException(
-                    "Error performing 'ubic.gemma.model.expression.bioAssayData.RawExpressionDataVectorService.update(ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector dedv)' --> "
+                    "Error performing 'ubic.gemma.model.expression.bioAssayData.DesignElementDataVector.update(ubic.gemma.model.expression.bioAssayData.DesignElementDataVector dedv)' --> "
                             + th, th );
         }
     }
@@ -273,27 +273,27 @@ public abstract class DesignElementDataVectorServiceBase implements
     /**
      * Performs the core logic for {@link #find(java.util.Collection)}
      */
-    protected abstract java.util.Collection<RawExpressionDataVector> handleFind(
+    protected abstract java.util.Collection<? extends DesignElementDataVector> handleFind(
             java.util.Collection<QuantitationType> quantitationTypes ) throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #find(ubic.gemma.model.common.quantitationtype.QuantitationType)}
      */
-    protected abstract java.util.Collection<RawExpressionDataVector> handleFind(
+    protected abstract java.util.Collection<? extends DesignElementDataVector> handleFind(
             ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType ) throws java.lang.Exception;
 
     /**
      * Performs the core logic for
      * {@link #find(ubic.gemma.model.expression.arrayDesign.ArrayDesign, ubic.gemma.model.common.quantitationtype.QuantitationType)}
      */
-    protected abstract java.util.Collection<RawExpressionDataVector> handleFind(
+    protected abstract java.util.Collection<? extends DesignElementDataVector> handleFind(
             ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign,
             ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType ) throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #load(java.lang.Long)}
      */
-    protected abstract ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector handleLoad( java.lang.Long id )
+    protected abstract ubic.gemma.model.expression.bioAssayData.DesignElementDataVector handleLoad( java.lang.Long id )
             throws java.lang.Exception;
 
     /**
@@ -305,9 +305,7 @@ public abstract class DesignElementDataVectorServiceBase implements
     /**
      * Performs the core logic for {@link #remove(ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector)}
      */
-    protected abstract void handleRemove(
-            ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector designElementDataVector )
-            throws java.lang.Exception;
+    protected abstract void handleRemove( DesignElementDataVector designElementDataVector ) throws java.lang.Exception;
 
     /**
      * Performs the core logic for
@@ -332,9 +330,7 @@ public abstract class DesignElementDataVectorServiceBase implements
     /**
      * Performs the core logic for {@link #thaw(ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector)}
      */
-    protected abstract void handleThaw(
-            ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector designElementDataVector )
-            throws java.lang.Exception;
+    protected abstract void handleThaw( DesignElementDataVector designElementDataVector ) throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #update(java.util.Collection)}
@@ -345,7 +341,6 @@ public abstract class DesignElementDataVectorServiceBase implements
     /**
      * Performs the core logic for {@link #update(ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector)}
      */
-    protected abstract void handleUpdate( ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector dedv )
-            throws java.lang.Exception;
+    protected abstract void handleUpdate( DesignElementDataVector dedv ) throws java.lang.Exception;
 
 }
