@@ -706,11 +706,11 @@ public class ExpressionExperimentController extends AbstractTaskService {
             Collection<ExpressionExperimentValueObject> eeValObjectCol, Integer filter ) {
         Collection<ExpressionExperimentValueObject> filtered = new HashSet<ExpressionExperimentValueObject>();
         Collection<ExpressionExperiment> eesToKeep = null;
-        
+
         /*
          * FIXME it might be faster to include the EEs as an argument to these methods, as a constraint.
          */
-        
+
         if ( filter == 1 ) {
             eesToKeep = expressionExperimentService.loadLackingEvent( DifferentialExpressionAnalysisEvent.class );
         } else if ( filter == 2 ) {
@@ -1425,6 +1425,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
             if ( d.after( cutoff ) || d.equals( cutoff ) ) {
                 keepers.add( v );
             }
+            if ( keepers.size() >= limit ) break;
         }
 
         for ( ExpressionExperimentValueObject vo : expressionExperiments ) {
