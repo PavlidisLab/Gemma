@@ -21,6 +21,7 @@ package ubic.gemma.tasks.analysis.diffex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalysisConfig;
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService;
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService.AnalysisType;
 import ubic.gemma.job.TaskMethod;
@@ -47,6 +48,8 @@ public class DifferentialExpressionAnalysisTaskImpl implements DifferentialExpre
     /*
      * (non-Javadoc)
      * 
+     * 
+     * 
      * @seeubic.gemma.grid.javaspaces.task.diff.DifferentialExpressionAnalysisTask#execute(ubic.gemma.grid.javaspaces.task
      * .diff. SpacesDifferentialExpressionAnalysisCommand)
      */
@@ -67,20 +70,27 @@ public class DifferentialExpressionAnalysisTaskImpl implements DifferentialExpre
     }
 
     /**
-     * @param jsDiffAnalysisCommand
+     * @param command
      * @return
      */
-    private DifferentialExpressionAnalysis doAnalysis( DifferentialExpressionAnalysisTaskCommand jsDiffAnalysisCommand ) {
-        ExpressionExperiment ee = jsDiffAnalysisCommand.getExpressionExperiment();
+    private DifferentialExpressionAnalysis doAnalysis( DifferentialExpressionAnalysisTaskCommand command ) {
+        ExpressionExperiment ee = command.getExpressionExperiment();
 
         expressionExperimentService.thawLite( ee );
 
         DifferentialExpressionAnalysis results;
-        AnalysisType analysisType = jsDiffAnalysisCommand.getAnalysisType();
+        AnalysisType analysisType = command.getAnalysisType();
+
         if ( analysisType != null ) {
-            assert jsDiffAnalysisCommand.getFactors() != null;
-            results = differentialExpressionAnalyzerService.runDifferentialExpressionAnalyses( ee,
-                    jsDiffAnalysisCommand.getFactors(), analysisType );
+            assert command.getFactors() != null;
+            DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
+            config.setFactorsToInclude( command.getFactors() );
+
+            if ( command.isIncludeInteractions() && command.getFactors().size() == 2 ) {
+                config.addInteractionToInclude( command.getFactors() );
+            }
+
+            results = differentialExpressionAnalyzerService.runDifferentialExpressionAnalyses( ee, config );
         } else {
             results = differentialExpressionAnalyzerService.runDifferentialExpressionAnalyses( ee );
         }

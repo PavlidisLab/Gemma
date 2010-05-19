@@ -59,8 +59,7 @@ public class TwoWayAnovaWithInteractionsAnalyzer extends LinearModelAnalyzer {
         }
 
         if ( config.getInteractionsToInclude().isEmpty() ) {
-            config.getInteractionsToInclude().add(
-                    expressionExperiment.getExperimentalDesign().getExperimentalFactors() );
+            config.addInteractionToInclude( config.getFactorsToInclude() );
         }
 
         return super.run( expressionExperiment, config );

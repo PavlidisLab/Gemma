@@ -115,6 +115,24 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
             DifferentialExpressionAnalysisConfig config ) {
 
         try {
+
+            /*
+             * I apologize for this being so complicated. It should be refactored but there are many data structures
+             * reused so refactoring is not obvious.
+             * 
+             * Basically there are four phases:
+             * 
+             * 1. Get the data matrix
+             * 
+             * 2. Get the factors
+             * 
+             * 3. Run the analysis
+             * 
+             * 4. Postprocess the analysis
+             * 
+             * By far the most complex is #2 -- it depends on which factors and what kind they are.
+             */
+
             connectToR();
 
             assert rc != null;

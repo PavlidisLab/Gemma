@@ -47,15 +47,13 @@ public class DifferentialExpressionAnalysisTaskCommand extends TaskCommand {
      */
     private Collection<ExperimentalFactor> factors;
 
-    public Collection<ExperimentalFactor> getFactors() {
-        return factors;
-    }
-
-    public void setFactors( Collection<ExperimentalFactor> factors ) {
-        this.factors = factors;
-    }
-
     private boolean forceAnalysis = false;
+
+    /**
+     * Whether interactions among the factors should be included. The implementation may limit this to two-way
+     * interactions for only up to two factors, so this may not have the effect desired.
+     */
+    private boolean includeInteractions = false;
 
     public DifferentialExpressionAnalysisTaskCommand( ExpressionExperiment ee ) {
         super();
@@ -83,8 +81,16 @@ public class DifferentialExpressionAnalysisTaskCommand extends TaskCommand {
         return expressionExperiment;
     }
 
+    public Collection<ExperimentalFactor> getFactors() {
+        return factors;
+    }
+
     public boolean isForceAnalysis() {
         return forceAnalysis;
+    }
+
+    public boolean isIncludeInteractions() {
+        return includeInteractions;
     }
 
     public void setAnalysisType( AnalysisType analysisType ) {
@@ -95,8 +101,16 @@ public class DifferentialExpressionAnalysisTaskCommand extends TaskCommand {
         this.expressionExperiment = expressionExperiment;
     }
 
+    public void setFactors( Collection<ExperimentalFactor> factors ) {
+        this.factors = factors;
+    }
+
     public void setForceAnalysis( boolean forceAnalysis ) {
         this.forceAnalysis = forceAnalysis;
+    }
+
+    public void setIncludeInteractions( boolean includeInteractions ) {
+        this.includeInteractions = includeInteractions;
     }
 
 }

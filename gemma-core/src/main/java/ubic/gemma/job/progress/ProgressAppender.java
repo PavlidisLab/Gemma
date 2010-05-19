@@ -20,7 +20,7 @@ package ubic.gemma.job.progress;
 
 import org.apache.log4j.AppenderSkeleton;
 import org.apache.log4j.Level;
-import org.apache.log4j.spi.LoggingEvent; 
+import org.apache.log4j.spi.LoggingEvent;
 
 /**
  * Logging appender for log4j that puts messages in the current thread progress monitor.
@@ -55,6 +55,7 @@ public class ProgressAppender extends AppenderSkeleton {
     @Override
     protected void append( LoggingEvent event ) {
         if ( !event.getThreadName().equals( this.threadName ) ) {
+            System.err.println( this.threadName + " !=" + event.getThreadName() );
             return;
         }
 

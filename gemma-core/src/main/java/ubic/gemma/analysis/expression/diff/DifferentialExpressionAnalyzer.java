@@ -73,6 +73,20 @@ public class DifferentialExpressionAnalyzer implements ApplicationContextAware {
     }
 
     /**
+     * @param expressionExperiment
+     * @param config
+     * @return
+     */
+    public DifferentialExpressionAnalysis analyze( ExpressionExperiment expressionExperiment,
+            DifferentialExpressionAnalysisConfig config ) {
+        AbstractDifferentialExpressionAnalyzer analyzer = determineAnalysis( expressionExperiment, config
+                .getFactorsToInclude(), config.getAnalysisType() );
+        DifferentialExpressionAnalysis analysis = analyzer.run( expressionExperiment, config );
+
+        return analysis;
+    }
+
+    /**
      * Initiates the differential expression analysis
      * 
      * @param expressionExperiment
@@ -272,7 +286,7 @@ public class DifferentialExpressionAnalyzer implements ApplicationContextAware {
 
         } else {
             /*
-             * FIXME we might want to catch other cases more carefully.
+             * Upstream we bail if there are too many factors.
              */
             return this.applicationContext.getBean( GenericAncovaAnalyzer.class );
         }

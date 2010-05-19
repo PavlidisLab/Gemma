@@ -19,6 +19,7 @@
 package ubic.gemma.analysis.expression.diff;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -27,6 +28,7 @@ import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
 
+import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService.AnalysisType;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.common.protocol.Protocol;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
@@ -38,50 +40,18 @@ import ubic.gemma.model.expression.experiment.FactorValue;
  */
 public class DifferentialExpressionAnalysisConfig {
 
+    private AnalysisType analysisType;
+
+    private Map<ExperimentalFactor, FactorValue> baseLineFactorValues = new HashMap<ExperimentalFactor, FactorValue>();
+
     private List<ExperimentalFactor> factorsToInclude = new ArrayList<ExperimentalFactor>();
+
+    private Collection<Collection<ExperimentalFactor>> interactionsToInclude = new HashSet<Collection<ExperimentalFactor>>();
 
     private ExperimentalFactor subsetFactor;
 
-    /**
-     * @return the subsetFactor
-     */
-    public ExperimentalFactor getSubsetFactor() {
-        return subsetFactor;
-    }
-
-    /**
-     * @param subsetFactor the subsetFactor to set
-     */
-    public void setSubsetFactor( ExperimentalFactor subsetFactor ) {
-        this.subsetFactor = subsetFactor;
-    }
-
-    /**
-     * @return the factorsToInclude
-     */
-    public List<ExperimentalFactor> getFactorsToInclude() {
-        return factorsToInclude;
-    }
-
-    /**
-     * @param factorsToInclude the factorsToInclude to set
-     */
-    public void setFactorsToInclude( Collection<ExperimentalFactor> factorsToInclude ) {
-        this.factorsToInclude = new ArrayList<ExperimentalFactor>( factorsToInclude );
-    }
-
-    /**
-     * @return the interactionsToInclude
-     */
-    public Collection<Collection<ExperimentalFactor>> getInteractionsToInclude() {
-        return interactionsToInclude;
-    }
-
-    /**
-     * @param interactionsToInclude the interactionsToInclude to set
-     */
-    public void setInteractionsToInclude( Collection<Collection<ExperimentalFactor>> interactionsToInclude ) {
-        this.interactionsToInclude = interactionsToInclude;
+    public AnalysisType getAnalysisType() {
+        return analysisType;
     }
 
     /**
@@ -92,15 +62,65 @@ public class DifferentialExpressionAnalysisConfig {
     }
 
     /**
+     * @return the factorsToInclude
+     */
+    public List<ExperimentalFactor> getFactorsToInclude() {
+        return factorsToInclude;
+    }
+
+    /**
+     * @return the interactionsToInclude
+     */
+    public Collection<Collection<ExperimentalFactor>> getInteractionsToInclude() {
+        return interactionsToInclude;
+    }
+
+    public void addInteractionToInclude( Collection<ExperimentalFactor> factors ) {
+        interactionsToInclude.add( factors );
+    }
+
+    public void addInteractionToInclude( ExperimentalFactor... factors ) {
+        interactionsToInclude.add( Arrays.asList( factors ) );
+    }
+
+    /**
+     * @return the subsetFactor
+     */
+    public ExperimentalFactor getSubsetFactor() {
+        return subsetFactor;
+    }
+
+    public void setAnalysisType( AnalysisType analysisType ) {
+        this.analysisType = analysisType;
+    }
+
+    /**
      * @param baseLineFactorValues the baseLineFactorValues to set
      */
     public void setBaseLineFactorValues( Map<ExperimentalFactor, FactorValue> baseLineFactorValues ) {
         this.baseLineFactorValues = baseLineFactorValues;
     }
 
-    private Collection<Collection<ExperimentalFactor>> interactionsToInclude = new HashSet<Collection<ExperimentalFactor>>();
+    /**
+     * @param factorsToInclude the factorsToInclude to set
+     */
+    public void setFactorsToInclude( Collection<ExperimentalFactor> factorsToInclude ) {
+        this.factorsToInclude = new ArrayList<ExperimentalFactor>( factorsToInclude );
+    }
 
-    private Map<ExperimentalFactor, FactorValue> baseLineFactorValues = new HashMap<ExperimentalFactor, FactorValue>();
+    /**
+     * @param interactionsToInclude the interactionsToInclude to set
+     */
+    public void setInteractionsToInclude( Collection<Collection<ExperimentalFactor>> interactionsToInclude ) {
+        this.interactionsToInclude = interactionsToInclude;
+    }
+
+    /**
+     * @param subsetFactor the subsetFactor to set
+     */
+    public void setSubsetFactor( ExperimentalFactor subsetFactor ) {
+        this.subsetFactor = subsetFactor;
+    }
 
     /**
      * @return representation of this analysis (not completely filled in - only the basic parameters)

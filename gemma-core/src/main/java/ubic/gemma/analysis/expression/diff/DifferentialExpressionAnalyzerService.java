@@ -170,6 +170,14 @@ public class DifferentialExpressionAnalyzerService {
      * @param expressionExperiment
      */
     public DifferentialExpressionAnalysis doDifferentialExpressionAnalysis( ExpressionExperiment expressionExperiment ) {
+
+        Collection<ExperimentalFactor> experimentalFactors = expressionExperiment.getExperimentalDesign()
+                .getExperimentalFactors();
+        if ( experimentalFactors.size() > MAX_FACTORS_FOR_AUTO_ANALYSIS ) {
+            throw new IllegalArgumentException( "Has more than " + MAX_FACTORS_FOR_AUTO_ANALYSIS
+                    + " factors, please specify the factors" );
+        }
+
         return differentialExpressionAnalyzer.analyze( expressionExperiment );
     }
 
@@ -183,6 +191,16 @@ public class DifferentialExpressionAnalyzerService {
     public DifferentialExpressionAnalysis doDifferentialExpressionAnalysis( ExpressionExperiment expressionExperiment,
             Collection<ExperimentalFactor> factors ) {
         return differentialExpressionAnalyzer.analyze( expressionExperiment, factors );
+    }
+
+    /**
+     * @param expressionExperiment
+     * @param config
+     * @return
+     */
+    public DifferentialExpressionAnalysis doDifferentialExpressionAnalysis( ExpressionExperiment expressionExperiment,
+            DifferentialExpressionAnalysisConfig config ) {
+        return differentialExpressionAnalyzer.analyze( expressionExperiment, config );
     }
 
     /**
@@ -206,6 +224,18 @@ public class DifferentialExpressionAnalyzerService {
     public Collection<ExpressionAnalysisResultSet> getResultSets( ExpressionExperiment expressionExperiment ) {
         return differentialExpressionAnalysisService.getResultSets( expressionExperiment );
     }
+
+    public DifferentialExpressionAnalysis runDifferentialExpressionAnalyses( ExpressionExperiment expressionExperiment,
+            DifferentialExpressionAnalysisConfig config ) {
+        DifferentialExpressionAnalysis diffExpressionAnalysis = doDifferentialExpressionAnalysis( expressionExperiment,
+                config );
+
+        deleteOldAnalyses( expressionExperiment );
+
+        return persistAnalysis( expressionExperiment, diffExpressionAnalysis );
+    }
+
+    private static final int MAX_FACTORS_FOR_AUTO_ANALYSIS = 3;
 
     /**
      * Run the differential expression analysis, attempting to identify the appropriate analysis automatically. First
