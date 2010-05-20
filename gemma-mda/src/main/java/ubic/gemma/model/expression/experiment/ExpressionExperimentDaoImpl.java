@@ -205,6 +205,9 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
      */
     @SuppressWarnings("unchecked")
     public Map<ExpressionExperiment, Date> findByUpdatedLimit( Collection<Long> ids, Integer limit ) {
+        Map<ExpressionExperiment, Date> result = new HashMap<ExpressionExperiment, Date>();
+        if ( ids.isEmpty() ) return result;
+
         Session s = this.getHibernateTemplate().getSessionFactory().openSession();
 
         /*
@@ -217,8 +220,6 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
         q.setParameterList( "ids", ids );
         // q.setMaxResults( Math.abs( limit ) );
         List list = q.list();
-
-        Map<ExpressionExperiment, Date> result = new HashMap<ExpressionExperiment, Date>();
 
         for ( Object o : list ) {
             Object[] oa = ( Object[] ) o;

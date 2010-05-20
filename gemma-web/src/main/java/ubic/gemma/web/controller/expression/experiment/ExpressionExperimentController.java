@@ -1215,7 +1215,11 @@ public class ExpressionExperimentController extends AbstractTaskService {
             eeValObjectCol = this.getFilteredExpressionExperimentValueObjects( null, ids, filterDataByUser );
         }
 
+        if ( eeValObjectCol.isEmpty() ) return eeValObjectCol;
+
         if ( filter != null && filter > 0 ) eeValObjectCol = applyFilter( eeValObjectCol, filter );
+
+        if ( eeValObjectCol.isEmpty() ) return eeValObjectCol;
 
         if ( limit != 0 ) {
             Collection<Long> idsOfFetched = EntityUtils.getIds( eeValObjectCol );
