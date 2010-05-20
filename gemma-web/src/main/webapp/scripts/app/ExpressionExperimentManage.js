@@ -16,10 +16,10 @@ Ext.onReady(function() {
 			});
 
 	if (Ext.get('updateAllReports-area')) {
-		Ext.DomHelper.overwrite('updateAllReports-area', '<p>' + 'To update all reports click here: ' +
-						'<a href="#" onClick="Ext.getCmp(\'eemanager\').updateAllEEReports(1)"><img ' +
-						'src="/Gemma/images/icons/arrow_refresh_small.png" title="refresh all reports" /> </a>' +
-						'</p>');
+		Ext.DomHelper.overwrite('updateAllReports-area', '<p>' + 'To update all reports click here: '
+						+ '<span class="link" onClick="Ext.getCmp(\'eemanager\').updateAllEEReports(1)"><img '
+						+ 'src="/Gemma/images/icons/arrow_refresh_small.png" title="refresh all reports" /> </span>'
+						+ '</p>');
 	}
 
 	this.manager = manager;
@@ -51,15 +51,16 @@ Ext.onReady(function() {
 	var adminRenderer = function(value, metadata, record, rowIndex, colIndex, store) {
 
 		if (record.get("currentUserHasWritePermission")) {
-			var adminLink = '<a href="#" onClick="Ext.getCmp(\'eemanager\').updateEEReport(' + value +
-					')"><img src="/Gemma/images/icons/arrow_refresh_small.png" ext:qtip="Refresh statistics"  ext:qtip="refresh"/></a>';
+			var adminLink = '<span class="link"  onClick="Ext.getCmp(\'eemanager\').updateEEReport('
+					+ value
+					+ ')"><img src="/Gemma/images/icons/arrow_refresh_small.png" ext:qtip="Refresh statistics"  ext:qtip="refresh"/></span>';
 
 			var isAdmin = Ext.get("hasAdmin").getValue() == 'true';
 			if (isAdmin) {
-				adminLink = adminLink +
-						'&nbsp;&nbsp;&nbsp;<a href="#" onClick="return Ext.getCmp(\'eemanager\').deleteExperiment(' +
-						value +
-						')"><img src="/Gemma/images/icons/cross.png" ext:qtip="Delete the experiment from the system" ext:qtip="delete" /></a>&nbsp;';
+				adminLink = adminLink
+						+ '&nbsp;&nbsp;&nbsp;<span class="link" onClick="return Ext.getCmp(\'eemanager\').deleteExperiment('
+						+ value
+						+ ')"><img src="/Gemma/images/icons/cross.png" ext:qtip="Delete the experiment from the system" ext:qtip="delete" /></span>&nbsp;';
 			}
 			return adminLink;
 		}
@@ -68,8 +69,8 @@ Ext.onReady(function() {
 	};
 
 	var shortNameRenderer = function(value, metadata, record, rowIndex, colIndex, store) {
-		return '<a href="/Gemma/expressionExperiment/showExpressionExperiment.html?id=' + record.get("id") +
-				'" target="_blank">' + value + '</a>';
+		return '<a href="/Gemma/expressionExperiment/showExpressionExperiment.html?id=' + record.get("id")
+				+ '" target="_blank">' + value + '</a>';
 	};
 
 	// var rowExpander = new Gemma.EEGridRowExpander({
@@ -82,9 +83,9 @@ Ext.onReady(function() {
 
 	var experimentalDesignEditRenderer = function(value, metadata, record, rowIndex, colIndex, store) {
 		var id = record.get('id');
-		var url = '<a target="_blank" href="/Gemma/experimentalDesign/showExperimentalDesign.html?eeid=' +
-				id +
-				'"><img src="/Gemma/images/icons/pencil.png" alt="view/edit experimental design" ext:qtip="view/edit experimental design"/></a>';
+		var url = '<a target="_blank" href="/Gemma/experimentalDesign/showExperimentalDesign.html?eeid='
+				+ id
+				+ '"><img src="/Gemma/images/icons/pencil.png" alt="view/edit experimental design" ext:qtip="view/edit experimental design"/></a>';
 		return value + '&nbsp;' + url;
 	};
 
@@ -92,14 +93,15 @@ Ext.onReady(function() {
 		var id = record.get('id');
 		var taxonId = record.get('taxonId');
 
-		var url = '<a href="#" onClick="return Ext.getCmp(\'eemanager\').tagger(' + id + ',' + taxonId + ',' +
-				record.get("currentUserHasWritePermission") +
-				')"><img src="/Gemma/images/icons/pencil.png" alt="view tags" ext:qtip="add/view tags"/></a>';
+		var url = '<span class="link" onClick="return Ext.getCmp(\'eemanager\').tagger(' + id + ',' + taxonId + ','
+				+ record.get("currentUserHasWritePermission")
+				+ ')"><img src="/Gemma/images/icons/pencil.png" alt="view tags" ext:qtip="add/view tags"/></span>';
 		value = value + '&nbsp;' + url;
 
 		if (record.get("currentUserHasWritePermission")) {
-			var turl = '<a href="#" onClick="return Ext.getCmp(\'eemanager\').autoTag(' + id +
-					')"><img src="/Gemma/images/icons/database_edit.png" alt="run auto-tagger" ext:qtip="add tags automatically"/></a>';
+			var turl = '<span class="link"  onClick="return Ext.getCmp(\'eemanager\').autoTag('
+					+ id
+					+ ')"><img src="/Gemma/images/icons/wand.png" alt="run auto-tagger" ext:qtip="add tags automatically"/></span>';
 			value = value + '&nbsp;' + turl;
 		}
 
@@ -113,9 +115,9 @@ Ext.onReady(function() {
 		var id = record.get('id');
 		var runurl = "";
 		if (record.get("currentUserHasWritePermission")) {
-			runurl = '<a href="#" onClick="return Ext.getCmp(\'eemanager\').doLinks(' +
-					id +
-					')"><img src="/Gemma/images/icons/control_play_blue.png" ext:qtip="Run coexpression analysis"  alt="link analysis" /></a>';
+			runurl = '<span class="link" onClick="return Ext.getCmp(\'eemanager\').doLinks('
+					+ id
+					+ ')"><img src="/Gemma/images/icons/control_play_blue.png" ext:qtip="Run coexpression analysis"  alt="link analysis" /></span>';
 		}
 
 		if (record.get('bioAssayCount') < BIG_ENOUGH_FOR_LINKS) {
@@ -136,8 +138,8 @@ Ext.onReady(function() {
 				suggestRun = false;
 			}
 
-			return '<span style="color:' + color + ';" ' + qtip + '>' + Ext.util.Format.date(value, 'y/M/d') +
-					'&nbsp;' + (suggestRun ? runurl : '');
+			return '<span style="color:' + color + ';" ' + qtip + '>' + Ext.util.Format.date(value, 'y/M/d') + '&nbsp;'
+					+ (suggestRun ? runurl : '');
 		} else {
 			return '<span style="color:#3A3;">Needed</span>&nbsp;' + runurl;
 		}
@@ -148,9 +150,9 @@ Ext.onReady(function() {
 
 		var runurl = "";
 		if (record.get("currentUserHasWritePermission")) {
-			runurl = '<a href="#" onClick="return Ext.getCmp(\'eemanager\').doMissingValues(' +
-					id +
-					')"><img src="/Gemma/images/icons/control_play_blue.png" ext:qtip="Run missing value analysis" alt="missing value computation"  /></a>';
+			runurl = '<span class="link" onClick="return Ext.getCmp(\'eemanager\').doMissingValues('
+					+ id
+					+ ')"><img src="/Gemma/images/icons/control_play_blue.png" ext:qtip="Run missing value analysis" alt="missing value computation"  /></span>';
 		}
 
 		/*
@@ -167,8 +169,8 @@ Ext.onReady(function() {
 					qtip = 'ext:qtip="Failed"';
 				}
 
-				return '<span style="color:' + color + ';" ' + qtip + '>' + Ext.util.Format.date(value, 'y/M/d') +
-						'&nbsp;' + (suggestRun ? runurl : '');
+				return '<span style="color:' + color + ';" ' + qtip + '>' + Ext.util.Format.date(value, 'y/M/d')
+						+ '&nbsp;' + (suggestRun ? runurl : '');
 			} else {
 				return '<span style="color:#3A3;">Needed</span>&nbsp;' + runurl;
 			}
@@ -182,9 +184,9 @@ Ext.onReady(function() {
 		var id = record.get('id');
 		var runurl = "";
 		if (record.get("currentUserHasWritePermission")) {
-			runurl = '<a href="#" onClick="return Ext.getCmp(\'eemanager\').doProcessedVectors(' +
-					id +
-					')"><img src="/Gemma/images/icons/control_play_blue.png" ext:qtip="Run processed vector generation" alt="processed vector generation"/></a>';
+			runurl = '<span class="link" onClick="return Ext.getCmp(\'eemanager\').doProcessedVectors('
+					+ id
+					+ ')"><img src="/Gemma/images/icons/control_play_blue.png" ext:qtip="Run processed vector generation" alt="processed vector generation"/></span>';
 		}
 
 		if (record.get('dateProcessedDataVectorComputation')) {
@@ -201,8 +203,8 @@ Ext.onReady(function() {
 				qtip = 'ext:qtip="Failed"';
 			}
 
-			return '<span style="color:' + color + ';" ' + qtip + '>' + Ext.util.Format.date(value, 'y/M/d') +
-					'&nbsp;' + (suggestRun ? runurl : '');
+			return '<span style="color:' + color + ';" ' + qtip + '>' + Ext.util.Format.date(value, 'y/M/d') + '&nbsp;'
+					+ (suggestRun ? runurl : '');
 		} else {
 			return '<span style="color:#3A3;">Needed</span>&nbsp;' + runurl;
 		}
@@ -213,9 +215,9 @@ Ext.onReady(function() {
 
 		var runurl = "";
 		if (record.get("currentUserHasWritePermission")) {
-			runurl = '<a href="#" onClick="return Ext.getCmp(\'eemanager\').doDifferential(' +
-					id +
-					')"><img src="/Gemma/images/icons/control_play_blue.png" alt="differential expression analysis" ext:qtip="Run differential expression analysis"/></a>';
+			runurl = '<span class="link" onClick="return Ext.getCmp(\'eemanager\').doDifferential('
+					+ id
+					+ ')"><img src="/Gemma/images/icons/control_play_blue.png" alt="differential expression analysis" ext:qtip="Run differential expression analysis"/></span>';
 		}
 
 		if (diffIsPossible(record)) {
@@ -233,8 +235,8 @@ Ext.onReady(function() {
 					qtip = 'ext:qtip="Failed"';
 				}
 
-				return '<span style="color:' + color + ';" ' + qtip + '>' + Ext.util.Format.date(value, 'y/M/d') +
-						'&nbsp;' + (suggestRun ? runurl : '');
+				return '<span style="color:' + color + ';" ' + qtip + '>' + Ext.util.Format.date(value, 'y/M/d')
+						+ '&nbsp;' + (suggestRun ? runurl : '');
 			} else {
 				return '<span style="color:#3A3;">Needed</span>&nbsp;' + runurl;
 			}
@@ -247,19 +249,20 @@ Ext.onReady(function() {
 		var id = record.get('id');
 		var result = '';
 		if (record.get('validatedFlag')) {
-			result = result +
-					'<img src="/Gemma/images/icons/emoticon_smile.png" alt="validated" ext:qtip="validated"/>';
+			result = result
+					+ '<img src="/Gemma/images/icons/emoticon_smile.png" alt="validated" ext:qtip="validated"/>';
 		}
 
 		if (record.get('troubleFlag')) {
-			result = result + '<img src="/Gemma/images/icons/stop.png" alt="trouble" ext:qtip="trouble: ' +
-					record.get('troubleFlag').note + '"/>';
+			result = result + '<img src="/Gemma/images/icons/stop.png" alt="trouble" ext:qtip="trouble: '
+					+ record.get('troubleFlag').note + '"/>';
 		}
 
-		result = result +
-				Gemma.SecurityManager.getSecurityLink(
+		result = result
+				+ Gemma.SecurityManager.getSecurityLink(
 						'ubic.gemma.model.expression.experiment.ExpressionExperimentImpl', id, record.get('isPublic'),
 						record.get('isShared'));
+
 		return result;
 
 	};
@@ -277,8 +280,19 @@ Ext.onReady(function() {
 		detailsmask.show();
 		ExpressionExperimentController.getDescription(record.id, {
 					callback : function(data) {
-						Ext.DomHelper.overwrite(dataSetDetailsPanel.body, "<h1>" + record.get('shortName') +
-										"</h1><h2>" + record.get('name') + "</h2><p>" + data + "</p>");
+						Ext.DomHelper
+								.overwrite(
+										dataSetDetailsPanel.body,
+										'<span class="big">'
+												+ shortNameRenderer(record.get('shortName'), null, record)
+												+ '</span>&nbsp;&nbsp;<span class="medium">'
+												+ record.get('name')
+												+ "</span><p>"
+												+ data
+												+ "</p>"
+												+ '<span class="link" onClick="Ext.getCmp(\'eemanager\').showAuditWindow('
+												+ record.id
+												+ ');" ><img ext:qtip="Show history" src="/Gemma/images/icons/pencil.png" /></span>');
 						detailsmask.hide();
 					}.createDelegate(this)
 				});
@@ -437,7 +451,7 @@ Ext.onReady(function() {
 	new Ext.Panel({
 				layout : 'border',
 				renderTo : 'eemanage',
-				width : 1000,
+				width : 1100,
 				height : 700,
 				items : [reportGrid, dataSetDetailsPanel]
 			});
@@ -513,6 +527,28 @@ Gemma.EEReportPanel = Ext.extend(Ext.grid.GridPanel, {
 				this.store.load({
 							params : [this.taxonid, this.ids, this.limit, this.filterType]
 						});
+			},
+
+			downloadAsText : function() {
+				alert("Sorry, coming soon");
+			},
+
+			getBookmark : function() {
+				var url = "http://www.chibi.ubc.ca/Gemma/expressionExperiments/showAllExpressionExperimentLinkSummaries.html?";
+				if (this.ids) {
+					url += "&ids=" + this.ids.join(",");
+				}
+				if (this.taxonid) {
+					url += "&taxon=" + this.taxonid;
+				}
+				if (this.limit) {
+					url += "&limit=" + this.limit;
+				}
+				if (this.filterType) {
+					url += "&filter=" + this.filterType;
+				}
+
+				Ext.Msg.alert("Copy this URL", url);
 			},
 
 			initComponent : function() {
@@ -594,10 +630,26 @@ Gemma.EEReportPanel = Ext.extend(Ext.grid.GridPanel, {
 													handler : this.refresh,
 													tooltip : "Refresh the table",
 													scope : this
-												}, this.filterCombo, this.taxonCombo, this.limitCombo]
+												}, this.filterCombo, this.taxonCombo, this.limitCombo, '->', {
+													xtype : 'button',
+													minWidth : 20,
+													cls : 'x-btn-icon',
+													icon : '/Gemma/images/icons/link.png',
+													handler : this.getBookmark,
+													tooltip : "Bookmarkable link",
+													scope : this
+												}, {
+													xtype : 'button',
+													minWidth : 20,
+													cls : 'x-btn-icon',
+													icon : '/Gemma/images/icons/disk.png',
+													handler : this.downloadAsText,
+													tooltip : "Download as text",
+													scope : this
+												}]
 									}),
 							bbar : new Ext.Toolbar({
-										items : [{
+										items : ['->', {
 													xtype : 'button',
 													handler : this.clearFilter.createDelegate(this),
 													tooltip : "Show all",

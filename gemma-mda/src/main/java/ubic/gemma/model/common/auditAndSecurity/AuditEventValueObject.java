@@ -51,6 +51,7 @@ public class AuditEventValueObject implements java.io.Serializable {
     }
 
     public AuditEventValueObject( AuditEvent ae ) {
+        if ( ae == null ) throw new IllegalArgumentException( "Event cannot be null" );
         if ( ae.getPerformer() != null ) this.setPerformer( ae.getPerformer().getUserName() );
 
         if ( ae.getAction() != null ) this.setAction( ae.getAction().getValue() );

@@ -60,6 +60,21 @@ Gemma.AuditTrailGrid = Ext.extend(Ext.grid.GridPanel, {
 						});
 			},
 
+			eventTypeRenderer : function(value, metaData, record, rowIndex, colIndex, store) {
+
+				var ret = value.replace(/.*\./, '').replace("Impl", '').replace(/([A-Z])/g, ' $1');
+
+				if (value == 'TroubleStatusFlagEventImpl') {
+					ret = '<img  src="/Gemma/images/icons/stop.png">&nbsp;' + ret;
+				} else if (value == 'ValidatedFlagEventImpl') {
+					ret = '<img  src="/Gemma/images/icons/emoticon_smile.png">&nbsp;' + ret;
+				} else if (value == 'OkStatusEventFlagImpl') {
+					ret = '<img  src="/Gemma/images/icons/checked.gif">&nbsp;' + ret;
+				}
+
+				return ret;
+			},
+
 			initComponent : function() {
 
 				Ext.apply(this, {
@@ -76,12 +91,13 @@ Gemma.AuditTrailGrid = Ext.extend(Ext.grid.GridPanel, {
 										dataIndex : "actionName"
 									}, {
 										header : "Performer",
-										width : 100,
+										width : 80,
 										dataIndex : "performer"
 									}, {
 										header : "Event type",
-										width : 120,
-										dataIndex : "eventTypeName"
+										width : 170,
+										dataIndex : "eventTypeName",
+										renderer : this.eventTypeRenderer
 									}, {
 										header : "Comment",
 										width : 275,

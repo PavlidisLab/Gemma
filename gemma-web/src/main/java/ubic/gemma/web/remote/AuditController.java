@@ -141,13 +141,14 @@ public class AuditController {
         if ( entity == null ) {
             return result;
         }
+        assert entity.getAuditTrail().getId() != null;
 
         Collection<AuditEvent> events = auditEventService.getEvents( entity );
         for ( AuditEvent ev : events ) {
+            if ( ev == null ) continue;
             result.add( new AuditEventValueObject( ev ) );
         }
 
         return result;
     }
-
 }

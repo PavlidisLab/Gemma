@@ -283,8 +283,7 @@ public class ArrayDesignWrapper extends TableDecorator {
         ArrayDesignValueObject object = ( ArrayDesignValueObject ) getCurrentRowObject();
         StringBuffer buf = new StringBuffer();
         if ( object.getTroubleEvent() != null ) {
-            buf
-                    .append( "&nbsp;<img src='/Gemma/images/icons/warning.png' height='16' width='16' alt='trouble' title='" );
+            buf.append( "&nbsp;<img src='/Gemma/images/icons/stop.png' height='16' width='16' alt='trouble' title='" );
             buf.append( StringEscapeUtils.escapeHtml( object.getTroubleEvent().toString() ) );
             buf.append( "' />" );
         }

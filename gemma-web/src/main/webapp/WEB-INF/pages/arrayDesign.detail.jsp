@@ -42,7 +42,7 @@
 	"
 	<c:if test="${(not empty troubleEvent)}">
 	&nbsp;
-	<img src='<c:url value="/images/icons/warning.png"/>' height='16' width='16' alt='trouble'
+	<img src='<c:url value="/images/icons/stop.png"/>' height='16' width='16' alt='trouble'
 			title='${ troubleEventDescription }' />
 	</c:if>
 	<c:if test="${ validatedEvent != null}">

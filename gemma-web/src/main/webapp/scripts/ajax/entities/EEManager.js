@@ -124,6 +124,28 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 		ExpressionExperimentReportGenerationController.run.apply(this, callParams);
 	},
 
+	historyWindow : null,
+
+	showAuditWindow : function(id) {
+		if (this.historyWindow != null) {
+			this.historyWindow.destroy();
+		}
+		this.historyWindow = new Ext.Window({
+					layout : 'fit',
+					title : 'History',
+					modal : false,
+					items : [new Gemma.AuditTrailGrid({
+								title : '',
+								collapsible : false,
+								auditable : {
+									id : id,
+									classDelegatingFor : "ubic.gemma.model.expression.experiment.ExpressionExperimentImpl"
+								}
+							})]
+				});
+		this.historyWindow.show();
+	},
+
 	updateAllEEReports : function() {
 		var callParams = [];
 		callParams.push({
@@ -205,11 +227,12 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 						text : 'Help',
 						handler : function() {
 							Ext.Msg
-									.alert("Help with tagging",
-											"Select a 'category' for the term; then enter a term, " +
-													"choosing from existing terms if possible. " +
-													"Click 'create' to save it. You can also edit existing terms;" +
-													" click 'save' to make the change stick, or 'delete' to remove a selected tag.");
+									.alert(
+											"Help with tagging",
+											"Select a 'category' for the term; then enter a term, "
+													+ "choosing from existing terms if possible. "
+													+ "Click 'create' to save it. You can also edit existing terms;"
+													+ " click 'save' to make the change stick, or 'delete' to remove a selected tag.");
 						}
 					}, {
 						text : 'Done',
@@ -538,8 +561,8 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 							footer : true,
 							closable : true,
 							title : 'Differential expression analysis',
-							html : 'Please confirm. The analysis performed will be a ' + analysisType +
-									'. If there is an existing analysis on the same factor(s), it will be deleted.',
+							html : 'Please confirm. The analysis performed will be a ' + analysisType
+									+ '. If there is an existing analysis on the same factor(s), it will be deleted.',
 							buttons : [{
 										text : 'Proceed',
 										handler : function(btn, text) {

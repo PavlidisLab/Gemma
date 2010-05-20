@@ -18,7 +18,6 @@
  */
 package ubic.gemma.model.common.auditAndSecurity;
 
-import java.util.Calendar;
 import java.util.Date;
 
 import org.apache.commons.logging.Log;
@@ -68,6 +67,7 @@ public class AuditTrailServiceImpl extends ubic.gemma.model.common.auditAndSecur
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.common.auditAndSecurity.AuditTrailServiceBase#handleAddUpdateEvent(ubic.gemma.model.common.Auditable
      * , ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType, java.lang.String)
@@ -172,6 +172,7 @@ public class AuditTrailServiceImpl extends ubic.gemma.model.common.auditAndSecur
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.common.auditAndSecurity.AuditTrailServiceBase#handleThaw(ubic.gemma.model.common.auditAndSecurity
      * .AuditTrail)

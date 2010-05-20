@@ -190,21 +190,18 @@ public class AuditEventDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
         return canonicalName.endsWith( "Impl" ) ? type.getCanonicalName() : type.getCanonicalName() + "Impl";
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     protected List<AuditEvent> handleGetEvents( final Auditable auditable ) {
         if ( auditable == null ) throw new IllegalArgumentException( "Auditable cannot be null" );
-        Session session = this.getSession();
-        session.lock( auditable, LockMode.NONE );
+
         Hibernate.initialize( auditable );
-        Hibernate.initialize( auditable.getAuditTrail() );
-        // It really is a list, even if andromda refused to declare it thusly.
-        List<AuditEvent> events = ( List<AuditEvent> ) auditable.getAuditTrail().getEvents();
-        Hibernate.initialize( events );
-        for ( AuditEvent auditEvent : events ) {
-            Hibernate.initialize( auditEvent );
-            Hibernate.initialize( auditEvent.getPerformer() );
-        }
-        return events;
+        
+        List results = this.getHibernateTemplate().findByNamedParam(
+                "select a.events from AuditTrailImpl a fetch all properties where a.id = :tid", "tid",
+                auditable.getAuditTrail().getId() );
+
+        return results;
     }
 
     /**

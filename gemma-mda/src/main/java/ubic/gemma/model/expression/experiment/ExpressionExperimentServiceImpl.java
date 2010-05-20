@@ -174,6 +174,9 @@ public class ExpressionExperimentServiceImpl extends
         return lastEventMap;
     }
 
+    /**
+     * @return
+     */
     private Map<Long, AuditEvent> getLastTroubleEvents() {
         Collection<ExpressionExperiment> ees = this.loadAll();
 
