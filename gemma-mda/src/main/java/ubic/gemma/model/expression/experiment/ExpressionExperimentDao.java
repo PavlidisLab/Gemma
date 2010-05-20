@@ -365,4 +365,8 @@ public interface ExpressionExperimentDao extends BioAssaySetDao<ExpressionExperi
      */
     public Map<ExpressionExperiment, Date> findByUpdatedLimit( Collection<Long> ids, Integer limit );
 
+    public Collection<ExpressionExperiment> loadLackingFactors();
+
+    public Collection<ExpressionExperiment> loadLackingTags();
+
 }

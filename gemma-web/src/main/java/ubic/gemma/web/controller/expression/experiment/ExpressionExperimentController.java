@@ -269,7 +269,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
 
     private static final Boolean AJAX = true;
 
-    private static final int TRIM_SIZE = 220;
+    private static final int TRIM_SIZE = 800;
 
     @Autowired
     private ArrayDesignService arrayDesignService;
@@ -449,25 +449,26 @@ public class ExpressionExperimentController extends AbstractTaskService {
             descriptive.append( eeDescription.substring( 0, TRIM_SIZE ) + "...&nbsp;&nbsp;" );
 
         // Is there any factor info to add?
-        if ( efs.size() < 1 ) return descriptive.append( "<b>(No Factors)</b>" ).toString();
+        if ( efs.size() < 1 ) return descriptive.append( "</br><b>(No Factors)</b>" ).toString();
 
         String efUri = "&nbsp;<a target='_blank' href='/Gemma/experimentalDesign/showExperimentalDesign.html?eeid="
                 + ee.getId() + "'>(details)</a >";
-
+        int MAX_TAGS_TO_SHOW = 10;
         Collection<Characteristic> tags = ee.getCharacteristics();
         if ( tags.size() > 0 ) {
-            descriptive.append( "&nbsp;<b>Tags:</b>&nbsp;" );
+            descriptive.append( "</br>&nbsp;<b>Tags:</b>&nbsp;" );
             int i = 0;
             for ( Characteristic tag : tags ) {
                 descriptive.append( tag.getValue() + ", " );
-                if ( ++i > 5 ) {
+
+                if ( ++i > MAX_TAGS_TO_SHOW ) {
                     descriptive.append( " [more tags not shown]" );
                     break;
                 }
             }
         }
 
-        descriptive.append( "&nbsp;<b>Factors:</b>&nbsp;" );
+        descriptive.append( "</br>&nbsp;<b>Factors:</b>&nbsp;" );
         for ( ExperimentalFactor ef : efs ) {
             descriptive.append( ef.getName() + ", " );
         }
@@ -652,7 +653,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
             throw new AccessDeniedException( "User does not have access to experiment management" );
         }
 
-        eeValObjectCol = getEEVOsForManager( taxonId, ids, filterDataByUser, limit );
+        eeValObjectCol = getEEVOsForManager( taxonId, ids, filterDataByUser, limit, filter );
 
         if ( eeValObjectCol.isEmpty() ) {
             return new HashSet<ExpressionExperimentValueObject>();
@@ -677,8 +678,6 @@ public class ExpressionExperimentController extends AbstractTaskService {
 
         timer.reset();
         timer.start();
-
-        if ( filter != null && filter > 0 ) eeValObjectCol = applyFilter( eeValObjectCol, filter );
 
         // List<ExpressionExperimentValueObject> result = filterByLastUpdate( recentDateInfo, eeValObjectCol, limit );
 
@@ -1101,21 +1100,35 @@ public class ExpressionExperimentController extends AbstractTaskService {
         /*
          * FIXME it might be faster to include the EEs as an argument to these methods, as a constraint.
          */
-
-        if ( filter == 1 ) {
-            eesToKeep = expressionExperimentService.loadLackingEvent( DifferentialExpressionAnalysisEvent.class );
-        } else if ( filter == 2 ) {
-            eesToKeep = expressionExperimentService.loadLackingEvent( LinkAnalysisEvent.class );
-        } else if ( filter == 3 ) {
-            eesToKeep = expressionExperimentService.loadWithEvent( DifferentialExpressionAnalysisEvent.class );
-        } else if ( filter == 4 ) {
-            eesToKeep = expressionExperimentService.loadWithEvent( LinkAnalysisEvent.class );
-            /*
-             * TODO support more filters, and use an enumeration.
-             */
-        } else {
-            throw new IllegalArgumentException( "Unknown filter: " + filter );
+        switch ( filter ) {
+            case 1:
+                eesToKeep = expressionExperimentService.loadLackingEvent( DifferentialExpressionAnalysisEvent.class );
+                break;
+            case 2:
+                eesToKeep = expressionExperimentService.loadLackingEvent( LinkAnalysisEvent.class );
+                break;
+            case 3:
+                eesToKeep = expressionExperimentService.loadWithEvent( DifferentialExpressionAnalysisEvent.class );
+                break;
+            case 4:
+                eesToKeep = expressionExperimentService.loadWithEvent( LinkAnalysisEvent.class );
+                break;
+            case 5:
+                eesToKeep = expressionExperimentService.loadTroubled();
+                break;
+            case 6:
+                eesToKeep = expressionExperimentService.loadLackingFactors();
+                break;
+            case 7:
+                eesToKeep = expressionExperimentService.loadLackingTags();
+                break;
+            default:
+                throw new IllegalArgumentException( "Unknown filter: " + filter );
         }
+
+        /*
+         * TODO support more filters, and use an enumeration.
+         */
 
         if ( eesToKeep != null ) {
             if ( eesToKeep.isEmpty() ) {
@@ -1127,81 +1140,12 @@ public class ExpressionExperimentController extends AbstractTaskService {
                     filtered.add( eevo );
                 }
             }
-
             return filtered;
 
         }
 
-        // temporary.
+        // temporary - no filtering.
         return eeValObjectCol;
-    }
-
-    /**
-     * @param recentDateInfo
-     * @param expressionExperiments
-     * @param limit Only this many will be returned (ties at the cutoff date will result in more), or all of them, but
-     *        sorted.
-     * @return
-     */
-    private List<ExpressionExperimentValueObject> filterByLastUpdate( Map<Long, Date> recentDateInfo,
-            Collection<ExpressionExperimentValueObject> expressionExperiments, int limit ) {
-
-        StopWatch timer = new StopWatch();
-        timer.start();
-
-        List<ExpressionExperimentValueObject> results = new ArrayList<ExpressionExperimentValueObject>();
-
-        if ( limit == 0 || expressionExperiments.size() < Math.abs( limit ) ) {
-            results.addAll( expressionExperiments );
-            return results;
-        }
-
-        List<Date> dates = new ArrayList<Date>();
-        dates.addAll( recentDateInfo.values() );
-        Collections.sort( dates );
-
-        Date cutoff = null;
-        int j = 0;
-        if ( limit > 0 ) {
-            for ( int i = dates.size() - 1; i >= 0; i-- ) {
-                cutoff = dates.get( i );
-                if ( ++j > limit ) {
-                    log.info( "Cutoff date: " + cutoff );
-                    break;
-                }
-            }
-        } else {
-            // least recently updated
-            for ( int i = 0; i < Math.abs( limit ); i++ ) {
-                cutoff = dates.get( i );
-                if ( ++j > Math.abs( limit ) ) {
-                    log.info( "Cutoff date: " + cutoff );
-                    break;
-                }
-            }
-        }
-
-        Collection<Long> keepers = new HashSet<Long>();
-        for ( Long eeId : recentDateInfo.keySet() ) {
-            Date d = recentDateInfo.get( eeId );
-            if ( d.after( cutoff ) || d.equals( cutoff ) ) {
-                keepers.add( eeId );
-            }
-            if ( keepers.size() >= Math.abs( limit ) ) break;
-        }
-
-        for ( ExpressionExperimentValueObject vo : expressionExperiments ) {
-            if ( keepers.contains( vo.getId() ) ) {
-                results.add( vo );
-            }
-        }
-
-        if ( timer.getTime() > 1000 ) {
-            log.info( "Filter by date: " + timer.getTime() + "ms" );
-        }
-
-        return results;
-
     }
 
     /**
@@ -1253,10 +1197,11 @@ public class ExpressionExperimentController extends AbstractTaskService {
      * @param filterDataByUser
      * @param limit - return the N most recently (limit > 0) or least recently updated experiments (limit < 0) or all
      *        (limit == 0)
+     * @param filter setting
      * @return
      */
     private Collection<ExpressionExperimentValueObject> getEEVOsForManager( Long taxonId, Collection<Long> ids,
-            boolean filterDataByUser, Integer limit ) {
+            boolean filterDataByUser, Integer limit, Integer filter ) {
         Collection<ExpressionExperimentValueObject> eeValObjectCol;
         if ( taxonId != null && ( ids == null || ids.isEmpty() ) ) {
             Taxon taxon = taxonService.load( taxonId );
@@ -1269,6 +1214,8 @@ public class ExpressionExperimentController extends AbstractTaskService {
         } else {
             eeValObjectCol = this.getFilteredExpressionExperimentValueObjects( null, ids, filterDataByUser );
         }
+
+        if ( filter != null && filter > 0 ) eeValObjectCol = applyFilter( eeValObjectCol, filter );
 
         if ( limit != 0 ) {
             Collection<Long> idsOfFetched = EntityUtils.getIds( eeValObjectCol );

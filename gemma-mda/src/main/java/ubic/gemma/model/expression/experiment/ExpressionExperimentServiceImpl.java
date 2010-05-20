@@ -110,6 +110,16 @@ public class ExpressionExperimentServiceImpl extends
         return this.getExpressionExperimentDao().loadLackingEvent( eventType );
     }
 
+    @Override
+    public Collection<ExpressionExperiment> loadLackingFactors() {
+        return this.getExpressionExperimentDao().loadLackingFactors();
+    }
+
+    @Override
+    public Collection<ExpressionExperiment> loadLackingTags() {
+        return this.getExpressionExperimentDao().loadLackingTags();
+    }
+
     /*
      * Note: implemented via SpringSecurity.
      * 
@@ -127,6 +137,12 @@ public class ExpressionExperimentServiceImpl extends
     @Override
     public Collection<ExpressionExperiment> loadMySharedExpressionExperiments() {
         return loadAll();
+    }
+
+    @Override
+    public Collection<ExpressionExperiment> loadTroubled() {
+        Map<Long, AuditEvent> lastTroubleEvents = this.getLastTroubleEvents();
+        return this.loadMultiple( lastTroubleEvents.keySet() );
     }
 
     /*
@@ -156,6 +172,20 @@ public class ExpressionExperimentServiceImpl extends
             lastEventMap.put( experiment.getId(), last );
         }
         return lastEventMap;
+    }
+
+    private Map<Long, AuditEvent> getLastTroubleEvents() {
+        Collection<ExpressionExperiment> ees = this.loadAll();
+
+        // this checks the array designs, too.
+        Map<Auditable, AuditEvent> directEvents = this.getAuditEventDao().getLastOutstandingTroubleEvents( ees );
+
+        Map<Long, AuditEvent> troubleMap = new HashMap<Long, AuditEvent>();
+        for ( Auditable a : directEvents.keySet() ) {
+            troubleMap.put( a.getId(), directEvents.get( a ) );
+        }
+
+        return troubleMap;
     }
 
     @Override

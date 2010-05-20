@@ -1671,4 +1671,28 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
         }
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDao#loadLackingFactors()
+     */
+    @SuppressWarnings("unchecked")
+    public Collection<ExpressionExperiment> loadLackingFactors() {
+        return this
+                .getHibernateTemplate()
+                .find(
+                        "select e from ExpressionExperimentImpl e join e.experimentalDesign d where d.experimentalFactors.size =  0" );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDao#loadLackingTags()
+     */
+    @SuppressWarnings("unchecked")
+    public Collection<ExpressionExperiment> loadLackingTags() {
+        return this.getHibernateTemplate().find(
+                "select e from ExpressionExperimentImpl e where e.characteristics.size = 0" );
+    }
+
 }

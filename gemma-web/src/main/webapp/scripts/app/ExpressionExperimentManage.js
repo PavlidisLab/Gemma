@@ -265,6 +265,27 @@ Ext.onReady(function() {
 
 	};
 
+	var detailsmask = null;
+
+	var showEEDetails = function(model, rowindex, record) {
+
+		if (detailsmask == null) {
+			detailsmask = new Ext.LoadMask(dataSetDetailsPanel.body, {
+						msg : "Loading details ..."
+					});
+		}
+
+		detailsmask.show();
+		ExpressionExperimentController.getDescription(record.id, {
+					callback : function(data) {
+						Ext.DomHelper.overwrite(dataSetDetailsPanel.body, "<h1>" + record.get('shortName')
+										+ "</h1><h2>" + record.get('name') + "</h2><p>" + data + "</p>");
+						detailsmask.hide();
+					}.createDelegate(this)
+				});
+
+	};
+
 	var columns = [/* rowExpander, */{
 		header : 'Short Name',
 		sortable : true,
@@ -386,31 +407,47 @@ Ext.onReady(function() {
 	}
 
 	var manager = new Gemma.EEReportPanel({
-		renderTo : 'eemanage',
-		store : store,
-		title : 'Experiment manager',
-		loadMask : true,
-		height : 600,
-		width : 1000,
-		taxonid : taxonid,
-		limit : limit,
-		filterMode : filterMode,
-		ids : ids,
-		colModel : new Ext.ux.grid.LockingColumnModel(columns),
-		view : new Ext.ux.grid.LockingGridView({
-					syncHeights : true
-				})
-			// ,
-			// rowExpander : rowExpander,
-			// plugins : rowExpander
+				store : store,
+				title : 'Experiment manager',
+				region : 'center',
+				loadMask : true,
+				height : 500,
+				taxonid : taxonid,
+				limit : limit,
+				filterMode : filterMode,
+				ids : ids,
+				colModel : new Ext.ux.grid.LockingColumnModel(columns),
+				view : new Ext.ux.grid.LockingGridView({
+							syncHeights : true
+						})
+			});
 
+	manager.getSelectionModel().on('rowselect', showEEDetails, this, {
+		buffer : 100
+			// keep from firing too many times at once
 		});
+
+	var dataSetDetailsPanel = new Ext.Panel({
+				region : 'south',
+				split : true,
+				bodyStyle : 'padding:8px',
+				height : 200,
+				autoScroll : true
+			});
+
+	new Ext.Panel({
+				layout : 'border',
+				renderTo : 'eemanage',
+				width : 1000,
+				height : 700,
+				items : [manager, dataSetDetailsPanel]
+			});
 
 	store.load({
 				params : [taxonid, ids, limit, filterMode]
 			});
-			
-			store.on('load', function(store, records, options) {
+
+	store.on('load', function(store, records, options) {
 				manager.setTitle("Showing " + records.length + " records.");
 			});
 
@@ -504,7 +541,7 @@ Gemma.EEReportPanel = Ext.extend(Ext.grid.GridPanel, {
 								id : 0,
 								fields : ['filterType', 'displayText'],
 								data : [[0, 'No filter'], [1, 'Need diff'], [2, 'Need coex'], [3, 'Has diff'],
-										[4, 'Has coex']]
+										[4, 'Has coex'], [5, 'Troubled'], [6, 'No factors'], [7, 'No tags']]
 									/*
 									 * TODO: support other filters.
 									 */
@@ -534,11 +571,11 @@ Gemma.EEReportPanel = Ext.extend(Ext.grid.GridPanel, {
 							store : new Ext.data.ArrayStore({
 										id : 0,
 										fields : ['count', 'displayText'],
-										data : [[50, '50 recent updates'], [100, '100 recent updates'],
-												[200, '200 recent updates'], [300, '300 recent updates'],
-												[500, '500 recent updates'], [1000, '1000'], ['0', 'All'], [-50, '50 oldest'],
-												[-100, '100 oldest'], [-200, '200 oldest'], [-300, '300 oldest'],
-												[-500, '500 oldest'], [-1000, '1000 oldest']]
+										data : [[50, '50 recently updated'], [100, '100 recently updated'],
+												[200, '200 recently updated'], [300, '300 recently updated'],
+												[500, '500 recently updated'], [-50, '50 oldest updates'],
+												[-100, '100 oldest updates'], [-200, '200 oldest updates'],
+												[-300, '300 oldest updates'], [-500, '500 oldest updates']]
 									}),
 							valueField : 'count',
 							displayField : 'displayText',

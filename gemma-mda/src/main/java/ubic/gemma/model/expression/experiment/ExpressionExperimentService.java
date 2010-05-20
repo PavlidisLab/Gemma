@@ -450,4 +450,13 @@ public interface ExpressionExperimentService {
     @Secured( { "GROUP_USER", "AFTER_ACL_MAP_READ" })
     public Map<ExpressionExperiment, Date> findByUpdatedLimit( Collection<Long> idsOfFetched, Integer limit );
 
+    @Secured( { "GROUP_USER", "AFTER_ACL_COLLECTION_READ" })
+    public Collection<ExpressionExperiment> loadTroubled();
+
+    @Secured( { "GROUP_USER", "AFTER_ACL_COLLECTION_READ" })
+    public Collection<ExpressionExperiment> loadLackingFactors();
+
+    @Secured( { "GROUP_USER", "AFTER_ACL_COLLECTION_READ" })
+    public Collection<ExpressionExperiment> loadLackingTags();
+
 }
