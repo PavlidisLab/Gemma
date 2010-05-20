@@ -22,6 +22,8 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.gene.GeneProductType;
+import ubic.gemma.model.genome.gene.GeneProductValueObject;
+import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.util.ConfigUtils;
 
@@ -51,13 +53,14 @@ public class LinkUtils {
 
         // String database = taxon.getExternalDatabase().getName();
         // FIXME get this from the taxon.
-        String database = "hg18";
+
+        String database = "";
         if ( organism.equalsIgnoreCase( "Human" ) ) {
-            database = "hg18";
+            database = ConfigUtils.getString( "gemma.goldenpath.db.human" );
         } else if ( organism.equalsIgnoreCase( "Rat" ) ) {
-            database = "rn4";
+            database = ConfigUtils.getString( "gemma.goldenpath.db.rat" );
         } else if ( organism.equalsIgnoreCase( "Mouse" ) ) {
-            database = "mm8";
+            database = ConfigUtils.getString( "gemma.goldenpath.db.mouse" );
         }
 
         String link = "http://genome.ucsc.edu/cgi-bin/hgTracks?org=" + organism + "&pix=850" + "&db=" + database
@@ -67,20 +70,12 @@ public class LinkUtils {
         return link;
     }
 
-    /**
-     * @param gene
-     * @return
-     */
-    public static String getGemmaGeneLink( Gene gene ) {
+    public static String getGemmaGeneLink( GeneValueObject gene ) {
         return "<a target='_blank' href='/Gemma/gene/showGene.html?id=" + gene.getId()
                 + "'><img height=10 width=10 src='/Gemma/images/logo/gemmaTiny.gif'></a>";
     }
 
-    /**
-     * @param gene
-     * @return
-     */
-    public static String getNcbiUrl( Gene gene ) {
+    public static String getNcbiUrl( GeneValueObject gene ) {
         return "http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gene&cmd=Retrieve&dopt=full_report&list_uids="
                 + gene.getNcbiId();
     }
@@ -89,9 +84,9 @@ public class LinkUtils {
      * @param product
      * @return
      */
-    public static String getNcbiUrl( GeneProduct product ) {
+    public static String getNcbiUrl( GeneProductValueObject product ) {
         String ncbiLink = "";
-        if ( product.getType() == GeneProductType.RNA ) {
+        if ( product.getType().equals( GeneProductType.RNA.getValue() ) ) {
             ncbiLink = "http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=Nucleotide&cmd=search&term=";
         } else {
             // assume protein
