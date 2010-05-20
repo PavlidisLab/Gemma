@@ -114,7 +114,11 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 						k.on('done', function(payload) {
 									this.fireEvent('reportUpdated', payload);
 								});
-					}.createDelegate(this)
+					}.createDelegate(this),
+					errorHandler : function(message, exception) {
+						Ext.Msg.alert("There was an error", message);
+						Ext.getBody().unmask();
+					}
 				});
 
 		ExpressionExperimentReportGenerationController.run.apply(this, callParams);
@@ -130,7 +134,11 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 						k.on('done', function(payload) {
 									this.fireEvent('reportUpdated', payload);
 								});
-					}.createDelegate(this)
+					}.createDelegate(this),
+					errorHandler : function(message, exception) {
+						Ext.Msg.alert("There was an error", message);
+						Ext.getBody().unmask();
+					}
 				});
 
 		ExpressionExperimentReportGenerationController.runAll.apply(this, callParams);
@@ -147,7 +155,11 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 						k.on('done', function(payload) {
 									this.fireEvent('tagsUpdated', payload);
 								});
-					}.createDelegate(this)
+					}.createDelegate(this),
+					errorHandler : function(message, exception) {
+						Ext.Msg.alert("There was an error", message);
+						Ext.getBody().unmask();
+					}
 				});
 
 		AnnotationController.autoTag.apply(this, callParams);
@@ -193,12 +205,11 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 						text : 'Help',
 						handler : function() {
 							Ext.Msg
-									.alert(
-											"Help with tagging",
-											"Select a 'category' for the term; then enter a term, "
-													+ "choosing from existing terms if possible. "
-													+ "Click 'create' to save it. You can also edit existing terms;"
-													+ " click 'save' to make the change stick, or 'delete' to remove a selected tag.");
+									.alert("Help with tagging",
+											"Select a 'category' for the term; then enter a term, " +
+													"choosing from existing terms if possible. " +
+													"Click 'create' to save it. You can also edit existing terms;" +
+													" click 'save' to make the change stick, or 'delete' to remove a selected tag.");
 						}
 					}, {
 						text : 'Done',
@@ -527,8 +538,8 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 							footer : true,
 							closable : true,
 							title : 'Differential expression analysis',
-							html : 'Please confirm. The analysis performed will be a ' + analysisType
-									+ '. If there is an existing analysis on the same factor(s), it will be deleted.',
+							html : 'Please confirm. The analysis performed will be a ' + analysisType +
+									'. If there is an existing analysis on the same factor(s), it will be deleted.',
 							buttons : [{
 										text : 'Proceed',
 										handler : function(btn, text) {
@@ -613,7 +624,11 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 											k.on('done', function(payload) {
 														this.fireEvent('processedVector', payload);
 													});
-										}.createDelegate(this)
+										}.createDelegate(this),
+										errorHandler : function(message, exception) {
+											Ext.Msg.alert("There was an error", message);
+											Ext.getBody().unmask();
+										}
 									});
 							ProcessedExpressionDataVectorCreateController.run.apply(this, callParams);
 						}
