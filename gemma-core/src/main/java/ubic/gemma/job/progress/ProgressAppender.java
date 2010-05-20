@@ -54,7 +54,12 @@ public class ProgressAppender extends AppenderSkeleton {
             return;
         }
 
-        if ( event.getLevel().isGreaterOrEqual( Level.INFO ) && event.getMessage() != null ) {
+        /*
+         * 'Remote task' logs are events that are duplicates of logging events from the worker. This appender should not
+         * be configured for spaces jobs but it can happen...not sure how yet
+         */
+        if ( event.getLevel().isGreaterOrEqual( Level.INFO ) && event.getMessage() != null
+                && !event.getMessage().toString().contains( "[Remote task:" ) ) {
             ProgressManager.updateJob( this.taskId, event.getMessage().toString() );
         }
     }
