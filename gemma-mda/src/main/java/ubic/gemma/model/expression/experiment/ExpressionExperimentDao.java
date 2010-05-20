@@ -19,6 +19,7 @@
 package ubic.gemma.model.expression.experiment;
 
 import java.util.Collection;
+import java.util.Date;
 import java.util.Map;
 
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
@@ -353,5 +354,15 @@ public interface ExpressionExperimentDao extends BioAssaySetDao<ExpressionExperi
      * @return
      */
     public Collection<ExpressionExperiment> loadLackingEvent( Class<? extends AuditEventType> eventType );
+
+    /**
+     * Return up to Math.abs(limit) experiments that were most recently updated (limit >0) or least recently updated
+     * (limit < 0).
+     * 
+     * @param idsOfFetched
+     * @param limit
+     * @return
+     */
+    public Map<ExpressionExperiment, Date> findByUpdatedLimit( Collection<Long> ids, Integer limit );
 
 }

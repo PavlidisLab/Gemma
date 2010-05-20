@@ -26,6 +26,8 @@ import java.util.Map;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneProduct;
+import ubic.gemma.model.genome.gene.GeneProductValueObject;
+import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 
 /**
@@ -41,7 +43,7 @@ public class GeneMappingSummary implements Serializable {
 
     private BlatResult blatResult;
 
-    private Map<GeneProduct, Gene> geneProductMap;
+    private Map<GeneProductValueObject, GeneValueObject> geneProductMap;
 
     // this is a bit of a hack - we need this information when displaying the blat results for a probe. Might need name
     // etc. too.
@@ -50,8 +52,8 @@ public class GeneMappingSummary implements Serializable {
     /*
      * These maps are maintained for javascript clients, which cannot marshal maps unless the keys are strings.
      */
-    private Map<String, GeneProduct> geneProductIdMap;
-    private Map<String, Gene> geneProductIdGeneMap;
+    private Map<String, GeneProductValueObject> geneProductIdMap;
+    private Map<String, GeneValueObject> geneProductIdGeneMap;
 
     private double identity = 0.0;
     private double score = 0.0;
@@ -60,9 +62,9 @@ public class GeneMappingSummary implements Serializable {
     private String blatResultId;
 
     public GeneMappingSummary() {
-        geneProductMap = new HashMap<GeneProduct, Gene>();
-        geneProductIdMap = new HashMap<String, GeneProduct>();
-        geneProductIdGeneMap = new HashMap<String, Gene>();
+        geneProductMap = new HashMap<GeneProductValueObject, GeneValueObject>();
+        geneProductIdMap = new HashMap<String, GeneProductValueObject>();
+        geneProductIdGeneMap = new HashMap<String, GeneValueObject>();
     }
 
     /**
@@ -88,22 +90,22 @@ public class GeneMappingSummary implements Serializable {
     /**
      * @return the geneProductMap
      */
-    public Map<GeneProduct, Gene> getGeneProductMap() {
+    public Map<GeneProductValueObject, GeneValueObject> getGeneProductMap() {
         return geneProductMap;
     }
 
     /**
      * @param geneProductMap the geneProductMap to set
      */
-    public void setGeneProductMap( Map<GeneProduct, Gene> geneProductMap ) {
+    public void setGeneProductMap( Map<GeneProductValueObject, GeneValueObject> geneProductMap ) {
         this.geneProductMap = geneProductMap;
     }
 
-    public Collection<GeneProduct> getGeneProducts() {
+    public Collection<GeneProductValueObject> getGeneProducts() {
         return this.geneProductMap.keySet();
     }
 
-    public Gene getGene( GeneProduct geneProduct ) {
+    public GeneValueObject getGene( GeneProductValueObject geneProduct ) {
         return this.geneProductMap.get( geneProduct );
     }
 
@@ -111,17 +113,17 @@ public class GeneMappingSummary implements Serializable {
      * @param geneProduct
      * @param gene
      */
-    public void addGene( GeneProduct geneProduct, Gene gene ) {
+    public void addGene( GeneProductValueObject geneProduct, GeneValueObject gene ) {
         geneProductIdMap.put( geneProduct.getId().toString(), geneProduct );
         geneProductMap.put( geneProduct, gene );
         geneProductIdGeneMap.put( geneProduct.getId().toString(), gene );
     }
 
-    public Map<String, Gene> getGeneProductIdGeneMap() {
+    public Map<String, GeneValueObject> getGeneProductIdGeneMap() {
         return geneProductIdGeneMap;
     }
 
-    public Map<String, GeneProduct> getGeneProductIdMap() {
+    public Map<String, GeneProductValueObject> getGeneProductIdMap() {
         return geneProductIdMap;
     }
 

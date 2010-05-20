@@ -72,7 +72,7 @@ public abstract class BackgroundJob<T extends TaskCommand> implements Callable<T
         ProgressAppender logAppender = null;
         try {
 
-            if ( !this.command.isWillRunOnGrid() ) {
+            if ( !this.getCommand().isWillRunOnGrid() ) {
                 /*
                  * Set up a local logger. On the grid, logging is set up by the TaskMethodAdvice
                  */

@@ -38,6 +38,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
  */
 public class TaskCommand implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+
     /**
      * How long we will wait for a started task before giving up waiting for it. Tasks running longer than this will be
      * cancelled. This does not include time spent queued.

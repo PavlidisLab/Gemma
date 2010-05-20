@@ -49,6 +49,8 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.biosequence.SequenceType;
 import ubic.gemma.model.genome.gene.GeneProduct;
+import ubic.gemma.model.genome.gene.GeneProductValueObject;
+import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
@@ -242,8 +244,9 @@ public class CompositeSequenceController extends BaseController {
         Collection<BioSequence2GeneProduct> bs2gps = cs.getBiologicalCharacteristic().getBioSequence2GeneProduct();
 
         for ( BioSequence2GeneProduct bs2gp : bs2gps ) {
-            GeneProduct geneProduct = bs2gp.getGeneProduct();
-            Gene gene = geneProduct.getGene();
+            GeneProductValueObject geneProduct = new GeneProductValueObject( bs2gp.getGeneProduct() );
+
+            GeneValueObject gene = new GeneValueObject( bs2gp.getGeneProduct().getGene() );
             BlatResult blatResult = null;
 
             if ( ( bs2gp instanceof BlatAssociation ) ) {

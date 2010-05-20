@@ -27,6 +27,7 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -310,6 +311,12 @@ public class ExpressionExperimentController extends AbstractTaskService {
 
     @Autowired
     private TaxonService taxonService;
+
+    @Autowired
+    ExpressionDataMatrixService expressionDataMatrixService;
+
+    @Autowired
+    ProcessedExpressionDataVectorService processedExpressionDataVectorService;
 
     /**
      * Exposed for AJAX calls.
@@ -622,7 +629,8 @@ public class ExpressionExperimentController extends AbstractTaskService {
      * 
      * @param taxonId can be null
      * @param sIds - ids
-     * @param limit If >0, get the most recently updated N experiments, where N <= limit.
+     * @param limit If >0, get the most recently updated N experiments, where N <= limit; or if < 0, get the least
+     *        recently updated; if 0, or null, return all.
      * @param filter if non-null, limit data sets to ones meeting criteria.
      * @return
      */
@@ -644,7 +652,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
             throw new AccessDeniedException( "User does not have access to experiment management" );
         }
 
-        eeValObjectCol = getEEVOsForManager( taxonId, ids, filterDataByUser );
+        eeValObjectCol = getEEVOsForManager( taxonId, ids, filterDataByUser, limit );
 
         if ( eeValObjectCol.isEmpty() ) {
             return new HashSet<ExpressionExperimentValueObject>();
@@ -661,7 +669,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
         timer.reset();
         timer.start();
 
-        Map<Long, Date> recentDateInfo = getReportData( eeValObjectCol );
+        getReportData( eeValObjectCol );
 
         if ( timer.getTime() > 1000 ) {
             log.info( "Filling in report data: " + timer.getTime() + "ms" );
@@ -672,62 +680,12 @@ public class ExpressionExperimentController extends AbstractTaskService {
 
         if ( filter != null && filter > 0 ) eeValObjectCol = applyFilter( eeValObjectCol, filter );
 
-        List<ExpressionExperimentValueObject> result = getRecentlyUpdated( recentDateInfo, eeValObjectCol, limit );
+        // List<ExpressionExperimentValueObject> result = filterByLastUpdate( recentDateInfo, eeValObjectCol, limit );
 
         if ( timer.getTime() > 1000 ) {
             log.info( "Sorting and filtering: " + timer.getTime() + "ms; limit=" + limit );
         }
 
-        return result;
-    }
-
-    /**
-     * Filter based on criteria of which events etc. the data sets have.
-     * 
-     * @param eeValObjectCol
-     * @param filter
-     * @return
-     */
-    private Collection<ExpressionExperimentValueObject> applyFilter(
-            Collection<ExpressionExperimentValueObject> eeValObjectCol, Integer filter ) {
-        Collection<ExpressionExperimentValueObject> filtered = new HashSet<ExpressionExperimentValueObject>();
-        Collection<ExpressionExperiment> eesToKeep = null;
-
-        /*
-         * FIXME it might be faster to include the EEs as an argument to these methods, as a constraint.
-         */
-
-        if ( filter == 1 ) {
-            eesToKeep = expressionExperimentService.loadLackingEvent( DifferentialExpressionAnalysisEvent.class );
-        } else if ( filter == 2 ) {
-            eesToKeep = expressionExperimentService.loadLackingEvent( LinkAnalysisEvent.class );
-        } else if ( filter == 3 ) {
-            eesToKeep = expressionExperimentService.loadWithEvent( DifferentialExpressionAnalysisEvent.class );
-        } else if ( filter == 4 ) {
-            eesToKeep = expressionExperimentService.loadWithEvent( LinkAnalysisEvent.class );
-            /*
-             * TODO support more filters, and use an enumeration.
-             */
-        } else {
-            throw new IllegalArgumentException( "Unknown filter: " + filter );
-        }
-
-        if ( eesToKeep != null ) {
-            if ( eesToKeep.isEmpty() ) {
-                return filtered;
-            }
-            Map<Long, Object> idMap = EntityUtils.getIdMap( eesToKeep );
-            for ( ExpressionExperimentValueObject eevo : eeValObjectCol ) {
-                if ( idMap.containsKey( eevo.getId() ) ) {
-                    filtered.add( eevo );
-                }
-            }
-
-            return filtered;
-
-        }
-
-        // temporary.
         return eeValObjectCol;
     }
 
@@ -923,45 +881,6 @@ public class ExpressionExperimentController extends AbstractTaskService {
         return mav;
     }
 
-    @RequestMapping("/refreshCorrMatrix.html")
-    public ModelAndView updateCorrelationMatrix( HttpServletRequest request, HttpServletResponse response ) {
-        ExpressionExperiment expressionExperiment;
-
-        /*
-         * TODO make this an ajax call.
-         */
-        Long id = null;
-
-        if ( request.getParameter( "id" ) == null ) {
-            throw new IllegalArgumentException( "Must provide an id" );
-
-        }
-        try {
-            id = Long.parseLong( request.getParameter( "id" ) );
-        } catch ( NumberFormatException e ) {
-            throw new IllegalArgumentException( "You must provide a valid numerical identifier" );
-        }
-        expressionExperiment = expressionExperimentService.load( id );
-        if ( expressionExperiment == null ) {
-            throw new IllegalArgumentException( "Unable to access experiment with id=" + id );
-        }
-
-        Collection<ProcessedExpressionDataVector> vectors = processedExpressionDataVectorService
-                .getProcessedDataVectors( expressionExperiment );
-
-        ExpressionDataDoubleMatrix datamatrix = expressionDataMatrixService.getFilteredMatrix( expressionExperiment,
-                new FilterConfig(), vectors );
-        ExpressionDataSampleCorrelation.process( datamatrix, expressionExperiment );
-
-        return showExpressionExperiment( request, response );
-
-    }
-
-    @Autowired
-    ProcessedExpressionDataVectorService processedExpressionDataVectorService;
-    @Autowired
-    ExpressionDataMatrixService expressionDataMatrixService;
-
     /**
      * @param request
      * @param response
@@ -1037,15 +956,6 @@ public class ExpressionExperimentController extends AbstractTaskService {
         return mav;
     }
 
-    private void addQCInfo( ExpressionExperiment expressionExperiment, ModelAndView mav ) {
-        mav.addObject( "hasCorrDistFile", ExpressionExperimentQCUtils.hasCorrDistFile( expressionExperiment ) );
-        mav.addObject( "hasCorrMatFile", ExpressionExperimentQCUtils.hasCorrMatFile( expressionExperiment ) );
-        mav.addObject( "hasPvalueDistFiles", ExpressionExperimentQCUtils.hasPvalueDistFiles( expressionExperiment ) );
-        mav.addObject( "hasPCAFile", ExpressionExperimentQCUtils.hasPCAFile( expressionExperiment ) );
-        mav.addObject( "hasNodeDegreeDistFile", ExpressionExperimentQCUtils
-                .hasNodeDegreeDistFile( expressionExperiment ) );
-    }
-
     /**
      * shows a list of BioAssays for an expression experiment subset
      * 
@@ -1117,6 +1027,40 @@ public class ExpressionExperimentController extends AbstractTaskService {
         return eeDetails;
     }
 
+    @RequestMapping("/refreshCorrMatrix.html")
+    public ModelAndView updateCorrelationMatrix( HttpServletRequest request, HttpServletResponse response ) {
+        ExpressionExperiment expressionExperiment;
+
+        /*
+         * TODO make this an ajax call.
+         */
+        Long id = null;
+
+        if ( request.getParameter( "id" ) == null ) {
+            throw new IllegalArgumentException( "Must provide an id" );
+
+        }
+        try {
+            id = Long.parseLong( request.getParameter( "id" ) );
+        } catch ( NumberFormatException e ) {
+            throw new IllegalArgumentException( "You must provide a valid numerical identifier" );
+        }
+        expressionExperiment = expressionExperimentService.load( id );
+        if ( expressionExperiment == null ) {
+            throw new IllegalArgumentException( "Unable to access experiment with id=" + id );
+        }
+
+        Collection<ProcessedExpressionDataVector> vectors = processedExpressionDataVectorService
+                .getProcessedDataVectors( expressionExperiment );
+
+        ExpressionDataDoubleMatrix datamatrix = expressionDataMatrixService.getFilteredMatrix( expressionExperiment,
+                new FilterConfig(), vectors );
+        ExpressionDataSampleCorrelation.process( datamatrix, expressionExperiment );
+
+        return showExpressionExperiment( request, response );
+
+    }
+
     /**
      * AJAX. Associate the given pubmedId with the given expression experiment.
      * 
@@ -1131,6 +1075,133 @@ public class ExpressionExperimentController extends AbstractTaskService {
         UpdatePubMed runner = new UpdatePubMed( command );
         startTask( runner );
         return runner.getTaskId();
+    }
+
+    private void addQCInfo( ExpressionExperiment expressionExperiment, ModelAndView mav ) {
+        mav.addObject( "hasCorrDistFile", ExpressionExperimentQCUtils.hasCorrDistFile( expressionExperiment ) );
+        mav.addObject( "hasCorrMatFile", ExpressionExperimentQCUtils.hasCorrMatFile( expressionExperiment ) );
+        mav.addObject( "hasPvalueDistFiles", ExpressionExperimentQCUtils.hasPvalueDistFiles( expressionExperiment ) );
+        mav.addObject( "hasPCAFile", ExpressionExperimentQCUtils.hasPCAFile( expressionExperiment ) );
+        mav.addObject( "hasNodeDegreeDistFile", ExpressionExperimentQCUtils
+                .hasNodeDegreeDistFile( expressionExperiment ) );
+    }
+
+    /**
+     * Filter based on criteria of which events etc. the data sets have.
+     * 
+     * @param eeValObjectCol
+     * @param filter
+     * @return
+     */
+    private Collection<ExpressionExperimentValueObject> applyFilter(
+            Collection<ExpressionExperimentValueObject> eeValObjectCol, Integer filter ) {
+        Collection<ExpressionExperimentValueObject> filtered = new HashSet<ExpressionExperimentValueObject>();
+        Collection<ExpressionExperiment> eesToKeep = null;
+
+        /*
+         * FIXME it might be faster to include the EEs as an argument to these methods, as a constraint.
+         */
+
+        if ( filter == 1 ) {
+            eesToKeep = expressionExperimentService.loadLackingEvent( DifferentialExpressionAnalysisEvent.class );
+        } else if ( filter == 2 ) {
+            eesToKeep = expressionExperimentService.loadLackingEvent( LinkAnalysisEvent.class );
+        } else if ( filter == 3 ) {
+            eesToKeep = expressionExperimentService.loadWithEvent( DifferentialExpressionAnalysisEvent.class );
+        } else if ( filter == 4 ) {
+            eesToKeep = expressionExperimentService.loadWithEvent( LinkAnalysisEvent.class );
+            /*
+             * TODO support more filters, and use an enumeration.
+             */
+        } else {
+            throw new IllegalArgumentException( "Unknown filter: " + filter );
+        }
+
+        if ( eesToKeep != null ) {
+            if ( eesToKeep.isEmpty() ) {
+                return filtered;
+            }
+            Map<Long, Object> idMap = EntityUtils.getIdMap( eesToKeep );
+            for ( ExpressionExperimentValueObject eevo : eeValObjectCol ) {
+                if ( idMap.containsKey( eevo.getId() ) ) {
+                    filtered.add( eevo );
+                }
+            }
+
+            return filtered;
+
+        }
+
+        // temporary.
+        return eeValObjectCol;
+    }
+
+    /**
+     * @param recentDateInfo
+     * @param expressionExperiments
+     * @param limit Only this many will be returned (ties at the cutoff date will result in more), or all of them, but
+     *        sorted.
+     * @return
+     */
+    private List<ExpressionExperimentValueObject> filterByLastUpdate( Map<Long, Date> recentDateInfo,
+            Collection<ExpressionExperimentValueObject> expressionExperiments, int limit ) {
+
+        StopWatch timer = new StopWatch();
+        timer.start();
+
+        List<ExpressionExperimentValueObject> results = new ArrayList<ExpressionExperimentValueObject>();
+
+        if ( limit == 0 || expressionExperiments.size() < Math.abs( limit ) ) {
+            results.addAll( expressionExperiments );
+            return results;
+        }
+
+        List<Date> dates = new ArrayList<Date>();
+        dates.addAll( recentDateInfo.values() );
+        Collections.sort( dates );
+
+        Date cutoff = null;
+        int j = 0;
+        if ( limit > 0 ) {
+            for ( int i = dates.size() - 1; i >= 0; i-- ) {
+                cutoff = dates.get( i );
+                if ( ++j > limit ) {
+                    log.info( "Cutoff date: " + cutoff );
+                    break;
+                }
+            }
+        } else {
+            // least recently updated
+            for ( int i = 0; i < Math.abs( limit ); i++ ) {
+                cutoff = dates.get( i );
+                if ( ++j > Math.abs( limit ) ) {
+                    log.info( "Cutoff date: " + cutoff );
+                    break;
+                }
+            }
+        }
+
+        Collection<Long> keepers = new HashSet<Long>();
+        for ( Long eeId : recentDateInfo.keySet() ) {
+            Date d = recentDateInfo.get( eeId );
+            if ( d.after( cutoff ) || d.equals( cutoff ) ) {
+                keepers.add( eeId );
+            }
+            if ( keepers.size() >= Math.abs( limit ) ) break;
+        }
+
+        for ( ExpressionExperimentValueObject vo : expressionExperiments ) {
+            if ( keepers.contains( vo.getId() ) ) {
+                results.add( vo );
+            }
+        }
+
+        if ( timer.getTime() > 1000 ) {
+            log.info( "Filter by date: " + timer.getTime() + "ms" );
+        }
+
+        return results;
+
     }
 
     /**
@@ -1180,10 +1251,12 @@ public class ExpressionExperimentController extends AbstractTaskService {
      * @param taxonId
      * @param ids - takes precedence
      * @param filterDataByUser
+     * @param limit - return the N most recently (limit > 0) or least recently updated experiments (limit < 0) or all
+     *        (limit == 0)
      * @return
      */
     private Collection<ExpressionExperimentValueObject> getEEVOsForManager( Long taxonId, Collection<Long> ids,
-            boolean filterDataByUser ) {
+            boolean filterDataByUser, Integer limit ) {
         Collection<ExpressionExperimentValueObject> eeValObjectCol;
         if ( taxonId != null && ( ids == null || ids.isEmpty() ) ) {
             Taxon taxon = taxonService.load( taxonId );
@@ -1196,6 +1269,29 @@ public class ExpressionExperimentController extends AbstractTaskService {
         } else {
             eeValObjectCol = this.getFilteredExpressionExperimentValueObjects( null, ids, filterDataByUser );
         }
+
+        if ( limit != 0 ) {
+            Collection<Long> idsOfFetched = EntityUtils.getIds( eeValObjectCol );
+            Map<ExpressionExperiment, Date> filteredByLimit = this.expressionExperimentService.findByUpdatedLimit(
+                    idsOfFetched, limit );
+
+            Map<Long, Date> filterdByLimitIdMap = new HashMap<Long, Date>();
+            for ( ExpressionExperiment e : filteredByLimit.keySet() ) {
+                filterdByLimitIdMap.put( e.getId(), filteredByLimit.get( e ) );
+            }
+
+            for ( Iterator<ExpressionExperimentValueObject> it = eeValObjectCol.iterator(); it.hasNext(); ) {
+                ExpressionExperimentValueObject obj = it.next();
+                Long id = obj.getId();
+                if ( !filterdByLimitIdMap.containsKey( id ) ) {
+                    it.remove();
+                } else {
+                    obj.setDateLastUpdated( filterdByLimitIdMap.get( id ) );
+                }
+
+            }
+        }
+
         return eeValObjectCol;
     }
 
@@ -1302,64 +1398,6 @@ public class ExpressionExperimentController extends AbstractTaskService {
         if ( resource != null ) return resource.getLabel();
 
         return null;
-    }
-
-    /**
-     * @param recentDateInfo
-     * @param expressionExperiments
-     * @param limit Only this many will be returned (ties at the cutoff date will result in more), or all of them, but
-     *        sorted.
-     * @return
-     */
-    private List<ExpressionExperimentValueObject> getRecentlyUpdated( Map<Long, Date> recentDateInfo,
-            Collection<ExpressionExperimentValueObject> expressionExperiments, int limit ) {
-
-        StopWatch timer = new StopWatch();
-        timer.start();
-
-        List<ExpressionExperimentValueObject> results = new ArrayList<ExpressionExperimentValueObject>();
-
-        if ( limit <= 0 || expressionExperiments.size() < limit ) {
-            log.debug( "Too few studies to filter, returning all" );
-            results.addAll( expressionExperiments );
-            return results;
-        }
-
-        List<Date> dates = new ArrayList<Date>();
-        dates.addAll( recentDateInfo.values() );
-        Collections.sort( dates );
-
-        Date cutoff = null;
-        int j = 0;
-        for ( int i = dates.size() - 1; i >= 0; i-- ) {
-            cutoff = dates.get( i );
-            if ( ++j > limit ) {
-                log.info( "Cutoff date: " + cutoff );
-                break;
-            }
-        }
-
-        Collection<Long> keepers = new HashSet<Long>();
-        for ( Long eeId : recentDateInfo.keySet() ) {
-            Date d = recentDateInfo.get( eeId );
-            if ( d.after( cutoff ) || d.equals( cutoff ) ) {
-                keepers.add( eeId );
-            }
-            if ( keepers.size() >= limit ) break;
-        }
-
-        for ( ExpressionExperimentValueObject vo : expressionExperiments ) {
-            if ( keepers.contains( vo.getId() ) ) {
-                results.add( vo );
-            }
-        }
-
-        if ( timer.getTime() > 1000 ) {
-            log.info( "Filter by date: " + timer.getTime() + "ms" );
-        }
-
-        return results;
-
     }
 
     /**

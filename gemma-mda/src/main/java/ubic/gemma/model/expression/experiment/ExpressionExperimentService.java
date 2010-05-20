@@ -19,6 +19,7 @@
 package ubic.gemma.model.expression.experiment;
 
 import java.util.Collection;
+import java.util.Date;
 import java.util.Map;
 
 import org.springframework.security.access.annotation.Secured;
@@ -437,5 +438,16 @@ public interface ExpressionExperimentService {
      */
     @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
     public void update( ExpressionExperiment expressionExperiment );
+
+    /**
+     * Return up to Math.abs(limit) experiments that were most recently updated (limit >0) or least recently updated
+     * (limit < 0).
+     * 
+     * @param idsOfFetched
+     * @param limit
+     * @return map of EE to last update event date.
+     */
+    @Secured( { "GROUP_USER", "AFTER_ACL_MAP_READ" })
+    public Map<ExpressionExperiment, Date> findByUpdatedLimit( Collection<Long> idsOfFetched, Integer limit );
 
 }

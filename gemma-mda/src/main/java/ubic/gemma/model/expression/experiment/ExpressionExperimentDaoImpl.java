@@ -25,6 +25,7 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,6 +35,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.hibernate.Criteria;
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
@@ -42,6 +44,8 @@ import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.criterion.DetachedCriteria;
+import org.hibernate.criterion.Order;
+import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.type.LongType;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -77,9 +81,44 @@ import ubic.gemma.util.EntityUtils;
 @Repository
 public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
 
+    private static final int BATCH_SIZE = 1000;
+
     static Log log = LogFactory.getLog( ExpressionExperimentDaoImpl.class.getName() );
 
-    private static final int BATCH_SIZE = 1000;
+    /**
+     * Sort a map's values. TODO: put this somewhere where it might be used by others.
+     * <p>
+     * Based on a concept at www.xinotes.org/notes/note/306
+     * 
+     * @param m
+     * @param desc
+     * @return
+     */
+    private static List<?> sortByValue( final Map<?, ?> m, final boolean desc ) {
+        List<Object> keys = new ArrayList<Object>();
+        keys.addAll( m.keySet() );
+        Collections.sort( keys, new Comparator<Object>() {
+            @Override
+            public int compare( Object o1, Object o2 ) {
+                Object v1 = m.get( o1 );
+                Object v2 = m.get( o2 );
+                if ( v1 == null ) {
+                    return v2 == null ? 0 : 1;
+                } else if ( v2 == null ) {
+                    return 1;
+                } else if ( v1 instanceof Comparable ) {
+                    int v = ( ( Comparable ) v1 ).compareTo( v2 );
+                    if ( desc ) {
+                        return -v;
+                    }
+                    return v;
+                } else {
+                    return 0;
+                }
+            }
+        } );
+        return keys;
+    }
 
     @Autowired
     public ExpressionExperimentDaoImpl( SessionFactory sessionFactory ) {
@@ -161,6 +200,54 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
     /*
      * (non-Javadoc)
      * 
+     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDao#findByUpdatedLimit(java.util.Collection,
+     * java.lang.Integer)
+     */
+    @SuppressWarnings("unchecked")
+    public Map<ExpressionExperiment, Date> findByUpdatedLimit( Collection<Long> ids, Integer limit ) {
+        Session s = this.getHibernateTemplate().getSessionFactory().openSession();
+
+        /*
+         * Get the most recent update date for all the experiments requested. I cannot figure out how to get an 'order
+         * by' on this query, so we always have to get everything and sort afterwards.
+         */
+        String queryString = "select e, (select max(ev.date) from e.auditTrail.events ev ) from ExpressionExperimentImpl e where e.id in (:ids) ";
+
+        Query q = s.createQuery( queryString );
+        q.setParameterList( "ids", ids );
+        // q.setMaxResults( Math.abs( limit ) );
+        List list = q.list();
+
+        Map<ExpressionExperiment, Date> result = new HashMap<ExpressionExperiment, Date>();
+
+        for ( Object o : list ) {
+            Object[] oa = ( Object[] ) o;
+            result.put( ( ExpressionExperiment ) oa[0], ( Date ) oa[1] );
+            // log.info( ( ( ExpressionExperiment ) oa[0] ).getShortName() + " " + oa[1] );
+        }
+
+        List<?> sortedKeys = sortByValue( result, limit > 0 );
+
+        assert sortedKeys.size() == ids.size() : "Expected " + ids.size() + ", got " + sortedKeys.size();
+
+        int j = 0;
+        for ( Iterator<?> i = sortedKeys.iterator(); i.hasNext(); ) {
+            Object next = i.next();
+            if ( j >= Math.abs( limit ) ) {
+                result.remove( next );
+            }
+            j++;
+        }
+
+        assert result.size() <= Math.abs( limit ) : "Expected " + Math.abs( limit ) + ", got " + result.size();
+
+        return result;
+
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
      * @seeubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#findOrCreate(ubic.gemma.model.expression.
      * experiment.ExpressionExperiment)
      */
@@ -235,6 +322,37 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
             throw super.convertHibernateAccessException( ex );
         }
         return ees;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDao#loadLackingEvent(java.lang.Class)
+     */
+    public Collection<ExpressionExperiment> loadLackingEvent( Class<? extends AuditEventType> eventType ) {
+        /*
+         * I cannot figure out a way to do this with a left join in HQL.
+         */
+        Collection<ExpressionExperiment> allEEs = this.loadAll();
+        allEEs.removeAll( loadWithEvent( eventType ) );
+        return allEEs;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDao#loadWithEvent(java.lang.Class)
+     */
+    @SuppressWarnings("unchecked")
+    public Collection<ExpressionExperiment> loadWithEvent( Class<? extends AuditEventType> eventType ) {
+        String className = eventType.getSimpleName().endsWith( "Impl" ) ? eventType.getSimpleName() : eventType
+                .getSimpleName()
+                + "Impl";
+        return this
+                .getHibernateTemplate()
+                .findByNamedParam(
+                        "select distinct e from ExpressionExperimentImpl e join e.auditTrail a join a.events ae join ae.eventType t where t.class = :type ",
+                        "type", className );
     }
 
     /*
@@ -390,6 +508,104 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
         }
 
         log.info( "Deleted " + toDelete );
+    }
+
+    /**
+     * @param qtMap
+     * @param v
+     * @param eeId
+     * @param type
+     */
+    private void fillQuantitationTypeInfo( Map<Long, Collection<QuantitationType>> qtMap,
+            ExpressionExperimentValueObject v, Long eeId, String type ) {
+
+        assert qtMap != null;
+
+        if ( v.getTechnologyType() != null && !v.getTechnologyType().equals( type ) ) {
+            v.setTechnologyType( "MIXED" );
+        } else {
+            v.setTechnologyType( type );
+        }
+
+        if ( !type.equals( TechnologyType.ONECOLOR.toString() ) ) {
+            Collection<QuantitationType> qts = qtMap.get( eeId );
+
+            if ( qts == null ) {
+                log.warn( "No quantitation types for EE=" + eeId + "?" );
+                return;
+            }
+
+            boolean hasIntensityA = false;
+            boolean hasIntensityB = false;
+            boolean hasBothIntensities = false;
+            boolean mayBeOneChannel = false;
+            for ( QuantitationType qt : qts ) {
+                if ( qt.getIsPreferred() && !qt.getIsRatio() ) {
+                    /*
+                     * This could be a dual-mode array, or it could be mis-labeled as two-color; or this might actually
+                     * be ratios. In either case, we should flag it; as it stands we shouldn't use two-channel missing
+                     * value analysis on it.
+                     */
+                    mayBeOneChannel = true;
+                    break;
+                } else if ( ChannelUtils.isSignalChannelA( qt.getName() ) ) {
+                    hasIntensityA = true;
+                    if ( hasIntensityB ) {
+                        hasBothIntensities = true;
+                    }
+                } else if ( ChannelUtils.isSignalChannelB( qt.getName() ) ) {
+                    hasIntensityB = true;
+                    if ( hasIntensityA ) {
+                        hasBothIntensities = true;
+                    }
+                }
+            }
+
+            v.setHasBothIntensities( hasBothIntensities && !mayBeOneChannel );
+            v.setHasEitherIntensity( hasIntensityA || hasIntensityB );
+        }
+    }
+
+    /**
+     * @return map of EEids to Qts.
+     */
+    @SuppressWarnings("unchecked")
+    private Map<Long, Collection<QuantitationType>> getQuantitationTypeMap( Collection eeids ) {
+        String queryString = "select ee, qts  from ExpressionExperimentImpl as ee inner join ee.quantitationTypes as qts ";
+        if ( eeids != null ) {
+            queryString = queryString + " where ee.id in (:eeids)";
+        }
+        org.hibernate.Query queryObject = super.getSession().createQuery( queryString );
+        // make sure we use the cache.
+        if ( eeids != null ) {
+            List idList = new ArrayList( eeids );
+            Collections.sort( idList );
+            queryObject.setParameterList( "eeids", idList );
+        }
+        queryObject.setReadOnly( true );
+        queryObject.setCacheable( true );
+
+        Map<Long, Collection<QuantitationType>> results = new HashMap<Long, Collection<QuantitationType>>();
+
+        StopWatch timer = new StopWatch();
+        timer.start();
+        List resultsList = queryObject.list();
+        timer.stop();
+        if ( timer.getTime() > 1000 ) {
+            log.info( "Got QT info in " + timer.getTime() + "ms" );
+        }
+
+        for ( Object object : resultsList ) {
+            Object[] ar = ( Object[] ) object;
+            ExpressionExperiment ee = ( ExpressionExperiment ) ar[0];
+            QuantitationType qt = ( QuantitationType ) ar[1];
+            Long id = ee.getId();
+            if ( !results.containsKey( id ) ) {
+                results.put( id, new HashSet<QuantitationType>() );
+            }
+            results.get( id ).add( qt );
+        }
+        return results;
     }
 
     @Override
@@ -1453,135 +1669,6 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
                 bf.getAuthors().size();
             }
         }
-    }
-
-    /**
-     * @param qtMap
-     * @param v
-     * @param eeId
-     * @param type
-     */
-    private void fillQuantitationTypeInfo( Map<Long, Collection<QuantitationType>> qtMap,
-            ExpressionExperimentValueObject v, Long eeId, String type ) {
-
-        assert qtMap != null;
-
-        if ( v.getTechnologyType() != null && !v.getTechnologyType().equals( type ) ) {
-            v.setTechnologyType( "MIXED" );
-        } else {
-            v.setTechnologyType( type );
-        }
-
-        if ( !type.equals( TechnologyType.ONECOLOR.toString() ) ) {
-            Collection<QuantitationType> qts = qtMap.get( eeId );
-
-            if ( qts == null ) {
-                log.warn( "No quantitation types for EE=" + eeId + "?" );
-                return;
-            }
-
-            boolean hasIntensityA = false;
-            boolean hasIntensityB = false;
-            boolean hasBothIntensities = false;
-            boolean mayBeOneChannel = false;
-            for ( QuantitationType qt : qts ) {
-                if ( qt.getIsPreferred() && !qt.getIsRatio() ) {
-                    /*
-                     * This could be a dual-mode array, or it could be mis-labeled as two-color; or this might actually
-                     * be ratios. In either case, we should flag it; as it stands we shouldn't use two-channel missing
-                     * value analysis on it.
-                     */
-                    mayBeOneChannel = true;
-                    break;
-                } else if ( ChannelUtils.isSignalChannelA( qt.getName() ) ) {
-                    hasIntensityA = true;
-                    if ( hasIntensityB ) {
-                        hasBothIntensities = true;
-                    }
-                } else if ( ChannelUtils.isSignalChannelB( qt.getName() ) ) {
-                    hasIntensityB = true;
-                    if ( hasIntensityA ) {
-                        hasBothIntensities = true;
-                    }
-                }
-            }
-
-            v.setHasBothIntensities( hasBothIntensities && !mayBeOneChannel );
-            v.setHasEitherIntensity( hasIntensityA || hasIntensityB );
-        }
-    }
-
-    /**
-     * @return map of EEids to Qts.
-     */
-    @SuppressWarnings("unchecked")
-    private Map<Long, Collection<QuantitationType>> getQuantitationTypeMap( Collection eeids ) {
-        String queryString = "select ee, qts  from ExpressionExperimentImpl as ee inner join ee.quantitationTypes as qts ";
-        if ( eeids != null ) {
-            queryString = queryString + " where ee.id in (:eeids)";
-        }
-        org.hibernate.Query queryObject = super.getSession().createQuery( queryString );
-        // make sure we use the cache.
-        if ( eeids != null ) {
-            List idList = new ArrayList( eeids );
-            Collections.sort( idList );
-            queryObject.setParameterList( "eeids", idList );
-        }
-        queryObject.setReadOnly( true );
-        queryObject.setCacheable( true );
-
-        Map<Long, Collection<QuantitationType>> results = new HashMap<Long, Collection<QuantitationType>>();
-
-        StopWatch timer = new StopWatch();
-        timer.start();
-        List resultsList = queryObject.list();
-        timer.stop();
-        if ( timer.getTime() > 1000 ) {
-            log.info( "Got QT info in " + timer.getTime() + "ms" );
-        }
-
-        for ( Object object : resultsList ) {
-            Object[] ar = ( Object[] ) object;
-            ExpressionExperiment ee = ( ExpressionExperiment ) ar[0];
-            QuantitationType qt = ( QuantitationType ) ar[1];
-            Long id = ee.getId();
-            if ( !results.containsKey( id ) ) {
-                results.put( id, new HashSet<QuantitationType>() );
-            }
-            results.get( id ).add( qt );
-        }
-        return results;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDao#loadLackingEvent(java.lang.Class)
-     */
-    public Collection<ExpressionExperiment> loadLackingEvent( Class<? extends AuditEventType> eventType ) {
-        /*
-         * I cannot figure out a way to do this with a left join in HQL.
-         */
-        Collection<ExpressionExperiment> allEEs = this.loadAll();
-        allEEs.removeAll( loadWithEvent( eventType ) );
-        return allEEs;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDao#loadWithEvent(java.lang.Class)
-     */
-    @SuppressWarnings("unchecked")
-    public Collection<ExpressionExperiment> loadWithEvent( Class<? extends AuditEventType> eventType ) {
-        String className = eventType.getSimpleName().endsWith( "Impl" ) ? eventType.getSimpleName() : eventType
-                .getSimpleName()
-                + "Impl";
-        return this
-                .getHibernateTemplate()
-                .findByNamedParam(
-                        "select distinct e from ExpressionExperimentImpl e join e.auditTrail a join a.events ae join ae.eventType t where t.class = :type ",
-                        "type", className );
     }
 
 }

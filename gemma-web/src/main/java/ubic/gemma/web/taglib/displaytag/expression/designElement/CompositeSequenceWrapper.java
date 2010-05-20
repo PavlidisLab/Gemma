@@ -24,9 +24,9 @@ import java.util.Collection;
 import org.apache.commons.lang.StringUtils;
 import org.displaytag.decorator.TableDecorator;
 
-import ubic.gemma.analysis.sequence.GeneMappingSummary;
-import ubic.gemma.model.genome.Gene;
-import ubic.gemma.model.genome.gene.GeneProduct;
+import ubic.gemma.analysis.sequence.GeneMappingSummary; 
+import ubic.gemma.model.genome.gene.GeneProductValueObject;
+import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.web.util.LinkUtils;
 
@@ -93,14 +93,14 @@ public class CompositeSequenceWrapper extends TableDecorator {
      */
     public String getGeneProducts() {
         GeneMappingSummary object = ( GeneMappingSummary ) getCurrentRowObject();
-        Collection<GeneProduct> geneProducts = object.getGeneProducts();
+        Collection<GeneProductValueObject> geneProducts = object.getGeneProducts();
 
         if ( geneProducts == null || geneProducts.size() == 0 ) {
             return "[none]";
         }
 
         String retVal = "";
-        for ( GeneProduct product : geneProducts ) {
+        for ( GeneProductValueObject product : geneProducts ) {
             String ncbiLink = LinkUtils.getNcbiUrl( product );
             String fullName = product.getName();
             String shortName = StringUtils.abbreviate( fullName, 20 );
@@ -120,15 +120,15 @@ public class CompositeSequenceWrapper extends TableDecorator {
      */
     public String getGenes() {
         GeneMappingSummary object = ( GeneMappingSummary ) getCurrentRowObject();
-        Collection<GeneProduct> geneProducts = object.getGeneProducts();
+        Collection<GeneProductValueObject> geneProducts = object.getGeneProducts();
 
         if ( geneProducts == null || geneProducts.size() == 0 ) {
             return "[none]";
         }
 
         String retVal = "";
-        for ( GeneProduct product : geneProducts ) {
-            Gene gene = object.getGene( product );
+        for ( GeneProductValueObject product : geneProducts ) {
+            GeneValueObject gene = object.getGene( product );
             String shortName = StringUtils.abbreviate( gene.getOfficialSymbol(), 20 );
             if ( gene.getNcbiId() != null ) {
                 retVal += "<span title='" + gene.getOfficialSymbol() + "'>" + shortName

@@ -72,9 +72,9 @@ Ext.onReady(function() {
 				+ '" target="_blank">' + value + '</a>';
 	};
 
-	var rowExpander = new Gemma.EEGridRowExpander({
-				tpl : ""
-			});
+	// var rowExpander = new Gemma.EEGridRowExpander({
+	// tpl : ""
+	// });
 
 	var diffIsPossible = function(record) {
 		return record.get("numPopulatedFactors") > 0 && record.get("currentUserHasWritePermission");
@@ -265,7 +265,7 @@ Ext.onReady(function() {
 
 	};
 
-	var columns = [rowExpander, {
+	var columns = [/* rowExpander, */{
 		header : 'Short Name',
 		sortable : true,
 		dataIndex : 'shortName',
@@ -325,6 +325,12 @@ Ext.onReady(function() {
 		tooltip : 'Create date',
 		renderer : dateRenderer
 	}, {
+		header : 'Updated',
+		sortable : true,
+		dataIndex : 'dateLastUpdated',
+		tooltip : 'Update date; not all possible types of updates are considered.',
+		renderer : dateRenderer
+	}, {
 		header : 'MissingVals',
 		sortable : true,
 		dataIndex : 'dateMissingValueAnalysis',
@@ -355,7 +361,6 @@ Ext.onReady(function() {
 		renderer : adminRenderer
 	}];
 
-	/* FIXME - perhaps make this adjustable */
 	var limit = 100;
 
 	var tpl = new Ext.XTemplate('<tpl for="."><div class="itemwrap" id="{shortName}">',
@@ -376,57 +381,37 @@ Ext.onReady(function() {
 		var urlParams = Ext.urlDecode(document.URL.substr(queryStart + 1));
 		ids = urlParams.ids ? urlParams.ids.split(',') : null;
 		taxonid = urlParams.taxon ? urlParams.taxon : null;
+		limit = urlParams.taxon ? urlParams.limit : 100;
 		filterMode = urlParams.filter ? urlParams.filter : null;
 	}
 
-	/*
-	 * FIXME. Only show this control if the user is admin? Or has at least _limit_ studies (hard to know in advance...)
-	 */
-	var controlForm = new Ext.form.FormPanel({
-				renderTo : 'controls',
-				border : false,
-				bodyBorder : false,
-				items : [{
-					xtype : 'checkbox',
-					boxLabel : 'Show all [Default: show only up to ' + limit
-							+ ' most recently changed (if url parameter "ids" is present, this is ignored)]',
-					hideLabel : true,
-					handler : function(chbx, checked) {
-						if (checked) {
-							store.load({
-										params : [taxonid, ids, -1, filterMode]
-									});
-						} else {
-							store.load({
-										params : [taxonid, ids, limit, filterMode]
-									});
-						}
-					}.createDelegate(this),
-					checked : false
-				}]
-			});
-
 	var manager = new Gemma.EEReportPanel({
-				renderTo : 'eemanage',
-				store : store,
-				loadMask : true,
-				height : 600,
-				width : 1000,
-				taxonid : taxonid,
-				limit : limit,
-				filterMode : filterMode,
-				ids : ids,
-				colModel : new Ext.ux.grid.LockingColumnModel(columns),
-				view : new Ext.ux.grid.LockingGridView({
-							syncHeights : true
-						}),
-				rowExpander : rowExpander,
-				plugins : rowExpander
+		renderTo : 'eemanage',
+		store : store,
+		title : 'Experiment manager',
+		loadMask : true,
+		height : 600,
+		width : 1000,
+		taxonid : taxonid,
+		limit : limit,
+		filterMode : filterMode,
+		ids : ids,
+		colModel : new Ext.ux.grid.LockingColumnModel(columns),
+		view : new Ext.ux.grid.LockingGridView({
+					syncHeights : true
+				})
+			// ,
+			// rowExpander : rowExpander,
+			// plugins : rowExpander
 
-			});
+		});
 
 	store.load({
 				params : [taxonid, ids, limit, filterMode]
+			});
+			
+			store.on('load', function(store, records, options) {
+				manager.setTitle("Showing " + records.length + " records.");
 			});
 
 	store.on("exception", function(scope, args, data, e) {
@@ -471,9 +456,26 @@ Gemma.EEReportPanel = Ext.extend(Ext.grid.GridPanel, {
 				this.store.reload();
 			},
 
+			filterType : null,
+
 			filterByNeed : function(box, record, index) {
+				this.filterType = record.get('filterType');
 				this.store.load({
-							params : [this.taxonid, this.ids, this.limit, record.get('filterType')]
+							params : [this.taxonid, this.ids, this.limit, this.filterType]
+						});
+			},
+
+			filterByTaxon : function(box, record, index) {
+				this.taxonid = record.get('id')
+				this.store.load({
+							params : [this.taxonid, this.ids, this.limit, this.filterType]
+						});
+			},
+
+			filterByLimit : function(box, record, index) {
+				this.limit = record.get('count');
+				this.store.load({
+							params : [this.taxonid, this.ids, this.limit, this.filterType]
 						});
 			},
 
@@ -516,6 +518,37 @@ Gemma.EEReportPanel = Ext.extend(Ext.grid.GridPanel, {
 
 						});
 
+				this.taxonCombo = new Gemma.TaxonCombo({
+							listeners : {
+								scope : this,
+								'select' : this.filterByTaxon
+							}
+						});
+
+				this.limitCombo = new Ext.form.ComboBox({
+							typeAhead : true,
+							width : 150,
+							triggerAction : 'all',
+							lazyRender : true,
+							mode : 'local',
+							store : new Ext.data.ArrayStore({
+										id : 0,
+										fields : ['count', 'displayText'],
+										data : [[50, '50 recent updates'], [100, '100 recent updates'],
+												[200, '200 recent updates'], [300, '300 recent updates'],
+												[500, '500 recent updates'], [1000, '1000'], ['0', 'All'], [-50, '50 oldest'],
+												[-100, '100 oldest'], [-200, '200 oldest'], [-300, '300 oldest'],
+												[-500, '500 oldest'], [-1000, '1000 oldest']]
+									}),
+							valueField : 'count',
+							displayField : 'displayText',
+							listeners : {
+								scope : this,
+								'select' : this.filterByLimit
+							}
+
+						});
+
 				Ext.apply(this, {
 
 							tbar : new Ext.Toolbar({
@@ -527,7 +560,10 @@ Gemma.EEReportPanel = Ext.extend(Ext.grid.GridPanel, {
 													handler : this.refresh,
 													tooltip : "Refresh the table",
 													scope : this
-												}, this.filterCombo, '->', {
+												}, this.filterCombo, this.taxonCombo, this.limitCombo]
+									}),
+							bbar : new Ext.Toolbar({
+										items : [{
 													xtype : 'button',
 													handler : this.clearFilter.createDelegate(this),
 													tooltip : "Show all",

@@ -25,10 +25,8 @@ import java.util.HashSet;
 import ubic.gemma.model.genome.Gene;
 
 /**
- * Took out of the model, can edit by hand
- * 
  * @author kelsey
- * @version
+ * @version $Id$
  */
 public class GeneValueObject implements java.io.Serializable {
     /**
@@ -44,14 +42,16 @@ public class GeneValueObject implements java.io.Serializable {
         for ( Gene g : genes ) {
             if ( g == null ) continue;
             converted.add( new GeneValueObject( g.getId(), g.getName(), g.getNcbiId(), g.getOfficialSymbol(), g
-                    .getOfficialName(), g.getDescription(), null, g.getTaxon().getId(), g.getTaxon().getScientificName() ) );
+                    .getOfficialName(), g.getDescription(), null, g.getTaxon().getId(), g.getTaxon()
+                    .getScientificName() ) );
         }
 
         return converted;
     }
-    
+
     /**
      * A static method for easily converting GeneSetMembers into GeneValueObjects
+     * 
      * @param genes
      * @return
      */
@@ -62,7 +62,7 @@ public class GeneValueObject implements java.io.Serializable {
 
         for ( GeneSetMember g : genes ) {
             if ( g == null ) continue;
-            converted.add( new GeneValueObject( g ));
+            converted.add( new GeneValueObject( g ) );
         }
 
         return converted;
@@ -79,16 +79,25 @@ public class GeneValueObject implements java.io.Serializable {
     private java.lang.String officialName;
 
     private java.lang.String description;
-    
+
     private java.lang.Long taxonId;
-    
+
     private java.lang.String taxonName;
-    
 
-
-    private Double score;  //This is for genes in genesets might have a rank or a score associated with them. 
+    private Double score; // This is for genes in genesets might have a rank or a score associated with them.
 
     public GeneValueObject() {
+    }
+
+    public GeneValueObject( Gene gene ) {
+        this.id = gene.getId();
+        this.ncbiId = gene.getNcbiId();
+        this.officialName = gene.getOfficialName();
+        this.officialSymbol = gene.getOfficialSymbol();
+        this.taxonName = gene.getTaxon().getScientificName();
+        this.name = gene.getName();
+        this.description = gene.getDescription();
+        this.taxonId = gene.getTaxon().getId();
     }
 
     /**
@@ -99,21 +108,25 @@ public class GeneValueObject implements java.io.Serializable {
      */
     public GeneValueObject( GeneValueObject otherBean ) {
         this( otherBean.getId(), otherBean.getName(), otherBean.getNcbiId(), otherBean.getOfficialSymbol(), otherBean
-                .getOfficialName(), otherBean.getDescription(), otherBean.getScore(), otherBean.getTaxonId(), otherBean.getTaxonName() );
+                .getOfficialName(), otherBean.getDescription(), otherBean.getScore(), otherBean.getTaxonId(), otherBean
+                .getTaxonName() );
     }
-    
+
     /**
      * Copy constructor for GeneSetMember
+     * 
      * @param otherBean
      */
     public GeneValueObject( GeneSetMember otherBean ) {
-        this( otherBean.getGene().getId(), otherBean.getGene().getName(), otherBean.getGene().getNcbiId(), otherBean.getGene().getOfficialSymbol(), otherBean
-                .getGene().getOfficialName(), otherBean.getGene().getDescription(), otherBean.getScore(), otherBean.getGene().getTaxon().getId(), otherBean.getGene().getTaxon().getScientificName() );
+        this( otherBean.getGene().getId(), otherBean.getGene().getName(), otherBean.getGene().getNcbiId(), otherBean
+                .getGene().getOfficialSymbol(), otherBean.getGene().getOfficialName(), otherBean.getGene()
+                .getDescription(), otherBean.getScore(), otherBean.getGene().getTaxon().getId(), otherBean.getGene()
+                .getTaxon().getScientificName() );
     }
 
-
     public GeneValueObject( java.lang.Long id, java.lang.String name, java.lang.String ncbiId,
-            java.lang.String officialSymbol, java.lang.String officialName, java.lang.String description, Double score, Long taxonId, String taxonName) {
+            java.lang.String officialSymbol, java.lang.String officialName, java.lang.String description, Double score,
+            Long taxonId, String taxonName ) {
         this.id = id;
         this.name = name;
         this.ncbiId = ncbiId;
@@ -141,13 +154,8 @@ public class GeneValueObject implements java.io.Serializable {
     }
 
     /**
-     *     public java.lang.Long getTaxonId() {
-        return taxonId;
-    }
-
-    public void setTaxonId( java.lang.Long taxonId ) {
-        this.taxonId = taxonId;
-    }
+     * public java.lang.Long getTaxonId() { return taxonId; } public void setTaxonId( java.lang.Long taxonId ) {
+     * this.taxonId = taxonId; }
      */
     public java.lang.String getDescription() {
         return this.description;
@@ -219,7 +227,7 @@ public class GeneValueObject implements java.io.Serializable {
     public Double getScore() {
         return score;
     }
-    
+
     public java.lang.Long getTaxonId() {
         return taxonId;
     }

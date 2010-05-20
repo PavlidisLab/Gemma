@@ -19,6 +19,7 @@
 package ubic.gemma.model.expression.experiment;
 
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -71,6 +72,16 @@ public class ExpressionExperimentServiceImpl extends
     /*
      * (non-Javadoc)
      * 
+     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentService#findByUpdatedLimit(java.util.Collection,
+     * java.lang.Integer)
+     */
+    public Map<ExpressionExperiment, Date> findByUpdatedLimit( Collection<Long> ids, Integer limit ) {
+        return this.getExpressionExperimentDao().findByUpdatedLimit( ids, limit );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.experiment.ExpressionExperimentService#getBioAssayDimensions(ubic.gemma.model.expression
      * .experiment.ExpressionExperiment)
@@ -90,12 +101,61 @@ public class ExpressionExperimentServiceImpl extends
     }
 
     /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentService#loadLackingEvent(java.lang.Class)
+     */
+    @Override
+    public Collection<ExpressionExperiment> loadLackingEvent( Class<? extends AuditEventType> eventType ) {
+        return this.getExpressionExperimentDao().loadLackingEvent( eventType );
+    }
+
+    /*
      * Note: implemented via SpringSecurity.
      * 
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentService#loadMyExpressionExperiments()
      */
     public Collection<ExpressionExperiment> loadMyExpressionExperiments() {
         return loadAll();
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentService#loadMySharedExpressionExperiments()
+     */
+    @Override
+    public Collection<ExpressionExperiment> loadMySharedExpressionExperiments() {
+        return loadAll();
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentService#loadWithEvent(java.lang.Class)
+     */
+    @Override
+    public Collection<ExpressionExperiment> loadWithEvent( Class<? extends AuditEventType> eventType ) {
+        return this.getExpressionExperimentDao().loadWithEvent( eventType );
+    }
+
+    /**
+     * @param ids
+     * @param type
+     * @returns a map of the expression experiment ids to the last audit event for the given audit event type the map
+     *          can contain nulls if the specified auditEventType isn't found for a given expression experiment id
+     * @see AuditableDao.getLastAuditEvent and getLastTypedAuditEvents for faster methods.
+     */
+    private Map<Long, AuditEvent> getLastEvent( Collection<Long> ids, AuditEventType type ) {
+
+        Map<Long, AuditEvent> lastEventMap = new HashMap<Long, AuditEvent>();
+        Collection<ExpressionExperiment> ees = this.loadMultiple( ids );
+        AuditEvent last;
+        for ( ExpressionExperiment experiment : ees ) {
+            last = this.getAuditEventDao().getLastEvent( experiment, type.getClass() );
+            lastEventMap.put( experiment.getId(), last );
+        }
+        return lastEventMap;
     }
 
     @Override
@@ -661,55 +721,6 @@ public class ExpressionExperimentServiceImpl extends
     @Override
     protected void handleUpdate( ExpressionExperiment expressionExperiment ) throws Exception {
         this.getExpressionExperimentDao().update( expressionExperiment );
-    }
-
-    /**
-     * @param ids
-     * @param type
-     * @returns a map of the expression experiment ids to the last audit event for the given audit event type the map
-     *          can contain nulls if the specified auditEventType isn't found for a given expression experiment id
-     * @see AuditableDao.getLastAuditEvent and getLastTypedAuditEvents for faster methods.
-     */
-    private Map<Long, AuditEvent> getLastEvent( Collection<Long> ids, AuditEventType type ) {
-
-        Map<Long, AuditEvent> lastEventMap = new HashMap<Long, AuditEvent>();
-        Collection<ExpressionExperiment> ees = this.loadMultiple( ids );
-        AuditEvent last;
-        for ( ExpressionExperiment experiment : ees ) {
-            last = this.getAuditEventDao().getLastEvent( experiment, type.getClass() );
-            lastEventMap.put( experiment.getId(), last );
-        }
-        return lastEventMap;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentService#loadMySharedExpressionExperiments()
-     */
-    @Override
-    public Collection<ExpressionExperiment> loadMySharedExpressionExperiments() {
-        return loadAll();
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentService#loadLackingEvent(java.lang.Class)
-     */
-    @Override
-    public Collection<ExpressionExperiment> loadLackingEvent( Class<? extends AuditEventType> eventType ) {
-        return this.getExpressionExperimentDao().loadLackingEvent( eventType );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentService#loadWithEvent(java.lang.Class)
-     */
-    @Override
-    public Collection<ExpressionExperiment> loadWithEvent( Class<? extends AuditEventType> eventType ) {
-        return this.getExpressionExperimentDao().loadWithEvent( eventType );
     }
 
 }
