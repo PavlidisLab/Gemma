@@ -10,7 +10,7 @@ Ext.onReady(function() {
 	Ext.QuickTips.init();
 	Ext.state.Manager.setProvider(new Ext.state.CookieProvider());
 
-	manager = new Gemma.EEManager({
+	var manager = new Gemma.EEManager({
 				editable : true,
 				id : 'eemanager'
 			});
@@ -41,6 +41,7 @@ Ext.onReady(function() {
 	manager.on('done', function() {
 				store.reload();
 			});
+
 	manager.on('tagsUpdated', function() {
 				store.reload();
 			});
@@ -284,7 +285,7 @@ Ext.onReady(function() {
 
 	};
 
-	var columns = [/* rowExpander, */{
+	var columns = [{
 		header : 'Short Name',
 		sortable : true,
 		dataIndex : 'shortName',
@@ -404,7 +405,7 @@ Ext.onReady(function() {
 		filterMode = urlParams.filter ? urlParams.filter : null;
 	}
 
-	var manager = new Gemma.EEReportPanel({
+	var reportGrid = new Gemma.EEReportPanel({
 				store : store,
 				title : 'Experiment manager',
 				region : 'center',
@@ -420,7 +421,7 @@ Ext.onReady(function() {
 						})
 			});
 
-	manager.getSelectionModel().on('rowselect', showEEDetails, this, {
+	reportGrid.getSelectionModel().on('rowselect', showEEDetails, this, {
 		buffer : 100
 			// keep from firing too many times at once
 		});
@@ -438,7 +439,7 @@ Ext.onReady(function() {
 				renderTo : 'eemanage',
 				width : 1000,
 				height : 700,
-				items : [manager, dataSetDetailsPanel]
+				items : [reportGrid, dataSetDetailsPanel]
 			});
 
 	store.load({
@@ -446,7 +447,7 @@ Ext.onReady(function() {
 			});
 
 	store.on('load', function(store, records, options) {
-				manager.setTitle("Showing " + records.length + " records.");
+				reportGrid.setTitle("Showing " + records.length + " records.");
 			});
 
 	store.on("exception", function(scope, args, data, e) {
@@ -536,14 +537,11 @@ Gemma.EEReportPanel = Ext.extend(Ext.grid.GridPanel, {
 							lazyRender : true,
 							mode : 'local',
 							store : new Ext.data.ArrayStore({
-								id : 0,
-								fields : ['filterType', 'displayText'],
-								data : [[0, 'No filter'], [1, 'Need diff'], [2, 'Need coex'], [3, 'Has diff'],
-										[4, 'Has coex'], [5, 'Troubled'], [6, 'No factors'], [7, 'No tags']]
-									/*
-									 * TODO: support other filters.
-									 */
-								}),
+										id : 0,
+										fields : ['filterType', 'displayText'],
+										data : [[0, 'No filter'], [1, 'Need diff'], [2, 'Need coex'], [3, 'Has diff'],
+												[4, 'Has coex'], [5, 'Troubled'], [6, 'No factors'], [7, 'No tags']]
+									}),
 							valueField : 'filterType',
 							displayField : 'displayText',
 							listeners : {
