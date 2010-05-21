@@ -195,10 +195,10 @@ public class AuditEventDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
     protected List<AuditEvent> handleGetEvents( final Auditable auditable ) {
         if ( auditable == null ) throw new IllegalArgumentException( "Auditable cannot be null" );
 
-        Hibernate.initialize( auditable );
-        
+        Hibernate.initialize( auditable.getAuditTrail() );
+
         List results = this.getHibernateTemplate().findByNamedParam(
-                "select a.events from AuditTrailImpl a fetch all properties where a.id = :tid", "tid",
+                "select e from AuditTrailImpl a join a.events e where a.id = :tid", "tid",
                 auditable.getAuditTrail().getId() );
 
         return results;
