@@ -14,14 +14,18 @@ Ext.namespace("Gemma");
  * 				var k = new Gemma.WaitHandler({
  * 					throbberEl : myThrobberElId // optional place to show the throbber; otherwise popup progress bar is shown.
  * 				}); // instantiate
- * 				this.relayEvents(k, ['done']); // make sure events make it out
+ * 				this.relayEvents(k, ['done','fail']); // make sure events make it out; optional
+ * 				k.on('done', ...); // optional
+ * 				k.on('fail', ...); // optional
  * 				k.handleWait(data, false ); 
- * 				k.on('done', function(payload) {
- * 							this.handleSucess(payload); // you define this.
- * 						});
- * 			}.createDelegate(this)
+ * 				Ext.getBody().unmask();
+ * 			}.createDelegate(this),
+ * 			errorHandler : function(error) {
+				Ext.Msg.alert("Failed", error);
+				Ext.getBody().unmask();  
+			}.createDelegate(this)
  * 		});
- * 
+ * Ext.getBody().mask();
  * Controller.dosomething.apply(this, callParams);
  * </pre>
  * 
