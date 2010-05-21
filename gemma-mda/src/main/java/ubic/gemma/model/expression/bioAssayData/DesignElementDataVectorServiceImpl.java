@@ -174,9 +174,9 @@ public class DesignElementDataVectorServiceImpl extends
 
         Class<? extends DesignElementDataVector> vectorClass = getVectorClass( vectors );
 
-        if ( vectorClass.equals( RawExpressionDataVector.class ) ) {
+        if ( RawExpressionDataVector.class.isAssignableFrom( vectorClass ) ) {
             this.getRawExpressionDataVectorDao().update( ( Collection<RawExpressionDataVector> ) vectors );
-        } else if ( vectorClass.equals( ProcessedExpressionDataVector.class ) ) {
+        } else if ( ProcessedExpressionDataVector.class.isAssignableFrom( vectorClass ) ) {
             this.getProcessedExpressionDataVectorDao().update( ( Collection<ProcessedExpressionDataVector> ) vectors );
         } else {
             throw new UnsupportedOperationException( "Don't know how to process  " + vectorClass.getName() );
