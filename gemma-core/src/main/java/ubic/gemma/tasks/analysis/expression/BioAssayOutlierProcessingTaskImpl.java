@@ -28,7 +28,6 @@ import ubic.gemma.job.TaskMethod;
 import ubic.gemma.job.TaskResult;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayService;
-import ubic.gemma.web.util.EntityNotFoundException;
 
 /**
  * @author paul
@@ -52,7 +51,7 @@ public class BioAssayOutlierProcessingTaskImpl implements BioAssayOutlierProcess
     public TaskResult execute( TaskCommand command ) {
         BioAssay bioAssay = bioAssayService.load( command.getEntityId() );
         if ( bioAssay == null ) {
-            throw new EntityNotFoundException( "BioAssay with id=" + command.getEntityId() + " not found" );
+            throw new RuntimeException( "BioAssay with id=" + command.getEntityId() + " not found" );
         }
         sampleRemoveService.markAsMissing( bioAssay );
         return new TaskResult( command, bioAssay );
