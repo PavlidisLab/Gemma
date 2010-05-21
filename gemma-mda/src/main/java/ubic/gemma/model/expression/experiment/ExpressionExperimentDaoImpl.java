@@ -35,7 +35,6 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.hibernate.Criteria;
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
@@ -44,8 +43,6 @@ import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.criterion.DetachedCriteria;
-import org.hibernate.criterion.Order;
-import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.type.LongType;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -385,6 +382,8 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
         Collection<RawExpressionDataVector> designElementDataVectors = toDelete.getRawExpressionDataVectors();
         Hibernate.initialize( designElementDataVectors );
         toDelete.setRawExpressionDataVectors( null );
+        
+        toDelete.getInvestigators().clear();
 
         int count = 0;
         if ( designElementDataVectors != null ) {
