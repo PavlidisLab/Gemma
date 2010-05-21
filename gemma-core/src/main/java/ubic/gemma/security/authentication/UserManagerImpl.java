@@ -261,17 +261,10 @@ public class UserManagerImpl implements UserManager {
         UserGroup g = loadGroup( USER_GROUP_NAME );
         userService.addUserToGroup( g, u );
 
-        //user = new UserDetailsImpl( u );
-        //
-        // if ( !loggedIn() && user.isEnabled() ) {
-        //
-        // Authentication currentAuthentication = SecurityContextHolder.getContext().getAuthentication();
-        //
-        // UsernamePasswordAuthenticationToken result = new UsernamePasswordAuthenticationToken( user.getUsername(),
-        // user.getPassword(), user.getAuthorities() );
-        // result.setDetails( currentAuthentication.getDetails() );
-        // SecurityContextHolder.getContext().setAuthentication( result );
-        // }
+        /*
+         * We don't log the user in automatically, because we require that new users click a confirmation link in an
+         * email.
+         */
     }
 
     /*
