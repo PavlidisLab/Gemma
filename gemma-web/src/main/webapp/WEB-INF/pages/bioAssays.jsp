@@ -1,8 +1,31 @@
 <%@ include file="/common/taglibs.jsp"%>
+<head>
+	<title><fmt:message key="bioAssays.title" />
+	</title>
 
-<title><fmt:message key="bioAssays.title" />
-</title>
+	<jwr:script src='/scripts/ajax/ext/data/DwrProxy.js' />
 
+	<script type="text/javascript">
+	Ext.BLANK_IMAGE_URL = '/Gemma/images/default/s.gif';
+
+	Ext.onReady( function() {
+
+		Ext.QuickTips.init();
+		Ext.state.Manager.setProvider(new Ext.state.CookieProvider());
+
+		var manager = new Gemma.EEManager( {
+			editable : true,
+			id : "eemanager"
+		});
+
+		manager.on('done', function() {
+			window.location.reload(true);
+		});
+
+	});
+</script>
+
+</head>
 <h2>
 	<fmt:message key="bioAssays.title" />
 	for
@@ -24,6 +47,7 @@
 	<display:column property="description" sortable="true" titleKey="bioAssay.description" maxWords="100" />
 
 	<security:authorize access="hasRole('GROUP_ADMIN')">
+		<%-- FIXME should be if they can edit this EE, not just admin. --%>
 		<display:column property="delete" sortable="false" title="QC" />
 	</security:authorize>
 

@@ -89,6 +89,13 @@ BibliographicReferenceController.update = function(p0, callback) {
 			callback);
 }
 // ====================================================================================
+if (BioAssayController == null)
+	var BioAssayController = {};
+BioAssayController._path = '/Gemma/dwr';
+BioAssayController.markOutlier = function(p0, callback) {
+	dwr.engine._execute(BioAssayController._path, 'BioAssayController', 'markOutlier', p0, callback);
+}
+// ====================================================================================
 if (BioMaterialController == null)
 	var BioMaterialController = {};
 BioMaterialController._path = '/Gemma/dwr';
@@ -555,7 +562,7 @@ SecurityController.getGroupMembers = function(p0, callback) {
 SecurityController.getAvailablePrincipalSids = function(callback) {
 	dwr.engine._execute(SecurityController._path, 'SecurityController', 'getAvailablePrincipalSids', callback);
 }
-//==============================================================================
+// ==============================================================================
 if (GeneSetController == null)
 	var GeneSetController = {};
 GeneSetController._path = '/Gemma/dwr';
@@ -563,7 +570,7 @@ GeneSetController.getGenesInGroup = function(p0, callback) {
 	dwr.engine._execute(GeneSetController._path, 'GeneSetController', 'getGenesInGroup', p0, callback);
 }
 GeneSetController.updateGeneGroup = function(p0, p1, p2, callback) {
-	dwr.engine._execute(GeneSetController._path, 'GeneSetController', 'updateGeneGroup', p0, p1,p2, callback);
+	dwr.engine._execute(GeneSetController._path, 'GeneSetController', 'updateGeneGroup', p0, p1, p2, callback);
 }
 GeneSetController.createGeneGroup = function(p0, p1, callback) {
 	dwr.engine._execute(GeneSetController._path, 'GeneSetController', 'createGeneGroup', p0, p1, callback);
@@ -577,7 +584,7 @@ GeneSetController.getUsersGeneGroups = function(p0, callback) {
 GeneSetController.findGeneSetsByGene = function(p0, callback) {
 	dwr.engine._execute(GeneSetController._path, 'GeneSetController', 'findGeneSetsByGene', p0, callback);
 }
-GeneSetController.findGeneSetsByName = function(p0,p1, callback) {
+GeneSetController.findGeneSetsByName = function(p0, p1, callback) {
 	dwr.engine._execute(GeneSetController._path, 'GeneSetController', 'findGeneSetsByName', p0, p1, callback);
 }
 // ====================================================================================
@@ -672,7 +679,7 @@ ProgressStatusService.cancelJob = function(p0, callback) {
 ProgressStatusService.addEmailAlert = function(p0, callback) {
 	dwr.engine._execute(ProgressStatusService._path, 'ProgressStatusService', 'addEmailAlert', p0, callback);
 }
-ProgressStatusService.getSubmittedTasks = function( callback) {
+ProgressStatusService.getSubmittedTasks = function(callback) {
 	dwr.engine._execute(ProgressStatusService._path, 'ProgressStatusService', 'getSubmittedTasks', callback);
 }
 ProgressStatusService.getFailedTasks = function(p0, callback) {

@@ -98,6 +98,9 @@
 				<value>
 					ubic.gemma.job.grid.util.MonitorTask
 				</value>
+				<value>
+					ubic.gemma.tasks.analysis.expression.BioAssayOutlierProcessingTask
+				</value>
 			</list>
 		</property>
 	</bean>
@@ -235,6 +238,18 @@
 		<property name="businessInterface">
 			<value>
 				ubic.gemma.job.grid.util.MonitorTask
+			</value>
+		</property>
+	</bean>
+
+	<bean id="bioAssayOutlierProcessingWorker" class="ubic.gemma.job.grid.worker.CustomDelegatingWorker" scope="prototype">
+		<property name="javaSpaceTemplate" ref="gigaspacesTemplate" />
+		<property name="delegate">
+			<ref bean="bioAssayOutlierProcessingTask" />
+		</property>
+		<property name="businessInterface">
+			<value>
+				ubic.gemma.tasks.analysis.expression.BioAssayOutlierProcessingTask
 			</value>
 		</property>
 	</bean>

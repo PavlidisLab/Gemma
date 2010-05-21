@@ -299,6 +299,37 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 				});
 	},
 
+	markOutlierBioAssay : function(bioAssayId) {
+		Ext.Msg.show({
+			title : 'Are you sure?',
+			msg : 'Are you sure you want to mark this bioAssay as an outlier? This can be undone only by regenerating the "processed data".',
+			buttons : Ext.Msg.YESNO,
+			fn : function(btn, text) {
+				if (btn == 'yes') {
+					var callParams = [];
+					callParams.push(bioAssayId);
+					Ext.getBody().mask();
+					callParams.push({
+								callback : function(data) {
+									var k = new Gemma.WaitHandler();
+									k.handleWait(data, true);
+									this.relayEvents(k, ['done', 'fail']);
+									Ext.getBody().unmask();
+								}.createDelegate(this),
+								errorHandler : function(error) {
+									Ext.Msg.alert("Outlier marking failed", error);
+									Ext.getBody().unmask();
+								}.createDelegate(this)
+							});
+					BioAssayController.markOutlier.apply(this, callParams);
+				}
+			},
+			scope : this,
+			animEl : 'elId',
+			icon : Ext.MessageBox.WARNING
+		});
+	},
+
 	doLinks : function(id) {
 		Ext.Msg.show({
 					title : 'Link analysis',

@@ -56,18 +56,12 @@ public class BioAssayWrapper extends TableDecorator {
         AuditTrail auditTrail = object.getAuditTrail();
         for ( AuditEvent ae : auditTrail.getEvents() ) {
             if ( ae.getEventType() != null && ae.getEventType() instanceof SampleRemovalEvent ) {
-                return "Outlier";
+                return "<img src=\"/Gemma/images/icons/stop.png\"/>";
             }
         }
 
-        // FIXME wire to AJAX call.
-        // confirmAction is stored in global.js
-        return "<form action=\"/Gemma/bioAssay/markBioAssayOutlier.html?id="
-                + object.getId()
-                + "\" onSubmit=\"return confirmAction('Are you sure you want to flag Bioassay "
-                + object.getName()
-                + " as an outlier?')\" method=\"post\"><input title=\"Mark this sample as an outlier.\"  type=\"submit\"  value=\"Outlier\" /></form>";
-
+        return "<span class=\"link\" onClick=\"Ext.getCmp('eemanager').markOutlierBioAssay(" + object.getId()
+                + ")\"><img title=\"Click to mark as an outlier\" src=\"/Gemma/images/icons/ok.png\"/></span>";
     }
 
 }

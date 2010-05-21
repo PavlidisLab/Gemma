@@ -29,15 +29,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
-import org.springframework.web.servlet.view.RedirectView;
-
-import ubic.gemma.analysis.service.SampleRemoveService;
 import ubic.gemma.job.AbstractTaskService;
 import ubic.gemma.job.BackgroundJob;
 import ubic.gemma.job.TaskCommand;
 import ubic.gemma.job.TaskResult;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayService;
+import ubic.gemma.tasks.analysis.expression.BioAssayOutlierProcessingTask;
 import ubic.gemma.web.util.EntityNotFoundException;
 
 /**
@@ -56,29 +54,38 @@ public class BioAssayController extends AbstractTaskService {
 
         @Override
         public TaskResult processJob() {
-            BioAssay bioAssay = bioAssayService.load( command.getEntityId() );
-            if ( bioAssay == null ) {
-                throw new EntityNotFoundException( "BioAssay with id=" + command.getEntityId() + " not found" );
-            }
-            sampleRemoveService.markAsMissing( bioAssay );
-            return new TaskResult( command, new ModelAndView( new RedirectView(
-                    "/Gemma/arrays/showAllArrayDesigns.html" ) ) );
+            return bioAssayOutlierProcessingTask.execute( command );
         }
     }
 
-    @Autowired
-    private BioAssayService bioAssayService = null;
+    private class RemoveBioAssaySpaceJob extends BackgroundJob<TaskCommand> {
+        final BioAssayOutlierProcessingTask taskProxy = ( BioAssayOutlierProcessingTask ) getProxy();
+
+        public RemoveBioAssaySpaceJob( TaskCommand command ) {
+            super( command );
+        }
+
+        @Override
+        public TaskResult processJob() {
+            return taskProxy.execute( command );
+        }
+    }
 
     private static final String identifierNotFound = "You must provide a valid BioAssay identifier";
 
     @Autowired
-    private SampleRemoveService sampleRemoveService;
+    private BioAssayOutlierProcessingTask bioAssayOutlierProcessingTask;
+
+    @Autowired
+    private BioAssayService bioAssayService;
 
     /**
      * @param request
      * @param response
      * @return taskId
+     * @deprecated in favor of ajax call
      */
+    @Deprecated
     @RequestMapping("markBioAssayOutlier.html")
     public String markBioAssayOutlier( HttpServletRequest request, HttpServletResponse response ) {
         String stringId = request.getParameter( "id" );
@@ -94,19 +101,18 @@ public class BioAssayController extends AbstractTaskService {
             throw new EntityNotFoundException( "Identifier was invalid" );
         }
 
-        RemoveBioAssayJob job = new RemoveBioAssayJob( new TaskCommand( id ) );
-        return super.startTask( job );
+        return markOutlier( id );
     }
 
     /**
-     * @param bioAssayService
+     * AJAX
+     * 
+     * @param id
+     * @return
      */
-    public void setBioAssayService( BioAssayService bioAssayService ) {
-        this.bioAssayService = bioAssayService;
-    }
-
-    public void setSampleRemoveService( SampleRemoveService sampleRemoveService ) {
-        this.sampleRemoveService = sampleRemoveService;
+    public String markOutlier( Long id ) {
+        RemoveBioAssayJob job = new RemoveBioAssayJob( new TaskCommand( id ) );
+        return super.startTask( job );
     }
 
     /**
@@ -168,11 +174,11 @@ public class BioAssayController extends AbstractTaskService {
 
     @Override
     protected BackgroundJob<TaskCommand> getInProcessRunner( TaskCommand command ) {
-        return null;
+        return new RemoveBioAssayJob( command );
     }
 
     @Override
     protected BackgroundJob<?> getSpaceRunner( TaskCommand command ) {
-        return null;
+        return new RemoveBioAssaySpaceJob( command );
     }
 }

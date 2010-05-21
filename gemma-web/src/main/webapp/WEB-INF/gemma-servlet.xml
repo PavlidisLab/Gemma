@@ -589,6 +589,20 @@ gemma.max.fileupload.size.bytes=
 						</property>
 					</bean>
 				</entry>
+				<entry key="BioAssayController">
+					<bean class="org.directwebremoting.spring.CreatorConfig">
+						<property name="creator">
+							<bean class="org.directwebremoting.spring.BeanCreator">
+								<property name="bean" ref="bioAssayController" />
+							</bean>
+						</property>
+						<property name="includes">
+							<list>
+								<value>markOutlier</value>
+							</list>
+						</property>
+					</bean>
+				</entry>
 				<entry key="BioMaterialController">
 					<bean class="org.directwebremoting.spring.CreatorConfig">
 						<property name="creator">
