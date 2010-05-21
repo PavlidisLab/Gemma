@@ -35,7 +35,24 @@ Ext.onReady(function() {
 				sortInfo : {
 					field : 'dateCreated',
 					direction : 'DESC'
+				},
+				sort : function(fieldName, dir) {
+					store.fireEvent('beforesort');
+					/*
+					 * Sorting this table is slooow. We need to pause to allow time for the loadmask to display.
+					 */
+					var t = new Ext.util.DelayedTask(function() {
+								Gemma.PagingDataStore.superclass.sort.call(store, fieldName, dir);
+								store.fireEvent('aftersort');
+							});
+					t.delay(100);
+
 				}
+			});
+
+	store.addEvents({
+				'beforesort' : true,
+				'aftersort' : true
 			});
 
 	manager.on('done', function() {
@@ -448,12 +465,20 @@ Ext.onReady(function() {
 				autoScroll : true
 			});
 
-	new Ext.Panel({
+	var pan = new Ext.Panel({
 				layout : 'border',
 				renderTo : 'eemanage',
 				width : 1100,
 				height : 700,
 				items : [reportGrid, dataSetDetailsPanel]
+			});
+
+	store.on('beforesort', function() {
+				reportGrid.loadMask.show();
+			});
+
+	store.on('aftersort', function() {
+				reportGrid.loadMask.hide()
 			});
 
 	store.load({
@@ -534,7 +559,7 @@ Gemma.EEReportPanel = Ext.extend(Ext.grid.GridPanel, {
 			},
 
 			getBookmark : function() {
-				var url = "http://www.chibi.ubc.ca/Gemma/expressionExperiments/showAllExpressionExperimentLinkSummaries.html?";
+				var url = "http://www.chibi.ubc.ca/Gemma/expressionExperiment/showAllExpressionExperimentLinkSummaries.html?";
 				if (this.ids) {
 					url += "&ids=" + this.ids.join(",");
 				}

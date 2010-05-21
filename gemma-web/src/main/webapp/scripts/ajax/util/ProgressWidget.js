@@ -242,6 +242,8 @@ Gemma.ProgressWidget = Ext.extend(Ext.Panel, {
 		 */
 		this.progressBar.updateText("Network error, continuing.");
 		this.waiting = true;
+		this.stopProgress();
+		this.startProgress();
 	},
 
 	/**

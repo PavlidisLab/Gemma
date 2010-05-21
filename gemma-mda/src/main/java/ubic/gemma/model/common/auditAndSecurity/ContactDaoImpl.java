@@ -18,11 +18,14 @@
  */
 package ubic.gemma.model.common.auditAndSecurity;
 
+import java.util.Collection;
+
 import org.hibernate.Criteria;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
+import ubic.gemma.model.analysis.Investigation;
 import ubic.gemma.util.BusinessKey;
 
 /**
@@ -40,6 +43,7 @@ public class ContactDaoImpl extends ubic.gemma.model.common.auditAndSecurity.Con
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.common.auditAndSecurity.ContactDaoBase#find(ubic.gemma.model.common.auditAndSecurity.Contact)
      */
@@ -74,6 +78,7 @@ public class ContactDaoImpl extends ubic.gemma.model.common.auditAndSecurity.Con
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.common.auditAndSecurity.ContactDaoBase#findOrCreate(ubic.gemma.model.common.auditAndSecurity
      * .Contact)
@@ -85,5 +90,14 @@ public class ContactDaoImpl extends ubic.gemma.model.common.auditAndSecurity.Con
             return existingContact;
         }
         return create( contact );
+    }
+
+    @SuppressWarnings("unchecked")
+    public Collection<Investigation> getInvestigations( Contact contact ) {
+        /*
+         * If there are other types of investigations they will have to be added to the results.
+         */
+        return this.getHibernateTemplate().findByNamedParam(
+                "select e from ExpressionExperimentImpl e join e.investigators i where i=:c ", "c", contact );
     }
 }

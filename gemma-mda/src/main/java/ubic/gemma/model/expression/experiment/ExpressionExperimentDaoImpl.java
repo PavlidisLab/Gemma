@@ -383,6 +383,9 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
         Hibernate.initialize( designElementDataVectors );
         toDelete.setRawExpressionDataVectors( null );
         
+        /*
+         * We don't delete the investigators, just breaking the association. 
+         */
         toDelete.getInvestigators().clear();
 
         int count = 0;

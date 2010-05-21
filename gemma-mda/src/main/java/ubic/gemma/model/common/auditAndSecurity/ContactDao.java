@@ -18,6 +18,9 @@
  */
 package ubic.gemma.model.common.auditAndSecurity;
 
+import java.util.Collection;
+
+import ubic.gemma.model.analysis.Investigation;
 import ubic.gemma.persistence.BaseDao;
 
 /**
@@ -38,5 +41,11 @@ public interface ContactDao extends BaseDao<Contact> {
      * 
      */
     public Contact findOrCreate( Contact contact );
+
+    /**
+     * @param contact
+     * @return
+     */
+    public Collection<Investigation> getInvestigations( Contact contact );
 
 }

@@ -21,9 +21,9 @@ Ext.namespace("Gemma");
  * 				Ext.getBody().unmask();
  * 			}.createDelegate(this),
  * 			errorHandler : function(error) {
-				Ext.Msg.alert("Failed", error);
-				Ext.getBody().unmask();  
-			}.createDelegate(this)
+ *  Ext.Msg.alert(&quot;Failed&quot;, error);
+ *  Ext.getBody().unmask();  
+ *  }.createDelegate(this)
  * 		});
  * Ext.getBody().mask();
  * Controller.dosomething.apply(this, callParams);
@@ -70,7 +70,7 @@ Gemma.WaitHandler = Ext.extend(Ext.util.Observable, {
 								showAllMessages : showAllMessages
 							});
 
-					if (this.throbberEl !== null) {
+					if (this.throbberEl != undefined) {
 						/*
 						 * Doesn't work quite right ... implemented for 'report' update.
 						 */
