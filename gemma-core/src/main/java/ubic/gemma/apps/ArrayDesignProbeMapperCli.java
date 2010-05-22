@@ -89,6 +89,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.util.AbstractCLI#buildOptions()
      */
     @SuppressWarnings("static-access")
@@ -175,6 +176,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.util.AbstractCLI#doWork(java.lang.String[])
      */
     @Override
@@ -361,6 +363,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
 
     /*
      * See 'configure' for how the other options are handled. (non-Javadoc)
+     * 
      * @see ubic.gemma.apps.ArrayDesignSequenceManipulatingCli#processOptions()
      */
     @Override
@@ -416,8 +419,12 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
      * @param skipIfLastRunLaterThan
      */
     private void batchRun( final Date skipIfLastRunLaterThan ) {
-        // look at all array designs.
-        Collection<ArrayDesign> allArrayDesigns = arrayDesignService.loadAll();
+        Collection<ArrayDesign> allArrayDesigns;
+        if ( this.taxon != null ) {
+            allArrayDesigns = arrayDesignService.findByTaxon( this.taxon );
+        } else {
+            allArrayDesigns = arrayDesignService.loadAll();
+        }
 
         final SecurityContext context = SecurityContextHolder.getContext();
 
@@ -445,13 +452,11 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
             }
 
             void consume( ArrayDesign x ) {
-                if ( arrayDesignService.getTaxa( x.getId() ).contains( taxon ) ) {
-                    /*
-                     * Note that if the array design has multiple taxa, analysis will be run on all of the sequences,
-                     * not just the ones from the taxon specified.
-                     */
-                    processArrayDesign( skipIfLastRunLaterThan, x );
-                }
+                /*
+                 * Note that if the array design has multiple taxa, analysis will be run on all of the sequences, not
+                 * just the ones from the taxon specified.
+                 */
+                processArrayDesign( skipIfLastRunLaterThan, x );
 
             }
         }
@@ -573,7 +578,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
 
         log.info( "============== Start processing: " + design + " ==================" );
         try {
-            design = arrayDesignService.thawLite( design );
+            design = arrayDesignService.thaw( design );
 
             arrayDesignProbeMapperService.processArrayDesign( design, this.configure(), this.useDB );
             successObjects.add( design.getName() );
