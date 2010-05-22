@@ -1291,4 +1291,16 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
                         "batch", batch );
         return bb;
     }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#findByTaxon(ubic.gemma.model.genome.Taxon)
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    public Collection<ArrayDesign> findByTaxon( Taxon taxon ) {
+        return this.getHibernateTemplate().findByNamedParam(
+                "select a from ArrayDesignImpl a where a.primaryTaxon = :t", "t", taxon );
+    }
 }

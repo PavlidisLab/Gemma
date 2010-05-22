@@ -100,6 +100,15 @@ public interface ArrayDesignService {
     public ArrayDesign findByShortName( String shortName );
 
     /**
+     * Find by the primary taxon.
+     * 
+     * @param taxon
+     * @return
+     */
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    public Collection<ArrayDesign> findByTaxon( Taxon taxon );
+
+    /**
      * 
      */
     @Secured( { "GROUP_USER", "AFTER_ACL_READ" })

@@ -168,9 +168,11 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
             }
 
         } else if ( taxon != null ) {
-            log.warn( "*** Running BLAT for all " + taxon.getCommonName() + " Array designs *** " );
 
-            Collection<ArrayDesign> allArrayDesigns = arrayDesignService.loadAll();
+            Collection<ArrayDesign> allArrayDesigns = arrayDesignService.findByTaxon( taxon );
+            log.warn( "*** Running BLAT for all " + taxon.getCommonName() + " Array designs *** ["
+                    + allArrayDesigns.size() + " items]" );
+
             final SecurityContext context = SecurityContextHolder.getContext();
 
             // split over multiple threads so we can multiplex. Put the array designs in a queue.
@@ -200,13 +202,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
 
                     x = arrayDesignService.thaw( x );
 
-                    if ( x.getPrimaryTaxon() != null && x.getPrimaryTaxon().equals( taxon ) ) {
-                        /*
-                         * Note that if the array design has multiple taxa, blat will be run on all of the sequences,
-                         * not just the ones from the taxon specified.
-                         */
-                        processArrayDesign( skipIfLastRunLaterThan, x );
-                    }
+                    processArrayDesign( skipIfLastRunLaterThan, x );
 
                 }
             }

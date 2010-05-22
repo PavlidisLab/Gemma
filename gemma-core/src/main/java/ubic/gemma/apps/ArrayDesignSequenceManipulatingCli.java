@@ -85,12 +85,12 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractSpringA
      */
     protected boolean isSubsumedOrMerged( ArrayDesign arrayDesign ) {
         if ( arrayDesign.getSubsumingArrayDesign() != null ) {
-            log.info( arrayDesign + " is subsumed by " + arrayDesign.getSubsumingArrayDesign() );
+            log.info( arrayDesign + " is subsumed by " + arrayDesign.getSubsumingArrayDesign().getId() );
             return true;
         }
 
         if ( arrayDesign.getMergedInto() != null ) {
-            log.info( arrayDesign + " is merged into " + arrayDesign.getMergedInto() );
+            log.info( arrayDesign + " is merged into " + arrayDesign.getMergedInto().getId() );
             return true;
         }
         return false;

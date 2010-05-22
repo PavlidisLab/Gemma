@@ -375,7 +375,15 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
     @Override
     protected Taxon handleGetTaxon( java.lang.Long id ) {
         return this.getArrayDesignDao().getTaxon( id );
+    }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#findByTaxon(ubic.gemma.model.genome.Taxon)
+     */
+    public Collection<ArrayDesign> findByTaxon( Taxon taxon ) {
+        return this.getArrayDesignDao().findByTaxon( taxon );
     }
 
     @Override

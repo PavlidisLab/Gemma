@@ -346,4 +346,10 @@ public interface ArrayDesignDao extends BaseDao<ArrayDesign> {
      */
     public Collection<ArrayDesign> findByManufacturer( String searchString );
 
+    /**
+     * @param taxon
+     * @return
+     */
+    public Collection<ArrayDesign> findByTaxon( Taxon taxon );
+
 }
