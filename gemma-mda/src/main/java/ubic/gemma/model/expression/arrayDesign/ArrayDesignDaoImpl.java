@@ -109,7 +109,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
                 .findByNamedParam(
                         "select a from ArrayDesignImpl a "
                                 + "left join fetch a.subsumedArrayDesigns "
-                                + " left join fetch a.mergees  left join fetch a.designProvider"
+                                + " left join fetch a.mergees  left join fetch a.designProvider left join fetch a.primaryTaxon "
                                 + " join fetch a.auditTrail trail join fetch trail.events left join fetch a.externalReferences "
                                 + "where a.id=:adid", "adid", arrayDesign.getId() );
 
