@@ -923,7 +923,8 @@ public class SearchService implements InitializingBean {
             if ( Gene.class.isAssignableFrom( resultObject.getClass() ) ) {
                 genes.put( ( Gene ) resultObject, sr );
             } else {
-                log.warn( "Expected a Gene, got a " + resultObject.getClass() + "" );
+                // see bug 1774 -- may not be happening any more.
+                log.warn( "Expected a Gene, got a " + resultObject.getClass() + " on query=" + settings.getQuery() );
             }
         }
 
