@@ -236,6 +236,10 @@ public class OntologyService implements InitializingBean {
 
         queryString = OntologySearch.stripInvalidCharacters( givenQueryString );
 
+        if ( StringUtils.isBlank( queryString ) ) {
+            throw new IllegalArgumentException( "The query was not valid (ended up being empty): " + givenQueryString );
+        }
+
         searchForGenes( queryString, categoryUri, taxon, searchResults );
 
         for ( AbstractOntologyService serv : this.ontologyServices ) {
