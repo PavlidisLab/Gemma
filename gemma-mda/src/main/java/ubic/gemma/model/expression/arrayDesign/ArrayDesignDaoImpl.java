@@ -355,8 +355,9 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         Map<Long, Integer> eeCount = new HashMap<Long, Integer>();
         List<Object[]> list = getHibernateTemplate().find( queryString );
 
-        // Bug 1549: for unknown reasons, this method sometimes returns only a single record (or no records)
-        log.info( list.size() + " rows from getExpressionExperimentCountMap query" );
+        // Bug 1549: for unknown reasons, this method sometimes returns only a single record (or no records). Obviously
+        // if we only have 1 array design this warning is spurious.
+        if ( list.size() < 2 ) log.warn( list.size() + " rows from getExpressionExperimentCountMap query" );
 
         for ( Object[] o : list ) {
             Long id = ( Long ) o[0];

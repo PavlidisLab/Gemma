@@ -196,14 +196,11 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
         // do this ahead to avoid round trips - this also filters...
         Collection<ExpressionExperiment> ees = expressionExperimentService.loadMultiple( ids );
 
-        Map<Long, ExpressionExperiment> eemap = new HashMap<Long, ExpressionExperiment>();
-        for ( ExpressionExperiment ee : ees ) {
-            eemap.put( ee.getId(), ee );
-        }
-
         if ( ees.size() == 0 ) {
             return results;
         }
+        
+        Map<Long, Object> eemap = EntityUtils.getIdMap( ees );
 
         Map<Long, AuditEvent> troubleEvents = getEvents( ees, TroubleStatusFlagEvent.class );
         Map<Long, AuditEvent> arrayDesignEvents = getEvents( ees, ArrayDesignGeneMappingEvent.class );
@@ -235,7 +232,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
 
             Long id = eeVo.getId();
 
-            ExpressionExperiment ee = eemap.get( id );
+            ExpressionExperiment ee = ( ExpressionExperiment ) eemap.get( id );
 
             if ( linkAnalysisEvents.containsKey( ee ) ) {
                 AuditEvent event = linkAnalysisEvents.get( ee );

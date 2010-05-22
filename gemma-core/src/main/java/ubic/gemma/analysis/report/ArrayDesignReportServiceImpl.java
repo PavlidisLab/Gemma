@@ -25,8 +25,10 @@ import java.io.FileOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -39,17 +41,24 @@ import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Service;
 
 import ubic.basecode.util.FileTools;
+import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.model.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
+import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignAnnotationFileEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignGeneMappingEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignMergeEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignProbeRenamingEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignRepeatAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceUpdateEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
+import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSubsumeCheckEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType; 
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject; 
 import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.EntityUtils;
 
 /**
  * @author jsantos
@@ -57,22 +66,34 @@ import ubic.gemma.util.ConfigUtils;
  */
 @Service
 public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
-    private Log log = LogFactory.getLog( this.getClass() );
+    private String ARRAY_DESIGN_REPORT_DIR = "ArrayDesignReports";
 
     private String ARRAY_DESIGN_REPORT_FILE_NAME_PREFIX = "ArrayDesignReport";
 
     // For all array designs
     private String ARRAY_DESIGN_SUMMARY = "AllArrayDesignsSummary";
 
-    private String ARRAY_DESIGN_REPORT_DIR = "ArrayDesignReports";
-
-    private String HOME_DIR = ConfigUtils.getString( "gemma.appdata.home" );
-
     @Autowired
     private ArrayDesignService arrayDesignService;
 
     @Autowired
+    private AuditEventService auditEventService;
+
+    @Autowired
     private AuditTrailService auditTrailService;
+
+    /**
+     * Batch of classes we can get events for all at once.
+     */
+    @SuppressWarnings("unchecked")
+    private Class<? extends AuditEventType>[] eventTypes = new Class[] { ArrayDesignProbeRenamingEvent.class,
+            ArrayDesignSequenceUpdateEvent.class, ArrayDesignSubsumeCheckEvent.class,
+            ArrayDesignSequenceAnalysisEvent.class, ArrayDesignMergeEvent.class, ArrayDesignAnnotationFileEvent.class,
+            ArrayDesignGeneMappingEvent.class, ArrayDesignRepeatAnalysisEvent.class };
+
+    private String HOME_DIR = ConfigUtils.getString( "gemma.appdata.home" );
+
+    private Log log = LogFactory.getLog( this.getClass() );
 
     /**
      * Fill in event information
@@ -96,59 +117,65 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
 
         if ( ids.size() == 0 ) return;
 
-        Map<Long, AuditEvent> geneMappingEvents = arrayDesignService.getLastGeneMapping( ids );
-        Map<Long, AuditEvent> sequenceUpdateEvents = arrayDesignService.getLastSequenceUpdate( ids );
-        Map<Long, AuditEvent> sequenceAnalysisEvents = arrayDesignService.getLastSequenceAnalysis( ids );
-        Map<Long, AuditEvent> repeatAnalysisEvents = arrayDesignService.getLastRepeatAnalysis( ids );
+        Collection<Class<? extends AuditEventType>> typesToGet = Arrays.asList( eventTypes );
+
+        Collection<ArrayDesign> arrayDesigns = arrayDesignService.loadMultiple( ids );
+
+        Map<Long, Object> idMap = EntityUtils.getIdMap( arrayDesigns );
+
+        Map<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>> events = auditEventService.getLastEvents(
+                arrayDesigns, typesToGet );
+
         Map<Long, AuditEvent> troubleEvents = arrayDesignService.getLastTroubleEvent( ids );
         Map<Long, AuditEvent> validationEvents = arrayDesignService.getLastValidationEvent( ids );
+        Map<Auditable, AuditEvent> geneMappingEvents = events.get( ArrayDesignGeneMappingEvent.class );
+        Map<Auditable, AuditEvent> sequenceUpdateEvents = events.get( ArrayDesignSequenceUpdateEvent.class );
+        Map<Auditable, AuditEvent> sequenceAnalysisEvents = events.get( ArrayDesignSequenceAnalysisEvent.class );
+        Map<Auditable, AuditEvent> repeatAnalysisEvents = events.get( ArrayDesignRepeatAnalysisEvent.class );
 
-        // fill in events for the value objects
         for ( ArrayDesignValueObject adVo : adVos ) {
-            // preemptively fill in event dates with None
 
             Long id = adVo.getId();
-            if ( geneMappingEvents.containsKey( id ) ) {
-                AuditEvent event = geneMappingEvents.get( id );
+            ArrayDesign ad = ( ArrayDesign ) idMap.get( id );
+
+            if ( geneMappingEvents.containsKey( ad ) ) {
+                AuditEvent event = geneMappingEvents.get( ad );
                 if ( event != null ) {
                     adVo.setLastGeneMapping( event.getDate() );
                 }
             }
 
-            if ( sequenceUpdateEvents.containsKey( id ) ) {
-                AuditEvent event = sequenceUpdateEvents.get( id );
+            if ( sequenceUpdateEvents.containsKey( ad ) ) {
+                AuditEvent event = sequenceUpdateEvents.get( ad );
                 if ( event != null ) {
                     adVo.setLastSequenceUpdate( event.getDate() );
                 }
             }
 
-            if ( sequenceAnalysisEvents.containsKey( id ) ) {
-                AuditEvent event = sequenceAnalysisEvents.get( id );
+            if ( sequenceAnalysisEvents.containsKey( ad ) ) {
+                AuditEvent event = sequenceAnalysisEvents.get( ad );
                 if ( event != null ) {
                     adVo.setLastSequenceAnalysis( event.getDate() );
                 }
             }
-            if ( repeatAnalysisEvents.containsKey( id ) ) {
-                AuditEvent event = repeatAnalysisEvents.get( id );
+            if ( repeatAnalysisEvents.containsKey( ad ) ) {
+                AuditEvent event = repeatAnalysisEvents.get( ad );
                 if ( event != null ) {
                     adVo.setLastRepeatMask( event.getDate() );
                 }
             }
             adVo.setTroubleEvent( troubleEvents.get( id ) );
             adVo.setValidationEvent( validationEvents.get( id ) );
-
-            // ArrayDesign ad = arrayDesignService.load( id );
-            // adVo.setTroubleEvent( auditTrailService.getLastTroubleEvent( ad ) );
-            // adVo.setValidationEvent( auditTrailService.getLastValidationEvent( ad ) );
         }
 
         watch.stop();
-        log.info( "Added event information in " + watch.getTime() + "ms (wall time)" );
+        if ( watch.getTime() > 1000 ) log.info( "Added event information in " + watch.getTime() + "ms" );
 
     }
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.analysis.report.ArrayDesignReportService#fillInSubsumptionInfo(java.util.Collection)
      */
     public void fillInSubsumptionInfo( Collection<ArrayDesignValueObject> valueObjects ) {
@@ -204,6 +231,7 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.analysis.report.ArrayDesignReportService#generateAllArrayDesignReport()
      */
     public void generateAllArrayDesignReport() {
@@ -231,11 +259,10 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
             File f = new File( HOME_DIR + File.separatorChar + ARRAY_DESIGN_REPORT_DIR + File.separatorChar
                     + ARRAY_DESIGN_SUMMARY );
             if ( f.exists() ) {
-                if ( !f.canWrite() ) {
+                if ( !f.canWrite() || !f.delete() ) {
                     log.warn( "Cannot write to file." );
                     return;
                 }
-                f.delete();
             }
             FileOutputStream fos = new FileOutputStream( HOME_DIR + File.separatorChar + ARRAY_DESIGN_REPORT_DIR
                     + File.separatorChar + ARRAY_DESIGN_SUMMARY );
@@ -252,6 +279,7 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.analysis.report.ArrayDesignReportService#generateArrayDesignReport()
      */
     @Secured( { "GROUP_AGENT" })
@@ -268,6 +296,7 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.analysis.report.ArrayDesignReportService#generateArrayDesignReport(ubic.gemma.model.expression.arrayDesign
      * .ArrayDesignValueObject)
@@ -310,11 +339,10 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
             File f = new File( reportFileName );
 
             if ( f.exists() ) {
-                if ( !f.canWrite() ) {
-                    log.error( "Report exists but cannot overwrite, leading the old one in place: " + reportFileName );
+                if ( !f.canWrite() || !f.delete() ) {
+                    log.error( "Report exists but cannot overwrite, leaving the old one in place: " + reportFileName );
                     return;
                 }
-                f.delete();
             }
             FileOutputStream fos = new FileOutputStream( reportFileName );
             ObjectOutputStream oos = new ObjectOutputStream( fos );
@@ -330,6 +358,7 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.analysis.report.ArrayDesignReportService#generateArrayDesignReport(java.lang.Long)
      */
     public ArrayDesignValueObject generateArrayDesignReport( Long id ) {
@@ -489,23 +518,9 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
         return analysisEventString;
     }
 
-    /**
-     * 
-     *
-     */
     private void initDirectories() {
-        // check to see if the home directory exists. If it doesn't, create it.
-        // check to see if the reports directory exists. If it doesn't, create it.
         FileTools.createDir( HOME_DIR );
         FileTools.createDir( HOME_DIR + File.separator + ARRAY_DESIGN_REPORT_DIR );
-        // File f = new File( HOME_DIR + File.separatorChar + ARRAY_DESIGN_REPORT_DIR );
-        // Collection<File> files = new ArrayList<File>();
-        // File[] fileArray = f.listFiles();
-        // for ( File file : fileArray ) {
-        // files.add( file );
-        // }
-        // // clear out all files
-        // FileTools.deleteFiles( files );
     }
 
 }
