@@ -109,7 +109,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
                 .findByNamedParam(
                         "select a from ArrayDesignImpl a "
                                 + "left join fetch a.subsumedArrayDesigns "
-                                + " left join fetch a.mergees  left join fetch a.designProvider join fetch a.primaryTaxon "
+                                + " left join fetch a.mergees  left join fetch a.designProvider left join fetch a.primaryTaxon "
                                 + " join fetch a.auditTrail trail join fetch trail.events left join fetch a.externalReferences "
                                 + "where a.id=:adid", "adid", arrayDesign.getId() );
 
@@ -144,13 +144,14 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
          */
         Collection<CompositeSequence> thawed = new HashSet<CompositeSequence>();
         Collection<CompositeSequence> batch = new HashSet<CompositeSequence>();
+        long lastTime = 0;
         for ( CompositeSequence cs : result.getCompositeSequences() ) {
             batch.add( cs );
             if ( batch.size() == 1000 ) {
-                if ( timer.getTime() > 10000 ) {
+                lastTime = timer.getTime();
+                if ( timer.getTime() > 10000 && timer.getTime() - lastTime > 10000 ) {
                     log.info( "Batch : " + timer.getTime() );
                 }
-
                 List<?> bb = thawBatchOfProbes( batch );
                 thawed.addAll( ( Collection<? extends CompositeSequence> ) bb );
 

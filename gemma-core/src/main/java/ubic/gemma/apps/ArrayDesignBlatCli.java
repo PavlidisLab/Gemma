@@ -198,9 +198,9 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
 
                 void consume( ArrayDesign x ) {
 
-                    arrayDesignService.thaw( x );
+                    x = arrayDesignService.thaw( x );
 
-                    if ( x.getPrimaryTaxon().equals( taxon ) ) {
+                    if ( x.getPrimaryTaxon() != null && x.getPrimaryTaxon().equals( taxon ) ) {
                         /*
                          * Note that if the array design has multiple taxa, blat will be run on all of the sequences,
                          * not just the ones from the taxon specified.
