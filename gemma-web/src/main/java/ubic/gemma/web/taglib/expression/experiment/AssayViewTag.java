@@ -32,8 +32,6 @@ import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.tagext.TagSupport;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -47,7 +45,6 @@ import com.sdicons.json.mapper.MapperException;
  * Used to display table of biomaterials and bioassays. In edit mode this displays allows dragging bioassays around to
  * match up across platforms.
  * 
- * @jsp.tag name="assayView" body-content="empty"
  * @author joseph
  * @version $Id$
  */
@@ -62,14 +59,11 @@ public class AssayViewTag extends TagSupport {
      */
     private static final int NUM_EXTRA_BIOMATERIALS = 12;
 
-    private Log log = LogFactory.getLog( this.getClass() );
-
     private ExpressionExperiment expressionExperiment;
     private boolean edit = false;
 
     /**
      * @param expressionExperiment
-     * @jsp.attribute required="true" rtexprvalue="true"
      */
     public void setExpressionExperiment( ExpressionExperiment expressionExperiment ) {
         this.expressionExperiment = expressionExperiment;
@@ -77,7 +71,6 @@ public class AssayViewTag extends TagSupport {
 
     /**
      * @param edit
-     * @jsp.attribute required="false" rtexprvalue="true"
      */
     public void setEdit( String edit ) {
         if ( edit.equalsIgnoreCase( "true" ) ) {
@@ -105,7 +98,6 @@ public class AssayViewTag extends TagSupport {
     @SuppressWarnings("unchecked")
     @Override
     public int doStartTag() throws JspException {
-        log.debug( "in Start Tag" );
 
         StringBuilder buf = new StringBuilder();
 
@@ -159,8 +151,8 @@ public class AssayViewTag extends TagSupport {
         // display arraydesigns
         for ( ArrayDesign design : designs ) {
             Long count = arrayMaterialCount.get( design );
-            buf.append( "<th>" + count + " BioAssays on<br />" + "<a href='' title='" + design.getName()
-                    + "' onclick='return false;'>"
+            buf.append( "<th>" + count + " BioAssays on<br /><a target='_blank' href=\"/Gemma/arrays/showArrayDesign.html?id="
+                    + design.getId() + "\" title=\"" + design.getName() + "\" >"
                     + ( design.getShortName() == null ? design.getName() : design.getShortName() ) + "</a></th>" );
         }
         buf.append( "</tr>" );
@@ -251,15 +243,14 @@ public class AssayViewTag extends TagSupport {
 
         if ( edit ) {
             // append JSON serialization
-            String jsonSerialization = "";
             try {
-                jsonSerialization = JSONMapper.toJSON( assayToMaterial ).render( false );
+                String jsonSerialization = JSONMapper.toJSON( assayToMaterial ).render( false );
+                buf.append( "<input type='hidden' id='assayToMaterialMap' name='assayToMaterialMap' value='"
+                        + jsonSerialization + "'/>" );
             } catch ( MapperException e ) {
                 // cannot serialize
-                log.error( "cannot serialize materialMap object!" );
             }
-            buf.append( "<input type='hidden' id='assayToMaterialMap' name='assayToMaterialMap' value='"
-                    + jsonSerialization + "'/>" );
+
         }
 
         buf.append( "</div>" );
