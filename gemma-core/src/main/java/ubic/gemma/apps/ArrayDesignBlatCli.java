@@ -84,6 +84,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.util.AbstractCLI#buildOptions()
      */
     @SuppressWarnings("static-access")
@@ -117,6 +118,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.util.AbstractCLI#doWork(java.lang.String[])
      */
     @Override
@@ -195,7 +197,8 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
                 }
 
                 void consume( ArrayDesign x ) {
-                    if ( arrayDesignService.getTaxa( x.getId() ).contains( taxon ) ) {
+
+                    if ( x.getPrimaryTaxon().equals( taxon ) ) {
                         /*
                          * Note that if the array design has multiple taxa, blat will be run on all of the sequences,
                          * not just the ones from the taxon specified.
