@@ -18,7 +18,10 @@
  */
 package ubic.gemma.model.expression.bioAssay;
 
+import java.util.Collection;
+
 import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -34,13 +37,13 @@ public interface BioAssayService {
      * Associates a bioMaterial with a specified bioAssay.
      * </p>
      */
-    @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    @PreAuthorize("hasPermission(#bioAssay, 'write') or hasPermission(#bioAssay, 'administration')")
     public void addBioMaterialAssociation( BioAssay bioAssay, BioMaterial bioMaterial );
 
     /**
      * 
      */
-    public java.lang.Integer countAll();
+    public Integer countAll();
 
     @Secured( { "GROUP_USER" })
     public BioAssay create( BioAssay bioAssay );
@@ -51,7 +54,7 @@ public interface BioAssayService {
      * </p>
      */
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    public java.util.Collection<BioAssayDimension> findBioAssayDimensions( BioAssay bioAssay );
+    public Collection<BioAssayDimension> findBioAssayDimensions( BioAssay bioAssay );
 
     /**
      * 

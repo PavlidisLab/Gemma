@@ -81,6 +81,11 @@ public class DifferentialExpressionAnalyzer implements ApplicationContextAware {
             DifferentialExpressionAnalysisConfig config ) {
         AbstractDifferentialExpressionAnalyzer analyzer = determineAnalysis( expressionExperiment, config
                 .getFactorsToInclude(), config.getAnalysisType() );
+
+        if ( analyzer == null ) {
+            throw new RuntimeException( "Could not locate an appropriate analyzer" );
+        }
+
         DifferentialExpressionAnalysis analysis = analyzer.run( expressionExperiment, config );
 
         return analysis;
@@ -117,6 +122,10 @@ public class DifferentialExpressionAnalyzer implements ApplicationContextAware {
             Collection<ExperimentalFactor> factors, AnalysisType type ) {
 
         AbstractDifferentialExpressionAnalyzer analyzer = determineAnalysis( expressionExperiment, factors, type );
+
+        if ( analyzer == null ) {
+            throw new RuntimeException( "Could not locate an appropriate analyzer" );
+        }
 
         DifferentialExpressionAnalysis analysis = analyzer.run( expressionExperiment, factors );
 
@@ -183,7 +192,7 @@ public class DifferentialExpressionAnalyzer implements ApplicationContextAware {
 
                 return this.applicationContext.getBean( GenericAncovaAnalyzer.class );
             default:
-                throw new IllegalArgumentException( "Analyses of that type are not yet supported" );
+                throw new IllegalArgumentException( "Analyses of that type (" + type + ")are not yet supported" );
         }
 
     }
@@ -211,7 +220,7 @@ public class DifferentialExpressionAnalyzer implements ApplicationContextAware {
             Collection<ExperimentalFactor> experimentalFactors ) {
 
         Collection<ExperimentalFactor> efsToUse = null;
-        if ( experimentalFactors == null ) {
+        if ( experimentalFactors == null || experimentalFactors.isEmpty() ) {
             efsToUse = expressionExperiment.getExperimentalDesign().getExperimentalFactors();
         } else {
             efsToUse = experimentalFactors;
@@ -233,6 +242,16 @@ public class DifferentialExpressionAnalyzer implements ApplicationContextAware {
             ExperimentalFactor experimentalFactor = efsToUse.iterator().next();
             Collection<FactorValue> factorValues = experimentalFactor.getFactorValues();
 
+            /*
+             * Check that there is more than one value in at least one group
+             */
+            boolean ok = differentialExpressionAnalysisHelperService.checkValidForLm( expressionExperiment,
+                    experimentalFactor );
+
+            if ( !ok ) {
+                return null;
+            }
+
             if ( factorValues.isEmpty() )
                 throw new IllegalArgumentException(
                         "Collection of factor values is either null or 0. Cannot execute differential expression analysis." );
@@ -250,6 +269,7 @@ public class DifferentialExpressionAnalyzer implements ApplicationContextAware {
             }
 
             else {
+
                 /*
                  * Return one way anova analyzer. NOTE: This can take care of the t-test as well, since a one-way anova
                  * with two groups is just a t-test

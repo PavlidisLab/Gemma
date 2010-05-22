@@ -41,6 +41,7 @@ public class BioAssayServiceImpl extends ubic.gemma.model.expression.bioAssay.Bi
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.bioAssay.BioAssayService#create(ubic.gemma.model.expression.bioAssay.BioAssay)
      */
     public BioAssay create( BioAssay bioAssay ) {
@@ -49,6 +50,7 @@ public class BioAssayServiceImpl extends ubic.gemma.model.expression.bioAssay.Bi
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.bioAssay.BioAssayServiceBase#handleAssociateBioMaterial(ubic.gemma.model.expression
      * .bioAssay.BioAssay, ubic.gemma.model.expression.biomaterial.BioMaterial)
@@ -78,7 +80,7 @@ public class BioAssayServiceImpl extends ubic.gemma.model.expression.bioAssay.Bi
         }
 
         this.update( bioAssay );
-        this.getBioMaterialService().update( bioMaterial );
+        this.getBioMaterialDao().update( bioMaterial );
     }
 
     @Override
@@ -111,6 +113,7 @@ public class BioAssayServiceImpl extends ubic.gemma.model.expression.bioAssay.Bi
     /**
      * @see ubic.gemma.model.expression.bioAssay.BioAssayService#loadAll()
      */
+    @SuppressWarnings("unchecked")
     @Override
     protected Collection<BioAssay> handleLoadAll() throws Exception {
         return ( Collection<BioAssay> ) this.getBioAssayDao().loadAll();
@@ -127,6 +130,7 @@ public class BioAssayServiceImpl extends ubic.gemma.model.expression.bioAssay.Bi
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.bioAssay.BioAssayServiceBase#handleRemoveBioMaterial(ubic.gemma.model.expression.
      * bioAssay.BioAssay, ubic.gemma.model.expression.biomaterial.BioMaterial)
@@ -149,10 +153,10 @@ public class BioAssayServiceImpl extends ubic.gemma.model.expression.bioAssay.Bi
         // if it is, delete it
         // if not, update it
         if ( currentBioAssays.size() == 0 ) {
-            this.getBioMaterialService().remove( bioMaterial );
+            this.getBioMaterialDao().remove( bioMaterial );
         } else {
             // update bioMaterial
-            this.getBioMaterialService().update( bioMaterial );
+            this.getBioMaterialDao().update( bioMaterial );
         }
 
     }

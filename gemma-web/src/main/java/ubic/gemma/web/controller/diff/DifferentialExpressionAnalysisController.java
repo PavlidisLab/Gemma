@@ -126,6 +126,9 @@ public class DifferentialExpressionAnalysisController extends AbstractTaskServic
             /*
              * Either there are no viable automatic choices, or there are no factors...
              */
+            if ( ee.getExperimentalDesign().getExperimentalFactors().size() < 2 ) {
+                throw new IllegalStateException( "This data set does not seem suitable for analysis." );
+            }
 
         } else if ( analyzer instanceof TTestAnalyzer ) {
             if ( ee.getExperimentalDesign().getExperimentalFactors().iterator().next().getFactorValues().size() == 1 ) {
@@ -244,43 +247,11 @@ public class DifferentialExpressionAnalysisController extends AbstractTaskServic
             }
         }
 
-        /*
-         * Note that the setup gets checked again later, so if the choice is not valid it's not the end of the world.
-         */
-        AnalysisType type = null;
-        if ( factors.size() == 2 ) {
-            if ( includeInteractions ) {
-                type = AnalysisType.TWIA;
-            } else {
-                type = AnalysisType.TWA;
-            }
-        } else if ( factors.size() == 1 ) {
-
-            int numValues = factors.iterator().next().getFactorValues().size();
-            if ( numValues == 0 ) {
-                throw new IllegalArgumentException( "Factor must have at least one value" );
-            } else if ( numValues == 1 ) {
-                type = AnalysisType.OSTTEST;
-            }
-            if ( numValues == 2 ) {
-                type = AnalysisType.TTEST;
-            } else if ( numValues > 2 ) {
-                type = AnalysisType.OWA;
-            }
-        } else {
-            type = AnalysisType.GENERICLM;
-        }
-
-        log.info( "Determining analysis type" );
-        AbstractDifferentialExpressionAnalyzer analyzer = this.differentialExpressionAnalyzer.determineAnalysis( ee,
-                factors, type );
-
-        if ( analyzer == null ) {
-            throw new IllegalArgumentException( "Your settings were not valid. Please check them and try again." );
+        if ( factors.size() != factorids.size() ) {
+            throw new IllegalArgumentException( "Unknown factors?" );
         }
 
         DifferentialExpressionAnalysisTaskCommand cmd = new DifferentialExpressionAnalysisTaskCommand( ee );
-        cmd.setAnalysisType( type );
         cmd.setFactors( factors );
         cmd.setIncludeInteractions( includeInteractions );
 

@@ -56,6 +56,8 @@ import ubic.gemma.persistence.PersisterHelper;
 /**
  * Differential expression service to run the differential expression analysis (and persist the results using the
  * appropriate data access objects).
+ * <p>
+ * FIXME this is very confusingly named as there is also a DifferentialExpressionAnalysisService and a DifferentialExpressionAnalyzer
  * 
  * @author keshav
  * @version $Id$

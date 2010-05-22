@@ -37,7 +37,6 @@ import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.tools.ant.filters.StringInputStream;
 import org.springframework.validation.BindException;
-import org.springframework.validation.ObjectError;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 import org.xml.sax.SAXException;
@@ -116,25 +115,14 @@ public class ExpressionExperimentFormController extends BaseFormController {
     public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
             BindException errors ) throws Exception {
 
-        log.debug( "entering onSubmit" );
-
         ExpressionExperimentEditCommand eeCommand = ( ExpressionExperimentEditCommand ) command;
+        ExpressionExperiment expressionExperiment = expressionExperimentService.load( eeCommand.getId() );
 
-        if ( eeCommand == null || eeCommand.getId() == null ) {
-            errors.addError( new ObjectError( command.toString(), null, null,
-                    "Expression experiment was null or had null id" ) );
-            return processFormSubmission( request, response, command, errors );
+        if ( expressionExperiment == null ) {
+            throw new IllegalArgumentException( "Could not load experiment" );
         }
 
-        ExpressionExperiment expressionExperiment = eeCommand.toExpressionExperiment();
-        // create bibliographicReference if necessary
-
-        updatePubMed( request, expressionExperiment );
-
-        /**
-         * Takes care of the basics.
-         */
-        expressionExperimentService.update( expressionExperiment );
+        expressionExperimentService.thawLite( expressionExperiment );
 
         /**
          * Much more complicated
@@ -142,11 +130,6 @@ public class ExpressionExperimentFormController extends BaseFormController {
         updateQuantTypes( request, expressionExperiment, eeCommand.getQuantitationTypes() );
 
         updateBioMaterialMap( request, expressionExperiment );
-
-        updateAccession( request, expressionExperiment );
-
-        // saveMessage( request, "object.saved", new Object[] { expressionExperiment.getClass().getSimpleName(),
-        // expressionExperiment.getId() }, "Saved" );
 
         return new ModelAndView( new RedirectView( "http://" + request.getServerName() + ":" + request.getServerPort()
                 + request.getContextPath() + "/expressionExperiment/showExpressionExperiment.html?id="
@@ -321,26 +304,6 @@ public class ExpressionExperimentFormController extends BaseFormController {
 
     private String scrub( String s ) {
         return StringEscapeUtils.escapeHtml( s );
-    }
-
-    /**
-     * @param request
-     * @param expressionExperiment
-     */
-    private void updateAccession( HttpServletRequest request, ExpressionExperiment expressionExperiment ) {
-        String accession = request.getParameter( "expressionExperiment.accession.accession" );
-
-        if ( accession == null ) {
-            // do nothing
-        } else if ( expressionExperiment.getAccession() != null ) {
-            /* database entry */
-            expressionExperiment.getAccession().setAccession( accession );
-
-            /* external database */
-            ExternalDatabase ed = ( expressionExperiment.getAccession().getExternalDatabase() );
-            ed = externalDatabaseService.findOrCreate( ed );
-            expressionExperiment.getAccession().setExternalDatabase( ed );
-        }
     }
 
     /**

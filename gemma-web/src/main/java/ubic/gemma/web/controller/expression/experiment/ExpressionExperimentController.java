@@ -69,9 +69,11 @@ import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssay.BioAssayService;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.expression.biomaterial.BioMaterialService;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -155,44 +157,6 @@ public class ExpressionExperimentController extends AbstractTaskService {
         }
 
     }
-
-    // private class UpdateBasics extends BackgroundJob<UpdateEEDetailsCommand> {
-    //
-    // public UpdateBasics( UpdateEEDetailsCommand command ) {
-    // super( command );
-    //
-    // }
-    //
-    // @Override
-    // public TaskResult processJob() {
-    //
-    // Long entityId = command.getEntityId();
-    // ExpressionExperiment ee = expressionExperimentService.load( entityId );
-    // if ( ee == null )
-    // throw new IllegalArgumentException( "Cannot locate or access experiment with id=" + entityId );
-    //
-    // if ( StringUtils.isNotBlank( command.getShortName() ) && !command.getShortName().equals( ee.getShortName() ) ) {
-    // if ( expressionExperimentService.findByShortName( command.getShortName() ) != null ) {
-    // throw new IllegalArgumentException( "An experiment with short name '" + command.getShortName()
-    // + "' already exists" );
-    // }
-    // ee.setShortName( command.getShortName() );
-    // }
-    // if ( StringUtils.isNotBlank( command.getName() ) && !command.getName().equals( ee.getName() ) ) {
-    // ee.setName( command.getName() );
-    // }
-    // if ( StringUtils.isNotBlank( command.getDescription() )
-    // && !command.getDescription().equals( ee.getDescription() ) ) {
-    // ee.setDescription( command.getDescription() );
-    // }
-    //
-    // log.info( "Updating ..." );
-    // expressionExperimentService.update( ee );
-    //
-    // ExpressionExperimentDetailsValueObject eeDetails = loadExpressionExperimentDetails( ee.getId() );
-    // return new TaskResult( command, eeDetails );
-    // }
-    // }
 
     private class UpdatePubMed extends BackgroundJob<UpdatePubMedCommand> {
 
@@ -279,6 +243,12 @@ public class ExpressionExperimentController extends AbstractTaskService {
 
     @Autowired
     private BibliographicReferenceService bibliographicReferenceService;
+
+    @Autowired
+    private BioAssayService bioAssayService;
+
+    @Autowired
+    private BioMaterialService bioMaterialService;
 
     @Autowired
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
@@ -978,6 +948,53 @@ public class ExpressionExperimentController extends AbstractTaskService {
 
         // request.setAttribute( "id", id );
         return new ModelAndView( "bioAssays" ).addObject( "bioAssays", subset.getBioAssays() );
+    }
+
+    /**
+     * Completely reset the pairing of bioassays to biomaterials so they are no longer paired. New biomaterials are
+     * constructed where necessary; they retain the characteristics of the original. Experimental design might need to
+     * be redone after this operation. (AJAX)
+     * 
+     * @param eeId
+     */
+    public void unmatchAllBioAssays( Long eeId ) {
+        ExpressionExperiment ee = this.expressionExperimentService.load( eeId );
+        if ( ee == null ) {
+            throw new IllegalArgumentException( "Could not load experiment with id=" + eeId );
+        }
+        this.expressionExperimentService.thawLite( ee );
+
+        Collection<BioMaterial> needToProcess = new HashSet<BioMaterial>();
+
+        for ( BioAssay ba : ee.getBioAssays() ) {
+            for ( BioMaterial bm : ba.getSamplesUsed() ) {
+                Collection<BioAssay> bioAssaysUsedIn = bm.getBioAssaysUsedIn();
+                if ( bioAssaysUsedIn.size() > 1 ) {
+                    needToProcess.add( bm );
+                }
+            }
+        }
+
+        for ( BioMaterial bm : needToProcess ) {
+            int i = 0;
+            for ( BioAssay baU : bm.getBioAssaysUsedIn() ) {
+                if ( i > 0 ) {
+                    BioMaterial newMaterial = bioMaterialService.copy( bm );
+                    newMaterial.setName( "Modeled after " + bm.getName() );
+                    newMaterial.getFactorValues().clear();
+                    newMaterial.getBioAssaysUsedIn().add( baU );
+                    newMaterial = ( BioMaterial ) persisterHelper.persist( newMaterial );
+
+                    baU.getSamplesUsed().clear();
+                    baU.getSamplesUsed().add( newMaterial );
+                    bioAssayService.update( baU );
+
+                }
+                i++;
+            }
+
+        }
+
     }
 
     /**

@@ -970,6 +970,7 @@ gemma.max.fileupload.size.bytes=
 								<value>loadExpressionExperimentDetails</value>
 								<value>loadStatusSummaries</value>
 								<value>getDescription</value>
+								<value>unmatchAllBioAssays</value>
 							</list>
 						</property>
 					</bean>

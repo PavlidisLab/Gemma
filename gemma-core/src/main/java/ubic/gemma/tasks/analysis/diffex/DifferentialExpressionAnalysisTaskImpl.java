@@ -22,6 +22,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalysisConfig;
+import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzer;
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService;
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService.AnalysisType;
 import ubic.gemma.job.TaskMethod;
@@ -45,8 +46,19 @@ public class DifferentialExpressionAnalysisTaskImpl implements DifferentialExpre
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
 
+    @Autowired
+    private DifferentialExpressionAnalyzer differentialExpressionAnalyzer;
+
     /*
      * (non-Javadoc)
+     * 
+     * 
+     * 
+     * 
+     * 
+     * 
+     * 
+     * 
      * 
      * 
      * 
@@ -80,6 +92,10 @@ public class DifferentialExpressionAnalysisTaskImpl implements DifferentialExpre
 
         DifferentialExpressionAnalysis results;
         AnalysisType analysisType = command.getAnalysisType();
+
+        if ( differentialExpressionAnalyzer.determineAnalysis( ee, command.getFactors() ) == null ) {
+            throw new IllegalStateException( "Data set cannot be analyzed" );
+        }
 
         if ( analysisType != null ) {
             assert command.getFactors() != null;

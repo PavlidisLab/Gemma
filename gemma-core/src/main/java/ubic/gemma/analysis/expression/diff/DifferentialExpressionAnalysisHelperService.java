@@ -444,4 +444,51 @@ public class DifferentialExpressionAnalysisHelperService {
         return factorValuesToCheck;
     }
 
+    /**
+     * Check that the factorvalues are measurements, or that there are at least two assays for at least one factor
+     * value. Otherwise the model fit will be perfect and pvalues will not be returned.
+     * 
+     * @param expressionExperiment
+     * @param experimentalFactor
+     * @return true if it's okay, false otherwise.
+     */
+    public boolean checkValidForLm( ExpressionExperiment expressionExperiment, ExperimentalFactor experimentalFactor ) {
+
+        if ( experimentalFactor.getFactorValues().size() < 2 ) {
+            return false;
+        }
+
+        for ( FactorValue fv : experimentalFactor.getFactorValues() ) {
+            if ( fv.getMeasurement() != null ) {
+                return true; // assume it's all like this.
+            }
+        }
+
+        /*
+         * Assuming fixed levels; we'll need at least two replicates for at least one factor value.
+         */
+        Map<FactorValue, Integer> counts = new HashMap<FactorValue, Integer>();
+        for ( BioAssay ba : expressionExperiment.getBioAssays() ) {
+            for ( BioMaterial bm : ba.getSamplesUsed() ) {
+                for ( FactorValue fv : bm.getFactorValues() ) {
+                    if ( fv.getExperimentalFactor().equals( experimentalFactor ) ) {
+
+                        if ( !counts.containsKey( fv ) ) {
+                            counts.put( fv, 0 );
+                        }
+
+                        counts.put( fv, counts.get( fv ) + 1 );
+                        if ( counts.get( fv ) > 1 ) {
+                            return true;
+                        }
+
+                    }
+                }
+            }
+        }
+
+        return false;
+
+    }
+
 }

@@ -370,9 +370,13 @@ ExpressionExperimentController.updateBasics = function(p0, callback) {
 	dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController', 'updateBasics', p0,
 			callback);
 }
-ExpressionExperimentController.updateBioMaterialMapping = function(callback) {
+//ExpressionExperimentController.updateBioMaterialMapping = function(callback) {
+//	dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController',
+//			'updateBioMaterialMapping', callback);
+//}
+ExpressionExperimentController.unmatchAllBioAssays = function(p0, callback) {
 	dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController',
-			'updateBioMaterialMapping', callback);
+			'unmatchAllBioAssays',p0,  callback);
 }
 // ====================================================================================
 if (ExpressionExperimentDataFetchController == null)

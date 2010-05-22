@@ -188,6 +188,48 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 
 	},
 
+	/**
+	 * Break the relationships between bioassays and biomaterials, such that there is only one bioassay per biomaterial.
+	 */
+	unmatchBioAssays : function(id) {
+		Ext.Msg.show({
+					title : 'Are you sure?',
+					msg : 'Are you sure you to unmatch the bioassays? (This has no effect if there is only one array design)',
+					buttons : Ext.Msg.YESNO,
+					fn : function(btn, text) {
+						if (btn == 'yes') {
+							var callParams = [];
+							callParams.push(id);
+							callParams.push({
+										callback : function(data) {
+//											var k = new Gemma.WaitHandler();
+//											this.relayEvents(k, ['done', 'fail']);
+//											k.handleWait(data, false);
+											this.fireEvent('done');
+										}.createDelegate(this),
+										errorHandler : function(message, exception) {
+											Ext.Msg.alert("There was an error", message);
+											Ext.getBody().unmask();
+										}
+									});
+
+							ExpressionExperimentController.unmatchAllBioAssays.apply(this, callParams);
+						}
+					},
+					scope : this
+				})
+	},
+
+	/**
+	 * Display the annotation tagger window.
+	 * 
+	 * @param {}
+	 *            id
+	 * @param {}
+	 *            taxonId
+	 * @param {}
+	 *            canEdit
+	 */
 	tagger : function(id, taxonId, canEdit) {
 		var annotator = new Ext.Panel({
 					id : 'annotator-wrap',

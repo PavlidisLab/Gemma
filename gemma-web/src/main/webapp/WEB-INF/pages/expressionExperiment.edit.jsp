@@ -2,6 +2,30 @@
 <head>
 	<jwr:script src="/scripts/json.js" />
 
+
+	<jwr:script src='/scripts/ajax/ext/data/DwrProxy.js' />
+
+	<script type="text/javascript">
+	Ext.BLANK_IMAGE_URL = '/Gemma/images/default/s.gif';
+
+	Ext.onReady( function() {
+
+		Ext.QuickTips.init();
+		Ext.state.Manager.setProvider(new Ext.state.CookieProvider());
+
+		var manager = new Gemma.EEManager( {
+			editable : true,
+			id : "eemanager"
+		});
+
+		manager.on('done', function() {
+			window.location.reload(true);
+		});
+
+	});
+</script>
+
+
 </head>
 <jsp:directive.page import="org.apache.commons.lang.StringUtils" />
 <jsp:useBean id="expressionExperiment" scope="request"
@@ -10,7 +34,8 @@
 	<c:if test="${not empty status.errorMessages}">
 		<div class="error">
 			<c:forEach var="error" items="${status.errorMessages}">
-				<img src="<c:url value="/images/iconWarning.gif"/>" alt="<fmt:message key="icon.warning"/>" class="icon" />
+				<img src="<c:url value="/images/iconWarning.gif"/>"
+					alt="<fmt:message key="icon.warning"/>" class="icon" />
 				<c:out value="${error}" escapeXml="false" />
 				<br />
 			</c:forEach>
@@ -19,196 +44,22 @@
 </spring:bind>
 
 <title><fmt:message key="expressionExperiment.title" />
-</title>
-<form method="post" action="<c:url value="/expressionExperiment/editExpressionExperiment.html"/>">
+	${expressionExperiment.shortName}</title>
+<form method="post"
+	action="<c:url value="/expressionExperiment/editExpressionExperiment.html"/>">
 
 
 	<h2>
-		<fmt:message key="expressionExperiment.title" />
+		Editing:
+		<a
+			href="<c:url value="/expressionExperiment/showExpressionExperiment.html?id=${expressionExperiment.id}" />">${expressionExperiment.shortName}</a>
 	</h2>
-
-	<table cellspacing="10">
-		<tr>
-			<td class="label">
-				<b> <fmt:message key="expressionExperiment.name" /> </b>
-			</td>
-			<td>
-				<spring:bind path="expressionExperiment.name">
-					<input type="text" size="75" name="<c:out value="${status.expression}"/>" value="<c:out value="${status.value}"/>" />
-				</spring:bind>
-			</td>
-		</tr>
-
-		<tr>
-			<td class="label">
-				<b> <fmt:message key="expressionExperiment.description" /> </b>
-			</td>
-			<td>
-				<spring:bind path="expressionExperiment.description">
-					<textarea rows="8" cols="75" name="<c:out value="${status.expression}"/>" value="<c:out value="${status.value}"/>"
-						type="_moz">${status.value}</textarea>
-				</spring:bind>
-			</td>
-		</tr>
-
-		<tr>
-			<td class="label">
-				<b> <fmt:message key="databaseEntry.title" /> </b>
-			</td>
-			<td>
-				<spring:bind path="expressionExperiment.accession">
-					<c:choose>
-						<c:when test="${expressionExperiment.accession == null}">
-							<input type="text" name="expressionExperiment.accession.accession" value="<c:out value="Accession unavailable"/>" />
-						</c:when>
-						<c:otherwise>
-							<input type="text" name="expressionExperiment.accession.accession"
-								value="<c:out value="${expressionExperiment.accession.accession}"/>" />
-						</c:otherwise>
-					</c:choose>
-				</spring:bind>
-
-			</td>
-		</tr>
-
-		<tr>
-			<td class="label">
-				<b> <fmt:message key="externalDatabase.title" /> </b>
-			</td>
-			<td>
-				<c:if test="${expressionExperiment.accession != null}">
-					<spring:bind path="expressionExperiment.accession.externalDatabase.name">
-						<select name="${status.expression}">
-							<c:forEach items="${externalDatabases}" var="externalDatabase">
-								<option value="${externalDatabase.name}"
-									<c:if test="${status.value == externalDatabase.name}">selected="selected"</c:if>>
-									${externalDatabase.name}
-								</option>
-							</c:forEach>
-						</select>
-						<span class="fieldError">${status.errorMessage}</span>
-					</spring:bind>
-				</c:if>
-			</td>
-		</tr>
-
-
-		<tr>
-			<td class="label">
-				<b> <fmt:message key="expressionExperiment.owner" /> </b>
-			</td>
-			<td>
-				<%
-				    if (expressionExperiment.getOwner() != null) {
-				%>
-				<jsp:getProperty name="expressionExperiment" property="owner" />
-				<%
-				    } else {
-								out.print("Public");
-							}
-				%>
-			</td>
-		</tr>
-		<tr>
-			<td class="label">
-				<fmt:message key="investigators.title" />
-			</td>
-			<td>
-				<%
-				    if ((expressionExperiment.getInvestigators()) != null
-									&& (expressionExperiment.getInvestigators().size() > 0)) {
-				%>
-				<c:forEach end="0" var="investigator" items="${ expressionExperiment.investigators }">
-					<c:out value="${ investigator.name}" />
-				</c:forEach>
-				<%
-				    if (expressionExperiment.getInvestigators().size() > 1) {
-									out.print(", et al. ");
-								}
-							} else {
-								out.print("No investigators known");
-							}
-				%>
-			</td>
-		</tr>
-		<tr>
-			<td class="label">
-				<fmt:message key="pubMed.publication" />
-			</td>
-			<td>
-				<%
-				    if (expressionExperiment.getPrimaryPublication() != null) {
-				%>
-				<Gemma:citation citation="${expressionExperiment.primaryPublication }" />
-				<%
-				    } else {
-				%>
-				<input type="text" name="expressionExperiment.PubMedId" value="" />
-				(enter PubMed Id here)
-				<%
-				    }
-				%>
-			</td>
-		</tr>
-
-
-		<tr>
-			<td class="label">
-				<b> <fmt:message key="auditTrail.date" /> </b>
-			</td>
-			<td>
-				<%
-				    if (expressionExperiment.getAuditTrail() != null) {
-								out.print(expressionExperiment.getAuditTrail()
-										.getCreationEvent().getDate());
-							} else {
-								out.print("Create date unavailable");
-							}
-				%>
-			</td>
-		</tr>
-
-
-
-
-
-
-	</table>
-
-	<security:authorize access="hasRole('GROUP_ADMIN')">
-		<h3>
-			<fmt:message key="experimentalDesign.title" />
-			:
-			<a
-				href="/Gemma/experimentalDesign/showExperimentalDesign.html?id=<%out.print(expressionExperiment.getExperimentalDesign().getId());%> ">
-				<%
-				    out.print(expressionExperiment.getExperimentalDesign().getName());
-				%> </a>
-		</h3>
-		<p>
-			<b>Description:</b>
-			<%
-			    out.print(StringUtils.abbreviate(expressionExperiment
-								.getExperimentalDesign().getDescription(), 100));
-			%>
-			<BR />
-			<BR />
-			This experimental design has
-			<%
-			    out.print(expressionExperiment.getExperimentalDesign()
-								.getExperimentalFactors().size());
-			%>
-			experimental factors.
-		</p>
-
-
-	</security:authorize>
-
 	<h3>
 		Quantitation Types
 	</h3>
 	<c:choose>
-		<c:when test='<%=expressionExperiment.getQuantitationTypes()
+		<c:when
+			test='<%=expressionExperiment.getQuantitationTypes()
 									.size() == 0%>'>
 									No quantitation types! Data may be corrupted (likely data import error)
 		</c:when>
@@ -252,62 +103,78 @@
 
 
 
-				<c:forEach var="index" begin="0" end="<%=expressionExperiment.getQuantitationTypes().size()
-					- 1%>" step="1">
-					<spring:nestedPath path="expressionExperiment.quantitationTypes[${index}]">
+				<c:forEach var="index" begin="0"
+					end="<%=expressionExperiment.getQuantitationTypes()
+										.size() - 1%>"
+					step="1">
+					<spring:nestedPath
+						path="expressionExperiment.quantitationTypes[${index}]">
 						<tr>
 							<td>
 								<spring:bind path="name">
-									<input type="text" size="20" name="<c:out value="${status.expression}"/>"
+									<input type="text" size="20"
+										name="<c:out value="${status.expression}"/>"
 										value="<c:out value="${status.value}"/>" />
 								</spring:bind>
 							</td>
 							<td>
 								<spring:bind path="description">
-									<input type="text" size="35" name="<c:out value="${status.expression}"/>"
+									<input type="text" size="35"
+										name="<c:out value="${status.expression}"/>"
 										value="<c:out value="${status.value}"/>" />
 								</spring:bind>
 							</td>
 							<td>
 								<spring:bind path="isPreferred">
-									<input id="preferredCheckbox" type="checkbox" name="${status.expression}"
+									<input id="preferredCheckbox" type="checkbox"
+										name="${status.expression}"
 										<c:if test="${status.value == true}">checked="checked"</c:if> />
-									<input type="hidden" name="_<c:out value="${status.expression}"/>">
+									<input type="hidden"
+										name="_<c:out value="${status.expression}"/>">
 								</spring:bind>
 							</td>
 							<td>
 								<spring:bind path="isRatio">
-									<input id="ratioCheckbox" type="checkbox" name="${status.expression}"
+									<input id="ratioCheckbox" type="checkbox"
+										name="${status.expression}"
 										<c:if test="${status.value == true}">checked="checked"</c:if> />
-									<input type="hidden" name="_<c:out value="${status.expression}"/>">
+									<input type="hidden"
+										name="_<c:out value="${status.expression}"/>">
 								</spring:bind>
 							</td>
 							<td>
 								<spring:bind path="isBackground">
-									<input id="backgroundCheckbox" type="checkbox" name="${status.expression}"
+									<input id="backgroundCheckbox" type="checkbox"
+										name="${status.expression}"
 										<c:if test="${status.value == true}">checked="checked"</c:if> />
-									<input type="hidden" name="_<c:out value="${status.expression}"/>">
+									<input type="hidden"
+										name="_<c:out value="${status.expression}"/>">
 								</spring:bind>
 							</td>
 							<td>
 								<spring:bind path="isBackgroundSubtracted">
-									<input id="bkgsubCheckbox" type="checkbox" name="${status.expression}"
+									<input id="bkgsubCheckbox" type="checkbox"
+										name="${status.expression}"
 										<c:if test="${status.value == true}">checked="checked"</c:if> />
-									<input type="hidden" name="_<c:out value="${status.expression}"/>">
+									<input type="hidden"
+										name="_<c:out value="${status.expression}"/>">
 								</spring:bind>
 							</td>
 							<td>
 								<spring:bind path="isNormalized">
-									<input id="normCheckbox" type="checkbox" name="${status.expression}"
+									<input id="normCheckbox" type="checkbox"
+										name="${status.expression}"
 										<c:if test="${status.value == true}">checked="checked"</c:if> />
-									<input type="hidden" name="_<c:out value="${status.expression}"/>">
+									<input type="hidden"
+										name="_<c:out value="${status.expression}"/>">
 								</spring:bind>
 							</td>
 							<td>
 								<spring:bind path="generalType">
 									<select name="${status.expression}">
 										<c:forEach items="${generalQuantitationTypes}" var="type">
-											<option value="${type}" <c:if test="${status.value == type}">selected</c:if>>
+											<option value="${type}"
+												<c:if test="${status.value == type}">selected</c:if>>
 												${type}
 											</option>
 										</c:forEach>
@@ -320,7 +187,8 @@
 								<spring:bind path="type">
 									<select name="${status.expression}">
 										<c:forEach items="${standardQuantitationTypes}" var="type">
-											<option value="${type}" <c:if test="${status.value == type}">selected</c:if>>
+											<option value="${type}"
+												<c:if test="${status.value == type}">selected</c:if>>
 												${type}
 											</option>
 										</c:forEach>
@@ -333,7 +201,8 @@
 								<spring:bind path="scale">
 									<select name="${status.expression}">
 										<c:forEach items="${scaleTypes}" var="type">
-											<option value="${type}" <c:if test="${status.value == type}">selected</c:if>>
+											<option value="${type}"
+												<c:if test="${status.value == type}">selected</c:if>>
 												${type}
 											</option>
 										</c:forEach>
@@ -346,7 +215,8 @@
 								<spring:bind path="representation">
 									<select name="${status.expression}">
 										<c:forEach items="${representations}" var="type">
-											<option value="${type}" <c:if test="${status.value == type}">selected</c:if>>
+											<option value="${type}"
+												<c:if test="${status.value == type}">selected</c:if>>
 												${type}
 											</option>
 										</c:forEach>
@@ -363,17 +233,27 @@
 		</c:otherwise>
 	</c:choose>
 
-	<security:authorize access="hasRole('GROUP_ADMIN')">
-		<h3>
-			Biomaterials and Assays
-		</h3>
+	<h3>
+		Biomaterials and Assays
+	</h3>
 
+	<p>
 		<a
-			href="/Gemma/expressionExperiment/showBioAssaysFromExpressionExperiment.html?id=<%out.print(expressionExperiment.getId());%>">
+			href="<c:url value="/expressionExperiment/showBioAssaysFromExpressionExperiment.html?id=${expressionExperiment.id}"/>">
 			Click for details and QC</a>
+	</p>
 
-		<Gemma:assayView expressionExperiment="${expressionExperiment}" edit="true"></Gemma:assayView>
-	</security:authorize>
+	<p>
+		<input type="button"
+			onClick="Ext.getCmp('eemanager').unmatchBioAssays(${expressionExperiment.id})"
+			value="Unmatch all bioassays" />
+	</p>
+
+
+
+	<Gemma:assayView expressionExperiment="${expressionExperiment}"
+		edit="true"></Gemma:assayView>
+
 
 	<script language="JavaScript" type="text/javascript">
 	// all the bioassays
@@ -485,8 +365,10 @@
 	<table>
 		<tr>
 			<td>
-				<input type="submit" class="button" name="save" value="<fmt:message key="button.save"/>" />
-				<input type="submit" class="button" name="cancel" value="<fmt:message key="button.cancel"/>" />
+				<input type="submit" class="button" name="save"
+					value="<fmt:message key="button.save"/>" />
+				<input type="submit" class="button" name="cancel"
+					value="<fmt:message key="button.cancel"/>" />
 			</td>
 		</tr>
 	</table>
