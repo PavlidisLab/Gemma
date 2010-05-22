@@ -38,6 +38,7 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import ubic.gemma.analysis.report.ArrayDesignReportService;
 import ubic.gemma.analysis.sequence.ProbeMapper;
 import ubic.gemma.analysis.sequence.ProbeMapperConfig;
 import ubic.gemma.externalDb.GoldenPathSequenceAnalysis;
@@ -92,6 +93,9 @@ public class ArrayDesignProbeMapperService {
     private GeneService geneService;
 
     @Autowired
+    ArrayDesignReportService arrayDesignReportService;
+
+    @Autowired
     private PersisterHelper persisterHelper;
 
     @Autowired
@@ -120,8 +124,8 @@ public class ArrayDesignProbeMapperService {
 
         for ( Taxon taxon : taxa ) {
 
-            GoldenPathSequenceAnalysis goldenPathDb  = new GoldenPathSequenceAnalysis( taxon );
-           
+            GoldenPathSequenceAnalysis goldenPathDb = new GoldenPathSequenceAnalysis( taxon );
+
             BlockingQueue<BlatAssociation> persistingQueue = new ArrayBlockingQueue<BlatAssociation>( QUEUE_SIZE );
             AtomicBoolean generatorDone = new AtomicBoolean( false );
             AtomicBoolean loaderDone = new AtomicBoolean( false );
@@ -189,6 +193,10 @@ public class ArrayDesignProbeMapperService {
 
             log.info( "Processed " + count + " composite sequences with blat results; " + hits + " mappings found." );
         }
+        
+
+        arrayDesignReportService.generateArrayDesignReport( arrayDesign.getId() );
+        
     }
 
     /**
@@ -355,58 +363,10 @@ public class ArrayDesignProbeMapperService {
             }
 
         }
+        
+        arrayDesignReportService.generateArrayDesignReport( arrayDesign.getId() );
         log.info( "Completed association processing for " + arrayDesign + ", " + numSkipped + " were skipped" );
 
-    }
-
-    /**
-     * @param annotationAssociationService the annotationAssociationService to set
-     */
-    public void setAnnotationAssociationService( AnnotationAssociationService annotationAssociationService ) {
-        this.annotationAssociationService = annotationAssociationService;
-    }
-
-    public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
-        this.arrayDesignService = arrayDesignService;
-    }
-
-    /**
-     * @param bioSequenceService the bioSequenceService to set
-     */
-    public void setBioSequenceService( BioSequenceService bioSequenceService ) {
-        this.bioSequenceService = bioSequenceService;
-    }
-
-    /**
-     * @param bioSequenceService the bioSequenceService to set
-     */
-    public void setBlatResultService( BlatResultService blatResultService ) {
-        this.blatResultService = blatResultService;
-    }
-
-    /**
-     * @param compositeSequenceService the compositeSequenceService to set
-     */
-    public void setCompositeSequenceService( CompositeSequenceService compositeSequenceService ) {
-        this.compositeSequenceService = compositeSequenceService;
-    }
-
-    /**
-     * @param geneService the geneService to set
-     */
-    public void setGeneService( GeneService geneService ) {
-        this.geneService = geneService;
-    }
-
-    /**
-     * @param persisterHelper the persisterHelper to set
-     */
-    public void setPersisterHelper( PersisterHelper persisterHelper ) {
-        this.persisterHelper = persisterHelper;
-    }
-
-    public void setProbeMapper( ProbeMapper probeMapper ) {
-        this.probeMapper = probeMapper;
     }
 
     /**

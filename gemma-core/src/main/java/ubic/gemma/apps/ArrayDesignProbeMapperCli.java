@@ -53,7 +53,7 @@ import ubic.gemma.model.genome.TaxonService;
 public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCli {
     private static final String CONFIG_OPTION = "config";
     private static final String MIRNA_ONLY_MODE_OPTION = "mirna";
-    ArrayDesignProbeMapperService arrayDesignProbeMapperService;
+    private ArrayDesignProbeMapperService arrayDesignProbeMapperService;
     private TaxonService taxonService;
     private String taxonName;
     private Taxon taxon;

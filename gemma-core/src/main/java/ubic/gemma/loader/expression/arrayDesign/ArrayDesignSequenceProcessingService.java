@@ -39,6 +39,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import ubic.gemma.analysis.report.ArrayDesignReportService;
 import ubic.gemma.analysis.sequence.SequenceManipulation;
 import ubic.gemma.loader.genome.FastaCmd;
 import ubic.gemma.loader.genome.FastaParser;
@@ -95,6 +96,9 @@ public class ArrayDesignSequenceProcessingService {
 
     @Autowired
     private ExternalDatabaseService externalDatabaseService;
+
+    @Autowired
+    ArrayDesignReportService arrayDesignReportService;
 
     /**
      * @param nameMap
@@ -466,6 +470,8 @@ public class ArrayDesignSequenceProcessingService {
         log.info( "Updating " + arrayDesign );
 
         arrayDesignService.update( arrayDesign );
+
+        arrayDesignReportService.generateArrayDesignReport( arrayDesign.getId() );
         log.info( "Done adding sequence information!" );
         return bioSequences;
     }
@@ -667,7 +673,7 @@ public class ArrayDesignSequenceProcessingService {
     public Collection<BioSequence> processArrayDesign( ArrayDesign arrayDesign, InputStream sequenceFile,
             SequenceType sequenceType, Taxon taxon ) throws IOException {
 
-        arrayDesign = arrayDesignService.thawLite( arrayDesign );
+        arrayDesign = arrayDesignService.thaw( arrayDesign );
 
         if ( sequenceType.equals( SequenceType.AFFY_PROBE ) ) {
             return this.processAffymetrixDesign( arrayDesign, sequenceFile, taxon, true );
@@ -765,6 +771,7 @@ public class ArrayDesignSequenceProcessingService {
         log.info( "Updating sequences on arrayDesign" );
         arrayDesignService.update( arrayDesign );
 
+        arrayDesignReportService.generateArrayDesignReport( arrayDesign.getId() );
         return bioSequences;
 
     }
@@ -913,6 +920,7 @@ public class ArrayDesignSequenceProcessingService {
         if ( !notFound.isEmpty() ) {
             logMissingSequences( arrayDesign, notFound );
         }
+        arrayDesignReportService.generateArrayDesignReport( arrayDesign.getId() );
 
         return finalResult;
 
@@ -1046,6 +1054,7 @@ public class ArrayDesignSequenceProcessingService {
 
         arrayDesignService.update( arrayDesign );
 
+        arrayDesignReportService.generateArrayDesignReport( arrayDesign.getId() );
         return finalResult;
 
     }

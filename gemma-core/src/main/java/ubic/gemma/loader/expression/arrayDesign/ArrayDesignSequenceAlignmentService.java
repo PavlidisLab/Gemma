@@ -32,6 +32,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import ubic.basecode.util.StringUtil;
+import ubic.gemma.analysis.report.ArrayDesignReportService;
 import ubic.gemma.apps.Blat;
 import ubic.gemma.externalDb.GoldenPathQuery;
 import ubic.gemma.model.common.description.ExternalDatabase;
@@ -69,6 +70,9 @@ public class ArrayDesignSequenceAlignmentService {
 
     @Autowired
     BioSequenceService bioSequenceService;
+
+    @Autowired
+    ArrayDesignReportService arrayDesignReportService;
 
     /**
      * Run blat on all sequences on the array design. For arrays with sequences from multiple taxa, BLAT is run
@@ -132,6 +136,9 @@ public class ArrayDesignSequenceAlignmentService {
 
             log.info( noresults + "/" + sequencesToBlat.size() + " sequences had no blat results" );
         }
+
+        arrayDesignReportService.generateArrayDesignReport( ad.getId() );
+
         return allResults;
 
     }
@@ -202,7 +209,11 @@ public class ArrayDesignSequenceAlignmentService {
             rawBlatResults.addAll( goldenPathAlignments.get( sequence ) );
         }
 
-        return persistBlatResults( rawBlatResults );
+        Collection<BlatResult> results = persistBlatResults( rawBlatResults );
+
+        arrayDesignReportService.generateArrayDesignReport( ad.getId() );
+
+        return results;
     }
 
     /**
@@ -224,28 +235,6 @@ public class ArrayDesignSequenceAlignmentService {
 
         }
         return taxon;
-    }
-
-    public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
-        this.arrayDesignService = arrayDesignService;
-    }
-
-    public void setBioSequenceService( BioSequenceService bioSequenceService ) {
-        this.bioSequenceService = bioSequenceService;
-    }
-
-    /**
-     * @param blatResultService the blatResultService to set
-     */
-    public void setBlatResultService( BlatResultService blatResultService ) {
-        this.blatResultService = blatResultService;
-    }
-
-    /**
-     * @param persisterHelper the persisterHelper to set
-     */
-    public void setPersisterHelper( PersisterHelper persisterHelper ) {
-        this.persisterHelper = persisterHelper;
     }
 
     /**
