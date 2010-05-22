@@ -402,10 +402,10 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
 
         ad = arrayDesignService.thaw( ad );
 
-        auditTrailService.addUpdateEvent( ad, "testing" );
-
         // make sure we can do this...
         ad.getPrimaryTaxon().equals( this.taxonService.load( 1L ) );
+
+        auditTrailService.addUpdateEvent( ad, "testing" );
 
         for ( CompositeSequence cs : ad.getCompositeSequences() ) {
             cs.getBiologicalCharacteristic().getName();

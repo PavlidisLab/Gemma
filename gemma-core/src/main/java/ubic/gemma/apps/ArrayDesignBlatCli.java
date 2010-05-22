@@ -198,6 +198,8 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
 
                 void consume( ArrayDesign x ) {
 
+                    arrayDesignService.thaw( x );
+
                     if ( x.getPrimaryTaxon().equals( taxon ) ) {
                         /*
                          * Note that if the array design has multiple taxa, blat will be run on all of the sequences,
@@ -295,7 +297,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
 
         log.info( "============== Start processing: " + design + " ==================" );
         try {
-            design = arrayDesignService.thawLite( design );
+            // thaw is already done.
             arrayDesignSequenceAlignmentService.processArrayDesign( design, true );
             successObjects.add( design.getName() );
             audit( design, "Part of a batch job; BLAT score threshold was " + this.blatScoreThreshold );
