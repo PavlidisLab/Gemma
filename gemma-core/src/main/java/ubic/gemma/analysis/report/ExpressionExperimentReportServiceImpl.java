@@ -226,7 +226,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
          * add in the last events of interest for all eeVos This step is remarkably slow.
          */
         for ( ExpressionExperimentValueObject eeVo : vos ) {
-            Date mostRecentDate = new Date( 0 );
+            Date mostRecentDate = eeVo.getDateLastUpdated() == null ? new Date( 0 ) : eeVo.getDateLastUpdated();
             Long id = eeVo.getId();
 
             ExpressionExperiment ee = eemap.get( id );
