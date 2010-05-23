@@ -78,7 +78,7 @@ Ext.onReady(function() {
 	var groupviewer = new Ext.Panel({
 		height : 600,
 		id : 'manager-panel',
-		width : "100%",
+		width : 1000,
 		renderTo : 'manageGroups-div',
 
 		layout : 'border',
@@ -257,7 +257,7 @@ Ext.onReady(function() {
 			title : 'Group members',
 			id : 'manager-group-members-panel',
 			region : 'center',
-			minSize : 100,
+			width : 225,
 			margins : '5 0 0 0',
 			cmargins : '5 5 0 0',
 			tbar : {
@@ -382,7 +382,7 @@ Ext.onReady(function() {
 			title : 'Data',
 			id : 'manager-group-data-panel',
 			region : 'east',
-			width : 800,
+			width : 600,
 			margins : '5 0 0 0',
 			cmargins : '5 5 0 0',
 			tbar : {
