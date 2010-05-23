@@ -161,14 +161,13 @@ Ext.onReady(function() {
 			experimentalFactorGrid.on("experimentalfactorchange", function(efgrid, efs) {
 						factorValueGrid.enable();
 						factorValueGrid.setTitle("Factor values");
-						factorValueGrid.setExperimentalFactor(null);
+						factorValueGrid.setExperimentalFactor(null); // ??
 						refreshNeeded = true;
 					});
 
 			experimentalFactorGrid.on("experimentalfactorselected", function(factor) {
 
 						if (factor.get("type") == "Continuous") {
-
 							factorValueGrid
 									.setTitle("Continuous values not displayed here, see the 'sample details' tab");
 							factorValueGrid.disable();
