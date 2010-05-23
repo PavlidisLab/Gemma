@@ -201,6 +201,7 @@ public class ExperimentalDesignImporterTest extends BaseSpringContextTest {
         // check.
         assertEquals( 4, ee.getExperimentalDesign().getExperimentalFactors().size() );
 
+        boolean foundpmi = false;
         Collection<Long> seenFactorValueIds = new HashSet<Long>();
         for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
 
@@ -219,9 +220,17 @@ public class ExperimentalDesignImporterTest extends BaseSpringContextTest {
                     assertNotNull( fv.getValue() + " should have a measurement or a characteristic", fv
                             .getMeasurement() );
                 }
+
+                if ( fv.getExperimentalFactor().getName().equals( "PMI (h)" ) ) {
+                    foundpmi = true;
+                    assertNotNull( fv.getMeasurement() ); // continuous
+                }
+
                 seenFactorValueIds.add( fv.getId() );
             }
         }
+
+        assertTrue( foundpmi );
 
         for ( BioMaterial bm : bms ) {
             assertEquals( 4, bm.getFactorValues().size() );
