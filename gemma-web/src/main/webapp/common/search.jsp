@@ -4,6 +4,8 @@
 
 <script type="text/javascript">
 
+	var dirty = false;
+
 	//Perform serach by creating a bookmark and forwarding to search page. 
 	doSearch = function( ){
 				var query = $('searchfield').getValue();
@@ -28,8 +30,11 @@
 		else
 		   return true;
 	}
+	
 	//Place to validate the query the user typed in. 
 	valid = function(query){
+		if (!dirty) {return false;}
+		
 		if (query == null)
 			return false;
 		
@@ -38,7 +43,12 @@
 			
 		return true;
 	}		
+
+	makeDirty = function() {
+		dirty = true;
+	}
 </script>
-	
-       <input id="searchfield" type="text" name="query" value="Search Gemma" size="20"  onClick="clear()" onkeypress="isEnterHit(event)" />
-       <input id="searchbutton" type="button" value="go" onClick="doSearch()" />
+
+<input id="searchfield" type="text" name="query" value="Search Gemma" size="20" onClick="clear();makeDirty()"
+	onkeypress="isEnterHit(event)" />
+<input id="searchbutton" type="button" value="go" onClick="doSearch()" />
