@@ -118,85 +118,87 @@ public class ArrayDesignProbeMapperService {
     public void processArrayDesign( ArrayDesign arrayDesign, ProbeMapperConfig config, boolean useDB ) {
 
         Collection<Taxon> taxa = arrayDesignService.getTaxa( arrayDesign.getId() );
-        if ( taxa == null || taxa.size() == 0 ) {
-            throw new IllegalArgumentException( "Cannot analyze " + arrayDesign + ", taxon could not be determined" );
+
+        Taxon taxon = arrayDesign.getPrimaryTaxon();
+        if ( taxa.size() > 1 && taxon == null ) {
+            throw new IllegalArgumentException(
+                    "Array design has sequence from multiple taxa and has no primary taxon set: " + arrayDesign );
         }
 
-        for ( Taxon taxon : taxa ) {
+        GoldenPathSequenceAnalysis goldenPathDb = new GoldenPathSequenceAnalysis( taxon );
 
-            GoldenPathSequenceAnalysis goldenPathDb = new GoldenPathSequenceAnalysis( taxon );
+        BlockingQueue<BlatAssociation> persistingQueue = new ArrayBlockingQueue<BlatAssociation>( QUEUE_SIZE );
+        AtomicBoolean generatorDone = new AtomicBoolean( false );
+        AtomicBoolean loaderDone = new AtomicBoolean( false );
 
-            BlockingQueue<BlatAssociation> persistingQueue = new ArrayBlockingQueue<BlatAssociation>( QUEUE_SIZE );
-            AtomicBoolean generatorDone = new AtomicBoolean( false );
-            AtomicBoolean loaderDone = new AtomicBoolean( false );
+        load( persistingQueue, generatorDone, loaderDone );
 
-            load( persistingQueue, generatorDone, loaderDone );
-
-            if ( useDB ) {
-                log.info( "Removing any old associations" );
-                arrayDesignService.deleteGeneProductAssociations( arrayDesign );
-            }
-
-            int count = 0;
-            int hits = 0;
-            log.info( "Start processing " + arrayDesign.getCompositeSequences().size() + " probes ..." );
-            for ( CompositeSequence compositeSequence : arrayDesign.getCompositeSequences() ) {
-                BioSequence bs = compositeSequence.getBiologicalCharacteristic();
-
-                if ( bs == null ) continue;
-
-                if ( !bs.getTaxon().equals( taxon ) ) {
-                    continue;
-                }
-
-                final Collection<BlatResult> blatResults = blatResultService.findByBioSequence( bs );
-
-                if ( blatResults == null || blatResults.isEmpty() ) continue;
-
-                Map<String, Collection<BlatAssociation>> results = probeMapper.processBlatResults( goldenPathDb,
-                        blatResults, config );
-
-                if ( log.isDebugEnabled() )
-                    log.debug( "Found " + results.size() + " mappings for " + compositeSequence + " ("
-                            + blatResults.size() + " BLAT results)" );
-
-                for ( Collection<BlatAssociation> col : results.values() ) {
-                    for ( BlatAssociation association : col ) {
-                        if ( log.isDebugEnabled() ) log.debug( association );
-                    }
-
-                    if ( useDB ) {
-                        // persisting is done in a separate thread.
-                        persistingQueue.addAll( col );
-                    } else {
-                        printResult( compositeSequence, col );
-                    }
-                    ++hits;
-                }
-
-                if ( ++count % 100 == 0 ) {
-                    log.info( "Processed " + count + " composite sequences" + " with blat results; " + hits
-                            + " mappings found." );
-                }
-            }
-
-            generatorDone.set( true );
-
-            log.info( "Waiting for loading to complete ..." );
-            while ( !loaderDone.get() ) {
-                try {
-                    Thread.sleep( 1000 );
-                } catch ( InterruptedException e ) {
-                    throw new RuntimeException( e );
-                }
-            }
-
-            log.info( "Processed " + count + " composite sequences with blat results; " + hits + " mappings found." );
+        if ( useDB ) {
+            log.info( "Removing any old associations" );
+            arrayDesignService.deleteGeneProductAssociations( arrayDesign );
         }
-        
+
+        int count = 0;
+        int hits = 0;
+        log.info( "Start processing " + arrayDesign.getCompositeSequences().size() + " probes ..." );
+        for ( CompositeSequence compositeSequence : arrayDesign.getCompositeSequences() ) {
+            BioSequence bs = compositeSequence.getBiologicalCharacteristic();
+
+            if ( bs == null ) continue;
+
+            /*
+             * It isn't 100% clear what the right thing to do is. But this seems at least _reasonable_.
+             */
+            if ( !bs.getTaxon().equals( taxon ) ) {
+                continue;
+            }
+
+            final Collection<BlatResult> blatResults = blatResultService.findByBioSequence( bs );
+
+            if ( blatResults == null || blatResults.isEmpty() ) continue;
+
+            Map<String, Collection<BlatAssociation>> results = probeMapper.processBlatResults( goldenPathDb,
+                    blatResults, config );
+
+            if ( log.isDebugEnabled() )
+                log.debug( "Found " + results.size() + " mappings for " + compositeSequence + " (" + blatResults.size()
+                        + " BLAT results)" );
+
+            for ( Collection<BlatAssociation> col : results.values() ) {
+                for ( BlatAssociation association : col ) {
+                    if ( log.isDebugEnabled() ) log.debug( association );
+                }
+
+                if ( useDB ) {
+                    // persisting is done in a separate thread.
+                    persistingQueue.addAll( col );
+                } else {
+                    printResult( compositeSequence, col );
+                }
+                ++hits;
+            }
+
+            if ( ++count % 100 == 0 ) {
+                log.info( "Processed " + count + " composite sequences" + " with blat results; " + hits
+                        + " mappings found." );
+            }
+        }
+
+        generatorDone.set( true );
+
+        log.info( "Waiting for loading to complete ..." );
+        while ( !loaderDone.get() ) {
+            try {
+                Thread.sleep( 1000 );
+            } catch ( InterruptedException e ) {
+                throw new RuntimeException( e );
+            }
+        }
+
+        log.info( "Processed " + count + " composite sequences with blat results; " + hits + " mappings found." );
 
         arrayDesignReportService.generateArrayDesignReport( arrayDesign.getId() );
-        
+
     }
 
     /**
@@ -363,7 +365,7 @@ public class ArrayDesignProbeMapperService {
             }
 
         }
-        
+
         arrayDesignReportService.generateArrayDesignReport( arrayDesign.getId() );
         log.info( "Completed association processing for " + arrayDesign + ", " + numSkipped + " were skipped" );
 

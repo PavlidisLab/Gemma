@@ -90,18 +90,12 @@ Ext.onReady(function() {
 					Ext.DomHelper.overwrite("messages", "");
 					var chars = browsergrid.getEditedCharacteristics();
 
-					/*
-					 * Call store.save(). Shouldn't have to call refresh.
-					 */
-
-					store.save();
-
-					// var callback = browsergrid.refresh.createDelegate(browsergrid);
-					// var errorHandler = Gemma.CharacteristicBrowser.handleError.createDelegate(this, [], true);
-					// CharacteristicBrowserController.updateCharacteristics(chars, {
-					// callback : callback,
-					// errorHandler : errorHandler
-					// });
+					var callback = browsergrid.refresh.createDelegate(browsergrid);
+					var errorHandler = Gemma.CharacteristicBrowser.handleError.createDelegate(this);
+					CharacteristicBrowserController.updateCharacteristics(chars, {
+								callback : callback,
+								errorHandler : errorHandler
+							});
 				}
 			});
 
@@ -118,10 +112,6 @@ Ext.onReady(function() {
 					browsergrid.loadMask.msg = "Deleting ...";
 					browsergrid.loadMask.show();
 					var chars = browsergrid.getSelectedCharacteristics();
-
-					/*
-					 * FIXME: remove them from the store and then call store.save().
-					 */
 
 					CharacteristicBrowserController.removeCharacteristics(chars, function() {
 
@@ -323,7 +313,9 @@ Ext.onReady(function() {
 				width : 'auto'
 			});
 
-	var secondToolbar = new Ext.Toolbar();
+	var secondToolbar = new Ext.Toolbar({
+				renderTo : browsergrid.tbar
+			});
 	secondToolbar.addSpacer();
 	secondToolbar.addText("Find characteristics from");
 	secondToolbar.addSpacer();
@@ -336,8 +328,7 @@ Ext.onReady(function() {
 	secondToolbar.addField(noCheckBox);
 	secondToolbar.addSpacer();
 	secondToolbar.addField(fvvCheckBox);
-
-	browsergrid.add(secondToolbar);
+	secondToolbar.doLayout();
 	browsergrid.doLayout();
 
 	// FIXME put this somewhere better.

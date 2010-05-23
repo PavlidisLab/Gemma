@@ -205,6 +205,7 @@ Gemma.SearchForm = Ext.extend(Ext.form.FormPanel, {
 									}, {
 										xtype : 'fieldset',
 										collapsible : true,
+										collapsed : true,
 										autoHeight : true,
 										defaultType : 'checkbox',
 										title : 'Items to search for',
@@ -296,6 +297,7 @@ Gemma.SearchForm = Ext.extend(Ext.form.FormPanel, {
 						xtype : 'fieldset',
 						defaultType : 'checkbox',
 						collapsible : true,
+						collapsed : true,
 						autoHeight : true,
 						title : 'Advanced options',
 						items : [{
@@ -389,8 +391,8 @@ Gemma.SearchGrid = Ext.extend(Ext.grid.GridPanel, {
 				// proxies.
 				return value.test(obj.name) || value.test(obj.description) || value.test(obj.taxon.commonName);
 			} else if (clazz == "Gene" || clazz == "PredictedGene" || clazz == "ProbeAlignedRegion") {
-				return value.test(obj.officialSymbol) || value.test(obj.officialName)
-						|| value.test(obj.taxon.commonName);
+				return value.test(obj.officialSymbol) || value.test(obj.officialName) ||
+						value.test(obj.taxon.commonName);
 			} else {
 				return false;
 			}
@@ -442,8 +444,8 @@ Gemma.SearchGrid = Ext.extend(Ext.grid.GridPanel, {
 								showPreview : true,
 								getRowClass : function(record, index, p, store) {
 									if (this.showPreview) {
-										p.body = "<p class='search-result-body' >" + record.get("highlightedText")
-												+ "</p>"; // typo.css
+										p.body = "<p class='search-result-body' >" + record.get("highlightedText") +
+												"</p>"; // typo.css
 									}
 									return '';
 								},
@@ -582,23 +584,23 @@ Gemma.SearchGrid = Ext.extend(Ext.grid.GridPanel, {
 		var dh = Ext.DomHelper;
 		var clazz = record.get("resultClass");
 		if (clazz == "ExpressionExperimentValueObject") {
-			return "<a href=\"/Gemma/expressionExperiment/showExpressionExperiment.html?id=" + data.id + "\">"
-					+ data.shortName + "</a> - " + data.name;
+			return "<a href=\"/Gemma/expressionExperiment/showExpressionExperiment.html?id=" + data.id + "\">" +
+					data.shortName + "</a> - " + data.name;
 		} else if (clazz == "CompositeSequence") {
-			return "<a href=\"/Gemma/compositeSequence/show.html?id=" + data.id + "\">" + data.name + "</a> - "
-					+ data.description + "; Array: " + data.arrayDesign.shortName;
+			return "<a href=\"/Gemma/compositeSequence/show.html?id=" + data.id + "\">" + data.name + "</a> - " +
+					data.description + "; Array: " + data.arrayDesign.shortName;
 		} else if (clazz == "ArrayDesignValueObject") {
-			return "<a href=\"/Gemma/arrays/showArrayDesign.html?id=" + data.id + "\">" + data.shortName + "</a>  "
-					+ data.name;
+			return "<a href=\"/Gemma/arrays/showArrayDesign.html?id=" + data.id + "\">" + data.shortName + "</a>  " +
+					data.name;
 		} else if (/^BioSequence.*/.exec(clazz)) {
-			return "<a href=\"/Gemma/genome/bioSequence/showBioSequence.html?id=" + data.id + "\">" + data.name
-					+ "</a> - " + data.taxon.commonName + " " + data.description;
+			return "<a href=\"/Gemma/genome/bioSequence/showBioSequence.html?id=" + data.id + "\">" + data.name +
+					"</a> - " + data.taxon.commonName + " " + data.description;
 		} else if (clazz == "Gene" || clazz == "PredictedGene" || clazz == "ProbeAlignedRegion") {
-			return "<a href=\"/Gemma/gene/showGene.html?id=" + data.id + "\">" + data.officialSymbol
-					+ "</a>  - Species: " + data.taxon.commonName + " Desc: " + data.officialName;
+			return "<a href=\"/Gemma/gene/showGene.html?id=" + data.id + "\">" + data.officialSymbol +
+					"</a>  - Species: " + data.taxon.commonName + " Desc: " + data.officialName;
 		} else if (clazz == "Bibliographicreference") {
-			return "<a href=\"/Gemma/gene/showGene.html?id=" + data.id + "\">" + data.title + "</a> [" + data.pubmedId
-					+ "]";
+			return "<a href=\"/Gemma/gene/showGene.html?id=" + data.id + "\">" + data.title + "</a> [" + data.pubmedId +
+					"]";
 		}
 	}
 

@@ -189,7 +189,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
 
         final Date skipIfLastRunLaterThan = getLimitingDate();
 
-        if ( this.taxon != null && this.directAnnotationInputFileName == null ) {
+        if ( this.taxon != null && this.directAnnotationInputFileName == null && this.arrayDesignName == null ) {
             log.warn( "*** Running mapping for all " + taxon.getCommonName() + " Array designs *** " );
         }
 
