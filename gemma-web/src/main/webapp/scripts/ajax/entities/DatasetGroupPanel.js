@@ -383,7 +383,7 @@ Gemma.DatasetGroupGridPanel = Ext.extend(Ext.grid.EditorGridPanel, {
 					dataIndex : "modifiable",
 					sortable : true,
 					editable : false,
-					tooltip : 'A locked group cannot have its members changed',
+					tooltip : 'A locked group cannot have its members changed by anybody',
 					width : 60,
 					renderer : function(value, metaData, record, rowIndex, colIndex, store) {
 						if (!value) {
