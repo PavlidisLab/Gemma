@@ -109,8 +109,7 @@ var LinePlot = function() {
 						if (sampleLabels[j].length > maxLabelLength) {
 							maxLabelLength = sampleLabels[j].length;
 						}
-					}
-
+					} 
 					// compute approximate pixel size of that label...not so easy without context.
 					var labelHeight = Math.round(Math.min(MAX_SAMPLE_LABEL_HEIGHT_PIXELS, Math.min(maxLabelLength,
 									SAMPLE_LABEL_MAX_CHAR)
@@ -134,6 +133,7 @@ var LinePlot = function() {
 					ctx.textAlign = "left";
 					ctx.translate(TRIM + 5, labelHeight - 2); // +extra to make sure we don't chop off the top.
 
+					// vertical text.
 					for (var j = 0; j < sampleLabels.length; j++) {
 						// the shorter the better for performance.
 						var lab = Ext.util.Format.ellipsis(sampleLabels[j], SAMPLE_LABEL_MAX_CHAR);

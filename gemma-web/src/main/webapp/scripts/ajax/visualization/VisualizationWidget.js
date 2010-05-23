@@ -185,10 +185,10 @@ Gemma.prepareProfiles = function(data) {
 			color : color,
 			genes : genes,
 			rawLabel : pvalueLabel + " " + geneSymbols + " " + geneNames,
-			label : pvalueLabel + "<span style='" + labelStyle + "'><a  href='/Gemma/compositeSequence/show.html?id="
-					+ probeId + "' target='_blank' ext:qtip= '" + qtip + "'>"
-					+ Ext.util.Format.ellipsis(geneSymbols, Gemma.MAX_THUMBNAILLABEL_LENGTH_CHAR) + "</a> " + geneNames
-					+ "</span>",
+			label : pvalueLabel + "<span style='" + labelStyle + "'><a  href='/Gemma/compositeSequence/show.html?id=" +
+					probeId + "' target='_blank' ext:qtip= '" + qtip + "'>" +
+					Ext.util.Format.ellipsis(geneSymbols, Gemma.MAX_THUMBNAILLABEL_LENGTH_CHAR) + "</a> " + geneNames +
+					"</span>",
 			lines : {
 				lineWidth : Gemma.LINE_THICKNESS
 			},
@@ -261,8 +261,8 @@ Gemma.ProfileTemplate = Ext.extend(Ext.XTemplate, {
 					Ext.DomHelper.append(shortName + '_vizwrap', {
 								tag : 'div',
 								id : shortName + "_vis",
-								style : 'width:' + Gemma.THUMBNAIL_PLOT_SIZE + 'px;height:' + Gemma.THUMBNAIL_PLOT_SIZE
-										+ 'px;'
+								style : 'width:' + Gemma.THUMBNAIL_PLOT_SIZE + 'px;height:' +
+										Gemma.THUMBNAIL_PLOT_SIZE + 'px;'
 							});
 
 					/*
@@ -295,8 +295,8 @@ Gemma.HeatmapTemplate = Ext.extend(Ext.XTemplate, {
 					Ext.DomHelper.append(shortName + '_vizwrap', {
 								tag : 'div',
 								id : shortName + "_vis",
-								style : 'width:' + Gemma.THUMBNAIL_PLOT_SIZE + 'px;height:' + Gemma.THUMBNAIL_PLOT_SIZE
-										+ 'px;'
+								style : 'width:' + Gemma.THUMBNAIL_PLOT_SIZE + 'px;height:' +
+										Gemma.THUMBNAIL_PLOT_SIZE + 'px;'
 							});
 					/*
 					 * Note: 'newDiv' works in FF but not in IE.
@@ -325,13 +325,13 @@ Gemma.getProfileThumbnailTemplate = function(heatmap, havePvalues, smooth) {
 	if (heatmap) {
 		return new Gemma.HeatmapTemplate(
 				'<tpl for="."><tpl for="eevo">',
-				'<div class="vizWrap" ext.qtip="{values.name}; Click to zoom" id ="{shortName}_vizwrap" style="cursor:pointer;float:left;padding: 10px"> <strong>{shortName}</strong>: <small> {[Ext.util.Format.ellipsis( values.name, Gemma.MAX_EE_NAME_LENGTH)]} </small> &nbsp;&nbsp;<i>'
-						+ pvalueString + '</i></div>', '</tpl></tpl>');
+				'<div class="vizWrap" ext.qtip="{values.name}; Click to zoom" id ="{shortName}_vizwrap" style="cursor:pointer;float:left;padding: 10px"> <strong>{shortName}</strong>: <small> {[Ext.util.Format.ellipsis( values.name, Gemma.MAX_EE_NAME_LENGTH)]} </small> &nbsp;&nbsp;<i>' +
+						pvalueString + '</i></div>', '</tpl></tpl>');
 	} else {
 		return new Gemma.ProfileTemplate(
 				'<tpl for="."><tpl for="eevo">',
-				'<div class="vizWrap" ext.qtip="{values.name}; Click to zoom" id ="{shortName}_vizwrap" style="cursor:pointer;float:left;padding: 10px"> <strong> {shortName}</strong>: <small> {[Ext.util.Format.ellipsis( values.name, Gemma.MAX_EE_NAME_LENGTH)]} </small> &nbsp;&nbsp; <i>'
-						+ pvalueString + '</i></div>', '</tpl></tpl>', {
+				'<div class="vizWrap" ext.qtip="{values.name}; Click to zoom" id ="{shortName}_vizwrap" style="cursor:pointer;float:left;padding: 10px"> <strong> {shortName}</strong>: <small> {[Ext.util.Format.ellipsis( values.name, Gemma.MAX_EE_NAME_LENGTH)]} </small> &nbsp;&nbsp; <i>' +
+						pvalueString + '</i></div>', '</tpl></tpl>', {
 					smooth : smooth
 				});
 	}
@@ -380,8 +380,8 @@ Gemma.VisualizationZoomPanel = Ext.extend(Ext.Panel, {
 	html : {
 		tag : 'div',
 		id : 'inner-zoom-html-' + Ext.id(),
-		style : 'overflow:auto;width:' + Gemma.ZOOM_PLOT_SIZE + 'px;height:' + Gemma.ZOOM_PLOT_SIZE
-				+ 'px; margin:5px 2px 2px 5px;'
+		style : 'overflow:auto;width:' + Gemma.ZOOM_PLOT_SIZE + 'px;height:' + Gemma.ZOOM_PLOT_SIZE +
+				'px; margin:5px 2px 2px 5px;'
 	},
 
 	/**
@@ -411,8 +411,8 @@ Gemma.VisualizationZoomPanel = Ext.extend(Ext.Panel, {
 
 		if (eevo) {
 
-			var eeInfoTitle = "<a ext.qtip='Click for details on experiment (opens in new window)' target='_blank'  href='/Gemma/expressionExperiment/showExpressionExperiment.html?id="
-					+ eevo.id + " '>" + eevo.shortName + "</a> (" + Ext.util.Format.ellipsis(eevo.name, 35) + ")";
+			var eeInfoTitle = "<a ext.qtip='Click for details on experiment (opens in new window)' target='_blank'  href='/Gemma/expressionExperiment/showExpressionExperiment.html?id=" +
+					eevo.id + " '>" + eevo.shortName + "</a> (" + Ext.util.Format.ellipsis(eevo.name, 35) + ")";
 
 			if (this.ownerCt && this.ownerCt.originalTitle) {
 				this.ownerCt.setTitle(this.ownerCt.originalTitle + "&nbsp;In:&nbsp;" + eeInfoTitle);
@@ -546,7 +546,7 @@ Gemma.VisualizationWithThumbsWindow = Ext.extend(Ext.Window, {
 
 	// supply an initial default. Important!
 	tpl : Gemma.getProfileThumbnailTemplate(false, true),
-	
+
 	showThumbNails : true,
 
 	heatmapSortMethod : Gemma.sortByImportance,
@@ -785,7 +785,7 @@ Gemma.VisualizationWithThumbsWindow = Ext.extend(Ext.Window, {
 
 		this.zoomLegendId = 'zoomLegend-' + Ext.id();
 
-		this.store = new Gemma.VisualizationStore({
+		this.store = this.store || new Gemma.VisualizationStore({
 					readMethod : this.readMethod
 				});
 
@@ -823,16 +823,16 @@ Gemma.VisualizationWithThumbsWindow = Ext.extend(Ext.Window, {
 					html : {
 						id : this.zoomLegendId,
 						tag : 'div',
-						style : 'width:' + (Gemma.THUMBNAIL_PLOT_SIZE + 50) + 'px;height:' + Gemma.THUMBNAIL_PLOT_SIZE
-								+ 'px; float:left;'
+						style : 'width:' + (Gemma.THUMBNAIL_PLOT_SIZE + 50) + 'px;height:' + Gemma.THUMBNAIL_PLOT_SIZE +
+								'px; float:left;'
 					}
 				});
 		var items = [this.thumbnailPanel, this.zoomPanel]
 
 		var browserWarning = "";
 		if (Ext.isIE) {
-			browserWarning = "<span ext:qtip='Plots use a feature of HTML 5 that runs in IE via emulation unless you have Chrome Frame installed. Firefox, Chrome, Safari and Opera will be faster too.'>"
-					+ "Too slow in Explorer? Try <a href='http://www.google.com/chromeframe/' target='_blank'>Chrome Frame</a></span>";
+			browserWarning = "<span ext:qtip='Plots use a feature of HTML 5 that runs in IE via emulation unless you have Chrome Frame installed. Firefox, Chrome, Safari and Opera will be faster too.'>" +
+					"Too slow in Explorer? Try <a href='http://www.google.com/chromeframe/' target='_blank'>Chrome Frame</a></span>";
 		}
 
 		Ext.apply(this, {
@@ -895,8 +895,7 @@ Gemma.VisualizationWithThumbsWindow = Ext.extend(Ext.Window, {
 					Ext.getCmp(this.downloadDataBtnId).enable();
 
 					// So initial state is sure to be okay, after restore from cookie
-					Ext.getCmp(this.toggleViewBtnId).setText(this.heatmapMode
-							? "Switch to line plot"
+					Ext.getCmp(this.toggleViewBtnId).setText(this.heatmapMode ? "Switch to line plot"
 							: "Switch to heatmap");
 					Ext.getCmp(this.forceFitBtnId).setText(this.forceFitPlots ? "Expand" : "Fit width");
 					Ext.getCmp(this.toggleLegendBtnId).setText(this.showLegend ? "Hide legend" : "Show legend");
@@ -1070,3 +1069,152 @@ Gemma.sortByImportance = function(a, b) {
 	}
 
 };
+
+/*
+ * Handy test data.
+ */
+Gemma.testVisData = function() {
+	var s0 = {};
+	var s1 = {};
+	var s2 = [];
+	var s4 = {};
+	var s6 = [];
+	var s9 = {};
+	var s7 = {};
+	var s8 = [];
+	var s5 = {};
+	var s10 = [];
+	var s13 = {};
+	var s11 = {};
+	var s12 = [];
+	var s3 = [];
+	s0.eevo = s1;
+	s0.profiles = s2;
+	s0.sampleNames = s3;
+	s1.clazz = "ExpressionExperimentValueObject";
+	s1.id = 1567;
+	s1.investigators = null;
+	s1.isPublic = true;
+	s1.isShared = false;
+	s1.linkAnalysisEventType = null;
+	s1.minPvalue = 1.12992044357193E-29;
+	s1.missingValueAnalysisEventType = null;
+	s1.name = "High fat diet leads to increased storage of mono-unsaturated fatty acids and tissue specific risk factors for disease";
+	s1.numAnnotations = null;
+	s1.numPopulatedFactors = null;
+	s1.owner = null;
+	s1.processedDataVectorComputationEventType = null;
+	s1.processedExpressionVectorCount = null;
+	s1['public'] = true;
+	s1.shortName = "GSE15822";
+	
+	// data vectors
+	s2[0] = s4;
+	s2[1] = s5; 
+	
+	// first data vector
+	s4.PValue = 1.03114379442728E-24;
+	s4.allMissing = false;
+	s4.color = "red";
+	s4.factor = 2;
+	s4.genes = s6;
+	s4.probe = s7;
+	s4.profile = s8;
+	s4.standardized = true;
+	s6[0] = s9;
+	s9.description = "Imported from NCBI gene; Nomenclature status: INTERIM";
+	s9.id = 590525;
+	s9.name = "Wdr1";
+	s9.ncbiId = "22388";
+	s9.officialName = "WD repeat domain 1";
+	s9.officialSymbol = "Wdr1";
+	s9.score = null;
+	s9.taxonId = 2;
+	s9.taxonName = "Mus musculus";
+	s7.arrayDesign = null;
+	s7.description = " Wdr1";
+	s7.id = 6346520;
+	s7.name = "ILMN_2460168";
+	s8[0] = -1.5727;
+	s8[1] = -1.0453;
+	s8[2] = -1.4501;
+	s8[3] = -1.2332;
+	s8[4] = -0.7847;
+	s8[5] = -1.7017;
+	s8[6] = -1.4386;
+	s8[7] = -1.0650;
+	s8[8] = -1.3970;
+	s8[9] = -0.8819;
+
+	// another data vector
+	s5.PValue = 1.12992044357193E-29;
+	s5.allMissing = false;
+	s5.color = "red";
+	s5.factor = 2;
+	s5.genes = s10;
+	s5.probe = s11;
+	s5.profile = s12;
+	s5.standardized = true;
+	s10[0] = s13;
+	s13.description = "Imported from NCBI gene; Nomenclature status: INTERIM";
+	s13.id = 590525;
+	s13.name = "Wdr1";
+	s13.ncbiId = "22388";
+	s13.officialName = "WD repeat domain 1";
+	s13.officialSymbol = "Wdr1";
+	s13.score = null;
+	s13.taxonId = 2;
+	s13.taxonName = "Mus musculus";
+	s11.arrayDesign = null;
+	s11.description = " Wdr1";
+	s11.id = 6345825;
+	s11.name = "ILMN_2497268";
+	
+	s12[0] = -1.588;
+	s12[1] = NaN;
+	s12[2] = -0.656;
+	s12[3] = NaN;
+	s12[4] = -1.370;
+	s12[5] = -1.417;
+	s12[6] = -1.035;
+	s12[7] = NaN;
+	s12[8] = NaN;
+	s12[9] = -1.044;
+	
+//	s12[0] = NaN;
+//	s12[1] = NaN;
+//	s12[2] = NaN;
+//	s12[3] = NaN;
+//	s12[4] = NaN;
+//	s12[5] = NaN;
+//	s12[6] = NaN;
+//	s12[7] = NaN;
+//	s12[8] = NaN;
+//	s12[9] = NaN;
+	
+	// orignal , unmessedup
+//	s12[0] = -1.588;
+//	s12[1] = -0.894;
+//	s12[2] = -0.656;
+//	s12[3] = -1.402;
+//	s12[4] = -1.370;
+//	s12[5] = -1.417;
+//	s12[6] = -1.035;
+//	s12[7] = -1.133;
+//	s12[8] = -0.734;
+//	s12[9] = -1.044;
+
+	// sample names
+	s3[0] = "Muscle.HFD.6";
+	s3[1] = "Muscle.HFD.5";
+	s3[2] = "Muscle.HFD.4";
+	s3[3] = "Muscle.HFD.3";
+	s3[4] = "Muscle.HFD.2";
+	s3[5] = "Muscle.HFD.1";
+	s3[6] = "Muscle.SBD.6";
+	s3[7] = "Muscle.SBD.5";
+	s3[8] = "Muscle.SBD.4";
+	s3[9] = "Muscle.SBD.3";
+
+	return [s0];
+}

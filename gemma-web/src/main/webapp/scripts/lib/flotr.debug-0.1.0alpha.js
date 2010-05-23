@@ -34,8 +34,7 @@ var Flotr = (function() {
 
 		for (var i in src) {
 			result[i] = (typeof(src[i]) == 'object' && !(src[i].constructor == Array || src[i].constructor == RegExp))
-					? merge(src[i], dest[i])
-					: result[i] = src[i];
+					? merge(src[i], dest[i]) : result[i] = src[i];
 		}
 		return result;
 	}
@@ -218,8 +217,8 @@ var Flotr = (function() {
 		}
 
 		this.toString = function() {
-			return (this.a >= 1.0) ? 'rgb(' + [this.r, this.g, this.b].join(',') + ')' : 'rgba('
-					+ [this.r, this.g, this.b, this.a].join(',') + ')';
+			return (this.a >= 1.0) ? 'rgb(' + [this.r, this.g, this.b].join(',') + ')' : 'rgba(' +
+					[this.r, this.g, this.b, this.a].join(',') + ')';
 		};
 
 		this.scale = function(rf, gf, bf, af) {
@@ -826,8 +825,8 @@ var Flotr = (function() {
 				}
 			}
 			var dummyDiv = target
-					.insert('<div style="position:absolute;top:-10000px;font-size:smaller" class="flotr-grid-label">'
-							+ max_label + '</div>').down(0).next(1);
+					.insert('<div style="position:absolute;top:-10000px;font-size:smaller" class="flotr-grid-label">' +
+							max_label + '</div>').down(0).next(1);
 			labelMaxWidth = dummyDiv.getWidth();
 			labelMaxHeight = dummyDiv.getHeight();
 			dummyDiv.remove();
@@ -989,9 +988,10 @@ var Flotr = (function() {
 				tick = xaxis.ticks[j];
 				if (!tick.label)
 					continue;
-				html += '<div style="position:absolute;top:' + (plotOffset.top + plotHeight + options.grid.labelMargin)
-						+ 'px;left:' + (plotOffset.left + tHoz(tick.v) - xBoxWidth / 2) + 'px;width:' + xBoxWidth
-						+ 'px;text-align:center" class="flotr-grid-label">' + tick.label + "</div>";
+				html += '<div style="position:absolute;top:' +
+						(plotOffset.top + plotHeight + options.grid.labelMargin) + 'px;left:' +
+						(plotOffset.left + tHoz(tick.v) - xBoxWidth / 2) + 'px;width:' + xBoxWidth +
+						'px;text-align:center" class="flotr-grid-label">' + tick.label + "</div>";
 			}
 
 			/**
@@ -1001,9 +1001,9 @@ var Flotr = (function() {
 				tick = yaxis.ticks[k];
 				if (!tick.label || tick.label.length == 0)
 					continue;
-				html += '<div style="position:absolute;top:' + (plotOffset.top + tVert(tick.v) - labelMaxHeight / 2)
-						+ 'px;left:0;width:' + labelMaxWidth + 'px;text-align:right" class="flotr-grid-label">'
-						+ tick.label + "</div>";
+				html += '<div style="position:absolute;top:' + (plotOffset.top + tVert(tick.v) - labelMaxHeight / 2) +
+						'px;left:0;width:' + labelMaxWidth + 'px;text-align:right" class="flotr-grid-label">' +
+						tick.label + "</div>";
 			}
 			html += '</div>';
 			target.insert(html);
@@ -1054,23 +1054,30 @@ var Flotr = (function() {
 					break;
 				}
 
+				if (isNaN(prevx)) {
+					// bug 1523 - if there are all missing values, we have to bail. We plot nothing.
+					return;
+				}
+
 				ctx.beginPath();
 				ctx.moveTo(prevx, prevy);
 				for (; i < data.length - 1; ++i) {
 					var x1 = data[i][0], y1 = data[i][1], x2 = data[i + 1][0], y2 = data[i + 1][1];
 
-					if (isNaN(y1) || isNaN(y2)) {
-
-						/*
-						 * If the second point is missing, the first point ends up with nothing shown. Example: GSE867.
-						 * (Id=392) FIXME: probably a similar problem happens whenever there is an isolated 'present'
-						 * value. See bug 1720.
-						 */
-						if (isNaN(y2) && i == 0) {
-							// Draw a short line to mark the spot. Possible better solution: draw dashed line to the
-							// next present point?
-							ctx.lineTo(prevx + 2, prevy);
-						}
+					/*
+					 * If the second point is missing, the first point ends up with nothing shown. Example: GSE867.
+					 * (Id=392). A similar problem happens whenever there is an isolated 'present' value. See bug 1720.
+					 */
+					if (isNaN(y2)) {
+						// Draw a short line to mark the spot where the last point was.
+						ctx.lineTo(prevx + 5, prevy);
+						continue;
+					}
+					if (isNaN(y1)) {
+						prevx = tHoz(x2);
+						prevy = tVert(y2) + offset;
+						ctx.moveTo(prevx, prevy);
+						ctx.lineTo(prevx + 5, prevy);
 						continue;
 					}
 
@@ -1149,6 +1156,7 @@ var Flotr = (function() {
 					ctx.lineTo(prevx, prevy);
 				}
 				ctx.stroke();
+
 			}
 
 			/**
@@ -1506,24 +1514,24 @@ var Flotr = (function() {
 
 				// Added so possible to capture mouse events on legend
 				if (series[i].labelID != null) {
-					fragments.push('<td class="flotr-legend-color-box"><div style="border:' + border
-							+ ';padding:1px"><div id=' + series[i].labelID
-							+ ' style="cursor:pointer;width:14px;height:10px;background-color:' + series[i].color
-							+ '"></div></div></td>' + '<td class="flotr-legend-label">' + label + '</td>');
+					fragments.push('<td class="flotr-legend-color-box"><div style="border:' + border +
+							';padding:1px"><div id=' + series[i].labelID +
+							' style="cursor:pointer;width:14px;height:10px;background-color:' + series[i].color +
+							'"></div></div></td>' + '<td class="flotr-legend-label">' + label + '</td>');
 
 				} else {
-					fragments.push('<td class="flotr-legend-color-box"><div style="border:1px solid '
-							+ options.legend.labelBoxBorderColor
-							+ ';padding:1px"><div style="width:14px;height:10px;background-color:' + series[i].color
-							+ '"></div></div></td>' + '<td class="flotr-legend-label">' + label + '</td>');
+					fragments.push('<td class="flotr-legend-color-box"><div style="border:1px solid ' +
+							options.legend.labelBoxBorderColor +
+							';padding:1px"><div style="width:14px;height:10px;background-color:' + series[i].color +
+							'"></div></div></td>' + '<td class="flotr-legend-label">' + label + '</td>');
 				}
 			}
 			if (rowStarted)
 				fragments.push('</tr>');
 
 			if (fragments.length > 0) {
-				var table = '<table style="font-size:smaller;color:' + options.grid.color + '">' + fragments.join("")
-						+ '</table>';
+				var table = '<table style="font-size:smaller;color:' + options.grid.color + '">' + fragments.join("") +
+						'</table>';
 				if (options.legend.container != null) {
 					// options.legend.container.appendChild(table);
 					$(options.legend.container).update(table);
@@ -1540,8 +1548,8 @@ var Flotr = (function() {
 						pos += 'right:' + (m + plotOffset.right) + 'px;';
 					else if (p.charAt(1) == 'w')
 						pos += 'left:' + (m + plotOffset.bottom) + 'px;';
-					var div = target.insert('<div class="flotr-legend" style="position:absolute;z-index:2;' + pos
-							+ '">' + table + '</div>').getElementsBySelector('div.flotr-legend').first();
+					var div = target.insert('<div class="flotr-legend" style="position:absolute;z-index:2;' + pos +
+							'">' + table + '</div>').getElementsBySelector('div.flotr-legend').first();
 
 					if (options.legend.backgroundOpacity != 0.0) {
 						/**
@@ -1550,15 +1558,13 @@ var Flotr = (function() {
 
 						var c = options.legend.backgroundColor;
 						if (c == null) {
-							var tmp = (options.grid.backgroundColor != null)
-									? options.grid.backgroundColor
+							var tmp = (options.grid.backgroundColor != null) ? options.grid.backgroundColor
 									: extractColor(div);
 							c = parseColor(tmp).adjust(null, null, null, 1).toString();
 						}
-						target
-								.insert('<div class="flotr-legend-bg" style="position:absolute;width:' + div.getWidth()
-										+ 'px;height:' + div.getHeight() + 'px;' + pos + 'background-color:' + c
-										+ ';"> </div>').select('div.flotr-legend-bg').first().setStyle({
+						target.insert('<div class="flotr-legend-bg" style="position:absolute;width:' + div.getWidth() +
+								'px;height:' + div.getHeight() + 'px;' + pos + 'background-color:' + c + ';"> </div>')
+								.select('div.flotr-legend-bg').first().setStyle({
 											'opacity' : options.legend.backgroundOpacity
 										});
 					}
@@ -1772,8 +1778,8 @@ var Flotr = (function() {
 					prevSelection.second.y), w = Math.abs(prevSelection.second.x - prevSelection.first.x), h = Math
 					.abs(prevSelection.second.y - prevSelection.first.y);
 
-			octx.clearRect(x + plotOffset.left - octx.lineWidth, y + plotOffset.top - octx.lineWidth, w
-							+ octx.lineWidth * 2, h + octx.lineWidth * 2);
+			octx.clearRect(x + plotOffset.left - octx.lineWidth, y + plotOffset.top - octx.lineWidth, w +
+							octx.lineWidth * 2, h + octx.lineWidth * 2);
 
 			prevSelection = null;
 		}
@@ -1807,9 +1813,9 @@ var Flotr = (function() {
 		 * Returns: void
 		 */
 		function drawSelection() {
-			if (prevSelection != null && selection.first.x == prevSelection.first.x
-					&& selection.first.y == prevSelection.first.y && selection.second.x == prevSelection.second.x
-					&& selection.second.y == prevSelection.second.y)
+			if (prevSelection != null && selection.first.x == prevSelection.first.x &&
+					selection.first.y == prevSelection.first.y && selection.second.x == prevSelection.second.x &&
+					selection.second.y == prevSelection.second.y)
 				return;
 
 			octx.strokeStyle = parseColor(options.selection.color).scale(null, null, null, 0.8).toString();
@@ -1846,8 +1852,8 @@ var Flotr = (function() {
 		 */
 		function selectionIsSane() {
 			var minSize = 5;
-			return Math.abs(selection.second.x - selection.first.x) >= minSize
-					&& Math.abs(selection.second.y - selection.first.y) >= minSize;
+			return Math.abs(selection.second.x - selection.first.x) >= minSize &&
+					Math.abs(selection.second.y - selection.first.y) >= minSize;
 		}
 		/**
 		 * Function: (private) clearHit
@@ -1860,10 +1866,9 @@ var Flotr = (function() {
 		 */
 		function clearHit() {
 			if (prevHit) {
-				octx.clearRect(tHoz(prevHit.x) + plotOffset.left - options.points.radius * 2, tVert(prevHit.y)
-								+ plotOffset.top - options.points.radius * 2, options.points.radius * 3
-								+ options.points.lineWidth * 3, options.points.radius * 3 + options.points.lineWidth
-								* 3);
+				octx.clearRect(tHoz(prevHit.x) + plotOffset.left - options.points.radius * 2, tVert(prevHit.y) +
+								plotOffset.top - options.points.radius * 2, options.points.radius * 3 +
+								options.points.lineWidth * 3, options.points.radius * 3 + options.points.lineWidth * 3);
 				prevHit = null;
 			}
 		}
@@ -1923,8 +1928,8 @@ var Flotr = (function() {
 						pos += 'left:' + (m + plotOffset.bottom) + 'px;';
 
 					target
-							.insert('<div class="flotr-mouse-value" style="opacity:0.7;background-color:#000;color:#fff;display:none;position:absolute;'
-									+ pos + '"></div>');
+							.insert('<div class="flotr-mouse-value" style="opacity:0.7;background-color:#000;color:#fff;display:none;position:absolute;' +
+									pos + '"></div>');
 					return;
 				}
 				if (n.x !== null && n.y !== null) {
