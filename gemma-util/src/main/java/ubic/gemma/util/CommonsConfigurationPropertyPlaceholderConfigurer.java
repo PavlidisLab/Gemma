@@ -31,6 +31,7 @@ public class CommonsConfigurationPropertyPlaceholderConfigurer extends PropertyP
         this.configuration = configuration;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     protected Properties mergeProperties() throws IOException {
         Properties result = super.mergeProperties();
@@ -38,8 +39,8 @@ public class CommonsConfigurationPropertyPlaceholderConfigurer extends PropertyP
         // now load properties from user's configuration (Gemma.properties), to override the
         // earlier properties from the xml
         if ( this.configuration != null ) {
-            for ( Iterator it = configuration.getKeys(); it.hasNext(); ) {
-                String key = ( String ) it.next();
+            for ( Iterator<String> it = configuration.getKeys(); it.hasNext(); ) {
+                String key = it.next();
                 result.setProperty( key, configuration.getString( key ) );
                 logger.debug( key + "=" + configuration.getString( key ) );
             }
