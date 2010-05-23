@@ -12,7 +12,7 @@
 
 	Ext.onReady( function() {
 		Ext.QuickTips.init();
- 	
+		 
 		var k = new Gemma.DatasetGroupCombo( {
 			renderTo : 'eesetcombo'
 		});
@@ -110,9 +110,22 @@
 			}
 		});
 
+
 		var v = new Gemma.ProgressWidget({renderTo : 'progressWidget', width : 400});
 		v.allMessages = "Here are some messages for you, widget test.";
+ 
 
+		var testdata = Gemma.testVisData();
+		var viswin = new Gemma.VisualizationWithThumbsWindow ({
+			renderTo : 'visualization',	admin : false,
+			id : 'viswin',
+			title : "This is a test of the visualization widget",
+			tpl : Gemma.getProfileThumbnailTemplate(false, false),
+			store : new Gemma.VisualizationStore({
+				proxy : new Ext.data.MemoryProxy(testdata)
+			})
+		}) ;
+		viswin.show({});
 	});
 	
 </script>
@@ -216,7 +229,10 @@
 <div class="widget" id="fileUpload"></div>
 
 
-
+<h2>
+	Visualization
+</h2>
+<div class="widget" id="visualization"></div>
 
 <h2>
 	ProgressWidget
