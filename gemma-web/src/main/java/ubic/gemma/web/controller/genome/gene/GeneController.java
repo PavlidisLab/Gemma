@@ -42,6 +42,7 @@ import ubic.gemma.image.aba.ImageSeries;
 import ubic.gemma.loader.genome.gene.ncbi.homology.HomologeneService;
 import ubic.gemma.model.association.Gene2GOAssociation;
 import ubic.gemma.model.association.Gene2GOAssociationService;
+import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
@@ -50,7 +51,6 @@ import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.ontology.providers.GeneOntologyService;
 import ubic.gemma.web.controller.BaseController;
-import ubic.gemma.web.controller.expression.experiment.AnnotationValueObject;
 
 /**
  * @author daq2101

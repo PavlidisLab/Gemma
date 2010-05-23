@@ -22,7 +22,7 @@ package ubic.gemma.tasks.maintenance;
 import java.util.Collection;
 
 import ubic.gemma.job.TaskCommand;
-import ubic.gemma.web.controller.expression.experiment.AnnotationValueObject;
+import ubic.gemma.model.common.description.AnnotationValueObject;
 
 /**
  * @author paul

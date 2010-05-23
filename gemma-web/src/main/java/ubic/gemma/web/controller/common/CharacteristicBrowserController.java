@@ -33,6 +33,7 @@ import ubic.gemma.job.AbstractTaskService;
 import ubic.gemma.job.BackgroundJob;
 import ubic.gemma.job.TaskCommand;
 import ubic.gemma.job.TaskResult;
+import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicService;
 import ubic.gemma.model.common.description.VocabCharacteristic;
@@ -46,7 +47,6 @@ import ubic.gemma.model.expression.experiment.FactorValueService;
 import ubic.gemma.tasks.maintenance.CharacteristicUpdateCommand;
 import ubic.gemma.tasks.maintenance.CharacteristicUpdateTask;
 import ubic.gemma.util.AnchorTagUtil;
-import ubic.gemma.web.controller.expression.experiment.AnnotationValueObject;
 import ubic.gemma.web.remote.JsonReaderResponse;
 import ubic.gemma.web.remote.ListBatchCommand;
 
