@@ -492,7 +492,12 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
     private ProbeMapperConfig configure() {
         ProbeMapperConfig config = new ProbeMapperConfig();
 
+        boolean hasMiRNATrack = taxon.getExternalDatabase().getName().equals( "hg19" );
+
         if ( this.hasOption( MIRNA_ONLY_MODE_OPTION ) ) {
+            if ( !hasMiRNATrack ) {
+                throw new IllegalArgumentException( "There is no miRNA track for this taxon." );
+            }
             log.info( "Micro RNA only mode" );
             config.setAllTracksOff();
             config.setUseMiRNA( true );
@@ -541,6 +546,11 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
                 throw new IllegalArgumentException( "Overlap threshold must be between 0 and 1" );
             }
             config.setMinimumExonOverlapFraction( option );
+        }
+
+        if ( hasMiRNATrack && config.isUseMiRNA() ) {
+            log.warn( "At last check hg19 did not have miRNA tracks, turning option off" );
+            config.setUseMiRNA( false );
         }
 
         log.info( config );

@@ -566,10 +566,9 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
     }
 
     /**
-     * <p>
      * Implementation note: The table in goldenpath for microRNAs is called wgRna for hg18, but miRNA in mouse and rat.
-     * We rename the table to miRNA for hg18. Futhermore, the rat and mouse databases lack the "type" field, so we can't
-     * use that very easily and put in a dummy description.
+     * We rename the table to miRNA for hg18. hg19 lacks the track entirely as of 5/2010. Futhermore, the rat and mouse
+     * databases lack the "type" field, so we can't use that very easily and put in a dummy description.
      * 
      * @param chromosome
      * @param start
