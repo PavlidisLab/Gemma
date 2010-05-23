@@ -38,10 +38,10 @@ import ubic.gemma.model.genome.Taxon;
 public class GeneSetServiceImpl implements GeneSetService {
 
     @Autowired
-    private GeneSetDao geneSetDao = null;
+    private Gene2GOAssociationService gene2GoService = null;
 
     @Autowired
-    private Gene2GOAssociationService gene2GoService = null;
+    private GeneSetDao geneSetDao = null;
 
     /*
      * (non-Javadoc)
@@ -69,6 +69,29 @@ public class GeneSetServiceImpl implements GeneSetService {
      */
     public Collection<GeneSet> findByGene( Gene gene ) {
         return this.geneSetDao.findByGene( gene );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.genome.gene.GeneSetService#findByGoId(java.lang.String, ubic.gemma.model.genome.Taxon)
+     */
+    public GeneSet findByGoId( String name, Taxon taxon ) {
+        Collection<Gene> genes = this.gene2GoService.findByGOTerm( name, taxon );
+
+        if ( genes.isEmpty() ) return null;
+
+        GeneSet transientGeneSet = GeneSet.Factory.newInstance();
+        transientGeneSet.setName( name );
+        Collection<GeneSetMember> members = new HashSet<GeneSetMember>();
+        for ( Gene gene : genes ) {
+            GeneSetMember gmember = GeneSetMember.Factory.newInstance();
+            gmember.setGene( gene );
+            members.add( gmember );
+        }
+
+        transientGeneSet.setMembers( members );
+        return transientGeneSet;
     }
 
     /**
@@ -112,6 +135,19 @@ public class GeneSetServiceImpl implements GeneSetService {
     /*
      * (non-Javadoc)
      * 
+     * @see ubic.gemma.model.genome.gene.GeneSetService#loadMyGeneSets()
+     */
+    public Collection<GeneSet> loadMyGeneSets() {
+        return loadAll();
+    }
+
+    public Collection<GeneSet> loadMySharedGeneSets() {
+        return loadAll();
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.gene.GeneSetService#remove(java.util.Collection)
      */
     public void remove( Collection<GeneSet> sets ) {
@@ -149,33 +185,5 @@ public class GeneSetServiceImpl implements GeneSetService {
     public void update( GeneSet geneset ) {
         this.geneSetDao.update( geneset );
 
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.genome.gene.GeneSetService#loadMyGeneSets()
-     */
-    public Collection<GeneSet> loadMyGeneSets() {
-        return loadAll();
-    }
-
-    public Collection<GeneSet> loadMySharedGeneSets() {
-        return loadAll();
-    }
-
-    public GeneSet findByGoId( String name, Taxon taxon ) {
-         Collection<Gene> genes = this.gene2GoService.findByGOTerm( name, taxon );
-         GeneSet transientGeneSet = GeneSet.Factory.newInstance();
-         transientGeneSet.setName( name );
-         Collection<GeneSetMember> members = new HashSet<GeneSetMember>();
-         for ( Gene gene : genes ) {
-             GeneSetMember gmember = GeneSetMember.Factory.newInstance();
-             gmember.setGene( gene );
-             members.add( gmember );            
-        }
-         
-         transientGeneSet.setMembers( members );
-         return transientGeneSet;
     }
 }

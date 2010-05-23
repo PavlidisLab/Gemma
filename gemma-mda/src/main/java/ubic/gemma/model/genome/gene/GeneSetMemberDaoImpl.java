@@ -74,7 +74,7 @@ public class GeneSetMemberDaoImpl extends HibernateDaoSupport implements GeneSet
         if ( id == null ) {
             throw new IllegalArgumentException( "GeneSetMember.load - 'id' can not be null" );
         }
-        return ( GeneSetMember ) this.getHibernateTemplate().get( GeneSetMember.class, id );
+        return this.getHibernateTemplate().get( GeneSetMember.class, id );
     }
 
     public Collection<? extends GeneSetMember> loadAll() {

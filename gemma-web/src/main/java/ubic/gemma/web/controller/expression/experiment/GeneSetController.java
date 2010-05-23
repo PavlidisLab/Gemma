@@ -50,10 +50,10 @@ public class GeneSetController {
 
     @Autowired
     private SecurityService securityService = null;
-    
+
     @Autowired
     private TaxonService taxonService = null;
-    
+
     private static Log log = LogFactory.getLog( GeneSetController.class );
     private static final Double DEFAULT_SCORE = 0.0;
 
@@ -247,22 +247,22 @@ public class GeneSetController {
 
         return GeneSetValueObject.convert2ValueObjects( genesets );
     }
-    
-    
-    public Collection<GeneSetValueObject> findGeneSetsByName(String name, Long taxonId){
-        
-        if (name == null || taxonId == null) return new ArrayList<GeneSetValueObject>();
-        
+
+    public Collection<GeneSetValueObject> findGeneSetsByName( String name, Long taxonId ) {
+
+        if ( name == null || taxonId == null ) return new ArrayList<GeneSetValueObject>();
+
         Collection<GeneSet> foundGeneSets = this.geneSetService.findByName( name );
 
-        Taxon tax = taxonService.load(taxonId);
-        if (tax == null){
-            log.warn( "Can't find matching go groups for search term: " + name + "because no valid taxon found for taxon id = " + taxonId );
-            return GeneSetValueObject.convert2ValueObjects( foundGeneSets ); 
+        Taxon tax = taxonService.load( taxonId );
+        if ( tax == null ) {
+            log.warn( "Can't find matching go groups for search term: " + name
+                    + "because no valid taxon found for taxon id = " + taxonId );
+            return GeneSetValueObject.convert2ValueObjects( foundGeneSets );
         }
 
-        GeneSet goSet = this.geneSetService.findByGoId( name, tax);
-        foundGeneSets.add( goSet );
+        GeneSet goSet = this.geneSetService.findByGoId( name, tax );
+        if ( goSet != null ) foundGeneSets.add( goSet );
         return GeneSetValueObject.convert2ValueObjects( foundGeneSets );
     }
 
