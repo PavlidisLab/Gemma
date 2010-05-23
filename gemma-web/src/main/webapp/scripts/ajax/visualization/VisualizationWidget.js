@@ -537,7 +537,7 @@ Gemma.VisualizationWithThumbsWindow = Ext.extend(Ext.Window, {
 	bodyStyle : "background:white",
 	layout : 'border',
 	title : "Visualization",
-	maximizable : true,
+	maximizable : false,
 	height : Gemma.ZOOM_PLOT_SIZE,
 	width : 600,
 	name : "VizWin",
