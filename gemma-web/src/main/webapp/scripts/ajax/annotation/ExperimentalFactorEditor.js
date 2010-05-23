@@ -70,7 +70,10 @@ Gemma.ExperimentalFactorGrid = Ext.extend(Gemma.GemmaGridPanel, {
 						});
 
 				if (this.editable) {
-					this.tbar = new Gemma.ExperimentalFactorToolbar({});
+					this.tbar = new Gemma.ExperimentalFactorToolbar({
+						store : this.store
+							// used for validation.
+						});
 				}
 
 				Gemma.ExperimentalFactorGrid.superclass.initComponent.call(this);
@@ -98,6 +101,7 @@ Gemma.ExperimentalFactorGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				var NAME_COLUMN = 0;
 				var CATEGORY_COLUMN = 1;
 				var DESCRIPTION_COLUMN = 2;
+				var TYPE_COLUMN = 3;
 
 				this.autoExpandColumn = DESCRIPTION_COLUMN;
 
@@ -109,7 +113,9 @@ Gemma.ExperimentalFactorGrid = Ext.extend(Gemma.GemmaGridPanel, {
 							termKey : "factor"
 						});
 
-				this.descriptionField = new Ext.form.TextField({});
+				this.descriptionField = new Ext.form.TextField({
+							allowBlank : false
+						});
 
 				if (this.editable) {
 
@@ -119,9 +125,32 @@ Gemma.ExperimentalFactorGrid = Ext.extend(Gemma.GemmaGridPanel, {
 							});
 
 					var descriptionEditor = new Ext.grid.GridEditor(this.descriptionField);
+
+					this.factorTypeCombo = new Ext.form.ComboBox({
+								triggerAction : 'all',
+								lazyRender : true,
+								width : 120,
+								mode : 'local',
+								store : new Ext.data.ArrayStore({
+											id : 0,
+											fields : ['type', 'display'],
+											data : [['Continuous', 'Continuous'], ['Categorical', 'Categorical']]
+										}),
+								valueField : 'type',
+								displayField : 'display'
+							});
+
+					var typeEditor = new Ext.grid.GridEditor(this.factorTypeCombo);
+
+					this.factorTypeCombo.on("select", function(combo, record, index) {
+								typeEditor.completeEdit();
+							});
+
 					this.getColumnModel().setEditor(NAME_COLUMN, nameEditor);
 					this.getColumnModel().setEditor(CATEGORY_COLUMN, categoryEditor);
 					this.getColumnModel().setEditor(DESCRIPTION_COLUMN, descriptionEditor);
+
+					this.getColumnModel().setEditor(TYPE_COLUMN, typeEditor);
 
 					this.getTopToolbar().on("create", function(newFactorValue) {
 						var oldmsg = this.loadMask.msg;
@@ -229,9 +258,22 @@ Gemma.ExperimentalFactorGrid = Ext.extend(Gemma.GemmaGridPanel, {
 			},
 
 			factorCreated : function(factor) {
+				/*
+				 * 'continuous' is a client-side value only. If they reload without adding a factor, this value is lost,
+				 * but it's a rare case. See bug 1796.
+				 */
+				if (factor.type = 'Continuous') {
+					this.getStore().on('load', function(store, records) {
+								var i = this.findExact('description', factor.description);
+								this.getAt(i).set('type', 'Continuous');
+								this.commitChanges();
+							}, this.getStore(), {
+								single : true
+							});
+				}
 				this.refresh();
 				var efs = [factor];
-				this.fireEvent('experimentalfactorchange', this, efs);
+				this.fireEvent('experimentalfactorselected', this, efs);
 			},
 
 			recordsChanged : function(records) {
@@ -288,6 +330,10 @@ Gemma.ExperimentalFactorAddWindow = Ext.extend(Ext.Window, {
 							id : 'factor-description-field',
 							allowBlank : false,
 							fieldLabel : "Description",
+							validator : function(value) {
+								return this.store.findExact('description', value) < 0 ? true
+										: "Description must be unique among factors";
+							}.createDelegate(this),
 							emptyText : "A short phrase such as 'control vs. drug'"
 						}, {
 							xtype : 'checkbox',
@@ -351,7 +397,9 @@ Gemma.ExperimentalFactorToolbar = Ext.extend(Ext.Toolbar, {
 							tooltip : "Add a new experimental factor to the design",
 							disabled : false,
 							handler : function() {
-								var w = new Gemma.ExperimentalFactorAddWindow();
+								var w = new Gemma.ExperimentalFactorAddWindow({
+											store : this.store
+										});
 								w.on('done', function(object) {
 											this.fireEvent('create', object);
 										}.createDelegate(this));
