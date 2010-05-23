@@ -1944,7 +1944,7 @@ gemma.max.fileupload.size.bytes=
 						</property>
 					</bean>
 				</entry>
-				<entry key="ubic.gemma.web.controller.expression.experiment.AnnotationValueObject">
+				<entry key="ubic.gemma.model.common.description.AnnotationValueObject">
 					<bean class="org.directwebremoting.spring.ConverterConfig">
 						<property name="type" value="bean" />
 					</bean>
