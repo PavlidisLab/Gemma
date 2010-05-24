@@ -178,7 +178,7 @@ public class ArrayDesignProbeMapperService {
                 ++hits;
             }
 
-            if ( ++count % 100 == 0 ) {
+            if ( ++count % 200 == 0 ) {
                 log.info( "Processed " + count + " composite sequences" + " with blat results; " + hits
                         + " mappings found." );
             }
