@@ -558,7 +558,8 @@ public class ProbeMapper {
             if ( chromosomes.size() > 0 ) {
                 chrom = chromosomes.iterator().next();
             } else {
-                chrom = chromosomeService.findOrCreate( chrom ); // typically only during tests, but see bug 1936
+                chrom = chromosomeService.findOrCreate( chrom.getName(), taxon ); // typically only during tests, but
+                                                                                  // see bug 1936
             }
         }
 

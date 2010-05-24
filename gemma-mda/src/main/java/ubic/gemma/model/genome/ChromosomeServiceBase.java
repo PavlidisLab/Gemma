@@ -34,24 +34,11 @@ public abstract class ChromosomeServiceBase implements ubic.gemma.model.genome.C
     private ubic.gemma.model.genome.ChromosomeDao chromosomeDao;
 
     /**
-     * @see ubic.gemma.model.genome.ChromosomeService#find(ubic.gemma.model.genome.Chromosome)
-     */
-    public ubic.gemma.model.genome.Chromosome find( final ubic.gemma.model.genome.Chromosome chromosome ) {
-        try {
-            return this.handleFind( chromosome );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.genome.ChromosomeServiceException(
-                    "Error performing 'ubic.gemma.model.genome.ChromosomeService.find(ubic.gemma.model.genome.Chromosome chromosome)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
      * @see ubic.gemma.model.genome.ChromosomeService#findOrCreate(ubic.gemma.model.genome.Chromosome)
      */
-    public ubic.gemma.model.genome.Chromosome findOrCreate( final ubic.gemma.model.genome.Chromosome chromosome ) {
+    public ubic.gemma.model.genome.Chromosome findOrCreate( final String name, final Taxon taxon ) {
         try {
-            return this.handleFindOrCreate( chromosome );
+            return this.handleFindOrCreate( name, taxon );
         } catch ( Throwable th ) {
             throw new ubic.gemma.model.genome.ChromosomeServiceException(
                     "Error performing 'ubic.gemma.model.genome.ChromosomeService.findOrCreate(ubic.gemma.model.genome.Chromosome chromosome)' --> "
@@ -74,15 +61,9 @@ public abstract class ChromosomeServiceBase implements ubic.gemma.model.genome.C
     }
 
     /**
-     * Performs the core logic for {@link #find(ubic.gemma.model.genome.Chromosome)}
-     */
-    protected abstract ubic.gemma.model.genome.Chromosome handleFind( ubic.gemma.model.genome.Chromosome chromosome )
-            throws java.lang.Exception;
-
-    /**
      * Performs the core logic for {@link #findOrCreate(ubic.gemma.model.genome.Chromosome)}
      */
-    protected abstract ubic.gemma.model.genome.Chromosome handleFindOrCreate(
-            ubic.gemma.model.genome.Chromosome chromosome ) throws java.lang.Exception;
+    protected abstract ubic.gemma.model.genome.Chromosome handleFindOrCreate( String name, Taxon taxon )
+            throws java.lang.Exception;
 
 }

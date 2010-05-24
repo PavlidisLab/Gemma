@@ -684,24 +684,11 @@ abstract public class GenomePersister extends CommonPersister {
             return seenChromosomes.get( key );
         }
 
-        chromosome.setSequence( persistBioSequence( chromosome.getSequence() ) );
+        // chromosome.setSequence( persistBioSequence( chromosome.getSequence() ) );
         chromosome.setTaxon( persistTaxon( chromosome.getTaxon() ) );
-        try {
-            chromosome = chromosomeService.findOrCreate( chromosome );
-        } catch ( InvalidDataAccessResourceUsageException e ) {
-            /*
-             * Probably we got multiple. Try another way.
-             */
-            log.warn( "Bad find results for: " + chromosome + " (multiple?), working around" );
-            Collection<Chromosome> existing = chromosomeService.find( chromosome.getName(), chromosome.getTaxon() );
 
-            if ( existing.isEmpty() ) {
-                chromosome = chromosomeService.create( chromosome );
-            } else {
-                chromosome = existing.iterator().next();
-            }
+        chromosome = chromosomeService.findOrCreate( chromosome.getName(), chromosome.getTaxon() );
 
-        }
         seenChromosomes.put( key, chromosome );
 
         return chromosome;

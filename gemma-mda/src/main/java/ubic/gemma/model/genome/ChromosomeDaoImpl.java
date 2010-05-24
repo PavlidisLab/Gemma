@@ -41,36 +41,6 @@ public class ChromosomeDaoImpl extends ubic.gemma.model.genome.ChromosomeDaoBase
         super.setSessionFactory( sessionFactory );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.genome.ChromosomeDaoBase#find(ubic.gemma.model.genome.Chromosome)
-     */
-    public Chromosome find( Chromosome chromosome ) {
-        try {
-
-            BusinessKey.checkValidKey( chromosome );
-            Criteria queryObject = super.getSession().createCriteria( Chromosome.class );
-            BusinessKey.addRestrictions( queryObject, chromosome );
-
-            java.util.List<?> results = queryObject.list();
-            Object result = null;
-            if ( results != null ) {
-                if ( results.size() > 1 ) {
-                    String details = debug( results );
-                    throw new org.springframework.dao.InvalidDataAccessResourceUsageException( results.size() + " "
-                            + Chromosome.class.getName() + "s were found when executing query\n" + details );
-
-                } else if ( results.size() == 1 ) {
-                    result = results.iterator().next();
-                }
-            }
-            return ( Chromosome ) result;
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
-        }
-    }
-
     @SuppressWarnings("unchecked")
     public Collection<Chromosome> find( String name, Taxon taxon ) {
         if ( StringUtils.isBlank( name ) ) {
@@ -89,20 +59,18 @@ public class ChromosomeDaoImpl extends ubic.gemma.model.genome.ChromosomeDaoBase
         return results;
     }
 
-    public Chromosome findOrCreate( Chromosome chromosome ) {
-        Chromosome existing = this.find( chromosome );
-        if ( existing != null ) {
-            assert existing.getId() != null;
-            return existing;
+    public Chromosome findOrCreate( String name, Taxon taxon ) {
+        Collection<Chromosome> hits = this.find( name, taxon );
+
+        if ( hits == null || hits.isEmpty() ) {
+            Chromosome c = Chromosome.Factory.newInstance();
+            c.setName( name );
+            c.setTaxon( taxon );
+
+            return create( c );
+        } else {
+            return hits.iterator().next();
         }
-        return create( chromosome );
     }
 
-    private String debug( List<?> results ) {
-        StringBuilder buf = new StringBuilder();
-        for ( Object object : results ) {
-            buf.append( object + "\n" );
-        }
-        return buf.toString();
-    }
 }

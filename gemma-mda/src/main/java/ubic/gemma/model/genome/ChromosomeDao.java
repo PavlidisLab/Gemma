@@ -35,14 +35,5 @@ public interface ChromosomeDao extends BaseDao<Chromosome> {
      */
     public Collection<Chromosome> find( String name, Taxon taxon );
 
-    /**
-     * 
-     */
-    public ubic.gemma.model.genome.Chromosome find( ubic.gemma.model.genome.Chromosome chromosome );
-
-    /**
-     * 
-     */
-    public ubic.gemma.model.genome.Chromosome findOrCreate( ubic.gemma.model.genome.Chromosome chromosome );
-
+    public Chromosome findOrCreate( String name, Taxon taxon );
 }
