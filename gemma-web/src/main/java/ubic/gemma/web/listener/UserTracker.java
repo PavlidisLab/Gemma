@@ -18,40 +18,28 @@
  */
 package ubic.gemma.web.listener;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 /**
- * Basic bean to hold number of authenticated users and sessions.
+ * Basic bean to hold number of sessions.
  * 
  * @author paul
  * @version $Id$
  */
 public class UserTracker {
 
-    private static int activeSessions = 0;
-
-    private static int authenticatedUsers = 0;
+    private static AtomicInteger activeSessions = new AtomicInteger( 0 );
 
     public static int decrementSessions() {
-        return --activeSessions;
+        return activeSessions.decrementAndGet();
     }
 
     public static int incrementSessions() {
-        return ++activeSessions;
-    }
-
-    public static int incrementAuthenticatedUsers() {
-        return ++authenticatedUsers;
-    }
-
-    public static int decrementAuthenticatedUsers() {
-        return --authenticatedUsers;
+        return activeSessions.incrementAndGet();
     }
 
     public static int getActiveSessions() {
-        return activeSessions;
-    }
-
-    public static int getAuthenticatedUsers() {
-        return authenticatedUsers;
+        return activeSessions.get();
     }
 
 }

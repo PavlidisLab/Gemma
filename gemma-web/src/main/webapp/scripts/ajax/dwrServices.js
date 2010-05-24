@@ -566,6 +566,12 @@ SecurityController.getGroupMembers = function(p0, callback) {
 SecurityController.getAvailablePrincipalSids = function(callback) {
 	dwr.engine._execute(SecurityController._path, 'SecurityController', 'getAvailablePrincipalSids', callback);
 }
+SecurityController.getAuthenticatedUserNames = function(callback) {
+	dwr.engine._execute(SecurityController._path, 'SecurityController', 'getAuthenticatedUserNames', callback);
+}
+SecurityController.getAuthenticatedUserCount = function(callback) {
+	dwr.engine._execute(SecurityController._path, 'SecurityController', 'getAuthenticatedUserCount', callback);
+}
 // ==============================================================================
 if (GeneSetController == null)
 	var GeneSetController = {};

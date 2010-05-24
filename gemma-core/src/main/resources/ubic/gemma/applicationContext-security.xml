@@ -45,7 +45,8 @@
 			exceptions galore.
 		-->
 		<s:session-management session-fixation-protection="none">
-			<s:concurrency-control max-sessions="1" />
+			<!-- We define the session registry ourselves so we can use it to count users -->
+			<s:concurrency-control max-sessions="1" session-registry-ref="sessionRegistry" />
 		</s:session-management>
 
 	</s:http>
@@ -53,6 +54,8 @@
 	<!-- For use with access tags  -->
 	<bean id="defaultWebSecurityExpressionHandler" class="org.springframework.security.web.access.expression.DefaultWebSecurityExpressionHandler"></bean>
 
+	<!-- works with the HttpSessionEventPublisher configured in web.xml-->
+	<bean id="sessionRegistry" class="org.springframework.security.core.session.SessionRegistryImpl" />
 
 	<bean id="httpAccessDecisionManager" class="org.springframework.security.access.vote.AffirmativeBased">
 		<property name="allowIfAllAbstainDecisions" value="true" />
@@ -111,7 +114,7 @@
 		<s:after-invocation-provider ref="afterAclArrayDesignCollectionRead" />
 		<s:after-invocation-provider ref="afterAclDataVectorCollectionRead" />
 		<s:after-invocation-provider ref="afterAclMyDataRead" />
-		<s:after-invocation-provider ref="afterAclMyPrivateDataRead"/>
+		<s:after-invocation-provider ref="afterAclMyPrivateDataRead" />
 		<s:after-invocation-provider ref="afterAclMapRead" />
 		<s:after-invocation-provider ref="afterAclMapValuesRead" />
 		<s:after-invocation-provider ref="postInvocationAdviceProvider" /><!-- for @Post... -->

@@ -55,6 +55,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.GrantedAuthorityImpl;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -140,6 +141,9 @@ public class SecurityService {
     private Log log = LogFactory.getLog( SecurityService.class );
 
     private ObjectIdentityRetrievalStrategy objectIdentityRetrievalStrategy = new ObjectIdentityRetrievalStrategyImpl();
+
+    @Autowired
+    private SessionRegistry sessionRegistry;
 
     @Autowired
     private SidRetrievalStrategy sidRetrievalStrategy;
@@ -387,6 +391,28 @@ public class SecurityService {
     }
 
     /**
+     * We make this available to anonymous
+     * 
+     * @return
+     */
+    public Integer getAuthenticatedUserCount() {
+        return this.sessionRegistry.getAllPrincipals().size();
+    }
+
+    /**
+     * @return user names
+     */
+    @Secured("GROUP_ADMIN")
+    public Collection<String> getAuthenticatedUserNames() {
+        List<Object> allPrincipals = this.sessionRegistry.getAllPrincipals();
+        Collection<String> result = new HashSet<String>();
+        for ( Object o : allPrincipals ) {
+            result.add( o.toString() );
+        }
+        return result;
+    }
+
+    /**
      * This methods is only available to administrators.
      * 
      * @return collection of all available security ids (basically, user names and group authorities.
@@ -577,6 +603,31 @@ public class SecurityService {
 
     /**
      * @param s
+     * @return true if the current user can edit the securable
+     */
+    @Secured("ACL_SECURABLE_READ")
+    public boolean isEditable( Securable s ) {
+
+        if ( !isUserLoggedIn() ) {
+            return false;
+        }
+
+        String currentUser = this.userManager.getCurrentUsername();
+
+        List<Permission> requiredPermissions = new ArrayList<Permission>();
+
+        requiredPermissions.add( BasePermission.WRITE );
+        if ( hasPermission( s, requiredPermissions, currentUser ) ) {
+            return true;
+        }
+
+        requiredPermissions.clear();
+        requiredPermissions.add( BasePermission.ADMINISTRATION );
+        return hasPermission( s, requiredPermissions, currentUser );
+    }
+
+    /**
+     * @param s
      * @param groupName
      * @return
      */
@@ -610,31 +661,6 @@ public class SecurityService {
         requiredPermissions.clear();
         requiredPermissions.add( BasePermission.ADMINISTRATION );
         return hasPermission( s, requiredPermissions, userName );
-    }
-
-    /**
-     * @param s
-     * @return true if the current user can edit the securable
-     */
-    @Secured("ACL_SECURABLE_READ")
-    public boolean isEditable( Securable s ) {
-
-        if ( !isUserLoggedIn() ) {
-            return false;
-        }
-
-        String currentUser = this.userManager.getCurrentUsername();
-
-        List<Permission> requiredPermissions = new ArrayList<Permission>();
-
-        requiredPermissions.add( BasePermission.WRITE );
-        if ( hasPermission( s, requiredPermissions, currentUser ) ) {
-            return true;
-        }
-
-        requiredPermissions.clear();
-        requiredPermissions.add( BasePermission.ADMINISTRATION );
-        return hasPermission( s, requiredPermissions, currentUser );
     }
 
     /**
@@ -951,34 +977,6 @@ public class SecurityService {
     }
 
     /**
-     * From the group name get the authority which should be underscored with GROUP_
-     * 
-     * @param The group name e.g. fish
-     * @return The authority e.g. GROUP_FISH_...
-     */
-    private String getGroupAuthorityNameFromGroupName( String groupName ) {
-        Collection<String> groups = checkForGroupAccessByCurrentuser( groupName );
-
-        if ( !groups.contains( groupName ) && !isUserAdmin() ) {
-            throw new AccessDeniedException( "User doesn't have access to that group" );
-        }
-
-        List<GrantedAuthority> groupAuthorities = userManager.findGroupAuthorities( groupName );
-
-        if ( groupAuthorities == null || groupAuthorities.isEmpty() ) {
-            throw new IllegalStateException( "Group has no authorities" );
-        }
-
-        if ( groupAuthorities.size() > 1 ) {
-            throw new UnsupportedOperationException( "Sorry, groups can only have a single authority" );
-        }
-
-        GrantedAuthority ga = groupAuthorities.get( 0 );
-        String authority = userManager.getRolePrefix() + ( ga.getAuthority() );
-        return authority;
-    }
-
-    /**
      * Adds write (and read) permissions.
      * 
      * @param s
@@ -1123,6 +1121,34 @@ public class SecurityService {
         } catch ( NotFoundException e ) {
             return null;
         }
+    }
+
+    /**
+     * From the group name get the authority which should be underscored with GROUP_
+     * 
+     * @param The group name e.g. fish
+     * @return The authority e.g. GROUP_FISH_...
+     */
+    private String getGroupAuthorityNameFromGroupName( String groupName ) {
+        Collection<String> groups = checkForGroupAccessByCurrentuser( groupName );
+
+        if ( !groups.contains( groupName ) && !isUserAdmin() ) {
+            throw new AccessDeniedException( "User doesn't have access to that group" );
+        }
+
+        List<GrantedAuthority> groupAuthorities = userManager.findGroupAuthorities( groupName );
+
+        if ( groupAuthorities == null || groupAuthorities.isEmpty() ) {
+            throw new IllegalStateException( "Group has no authorities" );
+        }
+
+        if ( groupAuthorities.size() > 1 ) {
+            throw new UnsupportedOperationException( "Sorry, groups can only have a single authority" );
+        }
+
+        GrantedAuthority ga = groupAuthorities.get( 0 );
+        String authority = userManager.getRolePrefix() + ( ga.getAuthority() );
+        return authority;
     }
 
     private Collection<String> getGroupsUserCanView() {

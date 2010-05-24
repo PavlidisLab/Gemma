@@ -26,8 +26,6 @@ import javax.servlet.http.HttpSessionListener;
 
 /**
  * Count active sessions
- * <p>
- * Orignal idea from Appfuse but probably doesn't resemble that any more. For counting authenticated users, see ????
  * 
  * @author keshav
  * @author pavlidis
@@ -40,22 +38,42 @@ public class UserCounterListener implements ServletContextListener, HttpSessionL
 
     private ServletContext servletContext;
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see javax.servlet.ServletContextListener#contextInitialized(javax.servlet.ServletContextEvent)
+     */
     public synchronized void contextInitialized( ServletContextEvent sce ) {
         this.servletContext = sce.getServletContext();
         servletContext.setAttribute( ( COUNT_KEY ), Integer.toString( 0 ) );
         servletContext.setAttribute( ( AUTH_KEY ), Integer.toString( 0 ) );
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see javax.servlet.ServletContextListener#contextDestroyed(javax.servlet.ServletContextEvent)
+     */
     public synchronized void contextDestroyed( ServletContextEvent event ) {
         servletContext = null;
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see javax.servlet.http.HttpSessionListener#sessionCreated(javax.servlet.http.HttpSessionEvent)
+     */
     public void sessionCreated( HttpSessionEvent arg0 ) {
         UserTracker.incrementSessions();
         servletContext.setAttribute( COUNT_KEY, Integer.toString( UserTracker.getActiveSessions() ) );
 
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see javax.servlet.http.HttpSessionListener#sessionDestroyed(javax.servlet.http.HttpSessionEvent)
+     */
     public void sessionDestroyed( HttpSessionEvent arg0 ) {
         UserTracker.decrementSessions();
         servletContext.setAttribute( COUNT_KEY, Integer.toString( UserTracker.getActiveSessions() ) );

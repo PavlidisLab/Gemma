@@ -1220,6 +1220,8 @@ gemma.max.fileupload.size.bytes=
 								<value>updatePermissions</value>
 								<value>updatePermission</value>
 								<value>getAvailablePrincipalSids</value>
+								<value>getAuthenticatedUserCount</value>
+								<value>getAuthenticatedUserNames</value>
 							</list>
 						</property>
 					</bean>

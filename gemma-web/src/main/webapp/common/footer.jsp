@@ -22,9 +22,15 @@
 
 	<security:authorize access="hasRole('GROUP_ADMIN')">
 		<span class="right"> <a href="<c:url value="/admin/activeUsers.html"/>"><fmt:message
-					key="mainMenu.activeUsers" />
-		</a>:&nbsp;<c:out value="${applicationScope.activeUsers}" />
-			&nbsp;SignedIn:&nbsp;${applicationScope.authenticatedUsers}&nbsp;|&nbsp;</span>
+					key="mainMenu.activeUsers" /> </a>:&nbsp;<c:out value="${applicationScope.activeUsers}" /> &nbsp;Signed in:&nbsp;<span
+			id="auth-user-count">?</span>&nbsp;|&nbsp;</span>
+		<script type="text/javascript">
+			Ext.onReady(function() {
+				SecurityController.getAuthenticatedUserCount( function(count) {
+					Ext.DomHelper.overwrite('auth-user-count', '' + count);
+					} );
+				 });
+			</script>
 	</security:authorize>
 
 	<br />
