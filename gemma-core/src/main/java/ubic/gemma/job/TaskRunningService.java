@@ -86,7 +86,7 @@ public class TaskRunningService implements InitializingBean {
      */
     public final static String JOB_ATTRIBUTE = "taskId";
 
-    private static Log log = LogFactory.getLog( TaskRunningService.class.getName() );
+    private static Log log = LogFactory.getLog( TaskRunningService.class );
 
     /**
      * How long we will queue a task before giving up and cancelling it (default value)
