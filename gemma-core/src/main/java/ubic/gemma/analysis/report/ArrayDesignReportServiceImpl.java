@@ -28,7 +28,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -53,10 +52,10 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignRepeatAnaly
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceUpdateEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSubsumeCheckEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType; 
+import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject; 
+import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.util.ConfigUtils;
 import ubic.gemma.util.EntityUtils;
 
@@ -86,10 +85,13 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
      * Batch of classes we can get events for all at once.
      */
     @SuppressWarnings("unchecked")
-    private Class<? extends AuditEventType>[] eventTypes = new Class[] { ArrayDesignProbeRenamingEvent.class,
-            ArrayDesignSequenceUpdateEvent.class, ArrayDesignSubsumeCheckEvent.class,
-            ArrayDesignSequenceAnalysisEvent.class, ArrayDesignMergeEvent.class, ArrayDesignAnnotationFileEvent.class,
-            ArrayDesignGeneMappingEvent.class, ArrayDesignRepeatAnalysisEvent.class };
+    private Class<? extends AuditEventType>[] eventTypes = new Class[] { ArrayDesignSequenceUpdateEvent.class,
+            ArrayDesignSequenceAnalysisEvent.class, ArrayDesignGeneMappingEvent.class,
+            ArrayDesignRepeatAnalysisEvent.class };
+    /*
+     * ArrayDesignProbeRenamingEvent.class,ArrayDesignMergeEvent.class, ArrayDesignAnnotationFileEvent.class,
+     * ArrayDesignSubsumeCheckEvent.class
+     */
 
     private String HOME_DIR = ConfigUtils.getString( "gemma.appdata.home" );
 

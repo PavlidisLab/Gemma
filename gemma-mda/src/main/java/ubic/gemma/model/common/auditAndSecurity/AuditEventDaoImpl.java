@@ -42,6 +42,7 @@ import org.springframework.orm.hibernate3.HibernateCallback;
 import org.springframework.stereotype.Repository;
 
 import ubic.gemma.model.common.Auditable;
+import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignGeneMappingEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.auditAndSecurity.eventType.OKStatusFlagEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.TroubleStatusFlagEvent;
@@ -169,7 +170,7 @@ public class AuditEventDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
 
         // how to determine subclasses? There is no way to do this but the hibernate way.
         SingleTableEntityPersister classMetadata = ( SingleTableEntityPersister ) this.getSessionFactory()
-                .getClassMetadata( type );
+                .getClassMetadata(  getImplClass( type )  );
         if ( classMetadata == null ) return classes;
 
         if ( classMetadata.hasSubclasses() ) {
@@ -186,8 +187,8 @@ public class AuditEventDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
     }
 
     private String getImplClass( Class<? extends AuditEventType> type ) {
-        String canonicalName = type.getCanonicalName();
-        return canonicalName.endsWith( "Impl" ) ? type.getCanonicalName() : type.getCanonicalName() + "Impl";
+        String canonicalName = type.getName();
+        return canonicalName.endsWith( "Impl" ) ? type.getName() : type.getName() + "Impl";
     }
 
     @SuppressWarnings("unchecked")
@@ -222,7 +223,12 @@ public class AuditEventDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
          * least of our worries. The real annoyance here is dealing with subclasses of event types.
          */
 
+        if (type.equals(ArrayDesignGeneMappingEvent.class )) {
+            log.info("woah");
+        }
+        
         List<String> classes = getClassHierarchy( type );
+        
 
         if ( classes.size() == 0 ) {
             return null;
