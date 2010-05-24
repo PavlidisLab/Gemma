@@ -57,7 +57,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
     private ArrayDesignProbeMapperService arrayDesignProbeMapperService;
     private TaxonService taxonService;
     private String taxonName;
-    private Taxon taxon;
+    private Taxon taxon = null;
     private String directAnnotationInputFileName = null;
     private ExternalDatabase sourceDatabase = null;
     private boolean useDB = true;
@@ -493,8 +493,11 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
     private ProbeMapperConfig configure() {
         ProbeMapperConfig config = new ProbeMapperConfig();
 
-        // boolean hasMiRNATrack = taxon.getExternalDatabase().getName().equals( "hg19" );
-        boolean isMissingTracks = ConfigUtils.getString( "gemma.goldenpath.db.human" ).equals( "hg19" );
+        /*
+         * Hackery to work around hg19 problems.
+         */
+        boolean isMissingTracks = taxon != null && taxon.getCommonName().equals( "human" )
+                && ConfigUtils.getString( "gemma.goldenpath.db.human" ).equals( "hg19" );
 
         if ( this.hasOption( MIRNA_ONLY_MODE_OPTION ) ) {
             if ( isMissingTracks ) {
