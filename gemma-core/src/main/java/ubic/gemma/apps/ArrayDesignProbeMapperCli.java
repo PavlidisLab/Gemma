@@ -494,10 +494,10 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         ProbeMapperConfig config = new ProbeMapperConfig();
 
         // boolean hasMiRNATrack = taxon.getExternalDatabase().getName().equals( "hg19" );
-        boolean hasMiRNATrack = ConfigUtils.getString( "gemma.goldenpath.db.human" ).equals( "hg19" );
+        boolean isMissingTracks = ConfigUtils.getString( "gemma.goldenpath.db.human" ).equals( "hg19" );
 
         if ( this.hasOption( MIRNA_ONLY_MODE_OPTION ) ) {
-            if ( !hasMiRNATrack ) {
+            if ( isMissingTracks ) {
                 throw new IllegalArgumentException( "There is no miRNA track for this taxon." );
             }
             log.info( "Micro RNA only mode" );
@@ -550,9 +550,13 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
             config.setMinimumExonOverlapFraction( option );
         }
 
-        if ( hasMiRNATrack && config.isUseMiRNA() ) {
+        if ( isMissingTracks && config.isUseMiRNA() ) {
             log.warn( "At last check hg19 did not have miRNA tracks, turning option off" );
             config.setUseMiRNA( false );
+        }
+        if ( isMissingTracks && config.isUseAcembly() ) {
+            log.warn( "At last check hg19 did not have acembly tracks, turning option off" );
+            config.setUseAcembly( false );
         }
 
         log.info( config );
