@@ -80,13 +80,13 @@ public class SecurityController {
     private GeneSetService geneSetService = null;
 
     @Autowired
+    private MailEngine mailEngine;
+
+    @Autowired
     private SecurityService securityService = null;
 
     @Autowired
     private UserManager userManager = null;
-
-    @Autowired
-    private MailEngine mailEngine;
 
     /**
      * AJAX
@@ -171,6 +171,22 @@ public class SecurityController {
          */
 
         securityService.deleteGroup( groupName );
+    }
+
+    /**
+     * @return
+     * @see ubic.gemma.security.SecurityService#getAuthenticatedUserCount()
+     */
+    public Integer getAuthenticatedUserCount() {
+        return securityService.getAuthenticatedUserCount();
+    }
+
+    /**
+     * @return
+     * @see ubic.gemma.security.SecurityService#getAuthenticatedUserNames()
+     */
+    public Collection<String> getAuthenticatedUserNames() {
+        return securityService.getAuthenticatedUserNames();
     }
 
     /**
