@@ -30,6 +30,7 @@ import ubic.gemma.model.common.description.ExternalDatabaseService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
+import ubic.gemma.util.ConfigUtils;
 
 /**
  * Process the blat results for an array design to map them onto genes.
@@ -492,7 +493,8 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
     private ProbeMapperConfig configure() {
         ProbeMapperConfig config = new ProbeMapperConfig();
 
-        boolean hasMiRNATrack = taxon.getExternalDatabase().getName().equals( "hg19" );
+        // boolean hasMiRNATrack = taxon.getExternalDatabase().getName().equals( "hg19" );
+        boolean hasMiRNATrack = ConfigUtils.getString( "gemma.goldenpath.db.human" ).equals( "hg19" );
 
         if ( this.hasOption( MIRNA_ONLY_MODE_OPTION ) ) {
             if ( !hasMiRNATrack ) {
