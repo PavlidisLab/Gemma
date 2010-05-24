@@ -38,6 +38,7 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.FactorType;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.util.ChannelUtils;
 import ubic.gemma.util.ConfigUtils;
@@ -690,6 +691,7 @@ public class MageMLConverterTest extends AbstractMageTest {
         for ( ExperimentalFactor ef : expressionExperiment.getExperimentalDesign().getExperimentalFactors() ) {
             assertEquals( 2, ef.getFactorValues().size() );
             for ( FactorValue fv : ef.getFactorValues() ) {
+                assertEquals( FactorType.CONTINUOUS, fv.getExperimentalFactor().getType() );
                 assertNotNull( fv.getMeasurement() );
                 assertEquals( ef, fv.getExperimentalFactor() );
             }

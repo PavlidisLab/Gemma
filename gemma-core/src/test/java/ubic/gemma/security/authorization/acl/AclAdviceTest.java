@@ -43,6 +43,7 @@ import ubic.gemma.model.expression.experiment.ExperimentalDesignService;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.model.expression.experiment.FactorType;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
@@ -190,6 +191,7 @@ public class AclAdviceTest extends BaseSpringContextTest {
         ExperimentalDesign ed = ee.getExperimentalDesign();
 
         ExperimentalFactor ef = ExperimentalFactor.Factory.newInstance();
+        ef.setType(FactorType.CATEGORICAL);
         ef.setExperimentalDesign( ed );
         String efName = "acladdtest_" + randomName();
         ef.setName( efName );

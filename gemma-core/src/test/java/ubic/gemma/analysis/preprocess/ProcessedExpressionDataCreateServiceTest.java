@@ -47,6 +47,7 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.model.expression.experiment.FactorType;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueService;
 
@@ -141,6 +142,7 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
         // log.info( oldMat );
 
         ExperimentalFactor factor = ExperimentalFactor.Factory.newInstance();
+        factor.setType( FactorType.CATEGORICAL );
         factor.setName( ee.getShortName() + " design" );
         factor.setExperimentalDesign( ee.getExperimentalDesign() );
         factor = experimentalFactorService.create( factor );

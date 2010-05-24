@@ -41,6 +41,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.model.expression.experiment.FactorType;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.testing.BaseSpringContextTest;
 import ubic.gemma.util.ChannelUtils;
@@ -189,6 +190,7 @@ public class ArrayExpressLoadServiceIntegrationTest extends BaseSpringContextTes
         for ( ExperimentalFactor ef : expressionExperiment.getExperimentalDesign().getExperimentalFactors() ) {
             assertEquals( 2, ef.getFactorValues().size() );
             for ( FactorValue fv : ef.getFactorValues() ) {
+                assertEquals( FactorType.CONTINUOUS, fv.getExperimentalFactor().getType() );
                 assertNotNull( fv.getMeasurement() );
                 assertEquals( ef, fv.getExperimentalFactor() );
             }
@@ -202,7 +204,7 @@ public class ArrayExpressLoadServiceIntegrationTest extends BaseSpringContextTes
         for ( BioAssay ba : expressionExperiment.getBioAssays() ) {
             if ( ad == null ) {
                 ArrayDesignService ads = ( ArrayDesignService ) this.getBean( "arrayDesignService" );
-             ad =   ads.thawLite( ba.getArrayDesignUsed() );
+                ad = ads.thaw( ba.getArrayDesignUsed() );
                 for ( CompositeSequence cs : ba.getArrayDesignUsed().getCompositeSequences() ) {
                     probeNames.add( cs.getName() );
                 }

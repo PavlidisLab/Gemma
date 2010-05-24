@@ -159,7 +159,7 @@ Ext.onReady(function() {
 					});
 
 			experimentalFactorGrid.on("experimentalfactorchange", function(efgrid, efs) {
-						factorValueGrid.enable();
+						factorValueGrid.getEl().unmask();
 						factorValueGrid.setTitle("Factor values");
 						factorValueGrid.setExperimentalFactor(null); // ??
 						refreshNeeded = true;
@@ -167,13 +167,14 @@ Ext.onReady(function() {
 
 			experimentalFactorGrid.on("experimentalfactorselected", function(factor) {
 
-						if (factor.get("type") == "Continuous") {
+						if (factor.get("type") == "continuous") {
+							factorValueGrid.getStore().removeAll();
 							factorValueGrid
 									.setTitle("Continuous values not displayed here, see the 'sample details' tab");
-							factorValueGrid.disable();
+							factorValueGrid.getEl().mask("Continuous values not displayed here, see the 'sample details' tab");
 
 						} else {
-							factorValueGrid.enable();
+							factorValueGrid.getEl().unmask();
 							factorValueGrid.setTitle("Factor values for : " + factor.get("name"));
 							factorValueGrid.setExperimentalFactor(factor.get("id"));
 

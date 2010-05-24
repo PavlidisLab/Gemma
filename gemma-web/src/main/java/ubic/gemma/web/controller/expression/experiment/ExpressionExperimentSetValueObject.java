@@ -64,6 +64,7 @@ public class ExpressionExperimentSetValueObject implements Comparable<Expression
     private String description;
     private Collection<Long> expressionExperimentIds;
     private Long id;
+    
     /**
      * If modifying the set is constrained by existing analyses.
      */

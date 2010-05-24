@@ -134,6 +134,7 @@ import ubic.gemma.model.expression.designElement.Reporter;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.FactorType;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
@@ -1530,6 +1531,7 @@ public class MageMLConverterHelper {
     public ExperimentalFactor convertExperimentalFactor( org.biomage.Experiment.ExperimentalFactor mageObj ) {
         if ( mageObj == null ) return null;
         ExperimentalFactor result = ExperimentalFactor.Factory.newInstance();
+        result.setType( FactorType.CATEGORICAL ); // temporary.
         convertIdentifiable( mageObj, result );
         convertAssociations( mageObj, result );
         return result;
@@ -1555,6 +1557,9 @@ public class MageMLConverterHelper {
             // Note that these should be the same factorvalues as referred to by the bioassays.
             simpleFillIn( ( List ) associatedObject, gemmaObj, getter, false );
             for ( FactorValue factorValue : gemmaObj.getFactorValues() ) {
+                if (factorValue.getMeasurement() != null) {
+                    gemmaObj.setType(FactorType.CONTINUOUS);
+                }
                 factorValue.setExperimentalFactor( gemmaObj );
             }
         } else
@@ -1729,6 +1734,9 @@ public class MageMLConverterHelper {
         if ( associationName.equals( "ExperimentalFactor" ) ) {
             // we let the ExperimentalFactor manage this association.
         } else if ( associationName.equals( "Measurement" ) ) {
+            if (gemmaObj.getExperimentalFactor() != null) {
+                gemmaObj.getExperimentalFactor().setType( FactorType.CONTINUOUS );
+            }
             simpleFillIn( associatedObject, gemmaObj, getter, "Measurement" );
         } else if ( associationName.equals( "Value" ) ) {
             simpleFillIn( Arrays.asList( new Object[] { associatedObject } ), gemmaObj, getter, CONVERT_ALL,

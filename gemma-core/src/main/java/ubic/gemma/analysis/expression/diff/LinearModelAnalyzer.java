@@ -57,6 +57,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.FactorType;
 import ubic.gemma.model.expression.experiment.FactorValue;
 
 /**
@@ -183,6 +184,10 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
             ExperimentalFactor subsetFactor = config.getSubsetFactor();
 
             if ( subsetFactor != null ) {
+                if ( subsetFactor.getType().equals( FactorType.CONTINUOUS ) ) {
+                    throw new IllegalArgumentException( "You cannot subset on a continuous factor (has a Measurement)" );
+                }
+
                 if ( config.getFactorsToInclude().contains( subsetFactor ) ) {
                     throw new IllegalArgumentException(
                             "You cannot analyze a factor and use it for subsetting at the same time." );
@@ -190,11 +195,7 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
 
                 Map<FactorValue, List<BioMaterial>> subSetSamples = new HashMap<FactorValue, List<BioMaterial>>();
                 for ( FactorValue fv : subsetFactor.getFactorValues() ) {
-                    if ( fv.getMeasurement() != null ) {
-                        throw new IllegalArgumentException(
-                                "You cannot subset on a continuous factor (has a Measurement)" );
-                    }
-
+                    assert fv.getMeasurement() == null;
                     subSetSamples.put( fv, new ArrayList<BioMaterial>() );
                 }
 
@@ -290,8 +291,8 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
             if ( rawResults.size() == 0 ) {
                 throw new IllegalStateException( "Got no results from the analysis" );
             }
-            
-            log.info("Post-processing");
+
+            log.info( "Post-processing" );
 
             /*
              * Initialize some data structures we need to hold results
@@ -505,12 +506,13 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
      * @return
      */
     protected Boolean isContinuous( ExperimentalFactor factor ) {
-        for ( FactorValue fv : factor.getFactorValues() ) {
-            if ( fv.getMeasurement() != null ) {
-                return true;
-            }
-        }
-        return false;
+        return factor.getType().equals(FactorType.CONTINUOUS);
+        // for ( FactorValue fv : factor.getFactorValues() ) {
+        // if ( fv.getMeasurement() != null ) {
+        // return true;
+        // }
+        // }
+        // return false;
     }
 
     protected String nameForR( ExperimentalFactor experimentalFactor ) {
@@ -542,7 +544,7 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
         Map<ExperimentalFactor, Boolean> isContinuous = new HashMap<ExperimentalFactor, Boolean>();
         for ( ExperimentalFactor factor : factors ) {
             factorNamesInR.put( factor, nameForR( factor ) );
-            isContinuous.put( factor, false );
+            isContinuous.put( factor, factor.getType().equals( FactorType.CONTINUOUS ) );
         }
 
         designMatrix.setColumnNames( new ArrayList<String>( factorNamesInR.values() ) );
@@ -576,11 +578,9 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
 
                         boolean isBaseline = baseLineFV != null && fv.equals( baseLineFV );
 
-                        Measurement measurement = fv.getMeasurement();
-                        if ( measurement != null ) {
-
-                            isContinuous.put( factor, true );
-
+                        if ( isContinuous.get( factor ) ) {
+                            Measurement measurement = fv.getMeasurement();
+                            assert measurement != null;
                             try {
                                 value = Double.parseDouble( measurement.getValue() );
                             } catch ( NumberFormatException e ) {
@@ -635,9 +635,9 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
 
         Future<?> f = service.submit( new Runnable() {
             public void run() {
-                 Map<String, LinearModelSummary> res = rc.rowApplyLinearModel( matrixName, modelFormula, factorNameMap
-                         .keySet().toArray( new String[] {} ) );
-                 rawResults.putAll( res );
+                Map<String, LinearModelSummary> res = rc.rowApplyLinearModel( matrixName, modelFormula, factorNameMap
+                        .keySet().toArray( new String[] {} ) );
+                rawResults.putAll( res );
 
             }
         } );

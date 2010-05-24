@@ -39,6 +39,7 @@ import ubic.gemma.model.common.measurement.MeasurementType;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
+import ubic.gemma.model.expression.experiment.FactorType;
 import ubic.gemma.model.expression.experiment.FactorValue;
 
 /**
@@ -139,6 +140,7 @@ public class AncovaTest extends BaseAnalyzerConfigurationTest {
         ExperimentalFactor experimentalFactorC = ExperimentalFactor.Factory.newInstance();
         experimentalFactorC.setName( "confabulatiliationity" );
         experimentalFactorC.setId( 5399424551L );
+        experimentalFactorC.setType( FactorType.CONTINUOUS );
         for ( int i = 1; i <= 8; i++ ) {
 
             FactorValue factorValueC = FactorValue.Factory.newInstance();
@@ -240,6 +242,7 @@ public class AncovaTest extends BaseAnalyzerConfigurationTest {
         ExperimentalFactor experimentalFactorC = ExperimentalFactor.Factory.newInstance();
         experimentalFactorC.setName( "threeLevFactor" );
         experimentalFactorC.setId( 5003L );
+        experimentalFactorC.setType( FactorType.CATEGORICAL );
         expressionExperiment.getExperimentalDesign().getExperimentalFactors().add( experimentalFactorC );
 
         FactorValue fcbase = null;

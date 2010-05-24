@@ -35,6 +35,7 @@ import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorService;
+import ubic.gemma.model.expression.experiment.FactorType;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.testing.BaseSpringContextTest;
 
@@ -59,6 +60,7 @@ public class ExpressionDataMatrixColumnSortTest extends BaseSpringContextTest {
         Collection<ExperimentalFactor> factors = new HashSet<ExperimentalFactor>();
         for ( int i = 0; i < 5; i++ ) {
             ExperimentalFactor ef = ExperimentalFactor.Factory.newInstance();
+            ef.setType( FactorType.CATEGORICAL );
             ef.setName( "factor" + i );
             if ( i == 4 ) {
                 ef.setName( "mfact" + i );
@@ -77,6 +79,7 @@ public class ExpressionDataMatrixColumnSortTest extends BaseSpringContextTest {
                 }
 
                 if ( i == 4 ) {
+                    ef.setType( FactorType.CONTINUOUS );
                     Measurement m = Measurement.Factory.newInstance();
                     m.setId( ( long ) j * ( i + 1 ) );
                     m.setValue( j + ".00" );

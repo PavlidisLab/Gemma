@@ -45,6 +45,7 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.model.expression.experiment.FactorType;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.ontology.providers.MgedOntologyService;
@@ -206,8 +207,10 @@ public class ExperimentalDesignImporterTest extends BaseSpringContextTest {
         for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
 
             if ( ef.getName().equals( "Profile" ) ) {
+                assertEquals( FactorType.CATEGORICAL, ef.getType() );
                 assertEquals( 2, ef.getFactorValues().size() );
             } else if ( ef.getName().equals( "PMI (h)" ) ) {
+                assertEquals( FactorType.CONTINUOUS, ef.getType() );
                 assertEquals( 8, ef.getFactorValues().size() );
             }
 

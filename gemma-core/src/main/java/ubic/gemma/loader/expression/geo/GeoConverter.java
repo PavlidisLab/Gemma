@@ -82,6 +82,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.FactorType;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
@@ -1336,6 +1337,7 @@ public class GeoConverter implements Converter<Object, Object> {
         ExperimentalFactor result = ExperimentalFactor.Factory.newInstance();
         result.setName( replication.getType().toString() );
         result.setDescription( replication.getDescription() );
+        result.setType(FactorType.CATEGORICAL);
         VocabCharacteristic term = convertReplicatationType( replication.getType() );
 
         result.setCategory( term );
@@ -2069,6 +2071,7 @@ public class GeoConverter implements Converter<Object, Object> {
         term.setValueUri( term.getCategoryUri() );
 
         experimentalFactor.setCategory( term );
+        experimentalFactor.setType(FactorType.CATEGORICAL);
         experimentalFactor.setDescription( "Converted from GEO subset " + geoSubSet.getGeoAccession() );
 
         boolean duplicateExists = false;
@@ -2175,6 +2178,7 @@ public class GeoConverter implements Converter<Object, Object> {
         log.debug( "Converting variable " + variable.getType() );
         ExperimentalFactor result = ExperimentalFactor.Factory.newInstance();
         result.setName( variable.getType().toString() );
+        result.setType( FactorType.CATEGORICAL );
         result.setDescription( variable.getDescription() );
         Characteristic term = convertVariableType( variable.getType() );
         result.setCategory( term );

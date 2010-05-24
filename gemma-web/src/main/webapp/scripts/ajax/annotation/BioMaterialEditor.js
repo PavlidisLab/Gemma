@@ -100,7 +100,7 @@ Gemma.BioMaterialGrid = Ext.extend(Gemma.GemmaGridPanel, {
 			var factorId = "factor" + factor.id;
 
 			var editor;
-			var continuous = factor.type == "Continuous";
+			var continuous = factor.type == "continuous";
 			if (continuous) {
 
 				editor = new Ext.form.NumberField({

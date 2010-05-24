@@ -45,7 +45,7 @@ public class ExperimentalFactorValueObject implements java.io.Serializable {
     private String factorValues;
     private int numValues = 0;
 
-    private String type = "Categorical"; // continuous or categorical.
+    private String type = "categorical"; // continuous or categorical.
 
     private Collection<FactorValueValueObject> values;
 
@@ -66,19 +66,33 @@ public class ExperimentalFactorValueObject implements java.io.Serializable {
          */
         Collection<FactorValueValueObject> vals = new HashSet<FactorValueValueObject>();
 
+        if ( factor.getType() != null ) {
+            this.type = factor.getType().equals( FactorType.CATEGORICAL ) ? "categorical" : "continuous";
+        }
+
         if ( factor.getFactorValues() == null || factor.getFactorValues().isEmpty() ) {
             return;
         }
 
-        // Normally not reached?
         this.numValues = factor.getFactorValues().size();
 
         for ( FactorValue value : factor.getFactorValues() ) {
 
             if ( value.getMeasurement() != null ) {
-                this.type = "Continuous";
+                if ( this.type.equals( "categorical" ) ) {
+                    throw new IllegalStateException(
+                            "Violation of factor type requirement: factors with measurement must be be attached to factors of type 'continuous': "
+                                    + factor );
+                }
+
+                this.type = "continuous";
             } else {
-                this.type = "Categorical";
+                if ( this.type.equals( "continuous" ) ) {
+                    throw new IllegalStateException(
+                            "Violation of factor type requirement: factors without measurement must be be attached to factors of type 'categorical': "
+                                    + factor );
+                }
+                this.type = "categorical";
             }
 
             Characteristic c = value.getExperimentalFactor().getCategory();

@@ -35,6 +35,7 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.FactorType;
 import ubic.gemma.model.expression.experiment.FactorValue;
 
 /**
@@ -458,11 +459,16 @@ public class DifferentialExpressionAnalysisHelperService {
             return false;
         }
 
-        for ( FactorValue fv : experimentalFactor.getFactorValues() ) {
-            if ( fv.getMeasurement() != null ) {
-                return true; // assume it's all like this.
-            }
+        if ( experimentalFactor.getType().equals( FactorType.CONTINUOUS ) ) {
+            return true;
         }
+
+        // redundant check.
+        // for ( FactorValue fv : experimentalFactor.getFactorValues() ) {
+        // if ( fv.getMeasurement() != null ) {
+        // return true; // assume it's all like this.
+        // }
+        // }
 
         /*
          * Assuming fixed levels; we'll need at least two replicates for at least one factor value.

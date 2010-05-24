@@ -627,6 +627,7 @@ public class ExpressionDataMatrixColumnSort {
      */
     private static void sortIfMeasurement( List<FactorValue> factorValues ) {
         if ( factorValues.iterator().next().getMeasurement() == null ) {
+            // could check EF instead.
             return;
         }
         log.debug( "Sorting measurements" );

@@ -37,6 +37,7 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.FactorType;
 import ubic.gemma.model.expression.experiment.FactorValue;
 
 /**
@@ -75,8 +76,8 @@ public class ExperimentalDesignWriter {
             bioMaterials.get( bm ).add( bioAssay );
         }
 
-        List<BioMaterial> orderedBioMaterials = ExpressionDataMatrixColumnSort
-                .orderByExperimentalDesign( new ArrayList<BioMaterial>( bioMaterials.keySet() ), null );
+        List<BioMaterial> orderedBioMaterials = ExpressionDataMatrixColumnSort.orderByExperimentalDesign(
+                new ArrayList<BioMaterial>( bioMaterials.keySet() ), null );
 
         Collection<ExperimentalFactor> efs = ed.getExperimentalFactors();
 
@@ -141,8 +142,7 @@ public class ExperimentalDesignWriter {
             }
             buf.append( " Type=" );
 
-            Iterator<FactorValue> factorValuesIt = ef.getFactorValues().iterator();
-            if ( factorValuesIt.hasNext() && factorValuesIt.next().getMeasurement() == null ) {
+            if ( ef.getType().equals( FactorType.CATEGORICAL ) ) {
                 buf.append( "Categorical" );
             } else {
                 buf.append( "Continuous" );

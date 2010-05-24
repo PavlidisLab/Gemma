@@ -58,6 +58,7 @@ import ubic.gemma.model.expression.designElement.Reporter;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.FactorType;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Chromosome;
 import ubic.gemma.model.genome.Gene;
@@ -222,6 +223,7 @@ public class PersistentDummyObjectHelper {
             ef.setExperimentalDesign( ed );
             ef.setName( "Experimental Factor " + RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) );
             ef.setDescription( i + ": A test experimental factor" );
+            ef.setType(FactorType.CATEGORICAL);
             log.debug( "experimental factor => factor values" );
             ef.setFactorValues( getFactorValues( ef ) );
             efCol.add( ef );

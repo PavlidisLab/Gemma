@@ -27,6 +27,7 @@ import java.util.Map;
 import ubic.basecode.dataStructure.DoublePoint;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
+import ubic.gemma.model.expression.experiment.FactorType;
 import ubic.gemma.model.expression.experiment.FactorValue;
 
 /**
@@ -142,17 +143,18 @@ public class FactorProfile {
     }
 
     private void checkIfFactorIsContinuous( ExperimentalFactor ef ) {
-        for ( FactorValue fv : ef.getFactorValues() ) {
-            if ( fv.getMeasurement() != null ) {
-                try {
-                    Double.parseDouble( fv.getMeasurement().getValue() );
-                    this.isContinuous = true;
-                } catch ( NumberFormatException e ) {
-                    this.isContinuous = false;
-                    break;
-                }
-            }
-        }
+        this.isContinuous = ef.getType().equals(FactorType.CONTINUOUS);
+//        for ( FactorValue fv : ef.getFactorValues() ) {
+//            if ( fv.getMeasurement() != null ) {
+//                try {
+//                    Double.parseDouble( fv.getMeasurement().getValue() );
+//                    this.isContinuous = true;
+//                } catch ( NumberFormatException e ) {
+//                    this.isContinuous = false;
+//                    break;
+//                }
+//            }
+//        }
     }
 
     private List<Double> extractFactorPlotValues( ExperimentalFactor ef,

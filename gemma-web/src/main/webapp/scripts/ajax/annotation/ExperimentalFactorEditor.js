@@ -134,7 +134,7 @@ Gemma.ExperimentalFactorGrid = Ext.extend(Gemma.GemmaGridPanel, {
 								store : new Ext.data.ArrayStore({
 											id : 0,
 											fields : ['type', 'display'],
-											data : [['Continuous', 'Continuous'], ['Categorical', 'Categorical']]
+											data : [['continuous', 'continuous'], ['categorical', 'categorical']]
 										}),
 								valueField : 'type',
 								displayField : 'display'
@@ -258,19 +258,6 @@ Gemma.ExperimentalFactorGrid = Ext.extend(Gemma.GemmaGridPanel, {
 			},
 
 			factorCreated : function(factor) {
-				/*
-				 * 'continuous' is a client-side value only. If they reload without adding a factor, this value is lost,
-				 * but it's a rare case. See bug 1796.
-				 */
-				if (factor.type = 'Continuous') {
-					this.getStore().on('load', function(store, records) {
-								var i = this.findExact('description', factor.description);
-								this.getAt(i).set('type', 'Continuous');
-								this.commitChanges();
-							}, this.getStore(), {
-								single : true
-							});
-				}
 				this.refresh();
 				var efs = [factor];
 				this.fireEvent('experimentalfactorselected', this, efs);
@@ -382,7 +369,7 @@ Gemma.ExperimentalFactorAddWindow = Ext.extend(Ext.Window, {
 			description : description,
 			category : category.term,
 			categoryUri : category.uri,
-			type : Ext.getCmp('factor-type-checkbox').getValue() ? "Continuous" : "Categorical"
+			type : Ext.getCmp('factor-type-checkbox').getValue() ? "continuous" : "categorical"
 		};
 	}
 });

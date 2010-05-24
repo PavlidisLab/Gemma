@@ -51,6 +51,7 @@ import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExperimentalDesignService;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.FactorType;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueService;
 import ubic.gemma.ontology.providers.MgedOntologyService;
@@ -99,12 +100,13 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
 
     @Autowired
     private MgedOntologyService mgedOntologyService;
-   
+
     @Autowired
     FactorValueService factorValueServiceService = null;
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.loader.expression.simple.ExperimentalDesignImporter#importDesign(ubic.gemma.model.expression.experiment
      * .ExpressionExperiment, java.io.InputStream)
@@ -370,7 +372,8 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
             // e.g. EnvironmentalHistory
             String categoryValue = StringUtils.split( category, "=" )[1];
 
-            ExperimentalFactor experimentalFactorFromFile = ExperimentalFactor.Factory.newInstance( experimentalDesign );
+            ExperimentalFactor experimentalFactorFromFile = ExperimentalFactor.Factory.newInstance();
+            experimentalFactorFromFile.setExperimentalDesign( experimentalDesign );
             VocabCharacteristic vc = mgedLookup( categoryValue, terms );
 
             // e.g. Category=EnvironmentalHistory
@@ -382,6 +385,8 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
             experimentalFactorFromFile.setCategory( vc );
             experimentalFactorFromFile.setName( factorValue );
             experimentalFactorFromFile.setDescription( factorValue );
+            experimentalFactorFromFile.setType( factorType.equalsIgnoreCase( "CATEGORICAL" ) ? FactorType.CATEGORICAL
+                    : FactorType.CONTINUOUS );
 
             addFactorValuesToExperimentalFactor( experimentalFactorFromFile, getMapFactorSampleValues( headerFields,
                     factorValueLines ), factorType );
@@ -509,7 +514,7 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
                 }
 
                 if ( currentFactorValue == null ) {
-                    log.error( "Current factor value not found " + currentExperimentalFactor + currentFactorValueValue );                    
+                    log.error( "Current factor value not found " + currentExperimentalFactor + currentFactorValueValue );
                 } else {
                     if ( !checkForDuplicateFactorOnBioMaterial( currentBioMaterial, currentFactorValue ) ) {
                         currentBioMaterial.getFactorValues().add( currentFactorValue );
@@ -647,12 +652,12 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
         String[] factorValueFields = StringUtils.splitPreserveAllTokens( factorValueLine, "\t" );
         String biomaterialNameFromFile = StringUtils.strip( factorValueFields[0] );
         // format the biomaterial name gemma style
-        String bioMaterialNameFormatedWithShortName = SimpleExpressionDataLoaderService.makeBioMaterialName( expressionExperiment,
-                biomaterialNameFromFile );
-        //connected to fix to allow duplicate bioassay names across datasets
+        String bioMaterialNameFormatedWithShortName = SimpleExpressionDataLoaderService.makeBioMaterialName(
+                expressionExperiment, biomaterialNameFromFile );
+        // connected to fix to allow duplicate bioassay names across datasets
         BioMaterial bioMaterial = biomaterialsInExpressionExperiment.get( bioMaterialNameFormatedWithShortName );
-        if(bioMaterial ==null){
-            log.debug("Name is without short name of experiment appeneded " + biomaterialNameFromFile);
+        if ( bioMaterial == null ) {
+            log.debug( "Name is without short name of experiment appeneded " + biomaterialNameFromFile );
             bioMaterial = biomaterialsInExpressionExperiment.get( biomaterialNameFromFile );
         }
         return bioMaterial;
@@ -684,6 +689,6 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
      */
     public void setMgedOntologyService( MgedOntologyService mgedOntologyService ) {
         this.mgedOntologyService = mgedOntologyService;
-    }   
+    }
 
 }

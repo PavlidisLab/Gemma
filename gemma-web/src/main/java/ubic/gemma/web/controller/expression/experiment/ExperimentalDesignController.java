@@ -51,6 +51,7 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.model.expression.experiment.FactorType;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueService;
 import ubic.gemma.model.expression.experiment.FactorValueValueObject;
@@ -141,6 +142,7 @@ public class ExperimentalDesignController extends BaseController {
         ExperimentalDesign ed = experimentalDesignService.load( e.getId() );
 
         ExperimentalFactor ef = ExperimentalFactor.Factory.newInstance();
+        ef.setType( FactorType.fromString( efvo.getType() ) );
         ef.setExperimentalDesign( ed );
         ef.setName( efvo.getName() );
         ef.setDescription( efvo.getDescription() );
@@ -534,6 +536,17 @@ public class ExperimentalDesignController extends BaseController {
             ExperimentalFactor ef = experimentalFactorService.load( efvo.getId() );
             ef.setName( efvo.getName() );
             ef.setDescription( efvo.getDescription() );
+
+            FactorType newType = FactorType.fromString( efvo.getType() );
+            if ( !newType.equals( ef.getType() ) ) {
+                // we only allow this if there are no factors
+                if ( ef.getFactorValues().isEmpty() ) {
+                    ef.setType( newType );
+                } else {
+                    throw new IllegalArgumentException(
+                            "You cannot change the 'type' of a factor once it has factor values. Delete the factor values first." );
+                }
+            }
 
             /*
              * at the moment, the characteristic is always going to be a VocabCharacteristic; if that changes, this will

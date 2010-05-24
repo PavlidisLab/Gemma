@@ -36,6 +36,7 @@ import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
+import ubic.gemma.model.expression.experiment.FactorType;
 import ubic.gemma.model.expression.experiment.FactorValue;
 
 /**
@@ -102,6 +103,7 @@ public class OneWayAnovaAnalyzerTest extends BaseAnalyzerConfigurationTest {
         ExperimentalFactor experimentalFactorC = ExperimentalFactor.Factory.newInstance();
         experimentalFactorC.setName( "groupash" );
         experimentalFactorC.setId( 5399424551L );
+        experimentalFactorC.setType(FactorType.CATEGORICAL);
         expressionExperiment.getExperimentalDesign().getExperimentalFactors().add( experimentalFactorC );
 
         FactorValue controlGroup = null;

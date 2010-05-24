@@ -79,7 +79,7 @@ public class PredictedCharacteristicFactory implements InitializingBean {
         boolean activated = ConfigUtils.getBoolean( ExpressionExperimentAnnotator.MMTX_ACTIVATION_PROPERTY_KEY );
 
         if ( !activated ) {
-            log.warn( "Automated tagger disabled; to turn on set "
+            log.info( "Automated tagger disabled; to turn on set "
                     + ExpressionExperimentAnnotator.MMTX_ACTIVATION_PROPERTY_KEY
                     + "=true in your Gemma.properties file" );
             return;

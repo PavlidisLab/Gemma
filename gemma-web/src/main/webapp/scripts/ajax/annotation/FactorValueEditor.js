@@ -15,6 +15,8 @@ Gemma.FactorValueGrid = Ext.extend(Gemma.GemmaGridPanel, {
 	},
 
 	taxonId : null,
+	
+	disabledClass : '.x-factor-grid-disabled',
 
 	record : Ext.data.Record.create([{
 				name : "charId",

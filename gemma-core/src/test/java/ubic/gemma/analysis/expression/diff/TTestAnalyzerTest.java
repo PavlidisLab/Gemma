@@ -48,7 +48,7 @@ import ubic.gemma.model.expression.experiment.FactorValue;
 public class TTestAnalyzerTest extends BaseAnalyzerConfigurationTest {
 
     @Autowired
-    private TTestAnalyzer analyzer = null;
+    private TTestAnalyzer analyzer;
 
     private Log log = LogFactory.getLog( this.getClass() );
 
@@ -85,6 +85,9 @@ public class TTestAnalyzerTest extends BaseAnalyzerConfigurationTest {
             CompositeSequence probe = probeAnalysisResult.getProbe();
 
             Double pvalue = probeAnalysisResult.getPvalue();
+
+            assertNotNull( pvalue );
+
             log.debug( "probe: " + probe + "; p-value: " + pvalue );
 
             if ( probe.getName().equals( "probe_0" ) ) {
