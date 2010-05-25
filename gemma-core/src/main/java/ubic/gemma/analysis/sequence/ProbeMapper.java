@@ -124,6 +124,15 @@ public class ProbeMapper {
             }
 
             /*
+             * Temporary code!!
+             */
+            if ( goldenPathDb.getDatabaseName().equals( "hg19" ) ) {
+                log.warn( "Disabling miRNA and acembly as hg19 doesn't have them" );
+                config.setUseMiRNA( false );
+                config.setUseAcembly( false );
+            }
+
+            /*
              * Sanity check to make sure user is paying attention to what they are putting in.
              */
             if ( blatResultsForSequence.size() > 25 ) {
@@ -559,7 +568,7 @@ public class ProbeMapper {
                 chrom = chromosomes.iterator().next();
             } else {
                 chrom = chromosomeService.findOrCreate( chrom.getName(), taxon ); // typically only during tests, but
-                                                                                  // see bug 1936
+                // see bug 1936
             }
         }
 

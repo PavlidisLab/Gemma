@@ -726,7 +726,7 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
      */
     public Collection<GeneProduct> findAcemblyGenesByLocation( String chromosome, Long start, Long end, String strand ) {
 
-        // only human has acembly genes. FIXME, if the situation changes this code will be invalid.
+        // only human has acembly genes. FIXME, if the situation changes this code will be invalid. hg19 doesn't have it either.
         if ( !TaxonUtility.isHuman( this.getTaxon() ) ) {
             return null;
         }

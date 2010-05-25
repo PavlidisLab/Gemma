@@ -495,18 +495,17 @@ public class Blat {
                     return humanSensitiveServerPort;
 
             }
-        } else {
-            switch ( genome ) {
-                case HUMAN:
-                    return humanServerPort;
-                case MOUSE:
-                    return mouseServerPort;
-                case RAT:
-                    return ratServerPort;
-                default:
-                    return humanServerPort;
+        }
+        switch ( genome ) {
+            case HUMAN:
+                return humanServerPort;
+            case MOUSE:
+                return mouseServerPort;
+            case RAT:
+                return ratServerPort;
+            default:
+                return humanServerPort;
 
-            }
         }
     }
 
