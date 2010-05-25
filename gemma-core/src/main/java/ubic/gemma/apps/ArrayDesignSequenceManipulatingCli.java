@@ -26,6 +26,7 @@ import java.util.List;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
+import org.apache.commons.lang.StringUtils;
 
 import ubic.gemma.analysis.report.ArrayDesignReportService;
 import ubic.gemma.model.common.auditAndSecurity.AuditAction;
@@ -158,6 +159,11 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractSpringA
     @Override
     protected void processOptions() {
         super.processOptions();
+
+        arrayDesignReportService = ( ArrayDesignReportService ) this.getBean( "arrayDesignReportService" );
+        arrayDesignService = ( ArrayDesignService ) this.getBean( "arrayDesignService" );
+        userManager = ( UserManager ) this.getBean( "userManager" );
+
         if ( this.hasOption( 'a' ) ) {
             arraysFromCliList();
         }
@@ -175,9 +181,7 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractSpringA
                 throw new IllegalArgumentException( "Please only select one of 'mdate' OR 'auto'" );
             }
         }
-        arrayDesignReportService = ( ArrayDesignReportService ) this.getBean( "arrayDesignReportService" );
-        arrayDesignService = ( ArrayDesignService ) this.getBean( "arrayDesignService" );
-        userManager = ( UserManager ) this.getBean( "userManager" );
+
     }
 
     protected ArrayDesign unlazifyArrayDesign( ArrayDesign arrayDesign ) {
@@ -204,6 +208,7 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractSpringA
         String[] shortNames = arrayShortNames.split( "," );
 
         for ( String shortName : shortNames ) {
+            if ( StringUtils.isBlank( shortName ) ) continue;
             ArrayDesign ad = locateArrayDesign( shortName );
             if ( ad == null ) {
                 log.warn( shortName + " not found" );
