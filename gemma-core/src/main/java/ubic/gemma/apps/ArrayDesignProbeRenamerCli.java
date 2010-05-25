@@ -72,7 +72,12 @@ public class ArrayDesignProbeRenamerCli extends ArrayDesignSequenceManipulatingC
             throw new IllegalArgumentException( "filename cannot be null" );
         }
 
-        ArrayDesign arrayDesign = this.locateArrayDesign( this.arrayDesignName );
+        if ( this.arrayDesignsToProcess.size() > 1 ) {
+            throw new IllegalArgumentException(
+                    "Cannot be applied to more than one array design given to the '-a' option" );
+        }
+
+        ArrayDesign arrayDesign = this.arrayDesignsToProcess.iterator().next();
         arrayDesign = unlazifyArrayDesign( arrayDesign );
 
         ArrayDesignProbeRenamingService arrayDesignProbeRenamingService = ( ArrayDesignProbeRenamingService ) this

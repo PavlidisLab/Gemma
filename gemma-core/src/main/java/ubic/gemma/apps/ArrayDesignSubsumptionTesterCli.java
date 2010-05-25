@@ -64,14 +64,12 @@ public class ArrayDesignSubsumptionTesterCli extends ArrayDesignSequenceManipula
             return err;
         }
 
-        ArrayDesign arrayDesign = locateArrayDesign( arrayDesignName );
-
-        if ( arrayDesign == null ) {
-            log.error( "No arrayDesign " + arrayDesignName + " found" );
-            bail( ErrorCode.INVALID_OPTION );
-            return null;
+        if ( this.arrayDesignsToProcess.size() > 1 ) {
+            throw new IllegalArgumentException(
+                    "Cannot be applied to more than one array design given to the '-a' option" );
         }
 
+        ArrayDesign arrayDesign = this.arrayDesignsToProcess.iterator().next();
         arrayDesign = unlazifyArrayDesign( arrayDesign );
 
         for ( String otherArrayDesigName : otherArrayDesignNames ) {
@@ -94,7 +92,7 @@ public class ArrayDesignSubsumptionTesterCli extends ArrayDesignSequenceManipula
                 // test other way around, but only if first way failed (to avoid cycles)
                 this.arrayDesignService.updateSubsumingStatus( otherArrayDesign, arrayDesign );
             }
-            audit( arrayDesign, "Tested to see if it is subsumed by " + arrayDesignName );
+            audit( otherArrayDesign, "Tested to see if it is subsumed by " + arrayDesign );
         }
 
         audit( arrayDesign, "Tested to see if it subsumes: " + StringUtils.join( otherArrayDesignNames, ',' ) );

@@ -51,10 +51,10 @@ public class ArrayDesignBioSequenceDetachCli extends ArrayDesignSequenceManipula
 
         Exception err = processCommandLine( "Array design sequence remover", args );
         if ( err != null ) return err;
-        ArrayDesign arrayDesign = locateArrayDesign( getArrayDesignName() );
-
-        this.getArrayDesignService().removeBiologicalCharacteristics( arrayDesign );
-        audit( arrayDesign, "Removed sequence associations with CLI" );
+        for ( ArrayDesign arrayDesign : this.arrayDesignsToProcess ) {
+            this.getArrayDesignService().removeBiologicalCharacteristics( arrayDesign );
+            audit( arrayDesign, "Removed sequence associations with CLI" );
+        }
         return null;
     }
 

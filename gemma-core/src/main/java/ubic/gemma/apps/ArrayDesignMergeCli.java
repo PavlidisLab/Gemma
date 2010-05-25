@@ -90,12 +90,12 @@ public class ArrayDesignMergeCli extends ArrayDesignSequenceManipulatingCli {
             return err;
         }
 
-        ArrayDesign arrayDesign = locateArrayDesign( arrayDesignName );
-
-        if ( arrayDesign == null ) {
-            log.error( "No arrayDesign " + arrayDesignName + " found" );
-            bail( ErrorCode.INVALID_OPTION );
+        if ( this.arrayDesignsToProcess.size() > 1 ) {
+            throw new IllegalArgumentException(
+                    "Cannot be applied to more than one array design given to the '-a' option" );
         }
+
+        ArrayDesign arrayDesign = this.arrayDesignsToProcess.iterator().next();
 
         arrayDesign = unlazifyArrayDesign( arrayDesign );
 

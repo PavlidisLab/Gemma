@@ -36,11 +36,6 @@ import ubic.gemma.util.AbstractSpringAwareCLI;
  */
 public class DatabaseViewGeneratorCLI extends AbstractSpringAwareCLI {
 
-    private boolean generateDiffExpressionSummary = false;
-    private boolean generateDatasetSummary = false;
-    private boolean generateTissueSummary = false;
-    private Integer limit = null;
-
     /**
      * @param args
      */
@@ -49,8 +44,15 @@ public class DatabaseViewGeneratorCLI extends AbstractSpringAwareCLI {
         o.doWork( args );
     }
 
+    private boolean generateDiffExpressionSummary = false;
+    private boolean generateDatasetSummary = false;
+    private boolean generateTissueSummary = false;
+
+    private Integer limit = null;
+
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.util.AbstractSpringAwareCLI#getShortDesc()
      */
     @Override

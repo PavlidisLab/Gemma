@@ -190,54 +190,53 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
 
         final Date skipIfLastRunLaterThan = getLimitingDate();
 
-        if ( this.taxon != null && this.directAnnotationInputFileName == null && this.arrayDesignName == null ) {
+        if ( this.taxon != null && this.directAnnotationInputFileName == null && this.arrayDesignsToProcess.isEmpty() ) {
             log.warn( "*** Running mapping for all " + taxon.getCommonName() + " Array designs *** " );
         }
 
-        if ( arrayDesignName != null ) {
-            // we've been given a specific array design; still use mdate to check.
-            ArrayDesign arrayDesign = locateArrayDesign( arrayDesignName );
+        if ( !this.arrayDesignsToProcess.isEmpty() ) {
+            for ( ArrayDesign arrayDesign : this.arrayDesignsToProcess ) {
 
-            if ( !needToRun( skipIfLastRunLaterThan, arrayDesign, ArrayDesignGeneMappingEvent.class ) ) {
-                log.warn( arrayDesign + " not ready to run" );
-                return null;
-            }
+                if ( !needToRun( skipIfLastRunLaterThan, arrayDesign, ArrayDesignGeneMappingEvent.class ) ) {
+                    log.warn( arrayDesign + " not ready to run" );
+                    return null;
+                }
 
-            arrayDesign = unlazifyArrayDesign( arrayDesign );
-            if ( directAnnotationInputFileName != null ) {
-                try {
-                    File f = new File( this.directAnnotationInputFileName );
-                    if ( !f.canRead() ) {
-                        throw new IOException( "Cannot read from " + this.directAnnotationInputFileName );
+                arrayDesign = unlazifyArrayDesign( arrayDesign );
+                if ( directAnnotationInputFileName != null ) {
+                    try {
+                        File f = new File( this.directAnnotationInputFileName );
+                        if ( !f.canRead() ) {
+                            throw new IOException( "Cannot read from " + this.directAnnotationInputFileName );
+                        }
+                        arrayDesignProbeMapperService.processArrayDesign( arrayDesign, taxon, f, this.sourceDatabase );
+                        audit( arrayDesign, "Imported from " + f, AnnotationBasedGeneMappingEvent.Factory.newInstance() );
+                    } catch ( IOException e ) {
+                        return e;
                     }
-                    arrayDesignProbeMapperService.processArrayDesign( arrayDesign, taxon, f, this.sourceDatabase );
-                    audit( arrayDesign, "Imported from " + f, AnnotationBasedGeneMappingEvent.Factory.newInstance() );
-                } catch ( IOException e ) {
-                    return e;
-                }
-            } else {
+                } else {
 
-                if ( !this.useDB ) {
-                    log.info( "**** Writing to STDOUT instead of the database ***" );
-                    System.out.print( config );
-                }
+                    if ( !this.useDB ) {
+                        log.info( "**** Writing to STDOUT instead of the database ***" );
+                        System.out.print( config );
+                    }
 
-                arrayDesignProbeMapperService.processArrayDesign( arrayDesign, config, this.useDB );
-                if ( useDB ) {
+                    arrayDesignProbeMapperService.processArrayDesign( arrayDesign, config, this.useDB );
+                    if ( useDB ) {
 
-                    if ( this.hasOption( MIRNA_ONLY_MODE_OPTION ) ) {
-                        audit( arrayDesign, "Run in miRNA-only mode.", AlignmentBasedGeneMappingEvent.Factory
-                                .newInstance() );
-                    } else if ( this.hasOption( CONFIG_OPTION ) ) {
-                        audit( arrayDesign, "Run with configuration=" + this.getOptionValue( CONFIG_OPTION ),
-                                AlignmentBasedGeneMappingEvent.Factory.newInstance() );
-                    } else {
-                        audit( arrayDesign, "Run with default parameters", AlignmentBasedGeneMappingEvent.Factory
-                                .newInstance() );
+                        if ( this.hasOption( MIRNA_ONLY_MODE_OPTION ) ) {
+                            audit( arrayDesign, "Run in miRNA-only mode.", AlignmentBasedGeneMappingEvent.Factory
+                                    .newInstance() );
+                        } else if ( this.hasOption( CONFIG_OPTION ) ) {
+                            audit( arrayDesign, "Run with configuration=" + this.getOptionValue( CONFIG_OPTION ),
+                                    AlignmentBasedGeneMappingEvent.Factory.newInstance() );
+                        } else {
+                            audit( arrayDesign, "Run with default parameters", AlignmentBasedGeneMappingEvent.Factory
+                                    .newInstance() );
+                        }
                     }
                 }
             }
-
         } else if ( taxon != null || skipIfLastRunLaterThan != null || autoSeek ) {
 
             if ( directAnnotationInputFileName != null ) {

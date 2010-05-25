@@ -476,7 +476,7 @@ public class Blat {
         }
 
     }
- 
+
     /**
      * @param genome
      * @return

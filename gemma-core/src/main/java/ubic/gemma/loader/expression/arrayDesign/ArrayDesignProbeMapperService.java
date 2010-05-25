@@ -368,7 +368,7 @@ public class ArrayDesignProbeMapperService {
 
         arrayDesignReportService.generateArrayDesignReport( arrayDesign.getId() );
         log.info( "Completed association processing for " + arrayDesign + ", " + numSkipped + " were skipped" );
-
+        b.close();
     }
 
     /**

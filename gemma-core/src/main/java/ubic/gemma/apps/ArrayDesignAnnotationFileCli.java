@@ -194,16 +194,17 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
             } else if ( this.taxonName != null ) {
                 processGenesForTaxon();
             } else {
-                if ( arrayDesignName == null ) {
+                if ( this.arrayDesignsToProcess.isEmpty() ) {
                     throw new IllegalArgumentException(
                             "You must specify an array design, a taxon, gene file, or batch." );
                 }
-                ArrayDesign arrayDesign = locateArrayDesign( arrayDesignName );
-                if ( doAllTypes ) {
-                    // make all three
-                    processOneAD( arrayDesign );
-                } else {
-                    processAD( arrayDesign, this.fileName, type );
+                for ( ArrayDesign arrayDesign : this.arrayDesignsToProcess ) {
+                    if ( doAllTypes ) {
+                        // make all three
+                        processOneAD( arrayDesign );
+                    } else {
+                        processAD( arrayDesign, this.fileName, type );
+                    }
                 }
             }
 
@@ -333,16 +334,15 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
 
             // need to set these so processing ad works correctly (todo: make
             // processtype take all 3 parameter)
-            this.arrayDesignName = accession;
-            ArrayDesign arrayDesign = locateArrayDesign( arrayDesignName );
+            ArrayDesign arrayDesign = locateArrayDesign( accession );
 
             try {
                 processAD( arrayDesign, annotationFileName, type );
             } catch ( Exception e ) {
-                log.error( "**** Exception while processing " + arrayDesignName + ": " + e.getMessage() + " ********" );
+                log.error( "**** Exception while processing " + arrayDesign + ": " + e.getMessage() + " ********" );
                 log.error( e, e );
                 cacheException( e );
-                errorObjects.add( arrayDesignName + ": " + e.getMessage() );
+                errorObjects.add( arrayDesign + ": " + e.getMessage() );
                 continue;
             }
 

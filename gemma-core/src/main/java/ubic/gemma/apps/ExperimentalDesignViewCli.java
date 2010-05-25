@@ -24,6 +24,23 @@ import ubic.gemma.util.AbstractSpringAwareCLI;
  */
 public class ExperimentalDesignViewCli extends AbstractSpringAwareCLI {
 
+    /**
+     * @param args
+     */
+    public static void main( String[] args ) {
+        ExperimentalDesignViewCli p = new ExperimentalDesignViewCli();
+        try {
+
+            Exception ex = p.doWork( args );
+            if ( ex != null ) {
+                ex.printStackTrace();
+            }
+            System.exit( 0 );
+        } catch ( Exception e ) {
+            throw new RuntimeException( e );
+        }
+    }
+
     @Override
     protected void buildOptions() {
         // TODO Auto-generated method stub
@@ -134,23 +151,6 @@ public class ExperimentalDesignViewCli extends AbstractSpringAwareCLI {
         }
 
         return null;
-    }
-
-    /**
-     * @param args
-     */
-    public static void main( String[] args ) {
-        ExperimentalDesignViewCli p = new ExperimentalDesignViewCli();
-        try {
-
-            Exception ex = p.doWork( args );
-            if ( ex != null ) {
-                ex.printStackTrace();
-            }
-            System.exit( 0 );
-        } catch ( Exception e ) {
-            throw new RuntimeException( e );
-        }
     }
 
 }

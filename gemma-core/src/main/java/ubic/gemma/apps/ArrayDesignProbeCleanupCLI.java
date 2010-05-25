@@ -56,12 +56,14 @@ public class ArrayDesignProbeCleanupCLI extends ArrayDesignSequenceManipulatingC
     }
 
     private String file;
+
     private CompositeSequenceService compositeSequenceService;
 
     private DesignElementDataVectorService designElementDataVectorService;
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.util.AbstractCLI#buildOptions()
      */
     @Override
@@ -77,6 +79,7 @@ public class ArrayDesignProbeCleanupCLI extends ArrayDesignSequenceManipulatingC
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.util.AbstractCLI#doWork(java.lang.String[])
      */
     @Override
@@ -91,11 +94,15 @@ public class ArrayDesignProbeCleanupCLI extends ArrayDesignSequenceManipulatingC
             bail( ErrorCode.INVALID_OPTION );
         }
 
-        ArrayDesign arrayDesign = locateArrayDesign( arrayDesignName );
-
+        if ( this.arrayDesignsToProcess.size() > 1 ) {
+            throw new IllegalArgumentException(
+                    "Cannot be applied to more than one array design given to the '-a' option" );
+        }
+        BufferedReader br = null;
+        ArrayDesign arrayDesign = this.arrayDesignsToProcess.iterator().next();
         try {
             InputStream is = new FileInputStream( f );
-            BufferedReader br = new BufferedReader( new InputStreamReader( is ) );
+            br = new BufferedReader( new InputStreamReader( is ) );
             String line = null;
             int count = 0;
             while ( ( line = br.readLine() ) != null ) {
@@ -118,6 +125,13 @@ public class ArrayDesignProbeCleanupCLI extends ArrayDesignSequenceManipulatingC
             log.info( "Deleted " + count + " probes" );
         } catch ( IOException e ) {
             return e;
+        } finally {
+            try {
+                if ( br != null ) br.close();
+            } catch ( IOException e ) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
         }
 
         return null;

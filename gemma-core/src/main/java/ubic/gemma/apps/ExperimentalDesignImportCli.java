@@ -59,6 +59,7 @@ public class ExperimentalDesignImportCli extends AbstractSpringAwareCLI {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.util.AbstractCLI#buildOptions()
      */
     @SuppressWarnings("static-access")
@@ -86,6 +87,7 @@ public class ExperimentalDesignImportCli extends AbstractSpringAwareCLI {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.util.AbstractCLI#doWork(java.lang.String[])
      */
     @Override
@@ -136,7 +138,7 @@ public class ExperimentalDesignImportCli extends AbstractSpringAwareCLI {
         }
         return experiment;
     }
- 
+
     @Override
     protected void processOptions() {
         super.processOptions();

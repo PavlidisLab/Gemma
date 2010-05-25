@@ -37,10 +37,10 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Random;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 
 import org.apache.commons.cli.Option;
@@ -48,27 +48,28 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 
-import cern.jet.stat.Descriptive;
-import cern.colt.list.DoubleArrayList;
-
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.dataStructure.matrix.SparseRaggedDoubleMatrix;
 import ubic.basecode.math.RandomChooser;
 import ubic.basecode.ontology.model.OntologyTerm;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.PredictedGene;
+import ubic.gemma.model.genome.ProbeAlignedRegion;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.gene.GeneService;
-import ubic.gemma.model.genome.PredictedGene;
-import ubic.gemma.model.genome.ProbeAlignedRegion;
 import ubic.gemma.ontology.GoMetric;
 import ubic.gemma.ontology.GoMetric.Metric;
 import ubic.gemma.ontology.providers.GeneOntologyService;
 import ubic.gemma.ontology.providers.GeneOntologyService.GOAspect;
 import ubic.gemma.util.AbstractSpringAwareCLI;
 import ubic.gemma.util.ConfigUtils;
-import ubic.gemma.model.expression.arrayDesign.*;
-import ubic.gemma.model.expression.designElement.*;
+import cern.colt.list.DoubleArrayList;
+import cern.jet.stat.Descriptive;
 
 /**
  * @author meeta
@@ -1600,44 +1601,6 @@ public class LinkEvalCli extends AbstractSpringAwareCLI {
     }
 
     /**
-     * Write the GO annotations in a tabbed format.
-     */
-    private void writeGoMap() throws IOException {
-
-        Writer w = new FileWriter( new File( this.termsOutPath ) );
-        w.write( "# Go terms for probes used in linkeval\n" );
-        w.write( "ProbeId\tProbeName\tGene\tGoTermCount\tGoTerms\n" );
-        Set<String> seenProbes = new HashSet<String>();
-        for ( CompositeSequence cs : this.probemap.keySet() ) {
-
-            if ( seenProbes.contains( cs.getName() ) ) {
-                log.info( "Skipping duplicate probe name " + cs.getName() );
-                continue;
-            }
-            seenProbes.add( cs.getName() );
-
-            w.write( cs.getId() + "\t" + cs.getName() + "\t" );
-            Collection<Gene> genes = this.probemap.get( cs );
-            Set<String> goTerms = new HashSet<String>();
-            Set<String> geneSymbs = new HashSet<String>();
-            for ( Gene gene : genes ) {
-                if ( geneGoMap.containsKey( gene.getId() ) ) {
-                    for ( String go : geneGoMap.get( gene.getId() ) ) {
-                        goTerms.add( GeneOntologyService.asRegularGoId( go ) );
-                    }
-                }
-                geneSymbs.add( gene.getOfficialSymbol() );
-            }
-
-            w.write( StringUtils.join( geneSymbs, "|" ) + "\t" );
-            w.write( goTerms.size() + "\t" );
-            w.write( StringUtils.join( goTerms, "|" ) + "\n" );
-        }
-
-        w.close();
-    }
-
-    /**
      * @param taxon
      */
     private void rebuildTaxonGeneGOMap() {
@@ -1745,6 +1708,44 @@ public class LinkEvalCli extends AbstractSpringAwareCLI {
             throw new RuntimeException( e );
         }
 
+    }
+
+    /**
+     * Write the GO annotations in a tabbed format.
+     */
+    private void writeGoMap() throws IOException {
+
+        Writer w = new FileWriter( new File( this.termsOutPath ) );
+        w.write( "# Go terms for probes used in linkeval\n" );
+        w.write( "ProbeId\tProbeName\tGene\tGoTermCount\tGoTerms\n" );
+        Set<String> seenProbes = new HashSet<String>();
+        for ( CompositeSequence cs : this.probemap.keySet() ) {
+
+            if ( seenProbes.contains( cs.getName() ) ) {
+                log.info( "Skipping duplicate probe name " + cs.getName() );
+                continue;
+            }
+            seenProbes.add( cs.getName() );
+
+            w.write( cs.getId() + "\t" + cs.getName() + "\t" );
+            Collection<Gene> genes = this.probemap.get( cs );
+            Set<String> goTerms = new HashSet<String>();
+            Set<String> geneSymbs = new HashSet<String>();
+            for ( Gene gene : genes ) {
+                if ( geneGoMap.containsKey( gene.getId() ) ) {
+                    for ( String go : geneGoMap.get( gene.getId() ) ) {
+                        goTerms.add( GeneOntologyService.asRegularGoId( go ) );
+                    }
+                }
+                geneSymbs.add( gene.getOfficialSymbol() );
+            }
+
+            w.write( StringUtils.join( geneSymbs, "|" ) + "\t" );
+            w.write( goTerms.size() + "\t" );
+            w.write( StringUtils.join( goTerms, "|" ) + "\n" );
+        }
+
+        w.close();
     }
 
     /**

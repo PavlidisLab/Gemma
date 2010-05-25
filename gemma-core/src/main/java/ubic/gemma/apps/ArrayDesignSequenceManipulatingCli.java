@@ -19,7 +19,9 @@
 package ubic.gemma.apps;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 
 import org.apache.commons.cli.Option;
@@ -45,15 +47,12 @@ import ubic.gemma.util.AbstractSpringAwareCLI;
 public abstract class ArrayDesignSequenceManipulatingCli extends AbstractSpringAwareCLI {
 
     protected ArrayDesignService arrayDesignService;
-    protected String arrayDesignName = null;
 
     protected UserManager userManager;
 
     protected ArrayDesignReportService arrayDesignReportService;
 
-    public String getArrayDesignName() {
-        return arrayDesignName;
-    }
+    protected Collection<ArrayDesign> arrayDesignsToProcess = new HashSet<ArrayDesign>();
 
     public ArrayDesignReportService getArrayDesignReportService() {
         return arrayDesignReportService;
@@ -67,7 +66,7 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractSpringA
     @SuppressWarnings("static-access")
     protected void buildOptions() {
         Option arrayDesignOption = OptionBuilder.hasArg().withArgName( "Array design" ).withDescription(
-                "Array design name (or short name)" ).withLongOpt( "array" ).create( 'a' );
+                "Array design name (or short name); or comma-delimited list" ).withLongOpt( "array" ).create( 'a' );
 
         addOption( arrayDesignOption );
 
@@ -160,7 +159,7 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractSpringA
     protected void processOptions() {
         super.processOptions();
         if ( this.hasOption( 'a' ) ) {
-            this.arrayDesignName = this.getOptionValue( 'a' );
+            arraysFromCliList();
         }
 
         if ( hasOption( "mdate" ) ) {
@@ -188,14 +187,34 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractSpringA
     /**
      * @param note
      */
-    protected void updateAudit( String note ) {
-        ArrayDesign ad = this.locateArrayDesign( arrayDesignName );
+    protected void updateAudit( ArrayDesign ad, String note ) {
         AuditEvent ae = AuditEvent.Factory.newInstance();
         ae.setNote( note );
         ae.setAction( AuditAction.UPDATE );
         ae.setPerformer( userManager.getCurrentUser() );
         ad.getAuditTrail().addEvent( ae );
         arrayDesignService.update( ad );
+    }
+
+    /**
+     * 
+     */
+    private void arraysFromCliList() {
+        String arrayShortNames = this.getOptionValue( 'a' );
+        String[] shortNames = arrayShortNames.split( "," );
+
+        for ( String shortName : shortNames ) {
+            ArrayDesign ad = locateArrayDesign( shortName );
+            if ( ad == null ) {
+                log.warn( shortName + " not found" );
+                continue;
+            }
+            arrayDesignsToProcess.add( ad );
+        }
+        if ( arrayDesignsToProcess.size() == 0 ) {
+            log.error( "There were no valid experimnents specified" );
+            bail( ErrorCode.INVALID_OPTION );
+        }
     }
 
     /**

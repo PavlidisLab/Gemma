@@ -23,7 +23,6 @@ import java.util.Date;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
-import org.apache.commons.lang.StringUtils;
 
 import ubic.gemma.analysis.sequence.RepeatScan;
 import ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceAlignmentService;
@@ -83,19 +82,18 @@ public class ArrayDesignRepeatScanCli extends ArrayDesignSequenceManipulatingCli
 
         Date skipIfLastRunLaterThan = getLimitingDate();
 
-        if ( StringUtils.isNotBlank( this.arrayDesignName ) ) {
+        if ( !this.arrayDesignsToProcess.isEmpty() ) {
+            for ( ArrayDesign arrayDesign : this.arrayDesignsToProcess ) {
 
-            ArrayDesign arrayDesign = locateArrayDesign( arrayDesignName );
+                if ( !needToRun( skipIfLastRunLaterThan, arrayDesign, ArrayDesignRepeatAnalysisEvent.class ) ) {
+                    log.warn( arrayDesign + " was last run more recently than " + skipIfLastRunLaterThan );
+                    return null;
+                }
 
-            if ( !needToRun( skipIfLastRunLaterThan, arrayDesign, ArrayDesignRepeatAnalysisEvent.class ) ) {
-                log.warn( arrayDesign + " was last run more recently than " + skipIfLastRunLaterThan );
-                return null;
+                arrayDesign = unlazifyArrayDesign( arrayDesign );
+
+                processArrayDesign( arrayDesign );
             }
-
-            arrayDesign = unlazifyArrayDesign( arrayDesign );
-
-            processArrayDesign( arrayDesign );
-
         } else if ( skipIfLastRunLaterThan != null ) {
             log.warn( "*** Running Repeatmasker for all Array designs *** " );
 
@@ -120,7 +118,7 @@ public class ArrayDesignRepeatScanCli extends ArrayDesignSequenceManipulatingCli
 
                 log.info( "============== Start processing: " + design + " ==================" );
                 try {
-                    design = arrayDesignService.thawLite( design );
+                    design = arrayDesignService.thaw( design );
                     processArrayDesign( design );
                     successObjects.add( design.getName() );
                     audit( design, "" );

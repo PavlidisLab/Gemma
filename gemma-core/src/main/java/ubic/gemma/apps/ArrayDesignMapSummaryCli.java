@@ -44,8 +44,6 @@ public class ArrayDesignMapSummaryCli extends ArrayDesignSequenceManipulatingCli
         }
     }
 
-    ArrayDesignMapResultService arrayDesignMapResultService;
-
     /*
      * (non-Javadoc)
      * 
@@ -55,19 +53,20 @@ public class ArrayDesignMapSummaryCli extends ArrayDesignSequenceManipulatingCli
     protected Exception doWork( String[] args ) {
         Exception err = processCommandLine( "Array design mapping summary", args );
         if ( err != null ) return err;
-        this.arrayDesignMapResultService = ( ArrayDesignMapResultService ) this.getBean( "arrayDesignMapResultService" );
+        ArrayDesignMapResultService arrayDesignMapResultService = ( ArrayDesignMapResultService ) this
+                .getBean( "arrayDesignMapResultService" );
 
-        ArrayDesign arrayDesign = locateArrayDesign( arrayDesignName );
+        for ( ArrayDesign arrayDesign : this.arrayDesignsToProcess ) {
 
-        ArrayDesign thawed = unlazifyArrayDesign( arrayDesign );
+            ArrayDesign thawed = unlazifyArrayDesign( arrayDesign );
 
-        Collection<CompositeSequenceMapSummary> results = arrayDesignMapResultService.summarizeMapResults( thawed );
+            Collection<CompositeSequenceMapSummary> results = arrayDesignMapResultService.summarizeMapResults( thawed );
 
-        System.out.println( CompositeSequenceMapSummary.header() );
-        for ( CompositeSequenceMapSummary summary : results ) {
-            System.out.println( summary );
+            System.out.println( CompositeSequenceMapSummary.header() );
+            for ( CompositeSequenceMapSummary summary : results ) {
+                System.out.println( summary );
+            }
         }
-
         return null;
     }
 

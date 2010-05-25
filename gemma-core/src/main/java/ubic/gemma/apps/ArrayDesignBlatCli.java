@@ -29,7 +29,6 @@ import java.util.concurrent.BlockingQueue;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
-import org.apache.commons.lang.StringUtils;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 
@@ -92,8 +91,11 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
     protected void buildOptions() {
         super.buildOptions();
 
-        Option blatResultOption = OptionBuilder.hasArg().withArgName( "PSL file" ).withDescription(
-                "Blat result file in PSL format (if supplied, BLAT will not be run); -t option overrides" )
+        Option blatResultOption = OptionBuilder
+                .hasArg()
+                .withArgName( "PSL file" )
+                .withDescription(
+                        "Blat result file in PSL format (if supplied, BLAT will not be run; will not work with settings that indidate multiple array designs to run); -t option overrides" )
                 .withLongOpt( "blatfile" ).create( 'b' );
 
         Option blatScoreThresholdOption = OptionBuilder.hasArg().withArgName( "Blat score threshold" ).withDescription(
@@ -130,41 +132,46 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
 
         final Date skipIfLastRunLaterThan = getLimitingDate();
 
-        if ( StringUtils.isNotBlank( this.arrayDesignName ) ) {
+        if ( !this.arrayDesignsToProcess.isEmpty() ) {
 
-            ArrayDesign arrayDesign = locateArrayDesign( arrayDesignName );
-
-            if ( !needToRun( skipIfLastRunLaterThan, arrayDesign, ArrayDesignSequenceAnalysisEvent.class ) ) {
-                log.warn( arrayDesign + " was last run more recently than " + skipIfLastRunLaterThan );
-                return null;
+            if ( this.blatResultFile != null && this.arrayDesignsToProcess.size() > 1 ) {
+                throw new IllegalArgumentException(
+                        "Cannot provide a blat result file when multiple arrays are being analyzed" );
             }
 
-            arrayDesign = unlazifyArrayDesign( arrayDesign );
-            Collection<BlatResult> persistedResults;
-            try {
-                if ( this.blatResultFile != null ) {
-                    Collection<BlatResult> blatResults = getBlatResultsFromFile( arrayDesign );
-
-                    if ( blatResults == null || blatResults.size() == 0 ) {
-                        throw new IllegalStateException( "No blat results in file!" );
-                    }
-
-                    log.info( "Got " + blatResults.size() + " blat records" );
-                    persistedResults = arrayDesignSequenceAlignmentService.processArrayDesign( arrayDesign, taxon,
-                            blatResults );
-                    audit( arrayDesign, "BLAT results read from file: " + blatResultFile );
-                } else {
-                    // Run blat from scratch.
-                    persistedResults = arrayDesignSequenceAlignmentService.processArrayDesign( arrayDesign,
-                            this.sensitive );
-                    audit( arrayDesign, "Based on a fresh alignment analysis; BLAT score threshold was "
-                            + this.blatScoreThreshold + "; sensitive mode was " + this.sensitive );
+            for ( ArrayDesign arrayDesign : this.arrayDesignsToProcess ) {
+                if ( !needToRun( skipIfLastRunLaterThan, arrayDesign, ArrayDesignSequenceAnalysisEvent.class ) ) {
+                    log.warn( arrayDesign + " was last run more recently than " + skipIfLastRunLaterThan );
+                    return null;
                 }
-                log.info( "Persisted " + persistedResults.size() + " results" );
-            } catch ( FileNotFoundException e ) {
-                return e;
-            } catch ( IOException e ) {
-                return e;
+
+                arrayDesign = unlazifyArrayDesign( arrayDesign );
+                Collection<BlatResult> persistedResults;
+                try {
+                    if ( this.blatResultFile != null ) {
+                        Collection<BlatResult> blatResults = getBlatResultsFromFile( arrayDesign );
+
+                        if ( blatResults == null || blatResults.size() == 0 ) {
+                            throw new IllegalStateException( "No blat results in file!" );
+                        }
+
+                        log.info( "Got " + blatResults.size() + " blat records" );
+                        persistedResults = arrayDesignSequenceAlignmentService.processArrayDesign( arrayDesign, taxon,
+                                blatResults );
+                        audit( arrayDesign, "BLAT results read from file: " + blatResultFile );
+                    } else {
+                        // Run blat from scratch.
+                        persistedResults = arrayDesignSequenceAlignmentService.processArrayDesign( arrayDesign,
+                                this.sensitive );
+                        audit( arrayDesign, "Based on a fresh alignment analysis; BLAT score threshold was "
+                                + this.blatScoreThreshold + "; sensitive mode was " + this.sensitive );
+                    }
+                    log.info( "Persisted " + persistedResults.size() + " results" );
+                } catch ( FileNotFoundException e ) {
+                    this.errorObjects.add( e );
+                } catch ( IOException e ) {
+                    this.errorObjects.add( e );
+                }
             }
 
         } else if ( taxon != null ) {
