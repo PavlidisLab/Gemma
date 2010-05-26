@@ -224,6 +224,8 @@ public interface GeneService {
 
     /**
      * load all genes specified by the given ids.
+     * 
+     * @return A collection containing up to ids.size() genes.
      */
     public Collection<Gene> loadMultiple( Collection<Long> ids );
 
