@@ -68,9 +68,9 @@ public abstract class RCommander {
      */
     public void cleanup() {
         if ( rc == null || !rc.isConnected() ) {
-            log.warn( "Cleanup called, but no valid R connection" );
             return;
         }
+
         rc.voidEval( " rm(list=ls())" ); // attempt to release all memory used by this connection.
 
         if ( rc instanceof RServeClient ) {

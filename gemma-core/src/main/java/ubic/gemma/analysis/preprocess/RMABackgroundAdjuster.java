@@ -38,7 +38,7 @@ public class RMABackgroundAdjuster extends RCommander implements BackgroundAdjus
 
     public RMABackgroundAdjuster() throws IOException {
         super();
-        ab = new AffyBatch();
+        ab = new AffyBatch( this.rc );
     }
 
     /**
@@ -50,7 +50,7 @@ public class RMABackgroundAdjuster extends RCommander implements BackgroundAdjus
      * @param background - not used by this method.
      * @see ubic.gemma.analysis.preprocess.BackgroundAdjuster#adjust(baseCode.dataStructure.matrix.DoubleMatrix,
      *      baseCode.dataStructure.matrix.DoubleMatrix)
-     */ 
+     */
     public DoubleMatrix adjust( DoubleMatrix signal, DoubleMatrix background ) {
         log.debug( "Background correcting..." );
 

@@ -54,14 +54,8 @@ public abstract class MarrayNormalizer extends RCommander implements TwoChannelN
      */
     protected DoubleMatrix<String, String> normalize( DoubleMatrix<String, String> channelOneSignal,
             DoubleMatrix<String, String> channelTwoSignal, DoubleMatrix<String, String> channelOneBackground,
-            DoubleMatrix<String, String> channelTwoBackground, DoubleMatrix<String, String> weights,
-            String method ) {
-        MArrayRaw mRaw;
-        try {
-            mRaw = new MArrayRaw();
-        } catch ( IOException e ) {
-            throw new RuntimeException( e );
-        }
+            DoubleMatrix<String, String> channelTwoBackground, DoubleMatrix<String, String> weights, String method ) {
+        MArrayRaw mRaw = new MArrayRaw( this.rc );
         mRaw.makeMArrayLayout( channelOneSignal.rows() );
         String mRawVarName = mRaw.makeMArrayRaw( channelOneSignal, channelTwoSignal, channelOneBackground,
                 channelTwoBackground, weights );
@@ -91,12 +85,7 @@ public abstract class MarrayNormalizer extends RCommander implements TwoChannelN
      */
     protected DoubleMatrix<String, String> normalize( DoubleMatrix<String, String> channelOneSignal,
             DoubleMatrix<String, String> channelTwoSignal, String method ) {
-        MArrayRaw mRaw;
-        try {
-            mRaw = new MArrayRaw();
-        } catch ( IOException e ) {
-            throw new RuntimeException( e );
-        }
+        MArrayRaw mRaw = new MArrayRaw( this.rc );
         mRaw.makeMArrayLayout( channelOneSignal.rows() );
         String mRawVarName = mRaw.makeMArrayRaw( channelOneSignal, channelTwoSignal, null, null, null );
 

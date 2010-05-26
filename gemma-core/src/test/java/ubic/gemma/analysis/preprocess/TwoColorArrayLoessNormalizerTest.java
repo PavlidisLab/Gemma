@@ -18,12 +18,17 @@
  */
 package ubic.gemma.analysis.preprocess;
 
+import static org.junit.Assert.*;
+
 import java.util.zip.GZIPInputStream;
 
 import junit.framework.TestCase;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.io.reader.DoubleMatrixReader;
@@ -32,20 +37,22 @@ import ubic.basecode.io.reader.DoubleMatrixReader;
  * @author pavlidis
  * @version $Id$
  */
-public class TwoColorArrayLoessNormalizerTest extends TestCase {
-    private static Log log = LogFactory.getLog( TwoColorArrayLoessNormalizerTest.class.getName() );
-    TwoColorArrayLoessNormalizer normalizer;
+public class TwoColorArrayLoessNormalizerTest {
+    private static Log log = LogFactory.getLog( TwoColorArrayLoessNormalizerTest.class );
+    private TwoColorArrayLoessNormalizer normalizer;
     private boolean connected = false;
 
     /*
      * Test method for 'ubic.gemma.model.analysis.preprocess.TwoColorArrayLoessNormalizer.normalize(DoubleMatrixNamed,
      * DoubleMatrixNamed, DoubleMatrixNamed, DoubleMatrixNamed, DoubleMatrixNamed)'
      */
+    @Test
     public void testNormalize() throws Exception {
         if ( !connected ) {
             log.warn( "Could not connect to R, skipping test." );
             return;
         }
+
         DoubleMatrixReader reader = new DoubleMatrixReader();
         DoubleMatrix<String, String> maGb = reader.read( new GZIPInputStream( this.getClass().getResourceAsStream(
                 "/data/swirldata/maGb.small.sample.txt.gz" ) ) );
@@ -64,6 +71,7 @@ public class TwoColorArrayLoessNormalizerTest extends TestCase {
 
     }
 
+    @Test
     public void testNormalizeNoBg() throws Exception {
         if ( !connected ) {
             log.warn( "Could not connect to R, skipping test." );
@@ -86,14 +94,13 @@ public class TwoColorArrayLoessNormalizerTest extends TestCase {
     /*
      * @see TestCase#setUp()
      */
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Before
+    public final void setUp() throws Exception {
         connected = false;
         try {
             normalizer = new TwoColorArrayLoessNormalizer();
             connected = true;
-        } catch ( Exception e1 ) {
+        } catch ( Exception e ) {
             connected = false;
         }
 
@@ -102,10 +109,10 @@ public class TwoColorArrayLoessNormalizerTest extends TestCase {
     /*
      * @see TestCase#tearDown()
      */
-    @Override
-    protected void tearDown() throws Exception {
-        super.tearDown();
+    @After
+    public void tearDown() throws Exception {
         if ( connected ) normalizer.cleanup();
+        normalizer = null;
     }
 
 }

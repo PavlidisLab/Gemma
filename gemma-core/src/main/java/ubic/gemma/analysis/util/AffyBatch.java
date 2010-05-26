@@ -18,9 +18,8 @@
  */
 package ubic.gemma.analysis.util;
 
-import java.io.IOException;
-
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
+import ubic.basecode.util.r.RClient;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 
 /**
@@ -29,10 +28,13 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
  * @author pavlidis
  * @version $Id$
  */
-public class AffyBatch extends RCommander {
+public class AffyBatch {
 
-    public AffyBatch() throws IOException {
+    private RClient rc;
+
+    public AffyBatch( RClient rc ) {
         super();
+        this.rc = rc;
         boolean ok = rc.loadLibrary( "affy" );
         if ( !ok ) {
             throw new IllegalStateException( "Could not locate 'affy' library" );
@@ -74,7 +76,7 @@ public class AffyBatch extends RCommander {
         String affyBatchRCmd = abName + "<-new(\"AffyBatch\", exprs=" + matrixName + ", cdfName=cdfName )";
 
         rc.voidEval( affyBatchRCmd );
-    //    rc.voidEval( "rm(" + matrixName + ")" ); // maybe saves memory...
+        // rc.voidEval( "rm(" + matrixName + ")" ); // maybe saves memory...
 
         return abName;
     }

@@ -21,7 +21,11 @@ package ubic.gemma.analysis.util;
 import java.io.IOException;
 import java.util.List;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
+import ubic.basecode.util.r.RClient;
 import ubic.basecode.util.r.RServeClient;
 
 /**
@@ -31,12 +35,16 @@ import ubic.basecode.util.r.RServeClient;
  * @author pavlidis
  * @version $Id$
  */
-public class MArrayRaw extends RCommander {
+public class MArrayRaw {
+
+    private static Log log = LogFactory.getLog( MArrayRaw.class );
 
     private String layoutName = null;
+    private RClient rc;
 
-    public MArrayRaw() throws IOException {
+    public MArrayRaw( RClient rc ) {
         super();
+        this.rc = rc;
         rc.voidEval( "library(marray)" );
     }
 
@@ -58,7 +66,7 @@ public class MArrayRaw extends RCommander {
      * @param greenBg Matrix of green background intensities, can be null
      * @param weights Optional matrix of weights
      * @return The name of the variable in the R context.
-     */ 
+     */
     public String makeMArrayRaw( DoubleMatrix<String, String> red, DoubleMatrix<String, String> green,
             DoubleMatrix<String, String> redBg, DoubleMatrix<String, String> greenBg,
             DoubleMatrix<String, String> weights ) {

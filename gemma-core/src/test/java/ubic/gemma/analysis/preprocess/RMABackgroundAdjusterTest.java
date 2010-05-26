@@ -62,7 +62,11 @@ public class RMABackgroundAdjusterTest extends TestCase {
         /*
          * This is needed to make sure cdfenv.example is loaded.
          */
-        aa.getRCommandObject().loadLibrary( "affy" );
+        if ( !aa.getRCommandObject().loadLibrary( "affy" ) ) {
+            log.warn( "Could not load library 'affy', skipping test." );
+            return;
+        }
+
         aa.getRCommandObject().voidEval( "data(cdfenv.example)" );
 
         aa.setArrayDesign( arrayDesign );
@@ -83,7 +87,6 @@ public class RMABackgroundAdjusterTest extends TestCase {
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        super.setUp();
         // test data are from the affybatch.example in the affy package.
         DoubleMatrixReader reader = new DoubleMatrixReader();
         is = new GZIPInputStream( this.getClass().getResourceAsStream( "/data/testShortCel.txt.gz" ) );
@@ -96,6 +99,7 @@ public class RMABackgroundAdjusterTest extends TestCase {
         try {
             aa = new RMABackgroundAdjuster();
             connected = true;
+            aa.cleanup();
         } catch ( Exception e ) {
             connected = false;
         }
