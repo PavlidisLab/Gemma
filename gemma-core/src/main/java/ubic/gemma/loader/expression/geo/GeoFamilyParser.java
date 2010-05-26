@@ -1205,6 +1205,8 @@ public class GeoFamilyParser implements Parser<Object> {
             // do nothing. for now.
         } else if ( startsWithIgnoreCase( line, "!Platform_relation" ) ) {
             // no op for now. Links to other platforms this is derived from.
+        } else if ( startsWithIgnoreCase( line, "!Platform_taxid" ) ) {
+            // no op for now....
         } else {
             log.error( "Unknown flag in platform: " + line );
         }
