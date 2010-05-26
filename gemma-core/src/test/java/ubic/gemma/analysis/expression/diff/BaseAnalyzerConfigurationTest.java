@@ -25,6 +25,7 @@ import java.util.List;
 
 import org.apache.commons.lang.RandomStringUtils;
 import org.easymock.classextension.EasyMock;
+import org.junit.After;
 import org.junit.Before;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -33,6 +34,7 @@ import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.io.reader.DoubleMatrixReader;
 import ubic.basecode.util.r.RClient;
 import ubic.basecode.util.r.RConnectionFactory;
+import ubic.basecode.util.r.RServeClient;
 import ubic.gemma.analysis.service.ExpressionDataMatrixService;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.common.description.Characteristic;
@@ -64,28 +66,53 @@ import ubic.gemma.util.ConfigUtils;
  */
 public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTest {
 
-    protected static final int NUM_DESIGN_ELEMENTS = 100;
-
     protected static final int NUM_BIOASSAYS = 8;
 
-    protected final int NUM_TWA_RESULT_SETS = 3;
+    protected static final int NUM_DESIGN_ELEMENTS = 100;
 
     protected ArrayDesign arrayDesign = null;
 
-    protected ExpressionExperiment expressionExperiment = null;
-
-    protected ExperimentalDesign experimentalDesign = null;
+    protected BioAssayDimension bioAssayDimension = null;
 
     protected List<BioMaterial> biomaterials = null;
 
-    protected QuantitationType quantitationType = null;
+    protected boolean connected = false;
 
-    protected BioAssayDimension bioAssayDimension = null;
+    protected ExperimentalDesign experimentalDesign = null;
+
+    protected ExperimentalFactor experimentalFactorA = null;
+
+    protected ExperimentalFactor experimentalFactorB = null;
 
     protected List<ExperimentalFactor> experimentalFactors = null;
 
-    protected ExperimentalFactor experimentalFactorA = null;
-    protected ExperimentalFactor experimentalFactorB = null;
+    @Autowired
+    protected ExpressionDataMatrixService expressionDataMatrixService = null;
+    protected ExpressionExperiment expressionExperiment = null;
+
+    protected final int NUM_TWA_RESULT_SETS = 3;
+
+    @Autowired
+    protected ProcessedExpressionDataVectorService processedExpressionDataVectorService = null;
+
+    protected QuantitationType quantitationType = null;
+
+    protected FactorValue factorValueA1;
+    protected FactorValue factorValueA2;
+    protected FactorValue factorValueB2;
+
+    private ByteArrayConverter bac = new ByteArrayConverter();
+
+    private BioAssay bioAssay0a = null;
+    private BioAssay bioAssay0b = null;
+    private BioAssay bioAssay1a = null;
+    private BioAssay bioAssay1b = null;
+    private BioAssay bioAssay2a = null;
+    private BioAssay bioAssay2b = null;
+    private BioAssay bioAssay3a = null;
+    private BioAssay bioAssay3b = null;
+
+    private List<BioAssay> bioAssays = null;
 
     private BioMaterial biomaterial0a = null;
     private BioMaterial biomaterial0b = null;
@@ -97,98 +124,11 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
     private BioMaterial biomaterial3b = null;
 
     private Collection<FactorValue> factorValuesA = null;
-
     private Collection<FactorValue> factorValuesB = null;
 
-    private List<BioAssay> bioAssays = null;
-
-    private BioAssay bioAssay0a = null;
-    private BioAssay bioAssay0b = null;
-    private BioAssay bioAssay1a = null;
-    private BioAssay bioAssay1b = null;
-    private BioAssay bioAssay2a = null;
-    private BioAssay bioAssay2b = null;
-    private BioAssay bioAssay3a = null;
-    private BioAssay bioAssay3b = null;
+    private RClient rc = null;
 
     private Collection<ProcessedExpressionDataVector> vectors = null;
-
-    private ByteArrayConverter bac = new ByteArrayConverter();
-
-    private RClient rc = null;
-    protected boolean connected = false;
-
-    @Autowired
-    protected ExpressionDataMatrixService expressionDataMatrixService = null;
-
-    @Autowired
-    protected ProcessedExpressionDataVectorService processedExpressionDataVectorService = null;
-
-    /**
-     * Configure the test data for one way anova.
-     */
-    protected void configureTestDataForOneWayAnova() throws Exception {
-
-        /*
-         * This really configures it for a t-test, which is just a one way anova if there are only 2 factor values
-         */
-        log.debug( "Configuring test data for one way anova." );
-
-        List<BioMaterial> updatedBiomaterials = new ArrayList<BioMaterial>();
-        for ( BioMaterial m : biomaterials ) {
-            Collection<FactorValue> fvs = m.getFactorValues();
-            Collection<FactorValue> updatedFactorValues = new HashSet<FactorValue>();
-            for ( FactorValue fv : fvs ) {
-                if ( !fv.getExperimentalFactor().getName().equals( experimentalFactorB.getName() ) ) {
-                    continue;
-                }
-                updatedFactorValues.add( fv );
-
-                m.getFactorValues().addAll( updatedFactorValues );
-                updatedBiomaterials.add( m );
-            }
-        }
-
-        biomaterials = updatedBiomaterials;
-
-        configureVectors( biomaterials, null );
-
-        experimentalFactors.remove( experimentalFactorA );
-        experimentalDesign.setExperimentalFactors( experimentalFactors );
-        expressionExperiment.setExperimentalDesign( experimentalDesign );
-    }
-
-    /**
-     * Configure the test data for two way anova without interactions that isn't valid for a two-way. F
-     * <p>
-     * Removes the replicates.
-     */
-    protected void configureTestDataForTwoWayAnovaWithoutInteractions() throws Exception {
-
-        log.info( "Configuring test data for two way anova without interactions." );
-
-        /* remove the "replicates" */
-        bioAssays.remove( bioAssay0b );
-        bioAssays.remove( bioAssay1b );
-        bioAssays.remove( bioAssay2b );
-        bioAssays.remove( bioAssay3b );
-
-        expressionExperiment.setBioAssays( bioAssays );
-
-        bioAssayDimension.setBioAssays( bioAssays );
-
-        biomaterials = new ArrayList<BioMaterial>();
-        for ( BioAssay b : bioAssayDimension.getBioAssays() ) {
-            biomaterials.add( b.getSamplesUsed().iterator().next() );
-        }
-
-        configureVectors( biomaterials, null );
-
-    }
-
-    FactorValue factorValueB2;
-    FactorValue factorValueA1;
-    FactorValue factorValueA2;
 
     /*
      * (non-Javadoc)
@@ -201,6 +141,11 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
         rc = RConnectionFactory.getRConnection( ConfigUtils.getString( "gemma.rserve.hostname", "localhost" ) );
         if ( rc != null && rc.isConnected() ) {
             connected = true;
+            /*
+             * We have to disconnect right away for test to work under Windows, where only one connection is allowed at
+             * a time. The classes under test will get their own connections.
+             */
+            if ( rc != null && rc.isConnected() && rc instanceof RServeClient ) ( ( RServeClient ) rc ).disconnect();
         }
 
         /* array designs */
@@ -456,6 +401,11 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
         configureVectors( biomaterials, null );
     }
 
+    @After
+    public void tearDown() throws Exception {
+        if ( rc != null && rc.isConnected() && rc instanceof RServeClient ) ( ( RServeClient ) rc ).disconnect();
+    }
+
     /**
      * Mocks the method getVectors in the {@link ExpressionDataMatrixService}.
      * 
@@ -478,6 +428,68 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
      * @throws Exception
      */
     protected abstract void configureMocks() throws Exception;
+
+    /**
+     * Configure the test data for one way anova.
+     */
+    protected void configureTestDataForOneWayAnova() throws Exception {
+
+        /*
+         * This really configures it for a t-test, which is just a one way anova if there are only 2 factor values
+         */
+        log.debug( "Configuring test data for one way anova." );
+
+        List<BioMaterial> updatedBiomaterials = new ArrayList<BioMaterial>();
+        for ( BioMaterial m : biomaterials ) {
+            Collection<FactorValue> fvs = m.getFactorValues();
+            Collection<FactorValue> updatedFactorValues = new HashSet<FactorValue>();
+            for ( FactorValue fv : fvs ) {
+                if ( !fv.getExperimentalFactor().getName().equals( experimentalFactorB.getName() ) ) {
+                    continue;
+                }
+                updatedFactorValues.add( fv );
+
+                m.getFactorValues().addAll( updatedFactorValues );
+                updatedBiomaterials.add( m );
+            }
+        }
+
+        biomaterials = updatedBiomaterials;
+
+        configureVectors( biomaterials, null );
+
+        experimentalFactors.remove( experimentalFactorA );
+        experimentalDesign.setExperimentalFactors( experimentalFactors );
+        expressionExperiment.setExperimentalDesign( experimentalDesign );
+    }
+
+    /**
+     * Configure the test data for two way anova without interactions that isn't valid for a two-way. F
+     * <p>
+     * Removes the replicates.
+     */
+    protected void configureTestDataForTwoWayAnovaWithoutInteractions() throws Exception {
+
+        log.info( "Configuring test data for two way anova without interactions." );
+
+        /* remove the "replicates" */
+        bioAssays.remove( bioAssay0b );
+        bioAssays.remove( bioAssay1b );
+        bioAssays.remove( bioAssay2b );
+        bioAssays.remove( bioAssay3b );
+
+        expressionExperiment.setBioAssays( bioAssays );
+
+        bioAssayDimension.setBioAssays( bioAssays );
+
+        biomaterials = new ArrayList<BioMaterial>();
+        for ( BioAssay b : bioAssayDimension.getBioAssays() ) {
+            biomaterials.add( b.getSamplesUsed().iterator().next() );
+        }
+
+        configureVectors( biomaterials, null );
+
+    }
 
     /**
      * @param numAssays

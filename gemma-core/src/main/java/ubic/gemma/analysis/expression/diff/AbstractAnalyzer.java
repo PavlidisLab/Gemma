@@ -60,7 +60,7 @@ public abstract class AbstractAnalyzer {
         if ( rc == null || !rc.isConnected() ) {
             return;
         }
-        rc.voidEval( "rm(list = ls())" );
+        rc.voidEval( "rm(list = ls())" ); // this probably doesn't do much, but doesn't hurt.
         if ( rc != null && rc instanceof RServeClient ) {
             ( ( RServeClient ) rc ).disconnect();
         }

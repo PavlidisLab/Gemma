@@ -52,6 +52,7 @@ public class RMATest extends TestCase {
             log.warn( "Could not connect to R, skipping test." );
             return;
         }
+
         aa.setArrayDesign( arrayDesign );
 
         /*
@@ -91,6 +92,8 @@ public class RMATest extends TestCase {
             try {
                 aa = new RMA();
                 connected = true;
+                aa.cleanup(); // make sure we leave connections available under Windows.
+
             } catch ( IOException e ) {
                 connected = false;
             }
