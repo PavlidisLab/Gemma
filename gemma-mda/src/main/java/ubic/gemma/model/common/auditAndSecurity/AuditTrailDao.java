@@ -18,39 +18,27 @@
  */
 package ubic.gemma.model.common.auditAndSecurity;
 
+import ubic.gemma.model.common.Auditable;
 import ubic.gemma.persistence.BaseDao;
 
 /**
  * @see ubic.gemma.model.common.auditAndSecurity.AuditTrail
  */
 public interface AuditTrailDao extends BaseDao<AuditTrail> {
-    /**
-     * This constant is used as a transformation flag; entities can be converted automatically into value objects or
-     * other types, different methods in a class implementing this interface support this feature: look for an
-     * <code>int</code> parameter called <code>transform</code>.
-     * <p/>
-     * This specific flag denotes no transformation will occur.
-     */
-    public final static int TRANSFORM_NONE = 0;
 
     /**
-     * <p>
      * Add the given event to the audit trail of the given Auditable entity
-     * </p>
      */
-    public ubic.gemma.model.common.auditAndSecurity.AuditEvent addEvent( ubic.gemma.model.common.Auditable auditable,
-            ubic.gemma.model.common.auditAndSecurity.AuditEvent auditEvent );
+    public AuditEvent addEvent( Auditable auditable, AuditEvent auditEvent );
 
     /**
      * 
      */
-    public void thaw( ubic.gemma.model.common.Auditable auditable );
+    public void thaw( Auditable auditable );
 
     /**
-     * <p>
      * thaws the given audit trail
-     * </p>
      */
-    public void thaw( ubic.gemma.model.common.auditAndSecurity.AuditTrail auditTrail );
+    public void thaw( AuditTrail auditTrail );
 
 }
