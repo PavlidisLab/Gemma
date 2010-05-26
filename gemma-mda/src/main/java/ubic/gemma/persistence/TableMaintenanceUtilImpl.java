@@ -124,7 +124,7 @@ public class TableMaintenanceUtilImpl implements TableMaintenenceUtil {
                 Collection<Auditable> updatedObj = auditEventService.getUpdatedSinceDate( status.getLastUpdate() );
                 for ( Auditable a : updatedObj ) {
                     if ( a instanceof ArrayDesign ) {
-                        a = arrayDesignService.thawLite( ( ArrayDesign ) a );
+                        a = arrayDesignService.thaw( ( ArrayDesign ) a );
                         for ( AuditEvent ae : a.getAuditTrail().getEvents() ) {
                             if ( ae.getEventType() != null && ae.getEventType() instanceof ArrayDesignGeneMappingEvent
                                     && ae.getDate().after( status.getLastUpdate() ) ) {
