@@ -350,7 +350,7 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 		if (this.editable) {
 			result = result +
 					Gemma.SecurityManager.getSecurityLink(
-							'ubic.gemma.model.expression.experiment.ExpressionExperimentImpl', ee.id, ee.isPublic);
+							'ubic.gemma.model.expression.experiment.ExpressionExperimentImpl', ee.id, ee.isPublic, true);
 		}
 
 		return result || "No flags";

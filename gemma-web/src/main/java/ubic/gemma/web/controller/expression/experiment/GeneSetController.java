@@ -13,13 +13,13 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Controller;
 
-import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
@@ -31,7 +31,6 @@ import ubic.gemma.model.genome.gene.GeneSetService;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.security.SecurityService;
 import ubic.gemma.web.controller.common.auditAndSecurity.GeneSetValueObject;
-import ubic.gemma.web.controller.common.auditAndSecurity.SidValueObject;
 
 /**
  * Exposes GeneServices methods over ajax
@@ -42,11 +41,15 @@ import ubic.gemma.web.controller.common.auditAndSecurity.SidValueObject;
 @Controller
 public class GeneSetController {
 
-    @Autowired
-    private GeneSetService geneSetService = null;
+    private static final Double DEFAULT_SCORE = 0.0;
+
+    private static Log log = LogFactory.getLog( GeneSetController.class );
 
     @Autowired
     private GeneService geneService = null;
+
+    @Autowired
+    private GeneSetService geneSetService = null;
 
     @Autowired
     private SecurityService securityService = null;
@@ -54,183 +57,26 @@ public class GeneSetController {
     @Autowired
     private TaxonService taxonService = null;
 
-    private static Log log = LogFactory.getLog( GeneSetController.class );
-    private static final Double DEFAULT_SCORE = 0.0;
-
-    public GeneSetController() {
-        super();
-    }
-
     /**
      * AJAX Creates a new gene group given a name for the group and the genes in the group
      * 
-     * @param name
-     * @param genes
-     * @return
+     * @param geneSetVo value object constructed on the client.
+     * @return id of the new gene group
      */
-    public Long createGeneGroup( String name, Collection<Long> geneIds ) {
+    public Collection<GeneSetValueObject> create( Collection<GeneSetValueObject> geneSetVos ) {
 
-        if ( name == null || name.isEmpty() ) return null;
+        Collection<GeneSetValueObject> results = new HashSet<GeneSetValueObject>();
+        for ( GeneSetValueObject geneSetVo : geneSetVos ) {
 
-        GeneSet gset = GeneSet.Factory.newInstance();
-        gset.setName( name );
+            if ( StringUtils.isBlank( geneSetVo.getName() ) ) {
+                throw new IllegalArgumentException( "Gene group name cannot be blank" );
+            }
 
-        // If no gene Ids just create group and return.
-        if ( geneIds == null || geneIds.isEmpty() ) {
-            gset = geneSetService.create( gset );
-            this.securityService.makePrivate( gset );
-            return gset.getId();
+            GeneSet gset = create( geneSetVo );
+            results.add( new GeneSetValueObject( gset ) );
+
         }
-
-        Collection<Gene> genes = geneService.loadMultiple( geneIds );
-
-        if ( genes == null || genes.isEmpty() ) return null;
-
-        for ( Gene g : genes ) {
-            GeneSetMember gmember = GeneSetMember.Factory.newInstance();
-            gmember.setGene( g );
-            gmember.setScore( DEFAULT_SCORE );
-            gset.getMembers().add( gmember );
-        }
-
-        gset = geneSetService.create( gset );
-        this.securityService.makePrivate( gset );
-
-        return gset.getId();
-    }
-
-    /**
-     * AJAX Given a valid gene group will remove it from db (if the user has permissons to do so).
-     * 
-     * @param groupId
-     */
-    public void deleteGeneGroup( Long groupId ) {
-
-        if ( groupId == null ) return;
-
-        GeneSet gset = geneSetService.load( groupId );
-        if ( gset != null ) geneSetService.remove( gset );
-
-    }
-
-    /**
-     * AJAX If the current user has access to given gene group will return the gene ids in the gene group
-     * 
-     * @param groupId
-     * @return
-     */
-    public Collection<GeneValueObject> getGenesInGroup( Long groupId ) {
-
-        Collection<GeneValueObject> results = null;
-
-        GeneSet gs = geneSetService.load( groupId );
-        if ( gs == null ) return null; // FIXME: Send and error code/feedback?
-
-        results = GeneValueObject.convertMembers2GeneValueObjects( gs.getMembers() );
-
         return results;
-
-    }
-
-    /**
-     * AJAX Updates the given gene group (permission permitting) with the given list of geneIds Will not allow the same
-     * gene to be added to the gene set twice.
-     * 
-     * @param groupId
-     * @param geneIds
-     */
-    public void updateGeneGroup( Long groupId, String description, Collection<Long> geneIds ) {
-
-        GeneSet gset = geneSetService.load( groupId );
-        if ( gset == null ) {
-            log.warn( "Atempt to update a group that doesn't exist. ID =  " + groupId );
-            return;
-        }
-        Collection<GeneSetMember> updatedGenelist = new HashSet<GeneSetMember>(); // Creating a new gene list indirectly
-        // allows for
-        // easy deletion of gene group members
-
-        // Create the empty gene group
-        if ( geneIds == null || geneIds.isEmpty() ) {
-            gset.setMembers( updatedGenelist );
-            gset.setDescription( description );
-            geneSetService.update( gset );
-            return;
-        }
-
-        Collection<Gene> genes = geneService.loadMultiple( geneIds );
-
-        if ( genes == null || genes.isEmpty() ) {
-            log.warn( "GeneIds returned were valid GeneIds:  Terminating updated and changing nothing." );
-            return;
-        }
-
-        for ( Gene g : genes ) {
-
-            GeneSetMember gsm = GeneSetImpl.containsGene( g, gset );
-
-            // Gene not in list create memember and add it.
-            if ( gsm == null ) {
-                GeneSetMember gmember = GeneSetMember.Factory.newInstance();
-                gmember.setGene( g );
-                gmember.setScore( DEFAULT_SCORE );
-                gset.getMembers().add( gmember );
-                updatedGenelist.add( gmember );
-            } else {
-                updatedGenelist.add( gsm );
-            }
-
-        }
-
-        gset.setMembers( updatedGenelist );
-        gset.setDescription( description );
-        geneSetService.update( gset );
-
-        return;
-
-    }
-
-    /**
-     * AJAX Returns just the current users gene sets
-     * 
-     * @param privateOnly
-     * @return
-     */
-    public Collection<GeneSetValueObject> getUsersGeneGroups( boolean privateOnly ) {
-        Collection<Securable> secs = new HashSet<Securable>();
-
-        Boolean isAnonymous = SecurityService.isUserAnonymous();
-
-        Collection<GeneSet> geneSets = null;
-
-        if ( isAnonymous ) {
-            secs.addAll( geneSetService.loadAll() );
-        } else if ( privateOnly ) {
-            try {
-                geneSets = geneSetService.loadMyGeneSets();
-                secs.addAll( securityService.choosePrivate( geneSets ) );
-            } catch ( AccessDeniedException e ) {
-                // okay, they just aren't allowed to see those.
-            }
-
-        } else {
-            secs.addAll( geneSetService.loadAll() );
-        }
-
-        // Create valueobject (need to add security info or would move this out into the valueobject...
-        Collection<GeneSetValueObject> result = new HashSet<GeneSetValueObject>();
-        for ( Securable gs : secs ) {
-
-            GeneSetValueObject gsvo = new GeneSetValueObject( ( GeneSet ) gs );
-            gsvo.setGeneMembers( null ); // For fear of to much data being passed back, client makes seperate call to
-            // get gene group memembers
-            gsvo.setPublik( securityService.isPublic( gs ) );
-            gsvo.setShared( securityService.isShared( gs ) );
-            gsvo.setOwner( new SidValueObject( securityService.getOwner( gs ) ) );
-
-            result.add( gsvo );
-        }
-        return result;
     }
 
     /**
@@ -264,6 +110,176 @@ public class GeneSetController {
         GeneSet goSet = this.geneSetService.findByGoId( name, tax );
         if ( goSet != null ) foundGeneSets.add( goSet );
         return GeneSetValueObject.convert2ValueObjects( foundGeneSets );
+    }
+
+    /**
+     * AJAX If the current user has access to given gene group will return the gene ids in the gene group
+     * 
+     * @param groupId
+     * @return
+     */
+    public Collection<GeneValueObject> getGenesInGroup( Long groupId ) {
+
+        Collection<GeneValueObject> results = null;
+
+        GeneSet gs = geneSetService.load( groupId );
+        if ( gs == null ) return null; // FIXME: Send and error code/feedback?
+
+        results = GeneValueObject.convertMembers2GeneValueObjects( gs.getMembers() );
+
+        return results;
+
+    }
+
+    /**
+     * AJAX Returns just the current users gene sets
+     * 
+     * @param privateOnly
+     * @return
+     */
+    public Collection<GeneSetValueObject> getUsersGeneGroups( boolean privateOnly ) {
+
+        Collection<GeneSet> geneSets = new HashSet<GeneSet>();
+        if ( privateOnly ) {
+            try {
+                geneSets = geneSetService.loadMyGeneSets();
+                geneSets.retainAll( securityService.choosePrivate( geneSets ) );
+            } catch ( AccessDeniedException e ) {
+                // okay, they just aren't allowed to see those.
+            }
+
+        } else {
+            geneSets = geneSetService.loadAll();
+        }
+
+        Collection<GeneSetValueObject> result = makeValueObects( geneSets );
+        return result;
+    }
+
+    /**
+     * AJAX Given a valid gene group will remove it from db (if the user has permissons to do so).
+     * 
+     * @param groups
+     */
+    public Collection<GeneSetValueObject> remove( Collection<GeneSetValueObject> vos ) {
+        for ( GeneSetValueObject geneSetValueObject : vos ) {
+            GeneSet gset = geneSetService.load( geneSetValueObject.getId() );
+            if ( gset != null ) geneSetService.remove( gset );
+        }
+        return new HashSet<GeneSetValueObject>();
+    }
+
+    /**
+     * AJAX Updates the given gene group (permission permitting) with the given list of geneIds Will not allow the same
+     * gene to be added to the gene set twice.
+     * 
+     * @param groupId
+     * @param geneIds
+     */
+    public Collection<GeneSetValueObject> update( Collection<GeneSetValueObject> geneSetVos ) {
+
+        Collection<GeneSet> updated = new HashSet<GeneSet>();
+        for ( GeneSetValueObject geneSetVo : geneSetVos ) {
+
+            Long groupId = geneSetVo.getId();
+            GeneSet gset = geneSetService.load( groupId );
+            if ( gset == null ) {
+                throw new IllegalArgumentException( "No gene set with id=" + groupId + " could be loaded" );
+            }
+            Collection<GeneSetMember> updatedGenelist = new HashSet<GeneSetMember>();
+
+            Collection<Long> geneIds = geneSetVo.getGeneIds();
+
+            if ( !geneIds.isEmpty() ) {
+                Collection<Gene> genes = geneService.loadMultiple( geneIds );
+
+                if ( genes.isEmpty() ) {
+                    throw new IllegalArgumentException( "None of the gene ids were valid (out of " + geneIds.size()
+                            + " provided)" );
+                }
+                if ( genes.size() < geneIds.size() ) {
+                    throw new IllegalArgumentException( "Some of the gene ids were invalid: only found " + genes.size()
+                            + " out of " + geneIds.size() + " provided)" );
+                }
+
+                assert genes.size() == geneIds.size();
+
+                for ( Gene g : genes ) {
+
+                    GeneSetMember gsm = GeneSetImpl.containsGene( g, gset );
+
+                    // Gene not in list create memember and add it.
+                    if ( gsm == null ) {
+                        GeneSetMember gmember = GeneSetMember.Factory.newInstance();
+                        gmember.setGene( g );
+                        gmember.setScore( DEFAULT_SCORE );
+                        gset.getMembers().add( gmember );
+                        updatedGenelist.add( gmember );
+                    } else {
+                        updatedGenelist.add( gsm );
+                    }
+
+                }
+            }
+
+            gset.getMembers().clear();
+            gset.getMembers().addAll( updatedGenelist );
+            gset.setDescription( geneSetVo.getDescription() );
+            gset.setName( geneSetVo.getName() );
+            geneSetService.update( gset );
+
+            /*
+             * Make sure we return the latest.
+             */
+            updated.add( geneSetService.load( gset.getId() ) );
+        }
+        return makeValueObects( updated );
+
+    }
+
+    private GeneSet create( GeneSetValueObject geneSetVo ) {
+        GeneSet newGeneSet = GeneSet.Factory.newInstance();
+        newGeneSet.setName( geneSetVo.getName() );
+        newGeneSet.setDescription( geneSetVo.getDescription() );
+
+        // If no gene Ids just create group and return.
+        GeneSet gset = geneSetService.create( newGeneSet );
+        this.securityService.makePrivate( gset );
+
+        Collection<Long> geneIds = geneSetVo.getGeneIds();
+
+        if ( geneIds != null && !geneIds.isEmpty() ) {
+            Collection<Gene> genes = geneService.loadMultiple( geneIds );
+            for ( Gene g : genes ) {
+                GeneSetMember gmember = GeneSetMember.Factory.newInstance();
+                gmember.setGene( g );
+                gmember.setScore( DEFAULT_SCORE );
+                gset.getMembers().add( gmember );
+            }
+
+            geneSetService.update( gset );
+        }
+        return geneSetService.load( gset.getId() );
+    }
+
+    /**
+     * @param secs
+     * @return
+     */
+    private Collection<GeneSetValueObject> makeValueObects( Collection<GeneSet> secs ) {
+        // Create valueobject (need to add security info or would move this out into the valueobject...
+        Collection<GeneSetValueObject> result = new HashSet<GeneSetValueObject>();
+        for ( GeneSet gs : secs ) {
+
+            GeneSetValueObject gsvo = new GeneSetValueObject( gs );
+
+            gsvo.setCurrentUserHasWritePermission( securityService.isEditable( gs ) );
+            gsvo.setPublik( securityService.isPublic( gs ) );
+            gsvo.setShared( securityService.isShared( gs ) );
+
+            result.add( gsvo );
+        }
+        return result;
     }
 
 }

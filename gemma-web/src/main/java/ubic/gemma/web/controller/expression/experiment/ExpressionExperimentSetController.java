@@ -57,6 +57,10 @@ public class ExpressionExperimentSetController extends BaseFormController {
 
     private TaxonService taxonService;
 
+    /**
+     * @param entities
+     * @return
+     */
     public Collection<ExpressionExperimentSetValueObject> create(
             Collection<ExpressionExperimentSetValueObject> entities ) {
         Collection<ExpressionExperimentSetValueObject> result = new HashSet<ExpressionExperimentSetValueObject>();

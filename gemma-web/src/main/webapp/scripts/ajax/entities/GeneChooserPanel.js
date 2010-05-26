@@ -130,7 +130,7 @@ Gemma.GeneGrid = Ext.extend(Ext.grid.GridPanel, {
 						}, this);
 
 				this.on("keypress", function(e) {
-							if (e.getCharCode() == Ext.EventObject.DELETE) {
+							if (!this.getTopToolbar().disabled && e.getCharCode() == Ext.EventObject.DELETE) {
 								this.removeGene();
 							}
 						}, this);
@@ -203,9 +203,9 @@ Gemma.GeneGrid = Ext.extend(Ext.grid.GridPanel, {
 							for (var i = 0; i < genes.length; ++i) {
 								if (i >= Gemma.MAX_GENES_PER_QUERY) {
 									if (!warned) {
-										Ext.Msg.alert("Too many genes", "You can only search up to "
-														+ Gemma.MAX_GENES_PER_QUERY
-														+ " genes, some of your selections will be ignored.");
+										Ext.Msg.alert("Too many genes", "You can only search up to " +
+														Gemma.MAX_GENES_PER_QUERY +
+														" genes, some of your selections will be ignored.");
 										warned = true;
 									}
 									break;
@@ -526,8 +526,8 @@ Gemma.GeneImportPanel = Ext.extend(Ext.Window, {
 										id : 'gene-list-text',
 										xtype : 'textarea',
 
-										fieldLabel : "Paste in gene symbols, one per line, up to "
-												+ Gemma.MAX_GENES_PER_QUERY,
+										fieldLabel : "Paste in gene symbols, one per line, up to " +
+												Gemma.MAX_GENES_PER_QUERY,
 										width : 290
 									}],
 							buttons : [{

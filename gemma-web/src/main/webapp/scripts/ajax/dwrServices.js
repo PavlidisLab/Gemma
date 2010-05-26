@@ -579,14 +579,14 @@ GeneSetController._path = '/Gemma/dwr';
 GeneSetController.getGenesInGroup = function(p0, callback) {
 	dwr.engine._execute(GeneSetController._path, 'GeneSetController', 'getGenesInGroup', p0, callback);
 }
-GeneSetController.updateGeneGroup = function(p0, p1, p2, callback) {
-	dwr.engine._execute(GeneSetController._path, 'GeneSetController', 'updateGeneGroup', p0, p1, p2, callback);
+GeneSetController.update = function(p0, callback) {
+	dwr.engine._execute(GeneSetController._path, 'GeneSetController', 'update', p0, callback);
 }
-GeneSetController.createGeneGroup = function(p0, p1, callback) {
-	dwr.engine._execute(GeneSetController._path, 'GeneSetController', 'createGeneGroup', p0, p1, callback);
+GeneSetController.create = function(p0, callback) {
+	dwr.engine._execute(GeneSetController._path, 'GeneSetController', 'create', p0, callback);
 }
-GeneSetController.deleteGeneGroup = function(p0, callback) {
-	dwr.engine._execute(GeneSetController._path, 'GeneSetController', 'deleteGeneGroup', p0, callback);
+GeneSetController.remove = function(p0, callback) {
+	dwr.engine._execute(GeneSetController._path, 'GeneSetController', 'remove', p0, callback);
 }
 GeneSetController.getUsersGeneGroups = function(p0, callback) {
 	dwr.engine._execute(GeneSetController._path, 'GeneSetController', 'getUsersGeneGroups', p0, callback);

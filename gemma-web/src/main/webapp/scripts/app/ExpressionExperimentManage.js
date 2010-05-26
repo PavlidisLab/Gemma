@@ -278,7 +278,7 @@ Ext.onReady(function() {
 		result = result
 				+ Gemma.SecurityManager.getSecurityLink(
 						'ubic.gemma.model.expression.experiment.ExpressionExperimentImpl', id, record.get('isPublic'),
-						record.get('isShared'));
+						record.get('isShared'), record.get('currentUserHasWritePermission'));
 
 		return result;
 

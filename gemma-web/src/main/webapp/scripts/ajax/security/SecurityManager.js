@@ -38,10 +38,12 @@ Gemma.SecurityManager.managePermissions = function(elid, clazz, id) {
 
 		var isPublic = securityInfo.publiclyReadable;
 		var isShared = securityInfo.shared;
+		var canEdit = securityInfo.currentUserCanwrite;
 
 		var readers = securityInfo.groupsThatCanRead;
 		var writers = securityInfo.groupsThatCanWrite;
 		var availableGroups = securityInfo.availableGroups;
+		var clazz = securityInfo.entityClazz;
 
 		var canManage = securityInfo.currentUserCanwrite;
 
@@ -185,8 +187,8 @@ Gemma.SecurityManager.managePermissions = function(elid, clazz, id) {
 									updatedGroupsThatCanWrite.push(groupName);
 									shared = true;
 								}
-								if (Ext.getCmp(groupName + "-read-chk").getValue()
-										|| Ext.getCmp(groupName + "-write-chk").getValue()) {
+								if (Ext.getCmp(groupName + "-read-chk").getValue() ||
+										Ext.getCmp(groupName + "-write-chk").getValue()) {
 									updatedGroupsThatCanRead.push(groupName);
 									shared = true;
 								}
@@ -196,18 +198,20 @@ Gemma.SecurityManager.managePermissions = function(elid, clazz, id) {
 							securityInfo.groupsThatCanRead = updatedGroupsThatCanRead;
 
 							SecurityController.updatePermission(securityInfo, {
-										callback : function() {
+										callback : function(updatedInfo) {
 											sp.destroy();
 
-											Gemma.SecurityManager.updateSecurityLink(elid,
-													securityInfo.publiclyReadable, shared);
+											Gemma.SecurityManager.updateSecurityLink(elid, updatedInfo.entityClass,
+													updatedInfo.entityId, updatedInfo.publiclyReadable, shared,
+													updatedInfo.currentUserCanwrite);
 										},
 										errorHandler : function() {
 											sp.destroy();
 											alert("There was an error saving the settings.");
 
-											Gemma.SecurityManager.updateSecurityLink(elid,
-													securityInfo.publiclyReadable, sared);
+											Gemma.SecurityManager.updateSecurityLink(elid, updatedInfo.entityClass,
+													updatedInfo.entityId, updatedInfo.publiclyReadable,
+													updatedInfo.shared, updatedInfo.currentUserCanwrite);
 
 										}
 									});
@@ -224,7 +228,7 @@ Gemma.SecurityManager.managePermissions = function(elid, clazz, id) {
 		sp.show();
 
 		// remove the load mask from the table.
-		Gemma.SecurityManager.updateSecurityLink(elid, isPublic, isShared);
+		Gemma.SecurityManager.updateSecurityLink(elid, clazz, id, isPublic, isShared, canEdit);
 
 	};
 
@@ -246,15 +250,11 @@ Gemma.SecurityManager.managePermissions = function(elid, clazz, id) {
 
 };
 
-Gemma.SecurityManager.updateSecurityLink = function(elid, isPublic, isShared) {
+Gemma.SecurityManager.updateSecurityLink = function(elid, clazz, id, isPublic, isShared, canEdit) {
 
-	var icon = isPublic
-			? '<img src="/Gemma/images/icons/lock_open2.png" ext:qtip="Public" alt="public"/>'
-			: '<img src="/Gemma/images/icons/lock.png" ext:qtip="Private" alt="private"/>';
+	var newLink = Gemma.SecurityManager.getSecurityLink(clazz, id, isPublic, isShared, canEdit);
 
-	var sharedIcon = isShared ? '<img src="/Gemma/images/icons/group.png" ext:qtip="Shared" alt="shared"/>' : '';
-
-	Ext.DomHelper.overwrite(elid, icon + '&nbsp;' + sharedIcon);
+	Ext.DomHelper.overwrite(elid, newLink);
 };
 
 /**
@@ -270,20 +270,32 @@ Gemma.SecurityManager.updateSecurityLink = function(elid, isPublic, isShared) {
  *            isPublic
  * @param {}
  *            isShared
+ * @param {}
+ *            canEdit if the current user should be able to edit permissions.
  * @return {} html for the link
  */
-Gemma.SecurityManager.getSecurityLink = function(clazz, id, isPublic, isShared) {
+Gemma.SecurityManager.getSecurityLink = function(clazz, id, isPublic, isShared, canEdit) {
 
-	var icon = isPublic
-			? '<img src="/Gemma/images/icons/lock_open2.png" ext:qtip="Public" ext:qtip="Public"  alt="public"/>'
-			: '<img src="/Gemma/images/icons/lock.png" ext:qtip="Private" ext:qtip="Private"  alt="private"/>';
+	var icon = '';
+
+	if (canEdit) {
+		icon = isPublic
+				? '<img src="/Gemma/images/icons/world_edit.png" ext:qtip="Public; click to edit permissions" ext:qtip="Public" alt="public"/>'
+				: '<img src="/Gemma/images/icons/lock_edit.png" ext:qtip="Private; click to edit permissions" ext:qtip="Private"  alt="private"/>';
+
+	} else {
+		icon = isPublic
+				? '<img src="/Gemma/images/icons/world.png" ext:qtip="Public" ext:qtip="Public"  alt="public"/>'
+				: '<img src="/Gemma/images/icons/lock.png" ext:qtip="Private" ext:qtip="Private"  alt="private"/>';
+	}
 
 	var sharedIcon = isShared ? '<img src="/Gemma/images/icons/group.png" ext:qtip="Shared"  alt="shared"/>' : '';
 
 	var elid = Ext.id();
 
-	var result = '<span style="cursor:pointer" onClick="return Gemma.SecurityManager.managePermissions(\'' + elid
-			+ '\', \'' + clazz + '\',\'' + id + '\');" id="' + elid + '" >' + icon + '&nbsp;' + sharedIcon + '</span>';
+	var dialog = canEdit ? 'style="cursor:pointer" onClick="return Gemma.SecurityManager.managePermissions(\'' + elid +
+			'\', \'' + clazz + '\',\'' + id + '\');"' : '';
+	var result = '<span  ' + dialog + ' id="' + elid + '" >' + icon + '&nbsp;' + sharedIcon + '</span>';
 	return result;
 };
 
@@ -311,8 +323,8 @@ Gemma.SecurityManager.getSecurityUrl = function(clazz, id) {
 
 					var isPublic = securityInfo.publiclyReadable;
 					var isShared = securityInfo.shared;
-
-					return Gemma.SecurityManager.getSecurityLink(clazz, id, isPublic, isShared);
+					var canEdit = securityInfo.currentUserCanwrite;
+					return Gemma.SecurityManager.getSecurityLink(clazz, id, isPublic, isShared, canEdit);
 
 				},
 				errorHandler : function(data) {

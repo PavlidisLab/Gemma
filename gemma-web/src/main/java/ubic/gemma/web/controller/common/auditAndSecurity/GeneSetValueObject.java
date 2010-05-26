@@ -22,9 +22,9 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashSet;
 
-import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.model.genome.gene.GeneSetMember;
+import ubic.gemma.util.EntityUtils;
 
 /**
  * Represents a Gene group gene set.
@@ -34,9 +34,6 @@ import ubic.gemma.model.genome.gene.GeneSetMember;
  */
 public class GeneSetValueObject implements Serializable {
 
-    /**
-     * 
-     */
     private static final long serialVersionUID = 6212231006289412683L;
 
     public static Collection<GeneSetValueObject> convert2ValueObjects( Collection<GeneSet> genesets ) {
@@ -51,21 +48,15 @@ public class GeneSetValueObject implements Serializable {
 
     private boolean currentUserHasWritePermission = false;
     private String description;
-    private Collection<GeneSetMember> geneMembers;
+    private Collection<Long> geneIds = new HashSet<Long>();
     private Long id;
-
     private String name;
-
-    private SidValueObject owner;
-
     private boolean publik;
-
     private boolean shared;
     private Integer size;
-    private Taxon taxon;
 
     /**
-     * Null constructor to satisfy java bean contract
+     * default constructor to satisfy java bean contract
      */
     public GeneSetValueObject() {
         super();
@@ -77,7 +68,16 @@ public class GeneSetValueObject implements Serializable {
      * @param gs
      */
     public GeneSetValueObject( GeneSet gs ) {
-        this( gs.getId(), gs.getName(), gs.getDescription(), gs.getMembers() );
+        Collection<Long> gids = new HashSet<Long>();
+        for ( GeneSetMember gm : gs.getMembers() ) {
+            gids.add( gm.getGene().getId() );
+        }
+        this.setName( gs.getName() );
+        this.setId( gs.getId() );
+        this.setDescription( gs.getDescription() );
+        this.geneIds.addAll( gids );
+        this.setSize( geneIds.size() );
+
     }
 
     /**
@@ -88,31 +88,15 @@ public class GeneSetValueObject implements Serializable {
      * @param description
      * @param members
      */
-    public GeneSetValueObject( Long id, String name, String description, Collection<GeneSetMember> members ) {
+    public GeneSetValueObject( Long id, String name, String description, Collection<Long> members ) {
 
         this();
         this.setName( name );
         this.setId( id );
         this.setDescription( description );
-        this.setGeneMembers( members );
+        this.geneIds.addAll( members );
         this.setSize( members.size() );
 
-    }
-
-    /**
-     * Constructor to build from listed sub components
-     * 
-     * @param id
-     * @param name
-     * @param description
-     * @param members
-     */
-    public GeneSetValueObject( Long id, String name, String description, Collection<GeneSetMember> members,
-            Boolean isShared, Boolean isPublic ) {
-
-        this( id, name, description, members );
-        this.setPublik( isPublic );
-        this.setShared( isShared );
     }
 
     /**
@@ -125,8 +109,8 @@ public class GeneSetValueObject implements Serializable {
     /**
      * @return
      */
-    public Collection<GeneSetMember> getGeneMembers() {
-        return geneMembers;
+    public Collection<Long> getGeneIds() {
+        return geneIds;
     }
 
     /**
@@ -141,10 +125,6 @@ public class GeneSetValueObject implements Serializable {
      */
     public String getName() {
         return name;
-    }
-
-    public SidValueObject getOwner() {
-        return owner;
     }
 
     /**
@@ -188,8 +168,8 @@ public class GeneSetValueObject implements Serializable {
     /**
      * @param geneMembers
      */
-    public void setGeneMembers( Collection<GeneSetMember> geneMembers ) {
-        this.geneMembers = geneMembers;
+    public void setGeneIds( Collection<Long> geneMembers ) {
+        this.geneIds = geneMembers;
     }
 
     /**
@@ -204,10 +184,6 @@ public class GeneSetValueObject implements Serializable {
      */
     public void setName( String name ) {
         this.name = name;
-    }
-
-    public void setOwner( SidValueObject owner ) {
-        this.owner = owner;
     }
 
     public void setPublik( boolean isPublic ) {

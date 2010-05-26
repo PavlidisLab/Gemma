@@ -503,8 +503,9 @@ public class SecurityController {
      * AJAX
      * 
      * @param settings
+     * @return updated value object
      */
-    public void updatePermission( SecurityInfoValueObject settings ) {
+    public SecurityInfoValueObject updatePermission( SecurityInfoValueObject settings ) {
         EntityDelegator sd = new EntityDelegator();
         sd.setId( settings.getEntityId() );
         sd.setClassDelegatingFor( settings.getEntityClazz() );
@@ -604,6 +605,7 @@ public class SecurityController {
         }
 
         log.info( "Updated permissions on " + s );
+        return securable2VO( s );
     }
 
     /**
