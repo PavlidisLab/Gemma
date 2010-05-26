@@ -586,8 +586,8 @@ abstract public class GenomePersister extends CommonPersister {
                     persistChromosome( geneProduct.getPhysicalLocation().getChromosome() ) );
 
             // sanity check, as we've had this problem...somehow.
-            assert geneProduct.getPhysicalLocation().getChromosome().getTaxon().equals(
-                    geneProduct.getGene().getTaxon() );
+            // assert geneProduct.getPhysicalLocation().getChromosome().getTaxon().equals(
+            // geneProduct.getGene().getTaxon() );
         }
 
         if ( geneProduct.getExons() != null ) {
