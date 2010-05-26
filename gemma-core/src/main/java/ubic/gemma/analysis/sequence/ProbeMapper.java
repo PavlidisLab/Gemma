@@ -96,6 +96,15 @@ public class ProbeMapper {
 
         Map<BioSequence, Collection<BlatResult>> biosequenceToBlatResults = groupBlatResultsByBioSequence( blatResults );
 
+        /*
+         * Temporary code!!
+         */
+        if ( goldenPathDb.getDatabaseName().equals( "hg19" ) ) {
+            log.warn( "Disabling miRNA and acembly as hg19 doesn't have them" );
+            config.setUseMiRNA( false );
+            config.setUseAcembly( false );
+        }
+
         // Do them one sequence at a time.
         for ( BioSequence sequence : biosequenceToBlatResults.keySet() ) {
             Collection<BlatResult> blatResultsForSequence = biosequenceToBlatResults.get( sequence );
@@ -121,15 +130,6 @@ public class ProbeMapper {
                 skippedDueToNonSpecific++;
                 skipped++;
                 continue;
-            }
-
-            /*
-             * Temporary code!!
-             */
-            if ( goldenPathDb.getDatabaseName().equals( "hg19" ) ) {
-                log.warn( "Disabling miRNA and acembly as hg19 doesn't have them" );
-                config.setUseMiRNA( false );
-                config.setUseAcembly( false );
             }
 
             /*
