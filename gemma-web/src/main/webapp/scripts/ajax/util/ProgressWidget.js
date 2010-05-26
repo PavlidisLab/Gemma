@@ -240,10 +240,8 @@ Gemma.ProgressWidget = Ext.extend(Ext.Panel, {
 		/*
 		 * keep going. Hopefully just a temporary network lapse.
 		 */
+		this.waiting = false;
 		this.progressBar.updateText("Network error, continuing.");
-		this.waiting = true;
-		this.stopProgress();
-		this.startProgress();
 	},
 
 	/**
@@ -324,7 +322,17 @@ Gemma.ProgressWidget = Ext.extend(Ext.Panel, {
 
 	done : false,
 
+	le : 0.3,
+
 	updateProgress : function(data) {
+
+		// for testing: simulate a network failure.
+		// if (Math.random() < this.le ) {
+		// this.handleResponseFailure();
+		// this.le = 0.0;
+		// return;
+		// }
+
 		this.waiting = false;
 		var messages = "";
 		var messagesToSave = '';
