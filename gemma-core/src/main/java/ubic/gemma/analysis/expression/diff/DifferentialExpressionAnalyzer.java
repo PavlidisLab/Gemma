@@ -20,6 +20,7 @@ package ubic.gemma.analysis.expression.diff;
 
 import java.util.Collection;
 
+import org.jfree.util.Log;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -287,12 +288,18 @@ public class DifferentialExpressionAnalyzer implements ApplicationContextAware {
                 Collection<FactorValue> factorValues = f.getFactorValues();
                 if ( factorValues.size() == 1 ) {
 
+                    boolean useIntercept = false;
                     // check for a ratiometric quantitation type.
                     for ( QuantitationType qt : expressionExperiment.getQuantitationTypes() ) {
                         if ( qt.getIsPreferred() && qt.getIsRatio() ) {
                             // TODO use ANOVA but treat the intercept as a factor.
-
+                            useIntercept = true;
+                            break;
                         }
+                    }
+
+                    if ( useIntercept ) {
+                        return this.applicationContext.getBean( GenericAncovaAnalyzer.class );
                     }
 
                     return null;
