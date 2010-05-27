@@ -138,8 +138,8 @@ Gemma.AuditTrailGrid = Ext.extend(Ext.grid.GridPanel, {
 							var record = this.getStore().getAt(row).data;
 							var note = record.note;
 							var detail = record.detail;
-							var content = "Date: " + record.date + "<br />Performer: " + record.performer
-									+ "<br />Note: " + note + "<br />Details: " + detail;
+							var content = "Date: " + record.date + "<br />Performer: " + record.performer +
+									"<br />Note: " + note + "<br />Details: " + detail;
 
 							Ext.MessageBox.alert("Event details", content);
 						});
@@ -166,17 +166,23 @@ Gemma.AddAuditEventDialog = Ext.extend(Ext.Window, {
 			title : "Add an audit event",
 
 			validate : function() {
-				return this.auditEventTypeCombo.isValid() && this.auditEventCommentField.isValid()
-						&& this.auditEventDetailField.isValid();
+				return this.auditEventTypeCombo.isValid() && this.auditEventCommentField.isValid() &&
+						this.auditEventDetailField.isValid();
 			},
 
 			initComponent : function() {
 
 				this.auditEventTypeStore = new Ext.data.SimpleStore({
 							fields : ['type', 'description'],
-							data : [['CommentedEvent', 'Comment'], ['TroubleStatusFlagEvent', 'Trouble flag'],
-									['OKStatusFlagEvent', 'OK flag (clear Trouble flag)'],
-									['ValidatedFlagEvent', 'Validated flag']]
+							data : [['CommentedEvent', 'Comment'],
+									['TroubleStatusFlagEvent', 'Other (generic) Trouble'],
+									['ExperimentalDesignTrouble', 'Experimental Design Trouble'],
+									['OutlierSampleTrouble', 'Outlier sample'],
+									['OKStatusFlagEvent', 'OK flag (clear Trouble)'],
+									['ValidatedFlagEvent', 'Validated flag'],
+									['ValidatedQualityControl', 'QC validated'],
+									['ValidatedAnnotations', 'Tags validated'],
+									['ValidatedExperimentalDesign', 'Experimental design validated']]
 						});
 
 				this.auditEventTypeCombo = new Ext.form.ComboBox({

@@ -22,6 +22,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import java.lang.reflect.Method;
 import java.util.List;
 
 import org.apache.commons.lang.RandomStringUtils;
@@ -32,6 +33,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignGeneMappingEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignGeneMappingEventImpl;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
+import ubic.gemma.model.common.auditAndSecurity.eventType.ValidatedFlagEvent;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.testing.BaseSpringContextTest;
 
@@ -81,4 +83,15 @@ public class AuditTrailServiceImplTest extends BaseSpringContextTest {
         assertEquals( size + 1, auditable.getAuditTrail().getEvents().size() );
     }
 
+    @Test
+    public final void testReflectionOnFactory() throws Exception {
+        Class<? extends AuditEventType> type = ValidatedFlagEvent.class;
+        AuditEventType auditEventType = null;
+
+        Class<?> factory = Class.forName( type.getName() + "$Factory" );
+        Method method = factory.getMethod( "newInstance" );
+        auditEventType = ( AuditEventType ) method.invoke( type );
+        assertNotNull( auditEventType );
+        assertTrue( auditEventType instanceof ValidatedFlagEvent );
+    }
 }

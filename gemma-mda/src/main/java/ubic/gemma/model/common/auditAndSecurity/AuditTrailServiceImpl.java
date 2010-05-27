@@ -18,6 +18,7 @@
  */
 package ubic.gemma.model.common.auditAndSecurity;
 
+import java.lang.reflect.Method;
 import java.util.Date;
 
 import org.apache.commons.logging.Log;
@@ -43,6 +44,29 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.ValidatedFlagEventImpl
 public class AuditTrailServiceImpl extends ubic.gemma.model.common.auditAndSecurity.AuditTrailServiceBase {
 
     private static Log log = LogFactory.getLog( AuditTrailServiceImpl.class.getName() );
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailService#addUpdateEvent(ubic.gemma.model.common.Auditable,
+     * java.lang.Class, java.lang.String, java.lang.String)
+     */
+    @Override
+    public AuditEvent addUpdateEvent( Auditable auditable, Class<? extends AuditEventType> type, String note,
+            String detail ) {
+
+        AuditEventType auditEventType = null;
+
+        try {
+            Class<?> factory = Class.forName( type.getName() + "$Factory" );
+            Method method = factory.getMethod( "newInstance" );
+            auditEventType = ( AuditEventType ) method.invoke( type );
+        } catch ( Exception e ) {
+            throw new RuntimeException( e );
+        }
+
+        return this.addUpdateEvent( auditable, auditEventType, note, detail );
+    }
 
     @Override
     protected void handleAddComment( Auditable auditable, String comment, String detail ) throws Exception {

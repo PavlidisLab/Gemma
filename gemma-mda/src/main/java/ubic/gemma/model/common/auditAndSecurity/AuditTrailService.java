@@ -19,6 +19,10 @@
 package ubic.gemma.model.common.auditAndSecurity;
 
 import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.access.prepost.PreAuthorize;
+
+import ubic.gemma.model.common.Auditable;
+import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 
 /**
  * @author kelsey
@@ -30,96 +34,90 @@ public interface AuditTrailService {
      * 
      */
 
-    @Secured( { "GROUP_USER" })
-    public void addComment( ubic.gemma.model.common.Auditable auditable, java.lang.String comment,
-            java.lang.String detail );
+    @PreAuthorize("hasPermission(#auditable, 'write') or hasPermission(#auditable, 'administration')")
+    public void addComment( Auditable auditable, java.lang.String comment, java.lang.String detail );
 
     /**
      * 
      */
-    @Secured( { "GROUP_USER" })
-    public void addOkFlag( ubic.gemma.model.common.Auditable auditable, java.lang.String comment,
-            java.lang.String detail );
+    @PreAuthorize("hasPermission(#auditable, 'write') or hasPermission(#auditable, 'administration')")
+    public void addOkFlag( Auditable auditable, java.lang.String comment, java.lang.String detail );
 
     /**
      * 
      */
-    @Secured( { "GROUP_USER" })
-    public void addTroubleFlag( ubic.gemma.model.common.Auditable auditable, java.lang.String comment,
-            java.lang.String detail );
+    @PreAuthorize("hasPermission(#auditable, 'write') or hasPermission(#auditable, 'administration')")
+    public void addTroubleFlag( Auditable auditable, java.lang.String comment, java.lang.String detail );
 
     /**
      * <p>
      * Add an update event defined by the given parameters, to the given auditable. Returns the generated event.
      * </p>
      */
-    @Secured( { "GROUP_USER" })
-    public ubic.gemma.model.common.auditAndSecurity.AuditEvent addUpdateEvent(
-            ubic.gemma.model.common.Auditable auditable, java.lang.String note );
+    @PreAuthorize("hasPermission(#auditable, 'write') or hasPermission(#auditable, 'administration')")
+    public AuditEvent addUpdateEvent( Auditable auditable, java.lang.String note );
 
     /**
      * 
      */
-    @Secured( { "GROUP_USER" })
-    public ubic.gemma.model.common.auditAndSecurity.AuditEvent addUpdateEvent(
-            ubic.gemma.model.common.Auditable auditable,
-            ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType auditEventType, java.lang.String note );
+    @PreAuthorize("hasPermission(#auditable, 'write') or hasPermission(#auditable, 'administration')")
+    public AuditEvent addUpdateEvent( Auditable auditable, AuditEventType auditEventType, java.lang.String note );
 
     /**
      * 
      */
-    @Secured( { "GROUP_USER" })
-    public ubic.gemma.model.common.auditAndSecurity.AuditEvent addUpdateEvent(
-            ubic.gemma.model.common.Auditable auditable,
-            ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType auditEventType, java.lang.String note,
+    @PreAuthorize("hasPermission(#auditable, 'write') or hasPermission(#auditable, 'administration')")
+    public AuditEvent addUpdateEvent( Auditable auditable, Class<? extends AuditEventType> type, java.lang.String note,
             java.lang.String detail );
 
     /**
      * 
      */
-    @Secured( { "GROUP_USER" })
-    public void addValidatedFlag( ubic.gemma.model.common.Auditable auditable, java.lang.String comment,
+    @PreAuthorize("hasPermission(#auditable, 'write') or hasPermission(#auditable, 'administration')")
+    public AuditEvent addUpdateEvent( Auditable auditable, AuditEventType auditEventType, java.lang.String note,
             java.lang.String detail );
 
     /**
      * 
      */
-    @Secured( { "GROUP_USER" })
-    public void audit( ubic.gemma.model.common.Auditable entity,
-            ubic.gemma.model.common.auditAndSecurity.AuditEvent auditEvent );
+    @PreAuthorize("hasPermission(#auditable, 'write') or hasPermission(#auditable, 'administration')")
+    public void addValidatedFlag( Auditable auditable, java.lang.String comment, java.lang.String detail );
+
+    /**
+     * 
+     */
+    @PreAuthorize("hasPermission(#auditable, 'write') or hasPermission(#auditable, 'administration')")
+    public void audit( Auditable entity, AuditEvent auditEvent );
 
     /**
      * 
      */
     @Secured( { "GROUP_USER" })
-    public ubic.gemma.model.common.auditAndSecurity.AuditTrail create(
-            ubic.gemma.model.common.auditAndSecurity.AuditTrail auditTrail );
+    public AuditTrail create( AuditTrail auditTrail );
 
-    /** 
+    /**
      * Return the last 'trouble' event (if any), if it was after the last 'ok' or 'validated' event (if any). Return
-     * null otherwise (indicating there is no trouble). 
+     * null otherwise (indicating there is no trouble).
      */
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY" })
-    public ubic.gemma.model.common.auditAndSecurity.AuditEvent getLastTroubleEvent(
-            ubic.gemma.model.common.Auditable auditable );
+    public AuditEvent getLastTroubleEvent( Auditable auditable );
 
-    /** 
-     * Return the last validation event (if any). 
+    /**
+     * Return the last validation event (if any).
      */
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY" })
-    public ubic.gemma.model.common.auditAndSecurity.AuditEvent getLastValidationEvent(
-            ubic.gemma.model.common.Auditable auditable );
+    public AuditEvent getLastValidationEvent( Auditable auditable );
 
     /**
      * 
      */
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY" })
-    public void thaw( ubic.gemma.model.common.Auditable auditable );
+    public void thaw( Auditable auditable );
 
     /**
      * Thaws the given audit trail to prevent lazy load errors
      */
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY" })
-    public void thaw( ubic.gemma.model.common.auditAndSecurity.AuditTrail auditTrail );
+    public void thaw( AuditTrail auditTrail );
 
 }

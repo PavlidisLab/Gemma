@@ -31,6 +31,8 @@ import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventValueObject;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
+import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
+import ubic.gemma.model.common.auditAndSecurity.eventType.ExperimentalDesignTrouble;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -72,6 +74,7 @@ public class AuditController {
      * @param comment
      * @param detail
      */
+    @SuppressWarnings("unchecked")
     public void addAuditEvent( EntityDelegator e, String auditEventType, String comment, String detail ) {
         Auditable entity = getAuditable( e );
         if ( entity == null ) {
@@ -88,7 +91,13 @@ public class AuditController {
         } else if ( auditEventType.equals( "ValidatedFlagEvent" ) ) {
             auditTrailService.addValidatedFlag( entity, comment, detail );
         } else {
-            log.warn( "We don't support that type of audit event yet, sorry: " + auditEventType );
+            Class<?> clazz;
+            try {
+                clazz = Class.forName( "ubic.gemma.model.common.auditAndSecurity.eventType." + auditEventType );
+            } catch ( ClassNotFoundException e1 ) {
+                throw new RuntimeException( "Unknown event type: " + auditEventType );
+            }
+            auditTrailService.addUpdateEvent( entity, ( Class<? extends AuditEventType> ) clazz, comment, detail );
         }
 
     }
