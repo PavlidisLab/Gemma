@@ -1,6 +1,7 @@
 
 <!--  Default header for only the main gemma home page -->
 <%@ include file="/common/taglibs.jsp"%>
+<jwr:script src='/scripts/ajax/ext/data/DwrProxy.js' />
 <c:if test="${pageContext.request.locale.language != 'en'}">
 	<div id="switchLocale">
 		<a href="<c:url value='/mainMenu.html?locale=en'/>"><fmt:message key="webapp.name" /> in English</a>
