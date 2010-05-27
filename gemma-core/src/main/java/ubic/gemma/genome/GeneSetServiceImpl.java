@@ -16,7 +16,7 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.model.genome.gene;
+package ubic.gemma.genome;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -27,6 +27,10 @@ import org.springframework.stereotype.Service;
 import ubic.gemma.model.association.Gene2GOAssociationService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.gene.GeneSet;
+import ubic.gemma.model.genome.gene.GeneSetDao;
+import ubic.gemma.model.genome.gene.GeneSetMember;
+import ubic.gemma.ontology.providers.GeneOntologyService;
 
 /**
  * Service for managing gene sets
@@ -38,10 +42,13 @@ import ubic.gemma.model.genome.Taxon;
 public class GeneSetServiceImpl implements GeneSetService {
 
     @Autowired
+    private GeneSetDao geneSetDao = null;
+
+    @Autowired
     private Gene2GOAssociationService gene2GoService = null;
 
     @Autowired
-    private GeneSetDao geneSetDao = null;
+    private GeneOntologyService geneOntologyService = null;
 
     /*
      * (non-Javadoc)
@@ -69,29 +76,6 @@ public class GeneSetServiceImpl implements GeneSetService {
      */
     public Collection<GeneSet> findByGene( Gene gene ) {
         return this.geneSetDao.findByGene( gene );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.genome.gene.GeneSetService#findByGoId(java.lang.String, ubic.gemma.model.genome.Taxon)
-     */
-    public GeneSet findByGoId( String name, Taxon taxon ) {
-        Collection<Gene> genes = this.gene2GoService.findByGOTerm( name, taxon );
-
-        if ( genes.isEmpty() ) return null;
-
-        GeneSet transientGeneSet = GeneSet.Factory.newInstance();
-        transientGeneSet.setName( name );
-        Collection<GeneSetMember> members = new HashSet<GeneSetMember>();
-        for ( Gene gene : genes ) {
-            GeneSetMember gmember = GeneSetMember.Factory.newInstance();
-            gmember.setGene( gene );
-            members.add( gmember );
-        }
-
-        transientGeneSet.setMembers( members );
-        return transientGeneSet;
     }
 
     /**
@@ -135,19 +119,6 @@ public class GeneSetServiceImpl implements GeneSetService {
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.model.genome.gene.GeneSetService#loadMyGeneSets()
-     */
-    public Collection<GeneSet> loadMyGeneSets() {
-        return loadAll();
-    }
-
-    public Collection<GeneSet> loadMySharedGeneSets() {
-        return loadAll();
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.genome.gene.GeneSetService#remove(java.util.Collection)
      */
     public void remove( Collection<GeneSet> sets ) {
@@ -185,5 +156,53 @@ public class GeneSetServiceImpl implements GeneSetService {
     public void update( GeneSet geneset ) {
         this.geneSetDao.update( geneset );
 
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.genome.gene.GeneSetService#loadMyGeneSets()
+     */
+    public Collection<GeneSet> loadMyGeneSets() {
+        return loadAll();
+    }
+
+    public Collection<GeneSet> loadMySharedGeneSets() {
+        return loadAll();
+    }
+
+    public GeneSet findByGoId( String goId, Taxon taxon ) {
+        
+        String ontologyName = geneOntologyService.getTermName( goId );
+        Collection<Gene> genes = this.gene2GoService.findByGOTerm( goId, taxon );
+        GeneSet transientGeneSet = GeneSet.Factory.newInstance();
+        if ( ontologyName == null || ontologyName.isEmpty() )
+            transientGeneSet.setName( goId );
+        else
+            transientGeneSet.setName( ontologyName + ": " + goId );
+        
+        
+        if ( genes == null ) return transientGeneSet;
+        
+        Collection<GeneSetMember> members = new HashSet<GeneSetMember>();
+        for ( Gene gene : genes ) {
+            GeneSetMember gmember = GeneSetMember.Factory.newInstance();
+            gmember.setGene( gene );
+            members.add( gmember );
+        }
+
+        transientGeneSet.setMembers( members );
+        return transientGeneSet;
+    }
+    
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.genome.gene.GeneSetService#findByGoTermName(java.lang.String, ubic.gemma.model.genome.Taxon)
+     */
+    public GeneSet findByGoTermName(String goTermName, Taxon taxon){
+        
+        //TODO:  create a gene ontology service that allows inexact searching of GO ontology terms
+       return null;
+        
+        
     }
 }

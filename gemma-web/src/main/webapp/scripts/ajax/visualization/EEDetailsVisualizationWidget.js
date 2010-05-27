@@ -26,6 +26,7 @@ Gemma.EEDetailsVisualizationWidget = Ext.extend(Gemma.GeneGrid, {
 	height : 120,
 	width : 420,
 
+	id : "eedvwId",
 	name : 'eedvw',
 
 	vizButtonId : "visualizeButton-" + Ext.id(),
@@ -33,8 +34,33 @@ Gemma.EEDetailsVisualizationWidget = Ext.extend(Gemma.GeneGrid, {
 	initComponent : function() {
 
 		// has to be done after constructor is done creating the handler...
+		var geneGroupCombo = new Gemma.GeneGroupCombo({
+					id : "visGeneGroupCombo",		reader : new Ext.data.ListRangeReader({
+											id : "id"
+										}, this.record),
+					listeners : {
+						'select' : {
+							fn : function(e, selectedGeneGroup) {
+
+								if (!selectedGeneGroup.data){
+									return;
+								}
+								var loadMask = new Ext.LoadMask(Ext.getCmp("eedvwId").getEl(), {
+											msg : "Loading Genes..."
+										});
+								loadMask.show();
+
+								this.loadGenes(selectedGeneGroup.data.geneIds,  function() {
+										loadMask.hide();
+									});
+							},
+							scope : this
+						}
+					}
+				});
+
 		Ext.apply(this, {
-			extraButtons : [new Ext.Button({
+			extraButtons : [geneGroupCombo, new Ext.Button({
 				id : this.vizButtonId,
 				text : "Show",
 				tooltip : "Click to display data for selected genes, or a 'random' selection of data from this experiment",
@@ -48,9 +74,10 @@ Gemma.EEDetailsVisualizationWidget = Ext.extend(Gemma.GeneGrid, {
 		this.on('ready', function(taxon) {
 					/*
 					 * taxon is the one filled in by staterestore; we need to enforce that we pick an exact taxon. Cant
-					 * use getToolbar() at this point.
+					 * use getToolbar() at this point. Set taxon, hide taxon combo and disable it....
 					 */
 					var foundTaxon = this.getTopToolbar().taxonCombo.setTaxonByCommonName(this.taxon);
+					this.getTopToolbar().taxonCombo.hide();
 					this.taxonChanged(foundTaxon, false);
 					this.getTopToolbar().taxonCombo.disable(false);
 				});

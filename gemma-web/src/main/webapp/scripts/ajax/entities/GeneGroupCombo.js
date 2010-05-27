@@ -1,3 +1,22 @@
+/*
+ * The Gemma project
+ * 
+ * Copyright (c) 2008 University of British Columbia
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
+ * 
+ */
+
+Ext.namespace('Gemma');
+
+
 Gemma.GeneGroupCombo = Ext.extend(Ext.form.ComboBox, {
 
 	name : 'geneGroupcombo',
@@ -14,39 +33,20 @@ Gemma.GeneGroupCombo = Ext.extend(Ext.form.ComboBox, {
 	mode : 'remote', // default = remote
 	queryDelay : 800, // default = 500
 
-	record : Ext.data.Record.create([{
-				name : "id",
-				type : "int"
-			}, {
-				name : "description"
-			}, {
-				name : "name",
-				type : "string"
-			}, {
-				name : "size",
-				type : "int"
-			},{
-				name : "geneMembers"
-				}]),
-
 	initComponent : function() {
 
 		var template = new Ext.XTemplate('<tpl for="."><div style="font-size:11px" class="x-combo-list-item" ext:qtip="{name}({size})"> {name} {description} ({size})</div></tpl>');
 
 		Ext.apply(this, {
 					tpl : template,
-					store : new Ext.data.Store({
-								proxy : new Ext.data.DWRProxy(GeneSetController.findGeneSetsByName),
-								reader : new Ext.data.ListRangeReader({
-											id : "id"
-										}, this.record),
+					store : new Gemma.GeneGroupStore({	proxy : new Ext.data.DWRProxy(GeneSetController.findGeneSetsByName),
 								sortInfo : {
 									field : "name",
 									dir : "ASC"
 								}
 							})
 				});
-
+			
 		Gemma.GeneGroupCombo.superclass.initComponent.call(this);
 
 		this.addEvents('genechanged');
@@ -61,7 +61,7 @@ Gemma.GeneGroupCombo = Ext.extend(Ext.form.ComboBox, {
 	onSelect : function(record, index) {
 		Gemma.GeneGroupCombo.superclass.onSelect.call(this, record, index);
 		if (!this.selectedGeneGroup || record.data.id != this.selectedGeneGroup.id) {
-			this.setGene(record.data);
+			this.setGeneGroup(record.data);
 			this.fireEvent('select', this, this.selectedGeneGroup);
 		}
 	},
@@ -70,7 +70,7 @@ Gemma.GeneGroupCombo = Ext.extend(Ext.form.ComboBox, {
 		Gemma.GeneGroupCombo.superclass.reset.call(this);
 		delete this.selectedGeneGroup;
 		this.lastQuery = null;
-		
+
 		if (this.tooltip) {
 			this.tooltip.destroy();
 		}
@@ -84,7 +84,7 @@ Gemma.GeneGroupCombo = Ext.extend(Ext.form.ComboBox, {
 	 * @return {}
 	 */
 	getParams : function(query) {
-		return [query, this.taxon ? this.taxon.id : 1];		//default taxon is human
+		return [query, this.taxon ? this.taxon.id : 1]; // default taxon is human
 	},
 
 	getGeneGroup : function() {
@@ -99,11 +99,11 @@ Gemma.GeneGroupCombo = Ext.extend(Ext.form.ComboBox, {
 		}
 		if (geneGroup) {
 			this.selectedGeneGroup = geneGroup;
-			//FIXME: gene group contains no taxon, taxon is in the gene members contained in the genegroup....
+			// FIXME: gene group contains no taxon, taxon is in the gene members contained in the genegroup....
 			this.taxon = geneGroup.taxon;
 			this.tooltip = new Ext.ToolTip({
 						target : this.getEl(),
-						html : String.format('{0} ({1})', geneGroup.name, description)
+						html : String.format('{0} ({1})', geneGroup.name, geneGroup.description)
 					});
 		}
 	},

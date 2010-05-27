@@ -371,8 +371,24 @@ public class DEDVController {
             dedvs = processedExpressionDataVectorService.getProcessedDataArrays( ees.iterator().next(), SAMPLE_SIZE,
                     false );
         } else {
-            genes = geneService.loadMultiple( geneIds );
 
+            if ( geneIds.size() > MAX_RESULTS_TO_RETURN ) {
+                log.warn( geneIds.size() + " genes for visulization. To many.  Only using first "
+                        + MAX_RESULTS_TO_RETURN + " genes. " );
+                Collection<Long> reducedGeneIds = new ArrayList<Long>();
+                
+                Integer i = 1;             
+                //TODO:  shuffle the list so not always the same?
+                for ( Long id : geneIds ) {
+                    reducedGeneIds.add( id );
+                    if ( i >= MAX_RESULTS_TO_RETURN ) break;
+                    i++;
+                }
+                geneIds = reducedGeneIds;
+            }
+            
+            
+            genes = geneService.loadMultiple( geneIds );            
             if ( genes.size() == 0 ) {
                 throw new IllegalArgumentException( "No genes found matching the given ids" );
             }

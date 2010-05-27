@@ -16,7 +16,7 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.model.genome.gene;
+package ubic.gemma.genome;
 
 import java.util.Collection;
 
@@ -25,6 +25,7 @@ import org.springframework.security.core.userdetails.User;
 
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.gene.GeneSet;
 
 /**
  * Service for managing gene sets
@@ -62,11 +63,33 @@ public interface GeneSetService {
     public Collection<GeneSet> findByGene( Gene gene );
 
 
+    /**
+     * @param name
+     * @return
+     */
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public Collection<GeneSet> findByName(String name);
     
+    /**
+     * finds gene sets by goTermId eg: GO:0000002
+     * Note: the gene set returned is a transient entity
+     * @param goId
+     * @param taxon
+     * @return
+     */
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY"})
-    public GeneSet findByGoId(String name, Taxon taxon);
+    public GeneSet findByGoId(String goId, Taxon taxon);
+    
+    /**
+     * finds genesets by go term name eg: "trans-hexaprenyltranstransferase activity"
+     * Note: the gene set returned is a transient entity
+     * @param goTermName
+     * @param taxon
+     * @return
+     */
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY"})
+    public GeneSet findByGoTermName(String goTermName, Taxon taxon);
+    
     
     
     /**
