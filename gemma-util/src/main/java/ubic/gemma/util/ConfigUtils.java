@@ -193,10 +193,17 @@ public class ConfigUtils {
     }
 
     /**
-     * @return the configured base url (e.g., http://www.chibi.ubc. a/Gemma) , or a warning if not configured.
+     * @return the configured base url (e.g., http://www.chibi.ubc.ca/Gemma) , or a warning if not configured.
      */
     public static String getBaseUrl() {
-        return getString( "gemma.base.url", "[URL to Gemma not configured]" );
+        return getString( "gemma.base.url", "http://www.chibi.ubc.ca/Gemma/" );
+    }
+
+    /**
+     * @return host url e.g. http://www.chibi.ubc.ca
+     */
+    public static String getHostUrl() {
+        return getString( "gemma.hosturl", "http://www.chibi.ubc.ca/" );
     }
 
     /**

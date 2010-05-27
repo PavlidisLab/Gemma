@@ -12,11 +12,9 @@ Ext.namespace('Gemma.ProbeBrowser');
 
 Ext.BLANK_IMAGE_URL = '/Gemma/images/default/s.gif';
 
-// FIXME make this configurable
-Gemma.GEMMA_BASE_URL = "http://www.chibi.ubc.ca/Gemma/";
-
 Gemma.UCSC_ICON = "/Gemma/images/logo/ucsc.gif";
 Gemma.NCBI_ICON = "/Gemma/images/logo/ncbi.gif";
+UCSC_TRACKS='http://genome.ucsc.edu/cgi-bin/hgTracks';
 
 /**
  * 
@@ -161,8 +159,8 @@ Gemma.ProbeDetailsGrid = Ext.extend(Ext.grid.GridPanel, {
 		var organism = d.targetChromosome.taxon;
 		var database = this.getDb(organism);
 		if (database) {
-			var link = "http://genome.ucsc.edu/cgi-bin/hgTracks?org=" + organism + "&pix=850&db=" + database
-					+ "&hgt.customText=" + Gemma.GEMMA_BASE_URL + "blatTrack.html?id=" + d.id;
+			var link = UCSC_TRACKS + "?org=" + organism + "&pix=850&db=" + database
+					+ "&hgt.customText=" + Gemma.BASEURL + "blatTrack.html?id=" + d.id;
 			res = res + "&nbsp;<a title='Genome browser view (opens in new window)' target='_blank' href='" + link
 					+ "'><img src='" + Gemma.UCSC_ICON + "' /></a>";
 		}

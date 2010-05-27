@@ -27,38 +27,40 @@ var showDesignUploadForm = function() {
 			});
 
 	var w = new Ext.Window({
-		title : "Experimental design upload",
-		closeAction : 'close',
-		id : 'experimental-design-upload-form-window',
-		width : 550,
-		items : [{
-			xtype : 'panel',
-			collapsible : true,
-			title : 'Instructions',
-			collapsed : false,
-			frame : false,
-			border : true,
-			html : '<p>Experimental design submission works in two phases. ' +
-					'First you must upload your design file (file format instructions' +
-					' <a target="_blank" href="http://www.chibi.ubc.ca/faculty/pavlidis/wiki/display/gemma/Experimental+Design+Upload">here</a>). ' +
-					'Then click "submit". If your file format is invalid or does not match the properties of the ' +
-					'experiment the design is intended for, you will see an error message.</p>'
-		}, uploadForm],
-		buttons : [{
-					id : 'submit-design-button',
-					value : 'Submit',
-					handler : submitDesign,
-					text : "Submit dataset",
-					disabled : true
-				}, {
-					value : 'Cancel',
-					text : 'Cancel',
-					enabled : true,
-					handler : function() {
-						w.close();
-					}
-				}]
-	});
+				title : "Experimental design upload",
+				closeAction : 'close',
+				id : 'experimental-design-upload-form-window',
+				width : 550,
+				items : [{
+					xtype : 'panel',
+					collapsible : true,
+					title : 'Instructions',
+					collapsed : false,
+					frame : false,
+					border : true,
+					html : '<p>Experimental design submission works in two phases. ' +
+							'First you must upload your design file (file format instructions' +
+							' <a target="_blank" href="' +
+							Gemma.HOST +
+							'faculty/pavlidis/wiki/display/gemma/Experimental+Design+Upload">here</a>). ' +
+							'Then click "submit". If your file format is invalid or does not match the properties of the ' +
+							'experiment the design is intended for, you will see an error message.</p>'
+				}, uploadForm],
+				buttons : [{
+							id : 'submit-design-button',
+							value : 'Submit',
+							handler : submitDesign,
+							text : "Submit dataset",
+							disabled : true
+						}, {
+							value : 'Cancel',
+							text : 'Cancel',
+							enabled : true,
+							handler : function() {
+								w.close();
+							}
+						}]
+			});
 
 	w.show();
 };
@@ -171,7 +173,8 @@ Ext.onReady(function() {
 							factorValueGrid.getStore().removeAll();
 							factorValueGrid
 									.setTitle("Continuous values not displayed here, see the 'sample details' tab");
-							factorValueGrid.getEl().mask("Continuous values not displayed here, see the 'sample details' tab");
+							factorValueGrid.getEl()
+									.mask("Continuous values not displayed here, see the 'sample details' tab");
 
 						} else {
 							factorValueGrid.getEl().unmask();

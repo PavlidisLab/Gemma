@@ -136,8 +136,8 @@ Gemma.DatasetGroupEditor = Ext.extend(Ext.Window, {
 								return this.datasetGroupMembersGrid.getStore().find('id', rid) < 0;
 							}, this);
 
-					this.sourceDatasetsGrid.setTitle(this.sourceDatasetsGrid.title + ", "
-							+ this.sourceDatasetsGrid.getStore().getCount() + " addable");
+					this.sourceDatasetsGrid.setTitle(this.sourceDatasetsGrid.title + ", " +
+							this.sourceDatasetsGrid.getStore().getCount() + " addable");
 
 				}.createDelegate(this))
 
@@ -197,8 +197,9 @@ Gemma.DatasetGroupEditor = Ext.extend(Ext.Window, {
 				this.detailsmask.show();
 				ExpressionExperimentController.getDescription(record.id, {
 							callback : function(data) {
-								Ext.DomHelper.overwrite(this.dataSetDetailsPanel.body, "<h1>" + record.get('shortName')
-												+ "</h1><h2>" + record.get('name') + "</h2><p>" + data + "</p>");
+								Ext.DomHelper.overwrite(this.dataSetDetailsPanel.body, "<h1>" +
+												record.get('shortName') + "</h1><h2>" + record.get('name') +
+												"</h2><p>" + data + "</p>");
 								this.detailsmask.hide();
 							}.createDelegate(this)
 						});
@@ -308,8 +309,7 @@ Gemma.DatasetGroupEditor = Ext.extend(Ext.Window, {
 			},
 
 			onHelp : function() {
-				window.open('http://www.chibi.ubc.ca/faculty/pavlidis/wiki/display/gemma/Dataset+chooser',
-						'DataSetChooserHelp');
+				window.open(Gemma.HOST + 'faculty/pavlidis/wiki/display/gemma/Dataset+chooser', 'DataSetChooserHelp');
 			}
 
 		});

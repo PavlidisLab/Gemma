@@ -28,7 +28,7 @@ Gemma.ExperimentalFactorChooserPanel = Ext.extend(Ext.Window, {
 	eeFactorsMap : null,
 
 	reset : function(eeSet) {
-		if (this.currentEEset  && eeSet != this.currentEEset) {
+		if (this.currentEEset && eeSet != this.currentEEset) {
 			// console.log("reset " + eeSet);
 			this.eeFactorsMap = null;
 		}
@@ -98,11 +98,12 @@ Gemma.ExperimentalFactorChooserPanel = Ext.extend(Ext.Window, {
 		Ext.Msg
 				.alert(
 						"Help for factor choose",
-						"The meta-analysis can only use one factor per study. Experiments that have more"
-								+ " than one factor will be shown here (or view all experiments)."
-								+ " Click on the factor field to get a menu for choosing among multiple possibilities. Use the 'hinting' "
-								+ "button to choose the type of factor most useful to you, to save manual work. For more help see <a target='_blank' "
-								+ "href='http://www.chibi.ubc.ca/faculty/pavlidis/wiki/display/gemma/Dataset+chooser#Datasetchooser-TheGemmaexperimentalfactorchooser'>this page</a>");
+						"The meta-analysis can only use one factor per study. Experiments that have more" +
+								" than one factor will be shown here (or view all experiments)." +
+								" Click on the factor field to get a menu for choosing among multiple possibilities. Use the 'hinting' " +
+								"button to choose the type of factor most useful to you, to save manual work. For more help see <a target='_blank' " +
+								"href='" + Gemma.WIKI +
+								"Dataset+chooser#Datasetchooser-TheGemmaexperimentalfactorchooser'>this page</a>");
 
 	},
 
@@ -288,7 +289,7 @@ Gemma.ExperimentalFactorChooserPanel = Ext.extend(Ext.Window, {
 		 * Locate the matching factor, if any, and set the value in the store. No filtering is actually done here; the
 		 * return value stops additional searching.
 		 */
-		editor.field.store.each(function(record) { 
+		editor.field.store.each(function(record) {
 					if (record.get('name').match(regex) || record.get('category').match(regex)) {
 						r.set('value', record.get('name'));
 						return false; // break iteration
