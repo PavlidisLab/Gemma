@@ -63,7 +63,7 @@ import ubic.gemma.web.remote.EntityDelegator;
 @Controller
 public class SecurityController {
 
-    private static final String GROUP_MANAGER_URL = "http://www.chibi.ubc.ca/Gemma/manageGroups.html";
+    private static final String GROUP_MANAGER_URL = ConfigUtils.getBaseUrl() + "manageGroups.html";
 
     private static Log log = LogFactory.getLog( SecurityController.class );
 

@@ -206,23 +206,18 @@ public class SignupController extends BaseController {
 
             model.put( "password", "" );
 
-            /*
-             * FIXME: make this url configurable.
-             */
-            String host = "www.chibi.ubc.ca";
-
-            model.put( "confirmLink", "http://" + host + "/Gemma/confirmRegistration.html?key=" + u.getSignupToken()
+            model.put( "confirmLink", ConfigUtils.getBaseUrl() + "confirmRegistration.html?key=" + u.getSignupToken()
                     + "&username=" + u.getUsername() );
             model.put( "message", getText( "signup.email.message", request.getLocale() ) );
-            model.put( "overviewURL", "http://" + host + "/Gemma/static/about.html" );
-            model.put( "faqURL", "http://" + host + "/Gemma/resources/faq.html" );
-            model.put( "wikiURL", "http://" +  host + "/faculty/pavlidis/wiki/display/gemma" );
-            
+            model.put( "overviewURL", ConfigUtils.getBaseUrl() + "static/about.html" );
+            model.put( "faqURL", ConfigUtils.getBaseUrl() + "resources/faq.html" );
+            model.put( "wikiURL", ConfigUtils.getBaseUrl() + "faculty/pavlidis/wiki/display/gemma" );
+
             /*
              * FIXME: make the template name configurable.
              */
             String templateName = "accountCreated.vm";
-            sendEmail( u.getUsername(),  u.getEmail(), "Successful registration for Gemma", templateName, model );
+            sendEmail( u.getUsername(), u.getEmail(), "Successful registration for Gemma", templateName, model );
             this.saveMessage( request, "signup.email.sent", u.getEmail(),
                     "A confirmation email was sent. Please check your mail and click the link it contains" );
         } catch ( Exception e ) {

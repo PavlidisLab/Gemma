@@ -584,7 +584,7 @@ public class TaskRunningService implements InitializingBean {
                 /*
                  * TODO provide a link to something relevant something like:
                  */
-                String url = "http://www.chibi.ubc.ca/Gemma/user/tasks.html?taskId=" + taskId;
+                String url = ConfigUtils.getBaseUrl() + "user/tasks.html?taskId=" + taskId;
 
                 mailEngine.send( msg );
             }
