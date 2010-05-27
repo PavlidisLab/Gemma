@@ -18,9 +18,7 @@
  */
 package ubic.gemma.web.util;
 
-import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.gene.GeneProductType;
 import ubic.gemma.model.genome.gene.GeneProductValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
@@ -51,9 +49,6 @@ public class LinkUtils {
         Taxon taxon = blatResult.getQuerySequence().getTaxon();
         String organism = taxon.getCommonName();
 
-        // String database = taxon.getExternalDatabase().getName();
-        // FIXME get this from the taxon.
-
         String database = "";
         if ( organism.equalsIgnoreCase( "Human" ) ) {
             database = ConfigUtils.getString( "gemma.goldenpath.db.human" );
@@ -61,6 +56,8 @@ public class LinkUtils {
             database = ConfigUtils.getString( "gemma.goldenpath.db.rat" );
         } else if ( organism.equalsIgnoreCase( "Mouse" ) ) {
             database = ConfigUtils.getString( "gemma.goldenpath.db.mouse" );
+        } else {
+            return null;
         }
 
         String link = "http://genome.ucsc.edu/cgi-bin/hgTracks?org=" + organism + "&pix=850" + "&db=" + database
