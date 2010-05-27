@@ -1121,6 +1121,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
         switch ( filter ) {
             case 1:
                 eesToKeep = expressionExperimentService.loadLackingEvent( DifferentialExpressionAnalysisEvent.class );
+                eesToKeep.removeAll( expressionExperimentService.loadLackingFactors() );
                 break;
             case 2:
                 eesToKeep = expressionExperimentService.loadLackingEvent( LinkAnalysisEvent.class );
