@@ -39,6 +39,7 @@ Gemma.GeneGroupCombo = Ext.extend(Ext.form.ComboBox, {
 
 		Ext.apply(this, {
 					tpl : template,
+					autoLoad : false,
 					store : new Gemma.GeneGroupStore({	proxy : new Ext.data.DWRProxy(GeneSetController.findGeneSetsByName),
 								sortInfo : {
 									field : "name",
