@@ -19,13 +19,16 @@
 package ubic.gemma.model.genome.gene;
 
 import java.util.Collection;
+import java.util.HashSet;
 
+import org.apache.commons.lang.StringUtils;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 import org.springframework.stereotype.Repository;
 
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.Taxon;
 
 /**
  * Base Spring DAO Class: is able to create, update, remove, load, and find objects of type
@@ -45,6 +48,7 @@ public class GeneSetDaoImpl extends HibernateDaoSupport implements GeneSetDao {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.persistence.BaseDao#create(java.util.Collection)
      */
     public Collection<? extends GeneSet> create( final Collection<? extends GeneSet> entities ) {
@@ -61,6 +65,7 @@ public class GeneSetDaoImpl extends HibernateDaoSupport implements GeneSetDao {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.persistence.BaseDao#create(java.lang.Object)
      */
     public GeneSet create( GeneSet entity ) {
@@ -75,27 +80,30 @@ public class GeneSetDaoImpl extends HibernateDaoSupport implements GeneSetDao {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.gene.GeneSetDao#findByGene(ubic.gemma.model.genome.Gene)
      */
     @SuppressWarnings("unchecked")
     public Collection<GeneSet> findByGene( Gene gene ) {
         return this.getHibernateTemplate().findByNamedParam(
-                "select gs from GeneSetImpl gs inner join gs.members m inner join m.gene ge where :g in (ge)", "g", gene );
+                "select gs from GeneSetImpl gs inner join gs.members m inner join m.gene g where g = :g", "g", gene );
     }
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.gene.GeneSetDao#findByGene(ubic.gemma.model.genome.Gene)
      */
     @SuppressWarnings("unchecked")
     public Collection<GeneSet> findByName( String name ) {
+        if ( StringUtils.isBlank( name ) ) return new HashSet<GeneSet>();
         return this.getHibernateTemplate().findByNamedParam(
                 "select gs from GeneSetImpl gs where gs.name like :name order by gs.name", "name", name + "%" );
     }
 
-    
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.persistence.BaseDao#load(java.util.Collection)
      */
     @SuppressWarnings("unchecked")
@@ -105,6 +113,7 @@ public class GeneSetDaoImpl extends HibernateDaoSupport implements GeneSetDao {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.persistence.BaseDao#load(java.lang.Long)
      */
     public GeneSet load( Long id ) {
@@ -117,6 +126,7 @@ public class GeneSetDaoImpl extends HibernateDaoSupport implements GeneSetDao {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.persistence.BaseDao#loadAll()
      */
     public Collection<? extends GeneSet> loadAll() {
@@ -126,6 +136,7 @@ public class GeneSetDaoImpl extends HibernateDaoSupport implements GeneSetDao {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.persistence.BaseDao#remove(java.util.Collection)
      */
     public void remove( Collection<? extends GeneSet> entities ) {
@@ -137,6 +148,7 @@ public class GeneSetDaoImpl extends HibernateDaoSupport implements GeneSetDao {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.persistence.BaseDao#remove(java.lang.Object)
      */
     public void remove( GeneSet entity ) {
@@ -149,6 +161,7 @@ public class GeneSetDaoImpl extends HibernateDaoSupport implements GeneSetDao {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.persistence.BaseDao#remove(java.lang.Long)
      */
     public void remove( Long id ) {
@@ -164,6 +177,7 @@ public class GeneSetDaoImpl extends HibernateDaoSupport implements GeneSetDao {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.persistence.BaseDao#update(java.util.Collection)
      */
     public void update( final Collection<? extends GeneSet> entities ) {
@@ -179,6 +193,7 @@ public class GeneSetDaoImpl extends HibernateDaoSupport implements GeneSetDao {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.persistence.BaseDao#update(java.lang.Object)
      */
     public void update( GeneSet entity ) {
@@ -186,6 +201,24 @@ public class GeneSetDaoImpl extends HibernateDaoSupport implements GeneSetDao {
             throw new IllegalArgumentException( "GeneSet.update - 'geneSet' can not be null" );
         }
         this.getHibernateTemplate().update( entity );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.genome.gene.GeneSetDao#findByName(java.lang.String, ubic.gemma.model.genome.Taxon)
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    public Collection<GeneSet> findByName( String name, Taxon taxon ) {
+        if ( StringUtils.isBlank( name ) ) return new HashSet<GeneSet>();
+        assert taxon != null;
+
+        return this
+                .getHibernateTemplate()
+                .findByNamedParam(
+                        "select gs from GeneSetImpl gs join gs.members g where g.taxon = :taxon and gs.name like :name order by gs.name",
+                        new String[] { "query", "taxon" }, new Object[] { name + "%", taxon } );
     }
 
 }

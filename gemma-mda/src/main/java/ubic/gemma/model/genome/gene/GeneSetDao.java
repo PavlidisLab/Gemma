@@ -21,6 +21,7 @@ package ubic.gemma.model.genome.gene;
 import java.util.Collection;
 
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.BaseDao;
 
 /**
@@ -42,5 +43,12 @@ public interface GeneSetDao extends BaseDao<GeneSet> {
      * @return a collection of geneSets that match the given search term. 
      */
     Collection<GeneSet> findByName( String name);
+
+    /**
+     * @param name
+     * @param taxon
+     * @return
+     */
+    Collection<GeneSet> findByName( String name, Taxon taxon );
 
 }

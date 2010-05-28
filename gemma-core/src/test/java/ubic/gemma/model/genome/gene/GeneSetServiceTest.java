@@ -31,12 +31,12 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import ubic.gemma.genome.GeneSetService;
 import ubic.gemma.model.association.Gene2GOAssociation;
 import ubic.gemma.model.association.Gene2GOAssociationService;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.ontology.providers.GeneOntologyService;
+import ubic.gemma.search.GeneSetSearch;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
@@ -58,6 +58,9 @@ public class GeneSetServiceTest extends BaseSpringContextTest {
     GeneOntologyService geneOntologyService;
 
     @Autowired
+    GeneSetSearch geneSetSearch;
+
+    @Autowired
     Gene2GOAssociationService gene2GoService;
 
     @Before
@@ -66,7 +69,6 @@ public class GeneSetServiceTest extends BaseSpringContextTest {
         InputStream is = this.getClass().getResourceAsStream( "/data/loader/ontology/molecular-function.test.owl" );
         assert is != null;
         geneOntologyService.loadTermsInNameSpace( is );
-        log.info( "Ready to test" );
 
         g = this.getTestPeristentGene();
         g3 = this.getTestPeristentGene();
@@ -147,6 +149,8 @@ public class GeneSetServiceTest extends BaseSpringContextTest {
         Collection<GeneSet> foundSets = geneSetService.findByName( "Find" );
         assertTrue( foundSets.size() > 0 );
 
+        assertTrue( geneSetService.findByName( "Find", g.getTaxon() ).size() > 0 );
+
     }
 
     @Test
@@ -165,7 +169,7 @@ public class GeneSetServiceTest extends BaseSpringContextTest {
         g2Go2.setGene( g3 );
         gene2GoService.create( g2Go2 );
 
-        GeneSet gset = this.geneSetService.findByGoId( GOTERM_QUERY, g3.getTaxon() );
+        GeneSet gset = this.geneSetSearch.findByGoId( GOTERM_QUERY, g3.getTaxon() );
         assertTrue( gset.getMembers().size() == 2 );
     }
 

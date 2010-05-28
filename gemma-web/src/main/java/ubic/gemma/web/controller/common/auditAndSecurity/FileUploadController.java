@@ -31,6 +31,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.directwebremoting.WebContextFactory;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 import org.springframework.web.servlet.ModelAndView;
@@ -38,6 +39,7 @@ import org.springframework.web.servlet.mvc.AbstractController;
 
 import ubic.gemma.web.util.upload.FailedMultipartHttpServletRequest;
 import ubic.gemma.web.util.upload.FileUploadUtil;
+import ubic.gemma.web.util.upload.UploadInfo;
 import ubic.gemma.web.view.JSONView;
 
 /**
@@ -59,10 +61,17 @@ public class FileUploadController extends AbstractController {
      * @throws FileNotFoundException
      */
     public String upload( InputStream is ) throws FileNotFoundException, IOException {
-
         File copiedFile = FileUploadUtil.copyUploadedInputStream( is );
-        log.info( "Uploaded file!" );
+        log.info( "DWR Uploaded file!" );
         return copiedFile.getAbsolutePath();
+    }
+
+    public UploadInfo getUploadStatus() {
+        HttpServletRequest req = WebContextFactory.get().getHttpServletRequest();
+        if ( req.getSession().getAttribute( "uploadInfo" ) != null )
+            return ( UploadInfo ) req.getSession().getAttribute( "uploadInfo" );
+        else
+            return new UploadInfo();
     }
 
     /*
@@ -127,7 +136,7 @@ public class FileUploadController extends AbstractController {
 
             }
         }
-        
+
         return new ModelAndView( new JSONView( "text/html; charset=utf-8" ), model );
     }
 }

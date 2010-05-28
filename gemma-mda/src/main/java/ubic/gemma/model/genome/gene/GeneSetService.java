@@ -16,7 +16,7 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.genome;
+package ubic.gemma.model.genome.gene;
 
 import java.util.Collection;
 
@@ -62,36 +62,13 @@ public interface GeneSetService {
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public Collection<GeneSet> findByGene( Gene gene );
 
-
     /**
      * @param name
      * @return
      */
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    public Collection<GeneSet> findByName(String name);
-    
-    /**
-     * finds gene sets by goTermId eg: GO:0000002
-     * Note: the gene set returned is a transient entity
-     * @param goId
-     * @param taxon
-     * @return
-     */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY"})
-    public GeneSet findByGoId(String goId, Taxon taxon);
-    
-    /**
-     * finds genesets by go term name eg: "trans-hexaprenyltranstransferase activity"
-     * Note: the gene set returned is a transient entity
-     * @param goTermName
-     * @param taxon
-     * @return
-     */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY"})
-    public GeneSet findByGoTermName(String goTermName, Taxon taxon);
-    
-    
-    
+    public Collection<GeneSet> findByName( String name );
+
     /**
      * Load all the genesets with the given IDs
      * 
@@ -169,5 +146,13 @@ public interface GeneSetService {
      */
     @Secured( { "GROUP_USER", "AFTER_ACL_FILTER_MY_PRIVATE_DATA" })
     public Collection<GeneSet> loadMySharedGeneSets();
+
+    /**
+     * @param name
+     * @param taxon
+     * @return
+     */
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    public Collection<GeneSet> findByName( String name, Taxon taxon );
 
 }

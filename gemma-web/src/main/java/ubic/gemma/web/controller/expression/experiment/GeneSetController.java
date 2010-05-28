@@ -1,26 +1,31 @@
 /*
- * The Gemma project Copyright (c) 2010 University of British Columbia Licensed under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the
- * License at http://www.apache.org/licenses/LICENSE-2.0 Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied. See the License for the specific language governing permissions and limitations
- * under the License.
+ * The Gemma project
+ * 
+ * Copyright (c) 2010 University of British Columbia
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
  */
-
 package ubic.gemma.web.controller.expression.experiment;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Controller;
 
-import ubic.gemma.genome.GeneSetService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
@@ -28,7 +33,9 @@ import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.model.genome.gene.GeneSetImpl;
 import ubic.gemma.model.genome.gene.GeneSetMember;
+import ubic.gemma.model.genome.gene.GeneSetService;
 import ubic.gemma.model.genome.gene.GeneValueObject;
+import ubic.gemma.search.GeneSetSearch;
 import ubic.gemma.security.SecurityService;
 import ubic.gemma.web.controller.common.auditAndSecurity.GeneSetValueObject;
 
@@ -43,10 +50,11 @@ public class GeneSetController {
 
     private static final Double DEFAULT_SCORE = 0.0;
 
-    private static Log log = LogFactory.getLog( GeneSetController.class );
-
     @Autowired
     private GeneService geneService = null;
+
+    @Autowired
+    private GeneSetSearch geneSetSearch;
 
     @Autowired
     private GeneSetService geneSetService = null;
@@ -89,25 +97,30 @@ public class GeneSetController {
 
         Gene gene = geneService.load( geneId );
 
-        Collection<GeneSet> genesets = this.geneSetService.findByGene( gene );
+        Collection<GeneSet> genesets = this.geneSetSearch.findByGene( gene );
 
         return GeneSetValueObject.convert2ValueObjects( genesets );
     }
 
+    /**
+     * @param name
+     * @param taxonId
+     * @return
+     */
     public Collection<GeneSetValueObject> findGeneSetsByName( String name, Long taxonId ) {
 
-        if ( name == null || taxonId == null ) return new ArrayList<GeneSetValueObject>();
-
-        Collection<GeneSet> foundGeneSets = this.geneSetService.findByName( name );
+        if ( name == null || taxonId == null )
+            throw new IllegalArgumentException( "Query must not be null; Taxon must not be null" );
 
         Taxon tax = taxonService.load( taxonId );
+
         if ( tax == null ) {
-            log.warn( "Can't find matching go groups for search term: " + name
-                    + "because no valid taxon found for taxon id = " + taxonId );
-            return GeneSetValueObject.convert2ValueObjects( foundGeneSets );
+            throw new IllegalArgumentException( "Can't locate taxon with id=" + taxonId );
         }
 
-        GeneSet goSet = this.geneSetService.findByGoId( name, tax );
+        Collection<GeneSet> foundGeneSets = this.geneSetSearch.findByName( name, tax );
+
+        GeneSet goSet = this.geneSetSearch.findByGoId( name, tax );
         if ( goSet != null ) foundGeneSets.add( goSet );
         return GeneSetValueObject.convert2ValueObjects( foundGeneSets );
     }
