@@ -217,7 +217,7 @@ public class GeneSetDaoImpl extends HibernateDaoSupport implements GeneSetDao {
         return this
                 .getHibernateTemplate()
                 .findByNamedParam(
-                        "select gs from GeneSetImpl gs join gs.members gm join gm.gene g where g.taxon = :taxon and gs.name like :name order by gs.name",
+                        "select gs from GeneSetImpl gs join gs.members gm join gm.gene g where g.taxon = :taxon and gs.name like :query order by gs.name",
                         new String[] { "query", "taxon" }, new Object[] { name + "%", taxon } );
     }
 
