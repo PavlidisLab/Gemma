@@ -649,11 +649,12 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
     }
 
     /**
+     * This is an important method for fetching vectors.
+     * 
      * @param ees
      * @param genes
      * @return
      */
-
     private Collection<DoubleVectorValueObject> handleGetProcessedExpressionDataArrays(
             Collection<ExpressionExperiment> ees, Collection<Gene> genes, boolean fullMap ) {
 
@@ -670,7 +671,8 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
 
         if ( needToSearch.size() != 0 ) {
 
-            Map<CompositeSequence, Collection<Gene>> cs2gene = CommonQueries.getCs2GeneMap( genesToSearch, this
+            Collection<ArrayDesign> arrays = CommonQueries.getArrayDesignsUsed( ees, this.getSession() ).keySet();
+            Map<CompositeSequence, Collection<Gene>> cs2gene = CommonQueries.getCs2GeneMap( genesToSearch, arrays, this
                     .getSession() );
 
             if ( cs2gene.size() == 0 ) {

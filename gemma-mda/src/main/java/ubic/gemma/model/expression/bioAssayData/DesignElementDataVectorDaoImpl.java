@@ -99,8 +99,8 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
         }
         timer.stop();
         if ( timer.getTime() > 50 ) {
-            log.info( "Fetch vectors for " + cs2gene.size() + " probes in " + ( ees == null ? "(?)" : ees.size() )
-                    + "ees : " + timer.getTime() + "ms" );
+            log.info( "Fetched " + dedv2genes.size() + " vectors for " + cs2gene.size() + " probes in "
+                    + ( ees == null ? "(?)" : ees.size() ) + "ees : " + timer.getTime() + "ms" );
         }
         return dedv2genes;
     }
