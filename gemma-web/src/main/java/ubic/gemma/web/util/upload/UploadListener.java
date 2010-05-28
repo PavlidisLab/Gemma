@@ -23,17 +23,10 @@
  */
 package ubic.gemma.web.util.upload;
 
-import java.util.Queue;
-
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
-import ubic.gemma.job.TaskCommand;
-import ubic.gemma.job.progress.ProgressData;
-import ubic.gemma.job.progress.ProgressJob;
-import ubic.gemma.job.progress.ProgressManager;
 
 /**
  * This is created when a multipart request is received (via the CommonsMultipartMonitoredResolver). It starts of a
@@ -47,11 +40,15 @@ public class UploadListener implements OutputStreamListener {
 
     private static Log log = LogFactory.getLog( UploadListener.class.getName() );
 
+    /**
+     * Set this while debugging. A value of 10-50 is sufficient.
+     */
     private long delay = 0;
+
     private long totalToRead = 0;
     private long totalBytesRead = 0;
-    private ProgressJob pJob;
-    private String taskId;
+    private HttpServletRequest request;
+    private int totalFiles = -1;
 
     /**
      * @param request
@@ -63,6 +60,7 @@ public class UploadListener implements OutputStreamListener {
     }
 
     public UploadListener( HttpServletRequest request ) {
+        this.request = request;
         this.totalToRead = request.getContentLength();
     }
 
@@ -72,9 +70,8 @@ public class UploadListener implements OutputStreamListener {
      * @see ubic.gemma.util.upload.OutputStreamListener#start()
      */
     public void start() {
-        this.pJob = ProgressManager.createProgressJob( new TaskCommand() );
-        pJob.setForwardWhenDone( false );
-        log.info( "Upload started ..." );
+        updateUploadInfo( "Start" );
+        totalFiles++;
     }
 
     /*
@@ -83,27 +80,12 @@ public class UploadListener implements OutputStreamListener {
      * @see ubic.gemma.util.upload.OutputStreamListener#bytesRead(int)
      */
     public void bytesRead( int bytesRead ) {
+        totalBytesRead = totalBytesRead + bytesRead;
+        updateUploadInfo( "Reading" );
 
-        int oldPercent = 0;
-        if ( pJob != null ) {
-            Queue<ProgressData> progressData = pJob.getProgressData();
-            if ( progressData == null || progressData.size() == 0 ) {
-                return; // probably it is finshed.
-            }
-            oldPercent = progressData.peek().getPercent();
-        }
-
-        this.totalBytesRead = totalBytesRead + bytesRead;
-        int newPercent = ( int ) ( ( ( double ) totalBytesRead / totalToRead ) * 100.00 );
-        if ( newPercent > oldPercent + 5 || newPercent == 100 ) {
-            if ( pJob != null ) {
-                pJob.updateProgress( newPercent );
-            }
-            // FIXME the oldPercent is always zero.
-            log.debug( newPercent + "% read (" + totalBytesRead + "/" + totalToRead + " bytes) old percent="
-                    + oldPercent );
-        }
-
+        /*
+         * For debugging, slow things down
+         */
         if ( delay > 0 ) {
             try {
                 Thread.sleep( delay );
@@ -111,6 +93,11 @@ public class UploadListener implements OutputStreamListener {
                 e.printStackTrace();
             }
         }
+    }
+
+    private void updateUploadInfo( String status ) {
+        request.getSession().setAttribute( "uploadInfo",
+                new UploadInfo( totalFiles, totalToRead, totalBytesRead, status ) );
     }
 
     /*
@@ -128,13 +115,7 @@ public class UploadListener implements OutputStreamListener {
      * @see ubic.gemma.util.upload.OutputStreamListener#done()
      */
     public void done() {
-        if ( pJob != null ) {
-            log.info( "Finished Uploading. Processing File..." );
-        }
-    }
-
-    public String getTaskId() {
-        return taskId;
+        updateUploadInfo( "done" );
     }
 
 }

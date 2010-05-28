@@ -370,13 +370,13 @@ ExpressionExperimentController.updateBasics = function(p0, callback) {
 	dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController', 'updateBasics', p0,
 			callback);
 }
-//ExpressionExperimentController.updateBioMaterialMapping = function(callback) {
-//	dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController',
-//			'updateBioMaterialMapping', callback);
-//}
+// ExpressionExperimentController.updateBioMaterialMapping = function(callback) {
+// dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController',
+// 'updateBioMaterialMapping', callback);
+// }
 ExpressionExperimentController.unmatchAllBioAssays = function(p0, callback) {
-	dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController',
-			'unmatchAllBioAssays',p0,  callback);
+	dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController', 'unmatchAllBioAssays',
+			p0, callback);
 }
 // ====================================================================================
 if (ExpressionExperimentDataFetchController == null)
@@ -459,6 +459,9 @@ if (FileUploadController == null)
 FileUploadController._path = '/Gemma/dwr';
 FileUploadController.upload = function(p0, callback) {
 	dwr.engine._execute(FileUploadController._path, 'FileUploadController', 'upload', p0, callback);
+}
+FileUploadController.getUploadStatus = function(callback) {
+	dwr.engine._execute(FileUploadController._path, 'FileUploadController', 'getUploadStatus', callback);
 }
 // ====================================================================================
 if (GeneController == null)

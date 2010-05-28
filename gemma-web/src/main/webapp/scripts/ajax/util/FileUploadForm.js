@@ -29,7 +29,7 @@ Gemma.FileUploadForm = Ext.extend(Ext.Panel, {
 										header : false,
 										method : 'POST',
 										frame : true,
-										url : '/Gemma/uploadFile.html',
+										url : '/Gemma/uploadFile.html', // FileUploadController
 										timeout : 15000,
 										defaults : {
 											anchor : '95%',
@@ -37,11 +37,6 @@ Gemma.FileUploadForm = Ext.extend(Ext.Panel, {
 											msgTarget : 'side'
 										},
 										items : [{
-													xtype : 'hidden',
-													value : this.taskId,
-													id : 'taskId',
-													name : 'taskId'
-												}, {
 													xtype : 'fileuploadfield',
 													id : 'form-file',
 													emptyText : 'Select a file',
@@ -64,32 +59,29 @@ Gemma.FileUploadForm = Ext.extend(Ext.Panel, {
 											id : 'file-upload-button',
 											disabled : true,
 											handler : function() {
-												var taskId = parseInt(Math.random() * 1e12, 12);
-												this.taskId = taskId;
-
 												var form = Ext.getCmp('uploadform').getForm();
 												if (form.isValid()) {
 													form.submit({
-																waitMsg : 'Uploading your file ...',
 																success : function(form, a) {
 																	var m = a.result;
 																	var m = a.result;
-																	Ext.getCmp('messages')
-																			.setText("File uploaded: " + m.originalFile
-																					+ "; " + m.size + " bytes");
+																	Ext.getCmp('messages').setText("File uploaded: " +
+																			m.originalFile + "; " + m.size + " bytes");
 																	this.fireEvent('finish', m);
 
 																}.createDelegate(this),
 																failure : function(form, a) {
-																	Ext.Msg.alert('Failure',
-																			'Problem with processing of file on the server: '
-																					+ a.result.error);
+																	Ext.Msg
+																			.alert(
+																					'Failure',
+																					'Problem with processing of file on the server: ' +
+																							a.result.error);
 
 																	this.fireEvent('fail', a.result);
 																}.createDelegate(this),
 																scope : this
 															});
-													this.fireEvent('start');
+													this.startMonitor();
 												}
 											},
 											scope : this
@@ -109,6 +101,42 @@ Gemma.FileUploadForm = Ext.extend(Ext.Panel, {
 							cancel : true
 						});
 
+			},
+
+			processProgressInfo : function(data) {
+				if (data) {
+					if (data.status == 'done') {
+						window.clearInterval(this.timeoutid);
+					} else {
+						Ext.getCmp('messages').setStatus(data.bytesRead + "/" + data.totalSize + " bytes read");
+					}
+				}
+			},
+
+			startMonitor : function() {
+				/*
+				 * Start monitoring progress.
+				 */
+				this.timeoutid = window.setInterval(this.refreshProgress.createDelegate(this), 2000);
+				this.fireEvent('start');
+				this.on('finish', function() {
+							window.clearInterval(this.timeoutid);
+						});
+				this.on('fail', function() {
+							window.clearInterval(this.timeoutid);
+						});
+			},
+
+			refreshProgress : function() {
+				var callback = this.processProgressInfo.createDelegate(this);
+				var errorHandler = function(e) {
+					window.clearInterval(this.timeoutid);
+				};
+
+				FileUploadController.getUploadStatus({
+							callback : callback,
+							errorHandler : errorHandler
+						});
 			}
 
 		});

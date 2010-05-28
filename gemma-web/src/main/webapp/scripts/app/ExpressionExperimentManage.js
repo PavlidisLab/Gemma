@@ -212,10 +212,7 @@ Ext.onReady(function() {
 
 			var suggestRun = true;
 			var qtip = 'ext:qtip="OK"';
-			if (type == 'FailedProcessedVectorComputationEventImpl') { // note:
-				// no
-				// such
-				// thing.
+			if (type == 'FailedProcessedVectorComputationEventImpl') { 
 				color = 'red';
 				qtip = 'ext:qtip="Failed"';
 			}
@@ -244,10 +241,7 @@ Ext.onReady(function() {
 				var color = "#000";
 				var suggestRun = true;
 				var qtip = 'ext:qtip="OK"';
-				if (type == 'FailedDifferentialExpressionAnalysisEventImpl') { // note:
-					// no
-					// such
-					// thing.
+				if (type == 'FailedDifferentialExpressionAnalysisEventImpl') {  
 					color = 'red';
 					qtip = 'ext:qtip="Failed"';
 				}
@@ -559,7 +553,7 @@ Gemma.EEReportPanel = Ext.extend(Ext.grid.GridPanel, {
 			},
 
 			getBookmark : function() {
-				var url = "http://www.chibi.ubc.ca/Gemma/expressionExperiment/showAllExpressionExperimentLinkSummaries.html?";
+				var url = Gemma.BASEURL + "expressionExperiment/showAllExpressionExperimentLinkSummaries.html?";
 				if (this.ids) {
 					url += "&ids=" + this.ids.join(",");
 				}

@@ -15,7 +15,7 @@ var showDesignUploadForm = function() {
 				allowBlank : false
 			});
 
-	uploadForm.on('start', function(result) {
+	uploadForm.on('start', function(taskId) {
 				Ext.getCmp('submit-design-button').disable();
 			}.createDelegate(this));
 

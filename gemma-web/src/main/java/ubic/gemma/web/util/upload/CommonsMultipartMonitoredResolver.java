@@ -19,7 +19,6 @@
 package ubic.gemma.web.util.upload;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -36,7 +35,6 @@ import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.core.io.Resource;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.util.StringUtils;
@@ -100,6 +98,7 @@ public class CommonsMultipartMonitoredResolver implements MultipartResolver, Ser
     @SuppressWarnings("unchecked")
     public MultipartHttpServletRequest resolveMultipart( HttpServletRequest request ) throws MultipartException {
         String enc = determineEncoding( request );
+
         this.fileUpload = this.newFileUpload( request );
         DiskFileItemFactory newFactory = ( DiskFileItemFactory ) fileUpload.getFileItemFactory();
         fileUpload.setSizeMax( sizeMax );
@@ -126,7 +125,6 @@ public class CommonsMultipartMonitoredResolver implements MultipartResolver, Ser
                         value = fileItem.getString();
                     }
 
-                    logger.info( fieldName + " = " + value );
                     String[] curParam = ( String[] ) multipartParams.get( fieldName );
                     if ( curParam == null ) {
                         // simple form field
@@ -140,8 +138,6 @@ public class CommonsMultipartMonitoredResolver implements MultipartResolver, Ser
                     // multipart file field
                     MultipartFile file = new CommonsMultipartFile( fileItem );
                     multipartFiles.set( file.getName(), file );
-                    // multipartParams.put( "size", new String[] { ( new Long( file.getSize() ) ).toString() } );
-                    // multipartParams.put( "file", new String[] { file.getOriginalFilename() } );
                     if ( logger.isDebugEnabled() ) {
                         logger.debug( "Found multipart file [" + file.getName() + "] of size " + file.getSize()
                                 + " bytes with original filename [" + file.getOriginalFilename() + "]" );
@@ -204,6 +200,7 @@ public class CommonsMultipartMonitoredResolver implements MultipartResolver, Ser
      * @return the new FileUpload instance
      */
     protected ServletFileUpload newFileUpload( HttpServletRequest request ) {
+
         UploadListener listener = new UploadListener( request );
         DiskFileItemFactory factory = new MonitoredDiskFileItemFactory( listener );
         ServletFileUpload upload = new ServletFileUpload( factory );
