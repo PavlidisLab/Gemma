@@ -16,7 +16,6 @@
 
 Ext.namespace('Gemma');
 
-
 Gemma.GeneGroupCombo = Ext.extend(Ext.form.ComboBox, {
 
 	name : 'geneGroupcombo',
@@ -39,15 +38,16 @@ Gemma.GeneGroupCombo = Ext.extend(Ext.form.ComboBox, {
 
 		Ext.apply(this, {
 					tpl : template,
-					autoLoad : false,
-					store : new Gemma.GeneGroupStore({	proxy : new Ext.data.DWRProxy(GeneSetController.findGeneSetsByName),
+					store : new Gemma.GeneGroupStore({
+								proxy : new Ext.data.DWRProxy(GeneSetController.findGeneSetsByName),
 								sortInfo : {
 									field : "name",
 									dir : "ASC"
-								}
+								},
+								autoLoad : false
 							})
 				});
-			
+
 		Gemma.GeneGroupCombo.superclass.initComponent.call(this);
 
 		this.addEvents('genechanged');
