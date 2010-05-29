@@ -30,7 +30,7 @@ import java.util.List;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
-
+ 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
@@ -82,7 +82,7 @@ public class DEDVController {
     protected static Log log = LogFactory.getLog( DEDVController.class.getName() );
 
     private static final double DEFAULT_THRESHOLD = 0.05;
-    private static final int MAX_RESULTS_TO_RETURN = 50;
+    private static final int MAX_RESULTS_TO_RETURN = 150;
     private static final int SAMPLE_SIZE = 20; // Number of dedvs to return if no genes given
 
     @Autowired
@@ -373,22 +373,13 @@ public class DEDVController {
         } else {
 
             if ( geneIds.size() > MAX_RESULTS_TO_RETURN ) {
-                log.warn( geneIds.size() + " genes for visulization. To many.  Only using first "
+                log.warn( geneIds.size() + " genes for visulization. Too many.  Only using first "
                         + MAX_RESULTS_TO_RETURN + " genes. " );
-                Collection<Long> reducedGeneIds = new ArrayList<Long>();
-                
-                Integer i = 1;             
-                //TODO:  shuffle the list so not always the same?
-                for ( Long id : geneIds ) {
-                    reducedGeneIds.add( id );
-                    if ( i >= MAX_RESULTS_TO_RETURN ) break;
-                    i++;
-                }
-                geneIds = reducedGeneIds;
+                List<Long> reducedGeneIds = new ArrayList<Long>( geneIds );
+                geneIds = reducedGeneIds.subList( 0, MAX_RESULTS_TO_RETURN );
             }
-            
-            
-            genes = geneService.loadMultiple( geneIds );            
+
+            genes = geneService.loadMultiple( geneIds );
             if ( genes.size() == 0 ) {
                 throw new IllegalArgumentException( "No genes found matching the given ids" );
             }

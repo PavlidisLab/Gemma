@@ -356,6 +356,12 @@ public class GoMetric {
 
         Map<String, Double> GOTermFrequency = new HashMap<String, Double>();
         List<String> goTerms = new ArrayList<String>( geneOntologyService.getAllGOTermIds() );
+
+        // Remove 'BiologicalProcess' etc.
+        goTerms.remove( BASE_GO_URI + "GO_0008150" );
+        goTerms.remove( BASE_GO_URI + "GO_0003674" );
+        goTerms.remove( BASE_GO_URI + "GO_0005575" );
+
         List<Long> geneSet = new ArrayList<Long>( gene2go.keySet() );
         DoubleMatrix<Long, String> gene2term = new SparseDoubleMatrix<Long, String>( geneSet.size(), goTerms.size() );
 

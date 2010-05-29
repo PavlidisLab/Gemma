@@ -34,7 +34,7 @@ Gemma.GeneGroupCombo = Ext.extend(Ext.form.ComboBox, {
 
 	initComponent : function() {
 
-		var template = new Ext.XTemplate('<tpl for="."><div style="font-size:11px" class="x-combo-list-item" ext:qtip="{name}({size})"> {name} {description} ({size})</div></tpl>');
+		var template = new Ext.XTemplate('<tpl for="."><div style="font-size:11px" class="x-combo-list-item" ext:qtip="{name} ({size})"> {name} {description} ({size})</div></tpl>');
 
 		Ext.apply(this, {
 					tpl : template,
@@ -48,9 +48,7 @@ Gemma.GeneGroupCombo = Ext.extend(Ext.form.ComboBox, {
 							})
 				});
 
-		Gemma.GeneGroupCombo.superclass.initComponent.call(this);
-
-		this.addEvents('genechanged');
+		Gemma.GeneGroupCombo.superclass.initComponent.call(this); 
 
 		this.store.on("datachanged", function() {
 					if (this.store.getCount() === 0) {

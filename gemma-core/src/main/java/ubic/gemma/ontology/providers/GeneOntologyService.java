@@ -42,6 +42,8 @@ import ubic.basecode.ontology.model.AnnotationProperty;
 import ubic.basecode.ontology.model.OntologyClassRestriction;
 import ubic.basecode.ontology.model.OntologyResource;
 import ubic.basecode.ontology.model.OntologyTerm;
+import ubic.basecode.ontology.search.OntologyIndexer;
+import ubic.basecode.ontology.search.OntologySearch;
 import ubic.gemma.model.association.Gene2GOAssociationService;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.VocabCharacteristic;
@@ -50,6 +52,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.util.ConfigUtils;
 
+import com.hp.hpl.jena.ontology.OntModel;
 import com.hp.hpl.jena.ontology.OntModelSpec;
 import com.hp.hpl.jena.query.Query;
 import com.hp.hpl.jena.query.QueryExecution;
@@ -57,6 +60,7 @@ import com.hp.hpl.jena.query.QueryExecutionFactory;
 import com.hp.hpl.jena.query.QueryFactory;
 import com.hp.hpl.jena.query.QuerySolution;
 import com.hp.hpl.jena.query.ResultSet;
+import com.hp.hpl.jena.query.larq.IndexLARQ;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.Resource;
 
@@ -68,6 +72,10 @@ import com.hp.hpl.jena.rdf.model.Resource;
  */
 @Service
 public class GeneOntologyService implements InitializingBean {
+
+    public static enum GOAspect {
+        BIOLOGICAL_PROCESS, CELLULAR_COMPONENT, MOLECULAR_FUNCTION
+    }
 
     public static final String BASE_GO_URI = "http://purl.org/obo/owl/GO#";
 
@@ -85,11 +93,7 @@ public class GeneOntologyService implements InitializingBean {
 
     private static Log log = LogFactory.getLog( GeneOntologyService.class.getName() );
 
-    private final static String MF_URL = "http://www.berkeleybop.org/ontologies/obo-all/molecular_function/molecular_function.owl";
-
-    public static enum GOAspect {
-        MOLECULAR_FUNCTION, BIOLOGICAL_PROCESS, CELLULAR_COMPONENT
-    };
+    private final static String MF_URL = "http://www.berkeleybop.org/ontologies/obo-all/molecular_function/molecular_function.owl";;
 
     // private DirectedGraph graph = null;
 
@@ -97,9 +101,9 @@ public class GeneOntologyService implements InitializingBean {
     private static final AtomicBoolean ready = new AtomicBoolean( false );
     private static final AtomicBoolean running = new AtomicBoolean( false );
 
+    private static Map<String, GOAspect> term2Aspect = new HashMap<String, GOAspect>();
     // map of uris to terms
     private static Map<String, OntologyTerm> uri2Term = new HashMap<String, OntologyTerm>();
-    private static Map<String, GOAspect> term2Aspect = new HashMap<String, GOAspect>();
 
     /**
      * @param term
@@ -110,10 +114,6 @@ public class GeneOntologyService implements InitializingBean {
         return asRegularGoId( uri );
     }
 
-    public static String asRegularGoId( String uri ) {
-        return uri.replaceAll( ".*?#", "" ).replace( "_", ":" );
-    }
-
     /**
      * @param term
      * @return Usual formatted GO id, e.g., GO:0039392
@@ -122,6 +122,10 @@ public class GeneOntologyService implements InitializingBean {
         if ( term == null ) return null;
         String uri = term.getUri();
         return asRegularGoId( uri );
+    }
+
+    public static String asRegularGoId( String uri ) {
+        return uri.replaceAll( ".*?#", "" ).replace( "_", ":" );
     }
 
     /**
@@ -225,6 +229,10 @@ public class GeneOntologyService implements InitializingBean {
      */
     private Map<Gene, Collection<OntologyTerm>> goTerms = new HashMap<Gene, Collection<OntologyTerm>>();
 
+    private IndexLARQ index;
+
+    private OntModel model;
+
     /**
      * Cache of go term -> parent terms
      */
@@ -314,6 +322,23 @@ public class GeneOntologyService implements InitializingBean {
     }
 
     /**
+     * Search by inexact string
+     * 
+     * @param queryString
+     * @return
+     */
+    public Collection<OntologyTerm> findTerm( String queryString ) {
+
+        if ( !isReady() ) return new HashSet<OntologyTerm>();
+
+        if ( log.isDebugEnabled() ) log.debug( "Searching Gene Ontology for '" + queryString + "'" );
+
+        assert index != null : "attempt to search Gene Ontology when index is null";
+        Collection<OntologyTerm> matches = OntologySearch.matchClasses( model, index, queryString );
+        return matches;
+    }
+
+    /**
      * @param entry
      * @return children, NOT including part-of relations.
      */
@@ -331,14 +356,11 @@ public class GeneOntologyService implements InitializingBean {
     }
 
     /**
-     * @return a collection of all existing GO term ids
+     * @return a collection of all existing GO term ids (GO_XXXXXXX) -- including the roots of the ontologies
+     *         ('biological process' etc.)
      */
     public Collection<String> getAllGOTermIds() {
-
         Collection<String> goTermIds = uri2Term.keySet();
-        goTermIds.remove( BASE_GO_URI + "GO_0008150" );
-        goTermIds.remove( BASE_GO_URI + "GO_0003674" );
-        goTermIds.remove( BASE_GO_URI + "GO_0005575" );
         return goTermIds;
     }
 
@@ -558,6 +580,7 @@ public class GeneOntologyService implements InitializingBean {
      * @return
      */
     public String getTermName( String goId ) {
+
         OntologyTerm t = getTermForId( goId );
         if ( t == null ) return "[Not available]"; // not ready yet?
         return t.getTerm();
@@ -582,7 +605,7 @@ public class GeneOntologyService implements InitializingBean {
             return;
         }
 
-        initializeGoOntology();
+        initializeGeneOntology();
     }
 
     /**
@@ -607,6 +630,21 @@ public class GeneOntologyService implements InitializingBean {
         if ( potentialParent.isRoot() ) return true; // well....
         Collection<OntologyTerm> parents = getAllParents( child );
         return parents.contains( potentialParent );
+    }
+
+    /**
+     * @param goId e.g. GO:0000244 or as GO_0000244
+     * @return
+     * @throws an exception of GO isn't ready.
+     */
+    public Boolean isAValidGOId( String goId ) {
+        if ( !this.isReady() ) {
+            throw new UnsupportedOperationException( "Gene ontology isn't ready so cannot check validity of IDs" );
+        }
+        if ( uri2Term.containsKey( toUri( goId ) ) )
+            return true;
+        else
+            return uri2Term.containsKey( toUri( goId.replaceFirst( "_", ":" ) ) );
     }
 
     /**
@@ -648,6 +686,19 @@ public class GeneOntologyService implements InitializingBean {
     }
 
     /**
+     * Primarily here for testing.
+     * 
+     * @param is
+     * @throws IOException
+     */
+    public void loadTermsInNameSpace( InputStream is ) {
+        this.model = OntologyLoader.loadMemoryModel( is, null, OntModelSpec.OWL_MEM );
+        Collection<OntologyResource> terms = OntologyLoader.initialize( null, model );
+        this.index = OntologyIndexer.indexOntology( "GeneOntology", model );
+        addTerms( terms );
+    }
+
+    /**
      * @param cacheManager the cacheManager to set
      */
     public void setCacheManager( CacheManager cacheManager ) {
@@ -672,19 +723,7 @@ public class GeneOntologyService implements InitializingBean {
      * 
      */
     protected synchronized void forceLoadOntology() {
-        initializeGoOntology();
-    }
-
-    /**
-     * Primarily here for testing.
-     * 
-     * @param is
-     * @throws IOException
-     */
-    public void loadTermsInNameSpace( InputStream is ) {
-        Collection<OntologyResource> terms = OntologyLoader.initialize( null, OntologyLoader.loadMemoryModel( is, null,
-                OntModelSpec.OWL_MEM ) );
-        addTerms( terms );
+        initializeGeneOntology();
     }
 
     /**
@@ -692,8 +731,9 @@ public class GeneOntologyService implements InitializingBean {
      * @throws IOException
      */
     protected void loadTermsInNameSpace( String url ) {
-        Collection<OntologyResource> terms = OntologyLoader.initialize( url, OntologyLoader.loadMemoryModel( url,
-                OntModelSpec.OWL_MEM ) );
+        this.model = OntologyLoader.loadMemoryModel( url, OntModelSpec.OWL_MEM );
+        Collection<OntologyResource> terms = OntologyLoader.initialize( url, model );
+        this.index = OntologyIndexer.indexOntology( url.replaceFirst( ".*/", "" ).replace( ".owl", "" ), model );
         addTerms( terms );
     }
 
@@ -829,7 +869,7 @@ public class GeneOntologyService implements InitializingBean {
     /**
      * 
      */
-    private synchronized void initializeGoOntology() {
+    private synchronized void initializeGeneOntology() {
 
         Thread loadThread = new Thread( new Runnable() {
             public void run() {

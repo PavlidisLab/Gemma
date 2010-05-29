@@ -24,7 +24,6 @@ import java.util.HashSet;
 
 import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.model.genome.gene.GeneSetMember;
-import ubic.gemma.util.EntityUtils;
 
 /**
  * Represents a Gene group gene set.
@@ -36,10 +35,19 @@ public class GeneSetValueObject implements Serializable {
 
     private static final long serialVersionUID = 6212231006289412683L;
 
-    public static Collection<GeneSetValueObject> convert2ValueObjects( Collection<GeneSet> genesets ) {
+    /**
+     * @param genesets
+     * @param includeOnesWithoutGenes if true, even gene sets that lack genes will be included.
+     * @return
+     */
+    public static Collection<GeneSetValueObject> convert2ValueObjects( Collection<GeneSet> genesets,
+            boolean includeOnesWithoutGenes ) {
         Collection<GeneSetValueObject> results = new HashSet<GeneSetValueObject>();
 
         for ( GeneSet gs : genesets ) {
+            if ( !includeOnesWithoutGenes && gs.getMembers().isEmpty() ) {
+                continue;
+            }
             results.add( new GeneSetValueObject( gs ) );
         }
 

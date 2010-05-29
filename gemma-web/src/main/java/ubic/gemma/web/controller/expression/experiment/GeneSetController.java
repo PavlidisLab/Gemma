@@ -22,6 +22,8 @@ import java.util.Collection;
 import java.util.HashSet;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Controller;
@@ -47,6 +49,8 @@ import ubic.gemma.web.controller.common.auditAndSecurity.GeneSetValueObject;
  */
 @Controller
 public class GeneSetController {
+
+    private static Log log = LogFactory.getLog( GeneSetController.class );
 
     private static final Double DEFAULT_SCORE = 0.0;
 
@@ -99,18 +103,18 @@ public class GeneSetController {
 
         Collection<GeneSet> genesets = this.geneSetSearch.findByGene( gene );
 
-        return GeneSetValueObject.convert2ValueObjects( genesets );
+        return GeneSetValueObject.convert2ValueObjects( genesets, false );
     }
 
     /**
-     * @param name
+     * @param query string to match to a gene set.
      * @param taxonId
      * @return
      */
-    public Collection<GeneSetValueObject> findGeneSetsByName( String name, Long taxonId ) {
-
-        if ( name == null || taxonId == null )
+    public Collection<GeneSetValueObject> findGeneSetsByName( String query, Long taxonId ) {
+        if ( query == null || taxonId == null ) {
             throw new IllegalArgumentException( "Query must not be null; Taxon must not be null" );
+        }
 
         Taxon tax = taxonService.load( taxonId );
 
@@ -118,11 +122,23 @@ public class GeneSetController {
             throw new IllegalArgumentException( "Can't locate taxon with id=" + taxonId );
         }
 
-        Collection<GeneSet> foundGeneSets = this.geneSetSearch.findByName( name, tax );
+        Collection<GeneSet> foundGeneSets = this.geneSetSearch.findByName( query, tax );
 
-        GeneSet goSet = this.geneSetSearch.findByGoId( name, tax );
-        if ( goSet != null ) foundGeneSets.add( goSet );
-        return GeneSetValueObject.convert2ValueObjects( foundGeneSets );
+        /*
+         * Behaviour implemented here (easy to change): If we have a match in our system we stop here. Otherwise, we go
+         * on to search the Gene Ontology.
+         */
+
+        if ( foundGeneSets.isEmpty() ) {
+            if ( query.toUpperCase().startsWith( "GO" ) ) {
+                GeneSet goSet = this.geneSetSearch.findByGoId( query, tax );
+                if ( goSet != null ) foundGeneSets.add( goSet );
+            } else {
+                foundGeneSets.addAll( geneSetSearch.findByGoTermName( query, tax ) );
+            }
+        }
+
+        return GeneSetValueObject.convert2ValueObjects( foundGeneSets, false );
     }
 
     /**

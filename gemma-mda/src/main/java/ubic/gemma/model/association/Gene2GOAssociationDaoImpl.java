@@ -48,6 +48,7 @@ public class Gene2GOAssociationDaoImpl extends ubic.gemma.model.association.Gene
      * (non-Javadoc)
      * @see ubic.gemma.model.association.Gene2GOAssociationDaoBase#find(ubic.gemma.model.association.Gene2GOAssociation)
      */
+    @SuppressWarnings("unchecked")
     @Override
     public Gene2GOAssociation find( Gene2GOAssociation gene2GOAssociation ) {
         try {
@@ -95,6 +96,7 @@ public class Gene2GOAssociationDaoImpl extends ubic.gemma.model.association.Gene
      * @see
      * ubic.gemma.model.association.Gene2GOAssociationDaoBase#handleFindAssociationByGene(ubic.gemma.model.genome.Gene)
      */
+    @SuppressWarnings("unchecked")
     @Override
     protected Collection<Gene2GOAssociation> handleFindAssociationByGene( Gene gene ) throws Exception {
         final String queryString = "from Gene2GOAssociationImpl where gene = :gene";
