@@ -350,7 +350,8 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 		if (this.editable) {
 			result = result +
 					Gemma.SecurityManager.getSecurityLink(
-							'ubic.gemma.model.expression.experiment.ExpressionExperimentImpl', ee.id, ee.isPublic, ee.isShared, this.editable);
+							'ubic.gemma.model.expression.experiment.ExpressionExperimentImpl', ee.id, ee.isPublic,
+							ee.isShared, this.editable);
 		}
 
 		return result || "No flags";
@@ -535,7 +536,10 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 
 		var vizPanel = new Gemma.EEDetailsVisualizationWidget({
 					renderTo : 'visualization',
-					taxon : e.parentTaxon
+					taxon : {
+						commonName : e.parentTaxon,
+						id : e.parentTaxonId
+					}
 				});
 
 		/*
@@ -599,7 +603,7 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 		// // window.location.reload(true);
 		// });
 
-		 manager.on('differential', function() {
+		manager.on('differential', function() {
 					window.location.reload(true);
 				});
 		// manager.on('processedVector', function() {
