@@ -498,8 +498,8 @@ public class Probe2ProbeCoexpressionDaoImpl extends
                 + " EXPERIMENTS2EXPRESSION_EXPERIMENT_SETS e2ees INNER JOIN INVESTIGATION e ON e.ID=e2ees.EXPERIMENTS_FK "
                 + "INNER JOIN EXPRESSION_EXPERIMENT_SET eeset ON eeset.ID=e2ees.EXPRESSION_EXPERIMENT_SETS_FK "
                 + "INNER JOIN ANALYSIS a ON a.EXPRESSION_EXPERIMENT_SET_ANALYZED_FK=eeset.ID "
-                + "INNER JOIN PROBE_COEXPRESSION_ANALYSIS_PROBES_USED pu ON pu.PROBE_COEXPRESSION_ANALYSES_FK=a.ID "
-                + "INNER JOIN GENE2CS gc ON gc.CS=pu.PROBES_USED_FK WHERE a.class='ProbeCoexpressionAnalysisImpl' AND e.ID= :eeid ";
+                + "INNER JOIN COEXPRESSION_PROBE pu ON pu.PROBE_COEXPRESSION_ANALYSIS_FK=a.ID "
+                + "INNER JOIN GENE2CS gc ON gc.CS=pu.PROBE_FK WHERE a.class='ProbeCoexpressionAnalysisImpl' AND e.ID= :eeid ";
 
         List<BigInteger> r = NativeQueryUtils.findByNamedParam( this.getHibernateTemplate(), nativeQueryString, "eeid",
                 ee.getId() );
