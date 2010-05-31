@@ -70,16 +70,20 @@ public class GeneCoexpressionAnalysisDaoImpl extends
      */
     @Override
     public void remove( final GeneCoexpressionAnalysis geneCoexpressionAnalysis ) {
-
+        /*
+         * Note that we don't worry about taxon here since the foreign key is the analysis. We could have bothered to
+         * figure out which taxon and thus which table we need to do.
+         */
         for ( String clazz : linkClasses ) {
-            // delete the links first.
-            String deleteLinkString = "delete link from " + clazz + " link inner join link.sourceAnalysis a where a=?";
+            String deleteLinkString = "delete from " + clazz + " where sourceAnalysis =?";
             int numdeleted = this.getHibernateTemplate().bulkUpdate( deleteLinkString, geneCoexpressionAnalysis );
             if ( numdeleted > 0 ) {
                 log.info( "Deleted " + numdeleted + " gene2gene links" );
                 break;
             }
         }
+
+        this.getHibernateTemplate().delete( geneCoexpressionAnalysis );
     }
 
     /*
@@ -87,6 +91,7 @@ public class GeneCoexpressionAnalysisDaoImpl extends
      * 
      * @see ubic.gemma.model.analysis.AnalysisDaoImpl#handleFindByInvestigation(ubic.gemma.model.analysis.Investigation)
      */
+    @SuppressWarnings("unchecked")
     @Override
     protected Collection<GeneCoexpressionAnalysis> handleFindByInvestigation( Investigation investigation )
             throws Exception {
@@ -110,6 +115,7 @@ public class GeneCoexpressionAnalysisDaoImpl extends
         return results;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     /*
      * * If a taxon is not a species check if it has child taxa and if so retrieve the expression experiments for the
