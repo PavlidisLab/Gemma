@@ -26,6 +26,7 @@ import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import ubic.basecode.ontology.model.OntologyResource;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.model.association.Gene2GOAssociationService;
 import ubic.gemma.model.genome.Gene;
@@ -61,14 +62,13 @@ public class GeneSetSearch {
     }
 
     /**
-     * Finds gene sets by exact match to goTermId eg: GO:0000002 Note: the gene set returned is a transient entity
+     * Finds gene sets by exact match to goTermId eg: GO:0000002 Note: the gene set returned is not persistent.
      * 
      * @param goId
      * @param taxon
-     * @return
+     * @return a GeneSet or null if nothing is found
      */
     public GeneSet findByGoId( String goId, Taxon taxon ) {
-
         OntologyTerm goTerm = GeneOntologyService.getTermForId( StringUtils.strip( goId ) );
 
         if ( goTerm == null ) {
@@ -80,19 +80,21 @@ public class GeneSetSearch {
 
     /**
      * finds genesets by go term name eg: "trans-hexaprenyltranstransferase activity" Note: the gene sets returned are
-     * transient entity
+     * not persistent
      * 
      * @param goTermName
      * @param taxon
-     * @return
+     * @return a collection with the hits
      */
     public Collection<GeneSet> findByGoTermName( String goTermName, Taxon taxon ) {
-        Collection<OntologyTerm> matches = this.geneOntologyService.findTerm( StringUtils.strip( goTermName ) );
+        Collection<? extends OntologyResource> matches = this.geneOntologyService.findTerm( StringUtils
+                .strip( goTermName ) );
 
         Collection<GeneSet> results = new HashSet<GeneSet>();
 
-        for ( OntologyTerm t : matches ) {
-            results.add( goTermToGeneSet( t, taxon ) );
+        for ( OntologyResource t : matches ) {
+            GeneSet converted = goTermToGeneSet( t, taxon );
+            if ( converted != null ) results.add( converted );
         }
 
         return results;
@@ -120,20 +122,36 @@ public class GeneSetSearch {
     /**
      * Convert a GO term to a 'GeneSet', including genes from all child terms.
      */
-    private GeneSet goTermToGeneSet( OntologyTerm term, Taxon taxon ) {
+    private GeneSet goTermToGeneSet( OntologyResource term, Taxon taxon ) {
 
-        Collection<OntologyTerm> allMatches = this.geneOntologyService.getAllChildren( term );
+        if ( term.getUri() == null ) {
+            return null;
+        }
+
+        Collection<OntologyResource> allMatches = new HashSet<OntologyResource>();
+
+        if ( term instanceof OntologyTerm ) {
+            allMatches.addAll( this.geneOntologyService.getAllChildren( ( OntologyTerm ) term ) );
+        }
         allMatches.add( term );
 
         Collection<Gene> genes = new HashSet<Gene>();
 
-        for ( OntologyTerm t : allMatches ) {
+        for ( OntologyResource t : allMatches ) {
             String goId = uri2goid( t );
+            /*
+             * This is a slow step. We might want to defer it. Getting a count would be faster
+             */
             genes.addAll( this.gene2GoService.findByGOTerm( goId, taxon ) );
         }
 
         GeneSet transientGeneSet = GeneSet.Factory.newInstance();
         transientGeneSet.setName( uri2goid( term ) );
+
+        if ( term.getLabel().toUpperCase().startsWith( "GO_" ) ) {
+            // hm, this is an individual or a 'resource', not a 'class', but it's a real GO term. How to get the text.
+        }
+
         transientGeneSet.setDescription( term.getLabel() );
 
         for ( Gene gene : genes ) {
@@ -144,7 +162,7 @@ public class GeneSetSearch {
         return transientGeneSet;
     }
 
-    private String uri2goid( OntologyTerm t ) {
+    private String uri2goid( OntologyResource t ) {
         return t.getUri().replaceFirst( ".*/GO#", "" );
     }
 

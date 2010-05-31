@@ -23,10 +23,9 @@ Ext.namespace('Gemma');
  */
 Gemma.EEDetailsVisualizationWidget = Ext.extend(Gemma.GeneGrid, {
 
-	height : 120,
-	width : 420,
+	height : 220,
+	width : 550,
 
-	id : "eedvwId",
 	name : 'eedvw',
 
 	vizButtonId : "visualizeButton-" + Ext.id(),
@@ -34,25 +33,20 @@ Gemma.EEDetailsVisualizationWidget = Ext.extend(Gemma.GeneGrid, {
 	initComponent : function() {
 
 		// has to be done after constructor is done creating the handler...
-		var geneGroupCombo = new Gemma.GeneGroupCombo({
-					id : "visGeneGroupCombo",		reader : new Ext.data.ListRangeReader({
-											id : "id"
-										}, this.record),
+		this.geneGroupCombo = new Gemma.GeneGroupCombo({
+					id : "visGeneGroupCombo",
 					listeners : {
 						'select' : {
-							fn : function(e, selectedGeneGroup) {
+							fn : function(combo, record, index) {
 
-								if (!selectedGeneGroup.data){
-									return;
-								}
-								var loadMask = new Ext.LoadMask(Ext.getCmp("eedvwId").getEl(), {
-											msg : "Loading Genes..."
+								var loadMask = new Ext.LoadMask(this.getEl(), {
+											msg : "Loading Genes for " + record.get('name') + " ..."
 										});
 								loadMask.show();
 
-								this.loadGenes(selectedGeneGroup.data.geneIds,  function() {
-										loadMask.hide();
-									});
+								this.loadGenes(record.get('geneIds'), function() {
+											loadMask.hide();
+										});
 							},
 							scope : this
 						}
@@ -60,24 +54,26 @@ Gemma.EEDetailsVisualizationWidget = Ext.extend(Gemma.GeneGrid, {
 				});
 
 		Ext.apply(this, {
-			extraButtons : [geneGroupCombo, new Ext.Button({
-				id : this.vizButtonId,
-				text : "Show",
-				tooltip : "Click to display data for selected genes, or a 'random' selection of data from this experiment",
-				handler : this.showButHandler,
-				scope : this
-			})]
+			extraButtons : [this.geneGroupCombo, {
+						xtype : 'tbfill'
+					}, new Ext.Button({
+						id : this.vizButtonId,
+						text : "Show",
+						tooltip : "Click to display data for selected genes, or a 'random' selection of data from this experiment",
+						handler : this.showButHandler,
+						scope : this
+					})]
 		});
 
 		Gemma.EEDetailsVisualizationWidget.superclass.initComponent.call(this);
 
-		this.on('ready', function(taxon) {
+		this.on('ready', function() {
 					/*
-					 * taxon is the one filled in by staterestore; we need to enforce that we pick an exact taxon. Cant
-					 * use getToolbar() at this point. Set taxon, hide taxon combo and disable it....
+					 * Taxon is passed in during construction.
 					 */
-					var foundTaxon = this.getTopToolbar().taxonCombo.setTaxonByCommonName(this.taxon);
+					var foundTaxon = this.getTopToolbar().taxonCombo.setTaxonByCommonName(this.taxon.commonName);
 					this.getTopToolbar().taxonCombo.hide();
+					this.geneGroupCombo.taxon = this.taxon;
 					this.taxonChanged(foundTaxon, false);
 					this.getTopToolbar().taxonCombo.disable(false);
 				});

@@ -18,7 +18,6 @@
 
 Ext.namespace('Gemma');
 
-
 /**
  * Interface with two panels: one for the groups, one for the group members.
  * 
@@ -757,10 +756,23 @@ Gemma.GeneGroupStore = function(config) {
 				type : "int"
 			}, {
 				name : "name",
-				type : "string"
+				type : "string",
+				convert : function(v, rec) {
+					if (v.startsWith("GO")) {
+						return rec.description;
+					}
+					return v;
+				}
 			}, {
 				name : "description",
-				type : "string"
+				type : "string",
+				convert : function(v, rec) {
+					if (rec.name.startsWith("GO")) {
+						return rec.name
+					}
+					return v;
+				}
+
 			}, {
 				name : "publik",
 				type : "boolean"

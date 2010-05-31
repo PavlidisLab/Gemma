@@ -30,6 +30,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import net.sf.ehcache.CacheManager;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -229,7 +230,7 @@ public class GeneOntologyService implements InitializingBean {
      */
     private Map<Gene, Collection<OntologyTerm>> goTerms = new HashMap<Gene, Collection<OntologyTerm>>();
 
-    private IndexLARQ index;
+    private Collection<IndexLARQ> indices = new HashSet<IndexLARQ>();
 
     private OntModel model;
 
@@ -333,8 +334,24 @@ public class GeneOntologyService implements InitializingBean {
 
         if ( log.isDebugEnabled() ) log.debug( "Searching Gene Ontology for '" + queryString + "'" );
 
-        assert index != null : "attempt to search Gene Ontology when index is null";
-        Collection<OntologyTerm> matches = OntologySearch.matchClasses( model, index, queryString );
+        // make sure we are all-inclusive
+        String pquery = queryString.replaceAll( "\\s+", " +" );
+
+        Collection<OntologyResource> rawMatches = new HashSet<OntologyResource>();
+        for ( IndexLARQ index : this.indices ) {
+            // rawMatches.addAll( OntologySearch.matchClasses( model, index, pquery ) );
+            rawMatches.addAll( OntologySearch.matchIndividuals( model, index, pquery ) );
+        }
+
+        /*
+         * Required to make sure the descriptions are filled in.
+         */
+        Collection<OntologyTerm> matches = new HashSet<OntologyTerm>();
+        for ( OntologyResource r : rawMatches ) {
+            if ( r.getUri() == null ) continue;
+            OntologyTerm termForURI = GeneOntologyService.getTermForURI( r.getUri() );
+            matches.add( termForURI );
+        }
         return matches;
     }
 
@@ -694,7 +711,7 @@ public class GeneOntologyService implements InitializingBean {
     public void loadTermsInNameSpace( InputStream is ) {
         this.model = OntologyLoader.loadMemoryModel( is, null, OntModelSpec.OWL_MEM );
         Collection<OntologyResource> terms = OntologyLoader.initialize( null, model );
-        this.index = OntologyIndexer.indexOntology( "GeneOntology", model );
+        this.indices.add( OntologyIndexer.indexOntology( "GeneOntology", model ) );
         addTerms( terms );
     }
 
@@ -733,7 +750,7 @@ public class GeneOntologyService implements InitializingBean {
     protected void loadTermsInNameSpace( String url ) {
         this.model = OntologyLoader.loadMemoryModel( url, OntModelSpec.OWL_MEM );
         Collection<OntologyResource> terms = OntologyLoader.initialize( url, model );
-        this.index = OntologyIndexer.indexOntology( url.replaceFirst( ".*/", "" ).replace( ".owl", "" ), model );
+        this.indices.add( OntologyIndexer.indexOntology( url.replaceFirst( ".*/", "" ).replace( ".owl", "" ), model ) );
         addTerms( terms );
     }
 
