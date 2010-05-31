@@ -56,12 +56,31 @@ Gemma.EEDetailsVisualizationWidget = Ext.extend(Gemma.GeneGrid, {
 		Ext.apply(this, {
 			extraButtons : [this.geneGroupCombo, {
 						xtype : 'tbfill'
-					}, new Ext.Button({
+					},
+
+					new Ext.Button({
 						id : this.vizButtonId,
 						text : "Show",
 						tooltip : "Click to display data for selected genes, or a 'random' selection of data from this experiment",
 						handler : this.showButHandler,
 						scope : this
+					}), new Ext.Button({
+						// icon : Gemma.ICONURL + 'information.png',
+						icon : '/Gemma/images/icons/information.png',
+						// text : 'help',
+						tootltip : "Get help",
+						handler : function() {
+							Ext.Msg.show({
+								title : 'Visualization',
+								msg : 'Use the search fields to find individual genes, or groups of genes. ' +
+										'Gene group searches work for GO terms and other groups in Gemma. ' +
+										'To create groups use the <a href=\"/Gemma/geneGroupManager.html\">gene group manager</a>'. +
+										' Click "show" to view the data for those genes. ' +
+										'Note that when viewing gene groups, not all genes in the group are necessarily in the data set.',
+								buttons : Ext.Msg.OK,
+								icon : Ext.MessageBox.INFO
+							});
+						}.createDelegate(this)
 					})]
 		});
 
