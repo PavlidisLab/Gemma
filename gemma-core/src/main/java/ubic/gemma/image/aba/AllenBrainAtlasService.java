@@ -51,7 +51,8 @@ import ubic.gemma.util.ConfigUtils;
 
 /**
  * Acts as a convient front end to the Allen Brain Atlas REST (web) services Used the ABAapi.java as the original
- * template for this Service (found in ABA demo code).
+ * template for this Service (found in ABA demo code). For the most current API regarding these methods go to:
+ * http://community.brain-map.org/confluence/display/DataAPI/Home NO AJAX Methods directly exposed by this service.
  * 
  * @author kelsey
  * @version $Id$
@@ -157,7 +158,15 @@ public class AllenBrainAtlasService {
         initDefaults();
     }
 
-    public String buildUrlString( String urlPattern, String args[] ) {
+    /**
+     * Given a predefined URL (one of the constants declared in the AllenBrainAtlasService) and a list of arguments will
+     * return the correct REST URL for the desired method call
+     * 
+     * @param urlPattern
+     * @param args
+     * @return
+     */
+    protected String buildUrlString( String urlPattern, String args[] ) {
 
         for ( int i = 0; i < args.length; i++ )
             urlPattern = urlPattern.replaceFirst( "@", args[i] );
@@ -165,6 +174,12 @@ public class AllenBrainAtlasService {
         return ( API_BASE_URL + urlPattern );
     }
 
+    /**
+     * Returns a document describing the given ImageSeriesId
+     * 
+     * @param imageseriesId
+     * @return
+     */
     public Document getAtlasImageMap( Integer imageseriesId ) {
         File outputFile = getFile( "atlasImageMap" + imageseriesId.toString() );
         Document atlasImageMapDoc = null;
@@ -189,6 +204,15 @@ public class AllenBrainAtlasService {
 
     }
 
+    /**
+     * Finds the associated immage map for the given series id and writes it to the given output stream
+     * 
+     * @param imageseriesid
+     * @param out
+     * @return
+     * @throws MalformedURLException
+     * @throws IOException
+     */
     public boolean getAtlasImageMap( Integer imageseriesid, OutputStream out ) throws MalformedURLException,
             IOException {
 
@@ -198,6 +222,16 @@ public class AllenBrainAtlasService {
         return ( doPageDownload( getImageMapUrl, out ) );
     }
 
+    /**
+     * Use this method to get information like width, height & number of tiers (zoom levels) available for the given
+     * image. The “path” parameter is the same as used in the “Get Image” method above.
+     * 
+     * @param plane
+     * @param out
+     * @return
+     * @throws MalformedURLException
+     * @throws IOException
+     */
     public boolean getAtlasInfo( String plane, OutputStream out ) throws MalformedURLException, IOException {
 
         String args[] = { plane };
@@ -206,18 +240,40 @@ public class AllenBrainAtlasService {
         return ( doPageDownload( getAtlasInfoUrl, out ) );
     }
 
+    /**
+     * Gets the caching directory
+     * 
+     * @return
+     */
     public String getCacheDir() {
         return ( this.cacheDir );
     }
 
+    /**
+     * Is caching on?
+     * 
+     * @return
+     */
     public boolean getCaching() {
         return ( this.useFileCache );
     }
 
+    /**
+     * return std error stream
+     * 
+     * @return
+     */
     public PrintStream getErrOut() {
         return ( this.errOut );
     }
 
+    /**
+     * @param imageseriesId
+     * @param out
+     * @return
+     * @throws MalformedURLException
+     * @throws IOException
+     */
     public boolean getExpressionInfo( Integer imageseriesId, OutputStream out ) throws MalformedURLException,
             IOException {
 
@@ -227,6 +283,24 @@ public class AllenBrainAtlasService {
         return ( doPageDownload( getExpressionInfoUrl, out ) );
     }
 
+    /**
+     * Each of these data files represent the volume of space occupied by a single mouse brain. The volume space is
+     * divided into individual 3D cubic voxels, of dimension (200 x 200 x 200) microns. The file contains the set of
+     * sagittally arranged voxels (expressed as x, y, z coordinates) that have an expression energy value other than
+     * 0.0. Along with each voxel in the data file is an “expression energy” value. The energy value is a function of
+     * the intensity of expression found within that voxel, together with the density of expression in that voxel. Due
+     * to the way gene expression experiments are carried out there are generally at least 200 microns between any two
+     * (25 micron thick) sections. In these datafiles, interpolation is used to “smooth” the energy values between those
+     * gaps to produce an expression value for each voxel that corresponds to brain volume. For more information about
+     * how expression is mapped to the atlas, see the Informatics Data Processing white paper. The ImageSeriesID
+     * parameter is an integer; find these as part of the return document from the Genes method.
+     * 
+     * @param imageseriesId
+     * @param out
+     * @return
+     * @throws MalformedURLException
+     * @throws IOException
+     */
     public boolean getExpressionVolume( Integer imageseriesId, OutputStream out ) throws MalformedURLException,
             IOException {
 
@@ -256,6 +330,7 @@ public class AllenBrainAtlasService {
     }
 
     /**
+     * Given a gene too look for for will return the coressponding abaGene (useful for finding images)
      * @param givenGene symbol of gene that will be used to search ABA.
      * @return
      */
@@ -371,6 +446,41 @@ public class AllenBrainAtlasService {
         return HTML_GENE_DETAILS_URL.replaceFirst( "@", this.correctCase( gene ) );
     }
 
+    /**
+     * Not all the parameters are required. The simplest url would look like this:
+     * http://www.brain-map.org/aba/api/image?zoom=[zoom]&path=[path]. The different options available are: path
+     * Required. The path to the desired image file. The image file path is available as part of the imageSeries XML
+     * returned by the ImageSeries API method. The XPath /image-series/images/image/downloadImagePath will return the
+     * paths for all of the images in a given image series. zoom Required. The level of resolution desired. The lowest
+     * resolution is 0, which is a thumbnail sized image. The highest resolution varies by image, but is usually 6 for
+     * ABA images. Each level is a downsampling by a factor of two of the next higher level. Use the value -1 to request
+     * the highest resolution available. mime Optional. Determines the mime type of the HTTP response. The default
+     * produces an image with mime type “application/jpeg”. Most web browsers, when receiving this kind of response will
+     * prompt the user to pick an application to open the file, or to select a location to save the file to disk. Using
+     * mime=2 will cause a response with mime type = “jpeg/image” to be returned. Most browsers will display the
+     * returned image as soon as it is available. When retrieving an image with anything other than a web browser, this
+     * parameter can usually be ignored. The following region-of-interest parameters are optional, however if any of
+     * them are given, they must all be present. top The y coordinate of the top left corner of the region of interest.
+     * This is given in terms of the full size image, regardless of which tier is requested. left The x coordinate of
+     * the top left corner of the desired region of interest. As above, this is in terms of the full scale image,
+     * regardless of the tier requested. width The actual width in pixels of the desired image. height The actual height
+     * in pixels of the desired image. Any malformed URL or other failure in the image fetching process results in an
+     * HTTP response code of 500. Example http://www.brain-
+     * map.org/aba/api/image?zoom=5&top=4000&left=8000&width=300&height=30 0&mime=2&path=/production11/Guk1_04-
+     * 0874_25411/zoomify/primary/0207030123/Guk1_70_0207030123_A.aff
+     * 
+     * @param imagePath
+     * @param zoom
+     * @param top
+     * @param left
+     * @param width
+     * @param height
+     * @param mimeType
+     * @param out
+     * @return
+     * @throws MalformedURLException
+     * @throws IOException
+     */
     public boolean getImageROI( String imagePath, Integer zoom, Integer top, Integer left, Integer width,
             Integer height, Integer mimeType, OutputStream out ) throws MalformedURLException, IOException {
 
@@ -381,6 +491,12 @@ public class AllenBrainAtlasService {
         return ( doPageDownload( getImageUrl, out ) );
     }
 
+    /**
+     * ImageSeriesID is an integer; find these as part of the return document from the Genes method.
+     * 
+     * @param imageseriesId
+     * @return
+     */
     public Collection<Image> getImageseries( Integer imageseriesId ) {
 
         File outputFile = getFile( "ImageseriesId_" + imageseriesId.toString() );
@@ -481,6 +597,12 @@ public class AllenBrainAtlasService {
 
     }
 
+    /**
+     * Returns a collection of images from all the imageSeries given (1 imageSeries can have many images)
+     * 
+     * @param imageSeries
+     * @return
+     */
     public Collection<Image> getImagesFromImageSeries( Collection<ImageSeries> imageSeries ) {
 
         Collection<Image> representativeImages = new HashSet<Image>();
@@ -504,11 +626,17 @@ public class AllenBrainAtlasService {
 
     }
 
+    /**
+     * REturns the info logging stream
+     * @return
+     */
     public PrintStream getInfoOut() {
         return ( this.infoOut );
     }
 
     /**
+     * Given a Gene, returns all the image series that contain saggital images for the given gene
+     * 
      * @param gene
      * @return
      * @throws IOException
@@ -545,10 +673,21 @@ public class AllenBrainAtlasService {
 
     }
 
+    /**
+     * Is verbose logging on?
+     * @return
+     */
     public boolean getVerbose() {
         return ( this.verbose );
     }
 
+    /**
+     * @param searchTerm
+     * @param out
+     * @return
+     * @throws MalformedURLException
+     * @throws IOException
+     */
     public boolean searchGenes( String searchTerm, OutputStream out ) throws MalformedURLException, IOException {
 
         String args[] = { searchTerm };
@@ -557,6 +696,10 @@ public class AllenBrainAtlasService {
         return ( doPageDownload( searchGenesUrl, out ) );
     }
 
+    /**
+     * Sets the caching directory
+     * @param s
+     */
     public void setCacheDir( String s ) {
         this.cacheDir = s;
     }
@@ -566,18 +709,31 @@ public class AllenBrainAtlasService {
      * brain atlas web site @param imageSeries @return
      */
 
+    /**
+     * Turn caching on or off
+     * @param v
+     */
     public void setCaching( boolean v ) {
         this.useFileCache = v;
     }
 
+    /**
+     * @param out
+     */
     public void setErrOut( PrintStream out ) {
         this.errOut = out;
     }
 
+    /**
+     * @param out
+     */
     public void setInfoOut( PrintStream out ) {
         this.infoOut = out;
     }
 
+    /**
+     * @param v
+     */
     public void setVerbose( boolean v ) {
         this.verbose = v;
     }
@@ -590,6 +746,15 @@ public class AllenBrainAtlasService {
         return ( doPageDownload( getGeneUrl, out ) );
     }
 
+    /**
+     * @param imagePath
+     * @param zoom
+     * @param mimeType
+     * @param out
+     * @return
+     * @throws MalformedURLException
+     * @throws IOException
+     */
     protected boolean getImage( String imagePath, Integer zoom, Integer mimeType, OutputStream out )
             throws MalformedURLException, IOException {
         String args[] = { mimeType.toString(), zoom.toString(), imagePath };
