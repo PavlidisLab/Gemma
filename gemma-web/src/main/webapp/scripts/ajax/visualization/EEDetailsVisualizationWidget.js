@@ -74,7 +74,7 @@ Gemma.EEDetailsVisualizationWidget = Ext.extend(Gemma.GeneGrid, {
 								title : 'Visualization',
 								msg : 'Use the search fields to find individual genes, or groups of genes. ' +
 										'Gene group searches work for GO terms and other groups in Gemma. ' +
-										'To create groups use the <a href=\"/Gemma/geneGroupManager.html\">gene group manager</a>'. +
+										'To create groups use the <a href=\"/Gemma/geneGroupManager.html\">gene group manager</a>.' +
 										' Click "show" to view the data for those genes. ' +
 										'Note that when viewing gene groups, not all genes in the group are necessarily in the data set.',
 								buttons : Ext.Msg.OK,
