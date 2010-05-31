@@ -21,12 +21,18 @@ Gemma.GeneGroupCombo = Ext.extend(Ext.form.ComboBox, {
 	name : 'geneGroupcombo',
 	displayField : 'name',
 	valueField : 'id',
-	width : 160, 
+	width : 160,
 	listWidth : 450, // ridiculously large so IE displays it properly
 	// (usually)
 
+	/*
+	 * Whether the user's groups should show up right away.
+	 */
+	prepopulate : true,
+
 	loadingText : 'Searching...',
-	emptyText : "Search for gene groups",
+
+	emptyText : "Choose or search for groups",
 	minChars : 1,
 	selectOnFocus : true,
 	mode : 'remote',
@@ -41,8 +47,8 @@ Gemma.GeneGroupCombo = Ext.extend(Ext.form.ComboBox, {
 					store : new Gemma.GeneGroupStore({
 								proxy : new Ext.data.DWRProxy(GeneSetController.findGeneSetsByName),
 								sortInfo : {
-									field : "name",
-									dir : "ASC"
+									field : "size",
+									dir : "DESC"
 								},
 								autoLoad : false
 							})
@@ -51,6 +57,19 @@ Gemma.GeneGroupCombo = Ext.extend(Ext.form.ComboBox, {
 		Gemma.GeneGroupCombo.superclass.initComponent.call(this);
 
 		this.on('select', this.setGeneGroup, this);
+
+		if (this.prepopulate) {
+			this.on('focus', function() {
+						GeneSetController.getUsersGeneGroups(false, function(records) {
+									this.store.loadData(records);
+								}.createDelegate(this));
+
+					}.createDelegate(this), this, {
+						scope : this,
+						single : true
+					});
+		}
+
 	},
 
 	reset : function() {
@@ -81,7 +100,7 @@ Gemma.GeneGroupCombo = Ext.extend(Ext.form.ComboBox, {
 	},
 
 	setGeneGroup : function(combo, geneGroup, index) {
-		//this.reset();
+		// this.reset();
 		this.selectedGeneGroup = geneGroup.data;
 		this.tooltip = new Ext.ToolTip({
 					target : this.getEl(),

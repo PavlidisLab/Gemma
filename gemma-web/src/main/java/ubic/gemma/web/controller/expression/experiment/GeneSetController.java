@@ -18,8 +18,11 @@
  */
 package ubic.gemma.web.controller.expression.experiment;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashSet;
+import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
@@ -27,6 +30,8 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Controller;
+
+import edu.emory.mathcs.backport.java.util.Collections;
 
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
@@ -302,7 +307,7 @@ public class GeneSetController {
      */
     private Collection<GeneSetValueObject> makeValueObects( Collection<GeneSet> secs ) {
         // Create valueobject (need to add security info or would move this out into the valueobject...
-        Collection<GeneSetValueObject> result = new HashSet<GeneSetValueObject>();
+        List<GeneSetValueObject> result = new ArrayList<GeneSetValueObject>();
         for ( GeneSet gs : secs ) {
 
             GeneSetValueObject gsvo = new GeneSetValueObject( gs );
@@ -313,6 +318,14 @@ public class GeneSetController {
 
             result.add( gsvo );
         }
+
+        Collections.sort( result, new Comparator<GeneSetValueObject>() {
+            @Override
+            public int compare( GeneSetValueObject o1, GeneSetValueObject o2 ) {
+                return -o1.getSize().compareTo( o2.getSize() );
+            }
+        } );
+
         return result;
     }
 

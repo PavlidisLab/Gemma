@@ -19,10 +19,15 @@
 package ubic.gemma.web.controller.common.auditAndSecurity;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashSet;
+import java.util.List;
 
 import org.apache.commons.lang.RandomStringUtils;
+
+import edu.emory.mathcs.backport.java.util.Collections;
 
 import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.model.genome.gene.GeneSetMember;
@@ -44,7 +49,7 @@ public class GeneSetValueObject implements Serializable {
      */
     public static Collection<GeneSetValueObject> convert2ValueObjects( Collection<GeneSet> genesets,
             boolean includeOnesWithoutGenes ) {
-        Collection<GeneSetValueObject> results = new HashSet<GeneSetValueObject>();
+        List<GeneSetValueObject> results = new ArrayList<GeneSetValueObject>();
 
         for ( GeneSet gs : genesets ) {
             if ( !includeOnesWithoutGenes && gs.getMembers().isEmpty() ) {
@@ -62,6 +67,12 @@ public class GeneSetValueObject implements Serializable {
             results.add( new GeneSetValueObject( gs ) );
         }
 
+        Collections.sort( results, new Comparator<GeneSetValueObject>() {
+            @Override
+            public int compare( GeneSetValueObject o1, GeneSetValueObject o2 ) {
+                return -o1.getSize().compareTo( o2.getSize() );
+            }
+        } );
         return results;
     }
 
