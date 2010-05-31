@@ -22,6 +22,8 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashSet;
 
+import org.apache.commons.lang.RandomStringUtils;
+
 import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.model.genome.gene.GeneSetMember;
 
@@ -48,6 +50,15 @@ public class GeneSetValueObject implements Serializable {
             if ( !includeOnesWithoutGenes && gs.getMembers().isEmpty() ) {
                 continue;
             }
+
+            if ( gs.getId() == null ) {
+                /*
+                 * GO terms, for example. We need a unique ID that also is different from IDs of things in the database.
+                 * This isn't an entirely satisfactory implementation, it should be made bulletproof.
+                 */
+                gs.setId( Long.parseLong( RandomStringUtils.randomNumeric( 16 ) ) + 100000L );
+            }
+
             results.add( new GeneSetValueObject( gs ) );
         }
 
@@ -81,29 +92,12 @@ public class GeneSetValueObject implements Serializable {
             gids.add( gm.getGene().getId() );
         }
         this.setName( gs.getName() );
+
         this.setId( gs.getId() );
+
         this.setDescription( gs.getDescription() );
         this.geneIds.addAll( gids );
         this.setSize( geneIds.size() );
-
-    }
-
-    /**
-     * Constructor to build from listed sub components
-     * 
-     * @param id
-     * @param name
-     * @param description
-     * @param members
-     */
-    public GeneSetValueObject( Long id, String name, String description, Collection<Long> members ) {
-
-        this();
-        this.setName( name );
-        this.setId( id );
-        this.setDescription( description );
-        this.geneIds.addAll( members );
-        this.setSize( members.size() );
 
     }
 
