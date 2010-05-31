@@ -29,6 +29,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,6 +48,7 @@ import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisR
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionAnalysisEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.FailedDifferentialExpressionAnalysisEvent;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -57,7 +59,8 @@ import ubic.gemma.persistence.PersisterHelper;
  * Differential expression service to run the differential expression analysis (and persist the results using the
  * appropriate data access objects).
  * <p>
- * FIXME this is very confusingly named as there is also a DifferentialExpressionAnalysisService and a DifferentialExpressionAnalyzer
+ * FIXME this is very confusingly named as there is also a DifferentialExpressionAnalysisService and a
+ * DifferentialExpressionAnalyzer
  * 
  * @author keshav
  * @version $Id$
@@ -229,12 +232,18 @@ public class DifferentialExpressionAnalyzerService {
 
     public DifferentialExpressionAnalysis runDifferentialExpressionAnalyses( ExpressionExperiment expressionExperiment,
             DifferentialExpressionAnalysisConfig config ) {
-        DifferentialExpressionAnalysis diffExpressionAnalysis = doDifferentialExpressionAnalysis( expressionExperiment,
-                config );
+        try {
+            DifferentialExpressionAnalysis diffExpressionAnalysis = doDifferentialExpressionAnalysis(
+                    expressionExperiment, config );
 
-        deleteOldAnalyses( expressionExperiment );
+            deleteOldAnalyses( expressionExperiment );
 
-        return persistAnalysis( expressionExperiment, diffExpressionAnalysis );
+            return persistAnalysis( expressionExperiment, diffExpressionAnalysis );
+        } catch ( Exception e ) {
+            auditTrailService.addUpdateEvent( expressionExperiment, FailedDifferentialExpressionAnalysisEvent.Factory
+                    .newInstance(), ExceptionUtils.getFullStackTrace( e ) );
+            throw new RuntimeException( e );
+        }
     }
 
     private static final int MAX_FACTORS_FOR_AUTO_ANALYSIS = 3;
@@ -248,11 +257,17 @@ public class DifferentialExpressionAnalyzerService {
      */
     public DifferentialExpressionAnalysis runDifferentialExpressionAnalyses( ExpressionExperiment expressionExperiment ) {
 
-        DifferentialExpressionAnalysis diffExpressionAnalysis = doDifferentialExpressionAnalysis( expressionExperiment );
+        try {
+            DifferentialExpressionAnalysis diffExpressionAnalysis = doDifferentialExpressionAnalysis( expressionExperiment );
 
-        deleteOldAnalyses( expressionExperiment );
+            deleteOldAnalyses( expressionExperiment );
 
-        return persistAnalysis( expressionExperiment, diffExpressionAnalysis );
+            return persistAnalysis( expressionExperiment, diffExpressionAnalysis );
+        } catch ( Exception e ) {
+            auditTrailService.addUpdateEvent( expressionExperiment, FailedDifferentialExpressionAnalysisEvent.Factory
+                    .newInstance(), ExceptionUtils.getFullStackTrace( e ) );
+            throw new RuntimeException( e );
+        }
     }
 
     /**
@@ -265,12 +280,18 @@ public class DifferentialExpressionAnalyzerService {
      */
     public DifferentialExpressionAnalysis runDifferentialExpressionAnalyses( ExpressionExperiment expressionExperiment,
             Collection<ExperimentalFactor> factors ) {
-        DifferentialExpressionAnalysis diffExpressionAnalysis = doDifferentialExpressionAnalysis( expressionExperiment,
-                factors );
+        try {
+            DifferentialExpressionAnalysis diffExpressionAnalysis = doDifferentialExpressionAnalysis(
+                    expressionExperiment, factors );
 
-        deleteOldAnalyses( expressionExperiment, factors );
+            deleteOldAnalyses( expressionExperiment, factors );
 
-        return persistAnalysis( expressionExperiment, diffExpressionAnalysis );
+            return persistAnalysis( expressionExperiment, diffExpressionAnalysis );
+        } catch ( Exception e ) {
+            auditTrailService.addUpdateEvent( expressionExperiment, FailedDifferentialExpressionAnalysisEvent.Factory
+                    .newInstance(), ExceptionUtils.getFullStackTrace( e ) );
+            throw new RuntimeException( e );
+        }
     }
 
     /**
@@ -285,14 +306,20 @@ public class DifferentialExpressionAnalyzerService {
     public DifferentialExpressionAnalysis runDifferentialExpressionAnalyses( ExpressionExperiment expressionExperiment,
             Collection<ExperimentalFactor> factors, AnalysisType type ) {
 
-        DifferentialExpressionAnalysis diffExpressionAnalysis = doDifferentialExpressionAnalysis( expressionExperiment,
-                factors, type );
+        try {
+            DifferentialExpressionAnalysis diffExpressionAnalysis = doDifferentialExpressionAnalysis(
+                    expressionExperiment, factors, type );
 
-        deleteOldAnalyses( expressionExperiment, factors );
+            deleteOldAnalyses( expressionExperiment, factors );
 
-        DifferentialExpressionAnalysis analysis = persistAnalysis( expressionExperiment, diffExpressionAnalysis );
+            DifferentialExpressionAnalysis analysis = persistAnalysis( expressionExperiment, diffExpressionAnalysis );
 
-        return analysis;
+            return analysis;
+        } catch ( Exception e ) {
+            auditTrailService.addUpdateEvent( expressionExperiment, FailedDifferentialExpressionAnalysisEvent.Factory
+                    .newInstance(), ExceptionUtils.getFullStackTrace( e ) );
+            throw new RuntimeException( e );
+        }
 
     }
 

@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,7 +41,8 @@ import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrixUtil;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrixColumnSort;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrixRowElement;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
-import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
+import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType; 
+import ubic.gemma.model.common.auditAndSecurity.eventType.FailedProcessedVectorComputationEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ProcessedVectorComputationEvent;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -94,21 +96,26 @@ public class ProcessedExpressionDataVectorCreateService {
     public Collection<ProcessedExpressionDataVector> computeProcessedExpressionData( ExpressionExperiment ee ) {
 
         // eeService.thawLite( ee );
+        try {
+            Collection<ProcessedExpressionDataVector> processedVectors = processedDataService
+                    .createProcessedDataVectors( ee );
 
-        Collection<ProcessedExpressionDataVector> processedVectors = processedDataService
-                .createProcessedDataVectors( ee );
+            assert processedVectors.size() > 0;
 
-        assert processedVectors.size() > 0;
+            Collection<ProcessedExpressionDataVector> result = updateRanks( ee, processedVectors );
 
-        Collection<ProcessedExpressionDataVector> result = updateRanks( ee, processedVectors );
+            audit( ee, "" );
 
-        audit( ee, "" );
+            /*
+             * Reorder?...
+             */
 
-        /*
-         * Reorder?...
-         */
-
-        return result;
+            return result;
+        } catch ( Exception e ) {
+            auditTrailService.addUpdateEvent( ee, FailedProcessedVectorComputationEvent.Factory.newInstance(),
+                    ExceptionUtils.getFullStackTrace( e ) );
+            throw new RuntimeException( e );
+        }
 
     }
 
