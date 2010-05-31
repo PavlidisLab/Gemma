@@ -112,8 +112,13 @@ public class GeneSetController {
      * @return
      */
     public Collection<GeneSetValueObject> findGeneSetsByName( String query, Long taxonId ) {
-        if ( query == null || taxonId == null ) {
-            throw new IllegalArgumentException( "Query must not be null; Taxon must not be null" );
+
+        if ( StringUtils.isBlank( query ) ) {
+            return new HashSet<GeneSetValueObject>();
+        }
+
+        if ( taxonId == null ) {
+            throw new IllegalArgumentException( "Taxon must not be null" );
         }
 
         Taxon tax = taxonService.load( taxonId );
