@@ -46,10 +46,6 @@ Gemma.GeneGroupCombo = Ext.extend(Ext.form.ComboBox, {
 					tpl : template,
 					store : new Gemma.GeneGroupStore({
 								proxy : new Ext.data.DWRProxy(GeneSetController.findGeneSetsByName),
-								sortInfo : {
-									field : "size",
-									dir : "DESC"
-								},
 								autoLoad : false
 							})
 				});
@@ -60,7 +56,7 @@ Gemma.GeneGroupCombo = Ext.extend(Ext.form.ComboBox, {
 
 		if (this.prepopulate) {
 			this.on('focus', function() {
-						GeneSetController.getUsersGeneGroups(false, function(records) {
+						GeneSetController.getUsersGeneGroups(false, this.taxon.id, function(records) {
 									this.store.loadData(records);
 								}.createDelegate(this));
 

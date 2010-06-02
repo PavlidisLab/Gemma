@@ -51,4 +51,10 @@ public interface GeneSetDao extends BaseDao<GeneSet> {
      */
     Collection<GeneSet> findByName( String name, Taxon taxon );
 
+    /**
+     * @param tax
+     * @return
+     */
+    Collection<GeneSet> loadAll( Taxon tax );
+
 }

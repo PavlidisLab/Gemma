@@ -52,7 +52,6 @@ Gemma.EEDetailsVisualizationWidget = Ext.extend(Gemma.GeneGrid, {
 						}
 					}
 				});
-
 		Ext.apply(this, {
 			extraButtons : [this.geneGroupCombo, {
 						xtype : 'tbfill'

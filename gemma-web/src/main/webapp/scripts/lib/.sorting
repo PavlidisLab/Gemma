@@ -1,6 +1,7 @@
 prototype.js
 scriptaculous/
 ext/
+globals.js
 excanvas.js
 typeface.js
 excanvas-text.js

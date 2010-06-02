@@ -174,21 +174,30 @@ public class GeneSetController {
      * AJAX Returns just the current users gene sets
      * 
      * @param privateOnly
+     * @param taxonId if non-null, restrict the groups by ones which have genes in the given taxon.
      * @return
      */
-    public Collection<GeneSetValueObject> getUsersGeneGroups( boolean privateOnly ) {
+    public Collection<GeneSetValueObject> getUsersGeneGroups( boolean privateOnly, Long taxonId ) {
+
+        Taxon tax = null;
+        if ( taxonId != null ) {
+            tax = taxonService.load( taxonId );
+            if ( tax == null ) {
+                throw new IllegalArgumentException( "No such taxon with id=" + taxonId );
+            }
+        }
 
         Collection<GeneSet> geneSets = new HashSet<GeneSet>();
         if ( privateOnly ) {
             try {
-                geneSets = geneSetService.loadMyGeneSets();
+                geneSets = geneSetService.loadMyGeneSets( tax );
                 geneSets.retainAll( securityService.choosePrivate( geneSets ) );
             } catch ( AccessDeniedException e ) {
                 // okay, they just aren't allowed to see those.
             }
 
         } else {
-            geneSets = geneSetService.loadAll();
+            geneSets = geneSetService.loadAll( tax );
         }
 
         Collection<GeneSetValueObject> result = makeValueObects( geneSets );
@@ -276,6 +285,10 @@ public class GeneSetController {
 
     }
 
+    /**
+     * @param geneSetVo
+     * @return
+     */
     private GeneSet create( GeneSetValueObject geneSetVo ) {
         GeneSet newGeneSet = GeneSet.Factory.newInstance();
         newGeneSet.setName( geneSetVo.getName() );

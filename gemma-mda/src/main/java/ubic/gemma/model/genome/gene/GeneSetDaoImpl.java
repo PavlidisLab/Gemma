@@ -104,6 +104,24 @@ public class GeneSetDaoImpl extends HibernateDaoSupport implements GeneSetDao {
     /*
      * (non-Javadoc)
      * 
+     * @see ubic.gemma.model.genome.gene.GeneSetDao#findByName(java.lang.String, ubic.gemma.model.genome.Taxon)
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    public Collection<GeneSet> findByName( String name, Taxon taxon ) {
+        if ( StringUtils.isBlank( name ) ) return new HashSet<GeneSet>();
+        assert taxon != null;
+
+        return this
+                .getHibernateTemplate()
+                .findByNamedParam(
+                        "select gs from GeneSetImpl gs join gs.members gm join gm.gene g where g.taxon = :taxon and gs.name like :query order by gs.name",
+                        new String[] { "query", "taxon" }, new Object[] { name + "%", taxon } );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.persistence.BaseDao#load(java.util.Collection)
      */
     @SuppressWarnings("unchecked")
@@ -132,6 +150,20 @@ public class GeneSetDaoImpl extends HibernateDaoSupport implements GeneSetDao {
     public Collection<? extends GeneSet> loadAll() {
         final java.util.Collection<GeneSetImpl> results = this.getHibernateTemplate().loadAll( GeneSetImpl.class );
         return results;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.genome.gene.GeneSetDao#loadAll(ubic.gemma.model.genome.Taxon)
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    public Collection<GeneSet> loadAll( Taxon tax ) {
+        if ( tax == null ) return ( Collection<GeneSet> ) this.loadAll();
+        return this.getHibernateTemplate().findByNamedParam(
+                "select distinct gs from GeneSetImpl gs join gs.members m join m.gene g where g.taxon = :t", "t",
+                tax );
     }
 
     /*
@@ -201,24 +233,6 @@ public class GeneSetDaoImpl extends HibernateDaoSupport implements GeneSetDao {
             throw new IllegalArgumentException( "GeneSet.update - 'geneSet' can not be null" );
         }
         this.getHibernateTemplate().update( entity );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.genome.gene.GeneSetDao#findByName(java.lang.String, ubic.gemma.model.genome.Taxon)
-     */
-    @SuppressWarnings("unchecked")
-    @Override
-    public Collection<GeneSet> findByName( String name, Taxon taxon ) {
-        if ( StringUtils.isBlank( name ) ) return new HashSet<GeneSet>();
-        assert taxon != null;
-
-        return this
-                .getHibernateTemplate()
-                .findByNamedParam(
-                        "select gs from GeneSetImpl gs join gs.members gm join gm.gene g where g.taxon = :taxon and gs.name like :query order by gs.name",
-                        new String[] { "query", "taxon" }, new Object[] { name + "%", taxon } );
     }
 
 }

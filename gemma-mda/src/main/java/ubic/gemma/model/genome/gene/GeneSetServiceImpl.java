@@ -77,6 +77,16 @@ public class GeneSetServiceImpl implements GeneSetService {
     /*
      * (non-Javadoc)
      * 
+     * @see ubic.gemma.model.genome.gene.GeneSetService#findByName(java.lang.String, ubic.gemma.model.genome.Taxon)
+     */
+    @Override
+    public Collection<GeneSet> findByName( String name, Taxon taxon ) {
+        return this.geneSetDao.findByName( name, taxon );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.gene.GeneSetService#load(java.util.Collection)
      */
     @SuppressWarnings("unchecked")
@@ -102,6 +112,39 @@ public class GeneSetServiceImpl implements GeneSetService {
     @SuppressWarnings("unchecked")
     public Collection<GeneSet> loadAll() {
         return ( Collection<GeneSet> ) this.geneSetDao.loadAll();
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.genome.gene.GeneSetService#loadAll(ubic.gemma.model.genome.Taxon)
+     */
+    @Override
+    public Collection<GeneSet> loadAll( Taxon tax ) {
+        return this.geneSetDao.loadAll( tax );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.genome.gene.GeneSetService#loadMyGeneSets()
+     */
+    public Collection<GeneSet> loadMyGeneSets() {
+        return loadAll();
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.genome.gene.GeneSetService#loadMyGeneSets(ubic.gemma.model.genome.Taxon)
+     */
+    @Override
+    public Collection<GeneSet> loadMyGeneSets( Taxon tax ) {
+        return this.geneSetDao.loadAll( tax );
+    }
+
+    public Collection<GeneSet> loadMySharedGeneSets() {
+        return loadAll();
     }
 
     /*
@@ -144,29 +187,6 @@ public class GeneSetServiceImpl implements GeneSetService {
     public void update( GeneSet geneset ) {
         this.geneSetDao.update( geneset );
 
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.genome.gene.GeneSetService#loadMyGeneSets()
-     */
-    public Collection<GeneSet> loadMyGeneSets() {
-        return loadAll();
-    }
-
-    public Collection<GeneSet> loadMySharedGeneSets() {
-        return loadAll();
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.genome.gene.GeneSetService#findByName(java.lang.String, ubic.gemma.model.genome.Taxon)
-     */
-    @Override
-    public Collection<GeneSet> findByName( String name, Taxon taxon ) {
-        return this.geneSetDao.findByName( name, taxon );
     }
 
 }

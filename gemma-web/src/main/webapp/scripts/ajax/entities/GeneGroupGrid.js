@@ -494,7 +494,7 @@ Gemma.GeneGroupEditToolbar = Ext.extend(Ext.Toolbar, {
 									if (btn == 'yes') {
 
 										this.ownerCt.getStore().load({
-													params : [showPrivateOnly]
+													params : [showPrivateOnly, null]
 												});
 									}
 								},
@@ -502,7 +502,7 @@ Gemma.GeneGroupEditToolbar = Ext.extend(Ext.Toolbar, {
 							});
 				} else {
 					this.ownerCt.getStore().load({
-								params : [showPrivateOnly]
+								params : [showPrivateOnly, null]
 							});
 				}
 			},
@@ -816,9 +816,9 @@ Ext.extend(Gemma.GeneGroupStore, Ext.data.Store, {
 								dwrFunction : GeneSetController.getUsersGeneGroups,
 								getDwrArgsFunction : function(request) {
 									if (request.params.length > 0) {
-										return [request.params[0]];
+										return [request.params[0], request.params[1]];
 									}
-									return [false];
+									return [false, null];
 								}
 							},
 							create : {
