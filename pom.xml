@@ -310,7 +310,7 @@
 						<reports>
 							<report>dependencies</report>
 							<report>dependency-convergence</report>
-							<!--	<report>index</report>
+								<report>index</report>
 
 								<report>project-team</report>
 
@@ -319,7 +319,7 @@
 								<report>license</report>
 								<report>scm</report>
 								<report>summary</report>
-								<report>mailing-list</report> -->
+								<report>mailing-list</report> 
 						</reports>
 					</reportSet>
 				</reportSets>
