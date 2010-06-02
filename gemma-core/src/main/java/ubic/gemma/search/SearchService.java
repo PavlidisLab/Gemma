@@ -1578,7 +1578,8 @@ public class SearchService implements InitializingBean {
     }
 
     /**
-     * This can only be used on SearchResults where the result object has a "getTaxon" method.
+     * If the SearchResults have no "getTaxon" method then the results will get filtered out Results with no taxon
+     * assoiciated will also get removed.
      * 
      * @param settings
      * @param geneSet
@@ -1589,13 +1590,23 @@ public class SearchService implements InitializingBean {
         }
         Collection<SearchResult> toRemove = new HashSet<SearchResult>();
         Taxon t = settings.getTaxon();
+
+        if ( results == null ) return;
+
         for ( SearchResult sr : results ) {
 
             Object o = sr.getResultObject();
             try {
                 Method m = o.getClass().getMethod( "getTaxon", new Class[] {} );
                 Taxon currentTaxon = ( Taxon ) m.invoke( o, new Object[] {} );
-                if ( !currentTaxon.equals( t ) ) {
+
+                // Results with no taxon also get removed
+                if ( currentTaxon == null || !currentTaxon.equals( t ) ) {
+                    if ( currentTaxon == null ) {
+                        // Sanity check for bad data in db. Can happen that searchResults have a vaild getTaxon method
+                        // but the method returns null (shouldn't make it this far)
+                        log.warn( "Object has getTaxon method but it retuns null. Obj is: " + o );
+                    }
                     toRemove.add( sr );
                 }
             } catch ( SecurityException e ) {
