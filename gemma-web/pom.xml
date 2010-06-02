@@ -1,16 +1,15 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<parent>
 		<artifactId>gemma</artifactId>
 		<groupId>gemma</groupId>
-		<version>1.5-SNAPSHOT</version>
+		<version>1.5</version>
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>gemma</groupId>
 	<artifactId>gemma-web</artifactId>
 	<packaging>war</packaging>
 	<name>Gemma web</name>
-	<version>1.5-SNAPSHOT</version>
+	<version>1.5</version>
 	<description>Gemma web application</description>
 	<build>
 		<sourceDirectory>src/main/java</sourceDirectory>
@@ -91,7 +90,7 @@
 						</goals>
 						<configuration>
 							<tasks>
-								<mkdir dir="${gemma.output.lib.dir}"  />
+								<mkdir dir="${gemma.output.lib.dir}" />
 								<delete>
 									<fileset dir="${gemma.output.lib.dir}" includes="*.jar" />
 								</delete>
@@ -134,7 +133,7 @@
 						</goals>
 						<configuration>
 							<tasks>
-								<mkdir dir="${gemma.output.lib.dir}"  />
+								<mkdir dir="${gemma.output.lib.dir}" />
 								<copy file="src/main/resources/log4j.properties" todir="${gemma.output.lib.dir}" />
 							</tasks>
 						</configuration>

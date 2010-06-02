@@ -1,10 +1,9 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<name>Gemma</name>
 	<groupId>gemma</groupId>
 	<artifactId>gemma</artifactId>
-	<version>1.5-SNAPSHOT</version>
+	<version>1.5</version>
 	<inceptionYear>2005</inceptionYear>
 	<description>
 		The Gemma Project for meta-analysis of genomics data
@@ -25,7 +24,8 @@
 		<connection>scm:cvs:ext:@katz.pavlab.chibi.ubc.ca:/space/cvs:Gemma</connection>
 		<developerConnection>scm:cvs:ext:@katz.pavlab.chibi.ubc.ca:/space/cvs:Gemma</developerConnection>
 		<url>http://www.chibi.ubc.ca/faculty/pavlidis/fisheye/browse/pavlab/Gemma</url>
-	</scm>
+	  <tag>gemma-1_5</tag>
+  </scm>
 	<issueManagement>
 		<system>Bugzilla</system>
 		<url>
@@ -380,7 +380,7 @@
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-report-plugin</artifactId>
 				<configuration>
-					<argLine>-Xmx1.2g</argLine>
+					<argLine>-Xmx1.2g -XX:MaxPermSize=256m</argLine>
 				</configuration>
 			</plugin>
 		</plugins>
@@ -400,7 +400,7 @@
 				<artifactId>maven-surefire-plugin</artifactId>
 				<configuration>
 					<argLine>
-						-Xmx1200M -ea -Djava.awt.headless=true
+						-Xmx1200M -ea -Djava.awt.headless=true -XX:MaxPermSize=256m
 					</argLine>
 					<redirectTestOutputToFile>true</redirectTestOutputToFile>
 					<excludes>
