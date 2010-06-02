@@ -591,8 +591,8 @@ GeneSetController.create = function(p0, callback) {
 GeneSetController.remove = function(p0, callback) {
 	dwr.engine._execute(GeneSetController._path, 'GeneSetController', 'remove', p0, callback);
 }
-GeneSetController.getUsersGeneGroups = function(p0, callback) {
-	dwr.engine._execute(GeneSetController._path, 'GeneSetController', 'getUsersGeneGroups', p0, callback);
+GeneSetController.getUsersGeneGroups = function(p0, p1, callback) {
+	dwr.engine._execute(GeneSetController._path, 'GeneSetController', 'getUsersGeneGroups', p0, p1, callback);
 }
 GeneSetController.findGeneSetsByGene = function(p0, callback) {
 	dwr.engine._execute(GeneSetController._path, 'GeneSetController', 'findGeneSetsByGene', p0, callback);
