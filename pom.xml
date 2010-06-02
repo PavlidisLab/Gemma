@@ -3,7 +3,7 @@
 	<name>Gemma</name>
 	<groupId>gemma</groupId>
 	<artifactId>gemma</artifactId>
-	<version>1.5</version>
+	<version>1.6-SNAPSHOT</version>
 	<inceptionYear>2005</inceptionYear>
 	<description>
 		The Gemma Project for meta-analysis of genomics data
@@ -24,7 +24,6 @@
 		<connection>scm:cvs:ext:@katz.pavlab.chibi.ubc.ca:/space/cvs:Gemma</connection>
 		<developerConnection>scm:cvs:ext:@katz.pavlab.chibi.ubc.ca:/space/cvs:Gemma</developerConnection>
 		<url>http://www.chibi.ubc.ca/faculty/pavlidis/fisheye/browse/pavlab/Gemma</url>
-	  <tag>gemma-1_5</tag>
   </scm>
 	<issueManagement>
 		<system>Bugzilla</system>
