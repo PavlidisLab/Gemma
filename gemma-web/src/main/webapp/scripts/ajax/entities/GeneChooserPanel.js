@@ -532,7 +532,7 @@ Gemma.GeneImportPanel = Ext.extend(Ext.Window, {
 									}],
 							buttons : [{
 										text : 'Cancel',
-										handler : this.hide,
+										handler : function() {this.hide()}.createDelegate(this),
 										scope : this
 									}, {
 										text : 'OK',
