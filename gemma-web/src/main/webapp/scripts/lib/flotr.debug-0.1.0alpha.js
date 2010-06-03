@@ -1036,9 +1036,12 @@ var Flotr = (function() {
 		 * Returns: void
 		 */
 		function drawSeriesLines(series) {
+			var DASH_LENGTH=2;
 			function plotLine(data, offset) {
-				if (data.length < 2)
+				if (data.length < 2) {
+					// nothing to plot. Well, we could plot a point.
 					return;
+				}
 
 				var i = 0;
 
@@ -1069,15 +1072,15 @@ var Flotr = (function() {
 					 * (Id=392). A similar problem happens whenever there is an isolated 'present' value. See bug 1720.
 					 */
 					if (isNaN(y2)) {
-						// Draw a short line to mark the spot where the last point was.
-						ctx.lineTo(prevx + 5, prevy);
+						// Draw a short 'dash' to mark the spot where the last point was. This has to be small or else it looks bad in thumbnails
+						ctx.lineTo(prevx + DASH_LENGTH, prevy);
 						continue;
 					}
 					if (isNaN(y1)) {
 						prevx = tHoz(x2);
 						prevy = tVert(y2) + offset;
 						ctx.moveTo(prevx, prevy);
-						ctx.lineTo(prevx + 5, prevy);
+						ctx.lineTo(prevx + DASH_LENGTH, prevy);
 						continue;
 					}
 
