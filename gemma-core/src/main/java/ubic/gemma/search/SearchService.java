@@ -82,6 +82,8 @@ import org.springframework.stereotype.Service;
 
 import ubic.basecode.ontology.model.OntologyIndividual;
 import ubic.basecode.ontology.model.OntologyTerm;
+import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
+import ubic.gemma.model.analysis.expression.ExpressionExperimentSetService;
 import ubic.gemma.model.association.Gene2GOAssociationService;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.BibliographicReferenceService;
@@ -106,6 +108,8 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.biosequence.BioSequenceService;
 import ubic.gemma.model.genome.gene.GeneProductService;
 import ubic.gemma.model.genome.gene.GeneService;
+import ubic.gemma.model.genome.gene.GeneSet;
+import ubic.gemma.model.genome.gene.GeneSetService;
 import ubic.gemma.ontology.OntologyService;
 import ubic.gemma.util.ConfigUtils;
 import ubic.gemma.util.EntityUtils;
@@ -129,16 +133,6 @@ import ubic.gemma.util.ReflectionUtil;
 public class SearchService implements InitializingBean {
 
     /**
-     * 
-     */
-    private static final int MAX_IN_MEMORY_INDEX_HITS = 1000;
-
-    /**
-     * Key for internal in-memory on-the-fly indexes
-     */
-    private static final String INDEX_KEY = "content";
-
-    /**
      * Defines the properties we look at for 'highlighting'.
      */
     static final String[] propertiesToSearch = new String[] { "all", "name", "description",
@@ -152,30 +146,27 @@ public class SearchService implements InitializingBean {
             "expressionExperiment.otherRelevantPublications.title" };
 
     /**
-     * Penalty applied to scores on hits for entities that derive from an association. For example, if a hit to an EE
-     * came from text associated with one of its biomaterials, the score is penalized by this amount.
-     */
-    private static final double INDIRECT_DB_HIT_PENALTY = 0.8;
-
-    /**
      * Penalty applied to all 'index' hits
      */
     private static final double COMPASS_HIT_SCORE_PENALTY_FACTOR = 0.9;
 
     /**
-     * How long an item in the cache lasts when it is not accessed.
+     * Key for internal in-memory on-the-fly indexes
      */
-    private static final int ONTOLOGY_CACHE_TIME_TO_IDLE = 600;
+    private static final String INDEX_KEY = "content";
 
     /**
-     * How long after creation before an object is evicted.
+     * Penalty applied to scores on hits for entities that derive from an association. For example, if a hit to an EE
+     * came from text associated with one of its biomaterials, the score is penalized by this amount.
      */
-    private static final int ONTOLOGY_CACHE_TIME_TO_DIE = 2000;
+    private static final double INDIRECT_DB_HIT_PENALTY = 0.8;
+
+    private static Log log = LogFactory.getLog( SearchService.class.getName() );
 
     /**
-     * How many term children can stay in memory
+     * 
      */
-    private static final int ONTOLOGY_INFO_CACHE_SIZE = 500;
+    private static final int MAX_IN_MEMORY_INDEX_HITS = 1000;
 
     private static final int MINIMUM_EE_QUERY_LENGTH = 3;
 
@@ -183,29 +174,25 @@ public class SearchService implements InitializingBean {
 
     private static final String NCBI_GENE = "ncbi_gene";
 
-    private static Log log = LogFactory.getLog( SearchService.class.getName() );
+    /**
+     * How long after creation before an object is evicted.
+     */
+    private static final int ONTOLOGY_CACHE_TIME_TO_DIE = 2000;
+
+    /**
+     * How long an item in the cache lasts when it is not accessed.
+     */
+    private static final int ONTOLOGY_CACHE_TIME_TO_IDLE = 600;
+
+    /**
+     * How many term children can stay in memory
+     */
+    private static final int ONTOLOGY_INFO_CACHE_SIZE = 500;
 
     Analyzer analyzer = new StandardAnalyzer();
 
-    private Cache childTermCache;
-
-    @Autowired
-    private Gene2GOAssociationService gene2GOAssociationService;
-
-    @Autowired
-    private GeneService geneService;
-
-    @Autowired
-    private GeneProductService geneProductService;
-
-    @Autowired
-    private CompositeSequenceService compositeSequenceService;
-
     @Autowired
     private ArrayDesignService arrayDesignService;
-
-    @Autowired
-    private ExpressionExperimentService expressionExperimentService;
 
     @Autowired
     private BibliographicReferenceService bibliographicReferenceService;
@@ -214,19 +201,12 @@ public class SearchService implements InitializingBean {
     private BioSequenceService bioSequenceService;
 
     @Autowired
+    private CacheManager cacheManager;
+
+    @Autowired
     private CharacteristicService characteristicService;
 
-    @Autowired
-    private OntologyService ontologyService;
-
-    @Autowired
-    private TaxonService taxonService;
-
-    @Autowired
-    private Compass compassGene;
-
-    @Autowired
-    private Compass compassExpression;
+    private Cache childTermCache;
 
     @Autowired
     private Compass compassArray;
@@ -238,10 +218,46 @@ public class SearchService implements InitializingBean {
     private Compass compassBiosequence;
 
     @Autowired
+    private Compass compassExperimentSet;
+
+    @Autowired
+    private Compass compassExpression;
+
+    @Autowired
+    private Compass compassGene;
+
+    @Autowired
+    private Compass compassGeneSet;
+
+    @Autowired
     private Compass compassProbe;
 
     @Autowired
-    private CacheManager cacheManager;
+    private CompositeSequenceService compositeSequenceService;
+
+    @Autowired
+    private ExpressionExperimentSetService experimentSetService;
+
+    @Autowired
+    private ExpressionExperimentService expressionExperimentService;
+
+    @Autowired
+    private Gene2GOAssociationService gene2GOAssociationService;
+
+    @Autowired
+    private GeneProductService geneProductService;
+
+    @Autowired
+    private GeneService geneService;
+
+    @Autowired
+    private GeneSetService geneSetService;
+
+    @Autowired
+    private OntologyService ontologyService;
+
+    @Autowired
+    private TaxonService taxonService;
 
     /*
      * (non-Javadoc)
@@ -475,6 +491,17 @@ public class SearchService implements InitializingBean {
         if ( settings.isSearchBibrefs() ) {
             Collection<SearchResult> bibliographicReferences = compassBibliographicReferenceSearch( settings );
             accreteResults( rawResults, bibliographicReferences );
+        }
+
+        if ( settings.isSearchGeneSets() ) {
+            // todo
+            Collection<SearchResult> geneSets = geneSetSearch( settings );
+            accreteResults( rawResults, geneSets );
+        }
+
+        if ( settings.isSearchExperimentSets() ) {
+            Collection<SearchResult> experimentSets = experimentSetSearch( settings );
+            accreteResults( rawResults, experimentSets );
         }
 
         Map<Class<?>, List<SearchResult>> sortedLimitedResults = getSortedLimitedResults( settings, rawResults,
@@ -1504,6 +1531,21 @@ public class SearchService implements InitializingBean {
     }
 
     /**
+     * @param settings
+     * @return
+     */
+    private Collection<SearchResult> experimentSetSearch( SearchSettings settings ) {
+        Collection<SearchResult> results = this.dbHitsToSearchResult( this.experimentSetService.findByName( settings
+                .getQuery() ) );
+
+        /*
+         * TODO remove sets that have only one EE in them...
+         */
+        results.addAll( compassSearch( compassExperimentSet, settings ) );
+        return results;
+    }
+
+    /**
      * A general search for expression experiments. This search does both an database search and a compass search.
      * 
      * @param settings
@@ -1690,6 +1732,17 @@ public class SearchService implements InitializingBean {
     }
 
     /**
+     * @param settings
+     * @return
+     */
+    private Collection<SearchResult> geneSetSearch( SearchSettings settings ) {
+        Collection<SearchResult> hits = this
+                .dbHitsToSearchResult( this.geneSetService.findByName( settings.getQuery() ) );
+        hits.addAll( compassSearch( compassGeneSet, settings ) );
+        return hits;
+    }
+
+    /**
      * Given classes to search and characteristics,
      * 
      * @param classes Which classes of entities to look for
@@ -1794,6 +1847,8 @@ public class SearchService implements InitializingBean {
         results.put( Gene.class, new ArrayList<SearchResult>() );
         results.put( PredictedGene.class, new ArrayList<SearchResult>() );
         results.put( ProbeAlignedRegion.class, new ArrayList<SearchResult>() );
+        results.put( GeneSet.class, new ArrayList<SearchResult>() );
+        results.put( ExpressionExperimentSet.class, new ArrayList<SearchResult>() );
 
         /*
          * Get the top N results, overall (NOT within each class - experimental.)
@@ -1973,6 +2028,10 @@ public class SearchService implements InitializingBean {
             return geneService.loadMultiple( ids );
         } else if ( BioSequence.class.isAssignableFrom( entityClass ) ) {
             return bioSequenceService.loadMultiple( ids );
+        } else if ( GeneSet.class.isAssignableFrom( entityClass ) ) {
+            return geneSetService.load( ids );
+        } else if ( ExpressionExperimentSet.class.isAssignableFrom( entityClass ) ) {
+            return experimentSetService.load( ids );
         } else {
             throw new UnsupportedOperationException( "Don't know how to retrieve objects for class=" + entityClass );
         }

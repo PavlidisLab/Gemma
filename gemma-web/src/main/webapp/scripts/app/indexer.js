@@ -1,32 +1,42 @@
+/**
+ * 
+ * 
+ * @param {}
+ *            data
+ * @version $Id$
+ */
+
 function reset(data) {
 
 }
 
 function handleSuccess(data) {
 	Ext.DomHelper.overwrite("messages", {
-		tag : 'div',
-		html : data
-	});
+				tag : 'div',
+				html : data
+			});
 }
 
 function handleFailure(data, e) {
 	Ext.DomHelper.overwrite("taskId", "");
 	Ext.DomHelper.overwrite("messages", {
-		tag : 'img',
-		src : '/Gemma/images/icons/warning.png'
-	});
+				tag : 'img',
+				src : '/Gemma/images/icons/warning.png'
+			});
 	Ext.DomHelper.append("messages", {
-		tag : 'span',
-		html : "&nbsp;There was an error: " + data
-	});
+				tag : 'span',
+				html : "&nbsp;There was an error: " + data
+			});
 }
 
 function handleIndexSuccess(data) {
 	try {
 		taskId = data;
 		Ext.DomHelper.overwrite("messages", "");
-		var p = new progressbar({taskId : taskId});
-		
+		var p = new progressbar({
+					taskId : taskId
+				});
+
 		p.createIndeterminateProgressBar();
 		p.on('fail', handleFailure);
 		p.on('cancel', reset);
@@ -48,7 +58,9 @@ function index(event) {
 		indexProbe : probeCheckBox.getValue(),
 		indexBibRef : bibRefCheckBox.getValue(),
 		indexGene : geneCheckBox.getValue(),
-		indexBioSequence : bsCheckBox.getValue()
+		indexBioSequence : bsCheckBox.getValue(),
+		indexExperimentSet : eeSetCheckBox.getValue(),
+		indexGeneSet : geneSetCheckBox.getValue()
 	};
 
 	callParams.push(commandObj);
@@ -57,15 +69,15 @@ function index(event) {
 	var errorHandler = handleFailure.createDelegate(this, [], true);
 
 	callParams.push({
-		callback : delegate,
-		errorHandler : errorHandler
-	});
+				callback : delegate,
+				errorHandler : errorHandler
+			});
 
 	// this should return quickly, with the task id.
 	Ext.DomHelper.overwrite("messages", {
-		tag : 'img',
-		src : '/Gemma/images/default/tree/loading.gif'
-	});
+				tag : 'img',
+				src : '/Gemma/images/default/tree/loading.gif'
+			});
 	Ext.DomHelper.append("messages", "&nbsp;Submitting job...");
 	IndexService.index.apply(this, callParams);
 
@@ -75,60 +87,74 @@ var indexForm = function() {
 
 	Ext.form.Field.prototype.msgTarget = 'side';
 	var simple = new Ext.FormPanel({
-		border : false
-	});
+				border : false
+			});
 
 	geneCheckBox = new Ext.form.Checkbox({
-		boxLabel : ' Index genes',
-		labelSeparator : '',
-		name : 'gene'
-	});
+				boxLabel : ' Index genes',
+				labelSeparator : '',
+				name : 'gene'
+			});
 	simple.add(geneCheckBox);
 
 	probeCheckBox = new Ext.form.Checkbox({
-		labelSeparator : '',
-		boxLabel : 'Index probes',
-		name : 'probe'
-	});
+				labelSeparator : '',
+				boxLabel : 'Index probes',
+				name : 'probe'
+			});
 	simple.add(probeCheckBox);
 
 	adCheckBox = new Ext.form.Checkbox({
-		labelSeparator : '',
-		boxLabel : 'Index Array Designs',
-		name : 'ad'
-	});
+				labelSeparator : '',
+				boxLabel : 'Index Array Designs',
+				name : 'ad'
+			});
 	simple.add(adCheckBox);
 
 	bsCheckBox = new Ext.form.Checkbox({
-		labelSeparator : '',
-		boxLabel : 'Index Biosequences',
-		name : 'bs'
-	});
+				labelSeparator : '',
+				boxLabel : 'Index Biosequences',
+				name : 'bs'
+			});
 	simple.add(bsCheckBox);
 
 	eeCheckBox = new Ext.form.Checkbox({
-		labelSeparator : '',
-		boxLabel : 'Index Expression Experiments',
-		name : 'ee'
-	});
+				labelSeparator : '',
+				boxLabel : 'Index Expression Experiments',
+				name : 'ee'
+			});
 	simple.add(eeCheckBox);
 
 	bibRefCheckBox = new Ext.form.Checkbox({
-		labelSeparator : '',
-		boxLabel : 'Index Bibliographic References',
-		name : 'bibRef'
-	});
+				labelSeparator : '',
+				boxLabel : 'Index Bibliographic References',
+				name : 'bibRef'
+			});
 	simple.add(bibRefCheckBox);
 
+	eeSetCheckBox = new Ext.form.Checkbox({
+				labelSeparator : '',
+				boxLabel : 'Index Experiment sets',
+				name : 'eeSet'
+			});
+	simple.add(eeSetCheckBox);
+
+	geneSetCheckBox = new Ext.form.Checkbox({
+				labelSeparator : '',
+				boxLabel : 'Index Gene sets',
+				name : 'geneSet'
+			});
+	simple.add(geneSetCheckBox);
+
 	simple.add(new Ext.Button({
-		text : "index",
-		handler : function(event) {
-			index(event);
-		}
-	}));
+				text : "index",
+				handler : function(event) {
+					index(event);
+				}
+			}));
 	simple.render('index-form');
 };
 
 Ext.onReady(function() {
-	indexForm();
-});
+			indexForm();
+		});

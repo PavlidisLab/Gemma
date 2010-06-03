@@ -18,28 +18,12 @@
  */
 package ubic.gemma.analysis.preprocess;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.zip.GZIPInputStream;
-
-import org.apache.commons.lang.RandomStringUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import ubic.gemma.loader.expression.geo.DatasetCombiner;
 import ubic.gemma.loader.expression.geo.GeoConverter;
-import ubic.gemma.loader.expression.geo.GeoFamilyParser;
-import ubic.gemma.loader.expression.geo.GeoParseResult;
-import ubic.gemma.loader.expression.geo.GeoSampleCorrespondence;
-import ubic.gemma.loader.expression.geo.model.GeoSeries;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
-import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.testing.BaseSpringContextTest;
 

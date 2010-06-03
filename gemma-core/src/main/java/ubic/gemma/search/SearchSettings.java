@@ -44,6 +44,36 @@ public class SearchSettings {
     private boolean searchArrays = true;
     private boolean searchBibrefs = false;
     private boolean searchGenesByGO = false;
+    private boolean searchGeneSets = true;
+    private boolean searchExperimentSets = true;
+
+    /**
+     * @return the searchGeneSets
+     */
+    public boolean isSearchGeneSets() {
+        return searchGeneSets;
+    }
+
+    /**
+     * @param searchGeneSets the searchGeneSets to set
+     */
+    public void setSearchGeneSets( boolean searchGeneSets ) {
+        this.searchGeneSets = searchGeneSets;
+    }
+
+    /**
+     * @return the searchExperimentSets
+     */
+    public boolean isSearchExperimentSets() {
+        return searchExperimentSets;
+    }
+
+    /**
+     * @param searchExperimentSets the searchExperimentSets to set
+     */
+    public void setSearchExperimentSets( boolean searchExperimentSets ) {
+        this.searchExperimentSets = searchExperimentSets;
+    }
 
     private boolean useIndices = true;
     private boolean useDatabase = true;
@@ -227,6 +257,8 @@ public class SearchSettings {
         this.searchGenesByGO = false;
         this.searchExperiments = false;
         this.searchProbes = false;
+        this.searchGeneSets = false;
+        this.searchExperimentSets = false;
     }
 
     public ArrayDesign getArrayDesign() {

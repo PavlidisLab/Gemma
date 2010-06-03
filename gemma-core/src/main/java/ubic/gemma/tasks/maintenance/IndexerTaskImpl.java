@@ -58,19 +58,27 @@ public class IndexerTaskImpl implements IndexerTask {
 
     private InternalCompass compassBiosequence;
 
+    private InternalCompass compassExperimentSet;
+
     private InternalCompass compassExpression;
 
     private InternalCompass compassGene;
 
+    private InternalCompass compassGeneSet;
+
     private InternalCompass compassProbe;
+
+    private SingleCompassGps experimentSetGps;
 
     private SingleCompassGps expressionGps;
 
     private SingleCompassGps geneGps;
 
-    private MailEngine mailEngine;
+    private SingleCompassGps geneSetGps;
 
     private Log log = LogFactory.getLog( this.getClass().getName() );
+
+    private MailEngine mailEngine;
 
     private SingleCompassGps probeGps;
 
@@ -80,9 +88,9 @@ public class IndexerTaskImpl implements IndexerTask {
 
         if ( command.isIndexEE() ) {
             if ( rebuildIndex( expressionGps, "Expression Experiment index" ) )
-                result.setPathToExpresionIndex( getIndexPath( compassExpression ) );
+                result.setPathToExpressionIndex( getIndexPath( compassExpression ) );
             else
-                result.setPathToExpresionIndex( null );
+                result.setPathToExpressionIndex( null );
 
         }
         if ( command.isIndexAD() ) {
@@ -93,31 +101,45 @@ public class IndexerTaskImpl implements IndexerTask {
 
         }
         if ( command.isIndexBibRef() ) {
-            if (rebuildIndex( bibliographicGps, "Bibliographic Reference Index" ))
-            result.setPathToBibliographicIndex( getIndexPath( compassBibliographic ) );
+            if ( rebuildIndex( bibliographicGps, "Bibliographic Reference Index" ) )
+                result.setPathToBibliographicIndex( getIndexPath( compassBibliographic ) );
             else
                 result.setPathToBibliographicIndex( null );
 
         }
         if ( command.isIndexBioSequence() ) {
-            if (rebuildIndex( biosequenceGps, "Biosequence Reference Index" ))
-            result.setPathToBiosequenceIndex( getIndexPath( compassBiosequence ) );
+            if ( rebuildIndex( biosequenceGps, "Biosequence Reference Index" ) )
+                result.setPathToBiosequenceIndex( getIndexPath( compassBiosequence ) );
             else
                 result.setPathToBiosequenceIndex( null );
         }
 
         if ( command.isIndexProbe() ) {
-            if (rebuildIndex( probeGps, "Probe Reference Index" ))
-            result.setPathToProbeIndex( getIndexPath( compassProbe ) );
+            if ( rebuildIndex( probeGps, "Probe Reference Index" ) )
+                result.setPathToProbeIndex( getIndexPath( compassProbe ) );
             else
                 result.setPathToProbeIndex( null );
         }
 
         if ( command.isIndexGene() ) {
-            if (rebuildIndex( geneGps, "Gene index" ))
-            result.setPathToGeneIndex( getIndexPath( compassGene ) );
+            if ( rebuildIndex( geneGps, "Gene index" ) )
+                result.setPathToGeneIndex( getIndexPath( compassGene ) );
             else
                 result.setPathToGeneIndex( null );
+        }
+
+        if ( command.isIndexGeneSet() ) {
+            if ( rebuildIndex( geneSetGps, "Gene set index" ) )
+                result.setPathToGeneSetIndex( getIndexPath( compassGeneSet ) );
+            else
+                result.setPathToGeneSetIndex( null );
+        }
+
+        if ( command.isIndexExperimentSet() ) {
+            if ( rebuildIndex( experimentSetGps, "Experiment set index" ) )
+                result.setPathToExperimentSetIndex( getIndexPath( compassExperimentSet ) );
+            else
+                result.setPathToExperimentSetIndex( null );
         }
         log.info( "Indexing Finished. Returning result to space. Result is: " + result );
         return result;
@@ -167,6 +189,13 @@ public class IndexerTaskImpl implements IndexerTask {
     }
 
     /**
+     * @param compassExperimentSet the compassExperimentSet to set
+     */
+    public void setCompassExperimentSet( InternalCompass compassExperimentSet ) {
+        this.compassExperimentSet = compassExperimentSet;
+    }
+
+    /**
      * @param compassExpression the compassExpression to set
      */
     public void setCompassExpression( InternalCompass compassExpression ) {
@@ -181,10 +210,24 @@ public class IndexerTaskImpl implements IndexerTask {
     }
 
     /**
+     * @param compassGeneSet the compassGeneSet to set
+     */
+    public void setCompassGeneSet( InternalCompass compassGeneSet ) {
+        this.compassGeneSet = compassGeneSet;
+    }
+
+    /**
      * @param compassProbe the compassProbe to set
      */
     public void setCompassProbe( InternalCompass compassProbe ) {
         this.compassProbe = compassProbe;
+    }
+
+    /**
+     * @param experimentSetGps the experimentSetGps to set
+     */
+    public void setExperimentSetGps( SingleCompassGps experimentSetGps ) {
+        this.experimentSetGps = experimentSetGps;
     }
 
     /**
@@ -202,6 +245,20 @@ public class IndexerTaskImpl implements IndexerTask {
     }
 
     /**
+     * @param geneSetGps the geneSetGps to set
+     */
+    public void setGeneSetGps( SingleCompassGps geneSetGps ) {
+        this.geneSetGps = geneSetGps;
+    }
+
+    /**
+     * @param mailEngine
+     */
+    public void setMailEngine( MailEngine mailEngine ) {
+        this.mailEngine = mailEngine;
+    }
+
+    /**
      * @param probeGps the probeGps to set
      */
     public void setProbeGps( SingleCompassGps probeGps ) {
@@ -210,13 +267,6 @@ public class IndexerTaskImpl implements IndexerTask {
 
     private String getIndexPath( InternalCompass compass ) {
         return compass.getSettings().getSetting( PATH_PROPERTY ).replaceFirst( FILE, "" ) + PATH_SUFFIX;
-    }
-
-    /**
-     * @param mailEngine
-     */
-    public void setMailEngine( MailEngine mailEngine ) {
-        this.mailEngine = mailEngine;
     }
 
     private Boolean rebuildIndex( CompassGpsInterfaceDevice device, String whatIndexingMsg ) {

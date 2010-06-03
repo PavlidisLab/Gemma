@@ -21,6 +21,9 @@ package ubic.gemma.web.controller.expression.experiment;
 import java.util.Collection;
 import java.util.HashSet;
 
+import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
+import ubic.gemma.util.EntityUtils;
+
 /**
  * @author paul
  * @version $Id$
@@ -64,7 +67,7 @@ public class ExpressionExperimentSetValueObject implements Comparable<Expression
     private String description;
     private Collection<Long> expressionExperimentIds;
     private Long id;
-    
+
     /**
      * If modifying the set is constrained by existing analyses.
      */
@@ -76,6 +79,27 @@ public class ExpressionExperimentSetValueObject implements Comparable<Expression
     private Long taxonId;
 
     private String taxonName;
+
+    public static Collection<ExpressionExperimentSetValueObject> makeValueObjects(
+            Collection<ExpressionExperimentSet> entities ) {
+        Collection<ExpressionExperimentSetValueObject> results = new HashSet<ExpressionExperimentSetValueObject>();
+
+        for ( ExpressionExperimentSet eeset : entities ) {
+            results.add( new ExpressionExperimentSetValueObject( eeset ) );
+        }
+
+        return results;
+    }
+
+    public ExpressionExperimentSetValueObject( ExpressionExperimentSet set ) {
+        this.id = set.getId();
+        this.name = set.getName();
+        this.description = set.getDescription();
+        this.taxonId = set.getTaxon().getId();
+        this.numExperiments = set.getExperiments().size();
+        this.expressionExperimentIds = EntityUtils.getIds( set.getExperiments() );
+
+    }
 
     public ExpressionExperimentSetValueObject() {
         this.expressionExperimentIds = new HashSet<Long>();

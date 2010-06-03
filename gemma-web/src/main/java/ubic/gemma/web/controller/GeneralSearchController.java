@@ -43,6 +43,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
+import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
+import ubic.gemma.model.analysis.expression.ExpressionExperimentSetService;
 import ubic.gemma.model.association.Gene2GOAssociationService;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.Characteristic;
@@ -57,12 +59,16 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.biosequence.BioSequence;
+import ubic.gemma.model.genome.gene.GeneSet;
+import ubic.gemma.model.genome.gene.GeneSetService;
 import ubic.gemma.search.SearchResult;
 import ubic.gemma.search.SearchService;
 import ubic.gemma.search.SearchSettings;
 import ubic.gemma.security.SecurityService;
 import ubic.gemma.security.audit.AuditableUtil;
 import ubic.gemma.util.EntityUtils;
+import ubic.gemma.web.controller.common.auditAndSecurity.GeneSetValueObject;
+import ubic.gemma.web.controller.expression.experiment.ExpressionExperimentSetValueObject;
 import ubic.gemma.web.propertyeditor.TaxonPropertyEditor;
 import ubic.gemma.web.remote.JsonReaderResponse;
 
@@ -89,6 +95,12 @@ public class GeneralSearchController extends BaseFormController {
 
     @Autowired
     private AuditableUtil auditableUtil;
+
+    @Autowired
+    private GeneSetService geneSetService;
+
+    @Autowired
+    private ExpressionExperimentSetService experimentSetService;
 
     /**
      * @param request
@@ -278,6 +290,7 @@ public class GeneralSearchController extends BaseFormController {
 
     /*
      * This is where "GET" requests go, e.g. from a 'bookmarkable link'.
+     * 
      * @see org.springframework.web.servlet.mvc.SimpleFormController#showForm(javax.servlet.http.HttpServletRequest,
      * javax.servlet.http.HttpServletResponse, org.springframework.validation.BindException)
      */
@@ -311,6 +324,12 @@ public class GeneralSearchController extends BaseFormController {
                         case 'A':
                             csc.setSearchArrays( true );
                             break;
+                        case 'M':
+                            csc.setSearchGeneSets( true );
+                            break;
+                        case 'N':
+                            csc.setSearchExperimentSets( true );
+                            break;
                         default:
                             break;
                     }
@@ -333,6 +352,8 @@ public class GeneralSearchController extends BaseFormController {
      */
     @SuppressWarnings("unchecked")
     private void fillValueObjects( Class entityClass, List<SearchResult> results, SearchSettings settings ) {
+        StopWatch timer = new StopWatch();
+        timer.start();
         Collection vos = null;
 
         if ( ExpressionExperiment.class.isAssignableFrom( entityClass ) ) {
@@ -358,6 +379,11 @@ public class GeneralSearchController extends BaseFormController {
             return;
         } else if ( BioSequence.class.isAssignableFrom( entityClass ) ) {
             return;
+        } else if ( GeneSet.class.isAssignableFrom( entityClass ) ) {
+            vos = GeneSetValueObject.convert2ValueObjects( geneSetService.load( EntityUtils.getIds( results ) ), false );
+        } else if ( ExpressionExperimentSet.class.isAssignableFrom( entityClass ) ) {
+            vos = ExpressionExperimentSetValueObject.makeValueObjects( experimentSetService.load( EntityUtils
+                    .getIds( results ) ) );
         } else {
             throw new UnsupportedOperationException( "Don't know how to make value objects for class=" + entityClass );
         }
@@ -374,6 +400,9 @@ public class GeneralSearchController extends BaseFormController {
             sr.setResultObject( idMap.get( sr.getId() ) );
         }
 
+        if ( timer.getTime() > 1000 ) {
+            log.info( "Value object conversion after search: " + timer.getTime() + "ms" );
+        }
     }
 
     /**

@@ -882,9 +882,9 @@ public class CompareToManualCLI extends AbstractSpringAwareCLI {
             totalIntersect += intersect.size();
         }
         System.out.println( "Human total:" + totalHuman + " Unique:" + uniqueHuman.size() + "  percent unique:"
-                + ( int ) ( 100.0 * uniqueHuman.size() / ( float ) totalHuman ) );
+                + ( int ) ( 100.0 * uniqueHuman.size() / totalHuman ) );
         System.out.println( "Machine:" + totalMachine + " Unique:" + uniqueMachine.size() + "  percent unique:"
-                + ( int ) ( 100.0 * uniqueMachine.size() / ( float ) totalMachine ) );
+                + ( int ) ( 100.0 * uniqueMachine.size() / totalMachine ) );
         System.out.println( "Intersect:" + totalIntersect + " Unique:" + uniqueIntersect.size() );
         float recall = totalIntersect / ( float ) totalHuman;
         System.out.println( "Recall:" + recall );

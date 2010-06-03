@@ -161,6 +161,7 @@ public abstract class AbstractCLI {
         return this.options.addOptionGroup( group );
     }
 
+    @SuppressWarnings("unchecked")
     public List getArgList() {
         return commandLine.getArgList();
     }
@@ -195,6 +196,7 @@ public abstract class AbstractCLI {
      * @return
      * @see org.apache.commons.cli.Options#getOptions()
      */
+    @SuppressWarnings("unchecked")
     public final Collection getOptions() {
         return this.options.getOptions();
     }
@@ -227,6 +229,7 @@ public abstract class AbstractCLI {
      * @return
      * @see org.apache.commons.cli.Options#getRequiredOptions()
      */
+    @SuppressWarnings("unchecked")
     public final List getRequiredOptions() {
         return this.options.getRequiredOptions();
     }
@@ -254,7 +257,7 @@ public abstract class AbstractCLI {
     /**
      * Set up logging according to the user-selected (or default) verbosity level.
      */
-    private void configureLogging( String loggerName, int verbosity ) {
+    private void configureLogging( String loggerName, int v ) {
 
         Logger log4jLogger = LogManager.exists( loggerName );
 
@@ -273,7 +276,7 @@ public abstract class AbstractCLI {
 
         this.originalLoggingLevels.put( log4jLogger, log4jLogger.getLevel() );
 
-        switch ( verbosity ) {
+        switch ( v ) {
             case 0:
                 log4jLogger.setLevel( Level.OFF );
                 break;

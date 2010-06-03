@@ -44,6 +44,8 @@ Gemma.Search.app = function() {
 			var searchExperiments = Ext.getCmp('search-exps-chkbx').getValue();
 			var searchArrays = Ext.getCmp('search-ars-chkbx').getValue();
 			var searchSequences = Ext.getCmp('search-seqs-chkbx').getValue();
+			var searchGeneSets = Ext.getCmp('search-genesets-chkbx').getValue();
+			var searchEESets = Ext.getCmp('search-eesets-chkbx').getValue();
 
 			var searchDatabase = true;
 			var searchIndices = true;
@@ -70,6 +72,12 @@ Gemma.Search.app = function() {
 			if (searchSequences) {
 				scopes = scopes + "S";
 			}
+			if (searchGeneSets) {
+				scopes = scopes + "M";
+			}
+			if (searchEESets) {
+				scopes = scopes + "N";
+			}
 
 			this.resultGrid.getStore().load({
 						params : [{
@@ -79,6 +87,8 @@ Gemma.Search.app = function() {
 									searchArrays : searchArrays,
 									searchExperiments : searchExperiments,
 									searchGenes : searchGenes,
+									searchGeneSets : searchGeneSets,
+									searchExperimentSets : searchEESets,
 									useDatabase : searchDatabase,
 									useIndices : searchIndices,
 									useCharacteristics : searchCharacteristics
@@ -150,6 +160,16 @@ Gemma.SearchForm = Ext.extend(Ext.form.FormPanel, {
 							Ext.getCmp('search-seqs-chkbx').setValue(true);
 						} else {
 							Ext.getCmp('search-seqs-chkbx').setValue(false);
+						}
+						if (params.scope.indexOf('M') > -1) {
+							Ext.getCmp('search-genesets-chkbx').setValue(true);
+						} else {
+							Ext.getCmp('search-genesets-chkbx').setValue(false);
+						}
+						if (params.scope.indexOf('N') > -1) {
+							Ext.getCmp('search-eesets-chkbx').setValue(true);
+						} else {
+							Ext.getCmp('search-eesets-chkbx').setValue(false);
 						}
 					}
 				} else {
@@ -274,6 +294,36 @@ Gemma.SearchForm = Ext.extend(Ext.form.FormPanel, {
 													id : 'search-prbs-chkbx',
 													name : "searchProbes",
 													boxLabel : "Probes",
+													stateful : true,
+													stateEvents : ['check'],
+													getState : function() {
+														return {
+															value : this.getValue()
+														};
+													},
+													applyState : function(state) {
+														this.setValue(state.value);
+													},
+													hideLabel : true
+												}, {
+													id : 'search-genesets-chkbx',
+													name : "searchGeneSets",
+													boxLabel : "Gene sets",
+													stateful : true,
+													stateEvents : ['check'],
+													getState : function() {
+														return {
+															value : this.getValue()
+														};
+													},
+													applyState : function(state) {
+														this.setValue(state.value);
+													},
+													hideLabel : true
+												}, {
+													id : 'search-eesets-chkbx',
+													name : "searchEESets",
+													boxLabel : "Experiment sets",
 													stateful : true,
 													stateEvents : ['check'],
 													getState : function() {
@@ -558,6 +608,10 @@ Gemma.SearchGrid = Ext.extend(Ext.grid.GridPanel, {
 			return "Sequence";
 		} else if (clazz == "Gene") {
 			return "Gene";
+		} else if (clazz == "GeneSetValueObject") {
+			return "Gene set";
+		} else if (clazz == "ExpressionExperimentSetValueObject") {
+			return "Experiment set";
 		} else {
 			return clazz;
 		}
@@ -573,7 +627,7 @@ Gemma.SearchGrid = Ext.extend(Ext.grid.GridPanel, {
 			return record.shortName;
 		} else if (/^BioSequence.*/.exec(clazz)) { // because we get proxies.
 			return record.name;
-		} else if (clazz == "Gene") {
+		} else if (clazz == "Gene" || clazz == 'GeneSetValueObject' || clazz == 'ExpressionExperimentSetValueObject') {
 			return record.name;
 		} else {
 			return clazz;
@@ -601,6 +655,18 @@ Gemma.SearchGrid = Ext.extend(Ext.grid.GridPanel, {
 		} else if (clazz == "Bibliographicreference") {
 			return "<a href=\"/Gemma/gene/showGene.html?id=" + data.id + "\">" + data.title + "</a> [" + data.pubmedId +
 					"]";
+		} else if (clazz == "ExpressionExperimentSetValueObject") {
+
+			/*
+			 * TODO add links.
+			 */
+			return data.name;
+		} else if (clazz == "GeneSetValueObject") {
+
+			/*
+			 * TODO add links
+			 */
+			return data.name;
 		}
 	}
 

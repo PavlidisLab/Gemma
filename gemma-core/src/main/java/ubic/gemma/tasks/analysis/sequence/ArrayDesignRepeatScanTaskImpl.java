@@ -57,7 +57,7 @@ public class ArrayDesignRepeatScanTaskImpl implements ArrayDesignRepeatScanTask 
 
         ArrayDesign ad = command.getArrayDesign();
 
-        ad = arrayDesignService.thawLite( ad );
+        ad = arrayDesignService.thaw( ad );
 
         Collection<BioSequence> sequences = ArrayDesignSequenceAlignmentService.getSequences( ad );
         RepeatScan scanner = new RepeatScan();

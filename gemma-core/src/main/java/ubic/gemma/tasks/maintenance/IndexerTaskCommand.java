@@ -28,7 +28,7 @@ import ubic.gemma.job.TaskCommand;
 
 public class IndexerTaskCommand extends TaskCommand {
 
-    private static final int INDEXER_MAX_RUNTIME = 300; //Minutes
+    private static final int INDEXER_MAX_RUNTIME = 300; // Minutes
 
     private static final long serialVersionUID = -8994831072852393919L;
 
@@ -42,7 +42,11 @@ public class IndexerTaskCommand extends TaskCommand {
 
     private boolean indexEE;
 
+    private boolean indexExperimentSet = true;
+
     private boolean indexGene;
+
+    private boolean indexGeneSet = true;
 
     private boolean indexProbe;
 
@@ -71,19 +75,33 @@ public class IndexerTaskCommand extends TaskCommand {
         return indexEE;
     }
 
+    /**
+     * @return the indexExperimentSet
+     */
+    public boolean isIndexExperimentSet() {
+        return indexExperimentSet;
+    }
+
     public boolean isIndexGene() {
         return indexGene;
+    }
+
+    /**
+     * @return the indexGeneSet
+     */
+    public boolean isIndexGeneSet() {
+        return indexGeneSet;
     }
 
     public boolean isIndexProbe() {
         return indexProbe;
     }
 
-   
     /**
-     * Indexing of probes and BioSequences sometimes bails because of the size of the index created. 
-     * Also their data rarely changes so there is not much value in indexing it every week. 
-     * Indexing of probes and biosequences can still be triggered manually.  
+     * Indexing of probes and BioSequences sometimes bails because of the size of the index created. Also their data
+     * rarely changes so there is not much value in indexing it every week. Indexing of probes and biosequences can
+     * still be triggered manually.
+     * 
      * @param all
      */
     public void setAll( boolean all ) {
@@ -93,6 +111,8 @@ public class IndexerTaskCommand extends TaskCommand {
         setIndexEE( all );
         setIndexGene( all );
         setIndexProbe( false );
+        this.setIndexExperimentSet( all );
+        this.setIndexGeneSet( all );
     }
 
     public void setCompassOn( boolean compassOn ) {
@@ -115,8 +135,22 @@ public class IndexerTaskCommand extends TaskCommand {
         this.indexEE = indexEE;
     }
 
+    /**
+     * @param indexExperimentSet the indexExperimentSet to set
+     */
+    public void setIndexExperimentSet( boolean indexExperimentSet ) {
+        this.indexExperimentSet = indexExperimentSet;
+    }
+
     public void setIndexGene( boolean indexGene ) {
         this.indexGene = indexGene;
+    }
+
+    /**
+     * @param indexGeneSet the indexGeneSet to set
+     */
+    public void setIndexGeneSet( boolean indexGeneSet ) {
+        this.indexGeneSet = indexGeneSet;
     }
 
     public void setIndexOntology( boolean indexBioSequence ) {

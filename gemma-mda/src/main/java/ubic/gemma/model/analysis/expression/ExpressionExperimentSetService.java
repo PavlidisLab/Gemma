@@ -59,6 +59,9 @@ public interface ExpressionExperimentSetService {
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     public ExpressionExperimentSet load( java.lang.Long id );
 
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    public java.util.Collection<ExpressionExperimentSet> load( Collection<Long> ids );
+
     /**
      * 
      */

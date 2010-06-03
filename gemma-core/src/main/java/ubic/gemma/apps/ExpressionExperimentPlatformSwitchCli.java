@@ -137,7 +137,7 @@ public class ExpressionExperimentPlatformSwitchCli extends ExpressionExperimentM
                     log.error( "Unknown array design" );
                     bail( ErrorCode.INVALID_OPTION );
                 }
-                ad = arrayDesignService.thawLite( ad );
+                ad = arrayDesignService.thaw( ad );
                 serv.switchExperimentToArrayDesign( ee, ad );
 
                 auditEventService.addUpdateEvent( ee, type, "Switched to use " + ad );

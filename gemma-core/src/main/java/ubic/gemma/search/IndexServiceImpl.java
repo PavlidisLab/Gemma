@@ -134,6 +134,20 @@ public class IndexServiceImpl extends AbstractTaskService implements IndexServic
                 throw new RuntimeException( e );
             }
 
+            try {
+                if ( this.command.isIndexGeneSet() && result.getPathToGeneSetIndex() != null )
+                    CompassUtils.swapCompassIndex( compassGeneSet, result.getPathToGeneSetIndex() );
+            } catch ( IOException e ) {
+                throw new RuntimeException( e );
+            }
+
+            try {
+                if ( this.command.isIndexExperimentSet() && result.getPathToExperimentSetIndex() != null )
+                    CompassUtils.swapCompassIndex( compassExperimentSet, result.getPathToExperimentSetIndex() );
+            } catch ( IOException e ) {
+                throw new RuntimeException( e );
+            }
+
             return result;
 
         }
@@ -152,6 +166,24 @@ public class IndexServiceImpl extends AbstractTaskService implements IndexServic
     private InternalCompass compassGene;
 
     private InternalCompass compassProbe;
+
+    private InternalCompass compassGeneSet;
+
+    private InternalCompass compassExperimentSet;
+
+    /**
+     * @param compassGeneSet the compassGeneSet to set
+     */
+    public void setCompassGeneSet( InternalCompass compassGeneSet ) {
+        this.compassGeneSet = compassGeneSet;
+    }
+
+    /**
+     * @param compassExperimentSet the compassExperimentSet to set
+     */
+    public void setCompassExperimentSet( InternalCompass compassExperimentSet ) {
+        this.compassExperimentSet = compassExperimentSet;
+    }
 
     public IndexServiceImpl() {
         this.setBusinessInterface( IndexerTask.class );

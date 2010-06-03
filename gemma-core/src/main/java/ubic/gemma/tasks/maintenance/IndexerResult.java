@@ -27,75 +27,109 @@ import ubic.gemma.job.TaskResult;
  */
 public class IndexerResult extends TaskResult {
 
+    private static final long serialVersionUID = -150285942553712429L;
+
+    protected String pathToArrayIndex = null;
+
+    protected String pathToBibliographicIndex = null;
+
+    protected String pathToBiosequenceIndex = null;
+
+    protected String pathToExperimentSetIndex;
+
+    protected String pathToExpressionIndex = null;
+
+    protected String pathToGeneIndex = null;
+
+    protected String pathToGeneSetIndex;
+
+    protected String pathToProbeIndex = null;
+
     public IndexerResult( IndexerTaskCommand command ) {
         super( command, null );
     }
 
-    private static final long serialVersionUID = -150285942553712429L;
-
-    protected String pathToExpresionIndex = null;
-
-    protected String pathToArrayIndex = null;
-
-    protected String pathToGeneIndex = null;
-
-    protected String pathToProbeIndex = null;
-
-    protected String pathToBiosequenceIndex = null;
-
-    protected String pathToBibliographicIndex = null;
-
     public String getPathToArrayIndex() {
         return pathToArrayIndex;
-    }
-
-    public void setPathToArrayIndex( String pathToArrayIndex ) {
-        this.pathToArrayIndex = pathToArrayIndex;
     }
 
     public String getPathToBibliographicIndex() {
         return pathToBibliographicIndex;
     }
 
-    public void setPathToBibliographicIndex( String pathToBibliographicIndex ) {
-        this.pathToBibliographicIndex = pathToBibliographicIndex;
-    }
-
     public String getPathToBiosequenceIndex() {
         return pathToBiosequenceIndex;
     }
 
-    public void setPathToBiosequenceIndex( String pathToBiosequenceIndex ) {
-        this.pathToBiosequenceIndex = pathToBiosequenceIndex;
+    /**
+     * @return the pathToExperimentSetIndex
+     */
+    public String getPathToExperimentSetIndex() {
+        return pathToExperimentSetIndex;
     }
 
     public String getPathToExpressionIndex() {
-        return pathToExpresionIndex;
-    }
-
-    public void setPathToExpresionIndex( String pathToExpresionIndex ) {
-        this.pathToExpresionIndex = pathToExpresionIndex;
+        return pathToExpressionIndex;
     }
 
     public String getPathToGeneIndex() {
         return pathToGeneIndex;
     }
 
-    public void setPathToGeneIndex( String pathToGeneIndex ) {
-        this.pathToGeneIndex = pathToGeneIndex;
+    /**
+     * @return the pathToGeneSetIndex
+     */
+    public String getPathToGeneSetIndex() {
+        return pathToGeneSetIndex;
     }
 
     public String getPathToProbeIndex() {
         return pathToProbeIndex;
     }
 
+    public void setPathToArrayIndex( String pathToArrayIndex ) {
+        this.pathToArrayIndex = pathToArrayIndex;
+    }
+
+    public void setPathToBibliographicIndex( String pathToBibliographicIndex ) {
+        this.pathToBibliographicIndex = pathToBibliographicIndex;
+    }
+
+    public void setPathToBiosequenceIndex( String pathToBiosequenceIndex ) {
+        this.pathToBiosequenceIndex = pathToBiosequenceIndex;
+    }
+
+    /**
+     * @param pathToExperimentSetIndex the pathToExperimentSetIndex to set
+     */
+    public void setPathToExperimentSetIndex( String pathToExperimentSetIndex ) {
+        this.pathToExperimentSetIndex = pathToExperimentSetIndex;
+    }
+
+    public void setPathToExpressionIndex( String pathToExpressionIndex ) {
+        this.pathToExpressionIndex = pathToExpressionIndex;
+    }
+
+    public void setPathToGeneIndex( String pathToGeneIndex ) {
+        this.pathToGeneIndex = pathToGeneIndex;
+    }
+
+    /**
+     * @param pathToGeneSetIndex the pathToGeneSetIndex to set
+     */
+    public void setPathToGeneSetIndex( String pathToGeneSetIndex ) {
+        this.pathToGeneSetIndex = pathToGeneSetIndex;
+    }
+
     public void setPathToProbeIndex( String pathToProbeIndex ) {
         this.pathToProbeIndex = pathToProbeIndex;
     }
-    
-    public String toString(){
-        
-        return "Probe path: " + pathToProbeIndex + " Gene path: " + pathToGeneIndex + " EE path: " + pathToExpresionIndex + " AD path " + pathToArrayIndex;
+
+    @Override
+    public String toString() {
+
+        return "Probe path: " + pathToProbeIndex + " Gene path: " + pathToGeneIndex + " EE path: "
+                + pathToExpressionIndex + " AD path " + pathToArrayIndex;
     }
 
 }

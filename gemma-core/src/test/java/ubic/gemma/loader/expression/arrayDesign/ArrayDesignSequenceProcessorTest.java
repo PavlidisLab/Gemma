@@ -27,8 +27,7 @@ import java.io.File;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.HashSet;
-
-import org.apache.commons.lang.RandomStringUtils;
+ 
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,8 +42,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
-import ubic.gemma.model.genome.biosequence.BioSequenceService;
-import ubic.gemma.model.genome.biosequence.SequenceType;
+import ubic.gemma.model.genome.biosequence.BioSequenceService; 
 import ubic.gemma.testing.BaseSpringContextTest;
 import ubic.gemma.util.ConfigUtils;
 
@@ -181,7 +179,7 @@ public class ArrayDesignSequenceProcessorTest extends BaseSpringContextTest {
                 false, false, true );
 
         result = ads.iterator().next();
-        result = arrayDesignService.thawLite( result );
+        result = arrayDesignService.thaw( result );
         // have to specify taxon as this has two taxons in it
         InputStream f = this.getClass().getResourceAsStream( "/data/loader/expression/arrayDesign/identifierTest.txt" );
         Collection<BioSequence> res = app.processArrayDesign( result, f, new String[] { "testblastdb",
@@ -208,7 +206,7 @@ public class ArrayDesignSequenceProcessorTest extends BaseSpringContextTest {
                 false, false, true );
         result = ads.iterator().next();
 
-        result = arrayDesignService.thawLite( result );
+        result = arrayDesignService.thaw( result );
         try {
             Collection<BioSequence> res = app.processArrayDesign( result, new String[] { "testblastdb",
                     "testblastdbPartTwo" }, ConfigUtils.getString( "gemma.home" )
@@ -244,32 +242,6 @@ public class ArrayDesignSequenceProcessorTest extends BaseSpringContextTest {
             assertTrue( "Got: " + e.getMessage(), e.getMessage().contains( "please specify which taxon to run" ) );
         }
 
-    }
-
-    @Test
-    public void testProcessAffymetrixDesign() throws Exception {
-        result = app.processAffymetrixDesign( RandomStringUtils.randomAlphabetic( 10 ) + "_arraydesign", taxon,
-                designElementStream, probeFile );
-
-        assertEquals( "composite sequence count", 33, result.getCompositeSequences().size() );
-        assertTrue( result.getCompositeSequences().iterator().next().getArrayDesign() == result );
-
-    }
-
-    @Test
-    public void testProcessNonAffyDesign() throws Exception {
-        result = app.processAffymetrixDesign( RandomStringUtils.randomAlphabetic( 10 ) + "_arraydesign", taxon,
-                designElementStream, probeFile );
-
-        assertNotNull( result.getId() );
-
-        app.processArrayDesign( result, seqFile, SequenceType.EST );
-
-        assertEquals( "composite sequence count", 33, result.getCompositeSequences().size() );
-
-        // assertEquals( "reporter per composite sequence", 17, result.getCompositeSequences().iterator().next()
-        // .getComponentReporters().size() );
-        assertTrue( result.getCompositeSequences().iterator().next().getArrayDesign() == result );
     }
 
 }

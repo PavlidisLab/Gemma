@@ -147,7 +147,7 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
         for ( ArrayDesign oldAd : oldArrayDesigns ) {
             if ( oldAd.equals( arrayDesign ) ) continue; // no need to switch
 
-            oldAd = arrayDesignService.thawLite( oldAd );
+            oldAd = arrayDesignService.thaw( oldAd );
 
             if ( oldAd.getCompositeSequences().size() == 0 ) {
                 throw new IllegalStateException( oldAd + " has no composite sequences" );
@@ -235,7 +235,7 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
         // find the AD they have been merged into, make sure it is exists and they are all merged into the same AD.
         for ( ArrayDesign design : oldArrayDesigns ) {
             ArrayDesign mergedInto = design.getMergedInto();
-            mergedInto = arrayDesignService.thawLite( mergedInto );
+            mergedInto = arrayDesignService.thaw( mergedInto );
 
             if ( mergedInto == null ) {
                 throw new IllegalArgumentException( design + " used by " + expExp
@@ -244,7 +244,7 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
 
             if ( arrayDesign == null ) {
                 arrayDesign = mergedInto;
-                arrayDesignService.thawLite( arrayDesign );
+                arrayDesignService.thaw( arrayDesign );
             }
 
             if ( !mergedInto.equals( arrayDesign ) ) {

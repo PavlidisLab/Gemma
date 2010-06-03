@@ -21,7 +21,7 @@ package ubic.gemma.model.analysis.expression;
 import java.util.Collection;
 
 import org.apache.commons.lang.StringUtils;
-import org.springframework.stereotype.Service; 
+import org.springframework.stereotype.Service;
 
 /**
  * @version $Id$
@@ -31,7 +31,33 @@ import org.springframework.stereotype.Service;
 public class ExpressionExperimentSetServiceImpl extends
         ubic.gemma.model.analysis.expression.ExpressionExperimentSetServiceBase {
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.analysis.expression.ExpressionExperimentSetService#load(java.util.Collection)
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    public Collection<ExpressionExperimentSet> load( Collection<Long> ids ) {
+        return ( Collection<ExpressionExperimentSet> ) this.getExpressionExperimentSetDao().load( ids );
+    }
+
     public Collection<ExpressionExperimentSet> loadAllMultiExperimentSets() {
+        return this.getExpressionExperimentSetDao().loadAllMultiExperimentSets();
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.analysis.expression.ExpressionExperimentSetService#loadMySets()
+     */
+    @Override
+    public Collection<ExpressionExperimentSet> loadMySets() {
+        return this.getExpressionExperimentSetDao().loadAllMultiExperimentSets();
+    }
+
+    @Override
+    public Collection<ExpressionExperimentSet> loadMySharedSets() {
         return this.getExpressionExperimentSetDao().loadAllMultiExperimentSets();
     }
 
@@ -111,19 +137,6 @@ public class ExpressionExperimentSetServiceImpl extends
         }
 
         this.getExpressionExperimentSetDao().update( expressionExperimentSet );
-    }
-
-    /* (non-Javadoc)
-     * @see ubic.gemma.model.analysis.expression.ExpressionExperimentSetService#loadMySets()
-     */
-    @Override
-    public Collection<ExpressionExperimentSet> loadMySets() {
-       return this.getExpressionExperimentSetDao().loadAllMultiExperimentSets();
-    }
-    
-    @Override
-    public Collection<ExpressionExperimentSet> loadMySharedSets() {
-       return this.getExpressionExperimentSetDao().loadAllMultiExperimentSets();
     }
 
 }
