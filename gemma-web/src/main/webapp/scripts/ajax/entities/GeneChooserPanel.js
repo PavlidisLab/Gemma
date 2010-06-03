@@ -197,30 +197,38 @@ Gemma.GeneGrid = Ext.extend(Ext.grid.GridPanel, {
 
 				var taxonId = taxon.id;
 				var text = e.geneNames;
-				GenePickerController.searchMultipleGenes(text, taxonId, function(genes) {
-							var geneData = [];
-							var warned = false;
-							for (var i = 0; i < genes.length; ++i) {
-								if (i >= Gemma.MAX_GENES_PER_QUERY) {
-									if (!warned) {
-										Ext.Msg.alert("Too many genes", "You can only search up to " +
-														Gemma.MAX_GENES_PER_QUERY +
-														" genes, some of your selections will be ignored.");
-										warned = true;
+				GenePickerController.searchMultipleGenes(text, taxonId, {
+
+							callback : function(genes) {
+								var geneData = [];
+								var warned = false;
+								for (var i = 0; i < genes.length; ++i) {
+									if (i >= Gemma.MAX_GENES_PER_QUERY) {
+										if (!warned) {
+											Ext.Msg.alert("Too many genes", "You can only search up to "
+															+ Gemma.MAX_GENES_PER_QUERY
+															+ " genes, some of your selections will be ignored.");
+											warned = true;
+										}
+										break;
 									}
-									break;
-								}
 
-								if (this.getStore().find("id", genes[i].id) < 0) {
-									geneData.push([genes[i].id, genes[i].taxon.scientificName, genes[i].officialSymbol,
-											genes[i].officialName]);
-								}
+									if (this.getStore().find("id", genes[i].id) < 0) {
+										geneData.push([genes[i].id, genes[i].taxon.scientificName,
+												genes[i].officialSymbol, genes[i].officialName]);
+									}
 
+								}
+								this.getStore().loadData(geneData, true);
+								loadMask.hide();
+
+							}.createDelegate(this),
+							
+							errorHandler : function(e) {
+								this.getEl().unmask();
+								Ext.Msg.alert('There was an error', e);
 							}
-							this.getStore().loadData(geneData, true);
-							loadMask.hide();
-
-						}.createDelegate(this));
+						});
 			},
 
 			getTaxonId : function() {
@@ -526,13 +534,15 @@ Gemma.GeneImportPanel = Ext.extend(Ext.Window, {
 										id : 'gene-list-text',
 										xtype : 'textarea',
 
-										fieldLabel : "Paste in gene symbols, one per line, up to " +
-												Gemma.MAX_GENES_PER_QUERY,
+										fieldLabel : "Paste in gene symbols, one per line, up to "
+												+ Gemma.MAX_GENES_PER_QUERY,
 										width : 290
 									}],
 							buttons : [{
 										text : 'Cancel',
-										handler : function() {this.hide()}.createDelegate(this),
+										handler : function() {
+											this.hide()
+										}.createDelegate(this),
 										scope : this
 									}, {
 										text : 'OK',
