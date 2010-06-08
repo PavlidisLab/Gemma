@@ -28,9 +28,10 @@ import java.io.IOException;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockHttpServletRequest;
-import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.Errors;
+import org.springframework.web.bind.support.SimpleSessionStatus;
 import org.springframework.web.servlet.ModelAndView;
 
 import ubic.gemma.testing.BaseSpringWebTest;
@@ -44,11 +45,9 @@ public class PubMedQueryControllerTest extends BaseSpringWebTest {
     @Autowired
     private PubMedQueryController controller;
 
+    @Test
     public void testDisplayForm() throws Exception {
-        MockHttpServletRequest request = newGet( "/pubMedSearch.html" );
-        MockHttpServletResponse response = new MockHttpServletResponse();
-        ModelAndView mv = controller.handleRequest( request, response );
-        assertEquals( "bibRefSearch", mv.getViewName() );
+        assertEquals( "bibRefSearch", controller.getView() );
     }
 
     /**
@@ -59,11 +58,12 @@ public class PubMedQueryControllerTest extends BaseSpringWebTest {
     @Test
     public final void testOnSubmit() throws Exception {
         MockHttpServletRequest request = newPost( "/pubMedSearch.html" );
-        MockHttpServletResponse response = new MockHttpServletResponse();
         request.addParameter( "accession", "134444" );
 
         try {
-            ModelAndView mv = controller.handleRequest( request, response );
+            ModelAndView mv = controller.onSubmit( request, new PubMedSearchCommand( "134444" ),
+                    new BeanPropertyBindingResult( new PubMedSearchCommand( "134444" ), "searchCriteria" ),
+                    new SimpleSessionStatus() );
             Errors errors = ( Errors ) mv.getModel().get( BindingResult.MODEL_KEY_PREFIX + "accession" );
             assertNull( "Errors in model: " + errors, errors );
 
@@ -90,32 +90,34 @@ public class PubMedQueryControllerTest extends BaseSpringWebTest {
         this.getTestPersistentBibliographicReference( "12299" );
 
         MockHttpServletRequest request = newPost( "/pubMedSearch.html" );
-        MockHttpServletResponse response = new MockHttpServletResponse();
-        request.addParameter( "accession", "12299" );
-        ModelAndView mv = controller.handleRequest( request, response );
-        Errors errors = ( Errors ) mv.getModel().get( BindingResult.MODEL_KEY_PREFIX + "accession" );
+
+        ModelAndView mv = controller.onSubmit( request, new PubMedSearchCommand( "12299" ),
+                new BeanPropertyBindingResult( new PubMedSearchCommand( "12299" ), "searchCriteria" ),
+                new SimpleSessionStatus() );
+        Errors errors = ( Errors ) mv.getModel().get( BindingResult.MODEL_KEY_PREFIX + "searchCriteria" );
         assertNull( "Errors in model: " + errors, errors );
-        // verify that success messages are in the request
         assertNotNull( mv.getModel().get( "bibliographicReference" ) );
         assertNotNull( request.getSession().getAttribute( "messages" ) );
         assertEquals( "bibRefView", mv.getViewName() );
     }
 
+    @Test
     public final void testOnSubmitInvalidValue() throws Exception {
         MockHttpServletRequest request = newPost( "/pubMedSearch.html" );
-        MockHttpServletResponse response = new MockHttpServletResponse();
-        request.addParameter( "accession", "bad idea" );
-        ModelAndView mv = controller.handleRequest( request, response );
+        ModelAndView mv = controller.onSubmit( request, new PubMedSearchCommand( "bad idea" ),
+                new BeanPropertyBindingResult( new PubMedSearchCommand( "bad idea" ), "searchCriteria" ),
+                new SimpleSessionStatus() );
         Errors errors = ( Errors ) mv.getModel().get( BindingResult.MODEL_KEY_PREFIX + "searchCriteria" );
         assertTrue( "Expected an error", errors != null );
         assertEquals( "bibRefSearch", mv.getViewName() );
     }
 
+    @Test
     public final void testOnSubmitNotFound() throws Exception {
         MockHttpServletRequest request = newPost( "/pubMedSearch.html" );
-        MockHttpServletResponse response = new MockHttpServletResponse();
-        request.addParameter( "accession", "13133314444" );
-        ModelAndView mv = controller.handleRequest( request, response );
+        ModelAndView mv = controller.onSubmit( request, new PubMedSearchCommand( "13133333314444" ),
+                new BeanPropertyBindingResult( new PubMedSearchCommand( "13133333314444" ), "searchCriteria" ),
+                new SimpleSessionStatus() );
         Errors errors = ( Errors ) mv.getModel().get( BindingResult.MODEL_KEY_PREFIX + "searchCriteria" );
         assertTrue( "Expected an error", errors != null );
         assertEquals( "bibRefSearch", mv.getViewName() );

@@ -59,7 +59,6 @@
 				<prop key="/bibRefEdit.html">bibliographicReferenceEditFormController</prop>
 				<prop key="/bibRef/*">bibliographicReferenceController</prop>
 				<prop key="/bibliographicReferenceView.html">bibliographicReferenceEditFormController</prop>
-				<prop key="/bibRefSearch.html">pubMedQueryController</prop>
 				<prop key="/arrayDesign/editArrayDesign.html">arrayDesignFormController</prop>
 				<prop key="/arrayDesign/associateSequences.html">arrayDesignSequenceAddController</prop>
 				<prop key="/bioAssay/editBioAssay.html">bioAssayFormController</prop>
@@ -345,29 +344,7 @@ gemma.max.fileupload.size.bytes=
 			<ref bean="bioAssayValidator" />
 		</property>
 	</bean>
-
-	<bean id="pubMedQueryController" name="/bibRefSearch.html" class="ubic.gemma.web.controller.common.description.bibref.PubMedQueryController">
-
-		<property name="commandClass">
-			<value>ubic.gemma.web.controller.common.description.bibref.PubMedSearchCommand
-			</value>
-		</property>
-		<property name="commandName">
-			<value>searchCriteria</value>
-		</property>
-		<property name="formView">
-			<value>bibRefSearch</value>
-		</property>
-		<property name="successView">
-			<value>bibRefView</value>
-		</property>
-		<property name="validator">
-			<ref bean="genericBeanValidator" />
-		</property>
-		<property name="bibliographicReferenceService">
-			<ref bean="bibliographicReferenceService" />
-		</property>
-	</bean>
+ 
 
 	<bean id="arrayDesignFormController" class="ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignFormController">
 

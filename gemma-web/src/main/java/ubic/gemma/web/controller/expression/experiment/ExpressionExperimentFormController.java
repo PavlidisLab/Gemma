@@ -416,59 +416,6 @@ public class ExpressionExperimentFormController extends BaseFormController {
     }
 
     /**
-     * @param request
-     * @param command
-     * @throws IOException
-     * @throws SAXException
-     * @throws ParserConfigurationException
-     */
-    private void updatePubMed( HttpServletRequest request, ExpressionExperiment command ) throws IOException,
-            SAXException, ParserConfigurationException {
-        String pubMedId = request.getParameter( "expressionExperiment.PubMedId" );
-        if ( StringUtils.isBlank( pubMedId ) ) {
-            return;
-        }
-        // first, search for the pubMedId in the database
-        // if it is in the database, then just point the EE to that
-        // if it doesn't, then grab the BibliographicReference from PubMed and persist. Then point EE to the new
-        // entry.
-        BibliographicReference publication = bibliographicReferenceService.findByExternalId( pubMedId );
-        if ( publication != null ) {
-            command.setPrimaryPublication( publication );
-        } else {
-            // search for pubmedId
-            PubMedSearch pms = new PubMedSearch();
-            Collection<String> searchTerms = new ArrayList<String>();
-            searchTerms.add( pubMedId );
-            Collection<BibliographicReference> publications = pms.searchAndRetrieveIdByHTTP( searchTerms );
-            // check to see if there are publications found
-            // if there are none, or more than one, add an error message and do nothing
-            if ( publications.size() == 0 ) {
-                this.saveMessage( request, "Cannot find PubMed ID " + pubMedId );
-            } else if ( publications.size() > 1 ) {
-                this.saveMessage( request, "PubMed ID " + pubMedId + "" );
-            } else {
-                publication = publications.iterator().next();
-
-                DatabaseEntry pubAccession = DatabaseEntry.Factory.newInstance();
-                pubAccession.setAccession( pubMedId );
-                ExternalDatabase ed = ExternalDatabase.Factory.newInstance();
-                ed.setName( "PubMed" );
-                pubAccession.setExternalDatabase( ed );
-
-                publication.setPubAccession( pubAccession );
-
-                // persist new publication
-                publication = ( BibliographicReference ) persisterHelper.persist( publication );
-                // publication = bibliographicReferenceService.findOrCreate( publication );
-                // assign to expressionExperiment
-                command.setPrimaryPublication( publication );
-            }
-        }
-
-    }
-
-    /**
      * Check old vs. new quantitation types, and update any affected data vectors.
      * 
      * @param request

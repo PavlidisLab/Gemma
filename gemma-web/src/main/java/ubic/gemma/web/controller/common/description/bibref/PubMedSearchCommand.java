@@ -27,6 +27,11 @@ package ubic.gemma.web.controller.common.description.bibref;
 public class PubMedSearchCommand {
     String accession;
 
+    public PubMedSearchCommand( String accession ) {
+        super();
+        this.accession = accession;
+    }
+
     /**
      * @return the accession
      */

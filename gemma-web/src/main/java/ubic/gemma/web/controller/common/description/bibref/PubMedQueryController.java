@@ -18,19 +18,23 @@
  */
 package ubic.gemma.web.controller.common.description.bibref;
 
-import java.io.IOException;
-
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang.StringUtils;
-import org.springframework.validation.BindException;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.support.SessionStatus;
 import org.springframework.web.servlet.ModelAndView;
 
 import ubic.gemma.loader.entrez.pubmed.PubMedXMLFetcher;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.BibliographicReferenceService;
-import ubic.gemma.web.controller.BaseFormController;
+import ubic.gemma.web.controller.BaseController;
 
 /**
  * Allow users to search for and view PubMed abstracts from NCBI, or from Gemma.
@@ -38,38 +42,38 @@ import ubic.gemma.web.controller.BaseFormController;
  * @author pavlidis
  * @version $Id$
  */
-public class PubMedQueryController extends BaseFormController {
+@Controller("/bibRefSearch.html")
+public class PubMedQueryController extends BaseController {
+
+    private static Log log = LogFactory.getLog( PubMedQueryController.class );
+
+    @Autowired
     private BibliographicReferenceService bibliographicReferenceService;
 
     private PubMedXMLFetcher pubMedXmlFetcher = new PubMedXMLFetcher();
 
-    public void setBibliographicReferenceService( BibliographicReferenceService bibliographicReferenceService ) {
-        this.bibliographicReferenceService = bibliographicReferenceService;
-    }
-
-    /**
-     * @param pubMedXmlFetcher The pubMedXmlFetcher to set.
-     */
-    public void setPubMedXmlFetcher( PubMedXMLFetcher pubMedXmlFetcher ) {
-        this.pubMedXmlFetcher = pubMedXmlFetcher;
+    @RequestMapping(method = RequestMethod.GET)
+    public String getView() {
+        return "bibRefSearch";
     }
 
     /*
      * (non-Javadoc)
+     * 
      * @see org.springframework.web.servlet.mvc.SimpleFormController#onSubmit(javax.servlet.http.HttpServletRequest,
      * javax.servlet.http.HttpServletResponse, java.lang.Object, org.springframework.validation.BindException)
      */
-    @Override
-    protected ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
-            BindException errors ) throws Exception {
-        PubMedSearchCommand search = ( PubMedSearchCommand ) command;
+    @RequestMapping(method = RequestMethod.POST)
+    public ModelAndView onSubmit( HttpServletRequest request, PubMedSearchCommand command, BindingResult result,
+            SessionStatus status ) throws Exception {
 
         // in the future we can search in other ways.
-        String accession = search.getAccession();
+        String accession = command.getAccession();
 
         if ( StringUtils.isBlank( accession ) ) {
-            errors.rejectValue( "search", "errors.pubmed.noaccession", "Accession was missing" );
-            return showForm( request, response, errors );
+
+            result.rejectValue( "search", "errors.pubmed.noaccession", "Accession was missing" );
+            return new ModelAndView( "bibRefSearch" );
         }
 
         // first see if we already have it in the system.
@@ -85,24 +89,20 @@ public class PubMedQueryController extends BaseFormController {
                 if ( bibRefFound == null ) {
                     log.debug( accession + " not found in NCBI" );
 
-                    errors.rejectValue( "accession", "bibliographicReference.notfoundInNCBI", "Not found in NCBI" );
-                    return showForm( request, response, errors );
+                    result.rejectValue( "accession", "bibliographicReference.notfoundInNCBI", "Not found in NCBI" );
+                    return new ModelAndView( "bibRefSearch", result.getModel() );
                 }
 
                 this.saveMessage( request, "bibliographicReference.found", accession, "Found" );
 
             } catch ( NumberFormatException e ) {
-                errors.rejectValue( "accession", "error.integer", "Not a number" );
-                return showForm( request, response, errors );
-            } catch ( IOException e ) {
-                if ( e.getStackTrace()[1].getFileName().startsWith( "HttpURLConnection" )
-                        || e.getMessage().startsWith( "Server returned HTTP response code 502" ) ) {
-                    errors.reject( "ncbi.error.502", "NCBI server was not accessible" );
-                    return showForm( request, response, errors );
-                }
+                result.rejectValue( "accession", "error.integer", "Not a number" );
+                return new ModelAndView( "bibRefSearch", result.getModel() );
             }
         }
-        return new ModelAndView( getSuccessView() ).addObject( "bibliographicReference", bibRefFound );
+
+        status.setComplete();
+        return new ModelAndView( "bibRefView" ).addObject( "bibliographicReference", bibRefFound );
     }
 
 }
