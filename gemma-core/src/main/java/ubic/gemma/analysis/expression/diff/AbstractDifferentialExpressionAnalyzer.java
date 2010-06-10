@@ -68,15 +68,12 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
             Collection<ExperimentalFactor> factors );
 
     /**
-     * Perform an analysis using the specified factor(s), on subsets of the data as defined by the subsetFactor.
-     * 
      * @param expressionExperiment
-     * @param subsetFactor
-     * @param factors
+     * @param config
      * @return
      */
     public abstract DifferentialExpressionAnalysis run( ExpressionExperiment expressionExperiment,
-            ExperimentalFactor subsetFactor, Collection<ExperimentalFactor> factors );
+            DifferentialExpressionAnalysisConfig config );
 
     /**
      * Perform an analysis using the specified factor(s), introduced in the order given.
@@ -89,12 +86,15 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
             ExperimentalFactor... experimentalFactors );
 
     /**
+     * Perform an analysis using the specified factor(s), on subsets of the data as defined by the subsetFactor.
+     * 
      * @param expressionExperiment
-     * @param config
+     * @param subsetFactor
+     * @param factors
      * @return
      */
     public abstract DifferentialExpressionAnalysis run( ExpressionExperiment expressionExperiment,
-            DifferentialExpressionAnalysisConfig config );
+            ExperimentalFactor subsetFactor, Collection<ExperimentalFactor> factors );
 
     /**
      * @param pvalues
@@ -196,13 +196,8 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
                             + qvalueCommand;
                 }
 
-                String path = "";
-                try {
-                    path = savePvaluesForDebugging( pvaluesToUse );
-                } catch ( IOException e ) {
-                    throw new IllegalStateException( err + "; the pvalues could not be written to disk for debugging: "
-                            + e.getMessage() );
-                }
+                String path = savePvaluesForDebugging( pvaluesToUse );
+
                 throw new IllegalStateException( err + ". The pvalues that caused the problem are saved in: " + path
                         + "; try running in R: \nlibrary(qvalue);\nx<-read.table(\"" + path
                         + "\", header=F);\nsummary(qvalues(x));\n" );
@@ -255,21 +250,25 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
     }
 
     /**
-     * Debugging tool. If qvalue failed, save the pvalues to a temporary file for inspection.
+     * Debugging tool. For example, if qvalue failed, save the pvalues to a temporary file for inspection.
      * 
      * @param pvaluesToUse
-     * @return path to file where the pvalues were saved
+     * @return path to file where the pvalues were saved (a temporary file)
      * @throws IOException
      */
-    private String savePvaluesForDebugging( double[] pvaluesToUse ) throws IOException {
-        File f = File.createTempFile( "diffanalysisfail_", ".pvalues.txt" );
-        FileWriter w = new FileWriter( f );
-        for ( double d : pvaluesToUse ) {
-            w.write( d + "\n" );
-        }
-        w.close();
+    protected String savePvaluesForDebugging( double[] pvaluesToUse ) {
+        try {
+            File f = File.createTempFile( "diffanalysis_", ".pvalues.txt" );
+            FileWriter w = new FileWriter( f );
+            for ( double d : pvaluesToUse ) {
+                w.write( d + "\n" );
+            }
+            w.close();
 
-        return f.getPath();
+            return f.getPath();
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
+        }
     }
 
 }

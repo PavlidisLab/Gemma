@@ -115,7 +115,7 @@ public class ExpressionDataMatrixWriterCLI extends ExpressionExperimentManipulat
                 PrintWriter writer = new PrintWriter( outFileName + "_"
                         + ( ( ExpressionExperiment ) ee ).getShortName().replaceAll( "\\s", "" ) + ".txt" );
 
-                out.write( writer, dataMatrix, genesByProbeId, true, false, addGeneInfo );
+                out.write( writer, dataMatrix, genesByProbeId, true, false, addGeneInfo, true );
                 writer.flush();
                 writer.close();
             } catch ( IOException e ) {

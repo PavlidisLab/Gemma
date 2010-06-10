@@ -48,6 +48,7 @@ public class ExperimentalDesignWriterTest extends BaseSpringContextTest {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.testing.BaseSpringContextTest#onSetUpInTransaction()
      */
     @Before
@@ -71,7 +72,7 @@ public class ExperimentalDesignWriterTest extends BaseSpringContextTest {
 
             PrintWriter writer = new PrintWriter( "test_writer_" + ee.getShortName().replaceAll( "\\s", "" ) + ".txt" );
 
-            edWriter.write( writer, ee, true );
+            edWriter.write( writer, ee, true, true );
         } catch ( Exception e ) {
             e.printStackTrace();
             fail = true;

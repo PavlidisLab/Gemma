@@ -51,6 +51,7 @@ public class ExperimentalDesignWriterCLI extends ExpressionExperimentManipulatin
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.util.AbstractSpringAwareCLI#getShortDesc()
      */
     @Override
@@ -60,6 +61,7 @@ public class ExperimentalDesignWriterCLI extends ExpressionExperimentManipulatin
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.apps.ExpressionExperimentManipulatingCLI#buildOptions()
      */
     @Override
@@ -74,6 +76,7 @@ public class ExperimentalDesignWriterCLI extends ExpressionExperimentManipulatin
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.util.AbstractCLI#doWork(java.lang.String[])
      */
     @Override
@@ -90,7 +93,7 @@ public class ExperimentalDesignWriterCLI extends ExpressionExperimentManipulatin
                     PrintWriter writer = new PrintWriter( outFileName + "_"
                             + ( ( ExpressionExperiment ) ee ).getShortName().replaceAll( "\\s", "" ) + ".txt" );
 
-                    edWriter.write( writer, ( ExpressionExperiment ) ee, true );
+                    edWriter.write( writer, ( ExpressionExperiment ) ee, true, true );
                     writer.flush();
                     writer.close();
                 } catch ( IOException e ) {
@@ -106,6 +109,7 @@ public class ExperimentalDesignWriterCLI extends ExpressionExperimentManipulatin
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.apps.ExpressionExperimentManipulatingCLI#processOptions()
      */
     @Override

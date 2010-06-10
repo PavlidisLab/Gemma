@@ -24,7 +24,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -55,9 +54,12 @@ public class ExperimentalDesignWriter {
      * @param writer
      * @param ExpressionExperiment ee
      * @param writeHeader
+     * @param sortByDesign whether the design should be arranged in the order defined by
+     *        ExpressionDataMatrixColumnSort.orderByExperimentalDesign
      * @throws IOException
      */
-    public void write( Writer writer, ExpressionExperiment ee, boolean writeHeader ) throws IOException {
+    public void write( Writer writer, ExpressionExperiment ee, boolean writeHeader, boolean sortByDesign )
+            throws IOException {
 
         ExperimentalDesign ed = ee.getExperimentalDesign();
 
@@ -76,8 +78,8 @@ public class ExperimentalDesignWriter {
             bioMaterials.get( bm ).add( bioAssay );
         }
 
-        List<BioMaterial> orderedBioMaterials = ExpressionDataMatrixColumnSort.orderByExperimentalDesign(
-                new ArrayList<BioMaterial>( bioMaterials.keySet() ), null );
+        // List<BioMaterial> orderedBioMaterials = ExpressionDataMatrixColumnSort.orderByExperimentalDesign(
+        // new ArrayList<BioMaterial>( bioMaterials.keySet() ), null );
 
         Collection<ExperimentalFactor> efs = ed.getExperimentalFactors();
 
@@ -90,7 +92,7 @@ public class ExperimentalDesignWriter {
             writeHeader( writer, ee, orderedFactors, writeHeader, buf );
         }
 
-        for ( BioMaterial bioMaterial : orderedBioMaterials ) {
+        for ( BioMaterial bioMaterial : bioMaterials.keySet() ) {
 
             /* column 0 of the design matrix */
             String rowName = ExpressionDataWriterUtils.constructBioAssayName( bioMaterial, bioMaterials

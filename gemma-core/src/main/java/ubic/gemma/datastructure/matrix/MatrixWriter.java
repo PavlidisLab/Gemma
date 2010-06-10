@@ -44,9 +44,17 @@ public class MatrixWriter<T> {
         nf.setMaximumFractionDigits( 4 );
     }
 
+    /**
+     * @param writer
+     * @param matrix
+     * @param geneAnnotations
+     * @param writeHeader
+     * @param orderByDesign
+     * @throws IOException
+     */
     public void write( Writer writer, ExpressionDataMatrix<T> matrix, Map<Long, Collection<Gene>> geneAnnotations,
-            boolean writeHeader ) throws IOException {
-        this.write( writer, matrix, geneAnnotations, writeHeader, true, true );
+            boolean writeHeader, boolean orderByDesign ) throws IOException {
+        this.write( writer, matrix, geneAnnotations, writeHeader, true, true, orderByDesign );
     }
 
     /**
@@ -61,7 +69,7 @@ public class MatrixWriter<T> {
      */
     public void writeWithStringifiedGeneAnnotations( Writer writer, ExpressionDataMatrix<T> matrix,
             Map<Long, String[]> geneAnnotations, boolean writeHeader ) throws IOException {
-        this.writeWithStringifiedGeneAnnotations( writer, matrix, geneAnnotations, writeHeader, true, true );
+        this.writeWithStringifiedGeneAnnotations( writer, matrix, geneAnnotations, writeHeader, true, true, true );
     }
 
     /**
@@ -72,15 +80,16 @@ public class MatrixWriter<T> {
      * @param writeHeader
      * @param writeSequence
      * @param writeGeneInfo
+     * @apram orderByDesign
      * @throws IOException
      */
     public void writeWithStringifiedGeneAnnotations( Writer writer, ExpressionDataMatrix<T> matrix,
-            Map<Long, String[]> geneAnnotations, boolean writeHeader, boolean writeSequence, boolean writeGeneInfo )
-            throws IOException {
+            Map<Long, String[]> geneAnnotations, boolean writeHeader, boolean writeSequence, boolean writeGeneInfo,
+            boolean orderByDesign ) throws IOException {
         int columns = matrix.columns();
         int rows = matrix.rows();
 
-        List<BioMaterial> orderedBioMaterials = ExpressionDataMatrixColumnSort.orderByExperimentalDesign( matrix );
+        List<BioMaterial> orderedBioMaterials = getBioMaterialsInRequestedOrder( matrix, orderByDesign );
 
         StringBuffer buf = new StringBuffer();
         if ( writeHeader ) {
@@ -126,18 +135,21 @@ public class MatrixWriter<T> {
      * @param writeHeader
      * @param writeSequence
      * @param writeGeneInfo
+     * @param orderByDesign if true, the columns are in the order defined by
+     *        ExpressionDataMatrixColumnSort.orderByExperimentalDesign
      * @throws IOException
      */
     public void write( Writer writer, ExpressionDataMatrix<T> matrix, Map<Long, Collection<Gene>> geneAnnotations,
-            boolean writeHeader, boolean writeSequence, boolean writeGeneInfo ) throws IOException {
+            boolean writeHeader, boolean writeSequence, boolean writeGeneInfo, boolean orderByDesign )
+            throws IOException {
         int columns = matrix.columns();
         int rows = matrix.rows();
 
-        List<BioMaterial> orderedBioMaterials = ExpressionDataMatrixColumnSort.orderByExperimentalDesign( matrix );
+        List<BioMaterial> bioMaterials = getBioMaterialsInRequestedOrder( matrix, orderByDesign );
 
         StringBuffer buf = new StringBuffer();
         if ( writeHeader ) {
-            writeHeader( orderedBioMaterials, matrix, geneAnnotations, writeSequence, writeGeneInfo, columns, buf );
+            writeHeader( bioMaterials, matrix, geneAnnotations, writeSequence, writeGeneInfo, columns, buf );
         }
 
         for ( int j = 0; j < rows; j++ ) {
@@ -152,14 +164,14 @@ public class MatrixWriter<T> {
                 addGeneInfo( buf, probeForRow, geneAnnotations );
             }
 
-            int orderedBioMLastIndex = orderedBioMaterials.size() - 1;
+            int orderedBioMLastIndex = bioMaterials.size() - 1;
 
-            for ( BioMaterial bioMaterial : orderedBioMaterials ) {
+            for ( BioMaterial bioMaterial : bioMaterials ) {
                 int i = matrix.getColumnIndex( bioMaterial );
                 T val = matrix.get( j, i );
 
                 // Don't want line to contain a trailing unnecessary tab
-                if ( orderedBioMaterials.indexOf( bioMaterial ) == orderedBioMLastIndex )
+                if ( bioMaterials.indexOf( bioMaterial ) == orderedBioMLastIndex )
                     buf.append( val );
                 else
                     buf.append( val + "\t" );
@@ -170,6 +182,18 @@ public class MatrixWriter<T> {
 
         }
         writer.write( buf.toString() );
+    }
+
+    private List<BioMaterial> getBioMaterialsInRequestedOrder( ExpressionDataMatrix<T> matrix, boolean orderByDesign ) {
+        List<BioMaterial> bioMaterials = new ArrayList<BioMaterial>();
+        if ( orderByDesign ) {
+            bioMaterials = ExpressionDataMatrixColumnSort.orderByExperimentalDesign( matrix );
+        } else {
+            for ( int i = 0; i < matrix.columns(); i++ ) {
+                bioMaterials.add( matrix.getBioMaterialForColumn( i ) );
+            }
+        }
+        return bioMaterials;
     }
 
     /**

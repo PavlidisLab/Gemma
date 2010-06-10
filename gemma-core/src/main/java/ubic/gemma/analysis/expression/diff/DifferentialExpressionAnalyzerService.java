@@ -41,6 +41,7 @@ import ubic.basecode.io.writer.MatrixWriter;
 import ubic.basecode.math.distribution.Histogram;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.analysis.report.ExpressionExperimentReportService;
+import ubic.gemma.analysis.service.ExpressionDataFileService;
 import ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
@@ -80,6 +81,9 @@ public class DifferentialExpressionAnalyzerService {
 
     @Autowired
     private DifferentialExpressionAnalyzer differentialExpressionAnalyzer;
+
+    @Autowired
+    ExpressionDataFileService expressionDataFileService;
 
     @Autowired
     private ExpressionExperimentReportService expressionExperimentReportService;
@@ -160,6 +164,11 @@ public class DifferentialExpressionAnalyzerService {
                 log.info( "Deleting old differential expression analysis for experiment "
                         + expressionExperiment.getShortName() );
                 differentialExpressionAnalysisService.delete( de );
+
+                /*
+                 * Delete old flat files.
+                 */
+                expressionDataFileService.deleteDiffExFile( expressionExperiment );
 
                 /*
                  * Delete the old statistic distributions.
@@ -547,35 +556,37 @@ public class DifferentialExpressionAnalyzerService {
     /**
      * @param expressionExperiment
      * @param diffExpressionAnalysis
-     * @return
+     * @return saved results.
      */
     private DifferentialExpressionAnalysis persistAnalysis( ExpressionExperiment expressionExperiment,
             DifferentialExpressionAnalysis diffExpressionAnalysis ) {
+        log.info( "Saving new results" );
         ExpressionExperimentSet eeSet = ExpressionExperimentSet.Factory.newInstance();
         Collection<BioAssaySet> experimentsAnalyzed = new HashSet<BioAssaySet>();
         experimentsAnalyzed.add( expressionExperiment );
         eeSet.setExperiments( experimentsAnalyzed );
         diffExpressionAnalysis.setExpressionExperimentSetAnalyzed( eeSet );
 
-        diffExpressionAnalysis = ( DifferentialExpressionAnalysis ) persisterHelper.persist( diffExpressionAnalysis );
+        DifferentialExpressionAnalysis savedResults = ( DifferentialExpressionAnalysis ) persisterHelper
+                .persist( diffExpressionAnalysis );
 
         /*
          * Audit event!
          */
         auditTrailService.addUpdateEvent( expressionExperiment, DifferentialExpressionAnalysisEvent.Factory
-                .newInstance(), diffExpressionAnalysis.getDescription() );
+                .newInstance(), savedResults.getDescription() );
 
         /*
          * Save histograms
          */
-        writeDistributions( expressionExperiment, diffExpressionAnalysis );
+        writeDistributions( expressionExperiment, savedResults );
 
         /*
          * Update the report
          */
         expressionExperimentReportService.generateSummaryObject( expressionExperiment.getId() );
 
-        return diffExpressionAnalysis;
+        return savedResults;
     }
 
     /**

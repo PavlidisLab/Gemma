@@ -512,12 +512,16 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
 
         this.ranks = sourceMatrix.ranks; // not strictly correct if we are using subcolumns
 
-        List<Integer> columnIndices = new ArrayList<Integer>();
+        /*
+         * Indices of the biomaterials in the original matrix.
+         */
+        List<Integer> originalBioMaterialIndices = new ArrayList<Integer>();
+
         List<Integer> columnNames = new ArrayList<Integer>();
         int k = 0;
         List<BioAssay> bioAssays = new ArrayList<BioAssay>();
         for ( BioMaterial bm : columnsToUse ) {
-            columnIndices.add( sourceMatrix.getColumnIndex( bm ) );
+            originalBioMaterialIndices.add( sourceMatrix.getColumnIndex( bm ) );
             columnNames.add( k );
             bioAssays.add( bm.getBioAssaysUsedIn().iterator().next() );
             k++;
@@ -542,12 +546,12 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
             DesignElement designElement = element.getDesignElement();
             super.addToRowMaps( i, designElement );
 
-            Double[] rowVals = sourceMatrix.getRow( designElement );
+            Double[] sourceRow = sourceMatrix.getRow( designElement );
 
-            assert rowVals != null : "Source matrix does not have row for " + designElement;
+            assert sourceRow != null : "Source matrix does not have row for " + designElement;
 
-            for ( int j = 0; j < columnIndices.size(); j++ ) {
-                Double val = rowVals[columnIndices.get( j )];
+            for ( int j = 0; j < originalBioMaterialIndices.size(); j++ ) {
+                Double val = sourceRow[originalBioMaterialIndices.get( j )];
                 set( i, j, val );
             }
             i++;

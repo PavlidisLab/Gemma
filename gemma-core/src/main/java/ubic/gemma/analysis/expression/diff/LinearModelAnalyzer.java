@@ -18,12 +18,16 @@
  */
 package ubic.gemma.analysis.expression.diff;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -32,6 +36,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+import org.apache.commons.collections.ListUtils;
 import org.apache.commons.collections.Transformer;
 import org.apache.commons.collections.TransformerUtils;
 import org.apache.commons.lang.ArrayUtils;
@@ -46,6 +51,7 @@ import ubic.basecode.dataStructure.matrix.ObjectMatrixImpl;
 import ubic.basecode.util.r.type.LinearModelSummary;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrixColumnSort;
+import ubic.gemma.datastructure.matrix.MatrixWriter;
 import ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.ProbeAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
@@ -157,11 +163,12 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
              * Figure out control groups, Reorder the matrix, samplesused also has to be reorganized. this puts the
              * control samples up front if possible.
              */
-            samplesUsed = ExpressionDataMatrixColumnSort.orderByExperimentalDesign( samplesUsed, factors );
-            dmatrix = new ExpressionDataDoubleMatrix( samplesUsed, dmatrix );
+            // samplesUsed = ExpressionDataMatrixColumnSort.orderByExperimentalDesign( samplesUsed, factors );
+            // ExpressionDataDoubleMatrix reorderedMatrix = new ExpressionDataDoubleMatrix( samplesUsed, dmatrix );
+            // dmatrix = reorderedMatrix;
+            Map<ExperimentalFactor, FactorValue> baselineConditions = new HashMap<ExperimentalFactor, FactorValue>();
+            baselineConditions = ExpressionDataMatrixColumnSort.getBaselineLevels( factors );
 
-            Map<ExperimentalFactor, FactorValue> baselineConditions = ExpressionDataMatrixColumnSort
-                    .getBaselineLevels( factors );
             Collection<FactorValue> factorValuesOfFirstSample = samplesUsed.iterator().next().getFactorValues();
             for ( ExperimentalFactor factor : factors ) {
                 if ( !baselineConditions.containsKey( factor ) ) {
@@ -178,46 +185,12 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
                 }
             }
 
-            /*
-             * TODO make subsets if requested. ( we can do subsets with the model with x / y notation)
-             */
             ExperimentalFactor subsetFactor = config.getSubsetFactor();
-
             if ( subsetFactor != null ) {
-                if ( subsetFactor.getType().equals( FactorType.CONTINUOUS ) ) {
-                    throw new IllegalArgumentException( "You cannot subset on a continuous factor (has a Measurement)" );
-                }
-
-                if ( config.getFactorsToInclude().contains( subsetFactor ) ) {
-                    throw new IllegalArgumentException(
-                            "You cannot analyze a factor and use it for subsetting at the same time." );
-                }
-
-                Map<FactorValue, List<BioMaterial>> subSetSamples = new HashMap<FactorValue, List<BioMaterial>>();
-                for ( FactorValue fv : subsetFactor.getFactorValues() ) {
-                    assert fv.getMeasurement() == null;
-                    subSetSamples.put( fv, new ArrayList<BioMaterial>() );
-                }
-
-                for ( BioMaterial sample : samplesUsed ) {
-                    for ( FactorValue fv : sample.getFactorValues() ) {
-                        if ( fv.getExperimentalFactor().equals( subsetFactor ) ) {
-                            subSetSamples.get( fv ).add( sample );
-                        }
-                    }
-                }
-
-                Map<FactorValue, ExpressionDataDoubleMatrix> subMatrices = new HashMap<FactorValue, ExpressionDataDoubleMatrix>();
-                for ( FactorValue fv : subSetSamples.keySet() ) {
-                    List<BioMaterial> samplesInSubset = subSetSamples.get( fv );
-                    samplesInSubset = ExpressionDataMatrixColumnSort.orderByExperimentalDesign( samplesInSubset, config
-                            .getFactorsToInclude() );
-                    ExpressionDataDoubleMatrix subMatrix = new ExpressionDataDoubleMatrix( samplesUsed, dmatrix );
-                    subMatrices.put( fv, subMatrix );
-                }
-
+                // makeSubSets( config, dmatrix, samplesUsed, subsetFactor );
                 /*
-                 * Now use the subMatrices - EESubSet?
+                 * TODO currently this isn't used. AT this point, we would have N groups all of which would have to be
+                 * analyzed separately.
                  */
             }
 
@@ -225,16 +198,21 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
             final Map<String, Collection<ExperimentalFactor>> label2Factors = new LinkedHashMap<String, Collection<ExperimentalFactor>>();
             QuantitationType quantitationType = dmatrix.getQuantitationTypes().iterator().next();
 
+            boolean useIntercept = false;
             for ( ExperimentalFactor experimentalFactor : factors ) {
 
                 label2Factors.put( nameForR( experimentalFactor ), new HashSet<ExperimentalFactor>() );
                 label2Factors.get( nameForR( experimentalFactor ) ).add( experimentalFactor );
-
                 /*
                  * Check if we need to treat the intercept as a fator.
                  */
-                interceptFactor = checkIfNeedToTreatAsIntercept( experimentalFactor, quantitationType, interceptFactor );
+                boolean useI = checkIfNeedToTreatAsIntercept( experimentalFactor, quantitationType );
 
+                if ( useI && useIntercept ) {
+                    throw new IllegalStateException( "Can only deal with one constant factor (intercept)" );
+                } else if ( useI ) {
+                    interceptFactor = experimentalFactor;
+                }
             }
 
             /*
@@ -249,12 +227,25 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
             String modelFormula = "";
             boolean oneSampleTtest = interceptFactor != null && factors.size() == 1;
             if ( oneSampleTtest ) {
-                // special case of one-sample t-test.
                 modelFormula = " ";
             } else {
 
-                String factTerm = StringUtils.join( label2Factors.keySet(), "+" );
+                /*
+                 * Build the formula, omitting the factor taking the place of the intercept, if need be.
+                 */
+                String factTerm = "";
+                for ( String nameInR : label2Factors.keySet() ) {
+                    if ( interceptFactor != null && label2Factors.get( nameInR ).size() == 1
+                            && label2Factors.get( nameInR ).iterator().next().equals( interceptFactor ) ) {
+                        continue;
+                    }
+                    factTerm = factTerm + " " + nameInR + " +";
+                }
+                factTerm = factTerm.replaceFirst( "\\+$", "" );
 
+                /*
+                 * Add interaction terms
+                 */
                 boolean hasInteractionTerms = !config.getInteractionsToInclude().isEmpty();
                 if ( hasInteractionTerms ) {
                     for ( Collection<ExperimentalFactor> interactionTerms : config.getInteractionsToInclude() ) {
@@ -279,6 +270,8 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
             }
 
             DoubleMatrix<DesignElement, Integer> namedMatrix = dmatrix.getMatrix();
+
+            // outputForDebugging( dmatrix, designMatrix );
 
             final Transformer rowNameExtractor = TransformerUtils.invokerTransformer( "getId" );
 
@@ -397,8 +390,10 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
             for ( String fName : pvaluesForQvalue.keySet() ) {
                 List<Double> pvals = pvaluesForQvalue.get( fName );
 
-                double[] qvalues = super.getQValues( pvals.toArray( new Double[] {} ) );
-                double[] ranks = super.computeRanks( ArrayUtils.toPrimitive( pvals.toArray( new Double[] {} ) ) );
+                Double[] pvalArray = pvals.toArray( new Double[] {} );
+                // savePvaluesForDebugging( ArrayUtils.toPrimitive( pvalArray ) );
+                double[] qvalues = super.getQValues( pvalArray );
+                double[] ranks = super.computeRanks( ArrayUtils.toPrimitive( pvalArray ) );
 
                 int i = 0;
                 for ( DifferentialExpressionAnalysisResult pr : resultLists.get( fName ) ) {
@@ -442,6 +437,72 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
 
     }
 
+    /**
+     * Create files that can be used in R to check the results.
+     * 
+     * @param dmatrix
+     * @param designMatrix
+     */
+    @SuppressWarnings("unchecked")
+    protected void outputForDebugging( ExpressionDataDoubleMatrix dmatrix,
+            ObjectMatrix<String, String, Object> designMatrix ) {
+        MatrixWriter<Double> mw = new MatrixWriter<Double>();
+        try {
+            mw.write( new FileWriter( File.createTempFile( "data.", ".txt" ) ), dmatrix, null, true, false );
+            ubic.basecode.io.writer.MatrixWriter dem = new ubic.basecode.io.writer.MatrixWriter( new FileWriter( File
+                    .createTempFile( "design.", ".txt" ) ) );
+            dem.writeMatrix( designMatrix, true );
+
+        } catch ( IOException e ) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * @param config
+     * @param dmatrix
+     * @param samplesUsed
+     * @param subsetFactor
+     */
+    private void makeSubSets( DifferentialExpressionAnalysisConfig config, ExpressionDataDoubleMatrix dmatrix,
+            List<BioMaterial> samplesUsed, ExperimentalFactor subsetFactor ) {
+        if ( subsetFactor.getType().equals( FactorType.CONTINUOUS ) ) {
+            throw new IllegalArgumentException( "You cannot subset on a continuous factor (has a Measurement)" );
+        }
+
+        if ( config.getFactorsToInclude().contains( subsetFactor ) ) {
+            throw new IllegalArgumentException(
+                    "You cannot analyze a factor and use it for subsetting at the same time." );
+        }
+
+        Map<FactorValue, List<BioMaterial>> subSetSamples = new HashMap<FactorValue, List<BioMaterial>>();
+        for ( FactorValue fv : subsetFactor.getFactorValues() ) {
+            assert fv.getMeasurement() == null;
+            subSetSamples.put( fv, new ArrayList<BioMaterial>() );
+        }
+
+        for ( BioMaterial sample : samplesUsed ) {
+            for ( FactorValue fv : sample.getFactorValues() ) {
+                if ( fv.getExperimentalFactor().equals( subsetFactor ) ) {
+                    subSetSamples.get( fv ).add( sample );
+                }
+            }
+        }
+
+        Map<FactorValue, ExpressionDataDoubleMatrix> subMatrices = new HashMap<FactorValue, ExpressionDataDoubleMatrix>();
+        for ( FactorValue fv : subSetSamples.keySet() ) {
+            List<BioMaterial> samplesInSubset = subSetSamples.get( fv );
+            samplesInSubset = ExpressionDataMatrixColumnSort.orderByExperimentalDesign( samplesInSubset, config
+                    .getFactorsToInclude() );
+            ExpressionDataDoubleMatrix subMatrix = new ExpressionDataDoubleMatrix( samplesUsed, dmatrix );
+            subMatrices.put( fv, subMatrix );
+        }
+
+        /*
+         * Now use the subMatrices - EESubSet?
+         */
+    }
+
     /*
      * (non-Javadoc)
      * 
@@ -481,24 +542,18 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
     /**
      * @param experimentalFactor
      * @param quantitationType
-     * @param interceptFactor existing value for interceptFactor
-     * @return
+     * @return boolean true if we need the intercept.
      */
-    protected ExperimentalFactor checkIfNeedToTreatAsIntercept( ExperimentalFactor experimentalFactor,
-            QuantitationType quantitationType, ExperimentalFactor interceptFactor ) {
+    protected boolean checkIfNeedToTreatAsIntercept( ExperimentalFactor experimentalFactor,
+            QuantitationType quantitationType ) {
         if ( experimentalFactor.getFactorValues().size() == 1 ) {
-            if ( interceptFactor != null ) {
-                throw new IllegalArgumentException( "Cannot deal with more than one constant factor" );
-            }
-
             if ( quantitationType.getIsRatio() ) {
-                interceptFactor = experimentalFactor;
-            } else {
-                throw new IllegalArgumentException(
-                        "Cannot deal with constant factors unless the data are ratiometric non-reference design" );
+                return true;
             }
+            throw new IllegalArgumentException(
+                    "Cannot deal with constant factors unless the data are ratiometric non-reference design" );
         }
-        return interceptFactor;
+        return false;
     }
 
     /**
@@ -506,13 +561,7 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
      * @return
      */
     protected Boolean isContinuous( ExperimentalFactor factor ) {
-        return factor.getType().equals(FactorType.CONTINUOUS);
-        // for ( FactorValue fv : factor.getFactorValues() ) {
-        // if ( fv.getMeasurement() != null ) {
-        // return true;
-        // }
-        // }
-        // return false;
+        return factor.getType().equals( FactorType.CONTINUOUS );
     }
 
     protected String nameForR( ExperimentalFactor experimentalFactor ) {
@@ -524,7 +573,8 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
     }
 
     /**
-     * Convert factors to a matrix usable in R.
+     * Convert factors to a matrix usable in R. The rows are in the same order as the columns of our data matrix
+     * (defined by samplesUsed).
      * 
      * @param factors
      * @param samplesUsed
@@ -685,7 +735,8 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
     }
 
     /**
-     * Assigns the design matrix columns as factors, defines contrasts
+     * Assigns the design matrix columns as factors, defines contrasts. We use treatment contrasts, comparing to a
+     * baseline condition.
      * 
      * @param designMatrix
      * @param baselineConditions
@@ -716,15 +767,23 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
 
                 FactorValue baseLineFV = baselineConditions.get( factor );
 
-                String fvName = nameForR( baseLineFV, true );
+                String baselineFactorValueName = nameForR( baseLineFV, true );
 
+                /*
+                 * It turns out that the location of 'base' is dependent on the location in the list of biomaterials.,
+                 * not in the 'levels' list.
+                 */
                 rc.assignFactor( factorName, Arrays.asList( colS ) );
-                List<String> stringListEval = rc.stringListEval( ( "levels(" + factorName + ")" ) );
+                List<String> factorValueNames = rc.stringListEval( "as.vector(" + factorName + ")" );
+                LinkedHashSet<String> lll = new LinkedHashSet<String>( factorValueNames );
+                factorValueNames = new ArrayList<String>( lll );
 
-                int indexOfBaseline = stringListEval.indexOf( fvName ) + 1; // R is 1-based.
+                int indexOfBaseline = factorValueNames.indexOf( baselineFactorValueName ) + 1; // R is 1-based.
 
-                rc.voidEval( "contrasts(" + factorName + ")<-contr.treatment(levels(" + factorName + "), base="
-                        + indexOfBaseline + ")" );
+                String command = "contrasts(" + factorName + ")<-contr.treatment(levels(" + factorName + "), base="
+                        + indexOfBaseline + ")";
+                log.info( command );
+                rc.voidEval( command );
             }
         }
     }

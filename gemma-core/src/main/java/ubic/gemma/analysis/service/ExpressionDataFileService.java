@@ -273,7 +273,7 @@ public class ExpressionDataFileService {
             }
 
             log.info( "Creating new experimental design file: " + f.getName() );
-            writeDesignMatrix( f, ee );
+            writeDesignMatrix( f, ee, true );
             return f;
         } catch ( IOException e ) {
             throw new RuntimeException( e );
@@ -350,8 +350,7 @@ public class ExpressionDataFileService {
 
         expressionExperimentService.thawLite( ee );
 
-        String filename = ee.getId() + "_" + ee.getShortName().replaceAll( "\\s+", "_" ) + "_diffExp"
-                + DATA_FILE_SUFFIX;
+        String filename = getDiffExFileName( ee );
         try {
             File f = getOutputFile( filename );
             if ( !forceWrite && f.canRead() ) {
@@ -366,6 +365,26 @@ public class ExpressionDataFileService {
             throw new RuntimeException( e );
         }
 
+    }
+
+    private String getDiffExFileName( ExpressionExperiment ee ) {
+        return ee.getId() + "_" + ee.getShortName().replaceAll( "\\s+", "_" ) + "_diffExp" + DATA_FILE_SUFFIX;
+    }
+
+    /**
+     * Delete the differential expression file for the given experiment
+     * 
+     * @param ee
+     */
+    public void deleteDiffExFile( ExpressionExperiment ee ) {
+        File f = getOutputFile( getDiffExFileName( ee ) );
+        if ( f.exists() ) {
+            if ( f.delete() ) {
+                log.info( "Deleted: " + f );
+            } else {
+                log.info( "Failed to delete: " + f );
+            }
+        }
     }
 
     /**
@@ -573,7 +592,7 @@ public class ExpressionDataFileService {
         // Different Headers if Gene Annotations missing.
         if ( geneAnnotations.isEmpty() ) {
             log
-                    .info( "Micro Array Annotation File Missing for this Experiment, unable to include gene annotation information" );
+                    .info( "Microarray annotation file is missing for this experiment, unable to include gene annotation information" );
             buf
                     .append( "# The micro array annotation file is missing for this Experiment, unable to include gene annotation information \n" );
             buf.append( "Probe_Name \t" );
@@ -671,14 +690,15 @@ public class ExpressionDataFileService {
      * 
      * @param file
      * @param expressionExperiment
+     * @param orderByesign
      * @throws IOException
      * @throws FileNotFoundException
      */
-    private void writeDesignMatrix( File file, ExpressionExperiment expressionExperiment ) throws IOException,
-            FileNotFoundException {
+    private void writeDesignMatrix( File file, ExpressionExperiment expressionExperiment, boolean orderByDesign )
+            throws IOException, FileNotFoundException {
         Writer writer = new OutputStreamWriter( new GZIPOutputStream( new FileOutputStream( file ) ) );
         ExperimentalDesignWriter edWriter = new ExperimentalDesignWriter();
-        edWriter.write( writer, expressionExperiment, true );
+        edWriter.write( writer, expressionExperiment, true, orderByDesign );
         writer.flush();
         writer.close();
     }
