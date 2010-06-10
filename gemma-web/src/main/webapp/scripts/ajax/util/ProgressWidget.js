@@ -140,7 +140,12 @@ Gemma.ProgressWidget = Ext.extend(Ext.Panel, {
 								autoScroll : true,
 								width : 400,
 								bodyStyle : 'padding:5px',
-								html : "The following messages were generated:<br/>" + this.allMessages
+								html : {
+									id : 'logs-view',
+									tag : 'pre',
+									style : 'font-size:smaller',
+									html : this.allMessages
+								}
 							}],
 					buttons : [{
 								text : "OK",
@@ -148,6 +153,13 @@ Gemma.ProgressWidget = Ext.extend(Ext.Panel, {
 									Ext.getCmp('all-messages-window').close();
 								}
 							}]
+				});
+		this.on('message-received', function() {
+					Ext.DomHelper.overwrite('logs-view', {
+								id : 'logs-view',
+								tag : 'pre',
+								html : this.allMessages
+							});
 				});
 		msgs.show();
 	},
@@ -225,7 +237,7 @@ Gemma.ProgressWidget = Ext.extend(Ext.Panel, {
 
 		Ext.apply(this);
 
-		this.addEvents('done', 'fail', 'cancel');
+		this.addEvents('done', 'fail', 'cancel', 'message-received');
 	},
 
 	/**
@@ -339,11 +351,15 @@ Gemma.ProgressWidget = Ext.extend(Ext.Panel, {
 
 		for (var i = 0, len = data.length; i < len; i++) {
 			var d = data[i];
-			if (messages.length > 0) {
-				messages = messages + "; " + d.description;
-			} else {
-				messages = d.description;
-			}
+
+			/*
+			 * Only show the most recent message in the progress bar.
+			 */
+			messages = d.description;
+
+			/*
+			 * But put all messages in the logs.
+			 */
 			messagesToSave = messagesToSave + "<br/>" + d.description;
 
 			if (d.failed) {
@@ -369,7 +385,11 @@ Gemma.ProgressWidget = Ext.extend(Ext.Panel, {
 
 			this.progressBar.updateText(messages);
 
+			this.fireEvent('message-received', messages);
 		} else {
+			/*
+			 * Just show dots to make it clear stuff is still happening.
+			 */
 			this.progressBar.updateText(this.progressBar.text.replace('.......', ''));
 			this.progressBar.updateText(this.progressBar.text + '.');
 		}
