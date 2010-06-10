@@ -28,6 +28,7 @@ import org.apache.commons.logging.LogFactory;
 import ubic.gemma.loader.util.parser.BasicLineParser;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.genome.Taxon;
 
 /**
  * Parse ArrayDesigns from a flat file. This is used to seed the system from our legacy data. (probably not used)
@@ -44,7 +45,9 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
  * 
  * @author keshav
  * @version $Id$
+ * @deprecated
  */
+@Deprecated
 public class ArrayDesignParser extends BasicLineParser<ArrayDesign> {
     protected static final Log log = LogFactory.getLog( ArrayDesignParser.class );
 
@@ -55,6 +58,10 @@ public class ArrayDesignParser extends BasicLineParser<ArrayDesign> {
         String[] fields = StringUtils.splitPreserveAllTokens( line, '\t' );
         ad.setName( fields[0] );
         ad.setDescription( fields[5] );
+
+        Taxon t = Taxon.Factory.newInstance();
+        t.setCommonName( fields[4].toLowerCase() );
+        ad.setPrimaryTaxon( t );
 
         Contact manufacturer = Contact.Factory.newInstance();
         manufacturer.setName( fields[1] );
