@@ -80,12 +80,10 @@ public class GridTaskInterceptor implements MethodInterceptor {
         SpacesProgressEntry loggingEntryTemplate = new SpacesProgressEntry();
         loggingEntryTemplate.setTaskId( taskId );
 
-        int millisPerMinute = 60 * 1000;
-
         /*
-         * Note we should set the leases to be not Lease.FOREVER so that we eventually clean these up, even if something
-         * goes wrong in the regular cleanup phase. Unforutnately this doesn't help with the thread leak. when fifo
-         * =true
+         * FIXME Note we should set the leases to be not Lease.FOREVER so that we eventually clean these up, even if
+         * something goes wrong in the regular cleanup phase. Unforutnately this doesn't help with the thread leak. when
+         * fifo =true
          */
 
         /*
@@ -116,10 +114,7 @@ public class GridTaskInterceptor implements MethodInterceptor {
         try {
             retVal = invocation.proceed();
         } catch ( Exception e ) {
-            log.error( "Job threw an exception: " + e.getMessage() );
-            /*
-             * FIXME: if cancellation, don't be so noisy.
-             */
+            log.debug( "Job threw an exception: " + e.getMessage() );
             throw ( e );
         } finally {
 

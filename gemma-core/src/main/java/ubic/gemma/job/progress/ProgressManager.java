@@ -170,7 +170,7 @@ public class ProgressManager {
         log.debug( "Destroying " + progressJob );
 
         String toForwardTo = getForwardingUrl( progressJob, doForward );
-        ProgressData progressData = new ProgressData( progressJob.getTaskId(), 100, "Job completed.", true );
+        ProgressData progressData = new ProgressData( progressJob.getTaskId(), 100, "", true );
         progressData.setForwardingURL( toForwardTo );
         progressJob.updateProgress( progressData );
         progressJob.done();

@@ -96,7 +96,7 @@ public class TableMaintenanceUtilImpl implements TableMaintenenceUtil {
      */
     public void updateGene2CsEntries() {
 
-        log.info( "Runninig Gene2CS status check" );
+        log.debug( "Running Gene2CS status check" );
 
         String annotation = "";
         try {
@@ -114,7 +114,7 @@ public class TableMaintenanceUtilImpl implements TableMaintenenceUtil {
                     if ( a instanceof ArrayDesign ) {
                         needToRefresh = true;
                         annotation = a + " is new since " + status.getLastUpdate();
-                        log.info( annotation );
+                        log.debug( annotation );
                         break;
                     }
                 }
@@ -130,7 +130,7 @@ public class TableMaintenanceUtilImpl implements TableMaintenenceUtil {
                                     && ae.getDate().after( status.getLastUpdate() ) ) {
                                 needToRefresh = true;
                                 annotation = a + " had probe mapping done since: " + status.getLastUpdate();
-                                log.info( annotation );
+                                log.debug( annotation );
                                 break;
                             }
                         }
@@ -140,13 +140,13 @@ public class TableMaintenanceUtilImpl implements TableMaintenenceUtil {
             }
 
             if ( needToRefresh ) {
-                log.info( "Update of GENE2CS initiated" );
+                log.debug( "Update of GENE2CS initiated" );
                 generateGene2CsEntries();
                 Gene2CsStatus updatedStatus = writeUpdateStatus( annotation, null );
                 sendEmail( updatedStatus );
 
             } else {
-                log.info( "No update of GENE2CS needed" );
+                log.debug( "No update of GENE2CS needed" );
             }
 
         } catch ( Exception e ) {
@@ -167,7 +167,7 @@ public class TableMaintenanceUtilImpl implements TableMaintenenceUtil {
      * @see GeneDao for where the GENE2CS table is used extensively.
      */
     private void generateGene2CsEntries() throws Exception {
-
+        log.info( "Updating Gene2Cs ..." );
         Session session = this.sessionFactory.getCurrentSession();
         log.info( "Deleting all entries for Gene2Cs." );
         String queryString = "TRUNCATE TABLE GENE2CS";

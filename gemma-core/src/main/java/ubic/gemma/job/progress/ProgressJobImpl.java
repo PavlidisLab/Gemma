@@ -129,7 +129,7 @@ public class ProgressJobImpl extends Observable implements ProgressJob {
     public void done() {
         Calendar cal = new GregorianCalendar();
         jInfo.setEndTime( cal.getTime() );
-        ProgressData d = new ProgressData( this.taskId, 100, "Finished", true );
+        ProgressData d = new ProgressData( this.taskId, 100, "", true );
         pData.add( d );
         notifyObservers( pData );
     }
