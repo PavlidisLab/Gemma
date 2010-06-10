@@ -32,6 +32,7 @@ import java.util.Map.Entry;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.hsqldb.lib.Iterator;
 
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.VocabCharacteristic;
@@ -437,6 +438,14 @@ public class ExpressionDataMatrixColumnSort {
                 efs.add( fv.getExperimentalFactor() );
             }
         }
+
+        for ( java.util.Iterator<ExperimentalFactor> ei = efs.iterator(); ei.hasNext(); ) {
+            ExperimentalFactor ef = ei.next();
+            if ( ef.getFactorValues().size() < 2 ) {
+                ei.remove();
+            }
+        }
+
         return efs;
     }
 
