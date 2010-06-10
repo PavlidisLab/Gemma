@@ -45,12 +45,22 @@ public class DifferentialExpressionAnalysisResultComparator implements Comparato
 
     /*
      * (non-Javadoc)
+     * 
      * @see java.util.Comparator#compare(java.lang.Object, java.lang.Object)
      */
     public int compare( DifferentialExpressionAnalysisResult ear1, DifferentialExpressionAnalysisResult ear2 ) {
 
         if ( ear1 != null ) {
-            if ( ear2 != null ) return ear1.getPvalue().compareTo( ear2.getPvalue() );
+            if ( ear2 != null ) {
+                if ( ear1.getPvalue() == null && ear2.getPvalue() == null ) {
+                    return 0;
+                } else if ( ear1.getPvalue() == null ) {
+                    return -1;
+                } else if ( ear2.getPvalue() == null ) {
+                    return 1;
+                }
+                return ear1.getPvalue().compareTo( ear2.getPvalue() );
+            }
 
             return 1;
         }
