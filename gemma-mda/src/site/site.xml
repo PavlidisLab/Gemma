@@ -11,7 +11,7 @@
 	<body>
 		<links>
 			<item name="Gemma" href="http://chibi.ubc.ca/Gemma/" />
-			<item name="Pavlidis lab" href="http://chibi.ubc.ca/pavlidis/lab" />
+			<item name="Pavlidis lab" href="http://chibi.ubc.ca/faculty/pavlidis/lab" />
 		</links>
 		<menu ref="reports" />
 		<menu ref="parent" />

@@ -5,6 +5,7 @@
 		<src>images/logo/gemma-sm50x195.png</src>
 		<href>/Gemma</href>
 	</bannerLeft>
+	<version position="left" />
 	<bannerRight>
 		<src>images/logo/heatfade.inner.png</src>
 	</bannerRight>
