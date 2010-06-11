@@ -36,7 +36,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-import org.apache.commons.collections.ListUtils;
 import org.apache.commons.collections.Transformer;
 import org.apache.commons.collections.TransformerUtils;
 import org.apache.commons.lang.ArrayUtils;
@@ -163,11 +162,11 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
              * Figure out control groups, Reorder the matrix, samplesused also has to be reorganized. this puts the
              * control samples up front if possible.
              */
-            // samplesUsed = ExpressionDataMatrixColumnSort.orderByExperimentalDesign( samplesUsed, factors );
-            // ExpressionDataDoubleMatrix reorderedMatrix = new ExpressionDataDoubleMatrix( samplesUsed, dmatrix );
-            // dmatrix = reorderedMatrix;
-            Map<ExperimentalFactor, FactorValue> baselineConditions = new HashMap<ExperimentalFactor, FactorValue>();
-            baselineConditions = ExpressionDataMatrixColumnSort.getBaselineLevels( factors );
+            samplesUsed = ExpressionDataMatrixColumnSort.orderByExperimentalDesign( samplesUsed, factors );
+            dmatrix = new ExpressionDataDoubleMatrix( samplesUsed, dmatrix );
+
+            Map<ExperimentalFactor, FactorValue> baselineConditions = ExpressionDataMatrixColumnSort
+                    .getBaselineLevels( factors );
 
             Collection<FactorValue> factorValuesOfFirstSample = samplesUsed.iterator().next().getFactorValues();
             for ( ExperimentalFactor factor : factors ) {
