@@ -30,6 +30,8 @@ import ubic.gemma.job.AbstractTaskService;
 import ubic.gemma.job.BackgroundJob;
 import ubic.gemma.job.TaskCommand;
 import ubic.gemma.job.TaskResult;
+import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
+import ubic.gemma.model.common.auditAndSecurity.eventType.ValidatedAnnotations;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicService;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -95,6 +97,9 @@ public class AnnotationController extends AbstractTaskService {
     @Autowired
     private TaxonService taxonService;
 
+    @Autowired
+    private AuditTrailService auditTrailService;
+
     /**
      * @param eeId
      * @return taskId
@@ -103,10 +108,6 @@ public class AnnotationController extends AbstractTaskService {
 
         if ( eeId == null ) {
             throw new IllegalArgumentException( "Id cannot be null" );
-        }
-
-        if ( !ExpressionExperimentAnnotator.ready() ) {
-            throw new RuntimeException( "Sorry, the auto-tagger is not available." );
         }
 
         return this.run( new TaskCommand( eeId ) );
@@ -195,6 +196,18 @@ public class AnnotationController extends AbstractTaskService {
             characteristicService.delete( id );
         }
 
+    }
+
+    /**
+     * @param eeId
+     */
+    public void validateTags( Long eeId ) {
+        ExpressionExperiment ee = expressionExperimentService.load( eeId );
+
+        if ( ee == null ) {
+            return;
+        }
+        this.auditTrailService.addUpdateEvent( ee, ValidatedAnnotations.class, "", "" );
     }
 
     /*

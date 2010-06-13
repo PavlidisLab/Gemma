@@ -53,6 +53,10 @@ public class AutoTaggerTaskImpl implements AutoTaggerTask {
     @TaskMethod
     public TaskResult execute( TaskCommand command ) {
 
+        if ( !ExpressionExperimentAnnotator.ready() ) {
+            throw new RuntimeException( "Sorry, the auto-tagger is not available." );
+        }
+
         ExpressionExperiment ee = expressionExperimentService.load( command.getEntityId() );
 
         if ( ee == null ) {
