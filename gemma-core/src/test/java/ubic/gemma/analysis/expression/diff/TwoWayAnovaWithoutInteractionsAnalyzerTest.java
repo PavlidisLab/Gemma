@@ -64,7 +64,7 @@ public class TwoWayAnovaWithoutInteractionsAnalyzerTest extends BaseAnalyzerConf
         configureMocks();
 
         DifferentialExpressionAnalysis differentialExpressionAnalysis = analyzer.run( expressionExperiment, Arrays
-                .asList( new ExperimentalFactor[] { experimentalFactorA, experimentalFactorB } ) );
+                .asList( new ExperimentalFactor[] { experimentalFactorA_Area, experimentalFactorB } ) );
 
         Collection<ExpressionAnalysisResultSet> resultSets = differentialExpressionAnalysis.getResultSets();
 
@@ -98,7 +98,7 @@ public class TwoWayAnovaWithoutInteractionsAnalyzerTest extends BaseAnalyzerConf
 
             log.debug( "probe: " + probe + "; p-value: " + pvalue + "; F=" + stat );
 
-            if ( f.equals( super.experimentalFactorA ) ) {
+            if ( f.equals( super.experimentalFactorA_Area ) ) {
 
                 assertEquals( factorValueA2, resultSet.getBaselineGroup() );
 
@@ -108,6 +108,10 @@ public class TwoWayAnovaWithoutInteractionsAnalyzerTest extends BaseAnalyzerConf
                     found = true;
                 } else if ( probe.getName().equals( "probe_97" ) ) { // id 1097
                     assertEquals( 0.3546, pvalue, 0.001 );
+                    assertEquals( -1.02, stat, 0.01 );
+                } else if ( probe.getName().equals( "probe_0" ) ) {
+                    assertEquals( 1.36e-12, pvalue, 1e-10 );
+                    assertEquals( -425.3, stat, 0.1 );
                 }
 
             } else {

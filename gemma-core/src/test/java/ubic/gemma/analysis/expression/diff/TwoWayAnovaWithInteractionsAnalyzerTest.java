@@ -56,7 +56,7 @@ public class TwoWayAnovaWithInteractionsAnalyzerTest extends BaseAnalyzerConfigu
 
         configureMocks();
 
-        DifferentialExpressionAnalysis expressionAnalysis = analyzer.run( expressionExperiment, experimentalFactorA,
+        DifferentialExpressionAnalysis expressionAnalysis = analyzer.run( expressionExperiment, experimentalFactorA_Area,
                 experimentalFactorB );
 
         Collection<ExpressionAnalysisResultSet> resultSets = expressionAnalysis.getResultSets();
@@ -92,7 +92,7 @@ public class TwoWayAnovaWithInteractionsAnalyzerTest extends BaseAnalyzerConfigu
 
                 ExperimentalFactor f = factors.iterator().next();
 
-                if ( f.equals( super.experimentalFactorA ) ) {
+                if ( f.equals( super.experimentalFactorA_Area ) ) {
                     assertEquals( factorValueA2, resultSet.getBaselineGroup() );
                     if ( probe.getName().equals( "probe_98" ) ) {
                         assertEquals( 0.8769, pvalue, 0.001 );

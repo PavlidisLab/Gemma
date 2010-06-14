@@ -30,6 +30,7 @@ import java.util.List;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import ubic.gemma.loader.expression.simple.ExperimentalDesignImporter;
 import ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.ProbeAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
@@ -98,7 +99,7 @@ public class AncovaTest extends BaseAnalyzerConfigurationTest {
 
                 ExperimentalFactor f = factors.iterator().next();
 
-                if ( f.equals( super.experimentalFactorA ) ) {
+                if ( f.equals( super.experimentalFactorA_Area ) ) {
                     if ( probe.getName().equals( "probe_98" ) ) {
                         assertEquals( 0.8572, pvalue, 0.001 );
                     } else if ( probe.getName().equals( "probe_10" ) ) {
@@ -189,7 +190,7 @@ public class AncovaTest extends BaseAnalyzerConfigurationTest {
 
                 ExperimentalFactor f = factors.iterator().next();
 
-                if ( f.equals( super.experimentalFactorA ) ) {
+                if ( f.equals( super.experimentalFactorA_Area ) ) {
 
                     if ( probe.getName().equals( "probe_98" ) ) {
                         assertEquals( 0.8673, pvalue, 0.001 );
@@ -266,7 +267,7 @@ public class AncovaTest extends BaseAnalyzerConfigurationTest {
 
         List<ExperimentalFactor> factors = new ArrayList<ExperimentalFactor>();
 
-        factors.add( experimentalFactorA );
+        factors.add( experimentalFactorA_Area );
         factors.add( experimentalFactorC );
 
         DifferentialExpressionAnalysis expressionAnalysis = analyzer.run( expressionExperiment, factors );
@@ -301,7 +302,7 @@ public class AncovaTest extends BaseAnalyzerConfigurationTest {
 
                 log.debug( "probe: " + probe + "; p-value: " + pvalue + "; T=" + stat );
 
-                if ( f.equals( super.experimentalFactorA ) ) {
+                if ( f.equals( super.experimentalFactorA_Area ) ) {
                     if ( probe.getName().equals( "probe_98" ) ) {
                         assertEquals( 0.8060, pvalue, 0.001 );
                         found198 = true;
@@ -347,7 +348,7 @@ public class AncovaTest extends BaseAnalyzerConfigurationTest {
         configureMocks();
 
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
-        config.getFactorsToInclude().add( this.experimentalFactorA );
+        config.getFactorsToInclude().add( this.experimentalFactorA_Area );
         config.getFactorsToInclude().add( this.experimentalFactorB );
         config.getInteractionsToInclude().add( config.getFactorsToInclude() );
 
@@ -393,7 +394,7 @@ public class AncovaTest extends BaseAnalyzerConfigurationTest {
 
                     assertNotNull( f );
 
-                    if ( f.equals( super.experimentalFactorA ) ) {
+                    if ( f.equals( super.experimentalFactorA_Area ) ) {
                         if ( probe.getName().equals( "probe_98" ) ) {
                             assertEquals( 0.8769, pvalue, 0.001 );
                         } else if ( probe.getName().equals( "probe_10" ) ) {

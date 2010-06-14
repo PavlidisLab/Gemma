@@ -66,7 +66,7 @@ public class TTestAnalyzerTest extends BaseAnalyzerConfigurationTest {
         configureMocks();
 
         Collection<ExperimentalFactor> factors = new HashSet<ExperimentalFactor>();
-        factors.add( super.experimentalFactorA );
+        factors.add( super.experimentalFactorA_Area );
 
         DifferentialExpressionAnalysis expressionAnalysis = analyzer.run( expressionExperiment, factors );
 
@@ -118,16 +118,16 @@ public class TTestAnalyzerTest extends BaseAnalyzerConfigurationTest {
         configureMocks();
 
         Collection<ExperimentalFactor> factors = new HashSet<ExperimentalFactor>();
-        factors.add( super.experimentalFactorA );
+        factors.add( super.experimentalFactorA_Area );
 
         /*
          * Remove factorValue from all the samples.
          */
-        Iterator<FactorValue> iterator = experimentalFactorA.getFactorValues().iterator();
+        Iterator<FactorValue> iterator = experimentalFactorA_Area.getFactorValues().iterator();
         FactorValue toUse = iterator.next();
         FactorValue toRemove = iterator.next();
 
-        experimentalFactorA.getFactorValues().remove( toRemove );
+        experimentalFactorA_Area.getFactorValues().remove( toRemove );
         for ( BioMaterial bm : super.biomaterials ) {
             bm.getFactorValues().remove( toRemove );
             bm.getFactorValues().add( toUse );

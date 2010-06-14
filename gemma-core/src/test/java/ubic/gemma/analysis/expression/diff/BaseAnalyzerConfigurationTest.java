@@ -80,7 +80,7 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
 
     protected ExperimentalDesign experimentalDesign = null;
 
-    protected ExperimentalFactor experimentalFactorA = null;
+    protected ExperimentalFactor experimentalFactorA_Area = null;
 
     protected ExperimentalFactor experimentalFactorB = null;
 
@@ -161,10 +161,10 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
         expressionExperiment.setShortName( RandomStringUtils.randomAlphanumeric( 12 ) );
 
         /* experimental factor "area" */
-        experimentalFactorA = ExperimentalFactor.Factory.newInstance();
-        experimentalFactorA.setName( "area" );
-        experimentalFactorA.setType( FactorType.CATEGORICAL );
-        experimentalFactorA.setId( 5001L );
+        experimentalFactorA_Area = ExperimentalFactor.Factory.newInstance();
+        experimentalFactorA_Area.setName( "area" );
+        experimentalFactorA_Area.setType( FactorType.CATEGORICAL );
+        experimentalFactorA_Area.setId( 5001L );
         factorValuesA = new HashSet<FactorValue>();
 
         factorValueA1 = FactorValue.Factory.newInstance();
@@ -175,7 +175,7 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
         Collection<Characteristic> characteristicsA1 = new HashSet<Characteristic>();
         characteristicsA1.add( characteristicA1 );
         factorValueA1.setCharacteristics( characteristicsA1 );
-        factorValueA1.setExperimentalFactor( experimentalFactorA );
+        factorValueA1.setExperimentalFactor( experimentalFactorA_Area );
 
         factorValueA2 = FactorValue.Factory.newInstance();
         factorValueA2.setValue( "amygdala" ); // this will automatically be set as the baseline
@@ -185,11 +185,11 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
         Collection<Characteristic> characteristicsA2 = new HashSet<Characteristic>();
         characteristicsA2.add( characteristicA2 );
         factorValueA2.setCharacteristics( characteristicsA2 );
-        factorValueA2.setExperimentalFactor( experimentalFactorA );
+        factorValueA2.setExperimentalFactor( experimentalFactorA_Area );
 
         factorValuesA.add( factorValueA1 );
         factorValuesA.add( factorValueA2 );
-        experimentalFactorA.getFactorValues().addAll( factorValuesA );
+        experimentalFactorA_Area.getFactorValues().addAll( factorValuesA );
 
         /* experimental factor "treat" */
         experimentalFactorB = ExperimentalFactor.Factory.newInstance();
@@ -373,7 +373,7 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
         expressionExperiment.setBioAssays( bioAssays );
 
         experimentalFactors = new ArrayList<ExperimentalFactor>();
-        experimentalFactors.add( experimentalFactorA );
+        experimentalFactors.add( experimentalFactorA_Area );
         experimentalFactors.add( experimentalFactorB );
 
         experimentalDesign = ExperimentalDesign.Factory.newInstance();
@@ -458,7 +458,7 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
 
         configureVectors( biomaterials, null );
 
-        experimentalFactors.remove( experimentalFactorA );
+        experimentalFactors.remove( experimentalFactorA_Area );
         experimentalDesign.setExperimentalFactors( experimentalFactors );
         expressionExperiment.setExperimentalDesign( experimentalDesign );
     }
