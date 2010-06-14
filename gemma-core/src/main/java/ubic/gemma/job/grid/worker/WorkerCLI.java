@@ -37,10 +37,12 @@ import net.jini.core.lease.Lease;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang.RandomStringUtils;
+import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.remoting.RemoteAccessException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springmodules.javaspaces.gigaspaces.GigaSpacesTemplate;
 
+import ubic.gemma.annotation.geommtx.ExpressionExperimentAnnotator;
 import ubic.gemma.job.grid.util.SpacesCancellationEntry;
 import ubic.gemma.job.grid.util.SpacesUtil;
 import ubic.gemma.util.AbstractSpringAwareCLI;
@@ -189,6 +191,9 @@ public class WorkerCLI extends AbstractSpringAwareCLI implements RemoteEventList
                 .create( "workers" );
         super.addOption( proxyBeanName );
 
+        Option mmtxOption = OptionBuilder.withDescription( "Set to force MMTX to be initialized" ).create( "mmtx" );
+        super.addOption( mmtxOption );
+
     }
 
     /*
@@ -225,12 +230,23 @@ public class WorkerCLI extends AbstractSpringAwareCLI implements RemoteEventList
     protected void processOptions() {
         super.processOptions();
 
+        if ( this.hasOption( "mmtx" ) ) {
+            if ( !ConfigUtils.getBoolean( ExpressionExperimentAnnotator.MMTX_ACTIVATION_PROPERTY_KEY ) ) {
+                ( ( ExpressionExperimentAnnotator ) this.getBean( "expressionExperimentAnnotator" ) ).init();
+            }
+        }
+
         String workS = this.getOptionValue( "workers" );
         this.workerNames = workS.split( "," );
 
         this.spacesUtil = ( SpacesUtil ) this.getBean( "spacesUtil" );
         this.ctx = this.spacesUtil.addGemmaSpacesToApplicationContext();
-        this.template = ( GigaSpacesTemplate ) this.getBean( "gigaspacesTemplate" );
+
+        try {
+            this.template = ( GigaSpacesTemplate ) this.getBean( "gigaspacesTemplate" );
+        } catch ( NoSuchBeanDefinitionException e ) {
+            throw new RuntimeException( "You must have javaspaces enabled to use the worker cli" );
+        }
 
     }
 

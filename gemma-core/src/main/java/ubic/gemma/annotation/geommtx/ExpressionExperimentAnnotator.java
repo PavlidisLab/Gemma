@@ -80,9 +80,22 @@ public class ExpressionExperimentAnnotator implements InitializingBean {
 
     protected static Log log = LogFactory.getLog( ExpressionExperimentAnnotator.class );
 
-    protected static final String MMTX_ACTIVATION_PROPERTY_KEY = "mmtxOn";
+    public static final String MMTX_ACTIVATION_PROPERTY_KEY = "mmtxOn";
+
+    private static AtomicBoolean initializing = new AtomicBoolean( false );
 
     private final static String MODEL_OUTPUT_PATH = ConfigUtils.getAnalysisStoragePath(); // FIXME
+
+    private static AtomicBoolean ready = new AtomicBoolean( false );
+
+    private static Text2Owl text2Owl;
+
+    /**
+     * @return true if the annotator is ready to be used.
+     */
+    public static boolean ready() {
+        return ready.get();
+    }
 
     @Autowired
     AuditTrailService auditTrailService;
@@ -103,23 +116,12 @@ public class ExpressionExperimentAnnotator implements InitializingBean {
 
     private List<AbstractFilter> filters;
 
-    private static AtomicBoolean initializing = new AtomicBoolean( false );
-
-    private static AtomicBoolean ready = new AtomicBoolean( false );
-
-    private static Text2Owl text2Owl;
-
     /*
      * (non-Javadoc)
      * 
      * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
      */
     public void afterPropertiesSet() throws Exception {
-
-        if ( initializing.get() ) {
-            log.info( "Already loading..." );
-            return;
-        }
 
         boolean activated = ConfigUtils.getBoolean( MMTX_ACTIVATION_PROPERTY_KEY );
 
@@ -129,44 +131,7 @@ public class ExpressionExperimentAnnotator implements InitializingBean {
             return;
         }
 
-        Thread loadThread = new Thread( new Runnable() {
-            public void run() {
-
-                initializing.set( true );
-
-                try {
-                    text2Owl = new Text2Owl( cacheManager );
-                } catch ( Exception e ) {
-                    log.warn( "Automated tagger could not be initialized: " + e.getMessage(), e );
-                    return;
-                } finally {
-                    ready.set( false );
-                    initializing.set( false );
-                }
-
-                // order matters for these filters
-                filters = new LinkedList<AbstractFilter>();
-                filters.add( new CUISUIFilter() );
-                filters.add( new CUIIRIFilter() );
-                BIRNLexFMANullsFilter birnFMANull = new BIRNLexFMANullsFilter( ontologyService.getFmaOntologyService(),
-                        ontologyService.getBirnLexOntologyService() );
-                filters.add( birnFMANull );
-                filters.add( new UninformativeFilter() );
-
-                // use the HighLevel Review of 100 experiments.xls spreadsheet
-                CheckHighLevelSpreadSheetReader highLevelResults = new CheckHighLevelSpreadSheetReader();
-                rejectedFromReview = highLevelResults.getRejectedAnnotations();
-
-                ready.set( true );
-                initializing.set( false );
-            }
-        }, "MMTX initialization" );
-
-        if ( initializing.get() ) return; // no need to start it, we already finished, somehow
-        loadThread.setDaemon( true ); // So vm doesn't wait on these threads to shutdown (if shutting down)
-        loadThread.start();
-
-        log.info( "Started MMTX initialization" );
+        init();
     }
 
     /*
@@ -276,10 +241,53 @@ public class ExpressionExperimentAnnotator implements InitializingBean {
     }
 
     /**
-     * @return true if the annotator is ready to be used.
+     * force initialization of MMTx
      */
-    public static boolean ready() {
-        return ready.get();
+    public void init() {
+
+        if ( initializing.get() ) {
+            log.info( "Already loading..." );
+            return;
+        }
+
+        Thread loadThread = new Thread( new Runnable() {
+            public void run() {
+
+                initializing.set( true );
+
+                try {
+                    text2Owl = new Text2Owl( cacheManager );
+                } catch ( Exception e ) {
+                    log.warn( "Automated tagger could not be initialized: " + e.getMessage(), e );
+                    return;
+                } finally {
+                    ready.set( false );
+                    initializing.set( false );
+                }
+
+                // order matters for these filters
+                filters = new LinkedList<AbstractFilter>();
+                filters.add( new CUISUIFilter() );
+                filters.add( new CUIIRIFilter() );
+                BIRNLexFMANullsFilter birnFMANull = new BIRNLexFMANullsFilter( ontologyService.getFmaOntologyService(),
+                        ontologyService.getBirnLexOntologyService() );
+                filters.add( birnFMANull );
+                filters.add( new UninformativeFilter() );
+
+                // use the HighLevel Review of 100 experiments.xls spreadsheet
+                CheckHighLevelSpreadSheetReader highLevelResults = new CheckHighLevelSpreadSheetReader();
+                rejectedFromReview = highLevelResults.getRejectedAnnotations();
+
+                ready.set( true );
+                initializing.set( false );
+            }
+        }, "MMTX initialization" );
+
+        if ( initializing.get() ) return; // no need to start it, we already finished, somehow
+        loadThread.setDaemon( true ); // So vm doesn't wait on these threads to shutdown (if shutting down)
+        loadThread.start();
+
+        log.info( "Started MMTX initialization" );
     }
 
     /**
