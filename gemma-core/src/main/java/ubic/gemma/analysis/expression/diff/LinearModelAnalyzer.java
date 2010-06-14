@@ -766,23 +766,20 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
 
                 FactorValue baseLineFV = baselineConditions.get( factor );
 
-                String baselineFactorValueName = nameForR( baseLineFV, true );
+                String fvName = nameForR( baseLineFV, true );
+
+                rc.assignFactor( factorName, Arrays.asList( colS ) );
+                List<String> stringListEval = rc.stringListEval( ( "levels(" + factorName + ")" ) );
 
                 /*
-                 * It turns out that the location of 'base' is dependent on the location in the list of biomaterials.,
-                 * not in the 'levels' list.
+                 * The 'base' is the index of the baseline group in the list of levels: the result of 'levels(factor)'.
+                 * Default base is 1.
                  */
-                rc.assignFactor( factorName, Arrays.asList( colS ) );
-                List<String> factorValueNames = rc.stringListEval( "as.vector(" + factorName + ")" );
-                LinkedHashSet<String> lll = new LinkedHashSet<String>( factorValueNames );
-                factorValueNames = new ArrayList<String>( lll );
 
-                int indexOfBaseline = factorValueNames.indexOf( baselineFactorValueName ) + 1; // R is 1-based.
+                int indexOfBaseline = stringListEval.indexOf( fvName ) + 1; // R is 1-based.
 
-                String command = "contrasts(" + factorName + ")<-contr.treatment(levels(" + factorName + "), base="
-                        + indexOfBaseline + ")";
-                log.info( command );
-                rc.voidEval( command );
+                rc.voidEval( "contrasts(" + factorName + ")<-contr.treatment(levels(" + factorName + "), base="
+                        + indexOfBaseline + ")" );
             }
         }
     }
