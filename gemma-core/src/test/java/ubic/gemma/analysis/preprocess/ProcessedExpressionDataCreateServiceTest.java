@@ -134,9 +134,9 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
         }
 
         eeService.thawLite( ee );
-        Collection<ProcessedExpressionDataVector> originalVecs = processedExpressionDataVectorCreateService
-                .computeProcessedExpressionData( ee );
-        eeService.thawLite( ee );
+        // Collection<ProcessedExpressionDataVector> originalVecs = processedExpressionDataVectorCreateService
+        // .computeProcessedExpressionData( ee );
+        // eeService.thawLite( ee );
 
         // ExpressionDataDoubleMatrix oldMat = new ExpressionDataDoubleMatrix( originalVecs );
         // log.info( oldMat );
