@@ -64,7 +64,7 @@ public class CharacteristicBrowserController extends AbstractTaskService {
     /**
      * 
      */
-    private static final int MAX_RESULTS = 500;
+    private static final int MAX_RESULTS = 1000;
 
     @Autowired
     private ExperimentalDesignService experimentalDesignService;
