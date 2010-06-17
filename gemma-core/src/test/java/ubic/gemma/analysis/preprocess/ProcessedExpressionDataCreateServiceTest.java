@@ -134,12 +134,7 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
         }
 
         eeService.thawLite( ee );
-        // Collection<ProcessedExpressionDataVector> originalVecs = processedExpressionDataVectorCreateService
-        // .computeProcessedExpressionData( ee );
-        // eeService.thawLite( ee );
-
-        // ExpressionDataDoubleMatrix oldMat = new ExpressionDataDoubleMatrix( originalVecs );
-        // log.info( oldMat );
+        processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
 
         ExperimentalFactor factor = ExperimentalFactor.Factory.newInstance();
         factor.setType( FactorType.CATEGORICAL );
@@ -219,6 +214,9 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
         // log.info( newMat );
 
         boolean foundVector = false;
+
+        assertTrue( resortedVectors.size() > 0 );
+
         for ( ProcessedExpressionDataVector vector : resortedVectors ) {
             i = 0;
             log.debug( vector.getDesignElement().getName() + " ........................." );
