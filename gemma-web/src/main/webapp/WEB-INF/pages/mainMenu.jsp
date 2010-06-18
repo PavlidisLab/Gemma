@@ -102,13 +102,10 @@
 						<a href='<c:url value="/admin/indexer.html"/>'> <fmt:message key="menu.compassIndexer" /> </a>
 					</li>
 					<li>
-						<a href='<c:url value="/expressionExperimentSetManager.html" />'>Manage experiment sets</a>
-					</li>
-					<li>
 						<a href='<c:url value="/admin/maintenanceMode.html" />'>Manage maintenance mode</a>
 					</li>
 					<li>
-						<a href='<c:url value="/whatsnew/generateCache.html" />'>Regenerate What's New Cache</a>
+						<a href='<c:url value="/whatsnew/generateCache.html" />'>Update "What's New"</a>
 					</li>
 					<li>
 						<a href='<c:url value="/admin/widgetTest.html"/>'>Widget test</a>
