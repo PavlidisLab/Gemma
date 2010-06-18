@@ -25,7 +25,6 @@ import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
-import ubic.gemma.annotation.geommtx.ExpressionExperimentAnnotator;
 import ubic.gemma.job.AbstractTaskService;
 import ubic.gemma.job.BackgroundJob;
 import ubic.gemma.job.TaskCommand;
@@ -80,6 +79,9 @@ public class AnnotationController extends AbstractTaskService {
     }
 
     @Autowired
+    private AuditTrailService auditTrailService;
+
+    @Autowired
     private AutoTaggerTask autoTagTask;
 
     @Autowired
@@ -96,9 +98,6 @@ public class AnnotationController extends AbstractTaskService {
 
     @Autowired
     private TaxonService taxonService;
-
-    @Autowired
-    private AuditTrailService auditTrailService;
 
     /**
      * @param eeId
@@ -153,6 +152,10 @@ public class AnnotationController extends AbstractTaskService {
         return ontologyService.findExactTerm( givenQueryString, categoryUri, taxon );
     }
 
+    /**
+     * @param vc
+     * @param id
+     */
     public void removeBiomaterialTag( Characteristic vc, Long id ) {
         BioMaterial bm = bioMaterialService.load( id );
         if ( bm == null ) {
