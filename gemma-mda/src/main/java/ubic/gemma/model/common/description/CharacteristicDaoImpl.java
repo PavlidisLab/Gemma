@@ -24,6 +24,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang.time.StopWatch;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.hibernate.Query;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,6 +44,8 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactorImpl;
 @Repository
 public class CharacteristicDaoImpl extends ubic.gemma.model.common.description.CharacteristicDaoBase {
 
+    private static Log log = LogFactory.getLog( CharacteristicDaoImpl.class );
+
     private static final int BATCH_SIZE = 1000;
 
     @Autowired
@@ -50,6 +55,7 @@ public class CharacteristicDaoImpl extends ubic.gemma.model.common.description.C
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.common.description.CharacteristicDaoBase#handleFindByParentClass(java.lang.Class)
      */
     @SuppressWarnings("unchecked")
@@ -73,6 +79,7 @@ public class CharacteristicDaoImpl extends ubic.gemma.model.common.description.C
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.common.description.CharacteristicDaoBase#handleFindByUri(java.util.Collection)
      */
     @SuppressWarnings("unchecked")
@@ -98,6 +105,7 @@ public class CharacteristicDaoImpl extends ubic.gemma.model.common.description.C
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.common.description.CharacteristicDaoBase#handleFindByUri(java.lang.String)
      */
     @SuppressWarnings("unchecked")
@@ -109,16 +117,27 @@ public class CharacteristicDaoImpl extends ubic.gemma.model.common.description.C
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.common.description.CharacteristicDaoBase#handleFindByvalue(java.lang.String)
      */
     @Override
     protected Collection<Characteristic> handleFindByValue( String search ) throws Exception {
         final String queryString = "select distinct char from CharacteristicImpl as char where char.value like :search";
-        return getHibernateTemplate().findByNamedParam( queryString, "search", search + "%" );
+        StopWatch timer = new StopWatch();
+        timer.start();
+
+        try {
+            return getHibernateTemplate().findByNamedParam( queryString, "search", search + "%" );
+        } finally {
+            if ( timer.getTime() > 100 ) {
+                log.info( "Characteristic search for " + search + ": " + timer.getTime() + "ms" );
+            }
+        }
     }
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.common.description.CharacteristicDaoBase#handleFindParents(java.lang.Class,
      * java.util.Collection)
      */
@@ -166,6 +185,7 @@ public class CharacteristicDaoImpl extends ubic.gemma.model.common.description.C
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.common.description.CharacteristicDao#browse(java.lang.Integer, java.lang.Integer)
      */
     public List<Characteristic> browse( Integer start, Integer limit ) {
@@ -177,6 +197,7 @@ public class CharacteristicDaoImpl extends ubic.gemma.model.common.description.C
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.common.description.CharacteristicDao#browse(java.lang.Integer, java.lang.Integer,
      * java.lang.String, boolean)
      */
@@ -191,6 +212,7 @@ public class CharacteristicDaoImpl extends ubic.gemma.model.common.description.C
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.common.description.CharacteristicDao#count()
      */
     public Integer count() {

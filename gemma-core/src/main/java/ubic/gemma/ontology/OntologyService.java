@@ -118,15 +118,21 @@ public class OntologyService implements InitializingBean {
     public static Collection<ubic.gemma.ontology.Ontology> listAvailableOntologies() {
 
         Collection<ubic.gemma.ontology.Ontology> ontologies = new HashSet<ubic.gemma.ontology.Ontology>();
+
         ModelMaker maker = OntologyLoader.getRDBMaker();
-        ExtendedIterator<String> iterator = maker.listModels();
-        while ( iterator.hasNext() ) {
-            String name = iterator.next();
-            ExternalDatabase database = OntologyUtils.ontologyAsExternalDatabase( name );
-            ubic.gemma.ontology.Ontology o = new ubic.gemma.ontology.Ontology( database );
-            ontologies.add( o );
+
+        try {
+            ExtendedIterator<String> iterator = maker.listModels();
+            while ( iterator.hasNext() ) {
+                String name = iterator.next();
+                ExternalDatabase database = OntologyUtils.ontologyAsExternalDatabase( name );
+                ubic.gemma.ontology.Ontology o = new ubic.gemma.ontology.Ontology( database );
+                ontologies.add( o );
+            }
+            return ontologies;
+        } finally {
+            maker.close();
         }
-        return ontologies;
 
     }
 
@@ -210,13 +216,16 @@ public class OntologyService implements InitializingBean {
             log.debug( "found " + individualResults.size() + " individuals from ontology term " + categoryUri + " in "
                     + watch.getTime() + " ms" );
 
+        Collection<String> foundValues = new HashSet<String>();
+
         List<Characteristic> previouslyUsedInSystem = new ArrayList<Characteristic>();
+
+        // this should be very fast.
         Collection<Characteristic> foundChars = characteristicService.findByValue( queryString );
 
         // remove duplicates, don't want to redefine == operator for
         // Characteristics
         // for this use consider if the value = then its a duplicate.
-        Collection<String> foundValues = new HashSet<String>();
         if ( foundChars != null ) {
             for ( Characteristic characteristic : foundChars ) {
                 if ( !foundValues.contains( foundValueKey( characteristic ) ) ) {
@@ -230,8 +239,8 @@ public class OntologyService implements InitializingBean {
                 }
             }
         }
-        if ( log.isDebugEnabled() )
-            log.debug( "found " + previouslyUsedInSystem.size() + " matching characteristics used in the database"
+        if ( log.isDebugEnabled() || watch.getTime() > 100 )
+            log.info( "found " + previouslyUsedInSystem.size() + " matching characteristics used in the database"
                     + " in " + watch.getTime() + " ms" );
 
         queryString = OntologySearch.stripInvalidCharacters( givenQueryString );
@@ -251,6 +260,10 @@ public class OntologyService implements InitializingBean {
         // Sort the individual results.
         Collection<Characteristic> sortedResults = sort( individualResults, previouslyUsedInSystem, searchResults,
                 queryString, foundValues );
+
+        if ( watch.getTime() > 1000 ) {
+            log.info( "Ontology term query for: " + givenQueryString + ": " + watch.getTime() + "ms" );
+        }
 
         return sortedResults;
 
