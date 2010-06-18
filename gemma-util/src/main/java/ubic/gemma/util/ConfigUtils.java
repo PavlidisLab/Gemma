@@ -193,10 +193,14 @@ public class ConfigUtils {
     }
 
     /**
-     * @return the configured base url (e.g., http://www.chibi.ubc.ca/Gemma) , or a warning if not configured.
+     * @return the configured base url (e.g., http://www.chibi.ubc.ca/Gemma/). It will always end in a slash.
      */
     public static String getBaseUrl() {
-        return getString( "gemma.base.url", "http://www.chibi.ubc.ca/Gemma/" );
+        String url = getString( "gemma.base.url", "http://www.chibi.ubc.ca/Gemma/" );
+        if ( !url.endsWith( "/" ) ) {
+            return url + "/";
+        }
+        return url;
     }
 
     /**
