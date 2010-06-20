@@ -205,7 +205,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
         Map<ExpressionExperiment, Date> result = new HashMap<ExpressionExperiment, Date>();
         if ( ids.isEmpty() ) return result;
 
-        Session s = this.getHibernateTemplate().getSessionFactory().openSession();
+        Session s = this.getSession();
 
         /*
          * Get the most recent update date for all the experiments requested. I cannot figure out how to get an 'order
@@ -237,7 +237,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
             j++;
         }
 
-        assert result.size() <= Math.abs( limit ) : "Expected " + Math.abs( limit ) + ", got " + result.size();
+        assert result.size() <= Math.abs( limit ) : "Expected " + Math.abs( limit ) + ", got " + result.size(); 
 
         return result;
 
@@ -316,6 +316,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
             if ( timer.getTime() > 1000 ) {
                 log.info( "EEs loaded in " + timer.getTime() + "ms" );
             }
+            this.releaseSession( session );
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }
@@ -382,9 +383,9 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
         Collection<RawExpressionDataVector> designElementDataVectors = toDelete.getRawExpressionDataVectors();
         Hibernate.initialize( designElementDataVectors );
         toDelete.setRawExpressionDataVectors( null );
-        
+
         /*
-         * We don't delete the investigators, just breaking the association. 
+         * We don't delete the investigators, just breaking the association.
          */
         toDelete.getInvestigators().clear();
 
