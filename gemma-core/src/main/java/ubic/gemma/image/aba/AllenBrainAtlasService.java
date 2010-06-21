@@ -224,7 +224,7 @@ public class AllenBrainAtlasService {
 
     /**
      * Use this method to get information like width, height & number of tiers (zoom levels) available for the given
-     * image. The “path” parameter is the same as used in the “Get Image” method above.
+     * image.
      * 
      * @param plane
      * @param out
@@ -287,10 +287,10 @@ public class AllenBrainAtlasService {
      * Each of these data files represent the volume of space occupied by a single mouse brain. The volume space is
      * divided into individual 3D cubic voxels, of dimension (200 x 200 x 200) microns. The file contains the set of
      * sagittally arranged voxels (expressed as x, y, z coordinates) that have an expression energy value other than
-     * 0.0. Along with each voxel in the data file is an “expression energy” value. The energy value is a function of
+     * 0.0. Along with each voxel in the data file is an "expression energy" value. The energy value is a function of
      * the intensity of expression found within that voxel, together with the density of expression in that voxel. Due
      * to the way gene expression experiments are carried out there are generally at least 200 microns between any two
-     * (25 micron thick) sections. In these datafiles, interpolation is used to “smooth” the energy values between those
+     * (25 micron thick) sections. In these datafiles, interpolation is used to "smooth" the energy values between those
      * gaps to produce an expression value for each voxel that corresponds to brain volume. For more information about
      * how expression is mapped to the atlas, see the Informatics Data Processing white paper. The ImageSeriesID
      * parameter is an integer; find these as part of the return document from the Genes method.
@@ -331,6 +331,7 @@ public class AllenBrainAtlasService {
 
     /**
      * Given a gene too look for for will return the coressponding abaGene (useful for finding images)
+     * 
      * @param givenGene symbol of gene that will be used to search ABA.
      * @return
      */
@@ -455,9 +456,9 @@ public class AllenBrainAtlasService {
      * resolution is 0, which is a thumbnail sized image. The highest resolution varies by image, but is usually 6 for
      * ABA images. Each level is a downsampling by a factor of two of the next higher level. Use the value -1 to request
      * the highest resolution available. mime Optional. Determines the mime type of the HTTP response. The default
-     * produces an image with mime type “application/jpeg”. Most web browsers, when receiving this kind of response will
+     * produces an image with mime type "application/jpeg". Most web browsers, when receiving this kind of response will
      * prompt the user to pick an application to open the file, or to select a location to save the file to disk. Using
-     * mime=2 will cause a response with mime type = “jpeg/image” to be returned. Most browsers will display the
+     * mime=2 will cause a response with mime type = "jpeg/image" to be returned. Most browsers will display the
      * returned image as soon as it is available. When retrieving an image with anything other than a web browser, this
      * parameter can usually be ignored. The following region-of-interest parameters are optional, however if any of
      * them are given, they must all be present. top The y coordinate of the top left corner of the region of interest.
@@ -505,17 +506,10 @@ public class AllenBrainAtlasService {
         try {
             FileOutputStream out = new FileOutputStream( outputFile );
             this.getImageseries( imageseriesId, out );
-
             imageSeriesDoc = XMLUtils.openAndParse( new FileInputStream( outputFile ) );
-        } catch ( ParserConfigurationException pce ) {
-            log.error( pce );
+        } catch ( Exception e ) {
+            log.error( e.getMessage(), e.getCause() );
             return null;
-        } catch ( SAXException se ) {
-            log.error( se );
-        } catch ( FileNotFoundException fnfe ) {
-            log.error( fnfe );
-        } catch ( IOException io ) {
-
         }
 
         NodeList idList = imageSeriesDoc.getChildNodes().item( 0 ).getChildNodes();
@@ -628,6 +622,7 @@ public class AllenBrainAtlasService {
 
     /**
      * REturns the info logging stream
+     * 
      * @return
      */
     public PrintStream getInfoOut() {
@@ -675,6 +670,7 @@ public class AllenBrainAtlasService {
 
     /**
      * Is verbose logging on?
+     * 
      * @return
      */
     public boolean getVerbose() {
@@ -698,6 +694,7 @@ public class AllenBrainAtlasService {
 
     /**
      * Sets the caching directory
+     * 
      * @param s
      */
     public void setCacheDir( String s ) {
@@ -711,6 +708,7 @@ public class AllenBrainAtlasService {
 
     /**
      * Turn caching on or off
+     * 
      * @param v
      */
     public void setCaching( boolean v ) {
