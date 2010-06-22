@@ -18,8 +18,10 @@
  */
 package ubic.gemma.ontology;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
@@ -40,9 +42,13 @@ import ubic.basecode.ontology.model.OntologyResource;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.providers.AbstractOntologyService;
 import ubic.basecode.ontology.providers.BirnLexOntologyService;
+import ubic.basecode.ontology.providers.CellTypeOntologyService;
 import ubic.basecode.ontology.providers.ChebiOntologyService;
 import ubic.basecode.ontology.providers.DiseaseOntologyService;
 import ubic.basecode.ontology.providers.FMAOntologyService;
+import ubic.basecode.ontology.providers.HumanDevelopmentOntologyService;
+import ubic.basecode.ontology.providers.MammalianPhenotypeOntologyService;
+import ubic.basecode.ontology.providers.MouseDevelopmentOntologyService;
 import ubic.basecode.ontology.search.OntologySearch;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.description.Characteristic;
@@ -75,7 +81,7 @@ import com.hp.hpl.jena.util.iterator.ExtendedIterator;
 public class OntologyService implements InitializingBean {
 
     // Private class for sorting Characteristics
-    static class TermComparator implements Comparator<Characteristic> {
+    static class TermComparator implements Comparator<Characteristic>, Serializable {
 
         String comparator;
 
@@ -141,6 +147,8 @@ public class OntologyService implements InitializingBean {
 
     private BirnLexOntologyService birnLexOntologyService;
 
+    private CellTypeOntologyService cellTypeOntologyService;
+
     @Autowired
     private CharacteristicService characteristicService;
 
@@ -152,8 +160,15 @@ public class OntologyService implements InitializingBean {
     private ExpressionExperimentService eeService;
 
     private FMAOntologyService fmaOntologyService;
+
+    private HumanDevelopmentOntologyService humanDevelopmentOntologyService;
+
+    private MammalianPhenotypeOntologyService mammalianPhenotypeOntologyService;
+
     @Autowired
     private MgedOntologyService mgedOntologyService;
+
+    private MouseDevelopmentOntologyService mouseDevelopmentOntologyService;
 
     private Collection<AbstractOntologyService> ontologyServices = new HashSet<AbstractOntologyService>();
 
@@ -166,12 +181,20 @@ public class OntologyService implements InitializingBean {
         this.chebiOntologyService = new ChebiOntologyService();
         this.fmaOntologyService = new FMAOntologyService();
         this.diseaseOntologyService = new DiseaseOntologyService();
+        this.humanDevelopmentOntologyService = new HumanDevelopmentOntologyService();
+        this.cellTypeOntologyService = new CellTypeOntologyService();
+        this.mouseDevelopmentOntologyService = new MouseDevelopmentOntologyService();
+        this.mammalianPhenotypeOntologyService = new MammalianPhenotypeOntologyService();
 
         this.ontologyServices.add( this.birnLexOntologyService );
         this.ontologyServices.add( this.chebiOntologyService );
         this.ontologyServices.add( this.fmaOntologyService );
         this.ontologyServices.add( this.diseaseOntologyService );
         this.ontologyServices.add( this.mgedOntologyService );
+        this.ontologyServices.add( this.mouseDevelopmentOntologyService );
+        this.ontologyServices.add( this.humanDevelopmentOntologyService );
+        this.ontologyServices.add( this.cellTypeOntologyService );
+        this.ontologyServices.add( this.mammalianPhenotypeOntologyService );
 
         for ( AbstractOntologyService serv : this.ontologyServices ) {
             serv.init( false );
@@ -197,17 +220,21 @@ public class OntologyService implements InitializingBean {
         StopWatch watch = new StopWatch();
         watch.start();
 
-        String queryString = givenQueryString;
+        String queryString = OntologySearch.stripInvalidCharacters( givenQueryString );
+        if ( StringUtils.isBlank( queryString ) ) {
+            log.warn( "The query was not valid (ended up being empty): " + givenQueryString );
+            return new HashSet<Characteristic>();
+        }
 
         if ( log.isDebugEnabled() ) {
             log.debug( "starting findExactTerm for " + queryString + ". Timing information begins from here" );
         }
 
         Collection<OntologyResource> results;
-        List<Characteristic> searchResults = new ArrayList<Characteristic>();
+        Collection<Characteristic> searchResults = new HashSet<Characteristic>();
 
         // Add the matching individuals
-        List<Characteristic> individualResults = new ArrayList<Characteristic>();
+        Collection<Characteristic> individualResults = new HashSet<Characteristic>();
         if ( StringUtils.isNotBlank( categoryUri ) && !categoryUri.equals( "{}" ) ) {
             results = new HashSet<OntologyResource>( mgedOntologyService.getTermIndividuals( categoryUri.trim() ) );
             if ( results.size() > 0 ) individualResults.addAll( filter( results, queryString ) );
@@ -218,21 +245,22 @@ public class OntologyService implements InitializingBean {
 
         Collection<String> foundValues = new HashSet<String>();
 
-        List<Characteristic> previouslyUsedInSystem = new ArrayList<Characteristic>();
+        Collection<Characteristic> previouslyUsedInSystem = new HashSet<Characteristic>();
 
         // this should be very fast.
         Collection<Characteristic> foundChars = characteristicService.findByValue( queryString );
 
-        // remove duplicates, don't want to redefine == operator for
-        // Characteristics
-        // for this use consider if the value = then its a duplicate.
+        /*
+         * remove duplicates, don't want to redefine == operator for Characteristics for this use consider if the value
+         * = then its a duplicate.
+         */
         if ( foundChars != null ) {
             for ( Characteristic characteristic : foundChars ) {
                 if ( !foundValues.contains( foundValueKey( characteristic ) ) ) {
-                    // Want to flag in the web interface that these are alrady
-                    // used by Gemma
-                    // Didn't want to make a characteristic value object just to
-                    // hold a boolean flag for used....
+                    /*
+                     * Want to flag in the web interface that these are alrady used by Gemma Didn't want to make a
+                     * characteristic value object just to hold a boolean flag for used....
+                     */
                     characteristic.setDescription( USED + characteristic.getDescription() );
                     previouslyUsedInSystem.add( characteristic );
                     foundValues.add( foundValueKey( characteristic ) );
@@ -242,12 +270,6 @@ public class OntologyService implements InitializingBean {
         if ( log.isDebugEnabled() || watch.getTime() > 100 )
             log.info( "found " + previouslyUsedInSystem.size() + " matching characteristics used in the database"
                     + " in " + watch.getTime() + " ms" );
-
-        queryString = OntologySearch.stripInvalidCharacters( givenQueryString );
-
-        if ( StringUtils.isBlank( queryString ) ) {
-            throw new IllegalArgumentException( "The query was not valid (ended up being empty): " + givenQueryString );
-        }
 
         searchForGenes( queryString, categoryUri, taxon, searchResults );
 
@@ -449,25 +471,6 @@ public class OntologyService implements InitializingBean {
     }
 
     /**
-     * Will persist the give vocab characteristic to each biomaterial id supplied in the list.
-     * 
-     * @param vc
-     * @param bioMaterialIdList
-     */
-    public void saveBioMaterialStatement( Characteristic vc, Collection<Long> bioMaterialIdList ) {
-
-        log.debug( "Vocab Characteristic: " + vc );
-        log.debug( "Biomaterial ID List: " + bioMaterialIdList );
-
-        Collection<BioMaterial> biomaterials = bioMaterialService.loadMultiple( bioMaterialIdList );
-
-        for ( BioMaterial bioM : biomaterials ) {
-            saveBioMaterialStatement( vc, bioM );
-        }
-
-    }
-
-    /**
      * Will persist the give vocab characteristic to the given biomaterial
      * 
      * @param vc
@@ -493,6 +496,25 @@ public class OntologyService implements InitializingBean {
 
         bm.setCharacteristics( current );
         bioMaterialService.update( bm );
+
+    }
+
+    /**
+     * Will persist the give vocab characteristic to each biomaterial id supplied in the list.
+     * 
+     * @param vc
+     * @param bioMaterialIdList
+     */
+    public void saveBioMaterialStatement( Characteristic vc, Collection<Long> bioMaterialIdList ) {
+
+        log.debug( "Vocab Characteristic: " + vc );
+        log.debug( "Biomaterial ID List: " + bioMaterialIdList );
+
+        Collection<BioMaterial> biomaterials = bioMaterialService.loadMultiple( bioMaterialIdList );
+
+        for ( BioMaterial bioM : biomaterials ) {
+            saveBioMaterialStatement( vc, bioM );
+        }
 
     }
 
@@ -669,9 +691,11 @@ public class OntologyService implements InitializingBean {
      * @return
      */
     private String foundValueKey( Characteristic c ) {
-        StringBuffer buf = new StringBuffer( c.getValue() );
-        if ( c instanceof VocabCharacteristic ) buf.append( ( ( VocabCharacteristic ) c ).getValueUri() );
-        return buf.toString();
+        if ( c instanceof VocabCharacteristic ) {
+            return ( ( VocabCharacteristic ) c ).getValueUri();
+        } else {
+            return c.getValue();
+        }
     }
 
     /**
@@ -699,7 +723,8 @@ public class OntologyService implements InitializingBean {
      * @param taxon okay if null
      * @param searchResults
      */
-    private void searchForGenes( String queryString, String categoryUri, Taxon taxon, List<Characteristic> searchResults ) {
+    private void searchForGenes( String queryString, String categoryUri, Taxon taxon,
+            Collection<Characteristic> searchResults ) {
         if ( categoryUri == null ) return;
 
         if ( categoryUri.equals( "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#GeneticModification" )
@@ -735,63 +760,116 @@ public class OntologyService implements InitializingBean {
      * @param foundValues
      * @return
      */
-    private Collection<Characteristic> sort( List<Characteristic> individualResults,
-            List<Characteristic> alreadyUsedResults, List<Characteristic> searchResults, String searchTerm,
+    private Collection<Characteristic> sort( Collection<Characteristic> individualResults,
+            Collection<Characteristic> alreadyUsedResults, Collection<Characteristic> searchResults, String searchTerm,
             Collection<String> foundValues ) {
 
-        // Organize the list into 3 parts.
-        // Want to get the exact match showing up on top
-        // But close matching individualResults and alreadyUsedResults should
-        // get
-        // priority over jena's search results.
-        // Each result's order should be preserved.
+        /*
+         * Organize the list into 3 parts. Want to get the exact match showing up on top But close matching
+         * individualResults and alreadyUsedResults should get priority over jena's search results. Each result's order
+         * should be preserved.
+         */
 
         List<Characteristic> sortedResultsExact = new ArrayList<Characteristic>();
         List<Characteristic> sortedResultsStartsWith = new ArrayList<Characteristic>();
         List<Characteristic> sortedResultsBottom = new ArrayList<Characteristic>();
 
         for ( Characteristic characteristic : alreadyUsedResults ) {
-            if ( characteristic.getValue().equalsIgnoreCase( searchTerm ) )
+            if ( characteristic.getValue().equalsIgnoreCase( searchTerm ) ) {
                 sortedResultsExact.add( characteristic );
-            else if ( characteristic.getValue().startsWith( searchTerm ) )
+            } else if ( characteristic.getValue().startsWith( searchTerm ) ) {
                 sortedResultsStartsWith.add( characteristic );
-            else
+            } else {
                 sortedResultsBottom.add( characteristic );
+            }
         }
 
         for ( Characteristic characteristic : individualResults ) {
             String key = foundValueKey( characteristic );
             if ( foundValues.contains( key ) ) continue;
+
             foundValues.add( key );
-            if ( characteristic.getValue().equalsIgnoreCase( searchTerm ) )
+
+            if ( characteristic.getValue().equalsIgnoreCase( searchTerm ) ) {
                 sortedResultsExact.add( characteristic );
-            else if ( characteristic.getValue().startsWith( searchTerm ) )
+            } else if ( characteristic.getValue().startsWith( searchTerm ) ) {
                 sortedResultsStartsWith.add( characteristic );
-            else
+            } else {
                 sortedResultsBottom.add( characteristic );
+            }
         }
 
         for ( Characteristic characteristic : searchResults ) {
             String key = foundValueKey( characteristic );
             if ( foundValues.contains( key ) ) continue;
             foundValues.add( key );
-            if ( characteristic.getValue().equalsIgnoreCase( searchTerm ) )
+            if ( characteristic.getValue().equalsIgnoreCase( searchTerm ) ) {
                 sortedResultsExact.add( characteristic );
-            else if ( characteristic.getValue().startsWith( searchTerm ) )
+            } else if ( characteristic.getValue().startsWith( searchTerm ) ) {
                 sortedResultsStartsWith.add( characteristic );
-            else
+            } else {
                 sortedResultsBottom.add( characteristic );
+            }
         }
 
-        // Collections.sort( sortedResultsExact, compare );
-        // Collections.reverse( sortedResultsExact );
+        Collections.sort( sortedResultsExact, new CharacteristicComparator() );
+        Collections.sort( sortedResultsStartsWith, new CharacteristicComparator() );
+        Collections.sort( sortedResultsBottom, new CharacteristicComparator() );
 
-        Collection<Characteristic> sortedTerms = new ArrayList<Characteristic>( foundValues.size() );
+        List<Characteristic> sortedTerms = new ArrayList<Characteristic>( foundValues.size() );
         sortedTerms.addAll( sortedResultsExact );
         sortedTerms.addAll( sortedResultsStartsWith );
         sortedTerms.addAll( sortedResultsBottom );
 
         return sortedTerms;
+    }
+
+    private class CharacteristicComparator implements Comparator<Characteristic> {
+
+        /*
+         * (non-Javadoc)
+         * 
+         * @see java.util.Comparator#compare(java.lang.Object, java.lang.Object)
+         */
+        @Override
+        public int compare( Characteristic o1, Characteristic o2 ) {
+
+            if ( o1.getValue().length() == o2.getValue().length() ) {
+                if ( o1.getDescription().startsWith( USED ) ) {
+                    if ( o2.getDescription().startsWith( USED ) ) {
+                        return compareByUri( o1, o2 );
+                    } else {
+                        // o1 is used, o2 is not
+                        return -1;
+                    }
+
+                } else if ( o2.getDescription().startsWith( USED ) ) {
+                    // o2 is used and o1 is not.
+                    return -1;
+                } else {
+                    // neither is used.
+                    return compareByUri( o1, o2 );
+                }
+            }
+            return o1.getValue().length() < o2.getValue().length() ? -1 : 1;
+        }
+
+        private int compareByUri( Characteristic o1, Characteristic o2 ) {
+            // both are used. Break tie based on whether it has a URI
+            if ( o1 instanceof VocabCharacteristic && ( ( VocabCharacteristic ) o1 ).getValueUri() != null ) {
+                if ( !( o2 instanceof VocabCharacteristic ) || ( ( VocabCharacteristic ) o2 ).getValueUri() == null ) {
+                    return -1;
+                }
+                // both have URIs
+                return ( ( VocabCharacteristic ) o1 ).getValueUri().compareTo(
+                        ( ( VocabCharacteristic ) o2 ).getValueUri() );
+            } else if ( o2 instanceof VocabCharacteristic && ( ( VocabCharacteristic ) o2 ).getValueUri() != null ) {
+                // we know o1 does not have a uri.
+                return 1;
+            }
+            // both not having uris
+            return o1.getValue().toLowerCase().compareTo( o2.getValue().toLowerCase() );
+        }
     }
 
 }
