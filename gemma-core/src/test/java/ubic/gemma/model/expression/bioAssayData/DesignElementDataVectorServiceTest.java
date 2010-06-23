@@ -43,6 +43,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
+import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.testing.BaseSpringContextTest;
@@ -69,6 +70,9 @@ public class DesignElementDataVectorServiceTest extends BaseSpringContextTest {
 
     @Autowired
     CompositeSequenceService compositeSequenceService;
+
+    @Autowired
+    GeneService geneService;
 
     @Before
     public void setup() throws Exception {
@@ -132,7 +136,7 @@ public class DesignElementDataVectorServiceTest extends BaseSpringContextTest {
         Collection<Gene> genes = new HashSet<Gene>();
         for ( CompositeSequence cs : ad.getCompositeSequences() ) {
             if ( i >= 10 ) break;
-            Gene g = this.getTestPeristentGene();
+            Gene g = geneService.thaw( this.getTestPeristentGene() );
             BlatAssociation blata = BlatAssociation.Factory.newInstance();
             blata.setGeneProduct( g.getProducts().iterator().next() );
             BlatResult br = BlatResult.Factory.newInstance();
