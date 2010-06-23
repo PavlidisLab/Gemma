@@ -1071,6 +1071,7 @@ public class GeneCoexpressionService {
      * @return Map of gene ids and their protein protein interactions
      */
     protected Map<Long, Gene2GeneProteinAssociation> getGene2GeneProteinAssociationForQueryGene( Gene gene ) {
+
         Map<Long, Gene2GeneProteinAssociation> stringUrlsMappedByGeneID = new HashMap<Long, Gene2GeneProteinAssociation>();
         Collection<Gene2GeneProteinAssociation> proteinInteractions = this.gene2GeneProteinAssociationService
                 .findProteinInteractionsForGene( gene );
@@ -1078,8 +1079,12 @@ public class GeneCoexpressionService {
         if ( proteinInteractions != null && !proteinInteractions.isEmpty() ) {
 
             for ( Gene2GeneProteinAssociation proteinInteraction : proteinInteractions ) {
-                log.debug( "found interaction for gene " + proteinInteraction.getFirstGene() + " and "
-                        + proteinInteraction.getSecondGene() );
+                gene2GeneProteinAssociationService.thaw( proteinInteraction );
+                if ( log.isDebugEnabled() ) {
+                    log.debug( "found interaction for gene " + proteinInteraction.getFirstGene() + " and "
+                            + proteinInteraction.getSecondGene() );
+                }
+
                 if ( proteinInteraction.getDatabaseEntry() != null
                         && proteinInteraction.getSecondGene().getId() != null
                         && proteinInteraction.getFirstGene().getId() != null ) {
