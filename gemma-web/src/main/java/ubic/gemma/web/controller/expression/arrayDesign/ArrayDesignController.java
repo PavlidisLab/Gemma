@@ -68,11 +68,13 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.search.SearchResult;
 import ubic.gemma.search.SearchService;
 import ubic.gemma.search.SearchSettings;
 import ubic.gemma.security.SecurityService;
 import ubic.gemma.security.audit.AuditableUtil;
+import ubic.gemma.util.EntityUtils;
 import ubic.gemma.web.remote.EntityDelegator;
 import ubic.gemma.web.taglib.arrayDesign.ArrayDesignHtmlUtil;
 import ubic.gemma.web.taglib.displaytag.ArrayDesignValueObjectComparator;
@@ -162,6 +164,9 @@ public class ArrayDesignController extends AbstractTaskService {
 
     @Autowired
     private SearchService searchService;
+
+    @Autowired
+    private TaxonService taxonService;
 
     public String addAlternateName( Long arrayDesignId, String alternateName ) {
         ArrayDesign ad = arrayDesignService.load( arrayDesignId );
@@ -445,13 +450,6 @@ public class ArrayDesignController extends AbstractTaskService {
     }
 
     /**
-     * @return the searchService
-     */
-    public SearchService getSearchService() {
-        return searchService;
-    }
-
-    /**
      * AJAX
      * 
      * @return the taskid
@@ -472,48 +470,6 @@ public class ArrayDesignController extends AbstractTaskService {
         super.startTask( job );
 
         return job.getTaskId();
-    }
-
-    /**
-     * @param arrayDesignMapResultService the arrayDesignMapResultService to set
-     */
-    public void setArrayDesignMapResultService( ArrayDesignMapResultService arrayDesignMapResultService ) {
-        this.arrayDesignMapResultService = arrayDesignMapResultService;
-    }
-
-    /**
-     * @param arrayDesignReportService the arrayDesignReportService to set
-     */
-    public void setArrayDesignReportService( ArrayDesignReportServiceImpl arrayDesignReportService ) {
-        this.arrayDesignReportService = arrayDesignReportService;
-    }
-
-    /**
-     * @param arrayDesignService The arrayDesignService to set.
-     */
-    public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
-        this.arrayDesignService = arrayDesignService;
-    }
-
-    /**
-     * @param ausitTrailService the auditTrailService to set
-     */
-    public void setAuditTrailService( AuditTrailService auditTrailService ) {
-        this.auditTrailService = auditTrailService;
-    }
-
-    /**
-     * @param compositeSequenceService the compositeSequenceService to set
-     */
-    public void setCompositeSequenceService( CompositeSequenceService compositeSequenceService ) {
-        this.compositeSequenceService = compositeSequenceService;
-    }
-
-    /**
-     * @param searchService the searchService to set
-     */
-    public void setSearchService( SearchService searchService ) {
-        this.searchService = searchService;
     }
 
     /**
@@ -563,7 +519,7 @@ public class ArrayDesignController extends AbstractTaskService {
         arrayDesignReportService.fillEventInformation( valueObjects );
         arrayDesignReportService.fillInSubsumptionInfo( valueObjects );
 
-        int numArrayDesigns = valueObjects.size() ;
+        int numArrayDesigns = valueObjects.size();
         ModelAndView mav = new ModelAndView( "arrayDesigns" );
         mav.addObject( "showMergees", showMergees );
         mav.addObject( "showOrphans", showOrphans );
@@ -604,8 +560,10 @@ public class ArrayDesignController extends AbstractTaskService {
         if ( arrayDesign == null ) {
             return new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html" ) ).addObject(
                     "message", "Unable to load Array Design with id: " + idStr + ". Displaying all Arrays" );
-
         }
+
+        arrayDesign = arrayDesignService.thawLite( arrayDesign );
+
         long id = arrayDesign.getId();
 
         Integer numCompositeSequences = arrayDesignService.getCompositeSequenceCount( arrayDesign );
@@ -637,10 +595,12 @@ public class ArrayDesignController extends AbstractTaskService {
             mav.addObject( "validatedEventDescription", StringEscapeUtils.escapeHtml( validatedEvent.toString() ) );
         }
 
-        Collection<ArrayDesign> subsumees = arrayDesign.getSubsumedArrayDesigns();
+        Collection<ArrayDesign> subsumees = arrayDesignService.thawLite( arrayDesign.getSubsumedArrayDesigns() );
+
         ArrayDesign subsumer = arrayDesign.getSubsumingArrayDesign();
 
-        Collection<ArrayDesign> mergees = arrayDesign.getMergees();
+        Collection<ArrayDesign> mergees = arrayDesignService.thawLite( arrayDesign.getMergees() );
+
         ArrayDesign merger = arrayDesign.getMergedInto();
 
         getAnnotationFileLinks( arrayDesign, mav );
@@ -750,14 +710,9 @@ public class ArrayDesignController extends AbstractTaskService {
     }
 
     private String formatExpressionExperimentIds( Collection<ExpressionExperiment> ee ) {
-        String[] eeIdList = new String[ee.size()];
-        int i = 0;
-        for ( ExpressionExperiment e : ee ) {
-            eeIdList[i] = e.getId().toString();
-            i++;
-        }
-        String eeIds = StringUtils.join( eeIdList, "," );
-        return eeIds;
+        Collection<Long> eeIds = EntityUtils.getIds( ee );
+        String eeIdString = StringUtils.join( eeIds, "," );
+        return eeIdString;
     }
 
     /**
@@ -768,13 +723,19 @@ public class ArrayDesignController extends AbstractTaskService {
      * @return Alpabetically sorted semicolon separated list of scientific names of taxa used on array/platform
      */
     private String formatTaxa( Taxon primaryTaxon, Collection<Taxon> taxonSet ) {
+
+        taxonService.thaw( primaryTaxon );
+
         String taxonListString = primaryTaxon.getScientificName();
         int i = 0;
         if ( !taxonSet.isEmpty() ) {
             Collection<String> taxonList = new TreeSet<String>();
             for ( Taxon taxon : taxonSet ) {
                 if ( taxon.equals( primaryTaxon ) ) continue;
+
+                taxonService.thaw( taxon );
                 taxonList.add( taxon.getScientificName() );
+
                 i++;
             }
 

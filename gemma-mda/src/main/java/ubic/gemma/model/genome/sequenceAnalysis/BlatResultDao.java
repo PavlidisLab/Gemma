@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.genome.sequenceAnalysis;
 
+import java.util.Collection;
+
 import ubic.gemma.persistence.BaseDao;
 
 /**
@@ -27,11 +29,14 @@ import ubic.gemma.persistence.BaseDao;
  */
 public interface BlatResultDao extends BaseDao<BlatResult> {
 
+    public BlatResult thaw( BlatResult blatResult );
+
+    public Collection<BlatResult> thaw( Collection<BlatResult> blatResults );
+
     /**
      * 
      */
-    public ubic.gemma.model.genome.sequenceAnalysis.BlatResult find(
-            ubic.gemma.model.genome.sequenceAnalysis.BlatResult blatResult );
+    public BlatResult find( BlatResult blatResult );
 
     /**
      * Find BLAT results for the given sequence

@@ -70,4 +70,15 @@ public interface BioMaterialDao extends BaseDao<BioMaterial> {
      */
     public void removeFactor( Collection<BioMaterial> bioMaterials, ExperimentalFactor experimentalFactor );
 
+    /**
+     * @param bioMaterial
+     */
+    public void thaw( BioMaterial bioMaterial );
+
+    /**
+     * @param bioMaterials
+     * @return
+     */
+    public Collection<BioMaterial> thaw( Collection<BioMaterial> bioMaterials );
+
 }

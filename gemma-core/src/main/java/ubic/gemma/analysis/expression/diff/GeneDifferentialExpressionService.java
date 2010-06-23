@@ -26,6 +26,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.util.AnchorTagUtil;
 import cern.colt.list.DoubleArrayList;
 
@@ -372,7 +373,7 @@ public class GeneDifferentialExpressionService {
          */
         double fisherPval = MetaAnalysis.fisherCombinePvalues( pvaluesToCombine );
         mavo.setFisherPValue( fisherPval );
-        mavo.setGene( g );
+        mavo.setGene( new GeneValueObject( g ) );
         mavo.setActiveExperiments( activeExperiments );
         mavo.setProbeResults( devos );
         mavo.setNumMetThreshold( eesThatMetThreshold.size() );
@@ -398,7 +399,7 @@ public class GeneDifferentialExpressionService {
             ExpressionExperimentValueObject eevo, Collection<ExperimentalFactor> efs ) {
 
         DifferentialExpressionValueObject devo = new DifferentialExpressionValueObject();
-        devo.setGene( gene );
+        devo.setGene( new GeneValueObject( gene ) );
         devo.setExpressionExperiment( eevo );
         CompositeSequence probe = r.getProbe();
         devo.setProbe( probe.getName() );

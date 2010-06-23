@@ -157,7 +157,7 @@ public class GeneCoexpressionEndpoint extends AbstractGemmaEndpoint {
                 String msg = "Input genes do not match input taxon.";
                 return buildBadResponse( document, msg );
             }
-            geneService.thawLite( geneCol );
+            geneCol = geneService.thawLite( geneCol );
 
             int stringency = Integer.parseInt( string );
 
@@ -175,7 +175,7 @@ public class GeneCoexpressionEndpoint extends AbstractGemmaEndpoint {
             final String FOUND_GENE_NAME = "found_gene";
             final String FOUND_GENE_ID = "found_id";
             final String SUPPORT_NAME = "support";
-            final String SIGN_NAME = "sign"; 
+            final String SIGN_NAME = "sign";
 
             Element responseWrapper = document.createElementNS( NAMESPACE_URI, LOCAL_NAME );
             Element responseElement = document.createElementNS( NAMESPACE_URI, LOCAL_NAME + RESPONSE );

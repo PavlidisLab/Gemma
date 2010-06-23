@@ -22,7 +22,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneProductType;
 import ubic.gemma.model.genome.gene.GeneProductValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
-import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
+import ubic.gemma.model.genome.sequenceAnalysis.BlatResultValueObject;
 import ubic.gemma.util.ConfigUtils;
 
 /**
@@ -41,7 +41,7 @@ public class LinkUtils {
      * @param blatResult
      * @return URL to the genome browser for the given blat result, or null if the URL cannot be formed correctly.
      */
-    public static String getGenomeBrowserLink( BlatResult blatResult ) {
+    public static String getGenomeBrowserLink( BlatResultValueObject blatResult ) {
 
         if ( ( blatResult.getQuerySequence() == null ) || ( blatResult.getQuerySequence().getTaxon() == null ) )
             return null;

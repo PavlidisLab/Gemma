@@ -123,6 +123,7 @@ public class BioSequenceServiceImpl extends ubic.gemma.model.genome.biosequence.
     protected Collection handleGetGenesByName( String search ) throws Exception {
         return this.getBioSequenceDao().getGenesByName( search );
     }
+  
 
     /*
      * (non-Javadoc)
@@ -158,8 +159,8 @@ public class BioSequenceServiceImpl extends ubic.gemma.model.genome.biosequence.
      * )
      */
     @Override
-    protected void handleThaw( BioSequence bioSequence ) throws Exception {
-        this.getBioSequenceDao().thaw( bioSequence );
+    protected BioSequence handleThaw( BioSequence bioSequence ) throws Exception {
+      return  this.getBioSequenceDao().thaw( bioSequence );
     }
 
     /*

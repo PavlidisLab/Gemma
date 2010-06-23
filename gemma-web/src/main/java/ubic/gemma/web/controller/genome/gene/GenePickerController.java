@@ -42,6 +42,7 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.gene.GeneService;
+import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.search.SearchResult;
 import ubic.gemma.search.SearchService;
 import ubic.gemma.search.SearchSettings;
@@ -86,11 +87,11 @@ public class GenePickerController {
      * @param collection of <long> geneIds
      * @return collection of gene entity objects
      */
-    public Collection<Gene> getGenes( Collection<Long> geneIds ) {
-        if ( geneIds == null || geneIds.size() == 0 ) {
-            return new HashSet<Gene>();
+    public Collection<GeneValueObject> getGenes( Collection<Long> geneIds ) {
+        if ( geneIds == null || geneIds.isEmpty() ) {
+            return new HashSet<GeneValueObject>();
         }
-        return geneService.loadMultiple( geneIds );
+        return GeneValueObject.convert2ValueObjects( geneService.thawLite( geneService.loadMultiple( geneIds ) ) );
     }
 
     /**
@@ -101,6 +102,7 @@ public class GenePickerController {
     public Collection<Taxon> getTaxa() {
         SortedSet<Taxon> taxa = new TreeSet<Taxon>( TAXON_COMPARATOR );
         for ( Taxon taxon : taxonService.loadAll() ) {
+            taxonService.thaw( taxon );
             taxa.add( taxon );
         }
         return taxa;
@@ -115,6 +117,7 @@ public class GenePickerController {
         SortedSet<Taxon> taxaSpecies = new TreeSet<Taxon>( TAXON_COMPARATOR );
         for ( Taxon taxon : taxonService.loadAll() ) {
             if ( taxon.getIsSpecies() ) {
+                taxonService.thaw( taxon );
                 taxaSpecies.add( taxon );
             }
         }
@@ -130,6 +133,7 @@ public class GenePickerController {
         SortedSet<Taxon> taxaWithGenes = new TreeSet<Taxon>( TAXON_COMPARATOR );
         for ( Taxon taxon : taxonService.loadAll() ) {
             if ( taxon.getIsGenesUsable() ) {
+                taxonService.thaw( taxon );
                 taxaWithGenes.add( taxon );
             }
         }
@@ -148,6 +152,7 @@ public class GenePickerController {
 
         for ( Taxon taxon : taxonService.loadAll() ) {
             if ( perTaxonCount.containsKey( taxon ) && perTaxonCount.get( taxon ) > 0 ) {
+                taxonService.thaw( taxon );
                 taxaWithDatasets.add( taxon );
             }
         }
@@ -174,7 +179,7 @@ public class GenePickerController {
      * @param taxonId
      * @return Collection of Gene entity objects
      */
-    public Collection<Gene> searchGenes( String query, Long taxonId ) {
+    public Collection<GeneValueObject> searchGenes( String query, Long taxonId ) {
 
         Taxon taxon = null;
         if ( taxonId != null ) {
@@ -186,13 +191,13 @@ public class GenePickerController {
         Collection<Gene> genes = new HashSet<Gene>();
         if ( geneSearchResults == null || geneSearchResults.isEmpty() ) {
             log.info( "No Genes for search: " + query + " taxon=" + taxonId );
-            return genes;
+            return new HashSet<GeneValueObject>();
         }
         for ( SearchResult sr : geneSearchResults ) {
             genes.add( ( Gene ) sr.getResultObject() );
         }
         log.info( "Gene search: " + query + " taxon=" + taxonId + ", " + genes.size() + " found" );
-        return genes;
+        return GeneValueObject.convert2ValueObjects( geneService.thawLite( genes ) );
     }
 
     /**
@@ -203,7 +208,7 @@ public class GenePickerController {
      * @return colleciton of gene entity objects
      * @throws IOException
      */
-    public Collection<Gene> searchMultipleGenes( String query, Long taxonId ) throws IOException {
+    public Collection<GeneValueObject> searchMultipleGenes( String query, Long taxonId ) throws IOException {
         Taxon taxon = taxonService.load( taxonId );
 
         BufferedReader reader = new BufferedReader( new StringReader( query ) );
@@ -263,28 +268,7 @@ public class GenePickerController {
             }
 
         }
-        return genes;
-    }
-
-    /**
-     * @param geneService The geneService to set.
-     */
-    public void setGeneService( GeneService geneService ) {
-        this.geneService = geneService;
-    }
-
-    /**
-     * @param searchService The searchService to set.
-     */
-    public void setSearchService( SearchService searchService ) {
-        this.searchService = searchService;
-    }
-
-    /**
-     * @param taxonService The taxonService to set.
-     */
-    public void setTaxonService( TaxonService taxonService ) {
-        this.taxonService = taxonService;
+        return GeneValueObject.convert2ValueObjects( geneService.thawLite( genes ) );
     }
 
 }

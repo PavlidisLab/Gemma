@@ -29,7 +29,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang.StringUtils;
-import org.hibernate.proxy.HibernateProxy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.WebDataBinder;
@@ -38,23 +37,22 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 
 import ubic.gemma.analysis.sequence.ArrayDesignMapResultService;
-import ubic.gemma.analysis.sequence.GeneMappingSummary;
 import ubic.gemma.analysis.sequence.CompositeSequenceMapValueObject;
+import ubic.gemma.analysis.sequence.GeneMappingSummary;
 import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
-import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.biosequence.BioSequence;
+import ubic.gemma.model.genome.biosequence.BioSequenceService;
 import ubic.gemma.model.genome.biosequence.SequenceType;
-import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.gene.GeneProductValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
-import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResultService;
+import ubic.gemma.model.genome.sequenceAnalysis.BlatResultValueObject;
 import ubic.gemma.search.SearchResult;
 import ubic.gemma.search.SearchService;
 import ubic.gemma.search.SearchSettings;
@@ -73,14 +71,21 @@ public class CompositeSequenceController extends BaseController {
 
     @Autowired
     private ArrayDesignMapResultService arrayDesignMapResultService = null;
+
     @Autowired
     private ArrayDesignService arrayDesignService = null;
+
     @Autowired
     private BlatResultService blatResultService = null;
+
     @Autowired
     private CompositeSequenceService compositeSequenceService = null;
+
     @Autowired
     private SearchService searchService;
+
+    @Autowired
+    private BioSequenceService bioSequenceService;
 
     /**
      * Search for probes.
@@ -213,13 +218,17 @@ public class CompositeSequenceController extends BaseController {
      * @param cs
      * @param blatResults
      */
-    private void addBlatResultsLackingGenes( CompositeSequence cs, Map<BlatResult, GeneMappingSummary> blatResults ) {
+    private void addBlatResultsLackingGenes( CompositeSequence cs,
+            Map<BlatResultValueObject, GeneMappingSummary> blatResults ) {
         /*
          * Pick up blat results that didn't map to genes.
          */
-        Collection<BlatResult> allBlatResultsForCs = blatResultService.findByBioSequence( cs
-                .getBiologicalCharacteristic() );
-        for ( BlatResult blatResult : allBlatResultsForCs ) {
+        BioSequence biologicalCharacteristic = bioSequenceService.thaw( cs.getBiologicalCharacteristic() );
+
+        Collection<BlatResultValueObject> allBlatResultsForCs = BlatResultValueObject
+                .convert2ValueObjects( blatResultService.thaw( blatResultService
+                        .findByBioSequence( biologicalCharacteristic ) ) );
+        for ( BlatResultValueObject blatResult : allBlatResultsForCs ) {
             if ( !blatResults.containsKey( blatResult ) ) {
                 GeneMappingSummary summary = new GeneMappingSummary();
                 summary.setBlatResult( blatResult );
@@ -234,31 +243,33 @@ public class CompositeSequenceController extends BaseController {
      * @return
      */
     private Collection<GeneMappingSummary> getGeneMappingSummary( CompositeSequence cs ) {
-        BioSequence bs = cs.getBiologicalCharacteristic();
+        BioSequence biologicalCharacteristic = cs.getBiologicalCharacteristic();
 
-        Map<BlatResult, GeneMappingSummary> results = new HashMap<BlatResult, GeneMappingSummary>();
-        if ( bs == null || bs.getBioSequence2GeneProduct() == null ) {
+        biologicalCharacteristic = bioSequenceService.thaw( biologicalCharacteristic );
+
+        Map<BlatResultValueObject, GeneMappingSummary> results = new HashMap<BlatResultValueObject, GeneMappingSummary>();
+        if ( biologicalCharacteristic == null || biologicalCharacteristic.getBioSequence2GeneProduct() == null ) {
             return results.values();
         }
 
-        Collection<BioSequence2GeneProduct> bs2gps = cs.getBiologicalCharacteristic().getBioSequence2GeneProduct();
+        Collection<BioSequence2GeneProduct> bs2gps = biologicalCharacteristic.getBioSequence2GeneProduct();
 
         for ( BioSequence2GeneProduct bs2gp : bs2gps ) {
             GeneProductValueObject geneProduct = new GeneProductValueObject( bs2gp.getGeneProduct() );
 
             GeneValueObject gene = new GeneValueObject( bs2gp.getGeneProduct().getGene() );
-            BlatResult blatResult = null;
+            BlatResultValueObject blatResult = null;
 
             if ( ( bs2gp instanceof BlatAssociation ) ) {
                 BlatAssociation blatAssociation = ( BlatAssociation ) bs2gp;
-                blatResult = blatAssociation.getBlatResult();
+                blatResult = new BlatResultValueObject( blatResultService.thaw( blatAssociation.getBlatResult() ) );
             } else if ( bs2gp instanceof AnnotationAssociation ) {
                 /*
                  * Make a dummy blat result
                  */
-                blatResult = BlatResult.Factory.newInstance();
-                blatResult.setQuerySequence( bs );
-                blatResult.setId( bs.getId() );
+                blatResult = new BlatResultValueObject();
+                blatResult.setQuerySequence( biologicalCharacteristic );
+                blatResult.setId( biologicalCharacteristic.getId() );
             }
 
             if ( blatResult == null ) {
@@ -283,8 +294,8 @@ public class CompositeSequenceController extends BaseController {
             // add a 'dummy' that at least contains the information about the CS. This is a bit of a hack...
             GeneMappingSummary summary = new GeneMappingSummary();
             summary.setCompositeSequence( cs );
-            BlatResult newInstance = BlatResult.Factory.newInstance();
-            newInstance.setQuerySequence( cs.getBiologicalCharacteristic() );
+            BlatResultValueObject newInstance = new BlatResultValueObject();
+            newInstance.setQuerySequence( biologicalCharacteristic );
             newInstance.setId( -1L );
             summary.setBlatResult( newInstance );
             results.put( newInstance, summary );

@@ -59,6 +59,13 @@ public class SystemMonitorController {
     public void flushAllCaches() {
         this.cacheMonitor.flushAllCaches();
     }
+    
+    /**
+     * 
+     */
+    public void resetHibernateStatus() {
+        this.hibernateMonitor.resetStats();
+    }
 
     /**
      * Flush (clear) a cache.

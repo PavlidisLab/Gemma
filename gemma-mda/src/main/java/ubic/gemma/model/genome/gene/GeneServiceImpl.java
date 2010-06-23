@@ -76,7 +76,7 @@ public class GeneServiceImpl extends GeneServiceBase {
     public PhysicalLocation getMaxPhysicalLength( Gene gene ) {
         if ( gene == null ) return null;
 
-        this.thaw( gene );
+        gene = this.thaw( gene );
 
         Collection<GeneProduct> gpCollection = gene.getProducts();
 
@@ -156,12 +156,12 @@ public class GeneServiceImpl extends GeneServiceBase {
     }
 
     @Override
-    public void handleThawLite( Collection<Gene> genes ) {
-        this.getGeneDao().thawLite( genes );
+    public Collection<Gene> handleThawLite( Collection<Gene> genes ) {
+        return this.getGeneDao().thawLite( genes );
     }
 
-    public void thawLite( Gene gene ) {
-        this.getGeneDao().thawLite( gene );
+    public Gene thawLite( Gene gene ) {
+        return this.getGeneDao().thawLite( gene );
     }
 
     @Override
@@ -381,8 +381,8 @@ public class GeneServiceImpl extends GeneServiceBase {
     }
 
     @Override
-    protected void handleThaw( Gene gene ) throws Exception {
-        this.getGeneDao().thaw( gene );
+    protected Gene handleThaw( Gene gene ) throws Exception {
+        return this.getGeneDao().thaw( gene );
     }
 
     /**

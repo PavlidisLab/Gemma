@@ -41,6 +41,8 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
 
     private Integer arrayDesignCount;
 
+    private Date autoTagDate;
+
     private Integer bioAssayCount;
 
     private Integer bioMaterialCount = null;
@@ -135,6 +137,8 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
 
     private AuditEventValueObject validatedFlag;
 
+    private AuditEventValueObject validatedAnnotations;
+
     public ExpressionExperimentValueObject() {
     }
 
@@ -162,14 +166,14 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
                         .getProcessedExpressionVectorCount(), otherBean.getDateLastUpdated(),
                 otherBean.getDateCached(), otherBean.getHasProbeSpecificForQueryGene(), otherBean.getMinPvalue(),
                 otherBean.getHasEitherIntensity(), otherBean.getDiffExpressedProbes(), otherBean
-                        .getExperimentalDesign() );
+                        .getExperimentalDesign(), otherBean.getAutoTagDate(), otherBean.getValidatedAnnotations() );
     }
 
     public ExpressionExperimentValueObject( Long id, String name, String externalDatabase, String externalUri,
-            String source, String accession, Integer bioAssayCount, String taxon, Long taxonId, Integer bioMaterialCount,
-            Integer designElementDataVectorCount, Integer arrayDesignCount, String shortName, String linkAnalysisEventType,
-            Date dateArrayDesignLastUpdated, AuditEventValueObject validatedFlag, String technologyType,
-            boolean hasBothIntensities, Integer numAnnotations, Integer numPopulatedFactors,
+            String source, String accession, Integer bioAssayCount, String taxon, Long taxonId,
+            Integer bioMaterialCount, Integer designElementDataVectorCount, Integer arrayDesignCount, String shortName,
+            String linkAnalysisEventType, Date dateArrayDesignLastUpdated, AuditEventValueObject validatedFlag,
+            String technologyType, boolean hasBothIntensities, Integer numAnnotations, Integer numPopulatedFactors,
             Date dateDifferentialAnalysis, String differentialAnalysisEventType,
             Collection<AuditEventValueObject> sampleRemovedFlags, boolean isPublic,
             boolean currentUserHasWritePermission, String clazz, Long sourceExperiment,
@@ -177,9 +181,10 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
             Date dateCreated, AuditEventValueObject troubleFlag, Integer coexpressionLinkCount,
             String processedDataVectorComputationEventType, String missingValueAnalysisEventType,
             Date dateLinkAnalysis, Integer rawCoexpressionLinkCount, Date dateProcessedDataVectorComputation,
-            Date dateMissingValueAnalysis, Integer processedExpressionVectorCount, Date dateLastUpdated, Date dateCached,
-            Boolean hasProbeSpecificForQueryGene, Double minPvalue, Boolean hasEitherIntensity,
-            Collection<DifferentialExpressionSummaryValueObject> probeIds, Long experimentalDesign ) {
+            Date dateMissingValueAnalysis, Integer processedExpressionVectorCount, Date dateLastUpdated,
+            Date dateCached, Boolean hasProbeSpecificForQueryGene, Double minPvalue, Boolean hasEitherIntensity,
+            Collection<DifferentialExpressionSummaryValueObject> probeIds, Long experimentalDesign, Date autoTagDate,
+            AuditEventValueObject validatedAnnotations ) {
         this.id = id;
         this.name = name;
         this.externalDatabase = externalDatabase;
@@ -228,6 +233,8 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
         this.hasEitherIntensity = hasEitherIntensity;
         this.diffExpressedProbes = probeIds;
         this.experimentalDesign = experimentalDesign;
+        this.validatedAnnotations = validatedAnnotations;
+        this.autoTagDate = autoTagDate;
     }
 
     /**
@@ -307,6 +314,13 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
      */
     public Integer getArrayDesignCount() {
         return this.arrayDesignCount;
+    }
+
+    /**
+     * @return the autoTagDate
+     */
+    public Date getAutoTagDate() {
+        return autoTagDate;
     }
 
     /**
@@ -674,6 +688,13 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
         this.arrayDesignCount = arrayDesignCount;
     }
 
+    /**
+     * @param date
+     */
+    public void setAutoTagDate( Date date ) {
+        this.autoTagDate = date;
+    }
+
     public void setBioAssayCount( Integer bioAssayCount ) {
         this.bioAssayCount = bioAssayCount;
     }
@@ -874,6 +895,20 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
 
     public void setValidatedFlag( AuditEventValueObject validatedFlag ) {
         this.validatedFlag = validatedFlag;
+    }
+
+    /**
+     * @param validatedAnnotations the validatedAnnotations to set
+     */
+    public void setValidatedAnnotations( AuditEventValueObject validatedAnnotations ) {
+        this.validatedAnnotations = validatedAnnotations;
+    }
+
+    /**
+     * @return the validatedAnnotations
+     */
+    public AuditEventValueObject getValidatedAnnotations() {
+        return validatedAnnotations;
     }
 
 }

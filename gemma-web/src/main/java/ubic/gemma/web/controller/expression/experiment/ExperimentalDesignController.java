@@ -315,7 +315,7 @@ public class ExperimentalDesignController extends BaseController {
     public Collection<BioMaterialValueObject> getBioMaterials( EntityDelegator e ) {
         if ( e == null || e.getId() == null ) return null;
         ExpressionExperiment ee = expressionExperimentService.load( e.getId() );
-
+        expressionExperimentService.thawLite( ee );
         Collection<BioMaterialValueObject> result = new HashSet<BioMaterialValueObject>();
         for ( BioAssay assay : ee.getBioAssays() ) {
             for ( BioMaterial sample : assay.getSamplesUsed() ) {
@@ -504,6 +504,8 @@ public class ExperimentalDesignController extends BaseController {
         }
 
         request.setAttribute( "id", designId );
+
+        expressionExperimentService.thawLite( ee );
 
         ModelAndView mnv = new ModelAndView( "experimentalDesign.detail" );
         mnv.addObject( "hasPopulatedDesign", experimentalDesign.getExperimentalFactors().size() > 0 );

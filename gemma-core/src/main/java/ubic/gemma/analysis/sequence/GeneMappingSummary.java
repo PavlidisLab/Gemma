@@ -24,11 +24,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.genome.Gene;
-import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.gene.GeneProductValueObject;
-import ubic.gemma.model.genome.gene.GeneValueObject;
-import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
+import ubic.gemma.model.genome.gene.GeneValueObject; 
+import ubic.gemma.model.genome.sequenceAnalysis.BlatResultValueObject;
 
 /**
  * This is a convenience value object to hold a BlatResult and its associated gene products and genes.
@@ -41,7 +39,7 @@ public class GeneMappingSummary implements Serializable {
 
     private static final long serialVersionUID = 8899320580201273360L;
 
-    private BlatResult blatResult;
+    private BlatResultValueObject blatResult;
 
     private Map<GeneProductValueObject, GeneValueObject> geneProductMap;
 
@@ -70,21 +68,21 @@ public class GeneMappingSummary implements Serializable {
     /**
      * @return the blatResult
      */
-    public BlatResult getBlatResult() {
+    public BlatResultValueObject getBlatResult() {
         return blatResult;
     }
 
     /**
-     * @param blatResult the blatResult to set
+     * @param blatResult2 the blatResult to set
      */
-    public void setBlatResult( BlatResult blatResult ) {
-        this.blatResult = blatResult;
-        if ( blatResult.getMatches() != null ) {
-            this.identity = blatResult.identity();
-            this.score = blatResult.score();
+    public void setBlatResult( BlatResultValueObject blatResult2 ) {
+        this.blatResult = blatResult2;
+        if ( blatResult2.getMatches() != null ) {
+            this.identity = blatResult2.getIdentity();
+            this.score = blatResult2.getScore();
         }
 
-        if ( blatResult.getId() != null ) this.blatResultId = blatResult.getId().toString();
+        if ( blatResult2.getId() != null ) this.blatResultId = blatResult2.getId().toString();
     }
 
     /**

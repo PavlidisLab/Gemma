@@ -30,7 +30,7 @@ import java.util.List;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
- 
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
@@ -168,9 +168,8 @@ public class DEDVController {
         Gene coexpressedGene = geneService.load( coexpressedGeneId );
 
         List<Gene> genes = new ArrayList<Gene>();
-        genes.add( queryGene );
-        genes.add( coexpressedGene );
-        geneService.thawLite( genes );
+        genes.add( geneService.thawLite( queryGene ) );
+        genes.add( geneService.thawLite( coexpressedGene ) );
 
         if ( genes.isEmpty() ) return null;
 

@@ -24,56 +24,58 @@ package ubic.gemma.analysis.expression.coexpression;
  */
 public class CoexpressionSummaryValueObject {
 
-    int datasetsAvailable;
-    int datasetsTested;
-    int datasetsWithSpecificProbes;
+    private int datasetsAvailable;
+    private int datasetsTested;
+    private int datasetsWithSpecificProbes;
 
-    public int getDatasetsWithSpecificProbes() {
-        return datasetsWithSpecificProbes;
-    }
+    private int linksFound;
 
-    public void setDatasetsWithSpecificProbes( int datasetsWithSpecificProbes ) {
-        this.datasetsWithSpecificProbes = datasetsWithSpecificProbes;
-    }
+    private int linksMetNegativeStringency;
 
-    int linksFound;
-    int linksMetPositiveStringency;
-    int linksMetNegativeStringency;
+    private int linksMetPositiveStringency;
 
     public int getDatasetsAvailable() {
         return datasetsAvailable;
-    }
-
-    public void setDatasetsAvailable( int datasetsAvailable ) {
-        this.datasetsAvailable = datasetsAvailable;
     }
 
     public int getDatasetsTested() {
         return datasetsTested;
     }
 
-    public void setDatasetsTested( int datasetsTested ) {
-        this.datasetsTested = datasetsTested;
+    public int getDatasetsWithSpecificProbes() {
+        return datasetsWithSpecificProbes;
     }
 
     public int getLinksFound() {
         return linksFound;
     }
 
-    public void setLinksFound( int linksFound ) {
-        this.linksFound = linksFound;
-    }
-
     public int getLinksMetNegativeStringency() {
         return linksMetNegativeStringency;
     }
 
-    public void setLinksMetNegativeStringency( int linksMetNegativeStringency ) {
-        this.linksMetNegativeStringency = linksMetNegativeStringency;
-    }
-
     public int getLinksMetPositiveStringency() {
         return linksMetPositiveStringency;
+    }
+
+    public void setDatasetsAvailable( int datasetsAvailable ) {
+        this.datasetsAvailable = datasetsAvailable;
+    }
+
+    public void setDatasetsTested( int datasetsTested ) {
+        this.datasetsTested = datasetsTested;
+    }
+
+    public void setDatasetsWithSpecificProbes( int datasetsWithSpecificProbes ) {
+        this.datasetsWithSpecificProbes = datasetsWithSpecificProbes;
+    }
+
+    public void setLinksFound( int linksFound ) {
+        this.linksFound = linksFound;
+    }
+
+    public void setLinksMetNegativeStringency( int linksMetNegativeStringency ) {
+        this.linksMetNegativeStringency = linksMetNegativeStringency;
     }
 
     public void setLinksMetPositiveStringency( int linksMetPositiveStringency ) {

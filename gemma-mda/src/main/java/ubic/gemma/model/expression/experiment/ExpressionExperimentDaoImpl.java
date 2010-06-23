@@ -237,7 +237,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
             j++;
         }
 
-        assert result.size() <= Math.abs( limit ) : "Expected " + Math.abs( limit ) + ", got " + result.size(); 
+        assert result.size() <= Math.abs( limit ) : "Expected " + Math.abs( limit ) + ", got " + result.size();
 
         return result;
 
@@ -735,12 +735,15 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
     @SuppressWarnings("unchecked")
     @Override
     protected Collection<ExpressionExperiment> handleFindByFactorValues( Collection fvs ) {
-        Collection<ExperimentalDesign> eds = new HashSet<ExperimentalDesign>();
-        for ( FactorValue fv : ( Collection<FactorValue> ) fvs ) {
-            eds.add( fv.getExperimentalFactor().getExperimentalDesign() );
-        }
 
-        if ( eds.size() == 0 ) {
+        if ( fvs.isEmpty() ) return new HashSet<ExpressionExperiment>();
+
+        // thaw the factor values.
+        Collection<ExperimentalDesign> eds = this.getHibernateTemplate().findByNamedParam(
+                "select ed from FactorValueImpl f join f.experimentalFactor ef "
+                        + " join ef.experimentalDesign ed where f.id in (:ids)", "ids", EntityUtils.getIds( fvs ) );
+
+        if ( eds.isEmpty() ) {
             return new HashSet<ExpressionExperiment>();
         }
 

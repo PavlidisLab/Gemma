@@ -407,6 +407,8 @@ public class ExpressionExperimentController extends AbstractTaskService {
         ExpressionExperiment ee = expressionExperimentService.load( id );
         if ( ee == null ) return null;
 
+        expressionExperimentService.thawLite( ee );
+
         Collection<ExperimentalFactor> efs = ee.getExperimentalDesign().getExperimentalFactors();
 
         StringBuffer descriptive = new StringBuffer();
@@ -647,15 +649,6 @@ public class ExpressionExperimentController extends AbstractTaskService {
             log.info( "Filling in report data: " + timer.getTime() + "ms" );
         }
 
-        timer.reset();
-        timer.start();
-
-        // List<ExpressionExperimentValueObject> result = filterByLastUpdate( recentDateInfo, eeValObjectCol, limit );
-
-        if ( timer.getTime() > 1000 ) {
-            log.info( "Sorting and filtering: " + timer.getTime() + "ms; limit=" + limit );
-        }
-
         return eeValObjectCol;
     }
 
@@ -791,11 +784,15 @@ public class ExpressionExperimentController extends AbstractTaskService {
         Long id = Long.parseLong( idStr );
 
         ExpressionExperiment expressionExperiment = expressionExperimentService.load( id );
+
+        expressionExperimentService.thawLite( expressionExperiment );
+
         if ( expressionExperiment == null ) {
             throw new EntityNotFoundException( id + " not found" );
         }
         request.setAttribute( "id", id );
-        ModelAndView mv = new ModelAndView( "bioAssays" ).addObject( "bioAssays", expressionExperiment.getBioAssays() );
+        ModelAndView mv = new ModelAndView( "bioAssays" ).addObject( "bioAssays", bioAssayService
+                .thaw( expressionExperiment.getBioAssays() ) );
 
         addQCInfo( expressionExperiment, mv );
         mv.addObject( "expressionExperiment", expressionExperiment );
@@ -819,6 +816,8 @@ public class ExpressionExperimentController extends AbstractTaskService {
         Long id = Long.parseLong( idStr );
 
         ExpressionExperiment expressionExperiment = expressionExperimentService.load( id );
+        expressionExperimentService.thawLite( expressionExperiment );
+
         if ( expressionExperiment == null ) {
             throw new EntityNotFoundException( id + " not found" );
         }
@@ -844,7 +843,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
 
         Integer numBioMaterials = bioMaterials.size();
         mav.addObject( "numBioMaterials", numBioMaterials );
-        mav.addObject( "bioMaterials", bioMaterials );
+        mav.addObject( "bioMaterials", bioMaterialService.thaw( bioMaterials ) );
 
         addQCInfo( expressionExperiment, mav );
 
@@ -1240,7 +1239,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
 
         if ( eeValObjectCol.isEmpty() ) return eeValObjectCol;
 
-        if ( limit != 0 ) {
+        if ( limit != null && limit != 0 ) {
             Collection<Long> idsOfFetched = EntityUtils.getIds( eeValObjectCol );
             Map<ExpressionExperiment, Date> filteredByLimit = this.expressionExperimentService.findByUpdatedLimit(
                     idsOfFetched, limit );
@@ -1256,6 +1255,9 @@ public class ExpressionExperimentController extends AbstractTaskService {
                 if ( !filterdByLimitIdMap.containsKey( id ) ) {
                     it.remove();
                 } else {
+                    /*
+                     * This is where the 'last update date' gets filled in.
+                     */
                     obj.setDateLastUpdated( filterdByLimitIdMap.get( id ) );
                 }
 
@@ -1277,10 +1279,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
         }
         StopWatch timer = new StopWatch();
         timer.start();
-        Collection<Long> ids = new HashSet<Long>();
-        for ( ExpressionExperiment ee : securedEEs ) {
-            ids.add( ee.getId() );
-        }
+        Collection<Long> ids = EntityUtils.getIds( securedEEs );
 
         Collection<ExpressionExperimentValueObject> valueObjs = expressionExperimentService.loadValueObjects( ids );
 

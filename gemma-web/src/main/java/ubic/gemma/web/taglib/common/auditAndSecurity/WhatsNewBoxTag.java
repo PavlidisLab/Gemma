@@ -47,7 +47,7 @@ public class WhatsNewBoxTag extends TagSupport {
      */
     private static final long serialVersionUID = 4743861628500226664L;
 
-    private WhatsNew whatsNew;
+    transient private WhatsNew whatsNew;
 
     /**
      * @jsp.attribute description="WhatsNew report" required="true" rtexprvalue="true"

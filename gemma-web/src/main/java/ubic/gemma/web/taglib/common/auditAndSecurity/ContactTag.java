@@ -37,7 +37,7 @@ public class ContactTag extends TagSupport {
      */
     private static final long serialVersionUID = -6477171433937178582L;
 
-    private Log log = LogFactory.getLog( this.getClass() );
+    private static Log log = LogFactory.getLog( ContactTag.class );
 
     private Contact contact;
 

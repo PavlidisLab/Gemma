@@ -2,33 +2,35 @@
 <jsp:useBean id="bioMaterial" scope="request" class="ubic.gemma.model.expression.biomaterial.BioMaterialImpl" />
 
 <head>
-	<title><fmt:message key="bioMaterial.details" /></title>
+	<title><fmt:message key="bioMaterial.details" />
+	</title>
 	<jwr:script src='/scripts/ajax/ext/data/DwrProxy.js' />
 	<jwr:script src='/scripts/app/bmFactorValues.js' />
 
 
 	<script type='text/javascript'>
-		Ext.namespace('Gemma');
-		Ext.onReady(function() {
+	Ext.namespace('Gemma');
+	Ext.onReady( function() {
 		Ext.QuickTips.init();
-	
-	var bmId = Ext.get("bmId").getValue();
-	var bmClass = Ext.get("bmClass").getValue();
-	var canEdit = Ext.get('canEdit') === null ? false : Ext.get('canEdit	').value();
-	var grid = new Gemma.AnnotationGrid( { renderTo : "bmAnnotations",
-				readMethod :BioMaterialController.getAnnotation,
-				readParams : [{
-					id : bmId,
-					classDelegatingFor : bmClass
-				}],
-				writeMethod : AnnotationController.createBioMaterialTag,
-				removeMethod : AnnotationController.removeBioMaterialTag,
-				entId : bmId, 
-				editable : canEdit,
-				mgedTermKey : "experiment"
-			});
-}); 
-	  </script>
+
+		var bmId = Ext.get("bmId").getValue();
+		var bmClass = Ext.get("bmClass").getValue();
+		var canEdit = Ext.get('canEdit') === null ? false : Ext.get('canEdit').getValue();
+		var grid = new Gemma.AnnotationGrid( {
+			renderTo : "bmAnnotations",
+			readMethod : BioMaterialController.getAnnotation,
+			readParams : [ {
+				id : bmId,
+				classDelegatingFor : bmClass
+			} ],
+			writeMethod : AnnotationController.createBioMaterialTag,
+			removeMethod : AnnotationController.removeBioMaterialTag,
+			entId : bmId,
+			editable : canEdit,
+			mgedTermKey : "experiment"
+		});
+	});
+</script>
 
 
 </head>
@@ -130,23 +132,12 @@
 <input type="hidden" name="bmClass" id="bmClass" value="${bioMaterial.class.name}" />
 
 
-
-<table>
-	<tr>
-		<td COLSPAN="2">
-			<DIV align="left">
-				<input type="button" onclick="location.href='/Gemma/expressionExperiment/showAllExpressionExperiments.html'"
-					value="Back">
-			</DIV>
-		</TD>
-		<security:accesscontrollist domainObject="${bioMaterial}" hasPermission="WRITE,ADMINISTRATION">
-			<input type="hidden" name="canEdit" id="canEdit" value="true" />
-			<TD COLSPAN="2">
-				<DIV align="left">
-					<input type="button" onclick="location.href='/Gemma/bioMaterial/editBioMaterial.html?id=${bioMaterial.id}"
-						value="Edit">
-				</DIV>
-			</td>
-		</security:accesscontrollist>
-	</tr>
-</table>
+<security:accesscontrollist domainObject="${bioMaterial}" hasPermission="WRITE,ADMINISTRATION">
+	<input type="hidden" name="canEdit" id="canEdit" value="true" />
+	<TD COLSPAN="2">
+		<DIV align="left">
+			<input type="button" onclick="location.href='/Gemma/bioMaterial/editBioMaterial.html?id=${bioMaterial.id}'"
+				value="Edit">
+		</DIV>
+	</td>
+</security:accesscontrollist>

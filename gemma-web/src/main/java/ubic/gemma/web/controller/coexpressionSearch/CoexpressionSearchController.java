@@ -43,6 +43,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneService;
+import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.search.SearchService;
 import ubic.gemma.util.EntityUtils;
 import ubic.gemma.web.controller.BaseFormController;
@@ -102,7 +103,7 @@ public class CoexpressionSearchController extends BaseFormController {
 
         log.info( "Coexpression search: " + searchOptions );
 
-        this.geneService.thawLite( gene ); // need to thaw externalDB in taxon for marshling back to client...
+        gene = this.geneService.thaw( gene ); // need to thaw externalDB in taxon for marshling back to client...
 
         Long eeSetId = getEESet( searchOptions, gene );
 
@@ -114,7 +115,7 @@ public class CoexpressionSearchController extends BaseFormController {
 
         List<Gene> genes = new ArrayList<Gene>();
         genes.add( gene );
-        result.setQueryGenes( genes );
+        result.setQueryGenes( GeneValueObject.convert2ValueObjects( genes ) );
 
         Collection<CoexpressionValueObjectExt> geneResults = geneCoexpressionService.coexpressionSearchQuick( eeSetId,
                 genes, 2, 20, false, true );
@@ -161,7 +162,7 @@ public class CoexpressionSearchController extends BaseFormController {
 
         }
 
-        this.geneService.thawLite( genes ); // need to thaw externalDB in taxon for marshling back to client...
+        genes = this.geneService.thawLite( genes ); // need to thaw externalDB in taxon for marshling back to client...
 
         /*
          * Validation ...
@@ -265,18 +266,6 @@ public class CoexpressionSearchController extends BaseFormController {
         return new CoexpressionMetaValueObject();
     }
 
-    public void setGeneCoexpressionService( GeneCoexpressionService geneCoexpressionService ) {
-        this.geneCoexpressionService = geneCoexpressionService;
-    }
-
-    public void setGeneService( GeneService geneService ) {
-        this.geneService = geneService;
-    }
-
-    public void setSearchService( SearchService searchService ) {
-        this.searchService = searchService;
-    }
-
     /*
      * Handle case of text export of the results.
      * 
@@ -291,6 +280,7 @@ public class CoexpressionSearchController extends BaseFormController {
 
             Collection<Long> geneIds = extractIds( request.getParameter( "g" ) );
             Collection<Gene> genes = geneService.loadMultiple( geneIds );
+            genes = geneService.thawLite( genes );
 
             boolean queryGenesOnly = request.getParameter( "q" ) != null;
             int stringency = DEFAULT_STRINGENCY;

@@ -371,14 +371,14 @@ public interface GeneDao extends ubic.gemma.model.genome.ChromosomeFeatureDao<Ge
     /**
      * 
      */
-    public void thaw( ubic.gemma.model.genome.Gene gene );
+    public Gene thaw( Gene gene );
 
-    public void thawLite( Gene gene );
+    public Gene thawLite( Gene gene );
 
     /**
      * 
      */
-    public void thawLite( java.util.Collection<Gene> genes );
+    public Collection<Gene> thawLite( java.util.Collection<Gene> genes );
 
     /**
      * Converts this DAO's entity to an object of type {@link ubic.gemma.model.genome.gene.GeneValueObject}.

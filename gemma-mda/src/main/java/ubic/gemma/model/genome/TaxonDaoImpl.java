@@ -52,6 +52,7 @@ public class TaxonDaoImpl extends ubic.gemma.model.genome.TaxonDaoBase {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.TaxonDaoBase#find(ubic.gemma.model.genome.Taxon)
      */
     @SuppressWarnings("boxing")
@@ -82,25 +83,24 @@ public class TaxonDaoImpl extends ubic.gemma.model.genome.TaxonDaoBase {
             throw super.convertHibernateAccessException( ex );
         }
     }
-    
+
     @Override
     public void handleThaw( final Taxon taxon ) throws Exception {
         HibernateTemplate templ = this.getHibernateTemplate();
         templ.executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                session.lock(taxon, LockMode.NONE );
-                Hibernate.initialize( taxon.getParentTaxon());     
+                session.lock( taxon, LockMode.NONE );
+                Hibernate.initialize( taxon.getParentTaxon() );
+                Hibernate.initialize( taxon.getExternalDatabase() );
                 session.evict( taxon );
                 return null;
             }
         } );
     }
-    
-    
-    
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.TaxonDaoBase#findOrCreate(ubic.gemma.model.genome.Taxon)
      */
     @Override

@@ -143,7 +143,9 @@ public class SearchService implements InitializingBean {
             "expressionExperiment.primaryPublication.title", "expressionExperiment.primaryPublication.abstractText",
             "expressionExperiment.primaryPublication.authorList",
             "expressionExperiment.otherRelevantPublications.abstractText",
-            "expressionExperiment.otherRelevantPublications.title" };
+            "expressionExperiment.otherRelevantPublications.title", "expressionExperiment.experimentalDesign.name",
+            "expressionExperiment.experimentalDesign.experimentalFactors.name",
+            "expressionExperiment.experimentalDesign.factorValues.value" };
 
     /**
      * Penalty applied to all 'index' hits

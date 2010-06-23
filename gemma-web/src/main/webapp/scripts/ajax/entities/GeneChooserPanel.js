@@ -72,7 +72,7 @@ Gemma.GeneGrid = Ext.extend(Ext.grid.GridPanel, {
 				GenePickerController.getGenes(geneIds, function(genes) {
 							var geneData = [];
 							for (var i = 0; i < genes.length; ++i) {
-								geneData.push([genes[i].id, genes[i].taxon.scientificName, genes[i].officialSymbol,
+								geneData.push([genes[i].id, genes[i].taxonScientificName, genes[i].officialSymbol,
 										genes[i].officialName]);
 							}
 							/*
@@ -205,16 +205,16 @@ Gemma.GeneGrid = Ext.extend(Ext.grid.GridPanel, {
 								for (var i = 0; i < genes.length; ++i) {
 									if (i >= Gemma.MAX_GENES_PER_QUERY) {
 										if (!warned) {
-											Ext.Msg.alert("Too many genes", "You can only search up to "
-															+ Gemma.MAX_GENES_PER_QUERY
-															+ " genes, some of your selections will be ignored.");
+											Ext.Msg.alert("Too many genes", "You can only search up to " +
+															Gemma.MAX_GENES_PER_QUERY +
+															" genes, some of your selections will be ignored.");
 											warned = true;
 										}
 										break;
 									}
 
 									if (this.getStore().find("id", genes[i].id) < 0) {
-										geneData.push([genes[i].id, genes[i].taxon.scientificName,
+										geneData.push([genes[i].id, genes[i].taxonScientificName,
 												genes[i].officialSymbol, genes[i].officialName]);
 									}
 
@@ -223,7 +223,7 @@ Gemma.GeneGrid = Ext.extend(Ext.grid.GridPanel, {
 								loadMask.hide();
 
 							}.createDelegate(this),
-							
+
 							errorHandler : function(e) {
 								this.getEl().unmask();
 								Ext.Msg.alert('There was an error', e);
@@ -354,7 +354,7 @@ Gemma.GeneChooserToolBar = Ext.extend(Ext.Toolbar, {
 				// clear any genes.
 				var all = this.getStore().getRange();
 				for (var i = 0; i < all.length; ++i) {
-					if (all[i].data.taxon.id != taxon.id) {
+					if (all[i].get('taxonId') != taxon.id) {
 						this.getStore().remove(all[i]);
 					}
 				}
@@ -401,9 +401,9 @@ Gemma.GeneChooserToolBar = Ext.extend(Ext.Toolbar, {
 								'select' : {
 									fn : function(combo, rec, index) {
 										if (rec.get) {
-											this.taxonCombo.setTaxon(rec.get("taxon"));
+											this.taxonCombo.setTaxon(rec.get("taxonId"));
 										} else {
-											this.taxonCombo.setTaxon(rec.taxon);
+											this.taxonCombo.setTaxon(rec.taxonId);
 										}
 										this.addButton.enable();
 									}.createDelegate(this)
@@ -534,8 +534,8 @@ Gemma.GeneImportPanel = Ext.extend(Ext.Window, {
 										id : 'gene-list-text',
 										xtype : 'textarea',
 
-										fieldLabel : "Paste in gene symbols, one per line, up to "
-												+ Gemma.MAX_GENES_PER_QUERY,
+										fieldLabel : "Paste in gene symbols, one per line, up to " +
+												Gemma.MAX_GENES_PER_QUERY,
 										width : 290
 									}],
 							buttons : [{

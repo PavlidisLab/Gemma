@@ -43,7 +43,7 @@ public class ShortBibliographicReferenceTag extends TagSupport {
      */
     private static final long serialVersionUID = -7325678534991860679L;
 
-    private Log log = LogFactory.getLog( this.getClass() );
+    private static Log log = LogFactory.getLog( ShortBibliographicReferenceTag.class );
 
     private BibliographicReference citation;
 
@@ -57,6 +57,7 @@ public class ShortBibliographicReferenceTag extends TagSupport {
 
     /*
      * (non-Javadoc)
+     * 
      * @see javax.servlet.jsp.tagext.TagSupport#doEndTag()
      */
     @Override
@@ -69,6 +70,7 @@ public class ShortBibliographicReferenceTag extends TagSupport {
 
     /*
      * (non-Javadoc)
+     * 
      * @see javax.servlet.jsp.tagext.TagSupport#doStartTag()
      */
     @Override

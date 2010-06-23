@@ -35,6 +35,10 @@ AnnotationController.createBioMaterialTag = function(p0, p1, callback) {
 AnnotationController.removeBioMaterialTag = function(p0, p1, callback) {
 	dwr.engine._execute(AnnotationController._path, 'AnnotationController', 'removeBioMaterialTag', p0, p1, callback);
 }
+AnnotationController.validateTags = function(p0, callback) {
+	dwr.engine._execute(AnnotationController._path, 'AnnotationController', 'validateTags', p0, callback);
+}
+
 // ====================================================================================
 if (ArrayDesignController == null)
 	var ArrayDesignController = {};
@@ -618,6 +622,9 @@ SystemMonitorController.flushCache = function(p0, callback) {
 }
 SystemMonitorController.flushAllCaches = function(callback) {
 	dwr.engine._execute(SystemMonitorController._path, 'SystemMonitorController', 'flushAllCaches', callback);
+}
+SystemMonitorController.resetHibernateStatus = function(callback) {
+	dwr.engine._execute(SystemMonitorController._path, 'SystemMonitorController', 'resetHibernateStatus', callback);
 }
 // ====================================================================================
 if (LinkAnalysisController == null)

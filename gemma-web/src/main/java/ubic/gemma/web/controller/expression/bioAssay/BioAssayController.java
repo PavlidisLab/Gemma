@@ -143,6 +143,8 @@ public class BioAssayController extends AbstractTaskService {
             throw new EntityNotFoundException( id + " not found" );
         }
 
+        bioAssayService.thaw( bioAssay );
+
         request.setAttribute( "id", id );
         return new ModelAndView( "bioAssay.detail" ).addObject( "bioAssay", bioAssay );
     }

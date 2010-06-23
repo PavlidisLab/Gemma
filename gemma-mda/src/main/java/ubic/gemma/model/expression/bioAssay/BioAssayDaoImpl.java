@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.expression.bioAssay;
 
+import java.util.Collection;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
@@ -30,6 +32,7 @@ import org.springframework.stereotype.Repository;
 
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.util.BusinessKey;
+import ubic.gemma.util.EntityUtils;
 
 /**
  * @author pavlidis
@@ -100,6 +103,22 @@ public class BioAssayDaoImpl extends ubic.gemma.model.expression.bioAssay.BioAss
                 return null;
             }
         } );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.expression.bioAssay.BioAssayDao#thaw(java.util.Collection)
+     */
+    @Override
+    public Collection<BioAssay> thaw( Collection<BioAssay> bioAssays ) {
+        if ( bioAssays.isEmpty() ) return bioAssays;
+        return this.getHibernateTemplate().findByNamedParam(
+                "select distinct b from BioAssayImpl b left join fetch b.arrayDesignUsed"
+                        + " left join fetch b.derivedDataFiles left join fetch b.samplesUsed bm"
+                        + " left join bm.factorValues left join bm.bioAssaysUsedIn left join fetch "
+                        + " b.auditTrail at left join fetch at.events where b.id in (:ids) ", "ids",
+                EntityUtils.getIds( bioAssays ) );
     }
 
     @Override

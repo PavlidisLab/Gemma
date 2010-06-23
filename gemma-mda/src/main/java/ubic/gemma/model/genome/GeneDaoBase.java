@@ -745,9 +745,9 @@ public abstract class GeneDaoBase extends ubic.gemma.model.genome.ChromosomeFeat
     /**
      * @see ubic.gemma.model.genome.GeneDao#thaw(ubic.gemma.model.genome.Gene)
      */
-    public void thaw( final ubic.gemma.model.genome.Gene gene ) {
+    public Gene thaw( final ubic.gemma.model.genome.Gene gene ) {
         try {
-            this.handleThaw( gene );
+            return this.handleThaw( gene );
         } catch ( Throwable th ) {
             throw new java.lang.RuntimeException(
                     "Error performing 'ubic.gemma.model.genome.GeneDao.thaw(ubic.gemma.model.genome.Gene gene)' --> "
@@ -758,9 +758,9 @@ public abstract class GeneDaoBase extends ubic.gemma.model.genome.ChromosomeFeat
     /**
      * @see ubic.gemma.model.genome.GeneDao#thawLite(java.util.Collection)
      */
-    public void thawLite( final java.util.Collection<Gene> genes ) {
+    public Collection<Gene> thawLite( final java.util.Collection<Gene> genes ) {
         try {
-            this.handleThawLite( genes );
+            return this.handleThawLite( genes );
         } catch ( Throwable th ) {
             throw new java.lang.RuntimeException(
                     "Error performing 'ubic.gemma.model.genome.GeneDao.thawLite(java.util.Collection genes)' --> " + th,
@@ -924,12 +924,12 @@ public abstract class GeneDaoBase extends ubic.gemma.model.genome.ChromosomeFeat
     /**
      * Performs the core logic for {@link #thaw(ubic.gemma.model.genome.Gene)}
      */
-    protected abstract void handleThaw( ubic.gemma.model.genome.Gene gene ) throws java.lang.Exception;
+    protected abstract Gene handleThaw( ubic.gemma.model.genome.Gene gene ) throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #thawLite(java.util.Collection)}
      */
-    protected abstract void handleThawLite( java.util.Collection<Gene> genes ) throws java.lang.Exception;
+    protected abstract Collection<Gene> handleThawLite( java.util.Collection<Gene> genes ) throws java.lang.Exception;
 
     /**
      * Default implementation for transforming the results of a report query into a value object. This implementation

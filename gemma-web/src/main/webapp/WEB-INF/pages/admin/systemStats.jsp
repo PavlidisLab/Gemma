@@ -9,12 +9,20 @@
 	<h2>
 		Hibernate statistics
 	</h2>
+
+	<div>
+		<input id="hibstat-reset-button" type="button" name="Clear Hibernate stats" value="Clear Hibernate stats"
+			onClick="resetHibernateStats();" />
+	</div>
 	<pre>
 		<div id="hibernateStats">Waiting ...</div>
 		</pre>
 	<h2>
 		Cache stats
 	</h2>
+
+	<div id="cache-pause-stats-checkbox-div" ></div>
+
 	<div id="cacheStats">
 		Waiting ...
 	</div>

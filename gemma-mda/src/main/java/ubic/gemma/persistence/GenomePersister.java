@@ -404,7 +404,7 @@ abstract public class GenomePersister extends CommonPersister {
         log.debug( "Updating " + existingGene );
 
         // updated gene products.
-        geneService.thaw( existingGene );
+        existingGene = geneService.thaw( existingGene );
         // NCBI id can be null if gene has been loaded from a gene info file
         String existingNcbiId = existingGene.getNcbiId();
         if ( existingNcbiId != null && !existingNcbiId.equals( gene.getNcbiId() ) ) {

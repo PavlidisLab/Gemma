@@ -51,6 +51,43 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
     /*
      * (non-Javadoc)
      * 
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#findByManufacturer(java.lang.String)
+     */
+    @Override
+    public Collection<ArrayDesign> findByManufacturer( String searchString ) {
+        return this.getArrayDesignDao().findByManufacturer( searchString );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#findByTaxon(ubic.gemma.model.genome.Taxon)
+     */
+    public Collection<ArrayDesign> findByTaxon( Taxon taxon ) {
+        return this.getArrayDesignDao().findByTaxon( taxon );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#getPerTaxonCount()
+     */
+    public Map<Taxon, Integer> getPerTaxonCount() {
+        return this.getArrayDesignDao().getPerTaxonCount();
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#thawLite(java.util.Collection)
+     */
+    public Collection<ArrayDesign> thawLite( Collection<ArrayDesign> arrayDesigns ) {
+        return this.getArrayDesignDao().thawLite( arrayDesigns );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleCompositeSequenceWithoutBioSequences(ubic
      * .gemma.model.expression.arrayDesign.ArrayDesign)
@@ -361,29 +398,11 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#getPerTaxonCount()
-     */
-    public Map<Taxon, Integer> getPerTaxonCount() {
-        return this.getArrayDesignDao().getPerTaxonCount();
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.expression.arrayDesign.handleGetTaxon(long)
      */
     @Override
     protected Taxon handleGetTaxon( java.lang.Long id ) {
         return this.getArrayDesignDao().getTaxon( id );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#findByTaxon(ubic.gemma.model.genome.Taxon)
-     */
-    public Collection<ArrayDesign> findByTaxon( Taxon taxon ) {
-        return this.getArrayDesignDao().findByTaxon( taxon );
     }
 
     @Override
@@ -671,8 +690,7 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
 
     @Override
     protected ArrayDesign handleThawLite( ArrayDesign arrayDesign ) throws Exception {
-        // thawLite is deprecated.
-        return this.getArrayDesignDao().thaw( arrayDesign );
+        return this.getArrayDesignDao().thawLite( arrayDesign );
     }
 
     /**
@@ -741,16 +759,6 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
             }
 
         }
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#findByManufacturer(java.lang.String)
-     */
-    @Override
-    public Collection<ArrayDesign> findByManufacturer( String searchString ) {
-        return this.getArrayDesignDao().findByManufacturer( searchString );
     }
 
 }

@@ -254,17 +254,17 @@ public interface GeneService {
     /**
      * @param gene
      */
-    public void thaw( Gene gene );
+    public Gene thaw( Gene gene );
 
     /**
      * @param genes
      */
-    public void thawLite( Collection<Gene> genes );
+    public Collection<Gene> thawLite( Collection<Gene> genes );
 
     /**
      * @param gene
      */
-    public void thawLite( Gene gene );
+    public Gene thawLite( Gene gene );
 
     /**
      * @param gene

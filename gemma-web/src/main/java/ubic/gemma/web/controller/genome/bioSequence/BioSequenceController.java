@@ -59,6 +59,7 @@ public class BioSequenceController extends BaseController {
             addMessage( request, "object.notfound", new Object[] { "Biosequence " + id } );
             return new ModelAndView( "mainMenu.html" );
         }
+        bioSequence = bioSequenceService.thaw( bioSequence );
         ModelAndView mav = new ModelAndView( "bioSequence.detail" );
         mav.addObject( "bioSequence", bioSequence );
         return mav;
@@ -89,6 +90,7 @@ public class BioSequenceController extends BaseController {
                 if ( bioSequence == null ) {
                     addMessage( request, "object.notfound", new Object[] { "Gene " + id } );
                 }
+                bioSequence = bioSequenceService.thaw( bioSequence );
                 bioSequences.add( bioSequence );
             }
         }

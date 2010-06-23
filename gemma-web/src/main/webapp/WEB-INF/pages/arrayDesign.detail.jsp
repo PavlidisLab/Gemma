@@ -193,7 +193,7 @@
 		</td>
 	</tr>
 
-	<tr>
+	<%--<tr>
 		<td class="label">
 			Provider
 		</td>
@@ -203,7 +203,7 @@
 				<c:otherwise>(Not Listed)</c:otherwise>
 			</c:choose>
 		</td>
-	</tr>
+	</tr> --%>
 
 	<tr>
 		<td class="label">
@@ -235,7 +235,7 @@
 		</td>
 		<td>
 
-		<c:if test="${(not empty arrayDesign.externalReferences)}">
+			<c:if test="${(not empty arrayDesign.externalReferences)}">
 				<c:forEach var="accession" items="${ arrayDesign.externalReferences }">
 					<Gemma:databaseEntry databaseEntry="${accession}" />
 					<br />
@@ -248,9 +248,10 @@
 			Experiments using this array
 		</td>
 		<td>
-			 ${numExpressionExperiments}<a title="Show details of datasets"
-				href="/Gemma/expressionExperiment/showAllExpressionExperiments.html?id=${expressionExperimentIds}" > 
-				<img src="/Gemma/images/magnifier.png" /> </a>
+			${numExpressionExperiments}
+			<a title="Show details of datasets"
+				href="/Gemma/expressionExperiment/showAllExpressionExperiments.html?id=${expressionExperimentIds}"> <img
+					src="/Gemma/images/magnifier.png" /> </a>
 		</td>
 	</tr>
 	<tr>

@@ -101,7 +101,7 @@ public class AuditAdviceTest extends BaseSpringContextTest {
         // make sure we added an update event on the ee (3 because of the way create happens)
         assertEquals( 3, ee.getAuditTrail().getEvents().size() );
 
-        expressionExperimentService.thaw( ee );
+        expressionExperimentService.thawLite( ee );
 
         // check that we haven't added an update event to the design -- only a create.
         assertEquals( 1, ee.getExperimentalDesign().getAuditTrail().getEvents().size() );
@@ -117,7 +117,7 @@ public class AuditAdviceTest extends BaseSpringContextTest {
         Gene g = this.getTestPeristentGene();
 
         g = this.geneService.load( g.getId() );
-        this.geneService.thaw( g );
+        g = this.geneService.thaw( g );
 
         // should have create and 1 because we update to add the gene product.
         assertEquals( 2, g.getAuditTrail().getEvents().size() );
@@ -167,7 +167,7 @@ public class AuditAdviceTest extends BaseSpringContextTest {
         Gene g = this.getTestPeristentGene();
 
         g = this.geneService.load( g.getId() );
-        this.geneService.thaw( g );
+        g = this.geneService.thaw( g );
 
         // should have create and 1 because we update to add the gene product.
         assertEquals( 2, g.getAuditTrail().getEvents().size() );

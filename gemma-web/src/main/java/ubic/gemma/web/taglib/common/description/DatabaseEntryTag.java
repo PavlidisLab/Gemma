@@ -38,7 +38,7 @@ public class DatabaseEntryTag extends TagSupport {
      */
     private static final long serialVersionUID = -8225561718129593445L;
 
-    private Log log = LogFactory.getLog( this.getClass() );
+    private static Log log = LogFactory.getLog( DatabaseEntryTag.class );
 
     private DatabaseEntry databaseEntry;
 
@@ -55,6 +55,7 @@ public class DatabaseEntryTag extends TagSupport {
 
     /*
      * (non-Javadoc)
+     * 
      * @see javax.servlet.jsp.tagext.TagSupport#doEndTag()
      */
     @Override
@@ -67,6 +68,7 @@ public class DatabaseEntryTag extends TagSupport {
 
     /*
      * (non-Javadoc)
+     * 
      * @see javax.servlet.jsp.tagext.TagSupport#doStartTag()
      */
     @Override

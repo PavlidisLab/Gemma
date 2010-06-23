@@ -34,8 +34,6 @@ import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
-import org.hibernate.Hibernate;
-import org.hibernate.LockMode;
 import org.hibernate.Query;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
@@ -45,7 +43,6 @@ import org.hibernate.type.DoubleType;
 import org.hibernate.type.LongType;
 import org.hibernate.type.StringType;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.orm.hibernate3.HibernateTemplate;
 import org.springframework.stereotype.Repository;
 
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressedGenesDetails;
@@ -59,6 +56,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.util.BusinessKey;
+import ubic.gemma.util.EntityUtils;
 import ubic.gemma.util.SequenceBinUtils;
 import ubic.gemma.util.TaxonUtility;
 
@@ -338,24 +336,13 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         return this.load( geneValueObject.getId() );
     }
 
-    public void thawLite( final Gene gene ) {
-        HibernateTemplate templ = this.getHibernateTemplate();
-        templ.execute( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-
-                // FIXME: (klc) This was using session.lock before but was getting a Non-Unique Entity Error
-                // using session.get fixes but might not be correct for cases where g != gene but gene.id==g.id
-                // (different object in memory but actually same gene; ie same id)
-                // session.lock( gene, LockMode.NONE );
-
-                Gene g = ( Gene ) session.get( GeneImpl.class, gene.getId() );
-                Hibernate.initialize( g );
-                session.evict( gene );
-
-                return null;
-            }
-        } );
-
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.genome.GeneDao#thawLite(ubic.gemma.model.genome.Gene)
+     */
+    public Gene thawLite( final Gene gene ) {
+        return this.thaw( gene );
     }
 
     @SuppressWarnings("unchecked")
@@ -771,53 +758,33 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
     }
 
     @Override
-    protected void handleThaw( final Gene gene ) throws Exception {
-        if ( gene.getId() == null ) return;
+    protected Gene handleThaw( final Gene gene ) throws Exception {
+        if ( gene.getId() == null ) return gene;
 
-        Session session = this.getSession();
+        List<?> res = this
+                .getHibernateTemplate()
+                .findByNamedParam(
+                        "select g from GeneImpl g "
+                                + "left join fetch g.aliases left join fetch g.accessions acc"
+                                + " left join fetch acc.externalDatabase left join fetch g.products gp "
+                                + "left join fetch gp.accessions gpacc left join fetch gpacc.externalDatabase left join"
+                                + " fetch gp.physicalLocation gppl left join fetch gppl.chromosome chr left join fetch chr.taxon "
+                                + " left join fetch g.taxon t left join fetch t.externalDatabase" + " where g.id=:gid",
+                        "gid", gene.getId() );
 
-        session.lock( gene, LockMode.NONE );
-        Hibernate.initialize( gene );
-        Hibernate.initialize( gene.getProducts() );
-        for ( ubic.gemma.model.genome.gene.GeneProduct gp : gene.getProducts() ) {
-            Hibernate.initialize( gp.getAccessions() );
-            if ( gp.getPhysicalLocation() != null ) {
-                Hibernate.initialize( gp.getPhysicalLocation().getChromosome() );
-                Hibernate.initialize( gp.getPhysicalLocation().getChromosome().getTaxon() );
-            }
-        }
-        Hibernate.initialize( gene.getAliases() );
-        Hibernate.initialize( gene.getAccessions() );
-        Taxon t = ( Taxon ) session.get( TaxonImpl.class, gene.getTaxon().getId() );
-        Hibernate.initialize( t );
-        if ( t.getExternalDatabase() != null ) {
-            Hibernate.initialize( t.getExternalDatabase() );
-        }
-        session.evict( gene );
+        return ( Gene ) res.iterator().next();
     }
 
     @Override
     @SuppressWarnings("unchecked")
-    protected void handleThawLite( final Collection genes ) throws Exception {
-        Session session = this.getSession();
-        for ( Gene gene : ( Collection<Gene> ) genes ) {
-
-            if ( gene.getId() == null ) continue;
-
-            // FIXME: (klc) This was using session.lock before but was getting a Non-Unique Entity Error
-            // using session.get fixes but might not be correct for cases where g != gene but gene.id==g.id
-            // (different object in memory but actually same gene; ie same id)
-
-            Gene g = ( Gene ) session.get( GeneImpl.class, gene.getId() );
-            Hibernate.initialize( g );
-            Taxon t = ( Taxon ) session.get( TaxonImpl.class, g.getTaxon().getId() );
-            Hibernate.initialize( t );
-
-            if ( t.getExternalDatabase() != null ) {
-                Hibernate.initialize( t.getExternalDatabase() );
-            }
-            session.evict( gene );
-        }
+    protected Collection<Gene> handleThawLite( final Collection<Gene> genes ) throws Exception {
+        return this.getHibernateTemplate().findByNamedParam(
+                "select distinct g from GeneImpl g left join fetch g.aliases left join fetch g.accessions acc "
+                        + "join fetch g.taxon t left join fetch t.externalDatabase"
+                        + " left join fetch acc.externalDatabase left join fetch g.products gp "
+                        + "left join fetch gp.accessions gpacc left join fetch gpacc.externalDatabase left join"
+                        + " fetch gp.physicalLocation gppl left join fetch gppl.chromosome chr join fetch chr.taxon "
+                        + " where g.id in (:gids)", "gids", EntityUtils.getIds( genes ) );
     }
 
     /**

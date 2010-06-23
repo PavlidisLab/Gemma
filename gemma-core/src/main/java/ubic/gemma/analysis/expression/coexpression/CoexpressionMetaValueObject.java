@@ -1,7 +1,7 @@
 /*
  * The Gemma project
  * 
- * Copyright (c) 2008 University of British Columbia
+ * Copyright (c) 2008-2010 University of British Columbia
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,34 +23,37 @@ import java.util.List;
 import java.util.Map;
 
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
-import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.gene.GeneValueObject;
 
 /**
  * @author luke
+ * @version $Id$
  */
 public class CoexpressionMetaValueObject {
 
-    List<ExpressionExperimentValueObject> datasets;
-    String errorState;
-    boolean isCannedAnalysis;
-    Collection<CoexpressionDatasetValueObject> knownGeneDatasets;
-    Collection<CoexpressionValueObjectExt> knownGeneResults;
+    private List<ExpressionExperimentValueObject> datasets;
+    private String errorState;
+    private Collection<CoexpressionDatasetValueObject> knownGeneDatasets;
+    private Collection<CoexpressionValueObjectExt> knownGeneResults;
 
-    boolean knownGenesOnly;
+    private boolean knownGenesOnly;
 
-    Collection<CoexpressionDatasetValueObject> predictedGeneDatasets;
+    private Collection<CoexpressionDatasetValueObject> predictedGeneDatasets;
 
-    Collection<CoexpressionValueObjectExt> predictedGeneResults;
-    Collection<CoexpressionDatasetValueObject> probeAlignedRegionDatasets;
-    Collection<CoexpressionValueObjectExt> probeAlignedRegionResults;
-    List<Gene> queryGenes;
-    Map<String, CoexpressionSummaryValueObject> summary;
+    private Collection<CoexpressionValueObjectExt> predictedGeneResults;
+    private Collection<CoexpressionDatasetValueObject> probeAlignedRegionDatasets;
+    private Collection<CoexpressionValueObjectExt> probeAlignedRegionResults;
+    private Collection<GeneValueObject> queryGenes;
+    private Map<String, CoexpressionSummaryValueObject> summary;
+
     public List<ExpressionExperimentValueObject> getDatasets() {
         return datasets;
     }
+
     public String getErrorState() {
         return errorState;
     }
+
     public Collection<CoexpressionDatasetValueObject> getKnownGeneDatasets() {
         return knownGeneDatasets;
     }
@@ -75,7 +78,7 @@ public class CoexpressionMetaValueObject {
         return probeAlignedRegionResults;
     }
 
-    public Collection<Gene> getQueryGenes() {
+    public Collection<GeneValueObject> getQueryGenes() {
         return queryGenes;
     }
 
@@ -93,10 +96,6 @@ public class CoexpressionMetaValueObject {
 
     public void setErrorState( String errorState ) {
         this.errorState = errorState;
-    }
-
-    public void setIsCannedAnalysis( boolean isCannedAnalysis ) {
-        this.isCannedAnalysis = isCannedAnalysis;
     }
 
     public void setKnownGeneDatasets( Collection<CoexpressionDatasetValueObject> knownGeneDatasets ) {
@@ -127,7 +126,7 @@ public class CoexpressionMetaValueObject {
         this.probeAlignedRegionResults = probeAlignedRegionResults;
     }
 
-    public void setQueryGenes( List<Gene> queryGenes ) {
+    public void setQueryGenes( Collection<GeneValueObject> queryGenes ) {
         this.queryGenes = queryGenes;
     }
 

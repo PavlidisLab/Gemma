@@ -23,21 +23,21 @@
 	-->
 	<bean class="org.springframework.web.servlet.mvc.annotation.DefaultAnnotationHandlerMapping">
 		<property name="order" value="1" />
-		<property name="interceptors">
+			<!--	<property name="interceptors">
 			<list>
 				<ref bean="openSessionInViewInterceptor" />
 			</list>
-		</property>
+		</property> -->
 	</bean>
 
 	<!-- see http://static.springsource.org/spring/docs/3.0.x/spring-framework-reference/html/ch15s10.html -->
 	<bean class="org.springframework.web.servlet.mvc.support.ControllerClassNameHandlerMapping">
 		<property name="order" value="2" />
-		<property name="interceptors">
+			<!--	<property name="interceptors">
 			<list>
 				<ref bean="openSessionInViewInterceptor" />
 			</list>
-		</property>
+		</property> -->
 	</bean>
 
 	<!-- see http://static.springsource.org/spring/docs/3.0.x/spring-framework-reference/html/ch15s10.html -->
@@ -47,11 +47,11 @@
 	<bean id="simpleUrlMapping" class="org.springframework.web.servlet.handler.SimpleUrlHandlerMapping">
 		<property name="order" value="3" />
 		<property name="alwaysUseFullPath" value="true" />
-		<property name="interceptors">
+			<!--	<property name="interceptors">
 			<list>
 				<ref bean="openSessionInViewInterceptor" />
 			</list>
-		</property>
+		</property> -->
 		<property name="mappings"><!-- replace with annotations ... -->
 			<props>
 				<prop key="/dwr/**/*">dwrController</prop>
@@ -87,11 +87,11 @@
 	<!-- default mapping, as a fallback. Avoid using. -->
 	<bean id="beanNameUrlHandlerMapping" class="org.springframework.web.servlet.handler.BeanNameUrlHandlerMapping">
 		<property name="order" value="4" />
-		<property name="interceptors">
+	<!--	<property name="interceptors">
 			<list>
 				<ref bean="openSessionInViewInterceptor" />
 			</list>
-		</property>
+		</property> -->
 	</bean>
 
 
@@ -100,11 +100,12 @@
 		openSessionInViewInterceptor: Interceptor to keep Hibernate sessions available in views
 	-->
 	<!-- ==================================================== -->
-	<bean id="openSessionInViewInterceptor" class="org.springframework.orm.hibernate3.support.OpenSessionInViewInterceptor">
+<!--	<bean id="openSessionInViewInterceptor" class="org.springframework.orm.hibernate3.support.OpenSessionInViewInterceptor">
 		<property name="sessionFactory">
 			<ref bean="sessionFactory" />
 		</property>
-	</bean>
+		<property name="singleSession" value="false" />
+	</bean>-->
 
 	<!-- ==================================================== -->
 	<!--
@@ -344,7 +345,7 @@ gemma.max.fileupload.size.bytes=
 			<ref bean="bioAssayValidator" />
 		</property>
 	</bean>
- 
+
 
 	<bean id="arrayDesignFormController" class="ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignFormController">
 
@@ -786,6 +787,7 @@ gemma.max.fileupload.size.bytes=
 								<value>removeExperimentTag</value>
 								<value>createBioMaterialTag</value>
 								<value>removeBioMaterialTag</value>
+								<value>validateTags</value>
 							</list>
 						</property>
 					</bean>
@@ -1110,6 +1112,7 @@ gemma.max.fileupload.size.bytes=
 								<value>getSpaceStatus</value>
 								<value>flushCache</value>
 								<value>flushAllCaches</value>
+								<value>resetHibernateStatus</value>
 							</list>
 						</property>
 					</bean>
@@ -1358,7 +1361,6 @@ gemma.max.fileupload.size.bytes=
 						<property name="type" value="bean" />
 					</bean>
 				</entry>
-
 				<entry key="ubic.gemma.model.genome.gene.GeneProduct">
 					<bean class="org.directwebremoting.spring.ConverterConfig">
 						<property name="type" value="bean" />
@@ -1368,20 +1370,6 @@ gemma.max.fileupload.size.bytes=
 								<value>name</value>
 								<value>description</value>
 								<value>type</value>
-								<value>taxon</value>
-							</list>
-						</property>
-					</bean>
-				</entry>
-				<entry key="ubic.gemma.model.genome.Gene">
-					<bean class="org.directwebremoting.spring.ConverterConfig">
-						<property name="type" value="bean" />
-						<property name="includes">
-							<list>
-								<value>id</value>
-								<value>name</value>
-								<value>officialSymbol</value>
-								<value>officialName</value>
 								<value>taxon</value>
 							</list>
 						</property>
@@ -1604,15 +1592,9 @@ gemma.max.fileupload.size.bytes=
 						</property>
 					</bean>
 				</entry>
-				<entry key="ubic.gemma.model.genome.sequenceAnalysis.BlatResult">
+				<entry key="ubic.gemma.model.genome.sequenceAnalysis.BlatResultValueObject">
 					<bean class="org.directwebremoting.spring.ConverterConfig">
 						<property name="type" value="bean" />
-						<property name="excludes">
-							<list>
-								<value>targetAlignedRegion</value>
-								<value>searchedDatabase</value>
-							</list>
-						</property>
 					</bean>
 				</entry>
 				<entry key="ubic.gemma.model.genome.biosequence.BioSequence">

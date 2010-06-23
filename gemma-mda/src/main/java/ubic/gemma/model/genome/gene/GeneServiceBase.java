@@ -374,9 +374,9 @@ public abstract class GeneServiceBase implements GeneService {
     /**
      * @see GeneService#thaw(Gene)
      */
-    public void thaw( final Gene gene ) {
+    public Gene thaw( final Gene gene ) {
         try {
-            this.handleThaw( gene );
+            return this.handleThaw( gene );
         } catch ( Throwable th ) {
             throw new GeneServiceException( "Error performing 'GeneService.thaw(Gene gene)' --> " + th, th );
         }
@@ -385,9 +385,9 @@ public abstract class GeneServiceBase implements GeneService {
     /**
      * @see GeneService#thawLite(Collection)
      */
-    public void thawLite( final Collection<Gene> genes ) {
+    public Collection<Gene> thawLite( final Collection<Gene> genes ) {
         try {
-            this.handleThawLite( genes );
+            return this.handleThawLite( genes );
         } catch ( Throwable th ) {
             throw new GeneServiceException( "Error performing 'GeneService.thawLite(Collection genes)' --> " + th, th );
         }
@@ -554,12 +554,12 @@ public abstract class GeneServiceBase implements GeneService {
     /**
      * Performs the core logic for {@link #thaw(Gene)}
      */
-    protected abstract void handleThaw( Gene gene ) throws Exception;
+    protected abstract Gene handleThaw( Gene gene ) throws Exception;
 
     /**
      * Performs the core logic for {@link #thawLite(Collection)}
      */
-    protected abstract void handleThawLite( Collection<Gene> genes ) throws Exception;
+    protected abstract Collection<Gene> handleThawLite( Collection<Gene> genes ) throws Exception;
 
     /**
      * Performs the core logic for {@link #update(Gene)}

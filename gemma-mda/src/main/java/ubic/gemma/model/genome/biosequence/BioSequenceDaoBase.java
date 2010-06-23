@@ -421,9 +421,9 @@ public abstract class BioSequenceDaoBase extends HibernateDaoSupport implements
     /**
      * @see ubic.gemma.model.genome.biosequence.BioSequenceDao#thaw(ubic.gemma.model.genome.biosequence.BioSequence)
      */
-    public void thaw( final ubic.gemma.model.genome.biosequence.BioSequence bioSequence ) {
+    public BioSequence thaw( final ubic.gemma.model.genome.biosequence.BioSequence bioSequence ) {
         try {
-            this.handleThaw( bioSequence );
+            return  this.handleThaw( bioSequence );
         } catch ( Throwable th ) {
             throw new java.lang.RuntimeException(
                     "Error performing 'ubic.gemma.model.genome.biosequence.BioSequenceDao.thaw(ubic.gemma.model.genome.biosequence.BioSequence bioSequence)' --> "
@@ -518,7 +518,7 @@ public abstract class BioSequenceDaoBase extends HibernateDaoSupport implements
     /**
      * Performs the core logic for {@link #thaw(ubic.gemma.model.genome.biosequence.BioSequence)}
      */
-    protected abstract void handleThaw( ubic.gemma.model.genome.biosequence.BioSequence bioSequence )
+    protected abstract BioSequence handleThaw( ubic.gemma.model.genome.biosequence.BioSequence bioSequence )
             throws java.lang.Exception;
 
     /**

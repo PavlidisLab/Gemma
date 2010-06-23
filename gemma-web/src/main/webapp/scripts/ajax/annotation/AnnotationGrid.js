@@ -28,13 +28,13 @@ Ext.namespace('Gemma');
  * 
  * TODO add writeParams and removeParams methods if more parameters are needed for removing and writing annotations
  * other than entId
+ * 
  * @version $Id$
  */
 
-
-
 /**
  * Shows tags in a simple row of links.
+ * 
  * @class Gemma.AnnotationDataView
  * @extends Ext.DataView
  */
@@ -68,8 +68,8 @@ Gemma.AnnotationDataView = Ext.extend(Ext.DataView, {
 	 */
 	tpl : new Ext.XTemplate(
 			'<tpl for=".">',
-			'<span class="ann-wrap" ext:qtip="{className}" ><span  class="x-editable">'
-					+ '<a ext:qtip="{className} : {termUri}" href="/Gemma/searcher.html?query={termName}&amp;termUri={termUri}&amp;scope=E" style="text-decoration:underline;">{termName}</a></span></span>&nbsp;&nbsp;',
+			'<span class="ann-wrap" ext:qtip="{className}" ><span  class="x-editable">' +
+					'<a ext:qtip="{className} : {termUri}" href="/Gemma/searcher.html?query={termName}&amp;termUri={termUri}&amp;scope=E" style="text-decoration:underline;">{termName}</a></span></span>&nbsp;&nbsp;',
 			'</tpl>'),
 
 	itemSelector : 'ann-wrap',
@@ -166,6 +166,7 @@ Gemma.AnnotationGrid = Ext.extend(Gemma.GemmaGridPanel, {
 			stateful : false,
 			taxonId : null,
 			name : 'AnnotationGrid',
+			entityAnnotsAreValidated : false,
 
 			viewConfig : {
 				enableRowBody : true,
@@ -173,8 +174,8 @@ Gemma.AnnotationGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				showDetails : false,
 				getRowClass : function(record, index, p, store) {
 					if (this.showDetails) {
-						p.body = "<p class='characteristic-body' >"
-								+ String.format("From {0}", record.data.parentOfParentLink) + "</p>";
+						p.body = "<p class='characteristic-body' >" +
+								String.format("From {0}", record.data.parentOfParentLink) + "</p>";
 					}
 					return '';
 				}
@@ -225,8 +226,8 @@ Gemma.AnnotationGrid = Ext.extend(Gemma.GemmaGridPanel, {
 			formatParentWithStyle : function(id, expanded, parentLink, parentDescription, parentOfParentLink,
 					parentOfParentDescription) {
 				var value;
-				value = (parentLink ? (parentLink + "&nbsp;&nbsp;") : "")
-						+ (parentDescription ? parentDescription : "");
+				value = (parentLink ? (parentLink + "&nbsp;&nbsp;") : "") +
+						(parentDescription ? parentDescription : "");
 
 				if (parentOfParentLink) {
 					value = value + "&nbsp;&laquo;&nbsp;" + parentOfParentLink;
@@ -285,7 +286,9 @@ Gemma.AnnotationGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				if (this.editable && this.useDefaultToolbar) {
 					Ext.apply(this, {
 								tbar : new Gemma.AnnotationToolBar({
-											annotationGrid : this,
+											annotationGrid : this, 
+											showValidateButton : true,
+											isValidated : this.entityAnnotsAreValidated,
 											createHandler : function(characteristic, callback) {
 												this.writeMethod(characteristic, this.entId, callback);
 											}.createDelegate(this),

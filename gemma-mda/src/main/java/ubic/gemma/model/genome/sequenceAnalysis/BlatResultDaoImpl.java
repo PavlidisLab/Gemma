@@ -29,6 +29,7 @@ import org.springframework.stereotype.Repository;
 
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.util.BusinessKey;
+import ubic.gemma.util.EntityUtils;
 
 /**
  * @see ubic.gemma.model.genome.sequenceAnalysis.BlatResult
@@ -90,6 +91,45 @@ public class BlatResultDaoImpl extends ubic.gemma.model.genome.sequenceAnalysis.
         logger.debug( "Creating new BlatResult: " + blatResult.toString() );
         result = create( blatResult );
         return result;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.model.genome.sequenceAnalysis.BlatResultDao#thaw(ubic.gemma.model.genome.sequenceAnalysis.BlatResult)
+     */
+    @Override
+    public BlatResult thaw( BlatResult blatResult ) {
+        if ( blatResult.getId() == null ) return blatResult;
+        return ( BlatResult ) this
+                .getHibernateTemplate()
+                .findByNamedParam(
+                        "select b from BlatResultImpl b left join fetch b.querySequence qs left join fetch b.targetSequence ts  "
+                                + " left join fetch b.searchedDatabase left join fetch b.targetChromosome tc left join fetch tc.taxon"
+                                + " left join fetch qs.taxon t "
+                                + " left join fetch t.externalDatabase left join fetch qs.sequenceDatabaseEntry s "
+                                + " left join fetch s.externalDatabase" + " where b.id = :id", "id", blatResult.getId() )
+                .iterator().next();
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.genome.sequenceAnalysis.BlatResultDao#thaw(java.util.Collection)
+     */
+    @Override
+    public Collection<BlatResult> thaw( Collection<BlatResult> blatResults ) {
+        if ( blatResults.isEmpty() ) return blatResults;
+        return this
+                .getHibernateTemplate()
+                .findByNamedParam(
+                        "select distinct b from BlatResultImpl b left join fetch b.querySequence qs left join fetch b.targetSequence ts  "
+                                + " left join fetch b.searchedDatabase left join fetch b.targetChromosome tc left join tc.taxon"
+                                + " left join fetch qs.taxon t "
+                                + " left join fetch t.externalDatabase left join fetch qs.sequenceDatabaseEntry s "
+                                + " left join fetch s.externalDatabase" + " where b.id in ( :ids)", "ids",
+                        EntityUtils.getIds( blatResults ) );
     }
 
     /*

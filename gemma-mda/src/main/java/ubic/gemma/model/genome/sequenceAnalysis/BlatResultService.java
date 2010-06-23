@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.genome.sequenceAnalysis;
 
+import java.util.Collection;
+
 import org.springframework.security.access.annotation.Secured;
 
 /**
@@ -27,18 +29,15 @@ import org.springframework.security.access.annotation.Secured;
 public interface BlatResultService {
 
     @Secured( { "GROUP_USER" })
-    public ubic.gemma.model.genome.sequenceAnalysis.BlatResult create(
-            ubic.gemma.model.genome.sequenceAnalysis.BlatResult blatResult );
+    public BlatResult create( BlatResult blatResult );
 
-    public ubic.gemma.model.genome.sequenceAnalysis.BlatResult find(
-            ubic.gemma.model.genome.sequenceAnalysis.BlatResult blatResult );
+    public BlatResult find( BlatResult blatResult );
 
     public java.util.Collection<BlatResult> findByBioSequence(
             ubic.gemma.model.genome.biosequence.BioSequence bioSequence );
 
     @Secured( { "GROUP_USER" })
-    public ubic.gemma.model.genome.sequenceAnalysis.BlatResult findOrCreate(
-            ubic.gemma.model.genome.sequenceAnalysis.BlatResult blatResult );
+    public BlatResult findOrCreate( BlatResult blatResult );
 
     /**
      * <p>
@@ -47,10 +46,16 @@ public interface BlatResultService {
      */
     public java.util.Collection<BlatResult> load( java.util.Collection<Long> ids );
 
-    @Secured( { "GROUP_USER" })
-    public void remove( ubic.gemma.model.genome.sequenceAnalysis.BlatResult blatResult );
+    public BlatResult load( Long id );
 
     @Secured( { "GROUP_USER" })
-    public void update( ubic.gemma.model.genome.sequenceAnalysis.BlatResult blatResult );
+    public void remove( BlatResult blatResult );
+
+    @Secured( { "GROUP_USER" })
+    public void update( BlatResult blatResult );
+
+    public BlatResult thaw( BlatResult blatResult );
+
+    public Collection<BlatResult> thaw( Collection<BlatResult> blatResults );
 
 }

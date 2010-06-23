@@ -60,11 +60,13 @@ import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignGeneMappingEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
+import ubic.gemma.model.common.auditAndSecurity.eventType.AutomatedAnnotationEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.LinkAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.MissingValueAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ProcessedVectorComputationEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.TroubleStatusFlagEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.ValidatedAnnotations;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ValidatedFlagEvent;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
@@ -121,8 +123,11 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
      */
     @SuppressWarnings("unchecked")
     private Class<? extends AuditEventType>[] eventTypes = new Class[] { LinkAnalysisEvent.class,
-            MissingValueAnalysisEvent.class, ProcessedVectorComputationEvent.class, ValidatedFlagEvent.class,
-            DifferentialExpressionAnalysisEvent.class };
+            MissingValueAnalysisEvent.class, ProcessedVectorComputationEvent.class, ValidatedAnnotations.class,
+            DifferentialExpressionAnalysisEvent.class, AutomatedAnnotationEvent.class, ValidatedFlagEvent.class /*
+                                                                                                                 * keep
+                                                                                                                 * last
+                                                                                                                 */};
 
     /**
      * Cache to hold stats in memory. This is used to avoid hittinig the disk for reports too often.
@@ -199,7 +204,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
         if ( ees.size() == 0 ) {
             return results;
         }
-        
+
         Map<Long, Object> eemap = EntityUtils.getIdMap( ees );
 
         Map<Long, AuditEvent> troubleEvents = getEvents( ees, TroubleStatusFlagEvent.class );
@@ -212,7 +217,9 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
         Map<Auditable, AuditEvent> missingValueAnalysisEvents = events.get( MissingValueAnalysisEvent.class );
         Map<Auditable, AuditEvent> rankComputationEvents = events.get( ProcessedVectorComputationEvent.class );
         Map<Auditable, AuditEvent> validationEvents = events.get( ValidatedFlagEvent.class );
+        Map<Auditable, AuditEvent> validatedAnnotationEvents = events.get( ValidatedAnnotations.class );
         Map<Auditable, AuditEvent> differentialAnalysisEvents = events.get( DifferentialExpressionAnalysisEvent.class );
+        Map<Auditable, AuditEvent> autotaggerEvents = events.get( AutomatedAnnotationEvent.class );
 
         Map<Long, Collection<AuditEvent>> sampleRemovalEvents = getSampleRemovalEvents( ees );
 
@@ -311,6 +318,33 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
                 }
 
                 eeVo.setValidatedFlag( new AuditEventValueObject( validated ) );
+
+            }
+
+            if ( validatedAnnotationEvents.containsKey( ee ) ) {
+                AuditEvent validated = validationEvents.get( ee );
+
+                if ( validated != null ) {
+
+                    auditEventService.thaw( validated );
+
+                    if ( validated.getDate().after( mostRecentDate ) ) {
+                        mostRecentDate = validated.getDate();
+                    }
+
+                    eeVo.setValidatedAnnotations( new AuditEventValueObject( validated ) );
+                }
+            }
+
+            if ( autotaggerEvents.containsKey( ee ) ) {
+                AuditEvent taggerEvent = autotaggerEvents.get( ee );
+                auditEventService.thaw( taggerEvent );
+
+                if ( taggerEvent.getDate().after( mostRecentDate ) ) {
+                    mostRecentDate = taggerEvent.getDate();
+                }
+
+                eeVo.setAutoTagDate( taggerEvent.getDate() );
             }
 
             if ( privacyInfo.containsKey( ee ) ) {

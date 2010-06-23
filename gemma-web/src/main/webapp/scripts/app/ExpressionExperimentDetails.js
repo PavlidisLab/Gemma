@@ -548,7 +548,7 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 		new Gemma.MGEDCombo({});
 
 		var taggerurl = '<span style="cursor:pointer" onClick="return Ext.getCmp(\'eemanager\').tagger(' + e.id + ',' +
-				e.taxonId + ',' + this.editable +
+				e.taxonId + ',' + this.editable + ',' + (e.validatedAnnotations !== null) +
 				')"><img src="/Gemma/images/icons/pencil.png" alt="view tags" title="view tags"/></span>';
 
 		tagView = new Gemma.AnnotationDataView({

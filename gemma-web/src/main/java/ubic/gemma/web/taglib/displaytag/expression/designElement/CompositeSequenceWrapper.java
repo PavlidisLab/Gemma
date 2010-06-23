@@ -24,10 +24,10 @@ import java.util.Collection;
 import org.apache.commons.lang.StringUtils;
 import org.displaytag.decorator.TableDecorator;
 
-import ubic.gemma.analysis.sequence.GeneMappingSummary; 
+import ubic.gemma.analysis.sequence.GeneMappingSummary;
 import ubic.gemma.model.genome.gene.GeneProductValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
-import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
+import ubic.gemma.model.genome.sequenceAnalysis.BlatResultValueObject;
 import ubic.gemma.web.util.LinkUtils;
 
 /**
@@ -51,10 +51,10 @@ public class CompositeSequenceWrapper extends TableDecorator {
      */
     public String getBlatIdentity() {
         GeneMappingSummary object = ( GeneMappingSummary ) getCurrentRowObject();
-        BlatResult blatResult = object.getBlatResult();
+        BlatResultValueObject blatResult = object.getBlatResult();
         String retVal = "";
-        if ( blatResult.identity() != null ) {
-            retVal += nf.format( blatResult.identity() );
+        if ( blatResult.getIdentity() != null ) {
+            retVal += nf.format( blatResult.getIdentity() );
         }
         return retVal;
     }
@@ -64,9 +64,9 @@ public class CompositeSequenceWrapper extends TableDecorator {
      */
     public String getBlatResult() {
         GeneMappingSummary object = ( GeneMappingSummary ) getCurrentRowObject();
-        BlatResult blatResult = object.getBlatResult();
+        BlatResultValueObject blatResult = object.getBlatResult();
         String retVal = "Chr. ";
-        retVal += blatResult.getTargetChromosome().getName();
+        retVal += blatResult.getTargetChromosomeName();
         retVal += " : ";
         retVal += blatResult.getTargetStart().toString() + "-";
         retVal += blatResult.getTargetEnd().toString();
@@ -80,10 +80,10 @@ public class CompositeSequenceWrapper extends TableDecorator {
      */
     public String getBlatScore() {
         GeneMappingSummary object = ( GeneMappingSummary ) getCurrentRowObject();
-        BlatResult blatResult = object.getBlatResult();
+        BlatResultValueObject blatResult = object.getBlatResult();
         String retVal = "";
-        if ( blatResult.score() != null ) {
-            retVal += nf.format( blatResult.score() );
+        if ( blatResult.getScore() != null ) {
+            retVal += nf.format( blatResult.getScore() );
         }
         return retVal;
     }

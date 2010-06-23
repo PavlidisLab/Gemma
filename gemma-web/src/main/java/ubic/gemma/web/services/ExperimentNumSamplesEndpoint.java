@@ -80,7 +80,7 @@ public class ExperimentNumSamplesEndpoint extends AbstractGemmaEndpoint {
 
         ExpressionExperiment ee = expressionExperimentService.load( Long.parseLong( eeId ) );
         if ( ee == null ) {
-            String msg = "No Expression Experiment with id, " + ee + " can be found.";
+            String msg = "No Expression Experiment with id, " + eeId + " can be found.";
             return buildBadResponse( document, msg );
         }
 

@@ -139,4 +139,16 @@ public class ExpressionExperimentSetServiceImpl extends
         this.getExpressionExperimentSetDao().update( expressionExperimentSet );
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.model.analysis.expression.ExpressionExperimentSetService#thaw(ubic.gemma.model.analysis.expression
+     * .ExpressionExperimentSet)
+     */
+    @Override
+    public void thaw( ExpressionExperimentSet expressionExperimentSet ) {
+        this.getExpressionExperimentSetDao().thaw( expressionExperimentSet );
+    }
+
 }

@@ -16,10 +16,10 @@ Ext.onReady(function() {
 			});
 
 	if (Ext.get('updateAllReports-area')) {
-		Ext.DomHelper.overwrite('updateAllReports-area', '<p>' + 'To update all reports click here: '
-						+ '<span class="link" onClick="Ext.getCmp(\'eemanager\').updateAllEEReports(1)"><img '
-						+ 'src="/Gemma/images/icons/arrow_refresh_small.png" title="refresh all reports" /> </span>'
-						+ '</p>');
+		Ext.DomHelper.overwrite('updateAllReports-area', '<p>' + 'To update all reports click here: ' +
+						'<span class="link" onClick="Ext.getCmp(\'eemanager\').updateAllEEReports(1)"><img ' +
+						'src="/Gemma/images/icons/arrow_refresh_small.png" title="refresh all reports" /> </span>' +
+						'</p>');
 	}
 
 	this.manager = manager;
@@ -68,16 +68,15 @@ Ext.onReady(function() {
 	var adminRenderer = function(value, metadata, record, rowIndex, colIndex, store) {
 
 		if (record.get("currentUserHasWritePermission")) {
-			var adminLink = '<span class="link"  onClick="Ext.getCmp(\'eemanager\').updateEEReport('
-					+ value
-					+ ')"><img src="/Gemma/images/icons/arrow_refresh_small.png" ext:qtip="Refresh statistics"  ext:qtip="refresh"/></span>';
+			var adminLink = '<span class="link"  onClick="Ext.getCmp(\'eemanager\').updateEEReport(' + value +
+					')"><img src="/Gemma/images/icons/arrow_refresh_small.png" ext:qtip="Refresh statistics"  ext:qtip="refresh"/></span>';
 
 			var isAdmin = Ext.get("hasAdmin").getValue() == 'true';
 			if (isAdmin) {
-				adminLink = adminLink
-						+ '&nbsp;&nbsp;&nbsp;<span class="link" onClick="return Ext.getCmp(\'eemanager\').deleteExperiment('
-						+ value
-						+ ')"><img src="/Gemma/images/icons/cross.png" ext:qtip="Delete the experiment from the system" ext:qtip="delete" /></span>&nbsp;';
+				adminLink = adminLink +
+						'&nbsp;&nbsp;&nbsp;<span class="link" onClick="return Ext.getCmp(\'eemanager\').deleteExperiment(' +
+						value +
+						')"><img src="/Gemma/images/icons/cross.png" ext:qtip="Delete the experiment from the system" ext:qtip="delete" /></span>&nbsp;';
 			}
 			return adminLink;
 		}
@@ -86,8 +85,8 @@ Ext.onReady(function() {
 	};
 
 	var shortNameRenderer = function(value, metadata, record, rowIndex, colIndex, store) {
-		return '<a href="/Gemma/expressionExperiment/showExpressionExperiment.html?id=' + record.get("id")
-				+ '" target="_blank">' + value + '</a>';
+		return '<a href="/Gemma/expressionExperiment/showExpressionExperiment.html?id=' + record.get("id") +
+				'" target="_blank">' + value + '</a>';
 	};
 
 	// var rowExpander = new Gemma.EEGridRowExpander({
@@ -100,9 +99,9 @@ Ext.onReady(function() {
 
 	var experimentalDesignEditRenderer = function(value, metadata, record, rowIndex, colIndex, store) {
 		var id = record.get('id');
-		var url = '<a target="_blank" href="/Gemma/experimentalDesign/showExperimentalDesign.html?eeid='
-				+ id
-				+ '"><img src="/Gemma/images/icons/pencil.png" alt="view/edit experimental design" ext:qtip="view/edit experimental design"/></a>';
+		var url = '<a target="_blank" href="/Gemma/experimentalDesign/showExperimentalDesign.html?eeid=' +
+				id +
+				'"><img src="/Gemma/images/icons/pencil.png" alt="view/edit experimental design" ext:qtip="view/edit experimental design"/></a>';
 		return value + '&nbsp;' + url;
 	};
 
@@ -110,15 +109,23 @@ Ext.onReady(function() {
 		var id = record.get('id');
 		var taxonId = record.get('taxonId');
 
-		var url = '<span class="link" onClick="return Ext.getCmp(\'eemanager\').tagger(' + id + ',' + taxonId + ','
-				+ record.get("currentUserHasWritePermission")
-				+ ')"><img src="/Gemma/images/icons/pencil.png" alt="view tags" ext:qtip="add/view tags"/></span>';
+		var url = '<span class="link" onClick="return Ext.getCmp(\'eemanager\').tagger(' + id + ',' + taxonId + ',' +
+				record.get("currentUserHasWritePermission") + ',' + (record.get("validatedAnnotations") !== null) +
+				')"><img src="/Gemma/images/icons/pencil.png" alt="view tags" ext:qtip="add/view tags"/></span>';
 		value = value + '&nbsp;' + url;
 
 		if (record.get("currentUserHasWritePermission")) {
-			var turl = '<span class="link"  onClick="return Ext.getCmp(\'eemanager\').autoTag('
-					+ id
-					+ ')"><img src="/Gemma/images/icons/wand.png" alt="run auto-tagger" ext:qtip="add tags automatically"/></span>';
+			var turl;
+			if (record.get('autoTagDate')) {
+				var icon = "/Gemma/images/icons/wand.png";
+				turl = '<span class="link"  onClick="return Ext.getCmp(\'eemanager\').autoTag(' + id + ')"><img src="' +
+						icon + '" alt="run auto-tagger" ext:qtip="tagger was run on ' +
+						Ext.util.Format.date(record.get('autoTagDate'), 'y/M/d') + '; click to re-run"/></span>';
+			} else {
+				var icon = "/Gemma/images/icons/wand--plus.png";
+				turl = '<span class="link"  onClick="return Ext.getCmp(\'eemanager\').autoTag(' + id + ')"><img src="' +
+						icon + '" alt="run auto-tagger" ext:qtip="add tags automatically"/></span>';
+			}
 			value = value + '&nbsp;' + turl;
 		}
 
@@ -132,9 +139,9 @@ Ext.onReady(function() {
 		var id = record.get('id');
 		var runurl = "";
 		if (record.get("currentUserHasWritePermission")) {
-			runurl = '<span class="link" onClick="return Ext.getCmp(\'eemanager\').doLinks('
-					+ id
-					+ ')"><img src="/Gemma/images/icons/control_play_blue.png" ext:qtip="Run coexpression analysis"  alt="link analysis" /></span>';
+			runurl = '<span class="link" onClick="return Ext.getCmp(\'eemanager\').doLinks(' +
+					id +
+					')"><img src="/Gemma/images/icons/control_play_blue.png" ext:qtip="Run coexpression analysis"  alt="link analysis" /></span>';
 		}
 
 		if (record.get('bioAssayCount') < BIG_ENOUGH_FOR_LINKS) {
@@ -155,8 +162,8 @@ Ext.onReady(function() {
 				suggestRun = false;
 			}
 
-			return '<span style="color:' + color + ';" ' + qtip + '>' + Ext.util.Format.date(value, 'y/M/d') + '&nbsp;'
-					+ (suggestRun ? runurl : '');
+			return '<span style="color:' + color + ';" ' + qtip + '>' + Ext.util.Format.date(value, 'y/M/d') +
+					'&nbsp;' + (suggestRun ? runurl : '');
 		} else {
 			return '<span style="color:#3A3;">Needed</span>&nbsp;' + runurl;
 		}
@@ -167,9 +174,9 @@ Ext.onReady(function() {
 
 		var runurl = "";
 		if (record.get("currentUserHasWritePermission")) {
-			runurl = '<span class="link" onClick="return Ext.getCmp(\'eemanager\').doMissingValues('
-					+ id
-					+ ')"><img src="/Gemma/images/icons/control_play_blue.png" ext:qtip="Run missing value analysis" alt="missing value computation"  /></span>';
+			runurl = '<span class="link" onClick="return Ext.getCmp(\'eemanager\').doMissingValues(' +
+					id +
+					')"><img src="/Gemma/images/icons/control_play_blue.png" ext:qtip="Run missing value analysis" alt="missing value computation"  /></span>';
 		}
 
 		/*
@@ -186,8 +193,8 @@ Ext.onReady(function() {
 					qtip = 'ext:qtip="Failed"';
 				}
 
-				return '<span style="color:' + color + ';" ' + qtip + '>' + Ext.util.Format.date(value, 'y/M/d')
-						+ '&nbsp;' + (suggestRun ? runurl : '');
+				return '<span style="color:' + color + ';" ' + qtip + '>' + Ext.util.Format.date(value, 'y/M/d') +
+						'&nbsp;' + (suggestRun ? runurl : '');
 			} else {
 				return '<span style="color:#3A3;">Needed</span>&nbsp;' + runurl;
 			}
@@ -201,9 +208,9 @@ Ext.onReady(function() {
 		var id = record.get('id');
 		var runurl = "";
 		if (record.get("currentUserHasWritePermission")) {
-			runurl = '<span class="link" onClick="return Ext.getCmp(\'eemanager\').doProcessedVectors('
-					+ id
-					+ ')"><img src="/Gemma/images/icons/control_play_blue.png" ext:qtip="Run processed vector generation" alt="processed vector generation"/></span>';
+			runurl = '<span class="link" onClick="return Ext.getCmp(\'eemanager\').doProcessedVectors(' +
+					id +
+					')"><img src="/Gemma/images/icons/control_play_blue.png" ext:qtip="Run processed vector generation" alt="processed vector generation"/></span>';
 		}
 
 		if (record.get('dateProcessedDataVectorComputation')) {
@@ -212,13 +219,13 @@ Ext.onReady(function() {
 
 			var suggestRun = true;
 			var qtip = 'ext:qtip="OK"';
-			if (type == 'FailedProcessedVectorComputationEventImpl') { 
+			if (type == 'FailedProcessedVectorComputationEventImpl') {
 				color = 'red';
 				qtip = 'ext:qtip="Failed"';
 			}
 
-			return '<span style="color:' + color + ';" ' + qtip + '>' + Ext.util.Format.date(value, 'y/M/d') + '&nbsp;'
-					+ (suggestRun ? runurl : '');
+			return '<span style="color:' + color + ';" ' + qtip + '>' + Ext.util.Format.date(value, 'y/M/d') +
+					'&nbsp;' + (suggestRun ? runurl : '');
 		} else {
 			return '<span style="color:#3A3;">Needed</span>&nbsp;' + runurl;
 		}
@@ -229,9 +236,9 @@ Ext.onReady(function() {
 
 		var runurl = "";
 		if (record.get("currentUserHasWritePermission")) {
-			runurl = '<span class="link" onClick="return Ext.getCmp(\'eemanager\').doDifferential('
-					+ id
-					+ ')"><img src="/Gemma/images/icons/control_play_blue.png" alt="differential expression analysis" ext:qtip="Run differential expression analysis"/></span>';
+			runurl = '<span class="link" onClick="return Ext.getCmp(\'eemanager\').doDifferential(' +
+					id +
+					')"><img src="/Gemma/images/icons/control_play_blue.png" alt="differential expression analysis" ext:qtip="Run differential expression analysis"/></span>';
 		}
 
 		if (diffIsPossible(record)) {
@@ -241,13 +248,13 @@ Ext.onReady(function() {
 				var color = "#000";
 				var suggestRun = true;
 				var qtip = 'ext:qtip="OK"';
-				if (type == 'FailedDifferentialExpressionAnalysisEventImpl') {  
+				if (type == 'FailedDifferentialExpressionAnalysisEventImpl') {
 					color = 'red';
 					qtip = 'ext:qtip="Failed"';
 				}
 
-				return '<span style="color:' + color + ';" ' + qtip + '>' + Ext.util.Format.date(value, 'y/M/d')
-						+ '&nbsp;' + (suggestRun ? runurl : '');
+				return '<span style="color:' + color + ';" ' + qtip + '>' + Ext.util.Format.date(value, 'y/M/d') +
+						'&nbsp;' + (suggestRun ? runurl : '');
 			} else {
 				return '<span style="color:#3A3;">Needed</span>&nbsp;' + runurl;
 			}
@@ -260,17 +267,17 @@ Ext.onReady(function() {
 		var id = record.get('id');
 		var result = '';
 		if (record.get('validatedFlag')) {
-			result = result
-					+ '<img src="/Gemma/images/icons/emoticon_smile.png" alt="validated" ext:qtip="validated"/>';
+			result = result +
+					'<img src="/Gemma/images/icons/emoticon_smile.png" alt="validated" ext:qtip="validated"/>';
 		}
 
 		if (record.get('troubleFlag')) {
-			result = result + '<img src="/Gemma/images/icons/stop.png" alt="trouble" ext:qtip="trouble: '
-					+ record.get('troubleFlag').note + '"/>';
+			result = result + '<img src="/Gemma/images/icons/stop.png" alt="trouble" ext:qtip="trouble: ' +
+					record.get('troubleFlag').note + '"/>';
 		}
 
-		result = result
-				+ Gemma.SecurityManager.getSecurityLink(
+		result = result +
+				Gemma.SecurityManager.getSecurityLink(
 						'ubic.gemma.model.expression.experiment.ExpressionExperimentImpl', id, record.get('isPublic'),
 						record.get('isShared'), record.get('currentUserHasWritePermission'));
 
@@ -294,16 +301,16 @@ Ext.onReady(function() {
 						Ext.DomHelper
 								.overwrite(
 										dataSetDetailsPanel.body,
-										'<span class="big">'
-												+ shortNameRenderer(record.get('shortName'), null, record)
-												+ '</span>&nbsp;&nbsp;<span class="medium">'
-												+ record.get('name')
-												+ "</span><p>"
-												+ data
-												+ "</p>"
-												+ '<span class="link" onClick="Ext.getCmp(\'eemanager\').showAuditWindow('
-												+ record.id
-												+ ');" ><img ext:qtip="Show history" src="/Gemma/images/icons/pencil.png" /></span>');
+										'<span class="big">' +
+												shortNameRenderer(record.get('shortName'), null, record) +
+												'</span>&nbsp;&nbsp;<span class="medium">' +
+												record.get('name') +
+												"</span><p>" +
+												data +
+												"</p>" +
+												'<span class="link" onClick="Ext.getCmp(\'eemanager\').showAuditWindow(' +
+												record.id +
+												');" ><img ext:qtip="Show history" src="/Gemma/images/icons/pencil.png" /></span>');
 						detailsmask.hide();
 					}.createDelegate(this)
 				});
@@ -311,100 +318,106 @@ Ext.onReady(function() {
 	};
 
 	var columns = [{
-		header : 'Short Name',
-		sortable : true,
-		dataIndex : 'shortName',
-		renderer : shortNameRenderer,
-		locked : true
-			/* LockingGridView */
-		}, {
-		header : 'Name',
-		sortable : true,
-		dataIndex : 'name'
-	}, {
-		header : 'Taxon',
-		sortable : true,
-		dataIndex : 'taxon',
-		width : 40
-	}, {
-		header : 'Flags',
-		sortable : true,
-		renderer : flagRenderer,
-		tooltip : 'Status flags'
-	}, {
-		header : '#ADs',
-		sortable : true,
-		dataIndex : 'arrayDesignCount',
-		tooltip : "The number of different array design platforms used in the study",
-		width : 35
-	}, {
-		header : '#BAs',
-		sortable : true,
-		dataIndex : 'bioAssayCount',
-		tooltip : 'The number of samples in the study',
-		width : 35
-	}, {
-		header : '#Prof',
-		sortable : true,
-		dataIndex : 'processedExpressionVectorCount',
-		tooltip : 'The number of expression profiles',
-		width : 45
-	}, {
-		header : '#Facs',
-		sortable : true,
-		dataIndex : 'numPopulatedFactors',
-		renderer : experimentalDesignEditRenderer,
-		tooltip : 'The number of experimental factors (variables) defined for the study',
-		width : 45
-	}, {
-		header : '#tags',
-		sortable : true,
-		dataIndex : 'numAnnotations',
-		renderer : experimentTaggerRenderer,
-		tooltip : 'The number of terms the experiment is tagged with',
-		width : 52
-	}, {
-		header : 'Created',
-		sortable : true,
-		dataIndex : 'dateCreated',
-		tooltip : 'Create date',
-		renderer : dateRenderer
-	}, {
-		header : 'Updated',
-		sortable : true,
-		dataIndex : 'dateLastUpdated',
-		tooltip : 'Update date; not all possible types of updates are considered.',
-		renderer : dateRenderer
-	}, {
-		header : 'MissingVals',
-		sortable : true,
-		dataIndex : 'dateMissingValueAnalysis',
-		tooltip : 'Status of missing value computation (two-channel studies only)',
-		renderer : missingValueAnalysisRenderer
-	}, {
-		header : 'ProcProf',
-		sortable : true,
-		dataIndex : 'dateProcessedDataVectorComputation',
-		tooltip : 'Status of processed expression profile configuration',
-		renderer : processedVectorCreateRenderer
-	}, {
-		header : 'Diff',
-		sortable : true,
-		dataIndex : 'dateDifferentialAnalysis',
-		tooltip : 'Status of differential expression analysis. Must have factors to enable',
-		renderer : differentialAnalysisRenderer
-	}, {
-		header : 'Links',
-		sortable : true,
-		dataIndex : 'dateLinkAnalysis',
-		tooltip : 'Status of coexpression analysis',
-		renderer : linkAnalysisRenderer
-	}, {
-		header : 'Admin',
-		sortable : false,
-		dataIndex : 'id',
-		renderer : adminRenderer
-	}];
+				header : 'Short Name',
+				sortable : true,
+				dataIndex : 'shortName',
+				renderer : shortNameRenderer
+			}, {
+				header : 'Name',
+				sortable : true,
+				dataIndex : 'name'
+			}, {
+				header : 'Taxon',
+				sortable : true,
+				dataIndex : 'taxon',
+				width : 40
+			}, {
+				header : 'Flags',
+				sortable : true,
+				renderer : flagRenderer,
+				tooltip : 'Status flags',
+				width : 40
+			}, {
+				header : '#ADs',
+				sortable : true,
+				dataIndex : 'arrayDesignCount',
+				tooltip : "The number of different array design platforms used in the study",
+				width : 35
+			}, {
+				header : '#BAs',
+				sortable : true,
+				dataIndex : 'bioAssayCount',
+				tooltip : 'The number of samples in the study',
+				width : 35
+			}, {
+				header : '#Prof',
+				sortable : true,
+				dataIndex : 'processedExpressionVectorCount',
+				tooltip : 'The number of expression profiles',
+				width : 45
+			}, {
+				header : '#Facs',
+				sortable : true,
+				dataIndex : 'numPopulatedFactors',
+				renderer : experimentalDesignEditRenderer,
+				tooltip : 'The number of experimental factors (variables) defined for the study',
+				width : 45
+			}, {
+				header : '#tags',
+				sortable : true,
+				dataIndex : 'numAnnotations',
+				renderer : experimentTaggerRenderer,
+				tooltip : 'The number of terms the experiment is tagged with',
+				width : 60
+			}, {
+				header : 'Created',
+				sortable : true,
+				dataIndex : 'dateCreated',
+				tooltip : 'Create date',
+				renderer : dateRenderer,
+				width : 80
+			}, {
+				header : 'Updated',
+				sortable : true,
+				dataIndex : 'dateLastUpdated',
+				tooltip : 'Update date; not all possible types of updates are considered.',
+				renderer : dateRenderer,
+				width : 80
+			}, {
+				header : 'MissingVals',
+				sortable : true,
+				dataIndex : 'dateMissingValueAnalysis',
+				tooltip : 'Status of missing value computation (two-channel studies only)',
+				renderer : missingValueAnalysisRenderer,
+				width : 80
+			}, {
+				header : 'ProcProf',
+				sortable : true,
+				dataIndex : 'dateProcessedDataVectorComputation',
+				tooltip : 'Status of processed expression profile configuration',
+				renderer : processedVectorCreateRenderer,
+				width : 80
+			}, {
+				header : 'Diff',
+				sortable : true,
+				dataIndex : 'dateDifferentialAnalysis',
+				tooltip : 'Status of differential expression analysis. Must have factors to enable',
+				renderer : differentialAnalysisRenderer,
+				width : 90
+			}, {
+				header : 'Links',
+				sortable : true,
+				dataIndex : 'dateLinkAnalysis',
+				tooltip : 'Status of coexpression analysis',
+				renderer : linkAnalysisRenderer,
+				width : 90
+			}, {
+				header : 'Admin',
+				sortable : false,
+				dataIndex : 'id',
+				renderer : adminRenderer,
+				width : 60
+			}];
 
 	var limit = 100;
 
@@ -431,20 +444,22 @@ Ext.onReady(function() {
 	}
 
 	var reportGrid = new Gemma.EEReportPanel({
-				store : store,
-				title : 'Experiment manager',
-				region : 'center',
-				loadMask : true,
-				height : 500,
-				taxonid : taxonid,
-				limit : limit,
-				filterMode : filterMode,
-				ids : ids,
-				colModel : new Ext.ux.grid.LockingColumnModel(columns),
-				view : new Ext.ux.grid.LockingGridView({
-							syncHeights : true
-						})
-			});
+		store : store,
+		title : 'Experiment manager',
+		region : 'center',
+		loadMask : true,
+		height : 500,
+		taxonid : taxonid,
+		limit : limit,
+		filterMode : filterMode,
+		ids : ids,
+		colModel : new Ext.grid.ColumnModel(columns)
+			// too buggy
+			// ,colModel : new Ext.ux.grid.LockingColumnModel(columns),
+			// view : new Ext.ux.grid.LockingGridView({
+			// syncHeights : true
+			// })
+		});
 
 	reportGrid.getSelectionModel().on('rowselect', showEEDetails, this, {
 		buffer : 100

@@ -251,7 +251,7 @@ public class ArrayDesignSequenceProcessingService {
         if ( bs.getSequenceDatabaseEntry() == null ) {
             return null;
         }
-        this.bioSequenceService.thaw( bs );
+        bs = this.bioSequenceService.thaw( bs );
         return bs.getSequenceDatabaseEntry().getAccession();
     }
 
@@ -730,22 +730,23 @@ public class ArrayDesignSequenceProcessingService {
                     numMatchedByProbeName++;
                     continue;
                 }
-            } else if ( compositeSequence.getBiologicalCharacteristic() != null ) {
-                bioSequenceService.thaw( compositeSequence.getBiologicalCharacteristic() );
-                if ( compositeSequence.getBiologicalCharacteristic().getSequenceDatabaseEntry() != null
-                        && gbIdMap.containsKey( compositeSequence.getBiologicalCharacteristic()
-                                .getSequenceDatabaseEntry().getAccession() ) ) {
-                    match = gbIdMap.get( compositeSequence.getBiologicalCharacteristic().getSequenceDatabaseEntry()
-                            .getAccession() );
-                    numMatchedByAccession++;
+            } else {
+                BioSequence biologicalCharacteristic = compositeSequence.getBiologicalCharacteristic();
+                if ( biologicalCharacteristic != null ) {
+                    biologicalCharacteristic = bioSequenceService.thaw( biologicalCharacteristic );
+                    if ( biologicalCharacteristic.getSequenceDatabaseEntry() != null
+                            && gbIdMap.containsKey( biologicalCharacteristic.getSequenceDatabaseEntry().getAccession() ) ) {
+                        match = gbIdMap.get( biologicalCharacteristic.getSequenceDatabaseEntry().getAccession() );
+                        numMatchedByAccession++;
+                    } else {
+                        compositeSequence.setBiologicalCharacteristic( null );
+                        numWithNoSequence++;
+                        notifyAboutMissingSequences( numWithNoSequence, compositeSequence );
+                    }
                 } else {
-                    compositeSequence.setBiologicalCharacteristic( null );
                     numWithNoSequence++;
                     notifyAboutMissingSequences( numWithNoSequence, compositeSequence );
                 }
-            } else {
-                numWithNoSequence++;
-                notifyAboutMissingSequences( numWithNoSequence, compositeSequence );
             }
 
             if ( match != null ) {
@@ -1339,7 +1340,7 @@ public class ArrayDesignSequenceProcessingService {
             fillInDatabaseEntry( found, result );
         }
 
-        bioSequenceService.thaw( result );
+        result = bioSequenceService.thaw( result );
 
         return result;
     }

@@ -18,12 +18,12 @@
  */
 package ubic.gemma.analysis.expression.coexpression;
 
-
 /**
  * @author luke
+ * @version $Id$
  */
 public class CoexpressionDatasetValueObject {
-    
+
     private Long id;
     private String queryGene;
     private Boolean probeSpecificForQueryGene;
@@ -31,11 +31,11 @@ public class CoexpressionDatasetValueObject {
     private Integer bioAssayCount;
     private Integer rawCoexpressionLinkCount;
     private Integer coexpressionLinkCount;
-    
+
     public Long getId() {
         return id;
     }
-    
+
     public void setId( Long id ) {
         this.id = id;
     }
@@ -47,45 +47,45 @@ public class CoexpressionDatasetValueObject {
     public void setQueryGene( String queryGene ) {
         this.queryGene = queryGene;
     }
-    
+
     public Boolean getProbeSpecificForQueryGene() {
         return probeSpecificForQueryGene;
     }
-    
+
     public void setProbeSpecificForQueryGene( Boolean probeSpecificForQueryGene ) {
         this.probeSpecificForQueryGene = probeSpecificForQueryGene;
     }
-    
+
     public Integer getArrayDesignCount() {
         return arrayDesignCount;
     }
-    
+
     public void setArrayDesignCount( Integer arrayDesignCount ) {
         this.arrayDesignCount = arrayDesignCount;
     }
-    
+
     public Integer getBioAssayCount() {
         return bioAssayCount;
     }
-    
+
     public void setBioAssayCount( Integer bioAssayCount ) {
         this.bioAssayCount = bioAssayCount;
     }
-    
+
     public Integer getRawCoexpressionLinkCount() {
         return rawCoexpressionLinkCount;
     }
-    
+
     public void setRawCoexpressionLinkCount( Integer rawCoexpressionLinkCount ) {
         this.rawCoexpressionLinkCount = rawCoexpressionLinkCount;
     }
-    
+
     public Integer getCoexpressionLinkCount() {
         return coexpressionLinkCount;
     }
-    
+
     public void setCoexpressionLinkCount( Integer coexpressionLinkCount ) {
         this.coexpressionLinkCount = coexpressionLinkCount;
     }
-        
+
 }

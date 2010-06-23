@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.expression.biomaterial;
 
+import java.util.Collection;
+
 import org.springframework.security.access.annotation.Secured;
 
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -92,5 +94,14 @@ public interface BioMaterialService {
      */
     @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
     public void update( BioMaterial bioMaterial );
+
+    /**
+     * @param bioMaterial
+     */
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE__READ" })
+    public void thaw( BioMaterial bioMaterial );
+
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    public Collection<BioMaterial> thaw( Collection<BioMaterial> bioMaterials );
 
 }

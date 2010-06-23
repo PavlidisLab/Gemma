@@ -41,6 +41,7 @@ public class BioMaterialServiceImpl extends ubic.gemma.model.expression.biomater
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.biomaterial.BioMaterialServiceBase#handleCopy(ubic.gemma.model.expression.biomaterial
      * .BioMaterial)
@@ -91,6 +92,7 @@ public class BioMaterialServiceImpl extends ubic.gemma.model.expression.biomater
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.biomaterial.BioMaterialServiceBase#handleLoadMultiple(java.util.Collection)
      */
     @Override
@@ -117,6 +119,7 @@ public class BioMaterialServiceImpl extends ubic.gemma.model.expression.biomater
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.biomaterial.BioMaterialServiceBase#handleUpdate(ubic.gemma.model.expression.biomaterial
      * .BioMaterial)
@@ -128,6 +131,7 @@ public class BioMaterialServiceImpl extends ubic.gemma.model.expression.biomater
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.biomaterial.BioMaterialService#exists(ubic.gemma.model.expression.biomaterial.BioMaterial
      * )
@@ -136,4 +140,24 @@ public class BioMaterialServiceImpl extends ubic.gemma.model.expression.biomater
         return this.getBioMaterialDao().find( bioMaterial ) != null;
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.model.expression.biomaterial.BioMaterialService#thaw(ubic.gemma.model.expression.biomaterial.BioMaterial
+     * )
+     */
+    public void thaw( BioMaterial bioMaterial ) {
+        this.getBioMaterialDao().thaw( bioMaterial );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.expression.biomaterial.BioMaterialService#thaw(java.util.Collection)
+     */
+    @Override
+    public Collection<BioMaterial> thaw( Collection<BioMaterial> bioMaterials ) {
+        return this.getBioMaterialDao().thaw( bioMaterials );
+    }
 }

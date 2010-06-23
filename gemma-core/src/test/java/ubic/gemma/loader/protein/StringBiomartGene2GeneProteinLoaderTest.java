@@ -19,7 +19,6 @@
 
 package ubic.gemma.loader.protein;
 
-
 import static org.junit.Assert.*;
 
 import java.io.File;
@@ -92,7 +91,7 @@ public class StringBiomartGene2GeneProteinLoaderTest extends BaseSpringContextTe
         taxa = getTaxonToProcess();
         getTestPeristentGenesZebra();
         getTestPeristentGenesRat();
-        //make sure all the data is cleared out before starting
+        // make sure all the data is cleared out before starting
         this.gene2GeneProteinAssociationService.deleteAll( gene2GeneProteinAssociationService.loadAll() );
         assertTrue( gene2GeneProteinAssociationService.loadAll().isEmpty() );
 
@@ -244,8 +243,8 @@ public class StringBiomartGene2GeneProteinLoaderTest extends BaseSpringContextTe
     }
 
     /**
-     * Tests that two taxons can be processed at same time. NOTE it does get the files from the biomart site.
-     * It also checks that the byte representing the evidence code is stored correctly.
+     * Tests that two taxons can be processed at same time. NOTE it does get the files from the biomart site. It also
+     * checks that the byte representing the evidence code is stored correctly.
      */
     @Test
     public void testDoLoadRemoteBiomartFileLocalStringFileMultipleTaxon() {
@@ -264,11 +263,12 @@ public class StringBiomartGene2GeneProteinLoaderTest extends BaseSpringContextTe
 
             for ( Gene2GeneProteinAssociation association : associations ) {
                 gene2GeneProteinAssociationService.thaw( association );
-                this.geneService.thaw( association.getSecondGene() );
-                String taxonScientificName = association.getSecondGene().getTaxon().getScientificName();
+                Gene secondGene = association.getSecondGene();
+                secondGene = this.geneService.thaw( secondGene );
+                String taxonScientificName = secondGene.getTaxon().getScientificName();
                 ProteinLinkOutFormatter formatter = new ProteinLinkOutFormatter();
                 if ( taxonScientificName.equals( zebraFish.getScientificName() ) ) {
-                    assertEquals( "751652", association.getSecondGene().getNcbiId() );
+                    assertEquals( "751652", secondGene.getNcbiId() );
                     if ( association.getFirstGene().getNcbiId().equals( "571540" ) ) {
                         byte[] array = new byte[] { 0, 0, 1, 0, 1, 1, 1 };
                         String asscession = ( databaseService.find( association.getDatabaseEntry() ) ).getAccession();
@@ -278,11 +278,11 @@ public class StringBiomartGene2GeneProteinLoaderTest extends BaseSpringContextTe
                         assertEquals( new Double( 180 ), associationScore );
                         assertArrayEquals( array, association.getEvidenceVector() );
                         counterAssociationsSavedZebra++;
-                        byte[] arrayBytes= association.getEvidenceVector();                        
-                    
-                        String formatedEvidence = formatter.getEvidenceDisplayText ( arrayBytes );
-                        assertEquals("Coocurrence:Experimental:Database:TextMining", formatedEvidence);
-                        
+                        byte[] arrayBytes = association.getEvidenceVector();
+
+                        String formatedEvidence = formatter.getEvidenceDisplayText( arrayBytes );
+                        assertEquals( "Coocurrence:Experimental:Database:TextMining", formatedEvidence );
+
                     } else if ( association.getFirstGene().getNcbiId().equals( "568371" ) ) {
                         byte[] array = new byte[] { 1, 1, 1, 1, 1, 1, 1 };
                         String asscession = ( databaseService.find( association.getDatabaseEntry() ) ).getAccession();
@@ -291,10 +291,12 @@ public class StringBiomartGene2GeneProteinLoaderTest extends BaseSpringContextTe
                         Double associationScore = association.getConfidenceScore();
                         assertEquals( new Double( 200 ), associationScore );
                         assertArrayEquals( array, association.getEvidenceVector() );
-                        
-                        byte[] arrayBytes= association.getEvidenceVector();                        
-                        String formatedEvidence = formatter.getEvidenceDisplayText ( arrayBytes );
-                        assertEquals("Neighbourhood:GeneFusion:Coocurrence:Coexpression:Experimental:Database:TextMining", formatedEvidence);
+
+                        byte[] arrayBytes = association.getEvidenceVector();
+                        String formatedEvidence = formatter.getEvidenceDisplayText( arrayBytes );
+                        assertEquals(
+                                "Neighbourhood:GeneFusion:Coocurrence:Coexpression:Experimental:Database:TextMining",
+                                formatedEvidence );
                         counterAssociationsSavedZebra++;
                     } else {
                         fail();

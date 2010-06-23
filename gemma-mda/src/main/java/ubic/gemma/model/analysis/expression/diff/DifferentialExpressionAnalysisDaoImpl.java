@@ -36,6 +36,7 @@ import org.springframework.stereotype.Repository;
 
 import ubic.gemma.model.analysis.Investigation;
 import ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet;
+import ubic.gemma.model.analysis.expression.FactorAssociatedAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.ProbeAnalysisResult;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
@@ -349,18 +350,21 @@ public class DifferentialExpressionAnalysisDaoImpl extends
                 for ( ExpressionAnalysisResultSet ear : ears ) {
                     session.update( ear );
                     Hibernate.initialize( ear );
-                    Collection<DifferentialExpressionAnalysisResult> ders = ear.getResults();
-                    Hibernate.initialize( ders );
-                    for ( DifferentialExpressionAnalysisResult der : ders ) {
-                        session.update( der );
-                        Hibernate.initialize( der );
-                        if ( der instanceof ProbeAnalysisResult ) {
-                            ProbeAnalysisResult par = ( ProbeAnalysisResult ) der;
-                            CompositeSequence cs = par.getProbe();
-                            // session.update( cs );
-                            Hibernate.initialize( cs );
-                        }
-                    }
+//                    Collection<DifferentialExpressionAnalysisResult> ders = ear.getResults();
+//                    Hibernate.initialize( ders );
+//                    for ( DifferentialExpressionAnalysisResult der : ders ) {
+//                        session.update( der );
+//                        Hibernate.initialize( der );
+//                        if ( der instanceof ProbeAnalysisResult ) {
+//                            ProbeAnalysisResult par = ( ProbeAnalysisResult ) der;
+//                            CompositeSequence cs = par.getProbe();
+//                            // session.update( cs );
+//                            Hibernate.initialize( cs );
+//                        }
+//                    }
+
+                    Hibernate.initialize( ( ( FactorAssociatedAnalysisResultSet ) ear ).getExperimentalFactors() );
+
                 }
                 return null;
             }

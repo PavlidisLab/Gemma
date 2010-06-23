@@ -94,6 +94,9 @@ public interface BioAssayService {
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     public void thaw( BioAssay bioAssay );
 
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    public Collection<BioAssay> thaw( Collection<BioAssay> bioAssays );
+
     /**
      * 
      */

@@ -2,8 +2,8 @@ package ubic.gemma.analysis.expression.diff;
 
 import java.util.Collection;
 
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment; 
+import ubic.gemma.model.genome.gene.GeneValueObject;
 
 /**
  * A value object with meta analysis results.
@@ -13,7 +13,7 @@ import ubic.gemma.model.genome.Gene;
  */
 public class DifferentialExpressionMetaAnalysisValueObject {
 
-    private Gene gene = null;
+    private GeneValueObject gene = null;
 
     private String sortKey;
     private Double fisherPValue = null;
@@ -33,11 +33,11 @@ public class DifferentialExpressionMetaAnalysisValueObject {
         this.fisherPValue = fisherPValue;
     }
 
-    public Gene getGene() {
+    public GeneValueObject getGene() {
         return gene;
     }
 
-    public void setGene( Gene gene ) {
+    public void setGene( GeneValueObject gene ) {
         this.gene = gene;
     }
 
@@ -102,6 +102,5 @@ public class DifferentialExpressionMetaAnalysisValueObject {
         }
         return buf.toString();
     }
-
 
 }

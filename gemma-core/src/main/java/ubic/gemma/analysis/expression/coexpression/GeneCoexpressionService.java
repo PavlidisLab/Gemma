@@ -59,6 +59,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneService;
+import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.ontology.providers.GeneOntologyService;
 import ubic.gemma.util.AnchorTagUtil;
 
@@ -302,12 +303,12 @@ public class GeneCoexpressionService {
 
         Collection<Gene2GeneCoexpression> seen = new HashSet<Gene2GeneCoexpression>();
 
-        geneService.thawLite( gg2gs.keySet() );
+        queryGenes = geneService.thawLite( gg2gs.keySet() );
 
         StopWatch timer = new StopWatch();
         timer.start();
         Collection<Gene> foundGenes = new HashSet<Gene>();
-        for ( Gene queryGene : gg2gs.keySet() ) {
+        for ( Gene queryGene : queryGenes ) {
 
             if ( !queryGene.getTaxon().equals( baseSet.getTaxon() ) ) {
                 throw new IllegalArgumentException(
@@ -327,8 +328,8 @@ public class GeneCoexpressionService {
                 // geneService.thawLite( foundGene );
                 foundGenes.add( foundGene );
 
-                cvo.setQueryGene( queryGene );
-                cvo.setFoundGene( foundGene );
+                cvo.setQueryGene( new GeneValueObject( queryGene ) );
+                cvo.setFoundGene( new GeneValueObject( foundGene ) );
 
                 if ( proteinInteractionMap != null && !( proteinInteractionMap.isEmpty() ) ) {
                     Gene2GeneProteinAssociation gene2GeneProteinAssociation = proteinInteractionMap.get( foundGene
@@ -447,9 +448,9 @@ public class GeneCoexpressionService {
             if ( queryGenesOnly && !geneIds.contains( cvo.getGeneId() ) ) continue;
 
             CoexpressionValueObjectExt ecvo = new CoexpressionValueObjectExt();
-            ecvo.setQueryGene( queryGene );
-            ecvo.setFoundGene( new SimpleGene( cvo.getGeneId(), cvo.getGeneName(), cvo.getGeneOfficialName(), queryGene
-                    .getTaxon() ) );
+            ecvo.setQueryGene( new GeneValueObject( queryGene ) );
+            ecvo.setFoundGene( new GeneValueObject( new SimpleGene( cvo.getGeneId(), cvo.getGeneName(), cvo
+                    .getGeneOfficialName(), queryGene.getTaxon() ) ) );
 
             ecvo.setPosSupp( cvo.getPositiveLinkSupport() );
             ecvo.setNegSupp( cvo.getNegativeLinkSupport() );
@@ -695,11 +696,11 @@ public class GeneCoexpressionService {
 
         Collection<Gene2GeneCoexpression> seen = new HashSet<Gene2GeneCoexpression>();
 
-        geneService.thawLite( gg2gs.keySet() );
+        queryGenes = geneService.thawLite( gg2gs.keySet() );
 
         // populate the value objects.
         StopWatch timer = new StopWatch();
-        for ( Gene queryGene : gg2gs.keySet() ) {
+        for ( Gene queryGene : queryGenes ) {
             timer.start();
 
             if ( !queryGene.getTaxon().equals( baseSet.getTaxon() ) ) {
@@ -750,10 +751,10 @@ public class GeneCoexpressionService {
 
                 CoexpressionValueObjectExt cvo = new CoexpressionValueObjectExt();
 
-                geneService.thawLite( foundGene );
+                foundGene = geneService.thawLite( foundGene );
 
-                cvo.setQueryGene( queryGene );
-                cvo.setFoundGene( foundGene );
+                cvo.setQueryGene( new GeneValueObject( queryGene ) );
+                cvo.setFoundGene( new GeneValueObject( foundGene ) );
 
                 // set the interaction if none null will be put
                 if ( proteinInteractionMap != null && !( proteinInteractionMap.isEmpty() ) ) {
@@ -847,7 +848,7 @@ public class GeneCoexpressionService {
 
             }
 
-            // FIXME This is only necessary for debugging purposes. Helps us keep track of duplicate genes found above.
+            // This is only necessary for debugging purposes. Helps us keep track of duplicate genes found above.
             if ( log.isDebugEnabled() ) {
                 for ( Gene foundGene : foundGenes.keySet() ) {
                     if ( foundGenes.get( foundGene ).size() > 1 ) {
@@ -931,8 +932,10 @@ public class GeneCoexpressionService {
 
     /**
      * @param expressionExperimentSet
+     * @return ids of the experiments in the set
      */
     private List<Long> getIds( ExpressionExperimentSet expressionExperimentSet ) {
+        expressionExperimentSetService.thaw( expressionExperimentSet );
         List<Long> ids = new ArrayList<Long>( expressionExperimentSet.getExperiments().size() );
         for ( BioAssaySet dataset : expressionExperimentSet.getExperiments() ) {
             // log.info( dataset.getId() );
@@ -1071,14 +1074,13 @@ public class GeneCoexpressionService {
      * @return Map of gene ids and their protein protein interactions
      */
     protected Map<Long, Gene2GeneProteinAssociation> getGene2GeneProteinAssociationForQueryGene( Gene gene ) {
-
         Map<Long, Gene2GeneProteinAssociation> stringUrlsMappedByGeneID = new HashMap<Long, Gene2GeneProteinAssociation>();
         Collection<Gene2GeneProteinAssociation> proteinInteractions = this.gene2GeneProteinAssociationService
                 .findProteinInteractionsForGene( gene );
         // check if found any interactions
         if ( proteinInteractions != null && !proteinInteractions.isEmpty() ) {
 
-            for ( Gene2GeneProteinAssociation proteinInteraction : proteinInteractions ) {
+            for ( Gene2GeneProteinAssociation proteinInteraction : proteinInteractions ) {              
                 gene2GeneProteinAssociationService.thaw( proteinInteraction );
                 if ( log.isDebugEnabled() ) {
                     log.debug( "found interaction for gene " + proteinInteraction.getFirstGene() + " and "
@@ -1157,9 +1159,8 @@ public class GeneCoexpressionService {
     private CoexpressionMetaValueObject initValueObject( Collection<Gene> genes,
             List<ExpressionExperimentValueObject> eevos, boolean isCanned ) {
         CoexpressionMetaValueObject result = new CoexpressionMetaValueObject();
-        result.setQueryGenes( new ArrayList<Gene>( genes ) );
+        result.setQueryGenes( new ArrayList<GeneValueObject>( GeneValueObject.convert2ValueObjects( genes ) ) );
         result.setDatasets( eevos );
-        result.setIsCannedAnalysis( isCanned );
         result.setKnownGeneDatasets( new ArrayList<CoexpressionDatasetValueObject>() );
         result.setKnownGeneResults( new ArrayList<CoexpressionValueObjectExt>() );
         result.setPredictedGeneDatasets( new ArrayList<CoexpressionDatasetValueObject>() );

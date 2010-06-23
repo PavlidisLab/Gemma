@@ -31,6 +31,38 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 @Service
 public class BlatResultServiceImpl extends ubic.gemma.model.genome.sequenceAnalysis.BlatResultServiceBase {
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.genome.sequenceAnalysis.BlatResultService#load(java.lang.Long)
+     */
+    @Override
+    public BlatResult load( Long id ) {
+        return this.getBlatResultDao().load( id );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.model.genome.sequenceAnalysis.BlatResultService#thaw(ubic.gemma.model.genome.sequenceAnalysis.BlatResult
+     * )
+     */
+    @Override
+    public BlatResult thaw( BlatResult blatResult ) {
+        return this.getBlatResultDao().thaw( blatResult );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.genome.sequenceAnalysis.BlatResultService#thaw(java.util.Collection)
+     */
+    @Override
+    public Collection<BlatResult> thaw( Collection<BlatResult> blatResults ) {
+        return this.getBlatResultDao().thaw( blatResults );
+    }
+
     /**
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlatResultService#create(ubic.gemma.model.genome.sequenceAnalysis.BlatResult)
      */
@@ -51,6 +83,7 @@ public class BlatResultServiceImpl extends ubic.gemma.model.genome.sequenceAnaly
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.genome.sequenceAnalysis.BlatResultServiceBase#handleFindByBioSequence(ubic.gemma.model.genome
      * .biosequence.BioSequence)
@@ -71,6 +104,7 @@ public class BlatResultServiceImpl extends ubic.gemma.model.genome.sequenceAnaly
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlatResultServiceBase#handleLoad(java.util.Collection)
      */
     @Override

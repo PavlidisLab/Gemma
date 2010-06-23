@@ -25,6 +25,7 @@ import org.apache.commons.lang.StringUtils;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.gene.GeneValueObject;
 
 /**
  * @author keshav
@@ -33,7 +34,7 @@ import ubic.gemma.model.genome.Gene;
 public class DifferentialExpressionValueObject {
 
     private Long id;
-    private Gene gene;
+    private GeneValueObject gene;
     private ExpressionExperimentValueObject expressionExperiment;
     private String probe;
     private Long probeId;
@@ -99,11 +100,11 @@ public class DifferentialExpressionValueObject {
         this.probeId = probeId;
     }
 
-    public Gene getGene() {
+    public GeneValueObject getGene() {
         return gene;
     }
 
-    public void setGene( Gene gene ) {
+    public void setGene( GeneValueObject gene ) {
         this.gene = gene;
     }
 

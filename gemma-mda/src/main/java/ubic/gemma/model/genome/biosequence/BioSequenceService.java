@@ -46,8 +46,7 @@ public interface BioSequenceService {
      * 
      */
     @Secured( { "GROUP_USER" })
-    public ubic.gemma.model.genome.biosequence.BioSequence create(
-            ubic.gemma.model.genome.biosequence.BioSequence bioSequence );
+    public BioSequence create( BioSequence bioSequence );
 
     /**
      * 
@@ -63,11 +62,11 @@ public interface BioSequenceService {
 
     /**
      * <p>
-     * Returns matching biosequences for the given genes in a Map (gene to a collection of biosequences). Genes which had no associated
-     * sequences are not included in the result.
+     * Returns matching biosequences for the given genes in a Map (gene to a collection of biosequences). Genes which
+     * had no associated sequences are not included in the result.
      * </p>
      */
-    public  Map<Gene, Collection<BioSequence>> findByGenes( java.util.Collection<Gene> genes );
+    public Map<Gene, Collection<BioSequence>> findByGenes( java.util.Collection<Gene> genes );
 
     /**
      * <p>
@@ -126,7 +125,7 @@ public interface BioSequenceService {
     /**
      * 
      */
-    public void thaw( ubic.gemma.model.genome.biosequence.BioSequence bioSequence );
+    public BioSequence thaw( ubic.gemma.model.genome.biosequence.BioSequence bioSequence );
 
     /**
      * <p>

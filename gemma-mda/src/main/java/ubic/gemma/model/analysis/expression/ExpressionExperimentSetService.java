@@ -101,4 +101,10 @@ public interface ExpressionExperimentSetService {
     @Secured( { "GROUP_USER", "AFTER_ACL_FILTER_MY_PRIVATE_DATA" })
     public Collection<ExpressionExperimentSet> loadMySharedSets();
 
+    /**
+     * @param expressionExperimentSet
+     */
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    public void thaw( ExpressionExperimentSet expressionExperimentSet );
+
 }

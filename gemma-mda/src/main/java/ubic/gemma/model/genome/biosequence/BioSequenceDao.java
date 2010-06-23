@@ -34,40 +34,37 @@ public interface BioSequenceDao extends BaseDao<BioSequence> {
 
     /**
      * <p>
-     * Does the same thing as {@link #find(boolean, ubic.gemma.model.genome.biosequence.BioSequence)} with an additional
-     * argument called <code>queryString</code>. This <code>queryString</code> argument allows you to override the query
-     * string defined in {@link #find(int, ubic.gemma.model.genome.biosequence.BioSequence bioSequence)}.
+     * Does the same thing as {@link #find(boolean, BioSequence)} with an additional argument called
+     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string defined
+     * in {@link #find(int, BioSequence bioSequence)}.
      * </p>
      */
-    public BioSequence find( int transform, String queryString,
-            ubic.gemma.model.genome.biosequence.BioSequence bioSequence );
+    public BioSequence find( int transform, String queryString, BioSequence bioSequence );
 
     /**
      * <p>
-     * Does the same thing as {@link #find(ubic.gemma.model.genome.biosequence.BioSequence)} with an additional flag
-     * called <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then finder results will
-     * <strong>NOT</strong> be transformed during retrieval. If this flag is any of the other constants defined here
-     * then finder results <strong>WILL BE</strong> passed through an operation which can optionally transform the
-     * entities (into value objects for example). By default, transformation does not occur.
+     * Does the same thing as {@link #find(BioSequence)} with an additional flag called <code>transform</code>. If this
+     * flag is set to <code>TRANSFORM_NONE</code> then finder results will <strong>NOT</strong> be transformed during
+     * retrieval. If this flag is any of the other constants defined here then finder results <strong>WILL BE</strong>
+     * passed through an operation which can optionally transform the entities (into value objects for example). By
+     * default, transformation does not occur.
      * </p>
      */
-    public BioSequence find( int transform, ubic.gemma.model.genome.biosequence.BioSequence bioSequence );
+    public BioSequence find( int transform, BioSequence bioSequence );
 
     /**
      * <p>
-     * Does the same thing as {@link #find(ubic.gemma.model.genome.biosequence.BioSequence)} with an additional argument
-     * called <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string
-     * defined in {@link #find(ubic.gemma.model.genome.biosequence.BioSequence)} .
+     * Does the same thing as {@link #find(BioSequence)} with an additional argument called <code>queryString</code>.
+     * This <code>queryString</code> argument allows you to override the query string defined in
+     * {@link #find(BioSequence)} .
      * </p>
      */
-    public ubic.gemma.model.genome.biosequence.BioSequence find( String queryString,
-            ubic.gemma.model.genome.biosequence.BioSequence bioSequence );
+    public BioSequence find( String queryString, BioSequence bioSequence );
 
     /**
      * 
      */
-    public ubic.gemma.model.genome.biosequence.BioSequence find(
-            ubic.gemma.model.genome.biosequence.BioSequence bioSequence );
+    public BioSequence find( BioSequence bioSequence );
 
     /**
      * <p>
@@ -99,14 +96,12 @@ public interface BioSequenceDao extends BaseDao<BioSequence> {
      * .
      * </p>
      */
-    public ubic.gemma.model.genome.biosequence.BioSequence findByAccession( String queryString,
-            ubic.gemma.model.common.description.DatabaseEntry accession );
+    public BioSequence findByAccession( String queryString, ubic.gemma.model.common.description.DatabaseEntry accession );
 
     /**
      * 
      */
-    public ubic.gemma.model.genome.biosequence.BioSequence findByAccession(
-            ubic.gemma.model.common.description.DatabaseEntry accession );
+    public BioSequence findByAccession( ubic.gemma.model.common.description.DatabaseEntry accession );
 
     /**
      * <p>
@@ -123,41 +118,37 @@ public interface BioSequenceDao extends BaseDao<BioSequence> {
 
     /**
      * <p>
-     * Does the same thing as {@link #findOrCreate(boolean, ubic.gemma.model.genome.biosequence.BioSequence)} with an
-     * additional argument called <code>queryString</code>. This <code>queryString</code> argument allows you to
-     * override the query string defined in {@link #findOrCreate(int, ubic.gemma.model.genome.biosequence.BioSequence
-     * bioSequence)}.
+     * Does the same thing as {@link #findOrCreate(boolean, BioSequence)} with an additional argument called
+     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string defined
+     * in {@link #findOrCreate(int, BioSequence bioSequence)}.
      * </p>
      */
-    public BioSequence findOrCreate( int transform, String queryString,
-            ubic.gemma.model.genome.biosequence.BioSequence bioSequence );
+    public BioSequence findOrCreate( int transform, String queryString, BioSequence bioSequence );
 
     /**
      * <p>
-     * Does the same thing as {@link #findOrCreate(ubic.gemma.model.genome.biosequence.BioSequence)} with an additional
-     * flag called <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then finder results will
-     * <strong>NOT</strong> be transformed during retrieval. If this flag is any of the other constants defined here
-     * then finder results <strong>WILL BE</strong> passed through an operation which can optionally transform the
-     * entities (into value objects for example). By default, transformation does not occur.
+     * Does the same thing as {@link #findOrCreate(BioSequence)} with an additional flag called <code>transform</code>.
+     * If this flag is set to <code>TRANSFORM_NONE</code> then finder results will <strong>NOT</strong> be transformed
+     * during retrieval. If this flag is any of the other constants defined here then finder results <strong>WILL
+     * BE</strong> passed through an operation which can optionally transform the entities (into value objects for
+     * example). By default, transformation does not occur.
      * </p>
      */
-    public BioSequence findOrCreate( int transform, ubic.gemma.model.genome.biosequence.BioSequence bioSequence );
+    public BioSequence findOrCreate( int transform, BioSequence bioSequence );
 
     /**
      * <p>
-     * Does the same thing as {@link #findOrCreate(ubic.gemma.model.genome.biosequence.BioSequence)} with an additional
-     * argument called <code>queryString</code>. This <code>queryString</code> argument allows you to override the query
-     * string defined in {@link #findOrCreate(ubic.gemma.model.genome.biosequence.BioSequence)}.
+     * Does the same thing as {@link #findOrCreate(BioSequence)} with an additional argument called
+     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string defined
+     * in {@link #findOrCreate(BioSequence)}.
      * </p>
      */
-    public ubic.gemma.model.genome.biosequence.BioSequence findOrCreate( String queryString,
-            ubic.gemma.model.genome.biosequence.BioSequence bioSequence );
+    public BioSequence findOrCreate( String queryString, BioSequence bioSequence );
 
     /**
      * 
      */
-    public ubic.gemma.model.genome.biosequence.BioSequence findOrCreate(
-            ubic.gemma.model.genome.biosequence.BioSequence bioSequence );
+    public BioSequence findOrCreate( BioSequence bioSequence );
 
     /**
      * 
@@ -167,7 +158,6 @@ public interface BioSequenceDao extends BaseDao<BioSequence> {
     /**
      * For a biosequence name, get the genes
      */
-    @Deprecated
     public java.util.Collection<Gene> getGenesByName( java.lang.String search );
 
     public Collection<BioSequence> load( Collection<Long> ids );
@@ -180,7 +170,7 @@ public interface BioSequenceDao extends BaseDao<BioSequence> {
     /**
      * 
      */
-    public void thaw( ubic.gemma.model.genome.biosequence.BioSequence bioSequence );
+    public BioSequence thaw( BioSequence bioSequence );
 
     /**
      * <p>

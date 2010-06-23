@@ -68,8 +68,6 @@ public class DifferentialExpressionSearchController extends BaseFormController {
     private ExpressionExperimentService expressionExperimentService = null;
     private ExpressionExperimentSetService expressionExperimentSetService = null;
 
-   
-
     /**
      * AJAX entry which returns results on a non-meta analysis basis. That is, the differential expression results for
      * the gene with the id, geneId, are returned.
@@ -94,7 +92,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
     public Collection<DifferentialExpressionValueObject> getDifferentialExpression( Long geneId, double threshold,
             Integer limit ) {
 
-        Gene g = geneService.load( geneId );
+        Gene g = geneService.thaw( geneService.load( geneId ) );
 
         if ( g == null ) {
             return new ArrayList<DifferentialExpressionValueObject>();
@@ -250,6 +248,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
         for ( Long id : diffAnalyses.keySet() ) {
 
             DifferentialExpressionAnalysis analysis = diffAnalyses.get( id );
+            differentialExpressionAnalysisService.thaw( analysis );
 
             Collection<ExperimentalFactor> factors = new HashSet<ExperimentalFactor>();
             for ( FactorAssociatedAnalysisResultSet fars : analysis.getResultSets() ) {
@@ -312,6 +311,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
 
     /*
      * Handles the case exporting results as text.
+     * 
      * @seeorg.springframework.web.servlet.mvc.AbstractFormController#handleRequestInternal(javax.servlet.http.
      * HttpServletRequest, javax.servlet.http.HttpServletResponse)
      */

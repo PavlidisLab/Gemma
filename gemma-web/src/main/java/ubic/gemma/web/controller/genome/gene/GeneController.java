@@ -131,37 +131,8 @@ public class GeneController extends BaseController {
 
         if ( gene == null ) throw new IllegalArgumentException( "No gene with id " + geneId );
 
+        gene = geneService.thaw( gene );
         return gene.getProducts();
-    }
-
-    public void setAllenBrainAtlasService( AllenBrainAtlasService allenBrainAtlasService ) {
-        this.allenBrainAtlasService = allenBrainAtlasService;
-    }
-
-    /**
-     * @param gene2GOAssociationService the gene2GOAssociationService to set
-     */
-    public void setGene2GOAssociationService( Gene2GOAssociationService gene2GOAssociationService ) {
-        this.gene2GOAssociationService = gene2GOAssociationService;
-    }
-
-    public void setGeneOntologyService( GeneOntologyService geneOntologyService ) {
-        this.geneOntologyService = geneOntologyService;
-    }
-
-    /**
-     * @param geneService The geneService to set.
-     */
-    public void setGeneService( GeneService geneService ) {
-        this.geneService = geneService;
-    }
-
-    public void setHomologeneService( HomologeneService homologeneService ) {
-        this.homologeneService = homologeneService;
-    }
-
-    public void setTaxonService( TaxonService ts ) {
-        this.taxonService = ts;
     }
 
     /**
@@ -202,6 +173,8 @@ public class GeneController extends BaseController {
             addMessage( request, "object.notfound", new Object[] { "Gene " + id } );
             return new ModelAndView( "index" );
         }
+
+        gene = geneService.thaw( gene );
 
         id = gene.getId();
 

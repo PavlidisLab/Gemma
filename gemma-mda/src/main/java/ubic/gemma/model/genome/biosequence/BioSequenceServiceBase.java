@@ -242,9 +242,9 @@ public abstract class BioSequenceServiceBase implements ubic.gemma.model.genome.
     /**
      * @see ubic.gemma.model.genome.biosequence.BioSequenceService#thaw(ubic.gemma.model.genome.biosequence.BioSequence)
      */
-    public void thaw( final ubic.gemma.model.genome.biosequence.BioSequence bioSequence ) {
+    public BioSequence thaw( final ubic.gemma.model.genome.biosequence.BioSequence bioSequence ) {
         try {
-            this.handleThaw( bioSequence );
+            return this.handleThaw( bioSequence );
         } catch ( Throwable th ) {
             throw new ubic.gemma.model.genome.biosequence.BioSequenceServiceException(
                     "Error performing 'ubic.gemma.model.genome.biosequence.BioSequenceService.thaw(ubic.gemma.model.genome.biosequence.BioSequence bioSequence)' --> "
@@ -384,7 +384,7 @@ public abstract class BioSequenceServiceBase implements ubic.gemma.model.genome.
     /**
      * Performs the core logic for {@link #thaw(ubic.gemma.model.genome.biosequence.BioSequence)}
      */
-    protected abstract void handleThaw( ubic.gemma.model.genome.biosequence.BioSequence bioSequence )
+    protected abstract BioSequence handleThaw( ubic.gemma.model.genome.biosequence.BioSequence bioSequence )
             throws java.lang.Exception;
 
     /**

@@ -52,4 +52,9 @@ public interface ExpressionExperimentSetDao extends BaseDao<ExpressionExperiment
      */
     public Collection<ExpressionExperimentSet> loadAllMultiExperimentSets();
 
+    /**
+     * @param expressionExperimentSet
+     */
+    public void thaw( ExpressionExperimentSet expressionExperimentSet );
+
 }

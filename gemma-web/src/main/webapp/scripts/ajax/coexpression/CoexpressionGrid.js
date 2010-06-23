@@ -109,8 +109,7 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 						renderer : this.proteinlinkStyler.createDelegate(this),
 						tooltip : "Evidence for Protein Protein Interactions from external sources",
 						sortable : true
-					}
-				]
+					}]
 		} else {
 			columns = [{
 						id : 'query',
@@ -152,7 +151,7 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 						renderer : this.supportStyler.createDelegate(this),
 						tooltip : "# of Datasets that confirm coexpression",
 						sortable : true
-					},{
+					}, {
 						id : 'gene2GeneProteinAssociationStringUrl',
 						header : "PPI",
 						dataIndex : "gene2GeneProteinAssociationStringUrl",
@@ -160,8 +159,8 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 						renderer : this.proteinlinkStyler.createDelegate(this),
 						tooltip : "Evidence for Protein Protein Interactions from external sources",
 						sortable : true
-					},	
-					
+					},
+
 					{
 						id : 'go',
 						header : "GO Overlap",
@@ -420,14 +419,14 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 				name : "supportingExperiments"
 			}, {
 				name : "gene2GeneProteinAssociationStringUrl",
-				type : "string"	
+				type : "string"
 			}, {
 				name : "gene2GeneProteinInteractionEvidence",
-				type : "string"	
-			},	{
+				type : "string"
+			}, {
 				name : "gene2GeneProteinInteractionConfidenceScore",
-				type : "string"	
-			}, 	{
+				type : "string"
+			}, {
 				name : "containsMyData",
 				type : "boolean"
 			}]),
@@ -441,22 +440,21 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 						'<span onClick="{0}" id="aba-{1}-button"><img height=15 width =15 src="/Gemma/images/logo/aba-icon.png" ext:qtip="Link to expression data from the Allen Brain Atlas for {2}" /> </span>',
 						call, value.officialSymbol, value.officialSymbol);
 	},
-	
-	//link for protein interactions
+
+	// link for protein interactions
 	proteinlinkStyler : function(value, metadata, record, row, col, ds) {
-	
-		var d = record.data;	
-		
-				
+
+		var d = record.data;
+
 		if (d.gene2GeneProteinAssociationStringUrl) {
 			return String
-			.format(
-					'<span> <a href="{0}"  target="_blank" class="external"><img "src="/Gemma/images/logo/string_logo.gif" ext:qtip="Click to view the protein protein interaction obtained from {1} evidence with a combined association score of {2} from STRING" /></a> </span>',
-					d.gene2GeneProteinAssociationStringUrl, d.gene2GeneProteinInteractionEvidence, d.gene2GeneProteinInteractionConfidenceScore);
-		}	
-		
+					.format(
+							'<span> <a href="{0}"  target="_blank" class="external"><img "src="/Gemma/images/logo/string_logo.gif" ext:qtip="Click to view the protein protein interaction obtained from {1} evidence with a combined association score of {2} from STRING" /></a> </span>',
+							d.gene2GeneProteinAssociationStringUrl, d.gene2GeneProteinInteractionEvidence,
+							d.gene2GeneProteinInteractionConfidenceScore);
+		}
+
 	},
-	
 
 	/**
 	 * 
@@ -466,13 +464,13 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 		if (d.posSupp || d.negSupp) {
 			var s = "";
 			if (d.posSupp) {
-				s = s
-						+ String.format("<span class='positiveLink'>{0}{1}</span> ", d.posSupp, this
+				s = s +
+						String.format("<span class='positiveLink'>{0}{1}</span> ", d.posSupp, this
 										.getSpecificLinkString(d.posSupp, d.nonSpecPosSupp));
 			}
 			if (d.negSupp) {
-				s = s
-						+ String.format("<span class='negativeLink'>{0}{1}</span> ", d.negSupp, this
+				s = s +
+						String.format("<span class='negativeLink'>{0}{1}</span> ", d.negSupp, this
 										.getSpecificLinkString(d.negSupp, d.nonSpecNegSupp));
 			}
 
@@ -515,9 +513,9 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 			g.officialName = "";
 		}
 
-		if (g.taxon != null) {
-			g.taxonId = g.taxon.id;
-			g.taxonName = g.taxon.commonName;
+		if (g.taxonId != null) {
+			g.taxonId = g.taxonId;
+			g.taxonName = g.taxonCommonName;
 		} else {
 			g.taxonId = -1;
 			g.taxonName = "?";
@@ -579,10 +577,10 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 			s = s + b;
 		}
 
-		var result = '<span style="margin:0;padding-top:' + (Gemma.CoexpressionGrid.bitImageBarHeight - maxheight)
-				+ 'px;height:' + Gemma.CoexpressionGrid.bitImageBarHeight + ';background-color:#EEEEEE" >'
-				+ '<img style="vertical-align:bottom" src="/Gemma/spark?type=bar&width=' + width + '&height='
-				+ maxheight + '&highcolor=black&color=black&spacing=' + gap + '&data=';
+		var result = '<span style="margin:0;padding-top:' + (Gemma.CoexpressionGrid.bitImageBarHeight - maxheight) +
+				'px;height:' + Gemma.CoexpressionGrid.bitImageBarHeight + ';background-color:#EEEEEE" >' +
+				'<img style="vertical-align:bottom" src="/Gemma/spark?type=bar&width=' + width + '&height=' +
+				maxheight + '&highcolor=black&color=black&spacing=' + gap + '&data=';
 
 		// dataset-bits is defined in typo.css
 
@@ -855,10 +853,10 @@ Gemma.CoexpressionGrid.linkOutPopUp = function(linkOutValueObject) {
 				resizable : false
 			});
 	popUpLinkOutWin
-			.setTitle("<a href='"
-					+ linkOutValueObject.abaGeneUrl
-					+ "' target='_blank'>  <img src='/Gemma/images/logo/aba-icon.png' ext:qtip='Link to Allen Brain Atlas gene details' />  </a> &nbsp; &nbsp;<img height=15  src=/Gemma/images/abaExpressionLegend.gif>  "
-					+ linkOutValueObject.geneSymbol);
+			.setTitle("<a href='" +
+					linkOutValueObject.abaGeneUrl +
+					"' target='_blank'>  <img src='/Gemma/images/logo/aba-icon.png' ext:qtip='Link to Allen Brain Atlas gene details' />  </a> &nbsp; &nbsp;<img height=15  src=/Gemma/images/abaExpressionLegend.gif>  " +
+					linkOutValueObject.geneSymbol);
 
 	// An attempt at adding a button to the window so that the different image
 	// from allen brain atlas could be seen clicking on it.

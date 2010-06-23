@@ -320,11 +320,19 @@ public interface ArrayDesignDao extends BaseDao<ArrayDesign> {
     public void removeBiologicalCharacteristics( ArrayDesign arrayDesign );
 
     /**
-     * <p>
-     * Unlazify associations of this object.
-     * </p>
+     * Unlazify associations of this object including the composite sequences and associated biosequences.
      */
     public ArrayDesign thaw( ArrayDesign arrayDesign );
+
+    /**
+     * Thaw just the basic information about the design, excluding the compositesequences.
+     * 
+     * @param arrayDesign
+     * @return
+     */
+    public ArrayDesign thawLite( ArrayDesign arrayDesign );
+
+    public Collection<ArrayDesign> thawLite( Collection<ArrayDesign> arrayDesigns );
 
     /**
      * <p>

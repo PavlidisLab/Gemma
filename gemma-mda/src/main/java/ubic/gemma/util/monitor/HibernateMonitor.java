@@ -169,6 +169,13 @@ public class HibernateMonitor {
         return buf.toString();
     }
 
+    /**
+     * Clear all statistics.
+     */
+    public void resetStats() {
+        sessionFactory.getStatistics().clear();
+    }
+
     public void setSessionFactory( SessionFactory sessionFactory ) {
         this.sessionFactory = sessionFactory;
     }

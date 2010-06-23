@@ -411,13 +411,13 @@ public interface ArrayDesignService {
     public ArrayDesign thaw( ArrayDesign arrayDesign );
 
     /**
-     * Perform a less intensive thaw of an array design.
-     * 
-     * @deprecated This does the same thing as 'thaw'.
+     * Perform a less intensive thaw of an array design: not the compositesequences.
      */
-    @Deprecated
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     public ArrayDesign thawLite( ArrayDesign arrayDesign );
+
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    public Collection<ArrayDesign> thawLite( Collection<ArrayDesign> arrayDesigns );
 
     /**
      * 

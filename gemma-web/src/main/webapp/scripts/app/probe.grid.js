@@ -150,17 +150,17 @@ Gemma.ProbeDetailsGrid = Ext.extend(Ext.grid.GridPanel, {
 	},
 
 	blatResRender : function(d, metadata, record, row, column, store) {
-		if (!d.targetChromosome) {
+		if (!d.targetChromosomeName) {
 			return "";
 		}
 
-		var res = "chr" + d.targetChromosome.name + " (" + d.strand + ") " + d.targetStart + "-" + d.targetEnd;
+		var res = "chr" + d.targetChromosomeName + " (" + d.strand + ") " + d.targetStart + "-" + d.targetEnd;
 
-		var organism = d.targetChromosome.taxon;
+		var organism = d.taxon;
 		var database = this.getDb(organism);
 		if (database) {
-			var link = UCSC_TRACKS + "?org=" + organism + "&pix=850&db=" + database
-					+ "&hgt.customText=" + Gemma.BASEURL + "blatTrack.html?id=" + d.id;
+			var link = UCSC_TRACKS + "?org=" + organism.commonName + "&pix=850&db=" + database
+					+ "&hgt.customText=" + Gemma.BASEURL + "/blatTrack.html?id=" + d.id;
 			res = res + "&nbsp;<a title='Genome browser view (opens in new window)' target='_blank' href='" + link
 					+ "'><img src='" + Gemma.UCSC_ICON + "' /></a>";
 		}

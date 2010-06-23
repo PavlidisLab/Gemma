@@ -42,8 +42,6 @@ public class GeneProductValueObject implements java.io.Serializable {
 
     private java.lang.Long nucleotideEnd;
 
-    private GeneValueObject gene;
-
     public GeneProductValueObject() {
     }
 
@@ -51,7 +49,6 @@ public class GeneProductValueObject implements java.io.Serializable {
         this.id = entity.getId();
         this.name = entity.getName();
         this.type = entity.getType().getValue();
-        this.gene = new GeneValueObject( entity.getGene() );
     }
 
     /**

@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.expression.bioAssay;
 
+import java.util.Collection;
+
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.persistence.BaseDao;
 
@@ -147,5 +149,11 @@ public interface BioAssayDao extends BaseDao<BioAssay> {
      * 
      */
     public void thaw( ubic.gemma.model.expression.bioAssay.BioAssay bioAssay );
+
+    /**
+     * @param bioAssays
+     * @return
+     */
+    public Collection<BioAssay> thaw( Collection<BioAssay> bioAssays );
 
 }

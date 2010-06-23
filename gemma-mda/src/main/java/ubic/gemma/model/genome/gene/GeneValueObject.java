@@ -34,7 +34,7 @@ public class GeneValueObject implements java.io.Serializable {
      */
     private static final long serialVersionUID = -7098036090107647318L;
 
-    public static Collection<GeneValueObject> convert2GeneValueObjects( Collection<Gene> genes ) {
+    public static Collection<GeneValueObject> convert2ValueObjects( Collection<Gene> genes ) {
 
         Collection<GeneValueObject> converted = new HashSet<GeneValueObject>();
         if ( genes == null ) return converted;
@@ -43,7 +43,7 @@ public class GeneValueObject implements java.io.Serializable {
             if ( g == null ) continue;
             converted.add( new GeneValueObject( g.getId(), g.getName(), g.getNcbiId(), g.getOfficialSymbol(), g
                     .getOfficialName(), g.getDescription(), null, g.getTaxon().getId(), g.getTaxon()
-                    .getScientificName() ) );
+                    .getScientificName(), g.getTaxon().getCommonName() ) );
         }
 
         return converted;
@@ -68,23 +68,25 @@ public class GeneValueObject implements java.io.Serializable {
         return converted;
     }
 
+    private java.lang.String description;
+
     private java.lang.Long id;
 
     private java.lang.String name;
 
     private java.lang.String ncbiId;
 
-    private java.lang.String officialSymbol;
-
     private java.lang.String officialName;
 
-    private java.lang.String description;
+    private java.lang.String officialSymbol;
+
+    private Double score; // This is for genes in genesets might have a rank or a score associated with them.
+
+    private String taxonCommonName;
 
     private java.lang.Long taxonId;
 
-    private java.lang.String taxonName;
-
-    private Double score; // This is for genes in genesets might have a rank or a score associated with them.
+    private java.lang.String taxonScientificName;
 
     public GeneValueObject() {
     }
@@ -94,22 +96,11 @@ public class GeneValueObject implements java.io.Serializable {
         this.ncbiId = gene.getNcbiId();
         this.officialName = gene.getOfficialName();
         this.officialSymbol = gene.getOfficialSymbol();
-        this.taxonName = gene.getTaxon().getScientificName();
+        this.taxonScientificName = gene.getTaxon().getScientificName();
+        this.setTaxonCommonName( gene.getTaxon().getCommonName() );
         this.name = gene.getName();
         this.description = gene.getDescription();
         this.taxonId = gene.getTaxon().getId();
-    }
-
-    /**
-     * Copies constructor from other GeneValueObject
-     * 
-     * @param otherBean, cannot be <code>null</code>
-     * @throws java.lang.NullPointerException if the argument is <code>null</code>
-     */
-    public GeneValueObject( GeneValueObject otherBean ) {
-        this( otherBean.getId(), otherBean.getName(), otherBean.getNcbiId(), otherBean.getOfficialSymbol(), otherBean
-                .getOfficialName(), otherBean.getDescription(), otherBean.getScore(), otherBean.getTaxonId(), otherBean
-                .getTaxonName() );
     }
 
     /**
@@ -121,12 +112,24 @@ public class GeneValueObject implements java.io.Serializable {
         this( otherBean.getGene().getId(), otherBean.getGene().getName(), otherBean.getGene().getNcbiId(), otherBean
                 .getGene().getOfficialSymbol(), otherBean.getGene().getOfficialName(), otherBean.getGene()
                 .getDescription(), otherBean.getScore(), otherBean.getGene().getTaxon().getId(), otherBean.getGene()
-                .getTaxon().getScientificName() );
+                .getTaxon().getScientificName(), otherBean.getGene().getTaxon().getCommonName() );
+    }
+
+    /**
+     * Copies constructor from other GeneValueObject
+     * 
+     * @param otherBean, cannot be <code>null</code>
+     * @throws java.lang.NullPointerException if the argument is <code>null</code>
+     */
+    public GeneValueObject( GeneValueObject otherBean ) {
+        this( otherBean.getId(), otherBean.getName(), otherBean.getNcbiId(), otherBean.getOfficialSymbol(), otherBean
+                .getOfficialName(), otherBean.getDescription(), otherBean.getScore(), otherBean.getTaxonId(), otherBean
+                .getTaxonScientificName(), otherBean.getTaxonCommonName() );
     }
 
     public GeneValueObject( java.lang.Long id, java.lang.String name, java.lang.String ncbiId,
             java.lang.String officialSymbol, java.lang.String officialName, java.lang.String description, Double score,
-            Long taxonId, String taxonName ) {
+            Long taxonId, String taxonScientificName, String taxonCommonName ) {
         this.id = id;
         this.name = name;
         this.ncbiId = ncbiId;
@@ -135,7 +138,8 @@ public class GeneValueObject implements java.io.Serializable {
         this.description = description;
         this.score = score;
         this.taxonId = taxonId;
-        this.taxonName = taxonName;
+        this.taxonScientificName = taxonScientificName;
+        this.taxonCommonName = taxonCommonName;
     }
 
     /**
@@ -196,6 +200,25 @@ public class GeneValueObject implements java.io.Serializable {
         return this.officialSymbol;
     }
 
+    public Double getScore() {
+        return score;
+    }
+
+    /**
+     * @return the taxonCommonName
+     */
+    public String getTaxonCommonName() {
+        return taxonCommonName;
+    }
+
+    public java.lang.Long getTaxonId() {
+        return taxonId;
+    }
+
+    public java.lang.String getTaxonScientificName() {
+        return taxonScientificName;
+    }
+
     public void setDescription( java.lang.String description ) {
         this.description = description;
     }
@@ -224,24 +247,19 @@ public class GeneValueObject implements java.io.Serializable {
         this.score = score;
     }
 
-    public Double getScore() {
-        return score;
-    }
-
-    public java.lang.Long getTaxonId() {
-        return taxonId;
+    /**
+     * @param taxonCommonName the taxonCommonName to set
+     */
+    public void setTaxonCommonName( String taxonCommonName ) {
+        this.taxonCommonName = taxonCommonName;
     }
 
     public void setTaxonId( java.lang.Long taxonId ) {
         this.taxonId = taxonId;
     }
 
-    public void setTaxonName( java.lang.String taxonName ) {
-        this.taxonName = taxonName;
-    }
-
-    public java.lang.String getTaxonName() {
-        return taxonName;
+    public void setTaxonScientificName( java.lang.String taxonScientificName ) {
+        this.taxonScientificName = taxonScientificName;
     }
 
 }

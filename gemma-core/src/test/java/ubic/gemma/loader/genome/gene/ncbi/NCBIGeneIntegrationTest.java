@@ -32,7 +32,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.gene.GeneService;
-import ubic.gemma.testing.BaseSpringContextTest; 
+import ubic.gemma.testing.BaseSpringContextTest;
 import ubic.gemma.util.ConfigUtils;
 
 /**
@@ -77,7 +77,7 @@ public class NCBIGeneIntegrationTest extends BaseSpringContextTest {
         Collection<String> hasAccessions = new ArrayList<String>();
         expectedAccessions.add( "AAF29803.1" );
         expectedAccessions.add( "NP_862654.1" );
-        geneService.thaw( g );
+        g = geneService.thaw( g );
         for ( GeneProduct product : products ) {
             Collection<DatabaseEntry> accessions = product.getAccessions();
             for ( DatabaseEntry de : accessions ) {

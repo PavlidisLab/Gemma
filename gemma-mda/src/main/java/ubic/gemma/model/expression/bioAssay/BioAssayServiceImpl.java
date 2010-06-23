@@ -182,4 +182,14 @@ public class BioAssayServiceImpl extends ubic.gemma.model.expression.bioAssay.Bi
         this.getBioAssayDao().update( bioAssay );
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.expression.bioAssay.BioAssayService#thaw(java.util.Collection)
+     */
+    @Override
+    public Collection<BioAssay> thaw( Collection<BioAssay> bioAssays ) {
+        return this.getBioAssayDao().thaw( bioAssays );
+    }
+
 }

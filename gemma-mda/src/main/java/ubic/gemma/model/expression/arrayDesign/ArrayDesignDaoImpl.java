@@ -54,6 +54,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.util.BusinessKey;
+import ubic.gemma.util.EntityUtils;
 import ubic.gemma.util.NativeQueryUtils;
 
 /**
@@ -104,19 +105,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         StopWatch timer = new StopWatch();
         timer.start();
 
-        List<?> res = this
-                .getHibernateTemplate()
-                .findByNamedParam(
-                        "select a from ArrayDesignImpl a "
-                                + "left join fetch a.subsumedArrayDesigns "
-                                + " left join fetch a.mergees  left join fetch a.designProvider left join fetch a.primaryTaxon "
-                                + " join fetch a.auditTrail trail join fetch trail.events left join fetch a.externalReferences "
-                                + "where a.id=:adid", "adid", arrayDesign.getId() );
-
-        if ( res.size() == 0 ) {
-            throw new IllegalArgumentException( "No array design with id=" + arrayDesign.getId() + " could be loaded." );
-        }
-        ArrayDesign result = ( ArrayDesign ) res.iterator().next();
+        ArrayDesign result = thawLite( arrayDesign );
 
         if ( timer.getTime() > 1000 ) {
             log.info( "Thaw array design stage 1: " + timer.getTime() + "ms" );
@@ -179,6 +168,43 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         }
 
         return result;
+    }
+
+    public ArrayDesign thawLite( ArrayDesign arrayDesign ) {
+        if ( arrayDesign == null ) {
+            throw new IllegalArgumentException( "array design cannot be null" );
+        }
+        List<?> res = this
+                .getHibernateTemplate()
+                .findByNamedParam(
+                        "select distinct a from ArrayDesignImpl a "
+                                + "left join fetch a.subsumedArrayDesigns "
+                                + " left join fetch a.mergees  left join fetch a.designProvider left join fetch a.primaryTaxon "
+                                + " join fetch a.auditTrail trail join fetch trail.events left join fetch a.externalReferences"
+                                + " left join fetch a.subsumedArrayDesigns left join fetch a.mergees left join fetch a.subsumingArrayDesign "
+                                + " left join fetch a.mergedInto " + "where a.id=:adid", "adid", arrayDesign.getId() );
+
+        if ( res.size() == 0 ) {
+            throw new IllegalArgumentException( "No array design with id=" + arrayDesign.getId() + " could be loaded." );
+        }
+        ArrayDesign result = ( ArrayDesign ) res.iterator().next();
+
+        return result;
+    }
+
+    public Collection<ArrayDesign> thawLite( Collection<ArrayDesign> arrayDesigns ) {
+        if ( arrayDesigns.isEmpty() ) return arrayDesigns;
+        return this
+                .getHibernateTemplate()
+                .findByNamedParam(
+                        "select distinct a from ArrayDesignImpl a "
+                                + "left join fetch a.subsumedArrayDesigns "
+                                + " left join fetch a.mergees  left join fetch a.designProvider left join fetch a.primaryTaxon "
+                                + " join fetch a.auditTrail trail join fetch trail.events left join fetch a.externalReferences"
+                                + " left join fetch a.subsumedArrayDesigns left join fetch a.mergees left join fetch a.subsumingArrayDesign "
+                                + " left join fetch a.mergedInto where a.id in (:adids)", "adids",
+                        EntityUtils.getIds( arrayDesigns ) );
+
     }
 
     /*
@@ -577,7 +603,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
     @Override
     protected Map handleGetAuditEvents( Collection ids ) throws Exception {
         final String queryString = "select ad.id, auditEvent from ArrayDesignImpl ad"
-                + " inner join ad.auditTrail as auditTrail inner join auditTrail.events as auditEvent "
+                + " join ad.auditTrail as auditTrail join auditTrail.events as auditEvent join fetch auditEvent.performer "
                 + " where ad.id in (:ids) ";
 
         List<Object[]> list = getHibernateTemplate().findByNamedParam( queryString, "ids", ids );

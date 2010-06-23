@@ -22,7 +22,7 @@ import java.util.Collection;
 
 import org.apache.commons.lang.StringUtils;
 
-import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.gene.GeneValueObject;
 
 /**
  * Implementation note: This has very abbreviated field names to reduce the size of strings sent to browsers.
@@ -32,15 +32,14 @@ import ubic.gemma.model.genome.Gene;
  */
 public class CoexpressionValueObjectExt implements Comparable<CoexpressionValueObjectExt> {
 
-    private Gene queryGene;
-    private Gene foundGene;
+    private GeneValueObject queryGene;
+    private GeneValueObject foundGene;
     private String sortKey;
     private Integer supportKey;
     private Integer posSupp;
     private Integer negSupp;
     private Integer nonSpecPosSupp;
     private Integer nonSpecNegSupp;
-    // private Boolean hybWQuery;
     private Integer numTestedIn;
     private Integer goSim;
     private Integer maxGoSim;
@@ -49,6 +48,7 @@ public class CoexpressionValueObjectExt implements Comparable<CoexpressionValueO
     private Collection<Long> supportingExperiments;
     private String gene2GeneProteinAssociationStringUrl;
     private String gene2GeneProteinInteractionConfidenceScore;
+
     /**
      * @return the gene2GeneProteinInteractionConfidenceScore
      */
@@ -78,26 +78,23 @@ public class CoexpressionValueObjectExt implements Comparable<CoexpressionValueO
     }
 
     private String gene2GeneProteinInteractionEvidence;
-    
-   
-        
 
-    public Gene getQueryGene() {
+    public GeneValueObject getQueryGene() {
         return queryGene;
     }
 
-    public void setQueryGene( Gene queryGene ) {
+    public void setQueryGene( GeneValueObject queryGene ) {
         this.queryGene = queryGene;
     }
 
     /**
      * @return the coexpressed gene.
      */
-    public Gene getFoundGene() {
+    public GeneValueObject getFoundGene() {
         return foundGene;
     }
 
-    public void setFoundGene( Gene foundGene ) {
+    public void setFoundGene( GeneValueObject foundGene ) {
         this.foundGene = foundGene;
     }
 
@@ -232,7 +229,7 @@ public class CoexpressionValueObjectExt implements Comparable<CoexpressionValueO
         result = prime * result + ( ( sortKey == null ) ? 0 : sortKey.hashCode() );
         return result;
     }
-    
+
     /**
      * @return the gene2GeneProteinAssociationStringUrl
      */
@@ -246,8 +243,7 @@ public class CoexpressionValueObjectExt implements Comparable<CoexpressionValueO
     public void setGene2GeneProteinAssociationStringUrl( String gene2GeneProteinAssociationStringUrl ) {
         this.gene2GeneProteinAssociationStringUrl = gene2GeneProteinAssociationStringUrl;
     }
-    
-    
+
     /*
      * (non-Javadoc)
      * 
@@ -268,9 +264,5 @@ public class CoexpressionValueObjectExt implements Comparable<CoexpressionValueO
     public int compareTo( CoexpressionValueObjectExt arg0 ) {
         return this.getSortKey().compareTo( arg0.getSortKey() );
     }
-    
-   
-    
-    
 
 }

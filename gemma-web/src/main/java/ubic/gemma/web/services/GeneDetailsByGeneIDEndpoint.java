@@ -80,7 +80,7 @@ public class GeneDetailsByGeneIDEndpoint extends AbstractGemmaEndpoint {
 
         Collection<Gene> geneCol = geneService.loadMultiple( geneLongInput );
 
-        geneService.thawLite( geneCol );
+        geneCol = geneService.thawLite( geneCol );
 
         if ( geneCol == null || geneCol.isEmpty() ) {
             String msg = "No genes can be found.";

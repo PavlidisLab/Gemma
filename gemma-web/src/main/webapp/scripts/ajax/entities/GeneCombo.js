@@ -30,7 +30,9 @@ Gemma.GeneCombo = Ext.extend(Ext.form.ComboBox, {
 				name : "id",
 				type : "int"
 			}, {
-				name : "taxon"
+				name : "taxonId"
+			}, {
+				name : "taxonScientificName"
 			}, {
 				name : "officialSymbol",
 				type : "string"
@@ -41,7 +43,7 @@ Gemma.GeneCombo = Ext.extend(Ext.form.ComboBox, {
 
 	initComponent : function() {
 
-		var template = new Ext.XTemplate('<tpl for="."><div style="font-size:11px" class="x-combo-list-item" ext:qtip="{officialName} ({[values.taxon.scientificName]})"> {officialSymbol} {officialName} ({[values.taxon.scientificName]})</div></tpl>');
+		var template = new Ext.XTemplate('<tpl for="."><div style="font-size:11px" class="x-combo-list-item" ext:qtip="{officialName} ({[values.taxonScientificName]})"> {officialSymbol} {officialName} ({[values.taxonScientificName]})</div></tpl>');
 
 		Ext.apply(this, {
 					tpl : template,
@@ -80,7 +82,7 @@ Gemma.GeneCombo = Ext.extend(Ext.form.ComboBox, {
 		Gemma.GeneCombo.superclass.reset.call(this);
 		delete this.selectedGene;
 		this.lastQuery = null;
-		
+
 		if (this.tooltip) {
 			this.tooltip.destroy();
 		}
@@ -109,11 +111,15 @@ Gemma.GeneCombo = Ext.extend(Ext.form.ComboBox, {
 		}
 		if (gene) {
 			this.selectedGene = gene;
-			this.taxon = gene.taxon;
+			this.taxon = {
+				id : gene.taxonId,
+				commonName : gene.taxonCommonName,
+				scientificname : gene.taxonScientificName
+			};
 			this.tooltip = new Ext.ToolTip({
 						target : this.getEl(),
 						html : String.format('{0} ({1})', gene.officialName || "no description",
-								gene.taxon.scientificName)
+								gene.taxonScientificName)
 					});
 		}
 	},

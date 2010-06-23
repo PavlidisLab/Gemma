@@ -25,6 +25,8 @@ import java.util.List;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
+import org.hibernate.Hibernate;
+import org.hibernate.LockMode;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -33,6 +35,7 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.util.BusinessKey;
+import ubic.gemma.util.EntityUtils;
 
 /**
  * @author pavlidis
@@ -51,6 +54,7 @@ public class BioMaterialDaoImpl extends ubic.gemma.model.expression.biomaterial.
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.biomaterial.BioMaterialDaoBase#find(ubic.gemma.model.expression.biomaterial.BioMaterial
      * )
@@ -82,6 +86,7 @@ public class BioMaterialDaoImpl extends ubic.gemma.model.expression.biomaterial.
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.biomaterial.BioMaterialDaoBase#findOrCreate(ubic.gemma.model.expression.biomaterial
      * .BioMaterial)
@@ -102,6 +107,7 @@ public class BioMaterialDaoImpl extends ubic.gemma.model.expression.biomaterial.
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.biomaterial.BioMaterialDao#getExpressionExperiment(java.lang.Long)
      */
     public ExpressionExperiment getExpressionExperiment( Long bioMaterialId ) {
@@ -120,6 +126,7 @@ public class BioMaterialDaoImpl extends ubic.gemma.model.expression.biomaterial.
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.biomaterial.BioMaterialDao#removeFactor(java.util.Collection,
      * ubic.gemma.model.expression.experiment.ExperimentalFactor)
      */
@@ -140,6 +147,7 @@ public class BioMaterialDaoImpl extends ubic.gemma.model.expression.biomaterial.
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.biomaterial.BioMaterialDaoBase#handleCopy(ubic.gemma.model.expression.biomaterial
      * .BioMaterial)
@@ -184,6 +192,7 @@ public class BioMaterialDaoImpl extends ubic.gemma.model.expression.biomaterial.
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.biomaterial.BioMaterialDaoBase#handleLoad(java.util.Collection)
      */
     @SuppressWarnings("unchecked")
@@ -202,4 +211,45 @@ public class BioMaterialDaoImpl extends ubic.gemma.model.expression.biomaterial.
         return bs;
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.model.expression.biomaterial.BioMaterialDao#thaw(ubic.gemma.model.expression.biomaterial.BioMaterial)
+     */
+    @Override
+    public void thaw( final BioMaterial bioMaterial ) {
+        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
+
+            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+
+                session.lock( bioMaterial, LockMode.NONE );
+                Hibernate.initialize( bioMaterial );
+                Hibernate.initialize( bioMaterial.getSourceTaxon() );
+                Hibernate.initialize( bioMaterial.getBioAssaysUsedIn() );
+                Hibernate.initialize( bioMaterial.getTreatments() );
+                Hibernate.initialize( bioMaterial.getFactorValues() );
+                return null;
+
+            }
+        } );
+
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.expression.biomaterial.BioMaterialDao#thaw(java.util.Collection)
+     */
+    @Override
+    public Collection<BioMaterial> thaw( Collection<BioMaterial> bioMaterials ) {
+        if ( bioMaterials.isEmpty() ) return bioMaterials;
+        return this
+                .getHibernateTemplate()
+                .findByNamedParam(
+                        "select distinct b from BioMaterialImpl b left join fetch b.sourceTaxon left join fetch b.bioAssaysUsedIn"
+                                + " left join fetch b.treatments left join fetch b.factorValues left join fetch b.auditTrail at "
+                                + "left join fetch at.events where b.id in (:ids)", "ids",
+                        EntityUtils.getIds( bioMaterials ) );
+    }
 }

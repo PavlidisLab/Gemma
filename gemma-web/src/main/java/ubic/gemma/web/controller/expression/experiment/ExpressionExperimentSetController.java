@@ -231,8 +231,8 @@ public class ExpressionExperimentSetController extends BaseFormController {
             throw new IllegalArgumentException( "Attempt to create an ExpressionExperimentSet with only "
                     + newSet.getExperiments().size() + ", must have at least 2" );
         }
-        ExpressionExperimentSet newAnalysis = ( ExpressionExperimentSet ) persisterHelper.persist( newSet );
-        return this.makeEESetValueObject( newAnalysis );
+        ExpressionExperimentSet newEESet = ( ExpressionExperimentSet ) persisterHelper.persist( newSet );
+        return this.makeEESetValueObject( newEESet );
     }
 
     /**
@@ -242,6 +242,8 @@ public class ExpressionExperimentSetController extends BaseFormController {
     private ExpressionExperimentSetValueObject makeEESetValueObject( ExpressionExperimentSet set ) {
         int size = set.getExperiments().size();
         assert size > 1; // should be due to the query.
+
+        expressionExperimentSetService.thaw( set );
 
         ExpressionExperimentSetValueObject vo = new ExpressionExperimentSetValueObject();
         vo.setName( set.getName() );

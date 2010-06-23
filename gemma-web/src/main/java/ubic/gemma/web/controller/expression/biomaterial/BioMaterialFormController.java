@@ -19,6 +19,8 @@ import ubic.gemma.model.expression.biomaterial.BioMaterialService;
 import ubic.gemma.web.controller.BaseFormController;
 
 /**
+ * FIXME this is nearly useless and needs to be cleaned up. See bioMaterial.edit.jsp
+ * 
  * @author paul
  * @version $Id$
  */
@@ -131,7 +133,7 @@ public class BioMaterialFormController extends BaseFormController {
 
         Long id = Long.parseLong( id_param );
 
-        if (  id != null )
+        if ( id != null )
             ba = bioMaterialService.load( id );
         else
             ba = BioMaterial.Factory.newInstance();

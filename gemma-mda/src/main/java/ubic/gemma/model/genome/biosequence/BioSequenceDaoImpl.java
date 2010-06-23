@@ -33,8 +33,6 @@ import org.hibernate.Criteria;
 import org.hibernate.FlushMode;
 import org.hibernate.Hibernate;
 import org.hibernate.LockMode;
-import org.hibernate.NonUniqueObjectException;
-import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.orm.hibernate3.HibernateTemplate;
@@ -43,9 +41,8 @@ import org.springframework.stereotype.Repository;
 import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.model.genome.gene.GeneProduct;
+import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.util.BusinessKey;
-import ubic.gemma.util.EntityUtils;
 
 /**
  * @author pavlidis
@@ -64,6 +61,7 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.biosequence.BioSequenceDaoBase#find(ubic.gemma
      * .model.genome.biosequence.BioSequence)
      */
@@ -114,6 +112,7 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
 
     /*
      * (non-Javadoc)
+     * 
      * @seeubic.gemma.model.genome.biosequence.BioSequenceDaoBase#findByAccession (ubic.gemma.model.common.description.
      * DatabaseEntry)
      */
@@ -159,6 +158,7 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.biosequence.BioSequenceDaoBase#findOrCreate(ubic
      * .gemma.model.genome.biosequence.BioSequence )
      */
@@ -180,6 +180,7 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.biosequence.BioSequenceDaoBase#handleGetGenesByName (java.lang.String)
      */
     @SuppressWarnings("unchecked")
@@ -215,6 +216,7 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
 
     /*
      * (non-Javadoc)
+     * 
      * @seeubic.gemma.model.genome.biosequence.BioSequenceDaoBase# handleGetGenesByAccession(java.lang.String)
      */
     @SuppressWarnings("unchecked")
@@ -228,6 +230,7 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.biosequence.BioSequenceDaoBase#handleGetGenesByName (java.lang.String)
      */
     @SuppressWarnings("unchecked")
@@ -249,6 +252,7 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.biosequence.BioSequenceDaoBase#handleLoad(java .util.Collection)
      */
     @SuppressWarnings("unchecked")
@@ -260,58 +264,31 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.biosequence.BioSequenceDaoBase#handleThaw(ubic
      * .gemma.model.genome.biosequence.BioSequence )
      */
     @Override
-    protected void handleThaw( final BioSequence bioSequence ) throws Exception {
-        if ( bioSequence == null ) return;
-        if ( bioSequence.getId() == null ) return;
+    protected BioSequence handleThaw( final BioSequence bioSequence ) throws Exception {
+        if ( bioSequence == null ) return null;
+        if ( bioSequence.getId() == null ) return bioSequence;
 
-        Session session = this.getSession();
+        List<?> res = this.getHibernateTemplate().findByNamedParam(
+                "select b from BioSequenceImpl b "
+                        + " left join fetch b.taxon left join fetch b.sequenceDatabaseEntry s "
+                        + " left join fetch s.externalDatabase"
+                        + " left join fetch b.bioSequence2GeneProduct bs2gp "
+                        + " left join fetch bs2gp.geneProduct gp left join fetch gp.gene g"
+                        + " left join fetch g.aliases left join fetch g.accessions  where b.id=:bid", "bid",
+                bioSequence.getId() );
 
-        EntityUtils.attach( session, bioSequence, BioSequenceImpl.class, bioSequence.getId() );
-        Hibernate.initialize( bioSequence );
-        Hibernate.initialize( bioSequence.getBioSequence2GeneProduct() );
-
-        if ( bioSequence.getTaxon() != null && bioSequence.getTaxon().getId() != null ) {
-            Hibernate.initialize( bioSequence.getTaxon() );
-        }
-
-        DatabaseEntry dbEntry = bioSequence.getSequenceDatabaseEntry();
-
-        if ( dbEntry != null ) {
-            Hibernate.initialize( dbEntry );
-            Hibernate.initialize( dbEntry.getExternalDatabase() );
-            session.evict( dbEntry );
-        }
-
-        for ( BioSequence2GeneProduct bs2gp : bioSequence.getBioSequence2GeneProduct() ) {
-            GeneProduct geneProduct = bs2gp.getGeneProduct();
-
-            try {
-                session.lock( geneProduct, LockMode.NONE );
-            } catch ( NonUniqueObjectException e ) {
-
-            }
-
-            Hibernate.initialize( geneProduct );
-            Gene g = geneProduct.getGene();
-            if ( g != null ) {
-                Hibernate.initialize( g );
-                Hibernate.initialize( g.getAliases() );
-                session.evict( g );
-            }
-            session.evict( geneProduct );
-
-        }
-
-        session.evict( bioSequence );
+        return ( BioSequence ) res.iterator().next();
 
     }
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.biosequence.BioSequenceDaoBase#handleThaw(java .util.Collection)
      */
     @Override
@@ -321,6 +298,7 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.biosequence.BioSequenceDaoBase#handleThaw(java .util.Collection)
      */
     @Override
@@ -377,14 +355,19 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
                 // this is okay.
                 int count = 0;
                 long lastTime = 0;
-                for ( Object object : bioSequences ) {
-                    BioSequence bioSequence = ( BioSequence ) object;
+                for ( BioSequence bioSequence : bioSequences ) {
                     session.lock( bioSequence, LockMode.NONE );
                     Hibernate.initialize( bioSequence );
 
                     if ( deep ) {
                         bioSequence.getTaxon();
-                        bioSequence.getBioSequence2GeneProduct().size();
+                        Hibernate.initialize( bioSequence.getBioSequence2GeneProduct() );
+                        for ( BioSequence2GeneProduct bs2gp : bioSequence.getBioSequence2GeneProduct() ) {
+                            Hibernate.initialize( bs2gp.getGeneProduct() );
+                            if ( bs2gp instanceof BlatAssociation ) {
+                                Hibernate.initialize( ( ( BlatAssociation ) bs2gp ).getBlatResult() );
+                            }
+                        }
                     }
 
                     DatabaseEntry dbEntry = bioSequence.getSequenceDatabaseEntry();

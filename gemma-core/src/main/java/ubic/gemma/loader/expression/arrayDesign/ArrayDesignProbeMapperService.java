@@ -316,7 +316,7 @@ public class ArrayDesignProbeMapperService {
             BioSequence bs = c.getBiologicalCharacteristic();
 
             if ( bs != null ) {
-                bioSequenceService.thaw( bs );
+                bs = bioSequenceService.thaw( bs );
                 if ( StringUtils.isNotBlank( seqName ) && !bs.getName().equals( seqName ) ) {
                     log.warn( "Sequence name '" + seqName + "' given for " + probeId
                             + " does not match existing entry " + bs.getName() + ", skipping" );
@@ -348,7 +348,7 @@ public class ArrayDesignProbeMapperService {
 
             assert bs.getId() != null;
             for ( Gene gene : geneListProbe ) {
-                geneService.thaw( gene );
+                gene = geneService.thaw( gene );
                 if ( gene.getProducts().size() == 0 ) {
                     log.warn( "There are no gene products for " + gene + ", it cannot be mapped to probes. Skipping" );
                     numSkipped++;

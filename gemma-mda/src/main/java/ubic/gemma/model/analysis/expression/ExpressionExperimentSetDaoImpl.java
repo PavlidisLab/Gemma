@@ -18,10 +18,16 @@
  */
 package ubic.gemma.model.analysis.expression;
 
+import java.sql.SQLException;
 import java.util.Collection;
 
+import org.hibernate.Hibernate;
+import org.hibernate.HibernateException;
+import org.hibernate.LockMode;
+import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.orm.hibernate3.HibernateCallback;
 import org.springframework.stereotype.Repository;
 
 import ubic.gemma.model.expression.experiment.BioAssaySet;
@@ -41,6 +47,7 @@ public class ExpressionExperimentSetDaoImpl extends ubic.gemma.model.analysis.ex
 
     /*
      * (non-Javadoc)
+     * 
      * @seeubic.gemma.model.analysis.expression.ExpressionExperimentSetDao#find(ubic.gemma.model.expression.experiment.
      * BioAssaySet)
      */
@@ -53,6 +60,7 @@ public class ExpressionExperimentSetDaoImpl extends ubic.gemma.model.analysis.ex
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.analysis.expression.ExpressionExperimentSetDao#loadAllMultiExperimentSets()
      */
     @SuppressWarnings("unchecked")
@@ -63,6 +71,7 @@ public class ExpressionExperimentSetDaoImpl extends ubic.gemma.model.analysis.ex
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.analysis.expression.ExpressionExperimentSetDaoBase#handleFindByName(java.lang.String)
      */
     @Override
@@ -74,6 +83,7 @@ public class ExpressionExperimentSetDaoImpl extends ubic.gemma.model.analysis.ex
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.analysis.expression.ExpressionExperimentSetDaoBase#handleGetAnalyses(ubic.gemma.model.analysis
      * .expression.ExpressionExperimentSet)
@@ -87,6 +97,32 @@ public class ExpressionExperimentSetDaoImpl extends ubic.gemma.model.analysis.ex
                 .findByNamedParam(
                         "select a from ExpressionAnalysisImpl a inner join a.expressionExperimentSetAnalyzed ees where ees = :eeset ",
                         "eeset", expressionExperimentSet );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @seeubic.gemma.model.analysis.expression.ExpressionExperimentSetDao#thaw(ubic.gemma.model.analysis.expression.
+     * ExpressionExperimentSet)
+     */
+    @Override
+    public void thaw( final ExpressionExperimentSet expressionExperimentSet ) {
+
+        this.getHibernateTemplate().execute( new HibernateCallback<Object>() {
+
+            @Override
+            public Object doInHibernate( Session session ) throws HibernateException, SQLException {
+                session.lock( expressionExperimentSet, LockMode.NONE );
+                Hibernate.initialize( expressionExperimentSet );
+                Hibernate.initialize( expressionExperimentSet.getTaxon() );
+                Hibernate.initialize( expressionExperimentSet.getExperiments() );
+                for ( BioAssaySet ee : expressionExperimentSet.getExperiments() ) {
+                    // Hibernate.initialize( ee );
+                }
+                return null;
+            }
+        } );
+
     }
 
 }

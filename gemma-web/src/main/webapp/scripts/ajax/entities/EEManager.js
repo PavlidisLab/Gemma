@@ -60,6 +60,8 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 			}, {
 				name : "validatedFlag"
 			}, {
+				name : 'validatedAnnotations'
+			}, {
 				name : "troubleFlag",
 				type : "object"
 			}, {
@@ -83,6 +85,9 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 				type : 'date'
 			}, {
 				name : "dateLinkAnalysis",
+				type : 'date'
+			}, {
+				name : "autoTagDate",
 				type : 'date'
 			}, {
 				name : "linkAnalysisEventType"
@@ -202,9 +207,9 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 							callParams.push(id);
 							callParams.push({
 										callback : function(data) {
-//											var k = new Gemma.WaitHandler();
-//											this.relayEvents(k, ['done', 'fail']);
-//											k.handleWait(data, false);
+											// var k = new Gemma.WaitHandler();
+											// this.relayEvents(k, ['done', 'fail']);
+											// k.handleWait(data, false);
 											this.fireEvent('done');
 										}.createDelegate(this),
 										errorHandler : function(message, exception) {
@@ -230,7 +235,7 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 	 * @param {}
 	 *            canEdit
 	 */
-	tagger : function(id, taxonId, canEdit) {
+	tagger : function(id, taxonId, canEdit, isValidated) {
 		var annotator = new Ext.Panel({
 					id : 'annotator-wrap',
 					collapsible : false,
@@ -239,6 +244,7 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 					layout : 'fit',
 					items : [new Gemma.AnnotationGrid({
 								id : 'annotator-grid',
+								entityAnnotsAreValidated : isValidated,
 								readMethod : ExpressionExperimentController.getAnnotation,
 								writeMethod : AnnotationController.createExperimentTag,
 								removeMethod : AnnotationController.removeExperimentTag,
@@ -269,12 +275,11 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 						text : 'Help',
 						handler : function() {
 							Ext.Msg
-									.alert(
-											"Help with tagging",
-											"Select a 'category' for the term; then enter a term, "
-													+ "choosing from existing terms if possible. "
-													+ "Click 'create' to save it. You can also edit existing terms;"
-													+ " click 'save' to make the change stick, or 'delete' to remove a selected tag.");
+									.alert("Help with tagging",
+											"Select a 'category' for the term; then enter a term, " +
+													"choosing from existing terms if possible. " +
+													"Click 'create' to save it. You can also edit existing terms;" +
+													" click 'save' to make the change stick, or 'delete' to remove a selected tag.");
 						}
 					}, {
 						text : 'Done',
@@ -634,8 +639,8 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 							footer : true,
 							closable : true,
 							title : 'Differential expression analysis',
-							html : 'Please confirm. The analysis performed will be a ' + analysisType
-									+ '. If there is an existing analysis on the same factor(s), it will be deleted.',
+							html : 'Please confirm. The analysis performed will be a ' + analysisType +
+									'. If there is an existing analysis on the same factor(s), it will be deleted.',
 							buttons : [{
 										text : 'Proceed',
 										handler : function(btn, text) {

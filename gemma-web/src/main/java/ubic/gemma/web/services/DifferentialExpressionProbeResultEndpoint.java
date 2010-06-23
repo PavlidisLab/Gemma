@@ -133,7 +133,7 @@ public class DifferentialExpressionProbeResultEndpoint extends AbstractGemmaEndp
             String msg = "Input genes do not match input taxon.";
             return buildBadResponse( document, msg );
         }
-        geneService.thawLite( geneCol );
+        geneCol = geneService.thawLite( geneCol );
 
         // expression experiment set id input
         Collection<String> analysisInput = getSingleNodeValue( requestElement, "expression_experiment_set_id" );

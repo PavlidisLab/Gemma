@@ -78,7 +78,7 @@ public class GeneExpressionProfile {
 
     public GeneExpressionProfile( DoubleVectorValueObject vector, String color, Integer factor, Double pValue,
             boolean standardize ) {
-        this.genes = GeneValueObject.convert2GeneValueObjects( vector.getGenes() );
+        this.genes = GeneValueObject.convert2ValueObjects( vector.getGenes() );
         this.probe = vector.getDesignElement();
         this.probe.setArrayDesign( null );
         this.factor = factor;

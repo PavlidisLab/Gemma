@@ -127,7 +127,8 @@ public class AuditEventDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
 
     @Override
     protected void handleThaw( final AuditEvent auditEvent ) throws Exception {
-        this.getHibernateTemplate().executeWithNativeSession( new HibernateCallback<Object>() {
+        if ( auditEvent == null ) return;
+        this.getHibernateTemplate().execute( new HibernateCallback<Object>() {
             public Object doInHibernate( Session session ) throws HibernateException {
                 /*
                  * FIXME this check really won't work. This thaw will not operate correctly if the event isn't already
@@ -170,7 +171,7 @@ public class AuditEventDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
 
         // how to determine subclasses? There is no way to do this but the hibernate way.
         SingleTableEntityPersister classMetadata = ( SingleTableEntityPersister ) this.getSessionFactory()
-                .getClassMetadata(  getImplClass( type )  );
+                .getClassMetadata( getImplClass( type ) );
         if ( classMetadata == null ) return classes;
 
         if ( classMetadata.hasSubclasses() ) {
@@ -196,13 +197,20 @@ public class AuditEventDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
     protected List<AuditEvent> handleGetEvents( final Auditable auditable ) {
         if ( auditable == null ) throw new IllegalArgumentException( "Auditable cannot be null" );
 
-        Hibernate.initialize( auditable.getAuditTrail() );
+        this.getHibernateTemplate().execute( new HibernateCallback<Object>() {
+            public Object doInHibernate( Session session ) throws HibernateException {
+                session.lock( auditable, LockMode.NONE );
+                Hibernate.initialize( auditable );
+                Hibernate.initialize( auditable.getAuditTrail() );
+                Hibernate.initialize( auditable.getAuditTrail().getEvents() );
+                for ( AuditEvent ae : auditable.getAuditTrail().getEvents() ) {
+                    thaw( ae );
+                }
+                return null;
+            }
+        } );
 
-        List results = this.getHibernateTemplate().findByNamedParam(
-                "select e from AuditTrailImpl a join a.events e where a.id = :tid", "tid",
-                auditable.getAuditTrail().getId() );
-
-        return results;
+        return ( List<AuditEvent> ) auditable.getAuditTrail().getEvents();
     }
 
     /**
@@ -223,12 +231,11 @@ public class AuditEventDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
          * least of our worries. The real annoyance here is dealing with subclasses of event types.
          */
 
-        if (type.equals(ArrayDesignGeneMappingEvent.class )) {
-            log.info("woah");
+        if ( type.equals( ArrayDesignGeneMappingEvent.class ) ) {
+            log.info( "woah" );
         }
-        
+
         List<String> classes = getClassHierarchy( type );
-        
 
         if ( classes.size() == 0 ) {
             return null;
@@ -352,6 +359,7 @@ public class AuditEventDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
              */
             for ( Class<? extends AuditEventType> ti : types ) {
                 if ( ti.isAssignableFrom( ty.getClass() ) ) {
+                    // FIXME we need to distinguish subclasses of validation events, for example.
                     Map<Auditable, AuditEvent> innerMap = results.get( ti );
 
                     assert innerMap != null;
