@@ -30,8 +30,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.web.servlet.ModelAndView;
 
-import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.testing.BaseSpringWebTest;
 
 /**
@@ -44,11 +42,6 @@ public class ArrayDesignControllerTest extends BaseSpringWebTest {
 
     @Autowired
     ArrayDesignController arrayDesignController;
-
-    ArrayDesign testArrayDesign;
-
-    @Autowired
-    ArrayDesignService arrayDesignService;
 
     /**
      * @throws Exception
