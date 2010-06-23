@@ -180,9 +180,9 @@ Gemma.AnnotationToolBar = Ext.extend(Ext.Toolbar, {
 
 		this.addFill();
 
-		if (this.showValidateButton) {
-			this.add(this.validateButton);
-		}
+		// if (this.showValidateButton) {
+		// this.add(this.validateButton);
+		//		}
 		Gemma.AnnotationToolBar.superclass.afterRender.call(this, l, r);
 	}
 
