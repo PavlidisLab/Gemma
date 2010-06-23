@@ -126,7 +126,7 @@ public class ExpressionExperimentAnnotator implements InitializingBean {
         boolean activated = ConfigUtils.getBoolean( MMTX_ACTIVATION_PROPERTY_KEY );
 
         if ( !activated ) {
-            log.info( "Automated tagger disabled; to turn on set " + MMTX_ACTIVATION_PROPERTY_KEY
+            log.debug( "Automated tagger disabled; to turn on set " + MMTX_ACTIVATION_PROPERTY_KEY
                     + "=true in your Gemma.properties file" );
             return;
         }
