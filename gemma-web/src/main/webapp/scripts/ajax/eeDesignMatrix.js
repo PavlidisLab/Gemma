@@ -78,5 +78,5 @@ var DesignMatrix = {
 };
 
 function cleanName(string) {
-		return string.replace(/[\'\s\(\)]/g, "_");
+		return string.replace(/[\\\/\"\'\s\(\),\.]/g, " ");
 }
