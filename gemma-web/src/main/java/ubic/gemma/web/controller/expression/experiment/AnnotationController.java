@@ -163,6 +163,7 @@ public class AnnotationController extends AbstractTaskService {
         if ( bm == null ) {
             throw new IllegalArgumentException( "No such BioMaterial with id=" + id );
         }
+        bioMaterialService.thaw( bm );
         ontologyService.removeBioMaterialStatement( vc.getId(), bm );
     }
 

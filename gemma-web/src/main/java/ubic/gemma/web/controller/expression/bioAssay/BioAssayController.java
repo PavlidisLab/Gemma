@@ -168,6 +168,7 @@ public class BioAssayController extends AbstractTaskService {
                 if ( bioAssay == null ) {
                     throw new EntityNotFoundException( id + " not found" );
                 }
+                bioAssayService.thaw( bioAssay );
                 bioAssays.add( bioAssay );
             }
         }
