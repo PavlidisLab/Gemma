@@ -117,6 +117,7 @@ public class AnnotationController extends AbstractTaskService {
         if ( bm == null ) {
             throw new IllegalArgumentException( "No such BioMaterial with id=" + id );
         }
+        bioMaterialService.thaw( bm );
         ontologyService.saveBioMaterialStatement( vc, bm );
     }
 
@@ -131,6 +132,7 @@ public class AnnotationController extends AbstractTaskService {
         if ( ee == null ) {
             throw new IllegalArgumentException( "No such experiment with id=" + id );
         }
+        expressionExperimentService.thawLite( ee );
         ontologyService.saveExpressionExperimentStatement( vc, ee );
 
     }
@@ -177,6 +179,8 @@ public class AnnotationController extends AbstractTaskService {
         if ( ee == null ) {
             return;
         }
+
+        expressionExperimentService.thawLite( ee );
 
         Collection<Characteristic> current = ee.getCharacteristics();
 
