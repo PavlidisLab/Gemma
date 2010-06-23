@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.common.description;
 
+import java.util.Collection;
+
 import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
@@ -33,56 +35,51 @@ public interface BibliographicReferenceService {
      * </p>
      */
     @Secured( { "GROUP_USER" })
-    public void addPDF( ubic.gemma.model.common.description.LocalFile pdfFile,
-            ubic.gemma.model.common.description.BibliographicReference bibliographicReference );
+    public void addPDF( LocalFile pdfFile, BibliographicReference bibliographicReference );
 
     /**
      * 
      */
     @Secured( { "GROUP_USER" })
-    public ubic.gemma.model.common.description.BibliographicReference create(
-            ubic.gemma.model.common.description.BibliographicReference bibliographicReference );
+    public BibliographicReference create( BibliographicReference bibliographicReference );
 
     /**
      * <p>
      * check to see if the object already exists
      * </p>
      */
-    public ubic.gemma.model.common.description.BibliographicReference find(
-            ubic.gemma.model.common.description.BibliographicReference bibliographicReference );
+    public BibliographicReference find( BibliographicReference bibliographicReference );
 
     /**
      * <p>
      * Get a reference by the unqualified external id.
      * </p>
      */
-    public ubic.gemma.model.common.description.BibliographicReference findByExternalId( java.lang.String id );
+    public BibliographicReference findByExternalId( java.lang.String id );
 
     /**
      * Retrieve a reference by identifier, qualified by the database name (such as 'pubmed').
      */
-    public ubic.gemma.model.common.description.BibliographicReference findByExternalId( java.lang.String id,
-            java.lang.String databaseName );
+    public BibliographicReference findByExternalId( java.lang.String id, java.lang.String databaseName );
 
-    
     /**
      * F
+     * 
      * @param accession
      * @return
      */
-    public ubic.gemma.model.common.description.BibliographicReference findByExternalId( DatabaseEntry accession );
-    
+    public BibliographicReference findByExternalId( DatabaseEntry accession );
+
     /**
      * 
      */
-    public ubic.gemma.model.common.description.BibliographicReference findByTitle( java.lang.String title );
+    public BibliographicReference findByTitle( java.lang.String title );
 
     /**
      * 
      */
     @Secured( { "GROUP_USER" })
-    public ubic.gemma.model.common.description.BibliographicReference findOrCreate(
-            ubic.gemma.model.common.description.BibliographicReference BibliographicReference );
+    public BibliographicReference findOrCreate( BibliographicReference BibliographicReference );
 
     /**
      * Return all the BibRefs that are linked to ExpressionExperiments.
@@ -95,12 +92,12 @@ public interface BibliographicReferenceService {
      */
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public java.util.Collection<ExpressionExperiment> getRelatedExperiments(
-            ubic.gemma.model.common.description.BibliographicReference bibliographicReference );
+            BibliographicReference bibliographicReference );
 
     /**
      * 
      */
-    public ubic.gemma.model.common.description.BibliographicReference load( java.lang.Long id );
+    public BibliographicReference load( java.lang.Long id );
 
     /**
      * 
@@ -111,12 +108,16 @@ public interface BibliographicReferenceService {
      * 
      */
     @Secured( { "GROUP_ADMIN" })
-    public void remove( ubic.gemma.model.common.description.BibliographicReference BibliographicReference );
+    public void remove( BibliographicReference BibliographicReference );
 
     /**
      * 
      */
     @Secured( { "GROUP_ADMIN" })
-    public void update( ubic.gemma.model.common.description.BibliographicReference bibliographicReference );
+    public void update( BibliographicReference bibliographicReference );
+
+    public BibliographicReference thaw( BibliographicReference bibliographicReference );
+
+    public Collection<BibliographicReference> thaw( Collection<BibliographicReference> bibliographicReferences );
 
 }

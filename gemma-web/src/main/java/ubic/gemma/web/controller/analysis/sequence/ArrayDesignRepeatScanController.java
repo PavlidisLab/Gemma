@@ -74,6 +74,7 @@ public class ArrayDesignRepeatScanController extends AbstractTaskService {
     public String run( Long id ) throws Exception {
         ArrayDesign ad = arrayDesignService.load( id );
 
+        ad = arrayDesignService.thawLite( ad );
         ArrayDesignRepeatScanTaskCommand cmd = new ArrayDesignRepeatScanTaskCommand( ad );
 
         return super.run( cmd );
@@ -85,6 +86,7 @@ public class ArrayDesignRepeatScanController extends AbstractTaskService {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.web.controller.grid.AbstractSpacesController#getRunner(java.lang.String, java.lang.Object)
      */
     @Override
@@ -94,6 +96,7 @@ public class ArrayDesignRepeatScanController extends AbstractTaskService {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.web.controller.grid.AbstractSpacesController#getSpaceRunner(java.lang.String, java.lang.Object)
      */
     @Override

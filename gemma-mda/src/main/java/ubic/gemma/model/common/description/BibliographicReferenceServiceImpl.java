@@ -42,6 +42,7 @@ public class BibliographicReferenceServiceImpl extends
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.common.description.BibliographicReferenceServiceBase#handleAddDocument(byte[],
      * ubic.gemma.model.common.description.BibliographicReference)
      */
@@ -99,6 +100,7 @@ public class BibliographicReferenceServiceImpl extends
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.common.description.BibliographicReferenceServiceBase#handleGetBibliographicReferenceByTitle(
      * java.lang.String)
@@ -133,6 +135,7 @@ public class BibliographicReferenceServiceImpl extends
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.common.description.BibliographicReferenceServiceBase#handleLoadBibliographicReference(java.lang
      * .Long)
@@ -165,6 +168,30 @@ public class BibliographicReferenceServiceImpl extends
      */
     public BibliographicReference findByExternalId( DatabaseEntry accession ) {
         return this.getBibliographicReferenceDao().findByExternalId( accession );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @seeubic.gemma.model.common.description.BibliographicReferenceService#thaw(ubic.gemma.model.common.description.
+     * BibliographicReference)
+     */
+    @Override
+    public BibliographicReference thaw( BibliographicReference bibliographicReference ) {
+        return this.getBibliographicReferenceDao().thaw( bibliographicReference );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * 
+     * /* (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.common.description.BibliographicReferenceService#thaw(java.util.Collection)
+     */
+    @Override
+    public Collection<BibliographicReference> thaw( Collection<BibliographicReference> bibliographicReferences ) {
+        return this.getBibliographicReferenceDao().thaw( bibliographicReferences );
     }
 
 }

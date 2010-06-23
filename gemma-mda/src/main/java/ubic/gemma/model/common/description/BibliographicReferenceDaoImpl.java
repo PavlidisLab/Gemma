@@ -35,6 +35,7 @@ import org.springframework.stereotype.Repository;
 
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.util.BusinessKey;
+import ubic.gemma.util.EntityUtils;
 
 /**
  * @author pavlidis
@@ -53,6 +54,7 @@ public class BibliographicReferenceDaoImpl extends ubic.gemma.model.common.descr
 
     /*
      * (non-Javadoc)
+     * 
      * @seeubic.gemma.model.common.description.BibliographicReferenceDaoBase#find(ubic.gemma.model.common.description.
      * BibliographicReference)
      */
@@ -93,6 +95,7 @@ public class BibliographicReferenceDaoImpl extends ubic.gemma.model.common.descr
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.common.description.BibliographicReferenceDaoBase#findOrCreate(ubic.gemma.model.common.description
      * .BibliographicReference)
@@ -113,7 +116,7 @@ public class BibliographicReferenceDaoImpl extends ubic.gemma.model.common.descr
     @Override
     @SuppressWarnings("unchecked")
     public Map<ExpressionExperiment, BibliographicReference> handleGetAllExperimentLinkedReferences() {
-        final String query = "select distinct e, e.primaryPublication from ExpressionExperimentImpl e ";
+        final String query = "select distinct e, b from ExpressionExperimentImpl e join e.primaryPublication b left join fetch b.pubAccession ";
         Map<ExpressionExperiment, BibliographicReference> result = new HashMap<ExpressionExperiment, BibliographicReference>();
         List<Object[]> os = this.getHibernateTemplate().find( query );
         for ( Object[] o : os ) {
@@ -126,7 +129,7 @@ public class BibliographicReferenceDaoImpl extends ubic.gemma.model.common.descr
     @Override
     protected Collection handleGetRelatedExperiments( BibliographicReference bibliographicReference ) throws Exception {
         final String queryString = "select distinct ee FROM ExpressionExperimentImpl as ee left join ee.otherRelevantPublications as eeO"
-                + " WHERE ee.primaryPublication = :bib OR (eeO = :bib) ";
+                + " where ee.primaryPublication = :bib OR (eeO = :bib) ";
 
         return this.getHibernateTemplate().findByNamedParam( queryString, "bib", bibliographicReference );
     }
@@ -136,4 +139,32 @@ public class BibliographicReferenceDaoImpl extends ubic.gemma.model.common.descr
         return this.getHibernateTemplate().find( "from BibliographicReferenceImpl b where b.id in :bib", ids );
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @seeubic.gemma.model.common.description.BibliographicReferenceDao#thaw(ubic.gemma.model.common.description.
+     * BibliographicReference)
+     */
+    @Override
+    public BibliographicReference thaw( BibliographicReference bibliographicReference ) {
+        if ( bibliographicReference == null || bibliographicReference.getId() == null ) return bibliographicReference;
+        return ( BibliographicReference ) this.getHibernateTemplate().findByNamedParam(
+                "select b from BibliographicReferenceImpl b left join fetch b.pubAccession left join fetch b.chemicals "
+                        + "left join fetch b.meshTerms left join fetch b.keywords where b.id = :id ", "id",
+                bibliographicReference.getId() ).iterator().next();
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.common.description.BibliographicReferenceDao#thaw(java.util.Collection)
+     */
+    @Override
+    public Collection<BibliographicReference> thaw( Collection<BibliographicReference> bibliographicReferences ) {
+        if ( bibliographicReferences.isEmpty() ) return bibliographicReferences;
+        return this.getHibernateTemplate().findByNamedParam(
+                "select b from BibliographicReferenceImpl b left join fetch b.pubAccession left join fetch b.chemicals "
+                        + "left join fetch b.meshTerms left join fetch b.keywords where b.id in (:ids) ", "ids",
+                EntityUtils.getIds( bibliographicReferences ) );
+    }
 }

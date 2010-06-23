@@ -102,7 +102,7 @@ public class ProcessedExpressionDataVectorCreateController extends AbstractTaskS
     public String run( Long id ) throws Exception {
 
         ExpressionExperiment ee = expressionExperimentService.load( id );
-
+        expressionExperimentService.thawLite( ee );
         ProcessedExpressionDataVectorCreateTaskCommand cmd = new ProcessedExpressionDataVectorCreateTaskCommand( ee );
 
         return super.run( cmd );

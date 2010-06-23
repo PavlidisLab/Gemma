@@ -153,6 +153,8 @@ public class BibliographicReferenceController extends BaseController {
             }
         }
 
+        bibRef = bibliographicReferenceService.thaw( bibRef );
+
         boolean isIncomplete = bibRef.getPublicationDate() == null;
         addMessage( request, "object.found", new Object[] { messagePrefix, pubMedId } );
         return new ModelAndView( "bibRefView" ).addObject( "bibliographicReference", bibRef ).addObject(
@@ -172,6 +174,9 @@ public class BibliographicReferenceController extends BaseController {
         Collection<BibliographicReferenceValueObject> vos = new HashSet<BibliographicReferenceValueObject>();
         for ( ExpressionExperiment e : allExperimentLinkedReferences.keySet() ) {
             BibliographicReference b = allExperimentLinkedReferences.get( e );
+
+            // no thaw needed as the fetch method does partial thaw.
+            // b = bibliographicReferenceService.thaw( b );
             BibliographicReferenceValueObject vo = new BibliographicReferenceValueObject( b );
 
             if ( !vos.contains( vo ) ) {
@@ -191,9 +196,10 @@ public class BibliographicReferenceController extends BaseController {
      */
     public void update( Long id ) {
         BibliographicReference bibRef = bibliographicReferenceService.load( id );
-        if ( id == null ) {
+        if ( bibRef == null ) {
             throw new EntityNotFoundException( "Could not locate reference with that id" );
         }
+        bibRef = bibliographicReferenceService.thaw( bibRef );
 
         String pubMedId = bibRef.getPubAccession().getAccession();
         BibliographicReference fresh = this.pubMedXmlFetcher.retrieveByHTTP( Integer.parseInt( pubMedId ) );

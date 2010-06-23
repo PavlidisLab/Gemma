@@ -68,4 +68,16 @@ public interface BibliographicReferenceDao extends BaseDao<BibliographicReferenc
 
     public Collection<BibliographicReference> load( Collection<Long> ids );
 
+    /**
+     * @param bibliographicReference
+     * @return
+     */
+    public BibliographicReference thaw( BibliographicReference bibliographicReference );
+
+    /**
+     * @param bibliographicReferences
+     * @return
+     */
+    public Collection<BibliographicReference> thaw( Collection<BibliographicReference> bibliographicReferences );
+
 }
