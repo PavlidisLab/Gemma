@@ -62,7 +62,7 @@ public class ArrayExpressLoadServiceIntegrationTest extends BaseSpringContextTes
      */
     @Test
     public void testLoad() throws Exception {
-        // Affymetrix GeneChip® Murine Genome U74Av2 [MG_U74Av2] = GPL81
+        // Affymetrix GeneChip Murine Genome U74Av2 [MG_U74Av2] = GPL81
         ArrayDesignService ads = ( ArrayDesignService ) this.getBean( "arrayDesignService" );
         ArrayDesign ad = ads.findByShortName( "GPL81" );
 
