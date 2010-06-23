@@ -224,6 +224,8 @@ public class GeneServiceImplTest extends TestCase {
 
     public void testGetMaxPhysicalLength() {
         reset( geneDaoMock );
+        geneDaoMock.thaw( g3 );
+        expectLastCall().andReturn( g3 );
         PhysicalLocation ploc = svc.getMaxPhysicalLength( g3 );
         assertTrue( ploc.getNucleotide() == 90 );
         assertTrue( ploc.getNucleotideLength() == 120 );

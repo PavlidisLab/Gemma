@@ -76,8 +76,6 @@ public class GeneServiceImpl extends GeneServiceBase {
     public PhysicalLocation getMaxPhysicalLength( Gene gene ) {
         if ( gene == null ) return null;
 
-        gene = this.thaw( gene );
-
         Collection<GeneProduct> gpCollection = gene.getProducts();
 
         if ( gpCollection == null ) return null;
