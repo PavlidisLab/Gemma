@@ -53,9 +53,8 @@ public abstract class CharacteristicDaoBase extends HibernateDaoSupport implemen
                 } );
         return entities;
     }
-    
-    
-    public Collection<? extends Characteristic > load( Collection<Long> ids ) {
+
+    public Collection<? extends Characteristic> load( Collection<Long> ids ) {
         return this.getHibernateTemplate().findByNamedParam( "from CharacteristicImpl where id in (:ids)", "ids", ids );
     }
 
@@ -74,7 +73,7 @@ public abstract class CharacteristicDaoBase extends HibernateDaoSupport implemen
     /**
      * @see ubic.gemma.model.common.description.CharacteristicDao#create(java.util.Collection)
      */
-    
+
     public java.util.Collection create( final java.util.Collection entities ) {
         return create( TRANSFORM_NONE, entities );
     }
@@ -176,7 +175,6 @@ public abstract class CharacteristicDaoBase extends HibernateDaoSupport implemen
      * @see ubic.gemma.model.common.description.CharacteristicDao#loadAll()
      */
 
-    
     public java.util.Collection loadAll() {
         return this.loadAll( TRANSFORM_NONE );
     }

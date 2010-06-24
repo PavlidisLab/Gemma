@@ -92,6 +92,10 @@ BibliographicReferenceController.update = function(p0, callback) {
 	dwr.engine._execute(BibliographicReferenceController._path, 'BibliographicReferenceController', 'update', p0,
 			callback);
 }
+BibliographicReferenceController.browse = function(p0, callback) {
+	dwr.engine._execute(BibliographicReferenceController._path, 'BibliographicReferenceController', 'browse', p0,
+			callback);
+}
 // ====================================================================================
 if (BioAssayController == null)
 	var BioAssayController = {};

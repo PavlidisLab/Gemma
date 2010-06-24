@@ -22,12 +22,14 @@ package ubic.gemma.model.common.description;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
+import org.hibernate.Query;
 import org.hibernate.SessionFactory;
 import org.hibernate.criterion.Restrictions;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,6 +52,31 @@ public class BibliographicReferenceDaoImpl extends ubic.gemma.model.common.descr
     @Autowired
     public BibliographicReferenceDaoImpl( SessionFactory sessionFactory ) {
         super.setSessionFactory( sessionFactory );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.persistence.BrowsingDao#browse(java.lang.Integer, java.lang.Integer)
+     */
+    public List<BibliographicReference> browse( Integer start, Integer limit ) {
+        Query query = this.getSession().createQuery( "from BibliographicReferenceImpl" );
+        query.setMaxResults( limit );
+        query.setFirstResult( start );
+        return query.list();
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.persistence.BrowsingDao#browse(java.lang.Integer, java.lang.Integer, java.lang.String, boolean)
+     */
+    public List<BibliographicReference> browse( Integer start, Integer limit, String orderField, boolean descending ) {
+        Query query = this.getSession().createQuery(
+                "from BibliographicReferenceImpl order by " + orderField + " " + ( descending ? "desc" : "" ) );
+        query.setMaxResults( limit );
+        query.setFirstResult( start );
+        return query.list();
     }
 
     /*
@@ -125,18 +152,27 @@ public class BibliographicReferenceDaoImpl extends ubic.gemma.model.common.descr
         return result;
     }
 
-    // Note that almost the same method is also available from the EEservice
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.common.description.BibliographicReferenceDao#getRelatedExperiments(java.util.Collection)
+     */
     @Override
-    protected Collection handleGetRelatedExperiments( BibliographicReference bibliographicReference ) throws Exception {
-        final String queryString = "select distinct ee FROM ExpressionExperimentImpl as ee left join ee.otherRelevantPublications as eeO"
-                + " where ee.primaryPublication = :bib OR (eeO = :bib) ";
-
-        return this.getHibernateTemplate().findByNamedParam( queryString, "bib", bibliographicReference );
-    }
-
-    @Override
-    protected Collection handleLoadMultiple( Collection ids ) throws Exception {
-        return this.getHibernateTemplate().find( "from BibliographicReferenceImpl b where b.id in :bib", ids );
+    public Map<BibliographicReference, Collection<ExpressionExperiment>> getRelatedExperiments(
+            Collection<BibliographicReference> records ) {
+        final String query = "select distinct e, b from ExpressionExperimentImpl "
+                + "e join e.primaryPublication b left join fetch b.pubAccession where b in (:recs)";
+        Map<BibliographicReference, Collection<ExpressionExperiment>> result = new HashMap<BibliographicReference, Collection<ExpressionExperiment>>();
+        List<Object[]> os = this.getHibernateTemplate().findByNamedParam( query, "recs", records );
+        for ( Object[] o : os ) {
+            ExpressionExperiment e = ( ExpressionExperiment ) o[0];
+            BibliographicReference b = ( BibliographicReference ) o[1];
+            if ( !result.containsKey( b ) ) {
+                result.put( b, new HashSet<ExpressionExperiment>() );
+            }
+            result.get( b ).add( e );
+        }
+        return result;
     }
 
     /*
@@ -167,4 +203,30 @@ public class BibliographicReferenceDaoImpl extends ubic.gemma.model.common.descr
                         + "left join fetch b.meshTerms left join fetch b.keywords where b.id in (:ids) ", "ids",
                 EntityUtils.getIds( bibliographicReferences ) );
     }
+
+    // Note that almost the same method is also available from the EEservice
+    @Override
+    protected Collection handleGetRelatedExperiments( BibliographicReference bibliographicReference ) throws Exception {
+        final String queryString = "select distinct ee FROM ExpressionExperimentImpl as ee left join ee.otherRelevantPublications as eeO"
+                + " where ee.primaryPublication = :bib OR (eeO = :bib) ";
+
+        return this.getHibernateTemplate().findByNamedParam( queryString, "bib", bibliographicReference );
+    }
+
+    @Override
+    protected Collection handleLoadMultiple( Collection ids ) throws Exception {
+        return this.getHibernateTemplate().find( "from BibliographicReferenceImpl b where b.id in :bib", ids );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.persistence.BrowsingDao#count()
+     */
+    @Override
+    public Integer count() {
+        return ( ( Long ) getHibernateTemplate().find( "select count(*) from BibliographicReferenceImpl" ).iterator()
+                .next() ).intValue();
+    }
+
 }

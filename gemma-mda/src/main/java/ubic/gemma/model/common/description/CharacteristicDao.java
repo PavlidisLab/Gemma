@@ -22,13 +22,13 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-import ubic.gemma.persistence.BaseDao;
+import ubic.gemma.persistence.BrowsingDao;
 
 /**
  * @see ubic.gemma.model.common.description.Characteristic
  * @version $Id$
  */
-public interface CharacteristicDao extends BaseDao<Characteristic> {
+public interface CharacteristicDao extends BrowsingDao<Characteristic> {
 
     /**
      * Finds all characteristics whose parent object is of the specified class. Returns a map of characteristics to

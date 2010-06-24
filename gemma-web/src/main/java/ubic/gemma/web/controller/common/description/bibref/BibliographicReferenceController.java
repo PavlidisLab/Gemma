@@ -18,8 +18,10 @@
  */
 package ubic.gemma.web.controller.common.description.bibref;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
@@ -37,8 +39,11 @@ import ubic.gemma.loader.entrez.pubmed.PubMedXMLFetcher;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.BibliographicReferenceService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.persistence.PersisterHelper;
 import ubic.gemma.web.controller.BaseController;
+import ubic.gemma.web.remote.JsonReaderResponse;
+import ubic.gemma.web.remote.ListBatchCommand;
 import ubic.gemma.web.util.EntityNotFoundException;
 
 /**
@@ -54,9 +59,9 @@ public class BibliographicReferenceController extends BaseController {
 
     @Autowired
     private BibliographicReferenceService bibliographicReferenceService = null;
+    private final String messagePrefix = "Reference with PubMed Id";
     @Autowired
     private PersisterHelper persisterHelper;
-    private final String messagePrefix = "Reference with PubMed Id";
     private PubMedXMLFetcher pubMedXmlFetcher = new PubMedXMLFetcher();
 
     /**
@@ -92,6 +97,39 @@ public class BibliographicReferenceController extends BaseController {
 
         return new ModelAndView( "bibRefView" ).addObject( "bibliographicReference", bibRef ).addObject(
                 "existsInSystem", Boolean.TRUE );
+    }
+
+    /**
+     * AJAX
+     * 
+     * @param batch
+     * @return
+     */
+    public JsonReaderResponse<BibliographicReferenceValueObject> browse( ListBatchCommand batch ) {
+        Integer count = bibliographicReferenceService.count();
+        List<BibliographicReference> records = getBatch( batch );
+        Map<BibliographicReference, Collection<ExpressionExperiment>> relatedExperiments = bibliographicReferenceService
+                .getRelatedExperiments( records );
+
+        List<BibliographicReferenceValueObject> valueObjects = new ArrayList<BibliographicReferenceValueObject>();
+
+        for ( BibliographicReference ref : records ) {
+
+            ref = bibliographicReferenceService.thaw( ref );
+            BibliographicReferenceValueObject vo = new BibliographicReferenceValueObject( ref );
+
+            if ( relatedExperiments.containsKey( ref ) ) {
+                vo
+                        .setExperiments( ExpressionExperimentValueObject.convert2ValueObjects( relatedExperiments
+                                .get( ref ) ) );
+            }
+            valueObjects.add( vo );
+
+        }
+
+        JsonReaderResponse<BibliographicReferenceValueObject> returnVal = new JsonReaderResponse<BibliographicReferenceValueObject>(
+                valueObjects, count.intValue() );
+        return returnVal;
     }
 
     /**
@@ -168,25 +206,7 @@ public class BibliographicReferenceController extends BaseController {
      */
     @RequestMapping("/showAllEeBibRefs.html")
     public ModelAndView showAllForExperiments( HttpServletRequest request, HttpServletResponse response ) {
-        Map<ExpressionExperiment, BibliographicReference> allExperimentLinkedReferences = bibliographicReferenceService
-                .getAllExperimentLinkedReferences();
-
-        Collection<BibliographicReferenceValueObject> vos = new HashSet<BibliographicReferenceValueObject>();
-        for ( ExpressionExperiment e : allExperimentLinkedReferences.keySet() ) {
-            BibliographicReference b = allExperimentLinkedReferences.get( e );
-
-            // no thaw needed as the fetch method does partial thaw.
-            // b = bibliographicReferenceService.thaw( b );
-            BibliographicReferenceValueObject vo = new BibliographicReferenceValueObject( b );
-
-            if ( !vos.contains( vo ) ) {
-                vos.add( vo );
-            }
-
-            vo.getExperiments().add( e );
-        }
-
-        return new ModelAndView( "bibRefList" ).addObject( "bibliographicReferences", vos );
+        return new ModelAndView( "bibRefList" );
     }
 
     /**
@@ -234,6 +254,34 @@ public class BibliographicReferenceController extends BaseController {
         log.info( "Bibliographic reference with pubMedId: " + bibRef.getPubAccession().getAccession() + " deleted" );
         addMessage( request, "object.deleted", new Object[] { messagePrefix, bibRef.getPubAccession().getAccession() } );
         return new ModelAndView( "bibRefView", "bibliographicReference", bibRef );
+    }
+
+    private List<BibliographicReference> getBatch( ListBatchCommand batch ) {
+        List<BibliographicReference> records;
+        if ( StringUtils.isNotBlank( batch.getSort() ) ) {
+
+            String o = batch.getSort();
+
+            String orderBy = "";
+            if ( o.equals( "title" ) ) {
+                orderBy = "title";
+            } else if ( o.equals( "publicationDate" ) ) {
+                orderBy = "publicationDate";
+            } else if ( o.equals( "publication" ) ) {
+                orderBy = "publication";
+            } else if ( o.equals( "authorList" ) ) {
+                orderBy = "authorList";
+            } else {
+                throw new IllegalArgumentException( "Unknown sort field: " + o );
+            }
+
+            boolean descending = batch.getDir() != null && batch.getDir().equalsIgnoreCase( "DESC" );
+            records = bibliographicReferenceService.browse( batch.getStart(), batch.getLimit(), orderBy, descending );
+
+        } else {
+            records = bibliographicReferenceService.browse( batch.getStart(), batch.getLimit() );
+        }
+        return records;
     }
 
 }

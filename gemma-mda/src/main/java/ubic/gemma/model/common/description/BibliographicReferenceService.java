@@ -19,6 +19,8 @@
 package ubic.gemma.model.common.description;
 
 import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 
 import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -37,6 +39,12 @@ public interface BibliographicReferenceService {
     @Secured( { "GROUP_USER" })
     public void addPDF( LocalFile pdfFile, BibliographicReference bibliographicReference );
 
+    public List<BibliographicReference> browse( Integer start, Integer limit );
+
+    public List<BibliographicReference> browse( Integer start, Integer limit, String orderField, boolean descending );
+
+    public Integer count();
+
     /**
      * 
      */
@@ -51,6 +59,14 @@ public interface BibliographicReferenceService {
     public BibliographicReference find( BibliographicReference bibliographicReference );
 
     /**
+     * F
+     * 
+     * @param accession
+     * @return
+     */
+    public BibliographicReference findByExternalId( DatabaseEntry accession );
+
+    /**
      * <p>
      * Get a reference by the unqualified external id.
      * </p>
@@ -61,14 +77,6 @@ public interface BibliographicReferenceService {
      * Retrieve a reference by identifier, qualified by the database name (such as 'pubmed').
      */
     public BibliographicReference findByExternalId( java.lang.String id, java.lang.String databaseName );
-
-    /**
-     * F
-     * 
-     * @param accession
-     * @return
-     */
-    public BibliographicReference findByExternalId( DatabaseEntry accession );
 
     /**
      * 
@@ -110,14 +118,19 @@ public interface BibliographicReferenceService {
     @Secured( { "GROUP_ADMIN" })
     public void remove( BibliographicReference BibliographicReference );
 
+    public BibliographicReference thaw( BibliographicReference bibliographicReference );
+
+    public Collection<BibliographicReference> thaw( Collection<BibliographicReference> bibliographicReferences );
+
     /**
      * 
      */
     @Secured( { "GROUP_ADMIN" })
     public void update( BibliographicReference bibliographicReference );
 
-    public BibliographicReference thaw( BibliographicReference bibliographicReference );
-
-    public Collection<BibliographicReference> thaw( Collection<BibliographicReference> bibliographicReferences );
+    /**
+     * @param records
+     */
+    public Map<BibliographicReference, Collection<ExpressionExperiment>> getRelatedExperiments( Collection<BibliographicReference> records );
 
 }

@@ -19,14 +19,15 @@
 package ubic.gemma.model.common.description;
 
 import java.util.Collection;
+import java.util.Map;
 
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.persistence.BaseDao;
+import ubic.gemma.persistence.BrowsingDao;
 
 /**
  * @see BibliographicReference
  */
-public interface BibliographicReferenceDao extends BaseDao<BibliographicReference> {
+public interface BibliographicReferenceDao extends BrowsingDao<BibliographicReference> {
 
     /**
      * 
@@ -79,5 +80,12 @@ public interface BibliographicReferenceDao extends BaseDao<BibliographicReferenc
      * @return
      */
     public Collection<BibliographicReference> thaw( Collection<BibliographicReference> bibliographicReferences );
+
+    /**
+     * @param records
+     * @return
+     */
+    public Map<BibliographicReference, Collection<ExpressionExperiment>> getRelatedExperiments(
+            Collection<BibliographicReference> records );
 
 }

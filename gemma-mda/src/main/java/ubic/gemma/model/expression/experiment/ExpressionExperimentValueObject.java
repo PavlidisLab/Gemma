@@ -19,6 +19,7 @@
 
 package ubic.gemma.model.expression.experiment;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
@@ -36,6 +37,19 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
      * The serial version UID of this class. Needed for serialization.
      */
     private static final long serialVersionUID = -5678747537830051610L;
+
+    /**
+     * @param collection
+     * @return
+     */
+    public static Collection<ExpressionExperimentValueObject> convert2ValueObjects(
+            Collection<ExpressionExperiment> collection ) {
+        Collection<ExpressionExperimentValueObject> result = new ArrayList<ExpressionExperimentValueObject>();
+        for ( ExpressionExperiment ee : collection ) {
+            result.add( new ExpressionExperimentValueObject( ee ) );
+        }
+        return result;
+    }
 
     private String accession;
 
@@ -135,11 +149,17 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
 
     private AuditEventValueObject troubleFlag;
 
-    private AuditEventValueObject validatedFlag;
-
     private AuditEventValueObject validatedAnnotations;
 
+    private AuditEventValueObject validatedFlag;
+
     public ExpressionExperimentValueObject() {
+    }
+
+    public ExpressionExperimentValueObject( ExpressionExperiment ee ) {
+        this.id = ee.getId();
+        this.shortName = ee.getShortName();
+        this.name = ee.getName();
     }
 
     /**
@@ -636,6 +656,13 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
     }
 
     /**
+     * @return the validatedAnnotations
+     */
+    public AuditEventValueObject getValidatedAnnotations() {
+        return validatedAnnotations;
+    }
+
+    /**
      * 
      */
     public AuditEventValueObject getValidatedFlag() {
@@ -893,10 +920,6 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
         this.troubleFlag = troubleFlag;
     }
 
-    public void setValidatedFlag( AuditEventValueObject validatedFlag ) {
-        this.validatedFlag = validatedFlag;
-    }
-
     /**
      * @param validatedAnnotations the validatedAnnotations to set
      */
@@ -904,11 +927,8 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
         this.validatedAnnotations = validatedAnnotations;
     }
 
-    /**
-     * @return the validatedAnnotations
-     */
-    public AuditEventValueObject getValidatedAnnotations() {
-        return validatedAnnotations;
+    public void setValidatedFlag( AuditEventValueObject validatedFlag ) {
+        this.validatedFlag = validatedFlag;
     }
 
 }

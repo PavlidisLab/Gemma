@@ -21,6 +21,7 @@
 package ubic.gemma.model.common.description;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.stereotype.Service;
@@ -192,6 +193,51 @@ public class BibliographicReferenceServiceImpl extends
     @Override
     public Collection<BibliographicReference> thaw( Collection<BibliographicReference> bibliographicReferences ) {
         return this.getBibliographicReferenceDao().thaw( bibliographicReferences );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.common.description.BibliographicReferenceService#browse(java.lang.Integer,
+     * java.lang.Integer)
+     */
+    @Override
+    public List<BibliographicReference> browse( Integer start, Integer limit ) {
+        return this.getBibliographicReferenceDao().browse( start, limit );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.common.description.BibliographicReferenceService#browse(java.lang.Integer,
+     * java.lang.Integer, java.lang.String, boolean)
+     */
+    @Override
+    public List<BibliographicReference> browse( Integer start, Integer limit, String orderField, boolean descending ) {
+        return this.getBibliographicReferenceDao().browse( start, limit, orderField, descending );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.common.description.BibliographicReferenceService#count()
+     */
+    @Override
+    public Integer count() {
+        return this.getBibliographicReferenceDao().count();
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.model.common.description.BibliographicReferenceService#getRelatedExperiments(java.util.Collection)
+     */
+    @Override
+    public Map<BibliographicReference, Collection<ExpressionExperiment>> getRelatedExperiments(
+            Collection<BibliographicReference> records ) {
+        return this.getBibliographicReferenceDao().getRelatedExperiments( records );
+
     }
 
 }

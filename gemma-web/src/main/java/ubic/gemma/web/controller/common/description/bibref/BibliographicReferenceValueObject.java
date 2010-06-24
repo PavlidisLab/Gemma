@@ -18,21 +18,14 @@
  */
 package ubic.gemma.web.controller.common.description.bibref;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.List;
 
-import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
-import ubic.gemma.model.common.auditAndSecurity.Person;
 import ubic.gemma.model.common.description.BibliographicReference;
-import ubic.gemma.model.common.description.Characteristic;
-import ubic.gemma.model.common.description.DatabaseEntry;
-import ubic.gemma.model.common.description.Keyword;
-import ubic.gemma.model.common.description.LocalFile;
-import ubic.gemma.model.common.description.MedicalSubjectHeading;
-import ubic.gemma.model.common.description.PublicationType;
-import ubic.gemma.model.expression.biomaterial.Compound;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 
 /**
  * @author pavlidis
@@ -40,161 +33,260 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  */
 public class BibliographicReferenceValueObject {
 
-    BibliographicReference bibRef;
+    public static List<BibliographicReferenceValueObject> convert2ValueObjects( Collection<BibliographicReference> refs ) {
+        List<BibliographicReferenceValueObject> results = new ArrayList<BibliographicReferenceValueObject>();
 
-    Collection<ExpressionExperiment> experiments = new HashSet<ExpressionExperiment>();
+        for ( BibliographicReference ref : refs ) {
+            results.add( new BibliographicReferenceValueObject( ref ) );
+        }
+
+        return results;
+    }
+
+    private String abstractText;
+
+    private String authorList;
+
+    private String citation;
+
+    private Collection<ExpressionExperimentValueObject> experiments = new HashSet<ExpressionExperimentValueObject>();
+
+    private Long id;
+
+    private String issue;
+
+    private String pages;
+
+    private String pubAccession;
+
+    private String publication;
+
+    private java.util.Date publicationDate;
+
+    private String publisher;
+
+    private String title;
+
+    private String volume;
 
     public BibliographicReferenceValueObject() {
         super();
     }
 
-    /*
-     * (non-Javadoc)
-     * @see java.lang.Object#hashCode()
-     */
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ( ( bibRef == null ) ? 0 : bibRef.hashCode() );
-        return result;
+    public BibliographicReferenceValueObject( BibliographicReference ref ) {
+        this.id = ref.getId();
+        this.abstractText = ref.getAbstractText();
+        this.authorList = ref.getAuthorList();
+        this.pubAccession = ref.getPubAccession().getAccession();
+        this.publicationDate = ref.getPublicationDate();
+        this.publisher = ref.getPublisher();
+        this.pages = ref.getPages();
+        this.issue = ref.getIssue();
+        this.title = ref.getTitle();
+        this.publication = ref.getPublication();
+        this.volume = ref.getVolume();
+        this.citation = ref.getCitation();
     }
 
-    /*
-     * (non-Javadoc)
-     * @see java.lang.Object#equals(java.lang.Object)
-     */
-    @Override
-    public boolean equals( Object obj ) {
-        if ( this == obj ) return true;
-        if ( obj == null ) return false;
-        if ( getClass() != obj.getClass() ) return false;
-        BibliographicReferenceValueObject other = ( BibliographicReferenceValueObject ) obj;
-        if ( bibRef == null ) {
-            if ( other.bibRef != null ) return false;
-        } else if ( !bibRef.equals( other.bibRef ) ) return false;
-        return true;
-    }
-
-    public BibliographicReferenceValueObject( BibliographicReference bibRef ) {
+    public BibliographicReferenceValueObject( Long id, String abstractText, String authorList, String citation,
+            String issue, String pages, String pubAccession, String publication, Date publicationDate,
+            String publisher, String title, String volume, Collection<ExpressionExperimentValueObject> experiments ) {
         super();
-        this.bibRef = bibRef;
+        this.id = id;
+        this.abstractText = abstractText;
+        this.authorList = authorList;
+        this.citation = citation;
+        this.issue = issue;
+        this.pages = pages;
+        this.pubAccession = pubAccession;
+        this.publication = publication;
+        this.publicationDate = publicationDate;
+        this.publisher = publisher;
+        this.title = title;
+        this.volume = volume;
+        this.experiments = experiments;
     }
 
+    /**
+     * @return the abstractText
+     */
     public String getAbstractText() {
-        return bibRef.getAbstractText();
+        return abstractText;
     }
 
-    public String getAnnotatedAbstract() {
-        return bibRef.getAnnotatedAbstract();
-    }
-
-    public Collection<Characteristic> getAnnotations() {
-        return bibRef.getAnnotations();
-    }
-
-    public AuditTrail getAuditTrail() {
-        return bibRef.getAuditTrail();
-    }
-
+    /**
+     * @return the authorList
+     */
     public String getAuthorList() {
-        return bibRef.getAuthorList();
+        return authorList;
     }
 
-    public Collection<Person> getAuthors() {
-        return bibRef.getAuthors();
-    }
-
-    public BibliographicReference getBibRef() {
-        return bibRef;
-    }
-
-    public Collection<Compound> getChemicals() {
-        return bibRef.getChemicals();
-    }
-
+    /**
+     * @return the citation
+     */
     public String getCitation() {
-        return bibRef.getCitation();
+        return citation;
     }
 
-    public String getDescription() {
-        return bibRef.getDescription();
-    }
-
-    public String getEditor() {
-        return bibRef.getEditor();
-    }
-
-    public Collection<ExpressionExperiment> getExperiments() {
+    /**
+     * @return the experiments
+     */
+    public Collection<ExpressionExperimentValueObject> getExperiments() {
         return experiments;
     }
 
-    public LocalFile getFullTextPDF() {
-        return bibRef.getFullTextPDF();
-    }
-
-    public String getFullTextURI() {
-        return bibRef.getFullTextURI();
-    }
-
+    /**
+     * @return the id
+     */
     public Long getId() {
-        return bibRef.getId();
+        return id;
     }
 
+    /**
+     * @return the issue
+     */
     public String getIssue() {
-        return bibRef.getIssue();
+        return issue;
     }
 
-    public Collection<Keyword> getKeywords() {
-        return bibRef.getKeywords();
-    }
-
-    public Collection<MedicalSubjectHeading> getMeshTerms() {
-        return bibRef.getMeshTerms();
-    }
-
-    public String getName() {
-        return bibRef.getName();
-    }
-
+    /**
+     * @return the pages
+     */
     public String getPages() {
-        return bibRef.getPages();
+        return pages;
     }
 
-    public DatabaseEntry getPubAccession() {
-        return bibRef.getPubAccession();
+    /**
+     * @return the pubAccession
+     */
+    public String getPubAccession() {
+        return pubAccession;
     }
 
+    /**
+     * @return the publication
+     */
     public String getPublication() {
-        return bibRef.getPublication();
+        return publication;
     }
 
-    public Date getPublicationDate() {
-        return bibRef.getPublicationDate();
+    /**
+     * @return the publicationDate
+     */
+    public java.util.Date getPublicationDate() {
+        return publicationDate;
     }
 
-    public Collection<PublicationType> getPublicationTypes() {
-        return bibRef.getPublicationTypes();
-    }
-
+    /**
+     * @return the publisher
+     */
     public String getPublisher() {
-        return bibRef.getPublisher();
+        return publisher;
     }
 
+    /**
+     * @return the title
+     */
     public String getTitle() {
-        return bibRef.getTitle();
+        return title;
     }
 
+    /**
+     * @return the volume
+     */
     public String getVolume() {
-        return bibRef.getVolume();
+        return volume;
     }
 
-    public void setBibRef( BibliographicReference bibRef ) {
-        this.bibRef = bibRef;
+    /**
+     * @param abstractText the abstractText to set
+     */
+    public void setAbstractText( String abstractText ) {
+        this.abstractText = abstractText;
     }
 
-    public void setExperiments( Collection<ExpressionExperiment> experiments ) {
+    /**
+     * @param authorList the authorList to set
+     */
+    public void setAuthorList( String authorList ) {
+        this.authorList = authorList;
+    }
+
+    /**
+     * @param citation the citation to set
+     */
+    public void setCitation( String citation ) {
+        this.citation = citation;
+    }
+
+    /**
+     * @param experiments the experiments to set
+     */
+    public void setExperiments( Collection<ExpressionExperimentValueObject> experiments ) {
         this.experiments = experiments;
+    }
+
+    /**
+     * @param id the id to set
+     */
+    public void setId( Long id ) {
+        this.id = id;
+    }
+
+    /**
+     * @param issue the issue to set
+     */
+    public void setIssue( String issue ) {
+        this.issue = issue;
+    }
+
+    /**
+     * @param pages the pages to set
+     */
+    public void setPages( String pages ) {
+        this.pages = pages;
+    }
+
+    /**
+     * @param pubAccession the pubAccession to set
+     */
+    public void setPubAccession( String pubAccession ) {
+        this.pubAccession = pubAccession;
+    }
+
+    /**
+     * @param publication the publication to set
+     */
+    public void setPublication( String publication ) {
+        this.publication = publication;
+    }
+
+    /**
+     * @param publicationDate the publicationDate to set
+     */
+    public void setPublicationDate( java.util.Date publicationDate ) {
+        this.publicationDate = publicationDate;
+    }
+
+    /**
+     * @param publisher the publisher to set
+     */
+    public void setPublisher( String publisher ) {
+        this.publisher = publisher;
+    }
+
+    /**
+     * @param title the title to set
+     */
+    public void setTitle( String title ) {
+        this.title = title;
+    }
+
+    /**
+     * @param volume the volume to set
+     */
+    public void setVolume( String volume ) {
+        this.volume = volume;
     }
 
 }
