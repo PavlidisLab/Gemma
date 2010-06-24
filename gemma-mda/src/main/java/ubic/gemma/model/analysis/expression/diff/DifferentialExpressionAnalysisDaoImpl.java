@@ -324,6 +324,9 @@ public class DifferentialExpressionAnalysisDaoImpl extends
     @Override
     protected Collection<ExpressionAnalysisResultSet> handleGetResultSets( ExpressionExperiment expressionExperiment )
             throws Exception {
+        /*
+         * FIXME this has to be changed to handle the case of EESubSets.
+         */
         final String query = "select distinct r from ExpressionAnalysisResultSetImpl r inner join r.analysis a"
                 + " inner join a.expressionExperimentSetAnalyzed eeset inner join eeset.experiments ee where ee=:expressionExperiment ";
         return this.getHibernateTemplate().findByNamedParam( query, "expressionExperiment", expressionExperiment );
@@ -369,6 +372,16 @@ public class DifferentialExpressionAnalysisDaoImpl extends
                 return null;
             }
         } );
+    }
+
+    @SuppressWarnings("unchecked")
+    public Collection<DifferentialExpressionAnalysis> getAnalyses( ExpressionExperiment expressionExperiment ) {
+        /*
+         * FIXME deal with ee subsets.
+         */
+        final String query = "select distinct a from DifferentialExpressionAnalysisImpl a join a.expressionExperimentSetAnalyzed eeset inner join eeset.experiments ee where ee=:expressionExperiment ";
+        return this.getHibernateTemplate().findByNamedParam( query, "expressionExperiment", expressionExperiment );
+
     }
 
 }
