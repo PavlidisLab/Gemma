@@ -243,6 +243,8 @@ public class ExperimentalDesignController extends BaseController {
             experimentalFactorsToRemove.add( experimentalFactor );
         }
 
+        expressionExperimentService.thawLite( ee );
+
         for ( BioAssay ba : ee.getBioAssays() ) {
             for ( BioMaterial bm : ba.getSamplesUsed() ) {
 
@@ -704,6 +706,7 @@ public class ExperimentalDesignController extends BaseController {
      */
     private void updateBioMaterial( BioMaterialValueObject bmvo ) {
         BioMaterial bm = bioMaterialService.load( bmvo.getId() );
+        bioMaterialService.thaw( bm );
 
         Collection<FactorValue> updatedFactorValues = new HashSet<FactorValue>();
         Map<String, String> factorIdToFactorValueId = bmvo.getFactorIdToFactorValueId(); // all of them.
