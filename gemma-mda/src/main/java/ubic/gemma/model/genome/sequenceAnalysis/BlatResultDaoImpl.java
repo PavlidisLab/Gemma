@@ -107,7 +107,7 @@ public class BlatResultDaoImpl extends ubic.gemma.model.genome.sequenceAnalysis.
                 .findByNamedParam(
                         "select b from BlatResultImpl b left join fetch b.querySequence qs left join fetch b.targetSequence ts  "
                                 + " left join fetch b.searchedDatabase left join fetch b.targetChromosome tc left join fetch tc.taxon"
-                                + " left join fetch qs.taxon t "
+                                + " left join fetch qs.taxon t left join t.parentTaxon "
                                 + " left join fetch t.externalDatabase left join fetch qs.sequenceDatabaseEntry s "
                                 + " left join fetch s.externalDatabase" + " where b.id = :id", "id", blatResult.getId() )
                 .iterator().next();
