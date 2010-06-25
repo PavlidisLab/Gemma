@@ -23,10 +23,6 @@ import static org.junit.Assert.assertNotNull;
 
 import java.io.IOException;
 import java.util.Collection;
-import java.util.Map;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -144,31 +140,6 @@ public class BibRefControllerTest extends BaseSpringWebTest {
         // assertTrue( errors != null && errors.size() > 0 );
         // assertTrue( "Got: " + errors.iterator().next(), errors.iterator().next().startsWith( nonexistentpubmedid ) );
 
-    }
-
-    /**
-     * Tests getting all the bibrefs, which is implemented in
-     * {@link ubic.gemma.controller.entrez.pubmed.BibliographicReferenceController} in method
-     * {@link #handleRequest(HttpServletRequest request, HttpServletResponse response)}.
-     * 
-     * @throws Exception
-     */
-    @Test
-    public void testGetAllBibliographicReferences() throws Exception {
-        if ( !ready ) {
-            log.error( "Test skipped due to failure to connect to NIH" );
-            return;
-        }
-        BibliographicReferenceController brc = ( BibliographicReferenceController ) getBean( "bibliographicReferenceController" );
-
-        req = new MockHttpServletRequest( "GET", "/bibRef/showAllEeBibRefs.html" );
-
-        ModelAndView mav = brc.showAllForExperiments( req, new MockHttpServletResponse() );
-        assertNotNull( mav );
-        Map<String, Object> m = mav.getModel();
-
-        assertNotNull( m.get( "bibliographicReferences" ) );
-        assertEquals( "bibRefList", mav.getViewName() );
     }
 
     /**
