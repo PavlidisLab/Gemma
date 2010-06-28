@@ -606,7 +606,7 @@ Gemma.SearchGrid = Ext.extend(Ext.grid.GridPanel, {
 			return "Array";
 		} else if (/^BioSequence.*/.exec(clazz)) { // because we get proxies.
 			return "Sequence";
-		} else if (clazz == "Gene") {
+		} else if (clazz == "GeneValueObject") {
 			return "Gene";
 		} else if (clazz == "GeneSetValueObject") {
 			return "Gene set";
@@ -627,7 +627,7 @@ Gemma.SearchGrid = Ext.extend(Ext.grid.GridPanel, {
 			return record.shortName;
 		} else if (/^BioSequence.*/.exec(clazz)) { // because we get proxies.
 			return record.name;
-		} else if (clazz == "Gene" || clazz == 'GeneSetValueObject' || clazz == 'ExpressionExperimentSetValueObject') {
+		} else if (clazz == "GeneValueObject" || clazz == 'GeneSetValueObject' || clazz == 'ExpressionExperimentSetValueObject') {
 			return record.name;
 		} else {
 			return clazz;
@@ -649,7 +649,7 @@ Gemma.SearchGrid = Ext.extend(Ext.grid.GridPanel, {
 		} else if (/^BioSequence.*/.exec(clazz)) {
 			return "<a href=\"/Gemma/genome/bioSequence/showBioSequence.html?id=" + data.id + "\">" + data.name +
 					"</a> - " + data.taxon.commonName + " " + data.description;
-		} else if (clazz == "Gene" || clazz == "PredictedGene" || clazz == "ProbeAlignedRegion") {
+		} else if (clazz == "GeneValueObject" || clazz == "PredictedGene" || clazz == "ProbeAlignedRegion") {
 			return "<a href=\"/Gemma/gene/showGene.html?id=" + data.id + "\">" + data.officialSymbol +
 					"</a>  - Species: " + data.taxon.commonName + " Desc: " + data.officialName;
 		} else if (clazz == "Bibliographicreference") {
