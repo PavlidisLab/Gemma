@@ -47,6 +47,7 @@ import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSetService;
 import ubic.gemma.model.association.Gene2GOAssociationService;
 import ubic.gemma.model.common.description.BibliographicReference;
+import ubic.gemma.model.common.description.BibliographicReferenceService;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
@@ -59,8 +60,10 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.biosequence.BioSequence;
+import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.model.genome.gene.GeneSetService;
+import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.search.SearchResult;
 import ubic.gemma.search.SearchService;
 import ubic.gemma.search.SearchSettings;
@@ -68,6 +71,7 @@ import ubic.gemma.security.SecurityService;
 import ubic.gemma.security.audit.AuditableUtil;
 import ubic.gemma.util.EntityUtils;
 import ubic.gemma.web.controller.common.auditAndSecurity.GeneSetValueObject;
+import ubic.gemma.web.controller.common.description.bibref.BibliographicReferenceValueObject;
 import ubic.gemma.web.controller.expression.experiment.ExpressionExperimentSetValueObject;
 import ubic.gemma.web.propertyeditor.TaxonPropertyEditor;
 import ubic.gemma.web.remote.JsonReaderResponse;
@@ -89,6 +93,12 @@ public class GeneralSearchController extends BaseFormController {
 
     @Autowired
     private Gene2GOAssociationService gene2GOAssociationService;
+
+    @Autowired
+    private GeneService geneService;
+
+    @Autowired
+    private BibliographicReferenceService bibliographicReferenceService;
 
     @Autowired
     private TaxonService taxonService;
@@ -372,9 +382,10 @@ public class GeneralSearchController extends BaseFormController {
         } else if ( CompositeSequence.class.isAssignableFrom( entityClass ) ) {
             return;
         } else if ( BibliographicReference.class.isAssignableFrom( entityClass ) ) {
-            return;
+            vos = BibliographicReferenceValueObject.convert2ValueObjects( bibliographicReferenceService
+                    .loadMultiple( EntityUtils.getIds( results ) ) );
         } else if ( Gene.class.isAssignableFrom( entityClass ) ) {
-            return;
+            vos = GeneValueObject.convert2ValueObjects( geneService.loadMultiple( EntityUtils.getIds( results ) ) );
         } else if ( Characteristic.class.isAssignableFrom( entityClass ) ) {
             return;
         } else if ( BioSequence.class.isAssignableFrom( entityClass ) ) {
