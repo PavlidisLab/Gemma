@@ -235,7 +235,7 @@ public class DifferentialExpressionAnalysisController extends AbstractTaskServic
      * @return
      * @throws Exception
      */
-    public String runCustom( Long id, Collection<Long> factorids, boolean includeInteractions, Long subsetFactorId )
+    public String runCustom( Long id, Collection<Long> factorids, boolean includeInteractions )
             throws Exception {
 
         if ( factorids.isEmpty() ) {
@@ -263,26 +263,26 @@ public class DifferentialExpressionAnalysisController extends AbstractTaskServic
             throw new IllegalArgumentException( "Unknown factors?" );
         }
 
-        ExperimentalFactor subsetFactor = null;
-        if ( subsetFactorId != null ) {
-            for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
-                if ( subsetFactorId.equals( ef.getId() ) ) {
-                    subsetFactor = ef;
-                    break;
-                }
-            }
-            if ( subsetFactor == null ) {
-                throw new IllegalArgumentException( "Unknown subset factor?" );
-            }
-
-            if ( factors.contains( subsetFactor ) ) {
-                throw new IllegalArgumentException( "Subset factor must not be one of the factors used in the analysis" );
-            }
-        }
+        // ExperimentalFactor subsetFactor = null;
+        // if ( subsetFactorId != null ) {
+        // for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
+        // if ( subsetFactorId.equals( ef.getId() ) ) {
+        // subsetFactor = ef;
+        // break;
+        // }
+        // }
+        // if ( subsetFactor == null ) {
+        // throw new IllegalArgumentException( "Unknown subset factor?" );
+        // }
+        //
+        // if ( factors.contains( subsetFactor ) ) {
+        // throw new IllegalArgumentException( "Subset factor must not be one of the factors used in the analysis" );
+        // }
+        // }
 
         DifferentialExpressionAnalysisTaskCommand cmd = new DifferentialExpressionAnalysisTaskCommand( ee );
         cmd.setFactors( factors );
-        cmd.setSubsetFactor( subsetFactor );
+        // cmd.setSubsetFactor( subsetFactor );
         cmd.setIncludeInteractions( includeInteractions );
 
         log.info( "Initializing analysis" );
