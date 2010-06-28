@@ -18,7 +18,10 @@
  */
 package ubic.gemma.model.analysis.expression.diff;
 
+import java.util.Collection;
+
 import ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
@@ -55,9 +58,17 @@ public interface DifferentialExpressionAnalysisDao extends
     public void thaw( java.util.Collection<DifferentialExpressionAnalysis> expressionAnalyses );
 
     /**
+     * @param expressionExperiment
+     * @return
+     */
+    public Collection<DifferentialExpressionAnalysis> getAnalyses( ExpressionExperiment expressionExperiment );
+
+    /**
      * 
      */
     public void thaw(
             ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis differentialExpressionAnalysis );
+
+    public Collection<DifferentialExpressionAnalysis> findByFactor( ExperimentalFactor ef );
 
 }

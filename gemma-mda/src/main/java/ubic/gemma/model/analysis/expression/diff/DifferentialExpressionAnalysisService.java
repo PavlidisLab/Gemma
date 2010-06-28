@@ -24,6 +24,7 @@ import java.util.Map;
 import org.springframework.security.access.annotation.Secured;
 
 import ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
@@ -81,8 +82,14 @@ public interface DifferentialExpressionAnalysisService extends
      * 
      */
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    public Collection<ExpressionAnalysisResultSet> getResultSets(
-            ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment );
+    public Collection<ExpressionAnalysisResultSet> getResultSets( ExpressionExperiment expressionExperiment );
+
+    /**
+     * @param expressionExperiment
+     * @return
+     */
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    public Collection<DifferentialExpressionAnalysis> getAnalyses( ExpressionExperiment expressionExperiment );
 
     /**
      * 
@@ -101,5 +108,7 @@ public interface DifferentialExpressionAnalysisService extends
 
     @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
     public void update( ExpressionAnalysisResultSet a );
+
+    public Collection<DifferentialExpressionAnalysis> findByFactor( ExperimentalFactor ef );
 
 }

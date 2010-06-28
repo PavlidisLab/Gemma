@@ -25,6 +25,7 @@ import org.springframework.stereotype.Service;
 
 import ubic.gemma.model.analysis.Investigation;
 import ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
@@ -229,6 +230,15 @@ public class DifferentialExpressionAnalysisServiceImpl extends
     @SuppressWarnings("unchecked")
     public Collection<DifferentialExpressionAnalysis> loadMySharedAnalyses() {
         return this.loadAll();
+    }
+
+    public Collection<DifferentialExpressionAnalysis> getAnalyses( ExpressionExperiment expressionExperiment ) {
+        return this.getDifferentialExpressionAnalysisDao().getAnalyses( expressionExperiment );
+    }
+
+    @Override
+    public Collection<DifferentialExpressionAnalysis> findByFactor( ExperimentalFactor ef ) {
+        return this.getDifferentialExpressionAnalysisDao().findByFactor( ef );
     }
 
 }

@@ -40,6 +40,7 @@ import ubic.gemma.model.analysis.expression.FactorAssociatedAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.ProbeAnalysisResult;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
@@ -353,18 +354,18 @@ public class DifferentialExpressionAnalysisDaoImpl extends
                 for ( ExpressionAnalysisResultSet ear : ears ) {
                     session.update( ear );
                     Hibernate.initialize( ear );
-//                    Collection<DifferentialExpressionAnalysisResult> ders = ear.getResults();
-//                    Hibernate.initialize( ders );
-//                    for ( DifferentialExpressionAnalysisResult der : ders ) {
-//                        session.update( der );
-//                        Hibernate.initialize( der );
-//                        if ( der instanceof ProbeAnalysisResult ) {
-//                            ProbeAnalysisResult par = ( ProbeAnalysisResult ) der;
-//                            CompositeSequence cs = par.getProbe();
-//                            // session.update( cs );
-//                            Hibernate.initialize( cs );
-//                        }
-//                    }
+                    // Collection<DifferentialExpressionAnalysisResult> ders = ear.getResults();
+                    // Hibernate.initialize( ders );
+                    // for ( DifferentialExpressionAnalysisResult der : ders ) {
+                    // session.update( der );
+                    // Hibernate.initialize( der );
+                    // if ( der instanceof ProbeAnalysisResult ) {
+                    // ProbeAnalysisResult par = ( ProbeAnalysisResult ) der;
+                    // CompositeSequence cs = par.getProbe();
+                    // // session.update( cs );
+                    // Hibernate.initialize( cs );
+                    // }
+                    // }
 
                     Hibernate.initialize( ( ( FactorAssociatedAnalysisResultSet ) ear ).getExperimentalFactors() );
 
@@ -382,6 +383,16 @@ public class DifferentialExpressionAnalysisDaoImpl extends
         final String query = "select distinct a from DifferentialExpressionAnalysisImpl a join a.expressionExperimentSetAnalyzed eeset inner join eeset.experiments ee where ee=:expressionExperiment ";
         return this.getHibernateTemplate().findByNamedParam( query, "expressionExperiment", expressionExperiment );
 
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public Collection<DifferentialExpressionAnalysis> findByFactor( ExperimentalFactor ef ) {
+        return this
+                .getHibernateTemplate()
+                .findByNamedParam(
+                        "select distinct a from DifferentialExpressionAnalysisImpl a join a.resultSets rs left join rs.baselineGroup bg join rs.experimentalFactors efa where efa = :ef ",
+                        "ef", ef );
     }
 
 }
