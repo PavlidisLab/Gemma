@@ -247,6 +247,8 @@ public class DifferentialExpressionAnalysisController extends AbstractTaskServic
             throw new IllegalArgumentException( "Cannot access experiment with id=" + id );
         }
 
+        expressionExperimentService.thawLite( ee );
+
         /*
          * Get the factors matching the factorids
          */
