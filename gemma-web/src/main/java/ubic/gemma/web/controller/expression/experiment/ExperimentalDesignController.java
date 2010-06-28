@@ -301,6 +301,7 @@ public class ExperimentalDesignController extends BaseController {
             if ( ef != null ) {
                 ef.getFactorValues().remove( fv );
             }
+            fv.setExperimentalFactor( null );
             factorValueService.delete( fv );
 
         }
