@@ -400,7 +400,10 @@ Gemma.ExperimentalFactorToolbar = Ext.extend(Ext.Toolbar, {
 							tooltip : "Delete the selected experimental factor(s)",
 							disabled : true,
 							handler : function() {
-								Ext.Msg.confirm('Deleting records', 'Are you sure? This cannot be undone',
+								Ext.Msg
+						.confirm(
+								'Deleting records',
+								'Are you sure? This cannot be undone. Any associated differential expression analyses will be deleted as well.',
 										function(but) {
 											if (but == 'yes') {
 												this.deleteButton.disable();

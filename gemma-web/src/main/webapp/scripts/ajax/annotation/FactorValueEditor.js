@@ -15,7 +15,7 @@ Gemma.FactorValueGrid = Ext.extend(Gemma.GemmaGridPanel, {
 	},
 
 	taxonId : null,
-	
+
 	disabledClass : '.x-factor-grid-disabled',
 
 	record : Ext.data.Record.create([{
@@ -145,8 +145,8 @@ Gemma.FactorValueGrid = Ext.extend(Gemma.GemmaGridPanel, {
 		 * The checkboxes defined here require that this.form be set: a <form> element wrapping the div that this goes
 		 * in. Clumsy but it works.
 		 */
-		var groupTextTpl = this.editable ? '<input id="{[ values.rs[0].data.id ]}" type="checkbox"' +
-				' name="selectedFactorValues" value="{[ values.rs[0].data.id ]}" />&nbsp;&nbsp; ' : '';
+		var groupTextTpl = this.editable ? '<input id="{[ values.rs[0].data.id ]}" type="checkbox"'
+				+ ' name="selectedFactorValues" value="{[ values.rs[0].data.id ]}" />&nbsp;&nbsp; ' : '';
 		groupTextTpl = groupTextTpl + '{[ values.rs[0].data.factorValue ]}';
 
 		this.view = new Ext.grid.GroupingView({
@@ -252,11 +252,14 @@ Gemma.FactorValueGrid = Ext.extend(Gemma.GemmaGridPanel, {
 			 * delete a factor value
 			 */
 			this.getTopToolbar().on("delete", function() {
-						var selected = this.getSelectedFactorValues();
+				var selected = this.getSelectedFactorValues();
 
-						if (selected && selected.length > 0) {
+				if (selected && selected.length > 0) {
 
-							Ext.Msg.confirm('Deleting factor value(s)', 'Are you sure? This cannot be undone',
+					Ext.Msg
+							.confirm(
+									'Deleting factor value(s)',
+									'Are you sure? This cannot be undone. Any associated differential expression analyses will be deleted as well.',
 									function(but) {
 										if (but == 'yes') {
 											Ext.getCmp('factor-value-delete-button').disable();
@@ -267,10 +270,10 @@ Gemma.FactorValueGrid = Ext.extend(Gemma.GemmaGridPanel, {
 											ExperimentalDesignController.deleteFactorValues(ef, selected, callback);
 										}
 									}.createDelegate(this));
-						} else {
-							Ext.Msg.alert("Nothing selected", "You have not checked any factor values for deletion");
-						}
-					}.createDelegate(this), this);
+				} else {
+					Ext.Msg.alert("Nothing selected", "You have not checked any factor values for deletion");
+				}
+			}.createDelegate(this), this);
 
 			/*
 			 * Commit changes to factor values (added characteristics or updated characteristics)
