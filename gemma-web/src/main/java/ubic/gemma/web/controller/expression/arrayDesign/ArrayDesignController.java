@@ -49,7 +49,6 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
 import ubic.gemma.analysis.report.ArrayDesignReportService;
-import ubic.gemma.analysis.report.ArrayDesignReportServiceImpl;
 import ubic.gemma.analysis.sequence.ArrayDesignMapResultService;
 import ubic.gemma.analysis.sequence.CompositeSequenceMapValueObject;
 import ubic.gemma.analysis.service.ArrayDesignAnnotationService;
@@ -58,6 +57,7 @@ import ubic.gemma.job.BackgroundJob;
 import ubic.gemma.job.TaskCommand;
 import ubic.gemma.job.TaskResult;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.model.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.expression.arrayDesign.AlternateName;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -154,10 +154,13 @@ public class ArrayDesignController extends AbstractTaskService {
     private ArrayDesignService arrayDesignService = null;
 
     @Autowired
-    private AuditTrailService auditTrailService;
+    private AuditableUtil auditableUtil;
 
     @Autowired
-    private AuditableUtil auditableUtil;
+    private AuditEventService auditEventService;
+
+    @Autowired
+    private AuditTrailService auditTrailService;
 
     @Autowired
     private CompositeSequenceService compositeSequenceService = null;
@@ -586,11 +589,13 @@ public class ArrayDesignController extends AbstractTaskService {
 
         AuditEvent troubleEvent = auditTrailService.getLastTroubleEvent( arrayDesign );
         if ( troubleEvent != null ) {
+            auditEventService.thaw( troubleEvent );
             mav.addObject( "troubleEvent", troubleEvent );
             mav.addObject( "troubleEventDescription", StringEscapeUtils.escapeHtml( troubleEvent.toString() ) );
         }
         AuditEvent validatedEvent = auditTrailService.getLastValidationEvent( arrayDesign );
         if ( validatedEvent != null ) {
+            auditEventService.thaw( validatedEvent );
             mav.addObject( "validatedEvent", validatedEvent );
             mav.addObject( "validatedEventDescription", StringEscapeUtils.escapeHtml( validatedEvent.toString() ) );
         }
@@ -695,6 +700,16 @@ public class ArrayDesignController extends AbstractTaskService {
         GenerateSummary runner = new GenerateSummary( new TaskCommand( ed.getId() ) );
         super.startTask( runner );
         return runner.getTaskId();
+    }
+
+    @Override
+    protected BackgroundJob<?> getInProcessRunner( TaskCommand command ) {
+        return null;
+    }
+
+    @Override
+    protected BackgroundJob<?> getSpaceRunner( TaskCommand command ) {
+        return null;
     }
 
     /**
@@ -845,15 +860,5 @@ public class ArrayDesignController extends AbstractTaskService {
             assert newSize < size;
             log.info( "Removed " + ( size - newSize ) + " array designs with 'trouble' flags, leaving " + newSize );
         }
-    }
-
-    @Override
-    protected BackgroundJob<?> getInProcessRunner( TaskCommand command ) {
-        return null;
-    }
-
-    @Override
-    protected BackgroundJob<?> getSpaceRunner( TaskCommand command ) {
-        return null;
     }
 }
