@@ -37,6 +37,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 
 import ubic.gemma.loader.expression.simple.ExperimentalDesignImporter;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicService;
@@ -91,6 +93,9 @@ public class ExperimentalDesignController extends BaseController {
 
     @Autowired
     private FactorValueService factorValueService = null;
+
+    @Autowired
+    private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
 
     @Autowired
     private SecurityService securityService = null;
@@ -241,6 +246,15 @@ public class ExperimentalDesignController extends BaseController {
         for ( Long efId : efIds ) {
             ExperimentalFactor experimentalFactor = experimentalFactorService.load( efId );
             experimentalFactorsToRemove.add( experimentalFactor );
+
+            /*
+             * First, check to see if there are any diff results that use this factor.
+             */
+            Collection<DifferentialExpressionAnalysis> analyses = differentialExpressionAnalysisService
+                    .findByFactor( experimentalFactor );
+            for ( DifferentialExpressionAnalysis a : analyses ) {
+                differentialExpressionAnalysisService.delete( a );
+            }
         }
 
         expressionExperimentService.thawLite( ee );
@@ -255,7 +269,7 @@ public class ExperimentalDesignController extends BaseController {
                     }
                 }
                 // if there are factors to remove
-                if ( factorValuesToRemoveFromBioMaterial != null && factorValuesToRemoveFromBioMaterial.size() > 0 ) {
+                if ( factorValuesToRemoveFromBioMaterial.size() > 0 ) {
                     bm.getFactorValues().removeAll( factorValuesToRemoveFromBioMaterial );
                     bioMaterialService.update( bm );
                 }
@@ -294,18 +308,20 @@ public class ExperimentalDesignController extends BaseController {
      */
     public void deleteFactorValues( EntityDelegator e, Collection<Long> fvIds ) {
         if ( e == null || e.getId() == null ) return;
-        ExperimentalFactor ef = experimentalFactorService.load( e.getId() );
-
         for ( Long fvId : fvIds ) {
             FactorValue fv = factorValueService.load( fvId );
-            if ( ef != null ) {
-                ef.getFactorValues().remove( fv );
-            }
-            fv.setExperimentalFactor( null );
-            factorValueService.delete( fv );
 
+            /*
+             * First, check to see if there are any diff results that use this factor.
+             */
+            ExperimentalFactor ef = experimentalFactorService.load( fv.getExperimentalFactor().getId() );
+            Collection<DifferentialExpressionAnalysis> analyses = differentialExpressionAnalysisService
+                    .findByFactor( ef );
+            for ( DifferentialExpressionAnalysis a : analyses ) {
+                differentialExpressionAnalysisService.delete( a );
+            }
+            factorValueService.delete( fv );
         }
-        experimentalFactorService.update( ef );
     }
 
     /**
