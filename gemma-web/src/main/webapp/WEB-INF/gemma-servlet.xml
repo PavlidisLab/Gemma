@@ -56,21 +56,15 @@
 			<props>
 				<prop key="/dwr/**/*">dwrController</prop>
 				<prop key="/uploadFile.html">fileUploadController</prop>
-				<prop key="/bibRefEdit.html">bibliographicReferenceEditFormController</prop>
 				<prop key="/bibRef/*">bibliographicReferenceController</prop>
-				<prop key="/bibliographicReferenceView.html">bibliographicReferenceEditFormController</prop>
 				<prop key="/arrayDesign/editArrayDesign.html">arrayDesignFormController</prop>
 				<prop key="/arrayDesign/associateSequences.html">arrayDesignSequenceAddController</prop>
-				<prop key="/bioAssay/editBioAssay.html">bioAssayFormController</prop>
-				<prop key="/bioMaterial/editBioMaterial.html">bioMaterialFormController</prop>
 				<prop key="/bioMaterial/*">bioMaterialController</prop>
 				<prop key="/compositeSequence/*">compositeSequenceController</prop>
 				<prop key="/experimentalDesign/*">experimentalDesignController</prop>
-				<prop key="/experimentalDesign/editExperimentalDesign.html">experimentalDesignFormController</prop>
 				<prop key="/expressionExperiment/editExpressionExperiment.html">expressionExperimentFormController</prop>
 				<prop key="/loadSimpleExpressionExperiment.html">expressionDataFileUploadController</prop>
 				<prop key="/getData.html">expressionExperimentDataFetchController</prop>
-				<prop key="/genome/bioSequence/*">bioSequenceController</prop>
 				<prop key="/checkJobProgress.html">taskCompletionController</prop>
 				<prop key="/searchCoexpression.html">coexpressionSearchController</prop>
 				<prop key="/gene/*">geneController</prop>
@@ -323,30 +317,6 @@ gemma.max.fileupload.size.bytes=
 
 	<bean id="arrayDesignSequenceAddValidator" class="ubic.gemma.web.validation.expression.arrayDesign.ArrayDesignSeqeunceAddValidator" />
 
-	<bean id="bioAssayFormController" class="ubic.gemma.web.controller.expression.bioAssay.BioAssayFormController">
-
-		<property name="commandName">
-			<value>bioAssayImpl</value>
-		</property>
-		<property name="formView">
-			<value>bioAssay.edit</value>
-		</property>
-		<property name="successView">
-			<value>redirect:/expressionExperiment/showAllExpressionExperiments.html
-			</value>
-		</property>
-		<property name="bioAssayService">
-			<ref bean="bioAssayService" />
-		</property>
-		<property name="externalDatabaseService">
-			<ref bean="externalDatabaseService" />
-		</property>
-		<property name="validator">
-			<ref bean="bioAssayValidator" />
-		</property>
-	</bean>
-
-
 	<bean id="arrayDesignFormController" class="ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignFormController">
 
 		<property name="commandName">
@@ -365,58 +335,7 @@ gemma.max.fileupload.size.bytes=
 		<property name="arrayDesignService">
 			<ref bean="arrayDesignService" />
 		</property>
-	</bean>
-
-
-	<bean id="bioMaterialFormController" class="ubic.gemma.web.controller.expression.biomaterial.BioMaterialFormController">
-
-		<property name="commandName">
-			<value>bioMaterial</value>
-		</property>
-		<property name="formView">
-			<value>bioMaterial.edit</value>
-		</property>
-		<property name="successView">
-			<value>redirect:/expressionExperiment/showAllExpressionExperiments.html
-			</value>
-		</property>
-		<property name="bioMaterialService">
-			<ref bean="bioMaterialService" />
-		</property>
-		<property name="externalDatabaseService">
-			<ref bean="externalDatabaseService" />
-		</property>
-		<property name="validator">
-			<ref bean="bioMaterialValidator" />
-		</property>
-	</bean>
-
-	<bean id="bibliographicReferenceEditFormController" class="ubic.gemma.web.controller.common.description.bibref.BibliographicReferenceEditFormController">
-
-		<property name="commandClass">
-			<value>ubic.gemma.model.common.description.BibliographicReference
-			</value>
-		</property>
-		<property name="commandName">
-			<value>bibliographicReference</value>
-		</property>
-		<property name="formView">
-			<value>bibRefEdit</value>
-		</property>
-		<property name="successView">
-			<value>bibRefView</value>
-		</property>
-		<property name="validator">
-			<ref bean="bibliographicReferenceValidator" />
-		</property>
-		<property name="bibliographicReferenceService">
-			<ref bean="bibliographicReferenceService" />
-		</property>
-		<property name="externalDatabaseService">
-			<ref bean="externalDatabaseService" />
-		</property>
-	</bean>
-
+	</bean> 
 
 	<!-- ==================================================== -->
 	<!--
@@ -447,16 +366,7 @@ gemma.max.fileupload.size.bytes=
 			<value>user</value>
 		</property>
 	</bean>
-
-	<bean id="bibliographicReferenceValidator" class="org.springmodules.validation.commons.ConfigurableBeanValidator">
-		<property name="validatorFactory">
-			<ref bean="validatorFactory" />
-		</property>
-		<property name="formName">
-			<value>bibliographicReference</value>
-		</property>
-	</bean>
-
+	
 	<bean id="simpleExpressionExperimentLoadValidator" class="ubic.gemma.web.validation.expression.experiment.SimpleExpressionExperimentLoadValidator" />
 
 
@@ -470,24 +380,6 @@ gemma.max.fileupload.size.bytes=
 	</bean>
 
 	<bean id="fileUploadValidator" class="ubic.gemma.web.validation.auditAndSecurity.FileUploadValidator" />
-
-	<bean id="bioAssayValidator" class="org.springmodules.validation.commons.ConfigurableBeanValidator">
-		<property name="validatorFactory">
-			<ref bean="validatorFactory" />
-		</property>
-		<property name="formName">
-			<value>bioAssay</value>
-		</property>
-	</bean>
-
-	<bean id="bioMaterialValidator" class="org.springmodules.validation.commons.ConfigurableBeanValidator">
-		<property name="validatorFactory">
-			<ref bean="validatorFactory" />
-		</property>
-		<property name="formName">
-			<value>bioMaterial</value>
-		</property>
-	</bean>
 
 	<bean id="expressionExperimentValidator" class="org.springmodules.validation.commons.ConfigurableBeanValidator">
 		<property name="validatorFactory">
