@@ -652,7 +652,7 @@ Gemma.SearchGrid = Ext.extend(Ext.grid.GridPanel, {
 					+ "</a> - " + data.taxon.commonName + " " + data.description;
 		} else if (clazz == "GeneValueObject" || clazz == "PredictedGene" || clazz == "ProbeAlignedRegion") {
 			return "<a href=\"/Gemma/gene/showGene.html?id=" + data.id + "\">" + data.officialSymbol
-					+ "</a>  - Species: " + data.taxon.commonName + " Desc: " + data.officialName;
+					+ "</a>  - Species: " + data.taxonCommonName + " Desc: " + data.officialName;
 		} else if (clazz == "Bibliographicreference") {
 			return "<a href=\"/Gemma/gene/showGene.html?id=" + data.id + "\">" + data.title + "</a> [" + data.pubmedId
 					+ "]";
