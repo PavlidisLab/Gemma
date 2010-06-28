@@ -113,6 +113,9 @@ public class DifferentialExpressionAnalysisController extends AbstractTaskServic
         if ( ee == null ) {
             throw new IllegalArgumentException( "Cannot access experiment with id=" + id );
         }
+
+        expressionExperimentService.thawLite( ee );
+
         AbstractDifferentialExpressionAnalyzer analyzer = this.differentialExpressionAnalyzer.determineAnalysis( ee,
                 null );
 
@@ -225,12 +228,19 @@ public class DifferentialExpressionAnalysisController extends AbstractTaskServic
     /**
      * AJAX entry point for 'customized' analysis.
      * 
-     * @param cmd
+     * @param id
+     * @param factorIds
+     * @param includeInteractions
+     * @param subsetFactorId optional
      * @return
      * @throws Exception
      */
-    public String runCustom( Long id, Collection<Long> factorids, boolean includeInteractions ) throws Exception {
-        /* this 'run' method is exported in the spring-beans.xml */
+    public String runCustom( Long id, Collection<Long> factorids, boolean includeInteractions, Long subsetFactorId )
+            throws Exception {
+
+        if ( factorids.isEmpty() ) {
+            throw new IllegalArgumentException( "You must provide at least one factor to analyze" );
+        }
 
         ExpressionExperiment ee = expressionExperimentService.load( id );
         if ( ee == null ) {
@@ -251,8 +261,26 @@ public class DifferentialExpressionAnalysisController extends AbstractTaskServic
             throw new IllegalArgumentException( "Unknown factors?" );
         }
 
+        ExperimentalFactor subsetFactor = null;
+        if ( subsetFactorId != null ) {
+            for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
+                if ( subsetFactorId.equals( ef.getId() ) ) {
+                    subsetFactor = ef;
+                    break;
+                }
+            }
+            if ( subsetFactor == null ) {
+                throw new IllegalArgumentException( "Unknown subset factor?" );
+            }
+
+            if ( factors.contains( subsetFactor ) ) {
+                throw new IllegalArgumentException( "Subset factor must not be one of the factors used in the analysis" );
+            }
+        }
+
         DifferentialExpressionAnalysisTaskCommand cmd = new DifferentialExpressionAnalysisTaskCommand( ee );
         cmd.setFactors( factors );
+        cmd.setSubsetFactor( subsetFactor );
         cmd.setIncludeInteractions( includeInteractions );
 
         log.info( "Initializing analysis" );
