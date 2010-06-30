@@ -545,6 +545,8 @@ public class ExpressionExperimentController extends AbstractTaskService {
 
         // Set the parent taxon
         Taxon taxon = taxonService.load( initialResult.getTaxonId() );
+        taxonService.thaw( taxon );
+        
         if ( taxon.getParentTaxon() != null ) {
             finalResult.setParentTaxon( taxon.getParentTaxon().getCommonName() );
             finalResult.setParentTaxonId( taxon.getParentTaxon().getId() );
