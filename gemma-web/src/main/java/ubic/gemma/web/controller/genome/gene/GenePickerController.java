@@ -197,8 +197,10 @@ public class GenePickerController {
             genes.add( ( Gene ) sr.getResultObject() );
         }
         log.info( "Gene search: " + query + " taxon=" + taxonId + ", " + genes.size() + " found" );
-        return GeneValueObject.convert2ValueObjects( geneService.thawLite( genes ) );
-    }
+        Collection<GeneValueObject> geneValueObjects = GeneValueObject.convert2ValueObjects( geneService.thawLite( genes ) );
+        log.debug( "Gene search: " + geneValueObjects.size() + " value objects returned.");        
+        return geneValueObjects;
+    } 
 
     /**
      * AJAX Search for multiple genes at once. This attempts to limit the number of genes per query to only one.
