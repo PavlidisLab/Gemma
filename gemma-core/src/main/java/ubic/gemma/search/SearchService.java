@@ -436,7 +436,7 @@ public class SearchService implements InitializingBean {
     }
 
     /**
-     * Makes no attempt at resovling the search query as a URI. Will tokenize the search query if there are control
+     * Makes no attempt at resolving the search query as a URI. Will tokenize the search query if there are control
      * characters in the String. URI's will get parsed into multiple query terms and lead to bad results.
      * 
      * @param settings Will try to resolve general terms like brain --> to appropriate OntologyTerms and search for
@@ -1330,17 +1330,16 @@ public class SearchService implements InitializingBean {
             // case 3: string is long enough, and user did not ask for wildcard.
             geneSet.addAll( geneService.findByOfficialSymbol( exactString ) );
         }
-
+/*  This search is slow as it does full table scan. The same search is done by compass.     
+ *  To speed things up this is commented out.
         if ( searchString.length() > 2 && geneSet.isEmpty() ) {
             if ( !inexactString.endsWith( "%" ) ) {
-                /*
-                 * Now, always use a wildcard.
-                 */
+                 // Now, always use a wildcard.
                 inexactString = inexactString + "%";
             }
             geneSet.addAll( geneService.findByOfficialNameInexact( inexactString ) );
         }
-
+*/
         /*
          * TODO The rest we are doing by exact matches only. For aliases it would probably be good to do it like
          * official symbols. For the other searches I think exact matches are the only thing that makes sense.
