@@ -779,6 +779,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
     @Override
     @SuppressWarnings("unchecked")
     protected Collection<Gene> handleThawLite( final Collection<Gene> genes ) throws Exception {
+        if ( genes.isEmpty() ) return new HashSet<Gene>();
         return this.getHibernateTemplate().findByNamedParam(
                 "select distinct g from GeneImpl g left join fetch g.aliases left join fetch g.accessions acc "
                         + "join fetch g.taxon t left join fetch t.externalDatabase"
