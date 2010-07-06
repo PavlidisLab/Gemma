@@ -23,21 +23,11 @@
 	-->
 	<bean class="org.springframework.web.servlet.mvc.annotation.DefaultAnnotationHandlerMapping">
 		<property name="order" value="1" />
-			<!--	<property name="interceptors">
-			<list>
-				<ref bean="openSessionInViewInterceptor" />
-			</list>
-		</property> -->
 	</bean>
 
 	<!-- see http://static.springsource.org/spring/docs/3.0.x/spring-framework-reference/html/ch15s10.html -->
 	<bean class="org.springframework.web.servlet.mvc.support.ControllerClassNameHandlerMapping">
 		<property name="order" value="2" />
-			<!--	<property name="interceptors">
-			<list>
-				<ref bean="openSessionInViewInterceptor" />
-			</list>
-		</property> -->
 	</bean>
 
 	<!-- see http://static.springsource.org/spring/docs/3.0.x/spring-framework-reference/html/ch15s10.html -->
@@ -47,11 +37,6 @@
 	<bean id="simpleUrlMapping" class="org.springframework.web.servlet.handler.SimpleUrlHandlerMapping">
 		<property name="order" value="3" />
 		<property name="alwaysUseFullPath" value="true" />
-			<!--	<property name="interceptors">
-			<list>
-				<ref bean="openSessionInViewInterceptor" />
-			</list>
-		</property> -->
 		<property name="mappings"><!-- replace with annotations ... -->
 			<props>
 				<prop key="/dwr/**/*">dwrController</prop>
@@ -81,25 +66,8 @@
 	<!-- default mapping, as a fallback. Avoid using. -->
 	<bean id="beanNameUrlHandlerMapping" class="org.springframework.web.servlet.handler.BeanNameUrlHandlerMapping">
 		<property name="order" value="4" />
-	<!--	<property name="interceptors">
-			<list>
-				<ref bean="openSessionInViewInterceptor" />
-			</list>
-		</property> -->
 	</bean>
 
-
-	<!-- ==================================================== -->
-	<!--
-		openSessionInViewInterceptor: Interceptor to keep Hibernate sessions available in views
-	-->
-	<!-- ==================================================== -->
-<!--	<bean id="openSessionInViewInterceptor" class="org.springframework.orm.hibernate3.support.OpenSessionInViewInterceptor">
-		<property name="sessionFactory">
-			<ref bean="sessionFactory" />
-		</property>
-		<property name="singleSession" value="false" />
-	</bean>-->
 
 	<!-- ==================================================== -->
 	<!--
