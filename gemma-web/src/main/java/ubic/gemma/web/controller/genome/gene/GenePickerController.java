@@ -46,6 +46,7 @@ import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.search.SearchResult;
 import ubic.gemma.search.SearchService;
 import ubic.gemma.search.SearchSettings;
+import ubic.gemma.util.EntityUtils;
 
 /**
  * For 'live searches' from the web interface.
@@ -188,17 +189,19 @@ public class GenePickerController {
         SearchSettings settings = SearchSettings.geneSearch( query, taxon );
         List<SearchResult> geneSearchResults = searchService.search( settings ).get( Gene.class );
 
-        Collection<Gene> genes = new HashSet<Gene>();
+//        Collection<Gene> genes = new HashSet<Gene>();
         if ( geneSearchResults == null || geneSearchResults.isEmpty() ) {
             log.info( "No Genes for search: " + query + " taxon=" + taxonId );
             return new HashSet<GeneValueObject>();
         }
-        for ( SearchResult sr : geneSearchResults ) {
+/*        for ( SearchResult sr : geneSearchResults ) {
             genes.add( ( Gene ) sr.getResultObject() );
             log.debug( "Gene search result: " + ((Gene)sr.getResultObject()).getOfficialSymbol() );         
         }
-        log.info( "Gene search: " + query + " taxon=" + taxonId + ", " + genes.size() + " found" );
-        Collection<GeneValueObject> geneValueObjects = GeneValueObject.convert2ValueObjects( geneService.thawLite( genes ) );
+*/
+        log.info( "Gene search: " + query + " taxon=" + taxonId + ", " + geneSearchResults.size() + " found" );
+        Collection<GeneValueObject> geneValueObjects = 
+        	GeneValueObject.convert2ValueObjects( geneService.loadMultiple(EntityUtils.getIds( geneSearchResults )));
         log.debug( "Gene search: " + geneValueObjects.size() + " value objects returned.");        
         return geneValueObjects;
     } 
