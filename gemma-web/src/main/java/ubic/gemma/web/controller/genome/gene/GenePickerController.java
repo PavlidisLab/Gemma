@@ -195,6 +195,7 @@ public class GenePickerController {
         }
         for ( SearchResult sr : geneSearchResults ) {
             genes.add( ( Gene ) sr.getResultObject() );
+            log.debug( "Gene search result: " + ((Gene)sr.getResultObject()).getOfficialSymbol() );         
         }
         log.info( "Gene search: " + query + " taxon=" + taxonId + ", " + genes.size() + " found" );
         Collection<GeneValueObject> geneValueObjects = GeneValueObject.convert2ValueObjects( geneService.thawLite( genes ) );
