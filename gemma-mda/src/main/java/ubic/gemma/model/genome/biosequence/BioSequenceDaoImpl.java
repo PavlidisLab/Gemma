@@ -185,24 +185,32 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
      */
     @SuppressWarnings("unchecked")
     @Override
-    protected Map<Gene, Collection<BioSequence>> handleFindByGenes( Collection genes ) throws Exception {
+    protected Map<Gene, Collection<BioSequence>> handleFindByGenes( Collection<Gene> genes ) throws Exception {
         if ( genes == null || genes.isEmpty() ) return new HashMap<Gene, Collection<BioSequence>>();
 
         Map<Gene, Collection<BioSequence>> results = new HashMap<Gene, Collection<BioSequence>>();
 
-        final String queryString = "select distinct gene,bs from GeneImpl gene inner join fetch gene.products ggp,"
-                + " BioSequenceImpl bs inner join bs.bioSequence2GeneProduct bs2gp inner join bs2gp.geneProduct bsgp"
-                + " where ggp=bsgp and gene in (:genes)";
+        int batchsize = 500;
 
-        List<Object[]> qr = getHibernateTemplate().findByNamedParam( queryString, "genes", genes );
-        for ( Object[] oa : qr ) {
-            Gene g = ( Gene ) oa[0];
-            BioSequence b = ( BioSequence ) oa[1];
-            if ( !results.containsKey( g ) ) {
-                results.put( g, new HashSet<BioSequence>() );
-            }
-            results.get( g ).add( b );
+        if ( genes.size() <= batchsize ) {
+            findByGenesBatch( genes, results );
+            return results;
         }
+
+        Collection<Gene> batch = new HashSet<Gene>();
+
+        for ( Gene gene : genes ) {
+            batch.add( gene );
+            if ( batch.size() == batchsize ) {
+                findByGenesBatch( genes, results );
+                batch.clear();
+            }
+        }
+
+        if ( !batch.isEmpty() ) {
+            findByGenesBatch( genes, results );
+        }
+
         return results;
     }
 
@@ -273,14 +281,16 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
         if ( bioSequence == null ) return null;
         if ( bioSequence.getId() == null ) return bioSequence;
 
-        List<?> res = this.getHibernateTemplate().findByNamedParam(
-                "select b from BioSequenceImpl b "
-                        + " left join fetch b.taxon tax left join fetch tax.parentTaxon left join fetch b.sequenceDatabaseEntry s "
-                        + " left join fetch s.externalDatabase"
-                        + " left join fetch b.bioSequence2GeneProduct bs2gp "
-                        + " left join fetch bs2gp.geneProduct gp left join fetch gp.gene g"
-                        + " left join fetch g.aliases left join fetch g.accessions  where b.id=:bid", "bid",
-                bioSequence.getId() );
+        List<?> res = this
+                .getHibernateTemplate()
+                .findByNamedParam(
+                        "select b from BioSequenceImpl b "
+                                + " left join fetch b.taxon tax left join fetch tax.parentTaxon left join fetch b.sequenceDatabaseEntry s "
+                                + " left join fetch s.externalDatabase"
+                                + " left join fetch b.bioSequence2GeneProduct bs2gp "
+                                + " left join fetch bs2gp.geneProduct gp left join fetch gp.gene g"
+                                + " left join fetch g.aliases left join fetch g.accessions  where b.id=:bid", "bid",
+                        bioSequence.getId() );
 
         return ( BioSequence ) res.iterator().next();
 
@@ -396,5 +406,25 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
                 return null;
             }
         } );
+    }
+
+    /**
+     * @param genes
+     * @param results
+     */
+    private void findByGenesBatch( Collection<Gene> genes, Map<Gene, Collection<BioSequence>> results ) {
+        final String queryString = "select distinct gene,bs from GeneImpl gene inner join fetch gene.products ggp,"
+                + " BioSequenceImpl bs inner join bs.bioSequence2GeneProduct bs2gp inner join bs2gp.geneProduct bsgp"
+                + " where ggp=bsgp and gene in (:genes)";
+
+        List<Object[]> qr = getHibernateTemplate().findByNamedParam( queryString, "genes", genes );
+        for ( Object[] oa : qr ) {
+            Gene g = ( Gene ) oa[0];
+            BioSequence b = ( BioSequence ) oa[1];
+            if ( !results.containsKey( g ) ) {
+                results.put( g, new HashSet<BioSequence>() );
+            }
+            results.get( g ).add( b );
+        }
     }
 }
