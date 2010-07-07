@@ -1635,6 +1635,9 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
                     Hibernate.initialize( bm.getFactorValues() );
                     Hibernate.initialize( bm.getTreatments() );
                 } catch ( HibernateException e ) {
+                    /*
+                     * We do his this see bug 1965.
+                     */
                     log.warn( "Could not initialize a biomaterial association: " + e.getMessage() );
                 }
                 session.evict( bm );
