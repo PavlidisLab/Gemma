@@ -49,6 +49,7 @@ import ubic.basecode.ontology.providers.FMAOntologyService;
 import ubic.basecode.ontology.providers.HumanDevelopmentOntologyService;
 import ubic.basecode.ontology.providers.MammalianPhenotypeOntologyService;
 import ubic.basecode.ontology.providers.MouseDevelopmentOntologyService;
+import ubic.basecode.ontology.providers.ObiService;
 import ubic.basecode.ontology.search.OntologySearch;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.description.Characteristic;
@@ -175,6 +176,8 @@ public class OntologyService implements InitializingBean {
     @Autowired
     private SearchService searchService;
 
+    private ObiService obiService;
+
     public void afterPropertiesSet() throws Exception {
 
         this.birnLexOntologyService = new BirnLexOntologyService();
@@ -185,6 +188,7 @@ public class OntologyService implements InitializingBean {
         this.cellTypeOntologyService = new CellTypeOntologyService();
         this.mouseDevelopmentOntologyService = new MouseDevelopmentOntologyService();
         this.mammalianPhenotypeOntologyService = new MammalianPhenotypeOntologyService();
+        this.obiService = new ObiService();
 
         this.ontologyServices.add( this.birnLexOntologyService );
         this.ontologyServices.add( this.chebiOntologyService );
@@ -195,6 +199,7 @@ public class OntologyService implements InitializingBean {
         this.ontologyServices.add( this.humanDevelopmentOntologyService );
         this.ontologyServices.add( this.cellTypeOntologyService );
         this.ontologyServices.add( this.mammalianPhenotypeOntologyService );
+        this.ontologyServices.add( this.obiService );
 
         for ( AbstractOntologyService serv : this.ontologyServices ) {
             serv.init( false );
