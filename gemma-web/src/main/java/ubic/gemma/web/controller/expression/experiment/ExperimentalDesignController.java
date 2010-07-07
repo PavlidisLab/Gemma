@@ -311,15 +311,29 @@ public class ExperimentalDesignController extends BaseController {
         for ( Long fvId : fvIds ) {
             FactorValue fv = factorValueService.load( fvId );
 
-            /*
-             * First, check to see if there are any diff results that use this factor.
-             */
-            ExperimentalFactor ef = experimentalFactorService.load( fv.getExperimentalFactor().getId() );
-            Collection<DifferentialExpressionAnalysis> analyses = differentialExpressionAnalysisService
-                    .findByFactor( ef );
-            for ( DifferentialExpressionAnalysis a : analyses ) {
-                differentialExpressionAnalysisService.delete( a );
+            if ( fv == null ) {
+                throw new IllegalArgumentException( "No factor value with id=" + fvId + " could be loaded" );
             }
+
+            if ( fv.getExperimentalFactor() == null ) {
+                throw new IllegalStateException( "No experimental factor for factor value " + fv.getId() );
+            }
+
+            /*
+             * Determine if there are any biomaterials that use the factor value in question.
+             */
+            if ( !bioMaterialService.findByFactorValue( fv ).isEmpty() ) {
+                /*
+                 * If so, check to see if there are any diff results that use this factor.
+                 */
+                ExperimentalFactor ef = experimentalFactorService.load( fv.getExperimentalFactor().getId() );
+                Collection<DifferentialExpressionAnalysis> analyses = differentialExpressionAnalysisService
+                        .findByFactor( ef );
+                for ( DifferentialExpressionAnalysis a : analyses ) {
+                    differentialExpressionAnalysisService.delete( a );
+                }
+            }
+
             factorValueService.delete( fv );
         }
     }
