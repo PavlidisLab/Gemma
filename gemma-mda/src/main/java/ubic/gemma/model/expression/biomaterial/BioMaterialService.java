@@ -23,6 +23,7 @@ import java.util.Collection;
 import org.springframework.security.access.annotation.Secured;
 
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.FactorValue;
 
 /**
  * @author kelsey
@@ -103,5 +104,8 @@ public interface BioMaterialService {
 
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public Collection<BioMaterial> thaw( Collection<BioMaterial> bioMaterials );
+
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    public Collection<BioMaterial> findByFactorValue( FactorValue fv );
 
 }

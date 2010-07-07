@@ -25,6 +25,7 @@ import java.util.Collection;
 import org.springframework.stereotype.Service;
 
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.FactorValue;
 
 /**
  * @author pavlidis
@@ -35,8 +36,45 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 @Service
 public class BioMaterialServiceImpl extends ubic.gemma.model.expression.biomaterial.BioMaterialServiceBase {
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.model.expression.biomaterial.BioMaterialService#exists(ubic.gemma.model.expression.biomaterial.BioMaterial
+     * )
+     */
+    public boolean exists( BioMaterial bioMaterial ) {
+        return this.getBioMaterialDao().find( bioMaterial ) != null;
+    }
+
+    @Override
+    public Collection<BioMaterial> findByFactorValue( FactorValue fv ) {
+        return this.getBioMaterialDao().findByFactorValue( fv );
+    }
+
     public ExpressionExperiment getExpressionExperiment( Long id ) {
         return this.getBioMaterialDao().getExpressionExperiment( id );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.model.expression.biomaterial.BioMaterialService#thaw(ubic.gemma.model.expression.biomaterial.BioMaterial
+     * )
+     */
+    public void thaw( BioMaterial bioMaterial ) {
+        this.getBioMaterialDao().thaw( bioMaterial );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.expression.biomaterial.BioMaterialService#thaw(java.util.Collection)
+     */
+    @Override
+    public Collection<BioMaterial> thaw( Collection<BioMaterial> bioMaterials ) {
+        return this.getBioMaterialDao().thaw( bioMaterials );
     }
 
     /*
@@ -127,37 +165,5 @@ public class BioMaterialServiceImpl extends ubic.gemma.model.expression.biomater
     @Override
     protected void handleUpdate( BioMaterial bioMaterial ) throws Exception {
         this.getBioMaterialDao().update( bioMaterial );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.model.expression.biomaterial.BioMaterialService#exists(ubic.gemma.model.expression.biomaterial.BioMaterial
-     * )
-     */
-    public boolean exists( BioMaterial bioMaterial ) {
-        return this.getBioMaterialDao().find( bioMaterial ) != null;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.model.expression.biomaterial.BioMaterialService#thaw(ubic.gemma.model.expression.biomaterial.BioMaterial
-     * )
-     */
-    public void thaw( BioMaterial bioMaterial ) {
-        this.getBioMaterialDao().thaw( bioMaterial );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.biomaterial.BioMaterialService#thaw(java.util.Collection)
-     */
-    @Override
-    public Collection<BioMaterial> thaw( Collection<BioMaterial> bioMaterials ) {
-        return this.getBioMaterialDao().thaw( bioMaterials );
     }
 }

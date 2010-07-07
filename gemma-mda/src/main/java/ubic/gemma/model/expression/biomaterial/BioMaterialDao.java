@@ -22,6 +22,7 @@ import java.util.Collection;
 
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.persistence.BaseDao;
 
 /**
@@ -42,6 +43,12 @@ public interface BioMaterialDao extends BaseDao<BioMaterial> {
      * 
      */
     public BioMaterial find( BioMaterial bioMaterial );
+
+    /**
+     * @param fv
+     * @return
+     */
+    public Collection<BioMaterial> findByFactorValue( FactorValue fv );
 
     /**
      * 
