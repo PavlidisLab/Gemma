@@ -25,6 +25,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
+import org.hibernate.LockMode;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -50,6 +51,7 @@ public class FactorValueDaoImpl extends ubic.gemma.model.expression.experiment.F
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.experiment.FactorValueDaoBase#find(ubic.gemma.model.expression.experiment.FactorValue
      * )
@@ -90,6 +92,7 @@ public class FactorValueDaoImpl extends ubic.gemma.model.expression.experiment.F
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.experiment.FactorValueDaoBase#findOrCreate(ubic.gemma.model.expression.experiment
      * .FactorValue)
@@ -106,6 +109,7 @@ public class FactorValueDaoImpl extends ubic.gemma.model.expression.experiment.F
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.experiment.FactorValueDaoBase#remove(ubic.gemma.model.expression.experiment.FactorValue
      * )
@@ -120,26 +124,25 @@ public class FactorValueDaoImpl extends ubic.gemma.model.expression.experiment.F
                     public Object doInHibernate( Session session ) throws HibernateException {
 
                         log.debug( "Deleting: " + toDelete );
-                        session.update( toDelete );
+                        session.lock( toDelete, LockMode.NONE );
 
                         final String queryString = "from BioMaterialImpl as bm inner join bm.factorValues AS fv "
                                 + "WHERE fv = :fv";
-                        // List list = getHibernateTemplate().findByNamedParam( queryString, "fv", toDelete );
+
                         Query query = session.createQuery( queryString );
                         query.setEntity( "fv", toDelete );
                         for ( Object[] row : ( List<Object[]> ) query.list() ) {
                             BioMaterial bm = ( BioMaterial ) row[0];
                             bm.getFactorValues().remove( toDelete );
                             session.update( bm );
-                            // session.evict( bm ); // required?
+                            session.evict( bm );
                         }
 
                         ExperimentalFactor experimentalFactor = toDelete.getExperimentalFactor();
                         experimentalFactor.getFactorValues().remove( toDelete );
-
                         session.update( experimentalFactor );
+                        session.evict( experimentalFactor );
 
-                        toDelete.setExperimentalFactor( null );
                         session.delete( toDelete );
 
                         return null;
