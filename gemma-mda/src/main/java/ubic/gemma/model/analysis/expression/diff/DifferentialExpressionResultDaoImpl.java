@@ -54,29 +54,29 @@ public class DifferentialExpressionResultDaoImpl extends
 
     private static final String fetchResultsByGeneAndExperimentsQuery = "select distinct e, r"
             + " from DifferentialExpressionAnalysisImpl a, BioSequence2GeneProductImpl bs2gp"
-            + " inner join a.expressionExperimentSetAnalyzed eesa inner join eesa.experiments e  "
-            + " inner join a.resultSets rs inner join rs.results r inner join r.probe p "
+            + " inner join a.expressionExperimentSetAnalyzed eesa inner join   eesa.experiments e  "
+            + " inner join a.resultSets rs inner join rs.results r inner join fetch r.probe p "
             + "inner join p.biologicalCharacteristic bs inner join bs2gp.geneProduct gp inner join gp.gene g"
             + " where bs2gp.bioSequence=bs and g=:gene and e in (:experimentsAnalyzed)";
 
     private static final String fetchResultsByGene = "select distinct e, r"
             + " from DifferentialExpressionAnalysisImpl a, BioSequence2GeneProductImpl bs2gp"
-            + " inner join a.expressionExperimentSetAnalyzed eesa inner join eesa.experiments e  "
-            + " inner join a.resultSets rs inner join rs.results r inner join r.probe p "
+            + " inner join a.expressionExperimentSetAnalyzed eesa inner join   eesa.experiments e  "
+            + " inner join a.resultSets rs inner join rs.results r inner join fetch r.probe  p "
             + "inner join p.biologicalCharacteristic bs inner join bs2gp.geneProduct gp inner join gp.gene g"
             + " where bs2gp.bioSequence=bs and g=:gene";
 
     private static final String fetchResultsByExperimentsQuery = "select distinct e, r"
             + " from DifferentialExpressionAnalysisImpl a, BioSequence2GeneProductImpl bs2gp"
-            + " inner join a.expressionExperimentSetAnalyzed eesa inner join eesa.experiments e  "
-            + " inner join a.resultSets rs inner join rs.results r inner join r.probe p "
+            + " inner join a.expressionExperimentSetAnalyzed eesa inner join   eesa.experiments e  "
+            + " inner join a.resultSets rs inner join rs.results r inner join fetch r.probe p "
             + "inner join p.biologicalCharacteristic bs inner join bs2gp.geneProduct gp inner join gp.gene g"
             + " where bs2gp.bioSequence=bs and e in (:experimentsAnalyzed)";
 
-    private static final String fetchResultsByResultSetQuery = "select distinct rs, r"
+    private static final String fetchResultsByResultSetQuery = "select distinct rs, r "
             + " from DifferentialExpressionAnalysisImpl a, BioSequence2GeneProductImpl bs2gp"
-            + " inner join a.expressionExperimentSetAnalyzed eesa inner join eesa.experiments e  "
-            + " inner join a.resultSets rs inner join rs.results r inner join r.probe p "
+            + " inner join a.expressionExperimentSetAnalyzed eesa inner join   eesa.experiments e  "
+            + " inner join a.resultSets rs inner join rs.results r inner join fetch r.probe p "
             + "inner join p.biologicalCharacteristic bs inner join bs2gp.geneProduct gp inner join gp.gene g"
             + " where bs2gp.bioSequence=bs and rs in (:resultsAnalyzed)";
 
