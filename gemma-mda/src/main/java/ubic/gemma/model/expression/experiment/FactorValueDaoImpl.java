@@ -135,13 +135,11 @@ public class FactorValueDaoImpl extends ubic.gemma.model.expression.experiment.F
                             BioMaterial bm = ( BioMaterial ) row[0];
                             bm.getFactorValues().remove( toDelete );
                             session.update( bm );
-                            session.evict( bm );
                         }
 
                         ExperimentalFactor experimentalFactor = toDelete.getExperimentalFactor();
                         experimentalFactor.getFactorValues().remove( toDelete );
                         session.update( experimentalFactor );
-                        session.evict( experimentalFactor );
 
                         session.delete( toDelete );
 
