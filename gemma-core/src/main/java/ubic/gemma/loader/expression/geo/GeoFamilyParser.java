@@ -76,6 +76,9 @@ public class GeoFamilyParser implements Parser<Object> {
      * 
      */
     private static final char FIELD_DELIM = '\t';
+
+    private static final int MAX_WARNINGS = 100;
+
     private static Log log = LogFactory.getLog( GeoFamilyParser.class.getName() );
     Integer previousNumTokens = null;
     /**
@@ -136,6 +139,8 @@ public class GeoFamilyParser implements Parser<Object> {
     private int seriesDataLines = 0;
 
     private boolean processPlatformsOnly;
+
+    private int numWarnings = 0;
 
     /*
      * Elements seen for the 'current sample'.
@@ -499,6 +504,7 @@ public class GeoFamilyParser implements Parser<Object> {
         if ( dis == null ) {
             throw new RuntimeException( "Null reader" );
         }
+        this.numWarnings = 0;
         haveReadPlatformHeader = false;
         haveReadSampleDataHeader = false;
         alreadyWarnedAboutClobbering = false;
@@ -1103,9 +1109,14 @@ public class GeoFamilyParser implements Parser<Object> {
 
         int numColumns = results.getPlatformMap().get( currentPlatformAccession ).getColumnNames().size();
 
-        if ( numColumns != tokens.length ) {
-            log.error( "Wrong number of tokens in line (" + tokens.length + ", expected " + numColumns
-                    + "), line was '" + line + "'; Possible corrupt file or invalid format?" );
+        if ( numColumns != tokens.length && numWarnings < MAX_WARNINGS ) {
+            log.warn( "Wrong number of tokens in line (" + tokens.length + ", expected " + numColumns + "), line was '"
+                    + line + "'; Possible corrupt file or invalid format?" );
+            numWarnings++;
+            if ( numWarnings == MAX_WARNINGS ) {
+                log.warn( "Further warnings suppressed" );
+            }
+
             return;
         }
 
@@ -1294,9 +1305,13 @@ public class GeoFamilyParser implements Parser<Object> {
         /*
          * This can happen in some files that are mildly corrupted. -- we have to ignore it.
          */
-        if ( tokens.length <= 1 ) {
+        if ( tokens.length <= 1 && numWarnings < MAX_WARNINGS ) {
             log.error( "Parse error, sample data line has too few elements (" + tokens.length + "), line was '" + line
                     + "'" );
+            numWarnings++;
+            if ( numWarnings == MAX_WARNINGS ) {
+                log.warn( "Further warnings suppressed" );
+            }
             return;
         }
 
