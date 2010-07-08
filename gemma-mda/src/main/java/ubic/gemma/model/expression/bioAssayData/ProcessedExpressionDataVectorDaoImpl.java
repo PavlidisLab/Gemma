@@ -99,7 +99,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
                 if ( element != null ) {
                     Collection<DoubleVectorValueObject> obs = ( Collection<DoubleVectorValueObject> ) element
                             .getObjectValue();
-                    results.addAll( obs );
+                    results.addAll( obs ); 
                 } else {
                     genesToSearch.add( g );
                 }
@@ -393,11 +393,11 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         final String queryString;
         if ( ees == null || ees.size() == 0 ) {
             queryString = "select distinct dedv, dedv.designElement from ProcessedExpressionDataVectorImpl dedv fetch all properties"
-                    + " inner join dedv.designElement de where dedv.designElement in ( :cs )  ";
+                    + " join dedv.designElement de join fetch dedv.expressionExperiment ee where de in ( :cs )  ";
         } else {
             queryString = "select distinct dedv, dedv.designElement from ProcessedExpressionDataVectorImpl dedv fetch all properties"
-                    + " inner join dedv.designElement de "
-                    + " where dedv.designElement in (:cs ) and dedv.expressionExperiment in ( :ees )";
+                    + " join dedv.designElement de join fetch dedv.expressionExperiment ee "
+                    + " where de in (:cs ) and dedv.expressionExperiment in ( :ees )";
         }
         return getVectorsForProbesInExperiments( ees, cs2gene, queryString );
     }
