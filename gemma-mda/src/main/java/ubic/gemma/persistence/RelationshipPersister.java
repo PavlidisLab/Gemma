@@ -18,6 +18,9 @@
  */
 package ubic.gemma.persistence;
 
+import java.util.Collection;
+import java.util.HashSet;
+
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -33,6 +36,7 @@ import ubic.gemma.model.association.Gene2GOAssociation;
 import ubic.gemma.model.association.Gene2GOAssociationService;
 import ubic.gemma.model.association.Gene2GeneProteinAssociation;
 import ubic.gemma.model.association.Gene2GeneProteinAssociationService;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
 
 /**
  * Persist objects like Gene2GOAssociation.
@@ -56,10 +60,9 @@ public abstract class RelationshipPersister extends ExpressionPersister {
 
     @Autowired
     private ExpressionExperimentSetService expressionExperimentSetService;
-    
+
     @Autowired
     private Gene2GeneProteinAssociationService gene2GeneProteinAssociationService;
-    
 
     public RelationshipPersister( SessionFactory sessionFactory ) {
         super( sessionFactory );
@@ -67,6 +70,7 @@ public abstract class RelationshipPersister extends ExpressionPersister {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.loader.util.persister.Persister#persist(java.lang.Object)
      */
     @Override
@@ -83,8 +87,7 @@ public abstract class RelationshipPersister extends ExpressionPersister {
             return persistGeneCoexpressionAnalysis( ( GeneCoexpressionAnalysis ) entity );
         } else if ( entity instanceof ExpressionExperimentSet ) {
             return persistExpressionExperimentSet( ( ExpressionExperimentSet ) entity );
-        }
-        else if ( entity instanceof Gene2GeneProteinAssociation ) {
+        } else if ( entity instanceof Gene2GeneProteinAssociation ) {
             return persistGene2GeneProteinAssociation( ( Gene2GeneProteinAssociation ) entity );
         }
         return super.persist( entity );
@@ -93,6 +96,7 @@ public abstract class RelationshipPersister extends ExpressionPersister {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.persistence.CommonPersister#persistOrUpdate(java.lang.Object)
      */
     @Override
@@ -124,8 +128,9 @@ public abstract class RelationshipPersister extends ExpressionPersister {
     public void setProbeCoexpressionAnalysisService( ProbeCoexpressionAnalysisService probeCoexpressionAnalysisService ) {
         this.probeCoexpressionAnalysisService = probeCoexpressionAnalysisService;
     }
-    
-    public void setGene2GeneProteinAssociationService( Gene2GeneProteinAssociationService gene2GeneProteinAssociationService ) {
+
+    public void setGene2GeneProteinAssociationService(
+            Gene2GeneProteinAssociationService gene2GeneProteinAssociationService ) {
         this.gene2GeneProteinAssociationService = gene2GeneProteinAssociationService;
     }
 
@@ -148,6 +153,18 @@ public abstract class RelationshipPersister extends ExpressionPersister {
         if ( entity.getExperiments().size() == 0 ) {
             throw new IllegalArgumentException( "Attempt to create an empty ExpressionExperimentSet." );
         }
+
+        Collection<BioAssaySet> setMembers = new HashSet<BioAssaySet>();
+
+        for ( BioAssaySet baSet : entity.getExperiments() ) {
+            if ( isTransient( baSet ) ) {
+                baSet = ( BioAssaySet ) persist( baSet );
+            }
+            setMembers.add( baSet );
+        }
+        entity.getExperiments().clear();
+        entity.getExperiments().addAll( setMembers );
+
         return expressionExperimentSetService.create( entity );
     }
 
@@ -191,19 +208,20 @@ public abstract class RelationshipPersister extends ExpressionPersister {
 
         return probeCoexpressionAnalysisService.create( entity );
     }
-    
-    
+
     /**
-     * The persisting method for Gene2GeneProteinAssociation which validates the the Gene2GeneProteinAssociation
-     * does not already exist in the system. If it does then the persisted object is returned
+     * The persisting method for Gene2GeneProteinAssociation which validates the the Gene2GeneProteinAssociation does
+     * not already exist in the system. If it does then the persisted object is returned
+     * 
      * @param entity Gene2GeneProteinAssociation the object to persist
      * @return Gene2GeneProteinAssociation the persisted object
      */
-    protected Gene2GeneProteinAssociation persistGene2GeneProteinAssociation( Gene2GeneProteinAssociation gene2GeneProteinAssociation ) {
+    protected Gene2GeneProteinAssociation persistGene2GeneProteinAssociation(
+            Gene2GeneProteinAssociation gene2GeneProteinAssociation ) {
         if ( gene2GeneProteinAssociation == null ) return null;
-        if ( !isTransient( gene2GeneProteinAssociation ) ) return gene2GeneProteinAssociation;         
-            
+        if ( !isTransient( gene2GeneProteinAssociation ) ) return gene2GeneProteinAssociation;
+
         return gene2GeneProteinAssociationService.createOrUpdate( gene2GeneProteinAssociation );
-    }    
+    }
 
 }
