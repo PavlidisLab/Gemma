@@ -115,7 +115,9 @@ public class ExpressionExperimentSetIDsEndpoint extends AbstractGemmaEndpoint {
         watch.stop();
         Long time = watch.getTime();
         // log.info( "Finished generating result. Sending response to client." );
-        log.info( "XML response for Experiment Set IDs results built in " + time + "ms." );
+        if ( time > 1000 ) {
+            log.info( "XML response for Experiment Set IDs results built in " + time + "ms." );
+        }
         return responseWrapper;
 
     }

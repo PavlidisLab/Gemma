@@ -39,7 +39,6 @@ import ubic.gemma.model.genome.gene.GeneService;
  * @author klc, gavin
  * @version$Id$
  */
-
 public class GeneIdEndpoint extends AbstractGemmaEndpoint {
 
     private static Log log = LogFactory.getLog( GeneIdEndpoint.class );
@@ -89,7 +88,7 @@ public class GeneIdEndpoint extends AbstractGemmaEndpoint {
             taxString = tax;
         }
 
-        log.info( "XML input read: gene symbol, " + geneName + " & taxon id, " + taxString );
+        log.debug( "XML input read: gene symbol, " + geneName + " & taxon id, " + taxString );
         // Collection<Gene> genes = geneService.findByOfficialSymbolInexact( geneName );
         Taxon taxon = taxonService.load( Long.parseLong( taxString ) );
         Gene gene = geneService.findByOfficialSymbol( geneName, taxon );
@@ -107,7 +106,9 @@ public class GeneIdEndpoint extends AbstractGemmaEndpoint {
 
         watch.stop();
         Long time = watch.getTime();
-        log.info( "XML response for gene id result (from gene symbol) built in " + time + "ms." );
+        if ( time > 1000 ) {
+            log.info( "XML response for gene id result (from gene symbol) built in " + time + "ms." );
+        }
         return wrapper;
 
     }
