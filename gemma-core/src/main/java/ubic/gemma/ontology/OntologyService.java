@@ -263,7 +263,7 @@ public class OntologyService implements InitializingBean {
             for ( Characteristic characteristic : foundChars ) {
                 if ( !foundValues.contains( foundValueKey( characteristic ) ) ) {
                     /*
-                     * Want to flag in the web interface that these are alrady used by Gemma Didn't want to make a
+                     * Want to flag in the web interface that these are already used by Gemma Didn't want to make a
                      * characteristic value object just to hold a boolean flag for used....
                      */
                     characteristic.setDescription( USED + characteristic.getDescription() );
@@ -281,7 +281,7 @@ public class OntologyService implements InitializingBean {
         for ( AbstractOntologyService serv : this.ontologyServices ) {
             results = serv.findResources( queryString );
             if ( log.isDebugEnabled() ) log.debug( "found " + results.size() + " in " + watch.getTime() + " ms" );
-            searchResults.addAll( filter( results, queryString ) );
+            searchResults.addAll( convert( results ));
         }
 
         // Sort the individual results.
@@ -690,7 +690,7 @@ public class OntologyService implements InitializingBean {
 
         return filtered;
     }
-
+    
     /**
      * @param c
      * @return
