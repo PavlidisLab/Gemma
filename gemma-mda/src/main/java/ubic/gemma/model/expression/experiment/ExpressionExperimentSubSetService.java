@@ -29,15 +29,14 @@ public interface ExpressionExperimentSubSetService {
     /**
      * 
      */
-    @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    public ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet create(
-            ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet expressionExperimentSubSet );
+    @Secured( { "GROUP_USER" })
+    public ExpressionExperimentSubSet create( ExpressionExperimentSubSet expressionExperimentSubSet );
 
     /**
      * 
      */
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    public ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet load( java.lang.Long id );
+    public ExpressionExperimentSubSet load( java.lang.Long id );
 
     /**
      * 
