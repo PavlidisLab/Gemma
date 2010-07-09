@@ -25,16 +25,16 @@
 			<value>false</value>
 		</property>
 		<property name="initialSize">
-			<value>6</value>
+			<value>12</value>
 		</property>
 		<property name="maxActive">
-			<value>50</value>
+			<value>70</value>
 		</property>
 		<property name="maxIdle">
 			<value>10</value>
 		</property>
 		<property name="maxWait">
-			<value>30000</value>
+			<value>100000</value>
 		</property>
 	</bean>
 
