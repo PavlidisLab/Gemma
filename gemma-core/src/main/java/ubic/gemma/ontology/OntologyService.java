@@ -281,7 +281,7 @@ public class OntologyService implements InitializingBean {
         for ( AbstractOntologyService serv : this.ontologyServices ) {
             results = serv.findResources( queryString );
             if ( log.isDebugEnabled() ) log.debug( "found " + results.size() + " in " + watch.getTime() + " ms" );
-            searchResults.addAll( convert( results ));
+            searchResults.addAll( filter( results, queryString ));
         }
 
         // Sort the individual results.
@@ -669,7 +669,7 @@ public class OntologyService implements InitializingBean {
 
         for ( OntologyResource res : terms ) {
             if ( StringUtils.isNotEmpty( res.getLabel() )
-                    && res.getLabel().toLowerCase().startsWith( caseInsensitiveFilter ) ) {
+                    && res.getLabel().toLowerCase().indexOf( caseInsensitiveFilter ) > -1) {
                 VocabCharacteristic vc = VocabCharacteristic.Factory.newInstance();
                 if ( res instanceof OntologyTerm ) {
                     OntologyTerm term = ( OntologyTerm ) res;
