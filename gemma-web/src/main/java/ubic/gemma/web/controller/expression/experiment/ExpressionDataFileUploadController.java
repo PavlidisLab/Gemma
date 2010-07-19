@@ -293,7 +293,7 @@ public class ExpressionDataFileUploadController extends AbstractTaskService {
             Long arrayDesignId = arrayDesignIds.iterator().next();
 
             ArrayDesign design = arrayDesignService.load( arrayDesignId );
-            design = arrayDesignService.thawLite( design );
+            design = arrayDesignService.thaw( design );
 
             // check that the probes can be matched up...
             int numRowsMatchingArrayDesign = 0;
