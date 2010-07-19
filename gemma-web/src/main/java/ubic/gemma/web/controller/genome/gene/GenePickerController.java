@@ -166,11 +166,12 @@ public class GenePickerController {
      * @return List of taxa with array designs in gemma
      */
     public Collection<Taxon> getTaxaWithArrays() {
-        Set<Taxon> taxaWithDatasets = new TreeSet<Taxon>( TAXON_COMPARATOR );
+        Set<Taxon> taxaWithArrays = new TreeSet<Taxon>( TAXON_COMPARATOR );
 
-        taxaWithDatasets.addAll( arrayDesignService.getPerTaxonCount().keySet() );
+        taxaWithArrays.addAll( arrayDesignService.getPerTaxonCount().keySet() );
 
-        return taxaWithDatasets;
+        log.debug("GenePicker::getTaxaWithArrays returned "+ taxaWithArrays.size() +" results");
+        return taxaWithArrays;
     }
 
     /**
