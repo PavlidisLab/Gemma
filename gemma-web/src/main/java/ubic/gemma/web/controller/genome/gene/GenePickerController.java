@@ -168,8 +168,11 @@ public class GenePickerController {
     public Collection<Taxon> getTaxaWithArrays() {
         Set<Taxon> taxaWithArrays = new TreeSet<Taxon>( TAXON_COMPARATOR );
 
-        taxaWithArrays.addAll( arrayDesignService.getPerTaxonCount().keySet() );
-
+        for (Taxon taxon : arrayDesignService.getPerTaxonCount().keySet()) {           
+        	taxonService.thaw( taxon );
+        	taxaWithArrays.add( taxon );        	        	
+        }
+        
         log.debug("GenePicker::getTaxaWithArrays returned "+ taxaWithArrays.size() +" results");
         return taxaWithArrays;
     }
