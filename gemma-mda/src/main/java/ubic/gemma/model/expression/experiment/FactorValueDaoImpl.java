@@ -140,12 +140,18 @@ public class FactorValueDaoImpl extends ubic.gemma.model.expression.experiment.F
                         ExperimentalFactor experimentalFactor = toDelete.getExperimentalFactor();
                         experimentalFactor.getFactorValues().remove( toDelete );
                         session.update( experimentalFactor );
-
-                        session.delete( toDelete );
-
                         return null;
                     }
                 } );
+
+        /*
+         * This rigamarole is to avoid the dreaded "would be reattached" error.
+         */
+        this.getHibernateTemplate().flush();
+        this.getHibernateTemplate().evict( factorValue );
+        this.getHibernateTemplate().evict( factorValue.getExperimentalFactor() );
+
+        this.getHibernateTemplate().delete( factorValue );
     }
 
     /**
