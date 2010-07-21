@@ -324,7 +324,7 @@ public class ExperimentalDesignController extends BaseController {
              */
             if ( !bioMaterialService.findByFactorValue( fv ).isEmpty() ) {
                 /*
-                 * If so, check to see if there are any diff results that use this factor.
+                 * If so, check to see if there are any diff results that use this factor. FIXME This might have to run in a background thread
                  */
                 ExperimentalFactor ef = experimentalFactorService.load( fv.getExperimentalFactor().getId() );
                 Collection<DifferentialExpressionAnalysis> analyses = differentialExpressionAnalysisService
