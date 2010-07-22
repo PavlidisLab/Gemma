@@ -35,9 +35,13 @@
 		</property>
 		<property name="maxWait">
 			<value>100000</value>
+		</property> 
+		<property name="testOnBorrow">
+			<value>true</value>
+		</property>
+		<property name="validationQuery">
+			<value>SELECT 1</value>
 		</property>
 	</bean>
-
-
 
 </beans>
