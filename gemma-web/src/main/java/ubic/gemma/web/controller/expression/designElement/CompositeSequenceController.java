@@ -19,6 +19,7 @@
 package ubic.gemma.web.controller.expression.designElement;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -207,6 +208,8 @@ public class CompositeSequenceController extends BaseController {
         if ( cs == null ) {
             addMessage( request, "object.notfound", new Object[] { "composite sequence " + id } );
         }
+
+        compositeSequenceService.thaw( Arrays.asList( new CompositeSequence[] { cs } ) );
 
         ModelAndView mav = new ModelAndView( "compositeSequence.detail" );
 
