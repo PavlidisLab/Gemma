@@ -617,10 +617,16 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
                         continue;
                     }
 
-                    session.update( bs );
-
                     bs.getTaxon();
 
+                    DatabaseEntry dbEntry = bs.getSequenceDatabaseEntry();
+                    if ( dbEntry != null ) {
+                        Hibernate.initialize( dbEntry );
+                        Hibernate.initialize( dbEntry.getExternalDatabase() );
+                        session.evict( dbEntry );
+                        session.evict( dbEntry.getExternalDatabase() );
+                    }
+                    
                     if ( bs.getBioSequence2GeneProduct() == null ) {
                         continue;
                     }
@@ -648,18 +654,7 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
                         }
                     }
 
-                    session.update( cs.getArrayDesign() );
                     cs.getArrayDesign().getName();
-
-                    DatabaseEntry dbEntry = bs.getSequenceDatabaseEntry();
-                    if ( dbEntry != null ) {
-                        session.lock( dbEntry, LockMode.NONE );
-                        Hibernate.initialize( dbEntry );
-                        session.lock( dbEntry.getExternalDatabase(), LockMode.NONE );
-                        Hibernate.initialize( dbEntry.getExternalDatabase() );
-                        session.evict( dbEntry );
-                        session.evict( dbEntry.getExternalDatabase() );
-                    }
                     
                     session.evict( bs );
                 }
