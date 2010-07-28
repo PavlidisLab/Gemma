@@ -617,6 +617,7 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
                         continue;
                     }
 
+                    Hibernate.initialize(bs);
                     bs.getTaxon();
 
                     DatabaseEntry dbEntry = bs.getSequenceDatabaseEntry();
