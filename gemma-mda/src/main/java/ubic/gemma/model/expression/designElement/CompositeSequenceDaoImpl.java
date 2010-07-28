@@ -32,7 +32,9 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 import org.hibernate.Hibernate;
+import org.hibernate.LockMode;
 import org.hibernate.SessionFactory;
+import org.hibernate.collection.PersistentCollection;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.type.LongType;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,7 +42,9 @@ import org.springframework.orm.hibernate3.HibernateTemplate;
 import org.springframework.orm.hibernate3.SessionFactoryUtils;
 import org.springframework.stereotype.Repository;
 
+import sun.awt.color.CMM.CSAccessor;
 import ubic.gemma.model.association.BioSequence2GeneProduct;
+import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.PhysicalLocation;
@@ -647,7 +651,16 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
                     session.update( cs.getArrayDesign() );
                     cs.getArrayDesign().getName();
 
-                    if ( bs.getSequenceDatabaseEntry() != null ) session.evict( bs.getSequenceDatabaseEntry() );
+                    DatabaseEntry dbEntry = bs.getSequenceDatabaseEntry();
+                    if ( dbEntry != null ) {
+                        session.lock( dbEntry, LockMode.NONE );
+                        Hibernate.initialize( dbEntry );
+                        session.lock( dbEntry.getExternalDatabase(), LockMode.NONE );
+                        Hibernate.initialize( dbEntry.getExternalDatabase() );
+                        session.evict( dbEntry );
+                        session.evict( dbEntry.getExternalDatabase() );
+                    }
+                    
                     session.evict( bs );
                 }
                 session.clear();
