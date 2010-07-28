@@ -151,6 +151,10 @@ public class CompositeSequenceController extends BaseController {
             return new HashSet<GeneMappingSummary>();
         }
         CompositeSequence cs = compositeSequenceService.load( csd.getId() );
+        //FIXME : This is a hack to make sure another hack is working. (Basically value object
+        // GeneMappingSummary contains non-value object (hibernate entity) CompositeSequence).
+        // The permanent solution is described in bug#1996.
+        compositeSequenceService.thaw( Arrays.asList( new CompositeSequence[] { cs } ) );
 
         return this.getGeneMappingSummary( cs );
     }
