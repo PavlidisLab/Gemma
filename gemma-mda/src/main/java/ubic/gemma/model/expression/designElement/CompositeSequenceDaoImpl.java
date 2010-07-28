@@ -30,7 +30,9 @@ import java.util.Map;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.hibernate.CacheMode;
 import org.hibernate.Criteria;
+import org.hibernate.FlushMode;
 import org.hibernate.Hibernate;
 import org.hibernate.LockMode;
 import org.hibernate.SessionFactory;
@@ -606,17 +608,19 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
         HibernateTemplate templ = this.getHibernateTemplate();
         templ.executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                int i = 0;
-                /*
-                 * Note this code is copied from ArrayDesignDaoImpl
-                 */
+            	int i = 0;
                 int numToDo = compositeSequences.size();
                 for ( CompositeSequence cs : compositeSequences ) {
-                    BioSequence bs = cs.getBiologicalCharacteristic();
+                	
+                	session.lock( cs, LockMode.NONE );
+                	cs.getArrayDesign().getName();
+                	
+                	BioSequence bs = cs.getBiologicalCharacteristic();
                     if ( bs == null ) {
                         continue;
                     }
-
+                    
+                    session.lock( bs, LockMode.NONE );
                     Hibernate.initialize(bs);
                     bs.getTaxon();
 
@@ -654,8 +658,6 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
                             //
                         }
                     }
-
-                    cs.getArrayDesign().getName();
                     
                     session.evict( bs );
                 }
