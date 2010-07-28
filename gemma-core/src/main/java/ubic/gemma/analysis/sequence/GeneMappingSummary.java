@@ -45,7 +45,7 @@ public class GeneMappingSummary implements Serializable {
 
     // this is a bit of a hack - we need this information when displaying the blat results for a probe. Might need name
     // etc. too.
-    private CompositeSequence compositeSequence;
+    private CompositeSequenceMapValueObject compositeSequenceMap;
 
     /*
      * These maps are maintained for javascript clients, which cannot marshal maps unless the keys are strings.
@@ -137,11 +137,11 @@ public class GeneMappingSummary implements Serializable {
         return blatResultId;
     }
 
-    public CompositeSequence getCompositeSequence() {
-        return compositeSequence;
+    public CompositeSequenceMapValueObject getCompositeSequence() {
+        return compositeSequenceMap;
     }
 
-    public void setCompositeSequence( CompositeSequence compositeSequence ) {
-        this.compositeSequence = compositeSequence;
+    public void setCompositeSequence( CompositeSequenceMapValueObject compositeSequenceMap ) {
+        this.compositeSequenceMap = compositeSequenceMap;
     }
 }

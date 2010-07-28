@@ -18,9 +18,14 @@
  */
 package ubic.gemma.analysis.sequence;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import ubic.gemma.model.association.BioSequence2GeneProduct;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.gene.GeneProductValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 
@@ -39,7 +44,7 @@ public class CompositeSequenceMapValueObject implements Comparable<CompositeSequ
     private Long arrayDesignId = null;
     private Long numBlatHits = null;
 
-    private Map<String, GeneProductValueObject> geneProducts = new HashMap<String, GeneProductValueObject>();;
+    private Map<String, GeneProductValueObject> geneProducts = new HashMap<String, GeneProductValueObject>();
     private Map<String, GeneValueObject> genes = new HashMap<String, GeneValueObject>();
 
     public CompositeSequenceMapValueObject() {
@@ -223,5 +228,29 @@ public class CompositeSequenceMapValueObject implements Comparable<CompositeSequ
     public void setCompositeSequenceDescription( String compositeSequenceDescription ) {
         this.compositeSequenceDescription = compositeSequenceDescription;
     }
-
+    
+    public static CompositeSequenceMapValueObject fromEntity(CompositeSequence cs) {
+    	CompositeSequenceMapValueObject vo = new CompositeSequenceMapValueObject();
+    	vo.setArrayDesignId(cs.getArrayDesign().getId());
+    	vo.setArrayDesignName(cs.getArrayDesign().getName());
+    	vo.setBioSequenceId(cs.getBiologicalCharacteristic().getId().toString());
+    	vo.setBioSequenceName(cs.getBiologicalCharacteristic().getName());
+    	vo.setCompositeSequenceDescription(cs.getDescription());
+    	vo.setCompositeSequenceId(cs.getId().toString());
+    	vo.setCompositeSequenceName(cs.getName());
+    	Map<String, GeneProductValueObject> gpvos = new HashMap<String, GeneProductValueObject>();
+    	Map<String, GeneValueObject> gvos = new HashMap<String, GeneValueObject>();
+    	/*
+    	for (BioSequence2GeneProduct bs_2_gp : cs.getBiologicalCharacteristic().getBioSequence2GeneProduct() ) {
+    		GeneProduct gp = bs_2_gp.getGeneProduct();    	
+    		gpvos.put(gp.getName(), GeneProductValueObject.fromEntity(gp));
+    		gvos.put(gp.getGene().getName(), GeneValueObject.fromEntity(gp.getGene()));
+    	}
+    	
+    	vo.setGeneProducts(gpvos);
+    	vo.setGenes(gvos);
+    	 */
+    	return vo;
+    }
+    
 }

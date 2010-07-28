@@ -286,10 +286,12 @@ public class CompositeSequenceController extends BaseController {
             if ( results.containsKey( blatResult ) ) {
                 results.get( blatResult ).addGene( geneProduct, gene );
             } else {
+            	CompositeSequenceMapValueObject cs_vo = new CompositeSequenceMapValueObject();
+            	
                 GeneMappingSummary summary = new GeneMappingSummary();
                 summary.addGene( geneProduct, gene );
                 summary.setBlatResult( blatResult );
-                summary.setCompositeSequence( cs );
+                summary.setCompositeSequence(cs_vo);
                 results.put( blatResult, summary );
             }
 
@@ -300,7 +302,7 @@ public class CompositeSequenceController extends BaseController {
         if ( results.size() == 0 ) {
             // add a 'dummy' that at least contains the information about the CS. This is a bit of a hack...
             GeneMappingSummary summary = new GeneMappingSummary();
-            summary.setCompositeSequence( cs );
+            summary.setCompositeSequence( CompositeSequenceMapValueObject.fromEntity(cs) );
             BlatResultValueObject newInstance = new BlatResultValueObject();
             newInstance.setQuerySequence( biologicalCharacteristic );
             newInstance.setId( -1L );
