@@ -362,7 +362,7 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
         for ( BioSequence bioSequence : bioSequences ) {
         	session.lock(bioSequence, LockMode.NONE); // re-attach object to session
         	
-            bioSequence.getType().getValue();
+            bioSequence.getType();
             bioSequence.getTaxon().getExternalDatabase();
             bioSequence.getTaxon().getParentTaxon();
             
