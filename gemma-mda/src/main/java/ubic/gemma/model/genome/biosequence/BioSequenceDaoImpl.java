@@ -41,6 +41,7 @@ import org.springframework.stereotype.Repository;
 import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.util.BusinessKey;
 
@@ -292,7 +293,9 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
                                 + " left join fetch g.aliases left join fetch g.accessions  where b.id=:bid", "bid",
                         bioSequence.getId() );
 
-        return ( BioSequence ) res.iterator().next();
+        BioSequence thawedBioSequence = ( BioSequence ) res.iterator().next();
+                
+        return thawedBioSequence;
 
     }
 
@@ -371,6 +374,7 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
 
                     if ( deep ) {
                         bioSequence.getTaxon();
+                        bioSequence.getTaxon().getExternalDatabase();
                         Hibernate.initialize( bioSequence.getBioSequence2GeneProduct() );
                         for ( BioSequence2GeneProduct bs2gp : bioSequence.getBioSequence2GeneProduct() ) {
                             Hibernate.initialize( bs2gp.getGeneProduct() );
