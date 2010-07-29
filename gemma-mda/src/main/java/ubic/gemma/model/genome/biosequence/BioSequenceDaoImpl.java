@@ -41,6 +41,7 @@ import org.springframework.stereotype.Repository;
 
 import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.common.description.DatabaseEntry;
+import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
@@ -365,7 +366,11 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
             bioSequence.getTaxon().getExternalDatabase();
             bioSequence.getTaxon().getParentTaxon();
             
-            bioSequence.getSequenceDatabaseEntry().getExternalDatabase().getName();
+            DatabaseEntry dbEntry = bioSequence.getSequenceDatabaseEntry();
+            if ( dbEntry != null ) {
+              ExternalDatabase extDB = dbEntry.getExternalDatabase();
+              if (extDB != null) extDB.getName();
+            }
             
         }
         session.close();
