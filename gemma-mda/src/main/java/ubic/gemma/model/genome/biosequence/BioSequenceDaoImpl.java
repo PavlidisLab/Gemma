@@ -33,6 +33,7 @@ import org.hibernate.Criteria;
 import org.hibernate.FlushMode;
 import org.hibernate.Hibernate;
 import org.hibernate.LockMode;
+import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.orm.hibernate3.HibernateTemplate;
@@ -353,65 +354,78 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
      */
     private void doThaw( final Collection<BioSequence> bioSequences, final boolean deep ) {
         if ( bioSequences == null || bioSequences.size() == 0 ) return;
-        HibernateTemplate templ = this.getHibernateTemplate();
-        final StopWatch timer = new StopWatch();
-        timer.start();
-        templ.executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                FlushMode oldFlushMode = session.getFlushMode();
-                CacheMode oldCacheMode = session.getCacheMode();
-                session.setCacheMode( CacheMode.IGNORE ); // Don't hit the
-                // secondary
-                // cache
-                session.setFlushMode( FlushMode.MANUAL ); // We're
-                // READ-ONLY so
-                // this is okay.
-                int count = 0;
-                long lastTime = 0;
-                for ( BioSequence bioSequence : bioSequences ) {
-                    session.lock( bioSequence, LockMode.NONE );
-                    Hibernate.initialize( bioSequence );
-
-                    if ( deep ) {
-                        bioSequence.getTaxon();
-                        bioSequence.getTaxon().getExternalDatabase();
-                        Hibernate.initialize( bioSequence.getBioSequence2GeneProduct() );
-                        for ( BioSequence2GeneProduct bs2gp : bioSequence.getBioSequence2GeneProduct() ) {
-                            Hibernate.initialize( bs2gp.getGeneProduct() );
-                            if ( bs2gp instanceof BlatAssociation ) {
-                                Hibernate.initialize( ( ( BlatAssociation ) bs2gp ).getBlatResult() );
-                            }
-                        }
-                    }
-
-                    DatabaseEntry dbEntry = bioSequence.getSequenceDatabaseEntry();
-                    if ( dbEntry != null ) {
-                        session.lock( dbEntry, LockMode.NONE );
-                        Hibernate.initialize( dbEntry );
-                        session.lock( dbEntry.getExternalDatabase(), LockMode.NONE );
-                        Hibernate.initialize( dbEntry.getExternalDatabase() );
-                        session.evict( dbEntry );
-                        session.evict( dbEntry.getExternalDatabase() );
-                    }
-
-                    if ( ++count % 2000 == 0 ) {
-                        if ( timer.getTime() - lastTime > 10000 ) {
-                            log.info( "Thawed " + count + " sequences ..." );
-                            lastTime = timer.getTime();
-                        }
-                        session.clear();
-                    }
-                }
-
-                session.clear();
-                session.setFlushMode( oldFlushMode );
-                session.setCacheMode( oldCacheMode );
-
-                return null;
-            }
-        } );
-    }
-
+        
+        HibernateTemplate template = this.getHibernateTemplate();
+        Session session = template.getSessionFactory().openSession();
+                        
+        for ( BioSequence bioSequence : bioSequences ) {
+        	session.lock(bioSequence, LockMode.NONE); // re-attach object to session
+        	
+            bioSequence.getType().getValue();
+            bioSequence.getTaxon().getExternalDatabase();
+            bioSequence.getTaxon().getParentTaxon();
+            
+            bioSequence.getSequenceDatabaseEntry().getExternalDatabase().getName();
+            
+        }
+        session.close();
+        
+    }                
+//        templ.executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
+//            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+//                FlushMode oldFlushMode = session.getFlushMode();
+//                CacheMode oldCacheMode = session.getCacheMode();
+//                session.setCacheMode( CacheMode.IGNORE ); // Don't hit the
+//                // secondary
+//                // cache
+//                session.setFlushMode( FlushMode.MANUAL ); // We're
+//                // READ-ONLY so
+//                // this is okay.
+//                int count = 0;
+//                long lastTime = 0;
+//                for ( BioSequence bioSequence : bioSequences ) {
+//                    session.lock( bioSequence, LockMode.NONE );
+//                    Hibernate.initialize( bioSequence );
+//
+//                    if ( deep ) {
+//                        bioSequence.getTaxon();
+//                        bioSequence.getTaxon().getExternalDatabase();
+//                        Hibernate.initialize( bioSequence.getBioSequence2GeneProduct() );
+//                        for ( BioSequence2GeneProduct bs2gp : bioSequence.getBioSequence2GeneProduct() ) {
+//                            Hibernate.initialize( bs2gp.getGeneProduct() );
+//                            if ( bs2gp instanceof BlatAssociation ) {
+//                                Hibernate.initialize( ( ( BlatAssociation ) bs2gp ).getBlatResult() );
+//                            }
+//                        }
+//                    }
+//
+//                    DatabaseEntry dbEntry = bioSequence.getSequenceDatabaseEntry();
+//                    if ( dbEntry != null ) {
+//                        session.lock( dbEntry, LockMode.NONE );
+//                        Hibernate.initialize( dbEntry );
+//                        session.lock( dbEntry.getExternalDatabase(), LockMode.NONE );
+//                        Hibernate.initialize( dbEntry.getExternalDatabase() );
+//                        session.evict( dbEntry );
+//                        session.evict( dbEntry.getExternalDatabase() );
+//                    }
+//
+//                    if ( ++count % 2000 == 0 ) {
+//                        if ( timer.getTime() - lastTime > 10000 ) {
+//                            log.info( "Thawed " + count + " sequences ..." );
+//                            lastTime = timer.getTime();
+//                        }
+//                        session.clear();
+//                    }
+//                }
+//
+//                session.clear();
+//                session.setFlushMode( oldFlushMode );
+//                session.setCacheMode( oldCacheMode );
+//
+//                return null;
+//            }
+//        } );
+    
     /**
      * @param genes
      * @param results
