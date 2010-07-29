@@ -18,6 +18,7 @@
  */
 package ubic.gemma.web.util;
 
+import ubic.gemma.model.TaxonValueObject;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneProductType;
 import ubic.gemma.model.genome.gene.GeneProductValueObject;
@@ -46,7 +47,7 @@ public class LinkUtils {
         if ( ( blatResult.getQuerySequence() == null ) || ( blatResult.getQuerySequence().getTaxon() == null ) )
             return null;
 
-        Taxon taxon = blatResult.getQuerySequence().getTaxon();
+        TaxonValueObject taxon = blatResult.getQuerySequence().getTaxon();
         String organism = taxon.getCommonName();
 
         String database = "";
