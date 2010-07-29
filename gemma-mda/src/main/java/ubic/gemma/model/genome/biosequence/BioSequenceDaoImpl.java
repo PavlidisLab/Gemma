@@ -364,15 +364,19 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
         	
             bioSequence.getType();
             ExternalDatabase extDB = bioSequence.getTaxon().getExternalDatabase();
-            if (extDB != null) { 
+            if (extDB != null) {
+            	session.lock(extDB, LockMode.NONE);
             	extDB.getName();
             }
             bioSequence.getTaxon().getParentTaxon();
             
             DatabaseEntry dbEntry = bioSequence.getSequenceDatabaseEntry();
             if ( dbEntry != null ) {
-              extDB = dbEntry.getExternalDatabase();
-              if (extDB != null) extDB.getName();
+            	extDB = dbEntry.getExternalDatabase();
+            	if (extDB != null) {
+                	session.lock(extDB, LockMode.NONE);
+            		extDB.getName();
+            	}
             }
             
         }
