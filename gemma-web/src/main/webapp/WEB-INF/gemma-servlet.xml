@@ -1484,7 +1484,7 @@ gemma.max.fileupload.size.bytes=
 				</entry>
 				<entry key="ubic.gemma.model.common.description.DatabaseEntry">
 					<bean class="org.directwebremoting.spring.ConverterConfig">
-						<property name="type" value="hibernate3" />
+						<property name="type" value="bean" />
 						<property name="includes">
 							<list>
 								<value>accession</value>
