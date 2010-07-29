@@ -147,6 +147,7 @@ public class CompositeSequenceController extends BaseController {
      * @return
      */
     public Collection<GeneMappingSummary> getGeneMappingSummary( EntityDelegator csd ) {
+    	log.warn("Started proccessing AJAX call: getGeneMappingSummary");
         if ( csd == null || csd.getId() == null ) {
             return new HashSet<GeneMappingSummary>();
         }
@@ -156,6 +157,7 @@ public class CompositeSequenceController extends BaseController {
         // The permanent solution is described in bug#1996.
         compositeSequenceService.thaw( Arrays.asList( new CompositeSequence[] { cs } ) );
 
+    	log.warn("Finished proccessing AJAX call: getGeneMappingSummary");        
         return this.getGeneMappingSummary( cs );
     }
 
