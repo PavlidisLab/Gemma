@@ -667,7 +667,7 @@ public class SearchService implements InitializingBean {
         StopWatch watch = startTiming();
 
         Collection<SearchResult> allResults = new HashSet<SearchResult>();
-        allResults.addAll( compassBioSequenceSearch( settings, previousGeneSearchResults ) );
+        //allResults.addAll( compassBioSequenceSearch( settings, previousGeneSearchResults ) );
         allResults.addAll( databaseBioSequenceSearch( settings ) );
 
         watch.stop();
