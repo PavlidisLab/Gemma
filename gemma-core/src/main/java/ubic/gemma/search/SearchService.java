@@ -664,19 +664,21 @@ public class SearchService implements InitializingBean {
      *        for the genes are added to the final results.
      * @return
      */
-    private Collection<SearchResult> bioSequenceSearch( SearchSettings settings,
-            Collection<SearchResult> previousGeneSearchResults ) {
+    private Collection<SearchResult> bioSequenceSearch(
+    										SearchSettings settings,
+    										Collection<SearchResult> previousGeneSearchResults )
+    {
         StopWatch watch = startTiming();
 
-        Collection<SearchResult> allResults = new HashSet<SearchResult>();
-        allResults.addAll( compassBioSequenceSearch( settings, previousGeneSearchResults ) );
-        allResults.addAll( databaseBioSequenceSearch( settings ) );
+        Collection<SearchResult> searchResults = new HashSet<SearchResult>();
+        searchResults.addAll( compassBioSequenceSearch( settings, previousGeneSearchResults ) );
+        searchResults.addAll( databaseBioSequenceSearch( settings ) );
 
         watch.stop();
         if ( watch.getTime() > 1000 )
-            log.info( "Biosequence search for '" + settings + "' took " + watch.getTime() + " ms " + allResults.size()
+            log.info( "Biosequence search for '" + settings + "' took " + watch.getTime() + " ms " + searchResults.size()
                     + " results." );
-        return allResults;
+        return searchResults;
     }
 
     /**
@@ -936,13 +938,12 @@ public class SearchService implements InitializingBean {
     private Collection<SearchResult> compassBioSequenceSearch( SearchSettings settings,
             Collection<SearchResult> previousGeneSearchResults ) {
 
-        Collection<SearchResult> results = compassSearch( compassBiosequence, settings );
-        for (SearchResult result : results) {
-        	// Thaw biosequences found by compass search.
-        	BioSequence bs = (BioSequence) result.getResultObject();        	
-        	bioSequenceService.thaw(Arrays.asList(new BioSequence[] {bs}));
-        	result.setResultObject(bs);
-        }
+        Collection<SearchResult> results = null; // = compassSearch( compassBiosequence, settings );
+//        for (SearchResult result : results) {
+//        	// Thaw biosequences found by compass search.
+//        	BioSequence bs = (BioSequence) result.getResultObject();        	
+//        	bioSequenceService.thaw(Arrays.asList(new BioSequence[] {bs}));
+//        }
         
         Collection<SearchResult> geneResults = null;
         if ( previousGeneSearchResults == null ) {
@@ -968,7 +969,7 @@ public class SearchService implements InitializingBean {
         for ( Gene gene : seqsFromDb.keySet() ) {
             List<BioSequence> bs = new ArrayList<BioSequence>( seqsFromDb.get( gene ) );
             bioSequenceService.thaw( bs );
-            results.addAll( dbHitsToSearchResult( bs, genes.get( gene ) ) );
+            results = ( dbHitsToSearchResult( bs, genes.get( gene ) ) );
         }
 
         return results;
@@ -2051,5 +2052,5 @@ public class SearchService implements InitializingBean {
         watch.start();
         return watch;
     }
-
+    
 }
