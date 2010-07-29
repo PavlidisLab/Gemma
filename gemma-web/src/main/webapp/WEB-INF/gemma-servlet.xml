@@ -1510,7 +1510,7 @@ gemma.max.fileupload.size.bytes=
 				</entry>
 				<entry key="ubic.gemma.model.expression.designElement.CompositeSequence">
 					<bean class="org.directwebremoting.spring.ConverterConfig">
-						<property name="type" value="hibernate3" />
+						<property name="type" value="bean" />
 						<property name="includes">
 							<list>
 								<value>id</value>
@@ -1523,7 +1523,7 @@ gemma.max.fileupload.size.bytes=
 				</entry>
 				<entry key="ubic.gemma.model.common.description.ExternalDatabase">
 					<bean class="org.directwebremoting.spring.ConverterConfig">
-						<property name="type" value="hibernate3" />
+						<property name="type" value="bean" />
 						<property name="includes">
 							<list>
 								<value>name</value>
