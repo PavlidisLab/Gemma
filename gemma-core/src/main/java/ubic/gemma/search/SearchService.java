@@ -935,7 +935,13 @@ public class SearchService implements InitializingBean {
             Collection<SearchResult> previousGeneSearchResults ) {
 
         Collection<SearchResult> results = compassSearch( compassBiosequence, settings );
-
+        for (SearchResult result : results) {
+        	// Thaw biosequences found by compass search.
+        	BioSequence bs = (BioSequence) result.getResultObject();
+        	bs = bioSequenceService.thaw(bs);
+        	result.setResultObject(bs);
+        }
+        
         Collection<SearchResult> geneResults = null;
         if ( previousGeneSearchResults == null ) {
             log.info( "Biosequence Search:  running gene search with " + settings.getQuery() );
