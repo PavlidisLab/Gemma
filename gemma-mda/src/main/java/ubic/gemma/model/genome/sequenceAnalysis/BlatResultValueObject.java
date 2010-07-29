@@ -22,8 +22,7 @@ package ubic.gemma.model.genome.sequenceAnalysis;
 import java.util.Collection;
 import java.util.HashSet;
 
-import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.model.genome.biosequence.BioSequence;
+import ubic.gemma.model.TaxonValueObject;
 
 /**
  * @author paul
@@ -31,65 +30,29 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
  */
 public class BlatResultValueObject {
 
-    /**
-     * @param blatResults
-     * @return
-     */
-    public static Collection<BlatResultValueObject> convert2ValueObjects( Collection<BlatResult> blatResults ) {
-        Collection<BlatResultValueObject> result = new HashSet<BlatResultValueObject>();
-        for ( BlatResult br : blatResults ) {
-            result.add( new BlatResultValueObject( br ) );
-
-        }
-        return result;
-    }
-
     private java.lang.Integer blockCount;
-
     private java.lang.String blockSizes;
-
     private Long id;
-
     private Double identity;
-
     private java.lang.Integer matches;
-
     private java.lang.Integer mismatches;
-
     private java.lang.Integer ns;
-
     private java.lang.Integer queryEnd;
-
     private java.lang.Integer queryGapBases;
-
     private java.lang.Integer queryGapCount;
-
-    private BioSequence querySequence;
-
+    private BioSequenceValueObject querySequence;
     private java.lang.Integer queryStart;
-
     private java.lang.String queryStarts;
-
     private java.lang.Integer repMatches;
-
     private Double score;
-
     private java.lang.String strand;
-
     private String targetChromosomeName;
-
     private String targetDatabase;
-
-    private Taxon taxon;
-
+    private TaxonValueObject taxon;
     private java.lang.Long targetEnd;
-
     private java.lang.Integer targetGapBases;
-
     private java.lang.Integer targetGapCount;
-
     private java.lang.Long targetStart;
-
     private java.lang.String targetStarts;
 
     public BlatResultValueObject() {
@@ -97,17 +60,35 @@ public class BlatResultValueObject {
     }
 
     public BlatResultValueObject( BlatResult br ) {
-        this( br.getId(), br.getTargetChromosome().getTaxon(), br.getBlockCount(), br.getBlockSizes(), br.getMatches(),
-                br.getMismatches(), br.getNs(), br.getQueryEnd(), br.getQueryGapBases(), br.getQueryGapCount(), br
-                        .getQuerySequence(), br.getQueryStart(), br.getQueryStarts(), br.getRepMatches(), br.score(),
-                br.identity(), br.getStrand(), br.getTargetChromosome().getName(), br.getSearchedDatabase().getName(),
-                br.getTargetEnd(), br.getTargetGapBases(), br.getTargetGapCount(), br.getTargetStart(), br
-                        .getTargetStarts() );
+        this( br.getId(),
+        	  TaxonValueObject.fromEntity(br.getTargetChromosome().getTaxon()),
+        	  br.getBlockCount(),
+        	  br.getBlockSizes(),
+        	  br.getMatches(),
+              br.getMismatches(),
+              br.getNs(),
+              br.getQueryEnd(),
+              br.getQueryGapBases(),
+              br.getQueryGapCount(),
+              BioSequenceValueObject.fromEntity(br.getQuerySequence()),
+              br.getQueryStart(),
+              br.getQueryStarts(),
+              br.getRepMatches(),
+              br.score(),
+              br.identity(),
+              br.getStrand(),
+              br.getTargetChromosome().getName(),
+              br.getSearchedDatabase().getName(),
+              br.getTargetEnd(),
+              br.getTargetGapBases(),
+              br.getTargetGapCount(),
+              br.getTargetStart(),
+              br.getTargetStarts() );
     }
 
-    public BlatResultValueObject( Long id, Taxon taxon, Integer blockCount, String blockSizes, Integer matches,
+    public BlatResultValueObject( Long id, TaxonValueObject taxon, Integer blockCount, String blockSizes, Integer matches,
             Integer mismatches, Integer ns, Integer queryEnd, Integer queryGapBases, Integer queryGapCount,
-            BioSequence querySequence, Integer queryStart, String queryStarts, Integer repMatches, Double score,
+            BioSequenceValueObject querySequence, Integer queryStart, String queryStarts, Integer repMatches, Double score,
             Double identity, String strand, String targetChromosomeName, String targetDatabase, Long targetEnd,
             Integer targetGapBases, Integer targetGapCount, Long targetStart, String targetStarts ) {
         super();
@@ -227,7 +208,7 @@ public class BlatResultValueObject {
     /**
      * @return the querySequence
      */
-    public BioSequence getQuerySequence() {
+    public BioSequenceValueObject getQuerySequence() {
         return querySequence;
     }
 
@@ -377,7 +358,7 @@ public class BlatResultValueObject {
     /**
      * @param querySequence the querySequence to set
      */
-    public void setQuerySequence( BioSequence querySequence ) {
+    public void setQuerySequence( BioSequenceValueObject querySequence ) {
         this.querySequence = querySequence;
     }
 
@@ -441,15 +422,28 @@ public class BlatResultValueObject {
     /**
      * @param taxon the taxon to set
      */
-    public void setTaxon( Taxon taxon ) {
+    public void setTaxon( TaxonValueObject taxon ) {
         this.taxon = taxon;
     }
 
     /**
      * @return the taxon
      */
-    public Taxon getTaxon() {
+    public TaxonValueObject getTaxon() {
         return taxon;
     }
 
+    /**
+     * @param blatResults
+     * @return
+     */
+    public static Collection<BlatResultValueObject> convert2ValueObjects( Collection<BlatResult> blatResults ) {
+        Collection<BlatResultValueObject> result = new HashSet<BlatResultValueObject>();
+        for ( BlatResult br : blatResults ) {
+            result.add( new BlatResultValueObject( br ) );
+
+        }
+        return result;
+    }
+    
 }

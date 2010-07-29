@@ -30,13 +30,10 @@ import java.util.Map;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.hibernate.CacheMode;
 import org.hibernate.Criteria;
-import org.hibernate.FlushMode;
 import org.hibernate.Hibernate;
 import org.hibernate.LockMode;
 import org.hibernate.SessionFactory;
-import org.hibernate.collection.PersistentCollection;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.type.LongType;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,7 +41,6 @@ import org.springframework.orm.hibernate3.HibernateTemplate;
 import org.springframework.orm.hibernate3.SessionFactoryUtils;
 import org.springframework.stereotype.Repository;
 
-import sun.awt.color.CMM.CSAccessor;
 import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -613,6 +609,7 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
                 for ( CompositeSequence cs : compositeSequences ) {
                 	
                 	session.lock( cs, LockMode.NONE );
+                	Hibernate.initialize(cs.getArrayDesign());
                 	cs.getArrayDesign().getName();
                 	
                 	BioSequence bs = cs.getBiologicalCharacteristic();

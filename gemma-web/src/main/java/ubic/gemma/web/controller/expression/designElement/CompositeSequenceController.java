@@ -51,6 +51,7 @@ import ubic.gemma.model.genome.biosequence.SequenceType;
 import ubic.gemma.model.genome.gene.GeneProductValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociation;
+import ubic.gemma.model.genome.sequenceAnalysis.BioSequenceValueObject;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResultService;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResultValueObject;
@@ -152,9 +153,6 @@ public class CompositeSequenceController extends BaseController {
             return new HashSet<GeneMappingSummary>();
         }
         CompositeSequence cs = compositeSequenceService.load( csd.getId() );
-        //FIXME : This is a hack to make sure another hack is working. (Basically value object
-        // GeneMappingSummary contains non-value object (hibernate entity) CompositeSequence).
-        // The permanent solution is described in bug#1996.
         compositeSequenceService.thaw( Arrays.asList( new CompositeSequence[] { cs } ) );
 
     	log.warn("Finished proccessing AJAX call: getGeneMappingSummary");        
@@ -277,7 +275,7 @@ public class CompositeSequenceController extends BaseController {
                  * Make a dummy blat result
                  */
                 blatResult = new BlatResultValueObject();
-                blatResult.setQuerySequence( biologicalCharacteristic );
+                blatResult.setQuerySequence( BioSequenceValueObject.fromEntity(biologicalCharacteristic) );
                 blatResult.setId( biologicalCharacteristic.getId() );
             }
 
@@ -306,7 +304,7 @@ public class CompositeSequenceController extends BaseController {
             GeneMappingSummary summary = new GeneMappingSummary();
             summary.setCompositeSequence( CompositeSequenceMapValueObject.fromEntity(cs) );
             BlatResultValueObject newInstance = new BlatResultValueObject();
-            newInstance.setQuerySequence( biologicalCharacteristic );
+            newInstance.setQuerySequence( BioSequenceValueObject.fromEntity(biologicalCharacteristic) );
             newInstance.setId( -1L );
             summary.setBlatResult( newInstance );
             results.put( newInstance, summary );

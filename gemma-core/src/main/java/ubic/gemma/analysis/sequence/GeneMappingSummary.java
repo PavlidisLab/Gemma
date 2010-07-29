@@ -23,7 +23,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.gene.GeneProductValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject; 
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResultValueObject;
@@ -43,8 +42,6 @@ public class GeneMappingSummary implements Serializable {
 
     private Map<GeneProductValueObject, GeneValueObject> geneProductMap;
 
-    // this is a bit of a hack - we need this information when displaying the blat results for a probe. Might need name
-    // etc. too.
     private CompositeSequenceMapValueObject compositeSequenceMap;
 
     /*
