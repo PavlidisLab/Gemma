@@ -80,6 +80,8 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import edu.emory.mathcs.backport.java.util.Arrays;
+
 import ubic.basecode.ontology.model.OntologyIndividual;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
@@ -667,7 +669,7 @@ public class SearchService implements InitializingBean {
         StopWatch watch = startTiming();
 
         Collection<SearchResult> allResults = new HashSet<SearchResult>();
-        //allResults.addAll( compassBioSequenceSearch( settings, previousGeneSearchResults ) );
+        allResults.addAll( compassBioSequenceSearch( settings, previousGeneSearchResults ) );
         allResults.addAll( databaseBioSequenceSearch( settings ) );
 
         watch.stop();
@@ -937,8 +939,8 @@ public class SearchService implements InitializingBean {
         Collection<SearchResult> results = compassSearch( compassBiosequence, settings );
         for (SearchResult result : results) {
         	// Thaw biosequences found by compass search.
-        	BioSequence bs = (BioSequence) result.getResultObject();
-        	bs = bioSequenceService.thaw(bs);
+        	BioSequence bs = (BioSequence) result.getResultObject();        	
+        	bioSequenceService.thaw(Arrays.asList(new BioSequence[] {bs}));
         	result.setResultObject(bs);
         }
         
