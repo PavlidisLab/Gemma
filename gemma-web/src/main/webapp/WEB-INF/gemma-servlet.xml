@@ -1477,11 +1477,6 @@ gemma.max.fileupload.size.bytes=
 						</property>
 					</bean>
 				</entry>
-				<entry key="ubic.gemma.model.genome.biosequence.SequenceType">
-					<bean class="org.directwebremoting.spring.ConverterConfig">
-						<property name="type" value="hibernate3" />
-					</bean>
-				</entry>
 				<entry key="ubic.gemma.model.common.description.DatabaseEntry">
 					<bean class="org.directwebremoting.spring.ConverterConfig">
 						<property name="type" value="bean" />
@@ -1491,6 +1486,11 @@ gemma.max.fileupload.size.bytes=
 								<value>externalDatabase</value>
 							</list>
 						</property>
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.model.DatabaseEntryValueObject">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="bean" />
 					</bean>
 				</entry>
 				<entry key="ubic.gemma.model.expression.arrayDesign.ArrayDesign">
@@ -1531,6 +1531,11 @@ gemma.max.fileupload.size.bytes=
 						</property>
 					</bean>
 				</entry>
+				<entry key="ubic.gemma.model.ExternalDatabaseValueObject">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="bean" />
+					</bean>
+				</entry>				
 				<entry key="ubic.gemma.model.expression.experiment.ExpressionExperiment">
 					<bean class="org.directwebremoting.spring.ConverterConfig">
 						<property name="type" value="hibernate3" />

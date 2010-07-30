@@ -1,20 +1,20 @@
 package ubic.gemma.model.genome.sequenceAnalysis;
 
+import ubic.gemma.model.DatabaseEntryValueObject;
 import ubic.gemma.model.TaxonValueObject;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 
 public class BioSequenceValueObject {
 
-    private java.lang.Long length;
+	private String name;
+	private String description;
+	private Long id;
     private java.lang.String sequence;
-    private java.lang.Boolean isApproximateLength;
-    private java.lang.Boolean isCircular;
-    private ubic.gemma.model.genome.biosequence.PolymerType polymerType;
+    private DatabaseEntryValueObject sequenceDatabaseEntry;
+	private java.lang.Long length;
     private ubic.gemma.model.genome.biosequence.SequenceType type;
     private java.lang.Double fractionRepeats;
-    private ubic.gemma.model.common.description.DatabaseEntry sequenceDatabaseEntry;
     private TaxonValueObject taxon;
-    private java.util.Collection<ubic.gemma.model.association.BioSequence2GeneProduct> bioSequence2GeneProduct = new java.util.HashSet<ubic.gemma.model.association.BioSequence2GeneProduct>();
     
     public java.lang.Long getLength()
     {
@@ -35,36 +35,6 @@ public class BioSequenceValueObject {
     {
         this.sequence = sequence;
     }
-
-    public java.lang.Boolean getIsApproximateLength()
-    {
-        return this.isApproximateLength;
-    }
-
-    public void setIsApproximateLength(java.lang.Boolean isApproximateLength)
-    {
-        this.isApproximateLength = isApproximateLength;
-    }
-
-    public java.lang.Boolean getIsCircular()
-    {
-        return this.isCircular;
-    }
-
-    public void setIsCircular(java.lang.Boolean isCircular)
-    {
-        this.isCircular = isCircular;
-    }
-
-    public ubic.gemma.model.genome.biosequence.PolymerType getPolymerType()
-    {
-        return this.polymerType;
-    }
-
-    public void setPolymerType(ubic.gemma.model.genome.biosequence.PolymerType polymerType)
-    {
-        this.polymerType = polymerType;
-    }
     
     public ubic.gemma.model.genome.biosequence.SequenceType getType()
     {
@@ -76,12 +46,6 @@ public class BioSequenceValueObject {
         this.type = type;
     }
 
-    /**
-     * <p>
-     * The fraction of the sequences determined to be made up of
-     * repeats (e.g., via repeatmasker)
-     * </p>
-     */
     public java.lang.Double getFractionRepeats()
     {
         return this.fractionRepeats;
@@ -92,49 +56,61 @@ public class BioSequenceValueObject {
         this.fractionRepeats = fractionRepeats;
     }
 
-//    public ubic.gemma.model.common.description.DatabaseEntry getSequenceDatabaseEntry()
-//    {
-//        return this.sequenceDatabaseEntry;
-//    }
-//
-//    public void setSequenceDatabaseEntry(ubic.gemma.model.common.description.DatabaseEntry sequenceDatabaseEntry)
-//    {
-//        this.sequenceDatabaseEntry = sequenceDatabaseEntry;
-//    }
-//
+    public DatabaseEntryValueObject getSequenceDatabaseEntry()
+    {
+        return this.sequenceDatabaseEntry;
+    }
+
+    public void setSequenceDatabaseEntry(DatabaseEntryValueObject sequenceDatabaseEntry)
+    {
+        this.sequenceDatabaseEntry = sequenceDatabaseEntry;
+    }
+
     public TaxonValueObject getTaxon()
     {
         return this.taxon;
     }
 
-    public void setTaxon(TaxonValueObject taxon)
+    public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public String getDescription() {
+		return description;
+	}
+
+	public void setDescription(String description) {
+		this.description = description;
+	}
+
+	public Long getId() {
+		return id;
+	}
+
+	public void setId(Long id) {
+		this.id = id;
+	}
+
+	public void setTaxon(TaxonValueObject taxon)
     {
         this.taxon = taxon;
     }
-//
-//    public java.util.Collection<ubic.gemma.model.association.BioSequence2GeneProduct> getBioSequence2GeneProduct()
-//    {
-//        return this.bioSequence2GeneProduct;
-//    }
-//
-//    public void setBioSequence2GeneProduct(java.util.Collection<ubic.gemma.model.association.BioSequence2GeneProduct> bioSequence2GeneProduct)
-//    {
-//        this.bioSequence2GeneProduct = bioSequence2GeneProduct;
-//    }
     
     public static BioSequenceValueObject fromEntity(BioSequence bs) {
     	BioSequenceValueObject vo = new BioSequenceValueObject();
-    	vo.setFractionRepeats( bs.getFractionRepeats() );
-    	vo.setIsApproximateLength( bs.getIsApproximateLength() );
-    	vo.setIsCircular( bs.getIsCircular() );
-    	vo.setLength( bs.getLength() );
-    	vo.setPolymerType( bs.getPolymerType() );
+    	vo.setName( bs.getName() );
+    	vo.setDescription( bs.getDescription() );
+    	vo.setId( bs.getId() );
     	vo.setSequence( bs.getSequence() );
+    	vo.setSequenceDatabaseEntry(DatabaseEntryValueObject.fromEntity(bs.getSequenceDatabaseEntry()));
+    	vo.setLength( bs.getLength() );
     	vo.setType( bs.getType() );
-    	
-    	//bs.getDescription()    	
-    	//bs.getId()    	    	
-    	//bs.getName()    	
+    	vo.setFractionRepeats( bs.getFractionRepeats() );
+    	vo.setTaxon(TaxonValueObject.fromEntity( bs.getTaxon() ));
     	return vo;
     }        
 	

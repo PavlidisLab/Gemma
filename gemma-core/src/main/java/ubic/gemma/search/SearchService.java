@@ -112,6 +112,7 @@ import ubic.gemma.model.genome.gene.GeneProductService;
 import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.model.genome.gene.GeneSetService;
+import ubic.gemma.model.genome.sequenceAnalysis.BioSequenceValueObject;
 import ubic.gemma.ontology.OntologyService;
 import ubic.gemma.util.ConfigUtils;
 import ubic.gemma.util.EntityUtils;
@@ -678,7 +679,8 @@ public class SearchService implements InitializingBean {
         if ( watch.getTime() > 1000 )
             log.info( "Biosequence search for '" + settings + "' took " + watch.getTime() + " ms " + searchResults.size()
                     + " results." );
-        return searchResults;
+                
+        return convertEntitySearchResutsToValueObjectsSearchResults(searchResults);
     }
 
     /**
@@ -938,12 +940,12 @@ public class SearchService implements InitializingBean {
     private Collection<SearchResult> compassBioSequenceSearch( SearchSettings settings,
             Collection<SearchResult> previousGeneSearchResults ) {
 
-        Collection<SearchResult> results = null; // = compassSearch( compassBiosequence, settings );
-//        for (SearchResult result : results) {
-//        	// Thaw biosequences found by compass search.
-//        	BioSequence bs = (BioSequence) result.getResultObject();        	
-//        	bioSequenceService.thaw(Arrays.asList(new BioSequence[] {bs}));
-//        }
+        Collection<SearchResult> results = compassSearch( compassBiosequence, settings );
+        for (SearchResult result : results) {
+        	// Thaw biosequences found by compass search.
+        	BioSequence bs = (BioSequence) result.getResultObject();        	
+        	bioSequenceService.thaw(Arrays.asList(new BioSequence[] {bs}));
+        }
         
         Collection<SearchResult> geneResults = null;
         if ( previousGeneSearchResults == null ) {
@@ -969,12 +971,32 @@ public class SearchService implements InitializingBean {
         for ( Gene gene : seqsFromDb.keySet() ) {
             List<BioSequence> bs = new ArrayList<BioSequence>( seqsFromDb.get( gene ) );
             bioSequenceService.thaw( bs );
-            results = ( dbHitsToSearchResult( bs, genes.get( gene ) ) );
+            results.addAll ( dbHitsToSearchResult( bs, genes.get( gene ) ) );
         }
 
         return results;
     }
-
+    
+    private Collection<SearchResult> convertEntitySearchResutsToValueObjectsSearchResults (
+    													  Collection<SearchResult> searchResults )
+    {
+    	Collection<SearchResult> convertedSearchResults = new ArrayList<SearchResult>();
+    	for (SearchResult searchResult : searchResults) {
+    		if (BioSequence.class.isAssignableFrom( searchResult.getResultClass())) {
+    			SearchResult convertedSearchResult = new SearchResult (
+    					BioSequenceValueObject.fromEntity((BioSequence)searchResult.getResultObject()),
+    					searchResult.getScore(),
+    					searchResult.getHighlightedText()
+				);
+    			convertedSearchResults.add(convertedSearchResult);
+    		} // else if ... 
+    		else {    			
+    			convertedSearchResults.add(searchResult);    			
+    		}    		
+    	}
+    	return convertedSearchResults;
+    }
+     
     /**
      * @param settings
      * @return
