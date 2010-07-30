@@ -639,17 +639,18 @@ Gemma.SearchGrid = Ext.extend(Ext.grid.GridPanel, {
 		var dh = Ext.DomHelper;
 		var clazz = record.get("resultClass");
 		if (clazz == "ExpressionExperimentValueObject") {
-			return "<a href=\"/Gemma/expressionExperiment/showExpressionExperiment.html?id=" + data.id + "\">"
-					+ data.shortName + "</a> - " + data.name;
+			return "<a href=\"/Gemma/expressionExperiment/showExpressionExperiment.html?id="
+					+ (data.sourceExperiment ? data.sourceExperiment : data.id) + "\">" + data.shortName + "</a> - "
+					+ data.name;
 		} else if (clazz == "CompositeSequence") {
 			return "<a href=\"/Gemma/compositeSequence/show.html?id=" + data.id + "\">" + data.name + "</a> - "
-					+ data.description + "; Array: " + data.arrayDesign.shortName;
+					+ (data.description ? data.description : "") + "; Array: " + data.arrayDesign.shortName;
 		} else if (clazz == "ArrayDesignValueObject") {
 			return "<a href=\"/Gemma/arrays/showArrayDesign.html?id=" + data.id + "\">" + data.shortName + "</a>  "
 					+ data.name;
 		} else if (/^BioSequence.*/.exec(clazz)) {
 			return "<a href=\"/Gemma/genome/bioSequence/showBioSequence.html?id=" + data.id + "\">" + data.name
-					+ "</a> - " + data.taxon.commonName + " " + data.description;
+					+ "</a> - " + data.taxon.commonName + " " + (data.description ? data.description : "");
 		} else if (clazz == "GeneValueObject" || clazz == "PredictedGene" || clazz == "ProbeAlignedRegion") {
 			return "<a href=\"/Gemma/gene/showGene.html?id=" + data.id + "\">" + data.officialSymbol
 					+ "</a>  - Species: " + data.taxonCommonName + " Desc: " + data.officialName;
