@@ -26,6 +26,7 @@ import java.util.Collection;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import ubic.gemma.model.analysis.ContrastResult;
 import ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.ProbeAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
@@ -35,7 +36,7 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 
 /**
  * Tests the two way anova analyzer with interactions. See test/data/stat-tests/README.txt for R code.
- *  
+ * 
  * @author keshav
  * @version $Id$
  */
@@ -56,9 +57,9 @@ public class TwoWayAnovaWithInteractionsAnalyzerTest extends BaseAnalyzerConfigu
 
         configureMocks();
 
-        DifferentialExpressionAnalysis expressionAnalysis = analyzer.run( expressionExperiment, experimentalFactorA_Area,
-                experimentalFactorB );
-
+        Collection<DifferentialExpressionAnalysis> expressionAnalyses = analyzer.run( expressionExperiment,
+                experimentalFactorA_Area, experimentalFactorB );
+        DifferentialExpressionAnalysis expressionAnalysis = expressionAnalyses.iterator().next();
         Collection<ExpressionAnalysisResultSet> resultSets = expressionAnalysis.getResultSets();
 
         assertEquals( NUM_TWA_RESULT_SETS, resultSets.size() );
@@ -81,12 +82,17 @@ public class TwoWayAnovaWithInteractionsAnalyzerTest extends BaseAnalyzerConfigu
             CompositeSequence probe = probeAnalysisResult.getProbe();
             Double pvalue = probeAnalysisResult.getPvalue();
             Double qvalue = probeAnalysisResult.getCorrectedPvalue();
-            Double stat = probeAnalysisResult.getEffectSize();
+            // Double stat = probeAnalysisResult.getEffectSize();
+            Collection<ContrastResult> contrasts = probeAnalysisResult.getContrasts();
+            Double stat = null;
+            if ( !contrasts.isEmpty() ) {
+                stat = contrasts.iterator().next().getTstat();
+            }
 
             // if ( pvalue != null ) assertNotNull( stat );
             assertNotNull( probe );
 
-            log.debug( "probe: " + probe + "; p-value: " + pvalue + "; F=" + stat );
+            // log.debug( "probe: " + probe + "; p-value: " + pvalue + "; F=" + stat );
 
             if ( factors.size() == 1 ) {
 
