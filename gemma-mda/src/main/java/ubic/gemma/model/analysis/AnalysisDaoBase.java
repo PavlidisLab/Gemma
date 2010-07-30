@@ -18,7 +18,11 @@
  */
 package ubic.gemma.model.analysis;
 
+import java.util.Collection;
+
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
+
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 
 /**
  * <p>
@@ -130,8 +134,8 @@ public abstract class AnalysisDaoBase<T extends Analysis> extends HibernateDaoSu
     /**
      * Performs the core logic for {@link #findByInvestigations(java.util.Collection)}
      */
-    protected abstract java.util.Map handleFindByInvestigations( java.util.Collection investigators )
-            throws java.lang.Exception;
+    protected abstract java.util.Map<Investigation, Collection<DifferentialExpressionAnalysis>> handleFindByInvestigations(
+            java.util.Collection<Investigation> investigatons ) throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #findByParentTaxon(ubic.gemma.model.genome.Taxon)}

@@ -261,15 +261,21 @@ Gemma.ProbeLevelDiffExGrid = Ext.extend(Ext.grid.GridPanel, {
 				this.visDifWindow.close();
 
 			var title = "Visualization of probes in:  " + ee.shortName;
+
+			/*
+			 * FIXME properly handle subsets.
+			 */
+			var eeid = ee.sourceExperiment ? ee.sourceExperiment : ee.id;
+
 			this.visDifWindow = new Gemma.VisualizationDifferentialWindow({
 						title : title,
 						thumbnails : false,
-						downloadLink : String.format('/Gemma/dedv/downloadDEDV.html?ee={0}&g={1}', ee.id, geneId),
+						downloadLink : String.format('/Gemma/dedv/downloadDEDV.html?ee={0}&g={1}', eeid, geneId),
 						readMethod : DEDVController.getDEDVForDiffExVisualizationByExperiment
 					});
 
 			this.visDifWindow.show({
-						params : [ee.id, geneId, Gemma.DIFFEXVIS_QVALUE_THRESHOLD]
+						params : [eeid, geneId, Gemma.DIFFEXVIS_QVALUE_THRESHOLD]
 					});
 		}
 	}
@@ -284,7 +290,10 @@ Gemma.ProbeLevelDiffExGrid = Ext.extend(Ext.grid.GridPanel, {
 /* stylers */
 Gemma.ProbeLevelDiffExGrid.getEEStyler = function() {
 	if (Gemma.ProbeLevelDiffExGrid.eeNameStyler === undefined) {
-		Gemma.ProbeLevelDiffExGrid.eeNameTemplate = new Ext.Template("<tpl for='.'><a target='_blank' title='{name}' href='/Gemma/expressionExperiment/showExpressionExperiment.html?id={id}' ext:qtip='{name}'>{shortName}</a></tpl>");
+		Gemma.ProbeLevelDiffExGrid.eeNameTemplate = new Ext.XTemplate(
+				'<tpl for="."><a target="_blank" title="{name}" href="/Gemma/expressionExperiment/showExpressionExperiment.html?id=',
+				'{[values.sourceExperiment ? values.sourceExperiment : values.id]}"',
+				' ext:qtip="{name}">{shortName}</a></tpl>');
 		Gemma.ProbeLevelDiffExGrid.eeNameStyler = function(value, metadata, record, row, col, ds) {
 			var ee = record.data.expressionExperiment;
 			return Gemma.ProbeLevelDiffExGrid.eeNameTemplate.apply(ee);

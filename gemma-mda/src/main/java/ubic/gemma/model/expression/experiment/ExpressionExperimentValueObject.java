@@ -24,7 +24,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
 
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionSummaryValueObject;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisValueObject;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventValueObject;
 
@@ -85,11 +85,7 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
 
     private Integer designElementDataVectorCount;
 
-    private String differentialAnalysisEventType;
-
-    private Long differentialExpressionAnalysisId;
-
-    private Collection<DifferentialExpressionSummaryValueObject> diffExpressedProbes;
+    private Collection<DifferentialExpressionAnalysisValueObject> differentialExpressionAnalyses = new HashSet<DifferentialExpressionAnalysisValueObject>();
 
     private Long experimentalDesign;
 
@@ -175,9 +171,8 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
                 otherBean.getArrayDesignCount(), otherBean.getShortName(), otherBean.getLinkAnalysisEventType(),
                 otherBean.getDateArrayDesignLastUpdated(), otherBean.getValidatedFlag(), otherBean.getTechnologyType(),
                 otherBean.isHasBothIntensities(), otherBean.getNumAnnotations(), otherBean.getNumPopulatedFactors(),
-                otherBean.getDateDifferentialAnalysis(), otherBean.getDifferentialAnalysisEventType(), otherBean
-                        .getSampleRemovedFlags(), otherBean.isIsPublic(), otherBean.isCurrentUserHasWritePermission(),
-                otherBean.getClazz(), otherBean.getSourceExperiment(), otherBean.getDifferentialExpressionAnalysisId(),
+                otherBean.getDateDifferentialAnalysis(), otherBean.getSampleRemovedFlags(), otherBean.isIsPublic(),
+                otherBean.isCurrentUserHasWritePermission(), otherBean.getClazz(), otherBean.getSourceExperiment(),
                 otherBean.getPubmedId(), otherBean.getInvestigators(), otherBean.getOwner(),
                 otherBean.getDateCreated(), otherBean.getTroubleFlag(), otherBean.getCoexpressionLinkCount(), otherBean
                         .getProcessedDataVectorComputationEventType(), otherBean.getMissingValueAnalysisEventType(),
@@ -185,8 +180,8 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
                         .getDateProcessedDataVectorComputation(), otherBean.getDateMissingValueAnalysis(), otherBean
                         .getProcessedExpressionVectorCount(), otherBean.getDateLastUpdated(),
                 otherBean.getDateCached(), otherBean.getHasProbeSpecificForQueryGene(), otherBean.getMinPvalue(),
-                otherBean.getHasEitherIntensity(), otherBean.getDiffExpressedProbes(), otherBean
-                        .getExperimentalDesign(), otherBean.getAutoTagDate(), otherBean.getValidatedAnnotations() );
+                otherBean.getHasEitherIntensity(), otherBean.getExperimentalDesign(), otherBean.getAutoTagDate(),
+                otherBean.getValidatedAnnotations(), otherBean.getDifferentialExpressionAnalyses() );
     }
 
     public ExpressionExperimentValueObject( Long id, String name, String externalDatabase, String externalUri,
@@ -194,17 +189,16 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
             Integer bioMaterialCount, Integer designElementDataVectorCount, Integer arrayDesignCount, String shortName,
             String linkAnalysisEventType, Date dateArrayDesignLastUpdated, AuditEventValueObject validatedFlag,
             String technologyType, boolean hasBothIntensities, Integer numAnnotations, Integer numPopulatedFactors,
-            Date dateDifferentialAnalysis, String differentialAnalysisEventType,
-            Collection<AuditEventValueObject> sampleRemovedFlags, boolean isPublic,
-            boolean currentUserHasWritePermission, String clazz, Long sourceExperiment,
-            Long differentialExpressionAnalysisId, Integer pubmedId, String investigators, String owner,
-            Date dateCreated, AuditEventValueObject troubleFlag, Integer coexpressionLinkCount,
-            String processedDataVectorComputationEventType, String missingValueAnalysisEventType,
-            Date dateLinkAnalysis, Integer rawCoexpressionLinkCount, Date dateProcessedDataVectorComputation,
-            Date dateMissingValueAnalysis, Integer processedExpressionVectorCount, Date dateLastUpdated,
-            Date dateCached, Boolean hasProbeSpecificForQueryGene, Double minPvalue, Boolean hasEitherIntensity,
-            Collection<DifferentialExpressionSummaryValueObject> probeIds, Long experimentalDesign, Date autoTagDate,
-            AuditEventValueObject validatedAnnotations ) {
+            Date dateDifferentialAnalysis, Collection<AuditEventValueObject> sampleRemovedFlags, boolean isPublic,
+            boolean currentUserHasWritePermission, String clazz, Long sourceExperiment, Integer pubmedId,
+            String investigators, String owner, Date dateCreated, AuditEventValueObject troubleFlag,
+            Integer coexpressionLinkCount, String processedDataVectorComputationEventType,
+            String missingValueAnalysisEventType, Date dateLinkAnalysis, Integer rawCoexpressionLinkCount,
+            Date dateProcessedDataVectorComputation, Date dateMissingValueAnalysis,
+            Integer processedExpressionVectorCount, Date dateLastUpdated, Date dateCached,
+            Boolean hasProbeSpecificForQueryGene, Double minPvalue, Boolean hasEitherIntensity,
+            Long experimentalDesign, Date autoTagDate, AuditEventValueObject validatedAnnotations,
+            Collection<DifferentialExpressionAnalysisValueObject> diffAnalyses ) {
         this.id = id;
         this.name = name;
         this.externalDatabase = externalDatabase;
@@ -226,13 +220,11 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
         this.numAnnotations = numAnnotations;
         this.numPopulatedFactors = numPopulatedFactors;
         this.dateDifferentialAnalysis = dateDifferentialAnalysis;
-        this.differentialAnalysisEventType = differentialAnalysisEventType;
         this.sampleRemovedFlags = sampleRemovedFlags;
         this.isPublic = isPublic;
         this.currentUserHasWritePermission = currentUserHasWritePermission;
         this.clazz = clazz;
         this.sourceExperiment = sourceExperiment;
-        this.differentialExpressionAnalysisId = differentialExpressionAnalysisId;
         this.pubmedId = pubmedId;
         this.investigators = investigators;
         this.owner = owner;
@@ -251,10 +243,10 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
         this.hasProbeSpecificForQueryGene = hasProbeSpecificForQueryGene;
         this.minPvalue = minPvalue;
         this.hasEitherIntensity = hasEitherIntensity;
-        this.diffExpressedProbes = probeIds;
         this.experimentalDesign = experimentalDesign;
         this.validatedAnnotations = validatedAnnotations;
         this.autoTagDate = autoTagDate;
+        this.differentialExpressionAnalyses = diffAnalyses;
     }
 
     /**
@@ -295,12 +287,10 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
             this.setNumAnnotations( otherBean.getNumAnnotations() );
             this.setNumPopulatedFactors( otherBean.getNumPopulatedFactors() );
             this.setDateDifferentialAnalysis( otherBean.getDateDifferentialAnalysis() );
-            this.setDifferentialAnalysisEventType( otherBean.getDifferentialAnalysisEventType() );
             this.setSampleRemovedFlags( otherBean.getSampleRemovedFlags() );
             this.setIsPublic( otherBean.isIsPublic() );
             this.setClazz( otherBean.getClazz() );
             this.setSourceExperiment( otherBean.getSourceExperiment() );
-            this.setDifferentialExpressionAnalysisId( otherBean.getDifferentialExpressionAnalysisId() );
             this.setPubmedId( otherBean.getPubmedId() );
             this.setInvestigators( otherBean.getInvestigators() );
             this.setOwner( otherBean.getOwner() );
@@ -318,7 +308,6 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
             this.setDateCached( otherBean.getDateCached() );
             this.setHasProbeSpecificForQueryGene( otherBean.getHasProbeSpecificForQueryGene() );
             this.setMinPvalue( otherBean.getMinPvalue() );
-            this.setDiffExpressedProbes( otherBean.getDiffExpressedProbes() );
         }
     }
 
@@ -371,6 +360,10 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
      */
     public Integer getCoexpressionLinkCount() {
         return this.coexpressionLinkCount;
+    }
+
+    public Boolean getCurrentUserHasWritePermission() {
+        return currentUserHasWritePermission;
     }
 
     /**
@@ -442,22 +435,8 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
         return this.designElementDataVectorCount;
     }
 
-    /**
-     * 
-     */
-    public String getDifferentialAnalysisEventType() {
-        return this.differentialAnalysisEventType;
-    }
-
-    /**
-     * 
-     */
-    public Long getDifferentialExpressionAnalysisId() {
-        return this.differentialExpressionAnalysisId;
-    }
-
-    public Collection<DifferentialExpressionSummaryValueObject> getDiffExpressedProbes() {
-        return diffExpressedProbes;
+    public Collection<DifferentialExpressionAnalysisValueObject> getDifferentialExpressionAnalyses() {
+        return differentialExpressionAnalyses;
     }
 
     public Long getExperimentalDesign() {
@@ -476,6 +455,10 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
      */
     public String getExternalUri() {
         return this.externalUri;
+    }
+
+    public Boolean getHasBothIntensities() {
+        return hasBothIntensities;
     }
 
     /**
@@ -506,6 +489,10 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
      */
     public String getInvestigators() {
         return this.investigators;
+    }
+
+    public Boolean getIsPublic() {
+        return isPublic;
     }
 
     /**
@@ -620,7 +607,7 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
 
     /**
      * <p>
-     * The ID of the source experiment, if this is an ExpressionExperimentSubSet
+     * The ID of the source experiment, if this is an ExpressionExperimentSubSet; otherwise will be null.
      * </p>
      */
     public Long getSourceExperiment() {
@@ -745,6 +732,10 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
         this.currentUserHasWritePermission = currentUserHasWritePermission;
     }
 
+    public void setCurrentUserHasWritePermission( Boolean currentUserHasWritePermission ) {
+        this.currentUserHasWritePermission = currentUserHasWritePermission;
+    }
+
     public void setDateArrayDesignLastUpdated( Date dateArrayDesignLastUpdated ) {
         this.dateArrayDesignLastUpdated = dateArrayDesignLastUpdated;
     }
@@ -781,16 +772,9 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
         this.designElementDataVectorCount = designElementDataVectorCount;
     }
 
-    public void setDifferentialAnalysisEventType( String differentialAnalysisEventType ) {
-        this.differentialAnalysisEventType = differentialAnalysisEventType;
-    }
-
-    public void setDifferentialExpressionAnalysisId( Long differentialExpressionAnalysisId ) {
-        this.differentialExpressionAnalysisId = differentialExpressionAnalysisId;
-    }
-
-    public void setDiffExpressedProbes( Collection<DifferentialExpressionSummaryValueObject> diffExpressedProbes ) {
-        this.diffExpressedProbes = diffExpressedProbes;
+    public void setDifferentialExpressionAnalyses(
+            Collection<DifferentialExpressionAnalysisValueObject> differentialExpressionAnalyses ) {
+        this.differentialExpressionAnalyses = differentialExpressionAnalyses;
     }
 
     public void setExperimentalDesign( Long experimentalDesign ) {
@@ -806,6 +790,10 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
     }
 
     public void setHasBothIntensities( boolean hasBothIntensities ) {
+        this.hasBothIntensities = hasBothIntensities;
+    }
+
+    public void setHasBothIntensities( Boolean hasBothIntensities ) {
         this.hasBothIntensities = hasBothIntensities;
     }
 
@@ -826,6 +814,10 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
     }
 
     public void setIsPublic( boolean isPublic ) {
+        this.isPublic = isPublic;
+    }
+
+    public void setIsPublic( Boolean isPublic ) {
         this.isPublic = isPublic;
     }
 

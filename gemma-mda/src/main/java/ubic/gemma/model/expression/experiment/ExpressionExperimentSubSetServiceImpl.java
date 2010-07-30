@@ -59,4 +59,14 @@ public class ExpressionExperimentSubSetServiceImpl extends
         return this.getExpressionExperimentSubSetDao().loadAll();
     }
 
+    @Override
+    public ExpressionExperimentSubSet findOrCreate( ExpressionExperimentSubSet entity ) {
+        return this.getExpressionExperimentSubSetDao().findOrCreate( entity );
+    }
+
+    @Override
+    public ExpressionExperimentSubSet find( ExpressionExperimentSubSet entity ) {
+        return this.getExpressionExperimentSubSetDao().find( entity );
+    }
+
 }

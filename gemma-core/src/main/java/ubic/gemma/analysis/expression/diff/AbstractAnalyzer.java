@@ -51,6 +51,8 @@ public abstract class AbstractAnalyzer {
             rc = RConnectionFactory.getRConnection( hostname );
             if ( rc == null ) throw new RuntimeException( "R connection was not established" );
         }
+
+        assert rc != null;
     }
 
     /**

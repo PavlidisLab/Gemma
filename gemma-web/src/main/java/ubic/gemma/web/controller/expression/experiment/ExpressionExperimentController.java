@@ -54,7 +54,6 @@ import ubic.gemma.job.BackgroundJob;
 import ubic.gemma.job.TaskCommand;
 import ubic.gemma.job.TaskResult;
 import ubic.gemma.loader.entrez.pubmed.PubMedSearch;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionAnalysisEvent;
@@ -349,7 +348,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
     }
 
     /**
-     * AJAX
+     * AJAX TODO --- include a search of subsets.
      * 
      * @param query search string
      * @param taxonId (if null, all taxa are searched)
@@ -546,7 +545,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
         // Set the parent taxon
         Taxon taxon = taxonService.load( initialResult.getTaxonId() );
         taxonService.thaw( taxon );
-        
+
         if ( taxon.getParentTaxon() != null ) {
             finalResult.setParentTaxon( taxon.getParentTaxon().getCommonName() );
             finalResult.setParentTaxonId( taxon.getParentTaxon().getId() );
@@ -563,6 +562,9 @@ public class ExpressionExperimentController extends AbstractTaskService {
         finalResult.setArrayDesigns( arrayDesignService.loadValueObjects( adids ) );
 
         finalResult.setCurrentUserHasWritePermission( securityService.isEditable( ee ) );
+
+        Collection<ExpressionExperimentValueObject> finalResultc = new HashSet<ExpressionExperimentValueObject>();
+        finalResultc.add( finalResult );
 
         /*
          * populate the publication and author information
@@ -596,7 +598,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
         }
         Collection<ExpressionExperimentValueObject> result = getFilteredExpressionExperimentValueObjects( null, ids,
                 false );
-        populateAnalyses( ids, result ); // FIXME make this optional.
+        // populateAnalyses( result ); // FIXME make this optional.
         return result;
     }
 
@@ -1382,7 +1384,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
         /*
          * This is only populated with experiments that have reports available on disk.
          */
-        Map<Long, Date> lastUpdated = expressionExperimentReportService.fillLinkStatsFromCache( expressionExperiments );
+        Map<Long, Date> lastUpdated = expressionExperimentReportService.fillReportInformation( expressionExperiments );
 
         expressionExperimentReportService.fillAnnotationInformation( expressionExperiments );
 
@@ -1396,25 +1398,6 @@ public class ExpressionExperimentController extends AbstractTaskService {
             }
         }
         return eventDates;
-    }
-
-    /**
-     * Fill in information about analyses done on the experiments.
-     * 
-     * @param result
-     */
-    private void populateAnalyses( Collection<Long> eeids, Collection<ExpressionExperimentValueObject> result ) {
-
-        if ( eeids.isEmpty() ) return;
-
-        Map<Long, DifferentialExpressionAnalysis> analysisMap = differentialExpressionAnalysisService
-                .findByInvestigationIds( eeids );
-        for ( ExpressionExperimentValueObject eevo : result ) {
-            if ( !analysisMap.containsKey( eevo.getId() ) ) {
-                continue;
-            }
-            eevo.setDifferentialExpressionAnalysisId( analysisMap.get( eevo.getId() ).getId() );
-        }
     }
 
     /**

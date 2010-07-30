@@ -66,7 +66,7 @@ public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractDifferentialEx
      * ExpressionExperiment)
      */
     @Override
-    public DifferentialExpressionAnalysis run( ExpressionExperiment expressionExperiment ) {
+    public Collection<DifferentialExpressionAnalysis> run( ExpressionExperiment expressionExperiment ) {
 
         Collection<ExperimentalFactor> experimentalFactors = expressionExperiment.getExperimentalDesign()
                 .getExperimentalFactors();
@@ -83,7 +83,7 @@ public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractDifferentialEx
      * .ExpressionExperiment, java.util.Collection)
      */
     @Override
-    public DifferentialExpressionAnalysis run( ExpressionExperiment expressionExperiment,
+    public Collection<DifferentialExpressionAnalysis> run( ExpressionExperiment expressionExperiment,
             Collection<ExperimentalFactor> experimentalFactors ) {
         if ( experimentalFactors.size() != mainEffectInteractionIndex )
             throw new RuntimeException( "Two way anova supports 2 experimental factors.  Received "
@@ -189,8 +189,6 @@ public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractDifferentialEx
                     }
                 }
 
-                probeAnalysisResult.setEffectSize( Double.isNaN( fstat ) ? null : fstat );
-
                 if ( j % pvaluesPerExample == mainEffectAIndex ) {
                     probeAnalysisResult.setPvalue( nan2Null( mainEffectAPvalues[i] ) );
                     probeAnalysisResult.setCorrectedPvalue( nan2Null( mainEffectAQvalues[i] ) );
@@ -209,19 +207,21 @@ public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractDifferentialEx
                     probeAnalysisResult.setCorrectedPvalue( nan2Null( interactionEffectQvalues[i] ) );
                     analysisResultsInteractionEffect.add( probeAnalysisResult );
                 }
+
+                // TODO contrasts
             }
         }
 
         /* main effects */
         Collection<ExperimentalFactor> mainA = new HashSet<ExperimentalFactor>();
         mainA.add( experimentalFactorA );
-        ExpressionAnalysisResultSet mainEffectResultSetA = ExpressionAnalysisResultSet.Factory.newInstance(null,
+        ExpressionAnalysisResultSet mainEffectResultSetA = ExpressionAnalysisResultSet.Factory.newInstance( null,
                 expressionAnalysis, analysisResultsMainEffectA, mainA );
         resultSets.add( mainEffectResultSetA );
 
         Collection<ExperimentalFactor> mainB = new HashSet<ExperimentalFactor>();
         mainB.add( experimentalFactorB );
-        ExpressionAnalysisResultSet mainEffectResultSetB = ExpressionAnalysisResultSet.Factory.newInstance(null,
+        ExpressionAnalysisResultSet mainEffectResultSetB = ExpressionAnalysisResultSet.Factory.newInstance( null,
                 expressionAnalysis, analysisResultsMainEffectB, mainB );
         resultSets.add( mainEffectResultSetB );
 
@@ -230,8 +230,8 @@ public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractDifferentialEx
             Collection<ExperimentalFactor> interAB = new HashSet<ExperimentalFactor>();
             interAB.add( experimentalFactorA );
             interAB.add( experimentalFactorB );
-            ExpressionAnalysisResultSet interactionEffectResultSet = ExpressionAnalysisResultSet.Factory.newInstance(null,
-                    expressionAnalysis, analysisResultsInteractionEffect, interAB );
+            ExpressionAnalysisResultSet interactionEffectResultSet = ExpressionAnalysisResultSet.Factory.newInstance(
+                    null, expressionAnalysis, analysisResultsInteractionEffect, interAB );
             resultSets.add( interactionEffectResultSet );
         }
 
@@ -255,7 +255,8 @@ public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractDifferentialEx
      * @param experimentalFactorB
      * @return
      */
-    protected abstract DifferentialExpressionAnalysis twoWayAnova( ExpressionExperiment expressionExperiment,
-            ExperimentalFactor experimentalFactorA, ExperimentalFactor experimentalFactorB );
+    protected abstract Collection<DifferentialExpressionAnalysis> twoWayAnova(
+            ExpressionExperiment expressionExperiment, ExperimentalFactor experimentalFactorA,
+            ExperimentalFactor experimentalFactorB );
 
 }

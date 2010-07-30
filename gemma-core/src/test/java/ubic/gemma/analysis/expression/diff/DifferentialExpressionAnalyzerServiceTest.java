@@ -81,7 +81,7 @@ public class DifferentialExpressionAnalyzerServiceTest extends BaseSpringContext
         StopWatch watch = new StopWatch();
         watch.start();
 
-        differentialExpressionAnalyzerService.delete( shortName );
+        differentialExpressionAnalyzerService.deleteOldAnalyses( ee );
 
         watch.stop();
 

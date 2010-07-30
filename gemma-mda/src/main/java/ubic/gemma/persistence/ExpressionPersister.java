@@ -30,6 +30,7 @@ import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.basecode.util.CancellationException;
+import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.Characteristic;
@@ -53,6 +54,8 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetService;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueService;
 
@@ -61,9 +64,6 @@ import ubic.gemma.model.expression.experiment.FactorValueService;
  * @version $Id$
  */
 abstract public class ExpressionPersister extends ArrayDesignPersister {
-
-    @Autowired
-    private ExpressionExperimentService expressionExperimentService;
 
     @Autowired
     private BioAssayDimensionService bioAssayDimensionService;
@@ -75,9 +75,6 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
     private BioMaterialService bioMaterialService;
 
     @Autowired
-    private FactorValueService factorValueService;
-
-    @Autowired
     private CompoundService compoundService;
 
     @Autowired
@@ -85,6 +82,15 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
 
     @Autowired
     private ExperimentalFactorService experimentalFactorService;
+
+    @Autowired
+    private ExpressionExperimentService expressionExperimentService;
+
+    @Autowired
+    private ExpressionExperimentSubSetService expressionExperimentSubSetService;
+
+    @Autowired
+    private FactorValueService factorValueService;
 
     Map<String, BioAssayDimension> bioAssayDimensionCache = new HashMap<String, BioAssayDimension>();
 
@@ -94,6 +100,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.loader.util.persister.Persister#persist(java.lang.Object)
      */
     @Override
@@ -114,6 +121,8 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
             return persistBioAssay( ( BioAssay ) entity );
         } else if ( entity instanceof Compound ) {
             return persistCompound( ( Compound ) entity );
+        } else if ( entity instanceof ExpressionExperimentSubSet ) {
+            return persistExpressionExperimentSubSet( ( ExpressionExperimentSubSet ) entity );
         }
         return super.persist( entity );
 
@@ -121,6 +130,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.persistence.CommonPersister#persistOrUpdate(java.lang.Object)
      */
     @Override
@@ -581,6 +591,23 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
         expressionExperimentService.update( expExp ); // help fix up ACLs. Yes, this is a good idea. See AclAdviceTest
 
         return expExp;
+    }
+
+    /**
+     * @param entity
+     * @return
+     */
+    private ExpressionExperimentSubSet persistExpressionExperimentSubSet( ExpressionExperimentSubSet entity ) {
+        if ( !isTransient( entity ) ) return entity;
+
+        if ( entity.getBioAssays().size() == 0 ) {
+            throw new IllegalArgumentException( "Cannot make a subset with no bioassays" );
+        } else if ( isTransient( entity.getSourceExperiment() ) ) {
+            throw new IllegalArgumentException(
+                    "Subsets are only supported for expressionexperiments that are already persistent" );
+        }
+
+        return expressionExperimentSubSetService.findOrCreate( entity );
     }
 
     /**

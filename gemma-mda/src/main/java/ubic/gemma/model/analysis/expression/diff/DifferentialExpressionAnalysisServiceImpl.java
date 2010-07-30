@@ -40,13 +40,32 @@ import ubic.gemma.model.genome.Taxon;
 public class DifferentialExpressionAnalysisServiceImpl extends
         ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisServiceBase {
 
-    public long countProbesMeetingThreshold( ExpressionAnalysisResultSet ears, double threshold ) {
+    public Integer countProbesMeetingThreshold( ExpressionAnalysisResultSet ears, double threshold ) {
         return this.getDifferentialExpressionAnalysisDao().countProbesMeetingThreshold( ears, threshold );
 
     }
 
+    @Override
+    public Collection<DifferentialExpressionAnalysis> findByFactor( ExperimentalFactor ef ) {
+        return this.getDifferentialExpressionAnalysisDao().findByFactor( ef );
+    }
+
+    public Collection<DifferentialExpressionAnalysis> getAnalyses( ExpressionExperiment expressionExperiment ) {
+        return this.getDifferentialExpressionAnalysisDao().findByInvestigation( expressionExperiment );
+    }
+
     public java.util.Collection<ExpressionAnalysisResultSet> getResultSets( java.util.Collection<Long> resultSetIds ) {
         return null;
+    }
+
+    @SuppressWarnings("unchecked")
+    public Collection<DifferentialExpressionAnalysis> loadMyAnalyses() {
+        return this.loadAll();
+    }
+
+    @SuppressWarnings("unchecked")
+    public Collection<DifferentialExpressionAnalysis> loadMySharedAnalyses() {
+        return this.loadAll();
     }
 
     public void update( DifferentialExpressionAnalysis o ) {
@@ -222,23 +241,15 @@ public class DifferentialExpressionAnalysisServiceImpl extends
         this.getDifferentialExpressionAnalysisDao().thaw( differentialExpressionAnalysis );
     }
 
-    @SuppressWarnings("unchecked")
-    public Collection<DifferentialExpressionAnalysis> loadMyAnalyses() {
-        return this.loadAll();
-    }
-
-    @SuppressWarnings("unchecked")
-    public Collection<DifferentialExpressionAnalysis> loadMySharedAnalyses() {
-        return this.loadAll();
-    }
-
-    public Collection<DifferentialExpressionAnalysis> getAnalyses( ExpressionExperiment expressionExperiment ) {
-        return this.getDifferentialExpressionAnalysisDao().getAnalyses( expressionExperiment );
+    @Override
+    public Integer countDownregulated( ExpressionAnalysisResultSet par, double threshold ) {
+        return this.getDifferentialExpressionAnalysisDao().countDownregulated( par, threshold );
     }
 
     @Override
-    public Collection<DifferentialExpressionAnalysis> findByFactor( ExperimentalFactor ef ) {
-        return this.getDifferentialExpressionAnalysisDao().findByFactor( ef );
+    public Integer countUpregulated( ExpressionAnalysisResultSet par, double threshold ) {
+        return this.getDifferentialExpressionAnalysisDao().countUpregulated( par, threshold );
+
     }
 
 }

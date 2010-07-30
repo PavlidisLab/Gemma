@@ -21,6 +21,7 @@ package ubic.gemma.model.analysis.expression.diff;
 import java.util.Collection;
 
 import ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
@@ -30,10 +31,16 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 public interface DifferentialExpressionAnalysisDao extends
         ubic.gemma.model.analysis.expression.ExpressionAnalysisDao<DifferentialExpressionAnalysis> {
 
-    public long countProbesMeetingThreshold( ExpressionAnalysisResultSet ears, double threshold );
+    public Integer countDownregulated( ExpressionAnalysisResultSet par, double threshold );
+
+    public Integer countProbesMeetingThreshold( ExpressionAnalysisResultSet ears, double threshold );
+
+    public Integer countUpregulated( ExpressionAnalysisResultSet par, double threshold );
 
     public java.util.Collection<DifferentialExpressionAnalysis> find( ubic.gemma.model.genome.Gene gene,
             ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet resultSet, double threshold );
+
+    public Collection<DifferentialExpressionAnalysis> findByFactor( ExperimentalFactor ef );
 
     /**
      * 
@@ -44,7 +51,7 @@ public interface DifferentialExpressionAnalysisDao extends
      * @param gene
      * @return
      */
-    public java.util.Collection<ExpressionExperiment> findExperimentsWithAnalyses( ubic.gemma.model.genome.Gene gene );
+    public java.util.Collection<BioAssaySet> findExperimentsWithAnalyses( ubic.gemma.model.genome.Gene gene );
 
     /**
      * 
@@ -58,17 +65,9 @@ public interface DifferentialExpressionAnalysisDao extends
     public void thaw( java.util.Collection<DifferentialExpressionAnalysis> expressionAnalyses );
 
     /**
-     * @param expressionExperiment
-     * @return
-     */
-    public Collection<DifferentialExpressionAnalysis> getAnalyses( ExpressionExperiment expressionExperiment );
-
-    /**
      * 
      */
     public void thaw(
             ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis differentialExpressionAnalysis );
-
-    public Collection<DifferentialExpressionAnalysis> findByFactor( ExperimentalFactor ef );
 
 }

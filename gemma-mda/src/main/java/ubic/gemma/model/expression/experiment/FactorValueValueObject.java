@@ -219,22 +219,22 @@ public class FactorValueValueObject implements Serializable {
     }
 
     /**
-     * @param value
+     * @param val
      * @param c
      */
-    private void init( FactorValue value, Characteristic c ) {
-        this.setId( value.getId() );
-        this.setFactorValue( getSummaryString( value ) );
-        this.setFactorId( value.getExperimentalFactor().getId() );
+    private void init( FactorValue val, Characteristic c ) {
+        this.setId( val.getId() );
+        this.setFactorValue( getSummaryString( val ) );
+        this.setFactorId( val.getExperimentalFactor().getId() );
 
-        if ( value.getMeasurement() != null ) {
+        if ( val.getMeasurement() != null ) {
             this.setMeasurement( true );
-            this.value = value.getMeasurement().getValue();
-            this.setCharId( value.getMeasurement().getId() );
+            this.value = val.getMeasurement().getValue();
+            this.setCharId( val.getMeasurement().getId() );
         } else if ( c != null && c.getId() != null ) {
             this.setCharId( c.getId() );
         } else {
-            this.value = value.getValue();
+            this.value = val.getValue();
         }
 
         if ( c != null ) {
@@ -250,7 +250,7 @@ public class FactorValueValueObject implements Serializable {
         /**
          * Make sure we fill in the Category for this.
          */
-        Characteristic factorCategory = value.getExperimentalFactor().getCategory();
+        Characteristic factorCategory = val.getExperimentalFactor().getCategory();
         if ( this.getCategory() == null && factorCategory != null ) {
             this.setCategory( factorCategory.getCategory() );
 

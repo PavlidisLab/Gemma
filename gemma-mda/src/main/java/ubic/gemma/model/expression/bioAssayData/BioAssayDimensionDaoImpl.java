@@ -53,6 +53,7 @@ public class BioAssayDimensionDaoImpl extends ubic.gemma.model.expression.bioAss
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.bioAssayData.BioAssayDimensionDaoBase#find(ubic.gemma.model.expression.bioAssayData
      * .BioAssayDimension)
@@ -107,6 +108,7 @@ public class BioAssayDimensionDaoImpl extends ubic.gemma.model.expression.bioAss
 
     /*
      * (non-Javadoc)
+     * 
      * @seeubic.gemma.model.expression.bioAssayData.BioAssayDimensionDaoBase#findOrCreate(ubic.gemma.model.expression.
      * bioAssayData.BioAssayDimension)
      */
@@ -130,6 +132,7 @@ public class BioAssayDimensionDaoImpl extends ubic.gemma.model.expression.bioAss
 
     /*
      * (non-Javadoc)
+     * 
      * @seeubic.gemma.model.expression.bioAssayData.BioAssayDimensionDao#thaw(ubic.gemma.model.expression.bioAssayData.
      * BioAssayDimension)
      */
@@ -141,6 +144,7 @@ public class BioAssayDimensionDaoImpl extends ubic.gemma.model.expression.bioAss
                 Hibernate.initialize( bioAssayDimension.getBioAssays() );
 
                 for ( BioAssay ba : bioAssayDimension.getBioAssays() ) {
+                    session.lock( ba, LockMode.NONE );
                     Hibernate.initialize( ba );
                     Hibernate.initialize( ba.getSamplesUsed() );
                     for ( BioMaterial bm : ba.getSamplesUsed() ) {

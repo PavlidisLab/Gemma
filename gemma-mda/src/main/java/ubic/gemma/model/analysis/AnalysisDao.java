@@ -18,10 +18,13 @@
  */
 package ubic.gemma.model.analysis;
 
+import java.util.Collection;
+
 import ubic.gemma.persistence.BaseDao;
 
 /**
  * @see ubic.gemma.model.analysis.Analysis
+ * @version $Id$
  */
 public interface AnalysisDao<T extends Analysis> extends BaseDao<T> {
     /**
@@ -38,7 +41,8 @@ public interface AnalysisDao<T extends Analysis> extends BaseDao<T> {
      * one of the investigations for that analysis was in the given collection started with
      * </p>
      */
-    public java.util.Map findByInvestigations( java.util.Collection investigators );
+    public java.util.Map<Investigation, Collection<T>> findByInvestigations(
+            java.util.Collection<Investigation> investigations );
 
     /**
      * <p>

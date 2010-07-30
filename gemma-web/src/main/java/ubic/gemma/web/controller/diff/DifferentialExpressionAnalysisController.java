@@ -117,7 +117,7 @@ public class DifferentialExpressionAnalysisController extends AbstractTaskServic
         expressionExperimentService.thawLite( ee );
 
         AbstractDifferentialExpressionAnalyzer analyzer = this.differentialExpressionAnalyzer.determineAnalysis( ee,
-                null );
+                null, null );
 
         DifferentialExpressionAnalyzerInfo result = new DifferentialExpressionAnalyzerInfo();
 
@@ -139,60 +139,6 @@ public class DifferentialExpressionAnalysisController extends AbstractTaskServic
             } else {
                 result.setType( AnalysisType.TTEST );
             }
-        } else if ( analyzer instanceof OneWayAnovaAnalyzer ) {
-            result.setType( AnalysisType.OWA );
-        } else if ( analyzer instanceof TwoWayAnovaWithInteractionsAnalyzer ) {
-            result.setType( AnalysisType.TWIA );
-        } else if ( analyzer instanceof TwoWayAnovaWithoutInteractionsAnalyzer ) {
-            result.setType( AnalysisType.TWA );
-        } else {
-            result.setType( AnalysisType.GENERICLM );
-        }
-        return result;
-    }
-
-    /**
-     * Not used?
-     * 
-     * @param id
-     * @param factorids
-     * @param type
-     * @return
-     */
-    public DifferentialExpressionAnalyzerInfo determineAnalysisType( Long id, Collection<Long> factorids,
-            AnalysisType type ) {
-
-        ExpressionExperiment ee = expressionExperimentService.load( id );
-        if ( ee == null ) {
-            throw new IllegalArgumentException( "Cannot access experiment with id=" + id );
-        }
-
-        /*
-         * Get the factors matching the factorids
-         */
-        Collection<ExperimentalFactor> factors = new HashSet<ExperimentalFactor>();
-        for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
-            if ( factorids.contains( ef.getId() ) ) {
-                factors.add( ef );
-            }
-        }
-
-        AbstractDifferentialExpressionAnalyzer analyzer = this.differentialExpressionAnalyzer.determineAnalysis( ee,
-                factors, type );
-
-        DifferentialExpressionAnalyzerInfo result = new DifferentialExpressionAnalyzerInfo();
-
-        for ( ExperimentalFactor factor : ee.getExperimentalDesign().getExperimentalFactors() ) {
-            result.getFactors().add( new ExperimentalFactorValueObject( factor ) );
-        }
-
-        if ( analyzer == null ) {
-            /*
-             * Either there are no viable automatic choices, or there are no factors...
-             */
-
-        } else if ( analyzer instanceof TTestAnalyzer ) {
-            result.setType( AnalysisType.TTEST );
         } else if ( analyzer instanceof OneWayAnovaAnalyzer ) {
             result.setType( AnalysisType.OWA );
         } else if ( analyzer instanceof TwoWayAnovaWithInteractionsAnalyzer ) {
@@ -235,7 +181,7 @@ public class DifferentialExpressionAnalysisController extends AbstractTaskServic
      * @return
      * @throws Exception
      */
-    public String runCustom( Long id, Collection<Long> factorids, boolean includeInteractions )
+    public String runCustom( Long id, Collection<Long> factorids, boolean includeInteractions, Long subsetFactorId )
             throws Exception {
 
         if ( factorids.isEmpty() ) {
@@ -263,26 +209,26 @@ public class DifferentialExpressionAnalysisController extends AbstractTaskServic
             throw new IllegalArgumentException( "Unknown factors?" );
         }
 
-        // ExperimentalFactor subsetFactor = null;
-        // if ( subsetFactorId != null ) {
-        // for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
-        // if ( subsetFactorId.equals( ef.getId() ) ) {
-        // subsetFactor = ef;
-        // break;
-        // }
-        // }
-        // if ( subsetFactor == null ) {
-        // throw new IllegalArgumentException( "Unknown subset factor?" );
-        // }
-        //
-        // if ( factors.contains( subsetFactor ) ) {
-        // throw new IllegalArgumentException( "Subset factor must not be one of the factors used in the analysis" );
-        // }
-        // }
+        ExperimentalFactor subsetFactor = null;
+        if ( subsetFactorId != null ) {
+            for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
+                if ( subsetFactorId.equals( ef.getId() ) ) {
+                    subsetFactor = ef;
+                    break;
+                }
+            }
+            if ( subsetFactor == null ) {
+                throw new IllegalArgumentException( "Unknown subset factor?" );
+            }
+
+            if ( factors.contains( subsetFactor ) ) {
+                throw new IllegalArgumentException( "Subset factor must not be one of the factors used in the analysis" );
+            }
+        }
 
         DifferentialExpressionAnalysisTaskCommand cmd = new DifferentialExpressionAnalysisTaskCommand( ee );
         cmd.setFactors( factors );
-        // cmd.setSubsetFactor( subsetFactor );
+        cmd.setSubsetFactor( subsetFactor );
         cmd.setIncludeInteractions( includeInteractions );
 
         log.info( "Initializing analysis" );

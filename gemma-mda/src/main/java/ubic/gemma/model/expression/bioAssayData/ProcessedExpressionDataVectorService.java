@@ -26,6 +26,7 @@ import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorDao.RankMethod;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.DesignElement;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 
@@ -55,14 +56,14 @@ public interface ProcessedExpressionDataVectorService {
             Collection<ExpressionExperiment> expressionExperiments, Collection<Gene> genes );
 
     /**
-     * @param expressionExperiments
+     * @param bioassaySets - expressionExperiments or expressionExperimentSubSets
      * @param genes
      * @param fullMapping if false only returns probe to known gene mappings, if true returns all (PARs, PGs, KGs),
      * @return
      */
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ" })
-    public Collection<DoubleVectorValueObject> getProcessedDataArrays(
-            Collection<ExpressionExperiment> expressionExperiments, Collection<Gene> genes, Boolean fullMapping );
+    public Collection<DoubleVectorValueObject> getProcessedDataArrays( Collection<? extends BioAssaySet> bioassaySets,
+            Collection<Gene> genes, Boolean fullMapping );
 
     /**
      * @param expressionExperiment
@@ -91,7 +92,7 @@ public interface ProcessedExpressionDataVectorService {
             boolean fullMap );
 
     /**
-     * Retireves DEDV's by probes and experiments
+     * Retrieves DEDV's by probes and experiments
      * 
      * @param expressionExperiments
      * @param compositeSequences
@@ -100,7 +101,7 @@ public interface ProcessedExpressionDataVectorService {
      */
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ" })
     public Collection<DoubleVectorValueObject> getProcessedDataArraysByProbe(
-            Collection<ExpressionExperiment> expressionExperiments, Collection<CompositeSequence> compositeSequences,
+            Collection<? extends BioAssaySet> expressionExperiments, Collection<CompositeSequence> compositeSequences,
             boolean fullMap );
 
     /**

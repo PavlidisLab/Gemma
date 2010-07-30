@@ -21,6 +21,7 @@ package ubic.gemma.model.analysis.expression.diff;
 import java.util.Collection;
 
 import ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
@@ -167,8 +168,7 @@ public abstract class DifferentialExpressionAnalysisDaoBase extends
     /**
      * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao#findExperimentsWithAnalyses(ubic.gemma.model.genome.Gene)
      */
-    public java.util.Collection<ExpressionExperiment> findExperimentsWithAnalyses(
-            final ubic.gemma.model.genome.Gene gene ) {
+    public java.util.Collection<BioAssaySet> findExperimentsWithAnalyses( final ubic.gemma.model.genome.Gene gene ) {
         try {
             return this.handleFindExperimentsWithAnalyses( gene );
         } catch ( Throwable th ) {
@@ -353,7 +353,7 @@ public abstract class DifferentialExpressionAnalysisDaoBase extends
     /**
      * Performs the core logic for {@link #findExperimentsWithAnalyses(ubic.gemma.model.genome.Gene)}
      */
-    protected abstract java.util.Collection<ExpressionExperiment> handleFindExperimentsWithAnalyses(
+    protected abstract java.util.Collection<BioAssaySet> handleFindExperimentsWithAnalyses(
             ubic.gemma.model.genome.Gene gene ) throws java.lang.Exception;
 
     /**

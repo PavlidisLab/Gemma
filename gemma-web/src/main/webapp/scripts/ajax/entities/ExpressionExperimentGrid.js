@@ -231,7 +231,11 @@ Gemma.ExpressionExperimentGrid = Ext.extend(Gemma.GemmaGridPanel, {
 	},
 
 	formatEE : function(value, metadata, record, row, col, ds) {
-		var eeTemplate = new Ext.Template("<a target='_blank' href='/Gemma/expressionExperiment/showExpressionExperiment.html?id={id}' ext:qtip='{name}'>{shortName}</a>");
+		// fixme: this is duplicated code.
+		var eeTemplate = new Ext.XTemplate(
+				'<tpl for="."><a target="_blank" title="{name}" href="/Gemma/expressionExperiment/showExpressionExperiment.html?id=',
+				'{[values.sourceExperiment ? values.sourceExperiment : values.id]}"',
+				' ext:qtip="{name}">{shortName}</a></tpl>');
 		return eeTemplate.apply(record.data);
 	},
 

@@ -24,6 +24,7 @@ import java.util.Map;
 import org.springframework.security.access.annotation.Secured;
 
 import ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
@@ -34,13 +35,19 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 public interface DifferentialExpressionAnalysisService extends
         ubic.gemma.model.analysis.AnalysisService<DifferentialExpressionAnalysis> {
 
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    public Integer countDownregulated( ExpressionAnalysisResultSet par, double threshold );
+
     /**
      * @param ExpressionAnalysisResultSet
      * @param threshold (double)
      * @return an integer count of all the probes that met the given threshold in the given expressionAnalysisResultSet
      */
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    public long countProbesMeetingThreshold( ExpressionAnalysisResultSet ears, double threshold );
+    public Integer countProbesMeetingThreshold( ExpressionAnalysisResultSet ears, double threshold );
+
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    public Integer countUpregulated( ExpressionAnalysisResultSet par, double threshold );
 
     /**
      * 
@@ -56,6 +63,8 @@ public interface DifferentialExpressionAnalysisService extends
     public Collection<DifferentialExpressionAnalysis> find( ubic.gemma.model.genome.Gene gene,
             ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet resultSet, double threshold );
 
+    public Collection<DifferentialExpressionAnalysis> findByFactor( ExperimentalFactor ef );
+
     /**
      * <p>
      * Given a collection of ids, return a map of id -> differential expression analysis (one per id).
@@ -70,7 +79,14 @@ public interface DifferentialExpressionAnalysisService extends
      * </p>
      */
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    public Collection<ExpressionExperiment> findExperimentsWithAnalyses( ubic.gemma.model.genome.Gene gene );
+    public Collection<BioAssaySet> findExperimentsWithAnalyses( ubic.gemma.model.genome.Gene gene );
+
+    /**
+     * @param expressionExperiment
+     * @return
+     */
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    public Collection<DifferentialExpressionAnalysis> getAnalyses( ExpressionExperiment expressionExperiment );
 
     /**
      * @param resultSetIds
@@ -83,13 +99,6 @@ public interface DifferentialExpressionAnalysisService extends
      */
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     public Collection<ExpressionAnalysisResultSet> getResultSets( ExpressionExperiment expressionExperiment );
-
-    /**
-     * @param expressionExperiment
-     * @return
-     */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    public Collection<DifferentialExpressionAnalysis> getAnalyses( ExpressionExperiment expressionExperiment );
 
     /**
      * 
@@ -108,7 +117,5 @@ public interface DifferentialExpressionAnalysisService extends
 
     @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
     public void update( ExpressionAnalysisResultSet a );
-
-    public Collection<DifferentialExpressionAnalysis> findByFactor( ExperimentalFactor ef );
 
 }

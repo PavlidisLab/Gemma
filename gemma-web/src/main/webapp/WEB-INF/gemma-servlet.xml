@@ -178,9 +178,6 @@ gemma.max.fileupload.size.bytes=
 		<property name="expressionExperimentService">
 			<ref bean="expressionExperimentService" />
 		</property>
-		<property name="differentialExpressionAnalysisService">
-			<ref bean="differentialExpressionAnalysisService" />
-		</property>
 		<property name="persisterHelper">
 			<ref bean="persisterHelper" />
 		</property>
@@ -189,6 +186,9 @@ gemma.max.fileupload.size.bytes=
 		</property>
 		<property name="securityService">
 			<ref bean="securityService" />
+		</property>
+		<property name="expressionExperimentReportService">
+			<ref bean="expressionExperimentReportService" />
 		</property>
 	</bean>
 
@@ -303,7 +303,7 @@ gemma.max.fileupload.size.bytes=
 		<property name="arrayDesignService">
 			<ref bean="arrayDesignService" />
 		</property>
-	</bean> 
+	</bean>
 
 	<!-- ==================================================== -->
 	<!--
@@ -334,7 +334,7 @@ gemma.max.fileupload.size.bytes=
 			<value>user</value>
 		</property>
 	</bean>
-	
+
 	<bean id="simpleExpressionExperimentLoadValidator" class="ubic.gemma.web.validation.expression.experiment.SimpleExpressionExperimentLoadValidator" />
 
 
@@ -807,6 +807,7 @@ gemma.max.fileupload.size.bytes=
 								<value>getExperimentalFactors</value>
 								<value>getFactorValues</value>
 								<value>getDesignMatrixRows</value>
+								<value>getDiffExAnalysisDetails</value>
 								<value>loadExpressionExperiments</value>
 								<value>loadExpressionExperimentDetails</value>
 								<value>loadStatusSummaries</value>
@@ -1450,7 +1451,7 @@ gemma.max.fileupload.size.bytes=
 				</entry>
 				<entry key="ubic.gemma.web.controller.common.description.bibref.BibliographicReferenceValueObject">
 					<bean class="org.directwebremoting.spring.ConverterConfig">
-						<property name="type" value="bean" /> 
+						<property name="type" value="bean" />
 					</bean>
 				</entry>
 				<entry key="ubic.gemma.model.genome.sequenceAnalysis.BlatResultValueObject">
@@ -1625,6 +1626,11 @@ gemma.max.fileupload.size.bytes=
 					</bean>
 				</entry>
 				<entry key="ubic.gemma.model.analysis.expression.diff.DifferentialExpressionSummaryValueObject">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="bean" />
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisValueObject">
 					<bean class="org.directwebremoting.spring.ConverterConfig">
 						<property name="type" value="bean" />
 					</bean>

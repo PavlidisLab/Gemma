@@ -242,32 +242,10 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
     }
 
     /**
-     * @param expressionAnalysis
-     */
-    private void logProcessing( DifferentialExpressionAnalysis expressionAnalysis ) {
-
-        log.debug( "Summarizing results for expression analysis of type: " + expressionAnalysis.getName() );
-        Collection<ExpressionAnalysisResultSet> resultSets = expressionAnalysis.getResultSets();
-
-        log.debug( resultSets.size() + " result set(s) to process." );
-        for ( ExpressionAnalysisResultSet resultSet : resultSets ) {
-            log.debug( "*** Result set ***" );
-            Collection<DifferentialExpressionAnalysisResult> results = resultSet.getResults();
-
-            for ( DifferentialExpressionAnalysisResult result : results ) {
-                ProbeAnalysisResult probeResult = ( ProbeAnalysisResult ) result;
-                log.debug( "probe: " + probeResult.getProbe().getName() + ", p-value: " + probeResult.getPvalue()
-                        + ", score: " + probeResult.getEffectSize() );
-            }
-            log.debug( "Result set processed with " + results.size() + " results." );
-        }
-    }
-
-    /**
      * @param ee
      */
     private void processExperiment( ExpressionExperiment ee ) {
-        DifferentialExpressionAnalysis results;
+        Collection<DifferentialExpressionAnalysis> results;
         try {
 
             this.eeService.thawLite( ee );
@@ -292,8 +270,6 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
             if ( results == null ) {
                 throw new Exception( "Failed to process differential expression for experiment " + ee.getShortName() );
             }
-
-            if ( log.isDebugEnabled() ) logProcessing( results );
 
             successObjects.add( ee.toString() );
 

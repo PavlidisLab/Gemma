@@ -151,7 +151,9 @@ public class DifferentialExpressionProbeResultEndpoint extends AbstractGemmaEndp
                     + taxon.getCommonName();
             return buildBadResponse( document, msg );
         }
-        Collection<ExpressionExperiment> eeCol = getEEIds( ees );
+        Collection<ExpressionExperiment> eeCol = getExperiments( ees );
+        Collection<BioAssaySet> bioAssaySets = new HashSet<BioAssaySet>();
+        bioAssaySets.addAll( eeCol );
 
         // threshold input
         Collection<String> thresholdInput = getSingleNodeValue( requestElement, "threshold" );
@@ -168,17 +170,17 @@ public class DifferentialExpressionProbeResultEndpoint extends AbstractGemmaEndp
         responseWrapper.appendChild( responseElement );
 
         for ( Gene gene : geneCol ) {
-            Map<ExpressionExperiment, Collection<ProbeAnalysisResult>> results = differentialExpressionResultService
-                    .find( gene, eeCol, Double.parseDouble( threshold ), null );
+            Map<BioAssaySet, List<ProbeAnalysisResult>> results = differentialExpressionResultService.find( gene,
+                    bioAssaySets, Double.parseDouble( threshold ), null );
 
-            for ( ExpressionExperiment ee : results.keySet() ) {
+            for ( BioAssaySet ee : results.keySet() ) {
                 // main call to the DifferentialExpressionAnalysisService to retrieve ProbeAnalysisResultSet collection
                 Collection<ProbeAnalysisResult> parCol = results.get( ee );
 
                 // check that a ProbeAnalysisResult is not null
                 if ( parCol == null || parCol.isEmpty() ) {
                     log.error( "No probe analysis results can be found for gene: " + gene.getOfficialSymbol()
-                            + " & experiment: " + ee.getShortName() );
+                            + " & experiment: " + ee );
                     buildXMLResponse( document, responseElement, gene.getId().toString(), ee.getId().toString(), null );
                 } else
                     buildXMLResponse( document, responseElement, gene.getId().toString(), ee.getId().toString(), parCol );
@@ -238,7 +240,7 @@ public class DifferentialExpressionProbeResultEndpoint extends AbstractGemmaEndp
 
     }
 
-    private Collection<ExpressionExperiment> getEEIds( ExpressionExperimentSet expressionExperimentSet ) {
+    private Collection<ExpressionExperiment> getExperiments( ExpressionExperimentSet expressionExperimentSet ) {
         List<Long> ids = new ArrayList<Long>( expressionExperimentSet.getExperiments().size() );
         for ( BioAssaySet dataset : expressionExperimentSet.getExperiments() ) {
             ids.add( dataset.getId() );

@@ -1,7 +1,7 @@
 /*
  * The Gemma project.
  * 
- * Copyright (c) 2006-2007 University of British Columbia
+ * Copyright (c) 2006-2010 University of British Columbia
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,20 +16,25 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.model.expression.experiment;
+package ubic.gemma.model.analysis;
 
 /**
- * @see ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet
+ * @author paul
+ * @version $Id$
+ * @see ubic.gemma.model.analysis.ContrastResult
  */
-public interface ExpressionExperimentSubSetDao extends
-        ubic.gemma.model.expression.experiment.BioAssaySetDao<ExpressionExperimentSubSet> {
+public class ContrastResultImpl extends ubic.gemma.model.analysis.ContrastResult {
+    /**
+     * The serial version UID of this class. Needed for serialization.
+     */
+    private static final long serialVersionUID = -4310735803120153778L;
 
     /**
-     * @param entity
-     * @return matching or new entity. Matching would mean the same bioassays.
+     * @see ubic.gemma.model.analysis.ContrastResult#toString()
      */
-    ExpressionExperimentSubSet findOrCreate( ExpressionExperimentSubSet entity );
-
-    ExpressionExperimentSubSet find( ExpressionExperimentSubSet entity );
+    @Override
+    public java.lang.String toString() {
+        return "Contrast for " + this.getFactorValue().toString();
+    }
 
 }

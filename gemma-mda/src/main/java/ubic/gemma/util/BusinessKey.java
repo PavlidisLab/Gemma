@@ -51,6 +51,7 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Chromosome;
 import ubic.gemma.model.genome.Gene;
@@ -956,36 +957,63 @@ public class BusinessKey {
      */
     private static void checkValidKey( VocabCharacteristic ontologyEntry ) {
         // TODO Auto-generated method stub
-
     }
-    
+
     /**
      * The search can be on the first gene and second gene. This query assumes that the order is known
+     * 
      * @param queryObject
      * @param gene2GeneProteinAssociation association to query
      */
     public static void createQueryObject( Criteria queryObject, Gene2GeneProteinAssociation gene2GeneProteinAssociation ) {
         if ( gene2GeneProteinAssociation.getId() != null ) {
             queryObject.add( Restrictions.eq( "id", gene2GeneProteinAssociation.getId() ) );
-        } else if ( StringUtils.isNotBlank( gene2GeneProteinAssociation.getFirstGene().getNcbiId() ) && StringUtils.isNotBlank( gene2GeneProteinAssociation.getSecondGene().getNcbiId() )){
+        } else if ( StringUtils.isNotBlank( gene2GeneProteinAssociation.getFirstGene().getNcbiId() )
+                && StringUtils.isNotBlank( gene2GeneProteinAssociation.getSecondGene().getNcbiId() ) ) {
             queryObject.add( Restrictions.eq( "firstGene", gene2GeneProteinAssociation.getFirstGene() ) );
             queryObject.add( Restrictions.eq( "secondGene", gene2GeneProteinAssociation.getSecondGene() ) );
-        }       
+        }
     }
-    
 
-    
     /**
      * Check that gene 1 and gene 2 are set
+     * 
      * @param gene2GeneProteinAssociation
      */
     public static void checkKey( Gene2GeneProteinAssociation gene2GeneProteinAssociation ) {
         if ( gene2GeneProteinAssociation == null || gene2GeneProteinAssociation.getFirstGene() == null
                 || gene2GeneProteinAssociation.getSecondGene() == null ) {
-            throw new IllegalArgumentException( "Gene 1 and Gene 2 were not set : "
-                    + gene2GeneProteinAssociation );
+            throw new IllegalArgumentException( "Gene 1 and Gene 2 were not set : " + gene2GeneProteinAssociation );
         }
-    }   
-    
+    }
 
+    public static void checkKey( ExpressionExperimentSubSet entity ) {
+        if ( entity.getBioAssays().isEmpty() ) {
+            throw new IllegalArgumentException( "Subset must have bioassays" );
+        }
+
+        if ( entity.getSourceExperiment() == null || entity.getSourceExperiment().getId() == null ) {
+            throw new IllegalArgumentException( "Subset must have persistent sourceExperiment" );
+        }
+
+        for ( BioAssay ba : entity.getBioAssays() ) {
+            if ( ba.getId() == null ) {
+                throw new IllegalArgumentException( "Subset must be made from persistent bioassays." );
+            }
+        }
+    }
+
+    public static void createQueryObject( Criteria queryObject, ExpressionExperimentSubSet entity ) {
+        /*
+         * Note that we don't match on name.
+         */ 
+
+        queryObject.add( Restrictions.eq( "sourceExperiment", entity.getSourceExperiment() ) );
+        
+        queryObject.add( Restrictions.sizeEq( "bioAssays", entity.getBioAssays().size() ) );
+
+        queryObject.createCriteria( "bioAssays" ).add(
+                Restrictions.in( "id", EntityUtils.getIds( entity.getBioAssays() ) ) );
+
+    }
 }

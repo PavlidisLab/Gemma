@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorDao.RankMethod;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.DesignElement;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 
@@ -27,6 +28,7 @@ public class ProcessedExpressionDataVectorServiceImpl implements ProcessedExpres
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService#createProcessedDataVectors(ubic
      * .gemma.model.expression.experiment.ExpressionExperiment)
@@ -41,13 +43,14 @@ public class ProcessedExpressionDataVectorServiceImpl implements ProcessedExpres
         return processedExpressionDataVectorDao.getProcessedDataArrays( expressionExperiments, genes );
     }
 
-    public Collection<DoubleVectorValueObject> getProcessedDataArrays(
-            Collection<ExpressionExperiment> expressionExperiments, Collection<Gene> genes, Boolean fullMapping ) {
-        return processedExpressionDataVectorDao.getProcessedDataArrays( expressionExperiments, genes, fullMapping );
+    public Collection<DoubleVectorValueObject> getProcessedDataArrays( Collection<? extends BioAssaySet> bioassaySets,
+            Collection<Gene> genes, Boolean fullMapping ) {
+        return processedExpressionDataVectorDao.getProcessedDataArrays( bioassaySets, genes, fullMapping );
     }
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService#getProcessedDataMatrix(ubic.gemma
      * .model.expression.experiment.ExpressionExperiment)
@@ -63,6 +66,7 @@ public class ProcessedExpressionDataVectorServiceImpl implements ProcessedExpres
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService#getProcessedDataMatrices(java.util
      * .Collection)
@@ -73,7 +77,7 @@ public class ProcessedExpressionDataVectorServiceImpl implements ProcessedExpres
     }
 
     public Collection<DoubleVectorValueObject> getProcessedDataArraysByProbe(
-            Collection<ExpressionExperiment> expressionExperiments, Collection<CompositeSequence> compositeSequences,
+            Collection<? extends BioAssaySet> expressionExperiments, Collection<CompositeSequence> compositeSequences,
             boolean fullMap ) {
 
         return this.getProcessedExpressionDataVectorDao().getProcessedDataArraysByProbe( expressionExperiments,
@@ -82,6 +86,7 @@ public class ProcessedExpressionDataVectorServiceImpl implements ProcessedExpres
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService#getProcessedDataVectors(ubic.gemma
      * .model.expression.experiment.ExpressionExperiment)
@@ -129,6 +134,7 @@ public class ProcessedExpressionDataVectorServiceImpl implements ProcessedExpres
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService#thaw(java.util.Collection)
      */
     public void thaw( Collection<ProcessedExpressionDataVector> vectors ) {
@@ -138,6 +144,7 @@ public class ProcessedExpressionDataVectorServiceImpl implements ProcessedExpres
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService#update(java.util.Collection)
      */
     public void update( Collection<ProcessedExpressionDataVector> dedvs ) {

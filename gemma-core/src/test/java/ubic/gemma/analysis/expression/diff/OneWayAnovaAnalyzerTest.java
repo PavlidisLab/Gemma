@@ -67,8 +67,8 @@ public class OneWayAnovaAnalyzerTest extends BaseAnalyzerConfigurationTest {
 
         configureMocks();
 
-        DifferentialExpressionAnalysis expressionAnalysis = analyzer.run( expressionExperiment );
-
+        Collection<DifferentialExpressionAnalysis> expressionAnalyses = analyzer.run( expressionExperiment );
+        DifferentialExpressionAnalysis expressionAnalysis = expressionAnalyses.iterator().next();
         Collection<ExpressionAnalysisResultSet> resultSets = expressionAnalysis.getResultSets();
         ExpressionAnalysisResultSet resultSet = resultSets.iterator().next();
         int numResults = resultSet.getResults().size();
@@ -103,7 +103,7 @@ public class OneWayAnovaAnalyzerTest extends BaseAnalyzerConfigurationTest {
         ExperimentalFactor experimentalFactorC = ExperimentalFactor.Factory.newInstance();
         experimentalFactorC.setName( "groupash" );
         experimentalFactorC.setId( 5399424551L );
-        experimentalFactorC.setType(FactorType.CATEGORICAL);
+        experimentalFactorC.setType( FactorType.CATEGORICAL );
         expressionExperiment.getExperimentalDesign().getExperimentalFactors().add( experimentalFactorC );
 
         FactorValue controlGroup = null;
@@ -127,8 +127,8 @@ public class OneWayAnovaAnalyzerTest extends BaseAnalyzerConfigurationTest {
 
         Collection<ExperimentalFactor> factors = new HashSet<ExperimentalFactor>();
         factors.add( experimentalFactorC );
-        DifferentialExpressionAnalysis expressionAnalysis = analyzer.run( expressionExperiment, factors );
-
+        Collection<DifferentialExpressionAnalysis> expressionAnalyses = analyzer.run( expressionExperiment, factors );
+        DifferentialExpressionAnalysis expressionAnalysis = expressionAnalyses.iterator().next();
         Collection<ExpressionAnalysisResultSet> resultSets = expressionAnalysis.getResultSets();
         ExpressionAnalysisResultSet resultSet = resultSets.iterator().next();
         int numResults = resultSet.getResults().size();
@@ -146,13 +146,13 @@ public class OneWayAnovaAnalyzerTest extends BaseAnalyzerConfigurationTest {
             ProbeAnalysisResult probeAnalysisResult = ( ProbeAnalysisResult ) r;
             CompositeSequence probe = probeAnalysisResult.getProbe();
             Double pvalue = probeAnalysisResult.getPvalue();
-            Double stat = probeAnalysisResult.getEffectSize();
 
-            if ( pvalue != null ) assertNotNull( stat );
+            // if ( pvalue != null ) assertNotNull( stat );
             assertNotNull( probe );
 
-            log.debug( "probe: " + probe + "; Factor=" + resultSet.getExperimentalFactors().iterator().next().getName()
-                    + "; p-value: " + pvalue + "; T=" + stat );
+            // log.debug( "probe: " + probe + "; Factor=" +
+            // resultSet.getExperimentalFactors().iterator().next().getName()
+            // + "; p-value: " + pvalue + "; T=" + stat );
 
             if ( probe.getName().equals( "probe_98" ) ) {
                 assertEquals( 0.1604, pvalue, 0.001 );

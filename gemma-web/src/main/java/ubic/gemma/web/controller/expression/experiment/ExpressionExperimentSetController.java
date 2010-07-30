@@ -29,10 +29,9 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.lang.StringUtils;
 
+import ubic.gemma.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
-import ubic.gemma.model.analysis.expression.ExpressionExperimentSetService;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
+import ubic.gemma.model.analysis.expression.ExpressionExperimentSetService; 
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
@@ -49,7 +48,7 @@ import ubic.gemma.web.controller.BaseFormController;
  * @version $Id$
  */
 public class ExpressionExperimentSetController extends BaseFormController {
-    private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
+    private ExpressionExperimentReportService expressionExperimentReportService;
     private ExpressionExperimentService expressionExperimentService;
     private ExpressionExperimentSetService expressionExperimentSetService;
     private PersisterHelper persisterHelper;
@@ -91,7 +90,7 @@ public class ExpressionExperimentSetController extends BaseFormController {
     public Collection<ExpressionExperimentValueObject> getExperimentsInSet( Long id ) {
         Collection<Long> eeids = getExperimentIdsInSet( id );
         Collection<ExpressionExperimentValueObject> result = expressionExperimentService.loadValueObjects( eeids );
-        populateAnalyses( eeids, result );
+        expressionExperimentReportService.fillReportInformation( result );
         return result;
     }
 
@@ -129,9 +128,9 @@ public class ExpressionExperimentSetController extends BaseFormController {
         return entities;
     }
 
-    public void setDifferentialExpressionAnalysisService(
-            DifferentialExpressionAnalysisService differentialExpressionAnalysisService ) {
-        this.differentialExpressionAnalysisService = differentialExpressionAnalysisService;
+    public void setExpressionExperimentReportService(
+            ExpressionExperimentReportService expressionExperimentReportService ) {
+        this.expressionExperimentReportService = expressionExperimentReportService;
     }
 
     public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
@@ -167,18 +166,6 @@ public class ExpressionExperimentSetController extends BaseFormController {
             update( ees );
         }
         return entities;
-    }
-
-    /**
-     * This is needed or you will have to specify a commandClass in the DispatcherServlet's context
-     * 
-     * @param request
-     * @return Object
-     * @throws Exception
-     */
-    @Override
-    protected Object formBackingObject( HttpServletRequest request ) throws Exception {
-        return request;
     }
 
     /**
@@ -277,22 +264,6 @@ public class ExpressionExperimentSetController extends BaseFormController {
     }
 
     /**
-     * Fill in information about analyses done on the experiments.
-     * 
-     * @param result
-     */
-    private void populateAnalyses( Collection<Long> eeids, Collection<ExpressionExperimentValueObject> result ) {
-        Map<Long, DifferentialExpressionAnalysis> analysisMap = differentialExpressionAnalysisService
-                .findByInvestigationIds( eeids );
-        for ( ExpressionExperimentValueObject eevo : result ) {
-            if ( !analysisMap.containsKey( eevo.getId() ) ) {
-                continue;
-            }
-            eevo.setDifferentialExpressionAnalysisId( analysisMap.get( eevo.getId() ).getId() );
-        }
-    }
-
-    /**
      * Delete a EEset from the system.
      * 
      * @param obj
@@ -320,6 +291,23 @@ public class ExpressionExperimentSetController extends BaseFormController {
         }
         return true;
     }
+
+    //
+    // /**
+    // * Fill in information about analyses done on the experiments.
+    // *
+    // * @param result
+    // */
+    // private void populateAnalyses( Collection<Long> eeids, Collection<ExpressionExperimentValueObject> result ) {
+    // Map<Long, DifferentialExpressionAnalysis> analysisMap = differentialExpressionAnalysisService
+    // .findByInvestigationIds( eeids );
+    // for ( ExpressionExperimentValueObject eevo : result ) {
+    // if ( !analysisMap.containsKey( eevo.getId() ) ) {
+    // continue;
+    // }
+    // eevo.getDifferentialExpressionAnalysisIds().add( analysisMap.get( eevo.getId() ).getId() );
+    // }
+    // }
 
     /**
      * @param obj
@@ -409,6 +397,18 @@ public class ExpressionExperimentSetController extends BaseFormController {
             }
         }
         return true;
+    }
+
+    /**
+     * This is needed or you will have to specify a commandClass in the DispatcherServlet's context
+     * 
+     * @param request
+     * @return Object
+     * @throws Exception
+     */
+    @Override
+    protected Object formBackingObject( HttpServletRequest request ) throws Exception {
+        return request;
     }
 
 }

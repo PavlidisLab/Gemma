@@ -39,6 +39,7 @@ import ubic.gemma.model.analysis.expression.ExpressionExperimentSetService;
 import ubic.gemma.model.analysis.expression.FactorAssociatedAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -415,7 +416,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
         }
 
         /* find experiments that have had the diff cli run on it and have the gene g (analyzed) - security filtered. */
-        Collection<ExpressionExperiment> experimentsAnalyzed = differentialExpressionAnalysisService
+        Collection<BioAssaySet> experimentsAnalyzed = differentialExpressionAnalysisService
                 .findExperimentsWithAnalyses( g );
 
         if ( experimentsAnalyzed.size() == 0 ) {
@@ -435,12 +436,12 @@ public class DifferentialExpressionSearchController extends BaseFormController {
          * filter experiments that had the diff cli run on it and are in the scope of eeFactorsMap eeIds
          * (active/available to the user).
          */
-        Collection<ExpressionExperiment> activeExperiments = null;
+        Collection<BioAssaySet> activeExperiments = null;
         if ( eeFactorsMap.keySet() == null || eeFactorsMap.isEmpty() ) {
             activeExperiments = experimentsAnalyzed;
         } else {
-            activeExperiments = new ArrayList<ExpressionExperiment>();
-            for ( ExpressionExperiment ee : experimentsAnalyzed ) {
+            activeExperiments = new ArrayList<BioAssaySet>();
+            for ( BioAssaySet ee : experimentsAnalyzed ) {
                 if ( eeFactorsMap.keySet().contains( ee.getId() ) ) {
                     activeExperiments.add( ee );
                 }

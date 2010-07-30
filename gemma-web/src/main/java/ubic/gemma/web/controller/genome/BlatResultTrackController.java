@@ -51,11 +51,7 @@ import ubic.gemma.web.view.TextView;
 public class BlatResultTrackController extends AbstractController {
 
     @Autowired
-    BlatResultService blatResultService;
-
-    public void setBlatResultService( BlatResultService blatResultService ) {
-        this.blatResultService = blatResultService;
-    }
+    private BlatResultService blatResultService;
 
     @Override
     protected ModelAndView handleRequestInternal( HttpServletRequest request, HttpServletResponse response )

@@ -7,6 +7,8 @@
  */
 Gemma.EEManager = Ext.extend(Ext.Component, {
 
+	name : 'eemanager',
+
 	record : Ext.data.Record.create([{
 				name : "id",
 				type : "int"
@@ -275,11 +277,12 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 						text : 'Help',
 						handler : function() {
 							Ext.Msg
-									.alert("Help with tagging",
-											"Select a 'category' for the term; then enter a term, " +
-													"choosing from existing terms if possible. " +
-													"Click 'create' to save it. You can also edit existing terms;" +
-													" click 'save' to make the change stick, or 'delete' to remove a selected tag.");
+									.alert(
+											"Help with tagging",
+											"Select a 'category' for the term; then enter a term, "
+													+ "choosing from existing terms if possible. "
+													+ "Click 'create' to save it. You can also edit existing terms;"
+													+ " click 'save' to make the change stick, or 'delete' to remove a selected tag.");
 						}
 					}, {
 						text : 'Done',
@@ -377,6 +380,12 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 		});
 	},
 
+	/**
+	 * Compute coexpression for the data set.
+	 * 
+	 * @param {}
+	 *            id
+	 */
 	doLinks : function(id) {
 		Ext.Msg.show({
 					title : 'Link analysis',
@@ -411,6 +420,12 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 				});
 	},
 
+	/**
+	 * Compute the missing values. This is only relevant for two-channel arrays.
+	 * 
+	 * @param {}
+	 *            id
+	 */
 	doMissingValues : function(id) {
 		Ext.Msg.show({
 					title : 'Missing value analysis',
@@ -445,6 +460,12 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 				});
 	},
 
+	/**
+	 * Interactive setup and running of a differential expression analysis.
+	 * 
+	 * @param {}
+	 *            id
+	 */
 	doDifferential : function(id) {
 
 		var m = this;
@@ -457,144 +478,242 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 			var factors = analysisInfo.factors;
 			var proposedAnalysis = analysisInfo.type;
 
-			var canDoInteractions = (proposedAnalysis == 'TWIA') || factors.length > 2;
+			/*
+			 * Set up buttons for the subset form.
+			 */
+			var subsetRadios = [];
+			subsetRadios.push(new Ext.form.Radio({
+						boxLabel : 'None', // need so they can unset it.
+						name : 'diff-ex-analyze-subset', // same name -> grouped.
+						id : 'no-factor-subset-radio',
+						checked : true,
+						listeners : {
+							check : validateFactorsChosen.createDelegate(this, [factors])
+						}
+					}));
+
+			for (var i = 0; i < factors.length; i++) {
+				var f = factors[i];
+				if (!f.name) {
+					continue;
+				}
+
+				/*
+				 * set up the subsets.
+				 */
+				subsetRadios.push(new Ext.form.Radio({
+							boxLabel : f.name,
+							name : 'diff-ex-analyze-subset', // same name -> grouped.
+							id : f.id + '-factor-subset-radio',
+							checked : false
+						}));
+			}
 
 			/*
-			 * DifferentialExpressionAnalysisSetupWindow - to be refactored.
+			 * DifferentialExpressionAnalysisCustomization - only available if there is more than one factor. We should
+			 * refactor this code.
 			 */
 			var deasw = new Ext.Window({
-						modal : true,
-						stateful : false,
-						resizable : false,
-						autoHeight : true,
-						width : 300,
-						plain : true,
-						title : "Differential analysis settings",
-						items : [{
-									xtype : 'form',
-									autoHeight : true,
-									items : [{
-												xtype : 'fieldset',
-												title : "Select factor(s) to use",
-												autoHeight : true,
-												labelWidth : 200,
-												id : 'diff-ex-analysis-customize-factors'
-											}, {
-												xtype : 'fieldset',
-												labelWidth : 200,
-												autoHeight : true,
-												hidden : !canDoInteractions,
-												/*
-												 * FIXME hide this if we have more than 2 factors -- basically where
-												 * we're not going to bother supporting interactions.
-												 */
-												items : [{
-															xtype : 'checkbox',
-															id : 'diff-ex-analysis-customize-include-interactions-checkbox',
-															fieldLabel : 'Include interactions if possible'
-														}]
-											}]
-								}],
-						buttons : [{
-							text : 'Proceed',
-							id : 'diff-ex-customize-proceed-button',
-							disabled : false,
-							scope : this,
-							handler : function(btn, text) {
+				name : 'diff-customization-window',
+				modal : true,
+				stateful : false,
+				resizable : false,
+				autoHeight : true,
+				width : 300,
+				plain : true,
+				title : "Differential analysis settings",
+				items : [{
+							xtype : 'form',
+							bodyBorder : false,
+							autoHeight : true,
+							items : [{
+										xtype : 'fieldset',
+										title : "Select factor(s) to use",
+										autoHeight : true,
+										labelWidth : 200,
+										id : 'diff-ex-analysis-customize-factors'
+									}, {
+										xtype : 'fieldset',
+										title : "Optional: Select a subset factor",
+										items : [{
+													xtype : 'radiogroup',
+													columns : 1,
+													allowBlank : true,
+													autoHeight : true,
+													id : 'diff-ex-analysis-subset-factors',
+													items : subsetRadios,
+													listeners : {
+														change : validateFactorsChosen.createDelegate(this, [factors])
+													}
+												}]
+									},
 
-								var includeInteractions = Ext
-										.getCmp('diff-ex-analysis-customize-include-interactions-checkbox').getValue();
+									{
+										xtype : 'fieldset',
+										labelWidth : 200,
+										autoHeight : true,
+										hidden : false,
 
-								/*
-								 * Get the factors the user checked. See checkbox creation code below.
-								 */
-								var factorsToUseIds = [];
-								if (factors) {
-									for (var i = 0; i < factors.length; i++) {
-										var f = factors[i];
-										if (!f.name) {
-											continue;
-										}
-										var checked = Ext.getCmp(f.id + '-factor-checkbox').getValue();
-										if (checked) {
-											factorsToUseIds.push(f.id);
-										}
-									}
-								}
+										/*
+										 * we hide this if we have more than 2 factors -- basically where we're not
+										 * going to bother supporting interactions.
+										 */
+										items : [{
+													xtype : 'checkbox',
+													id : 'diff-ex-analysis-customize-include-interactions-checkbox',
+													fieldLabel : 'Include interactions if possible'
+												}]
+									}]
+						}],
 
-								if (factorsToUseIds.length < 1) {
-									Ext.Msg.alert("Invalid selection", "Please pick at least one factor.");
-									return;
-								}
+				buttons : [{
+					text : "Help",
+					id : 'diff-ex-customize-help-button',
+					disabled : false,
+					scope : this,
+					handler : function() {
+						Ext.Msg.show({
+							title : 'Processed vector analysis',
+							msg : 'Choose which factors to include in the model. If you choose only one, the analysis will be a t-test or one-way-anova. If you choose two factors, you might be able to include interactions. If you choose three or more, '
+									+ 'interactions will not be estimated.'
+									+ 'You can also choose to analyze different parts of the data sets separately, by splitting it up according to the factors listed. The analysis is then done independently on each subset.',
+							buttons : Ext.Msg.OK,
+							icon : Ext.MessageBox.INFO
+						});
+					}
+				}, {
+					text : 'Proceed',
+					id : 'diff-ex-customize-proceed-button',
+					disabled : false,
+					scope : this,
+					handler : function(btn, text) {
 
-								/*
-								 * Pass back the factors to be used, and the choice of whether interactions are to be
-								 * used.
-								 */
-								var callParams = [];
-								callParams.push(id);
-								callParams.push(factorsToUseIds);
-								callParams.push(includeInteractions);
-								Ext.getBody().mask();
-								callParams.push({
-											callback : function(data) {
-												var k = new Gemma.WaitHandler();
-												k.handleWait(data, true);
-												m.relayEvents(k, ['done', 'fail']);
-												Ext.getBody().unmask();
-												k.on('done', function(payload) {
-															m.fireEvent('differential', payload)
-														});
-											}.createDelegate(m),
-											errorHandler : function(error) {
-												Ext.Msg.alert("Differential exp. Analysis failed", error);
-												Ext.getBody().unmask();
-											}.createDelegate(this)
-										});
+						var includeInteractions = Ext
+								.getCmp('diff-ex-analysis-customize-include-interactions-checkbox').getValue();
 
-								DifferentialExpressionAnalysisController.runCustom.apply(this, callParams);
-								deasw.close();
-							}
-						}, {
-							text : 'Cancel',
-							handler : function() {
-								deasw.close();
-							}
-						}]
-					});
+						/*
+						 * Get the factors the user checked. See checkbox creation code below.
+						 */
+						var factorsToUseIds = getFactorsToUseIds(factors);
+						var subsetFactor = getSubsetFactorId(factors);
+
+						if (factorsToUseIds.length < 1) {
+							Ext.Msg.alert("Invalid selection", "Please pick at least one factor.");
+							return;
+						}
+
+						/*
+						 * This should be disallowed by the interface, but just in case.
+						 */
+						if (subsetFactor !== null && factorsToUseIds.indexOf(subsetFactor) >= 0) {
+							Ext.Msg.alert("Invalid selection", "You cannot subset on a factor included in the model.");
+							return;
+						}
+
+						/*
+						 * Pass back the factors to be used, and the choice of whether interactions are to be used.
+						 */
+						var callParams = [];
+						callParams.push(id);
+						callParams.push(factorsToUseIds);
+						callParams.push(includeInteractions);
+						callParams.push(subsetFactor)
+						Ext.getBody().mask();
+						callParams.push({
+									callback : function(data) {
+										var k = new Gemma.WaitHandler();
+										k.handleWait(data, true);
+										m.relayEvents(k, ['done', 'fail']);
+										Ext.getBody().unmask();
+										k.on('done', function(payload) {
+													m.fireEvent('differential', payload)
+												});
+									}.createDelegate(m),
+									errorHandler : function(error) {
+										Ext.Msg.alert("Differential exp. Analysis failed", error);
+										Ext.getBody().unmask();
+									}.createDelegate(this)
+								});
+
+						DifferentialExpressionAnalysisController.runCustom.apply(this, callParams);
+						deasw.close();
+					}
+				}, {
+					text : 'Cancel',
+					handler : function() {
+						deasw.close();
+					}
+				}]
+			});
 
 			deasw.doLayout();
 
 			/*
-			 * Create the checkboxes for user choice of factors.
+			 * Create the checkboxes for user choice of factors. We assume there is more than one.
 			 */
 			if (factors) {
-				var onlyOne = factors.length == 1;
 				for (var i = 0; i < factors.length; i++) {
 					var f = factors[i];
 					if (!f.name) {
 						continue;
 					}
+
+					/*
+					 * Checkbox for one factor.
+					 */
 					Ext.getCmp('diff-ex-analysis-customize-factors').add(new Ext.form.Checkbox({
 								fieldLabel : f.name,
 								labelWidth : 180,
 								id : f.id + '-factor-checkbox',
 								tooltip : f.name,
-								checked : onlyOne
+								checked : false,
+								listeners : {
+									check : validateFactorsChosen.createDelegate(this, [factors])
+								}
 							}));
 				}
 			}
-
-			/*
-			 * TODO: add radiobutton for subset, if there are more than one factor
-			 */
 
 			deasw.doLayout();
 			deasw.show();
 
 		};
 
-		/*
+		var getFactorsToUseIds = function(factors) {
+			var factorsToUseIds = [];
+			for (var i = 0; i < factors.length; i++) {
+				var f = factors[i];
+				if (!f.name) {
+					continue;
+				}
+				var checked = Ext.getCmp(f.id + '-factor-checkbox').getValue();
+				if (checked) {
+					factorsToUseIds.push(f.id);
+				}
+			}
+			return factorsToUseIds;
+		};
+
+		var getSubsetFactorId = function(factors) {
+			var subsetFactor = null;
+			/*
+			 * get values of subset radios
+			 */
+			for (var i = 0; i < factors.length; i++) {
+				var f = factors[i];
+				if (!f.name) {
+					continue;
+				}
+				var checked = Ext.getCmp(f.id + '-factor-subset-radio').getValue();
+				if (checked) {
+					subsetFactor = f.id;
+					break;
+				}
+			}
+			return subsetFactor;
+		};
+
+		/**
 		 * Callback for analysis type determination. This gets the type of analysis, if it can be determined. If the
 		 * type is non-null, then just ask the user for confirmation. If they say no, or the type is null, show them the
 		 * DifferentialExpressionAnalysisSetupWindow.
@@ -622,6 +741,7 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 
 				// ask for confirmation.
 				var w = new Ext.Window({
+							name : 'diffex-dialog',
 							autoCreate : true,
 							resizable : false,
 							constrain : true,
@@ -639,8 +759,8 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 							footer : true,
 							closable : true,
 							title : 'Differential expression analysis',
-							html : 'Please confirm. The analysis performed will be a ' + analysisType +
-									'. If there is an existing analysis on the same factor(s), it will be deleted.',
+							html : 'Please confirm. The analysis performed will be a ' + analysisType
+									+ '. If there is an existing analysis on the same factor(s), it will be deleted.',
 							buttons : [{
 										text : 'Proceed',
 										handler : function(btn, text) {
@@ -694,11 +814,37 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 		};
 
 		/*
+		 * Make sure checkboxes are logically consistent (warning: this might not work 100% perfectly, so it's a good
+		 * idea to validate again later on the client side)
+		 */
+		var validateFactorsChosen = function(factors) {
+			var factorsToUseIds = getFactorsToUseIds(factors);
+			var subsetFactor = getSubsetFactorId(factors);
+
+			if (factorsToUseIds.length != 2) {
+				Ext.getCmp('diff-ex-analysis-customize-include-interactions-checkbox').setValue(false);
+				Ext.getCmp('diff-ex-analysis-customize-include-interactions-checkbox').disable();
+			} else {
+				Ext.getCmp('diff-ex-analysis-customize-include-interactions-checkbox').enable();
+			}
+
+			/*
+			 * The top checkboxes take precendence. We unset the 'subset' if there is a conflict.
+			 */
+			if (subsetFactor !== null && factorsToUseIds.indexOf(subsetFactor) >= 0) {
+				Ext.getCmp(subsetFactor + '-factor-subset-radio').setValue(false);
+				Ext.getCmp('no-factor-subset-radio').setValue(true);
+			}
+
+		};
+
+		/*
 		 * Get the analysis type.
 		 */
 		var eh = function(error) {
 			Ext.Msg.alert("There was an error", error);
 		};
+
 		DifferentialExpressionAnalysisController.determineAnalysisType(id, {
 					callback : cb,
 					errorhandler : eh
@@ -706,6 +852,10 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 
 	},
 
+	/**
+	 * Run the vector processing. Note that this is normally done when the data are first imported, so this is rarely
+	 * needed unless something fundamental changes about the data set.
+	 */
 	doProcessedVectors : function(id) {
 		Ext.Msg.show({
 					title : 'Processed vector analysis',

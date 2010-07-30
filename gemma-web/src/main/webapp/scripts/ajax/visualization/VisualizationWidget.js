@@ -185,10 +185,10 @@ Gemma.prepareProfiles = function(data) {
 			color : color,
 			genes : genes,
 			rawLabel : pvalueLabel + " " + geneSymbols + " " + geneNames,
-			label : pvalueLabel + "<span style='" + labelStyle + "'><a  href='/Gemma/compositeSequence/show.html?id=" +
-					probeId + "' target='_blank' ext:qtip= '" + qtip + "'>" +
-					Ext.util.Format.ellipsis(geneSymbols, Gemma.MAX_THUMBNAILLABEL_LENGTH_CHAR) + "</a> " + geneNames +
-					"</span>",
+			label : pvalueLabel + "<span style='" + labelStyle + "'><a  href='/Gemma/compositeSequence/show.html?id="
+					+ probeId + "' target='_blank' ext:qtip= '" + qtip + "'>"
+					+ Ext.util.Format.ellipsis(geneSymbols, Gemma.MAX_THUMBNAILLABEL_LENGTH_CHAR) + "</a> " + geneNames
+					+ "</span>",
 			lines : {
 				lineWidth : Gemma.LINE_THICKNESS
 			},
@@ -261,8 +261,8 @@ Gemma.ProfileTemplate = Ext.extend(Ext.XTemplate, {
 					Ext.DomHelper.append(shortName + '_vizwrap', {
 								tag : 'div',
 								id : shortName + "_vis",
-								style : 'width:' + Gemma.THUMBNAIL_PLOT_SIZE + 'px;height:' +
-										Gemma.THUMBNAIL_PLOT_SIZE + 'px;'
+								style : 'width:' + Gemma.THUMBNAIL_PLOT_SIZE + 'px;height:' + Gemma.THUMBNAIL_PLOT_SIZE
+										+ 'px;'
 							});
 
 					/*
@@ -295,8 +295,8 @@ Gemma.HeatmapTemplate = Ext.extend(Ext.XTemplate, {
 					Ext.DomHelper.append(shortName + '_vizwrap', {
 								tag : 'div',
 								id : shortName + "_vis",
-								style : 'width:' + Gemma.THUMBNAIL_PLOT_SIZE + 'px;height:' +
-										Gemma.THUMBNAIL_PLOT_SIZE + 'px;'
+								style : 'width:' + Gemma.THUMBNAIL_PLOT_SIZE + 'px;height:' + Gemma.THUMBNAIL_PLOT_SIZE
+										+ 'px;'
 							});
 					/*
 					 * Note: 'newDiv' works in FF but not in IE.
@@ -325,13 +325,13 @@ Gemma.getProfileThumbnailTemplate = function(heatmap, havePvalues, smooth) {
 	if (heatmap) {
 		return new Gemma.HeatmapTemplate(
 				'<tpl for="."><tpl for="eevo">',
-				'<div class="vizWrap" ext.qtip="{values.name}; Click to zoom" id ="{shortName}_vizwrap" style="cursor:pointer;float:left;padding: 10px"> <strong>{shortName}</strong>: <small> {[Ext.util.Format.ellipsis( values.name, Gemma.MAX_EE_NAME_LENGTH)]} </small> &nbsp;&nbsp;<i>' +
-						pvalueString + '</i></div>', '</tpl></tpl>');
+				'<div class="vizWrap" ext.qtip="{values.name}; Click to zoom" id ="{shortName}_vizwrap" style="cursor:pointer;float:left;padding: 10px"> <strong>{shortName}</strong>: <small> {[Ext.util.Format.ellipsis( values.name, Gemma.MAX_EE_NAME_LENGTH)]} </small> &nbsp;&nbsp;<i>'
+						+ pvalueString + '</i></div>', '</tpl></tpl>');
 	} else {
 		return new Gemma.ProfileTemplate(
 				'<tpl for="."><tpl for="eevo">',
-				'<div class="vizWrap" ext.qtip="{values.name}; Click to zoom" id ="{shortName}_vizwrap" style="cursor:pointer;float:left;padding: 10px"> <strong> {shortName}</strong>: <small> {[Ext.util.Format.ellipsis( values.name, Gemma.MAX_EE_NAME_LENGTH)]} </small> &nbsp;&nbsp; <i>' +
-						pvalueString + '</i></div>', '</tpl></tpl>', {
+				'<div class="vizWrap" ext.qtip="{values.name}; Click to zoom" id ="{shortName}_vizwrap" style="cursor:pointer;float:left;padding: 10px"> <strong> {shortName}</strong>: <small> {[Ext.util.Format.ellipsis( values.name, Gemma.MAX_EE_NAME_LENGTH)]} </small> &nbsp;&nbsp; <i>'
+						+ pvalueString + '</i></div>', '</tpl></tpl>', {
 					smooth : smooth
 				});
 	}
@@ -380,8 +380,8 @@ Gemma.VisualizationZoomPanel = Ext.extend(Ext.Panel, {
 	html : {
 		tag : 'div',
 		id : 'inner-zoom-html-' + Ext.id(),
-		style : 'overflow:auto;width:' + Gemma.ZOOM_PLOT_SIZE + 'px;height:' + Gemma.ZOOM_PLOT_SIZE +
-				'px; margin:5px 2px 2px 5px;'
+		style : 'overflow:auto;width:' + Gemma.ZOOM_PLOT_SIZE + 'px;height:' + Gemma.ZOOM_PLOT_SIZE
+				+ 'px; margin:5px 2px 2px 5px;'
 	},
 
 	/**
@@ -411,8 +411,12 @@ Gemma.VisualizationZoomPanel = Ext.extend(Ext.Panel, {
 
 		if (eevo) {
 
-			var eeInfoTitle = "<a ext.qtip='Click for details on experiment (opens in new window)' target='_blank'  href='/Gemma/expressionExperiment/showExpressionExperiment.html?id=" +
-					eevo.id + " '>" + eevo.shortName + "</a> (" + Ext.util.Format.ellipsis(eevo.name, 35) + ")";
+			var eeInfoTitle = "<a ext.qtip='Click for details on experiment (opens in new window)' target='_blank'  href='/Gemma/expressionExperiment/showExpressionExperiment.html?id="
+					+ (eevo.sourceExperiment ? eevo.sourceExperiment : eevo.id)
+					+ " '>"
+					+ eevo.shortName
+					+ "</a> ("
+					+ Ext.util.Format.ellipsis(eevo.name, 35) + ")";
 
 			if (this.ownerCt && this.ownerCt.originalTitle) {
 				this.ownerCt.setTitle(this.ownerCt.originalTitle + "&nbsp;In:&nbsp;" + eeInfoTitle);
@@ -823,16 +827,16 @@ Gemma.VisualizationWithThumbsWindow = Ext.extend(Ext.Window, {
 					html : {
 						id : this.zoomLegendId,
 						tag : 'div',
-						style : 'width:' + (Gemma.THUMBNAIL_PLOT_SIZE + 50) + 'px;height:' + Gemma.THUMBNAIL_PLOT_SIZE +
-								'px; float:left;'
+						style : 'width:' + (Gemma.THUMBNAIL_PLOT_SIZE + 50) + 'px;height:' + Gemma.THUMBNAIL_PLOT_SIZE
+								+ 'px; float:left;'
 					}
 				});
 		var items = [this.thumbnailPanel, this.zoomPanel]
 
 		var browserWarning = "";
 		if (Ext.isIE) {
-			browserWarning = "<span ext:qtip='Plots use a feature of HTML 5 that runs in IE via emulation unless you have Chrome Frame installed. Firefox, Chrome, Safari and Opera will be faster too.'>" +
-					"Too slow in Explorer? Try <a href='http://www.google.com/chromeframe/' target='_blank'>Chrome Frame</a></span>";
+			browserWarning = "<span ext:qtip='Plots use a feature of HTML 5 that runs in IE via emulation unless you have Chrome Frame installed. Firefox, Chrome, Safari and Opera will be faster too.'>"
+					+ "Too slow in Explorer? Try <a href='http://www.google.com/chromeframe/' target='_blank'>Chrome Frame</a></span>";
 		}
 
 		Ext.apply(this, {
@@ -895,7 +899,8 @@ Gemma.VisualizationWithThumbsWindow = Ext.extend(Ext.Window, {
 					Ext.getCmp(this.downloadDataBtnId).enable();
 
 					// So initial state is sure to be okay, after restore from cookie
-					Ext.getCmp(this.toggleViewBtnId).setText(this.heatmapMode ? "Switch to line plot"
+					Ext.getCmp(this.toggleViewBtnId).setText(this.heatmapMode
+							? "Switch to line plot"
 							: "Switch to heatmap");
 					Ext.getCmp(this.forceFitBtnId).setText(this.forceFitPlots ? "Expand" : "Fit width");
 					Ext.getCmp(this.toggleLegendBtnId).setText(this.showLegend ? "Hide legend" : "Show legend");
@@ -1107,11 +1112,11 @@ Gemma.testVisData = function() {
 	s1.processedExpressionVectorCount = null;
 	s1['public'] = true;
 	s1.shortName = "GSE15822";
-	
+
 	// data vectors
 	s2[0] = s4;
-	s2[1] = s5; 
-	
+	s2[1] = s5;
+
 	// first data vector
 	s4.PValue = 1.03114379442728E-24;
 	s4.allMissing = false;
@@ -1169,7 +1174,7 @@ Gemma.testVisData = function() {
 	s11.description = " Wdr1";
 	s11.id = 6345825;
 	s11.name = "ILMN_2497268";
-	
+
 	s12[0] = -1.588;
 	s12[1] = NaN;
 	s12[2] = -0.656;
@@ -1180,29 +1185,29 @@ Gemma.testVisData = function() {
 	s12[7] = NaN;
 	s12[8] = NaN;
 	s12[9] = -1.044;
-	
-//	s12[0] = NaN;
-//	s12[1] = NaN;
-//	s12[2] = NaN;
-//	s12[3] = NaN;
-//	s12[4] = NaN;
-//	s12[5] = NaN;
-//	s12[6] = NaN;
-//	s12[7] = NaN;
-//	s12[8] = NaN;
-//	s12[9] = NaN;
-	
+
+	// s12[0] = NaN;
+	// s12[1] = NaN;
+	// s12[2] = NaN;
+	// s12[3] = NaN;
+	// s12[4] = NaN;
+	// s12[5] = NaN;
+	// s12[6] = NaN;
+	// s12[7] = NaN;
+	// s12[8] = NaN;
+	// s12[9] = NaN;
+
 	// orignal , unmessedup
-//	s12[0] = -1.588;
-//	s12[1] = -0.894;
-//	s12[2] = -0.656;
-//	s12[3] = -1.402;
-//	s12[4] = -1.370;
-//	s12[5] = -1.417;
-//	s12[6] = -1.035;
-//	s12[7] = -1.133;
-//	s12[8] = -0.734;
-//	s12[9] = -1.044;
+	// s12[0] = -1.588;
+	// s12[1] = -0.894;
+	// s12[2] = -0.656;
+	// s12[3] = -1.402;
+	// s12[4] = -1.370;
+	// s12[5] = -1.417;
+	// s12[6] = -1.035;
+	// s12[7] = -1.133;
+	// s12[8] = -0.734;
+	// s12[9] = -1.044;
 
 	// sample names
 	s3[0] = "Muscle.HFD.6";

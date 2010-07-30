@@ -46,12 +46,7 @@ import ubic.gemma.model.genome.Gene;
  */
 public class VisualizationValueObject {
 
-    private static String[] colors = new String[] { "red", "black", "blue", "green", "orange" };
-
-    /**
-     * Only use this if there should be a pvalue; if you aren't using them, set the pvalue to null.
-     */
-    private static Double DEFAULT_P_VALUE = 1.0;
+    private static String[] colors = new String[] { "red", "black", "blue", "green", "orange" }; 
 
     private static Log log = LogFactory.getLog( VisualizationValueObject.class );
 
@@ -118,7 +113,7 @@ public class VisualizationValueObject {
                 valid = 1;
             }
 
-            GeneExpressionProfile profile = new GeneExpressionProfile( vector, color, valid, null );
+            GeneExpressionProfile profile = new GeneExpressionProfile( vector, color, valid, vector.getPvalue() );
 
             if ( !profile.isAllMissing() ) profiles.add( profile );
 
@@ -161,12 +156,12 @@ public class VisualizationValueObject {
             }
 
             int valid = 1;
-            Double pValue = DEFAULT_P_VALUE;
+            Double pValue = vector.getPvalue();
 
             if ( validatedProbes != null ) {
                 for ( DifferentialExpressionValueObject devo : validatedProbes ) {
                     if ( devo.getProbeId().equals( vector.getDesignElement().getId() ) ) {
-                        pValue = devo.getP();
+                        // pValue = devo.getP();
                         valid = 2;
                         break;
                     }

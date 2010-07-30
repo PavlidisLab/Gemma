@@ -24,10 +24,11 @@ import org.apache.commons.lang.StringUtils;
 
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
-import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 
 /**
+ * Represents the results for one probe.
+ * 
  * @author keshav
  * @version $Id$
  */

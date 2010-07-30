@@ -22,6 +22,7 @@ package ubic.gemma.web.controller.expression.experiment;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -45,7 +46,6 @@ import ubic.gemma.analysis.expression.diff.DiffExpressionSelectedFactorCommand;
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionValueObject;
 import ubic.gemma.analysis.expression.diff.GeneDifferentialExpressionService;
 import ubic.gemma.analysis.service.ExpressionDataFileService;
-import ubic.gemma.model.analysis.AnalysisResultSet;
 import ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.ProbeAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultService;
@@ -58,6 +58,7 @@ import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -205,7 +206,8 @@ public class DEDVController {
      * AJAX exposed method private DifferentialExpressionAnalysisResultService
      * differentialExpressionAnalysisResultService;
      * 
-     * @param eeIds
+     * @param eeIds FIXME accomodate ExpressionExperimentSubSets. Currently we pass in the "source experiment" so we
+     *        don't get the slice.
      * @param geneIds (could be just one)
      * @param threshold for 'significance'
      * @param factorMap Collection of DiffExpressionSelectedFactorCommand showing which factors to use.
@@ -218,7 +220,7 @@ public class DEDVController {
 
         StopWatch watch = new StopWatch();
         watch.start();
-        Collection<ExpressionExperiment> ees = expressionExperimentService.loadMultiple( eeIds );
+        Collection<? extends BioAssaySet> ees = expressionExperimentService.loadMultiple( eeIds );
         if ( ees == null || ees.isEmpty() ) return null;
         Collection<Gene> genes = geneService.loadMultiple( geneIds );
         if ( genes == null || genes.isEmpty() ) return null;
@@ -254,7 +256,8 @@ public class DEDVController {
     /**
      * AJAX exposed method
      * 
-     * @param eeId
+     * @param eeId FIXME accomodate ExpressionExperimentSubSets. Currently we pass in the "source experiment" so we
+     *        don't get the slice.
      * @param geneId
      * @param threshold (diff expression threshold)
      * @return
@@ -282,7 +285,7 @@ public class DEDVController {
 
         Collection<Gene> genes = new ArrayList<Gene>();
         genes.add( gene );
-        Collection<ExpressionExperiment> ees = new ArrayList<ExpressionExperiment>();
+        Collection<BioAssaySet> ees = new ArrayList<BioAssaySet>();
         ees.add( ee );
 
         dedvs = processedExpressionDataVectorService.getProcessedDataArrays( ees, genes, false );
@@ -320,7 +323,9 @@ public class DEDVController {
     /**
      * AJAX exposed method
      * 
-     * @param resultSetIds
+     * @param eeid The experiment we need to visualize DEPRECATED because we don't use it.
+     * @param resultSetId The resultset we're specifically interested. Note that this is what is used to choose the
+     *        vectors, since it could be a subset of an experiment.
      * @param threshold for 'significance'
      * @return collection of visualization value objects
      */
@@ -338,7 +343,7 @@ public class DEDVController {
             log.debug( "Threshold specified not using default value: " + givenThreshold );
         }
 
-        Collection<DoubleVectorValueObject> dedvs = getDiffExVectors( eeId, resultSetId, threshold );
+        List<DoubleVectorValueObject> dedvs = getDiffExVectors( resultSetId, threshold );
 
         // Map<ExpressionExperiment, LinkedHashMap<BioAssay, Map<ExperimentalFactor, Double>>> layouts = null;
         // FIXME: Commented out for performance and factor info not displayed on front end yet anyway.
@@ -586,7 +591,7 @@ public class DEDVController {
 
             Long eeId = eeIds.iterator().next();
 
-            Collection<DoubleVectorValueObject> diffExVectors = getDiffExVectors( eeId, resultSetId, thresh );
+            Collection<DoubleVectorValueObject> diffExVectors = getDiffExVectors( resultSetId, thresh );
 
             if ( diffExVectors == null || diffExVectors.isEmpty() ) {
                 mav.addObject( "text", "No DEDV results" );
@@ -689,33 +694,52 @@ public class DEDVController {
      * @param threshold
      * @return
      */
-    private Collection<DoubleVectorValueObject> getDiffExVectors( Long eeId, Long resultSetId, Double threshold ) {
+    private List<DoubleVectorValueObject> getDiffExVectors( Long resultSetId, Double threshold ) {
 
         StopWatch watch = new StopWatch();
         watch.start();
-        AnalysisResultSet ar = differentialExpressionResultService.loadAnalysisResult( resultSetId );
+        ExpressionAnalysisResultSet ar = differentialExpressionResultService.loadAnalysisResult( resultSetId );
         if ( ar == null ) return null;
 
         Collection<ExpressionAnalysisResultSet> ars = new ArrayList<ExpressionAnalysisResultSet>();
-        ars.add( ( ExpressionAnalysisResultSet ) ar );
+        ars.add( ar );
 
-        ExpressionExperiment ee = expressionExperimentService.load( eeId );
-        if ( ee == null ) return null;
-        Collection<ExpressionExperiment> ees = new ArrayList<ExpressionExperiment>();
-        ees.add( ee );
+        differentialExpressionResultService.thawLite( ar );
 
-        Map<ExpressionAnalysisResultSet, Collection<ProbeAnalysisResult>> ee2probeResults = differentialExpressionResultService
+        BioAssaySet analyzedSet = ar.getAnalysis().getExpressionExperimentSetAnalyzed().getExperiments().iterator()
+                .next();
+
+        Collection<BioAssaySet> ees = new ArrayList<BioAssaySet>();
+        ees.add( analyzedSet );
+
+        Map<ExpressionAnalysisResultSet, List<ProbeAnalysisResult>> ee2probeResults = differentialExpressionResultService
                 .findInResultSets( ars, threshold, MAX_RESULTS_TO_RETURN );
 
         if ( ee2probeResults == null || ee2probeResults.isEmpty() ) return null;
 
         Collection<CompositeSequence> probes = new HashSet<CompositeSequence>();
+        Map<CompositeSequence, Double> pvalues = new HashMap<CompositeSequence, Double>();
         for ( ProbeAnalysisResult par : ee2probeResults.get( ar ) ) {
             probes.add( par.getProbe() );
+            pvalues.put( par.getProbe(), par.getPvalue() );
         }
 
-        Collection<DoubleVectorValueObject> dedvs = processedExpressionDataVectorService.getProcessedDataArraysByProbe(
-                ees, probes, false );
+        List<DoubleVectorValueObject> dedvs = new ArrayList<DoubleVectorValueObject>(
+                processedExpressionDataVectorService.getProcessedDataArraysByProbe( ees, probes, false ) );
+
+        /*
+         * Resort
+         */
+        for ( DoubleVectorValueObject v : dedvs ) {
+            v.setPvalue( pvalues.get( v.getDesignElement() ) );
+        }
+
+        Collections.sort( dedvs, new Comparator<DoubleVectorValueObject>() {
+            @Override
+            public int compare( DoubleVectorValueObject o1, DoubleVectorValueObject o2 ) {
+                return o1.getPvalue().compareTo( o2.getPvalue() );
+            }
+        } );
 
         if ( watch.getTime() > 1000 )
             log.info( "Retrieved " + dedvs.size() + " DEDVs for " + ar.getId() + " ResultSetId and " + probes.size()
@@ -860,7 +884,8 @@ public class DEDVController {
 
     private List<String> getSampleNames( DoubleVectorValueObject dedv ) {
         List<String> result = new ArrayList<String>();
-        bioAssayDimensionService.thaw( dedv.getBioAssayDimension() );
+        if ( dedv.getBioAssayDimension().getId() != null )
+            bioAssayDimensionService.thaw( dedv.getBioAssayDimension() );
         for ( BioAssay ba : dedv.getBioAssayDimension().getBioAssays() ) {
             result.add( ba.getName() );
         }
@@ -1034,6 +1059,7 @@ public class DEDVController {
      * 
      * @param dedvs
      * @param genes
+     * @param validatedProbes
      * @param layouts
      * @return
      */
@@ -1043,14 +1069,14 @@ public class DEDVController {
 
         StopWatch timer = new StopWatch();
         timer.start();
-        Map<ExpressionExperiment, Collection<DoubleVectorValueObject>> vvoMap = new HashMap<ExpressionExperiment, Collection<DoubleVectorValueObject>>();
+        Map<ExpressionExperiment, List<DoubleVectorValueObject>> vvoMap = new HashMap<ExpressionExperiment, List<DoubleVectorValueObject>>();
         // Organize by expression experiment
         if ( dedvs == null || dedvs.isEmpty() ) return new VisualizationValueObject[1];
 
         for ( DoubleVectorValueObject dvvo : dedvs ) {
             ExpressionExperiment ee = dvvo.getExpressionExperiment();
             if ( !vvoMap.containsKey( ee ) ) {
-                vvoMap.put( ee, new HashSet<DoubleVectorValueObject>() );
+                vvoMap.put( ee, new ArrayList<DoubleVectorValueObject>() );
             }
             vvoMap.get( ee ).add( dvvo );
         }

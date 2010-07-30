@@ -40,6 +40,7 @@ import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
@@ -389,6 +390,7 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
         quantitationType.setIsPreferred( true );
         quantitationType.setIsMaskedPreferred( false );
         quantitationType.setIsBackground( false );
+        quantitationType.setScale( ScaleType.LOG2 );
         quantitationType.setIsNormalized( false );
         quantitationType.setIsBackgroundSubtracted( false );
         quantitationType.setIsRatio( false );

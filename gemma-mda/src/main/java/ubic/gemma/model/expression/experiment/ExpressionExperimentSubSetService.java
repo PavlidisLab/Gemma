@@ -44,4 +44,10 @@ public interface ExpressionExperimentSubSetService {
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public java.util.Collection<ExpressionExperimentSubSet> loadAll();
 
+    @Secured( { "GROUP_USER" })
+    public ExpressionExperimentSubSet findOrCreate( ExpressionExperimentSubSet entity );
+
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    public ExpressionExperimentSubSet find( ExpressionExperimentSubSet entity );
+
 }

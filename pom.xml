@@ -310,9 +310,7 @@
 							<report>dependencies</report>
 							<report>dependency-convergence</report>
 								<report>index</report>
-
 								<report>project-team</report>
-
 								<report>cim</report>
 								<report>issue-tracking</report>
 								<report>license</report>
@@ -382,6 +380,10 @@
 					<argLine>-Xmx1.2g -XX:MaxPermSize=256m</argLine>
 				</configuration>
 			</plugin>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>cobertura-maven-plugin</artifactId>
+			</plugin>
 		</plugins>
 	</reporting>
 	<build>
@@ -411,7 +413,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-release-plugin</artifactId> 
-				<version>2.0-beta-5</version><!--  2.0-beta-8 hangs on cvs update -->
+				<!--<version>2.0-beta-5</version>  2.0-beta-8 hangs on cvs update -->
 				<configuration>
 					<allowTimestampedSnapshots>
 						true

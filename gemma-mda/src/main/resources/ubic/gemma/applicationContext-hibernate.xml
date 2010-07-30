@@ -212,6 +212,8 @@
 				</value>
 				<value>classpath:ubic/gemma/model/analysis/AnalysisResultSet.hbm.xml
 				</value>
+				<value>classpath:ubic/gemma/model/analysis/ContrastResult.hbm.xml
+				</value>
 				<value>classpath:ubic/gemma/model/analysis/expression/ExpressionExperimentSet.hbm.xml
 				</value>
 				<value>classpath:ubic/gemma/model/genome/gene/GeneSet.hbm.xml

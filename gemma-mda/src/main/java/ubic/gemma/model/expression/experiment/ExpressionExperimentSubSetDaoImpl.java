@@ -18,9 +18,12 @@
  */
 package ubic.gemma.model.expression.experiment;
 
+import org.hibernate.Criteria;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
+
+import ubic.gemma.util.BusinessKey;
 
 /**
  * @see ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet
@@ -32,6 +35,32 @@ public class ExpressionExperimentSubSetDaoImpl extends
     @Autowired
     public ExpressionExperimentSubSetDaoImpl( SessionFactory sessionFactory ) {
         super.setSessionFactory( sessionFactory );
+    }
+
+    @Override
+    public ExpressionExperimentSubSet findOrCreate( ExpressionExperimentSubSet expressionExperimentSubSet ) {
+        if ( expressionExperimentSubSet.getName() == null ) {
+            throw new IllegalArgumentException( "ExperimentalDesign must have name or external accession." );
+        }
+        ExpressionExperimentSubSet existing = this.find( expressionExperimentSubSet );
+        if ( existing != null ) {
+            return existing;
+        }
+        return create( expressionExperimentSubSet );
+    }
+
+    @Override
+    public ExpressionExperimentSubSet find( ExpressionExperimentSubSet entity ) {
+        try {
+            Criteria queryObject = super.getSession().createCriteria( ExpressionExperimentSubSet.class );
+
+            BusinessKey.checkKey( entity );
+
+            BusinessKey.createQueryObject( queryObject, entity );
+            return ( ExpressionExperimentSubSet ) queryObject.uniqueResult();
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
     }
 
 }

@@ -79,6 +79,6 @@ public interface ExpressionExperimentReportService {
      * @param vos
      * @return
      */
-    public Map<Long, Date> fillLinkStatsFromCache( Collection<ExpressionExperimentValueObject> vos );
+    public Map<Long, Date> fillReportInformation( Collection<ExpressionExperimentValueObject> vos );
 
 }

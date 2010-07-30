@@ -60,15 +60,15 @@ public class DifferentialExpressionAnalyzer implements ApplicationContextAware {
      * @param expressionExperiment
      * @return
      */
-    public DifferentialExpressionAnalysis analyze( ExpressionExperiment expressionExperiment ) {
+    public Collection<DifferentialExpressionAnalysis> analyze( ExpressionExperiment expressionExperiment ) {
 
-        AbstractDifferentialExpressionAnalyzer analyzer = determineAnalysis( expressionExperiment, null );
+        AbstractDifferentialExpressionAnalyzer analyzer = determineAnalysis( expressionExperiment, null, null );
         if ( analyzer == null ) {
             throw new RuntimeException( "Could not locate an appropriate analyzer" );
         }
-        DifferentialExpressionAnalysis analysis = analyzer.run( expressionExperiment );
+        Collection<DifferentialExpressionAnalysis> analyses = analyzer.run( expressionExperiment );
 
-        return analysis;
+        return analyses;
 
     }
 
@@ -77,18 +77,18 @@ public class DifferentialExpressionAnalyzer implements ApplicationContextAware {
      * @param config
      * @return
      */
-    public DifferentialExpressionAnalysis analyze( ExpressionExperiment expressionExperiment,
+    public Collection<DifferentialExpressionAnalysis> analyze( ExpressionExperiment expressionExperiment,
             DifferentialExpressionAnalysisConfig config ) {
         AbstractDifferentialExpressionAnalyzer analyzer = determineAnalysis( expressionExperiment, config
-                .getFactorsToInclude(), config.getAnalysisType() );
+                .getFactorsToInclude(), config.getAnalysisType(), config.getSubsetFactor() );
 
         if ( analyzer == null ) {
             throw new RuntimeException( "Could not locate an appropriate analyzer" );
         }
 
-        DifferentialExpressionAnalysis analysis = analyzer.run( expressionExperiment, config );
+        Collection<DifferentialExpressionAnalysis> analyses = analyzer.run( expressionExperiment, config );
 
-        return analysis;
+        return analyses;
     }
 
     /**
@@ -97,18 +97,18 @@ public class DifferentialExpressionAnalyzer implements ApplicationContextAware {
      * @param expressionExperiment
      * @return
      */
-    public DifferentialExpressionAnalysis analyze( ExpressionExperiment expressionExperiment,
+    public Collection<DifferentialExpressionAnalysis> analyze( ExpressionExperiment expressionExperiment,
             Collection<ExperimentalFactor> factors ) {
 
-        AbstractDifferentialExpressionAnalyzer analyzer = determineAnalysis( expressionExperiment, factors );
+        AbstractDifferentialExpressionAnalyzer analyzer = determineAnalysis( expressionExperiment, factors, null );
 
         if ( analyzer == null ) {
             throw new RuntimeException( "Could not locate an appropriate analyzer" );
         }
 
-        DifferentialExpressionAnalysis analysis = analyzer.run( expressionExperiment, factors );
+        Collection<DifferentialExpressionAnalysis> analyses = analyzer.run( expressionExperiment, factors );
 
-        return analysis;
+        return analyses;
 
     }
 
@@ -118,18 +118,18 @@ public class DifferentialExpressionAnalyzer implements ApplicationContextAware {
      * @param type
      * @return
      */
-    public DifferentialExpressionAnalysis analyze( ExpressionExperiment expressionExperiment,
+    public Collection<DifferentialExpressionAnalysis> analyze( ExpressionExperiment expressionExperiment,
             Collection<ExperimentalFactor> factors, AnalysisType type ) {
 
-        AbstractDifferentialExpressionAnalyzer analyzer = determineAnalysis( expressionExperiment, factors, type );
+        AbstractDifferentialExpressionAnalyzer analyzer = determineAnalysis( expressionExperiment, factors, type, null );
 
         if ( analyzer == null ) {
             throw new RuntimeException( "Could not locate an appropriate analyzer" );
         }
 
-        DifferentialExpressionAnalysis analysis = analyzer.run( expressionExperiment, factors );
+        Collection<DifferentialExpressionAnalysis> analyses = analyzer.run( expressionExperiment, factors );
 
-        return analysis;
+        return analyses;
 
     }
 
@@ -137,17 +137,26 @@ public class DifferentialExpressionAnalyzer implements ApplicationContextAware {
      * @param expressionExperiment
      * @param factors
      * @param type - preselected value rather than inferring it
+     * @param subsetFactor - can be null
      * @return
      */
     public AbstractDifferentialExpressionAnalyzer determineAnalysis( ExpressionExperiment expressionExperiment,
-            Collection<ExperimentalFactor> factors, AnalysisType type ) {
+            Collection<ExperimentalFactor> factors, AnalysisType type, ExperimentalFactor subsetFactor ) {
 
         if ( factors.size() == 0 ) {
             throw new IllegalArgumentException( "Must provide at least one factor" );
         }
 
         if ( type == null ) {
-            return determineAnalysis( expressionExperiment, factors );
+            return determineAnalysis( expressionExperiment, factors, subsetFactor );
+        }
+
+        if ( subsetFactor != null ) {
+            /*
+             * Basically have to make the subsets, and then validate the choice of model on each of those. The following
+             * just assumes that we're going to do something very simple.
+             */
+            return this.applicationContext.getBean( GenericAncovaAnalyzer.class );
         }
 
         switch ( type ) {
@@ -213,28 +222,17 @@ public class DifferentialExpressionAnalyzer implements ApplicationContextAware {
      * 
      * @param expressionExperiment
      * @param factors which factors to use, or null if to use all from the experiment
+     * @param subsetFactor can ben null
      * @return an appropriate analyzer
      * @throws an exception if the experiment doesn't have a valid experimental design.
      */
     public AbstractDifferentialExpressionAnalyzer determineAnalysis( ExpressionExperiment expressionExperiment,
-            Collection<ExperimentalFactor> experimentalFactors ) {
+            Collection<ExperimentalFactor> experimentalFactors, ExperimentalFactor subsetFactor ) {
 
-        Collection<ExperimentalFactor> efsToUse = null;
-        if ( experimentalFactors == null || experimentalFactors.isEmpty() ) {
-            efsToUse = expressionExperiment.getExperimentalDesign().getExperimentalFactors();
-        } else {
-            efsToUse = experimentalFactors;
-            if ( efsToUse.isEmpty() ) {
-                throw new IllegalArgumentException(
-                        "No experimental factors.  Cannot execute differential expression analysis." );
-            }
+        Collection<ExperimentalFactor> efsToUse = getFactorsToUse( expressionExperiment, experimentalFactors );
 
-            // sanity check...
-            for ( ExperimentalFactor experimentalFactor : efsToUse ) {
-                if ( !experimentalFactor.getExperimentalDesign().equals( expressionExperiment.getExperimentalDesign() ) ) {
-                    throw new IllegalArgumentException( "Factors must come from the experiment provided" );
-                }
-            }
+        if ( subsetFactor != null ) {
+            return this.applicationContext.getBean( GenericAncovaAnalyzer.class );
         }
 
         if ( efsToUse.size() == 1 ) {
@@ -291,7 +289,7 @@ public class DifferentialExpressionAnalyzer implements ApplicationContextAware {
                     // check for a ratiometric quantitation type.
                     for ( QuantitationType qt : expressionExperiment.getQuantitationTypes() ) {
                         if ( qt.getIsPreferred() && qt.getIsRatio() ) {
-                            // TODO use ANOVA but treat the intercept as a factor.
+                            // use ANOVA but treat the intercept as a factor.
                             useIntercept = true;
                             break;
                         }
@@ -316,6 +314,33 @@ public class DifferentialExpressionAnalyzer implements ApplicationContextAware {
              */
             return this.applicationContext.getBean( GenericAncovaAnalyzer.class );
         }
+    }
+
+    /**
+     * @param expressionExperiment
+     * @param experimentalFactors
+     * @return
+     */
+    private Collection<ExperimentalFactor> getFactorsToUse( ExpressionExperiment expressionExperiment,
+            Collection<ExperimentalFactor> experimentalFactors ) {
+        Collection<ExperimentalFactor> efsToUse = null;
+        if ( experimentalFactors == null || experimentalFactors.isEmpty() ) {
+            efsToUse = expressionExperiment.getExperimentalDesign().getExperimentalFactors();
+        } else {
+            efsToUse = experimentalFactors;
+            if ( efsToUse.isEmpty() ) {
+                throw new IllegalArgumentException(
+                        "No experimental factors.  Cannot execute differential expression analysis." );
+            }
+
+            // sanity check...
+            for ( ExperimentalFactor experimentalFactor : efsToUse ) {
+                if ( !experimentalFactor.getExperimentalDesign().equals( expressionExperiment.getExperimentalDesign() ) ) {
+                    throw new IllegalArgumentException( "Factors must come from the experiment provided" );
+                }
+            }
+        }
+        return efsToUse;
     }
 
     /*

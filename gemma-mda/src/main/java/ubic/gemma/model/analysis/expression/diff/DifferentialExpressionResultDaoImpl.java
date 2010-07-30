@@ -18,6 +18,7 @@
  */
 package ubic.gemma.model.analysis.expression.diff;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -37,6 +38,7 @@ import org.springframework.stereotype.Repository;
 import ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.ProbeAnalysisResult;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
@@ -57,28 +59,29 @@ public class DifferentialExpressionResultDaoImpl extends
             + " inner join a.expressionExperimentSetAnalyzed eesa inner join   eesa.experiments e  "
             + " inner join a.resultSets rs inner join rs.results r inner join fetch r.probe p "
             + "inner join p.biologicalCharacteristic bs inner join bs2gp.geneProduct gp inner join gp.gene g"
-            + " where bs2gp.bioSequence=bs and g=:gene and e in (:experimentsAnalyzed)";
+            + " where bs2gp.bioSequence=bs and g=:gene and e in (:experimentsAnalyzed)"; // no order by clause, we add
+    // it later
 
     private static final String fetchResultsByGene = "select distinct e, r"
             + " from DifferentialExpressionAnalysisImpl a, BioSequence2GeneProductImpl bs2gp"
             + " inner join a.expressionExperimentSetAnalyzed eesa inner join   eesa.experiments e  "
             + " inner join a.resultSets rs inner join rs.results r inner join fetch r.probe  p "
             + "inner join p.biologicalCharacteristic bs inner join bs2gp.geneProduct gp inner join gp.gene g"
-            + " where bs2gp.bioSequence=bs and g=:gene";
+            + " where bs2gp.bioSequence=bs and g=:gene"; // no order by clause, we add it later
 
     private static final String fetchResultsByExperimentsQuery = "select distinct e, r"
             + " from DifferentialExpressionAnalysisImpl a, BioSequence2GeneProductImpl bs2gp"
             + " inner join a.expressionExperimentSetAnalyzed eesa inner join   eesa.experiments e  "
             + " inner join a.resultSets rs inner join rs.results r inner join fetch r.probe p "
             + "inner join p.biologicalCharacteristic bs inner join bs2gp.geneProduct gp inner join gp.gene g"
-            + " where bs2gp.bioSequence=bs and e in (:experimentsAnalyzed)";
+            + " where bs2gp.bioSequence=bs and e in (:experimentsAnalyzed) and r.correctedPvalue < :threshold order by r.correctedPvalue";
 
     private static final String fetchResultsByResultSetQuery = "select distinct rs, r "
             + " from DifferentialExpressionAnalysisImpl a, BioSequence2GeneProductImpl bs2gp"
             + " inner join a.expressionExperimentSetAnalyzed eesa inner join   eesa.experiments e  "
             + " inner join a.resultSets rs inner join rs.results r inner join fetch r.probe p "
             + "inner join p.biologicalCharacteristic bs inner join bs2gp.geneProduct gp inner join gp.gene g"
-            + " where bs2gp.bioSequence=bs and rs in (:resultsAnalyzed)";
+            + " where bs2gp.bioSequence=bs and rs in (:resultsAnalyzed)"; // no order by clause, we add it later
 
     @Autowired
     public DifferentialExpressionResultDaoImpl( SessionFactory sessionFactory ) {
@@ -93,10 +96,10 @@ public class DifferentialExpressionResultDaoImpl extends
      * .gemma.model.genome.Gene )
      */
     @SuppressWarnings("unchecked")
-    public Map<ExpressionExperiment, Collection<ProbeAnalysisResult>> find( Gene gene ) {
+    public Map<BioAssaySet, List<ProbeAnalysisResult>> find( Gene gene ) {
         StopWatch timer = new StopWatch();
         timer.start();
-        Map<ExpressionExperiment, Collection<ProbeAnalysisResult>> results = new HashMap<ExpressionExperiment, Collection<ProbeAnalysisResult>>();
+        Map<BioAssaySet, List<ProbeAnalysisResult>> results = new HashMap<BioAssaySet, List<ProbeAnalysisResult>>();
         if ( gene == null ) return results;
 
         HibernateTemplate tpl = new HibernateTemplate( this.getSessionFactory() );
@@ -107,11 +110,11 @@ public class DifferentialExpressionResultDaoImpl extends
         for ( Object o : qresult ) {
 
             Object[] oa = ( Object[] ) o;
-            ExpressionExperiment ee = ( ExpressionExperiment ) oa[0];
+            BioAssaySet ee = ( BioAssaySet ) oa[0];
             ProbeAnalysisResult probeResult = ( ProbeAnalysisResult ) oa[1];
 
             if ( !results.containsKey( ee ) ) {
-                results.put( ee, new HashSet<ProbeAnalysisResult>() );
+                results.put( ee, new ArrayList<ProbeAnalysisResult>() );
             }
 
             results.get( ee ).add( probeResult );
@@ -131,10 +134,9 @@ public class DifferentialExpressionResultDaoImpl extends
      * .gemma.model.genome.Gene, java.util.Collection)
      */
     @SuppressWarnings("unchecked")
-    public Map<ExpressionExperiment, Collection<ProbeAnalysisResult>> find( Gene gene,
-            Collection<ExpressionExperiment> experimentsAnalyzed ) {
+    public Map<BioAssaySet, List<ProbeAnalysisResult>> find( Gene gene, Collection<BioAssaySet> experimentsAnalyzed ) {
 
-        Map<ExpressionExperiment, Collection<ProbeAnalysisResult>> results = new HashMap<ExpressionExperiment, Collection<ProbeAnalysisResult>>();
+        Map<BioAssaySet, List<ProbeAnalysisResult>> results = new HashMap<BioAssaySet, List<ProbeAnalysisResult>>();
 
         if ( experimentsAnalyzed.size() == 0 ) {
             return results;
@@ -156,7 +158,7 @@ public class DifferentialExpressionResultDaoImpl extends
             ProbeAnalysisResult probeResult = ( ProbeAnalysisResult ) oa[1];
 
             if ( !results.containsKey( ee ) ) {
-                results.put( ee, new HashSet<ProbeAnalysisResult>() );
+                results.put( ee, new ArrayList<ProbeAnalysisResult>() );
             }
 
             results.get( ee ).add( probeResult );
@@ -172,11 +174,11 @@ public class DifferentialExpressionResultDaoImpl extends
      * 
      */
     @SuppressWarnings("unchecked")
-    public java.util.Map<ubic.gemma.model.expression.experiment.ExpressionExperiment, java.util.Collection<ProbeAnalysisResult>> find(
-            java.util.Collection<ubic.gemma.model.expression.experiment.ExpressionExperiment> experiments,
+    public java.util.Map<ubic.gemma.model.expression.experiment.BioAssaySet, java.util.List<ProbeAnalysisResult>> find(
+            java.util.Collection<ubic.gemma.model.expression.experiment.BioAssaySet> experiments,
             double qvalueThreshold, Integer limit ) {
 
-        Map<ExpressionExperiment, Collection<ProbeAnalysisResult>> results = new HashMap<ExpressionExperiment, Collection<ProbeAnalysisResult>>();
+        Map<BioAssaySet, List<ProbeAnalysisResult>> results = new HashMap<BioAssaySet, List<ProbeAnalysisResult>>();
 
         if ( experiments.size() == 0 ) {
             return results;
@@ -185,30 +187,27 @@ public class DifferentialExpressionResultDaoImpl extends
         StopWatch timer = new StopWatch();
         timer.start();
 
-        String qs = fetchResultsByExperimentsQuery + " and r.correctedPvalue < :threshold";
-
         HibernateTemplate tpl = new HibernateTemplate( this.getSessionFactory() );
         tpl.setQueryCacheRegion( "diffExResult" );
         tpl.setCacheQueries( true );
 
         if ( limit != null ) {
             tpl.setMaxResults( limit );
-            qs += " order by r.correctedPvalue";
         }
 
         String[] paramNames = { "experimentsAnalyzed", "threshold" };
         Object[] objectValues = { experiments, qvalueThreshold };
 
-        List qresult = tpl.findByNamedParam( qs, paramNames, objectValues );
+        List qresult = tpl.findByNamedParam( fetchResultsByExperimentsQuery, paramNames, objectValues );
 
         for ( Object o : qresult ) {
 
             Object[] oa = ( Object[] ) o;
-            ExpressionExperiment ee = ( ExpressionExperiment ) oa[0];
+            BioAssaySet ee = ( BioAssaySet ) oa[0];
             ProbeAnalysisResult probeResult = ( ProbeAnalysisResult ) oa[1];
 
             if ( !results.containsKey( ee ) ) {
-                results.put( ee, new HashSet<ProbeAnalysisResult>() );
+                results.put( ee, new ArrayList<ProbeAnalysisResult>() );
             }
 
             results.get( ee ).add( probeResult );
@@ -229,7 +228,7 @@ public class DifferentialExpressionResultDaoImpl extends
      * findResultsForGeneInExperimentsMetThreshold(ubic.gemma.model.genome.Gene, double, integer)
      */
     @SuppressWarnings("unchecked")
-    public java.util.Map<ubic.gemma.model.expression.experiment.ExpressionExperiment, java.util.Collection<ProbeAnalysisResult>> find(
+    public java.util.Map<ubic.gemma.model.expression.experiment.BioAssaySet, java.util.List<ProbeAnalysisResult>> find(
             ubic.gemma.model.genome.Gene gene, double threshold, Integer limit ) {
 
         StopWatch timer = new StopWatch();
@@ -247,7 +246,7 @@ public class DifferentialExpressionResultDaoImpl extends
             qs += " order by r.correctedPvalue";
         }
 
-        Map<ExpressionExperiment, Collection<ProbeAnalysisResult>> results = new HashMap<ExpressionExperiment, Collection<ProbeAnalysisResult>>();
+        Map<BioAssaySet, List<ProbeAnalysisResult>> results = new HashMap<BioAssaySet, List<ProbeAnalysisResult>>();
 
         String[] paramNames = { "gene", "threshold" };
         Object[] objectValues = { gene, threshold };
@@ -257,11 +256,11 @@ public class DifferentialExpressionResultDaoImpl extends
         for ( Object o : qresult ) {
 
             Object[] oa = ( Object[] ) o;
-            ExpressionExperiment ee = ( ExpressionExperiment ) oa[0];
+            BioAssaySet ee = ( BioAssaySet ) oa[0];
             ProbeAnalysisResult probeResult = ( ProbeAnalysisResult ) oa[1];
 
             if ( !results.containsKey( ee ) ) {
-                results.put( ee, new HashSet<ProbeAnalysisResult>() );
+                results.put( ee, new ArrayList<ProbeAnalysisResult>() );
             }
 
             results.get( ee ).add( probeResult );
@@ -285,9 +284,9 @@ public class DifferentialExpressionResultDaoImpl extends
      * findResultsForGeneInExperimentsMetThreshold(ubic.gemma.model.genome.Gene, java.util.Collection, double, Integer)
      */
     @SuppressWarnings("unchecked")
-    public java.util.Map<ubic.gemma.model.expression.experiment.ExpressionExperiment, java.util.Collection<ProbeAnalysisResult>> find(
+    public java.util.Map<ubic.gemma.model.expression.experiment.BioAssaySet, java.util.List<ProbeAnalysisResult>> find(
             ubic.gemma.model.genome.Gene gene,
-            java.util.Collection<ubic.gemma.model.expression.experiment.ExpressionExperiment> experimentsAnalyzed,
+            java.util.Collection<ubic.gemma.model.expression.experiment.BioAssaySet> experimentsAnalyzed,
             double threshold, Integer limit ) {
 
         StopWatch timer = new StopWatch();
@@ -303,7 +302,7 @@ public class DifferentialExpressionResultDaoImpl extends
             qs += " order by r.correctedPvalue";
         }
 
-        Map<ExpressionExperiment, Collection<ProbeAnalysisResult>> results = new HashMap<ExpressionExperiment, Collection<ProbeAnalysisResult>>();
+        Map<BioAssaySet, List<ProbeAnalysisResult>> results = new HashMap<BioAssaySet, List<ProbeAnalysisResult>>();
 
         if ( experimentsAnalyzed.size() == 0 ) {
             return results;
@@ -317,11 +316,11 @@ public class DifferentialExpressionResultDaoImpl extends
         for ( Object o : qresult ) {
 
             Object[] oa = ( Object[] ) o;
-            ExpressionExperiment ee = ( ExpressionExperiment ) oa[0];
+            BioAssaySet ee = ( BioAssaySet ) oa[0];
             ProbeAnalysisResult probeResult = ( ProbeAnalysisResult ) oa[1];
 
             if ( !results.containsKey( ee ) ) {
-                results.put( ee, new HashSet<ProbeAnalysisResult>() );
+                results.put( ee, new ArrayList<ProbeAnalysisResult>() );
             }
 
             results.get( ee ).add( probeResult );
@@ -347,10 +346,10 @@ public class DifferentialExpressionResultDaoImpl extends
      * @return
      */
     @SuppressWarnings("unchecked")
-    public java.util.Map<ExpressionAnalysisResultSet, java.util.Collection<ProbeAnalysisResult>> findInResultSets(
+    public java.util.Map<ExpressionAnalysisResultSet, List<ProbeAnalysisResult>> findInResultSets(
             java.util.Collection<ExpressionAnalysisResultSet> resultsAnalyzed, double threshold, Integer limit ) {
 
-        Map<ExpressionAnalysisResultSet, Collection<ProbeAnalysisResult>> results = new HashMap<ExpressionAnalysisResultSet, Collection<ProbeAnalysisResult>>();
+        Map<ExpressionAnalysisResultSet, List<ProbeAnalysisResult>> results = new HashMap<ExpressionAnalysisResultSet, List<ProbeAnalysisResult>>();
 
         if ( resultsAnalyzed.size() == 0 ) {
             return results;
@@ -358,13 +357,12 @@ public class DifferentialExpressionResultDaoImpl extends
 
         StopWatch timer = new StopWatch();
         timer.start();
-        String qs = fetchResultsByResultSetQuery + " and r.correctedPvalue < :threshold";
+        String qs = fetchResultsByResultSetQuery + " and r.correctedPvalue < :threshold order by r.correctedPvalue";
 
         HibernateTemplate tpl = new HibernateTemplate( this.getSessionFactory() );
 
         if ( limit != null ) {
             tpl.setMaxResults( limit );
-            qs += " order by r.correctedPvalue";
         }
 
         String[] paramNames = { "resultsAnalyzed", "threshold" };
@@ -379,7 +377,7 @@ public class DifferentialExpressionResultDaoImpl extends
             ProbeAnalysisResult probeResult = ( ProbeAnalysisResult ) oa[1];
 
             if ( !results.containsKey( ee ) ) {
-                results.put( ee, new HashSet<ProbeAnalysisResult>() );
+                results.put( ee, new ArrayList<ProbeAnalysisResult>() );
             }
 
             results.get( ee ).add( probeResult );

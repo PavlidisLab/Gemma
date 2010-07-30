@@ -59,13 +59,13 @@ public abstract class DesignElementImpl extends ubic.gemma.model.expression.desi
 
         if ( this.getId() != null ) {
             return 29 * getId().hashCode();
-        } else {
-            int nameHash = this.getName() == null ? 0 : getName().hashCode();
-
-            int descHash = this.getDescription() == null ? 0 : getDescription().hashCode();
-            int adHash = this.getArrayDesign() == null ? 0 : getArrayDesign().hashCode();
-            hashCode = 29 * nameHash + descHash + adHash;
         }
+        int nameHash = this.getName() == null ? 0 : getName().hashCode();
+
+        int descHash = this.getDescription() == null ? 0 : getDescription().hashCode();
+        int adHash = this.getArrayDesign() == null ? 0 : getArrayDesign().hashCode();
+        hashCode = 29 * nameHash + descHash + adHash;
+
         return hashCode;
     }
 

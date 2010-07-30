@@ -18,6 +18,7 @@
  */
 package ubic.gemma.analysis.expression.diff;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -38,7 +39,9 @@ import ubic.gemma.model.expression.experiment.FactorValue;
  * @author keshav
  * @version $Id$
  */
-public class DifferentialExpressionAnalysisConfig {
+public class DifferentialExpressionAnalysisConfig implements Serializable {
+
+    private static final long serialVersionUID = 622877438067070041L;
 
     private AnalysisType analysisType;
 

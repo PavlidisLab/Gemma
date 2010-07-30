@@ -18,6 +18,8 @@
  */
 package ubic.gemma.analysis.expression.diff;
 
+import java.util.Collection;
+
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
@@ -42,7 +44,7 @@ public class TwoWayAnovaWithInteractionsAnalyzer extends LinearModelAnalyzer {
      * ExpressionExperiment , ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalysisConfig)
      */
     @Override
-    public DifferentialExpressionAnalysis run( ExpressionExperiment expressionExperiment,
+    public Collection<DifferentialExpressionAnalysis> run( ExpressionExperiment expressionExperiment,
             DifferentialExpressionAnalysisConfig config ) {
 
         if ( expressionExperiment.getExperimentalDesign().getExperimentalFactors().size() < 2 ) {

@@ -55,6 +55,8 @@ public class DifferentialExpressionAnalysisTaskCommand extends TaskCommand {
      */
     private boolean includeInteractions = false;
 
+    private ExperimentalFactor subsetFactor;
+
     public DifferentialExpressionAnalysisTaskCommand( ExpressionExperiment ee ) {
         super();
         this.expressionExperiment = ee;
@@ -85,6 +87,13 @@ public class DifferentialExpressionAnalysisTaskCommand extends TaskCommand {
         return factors;
     }
 
+    /**
+     * @return the subsetFactor
+     */
+    public ExperimentalFactor getSubsetFactor() {
+        return subsetFactor;
+    }
+
     public boolean isForceAnalysis() {
         return forceAnalysis;
     }
@@ -111,6 +120,13 @@ public class DifferentialExpressionAnalysisTaskCommand extends TaskCommand {
 
     public void setIncludeInteractions( boolean includeInteractions ) {
         this.includeInteractions = includeInteractions;
+    }
+
+    /**
+     * @param subsetFactor the subsetFactor to set
+     */
+    public void setSubsetFactor( ExperimentalFactor subsetFactor ) {
+        this.subsetFactor = subsetFactor;
     }
 
 }

@@ -18,11 +18,15 @@
  */
 package ubic.gemma.model.expression.bioAssayData;
 
+import java.util.ArrayList;
 import java.util.Collection;
+
+import org.apache.commons.lang.ArrayUtils;
 
 import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.genome.Gene;
 import cern.colt.list.DoubleArrayList;
 
@@ -38,10 +42,12 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
      * 
      */
     private static final long serialVersionUID = -5116242513725297615L;
-    private boolean masked = false;
     private double[] data = null;
-    private Double rankByMean;
+    private boolean masked = false;
+    private Double pvalue;
     private Double rankByMax;
+    private Double rankByMean;
+    private Long sourceVectorId = null;
 
     /**
      * @param dedv
@@ -71,8 +77,56 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
         }
     }
 
+    /**
+     * Create a vector that is a slice of another one. The bioassays chosen are as given in the supplied
+     * bioassaydimension.
+     * 
+     * @param vec
+     * @param bad
+     */
+    public DoubleVectorValueObject( DoubleVectorValueObject vec, BioAssayDimension bad ) {
+        this.masked = vec.masked;
+        this.rankByMax = vec.rankByMax;
+        this.rankByMean = vec.rankByMean;
+        this.setGenes( vec.getGenes() );
+        this.setDesignElement( vec.getDesignElement() );
+
+        this.expressionExperiment = vec.getExpressionExperiment(); // FIXME, this should be the EESET.
+
+        this.setId( null ); // because this is a 'sliced', not a persistent one.
+        this.setQuantitationType( vec.getQuantitationType() );
+        this.setBioAssayDimension( bad );
+        this.sourceVectorId = vec.getId(); // so we can track this!
+
+        this.data = new double[bad.getBioAssays().size()];
+
+        Collection<Double> values = new ArrayList<Double>();
+        int i = 0;
+        for ( BioAssay ba : vec.getBioAssayDimension().getBioAssays() ) {
+            if ( this.bioAssayDimension.getBioAssays().contains( ba ) ) {
+                values.add( vec.getData()[i] );
+            }
+            i++;
+        }
+
+        this.data = ArrayUtils.toPrimitive( values.toArray( new Double[] {} ) );
+    }
+
     public double[] getData() {
         return data;
+    }
+
+    public Double getPvalue() {
+        return pvalue;
+    }
+
+    /**
+     * If this returns non-null, it means the vector is a slice of another vector identified by the return value.
+     * 
+     * @return
+     */
+    public Long getSourceVectorId() {
+        return sourceVectorId;
     }
 
     public boolean isMasked() {
@@ -81,6 +135,10 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
 
     public void setMasked( boolean masked ) {
         this.masked = masked;
+    }
+
+    public void setPvalue( Double pvalue ) {
+        this.pvalue = pvalue;
     }
 
     /**

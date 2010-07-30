@@ -21,6 +21,7 @@ package ubic.gemma.analysis.expression.diff;
 import static org.junit.Assert.assertNotNull;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 import org.junit.Test;
@@ -29,7 +30,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.model.analysis.expression.ProbeAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultDao;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.GeneDao;
 import ubic.gemma.testing.BaseSpringContextTest;
@@ -74,8 +75,7 @@ public class DifferentialExpressionAnalysisDaoImplTest extends BaseSpringContext
         }
 
         for ( Gene g : genes ) {
-            Collection<ExpressionExperiment> experiments = differentialExpressionAnalysisDao
-                    .findExperimentsWithAnalyses( g );
+            Collection<BioAssaySet> experiments = differentialExpressionAnalysisDao.findExperimentsWithAnalyses( g );
             assertNotNull( experiments );
             log.info( experiments.size() );
         }
@@ -95,15 +95,13 @@ public class DifferentialExpressionAnalysisDaoImplTest extends BaseSpringContext
         }
 
         for ( Gene g : genes ) {
-            Collection<ExpressionExperiment> experiments = differentialExpressionAnalysisDao
-                    .findExperimentsWithAnalyses( g );
+            Collection<BioAssaySet> experiments = differentialExpressionAnalysisDao.findExperimentsWithAnalyses( g );
 
             log.info( "num experiments for " + g.getOfficialSymbol() + ": " + experiments.size() );
 
-            Map<ExpressionExperiment, Collection<ProbeAnalysisResult>> results = differentialExpressionResultDao.find(
-                    g, experiments );
+            Map<BioAssaySet, List<ProbeAnalysisResult>> results = differentialExpressionResultDao.find( g, experiments );
 
-            for ( ExpressionExperiment e : results.keySet() ) {
+            for ( BioAssaySet e : results.keySet() ) {
 
                 log.debug( "num results for gene " + g.getOfficialSymbol() + " and experiment " + e.getName() + ": "
                         + results.size() );

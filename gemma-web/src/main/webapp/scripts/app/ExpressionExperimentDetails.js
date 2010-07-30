@@ -121,17 +121,17 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 	},
 
 	getPubMedHtml : function(e) {
-		var pubmedUrl = e.primaryCitation +
-				'&nbsp; <a target="_blank" ext:qtip="Go to PubMed (in new window)"' +
-				' href="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=pubmed&cmd=Retrieve&dopt=AbstractPlus&list_uids=' +
-				e.pubmedId +
-				'&query_hl=2&itool=pubmed_docsum"><img src="/Gemma/images/pubmed.gif" ealt="PubMed" /></a>&nbsp;&nbsp';
+		var pubmedUrl = e.primaryCitation
+				+ '&nbsp; <a target="_blank" ext:qtip="Go to PubMed (in new window)"'
+				+ ' href="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=pubmed&cmd=Retrieve&dopt=AbstractPlus&list_uids='
+				+ e.pubmedId
+				+ '&query_hl=2&itool=pubmed_docsum"><img src="/Gemma/images/pubmed.gif" ealt="PubMed" /></a>&nbsp;&nbsp';
 
 		if (this.editable) {
 			// Add the 'delete' button.
-			pubmedUrl = pubmedUrl +
-					'<span style="cursor:pointer" onClick="Ext.getCmp(\'ee-details-panel\').removePubMed()">' +
-					'<img src="/Gemma/images/icons/cross.png"  ext:qtip="Remove publication"  /></a>&nbsp;';
+			pubmedUrl = pubmedUrl
+					+ '<span style="cursor:pointer" onClick="Ext.getCmp(\'ee-details-panel\').removePubMed()">'
+					+ '<img src="/Gemma/images/icons/cross.png"  ext:qtip="Remove publication"  /></a>&nbsp;';
 		}
 
 		var pubmedRegion = {
@@ -172,8 +172,8 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 						listeners : {
 							'keyup' : {
 								fn : function(e) {
-									if (Ext.getCmp('pubmed-id-field').isDirty() &&
-											Ext.getCmp('pubmed-id-field').isValid()) {
+									if (Ext.getCmp('pubmed-id-field').isDirty()
+											&& Ext.getCmp('pubmed-id-field').isValid()) {
 										// show save
 										// button
 										Ext.getCmp('update-pubmed-region').show(true);
@@ -187,9 +187,9 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 					}, {
 						baseCls : 'x-plain-panel',
 						id : 'update-pubmed-region',
-						html : '<span style="cursor:pointer" onClick="Ext.getCmp(\'ee-details-panel\').savePubMed(' +
-								e.id +
-								',[\'shortname\',\'name\',\'description\'])" ><img src="/Gemma/images/icons/database_save.png" title="Click to save changes" alt="Click to save changes"/></span>',
+						html : '<span style="cursor:pointer" onClick="Ext.getCmp(\'ee-details-panel\').savePubMed('
+								+ e.id
+								+ ',[\'shortname\',\'name\',\'description\'])" ><img src="/Gemma/images/icons/database_save.png" title="Click to save changes" alt="Click to save changes"/></span>',
 						hidden : true
 					}
 
@@ -202,8 +202,8 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 		var result = '';
 		for (var i = 0; i < arrayDesigns.length; i++) {
 			var ad = arrayDesigns[i];
-			result = result + '<a href="/Gemma/arrays/showArrayDesign.html?id=' + ad.id + '">' + ad.shortName +
-					'</a> - ' + ad.name;
+			result = result + '<a href="/Gemma/arrays/showArrayDesign.html?id=' + ad.id + '">' + ad.shortName
+					+ '</a> - ' + ad.name;
 			if (i < arrayDesigns.length - 1) {
 				result = result + "<br/>";
 			}
@@ -226,50 +226,91 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 
 	},
 
+	/**
+	 * 
+	 * @param {}
+	 *            ee
+	 * @return {String}
+	 */
 	renderDiffExpressionDetails : function(ee) {
 
-		if (!ee.diffExpressedProbes) {
-			return "Unavailable";
+		var analyses = ee.differentialExpressionAnalyses;
+
+		if (!analyses || analyses.size() == 0) {
+			return "No analyses";
 		}
 
-		if (ee.diffExpressedProbes.size() == 0) {
-			return "None";
-		}
+		var finalResult = "";
 
-		var diffExpressionSummary = "";
-		for (var i = 0; i < ee.diffExpressedProbes.size(); i++) {
-			var factors;
-			if (ee.diffExpressedProbes[i].experimentalFactors == null ||
-					ee.diffExpressedProbes[i].experimentalFactors.size() == 0) {
-				factors = "n/a";
-			} else {
-				factors = "" + ee.diffExpressedProbes[i].experimentalFactors[0].name + "";
+		for (var j = 0; j < analyses.size(); j++) {
 
-				for (var j = 1; j < ee.diffExpressedProbes[i].experimentalFactors.size(); j++) {
-					factors = factors + " x " + ee.diffExpressedProbes[i].experimentalFactors[j].name + " ";
+			var diffExpressionSummary = "";
+
+			var analysis = analyses[j];
+
+			if (analysis.subsetFactorValue) {
+				diffExpressionSummary = '<span ext:qtip="Subset analysis, id=' + analysis.id + '">Subset:&nbsp;'
+						/* + analysis.subsetFactorValue.category + " " */+ analysis.subsetFactorValue.value
+						+ ':<span>';
+			}
+
+			for (var i = 0; i < analysis.resultSets.size(); i++) {
+
+				var resultSet = analysis.resultSets[i];
+
+				var factors;
+				if (resultSet.experimentalFactors == null || resultSet.experimentalFactors.size() == 0) {
+					factors = "n/a";
+				} else {
+					factors = "" + resultSet.experimentalFactors[0].name + "";
+					for (var k = 1; k < resultSet.experimentalFactors.size(); k++) {
+						factors = factors + " x " + resultSet.experimentalFactors[k].name + " ";
+					}
+				}
+				if (resultSet.numberOfDiffExpressedProbes == 0) {
+					diffExpressionSummary = diffExpressionSummary + "&nbsp;&nbsp;0";
+				} else {
+					/*
+					 * Show how many probes are differentially expressed; provide link for visualization.
+					 */
+					diffExpressionSummary = diffExpressionSummary
+							+ '&nbsp; ['
+							+ factors
+							+ ':<span class="link" onClick="Ext.getCmp(\'ee-details-panel\').visualizeDiffExpressionHandler(\''
+							+ ee.id + '\',\'' + resultSet.resultSetId + '\',\'' + factors
+							+ '\')" ext:qtip="Click to visualize differentially expressed probes for: ' + factors
+							+ ' (FDR threshold=' + resultSet.threshold + ')">&nbsp;'
+							+ resultSet.numberOfDiffExpressedProbes + ' probes</span>';
+
+					if (resultSet.baselineGroup) {
+						diffExpressionSummary = diffExpressionSummary + '&nbsp;Baseline&nbsp;=&nbsp;'
+								+ resultSet.baselineGroup.value
+					}
+
+					if (resultSet.upregulatedCount != 0) {
+						diffExpressionSummary = diffExpressionSummary + ';&nbsp;' + resultSet.upregulatedCount
+								+ "&nbsp;Up";
+					}
+
+					if (resultSet.downregulatedCount != 0) {
+						diffExpressionSummary = diffExpressionSummary + ';&nbsp;' + resultSet.downregulatedCount
+								+ "&nbsp;Down";
+					}
+
+					diffExpressionSummary = diffExpressionSummary + "]";
 				}
 			}
-			if (ee.diffExpressedProbes[i].numberOfDiffExpressedProbes == 0) {
-				diffExpressionSummary = diffExpressionSummary + "&nbsp; 0";
-			} else {
-				/*
-				 * Show how many probes are differentially expressed; provide link for visualization.
-				 */
-				diffExpressionSummary = diffExpressionSummary +
-						'&nbsp; <span class="link" onClick="Ext.getCmp(\'ee-details-panel\').visualizeDiffExpressionHandler(\'' +
-						ee.id + '\',\'' + ee.diffExpressedProbes[i].resultSetId + '\',\'' + factors +
-						'\')"  ext:qtip="Click to visualize differentially expressed probes for: ' + factors +
-						' (FDR threshold=' + ee.diffExpressedProbes[i].threshold + ')">' +
-						ee.diffExpressedProbes[i].numberOfDiffExpressedProbes + '</span>';
-			}
+
+			var downloadDiffDataLink = String
+					.format(
+							"<span style='cursor:pointer' ext:qtip='Download all differential expression data in a tab delimited  format' onClick='fetchDiffExpressionData({0})' > &nbsp; <img src='/Gemma/images/download.gif'/> &nbsp;  </span>",
+							ee.id); // FIXME
+
+			finalResult = finalResult + diffExpressionSummary + "&nbsp;&nbsp;" + downloadDiffDataLink + "<br/>"
+
 		}
 
-		var downloadDiffDataLink = String
-				.format(
-						"<span style='cursor:pointer' ext:qtip='Download all differential expression data in a tab delimited format'  onClick='fetchDiffExpressionData({0})' > &nbsp; <img src='/Gemma/images/download.gif'/> &nbsp; </span>",
-						ee.id);
-
-		return diffExpressionSummary + downloadDiffDataLink;
+		return finalResult;
 
 	},
 
@@ -303,13 +344,13 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 			var acc = ee.accession;
 			acc = acc.replace(/\.[1-9]$/, ''); // in case of multi-species.
 			logo = '/Gemma/images/logo/geoTiny.png';
-			result = '<a target="_blank" href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=' + acc +
-					'"><img src="' + logo + '"/></a>';
+			result = '<a target="_blank" href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=' + acc
+					+ '"><img src="' + logo + '"/></a>';
 
 		} else if (ee.externalDatabase == 'ArrayExpress') {
 			logo = '/Gemma/images/logo/arrayExpressTiny.png';
-			result = '<a target="_blank" href="http://www.ebi.ac.uk/microarray-as/aer/result?queryFor=Experiment&eAccession=' +
-					ee.accession + '"><img src="' + logo + '"/></a>';
+			result = '<a target="_blank" href="http://www.ebi.ac.uk/microarray-as/aer/result?queryFor=Experiment&eAccession='
+					+ ee.accession + '"><img src="' + logo + '"/></a>';
 		} else {
 			result = "Direct upload";
 		}
@@ -328,10 +369,10 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 	renderSamples : function(ee) {
 		var result = ee.bioAssayCount;
 		if (this.editable) {
-			result = result +
-					'&nbsp;&nbsp<a href="/Gemma/expressionExperiment/showBioAssaysFromExpressionExperiment.html?id=' +
-					ee.id +
-					'"><img ext:qtip="View the details of the samples" src="/Gemma/images/icons/magnifier.png"/></a>';
+			result = result
+					+ '&nbsp;&nbsp<a href="/Gemma/expressionExperiment/showBioAssaysFromExpressionExperiment.html?id='
+					+ ee.id
+					+ '"><img ext:qtip="View the details of the samples" src="/Gemma/images/icons/magnifier.png"/></a>';
 		}
 		return '' + result; // hack for possible problem with extjs 3.1 - bare number not displayed, coerce to string.
 	},
@@ -348,8 +389,8 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 		}
 
 		if (this.editable) {
-			result = result +
-					Gemma.SecurityManager.getSecurityLink(
+			result = result
+					+ Gemma.SecurityManager.getSecurityLink(
 							'ubic.gemma.model.expression.experiment.ExpressionExperimentImpl', ee.id, ee.isPublic,
 							ee.isShared, this.editable);
 		}
@@ -360,8 +401,9 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 
 	linkAnalysisRenderer : function(ee) {
 		var id = ee.id;
-		var runurl = '<span style="cursor:pointer" onClick="return Ext.getCmp(\'eemanager\').doLinks(' + id +
-				')"><img src="/Gemma/images/icons/control_play_blue.png" alt="link analysis" title="link analysis"/></span>';
+		var runurl = '<span style="cursor:pointer" onClick="return Ext.getCmp(\'eemanager\').doLinks('
+				+ id
+				+ ')"><img src="/Gemma/images/icons/control_play_blue.png" alt="link analysis" title="link analysis"/></span>';
 		if (ee.dateLinkAnalysis) {
 			var type = ee.linkAnalysisEventType;
 			var color = "#000";
@@ -376,8 +418,8 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 				suggestRun = false;
 			}
 
-			return '<span style="color:' + color + ';" ' + qtip + '>' +
-					Ext.util.Format.date(ee.dateLinkAnalysis, 'y/M/d') + '&nbsp;' + (suggestRun ? runurl : '');
+			return '<span style="color:' + color + ';" ' + qtip + '>'
+					+ Ext.util.Format.date(ee.dateLinkAnalysis, 'y/M/d') + '&nbsp;' + (suggestRun ? runurl : '');
 		} else {
 			return '<span style="color:#3A3;">Needed</span>&nbsp;' + runurl;
 		}
@@ -386,9 +428,9 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 
 	missingValueAnalysisRenderer : function(ee) {
 		var id = ee.id;
-		var runurl = '<span style="cursor:pointer" onClick="return Ext.getCmp(\'eemanager\').doMissingValues(' +
-				id +
-				')"><img src="/Gemma/images/icons/control_play_blue.png" alt="missing value computation" title="missing value computation"/></span>';
+		var runurl = '<span style="cursor:pointer" onClick="return Ext.getCmp(\'eemanager\').doMissingValues('
+				+ id
+				+ ')"><img src="/Gemma/images/icons/control_play_blue.png" alt="missing value computation" title="missing value computation"/></span>';
 
 		/*
 		 * Offer missing value analysis if it's possible (this might need tweaking).
@@ -406,9 +448,9 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 					qtip = 'ext:qtip="Failed"';
 				}
 
-				return '<span style="color:' + color + ';" ' + qtip + '>' +
-						Ext.util.Format.date(ee.dateMissingValueAnalysis, 'y/M/d') + '&nbsp;' +
-						(suggestRun ? runurl : '');
+				return '<span style="color:' + color + ';" ' + qtip + '>'
+						+ Ext.util.Format.date(ee.dateMissingValueAnalysis, 'y/M/d') + '&nbsp;'
+						+ (suggestRun ? runurl : '');
 			} else {
 				return '<span style="color:#3A3;">Needed</span>&nbsp;' + runurl;
 			}
@@ -420,9 +462,9 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 
 	processedVectorCreateRenderer : function(ee) {
 		var id = ee.id;
-		var runurl = '<span style="cursor:pointer" onClick="return Ext.getCmp(\'eemanager\').doProcessedVectors(' +
-				id +
-				')"><img src="/Gemma/images/icons/control_play_blue.png" alt="processed vector computation" title="processed vector computation"/></span>';
+		var runurl = '<span style="cursor:pointer" onClick="return Ext.getCmp(\'eemanager\').doProcessedVectors('
+				+ id
+				+ ')"><img src="/Gemma/images/icons/control_play_blue.png" alt="processed vector computation" title="processed vector computation"/></span>';
 
 		if (ee.dateProcessedDataVectorComputation) {
 			var type = ee.processedDataVectorComputationEventType;
@@ -438,9 +480,9 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 				qtip = 'ext:qtip="Failed"';
 			}
 
-			return '<span style="color:' + color + ';" ' + qtip + '>' +
-					Ext.util.Format.date(ee.dateProcessedDataVectorComputation, 'y/M/d') + '&nbsp;' +
-					(suggestRun ? runurl : '');
+			return '<span style="color:' + color + ';" ' + qtip + '>'
+					+ Ext.util.Format.date(ee.dateProcessedDataVectorComputation, 'y/M/d') + '&nbsp;'
+					+ (suggestRun ? runurl : '');
 		} else {
 			return '<span style="color:#3A3;">Needed</span>&nbsp;' + runurl;
 		}
@@ -448,9 +490,9 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 
 	differentialAnalysisRenderer : function(ee) {
 		var id = ee.id;
-		var runurl = '<span style="cursor:pointer" onClick="return Ext.getCmp(\'eemanager\').doDifferential(' +
-				id +
-				')"><img src="/Gemma/images/icons/control_play_blue.png" alt="differential expression analysis" title="differential expression analysis"/></span>';
+		var runurl = '<span style="cursor:pointer" onClick="return Ext.getCmp(\'eemanager\').doDifferential('
+				+ id
+				+ ')"><img src="/Gemma/images/icons/control_play_blue.png" alt="differential expression analysis" title="differential expression analysis"/></span>';
 
 		if (ee.numPopulatedFactors > 0) {
 			if (ee.dateDifferentialAnalysis) {
@@ -467,9 +509,9 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 					qtip = 'ext:qtip="Failed"';
 				}
 
-				return '<span style="color:' + color + ';" ' + qtip + '>' +
-						Ext.util.Format.date(ee.dateDifferentialAnalysis, 'y/M/d') + '&nbsp;' +
-						(suggestRun ? runurl : '');
+				return '<span style="color:' + color + ';" ' + qtip + '>'
+						+ Ext.util.Format.date(ee.dateDifferentialAnalysis, 'y/M/d') + '&nbsp;'
+						+ (suggestRun ? runurl : '');
 			} else {
 				return '<span style="color:#3A3;">Needed</span>&nbsp;' + runurl;
 			}
@@ -501,19 +543,19 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 		//
 		// this.rec = store.getAt(0);
 
-		adminLinks = '<span style="cursor:pointer" onClick="Ext.getCmp(\'eemanager\').updateEEReport(' +
-				e.id +
-				',\'admin-links\'' +
-				')"><img src="/Gemma/images/icons/arrow_refresh_small.png" ext:qtip="Refresh statistics"  title="refresh"/></span>' +
-				'&nbsp;<a href="/Gemma/expressionExperiment/editExpressionExperiment.html?id=' +
-				e.id +
-				'"  ><img src="/Gemma/images/icons/wrench.png" ext:qtip="Go to editor page for this experiment" title="edit"/></span>&nbsp;';
+		adminLinks = '<span style="cursor:pointer" onClick="Ext.getCmp(\'eemanager\').updateEEReport('
+				+ e.id
+				+ ',\'admin-links\''
+				+ ')"><img src="/Gemma/images/icons/arrow_refresh_small.png" ext:qtip="Refresh statistics"  title="refresh"/></span>'
+				+ '&nbsp;<a href="/Gemma/expressionExperiment/editExpressionExperiment.html?id='
+				+ e.id
+				+ '"  ><img src="/Gemma/images/icons/wrench.png" ext:qtip="Go to editor page for this experiment" title="edit"/></span>&nbsp;';
 
 		if (this.isAdmin) {
-			adminLinks = adminLinks +
-					'<span style="cursor:pointer" onClick="return Ext.getCmp(\'eemanager\').deleteExperiment(' +
-					e.id +
-					')"><img src="/Gemma/images/icons/cross.png" ext:qtip="Delete the experiment from the system" title="delete" /></span>&nbsp;';
+			adminLinks = adminLinks
+					+ '<span style="cursor:pointer" onClick="return Ext.getCmp(\'eemanager\').deleteExperiment('
+					+ e.id
+					+ ')"><img src="/Gemma/images/icons/cross.png" ext:qtip="Delete the experiment from the system" title="delete" /></span>&nbsp;';
 		}
 
 		var pubmedRegion = {};
@@ -547,9 +589,9 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 		 */
 		new Gemma.MGEDCombo({});
 
-		var taggerurl = '<span style="cursor:pointer" onClick="return Ext.getCmp(\'eemanager\').tagger(' + e.id + ',' +
-				e.taxonId + ',' + this.editable + ',' + (e.validatedAnnotations !== null) +
-				')"><img src="/Gemma/images/icons/pencil.png" alt="view tags" title="view tags"/></span>';
+		var taggerurl = '<span style="cursor:pointer" onClick="return Ext.getCmp(\'eemanager\').tagger(' + e.id + ','
+				+ e.taxonId + ',' + this.editable + ',' + (e.validatedAnnotations !== null)
+				+ ')"><img src="/Gemma/images/icons/pencil.png" alt="view tags" title="view tags"/></span>';
 
 		tagView = new Gemma.AnnotationDataView({
 					readParams : [{
@@ -711,8 +753,8 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 									listeners : {
 										'keyup' : {
 											fn : function(e) {
-												if (Ext.getCmp('shortname').isDirty() &&
-														Ext.getCmp('shortname').isValid()) {
+												if (Ext.getCmp('shortname').isDirty()
+														&& Ext.getCmp('shortname').isValid()) {
 													// show
 													// save
 													// button
@@ -729,9 +771,9 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 								}, {
 									baseCls : 'x-plain-panel',
 									id : 'update-button-region',
-									html : '<span style="cursor:pointer" onClick="Ext.getCmp(\'ee-details-panel\').save(' +
-											e.id +
-											',[\'shortname\',\'name\',\'description\'])" ><img src="/Gemma/images/icons/database_save.png" ext:qtip="Click to save changes" alt="Click to save changes"/></span>',
+									html : '<span style="cursor:pointer" onClick="Ext.getCmp(\'ee-details-panel\').save('
+											+ e.id
+											+ ',[\'shortname\',\'name\',\'description\'])" ><img src="/Gemma/images/icons/database_save.png" ext:qtip="Click to save changes" alt="Click to save changes"/></span>',
 									hidden : true
 								}]
 					}, {
@@ -759,17 +801,17 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 						html : 'Profiles:'
 					}, {
 						id : 'processedExpressionVectorCount-region',
-						html : '<div id="downloads"> ' +
-								this.renderProcessedExpressionVectorCount(e) +
-								'&nbsp;&nbsp;' +
-								'<i>Downloads:</i> &nbsp;&nbsp; <span class="link"  ext:qtip="Download the tab delimited data" onClick="fetchData(true,' +
-								e.id +
-								', \'text\', null, null)">Filtered</span> &nbsp;&nbsp;' +
-								'<span class="link" ext:qtip="Download the tab delimited data" onClick="fetchData(false,' +
-								e.id +
-								', \'text\', null, null)">Unfiltered</span> &nbsp;&nbsp;' +
-								'<a class="helpLink" href="?" onclick="showHelpTip(event, \'Tab-delimited data file for this experiment. The filtered version corresponds to what is used in most Gemma analyses, removing some probes. Unfiltered includes all probes\'); return false"> <img src="/Gemma/images/help.png" /> </a>' +
-								'</div>',
+						html : '<div id="downloads"> '
+								+ this.renderProcessedExpressionVectorCount(e)
+								+ '&nbsp;&nbsp;'
+								+ '<i>Downloads:</i> &nbsp;&nbsp; <span class="link"  ext:qtip="Download the tab delimited data" onClick="fetchData(true,'
+								+ e.id
+								+ ', \'text\', null, null)">Filtered</span> &nbsp;&nbsp;'
+								+ '<span class="link" ext:qtip="Download the tab delimited data" onClick="fetchData(false,'
+								+ e.id
+								+ ', \'text\', null, null)">Unfiltered</span> &nbsp;&nbsp;'
+								+ '<a class="helpLink" href="?" onclick="showHelpTip(event, \'Tab-delimited data file for this experiment. The filtered version corresponds to what is used in most Gemma analyses, removing some probes. Unfiltered includes all probes\'); return false"> <img src="/Gemma/images/help.png" /> </a>'
+								+ '</div>',
 						width : 400
 					}, {
 						html : 'Array designs:'
@@ -788,7 +830,7 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 					}, {
 						id : 'DiffExpressedProbes-region',
 						html : this.renderDiffExpressionDetails(e),
-						width : 200
+						width : 700
 					}, {
 						html : 'Publication:'
 					}, {

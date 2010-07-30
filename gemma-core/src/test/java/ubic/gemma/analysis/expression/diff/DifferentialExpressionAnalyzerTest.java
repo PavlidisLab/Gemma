@@ -50,7 +50,7 @@ public class DifferentialExpressionAnalyzerTest extends BaseAnalyzerConfiguratio
     @Test
     public void testDetermineAnalysisA() throws Exception {
         configureMocks();
-        AbstractAnalyzer analyzer = analysis.determineAnalysis( expressionExperiment, null );
+        AbstractAnalyzer analyzer = analysis.determineAnalysis( expressionExperiment, null, null );
         assertTrue( analyzer instanceof TwoWayAnovaWithInteractionsAnalyzer );
     }
 
@@ -71,7 +71,7 @@ public class DifferentialExpressionAnalyzerTest extends BaseAnalyzerConfiguratio
     public void testDetermineAnalysisB() throws Exception {
         super.configureTestDataForTwoWayAnovaWithoutInteractions();
         configureMocks();
-        AbstractAnalyzer analyzer = analysis.determineAnalysis( expressionExperiment, null );
+        AbstractAnalyzer analyzer = analysis.determineAnalysis( expressionExperiment, null, null );
         assertTrue( analyzer instanceof TwoWayAnovaWithoutInteractionsAnalyzer );
     }
 

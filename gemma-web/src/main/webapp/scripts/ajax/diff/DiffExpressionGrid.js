@@ -143,7 +143,12 @@ Gemma.DiffExpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 				var activeExperimentIds = [];
 
 				for (var i = 0; i < activeExperiments.size(); i++) {
-					activeExperimentIds.push(activeExperiments[i].id);
+					/*
+					 * FIXME properly handle subsets.
+					 */
+					activeExperimentIds.push(activeExperiments[i].sourceExperiment
+							? activeExperiments[i].sourceExperiment
+							: activeExperiments[i].id);
 				}
 
 				var downloadDedvLink = String.format("/Gemma/dedv/downloadDEDV.html?ee={0}&g={1}", activeExperimentIds

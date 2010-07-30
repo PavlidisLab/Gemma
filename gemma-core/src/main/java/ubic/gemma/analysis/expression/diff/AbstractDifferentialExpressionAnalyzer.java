@@ -55,7 +55,7 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
      * @param expressionExperiment
      * @return ExpressionAnalysis
      */
-    public abstract DifferentialExpressionAnalysis run( ExpressionExperiment expressionExperiment );
+    public abstract Collection<DifferentialExpressionAnalysis> run( ExpressionExperiment expressionExperiment );
 
     /**
      * Perform an analysis using the specified factor(s)
@@ -64,7 +64,7 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
      * @param factors If you care about the order the factors are included in the model, use a List
      * @return
      */
-    public abstract DifferentialExpressionAnalysis run( ExpressionExperiment expressionExperiment,
+    public abstract Collection<DifferentialExpressionAnalysis> run( ExpressionExperiment expressionExperiment,
             Collection<ExperimentalFactor> factors );
 
     /**
@@ -72,7 +72,7 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
      * @param config
      * @return
      */
-    public abstract DifferentialExpressionAnalysis run( ExpressionExperiment expressionExperiment,
+    public abstract Collection<DifferentialExpressionAnalysis> run( ExpressionExperiment expressionExperiment,
             DifferentialExpressionAnalysisConfig config );
 
     /**
@@ -82,7 +82,7 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
      * @param experimentalFactors
      * @return
      */
-    public abstract DifferentialExpressionAnalysis run( ExpressionExperiment expressionExperiment,
+    public abstract Collection<DifferentialExpressionAnalysis> run( ExpressionExperiment expressionExperiment,
             ExperimentalFactor... experimentalFactors );
 
     /**
@@ -93,7 +93,7 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
      * @param factors
      * @return
      */
-    public abstract DifferentialExpressionAnalysis run( ExpressionExperiment expressionExperiment,
+    public abstract Collection<DifferentialExpressionAnalysis> run( ExpressionExperiment expressionExperiment,
             ExperimentalFactor subsetFactor, Collection<ExperimentalFactor> factors );
 
     /**
@@ -224,7 +224,7 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
         return qvalues;
     }
 
-    protected DifferentialExpressionAnalysis initAnalysisEntity( ExpressionExperiment expressionExperiment ) {
+    protected DifferentialExpressionAnalysis initAnalysisEntity( BioAssaySet bioAssaySet ) {
         // TODO pass the DifferentialExpressionAnalysisConfig in (see LinkAnalysisService)
         /* Create the expression analysis and pack the results. */
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
@@ -232,7 +232,7 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
 
         ExpressionExperimentSet eeSet = ExpressionExperimentSet.Factory.newInstance();
         Collection<BioAssaySet> experimentsAnalyzed = new HashSet<BioAssaySet>();
-        experimentsAnalyzed.add( expressionExperiment );
+        experimentsAnalyzed.add( bioAssaySet );
         eeSet.setExperiments( experimentsAnalyzed );
         expressionAnalysis.setExpressionExperimentSetAnalyzed( eeSet );
         return expressionAnalysis;

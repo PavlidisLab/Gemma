@@ -33,6 +33,8 @@ import ubic.gemma.model.genome.Gene;
  */
 public abstract class DataVectorValueObject implements Serializable {
 
+    private static final long serialVersionUID = 4291090102921066018L;
+
     protected static ByteArrayConverter byteArrayConverter;
 
     static {

@@ -206,17 +206,13 @@ DifferentialExpressionAnalysisController.run = function(p0, callback) {
 	dwr.engine._execute(DifferentialExpressionAnalysisController._path, 'DifferentialExpressionAnalysisController',
 			'run', p0, callback);
 }
-DifferentialExpressionAnalysisController.determineAnalysisType = function(p0, p1, p2, callback) {
-	dwr.engine._execute(DifferentialExpressionAnalysisController._path, 'DifferentialExpressionAnalysisController',
-			'determineAnalysisType', p0, p1, p2, callback);
-}
 DifferentialExpressionAnalysisController.determineAnalysisType = function(p0, callback) {
 	dwr.engine._execute(DifferentialExpressionAnalysisController._path, 'DifferentialExpressionAnalysisController',
 			'determineAnalysisType', p0, callback);
 }
-DifferentialExpressionAnalysisController.runCustom = function(p0, p1, p2, callback) {
+DifferentialExpressionAnalysisController.runCustom = function(p0, p1, p2, p3, callback) {
 	dwr.engine._execute(DifferentialExpressionAnalysisController._path, 'DifferentialExpressionAnalysisController',
-			'runCustom', p0, p1, p2, callback);
+			'runCustom', p0, p1, p2, p3, callback);
 }
 DifferentialExpressionAnalysisController.run = function(p0, callback) {
 	dwr.engine._execute(DifferentialExpressionAnalysisController._path, 'DifferentialExpressionAnalysisController',

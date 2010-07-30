@@ -2,7 +2,8 @@ package ubic.gemma.analysis.expression.diff;
 
 import java.util.Collection;
 
-import ubic.gemma.model.expression.experiment.ExpressionExperiment; 
+import ubic.gemma.model.expression.experiment.BioAssaySet;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 
 /**
@@ -21,7 +22,7 @@ public class DifferentialExpressionMetaAnalysisValueObject {
     private int numExperimentsInScope;
     private int numMetThreshold;
 
-    private Collection<ExpressionExperiment> activeExperiments = null;
+    private Collection<BioAssaySet> activeExperiments = null;
 
     private Collection<DifferentialExpressionValueObject> probeResults = null;
 
@@ -41,11 +42,11 @@ public class DifferentialExpressionMetaAnalysisValueObject {
         this.gene = gene;
     }
 
-    public Collection<ExpressionExperiment> getActiveExperiments() {
+    public Collection<BioAssaySet> getActiveExperiments() {
         return activeExperiments;
     }
 
-    public void setActiveExperiments( Collection<ExpressionExperiment> activeExperiments ) {
+    public void setActiveExperiments( Collection<BioAssaySet> activeExperiments ) {
         this.activeExperiments = activeExperiments;
     }
 

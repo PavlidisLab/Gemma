@@ -23,18 +23,33 @@ import java.util.HashSet;
 
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
+import ubic.gemma.model.expression.experiment.FactorValueValueObject;
 
+/**
+ * Summary of a resultset.
+ * 
+ * @author paul
+ * @version $Id$
+ */
 public class DifferentialExpressionSummaryValueObject implements java.io.Serializable {
 
-    /**
-     * 
-     */
     private static final long serialVersionUID = 2063274043081170625L;
+    private Long analysisId;
+    private FactorValueValueObject baselineGroup;
+    private Integer downregulatedCount;
+
     private Collection<ExperimentalFactorValueObject> experimentalFactors;
+
+    private Collection<Long> factorIds;
+
+    private Integer numberOfDiffExpressedProbes;
+
     private Double qValue;
-    private Double threshold;
-    private long numberOfDiffExpressedProbes;
     private long resultSetId;
+
+    private Double threshold;
+
+    private Integer upregulatedCount;
 
     public DifferentialExpressionSummaryValueObject() {
         super();
@@ -51,11 +66,33 @@ public class DifferentialExpressionSummaryValueObject implements java.io.Seriali
 
     }
 
+    /**
+     * @return the analysisId
+     */
+    public Long getAnalysisId() {
+        return analysisId;
+    }
+
+    public FactorValueValueObject getBaselineGroup() {
+        return baselineGroup;
+    }
+
+    public Integer getDownregulatedCount() {
+        return downregulatedCount;
+    }
+
     public Collection<ExperimentalFactorValueObject> getExperimentalFactors() {
         return experimentalFactors;
     }
 
-    public long getNumberOfDiffExpressedProbes() {
+    /**
+     * @return the factorIds
+     */
+    public Collection<Long> getFactorIds() {
+        return factorIds;
+    }
+
+    public Integer getNumberOfDiffExpressedProbes() {
         return numberOfDiffExpressedProbes;
     }
 
@@ -69,6 +106,25 @@ public class DifferentialExpressionSummaryValueObject implements java.io.Seriali
 
     public Double getThreshold() {
         return threshold;
+    }
+
+    public Integer getUpregulatedCount() {
+        return upregulatedCount;
+    }
+
+    /**
+     * @param analysisId the analysisId to set
+     */
+    public void setAnalysisId( Long analysisId ) {
+        this.analysisId = analysisId;
+    }
+
+    public void setBaselineGroup( FactorValueValueObject baselineGroup ) {
+        this.baselineGroup = baselineGroup;
+    }
+
+    public void setDownregulatedCount( Integer downregulatedCount ) {
+        this.downregulatedCount = downregulatedCount;
     }
 
     public void setExperimentalFactors( Collection<ExperimentalFactor> experimentalFactors ) {
@@ -87,7 +143,14 @@ public class DifferentialExpressionSummaryValueObject implements java.io.Seriali
         this.experimentalFactors = experimentalFactors;
     }
 
-    public void setNumberOfDiffExpressedProbes( long numberOfDiffExpressedProbes ) {
+    /**
+     * @param factorIds the factorIds to set
+     */
+    public void setFactorIds( Collection<Long> factorIds ) {
+        this.factorIds = factorIds;
+    }
+
+    public void setNumberOfDiffExpressedProbes( Integer numberOfDiffExpressedProbes ) {
         this.numberOfDiffExpressedProbes = numberOfDiffExpressedProbes;
     }
 
@@ -101,6 +164,10 @@ public class DifferentialExpressionSummaryValueObject implements java.io.Seriali
 
     public void setThreshold( Double threshold ) {
         this.threshold = threshold;
+    }
+
+    public void setUpregulatedCount( Integer upregulatedCount ) {
+        this.upregulatedCount = upregulatedCount;
     }
 
 }

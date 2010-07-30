@@ -18,16 +18,22 @@
  */
 package ubic.gemma.tasks.analysis.diffex;
 
+import java.util.Collection;
+import java.util.HashSet;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import ubic.gemma.analysis.expression.diff.AbstractDifferentialExpressionAnalyzer;
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalysisConfig;
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzer;
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService;
-import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService.AnalysisType;
 import ubic.gemma.job.TaskMethod;
 import ubic.gemma.job.TaskResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 
@@ -40,6 +46,8 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 @Service
 public class DifferentialExpressionAnalysisTaskImpl implements DifferentialExpressionAnalysisTask {
 
+    private static Log log = LogFactory.getLog( DifferentialExpressionAnalysisTaskImpl.class.getName() );
+
     @Autowired
     private DifferentialExpressionAnalyzerService differentialExpressionAnalyzerService = null;
 
@@ -48,6 +56,9 @@ public class DifferentialExpressionAnalysisTaskImpl implements DifferentialExpre
 
     @Autowired
     private DifferentialExpressionAnalyzer differentialExpressionAnalyzer;
+
+    @Autowired
+    private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
 
     /*
      * (non-Javadoc)
@@ -58,15 +69,20 @@ public class DifferentialExpressionAnalysisTaskImpl implements DifferentialExpre
     @TaskMethod
     public TaskResult execute( DifferentialExpressionAnalysisTaskCommand command ) {
 
-        DifferentialExpressionAnalysis results = doAnalysis( command );
+        Collection<DifferentialExpressionAnalysis> results = doAnalysis( command );
 
-        /* Don't send the full analysis to the space. Instead, create a minimal result. */
-        DifferentialExpressionAnalysis minimalResult = DifferentialExpressionAnalysis.Factory.newInstance();
-        minimalResult.setName( results.getName() );
-        minimalResult.setDescription( results.getDescription() );
-        minimalResult.setAuditTrail( results.getAuditTrail() );
+        Collection<DifferentialExpressionAnalysis> minimalResults = new HashSet<DifferentialExpressionAnalysis>();
+        for ( DifferentialExpressionAnalysis r : results ) {
 
-        TaskResult result = new TaskResult( command, minimalResult );
+            /* Don't send the full analysis to the space. Instead, create a minimal result. */
+            DifferentialExpressionAnalysis minimalResult = DifferentialExpressionAnalysis.Factory.newInstance();
+            minimalResult.setName( r.getName() );
+            minimalResult.setDescription( r.getDescription() );
+            minimalResult.setAuditTrail( r.getAuditTrail() );
+            minimalResults.add( minimalResult );
+        }
+
+        TaskResult result = new TaskResult( command, minimalResults );
 
         return result;
     }
@@ -75,32 +91,39 @@ public class DifferentialExpressionAnalysisTaskImpl implements DifferentialExpre
      * @param command
      * @return
      */
-    private DifferentialExpressionAnalysis doAnalysis( DifferentialExpressionAnalysisTaskCommand command ) {
+    private Collection<DifferentialExpressionAnalysis> doAnalysis( DifferentialExpressionAnalysisTaskCommand command ) {
         ExpressionExperiment ee = command.getExpressionExperiment();
 
         expressionExperimentService.thawLite( ee );
 
-        DifferentialExpressionAnalysis results;
-        AnalysisType analysisType = command.getAnalysisType();
+        Collection<DifferentialExpressionAnalysis> diffAnalyses = differentialExpressionAnalysisService
+                .getAnalyses( ee );
 
-        if ( differentialExpressionAnalyzer.determineAnalysis( ee, command.getFactors() ) == null ) {
+        if ( !diffAnalyses.isEmpty() ) {
+            log
+                    .info( "This experiment has some existing analyses; if they overlap with the new analysis they will be deleted after the run." );
+        }
+
+        Collection<DifferentialExpressionAnalysis> results;
+
+        AbstractDifferentialExpressionAnalyzer analyzer = differentialExpressionAnalyzer.determineAnalysis( ee, command
+                .getFactors(), command.getSubsetFactor() );
+
+        if ( analyzer == null ) {
             throw new IllegalStateException( "Data set cannot be analyzed" );
         }
 
-        if ( analysisType != null ) {
-            assert command.getFactors() != null;
-            DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
-            config.setFactorsToInclude( command.getFactors() );
+        assert command.getFactors() != null;
+        DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
+        config.setFactorsToInclude( command.getFactors() );
+        config.setSubsetFactor( command.getSubsetFactor() );
 
-            if ( command.isIncludeInteractions() && command.getFactors().size() == 2 ) {
-                config.addInteractionToInclude( command.getFactors() );
-            }
-
-            results = differentialExpressionAnalyzerService.runDifferentialExpressionAnalyses( ee, config );
-        } else {
-            results = differentialExpressionAnalyzerService.runDifferentialExpressionAnalyses( ee );
+        if ( command.isIncludeInteractions() && command.getFactors().size() == 2 ) {
+            config.addInteractionToInclude( command.getFactors() );
         }
+
+        results = differentialExpressionAnalyzerService.runDifferentialExpressionAnalyses( ee, config );
+
         return results;
     }
-
 }

@@ -49,11 +49,11 @@ public class ExperimentalDesignDaoImpl extends ubic.gemma.model.expression.exper
      */
     @SuppressWarnings("unchecked")
     @Override
-    public ExperimentalDesign find( ExperimentalDesign ExperimentalDesign ) {
+    public ExperimentalDesign find( ExperimentalDesign experimentalDesign ) {
         try {
             Criteria queryObject = super.getSession().createCriteria( ExperimentalDesign.class );
 
-            queryObject.add( Restrictions.eq( "name", ExperimentalDesign.getName() ) );
+            queryObject.add( Restrictions.eq( "name", experimentalDesign.getName() ) );
 
             java.util.List results = queryObject.list();
             Object result = null;

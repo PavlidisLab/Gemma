@@ -28,6 +28,7 @@ import org.apache.commons.logging.LogFactory;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import ubic.gemma.model.analysis.ContrastResult;
 import ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.ProbeAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
@@ -63,10 +64,10 @@ public class TwoWayAnovaWithoutInteractionsAnalyzerTest extends BaseAnalyzerConf
 
         configureMocks();
 
-        DifferentialExpressionAnalysis differentialExpressionAnalysis = analyzer.run( expressionExperiment, Arrays
+        Collection<DifferentialExpressionAnalysis> expressionAnalyses = analyzer.run( expressionExperiment, Arrays
                 .asList( new ExperimentalFactor[] { experimentalFactorA_Area, experimentalFactorB } ) );
-
-        Collection<ExpressionAnalysisResultSet> resultSets = differentialExpressionAnalysis.getResultSets();
+        DifferentialExpressionAnalysis expressionAnalysis = expressionAnalyses.iterator().next();
+        Collection<ExpressionAnalysisResultSet> resultSets = expressionAnalysis.getResultSets();
 
         assertEquals( 2, resultSets.size() );
 
@@ -91,12 +92,14 @@ public class TwoWayAnovaWithoutInteractionsAnalyzerTest extends BaseAnalyzerConf
             ProbeAnalysisResult probeAnalysisResult = ( ProbeAnalysisResult ) r;
             CompositeSequence probe = probeAnalysisResult.getProbe();
             Double pvalue = probeAnalysisResult.getPvalue();
-            Double stat = probeAnalysisResult.getEffectSize();
-
-            if ( pvalue != null ) assertNotNull( stat );
+            Collection<ContrastResult> contrasts = probeAnalysisResult.getContrasts();
+            Double stat = null;
+            if ( !contrasts.isEmpty() ) {
+                stat = contrasts.iterator().next().getTstat();
+            }
             assertNotNull( probe );
 
-            log.debug( "probe: " + probe + "; p-value: " + pvalue + "; F=" + stat );
+            // log.debug( "probe: " + probe + "; p-value: " + pvalue + "; F=" + stat );
 
             if ( f.equals( super.experimentalFactorA_Area ) ) {
 
@@ -108,7 +111,6 @@ public class TwoWayAnovaWithoutInteractionsAnalyzerTest extends BaseAnalyzerConf
                     found = true;
                 } else if ( probe.getName().equals( "probe_97" ) ) { // id 1097
                     assertEquals( 0.3546, pvalue, 0.001 );
-                    assertEquals( -1.02, stat, 0.01 );
                 } else if ( probe.getName().equals( "probe_0" ) ) {
                     assertEquals( 1.36e-12, pvalue, 1e-10 );
                     assertEquals( -425.3, stat, 0.1 );
@@ -120,7 +122,6 @@ public class TwoWayAnovaWithoutInteractionsAnalyzerTest extends BaseAnalyzerConf
 
                 if ( probe.getName().equals( "probe_1" ) ) {
                     assertEquals( 0.501040, pvalue, 0.001 );
-                    assertEquals( -0.997, stat, 0.001 );
                     found = true;
                 } else if ( probe.getName().equals( "probe_97" ) ) {
                     assertEquals( 0.4449, pvalue, 0.001 );
