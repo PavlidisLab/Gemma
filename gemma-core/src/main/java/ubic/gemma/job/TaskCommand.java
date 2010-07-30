@@ -38,29 +38,18 @@ import org.springframework.security.core.context.SecurityContextHolder;
  */
 public class TaskCommand implements Serializable {
 
-    private static final long serialVersionUID = 1L;
-
     /**
      * How long we will wait for a started task before giving up waiting for it. Tasks running longer than this will be
      * cancelled. This does not include time spent queued.
      */
     public static final int MAX_RUNTIME_MINUTES = 60;
 
-    private int maxRuntime = MAX_RUNTIME_MINUTES;
+    private static final long serialVersionUID = 1L;
 
     /**
-     * @return the maxRuntime in minutes
+     * Set to false to force this job to run on the grid (or to not run at all). Default = true
      */
-    public int getMaxRuntime() {
-        return maxRuntime;
-    }
-
-    /**
-     * @param maxRuntime the maxRuntime to set (in minutes) before we bail. Default is MAX_RUNTIME_MINUTES
-     */
-    public void setMaxRuntime( int maxRuntime ) {
-        this.maxRuntime = maxRuntime;
-    }
+    private Boolean allowedToRunInProcess = true;
 
     /**
      * Should an email be sent to the user when the job is done?
@@ -71,6 +60,18 @@ public class TaskCommand implements Serializable {
      * Convenience field to handle the common case where a primary key is all that is needed.
      */
     private Long entityId = null;
+
+    /**
+     * How long we will allow this task to be queued before giving up.
+     */
+    private Integer maxQueueMinutes = TaskRunningService.MAX_QUEUING_MINUTES;
+
+    private int maxRuntime = MAX_RUNTIME_MINUTES;
+
+    /**
+     * Used during task tracking to determine if a task is in trouble.
+     */
+    private boolean mayHaveFailed = false;
 
     /**
      * If true, the jobDetails associated with this task will be persisted in the database. Consider setting to false
@@ -114,16 +115,6 @@ public class TaskCommand implements Serializable {
     private boolean willRunOnGrid = false;
 
     /**
-     * How long we will allow this task to be queued before giving up.
-     */
-    private Integer maxQueueMinutes = TaskRunningService.MAX_QUEUING_MINUTES;
-
-    /**
-     * Set to false to force this job to run on the grid (or to not run at all). Default = true
-     */
-    private Boolean allowedToRunInProcess = true;
-
-    /**
      * The taskId is assigned on creation.
      */
     public TaskCommand() {
@@ -153,6 +144,20 @@ public class TaskCommand implements Serializable {
 
     public Long getEntityId() {
         return entityId;
+    }
+
+    /**
+     * @return
+     */
+    public Integer getMaxQueueMinutes() {
+        return maxQueueMinutes;
+    }
+
+    /**
+     * @return the maxRuntime in minutes
+     */
+    public int getMaxRuntime() {
+        return maxRuntime;
     }
 
     /**
@@ -209,12 +214,32 @@ public class TaskCommand implements Serializable {
         return taskMethod;
     }
 
+    /**
+     * @return the allowedToRunInProcess
+     */
+    public Boolean isAllowedToRunInProcess() {
+        return allowedToRunInProcess;
+    }
+
     public boolean isEmailAlert() {
         return emailAlert;
     }
 
+    public boolean isMayHaveFailed() {
+        return mayHaveFailed;
+    }
+
     public boolean isWillRunOnGrid() {
         return willRunOnGrid;
+    }
+
+    /**
+     * Set to false to force this job to run on the grid (or to not run at all). Default = true
+     * 
+     * @param allowedToRunInProcess
+     */
+    public void setAllowedToRunInProcess( Boolean allowedToRunInProcess ) {
+        this.allowedToRunInProcess = allowedToRunInProcess;
     }
 
     public void setEmailAlert( boolean emailAlert ) {
@@ -223,6 +248,27 @@ public class TaskCommand implements Serializable {
 
     public void setEntityId( Long entityId ) {
         this.entityId = entityId;
+    }
+
+    /**
+     * How long we will allow this task to be queued before giving up. Default = TaskRunningService.MAX_QUEUING_MINUTES
+     * 
+     * @param maxQueueMinutes
+     * @see ubic.gemma.job.TaskRunningService.MAX_QUEUING_MINUTES
+     */
+    public void setMaxQueueMinutes( Integer maxQueueMinutes ) {
+        this.maxQueueMinutes = maxQueueMinutes;
+    }
+
+    /**
+     * @param maxRuntime the maxRuntime to set (in minutes) before we bail. Default is MAX_RUNTIME_MINUTES
+     */
+    public void setMaxRuntime( int maxRuntime ) {
+        this.maxRuntime = maxRuntime;
+    }
+
+    public void setMayHaveFailed( boolean mayHaveFailed ) {
+        this.mayHaveFailed = mayHaveFailed;
     }
 
     /**
@@ -282,39 +328,6 @@ public class TaskCommand implements Serializable {
      */
     public void setWillRunOnGrid( boolean willRunOnGrid ) {
         this.willRunOnGrid = willRunOnGrid;
-    }
-
-    /**
-     * How long we will allow this task to be queued before giving up. Default = TaskRunningService.MAX_QUEUING_MINUTES
-     * 
-     * @param maxQueueMinutes
-     * @see ubic.gemma.job.TaskRunningService.MAX_QUEUING_MINUTES
-     */
-    public void setMaxQueueMinutes( Integer maxQueueMinutes ) {
-        this.maxQueueMinutes = maxQueueMinutes;
-    }
-
-    /**
-     * @return
-     */
-    public Integer getMaxQueueMinutes() {
-        return maxQueueMinutes;
-    }
-
-    /**
-     * Set to false to force this job to run on the grid (or to not run at all). Default = true
-     * 
-     * @param allowedToRunInProcess
-     */
-    public void setAllowedToRunInProcess( Boolean allowedToRunInProcess ) {
-        this.allowedToRunInProcess = allowedToRunInProcess;
-    }
-
-    /**
-     * @return the allowedToRunInProcess
-     */
-    public Boolean isAllowedToRunInProcess() {
-        return allowedToRunInProcess;
     }
 
 }

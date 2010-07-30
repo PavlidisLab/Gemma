@@ -430,6 +430,7 @@ public class WorkerCLI extends AbstractSpringAwareCLI implements RemoteEventList
             final CustomDelegatingWorker worker, String workerName ) throws InterruptedException {
         log.info( "Starting heartbeat for " + registrationEntry.registrationId );
         while ( true ) {
+
             try {
                 Thread.sleep( HEARTBEAT_INTERVAL_MILLIS );
                 if ( log.isDebugEnabled() )
@@ -458,7 +459,11 @@ public class WorkerCLI extends AbstractSpringAwareCLI implements RemoteEventList
                     /*
                      * If we're out of memory, we're in trouble.
                      */
-                    long freeBytes = Runtime.getRuntime().freeMemory();
+
+                    long freeBytes = Runtime.getRuntime().freeMemory()
+                            + ( Runtime.getRuntime().maxMemory() - Runtime.getRuntime().totalMemory() );
+                    log.info( String.format( "%.2f Mbytes memory remaining", ( double ) freeBytes / ( 1024 * 1024 ) ) );
+
                     if ( freeBytes < 1024L * 1024 * ConfigUtils.getInt( "gemma.grid.minworkermemory" ) ) {
                         log.fatal( "Insufficient memory left (" + freeBytes + " bytes), panicking " );
                         System.exit( 1 ); // ???
@@ -466,9 +471,8 @@ public class WorkerCLI extends AbstractSpringAwareCLI implements RemoteEventList
                     /*
                      * Maybe we need more overlap...
                      */
-                    log.warn( "Entry expired but worker is still alive, renewing" );
-
-                    log.info( freeBytes + " bytes remaining" );
+                    log.warn( "Entry expired but worker is still alive, renewing; "
+                            + String.format( "%.2f Mbytes memory remaining", freeBytes / ( 1024 * 1024 ) ) );
 
                     template.write( registrationEntry, HEARTBEAT_INTERVAL_MILLIS + WAIT );
 
@@ -495,9 +499,9 @@ public class WorkerCLI extends AbstractSpringAwareCLI implements RemoteEventList
                         this.workers.remove( worker );
                         startWorker( workerName );
                         return null;
-                    } else {
-                        throw new IllegalStateException( "I wasn't expecting the worker to still be alive." );
                     }
+                    throw new IllegalStateException( "I wasn't expecting the worker to still be alive." );
+
                 }
 
             } catch ( Exception e ) {

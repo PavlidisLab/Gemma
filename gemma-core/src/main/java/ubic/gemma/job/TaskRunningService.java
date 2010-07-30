@@ -99,9 +99,10 @@ public class TaskRunningService implements InitializingBean {
     private static final int MAX_TRACKING_MINUTES = 10;
 
     /**
-     * How often we look for tasks to cleanup (milliseconds).
+     * How often we look for tasks to cleanup (milliseconds). This should be set to be longer than the grid monitor task
+     * interval. The longer it is, the longer it will be before dead tasks are noticed.
      */
-    private static final int TASK_CLEANUP_FREQUENCY = 60000; /* 1 minute */
+    private static final int TASK_CLEANUP_FREQUENCY = 30000;
 
     private final Map<String, TaskCommand> cancelledTasks = new ConcurrentHashMap<String, TaskCommand>();
 
@@ -473,22 +474,43 @@ public class TaskRunningService implements InitializingBean {
         boolean willRunOnGrid = command.isWillRunOnGrid();
 
         if ( willRunOnGrid ) {
+
             /*
              * Make sure the grid hasn't failed on us.
              */
             if ( !SpacesUtil.isSpaceRunning() ) {
                 if ( startTime == null || !SpacesUtil.taskIsRunningOnGrid( taskId ) ) {
                     ProgressManager.updateJob( taskId, "The compute grid has failed? Cancelling task " + taskId );
-                    submittedTasks.get( taskId ).getCommand().setEmailAlert( true );
+                    command.setEmailAlert( true );
                     cancelTask( taskId );
                     return;
                 }
             }
-            if ( !spaceMonitor.getLastStatusWasOK() ) {
+            if ( spaceMonitor.getLastStatusWasOK() ) {
+                // reset the flag.
+                command.setMayHaveFailed( false );
+            } else {
+
                 /*
-                 * This generates false positives.
+                 * Something might be wrong.
+                 */
+                
+                if ( command.isMayHaveFailed() ) {
+                    log.error( "Job seems to have failed due to a problem with the grid: " + taskId
+                            + " -- space monitor reports bad status " );
+                    ProgressManager.updateJob( taskId, "The compute grid has failed? Cancelling task " + taskId );
+                    command.setEmailAlert( true );
+                    cancelTask( taskId );
+                }
+
+                /*
+                 * This generates false positives, so we require two consecutive bad checks. This assumes that the
+                 * monitor checks are more frequent than the sweepup check.
                  */
                 log.warn( "Possible grid problem for job " + taskId + " -- space monitor reports bad status " );
+                ProgressManager.updateJob( taskId, "Possible grid problem for job " + taskId
+                        + " -- space monitor reports bad status -- hoping for recovery" );
+                command.setMayHaveFailed( true );
             }
         }
 
