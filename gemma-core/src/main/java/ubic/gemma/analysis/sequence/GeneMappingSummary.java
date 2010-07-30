@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import ubic.gemma.model.CompositeSequenceValueObject;
 import ubic.gemma.model.genome.gene.GeneProductValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject; 
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResultValueObject;
@@ -42,7 +43,7 @@ public class GeneMappingSummary implements Serializable {
 
     private Map<GeneProductValueObject, GeneValueObject> geneProductMap;
 
-    private CompositeSequenceMapValueObject compositeSequenceMap;
+    private CompositeSequenceValueObject compositeSequence;
 
     /*
      * These maps are maintained for javascript clients, which cannot marshal maps unless the keys are strings.
@@ -134,11 +135,11 @@ public class GeneMappingSummary implements Serializable {
         return blatResultId;
     }
 
-    public CompositeSequenceMapValueObject getCompositeSequence() {
-        return compositeSequenceMap;
+    public CompositeSequenceValueObject getCompositeSequence() {
+        return compositeSequence;
     }
 
-    public void setCompositeSequence( CompositeSequenceMapValueObject compositeSequenceMap ) {
-        this.compositeSequenceMap = compositeSequenceMap;
+    public void setCompositeSequence( CompositeSequenceValueObject compositeSequenceMap ) {
+        this.compositeSequence = compositeSequence;
     }
 }

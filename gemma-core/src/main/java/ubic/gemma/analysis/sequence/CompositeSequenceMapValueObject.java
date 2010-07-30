@@ -238,8 +238,8 @@ public class CompositeSequenceMapValueObject implements Comparable<CompositeSequ
     	vo.setCompositeSequenceDescription(cs.getDescription());
     	vo.setCompositeSequenceId(cs.getId().toString());
     	vo.setCompositeSequenceName(cs.getName());
-    	Map<String, GeneProductValueObject> gpvos = new HashMap<String, GeneProductValueObject>();
-    	Map<String, GeneValueObject> gvos = new HashMap<String, GeneValueObject>();
+    	//Map<String, GeneProductValueObject> gpvos = new HashMap<String, GeneProductValueObject>();
+    	//Map<String, GeneValueObject> gvos = new HashMap<String, GeneValueObject>();
     	/*
     	for (BioSequence2GeneProduct bs_2_gp : cs.getBiologicalCharacteristic().getBioSequence2GeneProduct() ) {
     		GeneProduct gp = bs_2_gp.getGeneProduct();    	

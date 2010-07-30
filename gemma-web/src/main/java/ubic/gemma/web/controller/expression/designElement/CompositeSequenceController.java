@@ -40,6 +40,7 @@ import org.springframework.web.servlet.ModelAndView;
 import ubic.gemma.analysis.sequence.ArrayDesignMapResultService;
 import ubic.gemma.analysis.sequence.CompositeSequenceMapValueObject;
 import ubic.gemma.analysis.sequence.GeneMappingSummary;
+import ubic.gemma.model.CompositeSequenceValueObject;
 import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
@@ -286,7 +287,7 @@ public class CompositeSequenceController extends BaseController {
             if ( results.containsKey( blatResult ) ) {
                 results.get( blatResult ).addGene( geneProduct, gene );
             } else {
-            	CompositeSequenceMapValueObject cs_vo = new CompositeSequenceMapValueObject();
+            	CompositeSequenceValueObject cs_vo = new CompositeSequenceValueObject();
             	
                 GeneMappingSummary summary = new GeneMappingSummary();
                 summary.addGene( geneProduct, gene );
@@ -302,7 +303,7 @@ public class CompositeSequenceController extends BaseController {
         if ( results.size() == 0 ) {
             // add a 'dummy' that at least contains the information about the CS. This is a bit of a hack...
             GeneMappingSummary summary = new GeneMappingSummary();
-            summary.setCompositeSequence( CompositeSequenceMapValueObject.fromEntity(cs) );
+            summary.setCompositeSequence( CompositeSequenceValueObject.fromEntity(cs) );
             BlatResultValueObject newInstance = new BlatResultValueObject();
             newInstance.setQuerySequence( BioSequenceValueObject.fromEntity(biologicalCharacteristic) );
             newInstance.setId( -1L );
