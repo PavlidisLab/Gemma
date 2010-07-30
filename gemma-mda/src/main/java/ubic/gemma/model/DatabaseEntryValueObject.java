@@ -22,8 +22,8 @@ public class DatabaseEntryValueObject {
 	
 	public static DatabaseEntryValueObject fromEntity( DatabaseEntry de) {
 		DatabaseEntryValueObject vo = new DatabaseEntryValueObject();
-		vo.setAccession(de.getAccession());
-		vo.setExternalDatabase( ExternalDatabaseValueObject.fromEntity(de.getExternalDatabase()) );
+		if (de.getAccession() != null) vo.setAccession(de.getAccession());
+		if (de.getExternalDatabase() != null) vo.setExternalDatabase( ExternalDatabaseValueObject.fromEntity(de.getExternalDatabase()) );
 		return vo;
 	}
 }
