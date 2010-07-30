@@ -112,7 +112,6 @@ import ubic.gemma.model.genome.gene.GeneProductService;
 import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.model.genome.gene.GeneSetService;
-import ubic.gemma.model.genome.sequenceAnalysis.BioSequenceValueObject;
 import ubic.gemma.ontology.OntologyService;
 import ubic.gemma.util.ConfigUtils;
 import ubic.gemma.util.EntityUtils;
@@ -680,7 +679,7 @@ public class SearchService implements InitializingBean {
             log.info( "Biosequence search for '" + settings + "' took " + watch.getTime() + " ms " + searchResults.size()
                     + " results." );
                 
-        return convertEntitySearchResutsToValueObjectsSearchResults(searchResults);
+        return searchResults;
     }
 
     /**
@@ -977,25 +976,25 @@ public class SearchService implements InitializingBean {
         return results;
     }
     
-    private Collection<SearchResult> convertEntitySearchResutsToValueObjectsSearchResults (
-    													  Collection<SearchResult> searchResults )
-    {
-    	Collection<SearchResult> convertedSearchResults = new ArrayList<SearchResult>();
-    	for (SearchResult searchResult : searchResults) {
-    		if (BioSequence.class.isAssignableFrom( searchResult.getResultClass())) {
-    			SearchResult convertedSearchResult = new SearchResult (
-    					BioSequenceValueObject.fromEntity((BioSequence)searchResult.getResultObject()),
-    					searchResult.getScore(),
-    					searchResult.getHighlightedText()
-				);
-    			convertedSearchResults.add(convertedSearchResult);
-    		} // else if ... 
-    		else {    			
-    			convertedSearchResults.add(searchResult);    			
-    		}    		
-    	}
-    	return convertedSearchResults;
-    }
+//    private Collection<SearchResult> convertEntitySearchResutsToValueObjectsSearchResults (
+//    													  Collection<SearchResult> searchResults )
+//    {
+//    	Collection<SearchResult> convertedSearchResults = new ArrayList<SearchResult>();
+//    	for (SearchResult searchResult : searchResults) {
+//    		if (BioSequence.class.isAssignableFrom( searchResult.getResultClass())) {
+//    			SearchResult convertedSearchResult = new SearchResult (
+//    					BioSequenceValueObject.fromEntity((BioSequence)searchResult.getResultObject()),
+//    					searchResult.getScore(),
+//    					searchResult.getHighlightedText()
+//				);
+//    			convertedSearchResults.add(convertedSearchResult);
+//    		} // else if ... 
+//    		else {    			
+//    			convertedSearchResults.add(searchResult);    			
+//    		}    		
+//    	}
+//    	return convertedSearchResults;
+//    }
      
     /**
      * @param settings
@@ -2059,7 +2058,9 @@ public class SearchService implements InitializingBean {
         } else if ( Gene.class.isAssignableFrom( entityClass ) ) {
             return geneService.loadMultiple( ids );
         } else if ( BioSequence.class.isAssignableFrom( entityClass ) ) {
-            return bioSequenceService.loadMultiple( ids );
+        	Collection<BioSequence> bs = bioSequenceService.loadMultiple( ids );
+        	bioSequenceService.thaw(bs);
+            return bs;
         } else if ( GeneSet.class.isAssignableFrom( entityClass ) ) {
             return geneSetService.load( ids );
         } else if ( ExpressionExperimentSet.class.isAssignableFrom( entityClass ) ) {
