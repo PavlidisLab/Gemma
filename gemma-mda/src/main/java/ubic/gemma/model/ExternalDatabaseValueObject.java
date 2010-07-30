@@ -15,8 +15,9 @@ public class ExternalDatabaseValueObject {
 	}
 
 	public static ExternalDatabaseValueObject fromEntity(ExternalDatabase ed) {
-    	ExternalDatabaseValueObject vo = new ExternalDatabaseValueObject();
-    	if (ed.getName() != null) vo.setName(ed.getName());
+    	if (ed == null) return null;
+		ExternalDatabaseValueObject vo = new ExternalDatabaseValueObject();
+    	vo.setName(ed.getName());
     	return vo;
     }
     
