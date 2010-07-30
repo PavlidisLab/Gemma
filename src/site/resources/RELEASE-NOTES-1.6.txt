@@ -16,19 +16,23 @@ The Gemma project, version 1.6 Release Notes
 
 Improvements and new features
 
-- 
-
+- Additional documentation for users on the wiki
+- Gene sets are fully integrated into the web interface
+- Differential expression analysis includes fold-change measurements
+- More support for subsets of experiments has been added. In particular, differential expression
+can be conducted on subsets.
 
 Bug fixes
 
-There have been numerous bug fixes since the last release. 
+There have been numerous bug fixes since the last release. Among the most significant fixes:
 
 - Improvements in stability due to changes to the database connection management.
-
+- Improved speed and accuracy of searches
+- Various improvements in speed
 
 Other changes
 
-Gemma now requires Java 1.6
+- Gemma now requires Java 1.6
 
 Contacting us
 
