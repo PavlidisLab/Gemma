@@ -139,7 +139,7 @@ public class GeneMappingSummary implements Serializable {
         return compositeSequence;
     }
 
-    public void setCompositeSequence( CompositeSequenceValueObject compositeSequenceMap ) {
+    public void setCompositeSequence( CompositeSequenceValueObject compositeSequence ) {
         this.compositeSequence = compositeSequence;
     }
 }
