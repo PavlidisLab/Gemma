@@ -100,10 +100,10 @@
 			<ref bean="monitorSpaceJobDetail" />
 		</property>
 		<property name="repeatInterval">
-			<value>60000</value> <!-- check every minute -->
+			<value>20000</value> 
 		</property>
 
-		<property name="startDelay" value="180000" /> <!--  wait 3 mintues before begining -->
+		<property name="startDelay" value="120000" /> <!--  wait before beginning -->
 	</bean>
 
 
