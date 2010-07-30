@@ -360,7 +360,8 @@ public class GeneDifferentialExpressionService {
 
                 DifferentialExpressionValueObject devo = diffExResultToValueObject( r, g, eevo, efs );
 
-                Boolean metThreshold = r.getCorrectedPvalue() <= threshold ? true : false;
+                Boolean metThreshold = r.getCorrectedPvalue() != null
+                        && ( r.getCorrectedPvalue() <= threshold ? true : false );
                 devo.setMetThreshold( metThreshold );
 
                 if ( metThreshold ) {
