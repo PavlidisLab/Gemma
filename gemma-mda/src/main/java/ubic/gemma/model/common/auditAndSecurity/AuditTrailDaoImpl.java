@@ -74,13 +74,12 @@ public class AuditTrailDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
             auditEvent.setPerformer( user );
         }
 
-        HibernateTemplate templ = this.getHibernateTemplate();
-
-        templ.executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
+        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
 
                 try {
-                    session.lock( auditable, LockMode.NONE ); // always a bit dicey. We can get a non-unique object
+                    session.lock( auditable, LockMode.NONE ); // always a bit dicey. We can get a non-unique
+                    // object
                     // exception. Session.get won't work right if this is a proxy... etc.
 
                     if ( !Hibernate.isInitialized( auditable ) ) Hibernate.initialize( auditable );
