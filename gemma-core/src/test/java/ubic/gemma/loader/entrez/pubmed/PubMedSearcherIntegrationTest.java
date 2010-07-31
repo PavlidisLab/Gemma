@@ -21,10 +21,12 @@ package ubic.gemma.loader.entrez.pubmed;
 import ubic.gemma.apps.AbstractCLITestCase;
 
 /**
+ * Tests command line. This creates an entire new Spring Context so is pretty heavy.
+ * 
  * @author pavlidis
  * @version $Id$
  */
-public class PubMedSearcherTest extends AbstractCLITestCase {
+public class PubMedSearcherIntegrationTest extends AbstractCLITestCase {
     PubMedSearcher p = new PubMedSearcher();
 
     /**
