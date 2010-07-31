@@ -23,6 +23,8 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Collection;
 
+import javax.sql.DataSource;
+
 import org.springframework.jdbc.core.SqlParameter;
 import org.springframework.jdbc.object.MappingSqlQuery;
 
@@ -76,7 +78,7 @@ public class GoldenPathQuery extends GoldenPath {
 
     private class EstQuery extends MappingSqlQuery<BlatResult> {
 
-        public EstQuery() {
+        public EstQuery( DataSource dataSource ) {
             super( dataSource, "SELECT * FROM all_est where qName = ?" );
             super.declareParameter( new SqlParameter( "accession", Types.VARCHAR ) );
             compile();
@@ -147,7 +149,7 @@ public class GoldenPathQuery extends GoldenPath {
 
     private class MrnaQuery extends MappingSqlQuery<BlatResult> {
 
-        public MrnaQuery() {
+        public MrnaQuery( DataSource dataSource ) {
             super( dataSource, "SELECT * FROM all_mrna where qName = ?" );
             super.declareParameter( new SqlParameter( "accession", Types.VARCHAR ) );
             compile();
@@ -163,8 +165,8 @@ public class GoldenPathQuery extends GoldenPath {
     @Override
     protected void init( int port, String host, String user, String password ) {
         super.init( port, host, user, password );
-        estQuery = new EstQuery();
-        mrnaQuery = new MrnaQuery();
+        estQuery = new EstQuery( this.jt.getDataSource() );
+        mrnaQuery = new MrnaQuery( this.jt.getDataSource() );
     }
 
 }

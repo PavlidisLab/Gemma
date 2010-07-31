@@ -24,7 +24,8 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.concurrent.BlockingQueue;
 
-import org.springframework.jdbc.datasource.DriverManagerDataSource;
+import javax.sql.DataSource;
+
 import org.springframework.jdbc.object.MappingSqlQuery;
 
 import ubic.gemma.model.common.description.DatabaseEntry;
@@ -236,13 +237,13 @@ public class GoldenPathDumper extends GoldenPath {
 
         SequenceType type;
 
-        public BioSequenceMappingQuery( DriverManagerDataSource ds, String table, SequenceType type, String limit ) {
+        public BioSequenceMappingQuery( DataSource ds, String table, SequenceType type, String limit ) {
             super( ds, "SELECT qName, qSize FROM " + table + " " + limit );
             this.type = type;
             compile();
         }
 
-        @Override 
+        @Override
         public BioSequence mapRow( ResultSet rs, int rowNumber ) throws SQLException {
             BioSequence bioSequence = BioSequence.Factory.newInstance();
 
@@ -273,12 +274,12 @@ public class GoldenPathDumper extends GoldenPath {
      */
     private class BioSequenceRefseqMappingQuery extends MappingSqlQuery<BioSequence> {
 
-        public BioSequenceRefseqMappingQuery( DriverManagerDataSource ds, String query ) {
+        public BioSequenceRefseqMappingQuery( DataSource ds, String query ) {
             super( ds, query );
             compile();
         }
 
-        @Override 
+        @Override
         public BioSequence mapRow( ResultSet rs, int rowNumber ) throws SQLException {
             BioSequence bioSequence = BioSequence.Factory.newInstance();
 
@@ -305,12 +306,12 @@ public class GoldenPathDumper extends GoldenPath {
      */
     private class BioSequenceEnsemblMappingQuery extends MappingSqlQuery<BioSequence> {
 
-        public BioSequenceEnsemblMappingQuery( DriverManagerDataSource ds, String query ) {
+        public BioSequenceEnsemblMappingQuery( DataSource ds, String query ) {
             super( ds, query );
             compile();
         }
 
-        @Override 
+        @Override
         public BioSequence mapRow( ResultSet rs, int rowNumber ) throws SQLException {
             BioSequence bioSequence = BioSequence.Factory.newInstance();
 
@@ -334,29 +335,29 @@ public class GoldenPathDumper extends GoldenPath {
     /**
      * @param query
      * @return
-     */ 
+     */
     private Collection<BioSequence> loadSequencesByQuery( String table, SequenceType type, String limit ) {
-        BioSequenceMappingQuery bsQuery = new BioSequenceMappingQuery( dataSource, table, type, limit );
+        BioSequenceMappingQuery bsQuery = new BioSequenceMappingQuery( this.jt.getDataSource(), table, type, limit );
         return bsQuery.execute();
     }
 
     /**
      * @param query
      * @return
-     */ 
+     */
     private Collection<BioSequence> loadRefseqByQuery( String limitSuffix ) {
         String query = "SELECT name FROM " + REF_GENE_TABLE_NAME + " " + limitSuffix;
-        BioSequenceRefseqMappingQuery bsQuery = new BioSequenceRefseqMappingQuery( dataSource, query );
+        BioSequenceRefseqMappingQuery bsQuery = new BioSequenceRefseqMappingQuery( this.jt.getDataSource(), query );
         return bsQuery.execute();
     }
 
     /**
      * @param query
      * @return
-     */ 
+     */
     private Collection<BioSequence> loadEnsemblByQuery( String limitSuffix ) {
         String query = "SELECT name FROM " + ENSEMBL_TABLE_NAME + " " + limitSuffix;
-        BioSequenceEnsemblMappingQuery bsQuery = new BioSequenceEnsemblMappingQuery( dataSource, query );
+        BioSequenceEnsemblMappingQuery bsQuery = new BioSequenceEnsemblMappingQuery( this.jt.getDataSource(), query );
         return bsQuery.execute();
     }
 

@@ -325,89 +325,90 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
                 params = new Object[] { starti, endi, starti, endi, starti, endi, starti, endi, chromosome };
             }
 
-            return ( Collection<GeneProduct> ) qr.query( conn, query, params, new ResultSetHandler() {
+            return ( Collection<GeneProduct> ) qr.query( this.jt.getDataSource().getConnection(), query, params,
+                    new ResultSetHandler() {
 
-                @SuppressWarnings("synthetic-access")
-                public Object handle( ResultSet rs ) throws SQLException {
-                    Collection<GeneProduct> r = new HashSet<GeneProduct>();
-                    while ( rs.next() ) {
+                        @SuppressWarnings("synthetic-access")
+                        public Object handle( ResultSet rs ) throws SQLException {
+                            Collection<GeneProduct> r = new HashSet<GeneProduct>();
+                            while ( rs.next() ) {
 
-                        GeneProduct product = GeneProduct.Factory.newInstance();
+                                GeneProduct product = GeneProduct.Factory.newInstance();
 
-                        String name = rs.getString( 1 );
+                                String name = rs.getString( 1 );
 
-                        /*
-                         * This happens for a very few cases in kgXref, where the gene is 'abParts'. We have to skip
-                         * these.
-                         */
-                        if ( StringUtils.isBlank( name ) ) {
-                            continue;
+                                /*
+                                 * This happens for a very few cases in kgXref, where the gene is 'abParts'. We have to
+                                 * skip these.
+                                 */
+                                if ( StringUtils.isBlank( name ) ) {
+                                    continue;
+                                }
+
+                                /*
+                                 * The name is our database identifier (either genbank or ensembl)
+                                 */
+                                DatabaseEntry accession = DatabaseEntry.Factory.newInstance();
+                                accession.setAccession( name );
+                                if ( name.startsWith( "ENST" ) ) {
+                                    accession.setExternalDatabase( NcbiGeneConverter.getEnsembl() );
+                                } else {
+                                    accession.setExternalDatabase( NcbiGeneConverter.getGenbank() );
+                                } // FIXME could be a microRNA.
+
+                                product.getAccessions().add( accession );
+
+                                product.setType( GeneProductType.RNA );
+
+                                Gene gene = Gene.Factory.newInstance();
+                                gene.setOfficialSymbol( rs.getString( 2 ) );
+                                gene.setName( gene.getOfficialSymbol() );
+                                gene.setTaxon( getTaxon() );
+
+                                PhysicalLocation pl = PhysicalLocation.Factory.newInstance();
+                                pl.setNucleotide( rs.getLong( 3 ) );
+                                pl.setNucleotideLength( rs.getInt( 4 ) - rs.getInt( 3 ) );
+                                pl.setStrand( rs.getString( 5 ) );
+                                pl.setBin( SequenceBinUtils.binFromRange( ( int ) rs.getLong( 3 ), rs.getInt( 4 ) ) );
+                                PhysicalLocation genePl = PhysicalLocation.Factory.newInstance();
+                                genePl.setStrand( pl.getStrand() );
+
+                                Chromosome c = Chromosome.Factory.newInstance();
+                                c.setName( SequenceManipulation.deBlatFormatChromosomeName( chromosome ) );
+                                c.setTaxon( getTaxon() );
+                                pl.setChromosome( c );
+                                genePl.setChromosome( c );
+
+                                /*
+                                 * this only contains the chromosome and strand: the nucleotide positions are only valid
+                                 * for the gene product
+                                 */
+                                gene.setPhysicalLocation( genePl );
+
+                                product.setName( name );
+
+                                product.setDescription( "Imported from Golden Path: " + rs.getString( 8 ) );
+                                product.setPhysicalLocation( pl );
+                                product.setGene( gene );
+
+                                Blob exonStarts = rs.getBlob( 6 );
+                                Blob exonEnds = rs.getBlob( 7 );
+                                product.setExons( getExons( c, exonStarts, exonEnds ) );
+
+                                /*
+                                 * For microRNAs, we don't get exons, so we just use the whole length for now.
+                                 */
+                                if ( product.getExons().size() == 0 ) {
+                                    product.getExons().add( pl );
+                                }
+
+                                r.add( product );
+
+                            }
+                            return r;
                         }
 
-                        /*
-                         * The name is our database identifier (either genbank or ensembl)
-                         */
-                        DatabaseEntry accession = DatabaseEntry.Factory.newInstance();
-                        accession.setAccession( name );
-                        if ( name.startsWith( "ENST" ) ) {
-                            accession.setExternalDatabase( NcbiGeneConverter.getEnsembl() );
-                        } else {
-                            accession.setExternalDatabase( NcbiGeneConverter.getGenbank() );
-                        } // FIXME could be a microRNA.
-
-                        product.getAccessions().add( accession );
-
-                        product.setType( GeneProductType.RNA );
-
-                        Gene gene = Gene.Factory.newInstance();
-                        gene.setOfficialSymbol( rs.getString( 2 ) );
-                        gene.setName( gene.getOfficialSymbol() );
-                        gene.setTaxon( getTaxon() );
-
-                        PhysicalLocation pl = PhysicalLocation.Factory.newInstance();
-                        pl.setNucleotide( rs.getLong( 3 ) );
-                        pl.setNucleotideLength( rs.getInt( 4 ) - rs.getInt( 3 ) );
-                        pl.setStrand( rs.getString( 5 ) );
-                        pl.setBin( SequenceBinUtils.binFromRange( ( int ) rs.getLong( 3 ), rs.getInt( 4 ) ) );
-                        PhysicalLocation genePl = PhysicalLocation.Factory.newInstance();
-                        genePl.setStrand( pl.getStrand() );
-
-                        Chromosome c = Chromosome.Factory.newInstance();
-                        c.setName( SequenceManipulation.deBlatFormatChromosomeName( chromosome ) );
-                        c.setTaxon( getTaxon() );
-                        pl.setChromosome( c );
-                        genePl.setChromosome( c );
-
-                        /*
-                         * this only contains the chromosome and strand: the nucleotide positions are only valid for the
-                         * gene product
-                         */
-                        gene.setPhysicalLocation( genePl );
-
-                        product.setName( name );
-
-                        product.setDescription( "Imported from Golden Path: " + rs.getString( 8 ) );
-                        product.setPhysicalLocation( pl );
-                        product.setGene( gene );
-
-                        Blob exonStarts = rs.getBlob( 6 );
-                        Blob exonEnds = rs.getBlob( 7 );
-                        product.setExons( getExons( c, exonStarts, exonEnds ) );
-
-                        /*
-                         * For microRNAs, we don't get exons, so we just use the whole length for now.
-                         */
-                        if ( product.getExons().size() == 0 ) {
-                            product.getExons().add( pl );
-                        }
-
-                        r.add( product );
-
-                    }
-                    return r;
-                }
-
-            } );
+                    } );
         } catch ( SQLException e ) {
             throw new RuntimeException( e );
         }
@@ -442,75 +443,76 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
                 params = new Object[] { starti, endi, starti, endi, starti, endi, starti, endi, chromosome };
             }
 
-            return ( Collection<GeneProduct> ) qr.query( conn, query, params, new ResultSetHandler() {
+            return ( Collection<GeneProduct> ) qr.query( this.jt.getDataSource().getConnection(), query, params,
+                    new ResultSetHandler() {
 
-                @SuppressWarnings("synthetic-access")
-                public Object handle( ResultSet rs ) throws SQLException {
-                    Collection<GeneProduct> r = new HashSet<GeneProduct>();
-                    while ( rs.next() ) {
+                        @SuppressWarnings("synthetic-access")
+                        public Object handle( ResultSet rs ) throws SQLException {
+                            Collection<GeneProduct> r = new HashSet<GeneProduct>();
+                            while ( rs.next() ) {
 
-                        GeneProduct product = GeneProduct.Factory.newInstance();
+                                GeneProduct product = GeneProduct.Factory.newInstance();
 
-                        String name = rs.getString( 1 );
-                        assert StringUtils.isNotBlank( name );
+                                String name = rs.getString( 1 );
+                                assert StringUtils.isNotBlank( name );
 
-                        DatabaseEntry accession = DatabaseEntry.Factory.newInstance();
-                        accession.setAccession( name );
-                        accession.setExternalDatabase( getSearchedDatabase() );
-                        product.getAccessions().add( accession );
+                                DatabaseEntry accession = DatabaseEntry.Factory.newInstance();
+                                accession.setAccession( name );
+                                accession.setExternalDatabase( getSearchedDatabase() );
+                                product.getAccessions().add( accession );
 
-                        product.setType( GeneProductType.RNA );
+                                product.setType( GeneProductType.RNA );
 
-                        PredictedGene gene = PredictedGene.Factory.newInstance();
-                        gene.setOfficialSymbol( rs.getString( 2 ) );
-                        gene.setName( gene.getOfficialSymbol() );
-                        gene.setTaxon( getTaxon() );
-                        gene.getAccessions().add( accession );
-                        gene.setMethod( source );
+                                PredictedGene gene = PredictedGene.Factory.newInstance();
+                                gene.setOfficialSymbol( rs.getString( 2 ) );
+                                gene.setName( gene.getOfficialSymbol() );
+                                gene.setTaxon( getTaxon() );
+                                gene.getAccessions().add( accession );
+                                gene.setMethod( source );
 
-                        PhysicalLocation pl = PhysicalLocation.Factory.newInstance();
-                        pl.setNucleotide( rs.getLong( 3 ) );
-                        pl.setNucleotideLength( rs.getInt( 4 ) - rs.getInt( 3 ) );
-                        pl.setStrand( rs.getString( 5 ) );
-                        pl.setBin( SequenceBinUtils.binFromRange( ( int ) rs.getLong( 3 ), rs.getInt( 4 ) ) );
+                                PhysicalLocation pl = PhysicalLocation.Factory.newInstance();
+                                pl.setNucleotide( rs.getLong( 3 ) );
+                                pl.setNucleotideLength( rs.getInt( 4 ) - rs.getInt( 3 ) );
+                                pl.setStrand( rs.getString( 5 ) );
+                                pl.setBin( SequenceBinUtils.binFromRange( ( int ) rs.getLong( 3 ), rs.getInt( 4 ) ) );
 
-                        PhysicalLocation genePl = PhysicalLocation.Factory.newInstance();
-                        genePl.setStrand( pl.getStrand() );
+                                PhysicalLocation genePl = PhysicalLocation.Factory.newInstance();
+                                genePl.setStrand( pl.getStrand() );
 
-                        /*
-                         * Do not use this as the official_name: it isn't.
-                         */
-                        gene.setDescription( "Predicted gene imported from Golden Path. " + rs.getString( 8 ) );
+                                /*
+                                 * Do not use this as the official_name: it isn't.
+                                 */
+                                gene.setDescription( "Predicted gene imported from Golden Path. " + rs.getString( 8 ) );
 
-                        Chromosome c = Chromosome.Factory.newInstance();
-                        c.setName( SequenceManipulation.deBlatFormatChromosomeName( chromosome ) );
-                        c.setTaxon( getTaxon() );
-                        pl.setChromosome( c );
-                        genePl.setChromosome( c );
+                                Chromosome c = Chromosome.Factory.newInstance();
+                                c.setName( SequenceManipulation.deBlatFormatChromosomeName( chromosome ) );
+                                c.setTaxon( getTaxon() );
+                                pl.setChromosome( c );
+                                genePl.setChromosome( c );
 
-                        /*
-                         * this only contains the chromosome and strand: the nucleotide positions are only valid for the
-                         * gene product
-                         */
-                        gene.setPhysicalLocation( genePl );
+                                /*
+                                 * this only contains the chromosome and strand: the nucleotide positions are only valid
+                                 * for the gene product
+                                 */
+                                gene.setPhysicalLocation( genePl );
 
-                        product.setName( name );
+                                product.setName( name );
 
-                        product.setDescription( "Predicted gene product imported from Golden Path" );
-                        product.setPhysicalLocation( pl );
-                        product.setGene( gene );
+                                product.setDescription( "Predicted gene product imported from Golden Path" );
+                                product.setPhysicalLocation( pl );
+                                product.setGene( gene );
 
-                        Blob exonStarts = rs.getBlob( 6 );
-                        Blob exonEnds = rs.getBlob( 7 );
-                        product.setExons( getExons( c, exonStarts, exonEnds ) );
+                                Blob exonStarts = rs.getBlob( 6 );
+                                Blob exonEnds = rs.getBlob( 7 );
+                                product.setExons( getExons( c, exonStarts, exonEnds ) );
 
-                        r.add( product );
+                                r.add( product );
 
-                    }
-                    return r;
-                }
+                            }
+                            return r;
+                        }
 
-            } );
+                    } );
         } catch ( SQLException e ) {
             throw new RuntimeException( e );
         }
@@ -601,54 +603,55 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
     @SuppressWarnings("unchecked")
     private Collection<BlatResult> findLocationsByQuery( final String query, final Object[] params ) {
         try {
-            return ( Set<BlatResult> ) qr.query( conn, query, params, new ResultSetHandler() {
+            return ( Set<BlatResult> ) qr.query( this.jt.getDataSource().getConnection(), query, params,
+                    new ResultSetHandler() {
 
-                @SuppressWarnings("synthetic-access")
-                public Object handle( ResultSet rs ) throws SQLException {
-                    Collection<BlatResult> r = new HashSet<BlatResult>();
-                    while ( rs.next() ) {
+                        @SuppressWarnings("synthetic-access")
+                        public Object handle( ResultSet rs ) throws SQLException {
+                            Collection<BlatResult> r = new HashSet<BlatResult>();
+                            while ( rs.next() ) {
 
-                        BlatResult blatResult = BlatResult.Factory.newInstance();
+                                BlatResult blatResult = BlatResult.Factory.newInstance();
 
-                        Chromosome c = Chromosome.Factory.newInstance();
-                        c.setName( SequenceManipulation.deBlatFormatChromosomeName( rs.getString( 1 ) ) );
-                        c.setTaxon( getTaxon() );
-                        blatResult.setTargetChromosome( c );
+                                Chromosome c = Chromosome.Factory.newInstance();
+                                c.setName( SequenceManipulation.deBlatFormatChromosomeName( rs.getString( 1 ) ) );
+                                c.setTaxon( getTaxon() );
+                                blatResult.setTargetChromosome( c );
 
-                        Blob blockSizes = rs.getBlob( 2 );
-                        Blob targetStarts = rs.getBlob( 3 );
-                        Blob queryStarts = rs.getBlob( 4 );
+                                Blob blockSizes = rs.getBlob( 2 );
+                                Blob targetStarts = rs.getBlob( 3 );
+                                Blob queryStarts = rs.getBlob( 4 );
 
-                        blatResult.setBlockSizes( SQLUtils.blobToString( blockSizes ) );
-                        blatResult.setTargetStarts( SQLUtils.blobToString( targetStarts ) );
-                        blatResult.setQueryStarts( SQLUtils.blobToString( queryStarts ) );
+                                blatResult.setBlockSizes( SQLUtils.blobToString( blockSizes ) );
+                                blatResult.setTargetStarts( SQLUtils.blobToString( targetStarts ) );
+                                blatResult.setQueryStarts( SQLUtils.blobToString( queryStarts ) );
 
-                        blatResult.setStrand( rs.getString( 5 ) );
+                                blatResult.setStrand( rs.getString( 5 ) );
 
-                        // need the query size to compute scores.
-                        blatResult.setQuerySequence( BioSequence.Factory.newInstance() );
-                        blatResult.getQuerySequence().setLength( rs.getLong( 6 ) );
-                        blatResult.getQuerySequence().setName( ( String ) params[0] );
+                                // need the query size to compute scores.
+                                blatResult.setQuerySequence( BioSequence.Factory.newInstance() );
+                                blatResult.getQuerySequence().setLength( rs.getLong( 6 ) );
+                                blatResult.getQuerySequence().setName( ( String ) params[0] );
 
-                        blatResult.setMatches( rs.getInt( 7 ) );
-                        blatResult.setMismatches( rs.getInt( 8 ) );
-                        blatResult.setQueryGapCount( rs.getInt( 9 ) );
-                        blatResult.setTargetGapCount( rs.getInt( 10 ) );
+                                blatResult.setMatches( rs.getInt( 7 ) );
+                                blatResult.setMismatches( rs.getInt( 8 ) );
+                                blatResult.setQueryGapCount( rs.getInt( 9 ) );
+                                blatResult.setTargetGapCount( rs.getInt( 10 ) );
 
-                        blatResult.setQueryStart( rs.getInt( 11 ) );
-                        blatResult.setQueryEnd( rs.getInt( 12 ) );
+                                blatResult.setQueryStart( rs.getInt( 11 ) );
+                                blatResult.setQueryEnd( rs.getInt( 12 ) );
 
-                        blatResult.setTargetStart( rs.getLong( 13 ) );
-                        blatResult.setTargetEnd( rs.getLong( 14 ) );
+                                blatResult.setTargetStart( rs.getLong( 13 ) );
+                                blatResult.setTargetEnd( rs.getLong( 14 ) );
 
-                        blatResult.setRepMatches( rs.getInt( 15 ) );
+                                blatResult.setRepMatches( rs.getInt( 15 ) );
 
-                        r.add( blatResult );
-                    }
-                    return r;
-                }
+                                r.add( blatResult );
+                            }
+                            return r;
+                        }
 
-            } );
+                    } );
         } catch ( SQLException e ) {
             throw new RuntimeException( e );
         }
@@ -726,7 +729,8 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
      */
     public Collection<GeneProduct> findAcemblyGenesByLocation( String chromosome, Long start, Long end, String strand ) {
 
-        // only human has acembly genes. FIXME, if the situation changes this code will be invalid. hg19 doesn't have it either.
+        // only human has acembly genes. FIXME, if the situation changes this code will be invalid. hg19 doesn't have it
+        // either.
         if ( !TaxonUtility.isHuman( this.getTaxon() ) ) {
             return null;
         }
@@ -804,43 +808,44 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
                     regionStart, regionEnd, searchChrom, strand };
 
         try {
-            return ( Collection<Gene> ) qr.query( conn, query, params, new ResultSetHandler() {
+            return ( Collection<Gene> ) qr.query( this.jt.getDataSource().getConnection(), query, params,
+                    new ResultSetHandler() {
 
-                @SuppressWarnings("synthetic-access")
-                public Object handle( ResultSet rs ) throws SQLException {
-                    Collection<Gene> r = new HashSet<Gene>();
-                    while ( rs.next() ) {
+                        @SuppressWarnings("synthetic-access")
+                        public Object handle( ResultSet rs ) throws SQLException {
+                            Collection<Gene> r = new HashSet<Gene>();
+                            while ( rs.next() ) {
 
-                        Gene gene = Gene.Factory.newInstance();
+                                Gene gene = Gene.Factory.newInstance();
 
-                        gene.setNcbiId( rs.getString( 1 ) );
-                        gene.setOfficialSymbol( rs.getString( 2 ) );
-                        gene.setName( gene.getOfficialSymbol() );
+                                gene.setNcbiId( rs.getString( 1 ) );
+                                gene.setOfficialSymbol( rs.getString( 2 ) );
+                                gene.setName( gene.getOfficialSymbol() );
 
-                        PhysicalLocation pl = PhysicalLocation.Factory.newInstance();
-                        pl.setNucleotide( rs.getLong( 3 ) );
-                        pl.setNucleotideLength( rs.getInt( 4 ) - rs.getInt( 3 ) );
-                        pl.setStrand( rs.getString( 5 ) );
-                        pl.setBin( SequenceBinUtils.binFromRange( ( int ) rs.getLong( 3 ), rs.getInt( 4 ) ) );
+                                PhysicalLocation pl = PhysicalLocation.Factory.newInstance();
+                                pl.setNucleotide( rs.getLong( 3 ) );
+                                pl.setNucleotideLength( rs.getInt( 4 ) - rs.getInt( 3 ) );
+                                pl.setStrand( rs.getString( 5 ) );
+                                pl.setBin( SequenceBinUtils.binFromRange( ( int ) rs.getLong( 3 ), rs.getInt( 4 ) ) );
 
-                        Chromosome c = Chromosome.Factory.newInstance();
-                        c.setName( SequenceManipulation.deBlatFormatChromosomeName( chromosome ) );
-                        c.setTaxon( getTaxon() );
-                        pl.setChromosome( c );
+                                Chromosome c = Chromosome.Factory.newInstance();
+                                c.setName( SequenceManipulation.deBlatFormatChromosomeName( chromosome ) );
+                                c.setTaxon( getTaxon() );
+                                pl.setChromosome( c );
 
-                        // note that we aren't setting the chromosome here; we already know that.
-                        gene.setPhysicalLocation( pl );
-                        r.add( gene );
+                                // note that we aren't setting the chromosome here; we already know that.
+                                gene.setPhysicalLocation( pl );
+                                r.add( gene );
 
-                        Blob blockSizes = rs.getBlob( 6 );
-                        Blob blockStarts = rs.getBlob( 7 );
+                                Blob blockSizes = rs.getBlob( 6 );
+                                Blob blockStarts = rs.getBlob( 7 );
 
-                        setBlocks( gene, blockSizes, blockStarts );
+                                setBlocks( gene, blockSizes, blockStarts );
 
-                    }
-                    return r;
-                }
-            } );
+                            }
+                            return r;
+                        }
+                    } );
 
         } catch ( SQLException e ) {
             throw new RuntimeException( e );
@@ -882,43 +887,44 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
                     regionStart, regionEnd, searchChrom, strand };
 
         try {
-            return ( Collection<Gene> ) qr.query( conn, query, params, new ResultSetHandler() {
+            return ( Collection<Gene> ) qr.query( this.jt.getDataSource().getConnection(), query, params,
+                    new ResultSetHandler() {
 
-                @SuppressWarnings("synthetic-access")
-                public Object handle( ResultSet rs ) throws SQLException {
-                    Collection<Gene> r = new HashSet<Gene>();
-                    while ( rs.next() ) {
+                        @SuppressWarnings("synthetic-access")
+                        public Object handle( ResultSet rs ) throws SQLException {
+                            Collection<Gene> r = new HashSet<Gene>();
+                            while ( rs.next() ) {
 
-                        Gene gene = Gene.Factory.newInstance();
+                                Gene gene = Gene.Factory.newInstance();
 
-                        gene.setNcbiId( rs.getString( 1 ) );
-                        gene.setOfficialSymbol( rs.getString( 2 ) );
-                        gene.setName( gene.getOfficialSymbol() );
+                                gene.setNcbiId( rs.getString( 1 ) );
+                                gene.setOfficialSymbol( rs.getString( 2 ) );
+                                gene.setName( gene.getOfficialSymbol() );
 
-                        PhysicalLocation pl = PhysicalLocation.Factory.newInstance();
-                        pl.setNucleotide( rs.getLong( 3 ) );
-                        pl.setNucleotideLength( rs.getInt( 4 ) - rs.getInt( 3 ) );
-                        pl.setStrand( rs.getString( 5 ) );
-                        pl.setBin( SequenceBinUtils.binFromRange( ( int ) rs.getLong( 3 ), rs.getInt( 4 ) ) );
+                                PhysicalLocation pl = PhysicalLocation.Factory.newInstance();
+                                pl.setNucleotide( rs.getLong( 3 ) );
+                                pl.setNucleotideLength( rs.getInt( 4 ) - rs.getInt( 3 ) );
+                                pl.setStrand( rs.getString( 5 ) );
+                                pl.setBin( SequenceBinUtils.binFromRange( ( int ) rs.getLong( 3 ), rs.getInt( 4 ) ) );
 
-                        Chromosome c = Chromosome.Factory.newInstance();
-                        c.setName( SequenceManipulation.deBlatFormatChromosomeName( chromosome ) );
-                        c.setTaxon( getTaxon() );
-                        pl.setChromosome( c );
+                                Chromosome c = Chromosome.Factory.newInstance();
+                                c.setName( SequenceManipulation.deBlatFormatChromosomeName( chromosome ) );
+                                c.setTaxon( getTaxon() );
+                                pl.setChromosome( c );
 
-                        // note that we aren't setting the chromosome here; we already know that.
-                        gene.setPhysicalLocation( pl );
-                        r.add( gene );
+                                // note that we aren't setting the chromosome here; we already know that.
+                                gene.setPhysicalLocation( pl );
+                                r.add( gene );
 
-                        Blob blockSizes = rs.getBlob( 6 );
-                        Blob blockStarts = rs.getBlob( 7 );
+                                Blob blockSizes = rs.getBlob( 6 );
+                                Blob blockStarts = rs.getBlob( 7 );
 
-                        setBlocks( gene, blockSizes, blockStarts );
+                                setBlocks( gene, blockSizes, blockStarts );
 
-                    }
-                    return r;
-                }
-            } );
+                            }
+                            return r;
+                        }
+                    } );
 
         } catch ( SQLException e ) {
             throw new RuntimeException( e );

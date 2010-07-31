@@ -18,8 +18,6 @@
  */
 package ubic.gemma.externalDb;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.SQLException;
 
 import org.apache.commons.dbutils.QueryRunner;
@@ -49,11 +47,12 @@ public class GoldenPath {
 
     private ExternalDatabaseService externalDatabaseService;
 
-    protected DriverManagerDataSource dataSource;
+    /*
+     * TODO - use a connection pool.
+     */
+    private DriverManagerDataSource dataSource;
 
     protected JdbcTemplate jt;
-
-    protected Connection conn;
 
     protected QueryRunner qr;
 
@@ -103,6 +102,12 @@ public class GoldenPath {
         }
     }
 
+    @Override
+    protected void finalize() throws Throwable {
+        super.finalize();
+        this.dataSource.getConnection().close();
+    }
+
     /**
      * Get a GoldenPath instance for a given taxon, using configured database settings.
      * 
@@ -145,12 +150,6 @@ public class GoldenPath {
 
         jt.setFetchSize( 50 );
         jt.setDataSource( dataSource );
-
-        try {
-            conn = DriverManager.getConnection( url, user, password );
-        } catch ( SQLException e ) {
-            throw new RuntimeException( e );
-        }
 
         qr = new QueryRunner();
     }
