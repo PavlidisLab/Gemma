@@ -36,7 +36,7 @@ import ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceAlignmentServ
 import ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceProcessingService;
 import ubic.gemma.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
-import ubic.gemma.loader.expression.geo.service.AbstractGeoService;
+import ubic.gemma.loader.expression.geo.service.GeoDatasetService;
 import ubic.gemma.loader.genome.gene.ncbi.NcbiGeneLoader;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
@@ -69,7 +69,7 @@ public class CompositeSequenceGeneMapperServiceIntegrationTest extends AbstractG
     ArrayDesignService arrayDesignService = null;
 
     @Autowired
-    AbstractGeoService geoService = null;
+    GeoDatasetService geoService = null;
 
     ArrayDesign ad = null;
 
