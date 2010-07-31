@@ -70,7 +70,6 @@ public abstract class AbstractArrayDesignProcessingTest extends BaseSpringContex
                         true, true, false, false, true );
 
                 ad = ads.iterator().next();
-                ad = arrayDesignService.thaw( ad );
 
             } catch ( Exception e ) {
                 if ( e.getCause() instanceof FileNotFoundException ) {
@@ -80,6 +79,8 @@ public abstract class AbstractArrayDesignProcessingTest extends BaseSpringContex
                 throw e;
             }
         }
+
+        ad = arrayDesignService.thaw( ad );
 
     }
 
