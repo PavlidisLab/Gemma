@@ -43,6 +43,9 @@ import ubic.gemma.util.ConfigUtils;
 import ubic.gemma.web.controller.BaseController;
 import ubic.gemma.web.util.JSONUtil;
 
+import org.apache.commons.validator.EmailValidator;
+import org.apache.commons.validator.Validator;
+
 /**
  * Controller to edit profile of users.
  * 
@@ -102,8 +105,9 @@ public class UserFormMultiActionController extends BaseController {
 
             boolean changed = false;
 
-            if ( StringUtils.isNotBlank( email ) && !user.getEmail().equals( email ) ) {
-                if ( !email.matches( "/^(\\w+)([-+.][\\w]+)*@(\\w[-\\w]*\\.){1,5}([A-Za-z]){2,4}$/;" ) ) {
+            if ( StringUtils.isNotBlank( email ) && !user.getEmail().equals( email ) ) {                
+                //if ( !email.matches( "/^(\\w+)([-+.][\\w]+)*@(\\w[-\\w]*\\.){1,5}([A-Za-z]){2,4}$/;" ) ) {
+                if (!EmailValidator.getInstance().isValid( email ) ) {
                     jsonText = "{success:false,message:'The email address does not look valid'}";
                     jsonUtil.writeToResponse( jsonText );
                     return;
