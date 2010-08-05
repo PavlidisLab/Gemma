@@ -415,7 +415,7 @@ Ext.onReady(function() {
 					handler : tool.validate,
 					scope : tool,
 					text : "Validate data",
-					disabled : false
+					disabled : true
 				}, {
 					id : 'submit-data-button',
 					value : 'Submit dataset',
