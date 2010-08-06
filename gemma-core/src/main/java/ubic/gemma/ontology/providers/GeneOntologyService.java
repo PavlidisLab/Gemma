@@ -334,12 +334,12 @@ public class GeneOntologyService implements InitializingBean {
         if ( log.isDebugEnabled() ) log.debug( "Searching Gene Ontology for '" + queryString + "'" );
 
         // make sure we are all-inclusive
-        String pquery = queryString.replaceAll( "\\s+", " +" );
+        //String pquery = queryString.replaceAll( "\\s+", " +" );
 
         Collection<OntologyResource> rawMatches = new HashSet<OntologyResource>();
         for ( IndexLARQ index : this.indices ) {
             // rawMatches.addAll( OntologySearch.matchClasses( model, index, pquery ) );
-            rawMatches.addAll( OntologySearch.matchIndividuals( model, index, pquery ) );
+            rawMatches.addAll( OntologySearch.matchIndividuals( model, index, queryString ) );
         }
 
         /*
