@@ -123,10 +123,8 @@ public class GeneSetSearch {
      * Convert a GO term to a 'GeneSet', including genes from all child terms.
      */
     private GeneSet goTermToGeneSet( OntologyResource term, Taxon taxon ) {
-
-        if ( term.getUri() == null ) {
-            return null;
-        }
+        if ( term == null ) return null;
+        if ( term.getUri() == null ) return null;
 
         Collection<OntologyResource> allMatches = new HashSet<OntologyResource>();
 
