@@ -275,9 +275,12 @@ Gemma.DatasetGroupEditToolbar = Ext.extend(Ext.Toolbar, {
 			commit : function() {
 				/*
 				 * FIXME: check if groups have >0 experiments added to them.
+				 * 
 				 */
 				this.ownerCt.loadMask.show();
-				this.ownerCt.getStore().save();
+				if (this.ownerCt.getStore().save() == -1  ) { 
+					Ext.Msg.alert("Error", "We encountered errors while saving your changes.");
+				}
 			},
 
 			/**
@@ -517,6 +520,8 @@ Gemma.EESetDetailsDialog = Ext.extend(Ext.Window, {
 					return;
 				} else {
 					this.hide();
+					Ext.Msg.alert("Duplicate name", "Please provide a previously unused name for the set");
+
 					return this.fireEvent("commit", {
 								name : values.newEesetName,
 								description : values.newEesetDescription,
