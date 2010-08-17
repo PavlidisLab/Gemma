@@ -202,7 +202,7 @@ public class OntologyService implements InitializingBean {
         this.ontologyServices.add( this.obiService );
 
         for ( AbstractOntologyService serv : this.ontologyServices ) {
-            serv.init( false );
+            serv.startInitializationThread( false );
         }
 
     }
@@ -355,7 +355,7 @@ public class OntologyService implements InitializingBean {
         }
 
         for ( AbstractOntologyService ontology : ontologyServices ) {
-            if ( ontology.isEnabled() ) {
+            if ( ontology.isOntologyLoaded() ) {
                 Collection<OntologyTerm> found = ontology.findTerm( query );
                 if ( found != null ) results.addAll( found );
             }

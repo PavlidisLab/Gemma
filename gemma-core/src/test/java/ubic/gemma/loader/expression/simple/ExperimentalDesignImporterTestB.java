@@ -108,7 +108,7 @@ public class ExperimentalDesignImporterTestB extends BaseSpringContextTest {
 
         SimpleExpressionExperimentMetaData metaData = new SimpleExpressionExperimentMetaData();
 
-        mos.init( true );
+        mos.startInitializationThread( true );
         while ( !mos.isOntologyLoaded() ) {
             Thread.sleep( 1000 );
             log.info( "Waiting for mgedontology to load" );

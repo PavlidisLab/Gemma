@@ -20,6 +20,9 @@
 package ubic.gemma.ontology.providers;
 
 import java.io.BufferedReader;
+
+
+
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
@@ -36,22 +39,19 @@ import org.apache.commons.lang.StringUtils;
 import org.springframework.stereotype.Service;
 
 import ubic.basecode.ontology.Configuration;
-import ubic.basecode.ontology.OntologyLoader;
 import ubic.basecode.ontology.OntologyTreeNode;
 import ubic.basecode.ontology.model.OntologyTerm;
-import ubic.basecode.ontology.providers.AbstractOntologyService;
-
-import com.hp.hpl.jena.ontology.OntModel;
+import ubic.basecode.ontology.providers.AbstractOntologyMemoryBackedService;
 
 /**
  * Holds a complete copy of the MgedOntology in memory. This gets loaded on startup. As the MgedOntology is the
- * framework ontology i've added a feature so that the Ontology can be changed dynamically via the web front end.
+ * framework ontology i've added a feature so that the ontology can be changed dynamically via the web front end.
  * 
  * @author klc
  * @version $Id: MgedOntologyService.java
  */
 @Service
-public class MgedOntologyService extends AbstractOntologyService {
+public class MgedOntologyService extends AbstractOntologyMemoryBackedService {
 
     public static final String MGED_ONTOLOGY_URL = "url.mgedOntology";
 
@@ -83,7 +83,7 @@ public class MgedOntologyService extends AbstractOntologyService {
 
     public Collection<OntologyTerm> getBioMaterialTerms() {
 
-        if ( !ready.get() ) return null;
+        if ( !isInitialized.get() ) return null;
 
         OntologyTerm term = terms.get( ontology_startingPoint );
         Collection<OntologyTerm> results = getAllTerms( term );
@@ -95,7 +95,7 @@ public class MgedOntologyService extends AbstractOntologyService {
 
     public Collection<OntologyTreeNode> getBioMaterialTreeNodeTerms() {
 
-        if ( !ready.get() ) return null;
+        if ( !isInitialized.get() ) return null;
 
         Collection<OntologyTreeNode> nodes = new ArrayList<OntologyTreeNode>();
 
@@ -147,7 +147,7 @@ public class MgedOntologyService extends AbstractOntologyService {
      *         bioMaterial package plus some special cases.
      */
     public Collection<OntologyTerm> getUsefulMgedTerms() {
-        if ( !ready.get() ) {
+        if ( !isInitialized.get() ) {
             log.warn( "MGED Ontology is not loaded (yet?)" );
             return new HashSet<OntologyTerm>();
         }
@@ -185,20 +185,18 @@ public class MgedOntologyService extends AbstractOntologyService {
      */
     public void loadNewOntology( String ontologyURL, String startingPointURL ) {
 
-        if ( running.get() ) return;
+        if ( initializationThread.isAlive() ) return;
 
         ontology_URL = ontologyURL;
         ontology_startingPoint = startingPointURL;
 
-        ready = new AtomicBoolean( false );
-        running = new AtomicBoolean( false );
+        isInitialized.set( false );
 
-        init( true );
-
+        startInitializationThread( true );
     }
 
     /**
-     * @param node Recursivly builds the tree node structure that is needed by the ext tree
+     * @param node Recursively builds the tree node structure that is needed by the ext tree
      */
     protected OntologyTreeNode buildTreeNode( OntologyTerm term ) {
 
@@ -252,11 +250,6 @@ public class MgedOntologyService extends AbstractOntologyService {
     @Override
     protected String getOntologyUrl() {
         return Configuration.getString( MGED_ONTOLOGY_URL );
-    }
-
-    @Override
-    protected OntModel loadModel( String url ) {
-        return OntologyLoader.loadMemoryModel( url );
     }
 
 }

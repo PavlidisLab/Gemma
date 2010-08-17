@@ -71,7 +71,7 @@ public class ExperimentalDesignImportDuplicateValueTest extends BaseSpringContex
         SimpleExpressionExperimentMetaData metaData = new SimpleExpressionExperimentMetaData();
 
         mos = ( MgedOntologyService ) this.getBean( "mgedOntologyService" );
-        mos.init( true );
+        mos.startInitializationThread( true );
         while ( !mos.isOntologyLoaded() ) {
             Thread.sleep( 5000 );
             log.info( "Waiting for mgedontology to load" );

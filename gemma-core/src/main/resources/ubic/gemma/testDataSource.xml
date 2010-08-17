@@ -24,5 +24,8 @@
 		<property name="url">
 			<value>${gemma.testdb.url}</value>
 		</property>
+		<property name="maxActive">
+			<value>10</value>
+		</property>		
 	</bean>
 </beans>

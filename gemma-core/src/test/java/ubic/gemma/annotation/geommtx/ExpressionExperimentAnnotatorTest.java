@@ -55,7 +55,7 @@ public class ExpressionExperimentAnnotatorTest extends BaseSpringContextTest {
             return;
         }
 
-        ontologyService.getBirnLexOntologyService().init( true );
+        ontologyService.getBirnLexOntologyService().startInitializationThread( true );
 
         while ( !ontologyService.getBirnLexOntologyService().isOntologyLoaded() ) {
             Thread.sleep( 5000 );

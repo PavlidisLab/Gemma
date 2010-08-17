@@ -96,7 +96,7 @@ public class ExperimentalDesignImportCli extends AbstractSpringAwareCLI {
         if ( e != null ) return e;
 
         MgedOntologyService mos = ( MgedOntologyService ) this.getBean( "mgedOntologyService" );
-        mos.init( true );
+        mos.startInitializationThread( true );
         while ( !mos.isOntologyLoaded() ) {
             try {
                 Thread.sleep( 5000 );
