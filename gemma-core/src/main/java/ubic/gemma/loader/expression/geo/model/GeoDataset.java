@@ -423,7 +423,9 @@ public class GeoDataset extends GeoData {
      * @return
      */
     public static ExperimentType convertStringToExperimentType( String string ) {
-        if ( string.equals( "gene expression array-based" ) ) {
+        if ( string.equals( "Expression profiling by array" ) ) {
+            return ExperimentType.geneExpressionArraybased;
+        } else if ( string.equals( "gene expression array-based" ) ) {
             return ExperimentType.geneExpressionArraybased;
         } else if ( string.equals( "gene expression SAGE-based" ) ) {
             return ExperimentType.geneExpressionSAGEbased;
