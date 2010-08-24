@@ -104,6 +104,18 @@ public class SecurityService {
         }
         return false;
     }
+    
+    public static boolean isRunningAsAdmin() {
+        
+        Collection<GrantedAuthority> authorities = getAuthentication().getAuthorities();
+        assert authorities != null;
+        for ( GrantedAuthority authority : authorities ) {
+            if ( authority.getAuthority().equals( AuthorityConstants.RUN_AS_ADMIN_AUTHORITY ) ) {
+                return true;
+            }
+        }
+        return false;                
+    }
 
     /**
      * @return
