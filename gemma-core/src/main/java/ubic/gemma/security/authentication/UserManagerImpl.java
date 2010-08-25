@@ -139,7 +139,7 @@ public class UserManagerImpl implements UserManager {
      * @see ubic.gemma.security.authentication.UserManagerI#changePassword(java.lang.String, java.lang.String)
      */
     @Transactional
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "RUN_AS_ADMIN" })
+    @Secured( { "GROUP_USER" } )
     public void changePassword( String oldPassword, String newPassword ) throws AuthenticationException {
         Authentication currentAuthentication = SecurityContextHolder.getContext().getAuthentication();
 

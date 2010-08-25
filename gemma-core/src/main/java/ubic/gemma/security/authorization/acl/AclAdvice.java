@@ -19,6 +19,7 @@
 package ubic.gemma.security.authorization.acl;
 
 import java.beans.PropertyDescriptor;
+
 import java.util.Collection;
 
 import org.apache.commons.logging.Log;
@@ -59,6 +60,9 @@ import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.TransactionCallbackWithoutResult;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
+import ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.model.common.auditAndSecurity.SecuredChild;
@@ -67,6 +71,7 @@ import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.UserGroup;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.CrudUtils;
 import ubic.gemma.security.SecurityService;
@@ -157,6 +162,133 @@ public class AclAdvice extends HibernateDaoSupport {
         this.crudUtils = crudUtils;
     }
 
+//TODO: Work in progress. This is a refactoring of addOrUpdateAcl logic. I'm keeping old one for now but it's getting too messy.
+//    private boolean isObjectPublicWhenCreatedByAdmin( Object object ) {
+//        return !( User.class.isAssignableFrom( object.getClass() ) || UserGroup.class.isAssignableFrom( object
+//                .getClass() ) );
+//    }
+//
+      /*   
+       * 
+       * 
+       * 
+       */
+//    private AuditableAcl addAcl (Securable object, ObjectIdentity oi, Acl parentAcl) {
+//        // Assumption: doesn't exist
+//        AuditableAcl acl = null;
+//        Sid sid = null;
+//        
+//        // FIXME: better definition
+//        // Object is TOP_PARENT (ROOT of permissions inheritance tree)
+//        boolean isTopParent = ;
+//        
+//        /*
+//         * The logic here is: if we're supposed to inherit from the parent, but none is provided (can easily happen), we
+//         * have to put in ACEs. Same goes if we're not supposed to inherit. Objects which are not supposed to have their
+//         * own ACLs (SecurableChild)
+//         */
+//        if ( isTopParent ) {
+//
+//            /*
+//             * All top level objects must have administration GROUP_ADMIN permissions.
+//             */
+//            if ( log.isDebugEnabled() ) log.debug( "Making administratable by GROUP_ADMIN: " + oi );            
+//            grant( acl, BasePermission.ADMINISTRATION, new GrantedAuthoritySid( new GrantedAuthorityImpl(
+//                    AuthorityConstants.ADMIN_GROUP_AUTHORITY ) ) );
+//
+//            /*
+//             * GROUP_AGENT can read anything.
+//             */
+//            if ( log.isDebugEnabled() ) log.debug( "Making readable by GROUP_AGENT: " + oi );            
+//            grant( acl, BasePermission.READ, new GrantedAuthoritySid( new GrantedAuthorityImpl(
+//                    AuthorityConstants.AGENT_GROUP_AUTHORITY ) ) );
+//
+//            /*
+//             * If object is created by admin and the object is not a user or group, make it readable by anonymous (public).
+//             */           
+//            if ( SecurityService.isUserAdmin() & isObjectPublicWhenCreatedByAdmin ( object ) ) {
+//                if ( log.isDebugEnabled() ) log.debug( "Making readable by IS_AUTHENTICATED_ANONYMOUSLY: " + oi );
+//                grant( acl, BasePermission.READ, new GrantedAuthoritySid( new GrantedAuthorityImpl(
+//                        AuthorityConstants.IS_AUTHENTICATED_ANONYMOUSLY ) ) );
+//            }
+//
+//            /*
+//             * The user who created the object can read/write it, if admin then skip since admin has all permission already anyway. 
+//             */
+//            if ( SecurityService.isUserLoggedIn() && !SecurityService.isUserAdmin() ) {
+//                if ( log.isDebugEnabled() ) log.debug( "Giving read/write permissions on " + oi + " to " + sid );
+//                grant( acl, BasePermission.READ, sid );
+//                grant( acl, BasePermission.WRITE, sid );
+//            }
+//        }
+//
+//        //
+//        // SPECIAL CASES
+//        //
+//        
+//        /*
+//         * NEW USER CREATION AT REGISTRATION
+//         * Normal case: We expect anonymous user running with GROUP_RUN_AS_ADMIN privileges. 
+//         */                        
+//        if ( SecurityService.isRunningAsAdmin() && User.class.isAssignableFrom( object.getClass() ) ) {
+//            User u = ( User ) object;
+//            sid = new PrincipalSid( u.getUserName() );
+//
+//            grant( acl, BasePermission.READ, sid );
+//            grant( acl, BasePermission.WRITE, sid );
+//
+//            if ( log.isDebugEnabled() ) log.debug( "New User: given read/write permissions on " + oi + " to " + sid );            
+//        }
+//
+//        // Treating Analyses as special case. It'll inherit ACL from ExpressionExperiment
+//        // If aclParent is passed to this method we overwrite it.
+//        if ( DifferentialExpressionAnalysis.class.isAssignableFrom( object.getClass() ) ) {
+//
+//            DifferentialExpressionAnalysis dea = ( DifferentialExpressionAnalysis ) object;
+//            ExpressionExperimentSet eeSet = dea.getExpressionExperimentSetAnalyzed();
+//            Collection<BioAssaySet> experiments = eeSet.getExperiments();
+//
+//            if ( experiments.size() != 1 )
+//                throw new RuntimeException( "We do not support Diff. Expr. Analyses based on multiple datasets." );
+//
+//            BioAssaySet e = experiments.iterator().next();
+//            ObjectIdentity oi_temp = makeObjectIdentity( e );
+//
+//            parentAcl = aclService.readAclById( oi_temp );
+//            acl.setEntriesInheriting( true );
+//        }
+//                
+//        acl.setEntriesInheriting( inheritParent );        
+//        acl.setOwner( sid );
+//
+//        assert !acl.equals( parentAcl );
+//
+//        if ( parentAcl != null ) {
+//            if ( log.isTraceEnabled() ) log.trace( "Setting parent to: " + parentAcl + " <--- " + acl );
+//            acl.setParent( parentAcl );            
+//        }
+//
+//        return ( AuditableAcl ) aclService.updateAcl( acl );
+//        
+//    }
+//
+//    private AuditableAcl updateAcl( AuditableAcl acl, Securable object, Acl parentAcl ) {
+//        // Assumption: already exists
+//
+//        /*
+//         * Could be findOrCreate, or could be a second pass that will let us fill in parent ACLs for associated objects
+//         * missed earlier in a persist cycle. E.g. BioMaterial
+//         */
+//        try {
+//            maybeSetParentACL( object, acl, parentAcl );
+//            return acl;
+//        } catch ( NotFoundException nfe ) {
+//            log.error( nfe, nfe );
+//        }
+//
+//        return null;
+//    }
+
     /**
      * Creates the acl_permission object and the acl_object_identity object.
      * 
@@ -164,12 +296,23 @@ public class AclAdvice extends HibernateDaoSupport {
      * @return true if an ACL was created, false otherwise.
      */
     private AuditableAcl addOrUpdateAcl( Securable object, Acl parentAcl ) {
+        // Flow
+        // exists vs doesn't exist
+        // updateAcl addAcl
 
-        /*
-         * OI for new object
-         */
+        // inherits from parent vs doesn't inherit
+        //
+        // Special handling under some privileges
+        // Special handling for some classes
+        // (default permissions rules)
+        // Root (top_parent) of acl inheritance tree
+        // Enforce SecuredChild, SecuredNotChild rules
+
+        // FIXME: Maybe getObjectIdentity? since the method is addOrUpdate object identity may already exist
+        // and this method doesn't create a new one.
         ObjectIdentity oi = makeObjectIdentity( object );
 
+        // FIXME: Maybe through exception? since there's no way to recover from this.
         if ( oi == null ) {
             log.warn( "Null object identity for : " + object );
             return null;
@@ -198,9 +341,6 @@ public class AclAdvice extends HibernateDaoSupport {
             }
         }
 
-        /*
-         * SID for current user
-         */
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         if ( authentication == null ) {
@@ -217,6 +357,8 @@ public class AclAdvice extends HibernateDaoSupport {
 
         boolean isAdmin = SecurityService.isUserAdmin();
 
+        boolean isRunningAsAdmin = SecurityService.isRunningAsAdmin();
+
         boolean isAnonymous = SecurityService.isUserAnonymous();
 
         boolean objectIsAUser = User.class.isAssignableFrom( object.getClass() );
@@ -224,7 +366,7 @@ public class AclAdvice extends HibernateDaoSupport {
         boolean objectIsAGroup = UserGroup.class.isAssignableFrom( object.getClass() );
 
         /*
-         * the only case where we absolutely disallow inheritance is for SecuredNotChild.
+         * The only case where we absolutely disallow inheritance is for SecuredNotChild.
          */
         boolean inheritFromParent = parentAcl != null && !SecuredNotChild.class.isAssignableFrom( object.getClass() );
 
@@ -245,7 +387,7 @@ public class AclAdvice extends HibernateDaoSupport {
         if ( !inheritFromParent || parentAcl == null ) {
 
             /*
-             * All object must have administration permissons on them.
+             * All objects must have administration permissions on them.
              */
             if ( log.isDebugEnabled() ) log.debug( "Making administratable by GROUP_ADMIN: " + oi );
             grant( acl, BasePermission.ADMINISTRATION, new GrantedAuthoritySid( new GrantedAuthorityImpl(
@@ -305,7 +447,7 @@ public class AclAdvice extends HibernateDaoSupport {
                 if ( log.isDebugEnabled() )
                     log.debug( "New User: given read/write permissions on " + oi + " to " + sid );
 
-                if ( isAdmin ) {
+                if ( isRunningAsAdmin ) {
                     /*
                      * Important: we expect this to normally be the case.
                      */
@@ -320,6 +462,39 @@ public class AclAdvice extends HibernateDaoSupport {
 
             }
         }
+
+        // Treating Analyses as special case. It'll inherit ACL from ExpressionExperiment
+        // If aclParent is passed to this method we overwrite it.
+        if ( DifferentialExpressionAnalysis.class.isAssignableFrom( object.getClass() ) ) {
+
+            DifferentialExpressionAnalysis dea = ( DifferentialExpressionAnalysis ) object;
+            ExpressionExperimentSet eeSet = dea.getExpressionExperimentSetAnalyzed();
+            Collection<BioAssaySet> experiments = eeSet.getExperiments();
+
+            if ( experiments.size() != 1 )
+                throw new RuntimeException( "We do not support Diff Expr Analyses based on multiple datasets." );
+
+            BioAssaySet e = experiments.iterator().next();
+            ObjectIdentity oi_temp = makeObjectIdentity( e );
+            acl.setEntriesInheriting( true );
+            parentAcl = aclService.readAclById( oi_temp );
+        }
+
+        // if (ProbeCoexpressionAnalysis.class.isAssignableFrom( object.getClass() ) ) {
+        // // Get expression experiment
+        // ProbeCoexpressionAnalysis pcea = (ProbeCoexpressionAnalysis) object;
+        // ExpressionExperimentSet eeSet = pcea.getExpressionExperimentSetAnalyzed();
+        // Collection <BioAssaySet> experiments = eeSet.getExperiments();
+        //            
+        // if (experiments.size() != 1) throw new
+        // RuntimeException("We do not support Probe CoExpr Analyses based on multiple datasets.");
+        //            
+        // BioAssaySet e = experiments.iterator().next();
+        //            
+        // // Get its ACL
+        // ObjectIdentity oi_temp = makeObjectIdentity(e);
+        // parentAcl = aclService.readAclById( oi_temp );
+        // }
 
         acl.setOwner( sid ); // this might be the 'user' now.
 
