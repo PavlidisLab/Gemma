@@ -255,6 +255,7 @@ public class ExpressionExperimentFormController extends BaseFormController {
         ExpressionExperimentEditCommand obj;
         if ( id != null ) {
             ee = expressionExperimentService.load( id );
+            expressionExperimentService.thawLite( ee );
             qts.addAll( expressionExperimentService.getQuantitationTypes( ee ) );
             obj = new ExpressionExperimentEditCommand( ee, qts );
         } else {
