@@ -26,6 +26,7 @@ import ubic.GEOMMTx.ParentFinder;
 import ubic.GEOMMTx.evaluation.MakeHistogramData;
 import ubic.basecode.dataStructure.StringToStringSetMap;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
+import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -90,26 +91,31 @@ public class GetAnnotationMatrixCLI extends AbstractSpringAwareCLI {
             for ( Characteristic ch : characters ) {
                 if ( ch instanceof VocabCharacteristic ) {
                     VocabCharacteristic vc = ( VocabCharacteristic ) ch;
+
+                    // is it manual annotation?
+                    // if ( vc.getEvidenceCode().equals( GOEvidenceCode.IC ) ) {
                     // log.info( vc.getValue() + " " + vc.getValueUri() );
                     if ( vc.getValueUri() != null && vc.getValueUri().startsWith( "http" ) ) {
                         currentLabelSet.add( vc.getValue() );
                         currentURISet.add( vc.getValueUri() );
 
                         // get parents
-                        Set<String> parentURLs = parentFinder.allParents( vc.getValueUri() );
-                        for ( String parentURI : parentURLs ) {
-                            currentURISet.add( parentURI );
-                            if ( parentFinder.getTerm( parentURI ) != null ) {
-                                String parentLabel = parentFinder.getTerm( parentURI ).getLabel();
-                                // log.info( vc.getValue() + "->" + parentLabel );
-                                if ( parentLabel != null ) currentLabelSet.add( parentLabel );
-                            }
-                        }
+                        // COMMENTED OUT
+                        // Set<String> parentURLs = parentFinder.allParents( vc.getValueUri() );
+                        // for ( String parentURI : parentURLs ) {
+                        // currentURISet.add( parentURI );
+                        // if ( parentFinder.getTerm( parentURI ) != null ) {
+                        // String parentLabel = parentFinder.getTerm( parentURI ).getLabel();
+                        // // log.info( vc.getValue() + "->" + parentLabel );
+                        // if ( parentLabel != null ) currentLabelSet.add( parentLabel );
+                        // }
+                        // }
                     } else {
                         log.info( "NON-URI:" + vc.getValue() + " " + vc.getValueUri() );
                     }
-
                 }
+
+                // }
             }
         }
 
