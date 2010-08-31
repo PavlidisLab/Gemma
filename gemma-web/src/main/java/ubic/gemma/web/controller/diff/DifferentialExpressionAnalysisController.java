@@ -165,8 +165,10 @@ public class DifferentialExpressionAnalysisController extends AbstractTaskServic
         if ( ee == null ) {
             throw new IllegalArgumentException( "Cannot access experiment with id=" + id );
         }
+        expressionExperimentService.thawLite( ee );
 
         DifferentialExpressionAnalysisTaskCommand cmd = new DifferentialExpressionAnalysisTaskCommand( ee );
+        cmd.setFactors( ee.getExperimentalDesign().getExperimentalFactors());
 
         return super.run( cmd );
     }
