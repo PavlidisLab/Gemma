@@ -12,7 +12,7 @@ Ext.onReady(function() {
 			// fire once immediately.
 			task();
 			window.setInterval(task, 10000);
-
+         
 			function task() {
 				SystemMonitorController.getHibernateStatus(handleSuccess);
 
@@ -33,7 +33,7 @@ Ext.onReady(function() {
 			function handleSpaceStatus(data) {
 				Ext.DomHelper.overwrite("spaceStats", data);
 			}
-
+});
 			function flushAllCaches() {
 				Ext.Msg.show({
 							title : 'Are you sure?',
@@ -88,4 +88,3 @@ Ext.onReady(function() {
 				}
 			}
 
-		});
