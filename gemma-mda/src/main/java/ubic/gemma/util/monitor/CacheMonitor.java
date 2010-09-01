@@ -59,8 +59,8 @@ public class CacheMonitor {
     public void flushCache( String cacheName ) {
         Cache cache = this.cacheManager.getCache( cacheName );
         if ( cache != null ) {
-            cache.flush();
-            log.info( "Flushed " + cache.getName() );
+            cache.removeAll();
+            log.info( "Cleared cache: " + cache.getName() );
         } else {
             throw new IllegalArgumentException( "No cache found with name=" + cacheName );
         }
@@ -74,7 +74,7 @@ public class CacheMonitor {
     public void flushAllCaches() {
         String[] cacheNames = cacheManager.getCacheNames();
         for ( String string : cacheNames ) {
-            cacheManager.getCache( string ).flush();
+            cacheManager.getCache( string ).removeAll();
         }
     }
 
