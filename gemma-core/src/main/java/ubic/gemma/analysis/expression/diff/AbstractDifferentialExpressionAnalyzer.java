@@ -117,7 +117,9 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
      * 
      * @param pvalues Entries that are NaN or out of range [0,1] are ignored in the qvalue computation and rendered as
      *        NaN qvalues.
-     * @return returns the qvalues (false discovery rates) for the pvalues using the method of Storey and Tibshirani.
+     * @return returns the qvalues (false discovery rates) for the pvalues using the method of Storey and Tibshirani;
+     *         falls back on Benjamini-Hochberg if qvalue fails to return a result (this can happen if qvalue's fitting
+     *         procedure fails to converge).
      */
     protected double[] getQValues( Double[] pvalues ) {
 
@@ -213,8 +215,10 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
                         qve = e;
                     }
                 } else {
-                    throw new IllegalStateException( err + ". The pvalues that caused the problem are saved in: "
-                            + path + "; try running in R: \nlibrary(qvalue);\nx<-read.table(\"" + path
+                    throw new IllegalStateException( err
+                            + ". Fallback to Benjamini-Hochberg failed due to missing library. "
+                            + "The pvalues that caused the problem are saved in: " + path
+                            + "; try running in R: \nlibrary(qvalue);\nx<-read.table(\"" + path
                             + "\", header=F);\nsummary(qvalues(x));\n" );
                 }
 
