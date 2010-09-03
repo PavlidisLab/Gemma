@@ -546,6 +546,7 @@ abstract public class GenomePersister extends CommonPersister {
      */
     private void addAnyNewAccessions( GeneProduct existing, GeneProduct geneProduct ) {
         Map<String, DatabaseEntry> updatedGpMap = new HashMap<String, DatabaseEntry>();
+        existing = geneProductService.thaw( existing );
         for ( DatabaseEntry de : existing.getAccessions() ) {
             updatedGpMap.put( de.getAccession(), de );
         }
@@ -728,6 +729,8 @@ abstract public class GenomePersister extends CommonPersister {
      */
     private GeneProduct updateGeneProduct( GeneProduct existing, GeneProduct geneProduct ) {
         assert !isTransient( existing.getGene() );
+
+        existing = geneProductService.thaw( existing );
 
         existing.setName( geneProduct.getName() );
         existing.setDescription( geneProduct.getDescription() );

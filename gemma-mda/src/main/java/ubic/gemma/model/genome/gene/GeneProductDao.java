@@ -163,4 +163,6 @@ public interface GeneProductDao extends ubic.gemma.model.genome.ChromosomeFeatur
      */
     public void toGeneProductValueObjectCollection( java.util.Collection<GeneProduct> entities );
 
+    public GeneProduct thaw( GeneProduct existing );
+
 }

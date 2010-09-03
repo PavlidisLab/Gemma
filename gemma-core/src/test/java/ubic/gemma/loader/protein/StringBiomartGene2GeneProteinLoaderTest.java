@@ -29,6 +29,7 @@ import java.util.List;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.model.association.Gene2GeneProteinAssociation;
 import ubic.gemma.model.association.Gene2GeneProteinAssociationService;
@@ -57,45 +58,27 @@ import ubic.gemma.testing.BaseSpringContextTest;
  * @version $Id$
  */
 public class StringBiomartGene2GeneProteinLoaderTest extends BaseSpringContextTest {
-    GeneService geneService = null;
-    DatabaseEntryService databaseService = null;
-    StringBiomartGene2GeneProteinAssociationLoader stringBiomartGene2GeneProteinAssociationLoader = null;
 
+    @Autowired
+    private DatabaseEntryService databaseService = null;
+
+    @Autowired
     private Gene2GeneProteinAssociationService gene2GeneProteinAssociationService;
 
-    Collection<Taxon> taxa = null;
-    Taxon rat = null;
-    Taxon zebraFish = null;
+    private Collection<Gene2GeneProteinAssociation> geneAssociationRat = null;
 
-    Collection<Gene> genesZebra = null;
-    Collection<Gene2GeneProteinAssociation> geneAssociationZebra = null;
+    private Collection<Gene2GeneProteinAssociation> geneAssociationZebra = null;
 
-    Collection<Gene> genesRat = null;
-    Collection<Gene2GeneProteinAssociation> geneAssociationRat = null;
+    @Autowired
+    private GeneService geneService = null;
+    private Collection<Gene> genesRat = null;
+    private Collection<Gene> genesZebra = null;
 
-    @Before
-    public void setUp() throws Exception {
+    private Taxon rat = null;
+    private StringBiomartGene2GeneProteinAssociationLoader stringBiomartGene2GeneProteinAssociationLoader = null;
 
-        geneService = ( GeneService ) getBean( "geneService" );
-        taxonService = ( ( TaxonService ) getBean( "taxonService" ) );
-        externalDatabaseService = ( ( ExternalDatabaseService ) getBean( "externalDatabaseService" ) );
-        databaseService = ( ( DatabaseEntryService ) getBean( "databaseEntryService" ) );
-        gene2GeneProteinAssociationService = ( ( Gene2GeneProteinAssociationService ) getBean( "gene2GeneProteinAssociationService" ) );
-
-        stringBiomartGene2GeneProteinAssociationLoader = new StringBiomartGene2GeneProteinAssociationLoader();
-        stringBiomartGene2GeneProteinAssociationLoader.setPersisterHelper( super.persisterHelper );
-
-        stringBiomartGene2GeneProteinAssociationLoader.setGeneService( geneService );
-        stringBiomartGene2GeneProteinAssociationLoader.setExternalDatabaseService( externalDatabaseService );
-
-        taxa = getTaxonToProcess();
-        getTestPeristentGenesZebra();
-        getTestPeristentGenesRat();
-        // make sure all the data is cleared out before starting
-        this.gene2GeneProteinAssociationService.deleteAll( gene2GeneProteinAssociationService.loadAll() );
-        assertTrue( gene2GeneProteinAssociationService.loadAll().isEmpty() );
-
-    }
+    private Collection<Taxon> taxa = null;
+    private Taxon zebraFish = null;
 
     /**
      * Set up and save some taxa.
@@ -123,63 +106,6 @@ public class StringBiomartGene2GeneProteinLoaderTest extends BaseSpringContextTe
         taxa.add( ( Taxon ) persisterHelper.persist( rat ) );
 
         return taxa;
-    }
-
-    public void getTestPeristentGenesZebra() {
-        genesZebra = new ArrayList<Gene>();
-        // ENSDARG00000074913 ENSDART00000109786 751652 ENSDARP00000098813
-        Gene geneZebraOne = Gene.Factory.newInstance();
-        geneZebraOne.setName( "zgc:153184" );
-        geneZebraOne.setOfficialName( "zgc:153184" );
-        geneZebraOne.setOfficialSymbol( "zgc:153184" );
-        geneZebraOne.setNcbiId( "751652" );
-        geneZebraOne.setTaxon( zebraFish );
-        List<GeneProduct> geneProduct = new ArrayList<GeneProduct>();
-        geneProduct.add( super.getTestPersistentGeneProduct( geneZebraOne ) );
-        geneZebraOne.setProducts( geneProduct );
-        geneZebraOne = ( Gene ) persisterHelper.persist( geneZebraOne );
-        genesZebra.add( geneZebraOne );
-
-        // ENSDARG00000060734 ENSDART00000085868 571540 ENSDARP00000080303
-        Gene geneZebraTwo = Gene.Factory.newInstance();
-        geneZebraTwo.setName( "appl1" );
-        geneZebraTwo.setOfficialName( "appl1" );
-        geneZebraTwo.setOfficialSymbol( "appl1" );
-        geneZebraTwo.setNcbiId( "571540" );
-        geneZebraTwo.setTaxon( zebraFish );
-        List<GeneProduct> geneProductTwo = new ArrayList<GeneProduct>();
-        geneProductTwo.add( super.getTestPersistentGeneProduct( geneZebraTwo ) );
-        geneZebraTwo.setProducts( geneProductTwo );
-        geneZebraTwo = ( Gene ) persisterHelper.persist( geneZebraTwo );
-        genesZebra.add( geneZebraTwo );
-
-        // ENSDARG00000008473 ENSDART00000019008 568371 ENSDARP00000006838
-        Gene geneZebraThree = Gene.Factory.newInstance();
-        geneZebraThree.setName( "LOC568371" );
-        geneZebraThree.setOfficialName( "LOC568371" );
-        geneZebraThree.setOfficialSymbol( "LOC568371" );
-        geneZebraThree.setNcbiId( "568371" );
-        geneZebraThree.setTaxon( zebraFish );
-        List<GeneProduct> geneProductThree = new ArrayList<GeneProduct>();
-        geneProductThree.add( super.getTestPersistentGeneProduct( geneZebraThree ) );
-        geneZebraThree.setProducts( geneProductThree );
-        geneZebraThree = ( Gene ) persisterHelper.persist( geneZebraThree );
-        genesZebra.add( geneZebraThree );
-
-        Gene2GeneProteinAssociation existingGene2GeneProteinAssociationOne = Gene2GeneProteinAssociation.Factory
-                .newInstance();
-        existingGene2GeneProteinAssociationOne.setFirstGene( geneZebraOne );
-        existingGene2GeneProteinAssociationOne.setSecondGene( geneZebraThree );
-
-        Gene2GeneProteinAssociation existingGene2GeneProteinAssociationTwo = Gene2GeneProteinAssociation.Factory
-                .newInstance();
-        existingGene2GeneProteinAssociationTwo.setFirstGene( geneZebraOne );
-        existingGene2GeneProteinAssociationTwo.setSecondGene( geneZebraTwo );
-
-        geneAssociationZebra = new ArrayList<Gene2GeneProteinAssociation>();
-        geneAssociationZebra.add( existingGene2GeneProteinAssociationTwo );
-        geneAssociationZebra.add( existingGene2GeneProteinAssociationOne );
-
     }
 
     /**
@@ -239,6 +165,128 @@ public class StringBiomartGene2GeneProteinLoaderTest extends BaseSpringContextTe
         geneAssociationRat = new ArrayList<Gene2GeneProteinAssociation>();
         geneAssociationRat.add( existingGene2GeneProteinAssociationTwo );
         geneAssociationRat.add( existingGene2GeneProteinAssociationOne );
+
+    }
+
+    public void getTestPeristentGenesZebra() {
+        genesZebra = new ArrayList<Gene>();
+        // ENSDARG00000074913 ENSDART00000109786 751652 ENSDARP00000098813
+        Gene geneZebraOne = Gene.Factory.newInstance();
+        geneZebraOne.setName( "zgc:153184" );
+        geneZebraOne.setOfficialName( "zgc:153184" );
+        geneZebraOne.setOfficialSymbol( "zgc:153184" );
+        geneZebraOne.setNcbiId( "751652" );
+        geneZebraOne.setTaxon( zebraFish );
+        List<GeneProduct> geneProduct = new ArrayList<GeneProduct>();
+        geneProduct.add( super.getTestPersistentGeneProduct( geneZebraOne ) );
+        geneZebraOne.setProducts( geneProduct );
+        geneZebraOne = ( Gene ) persisterHelper.persist( geneZebraOne );
+        genesZebra.add( geneZebraOne );
+
+        // ENSDARG00000060734 ENSDART00000085868 571540 ENSDARP00000080303
+        Gene geneZebraTwo = Gene.Factory.newInstance();
+        geneZebraTwo.setName( "appl1" );
+        geneZebraTwo.setOfficialName( "appl1" );
+        geneZebraTwo.setOfficialSymbol( "appl1" );
+        geneZebraTwo.setNcbiId( "571540" );
+        geneZebraTwo.setTaxon( zebraFish );
+        List<GeneProduct> geneProductTwo = new ArrayList<GeneProduct>();
+        geneProductTwo.add( super.getTestPersistentGeneProduct( geneZebraTwo ) );
+        geneZebraTwo.setProducts( geneProductTwo );
+        geneZebraTwo = ( Gene ) persisterHelper.persist( geneZebraTwo );
+        genesZebra.add( geneZebraTwo );
+
+        // ENSDARG00000008473 ENSDART00000019008 568371 ENSDARP00000006838
+        Gene geneZebraThree = Gene.Factory.newInstance();
+        geneZebraThree.setName( "LOC568371" );
+        geneZebraThree.setOfficialName( "LOC568371" );
+        geneZebraThree.setOfficialSymbol( "LOC568371" );
+        geneZebraThree.setNcbiId( "568371" );
+        geneZebraThree.setTaxon( zebraFish );
+        List<GeneProduct> geneProductThree = new ArrayList<GeneProduct>();
+        geneProductThree.add( super.getTestPersistentGeneProduct( geneZebraThree ) );
+        geneZebraThree.setProducts( geneProductThree );
+        geneZebraThree = ( Gene ) persisterHelper.persist( geneZebraThree );
+        genesZebra.add( geneZebraThree );
+
+        Gene2GeneProteinAssociation existingGene2GeneProteinAssociationOne = Gene2GeneProteinAssociation.Factory
+                .newInstance();
+        existingGene2GeneProteinAssociationOne.setFirstGene( geneZebraOne );
+        existingGene2GeneProteinAssociationOne.setSecondGene( geneZebraThree );
+
+        Gene2GeneProteinAssociation existingGene2GeneProteinAssociationTwo = Gene2GeneProteinAssociation.Factory
+                .newInstance();
+        existingGene2GeneProteinAssociationTwo.setFirstGene( geneZebraOne );
+        existingGene2GeneProteinAssociationTwo.setSecondGene( geneZebraTwo );
+
+        geneAssociationZebra = new ArrayList<Gene2GeneProteinAssociation>();
+        geneAssociationZebra.add( existingGene2GeneProteinAssociationTwo );
+        geneAssociationZebra.add( existingGene2GeneProteinAssociationOne );
+
+    }
+
+    @Before
+    public void setUp() throws Exception {
+
+        stringBiomartGene2GeneProteinAssociationLoader = new StringBiomartGene2GeneProteinAssociationLoader();
+        stringBiomartGene2GeneProteinAssociationLoader.setPersisterHelper( super.persisterHelper );
+
+        stringBiomartGene2GeneProteinAssociationLoader.setGeneService( geneService );
+        stringBiomartGene2GeneProteinAssociationLoader.setExternalDatabaseService( super.externalDatabaseService );
+
+        taxa = getTaxonToProcess();
+        getTestPeristentGenesZebra();
+        getTestPeristentGenesRat();
+
+        // make sure all the data is cleared out before starting
+        this.gene2GeneProteinAssociationService.deleteAll( gene2GeneProteinAssociationService.loadAll() );
+        assertTrue( gene2GeneProteinAssociationService.loadAll().isEmpty() );
+
+    }
+
+    /**
+     * tests that given a local biomart and local string file data is processed
+     */
+    @Test
+    public void testDoLoadLocalBiomartLocalStringOneTaxon() {
+
+        String fileNameStringZebraFish = "/data/loader/protein/string/protein.links.zebrafish.txt";
+        URL fileNameStringZebraFishURL = this.getClass().getResource( fileNameStringZebraFish );
+
+        String fileNameStringZebra = "/data/loader/protein/biomart/biomartzebrafish.txt";
+        URL fileNameBiomartZebraURL = this.getClass().getResource( fileNameStringZebra );
+
+        Collection<Taxon> taxaZebraFish = new ArrayList<Taxon>();
+        taxaZebraFish.add( zebraFish );
+        try {
+            stringBiomartGene2GeneProteinAssociationLoader.load( new File( fileNameStringZebraFishURL.getFile() ),
+                    null, new File( fileNameBiomartZebraURL.getFile() ), taxaZebraFish );
+
+            Collection<Gene2GeneProteinAssociation> associations = gene2GeneProteinAssociationService.loadAll();
+            assertEquals( 3, associations.size() );
+
+            for ( Gene gene : genesZebra ) {
+                Collection<Gene2GeneProteinAssociation> interactionsForGene = this.gene2GeneProteinAssociationService
+                        .findProteinInteractionsForGene( gene );
+
+                if ( gene.getName().equals( "zgc:153184" ) ) {
+                    assertEquals( 2, interactionsForGene.size() );
+                }
+                if ( gene.getName().equals( "appl1" ) ) {
+                    assertEquals( 2, interactionsForGene.size() );
+                }
+                if ( gene.getName().equals( "LOC568371" ) ) {
+                    assertEquals( 2, interactionsForGene.size() );
+                }
+            }
+
+            this.gene2GeneProteinAssociationService.deleteAll( associations );
+            associations = gene2GeneProteinAssociationService.loadAll();
+            assertTrue( associations.isEmpty() );
+
+        } catch ( Exception e ) {
+            fail();
+        }
 
     }
 
@@ -355,52 +403,6 @@ public class StringBiomartGene2GeneProteinLoaderTest extends BaseSpringContextTe
             System.out.println( e.getMessage() );
             fail();
         }
-    }
-
-    /**
-     * tests that given a local biomart and local string file data is processed
-     */
-    @Test
-    public void testDoLoadLocalBiomartLocalStringOneTaxon() {
-
-        String fileNameStringZebraFish = "/data/loader/protein/string/protein.links.zebrafish.txt";
-        URL fileNameStringZebraFishURL = this.getClass().getResource( fileNameStringZebraFish );
-
-        String fileNameStringZebra = "/data/loader/protein/biomart/biomartzebrafish.txt";
-        URL fileNameBiomartZebraURL = this.getClass().getResource( fileNameStringZebra );
-
-        Collection<Taxon> taxaZebraFish = new ArrayList<Taxon>();
-        taxaZebraFish.add( zebraFish );
-        try {
-            stringBiomartGene2GeneProteinAssociationLoader.load( new File( fileNameStringZebraFishURL.getFile() ),
-                    null, new File( fileNameBiomartZebraURL.getFile() ), taxaZebraFish );
-
-            Collection<Gene2GeneProteinAssociation> associations = gene2GeneProteinAssociationService.loadAll();
-            assertEquals( 3, associations.size() );
-
-            for ( Gene gene : genesZebra ) {
-                Collection<Gene2GeneProteinAssociation> interactionsForGene = this.gene2GeneProteinAssociationService
-                        .findProteinInteractionsForGene( gene );
-
-                if ( gene.getName().equals( "zgc:153184" ) ) {
-                    assertEquals( 2, interactionsForGene.size() );
-                }
-                if ( gene.getName().equals( "appl1" ) ) {
-                    assertEquals( 2, interactionsForGene.size() );
-                }
-                if ( gene.getName().equals( "LOC568371" ) ) {
-                    assertEquals( 2, interactionsForGene.size() );
-                }
-            }
-
-            this.gene2GeneProteinAssociationService.deleteAll( associations );
-            associations = gene2GeneProteinAssociationService.loadAll();
-            assertTrue( associations.isEmpty() );
-
-        } catch ( Exception e ) {
-            fail();
-        }
-
     }
 
 }

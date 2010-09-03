@@ -23,6 +23,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.Date;
 
+import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.junit.Before;
@@ -44,6 +45,9 @@ public class AuditTrailDaoTest extends BaseSpringContextTest {
     @Autowired
     AuditTrailDao auditTrailDao;
 
+    @Autowired
+    ArrayDesignService arrayDesignService;
+
     Auditable auditable;
     AuditTrail auditTrail;
     AuditEvent auditEvent0;
@@ -59,11 +63,10 @@ public class AuditTrailDaoTest extends BaseSpringContextTest {
     public void setup() throws Exception {
 
         ArrayDesign ad = ArrayDesign.Factory.newInstance();
-        ad.setName( "testing" );
+        ad.setName( "test_" + RandomStringUtils.randomAlphabetic( 10 ) );
         ad.setPrimaryTaxon( this.getTaxon( "mouse" ) );
 
-        ArrayDesignService ads = ( ArrayDesignService ) getBean( "arrayDesignService" );
-        ad = ads.create( ad );
+        ad = arrayDesignService.create( ad );
         auditable = ad;
 
         auditTrail = AuditTrail.Factory.newInstance();

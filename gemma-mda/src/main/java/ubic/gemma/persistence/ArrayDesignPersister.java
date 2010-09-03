@@ -145,13 +145,13 @@ abstract public class ArrayDesignPersister extends GenomePersister {
             designElement
                     .setBiologicalCharacteristic( persistBioSequence( designElement.getBiologicalCharacteristic() ) );
         }
-        designElement = compositeSequenceService.create( designElement );
+        CompositeSequence persistedDE = compositeSequenceService.create( designElement );
 
-        arrayDesign.getCompositeSequences().add( designElement );
+        arrayDesign.getCompositeSequences().add( persistedDE );
 
         this.arrayDesignService.update( arrayDesign );
 
-        return designElement;
+        return persistedDE;
 
     }
 
@@ -216,20 +216,22 @@ abstract public class ArrayDesignPersister extends GenomePersister {
      */
     protected ArrayDesign cacheArrayDesign( ArrayDesign ad ) {
         assert ad != null;
-        if ( !arrayDesignCache.containsKey( ad.getName() )
-                && !( ad.getShortName() != null && arrayDesignCache.containsKey( ad.getShortName() ) ) ) {
-            ad = persistArrayDesign( ad );
-            assert !isTransient( ad );
-            addToDesignElementCache( ad );
-            arrayDesignCache.put( ad.getName(), ad );
-            if ( ad.getShortName() != null ) {
-                arrayDesignCache.put( ad.getShortName(), ad );
+        ArrayDesign cachedAd = ad;
+        if ( !arrayDesignCache.containsKey( cachedAd.getName() )
+                && !( cachedAd.getShortName() != null && arrayDesignCache.containsKey( cachedAd.getShortName() ) ) ) {
+            cachedAd = persistArrayDesign( ad );
+            cachedAd = arrayDesignService.thaw( cachedAd );
+            assert !isTransient( cachedAd );
+            addToDesignElementCache( cachedAd );
+            arrayDesignCache.put( ad.getName(), cachedAd );
+            if ( cachedAd.getShortName() != null ) {
+                arrayDesignCache.put( cachedAd.getShortName(), cachedAd );
             }
         }
-        if ( arrayDesignCache.containsKey( ad.getName() ) ) {
-            return arrayDesignCache.get( ad.getName() );
+        if ( arrayDesignCache.containsKey( cachedAd.getName() ) ) {
+            return arrayDesignCache.get( cachedAd.getName() );
         }
-        return arrayDesignCache.get( ad.getShortName() );
+        return arrayDesignCache.get( cachedAd.getShortName() );
 
     }
 
@@ -304,6 +306,10 @@ abstract public class ArrayDesignPersister extends GenomePersister {
             for ( LocalFile file : arrayDesign.getLocalFiles() ) {
                 file = persistLocalFile( file );
             }
+        }
+
+        if ( arrayDesign.getPrimaryTaxon() == null ) {
+            throw new IllegalArgumentException( "Primary taxon cannot be null" );
         }
 
         arrayDesign.setPrimaryTaxon( ( Taxon ) persist( arrayDesign.getPrimaryTaxon() ) );

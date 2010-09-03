@@ -53,15 +53,24 @@ import ubic.gemma.util.ConfigUtils;
  */
 public class CompositeSequenceDaoIntegrationTest extends AbstractArrayDesignProcessingTest {
 
-    static Blat blat = new Blat();
+    private static Blat blat = new Blat();
+
+    private static boolean setupDone = false;
 
     @Autowired
-    CompositeSequenceService compositeSequenceService;
-
-    static boolean setupDone = false;
+    private CompositeSequenceService compositeSequenceService;
 
     @Autowired
-    GeneService geneService;
+    private ArrayDesignSequenceAlignmentService arrayDesignSequenceAlignmentService;
+
+    @Autowired
+    private ArrayDesignSequenceProcessingService arrayDesignSequenceProcessingService;
+
+    @Autowired
+    private ArrayDesignProbeMapperService arrayDesignProbeMapperService;
+
+    @Autowired
+    private GeneService geneService;
 
     /**
      * The test files have only ~100 genes. This is still a very slow test to run, because it does many steps of
@@ -72,7 +81,7 @@ public class CompositeSequenceDaoIntegrationTest extends AbstractArrayDesignProc
     @Before
     public void setup() throws Exception {
 
-        Taxon taxon = ( ( TaxonService ) getBean( "taxonService" ) ).findByScientificName( "Homo sapiens" );
+        Taxon taxon = taxonService.findByScientificName( "Homo sapiens" );
 
         if ( !setupDone ) {
             // insert the needed genes and geneproducts into the system.(can use NCBI gene loader, but for subset)
@@ -86,31 +95,29 @@ public class CompositeSequenceDaoIntegrationTest extends AbstractArrayDesignProc
             String geneHistoryFile = filePath + File.separatorChar + "selected_gene_history.gz";
 
             loader.load( geneInfoFile, gene2AccFile, geneHistoryFile, true );
-            
+
             // needed to fill in the sequence information for blat scoring.
             InputStream sequenceFile = this.getClass().getResourceAsStream(
                     "/data/loader/genome/gpl140.sequences.fasta" );
-            ArrayDesignSequenceProcessingService app = ( ArrayDesignSequenceProcessingService ) getBean( "arrayDesignSequenceProcessingService" );
-            app.processArrayDesign( getAd(), sequenceFile, SequenceType.EST );
-            
+
+            arrayDesignSequenceProcessingService.processArrayDesign( getAd(), sequenceFile, SequenceType.EST );
+
             // fill in the blat results. Note that each time you run this test you
             // get the results loaded again (so they
             // pile up)
-            ArrayDesignSequenceAlignmentService aligner = ( ArrayDesignSequenceAlignmentService ) getBean( "arrayDesignSequenceAlignmentService" );
 
             InputStream blatResultInputStream = new GZIPInputStream( this.getClass().getResourceAsStream(
                     "/data/loader/genome/gpl140.blatresults.psl.gz" ) );
 
             Collection<BlatResult> results = blat.processPsl( blatResultInputStream, taxon );
 
-            aligner.processArrayDesign( getAd(), taxon, results );
-            
+            arrayDesignSequenceAlignmentService.processArrayDesign( getAd(), taxon, results );
+
             // real stuff.
-            ArrayDesignProbeMapperService arrayDesignProbeMapperService = ( ArrayDesignProbeMapperService ) this
-                    .getBean( "arrayDesignProbeMapperService" );
+
             arrayDesignProbeMapperService.processArrayDesign( getAd() );
             setupDone = true;
-            
+
         }
 
     }

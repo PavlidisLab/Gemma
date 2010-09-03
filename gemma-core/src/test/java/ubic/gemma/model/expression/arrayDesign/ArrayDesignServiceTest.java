@@ -454,6 +454,7 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
         ad.setPrimaryTaxon( tax );
 
         ad = ( ArrayDesign ) persisterHelper.persist( ad );
+        ad = arrayDesignService.thaw( ad );
 
         ArrayDesign subsumedArrayDesign = ArrayDesign.Factory.newInstance();
         subsumedArrayDesign.setName( "subsumed_arraydesign" );
@@ -467,7 +468,7 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
         c2.setArrayDesign( subsumedArrayDesign );
 
         subsumedArrayDesign = ( ArrayDesign ) persisterHelper.persist( subsumedArrayDesign );
-
+        subsumedArrayDesign = arrayDesignService.thaw( subsumedArrayDesign );
         // flushAndClearSession();
 
         boolean actualValue = arrayDesignService.updateSubsumingStatus( ad, subsumedArrayDesign );

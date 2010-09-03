@@ -26,6 +26,7 @@ import java.util.Date;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -38,10 +39,14 @@ import ubic.gemma.testing.BaseSpringContextTest;
  */
 public class AuditEventDaoImplTest extends BaseSpringContextTest {
 
+    @Autowired
+    private ArrayDesignService ads;
+
+    @Autowired
+    private AuditEventService auditEventService;
+
     @Before
     public void setup() throws Exception {
-
-        ArrayDesignService ads = ( ArrayDesignService ) this.getBean( "arrayDesignService" );
         for ( int i = 0; i < 5; i++ ) {
             ArrayDesign ad = ArrayDesign.Factory.newInstance();
             ad.setName( "ffoo " + i );
@@ -56,11 +61,11 @@ public class AuditEventDaoImplTest extends BaseSpringContextTest {
 
     @Test
     public void testHandleGetNewSinceDate() {
-        AuditEventDao aed = ( AuditEventDao ) this.getBean( "auditEventDao" );
+
         Calendar c = Calendar.getInstance();
         c.set( 2006, Calendar.DECEMBER, 1 );
         Date d = c.getTime();
-        Collection<Auditable> objs = aed.getNewSinceDate( d );
+        Collection<Auditable> objs = auditEventService.getNewSinceDate( d );
         assertTrue( objs.size() > 0 );
         // for ( Auditable auditable : objs ) {
         // if ( objs instanceof ArrayDesign ) {
@@ -70,11 +75,10 @@ public class AuditEventDaoImplTest extends BaseSpringContextTest {
 
     @Test
     public void testHandleGetUpdatedSinceDate() {
-        AuditEventDao aed = ( AuditEventDao ) this.getBean( "auditEventDao" );
         Calendar c = Calendar.getInstance();
         c.set( 2006, Calendar.DECEMBER, 1 );
         Date d = c.getTime();
-        Collection<Auditable> objs = aed.getUpdatedSinceDate( d );
+        Collection<Auditable> objs = auditEventService.getUpdatedSinceDate( d );
         assertTrue( objs.size() > 0 );
         // for ( Auditable auditable : objs ) {
         // if ( objs instanceof ArrayDesign ) {

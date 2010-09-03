@@ -50,6 +50,7 @@ public class GeneProductDaoImpl extends ubic.gemma.model.genome.gene.GeneProduct
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.gene.GeneProductDaoBase#find(ubic.gemma.model.genome.gene.GeneProduct)
      */
     @SuppressWarnings("unchecked")
@@ -137,6 +138,7 @@ public class GeneProductDaoImpl extends ubic.gemma.model.genome.gene.GeneProduct
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.gene.GeneProductDaoBase#findOrCreate(ubic.gemma.model.genome.gene.GeneProduct)
      */
     @Override
@@ -151,6 +153,7 @@ public class GeneProductDaoImpl extends ubic.gemma.model.genome.gene.GeneProduct
 
     /*
      * (non-Javadoc)
+     * 
      * @seeubic.gemma.model.genome.gene.GeneProductDao#geneProductValueObjectToEntity(ubic.gemma.model.genome.gene.
      * GeneProductValueObject)
      */
@@ -185,6 +188,7 @@ public class GeneProductDaoImpl extends ubic.gemma.model.genome.gene.GeneProduct
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.gene.GeneProductDaoBase#handleGetGenesByName(java.lang.String)
      */
     @SuppressWarnings("unchecked")
@@ -206,6 +210,7 @@ public class GeneProductDaoImpl extends ubic.gemma.model.genome.gene.GeneProduct
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.gene.GeneProductDaoBase#handleGetGenesByNcbiId(java.lang.String)
      */
     @SuppressWarnings("unchecked")
@@ -227,6 +232,7 @@ public class GeneProductDaoImpl extends ubic.gemma.model.genome.gene.GeneProduct
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.gene.GeneProductDaoBase#handleLoad(java.util.Collection)
      */
     @SuppressWarnings("unchecked")
@@ -258,4 +264,21 @@ public class GeneProductDaoImpl extends ubic.gemma.model.genome.gene.GeneProduct
         log.error( buf );
 
     }
+
+    @Override
+    public GeneProduct thaw( GeneProduct existing ) {
+        List re = this
+                .getHibernateTemplate()
+                .findByNamedParam(
+                        "select distinct gp from GeneProductImpl gp left join fetch gp.gene "
+                                + "left join fetch gp.physicalLocation pl left join fetch gp.accessions left join fetch pl.chromosome ch left join fetch ch.taxon where gp = :gp",
+                        "gp", existing );
+
+        if ( re.isEmpty() ) return null;
+
+        assert re.size() == 1;
+
+        return ( GeneProduct ) re.iterator().next();
+    }
+
 }

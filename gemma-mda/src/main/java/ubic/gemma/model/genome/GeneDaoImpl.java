@@ -764,7 +764,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         List<?> res = this
                 .getHibernateTemplate()
                 .findByNamedParam(
-                        "select g from GeneImpl g "
+                        "select distinct g from GeneImpl g "
                                 + "left join fetch g.aliases left join fetch g.accessions acc"
                                 + " left join fetch acc.externalDatabase left join fetch g.products gp "
                                 + " left join fetch g.auditTrail at left join fetch at.events "

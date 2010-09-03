@@ -52,6 +52,7 @@ public class GeneProductServiceImpl extends ubic.gemma.model.genome.gene.GenePro
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.gene.GeneProductServiceBase#handleFind(ubic.gemma.model.genome.gene.GeneProduct)
      */
     @Override
@@ -71,6 +72,7 @@ public class GeneProductServiceImpl extends ubic.gemma.model.genome.gene.GenePro
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.gene.GeneProductServiceBase#handleGetGenesByName(java.lang.String)
      */
     @Override
@@ -80,6 +82,7 @@ public class GeneProductServiceImpl extends ubic.gemma.model.genome.gene.GenePro
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.gene.GeneProductServiceBase#handleGetGenesByNcbiId(java.lang.String)
      */
     @Override
@@ -97,6 +100,7 @@ public class GeneProductServiceImpl extends ubic.gemma.model.genome.gene.GenePro
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.gene.GeneProductServiceBase#handleLoadMultiple(java.util.Collection)
      */
     @Override
@@ -110,6 +114,11 @@ public class GeneProductServiceImpl extends ubic.gemma.model.genome.gene.GenePro
     @Override
     protected void handleUpdate( ubic.gemma.model.genome.gene.GeneProduct geneProduct ) throws java.lang.Exception {
         this.getGeneProductDao().update( geneProduct );
+    }
+
+    @Override
+    public GeneProduct thaw( GeneProduct existing ) {
+        return this.getGeneProductDao().thaw( existing );
     }
 
 }

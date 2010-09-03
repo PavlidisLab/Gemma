@@ -93,4 +93,6 @@ public interface GeneProductService {
     @Secured( { "GROUP_USER" })
     public void update( ubic.gemma.model.genome.gene.GeneProduct geneProduct );
 
+    public GeneProduct thaw( GeneProduct existing );
+
 }
