@@ -73,26 +73,34 @@ public class DifferentialExpressionAnalysisDaoImpl extends
 
         int up = this.countUpregulated( ears, threshold );
         int down = this.countDownregulated( ears, threshold );
-        return up + down;
-        //        
-        // String query =
-        // "select count(distinct r) from ExpressionAnalysisResultSetImpl rs inner join rs.results r where rs = :rs and r.correctedPvalue < :threshold";
-        //
-        // String[] paramNames = { "rs", "threshold" };
-        // Object[] objectValues = { ears, threshold };
-        //
-        // List qresult = this.getHibernateTemplate().findByNamedParam( query, paramNames, objectValues );
-        //
-        // if ( qresult.isEmpty() ) {
-        // log.warn( "No count returned" );
-        // return 0;
-        // }
-        // Long count = ( Long ) qresult.iterator().next();
-        //
-        // log.debug( "Found " + count + " differentially expressed genes in result set (" + ears.getId()
-        // + ") at a corrected pvalue threshold of " + threshold );
-        //
-        // return count.intValue();
+        int result = up + down;
+
+        if ( result > 0 ) {
+            return result;
+        }
+
+        /*
+         * Otherwise, perhaps we have not filled in the contrast information. Try alternative instead. This is basically
+         * a backwards compatibility fix, it can be removed once all data sets are analyzed with the new method.
+         */
+
+        String query = "select count(distinct r) from ExpressionAnalysisResultSetImpl rs inner join rs.results r where rs = :rs and r.correctedPvalue < :threshold";
+
+        String[] paramNames = { "rs", "threshold" };
+        Object[] objectValues = { ears, threshold };
+
+        List qresult = this.getHibernateTemplate().findByNamedParam( query, paramNames, objectValues );
+
+        if ( qresult.isEmpty() ) {
+            log.warn( "No count returned" );
+            return 0;
+        }
+        Long count = ( Long ) qresult.iterator().next();
+
+        log.debug( "Found " + count + " differentially expressed genes in result set (" + ears.getId()
+                + ") at a corrected pvalue threshold of " + threshold );
+
+        return count.intValue();
     }
 
     @SuppressWarnings("unchecked")
