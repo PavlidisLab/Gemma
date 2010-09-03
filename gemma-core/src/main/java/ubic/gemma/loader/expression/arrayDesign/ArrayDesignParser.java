@@ -62,6 +62,7 @@ public class ArrayDesignParser extends BasicLineParser<ArrayDesign> {
         Taxon t = Taxon.Factory.newInstance();
         t.setCommonName( fields[4].toLowerCase() );
         t.setIsSpecies( true ); // assumption.
+        t.setIsGenesUsable( true ); // assumption
         ad.setPrimaryTaxon( t );
 
         Contact manufacturer = Contact.Factory.newInstance();
