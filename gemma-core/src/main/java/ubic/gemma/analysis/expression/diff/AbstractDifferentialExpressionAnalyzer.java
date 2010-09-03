@@ -167,7 +167,6 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
         try {
             qvaluesFromR = rc.doubleArrayEval( qvalueCommand );
         } catch ( Exception e ) {
-            log.error( e, e );
             qve = e;
         }
 
@@ -198,9 +197,40 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
 
                 String path = savePvaluesForDebugging( pvaluesToUse );
 
-                throw new IllegalStateException( err + ". The pvalues that caused the problem are saved in: " + path
-                        + "; try running in R: \nlibrary(qvalue);\nx<-read.table(\"" + path
-                        + "\", header=F);\nsummary(qvalues(x));\n" );
+                /*
+                 * Fall back on Benjamni-Hochberg
+                 */
+
+                boolean hasMulttest = rc.loadLibrary( "globaltest" );
+                if ( hasMulttest ) {
+                    log.info( "qvalue failed; Falling back on Benjamini-Hochberg (error was: " + qve );
+                    qvalueCommand = "p.adjust(" + pvalsName + ", \"BH\")";
+                    qve = null;
+                    try {
+                        qvaluesFromR = rc.doubleArrayEval( qvalueCommand );
+                    } catch ( Exception e ) {
+                        log.error( e, e );
+                        qve = e;
+                    }
+                } else {
+                    throw new IllegalStateException( err + ". The pvalues that caused the problem are saved in: "
+                            + path + "; try running in R: \nlibrary(qvalue);\nx<-read.table(\"" + path
+                            + "\", header=F);\nsummary(qvalues(x));\n" );
+                }
+
+                if ( qvaluesFromR == null ) {
+                    if ( qve != null ) {
+                        err = "p.adjust failed (fallback for qvalue, which also failed): " + qve.getMessage();
+                    } else {
+                        err = "Null qvalues were returned from R. No details about the problem, but probably pi0 was <= 0. Tried both fitting methods. Last attempted command was: "
+                                + qvalueCommand;
+                    }
+                    throw new IllegalStateException( err + ". The pvalues that caused the problem are saved in: "
+                            + path + "; try running in R: \nlibrary(qvalue);\nx<-read.table(\"" + path
+                            + "\", header=F);\nsummary(qvalues(x));\n" );
+
+                }
+
             }
         }
 
