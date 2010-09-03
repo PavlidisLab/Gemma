@@ -63,9 +63,13 @@ public class StringProteinFetcherIntegrationTest {
         Collection<LocalFile> localFile = stringProteinLinksDetailedFetcher.fetch( testFileName );
         String outputfilenamegzip = "";
         String outputfilename = "";
+
+        stringProteinLinksDetailedFetcher.unPackFile( localFile );
+
         for ( LocalFile file : localFile ) {
             outputfilenamegzip = file.getLocalURL().getFile();
             assertNotNull( outputfilenamegzip );
+
             int lastIndexOf = outputfilenamegzip.lastIndexOf( "." + archiveMethod );
             if ( lastIndexOf != -1 ) {
                 outputfilename = outputfilenamegzip.substring( 0, lastIndexOf );

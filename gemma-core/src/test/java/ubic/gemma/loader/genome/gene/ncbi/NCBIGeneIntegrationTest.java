@@ -72,12 +72,14 @@ public class NCBIGeneIntegrationTest extends BaseSpringContextTest {
         // gene_info
         Collection<Gene> geneCollection = geneService.findByOfficialName( "orf31" );
         Gene g = geneCollection.iterator().next();
+        g = geneService.thaw( g );
+
         Collection<GeneProduct> products = g.getProducts();
         Collection<String> expectedAccessions = new ArrayList<String>();
         Collection<String> hasAccessions = new ArrayList<String>();
         expectedAccessions.add( "AAF29803.1" );
         expectedAccessions.add( "NP_862654.1" );
-        g = geneService.thaw( g );
+
         for ( GeneProduct product : products ) {
             Collection<DatabaseEntry> accessions = product.getAccessions();
             for ( DatabaseEntry de : accessions ) {

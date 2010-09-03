@@ -18,27 +18,33 @@
  */
 package ubic.gemma.analysis.expression.diff;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import java.io.IOException;
 import java.util.Collection;
+import java.util.List;
 
-import org.apache.commons.lang.time.StopWatch;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
+import edu.emory.mathcs.backport.java.util.Arrays;
+
+import ubic.gemma.loader.expression.geo.AbstractGeoServiceTest;
+import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
+import ubic.gemma.loader.expression.geo.service.GeoDatasetService;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
+import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
- * @author keshav
+ * @author keshav, paul
  * @version $Id$
  */
-public class DifferentialExpressionAnalyzerServiceTest extends BaseSpringContextTest {
+public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServiceTest {
 
     @Autowired
     private DifferentialExpressionAnalyzerService differentialExpressionAnalyzerService = null;
@@ -46,66 +52,142 @@ public class DifferentialExpressionAnalyzerServiceTest extends BaseSpringContext
     @Autowired
     private ExpressionExperimentService expressionExperimentService = null;
 
+    @Autowired
+    private ProcessedExpressionDataVectorService processedDataVectorService;
+
+    @Autowired
+    protected GeoDatasetService geoService;
+
+    @Autowired
+    GenericAncovaAnalyzer analyzer;
+
     ExpressionExperiment ee = null;
 
-    private String shortName = "GSE1997";
+    boolean rReady = true;
 
     /*
      * (non-Javadoc)
      * 
      * @see ubic.gemma.testing.BaseSpringContextTest#onSetUpInTransaction()
      */
+    @SuppressWarnings("unchecked")
     @Before
     public void setup() throws Exception {
-        ee = expressionExperimentService.findByShortName( shortName );
-        if ( ee != null ) expressionExperimentService.thawLite( ee );
-    }
 
-    /**
-     * @throws Exception
-     */
-    @Test
-    public void testDelete() throws Exception {
+        try {
+            analyzer.connectToR();
+        } catch ( Exception e ) {
+            this.rReady = false;
+        }
+        analyzer.disconnectR();
 
-        if ( ee == null ) return;
+        ee = expressionExperimentService.findByShortName( "GSE1611" );
 
-        Collection<ExpressionAnalysisResultSet> resultSets = differentialExpressionAnalyzerService.getResultSets( ee );
+        if ( ee == null ) {
 
-        log.info( "Result sets for " + shortName + resultSets.size() );
+            String path = getTestFileBasePath();
+            geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
+                    + "gds994Short" ) );
+            Collection<ExpressionExperiment> results = geoService.fetchAndLoad( "GSE1611", false, true, false, false,
+                    true );
 
-        ExpressionAnalysisResultSet rs = resultSets.iterator().next();
-        Collection<DifferentialExpressionAnalysisResult> results = rs.getResults();
+            ee = results.iterator().next();
+        }
+        processedDataVectorService.createProcessedDataVectors( ee );
 
-        if ( results == null || results.isEmpty() ) return;
-
-        StopWatch watch = new StopWatch();
-        watch.start();
+        expressionExperimentService.thawLite( ee );
 
         differentialExpressionAnalyzerService.deleteOldAnalyses( ee );
 
-        watch.stop();
-
-        log.info( "deletion time: " + watch.getTime() );
-
+        assertEquals( 2, ee.getExperimentalDesign().getExperimentalFactors().size() );
     }
 
     /**
+     * This requires that R is set up.
      * 
+     * @throws Exception
      */
     @Test
-    public void testWritePValuesHistogram() {
+    public void testAnalyzeAndDelete() throws Exception {
 
-        if ( ee == null ) return;
-
-        Exception ex = null;
-        try {
-            differentialExpressionAnalyzerService.updateScoreDistributionFiles( ee );
-        } catch ( IOException e ) {
-            ex = e;
-            e.printStackTrace();
-        } finally {
-            assertTrue( ex == null );
+        if ( !this.rReady ) {
+            log.info( "R is not available for the test" );
+            return;
         }
+
+        Collection<DifferentialExpressionAnalysis> analyses = differentialExpressionAnalyzerService
+                .runDifferentialExpressionAnalyses( ee );
+        assertNotNull( analyses );
+        assertTrue( !analyses.isEmpty() );
+        assertNotNull( analyses.iterator().next() );
+
+        int numDeleted = differentialExpressionAnalyzerService.deleteOldAnalyses( ee );
+        assertTrue( numDeleted > 0 );
+    }
+
+    /**
+     * This requires that R is set up. Test for bug 2026, not a subsetted analysis.
+     * 
+     * @throws Exception
+     */
+    @Test
+    public void testAnalyzeAndDeleteSpecificAnalysis() throws Exception {
+        if ( !this.rReady ) {
+            log.info( "R is not available for the test" );
+            return;
+        }
+
+        Collection<DifferentialExpressionAnalysis> analyses = differentialExpressionAnalyzerService
+                .runDifferentialExpressionAnalyses( ee );
+        assertTrue( !analyses.isEmpty() );
+        int numDeleted = differentialExpressionAnalyzerService.deleteOldAnalyses( ee, analyses.iterator().next(), ee
+                .getExperimentalDesign().getExperimentalFactors() );
+        assertTrue( numDeleted > 0 );
+    }
+
+    /**
+     * Tests running with a subset factor, then deleting.
+     * 
+     * @throws Exception
+     */
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testAnalyzeAndDeleteSpecificAnalysisWithSubset() throws Exception {
+        if ( !this.rReady ) {
+            log.info( "R is not available for the test" );
+            return;
+        }
+
+        ExperimentalFactor[] factors = ee.getExperimentalDesign().getExperimentalFactors().toArray(
+                new ExperimentalFactor[] {} );
+
+        List<ExperimentalFactor> factorsToUse = Arrays.asList( new ExperimentalFactor[] { factors[0] } );
+        ExperimentalFactor subsetFactor = factors[1];
+
+        DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
+        config.setFactorsToInclude( factorsToUse );
+        config.setSubsetFactor( subsetFactor );
+
+        Collection<DifferentialExpressionAnalysis> analyses = differentialExpressionAnalyzerService
+                .runDifferentialExpressionAnalyses( ee, config );
+
+        assertTrue( !analyses.isEmpty() );
+        int numDeleted = differentialExpressionAnalyzerService.deleteOldAnalyses( ee, analyses.iterator().next(),
+                factorsToUse );
+        assertTrue( numDeleted > 0 );
+    }
+
+    /**
+     * This requires that R is set up.
+     */
+    @Test
+    public void testWritePValuesHistogram() throws Exception {
+        if ( !this.rReady ) {
+            log.info( "R is not available for the test" );
+            return;
+        }
+        differentialExpressionAnalyzerService.runDifferentialExpressionAnalyses( ee );
+        differentialExpressionAnalyzerService.updateScoreDistributionFiles( ee );
 
     }
 }

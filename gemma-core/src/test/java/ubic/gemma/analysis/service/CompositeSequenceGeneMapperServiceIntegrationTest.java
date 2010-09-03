@@ -102,7 +102,7 @@ public class CompositeSequenceGeneMapperServiceIntegrationTest extends AbstractG
                     true, true, false, false, true );
             ad = ads.iterator().next();
 
-            ad = arrayDesignService.thawLite( ad );
+            ad = arrayDesignService.thaw( ad );
 
             loadData();
 

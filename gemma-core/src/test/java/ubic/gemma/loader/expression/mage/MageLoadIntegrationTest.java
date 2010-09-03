@@ -94,6 +94,11 @@ public class MageLoadIntegrationTest extends AbstractMageTest {
             if ( object instanceof ExpressionExperiment ) {
                 ee = ( ExpressionExperiment ) object;
                 ee.setName( RandomStringUtils.randomAlphabetic( 20 ) + "expressionExperiment" );
+                
+                /*
+                 * FIXME the array design ends up having a null primaryTaxon.
+                 */
+                
                 ee = ( ExpressionExperiment ) persisterHelper.persist( ee );
                 assertNotNull( ee.getId() );
                 assertEquals( 12, ee.getBioAssays().size() );

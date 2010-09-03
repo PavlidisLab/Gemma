@@ -30,6 +30,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.junit.Before;
 import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.loader.expression.simple.model.SimpleExpressionExperimentMetaData;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
@@ -53,17 +54,23 @@ import ubic.gemma.testing.BaseSpringContextTest;
  */
 public class ExperimentalDesignImportDuplicateValueTest extends BaseSpringContextTest {
     private static Log log = LogFactory.getLog( ExperimentalDesignImportDuplicateValueTest.class.getName() );
+
+    @Autowired
     MgedOntologyService mos;
+
     ExpressionExperiment ee;
+
+    @Autowired
     ExpressionExperimentService eeService;
+
+    @Autowired
+    SimpleExpressionDataLoaderService s;
+
+    @Autowired
+    ExperimentalDesignImporter experimentalDesignImporter;
 
     @Before
     public void setup() throws Exception {
-
-        SimpleExpressionDataLoaderService s = ( SimpleExpressionDataLoaderService ) this
-                .getBean( "simpleExpressionDataLoaderService" );
-
-        eeService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
 
         InputStream data = this.getClass().getResourceAsStream(
                 "/data/loader/expression/expdesign.import.testfull.data.txt" );
@@ -104,12 +111,9 @@ public class ExperimentalDesignImportDuplicateValueTest extends BaseSpringContex
     @Test
     public final void testParse() throws Exception {
 
-        ExperimentalDesignImporter parser = ( ExperimentalDesignImporter ) this.getBean( "experimentalDesignImporter" );
-        // parser.setMgedOntologyService( mos );
-
         InputStream is = this.getClass().getResourceAsStream( "/data/loader/expression/expdesign.import.testfull.txt" );
 
-        parser.importDesign( ee, is, false );
+        experimentalDesignImporter.importDesign( ee, is, false );
 
         Collection<BioMaterial> bms = new HashSet<BioMaterial>();
         for ( BioAssay ba : ee.getBioAssays() ) {
