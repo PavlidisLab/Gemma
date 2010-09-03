@@ -478,24 +478,26 @@ public class AclAdvice extends HibernateDaoSupport {
             ObjectIdentity oi_temp = makeObjectIdentity( e );
             acl.setEntriesInheriting( true );
             parentAcl = aclService.readAclById( oi_temp );
+            // Owner of the experiment owns analyses even if administrator ran them.
+            sid = parentAcl.getOwner();
+        } else if ( ProbeCoexpressionAnalysis.class.isAssignableFrom( object.getClass() ) ) {
+
+            ProbeCoexpressionAnalysis pcea = (ProbeCoexpressionAnalysis) object;
+            
+            ExpressionExperimentSet eeSet = pcea.getExpressionExperimentSetAnalyzed();
+            Collection <BioAssaySet> experiments = eeSet.getExperiments();
+           
+            if ( experiments.size() != 1 )
+                throw new RuntimeException( "We do not support Coexpr Analyses based on multiple datasets." );
+
+            BioAssaySet e = experiments.iterator().next();
+            ObjectIdentity oi_temp = makeObjectIdentity( e );
+            acl.setEntriesInheriting( true );
+            parentAcl = aclService.readAclById( oi_temp );
+            // Owner of the experiment owns analyses even if administrator ran them.
+            sid = parentAcl.getOwner();
         }
-
-        // if (ProbeCoexpressionAnalysis.class.isAssignableFrom( object.getClass() ) ) {
-        // // Get expression experiment
-        // ProbeCoexpressionAnalysis pcea = (ProbeCoexpressionAnalysis) object;
-        // ExpressionExperimentSet eeSet = pcea.getExpressionExperimentSetAnalyzed();
-        // Collection <BioAssaySet> experiments = eeSet.getExperiments();
-        //            
-        // if (experiments.size() != 1) throw new
-        // RuntimeException("We do not support Probe CoExpr Analyses based on multiple datasets.");
-        //            
-        // BioAssaySet e = experiments.iterator().next();
-        //            
-        // // Get its ACL
-        // ObjectIdentity oi_temp = makeObjectIdentity(e);
-        // parentAcl = aclService.readAclById( oi_temp );
-        // }
-
+        
         acl.setOwner( sid ); // this might be the 'user' now.
 
         assert !acl.equals( parentAcl );
@@ -533,8 +535,8 @@ public class AclAdvice extends HibernateDaoSupport {
          * would be expensive to traverse.F
          */
         if ( ExpressionExperiment.class.isAssignableFrom( object.getClass() )
-                && ( propertyName.equals( "rawExpressionDataVectors" ) || propertyName
-                        .equals( "processedExpressionDataVectors" ) ) ) {
+                && ( propertyName.equals( "rawExpressionDataVectors" ) || 
+                     propertyName.equals( "processedExpressionDataVectors" ) ) ) {
             log.trace( "Skipping vectors" );
             return true;
         }
