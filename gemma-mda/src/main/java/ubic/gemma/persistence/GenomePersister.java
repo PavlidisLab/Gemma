@@ -751,7 +751,8 @@ abstract public class GenomePersister extends CommonPersister {
                     persistChromosome( existing.getPhysicalLocation().getChromosome() ) );
 
             // sanity check, as we've had this problem...somehow.
-            if ( existing.getPhysicalLocation() != null ) {
+            if ( existing.getPhysicalLocation() != null && existing.getGene() != null
+                    && existing.getPhysicalLocation().getChromosome() != null ) {
                 /*
                  * Rethaw.
                  */
