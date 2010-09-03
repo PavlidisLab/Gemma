@@ -265,12 +265,13 @@ public class GeneProductDaoImpl extends ubic.gemma.model.genome.gene.GeneProduct
 
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public GeneProduct thaw( GeneProduct existing ) {
         List re = this
                 .getHibernateTemplate()
                 .findByNamedParam(
-                        "select distinct gp from GeneProductImpl gp left join fetch gp.gene "
+                        "select distinct gp from GeneProductImpl gp left join fetch gp.gene g left join fetch g.taxon "
                                 + "left join fetch gp.physicalLocation pl left join fetch gp.accessions left join fetch pl.chromosome ch left join fetch ch.taxon where gp = :gp",
                         "gp", existing );
 
