@@ -41,6 +41,8 @@ public abstract class AbstractAnalyzer {
 
     /**
      * Connect to R.
+     * 
+     * @throws exception if no connection is obtained
      */
     public void connectToR() {
 
