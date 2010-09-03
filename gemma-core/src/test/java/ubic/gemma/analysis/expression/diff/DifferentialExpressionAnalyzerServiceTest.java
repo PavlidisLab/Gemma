@@ -35,7 +35,9 @@ import ubic.gemma.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.loader.expression.geo.service.GeoDatasetService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
@@ -92,14 +94,21 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
                     true );
 
             ee = results.iterator().next();
+            processedDataVectorService.createProcessedDataVectors( ee );
+
         }
-        processedDataVectorService.createProcessedDataVectors( ee );
 
+        ee = expressionExperimentService.findByShortName( "GSE1611" );
         expressionExperimentService.thawLite( ee );
-
         differentialExpressionAnalyzerService.deleteOldAnalyses( ee );
 
         assertEquals( 2, ee.getExperimentalDesign().getExperimentalFactors().size() );
+
+        for ( BioAssay ba : ee.getBioAssays() ) {
+            for ( BioMaterial bm : ba.getSamplesUsed() ) {
+                assertEquals( bm + " " + ba, 2, bm.getFactorValues().size() );
+            }
+        }
     }
 
     /**

@@ -366,9 +366,9 @@ public class DifferentialExpressionAnalysisHelperService {
                 /*
                  * This amounts to a missing value.
                  */
-//                throw new IllegalArgumentException(
-//                        "Biomaterial does not have a combination of factors matching the model; design error?: " + m );
-                continue;
+                 throw new IllegalArgumentException(
+                         "Biomaterial does not have a combination of factors matching the model; design error?: " + m );
+               // continue;
             }
 
             seenPairings.put( factorValuesFromBioMaterial, m );
