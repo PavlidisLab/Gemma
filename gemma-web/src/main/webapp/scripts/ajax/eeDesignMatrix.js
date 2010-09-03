@@ -40,7 +40,7 @@ var DesignMatrix = {
 					type : "int"
 				});
 
-		var DesignMatrixRow = Ext.data.Record.create(record);
+		var designMatrixRow = Ext.data.Record.create(record);
 		var cm = new Ext.grid.ColumnModel(columns);
 
 		var data = [];
@@ -53,7 +53,7 @@ var DesignMatrix = {
 		}
 		this.ds = new Ext.data.Store({
 					proxy : new Ext.data.MemoryProxy(data),
-					reader : new Ext.data.ArrayReader({}, DesignMatrixRow),
+					reader : new Ext.data.ArrayReader({}, designMatrixRow),
 					remoteSort : false
 				});
 		this.ds.load();
@@ -78,5 +78,5 @@ var DesignMatrix = {
 };
 
 function cleanName(string) {
-		return string.replace(/[\\\/\"\'\s\(\),\.]/g, " ");
+		return string.replace(/[\\\/\"\'\s\(\),\.;]/g, "_");
 }
