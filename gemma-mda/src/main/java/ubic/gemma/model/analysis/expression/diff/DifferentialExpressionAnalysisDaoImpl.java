@@ -62,26 +62,37 @@ public class DifferentialExpressionAnalysisDaoImpl extends
         super.setSessionFactory( sessionFactory );
     }
 
-    @SuppressWarnings("unchecked")
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao#countProbesMeetingThreshold(ubic.
+     * gemma.model.analysis.expression.ExpressionAnalysisResultSet, double)
+     */
     public Integer countProbesMeetingThreshold( ExpressionAnalysisResultSet ears, double threshold ) {
 
-        String query = "select count(r) from ExpressionAnalysisResultSetImpl rs inner join rs.results r where rs = :rs and r.correctedPvalue < :threshold";
-
-        String[] paramNames = { "rs", "threshold" };
-        Object[] objectValues = { ears, threshold };
-
-        List qresult = this.getHibernateTemplate().findByNamedParam( query, paramNames, objectValues );
-
-        Long count = 0L;
-        for ( Object o : qresult ) {
-
-            count = ( Long ) o;
-            if ( log.isDebugEnabled() )
-                log.debug( "Found " + count + " differentially expressed genes in result set (" + ears.getId()
-                        + ") at a threshold of " + threshold );
-
-        }
-        return count.intValue();
+        int up = this.countUpregulated( ears, threshold );
+        int down = this.countDownregulated( ears, threshold );
+        return up + down;
+        //        
+        // String query =
+        // "select count(distinct r) from ExpressionAnalysisResultSetImpl rs inner join rs.results r where rs = :rs and r.correctedPvalue < :threshold";
+        //
+        // String[] paramNames = { "rs", "threshold" };
+        // Object[] objectValues = { ears, threshold };
+        //
+        // List qresult = this.getHibernateTemplate().findByNamedParam( query, paramNames, objectValues );
+        //
+        // if ( qresult.isEmpty() ) {
+        // log.warn( "No count returned" );
+        // return 0;
+        // }
+        // Long count = ( Long ) qresult.iterator().next();
+        //
+        // log.debug( "Found " + count + " differentially expressed genes in result set (" + ears.getId()
+        // + ") at a corrected pvalue threshold of " + threshold );
+        //
+        // return count.intValue();
     }
 
     @SuppressWarnings("unchecked")
@@ -409,6 +420,13 @@ public class DifferentialExpressionAnalysisDaoImpl extends
         return this.getHibernateTemplate().findByNamedParam( query, "expressionExperiment", expressionExperiment );
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao#countDownregulated(ubic.gemma.model
+     * .analysis.expression.ExpressionAnalysisResultSet, double)
+     */
     @Override
     public Integer countDownregulated( ExpressionAnalysisResultSet par, double threshold ) {
         String query = "select count(distinct r) from ExpressionAnalysisResultSetImpl rs inner join rs.results r join r.contrasts c where rs = :rs and r.correctedPvalue < :threshold and c.tstat < 0";
@@ -418,18 +436,25 @@ public class DifferentialExpressionAnalysisDaoImpl extends
 
         List qresult = this.getHibernateTemplate().findByNamedParam( query, paramNames, objectValues );
 
-        Long count = 0L;
-        for ( Object o : qresult ) {
-
-            count = ( Long ) o;
-            if ( log.isDebugEnabled() )
-                log.debug( "Found " + count + " differentially expressed genes in result set (" + par.getId()
-                        + ") at a threshold of " + threshold );
-
+        if ( qresult.isEmpty() ) {
+            log.warn( "No count returned" );
+            return 0;
         }
+        Long count = ( Long ) qresult.iterator().next();
+
+        log.debug( "Found " + count + " downregulated genes in result set (" + par.getId()
+                + ") at a corrected pvalue threshold of " + threshold );
+
         return count.intValue();
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao#countUpregulated(ubic.gemma.model
+     * .analysis.expression.ExpressionAnalysisResultSet, double)
+     */
     @Override
     public Integer countUpregulated( ExpressionAnalysisResultSet par, double threshold ) {
         String query = "select count(distinct r) from ExpressionAnalysisResultSetImpl rs inner join rs.results r join r.contrasts c where rs = :rs and r.correctedPvalue < :threshold and c.tstat > 0";
@@ -439,15 +464,15 @@ public class DifferentialExpressionAnalysisDaoImpl extends
 
         List qresult = this.getHibernateTemplate().findByNamedParam( query, paramNames, objectValues );
 
-        Long count = 0L;
-        for ( Object o : qresult ) {
-
-            count = ( Long ) o;
-            if ( log.isDebugEnabled() )
-                log.debug( "Found " + count + " differentially expressed genes in result set (" + par.getId()
-                        + ") at a threshold of " + threshold );
-
+        if ( qresult.isEmpty() ) {
+            log.warn( "No count returned" );
+            return 0;
         }
+        Long count = ( Long ) qresult.iterator().next();
+
+        log.debug( "Found " + count + " upregulated genes in result set (" + par.getId()
+                + ") at a corrected pvalue threshold of " + threshold );
+
         return count.intValue();
     }
 

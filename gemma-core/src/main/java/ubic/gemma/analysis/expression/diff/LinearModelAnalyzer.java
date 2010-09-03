@@ -94,7 +94,7 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
     /**
      * Threshold below which contrasts will be stored for a given Result.
      */
-    private final Double PVALUE_CONTRAST_SELECT_THRESHOLD = 0.05;
+    private final Double PVALUE_CONTRAST_SELECT_THRESHOLD = 0.1;
 
     /**
      * Determine if any factor should be treated as the intercept term.

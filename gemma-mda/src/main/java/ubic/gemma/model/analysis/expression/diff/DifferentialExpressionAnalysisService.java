@@ -35,17 +35,27 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 public interface DifferentialExpressionAnalysisService extends
         ubic.gemma.model.analysis.AnalysisService<DifferentialExpressionAnalysis> {
 
+    /**
+     * @param par
+     * @param threshold for corrected pvalue. Results may not be accurate for 'unreasonable' thresholds.
+     * @return
+     */
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     public Integer countDownregulated( ExpressionAnalysisResultSet par, double threshold );
 
     /**
      * @param ExpressionAnalysisResultSet
-     * @param threshold (double)
+     * @param threshold (double) for corrected pvalue. Results may not be accurate for 'unreasonable' thresholds.
      * @return an integer count of all the probes that met the given threshold in the given expressionAnalysisResultSet
      */
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     public Integer countProbesMeetingThreshold( ExpressionAnalysisResultSet ears, double threshold );
 
+    /**
+     * @param par
+     * @param threshold for corrected pvalue. Results may not be accurate for 'unreasonable' thresholds.
+     * @return
+     */
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     public Integer countUpregulated( ExpressionAnalysisResultSet par, double threshold );
 
