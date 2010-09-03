@@ -154,6 +154,9 @@ public class ArrayDesignSequenceAlignmentService {
     public Collection<BlatResult> processArrayDesign( ArrayDesign ad, Taxon taxon, Collection<BlatResult> rawBlatResults ) {
 
         log.info( "Looking for old results to remove..." );
+
+        ad = arrayDesignService.thaw( ad );
+
         arrayDesignService.deleteAlignmentData( ad );
         // Blat file processing can only be run on one taxon at a time
         taxon = validateTaxaForBlatFile( ad, taxon );
@@ -344,6 +347,7 @@ public class ArrayDesignSequenceAlignmentService {
      * @return
      */
     public static Collection<BioSequence> getSequences( ArrayDesign ad, Taxon taxon ) {
+
         Collection<CompositeSequence> compositeSequences = ad.getCompositeSequences();
         Collection<BioSequence> sequencesToBlat = new HashSet<BioSequence>();
         int numWithNoBioSequence = 0;
