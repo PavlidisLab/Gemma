@@ -104,9 +104,9 @@ public class SecurityService {
         }
         return false;
     }
-    
+
     public static boolean isRunningAsAdmin() {
-        
+
         Collection<GrantedAuthority> authorities = getAuthentication().getAuthorities();
         assert authorities != null;
         for ( GrantedAuthority authority : authorities ) {
@@ -114,7 +114,7 @@ public class SecurityService {
                 return true;
             }
         }
-        return false;                
+        return false;
     }
 
     /**
@@ -692,11 +692,19 @@ public class SecurityService {
                 return ( ( PrincipalSid ) owner ).getPrincipal().equals( userManager.getCurrentUsername() );
             }
 
+            /*
+             * Special case: if we're the administrator, and the owner of the data is GROUP_ADMIN, we are considered the
+             * owner.
+             */
+            return owner instanceof GrantedAuthoritySid
+                    && isUserAdmin()
+                    && ( ( GrantedAuthoritySid ) owner ).getGrantedAuthority().equals(
+                            AuthorityConstants.ADMIN_GROUP_AUTHORITY );
+
         } catch ( NotFoundException nfe ) {
             return false;
         }
 
-        return false;
     }
 
     /**
