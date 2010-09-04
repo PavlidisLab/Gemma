@@ -30,15 +30,13 @@ import org.apache.commons.lang.time.StopWatch;
 
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService;
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService.AnalysisType;
-import ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet;
-import ubic.gemma.model.analysis.expression.ProbeAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.security.SecurityService;
 
 /**
  * A command line interface to the {@link DifferentialExpressionAnalysis}.
@@ -70,10 +68,11 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
 
     private DifferentialExpressionAnalyzerService differentialExpressionAnalyzerService = null;
 
+    /*
+     * Used when processing a single experiment.
+     */
     private AnalysisType type = null;
-
     private List<Long> factorIds = new ArrayList<Long>();
-
     private List<String> factorNames = new ArrayList<String>();
 
     /*
@@ -108,6 +107,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                 "The top (most significant) results to display." ).create();
         super.addOption( topOpt );
 
+        super.addAutoOption();
         super.addForceOption( null );
 
         // Option forceAnalysisOpt = OptionBuilder.hasArg( false ).withDescription( "Force the run." ).create( 'r' );
@@ -145,13 +145,24 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
         this.differentialExpressionAnalyzerService = ( DifferentialExpressionAnalyzerService ) this
                 .getBean( "differentialExpressionAnalyzerService" );
 
-        // this.expressionExperimentReportService = ( ExpressionExperimentReportService ) this
-        // .getBean( "expressionExperimentReportService" );
+        SecurityService securityService = ( SecurityService ) this.getBean( "securityService" );
 
         for ( BioAssaySet ee : expressionExperiments ) {
             if ( !( ee instanceof ExpressionExperiment ) ) {
                 continue;
             }
+
+            log.info( ee );
+
+            /*
+             * This is really only important when running as admin and in a batch mode.
+             */
+            log.info( securityService.getOwner( ee ) );
+
+            if ( !securityService.isOwnedByCurrentUser( ee ) && this.expressionExperiments.size() > 1 ) {
+                log.warn( "Experiment is not owned by current user, skipping: " + ee );
+            }
+
             processExperiment( ( ExpressionExperiment ) ee );
         }
 
@@ -170,6 +181,12 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
         super.processOptions();
 
         if ( hasOption( "type" ) ) {
+
+            if ( this.expressionExperiments.size() > 1 ) {
+                throw new IllegalArgumentException(
+                        "You can only specify the analysis type when analyzing a single experiment" );
+            }
+
             if ( !hasOption( "factors" ) ) {
                 throw new IllegalArgumentException( "Please specify the factor(s) when specifying the analysis type." );
             }
@@ -177,6 +194,12 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
         }
 
         if ( hasOption( "factors" ) ) {
+
+            if ( this.expressionExperiments.size() > 1 ) {
+                throw new IllegalArgumentException(
+                        "You can only specify the factors when analyzing a single experiment" );
+            }
+
             String rawfactors = getOptionValue( "factors" );
             String[] factorIDst = StringUtils.split( rawfactors, "," );
             if ( factorIDst != null && factorIDst.length > 0 ) {
@@ -193,7 +216,8 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
     }
 
     /**
-     * Determine which factors to use if given from the command line.
+     * Determine which factors to use if given from the command line. Only applicable if analysis is on a single data
+     * set.
      * 
      * @param ee
      * @return
@@ -248,14 +272,26 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
         Collection<DifferentialExpressionAnalysis> results;
         try {
 
-            this.eeService.thawLite( ee );
+            // this.eeService.thawLite( ee ); already done.
 
-            /*
-             * Manual selection of factors
-             */
+            if ( ee.getExperimentalDesign().getExperimentalFactors().size() == 0 ) {
+                if ( this.expressionExperiments.size() == 1 ) {
+                    /*
+                     * Only need to be noisy if this is the only ee. Batch processing should be less so.
+                     */
+                    throw new RuntimeException( "Experiment does not have an experimental design populated: "
+                            + ee.getShortName() );
+                }
+                log.warn( "Experiment does not have an experimental design populated: " + ee.getShortName() );
+                return;
+            }
+
             Collection<ExperimentalFactor> factors = guessFactors( ee );
 
             if ( factors.size() > 0 ) {
+                /*
+                 * Manual selection of factors
+                 */
                 if ( this.type != null ) {
                     results = this.differentialExpressionAnalyzerService.runDifferentialExpressionAnalyses( ee,
                             factors, type );
@@ -264,6 +300,14 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                             .runDifferentialExpressionAnalyses( ee, factors );
                 }
             } else {
+                /*
+                 * Automagically
+                 */
+                if ( ee.getExperimentalDesign().getExperimentalFactors().size() > 2 ) {
+                    throw new RuntimeException( "Experiment has too many factors to run automatically: "
+                            + ee.getShortName() );
+                }
+
                 results = this.differentialExpressionAnalyzerService.runDifferentialExpressionAnalyses( ee );
             }
 
