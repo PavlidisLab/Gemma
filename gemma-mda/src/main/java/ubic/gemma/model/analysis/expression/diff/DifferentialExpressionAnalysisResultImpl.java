@@ -38,9 +38,10 @@ public abstract class DifferentialExpressionAnalysisResultImpl extends
 
         /*
          * See bug 2013. Here we ensure that the bin is always set. The maximum value is 5, representing qvalues better
-         * than 10e-5
+         * than 10e-5. 0.1-1 -> 0; 0.01-0.099 -> 1; 0.001-0.00999 -> 2; 0.0001- 0.000999 -> 3 etc. Thus "p<0.01" is
+         * equivalent to "bin >=2"
          */
-        this.setCorrectedPValueBin( ( int ) Math.min( 5, -Math.log10( correctedPvalue ) ) );
+        this.setCorrectedPValueBin( ( int ) Math.min( 5, Math.floor( -Math.log10( correctedPvalue ) ) ) );
     }
 
 }
