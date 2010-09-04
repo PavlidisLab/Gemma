@@ -281,7 +281,7 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
                 .getHibernateTemplate()
                 .findByNamedParam(
                         "select b from BioSequenceImpl b "
-                                + " left join fetch b.taxon tax left join fetch tax.parentTaxon left join fetch b.sequenceDatabaseEntry s "
+                                + " left join fetch b.taxon tax left join fetch tax.externalDatabase left join fetch tax.parentTaxon left join fetch b.sequenceDatabaseEntry s "
                                 + " left join fetch s.externalDatabase"
                                 + " left join fetch b.bioSequence2GeneProduct bs2gp "
                                 + " left join fetch bs2gp.geneProduct gp left join fetch gp.gene g"
