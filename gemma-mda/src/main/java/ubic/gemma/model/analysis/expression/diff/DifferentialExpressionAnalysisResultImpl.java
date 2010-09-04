@@ -31,6 +31,9 @@ public abstract class DifferentialExpressionAnalysisResultImpl extends
 
     @Override
     public void setCorrectedPvalue( Double correctedPvalue ) {
+
+        if ( correctedPvalue == null ) return;
+
         super.setCorrectedPvalue( correctedPvalue );
 
         /*
