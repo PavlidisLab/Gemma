@@ -750,18 +750,19 @@ abstract public class GenomePersister extends CommonPersister {
             existing.getPhysicalLocation().setChromosome(
                     persistChromosome( existing.getPhysicalLocation().getChromosome() ) );
 
-            // sanity check, as we've had this problem...somehow.
-            if ( existing.getPhysicalLocation() != null && existing.getGene() != null
-                    && existing.getPhysicalLocation().getChromosome() != null ) {
-                /*
-                 * Rethaw.
-                 */
-                existing = geneProductService.thaw( existing );
-
-                if ( !existing.getPhysicalLocation().getChromosome().getTaxon().equals( existing.getGene().getTaxon() ) ) {
-                    throw new IllegalStateException( "Taxa don't match for gene product location and gene" );
-                }
-            }
+            // // sanity check, as we've had this problem...somehow.
+            // if ( existing.getPhysicalLocation() != null && existing.getGene() != null
+            // && existing.getPhysicalLocation().getChromosome() != null ) {
+            // /*
+            // * Rethaw.
+            // */
+            // existing = geneProductService.thaw( existing );
+            //
+            // if ( !existing.getPhysicalLocation().getChromosome().getTaxon().equals( existing.getGene().getTaxon() ) )
+            // {
+            // throw new IllegalStateException( "Taxa don't match for gene product location and gene" );
+            // }
+            // }
         }
 
         existing.setExons( geneProduct.getExons() );
