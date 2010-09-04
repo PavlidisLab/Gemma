@@ -108,6 +108,8 @@ public class TaxonValueObject {
         TaxonValueObject vo = new TaxonValueObject();
         vo.setScientificName( taxon.getScientificName() );
 
+        vo.setCommonName( taxon.getCommonName() );
+
         if ( taxon.getExternalDatabase() != null ) {
             vo.setExternalDatabase( ExternalDatabaseValueObject.fromEntity( taxon.getExternalDatabase() ) );
         }
