@@ -71,7 +71,7 @@ public class HomePageController {
     }
 
     @RequestMapping("/mainMenu.html")
-    @Monitored(minTimeToReport = 10)
+    @Monitored
     public ModelAndView showHomePage() throws Exception {
 
         /*
@@ -87,6 +87,7 @@ public class HomePageController {
      * 
      * @param
      */
+    @Monitored
     public void updateCounts() {
         Map<String, Long> stats = new HashMap<String, Long>();
 

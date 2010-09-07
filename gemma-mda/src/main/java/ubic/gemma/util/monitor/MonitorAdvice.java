@@ -19,11 +19,11 @@
 package ubic.gemma.util.monitor;
 
 import org.apache.commons.logging.Log;
+
 import org.apache.commons.logging.LogFactory;
 import org.aspectj.lang.ProceedingJoinPoint;
-import org.hibernate.SessionFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.aspectj.lang.annotation.Around;
+import org.aspectj.lang.annotation.Aspect;
 import org.springframework.util.StopWatch;
 
 /**
@@ -32,13 +32,13 @@ import org.springframework.util.StopWatch;
  * @author paul
  * @version $Id$
  */
-@Component
+@Aspect
 public class MonitorAdvice {
 
     private static Log log = LogFactory.getLog( MonitorAdvice.class );
 
-    @Autowired
-    private SessionFactory sessionFactory;
+    //@Autowired
+    //private SessionFactory sessionFactory;
 
     /**
      * Entry point.
@@ -48,32 +48,34 @@ public class MonitorAdvice {
      * @return
      * @throws Throwable
      */
+    @Around("@annotation(ubic.gemma.util.monitor.Monitored)")
     public Object profile( ProceedingJoinPoint pjp ) throws Throwable {
-        long cacheHitsBefore = sessionFactory.getStatistics().getQueryCacheHitCount();
+        //long cacheHitsBefore = sessionFactory.getStatistics().getQueryCacheHitCount();
 
         StopWatch stopWatch = new StopWatch();
-        try {
-            stopWatch.start( pjp.getSignature().getName() );
-            return pjp.proceed();
-        } finally {
+//        try {
+            stopWatch.start();
+            Object retVal =  pjp.proceed();
+//        } finally {
             stopWatch.stop();
             // if ( stopWatch.getTotalTimeMillis() > monitored.minTimeToReport() ) {
-            long cacheHitsAfter = sessionFactory.getStatistics().getQueryCacheHitCount();
-            long cacheHits = cacheHitsAfter - cacheHitsBefore;
-            String chs = "";
-            if ( cacheHits > 0 ) {
-                chs = " - query cache hit"; // this hit could have been from another thread...
-            }
-            log.warn( stopWatch.shortSummary() + chs );
-            // }
-        }
+//            long cacheHitsAfter = sessionFactory.getStatistics().getQueryCacheHitCount();
+//            long cacheHits = cacheHitsAfter - cacheHitsBefore;
+//            String chs = "";
+//            if ( cacheHits > 0 ) {
+//                chs = " - query cache hit"; // this hit could have been from another thread...
+//            }
+            log.warn( pjp.getSignature().toString()+ " took " + stopWatch.getLastTaskTimeMillis() + "ms." );            
+            // }            
+            return retVal;
+//        }
     }
 
     /**
      * @param sessionFactory the sessionFactory to set
      */
-    public void setSessionFactory( SessionFactory sessionFactory ) {
-        this.sessionFactory = sessionFactory;
-    }
+//    public void setSessionFactory( SessionFactory sessionFactory ) {
+//        this.sessionFactory = sessionFactory;
+//    }
 
 }
