@@ -20,15 +20,8 @@
 
 	<aop:aspectj-autoproxy />
 
-	<!--
-		Pointcut for monitoring methods. See ubic.gemma.util.monitor.MonitorAdvice and Monitored (annotations not working
-		here)
-	-->
-	<aop:config>
-		<aop:aspect id="monitorAspect" ref="monitorAdvice">
-			<aop:around method="profile" pointcut="execution(@ubic.gemma.util.monitor.Monitored * *(..))" />
-		</aop:aspect>
-	</aop:config>
+	<!-- See ubic.gemma.util.monitor.MonitorAdvice and Monitored. -->
+	<bean id="monitorAdvice" class="ubic.gemma.util.monitor.MonitorAdvice" />
 
 	<!-- setup/teardown for long-running tasks. See also gigaspaces.xml -->
 	<bean id="taskMethodAdvice" class="ubic.gemma.job.TaskMethodAdvice">
