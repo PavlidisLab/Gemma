@@ -256,7 +256,9 @@ public class AuditEventDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
 
             if ( results == null || results.isEmpty() ) return null;
 
-            return results.iterator().next();
+            AuditEvent result = results.iterator().next();
+            result.getPerformer();  // Hit performer to make hibernate initialize it.
+            return result;
 
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
