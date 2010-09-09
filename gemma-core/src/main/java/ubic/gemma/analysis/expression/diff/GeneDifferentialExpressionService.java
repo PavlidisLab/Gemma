@@ -527,6 +527,11 @@ public class GeneDifferentialExpressionService {
                 }
 
                 DifferentialExpressionValueObject devo = diffExResultToValueObject( r, gene, eevo, efs );
+                
+                if (r.getCorrectedPvalue() == null) {
+                    log.warn( "No p-value for ProbeAnalysisResult: " + r.getId() );
+                    continue;
+                }
 
                 devo.setP( r.getCorrectedPvalue() );
                 devo.setMetThreshold( r.getCorrectedPvalue() < threshold );
