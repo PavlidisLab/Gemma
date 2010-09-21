@@ -27,6 +27,7 @@ import org.compass.gps.impl.SingleCompassGps;
 import org.compass.gps.spi.CompassGpsInterfaceDevice;
 
 import ubic.gemma.job.TaskMethod;
+import ubic.gemma.job.TaskResult;
 import ubic.gemma.util.CompassUtils;
 import ubic.gemma.util.MailEngine;
 
@@ -273,11 +274,27 @@ public class IndexerTaskImpl implements IndexerTask {
 
         StopWatch timer = new StopWatch();
         timer.start();
-        log.info( "Rebuilding " + whatIndexingMsg );
+        log.info( "Rebuilding " + whatIndexingMsg + ". First attempt.");
 
         Boolean success = CompassUtils.rebuildCompassIndex( device );
-
-        // If failed send an email to administrator
+        
+        // First attempt failed. Wait a bit then re-try.
+        // See bug#2031. There are intermittent indexing failures. The cause is unknown at the moment.
+        if (!success) {
+            log.warn( "Failed to index " + whatIndexingMsg + ". Trying it again...");
+            try {
+                Thread.sleep( 120000 ); // sleep for 2 minutes.
+            } catch ( InterruptedException e ) {
+                log.warn( "Job to index" + whatIndexingMsg + " was interrupted." );
+                return false;
+            }
+            
+            timer.start();
+            log.info( "Rebuilding " + whatIndexingMsg + ". Second attempt.");
+            success = CompassUtils.rebuildCompassIndex( device );
+        }
+                
+        // If failed for the second time send an email to administrator.
         if ( !success ) {
             mailEngine.sendAdminMessage( "Failed to index " + whatIndexingMsg, "Failed to index " + whatIndexingMsg
                     + ".  See logs for details" );
