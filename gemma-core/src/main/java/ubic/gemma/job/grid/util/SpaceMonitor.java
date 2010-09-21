@@ -44,7 +44,7 @@ import ubic.gemma.util.ConfigUtils;
 @Service
 public class SpaceMonitor extends AbstractTaskService {
 
-    private final static long TIMEOUT_MILLIS = 10000;
+    private final static long TIMEOUT_MILLIS = 15000;
 
     private Boolean enabled = true;
 
