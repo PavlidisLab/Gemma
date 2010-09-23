@@ -363,6 +363,7 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
                 extDB.getName();
             }
             bioSequence.getTaxon().getParentTaxon();
+            bioSequence.getTaxon().getCommonName();
 
             DatabaseEntry dbEntry = bioSequence.getSequenceDatabaseEntry();
             if ( dbEntry != null ) {
