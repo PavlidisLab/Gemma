@@ -360,29 +360,29 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
             
             Taxon taxon = bioSequence.getTaxon();
             session.lock( taxon, LockMode.NONE );
-            //Hibernate.initialize( taxon );            
+            Hibernate.initialize( taxon );            
             taxon.getParentTaxon();
             taxon.getCommonName();
             
-            ExternalDatabase taxonExtDB = taxon.getExternalDatabase();
-            if ( taxonExtDB != null ) {
-                session.lock( taxonExtDB, LockMode.NONE );
-                //Hibernate.initialize( extDB );
-                taxonExtDB.getName();
-            }
+//            ExternalDatabase taxonExtDB = taxon.getExternalDatabase();
+//            if ( taxonExtDB != null ) {
+//                session.lock( taxonExtDB, LockMode.NONE );
+//                //Hibernate.initialize( extDB );
+//                taxonExtDB.getName();
+//            }
 
             DatabaseEntry dbEntry = bioSequence.getSequenceDatabaseEntry();
             if ( dbEntry != null ) {
                 session.lock( dbEntry, LockMode.NONE );
                 ExternalDatabase extDB = dbEntry.getExternalDatabase();
-                //Hibernate.initialize( dbEntry );
+                Hibernate.initialize( dbEntry );
                 dbEntry.getAccession();
                 if ( extDB != null ) {
-                    if ((taxonExtDB != null && extDB.getId() != taxonExtDB.getId()) || taxonExtDB == null ) {
+//                    if ((taxonExtDB != null && extDB.getId() != taxonExtDB.getId()) || taxonExtDB == null ) {
                         session.lock( extDB, LockMode.NONE );
-                        //Hibernate.initialize( extDB );
+                        Hibernate.initialize( extDB );
                         extDB.getName();                        
-                    }
+//                    }
                 }
             }
             
