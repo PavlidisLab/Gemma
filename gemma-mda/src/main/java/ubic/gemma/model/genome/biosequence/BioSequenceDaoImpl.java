@@ -377,13 +377,15 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
                 ExternalDatabase extDB = dbEntry.getExternalDatabase();
                 //Hibernate.initialize( dbEntry );
                 dbEntry.getAccession();
-                if ( extDB != null && extDB.getId() != taxonExtDB.getId() ) {
-                    session.lock( extDB, LockMode.NONE );
-                    //Hibernate.initialize( extDB );
-                    extDB.getName();
+                if ( extDB != null ) {
+                    if ((taxonExtDB != null && extDB.getId() != taxonExtDB.getId()) || taxonExtDB == null ) {
+                        session.lock( extDB, LockMode.NONE );
+                        //Hibernate.initialize( extDB );
+                        extDB.getName();                        
+                    }
                 }
             }
-
+            
         }
         session.close();
 
