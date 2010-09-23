@@ -359,7 +359,7 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
             ExternalDatabase extDB = bioSequence.getTaxon().getExternalDatabase();
             if ( extDB != null ) {
                 //session.lock( extDB, LockMode.NONE );
-                Hibernate.initialize( extDB );
+                //Hibernate.initialize( extDB );
                 extDB.getName();
             }
             bioSequence.getTaxon().getParentTaxon();
@@ -369,11 +369,11 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
             if ( dbEntry != null ) {
                 //session.lock( dbEntry, LockMode.NONE );
                 extDB = dbEntry.getExternalDatabase();
-                Hibernate.initialize( dbEntry );
+                //Hibernate.initialize( dbEntry );
                 dbEntry.getAccession();
                 if ( extDB != null ) {
                     //session.lock( extDB, LockMode.NONE );
-                    Hibernate.initialize( extDB );
+                    //Hibernate.initialize( extDB );
                     extDB.getName();
                 }
             }
