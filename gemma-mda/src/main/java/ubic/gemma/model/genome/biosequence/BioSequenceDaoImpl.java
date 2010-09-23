@@ -39,6 +39,7 @@ import org.springframework.stereotype.Repository;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.util.BusinessKey;
 
 /**
@@ -356,23 +357,28 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
             session.lock( bioSequence, LockMode.NONE ); // re-attach object to session
 
             bioSequence.getType();
-            ExternalDatabase extDB = bioSequence.getTaxon().getExternalDatabase();
-            if ( extDB != null ) {
-                //session.lock( extDB, LockMode.NONE );
+            
+            Taxon taxon = bioSequence.getTaxon();
+            session.lock( taxon, LockMode.NONE );
+            //Hibernate.initialize( taxon );            
+            taxon.getParentTaxon();
+            taxon.getCommonName();
+            
+            ExternalDatabase taxonExtDB = taxon.getExternalDatabase();
+            if ( taxonExtDB != null ) {
+                session.lock( taxonExtDB, LockMode.NONE );
                 //Hibernate.initialize( extDB );
-                extDB.getName();
+                taxonExtDB.getName();
             }
-            bioSequence.getTaxon().getParentTaxon();
-            bioSequence.getTaxon().getCommonName();
 
             DatabaseEntry dbEntry = bioSequence.getSequenceDatabaseEntry();
             if ( dbEntry != null ) {
-                //session.lock( dbEntry, LockMode.NONE );
-                extDB = dbEntry.getExternalDatabase();
+                session.lock( dbEntry, LockMode.NONE );
+                ExternalDatabase extDB = dbEntry.getExternalDatabase();
                 //Hibernate.initialize( dbEntry );
                 dbEntry.getAccession();
-                if ( extDB != null ) {
-                    //session.lock( extDB, LockMode.NONE );
+                if ( extDB != null && extDB.getId() != taxonExtDB.getId() ) {
+                    session.lock( extDB, LockMode.NONE );
                     //Hibernate.initialize( extDB );
                     extDB.getName();
                 }
