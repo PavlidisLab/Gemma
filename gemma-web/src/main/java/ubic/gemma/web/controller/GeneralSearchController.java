@@ -64,6 +64,7 @@ import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.model.genome.gene.GeneSetService;
 import ubic.gemma.model.genome.gene.GeneValueObject;
+import ubic.gemma.model.genome.sequenceAnalysis.BioSequenceValueObject;
 import ubic.gemma.search.SearchResult;
 import ubic.gemma.search.SearchService;
 import ubic.gemma.search.SearchSettings;
@@ -388,7 +389,7 @@ public class GeneralSearchController extends BaseFormController {
             vos = GeneValueObject.convert2ValueObjects( geneService.loadMultiple( EntityUtils.getIds( results ) ) );
         } else if ( Characteristic.class.isAssignableFrom( entityClass ) ) {
             return;
-        } else if ( BioSequence.class.isAssignableFrom( entityClass ) ) {
+        } else if ( BioSequenceValueObject.class.isAssignableFrom( entityClass ) ) {
             return;
         } else if ( GeneSet.class.isAssignableFrom( entityClass ) ) {
             vos = GeneSetValueObject.convert2ValueObjects( geneSetService.load( EntityUtils.getIds( results ) ), false );

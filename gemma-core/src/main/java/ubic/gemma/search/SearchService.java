@@ -112,6 +112,7 @@ import ubic.gemma.model.genome.gene.GeneProductService;
 import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.model.genome.gene.GeneSetService;
+import ubic.gemma.model.genome.sequenceAnalysis.BioSequenceValueObject;
 import ubic.gemma.ontology.OntologyService;
 import ubic.gemma.util.ConfigUtils;
 import ubic.gemma.util.EntityUtils;
@@ -314,6 +315,7 @@ public class SearchService implements InitializingBean {
         } catch ( Exception e ) {
             log.error( "Search error on settings: " + settings + "; message=" + e.getMessage(), e );
         }
+        
         return searchResults;
     }
 
@@ -940,11 +942,11 @@ public class SearchService implements InitializingBean {
             Collection<SearchResult> previousGeneSearchResults ) {
 
         Collection<SearchResult> results = compassSearch( compassBiosequence, settings );
-        for (SearchResult result : results) {
-        	// Thaw biosequences found by compass search.
-        	BioSequence bs = (BioSequence) result.getResultObject();        	
-        	bioSequenceService.thaw(Arrays.asList(new BioSequence[] {bs}));
-        }
+//        for (SearchResult result : results) {
+//        	// Thaw biosequences found by compass search.
+//        	BioSequence bs = (BioSequence) result.getResultObject();        	
+//        	bioSequenceService.thaw(Arrays.asList(new BioSequence[] {bs}));
+//        }
         
         Collection<SearchResult> geneResults = null;
         if ( previousGeneSearchResults == null ) {
@@ -969,32 +971,32 @@ public class SearchService implements InitializingBean {
         Map<Gene, Collection<BioSequence>> seqsFromDb = bioSequenceService.findByGenes( genes.keySet() );
         for ( Gene gene : seqsFromDb.keySet() ) {
             List<BioSequence> bs = new ArrayList<BioSequence>( seqsFromDb.get( gene ) );
-            bioSequenceService.thaw( bs );
+//            bioSequenceService.thaw( bs );
             results.addAll ( dbHitsToSearchResult( bs, genes.get( gene ) ) );
         }
 
         return results;
     }
     
-//    private Collection<SearchResult> convertEntitySearchResutsToValueObjectsSearchResults (
-//    													  Collection<SearchResult> searchResults )
-//    {
-//    	Collection<SearchResult> convertedSearchResults = new ArrayList<SearchResult>();
-//    	for (SearchResult searchResult : searchResults) {
-//    		if (BioSequence.class.isAssignableFrom( searchResult.getResultClass())) {
-//    			SearchResult convertedSearchResult = new SearchResult (
-//    					BioSequenceValueObject.fromEntity((BioSequence)searchResult.getResultObject()),
-//    					searchResult.getScore(),
-//    					searchResult.getHighlightedText()
-//				);
-//    			convertedSearchResults.add(convertedSearchResult);
-//    		} // else if ... 
-//    		else {    			
-//    			convertedSearchResults.add(searchResult);    			
-//    		}    		
-//    	}
-//    	return convertedSearchResults;
-//    }
+    private List<SearchResult> convertEntitySearchResutsToValueObjectsSearchResults (
+    													  Collection<SearchResult> searchResults )
+    {
+    	List<SearchResult> convertedSearchResults = new ArrayList<SearchResult>();
+    	for (SearchResult searchResult : searchResults) {
+    		if (BioSequence.class.isAssignableFrom( searchResult.getResultClass())) {
+    			SearchResult convertedSearchResult = new SearchResult (
+    					BioSequenceValueObject.fromEntity(bioSequenceService.thaw ((BioSequence)searchResult.getResultObject())),
+    					searchResult.getScore(),
+    					searchResult.getHighlightedText()
+				);
+    			convertedSearchResults.add(convertedSearchResult);
+    		} // else if ... 
+    		else {    			
+    			convertedSearchResults.add(searchResult);    			
+    		}    		
+    	}
+    	return convertedSearchResults;
+    }
      
     /**
      * @param settings
@@ -1149,7 +1151,7 @@ public class SearchService implements InitializingBean {
         inexactString = match.replaceAll( "%" );
 
         Collection<BioSequence> bs = bioSequenceService.findByName( inexactString );
-        bioSequenceService.thaw( bs );
+        //bioSequenceService.thaw( bs );
         Collection<SearchResult> bioSequenceList = new HashSet<SearchResult>( dbHitsToSearchResult( bs ) );
 
         watch.stop();
@@ -1869,7 +1871,7 @@ public class SearchService implements InitializingBean {
 
         Map<Class<?>, List<SearchResult>> results = new HashMap<Class<?>, List<SearchResult>>();
         Collections.sort( rawResults );
-
+        
         results.put( ArrayDesign.class, new ArrayList<SearchResult>() );
         results.put( BioSequence.class, new ArrayList<SearchResult>() );
         results.put( BibliographicReference.class, new ArrayList<SearchResult>() );
@@ -1894,7 +1896,8 @@ public class SearchService implements InitializingBean {
                     .getClass();
 
             resultClass = ReflectionUtil.getBaseForImpl( resultClass );
-
+            
+//            Class<? extends Object> resultClass = sr.getResultClass();
             assert results.containsKey( resultClass ) : "Unknown class " + resultClass;
             results.get( resultClass ).add( sr );
         }
@@ -1931,7 +1934,11 @@ public class SearchService implements InitializingBean {
                 sr.setResultObject( null );
             }
         }
-
+        
+        List<SearchResult> convertedResults = convertEntitySearchResutsToValueObjectsSearchResults(results.get( BioSequence.class ));        
+        results.put( BioSequenceValueObject.class, convertedResults );
+        results.remove( BioSequence.class );
+        
         return results;
     }
 
@@ -2059,7 +2066,7 @@ public class SearchService implements InitializingBean {
             return geneService.loadMultiple( ids );
         } else if ( BioSequence.class.isAssignableFrom( entityClass ) ) {
         	Collection<BioSequence> bs = bioSequenceService.loadMultiple( ids );
-        	bioSequenceService.thaw(bs);
+        	//bioSequenceService.thaw(bs);
             return bs;
         } else if ( GeneSet.class.isAssignableFrom( entityClass ) ) {
             return geneSetService.load( ids );

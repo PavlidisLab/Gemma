@@ -1,5 +1,8 @@
 package ubic.gemma.model.genome.sequenceAnalysis;
 
+import java.util.ArrayList;
+import java.util.Collection;
+
 import ubic.gemma.model.DatabaseEntryValueObject;
 import ubic.gemma.model.TaxonValueObject;
 import ubic.gemma.model.genome.biosequence.BioSequence;
@@ -110,8 +113,16 @@ public class BioSequenceValueObject {
     	vo.setLength( bs.getLength() );
     	vo.setType( bs.getType() );
     	vo.setFractionRepeats( bs.getFractionRepeats() );
-    	vo.setTaxon(TaxonValueObject.fromEntity( bs.getTaxon() ));
+    	vo.setTaxon( TaxonValueObject.fromEntity( bs.getTaxon() ) );
     	return vo;
     }        
 	
+    public static Collection<BioSequenceValueObject> fromEntities(Collection<BioSequence> bsList) {
+        Collection<BioSequenceValueObject> result = new ArrayList<BioSequenceValueObject>();
+        for (BioSequence bs : bsList) {
+            result.add( BioSequenceValueObject.fromEntity( bs ) );
+        }                
+        return result;
+    }        
+    
 }
