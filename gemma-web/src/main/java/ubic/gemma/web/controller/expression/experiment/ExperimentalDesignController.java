@@ -108,7 +108,8 @@ public class ExperimentalDesignController extends BaseController {
      */
     public void createDesignFromFile( Long eeid, String filePath ) {
         ExpressionExperiment ee = expressionExperimentService.load( eeid );
-
+        expressionExperimentService.thaw(ee);
+        
         if ( ee == null ) {
             throw new IllegalArgumentException( "Could not access experiment with id=" + eeid );
         }
