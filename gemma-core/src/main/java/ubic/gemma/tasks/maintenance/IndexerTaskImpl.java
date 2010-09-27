@@ -289,6 +289,7 @@ public class IndexerTaskImpl implements IndexerTask {
                 return false;
             }
             
+            timer.reset();
             timer.start();
             log.info( "Rebuilding " + whatIndexingMsg + ". Second attempt.");
             success = CompassUtils.rebuildCompassIndex( device );
