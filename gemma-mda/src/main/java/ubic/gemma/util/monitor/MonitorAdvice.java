@@ -65,7 +65,7 @@ public class MonitorAdvice {
 //            if ( cacheHits > 0 ) {
 //                chs = " - query cache hit"; // this hit could have been from another thread...
 //            }
-            log.warn( pjp.getSignature().toString()+ " took " + stopWatch.getLastTaskTimeMillis() + "ms." );            
+            log.info( pjp.getSignature().toString()+ " took " + stopWatch.getLastTaskTimeMillis() + "ms." );            
             // }            
             return retVal;
 //        }
