@@ -776,10 +776,39 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         return ( Gene ) res.iterator().next();
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.genome.GeneDaoBase#handleThawLite(java.util.Collection)
+     */
     @Override
-    @SuppressWarnings("unchecked")
     protected Collection<Gene> handleThawLite( final Collection<Gene> genes ) throws Exception {
         if ( genes.isEmpty() ) return new HashSet<Gene>();
+
+        Collection<Gene> result = new HashSet<Gene>();
+        Collection<Gene> batch = new HashSet<Gene>();
+
+        for ( Gene g : genes ) {
+            batch.add( g );
+            if ( batch.size() == 100 ) {
+                result.addAll( doThawLite( batch ) );
+                batch.clear();
+            }
+        }
+
+        if ( !batch.isEmpty() ) {
+            result.addAll( doThawLite( batch ) );
+        }
+
+        return result;
+    }
+
+    /**
+     * @param batch
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    private List<Gene> doThawLite( Collection<Gene> batch ) {
         return this.getHibernateTemplate().findByNamedParam(
                 "select distinct g from GeneImpl g left join fetch g.aliases left join fetch g.accessions acc "
                         + "join fetch g.taxon t left join fetch t.externalDatabase"
@@ -787,7 +816,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
                         + " left join fetch g.auditTrail at left join fetch at.events "
                         + "left join fetch gp.accessions gpacc left join fetch gpacc.externalDatabase left join"
                         + " fetch gp.physicalLocation gppl left join fetch gppl.chromosome chr join fetch chr.taxon "
-                        + " where g.id in (:gids)", "gids", EntityUtils.getIds( genes ) );
+                        + " where g.id in (:gids)", "gids", EntityUtils.getIds( batch ) );
     }
 
     /**
