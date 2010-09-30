@@ -157,7 +157,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
             /*
              * This is really only important when running as admin and in a batch mode.
              */
-            log.info( securityService.getOwner( ee ) );
+            log.debug( securityService.getOwner( ee ) );
 
             if ( !securityService.isOwnedByCurrentUser( ee ) && this.expressionExperiments.size() > 1 ) {
                 log.warn( "Experiment is not owned by current user, skipping: " + ee );
