@@ -21,7 +21,7 @@ package ubic.gemma.util;
 import java.io.File;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Date;
+import java.util.Date; 
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -42,9 +42,11 @@ import org.apache.commons.cli.UnrecognizedOptionException;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.log4j.ConsoleAppender;
 import org.apache.log4j.Level;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
+import org.apache.log4j.PatternLayout;
 
 /**
  * Base Command Line Interface. Provides some default functionality.
@@ -339,6 +341,11 @@ public abstract class AbstractCLI {
                 throw new RuntimeException( "Verbosity must be from 1 to 5" );
             }
         }
+        PatternLayout layout =  new PatternLayout("[Gemma %d] %p [%t] %C.%M(%L) | %m%n");
+        ConsoleAppender cnslAppndr = new ConsoleAppender(layout);
+        Logger f = LogManager.getRootLogger();
+        assert f != null;
+        f.addAppender( cnslAppndr );
 
         if ( commandLine.hasOption( "logger" ) ) {
             String value = getOptionValue( "logger" );
