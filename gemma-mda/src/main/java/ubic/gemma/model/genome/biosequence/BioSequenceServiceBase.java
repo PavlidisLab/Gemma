@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.genome.biosequence;
 
+import java.util.Collection;
+
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -229,9 +231,9 @@ public abstract class BioSequenceServiceBase implements ubic.gemma.model.genome.
     /**
      * @see ubic.gemma.model.genome.biosequence.BioSequenceService#thaw(java.util.Collection)
      */
-    public void thaw( final java.util.Collection bioSequences ) {
+    public Collection<BioSequence> thaw( final java.util.Collection<BioSequence> bioSequences ) {
         try {
-            this.handleThaw( bioSequences );
+            return this.handleThaw( bioSequences );
         } catch ( Throwable th ) {
             throw new ubic.gemma.model.genome.biosequence.BioSequenceServiceException(
                     "Error performing 'ubic.gemma.model.genome.biosequence.BioSequenceService.thaw(java.util.Collection bioSequences)' --> "
@@ -248,19 +250,6 @@ public abstract class BioSequenceServiceBase implements ubic.gemma.model.genome.
         } catch ( Throwable th ) {
             throw new ubic.gemma.model.genome.biosequence.BioSequenceServiceException(
                     "Error performing 'ubic.gemma.model.genome.biosequence.BioSequenceService.thaw(ubic.gemma.model.genome.biosequence.BioSequence bioSequence)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.biosequence.BioSequenceService#thawLite(java.util.Collection)
-     */
-    public void thawLite( final java.util.Collection bioSequences ) {
-        try {
-            this.handleThawLite( bioSequences );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.genome.biosequence.BioSequenceServiceException(
-                    "Error performing 'ubic.gemma.model.genome.biosequence.BioSequenceService.thawLite(java.util.Collection bioSequences)' --> "
                             + th, th );
         }
     }
@@ -379,7 +368,8 @@ public abstract class BioSequenceServiceBase implements ubic.gemma.model.genome.
     /**
      * Performs the core logic for {@link #thaw(java.util.Collection)}
      */
-    protected abstract void handleThaw( java.util.Collection bioSequences ) throws java.lang.Exception;
+    protected abstract Collection<BioSequence> handleThaw( java.util.Collection<BioSequence> bioSequences )
+            throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #thaw(ubic.gemma.model.genome.biosequence.BioSequence)}
@@ -388,14 +378,9 @@ public abstract class BioSequenceServiceBase implements ubic.gemma.model.genome.
             throws java.lang.Exception;
 
     /**
-     * Performs the core logic for {@link #thawLite(java.util.Collection)}
-     */
-    protected abstract void handleThawLite( java.util.Collection bioSequences ) throws java.lang.Exception;
-
-    /**
      * Performs the core logic for {@link #update(java.util.Collection)}
      */
-    protected abstract void handleUpdate( java.util.Collection bioSequences ) throws java.lang.Exception;
+    protected abstract void handleUpdate( java.util.Collection<BioSequence> bioSequences ) throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #update(ubic.gemma.model.genome.biosequence.BioSequence)}

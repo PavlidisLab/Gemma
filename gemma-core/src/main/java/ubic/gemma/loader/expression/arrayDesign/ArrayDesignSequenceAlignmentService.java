@@ -162,7 +162,7 @@ public class ArrayDesignSequenceAlignmentService {
         taxon = validateTaxaForBlatFile( ad, taxon );
 
         Collection<BioSequence> sequencesToBlat = getSequences( ad );
-        bioSequenceService.thawLite( sequencesToBlat );
+        sequencesToBlat = bioSequenceService.thaw( sequencesToBlat );
 
         // if the blat results were loaded from a file, we have to replace the
         // querysequences with the actual ones
@@ -267,7 +267,7 @@ public class ArrayDesignSequenceAlignmentService {
             boolean sensitive, Taxon taxon ) {
         Blat blat = new Blat();
         Map<BioSequence, Collection<BlatResult>> results = new HashMap<BioSequence, Collection<BlatResult>>();
-        bioSequenceService.thawLite( sequencesToBlat );
+        sequencesToBlat = bioSequenceService.thaw( sequencesToBlat );
         try {
 
             Collection<BioSequence> needBlat = getGoldenPathAlignments( sequencesToBlat, taxon, results );

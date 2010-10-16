@@ -165,18 +165,11 @@ public interface BioSequenceDao extends BaseDao<BioSequence> {
     /**
      * 
      */
-    public void thaw( java.util.Collection<BioSequence> bioSequences );
+    public Collection<BioSequence> thaw( java.util.Collection<BioSequence> bioSequences );
 
     /**
      * 
      */
     public BioSequence thaw( BioSequence bioSequence );
-
-    /**
-     * <p>
-     * Thaw but do not retrieve as many associations as the regular thaw.
-     * </p>
-     */
-    public void thawLite( java.util.Collection<BioSequence> bioSequences );
 
 }

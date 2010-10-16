@@ -41,6 +41,7 @@ import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.util.BusinessKey;
+import ubic.gemma.util.EntityUtils;
 
 /**
  * @author pavlidis
@@ -110,6 +111,7 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
 
     /*
      * (non-Javadoc)
+     * 
      * 
      * @seeubic.gemma.model.genome.biosequence.BioSequenceDaoBase#findByAccession (ubic.gemma.model.common.description.
      * DatabaseEntry)
@@ -282,8 +284,9 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
                 .getHibernateTemplate()
                 .findByNamedParam(
                         "select b from BioSequenceImpl b "
-                                + " left join fetch b.taxon tax left join fetch tax.externalDatabase left join fetch tax.parentTaxon left join fetch b.sequenceDatabaseEntry s "
-                                + " left join fetch s.externalDatabase"
+                                + " left join fetch b.taxon tax left join fetch tax.externalDatabase left join fetch tax.parentTaxon pt "
+                                + " left join fetch pt.externalDatabase "
+                                + " left join fetch b.sequenceDatabaseEntry s left join fetch s.externalDatabase"
                                 + " left join fetch b.bioSequence2GeneProduct bs2gp "
                                 + " left join fetch bs2gp.geneProduct gp left join fetch gp.gene g"
                                 + " left join fetch g.aliases left join fetch g.accessions  where b.id=:bid", "bid",
@@ -301,18 +304,8 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
      * @see ubic.gemma.model.genome.biosequence.BioSequenceDaoBase#handleThaw(java .util.Collection)
      */
     @Override
-    protected void handleThaw( final Collection<BioSequence> bioSequences ) throws Exception {
-        doThaw( bioSequences, true );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.genome.biosequence.BioSequenceDaoBase#handleThaw(java .util.Collection)
-     */
-    @Override
-    protected void handleThawLite( final Collection<BioSequence> bioSequences ) throws Exception {
-        doThaw( bioSequences, false );
+    protected Collection<BioSequence> handleThaw( final Collection<BioSequence> bioSequences ) throws Exception {
+        return doThaw( bioSequences );
     }
 
     /**
@@ -347,104 +340,42 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
      * @param bioSequences
      * @param deep
      */
-    private void doThaw( final Collection<BioSequence> bioSequences, final boolean deep ) {
-        if ( bioSequences == null || bioSequences.size() == 0 ) return;
+    private Collection<BioSequence> doThaw( final Collection<BioSequence> bioSequences ) {
 
-        HibernateTemplate template = this.getHibernateTemplate();
-        Session session = template.getSessionFactory().openSession();
+        if ( bioSequences.isEmpty() ) return new HashSet<BioSequence>();
 
-        for ( BioSequence bioSequence : bioSequences ) {
-            session.lock( bioSequence, LockMode.NONE ); // re-attach object to session
+        Collection<BioSequence> result = new HashSet<BioSequence>();
+        Collection<BioSequence> batch = new HashSet<BioSequence>();
 
-            bioSequence.getType();
-            
-            Taxon taxon = bioSequence.getTaxon();
-            session.lock( taxon, LockMode.NONE );
-            Hibernate.initialize( taxon );            
-            taxon.getParentTaxon();
-            taxon.getCommonName();
-            
-//            ExternalDatabase taxonExtDB = taxon.getExternalDatabase();
-//            if ( taxonExtDB != null ) {
-//                session.lock( taxonExtDB, LockMode.NONE );
-//                //Hibernate.initialize( extDB );
-//                taxonExtDB.getName();
-//            }
-
-            DatabaseEntry dbEntry = bioSequence.getSequenceDatabaseEntry();
-            if ( dbEntry != null ) {
-                session.lock( dbEntry, LockMode.NONE );
-                ExternalDatabase extDB = dbEntry.getExternalDatabase();
-                Hibernate.initialize( dbEntry );
-                dbEntry.getAccession();
-                if ( extDB != null ) {
-//                    if ((taxonExtDB != null && extDB.getId() != taxonExtDB.getId()) || taxonExtDB == null ) {
-                        session.lock( extDB, LockMode.NONE );
-                        Hibernate.initialize( extDB );
-                        extDB.getName();                        
-//                    }
-                }
+        for ( BioSequence g : bioSequences ) {
+            batch.add( g );
+            if ( batch.size() == 100 ) {
+                result.addAll( doThawBatch( batch ) );
+                batch.clear();
             }
-            
         }
-        session.close();
+
+        if ( !batch.isEmpty() ) {
+            result.addAll( doThawBatch( batch ) );
+        }
+
+        return result;
 
     }
 
-    // templ.executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
-    // public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-    // FlushMode oldFlushMode = session.getFlushMode();
-    // CacheMode oldCacheMode = session.getCacheMode();
-    // session.setCacheMode( CacheMode.IGNORE ); // Don't hit the
-    // // secondary
-    // // cache
-    // session.setFlushMode( FlushMode.MANUAL ); // We're
-    // // READ-ONLY so
-    // // this is okay.
-    // int count = 0;
-    // long lastTime = 0;
-    // for ( BioSequence bioSequence : bioSequences ) {
-    // session.lock( bioSequence, LockMode.NONE );
-    // Hibernate.initialize( bioSequence );
-    //
-    // if ( deep ) {
-    // bioSequence.getTaxon();
-    // bioSequence.getTaxon().getExternalDatabase();
-    // Hibernate.initialize( bioSequence.getBioSequence2GeneProduct() );
-    // for ( BioSequence2GeneProduct bs2gp : bioSequence.getBioSequence2GeneProduct() ) {
-    // Hibernate.initialize( bs2gp.getGeneProduct() );
-    // if ( bs2gp instanceof BlatAssociation ) {
-    // Hibernate.initialize( ( ( BlatAssociation ) bs2gp ).getBlatResult() );
-    // }
-    // }
-    // }
-    //
-    // DatabaseEntry dbEntry = bioSequence.getSequenceDatabaseEntry();
-    // if ( dbEntry != null ) {
-    // session.lock( dbEntry, LockMode.NONE );
-    // Hibernate.initialize( dbEntry );
-    // session.lock( dbEntry.getExternalDatabase(), LockMode.NONE );
-    // Hibernate.initialize( dbEntry.getExternalDatabase() );
-    // session.evict( dbEntry );
-    // session.evict( dbEntry.getExternalDatabase() );
-    // }
-    //
-    // if ( ++count % 2000 == 0 ) {
-    // if ( timer.getTime() - lastTime > 10000 ) {
-    // log.info( "Thawed " + count + " sequences ..." );
-    // lastTime = timer.getTime();
-    // }
-    // session.clear();
-    // }
-    // }
-    //
-    // session.clear();
-    // session.setFlushMode( oldFlushMode );
-    // session.setCacheMode( oldCacheMode );
-    //
-    // return null;
-    // }
-    // } );
+    @SuppressWarnings("unchecked")
+    private Collection<? extends BioSequence> doThawBatch( Collection<BioSequence> batch ) {
+        return this
+                .getHibernateTemplate()
+                .findByNamedParam(
+                        "select b from BioSequenceImpl b "
+                                + " left join fetch b.taxon tax left join fetch tax.externalDatabase left join fetch tax.parentTaxon left join fetch b.sequenceDatabaseEntry s "
+                                + " left join fetch s.externalDatabase"
+                                + " left join fetch b.bioSequence2GeneProduct bs2gp "
+                                + " left join fetch bs2gp.geneProduct gp left join fetch gp.gene g"
+                                + " left join fetch g.aliases left join fetch g.accessions  where b.id in (:bids)",
+                        "bids", EntityUtils.getIds( batch ) );
+    }
 
     /**
      * @param genes

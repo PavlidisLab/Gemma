@@ -84,7 +84,7 @@ public abstract class BioSequenceDaoBase extends HibernateDaoSupport implements
     /**
      * @see ubic.gemma.model.genome.biosequence.BioSequenceDao#create(java.util.Collection)
      */
-    
+
     public java.util.Collection<BioSequence> create( final java.util.Collection entities ) {
         return create( TRANSFORM_NONE, entities );
     }
@@ -100,7 +100,7 @@ public abstract class BioSequenceDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.genome.biosequence.BioSequenceDao#find(int, java.lang.String,
      *      ubic.gemma.model.genome.biosequence.BioSequence)
      */
-    
+
     public BioSequence find( final int transform, final java.lang.String queryString,
             final ubic.gemma.model.genome.biosequence.BioSequence bioSequence ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -155,7 +155,7 @@ public abstract class BioSequenceDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.genome.biosequence.BioSequenceDao#findByAccession(int, java.lang.String,
      *      ubic.gemma.model.common.description.DatabaseEntry)
      */
-    
+
     public BioSequence findByAccession( final int transform, final java.lang.String queryString,
             final ubic.gemma.model.common.description.DatabaseEntry accession ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -238,7 +238,7 @@ public abstract class BioSequenceDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.genome.biosequence.BioSequenceDao#findOrCreate(int, java.lang.String,
      *      ubic.gemma.model.genome.biosequence.BioSequence)
      */
-    
+
     public BioSequence findOrCreate( final int transform, final java.lang.String queryString,
             final ubic.gemma.model.genome.biosequence.BioSequence bioSequence ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -362,7 +362,6 @@ public abstract class BioSequenceDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.genome.biosequence.BioSequenceDao#loadAll(int)
      */
 
-    
     public java.util.Collection<? extends BioSequence> loadAll( final int transform ) {
         final java.util.Collection<? extends BioSequence> results = this.getHibernateTemplate().loadAll(
                 ubic.gemma.model.genome.biosequence.BioSequenceImpl.class );
@@ -408,9 +407,9 @@ public abstract class BioSequenceDaoBase extends HibernateDaoSupport implements
     /**
      * @see ubic.gemma.model.genome.biosequence.BioSequenceDao#thaw(java.util.Collection)
      */
-    public void thaw( final java.util.Collection<BioSequence> bioSequences ) {
+    public Collection<BioSequence> thaw( final java.util.Collection<BioSequence> bioSequences ) {
         try {
-            this.handleThaw( bioSequences );
+            return this.handleThaw( bioSequences );
         } catch ( Throwable th ) {
             throw new java.lang.RuntimeException(
                     "Error performing 'ubic.gemma.model.genome.biosequence.BioSequenceDao.thaw(java.util.Collection bioSequences)' --> "
@@ -423,23 +422,10 @@ public abstract class BioSequenceDaoBase extends HibernateDaoSupport implements
      */
     public BioSequence thaw( final ubic.gemma.model.genome.biosequence.BioSequence bioSequence ) {
         try {
-            return  this.handleThaw( bioSequence );
+            return this.handleThaw( bioSequence );
         } catch ( Throwable th ) {
             throw new java.lang.RuntimeException(
                     "Error performing 'ubic.gemma.model.genome.biosequence.BioSequenceDao.thaw(ubic.gemma.model.genome.biosequence.BioSequence bioSequence)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.biosequence.BioSequenceDao#thawLite(java.util.Collection)
-     */
-    public void thawLite( final java.util.Collection<BioSequence> bioSequences ) {
-        try {
-            this.handleThawLite( bioSequences );
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.genome.biosequence.BioSequenceDao.thawLite(java.util.Collection bioSequences)' --> "
                             + th, th );
         }
     }
@@ -513,18 +499,14 @@ public abstract class BioSequenceDaoBase extends HibernateDaoSupport implements
     /**
      * Performs the core logic for {@link #thaw(java.util.Collection)}
      */
-    protected abstract void handleThaw( java.util.Collection<BioSequence> bioSequences ) throws java.lang.Exception;
+    protected abstract Collection<BioSequence> handleThaw( java.util.Collection<BioSequence> bioSequences )
+            throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #thaw(ubic.gemma.model.genome.biosequence.BioSequence)}
      */
     protected abstract BioSequence handleThaw( ubic.gemma.model.genome.biosequence.BioSequence bioSequence )
             throws java.lang.Exception;
-
-    /**
-     * Performs the core logic for {@link #thawLite(java.util.Collection)}
-     */
-    protected abstract void handleThawLite( java.util.Collection<BioSequence> bioSequences ) throws java.lang.Exception;
 
     /**
      * Transforms a collection of entities using the

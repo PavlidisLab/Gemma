@@ -120,19 +120,12 @@ public interface BioSequenceService {
     /**
      * 
      */
-    public void thaw( java.util.Collection<BioSequence> bioSequences );
+    public Collection<BioSequence> thaw( java.util.Collection<BioSequence> bioSequences );
 
     /**
      * 
      */
     public BioSequence thaw( ubic.gemma.model.genome.biosequence.BioSequence bioSequence );
-
-    /**
-     * <p>
-     * Thaw but do not initialize as many associations as regular thaw.
-     * </p>
-     */
-    public void thawLite( java.util.Collection<BioSequence> bioSequences );
 
     /**
      * 
