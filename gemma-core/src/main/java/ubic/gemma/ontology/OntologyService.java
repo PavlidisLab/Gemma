@@ -49,6 +49,7 @@ import ubic.basecode.ontology.providers.FMAOntologyService;
 import ubic.basecode.ontology.providers.HumanDevelopmentOntologyService;
 import ubic.basecode.ontology.providers.MammalianPhenotypeOntologyService;
 import ubic.basecode.ontology.providers.MouseDevelopmentOntologyService;
+import ubic.basecode.ontology.providers.NIFSTDOntologyService;
 import ubic.basecode.ontology.providers.ObiService;
 import ubic.basecode.ontology.search.OntologySearch;
 import ubic.gemma.model.association.GOEvidenceCode;
@@ -149,6 +150,8 @@ public class OntologyService implements InitializingBean {
     private BirnLexOntologyService birnLexOntologyService;
 
     private CellTypeOntologyService cellTypeOntologyService;
+    
+    private NIFSTDOntologyService nifstdOntologyService;
 
     @Autowired
     private CharacteristicService characteristicService;
@@ -181,6 +184,7 @@ public class OntologyService implements InitializingBean {
     public void afterPropertiesSet() throws Exception {
 
         this.birnLexOntologyService = new BirnLexOntologyService();
+        this.nifstdOntologyService = new NIFSTDOntologyService();
         this.chebiOntologyService = new ChebiOntologyService();
         this.fmaOntologyService = new FMAOntologyService();
         this.diseaseOntologyService = new DiseaseOntologyService();
@@ -191,6 +195,7 @@ public class OntologyService implements InitializingBean {
         this.obiService = new ObiService();
 
         this.ontologyServices.add( this.birnLexOntologyService );
+        this.ontologyServices.add( this.nifstdOntologyService );
         this.ontologyServices.add( this.chebiOntologyService );
         this.ontologyServices.add( this.fmaOntologyService );
         this.ontologyServices.add( this.diseaseOntologyService );
@@ -369,6 +374,10 @@ public class OntologyService implements InitializingBean {
      */
     public BirnLexOntologyService getBirnLexOntologyService() {
         return birnLexOntologyService;
+    }
+    
+    public NIFSTDOntologyService getNifstfOntologyService() {
+        return nifstdOntologyService;        
     }
 
     /**
