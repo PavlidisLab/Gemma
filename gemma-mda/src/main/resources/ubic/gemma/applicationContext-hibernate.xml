@@ -221,6 +221,8 @@
 				<value>classpath:ubic/gemma/model/genome/gene/GeneSetMember.hbm.xml
 				</value>
 				<value>classpath:ubic/gemma/model/association/Gene2GeneProteinAssociation.hbm.xml   </value> 
+				
+				<value>classpath:ubic/gemma/model/association/PazarAssociation.hbm.xml</value>
 
 			</list>
 		</property>

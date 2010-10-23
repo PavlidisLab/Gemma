@@ -35,6 +35,7 @@ import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.biosequence.BioSequenceService;
 import ubic.gemma.model.genome.biosequence.PolymerType;
+import ubic.gemma.model.genome.biosequence.SequenceType;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.gene.GeneProductType;
 import ubic.gemma.model.genome.gene.GeneService;
@@ -95,6 +96,7 @@ public class GenericGenelistDesignGenerator extends AbstractSpringAwareCLI {
         arrayDesign.setPrimaryTaxon( taxon );
         arrayDesign.setName( "Generic array for " + taxon.getScientificName() );
         arrayDesign.setDescription( "Created by Gemma" );
+        // arrayDesign.setTechnologyType( TechnologyType.SEQUENCE_COUNT);
 
         if ( arrayDesignService.find( arrayDesign ) != null ) {
             log.info( "Array design for " + taxon + " already exists." );
@@ -125,11 +127,14 @@ public class GenericGenelistDesignGenerator extends AbstractSpringAwareCLI {
                      */
 
                     String name = geneProduct.getName();
-                    BioSequence bs = BioSequence.Factory.newInstance();
+                    BioSequence bioSequence = BioSequence.Factory.newInstance();
                     Collection<DatabaseEntry> accessions = geneProduct.getAccessions();
-                    bs.setName( name );
-                    bs.setTaxon( taxon );
-                    bs.setPolymerType( PolymerType.RNA );
+                    bioSequence.setName( name );
+                    bioSequence.setTaxon( taxon );
+                    bioSequence.setPolymerType( PolymerType.RNA );
+                    bioSequence.setType( SequenceType.mRNA );
+
+                    BioSequence existing = null;
 
                     if ( accessions.isEmpty() ) {
                         // this should not be hit.
@@ -139,35 +144,40 @@ public class GenericGenelistDesignGenerator extends AbstractSpringAwareCLI {
                         if ( name.startsWith( "ENS" ) && name.length() > 10 ) {
                             de.setExternalDatabase( ensembl );
                         } else {
-                            assert name.matches( "^[A-Z]{1,2}(_?)[0-9]+(\\.[0-9]+)?$" ) : "Name doesn't look like genbnak: "
-                                    + name;
-                            de.setExternalDatabase( genbank );
+                            if ( name.matches( "^[A-Z]{1,2}(_?)[0-9]+(\\.[0-9]+)?$" ) ) {
+                                de.setExternalDatabase( genbank );
+                            } else {
+                                log.info( "Name doesn't look like genbank or ensembl, skipping: " + name );
+                                continue;
+                            }
                         }
-                        bs.setSequenceDatabaseEntry( de );
+                        bioSequence.setSequenceDatabaseEntry( de );
                     } else {
                         if ( accessions.size() > 1 ) {
                             log.warn( "Ambiguous accessions for " + name );
                         }
-                        bs.setSequenceDatabaseEntry( accessions.iterator().next() );
-                    }
+                        bioSequence.setSequenceDatabaseEntry( accessions.iterator().next() );
+                        existing = bioSequenceService.findByAccession( accessions.iterator().next() );
 
-                    BioSequence bioSequence = bioSequenceService.findOrCreate( bs );
-                    // BioSequence bioSequence = bioSequenceService.find( bs );
-                    //
-                    // if ( bioSequence == null ) {
-                    // Collection<BioSequence> candidates = bioSequenceService.findByName( name );
-                    // log.debug( "No sequence for " + name + " found " + candidates.size() + " by name alone (" + gene
-                    // + ")" );
-                    // } else {
-                    // log.debug( "Found existing sequence for " + name );
-                    // }
+                    }
+                    if ( existing == null ) {
+                        bioSequence = ( BioSequence ) getPersisterHelper().persist( bioSequence );
+                    } else {
+                        bioSequence = existing;
+                    }
+                    assert bioSequence != null;
+                    if ( bioSequence.getSequenceDatabaseEntry() == null ) {
+                        log.info( "No DB entry for " + bioSequence + "(" + gene + "), skipping" );
+                        continue;
+                    }
 
                     gp2bs.put( geneProduct, bioSequence );
 
                     CompositeSequence cs = CompositeSequence.Factory.newInstance();
-                    cs.setName( name );
+                    cs.setName( gene.getOfficialSymbol() );
                     cs.setArrayDesign( arrayDesign );
-                    cs.setDescription( "Generic expression element for " + geneProduct );
+                    cs.setBiologicalCharacteristic( bioSequence );
+                    cs.setDescription( "Generic expression element for " + gene );
                     cs = compositeSequenceService.findOrCreate( cs );
                     arrayDesign.getCompositeSequences().add( cs );
 
@@ -180,12 +190,13 @@ public class GenericGenelistDesignGenerator extends AbstractSpringAwareCLI {
                      * For now, only associate with a single transcript. Later we will refine our definition of
                      * transcripts and fix this.
                      */
+                    log.info( cs );
                     hasTranscript = true;
                     break;
                 }
             }
             if ( !hasTranscript ) {
-                log.warn( "No transcript for " + gene );
+                log.debug( "No transcript for " + gene );
             }
 
             if ( ++count % 10 == 0 ) log.info( count + " genes processed; " + gp2bs.size() + " transcripts so far" );
@@ -193,7 +204,7 @@ public class GenericGenelistDesignGenerator extends AbstractSpringAwareCLI {
 
         arrayDesignService.update( arrayDesign );
 
-        arrayDesign = arrayDesignService.thawLite( arrayDesign );
+        arrayDesign = arrayDesignService.thaw( arrayDesign );
 
         log.info( "Array design has " + arrayDesign.getCompositeSequences().size() + " 'probes'" );
 

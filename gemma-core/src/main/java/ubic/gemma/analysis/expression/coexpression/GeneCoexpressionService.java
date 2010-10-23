@@ -49,6 +49,8 @@ import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysi
 import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisService;
 import ubic.gemma.model.association.Gene2GeneProteinAssociation;
 import ubic.gemma.model.association.Gene2GeneProteinAssociationService;
+import ubic.gemma.model.association.TfGeneAssociation;
+import ubic.gemma.model.association.TfGeneAssociationService;
 import ubic.gemma.model.association.coexpression.Gene2GeneCoexpression;
 import ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionService;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
@@ -107,6 +109,9 @@ public class GeneCoexpressionService {
     private Gene2GeneCoexpressionService gene2GeneCoexpressionService;
 
     @Autowired
+    private Gene2GeneProteinAssociationService gene2GeneProteinAssociationService = null;
+
+    @Autowired
     private GeneCoexpressionAnalysisService geneCoexpressionAnalysisService;
 
     @Autowired
@@ -119,7 +124,7 @@ public class GeneCoexpressionService {
     private ProbeLinkCoexpressionAnalyzer probeLinkCoexpressionAnalyzer;
 
     @Autowired
-    private Gene2GeneProteinAssociationService gene2GeneProteinAssociationService = null;
+    private TfGeneAssociationService tfGeneAssociationService;
 
     /**
      * Main entry point. Note that if possible, the query will be done using results from an ExpressionExperimentSet.
@@ -319,6 +324,9 @@ public class GeneCoexpressionService {
             Map<Long, Gene2GeneProteinAssociation> proteinInteractionMap = this
                     .getGene2GeneProteinAssociationForQueryGene( queryGene );
 
+            Map<Long, TfGeneAssociation> regulatedBy = this.getTfGeneAssociationsforTargetGene( queryGene );
+            Map<Long, TfGeneAssociation> regulates = this.getTfGeneAssociationsforTf( queryGene );
+
             assert g2gs != null;
 
             for ( Gene2GeneCoexpression g2g : g2gs ) {
@@ -334,8 +342,19 @@ public class GeneCoexpressionService {
                 if ( proteinInteractionMap != null && !( proteinInteractionMap.isEmpty() ) ) {
                     Gene2GeneProteinAssociation gene2GeneProteinAssociation = proteinInteractionMap.get( foundGene
                             .getId() );
-                    addProteinDetailsToValueObject( gene2GeneProteinAssociation, cvo );
+                    if ( gene2GeneProteinAssociation != null )
+                        addProteinDetailsToValueObject( gene2GeneProteinAssociation, cvo );
 
+                }
+
+                if ( regulatedBy != null && !regulatedBy.isEmpty() ) {
+                    TfGeneAssociation tfGeneAssociation = regulatedBy.get( foundGene.getId() );
+                    if ( tfGeneAssociation != null ) this.addTfInteractionToValueObject( tfGeneAssociation, cvo );
+                }
+
+                if ( regulates != null && !regulates.isEmpty() ) {
+                    TfGeneAssociation tfGeneAssociation = regulates.get( foundGene.getId() );
+                    if ( tfGeneAssociation != null ) this.addTfInteractionToValueObject( tfGeneAssociation, cvo );
                 }
 
                 /*
@@ -401,6 +420,14 @@ public class GeneCoexpressionService {
         this.gene2GeneCoexpressionService = gene2GeneCoexpressionService;
     }
 
+    /**
+     * @param gene2GeneProteinAssociationService the gene2GeneProteinAssociationService to set
+     */
+    public void setGene2GeneProteinAssociationService(
+            Gene2GeneProteinAssociationService gene2GeneProteinAssociationService ) {
+        this.gene2GeneProteinAssociationService = gene2GeneProteinAssociationService;
+    }
+
     public void setGeneCoexpressionAnalysisService( GeneCoexpressionAnalysisService geneCoexpressionAnalysisService ) {
         this.geneCoexpressionAnalysisService = geneCoexpressionAnalysisService;
     }
@@ -415,14 +442,6 @@ public class GeneCoexpressionService {
 
     public void setProbeLinkCoexpressionAnalyzer( ProbeLinkCoexpressionAnalyzer probeLinkCoexpressionAnalyzer ) {
         this.probeLinkCoexpressionAnalyzer = probeLinkCoexpressionAnalyzer;
-    }
-
-    /**
-     * @param gene2GeneProteinAssociationService the gene2GeneProteinAssociationService to set
-     */
-    public void setGene2GeneProteinAssociationService(
-            Gene2GeneProteinAssociationService gene2GeneProteinAssociationService ) {
-        this.gene2GeneProteinAssociationService = gene2GeneProteinAssociationService;
     }
 
     /**
@@ -533,6 +552,52 @@ public class GeneCoexpressionService {
             ecdvo.setArrayDesignCount( eevo.getArrayDesignCount() );
             ecdvo.setBioAssayCount( eevo.getBioAssayCount() );
             datasetResults.add( ecdvo );
+        }
+    }
+
+    /**
+     * Adds the protein protein interaction data to the value object, that is the url link for string the evidence for
+     * that interaction and the confidenence score.
+     * 
+     * @param proteinProteinInteraction Protein Protein interactin for the coexpression link
+     * @param cvo The value object used to display coexpression data
+     */
+    private void addProteinDetailsToValueObject( Gene2GeneProteinAssociation proteinProteinInteraction,
+            CoexpressionValueObjectExt cvo ) {
+
+        if ( proteinProteinInteraction == null ) return;
+
+        ProteinLinkOutFormatter proteinFormatter = new ProteinLinkOutFormatter();
+        String proteinProteinIdUrl = proteinFormatter
+                .getStringProteinProteinInteractionLinkGemmaDefault( proteinProteinInteraction.getDatabaseEntry() );
+
+        String evidenceText = proteinFormatter.getEvidenceDisplayText( proteinProteinInteraction.getEvidenceVector() );
+
+        String confidenceText = proteinFormatter.getConfidenceScoreAsPercentage( proteinProteinInteraction
+                .getConfidenceScore() );
+
+        log.debug( "A coexpression link in GEMMA has a interaction in STRING " + proteinProteinIdUrl + " evidence of "
+                + evidenceText );
+
+        cvo.setGene2GeneProteinAssociationStringUrl( proteinProteinIdUrl );
+        cvo.setGene2GeneProteinInteractionConfidenceScore( confidenceText );
+        cvo.setGene2GeneProteinInteractionEvidence( evidenceText );
+
+    }
+
+    /**
+     * @param tfGeneAssociation
+     * @param cvo
+     */
+    private void addTfInteractionToValueObject( TfGeneAssociation tfGeneAssociation, CoexpressionValueObjectExt cvo ) {
+        if ( tfGeneAssociation == null ) return;
+
+        if ( tfGeneAssociation.getFirstGene().getId().equals( cvo.getQueryGene().getId() ) ) {
+            cvo.setQueryRegulatesFound( true );
+        } else if ( tfGeneAssociation.getFirstGene().getId().equals( cvo.getFoundGene().getId() ) ) {
+            cvo.setFoundRegulatesQuery( true );
+        } else {
+            throw new IllegalStateException();
         }
     }
 
@@ -732,6 +797,9 @@ public class GeneCoexpressionService {
             Map<Long, Gene2GeneProteinAssociation> proteinInteractionMap = this
                     .getGene2GeneProteinAssociationForQueryGene( queryGene );
 
+            Map<Long, TfGeneAssociation> regulatedBy = this.getTfGeneAssociationsforTargetGene( queryGene );
+            Map<Long, TfGeneAssociation> regulates = this.getTfGeneAssociationsforTf( queryGene );
+
             for ( Gene2GeneCoexpression g2g : g2gs ) {
                 Gene foundGene = g2g.getFirstGene().equals( queryGene ) ? g2g.getSecondGene() : g2g.getFirstGene();
 
@@ -759,7 +827,17 @@ public class GeneCoexpressionService {
                 // set the interaction if none null will be put
                 if ( proteinInteractionMap != null && !( proteinInteractionMap.isEmpty() ) ) {
                     Gene2GeneProteinAssociation assoication = proteinInteractionMap.get( foundGene.getId() );
-                    this.addProteinDetailsToValueObject( assoication, cvo );
+                    if ( assoication != null ) this.addProteinDetailsToValueObject( assoication, cvo );
+                }
+
+                if ( regulatedBy != null && !regulatedBy.isEmpty() ) {
+                    TfGeneAssociation tfGeneAssociation = regulatedBy.get( foundGene.getId() );
+                    if ( tfGeneAssociation != null ) this.addTfInteractionToValueObject( tfGeneAssociation, cvo );
+                }
+
+                if ( regulates != null && !regulates.isEmpty() ) {
+                    TfGeneAssociation tfGeneAssociation = regulates.get( foundGene.getId() );
+                    if ( tfGeneAssociation != null ) this.addTfInteractionToValueObject( tfGeneAssociation, cvo );
                 }
 
                 Collection<Long> testingDatasets = GeneLinkCoexpressionAnalyzer.getTestedExperimentIds( g2g,
@@ -1065,77 +1143,6 @@ public class GeneCoexpressionService {
     }
 
     /**
-     * For a given query gene retrieve it's protein protein interactions. Iterating through those interactions create a
-     * map keyed on the gene association that was retreived for that given gene. E.g. query gene 'AB' has interactions
-     * with 'BB' and 'CC' then create a map using the ids as keys from BB and CC. and the value using the String url for
-     * that interaction
-     * 
-     * @param gene The gene to find associations for
-     * @return Map of gene ids and their protein protein interactions
-     */
-    protected Map<Long, Gene2GeneProteinAssociation> getGene2GeneProteinAssociationForQueryGene( Gene gene ) {
-        Map<Long, Gene2GeneProteinAssociation> stringUrlsMappedByGeneID = new HashMap<Long, Gene2GeneProteinAssociation>();
-        Collection<Gene2GeneProteinAssociation> proteinInteractions = this.gene2GeneProteinAssociationService
-                .findProteinInteractionsForGene( gene );
-        // check if found any interactions
-        if ( proteinInteractions != null && !proteinInteractions.isEmpty() ) {
-
-            for ( Gene2GeneProteinAssociation proteinInteraction : proteinInteractions ) {              
-                gene2GeneProteinAssociationService.thaw( proteinInteraction );
-                if ( log.isDebugEnabled() ) {
-                    log.debug( "found interaction for gene " + proteinInteraction.getFirstGene() + " and "
-                            + proteinInteraction.getSecondGene() );
-                }
-
-                if ( proteinInteraction.getDatabaseEntry() != null
-                        && proteinInteraction.getSecondGene().getId() != null
-                        && proteinInteraction.getFirstGene().getId() != null ) {
-                    // can append extra details to link if required this formating code should be somewhere else?
-
-                    if ( proteinInteraction.getFirstGene().getId().equals( gene.getId() ) ) {
-                        stringUrlsMappedByGeneID.put( proteinInteraction.getSecondGene().getId(), proteinInteraction );
-                    } else {
-                        stringUrlsMappedByGeneID.put( proteinInteraction.getFirstGene().getId(), proteinInteraction );
-                    }
-                }
-            }
-        }
-        return stringUrlsMappedByGeneID;
-
-    }
-
-    /**
-     * Adds the protein protein interaction data to the value object, that is the url link for string the evidence for
-     * that interaction and the confidenence score.
-     * 
-     * @param proteinProteinInteraction Protein Protein interactin for the coexpression link
-     * @param cvo The value object used to display coexpression data
-     */
-    public void addProteinDetailsToValueObject( Gene2GeneProteinAssociation proteinProteinInteraction,
-            CoexpressionValueObjectExt cvo ) {
-
-        if ( proteinProteinInteraction != null ) {
-            ProteinLinkOutFormatter proteinFormatter = new ProteinLinkOutFormatter();
-            String proteinProteinIdUrl = proteinFormatter
-                    .getStringProteinProteinInteractionLinkGemmaDefault( proteinProteinInteraction.getDatabaseEntry() );
-
-            String evidenceText = proteinFormatter.getEvidenceDisplayText( proteinProteinInteraction
-                    .getEvidenceVector() );
-
-            String confidenceText = proteinFormatter.getConfidenceScoreAsPercentage( proteinProteinInteraction
-                    .getConfidenceScore() );
-
-            log.debug( "A coexpression link in GEMMA has a interaction in STRING " + proteinProteinIdUrl
-                    + " evidence of " + evidenceText );
-
-            cvo.setGene2GeneProteinAssociationStringUrl( proteinProteinIdUrl );
-            cvo.setGene2GeneProteinInteractionConfidenceScore( confidenceText );
-            cvo.setGene2GeneProteinInteractionEvidence( evidenceText );
-        }
-
-    }
-
-    /**
      * Remove data sets that are 'troubled' and sort the list.
      * 
      * @param datasets
@@ -1217,6 +1224,92 @@ public class GeneCoexpressionService {
             assert newSize < size;
             log.info( "Removed " + ( size - newSize ) + " experiments with 'trouble' flags, leaving " + newSize );
         }
+    }
+
+    /**
+     * For a given query gene retrieve it's protein protein interactions. Iterating through those interactions create a
+     * map keyed on the gene association that was retreived for that given gene. E.g. query gene 'AB' has interactions
+     * with 'BB' and 'CC' then create a map using the ids as keys from BB and CC. and the value using the String url for
+     * that interaction
+     * 
+     * @param gene The gene to find associations for
+     * @return Map of gene ids and their protein protein interactions
+     */
+    protected Map<Long, Gene2GeneProteinAssociation> getGene2GeneProteinAssociationForQueryGene( Gene gene ) {
+        Map<Long, Gene2GeneProteinAssociation> stringUrlsMappedByGeneID = new HashMap<Long, Gene2GeneProteinAssociation>();
+        Collection<Gene2GeneProteinAssociation> proteinInteractions = this.gene2GeneProteinAssociationService
+                .findProteinInteractionsForGene( gene );
+        // check if found any interactions
+        if ( proteinInteractions != null && !proteinInteractions.isEmpty() ) {
+
+            for ( Gene2GeneProteinAssociation proteinInteraction : proteinInteractions ) {
+                gene2GeneProteinAssociationService.thaw( proteinInteraction );
+                if ( log.isDebugEnabled() ) {
+                    log.debug( "found interaction for gene " + proteinInteraction.getFirstGene() + " and "
+                            + proteinInteraction.getSecondGene() );
+                }
+
+                if ( proteinInteraction.getDatabaseEntry() != null
+                        && proteinInteraction.getSecondGene().getId() != null
+                        && proteinInteraction.getFirstGene().getId() != null ) {
+                    // can append extra details to link if required this formating code should be somewhere else?
+
+                    if ( proteinInteraction.getFirstGene().getId().equals( gene.getId() ) ) {
+                        stringUrlsMappedByGeneID.put( proteinInteraction.getSecondGene().getId(), proteinInteraction );
+                    } else {
+                        stringUrlsMappedByGeneID.put( proteinInteraction.getFirstGene().getId(), proteinInteraction );
+                    }
+                }
+            }
+        }
+        return stringUrlsMappedByGeneID;
+
+    }
+
+    /**
+     * @param gene which is to be treated as a "target"
+     * @return map of the transcription factor to the interaction details
+     */
+    protected Map<Long, TfGeneAssociation> getTfGeneAssociationsforTargetGene( Gene gene ) {
+        Map<Long, TfGeneAssociation> associationsMappedByGeneId = new HashMap<Long, TfGeneAssociation>();
+        Collection<? extends TfGeneAssociation> interactions = this.tfGeneAssociationService.findByTargetGene( gene );
+
+        if ( interactions != null && !interactions.isEmpty() ) {
+
+            for ( TfGeneAssociation interaction : interactions ) {
+
+                if ( log.isDebugEnabled() ) {
+                    log.debug( "found interaction for gene " + interaction.getFirstGene() + " and "
+                            + interaction.getSecondGene() );
+                }
+
+                associationsMappedByGeneId.put( interaction.getFirstGene().getId(), interaction );
+
+            }
+        }
+        return associationsMappedByGeneId;
+
+    }
+
+    /**
+     * @param gene which is to be treated as a "transcription factor"
+     * @return map of the target genes to the interaction details.
+     */
+    protected Map<Long, TfGeneAssociation> getTfGeneAssociationsforTf( Gene gene ) {
+        Map<Long, TfGeneAssociation> associationsMappedByGeneId = new HashMap<Long, TfGeneAssociation>();
+        Collection<? extends TfGeneAssociation> interactions = this.tfGeneAssociationService.findByTf( gene );
+        if ( interactions != null && !interactions.isEmpty() ) {
+
+            for ( TfGeneAssociation interaction : interactions ) {
+
+                if ( log.isDebugEnabled() ) {
+                    log.debug( "found interaction for gene " + interaction.getFirstGene() + " and "
+                            + interaction.getSecondGene() );
+                }
+                associationsMappedByGeneId.put( interaction.getSecondGene().getId(), interaction );
+            }
+        }
+        return associationsMappedByGeneId;
     }
 
 }

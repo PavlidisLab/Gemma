@@ -32,216 +32,30 @@ import ubic.gemma.model.genome.gene.GeneValueObject;
  */
 public class CoexpressionValueObjectExt implements Comparable<CoexpressionValueObjectExt> {
 
-    private GeneValueObject queryGene;
-    private GeneValueObject foundGene;
-    private String sortKey;
-    private Integer supportKey;
-    private Integer posSupp;
-    private Integer negSupp;
-    private Integer nonSpecPosSupp;
-    private Integer nonSpecNegSupp;
-    private Integer numTestedIn;
-    private Integer goSim;
-    private Integer maxGoSim;
+    private Boolean containsMyData = false;
     private String datasetVector;
-    private Boolean containsMyData;
-    private Collection<Long> supportingExperiments;
+    private GeneValueObject foundGene;
+    private Boolean foundRegulatesQuery = false;
     private String gene2GeneProteinAssociationStringUrl;
     private String gene2GeneProteinInteractionConfidenceScore;
-
-    /**
-     * @return the gene2GeneProteinInteractionConfidenceScore
-     */
-    public String getGene2GeneProteinInteractionConfidenceScore() {
-        return gene2GeneProteinInteractionConfidenceScore;
-    }
-
-    /**
-     * @param gene2GeneProteinInteractionConfidenceScore the gene2GeneProteinInteractionConfidenceScore to set
-     */
-    public void setGene2GeneProteinInteractionConfidenceScore( String gene2GeneProteinInteractionConfidenceScore ) {
-        this.gene2GeneProteinInteractionConfidenceScore = gene2GeneProteinInteractionConfidenceScore;
-    }
-
-    /**
-     * @return the gene2GeneProteinInteractionEvidence
-     */
-    public String getGene2GeneProteinInteractionEvidence() {
-        return gene2GeneProteinInteractionEvidence;
-    }
-
-    /**
-     * @param gene2GeneProteinInteractionEvidence the gene2GeneProteinInteractionEvidence to set
-     */
-    public void setGene2GeneProteinInteractionEvidence( String gene2GeneProteinInteractionEvidence ) {
-        this.gene2GeneProteinInteractionEvidence = gene2GeneProteinInteractionEvidence;
-    }
-
     private String gene2GeneProteinInteractionEvidence;
+    private Integer goSim;
+    private Integer maxGoSim;
+    private Integer negSupp;
+    private Integer nonSpecNegSupp;
+    private Integer nonSpecPosSupp;
+    private Integer numTestedIn;
+    private Integer posSupp;
+    private GeneValueObject queryGene;
+    private Boolean queryRegulatesFound = false;
 
-    public GeneValueObject getQueryGene() {
-        return queryGene;
-    }
+    private String sortKey;
+    private Collection<Long> supportingExperiments;
 
-    public void setQueryGene( GeneValueObject queryGene ) {
-        this.queryGene = queryGene;
-    }
+    private Integer supportKey;
 
-    /**
-     * @return the coexpressed gene.
-     */
-    public GeneValueObject getFoundGene() {
-        return foundGene;
-    }
-
-    public void setFoundGene( GeneValueObject foundGene ) {
-        this.foundGene = foundGene;
-    }
-
-    public String getSortKey() {
-        return sortKey;
-    }
-
-    public void setSortKey() {
-        this.sortKey = String.format( "%06f%s", 1.0 / Math.abs( getSupportKey() ), getFoundGene().getOfficialSymbol() );
-    }
-
-    public Integer getSupportKey() {
-        return supportKey;
-    }
-
-    public void setSupportKey( Integer supportKey ) {
-        this.supportKey = supportKey;
-    }
-
-    public String getDatasetVector() {
-        return datasetVector;
-    }
-
-    public void setDatasetVector( String datasetVector ) {
-        this.datasetVector = datasetVector;
-    }
-
-    @Override
-    public String toString() {
-        StringBuilder buf = new StringBuilder();
-        if ( this.getPosSupp() > 0 ) {
-            buf.append( getSupportRow( getPosSupp(), "+" ) );
-        }
-        if ( getNegSupp() > 0 ) {
-            if ( buf.length() > 0 ) buf.append( "\n" );
-            buf.append( getSupportRow( getNegSupp(), "-" ) );
-        }
-        return buf.toString();
-    }
-
-    private String getSupportRow( Integer links, String sign ) {
-        String[] fields = new String[] { queryGene.getOfficialSymbol(), foundGene.getOfficialSymbol(),
-                links.toString(), sign };
-        return StringUtils.join( fields, "\t" );
-    }
-
-    public Integer getPosSupp() {
-        return posSupp;
-    }
-
-    public void setPosSupp( Integer posSupp ) {
-        this.posSupp = posSupp;
-    }
-
-    public Integer getNegSupp() {
-        return negSupp;
-    }
-
-    public void setNegSupp( Integer negSupp ) {
-        this.negSupp = negSupp;
-    }
-
-    public Integer getNonSpecPosSupp() {
-        return nonSpecPosSupp;
-    }
-
-    public void setNonSpecPosSupp( Integer nonSpecPosSupp ) {
-        this.nonSpecPosSupp = nonSpecPosSupp;
-    }
-
-    public Integer getNonSpecNegSupp() {
-        return nonSpecNegSupp;
-    }
-
-    public void setNonSpecNegSupp( Integer nonSpecNegSupp ) {
-        this.nonSpecNegSupp = nonSpecNegSupp;
-    }
-
-    public Integer getNumTestedIn() {
-        return numTestedIn;
-    }
-
-    public void setNumTestedIn( Integer numTestedIn ) {
-        this.numTestedIn = numTestedIn;
-    }
-
-    public Integer getGoSim() {
-        return goSim;
-    }
-
-    public void setGoSim( Integer goSim ) {
-        this.goSim = goSim;
-    }
-
-    public Integer getMaxGoSim() {
-        return maxGoSim;
-    }
-
-    public void setMaxGoSim( Integer maxGoSim ) {
-        this.maxGoSim = maxGoSim;
-    }
-
-    public void setSortKey( String sortKey ) {
-        this.sortKey = sortKey;
-    }
-
-    public Collection<Long> getSupportingExperiments() {
-        return supportingExperiments;
-    }
-
-    public void setSupportingExperiments( Collection<Long> supportingExperiments ) {
-        this.supportingExperiments = supportingExperiments;
-    }
-
-    public Boolean getContainsMyData() {
-        return containsMyData;
-    }
-
-    public void setContainsMyData( Boolean containsMyData ) {
-        this.containsMyData = containsMyData;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see java.lang.Object#hashCode()
-     */
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ( ( sortKey == null ) ? 0 : sortKey.hashCode() );
-        return result;
-    }
-
-    /**
-     * @return the gene2GeneProteinAssociationStringUrl
-     */
-    public String getGene2GeneProteinAssociationStringUrl() {
-        return gene2GeneProteinAssociationStringUrl;
-    }
-
-    /**
-     * @param gene2GeneProteinAssociationStringUrl the gene2GeneProteinAssociationStringUrl to set
-     */
-    public void setGene2GeneProteinAssociationStringUrl( String gene2GeneProteinAssociationStringUrl ) {
-        this.gene2GeneProteinAssociationStringUrl = gene2GeneProteinAssociationStringUrl;
+    public int compareTo( CoexpressionValueObjectExt arg0 ) {
+        return this.getSortKey().compareTo( arg0.getSortKey() );
     }
 
     /*
@@ -261,8 +75,213 @@ public class CoexpressionValueObjectExt implements Comparable<CoexpressionValueO
         return true;
     }
 
-    public int compareTo( CoexpressionValueObjectExt arg0 ) {
-        return this.getSortKey().compareTo( arg0.getSortKey() );
+    public Boolean getContainsMyData() {
+        return containsMyData;
+    }
+
+    public String getDatasetVector() {
+        return datasetVector;
+    }
+
+    /**
+     * @return the coexpressed gene.
+     */
+    public GeneValueObject getFoundGene() {
+        return foundGene;
+    }
+
+    public Boolean getFoundRegulatesQuery() {
+        return foundRegulatesQuery;
+    }
+
+    /**
+     * @return the gene2GeneProteinAssociationStringUrl
+     */
+    public String getGene2GeneProteinAssociationStringUrl() {
+        return gene2GeneProteinAssociationStringUrl;
+    }
+
+    /**
+     * @return the gene2GeneProteinInteractionConfidenceScore
+     */
+    public String getGene2GeneProteinInteractionConfidenceScore() {
+        return gene2GeneProteinInteractionConfidenceScore;
+    }
+
+    /**
+     * @return the gene2GeneProteinInteractionEvidence
+     */
+    public String getGene2GeneProteinInteractionEvidence() {
+        return gene2GeneProteinInteractionEvidence;
+    }
+
+    public Integer getGoSim() {
+        return goSim;
+    }
+
+    public Integer getMaxGoSim() {
+        return maxGoSim;
+    }
+
+    public Integer getNegSupp() {
+        return negSupp;
+    }
+
+    public Integer getNonSpecNegSupp() {
+        return nonSpecNegSupp;
+    }
+
+    public Integer getNonSpecPosSupp() {
+        return nonSpecPosSupp;
+    }
+
+    public Integer getNumTestedIn() {
+        return numTestedIn;
+    }
+
+    public Integer getPosSupp() {
+        return posSupp;
+    }
+
+    public GeneValueObject getQueryGene() {
+        return queryGene;
+    }
+
+    public Boolean getQueryRegulatesFound() {
+        return queryRegulatesFound;
+    }
+
+    public String getSortKey() {
+        return sortKey;
+    }
+
+    public Collection<Long> getSupportingExperiments() {
+        return supportingExperiments;
+    }
+
+    public Integer getSupportKey() {
+        return supportKey;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see java.lang.Object#hashCode()
+     */
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ( ( sortKey == null ) ? 0 : sortKey.hashCode() );
+        return result;
+    }
+
+    public void setContainsMyData( Boolean containsMyData ) {
+        this.containsMyData = containsMyData;
+    }
+
+    public void setDatasetVector( String datasetVector ) {
+        this.datasetVector = datasetVector;
+    }
+
+    public void setFoundGene( GeneValueObject foundGene ) {
+        this.foundGene = foundGene;
+    }
+
+    public void setFoundRegulatesQuery( Boolean foundRegulatesQuery ) {
+        this.foundRegulatesQuery = foundRegulatesQuery;
+    }
+
+    /**
+     * @param gene2GeneProteinAssociationStringUrl the gene2GeneProteinAssociationStringUrl to set
+     */
+    public void setGene2GeneProteinAssociationStringUrl( String gene2GeneProteinAssociationStringUrl ) {
+        this.gene2GeneProteinAssociationStringUrl = gene2GeneProteinAssociationStringUrl;
+    }
+
+    /**
+     * @param gene2GeneProteinInteractionConfidenceScore the gene2GeneProteinInteractionConfidenceScore to set
+     */
+    public void setGene2GeneProteinInteractionConfidenceScore( String gene2GeneProteinInteractionConfidenceScore ) {
+        this.gene2GeneProteinInteractionConfidenceScore = gene2GeneProteinInteractionConfidenceScore;
+    }
+
+    /**
+     * @param gene2GeneProteinInteractionEvidence the gene2GeneProteinInteractionEvidence to set
+     */
+    public void setGene2GeneProteinInteractionEvidence( String gene2GeneProteinInteractionEvidence ) {
+        this.gene2GeneProteinInteractionEvidence = gene2GeneProteinInteractionEvidence;
+    }
+
+    public void setGoSim( Integer goSim ) {
+        this.goSim = goSim;
+    }
+
+    public void setMaxGoSim( Integer maxGoSim ) {
+        this.maxGoSim = maxGoSim;
+    }
+
+    public void setNegSupp( Integer negSupp ) {
+        this.negSupp = negSupp;
+    }
+
+    public void setNonSpecNegSupp( Integer nonSpecNegSupp ) {
+        this.nonSpecNegSupp = nonSpecNegSupp;
+    }
+
+    public void setNonSpecPosSupp( Integer nonSpecPosSupp ) {
+        this.nonSpecPosSupp = nonSpecPosSupp;
+    }
+
+    public void setNumTestedIn( Integer numTestedIn ) {
+        this.numTestedIn = numTestedIn;
+    }
+
+    public void setPosSupp( Integer posSupp ) {
+        this.posSupp = posSupp;
+    }
+
+    public void setQueryGene( GeneValueObject queryGene ) {
+        this.queryGene = queryGene;
+    }
+
+    public void setQueryRegulatesFound( Boolean queryRegulatesFound ) {
+        this.queryRegulatesFound = queryRegulatesFound;
+    }
+
+    public void setSortKey() {
+        this.sortKey = String.format( "%06f%s", 1.0 / Math.abs( getSupportKey() ), getFoundGene().getOfficialSymbol() );
+    }
+
+    public void setSortKey( String sortKey ) {
+        this.sortKey = sortKey;
+    }
+
+    public void setSupportingExperiments( Collection<Long> supportingExperiments ) {
+        this.supportingExperiments = supportingExperiments;
+    }
+
+    public void setSupportKey( Integer supportKey ) {
+        this.supportKey = supportKey;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder buf = new StringBuilder();
+        if ( this.getPosSupp() > 0 ) {
+            buf.append( getSupportRow( getPosSupp(), "+" ) );
+        }
+        if ( getNegSupp() > 0 ) {
+            if ( buf.length() > 0 ) buf.append( "\n" );
+            buf.append( getSupportRow( getNegSupp(), "-" ) );
+        }
+        return buf.toString();
+    }
+
+    private String getSupportRow( Integer links, String sign ) {
+        String[] fields = new String[] { queryGene.getOfficialSymbol(), foundGene.getOfficialSymbol(),
+                links.toString(), sign };
+        return StringUtils.join( fields, "\t" );
     }
 
 }

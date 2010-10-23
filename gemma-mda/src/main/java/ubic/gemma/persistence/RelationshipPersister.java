@@ -36,6 +36,8 @@ import ubic.gemma.model.association.Gene2GOAssociation;
 import ubic.gemma.model.association.Gene2GOAssociationService;
 import ubic.gemma.model.association.Gene2GeneProteinAssociation;
 import ubic.gemma.model.association.Gene2GeneProteinAssociationService;
+import ubic.gemma.model.association.TfGeneAssociation;
+import ubic.gemma.model.association.TfGeneAssociationService;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 
 /**
@@ -57,6 +59,9 @@ public abstract class RelationshipPersister extends ExpressionPersister {
 
     @Autowired
     private GeneCoexpressionAnalysisService geneCoexpressionAnalysisService;
+
+    @Autowired
+    private TfGeneAssociationService tfGeneAssociationService;
 
     @Autowired
     private ExpressionExperimentSetService expressionExperimentSetService;
@@ -89,6 +94,8 @@ public abstract class RelationshipPersister extends ExpressionPersister {
             return persistExpressionExperimentSet( ( ExpressionExperimentSet ) entity );
         } else if ( entity instanceof Gene2GeneProteinAssociation ) {
             return persistGene2GeneProteinAssociation( ( Gene2GeneProteinAssociation ) entity );
+        } else if ( entity instanceof TfGeneAssociation ) {
+            return persistTfGeneAssociation( ( TfGeneAssociation ) entity );
         }
         return super.persist( entity );
 
@@ -178,6 +185,19 @@ public abstract class RelationshipPersister extends ExpressionPersister {
 
         association.setGene( persistGene( association.getGene() ) );
         return gene2GoAssociationService.findOrCreate( association );
+    }
+
+    private TfGeneAssociation persistTfGeneAssociation( TfGeneAssociation entity ) {
+        if ( entity == null ) return null;
+        if ( !isTransient( entity ) ) return entity;
+
+        if ( isTransient( entity.getFirstGene() ) || isTransient( entity.getSecondGene() ) ) {
+            throw new IllegalArgumentException(
+                    "Associations can only be made between genes that already exist in the system" );
+        }
+
+        return tfGeneAssociationService.create( entity );
+
     }
 
     /**
