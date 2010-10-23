@@ -19,16 +19,13 @@
 package ubic.gemma.ontology;
 
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 import java.util.Collection;
 
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.model.common.description.Characteristic;
-import ubic.gemma.ontology.OntologyService;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
@@ -58,27 +55,6 @@ public class OntologyServiceTest extends BaseSpringContextTest {
         }
         assertTrue( name.size() > 0 );
     }
-
-    /**
-     * Test for problem with birnlex, which returns 'organ' as a _subclass_ of 'liver'.
-     * 
-     * @throws Exception
-     */
-    @Test
-    public final void testFindTerm() throws Exception {
-        os.getBirnLexOntologyService().startInitializationThread( true );
-        while ( !os.getBirnLexOntologyService().isOntologyLoaded() ) {
-            Thread.sleep( 5000 );
-            log.info( "Waiting for Ontology to load" );
-        }
-        Collection<OntologyTerm> terms = os.findTerms( "liver" );
-        assertTrue( terms.size() > 0 );
-        //
-        for ( OntologyTerm term : terms ) {
-            if ( term.getLabel().contains( "Organ" ) ) {
-                fail( "Should get organ as a child of liver" );
-            }
-        }
-    }
+ 
 
 }
