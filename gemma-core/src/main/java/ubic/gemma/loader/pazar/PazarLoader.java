@@ -28,7 +28,7 @@ import ubic.gemma.model.association.PazarAssociation;
 import ubic.gemma.persistence.PersisterHelper;
 
 /**
- * TODO Document Me
+ * Load Pazar records from a text file
  * 
  * @author paul
  * @version $Id$
