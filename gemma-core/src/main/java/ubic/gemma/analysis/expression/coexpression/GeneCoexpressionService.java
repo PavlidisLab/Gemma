@@ -609,6 +609,7 @@ public class GeneCoexpressionService {
      * @return
      */
     private GeneCoexpressionAnalysis findEnabledCoexpressionAnalysis( Collection<Gene> queryGenes ) {
+
         GeneCoexpressionAnalysis gA = null;
         Gene g = queryGenes.iterator().next();
         // note: we assume they all come from one taxon.
@@ -791,6 +792,8 @@ public class GeneCoexpressionService {
             List<Long> relevantEEIdList = getRelevantEEidsForBitVector( positionToIDMap, g2gs );
             relevantEEIdList.retainAll( filteredEeIds );
 
+            GeneValueObject queryGeneValueObject = new GeneValueObject( queryGene );
+
             HashMap<Gene, Collection<Gene2GeneCoexpression>> foundGenes = new HashMap<Gene, Collection<Gene2GeneCoexpression>>();
 
             // for queryGene get the interactions
@@ -800,7 +803,17 @@ public class GeneCoexpressionService {
             Map<Long, TfGeneAssociation> regulatedBy = this.getTfGeneAssociationsforTargetGene( queryGene );
             Map<Long, TfGeneAssociation> regulates = this.getTfGeneAssociationsforTf( queryGene );
 
+            if ( timer.getTime() > 100 ) {
+                log.info( "Postprocess " + queryGene.getOfficialSymbol() + "Phase I: " + timer.getTime() + "ms" );
+            }
+            timer.stop();
+            timer.reset();
+            timer.start();
+
             for ( Gene2GeneCoexpression g2g : g2gs ) {
+                StopWatch timer2 = new StopWatch();
+                timer2.start();
+
                 Gene foundGene = g2g.getFirstGene().equals( queryGene ) ? g2g.getSecondGene() : g2g.getFirstGene();
 
                 // FIXME Symptom fix for duplicate found genes
@@ -819,26 +832,20 @@ public class GeneCoexpressionService {
 
                 CoexpressionValueObjectExt cvo = new CoexpressionValueObjectExt();
 
-                foundGene = geneService.thawLite( foundGene );
+                /*
+                 * This Thaw is a big time sink and _should not_ be necessary.
+                 */
+                // foundGene = geneService.thawLite( foundGene ); // db hit
 
-                cvo.setQueryGene( new GeneValueObject( queryGene ) );
+                cvo.setQueryGene( queryGeneValueObject );
                 cvo.setFoundGene( new GeneValueObject( foundGene ) );
 
-                // set the interaction if none null will be put
-                if ( proteinInteractionMap != null && !( proteinInteractionMap.isEmpty() ) ) {
-                    Gene2GeneProteinAssociation assoication = proteinInteractionMap.get( foundGene.getId() );
-                    if ( assoication != null ) this.addProteinDetailsToValueObject( assoication, cvo );
-                }
+                if ( timer2.getTime() > 10 ) log.info( "Coexp. Gene processing phase I:" + timer2.getTime() + "ms" );
+                timer2.stop();
+                timer2.reset();
+                timer2.start();
 
-                if ( regulatedBy != null && !regulatedBy.isEmpty() ) {
-                    TfGeneAssociation tfGeneAssociation = regulatedBy.get( foundGene.getId() );
-                    if ( tfGeneAssociation != null ) this.addTfInteractionToValueObject( tfGeneAssociation, cvo );
-                }
-
-                if ( regulates != null && !regulates.isEmpty() ) {
-                    TfGeneAssociation tfGeneAssociation = regulates.get( foundGene.getId() );
-                    if ( tfGeneAssociation != null ) this.addTfInteractionToValueObject( tfGeneAssociation, cvo );
-                }
+                populateInteractions( proteinInteractionMap, regulatedBy, regulates, foundGene, cvo );
 
                 Collection<Long> testingDatasets = GeneLinkCoexpressionAnalyzer.getTestedExperimentIds( g2g,
                         positionToIDMap );
@@ -851,6 +858,11 @@ public class GeneCoexpressionService {
                 Collection<Long> supportingDatasets = GeneLinkCoexpressionAnalyzer.getSupportingExperimentIds( g2g,
                         positionToIDMap );
 
+                if ( timer2.getTime() > 100 ) log.info( "Coexp. Gene processing phase II:" + timer2.getTime() + "ms" );
+                timer2.stop();
+                timer2.reset();
+                timer2.start();
+
                 // necessary in case any were filtered out.
                 supportingDatasets.retainAll( filteredEeIds );
 
@@ -859,6 +871,10 @@ public class GeneCoexpressionService {
                 Collection<Long> specificDatasets = GeneLinkCoexpressionAnalyzer.getSpecificExperimentIds( g2g,
                         positionToIDMap );
 
+                if ( timer2.getTime() > 10 ) log.info( "Coexp. Gene processing phase III:" + timer2.getTime() + "ms" );
+                timer2.stop();
+                timer2.reset();
+                timer2.start();
                 /*
                  * Specific probe EEids contains 1 even if the data set wasn't supporting.
                  */
@@ -924,7 +940,21 @@ public class GeneCoexpressionService {
                 allSupportingDatasets.addAll( supportingDatasets );
                 allDatasetsWithSpecificProbes.addAll( specificDatasets );
 
+                if ( timer2.getTime() > 100 )
+                    log.info( "Coexp. Gene processing phase IV (end):" + timer2.getTime() + "ms" );
+                timer2.stop();
+                timer2.reset();
+                timer2.start();
+
             }
+
+            if ( timer.getTime() > 1000 ) {
+                log.info( "Postprocess " + g2gs.size() + " results for " + queryGene.getOfficialSymbol() + "Phase II: "
+                        + timer.getTime() + "ms" );
+            }
+            timer.stop();
+            timer.reset();
+            timer.start();
 
             // This is only necessary for debugging purposes. Helps us keep track of duplicate genes found above.
             if ( log.isDebugEnabled() ) {
@@ -961,14 +991,40 @@ public class GeneCoexpressionService {
 
             timer.stop();
             if ( timer.getTime() > 1000 ) {
-                log.info( "Postprocess " + g2gs.size() + " results for " + queryGene.getOfficialSymbol() + ": "
-                        + timer.getTime() + "ms" );
+                log.info( "Postprocess " + g2gs.size() + " results for " + queryGene.getOfficialSymbol()
+                        + " PhaseIII: " + timer.getTime() + "ms" );
             }
             timer.reset();
         } // Over results.
 
         result.getKnownGeneResults().addAll( ecvos );
         return result;
+    }
+
+    private void populateInteractions( Map<Long, Gene2GeneProteinAssociation> proteinInteractionMap,
+            Map<Long, TfGeneAssociation> regulatedBy, Map<Long, TfGeneAssociation> regulates, Gene foundGene,
+            CoexpressionValueObjectExt cvo ) {
+
+        StopWatch timer = new StopWatch();
+        timer.start();
+
+        // set the interaction if none null will be put
+        if ( proteinInteractionMap != null && !( proteinInteractionMap.isEmpty() ) ) {
+            Gene2GeneProteinAssociation association = proteinInteractionMap.get( foundGene.getId() );
+            if ( association != null ) this.addProteinDetailsToValueObject( association, cvo );
+        }
+
+        if ( regulatedBy != null && !regulatedBy.isEmpty() ) {
+            TfGeneAssociation tfGeneAssociation = regulatedBy.get( foundGene.getId() );
+            if ( tfGeneAssociation != null ) this.addTfInteractionToValueObject( tfGeneAssociation, cvo );
+        }
+
+        if ( regulates != null && !regulates.isEmpty() ) {
+            TfGeneAssociation tfGeneAssociation = regulates.get( foundGene.getId() );
+            if ( tfGeneAssociation != null ) this.addTfInteractionToValueObject( tfGeneAssociation, cvo );
+        }
+        if ( timer.getTime() > 10 ) log.info( "Iteraction population:" + timer.getTime() + "ms" );
+
     }
 
     /**

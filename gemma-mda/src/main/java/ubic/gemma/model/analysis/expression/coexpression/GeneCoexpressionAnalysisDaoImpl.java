@@ -115,14 +115,13 @@ public class GeneCoexpressionAnalysisDaoImpl extends
         return results;
     }
 
-    @SuppressWarnings("unchecked")
-    @Override
     /*
      * * If a taxon is not a species check if it has child taxa and if so retrieve the expression experiments for the
      * child taxa
      */
+    @SuppressWarnings("unchecked")
+    @Override
     protected Collection<GeneCoexpressionAnalysis> handleFindByParentTaxon( Taxon taxon ) {
-
         final String queryStringParent = "select distinct goa from GeneCoexpressionAnalysisImpl as goa inner join goa.expressionExperimentSetAnalyzed"
                 + " as eesa inner join eesa.experiments as ee "
                 + "inner join ee.bioAssays as ba "
@@ -131,12 +130,15 @@ public class GeneCoexpressionAnalysisDaoImpl extends
 
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.analysis.AnalysisDaoBase#handleFindByTaxon(ubic.gemma.model.genome.Taxon)
+     */
+    @SuppressWarnings("unchecked")
     @Override
     protected Collection<GeneCoexpressionAnalysis> handleFindByTaxon( Taxon taxon ) {
-        final String queryString = "select distinct goa from GeneCoexpressionAnalysisImpl as goa inner join goa.expressionExperimentSetAnalyzed"
-                + " as eesa inner join eesa.experiments as ee "
-                + "inner join ee.bioAssays as ba "
-                + "inner join ba.samplesUsed as sample where sample.sourceTaxon = :taxon ";
+        final String queryString = "select goa from GeneCoexpressionAnalysisImpl as goa where goa.taxon = :taxon ";
         return this.getHibernateTemplate().findByNamedParam( queryString, "taxon", taxon );
     }
 
