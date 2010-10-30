@@ -21,7 +21,7 @@ package ubic.gemma.util;
 import java.io.File;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Date; 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -341,8 +341,8 @@ public abstract class AbstractCLI {
                 throw new RuntimeException( "Verbosity must be from 1 to 5" );
             }
         }
-        PatternLayout layout =  new PatternLayout("[Gemma %d] %p [%t] %C.%M(%L) | %m%n");
-        ConsoleAppender cnslAppndr = new ConsoleAppender(layout);
+        PatternLayout layout = new PatternLayout( "[Gemma %d] %p [%t] %C.%M(%L) | %m%n" );
+        ConsoleAppender cnslAppndr = new ConsoleAppender( layout );
         Logger f = LogManager.getRootLogger();
         assert f != null;
         f.addAppender( cnslAppndr );
@@ -676,6 +676,9 @@ public abstract class AbstractCLI {
     }
 
     /**
+     * Print out a summary of what the program did. Useful when analyzing lists of experiments etc. Use the
+     * 'successObjects' and 'errorObjects'
+     * 
      * @param errorObjects
      * @param successObjects
      */
