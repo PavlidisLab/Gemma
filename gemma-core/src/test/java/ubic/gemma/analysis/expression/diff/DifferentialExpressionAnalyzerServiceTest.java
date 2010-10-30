@@ -90,10 +90,9 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
             String path = getTestFileBasePath();
             geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
                     + "gds994Short" ) );
-            Collection<ExpressionExperiment> results = geoService.fetchAndLoad( "GSE1611", false, true, false, false,
-                    true );
+            Collection<?> results = geoService.fetchAndLoad( "GSE1611", false, true, false, false );
 
-            ee = results.iterator().next();
+            ee = ( ExpressionExperiment ) results.iterator().next();
             processedDataVectorService.createProcessedDataVectors( ee );
 
         }

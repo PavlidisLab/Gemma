@@ -67,7 +67,7 @@ public abstract class AbstractArrayDesignProcessingTest extends BaseSpringContex
 
             try {
                 final Collection<ArrayDesign> ads = ( Collection<ArrayDesign> ) geoService.fetchAndLoad( ACCESSION,
-                        true, true, false, false, true );
+                        true, true, false, false, true, true );
 
                 ad = ads.iterator().next();
 

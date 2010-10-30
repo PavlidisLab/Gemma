@@ -21,6 +21,7 @@ import java.util.Collection;
 import java.util.HashSet;
 
 import org.apache.commons.cli.OptionBuilder;
+import org.apache.commons.lang.StringUtils;
 
 import ubic.gemma.util.AbstractSpringAwareCLI;
 
@@ -55,7 +56,10 @@ public class GeoLoaderCli extends AbstractSpringAwareCLI {
         Collection<String> eeNames = new HashSet<String>();
         BufferedReader in = new BufferedReader( new FileReader( fileName ) );
         while ( in.ready() ) {
-            String eeName = in.readLine().trim();
+            String line = in.readLine().trim();
+            String[] toks = StringUtils.splitPreserveAllTokens( line, "\t" );
+            if ( toks.length == 0 ) continue;
+            String eeName = toks[0];
             if ( eeName.startsWith( "#" ) ) {
                 continue;
             }
@@ -73,7 +77,7 @@ public class GeoLoaderCli extends AbstractSpringAwareCLI {
         for ( String gse : ges ) {
             log.info( "***** Loading: " + gse + " ******" );
             try {
-                Collection<?> results = loader.fetchAndLoad( gse, false, false, true, true, false );
+                Collection<?> results = loader.fetchAndLoad( gse, false, false, true, true, false, false );
                 for ( Object object : results ) {
                     successObjects.add( ges + ": " + object );
                 }

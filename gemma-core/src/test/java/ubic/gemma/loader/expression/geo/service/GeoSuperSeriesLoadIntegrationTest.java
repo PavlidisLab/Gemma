@@ -48,8 +48,8 @@ public class GeoSuperSeriesLoadIntegrationTest extends AbstractGeoServiceTest {
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
                 + "GSE11897SuperSeriesShort" ) );
         try {
-            Collection<ExpressionExperiment> results = geoService
-                    .fetchAndLoad( "GSE11897", false, true, false, false, true );
+            Collection<ExpressionExperiment> results = geoService.fetchAndLoad( "GSE11897", false, true, false, false,
+                    true, false );
             assertEquals( 1, results.size() );
         } catch ( AlreadyExistsInSystemException e ) {
             // TODO Auto-generated catch block

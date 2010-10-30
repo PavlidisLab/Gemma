@@ -74,6 +74,19 @@ public class GeoDatasetService extends AbstractGeoService {
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.loader.expression.geo.service.AbstractGeoService#fetchAndLoad(java.lang.String, boolean, boolean,
+     * boolean, boolean)
+     */
+    @Override
+    public Collection<?> fetchAndLoad( String geoAccession, boolean loadPlatformOnly, boolean doSampleMatching,
+            boolean aggressiveQuantitationTypeRemoval, boolean splitIncompatiblePlatforms ) {
+        return this.fetchAndLoad( geoAccession, loadPlatformOnly, doSampleMatching, aggressiveQuantitationTypeRemoval,
+                splitIncompatiblePlatforms, true, true );
+    }
+
     /**
      * Given a GEO GSE or GDS (or GPL, but support might not be complete)
      * <ol>
@@ -89,7 +102,7 @@ public class GeoDatasetService extends AbstractGeoService {
     @Override
     public Collection fetchAndLoad( String geoAccession, boolean loadPlatformOnly, boolean doSampleMatching,
             boolean aggressiveQuantitationTypeRemoval, boolean splitIncompatiblePlatforms,
-            boolean allowSuperSeriesImport ) {
+            boolean allowSuperSeriesImport, boolean allowSubSeriesImport ) {
 
         /*
          * We do this to get a fresh instantiation of GeoConverter (prototype scope)
@@ -140,6 +153,16 @@ public class GeoDatasetService extends AbstractGeoService {
             } else {
                 throw new IllegalStateException(
                         "SuperSeries detected, set 'allowSuperSeriesImport' to 'true' to allow this dataset to load" );
+            }
+        }
+
+        if ( series.isSubSeries() ) {
+            if ( allowSubSeriesImport ) {
+                log.info( " ==================== Sub Detected! ==================" );
+                log.info( "Please make sure you want to import this as a subseries and not the superseries" );
+            } else {
+                throw new IllegalStateException(
+                        "SubSeries detected, set 'allowSubSeriesImport' to 'true' to allow this dataset to load" );
             }
         }
 

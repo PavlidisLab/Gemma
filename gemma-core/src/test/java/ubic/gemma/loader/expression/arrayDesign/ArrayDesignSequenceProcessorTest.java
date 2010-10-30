@@ -27,7 +27,7 @@ import java.io.File;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.HashSet;
- 
+
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,7 +42,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
-import ubic.gemma.model.genome.biosequence.BioSequenceService; 
+import ubic.gemma.model.genome.biosequence.BioSequenceService;
 import ubic.gemma.testing.BaseSpringContextTest;
 import ubic.gemma.util.ConfigUtils;
 
@@ -176,7 +176,7 @@ public class ArrayDesignSequenceProcessorTest extends BaseSpringContextTest {
                 + AbstractGeoServiceTest.GEO_TEST_DATA_ROOT ) );
 
         final Collection<ArrayDesign> ads = ( Collection<ArrayDesign> ) geoService.fetchAndLoad( "GPL226", true, true,
-                false, false, true );
+                false, false, true, true );
 
         result = ads.iterator().next();
         result = arrayDesignService.thaw( result );
@@ -203,7 +203,7 @@ public class ArrayDesignSequenceProcessorTest extends BaseSpringContextTest {
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path
                 + AbstractGeoServiceTest.GEO_TEST_DATA_ROOT ) );
         final Collection<ArrayDesign> ads = ( Collection<ArrayDesign> ) geoService.fetchAndLoad( "GPL226", true, true,
-                false, false, true );
+                false, false );
         result = ads.iterator().next();
 
         result = arrayDesignService.thaw( result );

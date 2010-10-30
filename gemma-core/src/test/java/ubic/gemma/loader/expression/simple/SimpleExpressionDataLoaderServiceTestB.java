@@ -43,11 +43,10 @@ public class SimpleExpressionDataLoaderServiceTestB extends AbstractGeoServiceTe
     ExpressionExperiment ee;
 
     @Before
-    public void setUp() throws Exception{
+    public void setUp() throws Exception {
         super.executeSqlScript( "/script/sql/add-fish-taxa.sql", false );
     }
-    
-    
+
     @After
     public void tearDown() {
         if ( ee != null ) {
@@ -66,12 +65,12 @@ public class SimpleExpressionDataLoaderServiceTestB extends AbstractGeoServiceTe
          * Have to add ssal for this platform.
          */
 
-        //Taxon salmon = taxonService.findByScientificName( "atlantic salmon" );
+        // Taxon salmon = taxonService.findByScientificName( "atlantic salmon" );
 
-      // if ( salmon == null ) {
-           
-           Taxon salmon = taxonService.findByCommonName( "atlantic salmon" );
-      //  }
+        // if ( salmon == null ) {
+
+        Taxon salmon = taxonService.findByCommonName( "atlantic salmon" );
+        // }
 
         assertNotNull( salmon );
 
@@ -80,7 +79,7 @@ public class SimpleExpressionDataLoaderServiceTestB extends AbstractGeoServiceTe
          */
         String path = getTestFileBasePath();
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT ) );
-        geoService.fetchAndLoad( "GPL2716", true, true, false, false, true );
+        geoService.fetchAndLoad( "GPL2716", true, true, false, false );
         ArrayDesign ad = arrayDesignService.findByShortName( "GPL2716" );
 
         assertNotNull( ad );
@@ -112,7 +111,7 @@ public class SimpleExpressionDataLoaderServiceTestB extends AbstractGeoServiceTe
         makeMetaData( salmon, ad, metaData );
 
         ExpressionExperiment a = simpleExpressionDataLoaderService.load( metaData, data );
-        
+
         // ugly, but try to clean up .
         eeService.delete( a );
 

@@ -79,7 +79,6 @@ public class DesignElementDataVectorServiceTest extends BaseSpringContextTest {
         dedv = RawExpressionDataVector.Factory.newInstance();
     }
 
-    @SuppressWarnings("unchecked")
     @Test
     public void testFindByQt() {
 
@@ -88,9 +87,8 @@ public class DesignElementDataVectorServiceTest extends BaseSpringContextTest {
             assert path != null;
             geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path
                     + AbstractGeoServiceTest.GEO_TEST_DATA_ROOT + "gse432Short" ) );
-            Collection<ExpressionExperiment> results = geoService.fetchAndLoad( "GSE432", false, true, false, false,
-                    false );
-            newee = results.iterator().next();
+            Collection<?> results = geoService.fetchAndLoad( "GSE432", false, true, false, false );
+            newee = ( ExpressionExperiment ) results.iterator().next();
 
         } catch ( AlreadyExistsInSystemException e ) {
             newee = ( ExpressionExperiment ) e.getData();

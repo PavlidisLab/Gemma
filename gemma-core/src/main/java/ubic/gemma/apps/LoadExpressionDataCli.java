@@ -52,6 +52,8 @@ import ubic.gemma.util.AbstractSpringAwareCLI;
 /**
  * Simple command line to load expression experiments, either singly or in batches defined on the command line or in a
  * file.
+ * <p>
+ * CAUTION: redundant with GeoLoaderCli.
  * 
  * @author pavlidis
  * @version $Id$
@@ -60,7 +62,7 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
 
     private enum Formats {
         AE, GEO
-    };
+    }
 
     /**
      * @param args
@@ -100,6 +102,7 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
 
     private boolean splitIncompatiblePlatforms = false;
     private boolean allowSuperSeriesLoad = true;
+    private boolean allowSubSeriesLoad = true;
     private boolean suppressPostProcessing = false;
 
     @Override
@@ -226,7 +229,7 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
                         processAEAccession( aeService, accession );
 
                     } else if ( platformOnly ) {
-                        Collection designs = geoService.fetchAndLoad( accession, true, true, false, false, true );
+                        Collection designs = geoService.fetchAndLoad( accession, true, true, false, false, true, true );
                         for ( Object object : designs ) {
                             assert object instanceof ArrayDesign;
                             successObjects.add( ( ( Describable ) object ).getName()
@@ -274,7 +277,8 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
             }
 
             Collection<ExpressionExperiment> ees = geoService.fetchAndLoad( accession, false, doMatching,
-                    this.aggressive, this.splitIncompatiblePlatforms, this.allowSuperSeriesLoad );
+                    this.aggressive, this.splitIncompatiblePlatforms, this.allowSuperSeriesLoad,
+                    this.allowSubSeriesLoad );
 
             if ( !suppressPostProcessing ) {
                 postProcess( ees );

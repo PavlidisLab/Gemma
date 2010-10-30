@@ -84,6 +84,7 @@ public class ExpressionExperimentLoadTaskImpl implements ExpressionExperimentLoa
         boolean aggressiveQtRemoval = jsEeLoadCommand.isAggressiveQtRemoval();
         boolean splitIncompatiblePlatforms = jsEeLoadCommand.isSplitIncompatiblePlatforms();
         boolean allowSuperSeriesLoad = jsEeLoadCommand.isAllowSuperSeriesLoad();
+        boolean allowSubSeriesLoad = true; // FIXME
 
         TaskResult result;
         if ( jsEeLoadCommand.isArrayExpress() ) {
@@ -99,8 +100,8 @@ public class ExpressionExperimentLoadTaskImpl implements ExpressionExperimentLoa
             }
             result = new TaskResult( command, minimalDataset );
         } else if ( loadPlatformOnly ) {
-            Collection<ArrayDesign> arrayDesigns = geoDatasetService.fetchAndLoad( accession, true, doSampleMatching,
-                    aggressiveQtRemoval, splitIncompatiblePlatforms, allowSuperSeriesLoad );
+            Collection<ArrayDesign> arrayDesigns = ( Collection<ArrayDesign> ) geoDatasetService.fetchAndLoad(
+                    accession, true, doSampleMatching, aggressiveQtRemoval, splitIncompatiblePlatforms );
             ArrayList<ArrayDesign> minimalDesigns = null;
             if ( arrayDesigns != null ) {
                 /* Don't send the full array designs to space. Instead, create a minimal result. */
@@ -117,7 +118,8 @@ public class ExpressionExperimentLoadTaskImpl implements ExpressionExperimentLoa
             result = new TaskResult( command, minimalDesigns );
         } else {
             Collection<ExpressionExperiment> datasets = geoDatasetService.fetchAndLoad( accession, loadPlatformOnly,
-                    doSampleMatching, aggressiveQtRemoval, splitIncompatiblePlatforms, allowSuperSeriesLoad );
+                    doSampleMatching, aggressiveQtRemoval, splitIncompatiblePlatforms, allowSuperSeriesLoad,
+                    allowSubSeriesLoad );
 
             log.info( "Loading done, starting postprocessing" );
             postProcess( datasets );

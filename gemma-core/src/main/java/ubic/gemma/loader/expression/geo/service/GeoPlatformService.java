@@ -48,7 +48,7 @@ public class GeoPlatformService extends AbstractGeoService {
     @SuppressWarnings("unchecked")
     @Override
     public Collection fetchAndLoad( String geoPlatformAccession, boolean loadPlatformOnly, boolean doSampleMatching,
-            boolean ignored, boolean alsoIgnored, boolean allowSuperSeriesImport ) {
+            boolean ignored, boolean alsoIgnored ) {
         if ( this.geoDomainObjectGenerator == null ) this.geoDomainObjectGenerator = new GeoDomainObjectGenerator();
         this.geoDomainObjectGenerator.setProcessPlatformsOnly( true );
 
@@ -61,6 +61,14 @@ public class GeoPlatformService extends AbstractGeoService {
                 .generate( geoPlatformAccession );
         Collection<Object> arrayDesigns = geoConverter.convert( platforms );
         return persisterHelper.persist( arrayDesigns );
+    }
+
+    @Override
+    public Collection<?> fetchAndLoad( String geoPlatformAccession, boolean loadPlatformOnly, boolean doSampleMatching,
+            boolean aggressiveQuantitationTypeRemoval, boolean splitIncompatiblePlatforms,
+            boolean allowSuperSeriesImport, boolean allowSubSeriesImport ) {
+        return this.fetchAndLoad( geoPlatformAccession, loadPlatformOnly, doSampleMatching,
+                aggressiveQuantitationTypeRemoval, splitIncompatiblePlatforms, true, true );
     }
 
 }

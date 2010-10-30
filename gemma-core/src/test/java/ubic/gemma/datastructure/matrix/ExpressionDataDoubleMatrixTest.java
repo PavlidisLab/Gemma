@@ -92,6 +92,7 @@ public class ExpressionDataDoubleMatrixTest extends BaseSpringContextTest {
 
     /*
      * (non-Javadoc)
+     * 
      * @see org.springframework.test.AbstractTransactionalSpringContextTests#onSetUpInTransaction()
      */
     @Before
@@ -294,7 +295,6 @@ public class ExpressionDataDoubleMatrixTest extends BaseSpringContextTest {
         assertEquals( expressionDataMatrix.columns(), 2 );
     }
 
-    @SuppressWarnings("unchecked")
     @Test
     public void testMatrixConversionGSE432() throws Exception {
 
@@ -303,9 +303,8 @@ public class ExpressionDataDoubleMatrixTest extends BaseSpringContextTest {
             assert path != null;
             geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path
                     + AbstractGeoServiceTest.GEO_TEST_DATA_ROOT + "gse432Short" ) );
-            Collection<ExpressionExperiment> results = geoService.fetchAndLoad( "GSE432", false, true, false, false,
-                    true );
-            newee = results.iterator().next();
+            Collection<?> results = geoService.fetchAndLoad( "GSE432", false, true, false, false );
+            newee = ( ExpressionExperiment ) results.iterator().next();
         } catch ( AlreadyExistsInSystemException e ) {
             newee = ( ExpressionExperiment ) e.getData();
         }

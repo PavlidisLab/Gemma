@@ -232,9 +232,11 @@ public class ExpressionExperimentLoadController extends AbstractTaskService {
             boolean aggressiveQtRemoval = expressionExperimentLoadCommand.isAggressiveQtRemoval();
             boolean splitIncompatiblePlatforms = expressionExperimentLoadCommand.isSplitByPlatform();
             boolean allowSuperSeriesLoad = expressionExperimentLoadCommand.isAllowSuperSeriesLoad();
+            boolean allowSubSeriesLoad = true; // FIXME
 
             Collection<ExpressionExperiment> result = geoDatasetService.fetchAndLoad( accession, false,
-                    doSampleMatching, aggressiveQtRemoval, splitIncompatiblePlatforms, allowSuperSeriesLoad );
+                    doSampleMatching, aggressiveQtRemoval, splitIncompatiblePlatforms, allowSuperSeriesLoad,
+                    allowSubSeriesLoad );
 
             if ( result == null ) {
                 throw new RuntimeException( "No results were returned (cancelled or failed)" );
@@ -287,8 +289,8 @@ public class ExpressionExperimentLoadController extends AbstractTaskService {
 
             boolean doSampleMatching = !expressionExperimentLoadCommand.isSuppressMatching();
             boolean aggressiveQtRemoval = expressionExperimentLoadCommand.isAggressiveQtRemoval();
-            Collection<ArrayDesign> arrayDesigns = geoDatasetService.fetchAndLoad( accession, true, doSampleMatching,
-                    aggressiveQtRemoval, false, true ); // last parameters are irrelevant.
+            Collection<ArrayDesign> arrayDesigns = ( Collection<ArrayDesign> ) geoDatasetService.fetchAndLoad(
+                    accession, true, doSampleMatching, aggressiveQtRemoval, false );
 
             return processArrayDesignResult( arrayDesigns );
         }

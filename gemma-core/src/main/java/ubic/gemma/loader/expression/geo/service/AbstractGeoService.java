@@ -55,12 +55,26 @@ public abstract class AbstractGeoService implements BeanFactoryAware {
      * @param doSampleMatching
      * @param aggressiveQuantitationTypeRemoval
      * @param splitIncompatiblePlatforms
-     * @param allowSuperSeriesImport
+     * @param allowSuperSeriesImport Allow loading if the Series is a SuperSeries
+     * @param allowSubSeriesImport Allow loading if the Series is a SubSeries
      * @return
      */
     public abstract Collection<?> fetchAndLoad( String geoAccession, boolean loadPlatformOnly,
             boolean doSampleMatching, boolean aggressiveQuantitationTypeRemoval, boolean splitIncompatiblePlatforms,
-            boolean allowSuperSeriesImport );
+            boolean allowSuperSeriesImport, boolean allowSubSeriesImport );
+
+    /**
+     * Load data, no restrictions on superseries or subseries
+     * 
+     * @param geoAccession
+     * @param loadPlatformOnly
+     * @param doSampleMatching
+     * @param aggressiveQuantitationTypeRemoval
+     * @param splitIncompatiblePlatforms
+     * @return
+     */
+    public abstract Collection<?> fetchAndLoad( String geoAccession, boolean loadPlatformOnly,
+            boolean doSampleMatching, boolean aggressiveQuantitationTypeRemoval, boolean splitIncompatiblePlatforms );
 
     /**
      * This is supplied to allow clients to check that the generator has been set correctly.
@@ -96,6 +110,7 @@ public abstract class AbstractGeoService implements BeanFactoryAware {
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * org.springframework.beans.factory.BeanFactoryAware#setBeanFactory(org.springframework.beans.factory.BeanFactory)
      * TODO a better way would be method injection.

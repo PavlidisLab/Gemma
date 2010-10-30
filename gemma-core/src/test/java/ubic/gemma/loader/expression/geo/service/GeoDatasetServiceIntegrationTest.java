@@ -34,7 +34,7 @@ import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
 import ubic.gemma.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
-import ubic.gemma.loader.util.AlreadyExistsInSystemException; 
+import ubic.gemma.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
@@ -75,8 +75,8 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
         String path = getTestFileBasePath();
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
                 + "gse1133Short" ) );
-        Collection<ExpressionExperiment> results = geoService.fetchAndLoad( "GSE1133", false, true, false, false, true );
-        ee = results.iterator().next(); // fixme, need to delete both.
+        Collection<?> results = geoService.fetchAndLoad( "GSE1133", false, true, false, false );
+        ee = ( ExpressionExperiment ) results.iterator().next(); // fixme, need to delete both.
         eeService.thawLite( ee );
 
         /*
@@ -105,9 +105,8 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
         try {
             geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path
                     + AbstractGeoServiceTest.GEO_TEST_DATA_ROOT ) );
-            Collection<ExpressionExperiment> results = geoService.fetchAndLoad( "GSE13657", false, true, false, false,
-                    true );
-            ee = results.iterator().next();
+            Collection<?> results = geoService.fetchAndLoad( "GSE13657", false, true, false, false );
+            ee = ( ExpressionExperiment ) results.iterator().next();
         } catch ( AlreadyExistsInSystemException e ) {
             log.info( "Test skipped because GSE13657 was already loaded - clean the DB before running the test" );
             return;
@@ -129,9 +128,8 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
         try {
             geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path
                     + AbstractGeoServiceTest.GEO_TEST_DATA_ROOT + "GSE5949short" ) );
-            Collection<ExpressionExperiment> results = geoService.fetchAndLoad( "GSE5949", false, true, false, false,
-                    true );
-            ee = results.iterator().next();
+            Collection<?> results = geoService.fetchAndLoad( "GSE5949", false, true, false, false );
+            ee = ( ExpressionExperiment ) results.iterator().next();
         } catch ( AlreadyExistsInSystemException e ) {
             log.info( "Test skipped because GSE5949 was already loaded - clean the DB before running the test" );
             return;
@@ -159,9 +157,8 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
          */
         ExpressionExperiment newee;
         try {
-            Collection<ExpressionExperiment> results = geoService.fetchAndLoad( "GDS472", false, true, false, false,
-                    true );
-            newee = results.iterator().next();
+            Collection<?> results = geoService.fetchAndLoad( "GDS472", false, true, false, false );
+            newee = ( ExpressionExperiment ) results.iterator().next();
 
         } catch ( AlreadyExistsInSystemException e ) {
             log.info( "Skipping test, data already exists in db" );
@@ -207,7 +204,7 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
      */
     void fetchASeries( String accession ) throws Exception {
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
-        geoService.fetchAndLoad( accession, false, false, false, false, true );
+        geoService.fetchAndLoad( accession, false, false, false, false );
     }
 
     /**

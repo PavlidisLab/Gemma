@@ -118,10 +118,10 @@ public class ExperimentalDesignImporterTestC extends AbstractGeoServiceTest {
 
         Taxon salmon = taxonService.findByScientificName( "atlantic salmon" );
 
-      //  if ( salmon == null ) {
-            super.executeSqlScript( "/script/sql/add-fish-taxa.sql", false );
-            salmon = taxonService.findByCommonName( "atlantic salmon" );
-      //  }
+        // if ( salmon == null ) {
+        super.executeSqlScript( "/script/sql/add-fish-taxa.sql", false );
+        salmon = taxonService.findByCommonName( "atlantic salmon" );
+        // }
 
         assertNotNull( salmon );
 
@@ -131,7 +131,7 @@ public class ExperimentalDesignImporterTestC extends AbstractGeoServiceTest {
         String path = getTestFileBasePath();
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
                 + "designLoadTests" ) );
-        geoService.fetchAndLoad( "GPL2899", true, true, false, false, true );
+        geoService.fetchAndLoad( "GPL2899", true, true, false, false );
         ArrayDesign ad = arrayDesignService.findByShortName( "GPL2899" );
 
         assertNotNull( ad );

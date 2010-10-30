@@ -113,8 +113,7 @@ public class ProcessedExpressionDataVectorServiceTest extends BaseSpringContextT
         try {
             geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path
                     + AbstractGeoServiceTest.GEO_TEST_DATA_ROOT + "gse432Short" ) );
-            Collection<ExpressionExperiment> results = geoService.fetchAndLoad( "GSE432", false, true, false, false,
-                    false );
+            Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad( "GSE432", false, true, false, false );
             newee = results.iterator().next();
 
             TwoChannelMissingValues tcmv = ( TwoChannelMissingValues ) this.getBean( "twoChannelMissingValues" );
