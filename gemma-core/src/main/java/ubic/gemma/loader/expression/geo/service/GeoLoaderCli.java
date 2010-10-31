@@ -23,6 +23,17 @@ import java.util.HashSet;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang.StringUtils;
 
+import ubic.gemma.analysis.preprocess.ProcessedExpressionDataVectorCreateService;
+import ubic.gemma.analysis.preprocess.TwoChannelMissingValues;
+import ubic.gemma.analysis.preprocess.filter.FilterConfig;
+import ubic.gemma.analysis.service.ExpressionDataMatrixService;
+import ubic.gemma.analysis.stats.ExpressionDataSampleCorrelation;
+import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.TechnologyType;
+import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.util.AbstractSpringAwareCLI;
 
 /**
@@ -34,6 +45,10 @@ import ubic.gemma.util.AbstractSpringAwareCLI;
 public class GeoLoaderCli extends AbstractSpringAwareCLI {
 
     private Collection<String> ges;
+    protected ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService;
+    protected ExpressionDataMatrixService expressionDataMatrixService;
+    private TwoChannelMissingValues tcmv;
+    protected ExpressionExperimentService eeService;
 
     @SuppressWarnings("static-access")
     @Override
@@ -78,18 +93,65 @@ public class GeoLoaderCli extends AbstractSpringAwareCLI {
             log.info( "***** Loading: " + gse + " ******" );
             try {
                 Collection<?> results = loader.fetchAndLoad( gse, false, false, true, true, false, false );
+                postProcess( ( Collection<ExpressionExperiment> ) results );
+
                 for ( Object object : results ) {
-                    successObjects.add( ges + ": " + object );
+                    successObjects.add( gse + ": " + object );
                 }
             } catch ( Exception e ) {
                 log.error( e, e );
-                this.errorObjects.add( ges );
+                this.errorObjects.add( gse + ": " + e.getMessage() );
             }
         }
 
         super.summarizeProcessing();
 
         return null;
+    }
+
+    /**
+     * @param ee
+     * @return
+     */
+    private boolean processForMissingValues( ExpressionExperiment ee, ArrayDesign design ) {
+
+        boolean wasProcessed = false;
+
+        TechnologyType tt = design.getTechnologyType();
+        if ( tt == TechnologyType.TWOCOLOR || tt == TechnologyType.DUALMODE ) {
+            log.info( ee + " uses a two-color array design, processing for missing values ..." );
+            eeService.thawLite( ee );
+            tcmv.computeMissingValues( ee );
+            wasProcessed = true;
+        }
+
+        return wasProcessed;
+    }
+
+    /**
+     * Do missing value and processed vector creation steps.
+     * 
+     * @param ees
+     */
+    private void postProcess( Collection<ExpressionExperiment> ees ) {
+        log.info( "Postprocessing ..." );
+        for ( ExpressionExperiment ee : ees ) {
+
+            Collection<ArrayDesign> arrayDesignsUsed = eeService.getArrayDesignsUsed( ee );
+            if ( arrayDesignsUsed.size() > 1 ) {
+                log.warn( "Skipping postprocessing because experiment uses "
+                        + "multiple array types. Please check valid entry and run postprocessing separately." );
+            }
+
+            ArrayDesign arrayDesignUsed = arrayDesignsUsed.iterator().next();
+            processForMissingValues( ee, arrayDesignUsed );
+            Collection<ProcessedExpressionDataVector> dataVectors = processedExpressionDataVectorCreateService
+                    .computeProcessedExpressionData( ee );
+
+            ExpressionDataDoubleMatrix datamatrix = expressionDataMatrixService.getFilteredMatrix( ee,
+                    new FilterConfig(), dataVectors );
+            ExpressionDataSampleCorrelation.process( datamatrix, ee );
+        }
     }
 
     @Override
@@ -108,7 +170,10 @@ public class GeoLoaderCli extends AbstractSpringAwareCLI {
         } else {
             throw new IllegalArgumentException( "You must specify data sets" );
         }
-
+        this.eeService = ( ExpressionExperimentService ) getBean( "expressionExperimentService" );
+        this.processedExpressionDataVectorCreateService = ( ProcessedExpressionDataVectorCreateService ) getBean( "processedExpressionDataVectorCreateService" );
+        this.tcmv = ( TwoChannelMissingValues ) this.getBean( "twoChannelMissingValues" );
+        this.expressionDataMatrixService = ( ExpressionDataMatrixService ) getBean( "expressionDataMatrixService" );
     }
 
     /**
