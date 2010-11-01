@@ -105,7 +105,7 @@ public class GeoLoaderCli extends AbstractSpringAwareCLI {
                     results = new HashSet<ExpressionExperiment>();
                     ExpressionExperiment existingEE = eeService.findByShortName( gse );
                     if ( existingEE == null ) {
-                        return new IllegalArgumentException( "No such experiment in system available: " + gse );
+                        throw new IllegalArgumentException( "No such experiment in system available: " + gse );
                     }
 
                     results.add( existingEE );
