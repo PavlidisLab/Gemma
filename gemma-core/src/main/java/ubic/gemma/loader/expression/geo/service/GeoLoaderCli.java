@@ -59,7 +59,7 @@ public class GeoLoaderCli extends AbstractSpringAwareCLI {
                 .create( "f" ) );
 
         this.addOption( OptionBuilder.withDescription( "Postprocess only - for data already in system" ).create(
-                "postproceesonly" ) );
+                "postprocessonly" ) );
 
         super.requireLogin();
 
@@ -88,7 +88,9 @@ public class GeoLoaderCli extends AbstractSpringAwareCLI {
 
     @Override
     protected Exception doWork( String[] args ) {
-        super.processCommandLine( "geo loader", args );
+        Exception err = super.processCommandLine( "geo loader", args );
+
+        if ( err != null ) return err;
 
         GeoDatasetService loader = ( GeoDatasetService ) this.getBean( "geoDatasetService" );
 
