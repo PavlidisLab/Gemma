@@ -59,7 +59,7 @@ public class GeoLoaderCli extends AbstractSpringAwareCLI {
                 .create( "f" ) );
 
         this.addOption( OptionBuilder.withDescription( "Postprocess only - for data already in system" ).create(
-                "postprocees-only" ) );
+                "postproceesonly" ) );
 
         super.requireLogin();
 
