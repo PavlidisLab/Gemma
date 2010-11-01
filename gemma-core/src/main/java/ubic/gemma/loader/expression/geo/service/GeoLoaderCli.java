@@ -97,7 +97,7 @@ public class GeoLoaderCli extends AbstractSpringAwareCLI {
             try {
 
                 Collection<ExpressionExperiment> results;
-                if ( !this.hasOption( "postprocess-only" ) ) {
+                if ( !this.hasOption( "postprocessonly" ) ) {
                     results = loader.fetchAndLoad( gse, false, false, true, true, false, false );
                 } else {
                     results = new HashSet<ExpressionExperiment>();
