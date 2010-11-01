@@ -58,6 +58,9 @@ public class GeoLoaderCli extends AbstractSpringAwareCLI {
         this.addOption( OptionBuilder.hasArg().withArgName( "file name" ).withDescription( "File with list of GSE ids" )
                 .create( "f" ) );
 
+        this.addOption( OptionBuilder.withDescription( "Postprocess only - for data already in system" ).create(
+                "postprocees-only" ) );
+
         super.requireLogin();
 
     }
@@ -92,8 +95,20 @@ public class GeoLoaderCli extends AbstractSpringAwareCLI {
         for ( String gse : ges ) {
             log.info( "***** Loading: " + gse + " ******" );
             try {
-                Collection<?> results = loader.fetchAndLoad( gse, false, false, true, true, false, false );
-                postProcess( ( Collection<ExpressionExperiment> ) results );
+
+                Collection<ExpressionExperiment> results;
+                if ( !this.hasOption( "postprocess-only" ) ) {
+                    results = loader.fetchAndLoad( gse, false, false, true, true, false, false );
+                } else {
+                    results = new HashSet<ExpressionExperiment>();
+                    ExpressionExperiment existingEE = eeService.findByShortName( gse );
+                    if ( existingEE == null ) {
+                        return new IllegalArgumentException( "No such experiment in system available: " + gse );
+                    }
+
+                    results.add( existingEE );
+                }
+                postProcess( results );
 
                 for ( Object object : results ) {
                     successObjects.add( gse + ": " + object );
