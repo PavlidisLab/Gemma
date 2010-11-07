@@ -30,6 +30,7 @@ import ubic.gemma.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.analysis.service.ExpressionDataMatrixService;
 import ubic.gemma.analysis.stats.ExpressionDataSampleCorrelation;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
+import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
@@ -99,6 +100,9 @@ public class GeoLoaderCli extends AbstractSpringAwareCLI {
         for ( String gse : ges ) {
             log.info( "***** Loading: " + gse + " ******" );
             try {
+                
+                // Reset.
+                loader.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
 
                 Collection<ExpressionExperiment> results;
                 if ( !this.hasOption( "postprocessonly" ) ) {
