@@ -26,6 +26,7 @@ import org.apache.commons.lang.StringUtils;
 import ubic.gemma.analysis.preprocess.ProcessedExpressionDataVectorCreateService;
 import ubic.gemma.analysis.preprocess.TwoChannelMissingValues;
 import ubic.gemma.analysis.preprocess.filter.FilterConfig;
+import ubic.gemma.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.analysis.service.ExpressionDataMatrixService;
 import ubic.gemma.analysis.stats.ExpressionDataSampleCorrelation;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
@@ -49,6 +50,7 @@ public class GeoLoaderCli extends AbstractSpringAwareCLI {
     protected ExpressionDataMatrixService expressionDataMatrixService;
     private TwoChannelMissingValues tcmv;
     protected ExpressionExperimentService eeService;
+    private ExpressionExperimentReportService expressionExperimentReportService;
 
     @SuppressWarnings("static-access")
     @Override
@@ -168,6 +170,9 @@ public class GeoLoaderCli extends AbstractSpringAwareCLI {
             ExpressionDataDoubleMatrix datamatrix = expressionDataMatrixService.getFilteredMatrix( ee,
                     new FilterConfig(), dataVectors );
             ExpressionDataSampleCorrelation.process( datamatrix, ee );
+
+            this.expressionExperimentReportService.generateSummaryObject( ee.getId() );
+
         }
     }
 
@@ -191,6 +196,7 @@ public class GeoLoaderCli extends AbstractSpringAwareCLI {
         this.processedExpressionDataVectorCreateService = ( ProcessedExpressionDataVectorCreateService ) getBean( "processedExpressionDataVectorCreateService" );
         this.tcmv = ( TwoChannelMissingValues ) this.getBean( "twoChannelMissingValues" );
         this.expressionDataMatrixService = ( ExpressionDataMatrixService ) getBean( "expressionDataMatrixService" );
+        expressionExperimentReportService = ( ExpressionExperimentReportService ) getBean( "expressionExperimentReportService" );
     }
 
     /**
