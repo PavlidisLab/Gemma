@@ -1516,6 +1516,16 @@ public class GeoFamilyParser implements Parser<Object> {
             seriesAddTo( currentSeriesAccession, "pubmedIds", value );
         } else if ( startsWithIgnoreCase( line, "!Series_overall_design" ) ) {
             // FIXME add support for this description.
+        } else if ( startsWithIgnoreCase( line, "!Series_relation" ) ) {
+
+            if ( value.toLowerCase().startsWith( "superseries" ) ) {
+                log.info( " ** SuperSeries detected **" );
+                seriesSet( currentSeriesAccession, "isSuperSeries", true );
+            } else if ( value.toLowerCase().startsWith( "subseries" ) ) {
+                log.info( " ** Subseries detected **" );
+                seriesSet( currentSeriesAccession, "isSubSeries", true );
+            }
+
         } else if ( startsWithIgnoreCase( line, "!Series_summary" ) ) {
 
             if ( value.toLowerCase().startsWith( "this superseries" ) ) {
