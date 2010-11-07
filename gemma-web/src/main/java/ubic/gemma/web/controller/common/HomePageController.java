@@ -18,9 +18,11 @@
  */
 package ubic.gemma.web.controller.common;
 
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.TreeMap;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -33,7 +35,6 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.bioAssay.BioAssayService;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.util.monitor.Monitored;
 
 /**
  * Responsible for display of the Gemma home page.
@@ -92,7 +93,17 @@ public class HomePageController {
         long bioAssayCount = bioAssayService.countAll();
         long arrayDesignCount = arrayDesignService.countAll();
 
-        Map<Taxon, Long> eesPerTaxon = expressionExperimentService.getPerTaxonCount();
+        /*
+         * Sort taxa by name.
+         */
+        TreeMap<Taxon, Long> eesPerTaxon = new TreeMap<Taxon, Long>( new Comparator<Taxon>() {
+            @Override
+            public int compare( Taxon o1, Taxon o2 ) {
+                return o1.getScientificName().compareTo( o2.getScientificName() );
+            }
+        } );
+        eesPerTaxon.putAll( expressionExperimentService.getPerTaxonCount() );
+
         long expressionExperimentCount = 0;
         long otherTaxaEECount = 0;
         for ( Iterator<Taxon> it = eesPerTaxon.keySet().iterator(); it.hasNext(); ) {
@@ -100,6 +111,7 @@ public class HomePageController {
             Long c = eesPerTaxon.get( t );
             // TODO problem with this is we want to make a link to them.
             if ( c < 10 ) {
+                // temporary, hide 'uncommon' taxa from this table. See bug 2052
                 otherTaxaEECount += c;
                 it.remove();
             }
@@ -122,5 +134,4 @@ public class HomePageController {
         }
 
     }
-
 }
