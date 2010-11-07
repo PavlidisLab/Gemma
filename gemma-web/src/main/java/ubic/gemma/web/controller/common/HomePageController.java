@@ -101,7 +101,7 @@ public class HomePageController {
             // TODO problem with this is we want to make a link to them.
             if ( c < 10 ) {
                 otherTaxaEECount += c;
-                // it.remove();
+                it.remove();
             }
             expressionExperimentCount += c;
         }
