@@ -190,24 +190,26 @@ public class ProbeMapperTest extends TestCase {
         try {
             mousegp = new GoldenPathSequenceAnalysis( 3306, ConfigUtils.getString( "gemma.goldenpath.db.mouse" ),
                     databaseHost, databaseUser, databasePassword );
-        } catch ( java.sql.SQLException e ) {
+        } catch ( Exception e ) {
             if ( e.getMessage().contains( "Unknown database" ) ) {
                 hasMousegp = false;
             } else if ( e.getMessage().contains( "Access denied" ) ) {
                 hasMousegp = false;
+            } else {
+                throw e;
             }
-            throw e;
         }
         try {
             humangp = new GoldenPathSequenceAnalysis( 3306, ConfigUtils.getString( "gemma.goldenpath.db.human" ),
                     databaseHost, databaseUser, databasePassword );
-        } catch ( java.sql.SQLException e ) {
+        } catch ( Exception e ) {
             if ( e.getMessage().contains( "Unknown database" ) ) {
                 hasHumangp = false;
             } else if ( e.getMessage().contains( "Access denied" ) ) {
                 hasHumangp = false;
+            } else {
+                throw e;
             }
-            throw e;
         }
     }
 
