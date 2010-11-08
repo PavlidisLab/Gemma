@@ -85,6 +85,8 @@ public class AnnotateExperimentCLI extends ExpressionExperimentManipulatingCLI {
         expressionExperimentAnnotator = ( ExpressionExperimentAnnotator ) this
                 .getBean( "expressionExperimentAnnotator" );
 
+        expressionExperimentAnnotator.init();
+        
         while ( !ExpressionExperimentAnnotator.ready() || !PredictedCharacteristicFactory.ready() ) {
             try {
                 Thread.sleep( 1000 );
