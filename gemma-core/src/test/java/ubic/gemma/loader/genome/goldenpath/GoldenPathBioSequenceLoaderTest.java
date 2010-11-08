@@ -59,14 +59,25 @@ public class GoldenPathBioSequenceLoaderTest extends BaseSpringContextTest {
 
         GoldenPathBioSequenceLoader gp = new GoldenPathBioSequenceLoader( taxon );
 
-        GoldenPathDumper dumper = new GoldenPathDumper( taxon );
+        try {
+            GoldenPathDumper dumper = new GoldenPathDumper( taxon );
 
-        gp.setExternalDatabaseService( externalDatabaseService );
-        gp.setBioSequenceService( bioSequenceService );
+            gp.setExternalDatabaseService( externalDatabaseService );
+            gp.setBioSequenceService( bioSequenceService );
 
-        gp.setLimit( 20 );
-        gp.load( dumper );
-
+            gp.setLimit( 20 );
+            gp.load( dumper );
+        } catch ( Exception e ) {
+            if ( e.getMessage().contains( "Unknown database" ) ) {
+                log.info( "Part of test skipped: " + e.getMessage() );
+                return;
+            } else if ( e.getMessage().contains( "Access denied" ) ) {
+                log.info( "Part of test skipped: " + e.getMessage() );
+                return;
+            } else {
+                throw e;
+            }
+        }
     }
 
 }
