@@ -109,7 +109,7 @@ public class IndexerTaskCommand extends TaskCommand {
         setIndexBibRef( all );
         setIndexBioSequence( false );
         setIndexEE( all );
-        setIndexGene( all );
+        setIndexGene( false );
         setIndexProbe( false );
         this.setIndexExperimentSet( all );
         this.setIndexGeneSet( all );
