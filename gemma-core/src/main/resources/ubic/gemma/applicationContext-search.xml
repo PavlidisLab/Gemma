@@ -106,8 +106,14 @@
 				</property>
 			</bean>
 		</property>
+		<property name="parallelIndexExecutor">
+			<bean class="org.compass.gps.device.support.parallel.ConcurrentParallelIndexExecutor">		
+				<constructor-arg type="int" value="2"/>
+			</bean>	
+		</property>
+				
 		<property name="fetchCount">
-			<value>50</value>
+			<value>200</value>
 		</property>
 		<property name="mirrorDataChanges">
 			<!-- This is critical. If true, then objects are indexed as they are persisted, which is not working for us -->
