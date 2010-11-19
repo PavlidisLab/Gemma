@@ -170,7 +170,7 @@ public class TableMaintenanceUtilImpl implements TableMaintenenceUtil {
         log.info( "Updating Gene2Cs ..." );
         Session session = this.sessionFactory.getCurrentSession();
         log.info( "Deleting all entries for Gene2Cs." );
-        String queryString = "TRUNCATE TABLE GENE2CS";
+        String queryString = "DELETE FROM GENE2CS"; // Truncate doesn't work., bug 2057
         org.hibernate.SQLQuery queryObject;
 
         queryObject = session.createSQLQuery( queryString ); // for native query.
