@@ -685,6 +685,15 @@
 
 	<cache name="ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisImpl"
 		maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
+		
+	<cache name="ubic.gemma.model.analysis.ContrastResultImpl"
+		maxElementsInMemory="50000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
+		
+	<cache name="ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultImpl.contrasts"
+		maxElementsInMemory="50000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
+		
+	<cache name="ubic.gemma.model.association.PazarAssociationImpl"
+		maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
 	<cache name="ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultImpl"
 		maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
