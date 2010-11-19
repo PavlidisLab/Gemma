@@ -78,7 +78,7 @@
 	</s:authentication-manager>
 
 
-	<bean id="runasManager" class="org.springframework.security.access.intercept.RunAsManagerImpl">
+	<bean id="runAsManager" class="org.springframework.security.access.intercept.RunAsManagerImpl">
 		<property name="rolePrefix" value="GROUP_" />
 		<property name="key" value="${gemma.runas.password}" />
 	</bean>
@@ -104,7 +104,7 @@
 
 	<!--- global method security configuration -->
 
-	<s:global-method-security run-as-manager-ref="runasManager" secured-annotations="enabled"
+	<s:global-method-security run-as-manager-ref="runAsManager" secured-annotations="enabled"
 		pre-post-annotations="enabled" access-decision-manager-ref="accessDecisionManager">
 		<s:expression-handler ref="securityExpressionHandler" />
 
