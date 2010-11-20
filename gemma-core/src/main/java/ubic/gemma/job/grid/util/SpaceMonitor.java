@@ -151,6 +151,7 @@ public class SpaceMonitor extends AbstractTaskService {
                 this.lastStatusWasOK = false;
                 numberOfBadPings++;
                 numberOfPings++;
+                log.warn( taskId + " got " + e.getMessage() );
                 return false;
             } catch ( ConflictingTaskException e ) {
                 this.lastStatusMessage = e.getMessage() + " -- attempting to cancel the old task";
@@ -158,6 +159,7 @@ public class SpaceMonitor extends AbstractTaskService {
                 taskRunningService.cancelTask( e.getCollidingCommand().getTaskId() );
                 numberOfBadPings++;
                 numberOfPings++;
+                log.warn( taskId + " got " + e.getMessage() );
                 return false;
             }
 
@@ -176,11 +178,13 @@ public class SpaceMonitor extends AbstractTaskService {
                                 status = "Task " + taskId + " returned bad status - space may not be accepting jobs: "
                                         + progressData.getDescription();
                                 allIsWell = false;
+                                log.warn( taskId + " got " + status );                                
                             }
 
                         } catch ( Exception e ) {
                             status = ExceptionUtils.getStackTrace( e );
                             allIsWell = false;
+                            log.warn( taskId + " got " + status );
                         }
                         break wait;
                     }
@@ -192,6 +196,7 @@ public class SpaceMonitor extends AbstractTaskService {
                     taskRunningService.cancelTask( taskId );
                     status = "Waiting for result was interrupted: " + taskId;
                     allIsWell = false;
+                    log.warn( taskId + " " + status + e.getMessage() );
                 }
 
                 if ( timer.getTime() > TIMEOUT_MILLIS ) {
