@@ -32,126 +32,127 @@ import ubic.gemma.loader.util.parser.LineParser;
 import ubic.gemma.model.genome.Taxon;
 
 /**
- * Class that is responsible for generating a map of BioMartEnsembleNcbiObject value objects
- * which are keyed on ensemble protein id. This BioMartEnsembleNcbiObject object represents a mapping
- * between ensemble protein ids, ensemble gene ids and entrez gene ids.  
+ * Class that is responsible for generating a map of BioMartEnsembleNcbiObject value objects which are keyed on ensemble
+ * protein id. This BioMartEnsembleNcbiObject object represents a mapping between ensemble protein ids, ensemble gene
+ * ids and entrez gene ids.
  * <p>
- * If a bioMartFileName is supplied then biomart fetcher is not called and provided filename is used for parsing, in this scenario
- * only 1 taxon can be processed. If the bioMartFileName is null then all eligible taxa files are downloaded from biomart.
- * Eligible taxa are those that are in gemma and that have usable genes and that are species.
+ * If a bioMartFileName is supplied then biomart fetcher is not called and provided filename is used for parsing, in
+ * this scenario only 1 taxon can be processed. If the bioMartFileName is null then all eligible taxa files are
+ * downloaded from biomart. Eligible taxa are those that are in gemma and that have usable genes and that are species.
  * Once files have been downloaded or located then those files are parsed into BioMartEnsembleNcbi value objects
  * 
  * @author ldonnison
  * @version $Id$
  */
 public class BiomartEnsemblNcbiObjectGenerator {
-    
-    
-    /** Fetcher is called to download files if bioMartFileName is null  */
-    protected BiomartEnsemblNcbiFetcher biomartEnsemblNcbiFetcher;  
-    
-   /** A biomart parser which is constructed a new for each taxon due to slight file taxon differences */
-    protected LineParser<BioMartEnsembleNcbi> bioMartEnsemblNcbiParser;           
-    
+
+    /** Fetcher is called to download files if bioMartFileName is null */
+    protected BiomartEnsemblNcbiFetcher biomartEnsemblNcbiFetcher;
+
+    /** A biomart parser which is constructed a new for each taxon due to slight file taxon differences */
+    protected LineParser<BioMartEnsembleNcbi> bioMartEnsemblNcbiParser;
+
     /** If this file name is set then implies that file is local and no remote call should be made to biomart service */
-    protected File bioMartFileName =null;
-       
-    protected Log log = LogFactory.getLog(BiomartEnsemblNcbiObjectGenerator.class );
-    
-    /**
-     * Constructor ensuring that fetcher is set. Even if not fetching files should be set so as to get abbribute header information for that particular taxon.
-     */
-    public BiomartEnsemblNcbiObjectGenerator(){
-        this.biomartEnsemblNcbiFetcher = new BiomartEnsemblNcbiFetcher();
-    }
-    
+    protected File bioMartFileName = null;
+
+    protected Log log = LogFactory.getLog( BiomartEnsemblNcbiObjectGenerator.class );
 
     /**
-     * Main method to generate a map of biomartensemblencbiids, involves optional fetch from biomart if no file
-     * is provided then returns results of parse method.
-     * If the fetcher is called then all then all files for eligible taxon are retrieved and the results returned as a map
-     * keyed on taxon. This map can be iterated through and files parsed with the specific parser generated for that particular taxon.
-     * Currently only different for human. The results for each taxon parsing are combined into a map of BioMartEnsembleNcbi value objects.     * 
-     * If a bioMartFileName file is provided then no iteration is needed and the file is directly parsed.    
-     *  
+     * Constructor ensuring that fetcher is set. Even if not fetching files should be set so as to get abbribute header
+     * information for that particular taxon.
+     */
+    public BiomartEnsemblNcbiObjectGenerator() {
+        this.biomartEnsemblNcbiFetcher = new BiomartEnsemblNcbiFetcher();
+    }
+
+    /**
+     * Main method to generate a map of biomartensemblencbiids, involves optional fetch from biomart if no file is
+     * provided then returns results of parse method. If the fetcher is called then all then all files for eligible
+     * taxon are retrieved and the results returned as a map keyed on taxon. This map can be iterated through and files
+     * parsed with the specific parser generated for that particular taxon. Currently only different for human. The
+     * results for each taxon parsing are combined into a map of BioMartEnsembleNcbi value objects. * If a
+     * bioMartFileName file is provided then no iteration is needed and the file is directly parsed.
+     * 
      * @param valid taxa Taxa to retrieve biomart files for.
      * @return Map of BioMartEnsembleNcbi value objects keyed on ensemble peptide id.
      */
-    public Map<String, BioMartEnsembleNcbi> generate( Collection<Taxon> validTaxa ){              
-        //fetch the biomart files to process keyed on taxon
-        if(bioMartFileName ==null){
-            log.info("No file name set fetching files from biomart " );
-            return generateRemote(validTaxa);
-        }else{ 
-            log.info("File name set paring directly  " + bioMartFileName);
-            return parseTaxonBiomartFile(validTaxa.iterator().next(), bioMartFileName);                        
-        }  
-    }  
-   
-    /**
-     * Generates file from remote biomart location
-     * @return
-     */
-    public Map<String, BioMartEnsembleNcbi> generateRemote(Collection<Taxon> validTaxa){
-        Map<String,BioMartEnsembleNcbi> bioMartEnsemblNcbiIdsForValidAllGemmaTaxa =new HashMap<String,BioMartEnsembleNcbi>();        
-        Map<Taxon, File>  taxaBiomartFiles= this.biomartEnsemblNcbiFetcher.fetch(validTaxa);
-        
-        if(taxaBiomartFiles !=null && !taxaBiomartFiles.isEmpty()){
-            for(Taxon taxon: taxaBiomartFiles.keySet()){
-                File fileForTaxon = taxaBiomartFiles.get( taxon );
-                if(fileForTaxon != null){
-                    log.info("Starting processing taxon " + taxon + " for file " + fileForTaxon);
-                    Map<String,BioMartEnsembleNcbi> map = parseTaxonBiomartFile(taxon, fileForTaxon);                                  
-                    bioMartEnsemblNcbiIdsForValidAllGemmaTaxa.putAll( map );      
-                }else{
-                    log.error("No biomart file retrieved for taxon " + taxon);
-                }              
-                                                        
-            }  
-        }else{
-            throw new RuntimeException("No files could be downloaded feom Biomart for provided taxon");
-        } 
-        return bioMartEnsemblNcbiIdsForValidAllGemmaTaxa;
+    public Map<String, BioMartEnsembleNcbi> generate( Collection<Taxon> validTaxa ) {
+        // fetch the biomart files to process keyed on taxon
+        if ( bioMartFileName == null ) {
+            log.info( "No file name set fetching files from biomart " );
+            return generateRemote( validTaxa );
+        }
+        log.info( "File name set paring directly  " + bioMartFileName );
+        return parseTaxonBiomartFile( validTaxa.iterator().next(), bioMartFileName );
+
     }
-    
 
     /**
-     * Method calls the parse method to parse a biomart file. The parser is  configurable based on the taxon.
+     * Generates file from remote biomart location
+     * 
+     * @return
+     */
+    public Map<String, BioMartEnsembleNcbi> generateRemote( Collection<Taxon> validTaxa ) {
+        Map<String, BioMartEnsembleNcbi> bioMartEnsemblNcbiIdsForValidAllGemmaTaxa = new HashMap<String, BioMartEnsembleNcbi>();
+        Map<Taxon, File> taxaBiomartFiles = this.biomartEnsemblNcbiFetcher.fetch( validTaxa );
+
+        if ( taxaBiomartFiles != null && !taxaBiomartFiles.isEmpty() ) {
+            for ( Taxon taxon : taxaBiomartFiles.keySet() ) {
+                File fileForTaxon = taxaBiomartFiles.get( taxon );
+                if ( fileForTaxon != null ) {
+                    log.info( "Starting processing taxon " + taxon + " for file " + fileForTaxon );
+                    Map<String, BioMartEnsembleNcbi> map = parseTaxonBiomartFile( taxon, fileForTaxon );
+                    bioMartEnsemblNcbiIdsForValidAllGemmaTaxa.putAll( map );
+                } else {
+                    log.error( "No biomart file retrieved for taxon " + taxon );
+                }
+
+            }
+        } else {
+            throw new RuntimeException( "No files could be downloaded feom Biomart for provided taxon" );
+        }
+        return bioMartEnsemblNcbiIdsForValidAllGemmaTaxa;
+    }
+
+    /**
+     * Method calls the parse method to parse a biomart file. The parser is configurable based on the taxon.
      * 
      * @param taxon Taxon for which file is for.
      * @param taxaBiomartFile The biomart file for given taxon
      * @return Map of BioMartEnsembleNcbi value objects for the given taxon keyed on ensembl peptide id
      */
-    public Map<String,BioMartEnsembleNcbi> parseTaxonBiomartFile(Taxon taxon, File taxonBiomartFile) {
-      //get the attributes in the file and set for this taxon
+    public Map<String, BioMartEnsembleNcbi> parseTaxonBiomartFile( Taxon taxon, File taxonBiomartFile ) {
+        // get the attributes in the file and set for this taxon
         String biomartTaxonName = this.biomartEnsemblNcbiFetcher.getBiomartTaxonName( taxon );
-        Map<String,BioMartEnsembleNcbi> map = null;
-        if(biomartTaxonName !=null){
-            String[] bioMartHeaderFields = this.biomartEnsemblNcbiFetcher.attributesToRetrieveFromBioMartForProteinQuery( biomartTaxonName  );
-            //parse the file dependant upon the header files for this taxon
-            BiomartEnsembleNcbiParser parser = new BiomartEnsembleNcbiParser(taxon, bioMartHeaderFields);
-           
-            //get the biomart file for this taxon
-            try{
+        Map<String, BioMartEnsembleNcbi> map = null;
+        if ( biomartTaxonName != null ) {
+            String[] bioMartHeaderFields = this.biomartEnsemblNcbiFetcher
+                    .attributesToRetrieveFromBioMartForProteinQuery( biomartTaxonName );
+            // parse the file dependant upon the header files for this taxon
+            BiomartEnsembleNcbiParser parser = new BiomartEnsembleNcbiParser( taxon, bioMartHeaderFields );
+
+            // get the biomart file for this taxon
+            try {
                 parser.parse( taxonBiomartFile );
                 map = parser.getMap();
-                if(map == null){   
-                    throw new RuntimeException("No valid objects could be parsed from biomart for taxon " + taxon + " using file " +  taxonBiomartFile);
-                }  
-                
-            }catch(IOException e){            
-                throw new RuntimeException(e);
+                if ( map == null ) {
+                    throw new RuntimeException( "No valid objects could be parsed from biomart for taxon " + taxon
+                            + " using file " + taxonBiomartFile );
+                }
+
+            } catch ( IOException e ) {
+                throw new RuntimeException( e );
             }
-        }else{
-            throw new RuntimeException("A biomart taxon name could not be constructed from supplied taxon " + taxon);
+        } else {
+            throw new RuntimeException( "A biomart taxon name could not be constructed from supplied taxon " + taxon );
         }
-       
-        return  map;           
-    }      
-        
-    
+
+        return map;
+    }
+
     /**
      * Get the biomart file name can be null if retrieving all taxons
+     * 
      * @return
      */
     public File getBioMartFileName() {
@@ -160,14 +161,16 @@ public class BiomartEnsemblNcbiObjectGenerator {
 
     /**
      * Set a biomart file name can be null if retrieving all taxons
+     * 
      * @param bioMartFileName
      */
     public void setBioMartFileName( File bioMartFileName ) {
         this.bioMartFileName = bioMartFileName;
     }
-    
+
     /**
      * Should be set
+     * 
      * @return the bioMartEnsemblNcbiFetcher
      */
     public BiomartEnsemblNcbiFetcher getBioMartEnsemblNcbiFetcher() {
@@ -179,6 +182,6 @@ public class BiomartEnsemblNcbiObjectGenerator {
      */
     public void setBioMartEnsemblNcbiFetcher( BiomartEnsemblNcbiFetcher biomartEnsemblNcbiFetcher ) {
         this.biomartEnsemblNcbiFetcher = biomartEnsemblNcbiFetcher;
-    }        
+    }
 
 }

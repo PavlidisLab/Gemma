@@ -57,7 +57,7 @@ public class StringProteinProteinInteractionObjectGenerator {
 
     /**
      * Constructor that sets the string file to process whether local or remote. Also ensures fetcher set (this is
-     * needed even for )
+     * needed even for ). Provide either a local or remote path (?)
      * 
      * @param stringProteinInteractionFileLocal Name of local file to process
      * @param stringProteinInteractionFileRemote Name of remote file to process
@@ -77,7 +77,7 @@ public class StringProteinProteinInteractionObjectGenerator {
      * @return Collection of StringProteinProteinInteraction objects specific for the taxa that were provided, held in a
      *         may keyed on taxon.
      */
-    public Map<String, Collection<StringProteinProteinInteraction>> generate( Collection<Taxon> validTaxa ) {
+    public Map<Taxon, Collection<StringProteinProteinInteraction>> generate( Collection<Taxon> validTaxa ) {
 
         log.debug( "Starting to get StringProteinProteinInteraction data" );
         Collection<StringProteinProteinInteraction> stringProteinProteinInteractions = null;
@@ -86,7 +86,8 @@ public class StringProteinProteinInteractionObjectGenerator {
             log.info( "stringProteinInteractionFile is remote file fetching remote site" );
             fetchProteinStringFileFromRemoteSiteUnArchived();
         }
-        Map<String, Collection<StringProteinProteinInteraction>> map = new HashMap<String, Collection<StringProteinProteinInteraction>>();
+
+        Map<Taxon, Collection<StringProteinProteinInteraction>> map = new HashMap<Taxon, Collection<StringProteinProteinInteraction>>();
 
         // this is a bit ugly as reads string file for every taxon
         // however when I did it in one big go I got java.lang.OutOfMemoryError: Java heap space
@@ -95,7 +96,7 @@ public class StringProteinProteinInteractionObjectGenerator {
             Collection<Taxon> taxa = new ArrayList<Taxon>();
             taxa.add( taxon );
             stringProteinProteinInteractions = this.parseProteinStringFileInteraction( taxa );
-            map.put( taxon.getScientificName(), stringProteinProteinInteractions );
+            map.put( taxon, stringProteinProteinInteractions );
         }
 
         log.debug( "Starting to get StringProteinProteinInteraction data" );

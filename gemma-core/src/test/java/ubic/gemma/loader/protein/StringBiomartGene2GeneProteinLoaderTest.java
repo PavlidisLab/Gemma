@@ -19,7 +19,10 @@
 
 package ubic.gemma.loader.protein;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.File;
 import java.net.URL;
@@ -34,10 +37,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.model.association.Gene2GeneProteinAssociation;
 import ubic.gemma.model.association.Gene2GeneProteinAssociationService;
 import ubic.gemma.model.common.description.DatabaseEntryService;
-import ubic.gemma.model.common.description.ExternalDatabaseService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.testing.BaseSpringContextTest;
@@ -316,12 +317,13 @@ public class StringBiomartGene2GeneProteinLoaderTest extends BaseSpringContextTe
                 String taxonScientificName = secondGene.getTaxon().getScientificName();
                 ProteinLinkOutFormatter formatter = new ProteinLinkOutFormatter();
                 if ( taxonScientificName.equals( zebraFish.getScientificName() ) ) {
-                    assertEquals( "751652", secondGene.getNcbiId() );
-                    if ( association.getFirstGene().getNcbiId().equals( "571540" ) ) {
+                  
+                    if ( association.getFirstGene().getNcbiId().equals( "751652" ) ) {
+                        assertEquals( "571540", secondGene.getNcbiId() );
                         byte[] array = new byte[] { 0, 0, 1, 0, 1, 1, 1 };
-                        String asscession = ( databaseService.find( association.getDatabaseEntry() ) ).getAccession();
-                        assertTrue( asscession.contains( "%0D7955." ) );
-                        log.info( "Assesion for zebra fish " + asscession );
+                        String accession = ( databaseService.find( association.getDatabaseEntry() ) ).getAccession();
+                        assertTrue( "Accession was: " + accession, accession.contains( "%0D7955." ) );
+                        log.info( "Accession for zebra fish " + accession );
                         Double associationScore = association.getConfidenceScore();
                         assertEquals( new Double( 180 ), associationScore );
                         assertArrayEquals( array, association.getEvidenceVector() );
@@ -332,10 +334,11 @@ public class StringBiomartGene2GeneProteinLoaderTest extends BaseSpringContextTe
                         assertEquals( "Coocurrence:Experimental:Database:TextMining", formatedEvidence );
 
                     } else if ( association.getFirstGene().getNcbiId().equals( "568371" ) ) {
+                        assertEquals( "751652", secondGene.getNcbiId() );
                         byte[] array = new byte[] { 1, 1, 1, 1, 1, 1, 1 };
-                        String asscession = ( databaseService.find( association.getDatabaseEntry() ) ).getAccession();
-                        assertTrue( asscession.contains( "%0D7955." ) );
-                        log.info( "Assesion for zebra fish " + asscession );
+                        String accession = ( databaseService.find( association.getDatabaseEntry() ) ).getAccession();
+                        assertTrue( accession.contains( "%0D7955." ) );
+                        log.info( "Accession for zebra fish " + accession );
                         Double associationScore = association.getConfidenceScore();
                         assertEquals( new Double( 200 ), associationScore );
                         assertArrayEquals( array, association.getEvidenceVector() );
@@ -347,15 +350,15 @@ public class StringBiomartGene2GeneProteinLoaderTest extends BaseSpringContextTe
                                 formatedEvidence );
                         counterAssociationsSavedZebra++;
                     } else {
-                        fail();
+                        fail( "Did not find correct association" );
                     }
 
                 }// rat
                 else if ( taxonScientificName.equals( rat.getScientificName() ) ) {
                     // should be same accession number both entries as these two map to one ensembl
-                    String asscession = association.getDatabaseEntry().getAccession();
-                    assertTrue( asscession.contains( "%0D10116.ENSRN" ) );
-                    log.info( "Assesion for rat  " + asscession );
+                    String accession = association.getDatabaseEntry().getAccession();
+                    assertTrue( accession.contains( "%0D10116.ENSRN" ) );
+                    log.info( "Accession for rat  " + accession );
                     counterAssociationsSavedRat++;
                 } else {
                     fail();

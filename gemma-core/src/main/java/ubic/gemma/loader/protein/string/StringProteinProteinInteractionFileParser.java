@@ -100,9 +100,15 @@ public class StringProteinProteinInteractionFileParser extends BasicLineParser<S
     }
 
     /**
-     * Typical line of string file is of the following format: 882.DVU0001 882.DVU0002 707 0 0 0 0 0 172 742 882.DVU0001
-     * 882.DVU0002 this refers to protein 1 and protein2 Note the 882 is the ncbi taxon id. Method takes the array
-     * representing a line of string file and creates a StringProteinProteinInteraction object.
+     * Typical line of string file is of the following format:
+     * 
+     * <pre>
+     * 882.DVU0001 882.DVU0002 707 0 0 0 0 0 172 742
+     * </pre>
+     * 
+     * 882.DVU0001 and 882.DVU0002 refer to protein 1 and protein2 Note the 882 is the ncbi taxon id, the other part is
+     * an external id (ensembl). Method takes the array representing a line of string file and creates a
+     * StringProteinProteinInteraction object.
      * 
      * @param fields Line split on delimiter
      * @return StringProteinProteinInteraction value object.
@@ -153,15 +159,22 @@ public class StringProteinProteinInteractionFileParser extends BasicLineParser<S
                 throw new FileFormatException( "This line does not contain valid number " );
             }
         }
-        
-        stringProteinProteinInteraction.addEvidenceCodeScoreToMap(StringProteinInteractionEvidenceCodeEnum.NEIGHBORHOOD, Integer.valueOf( fields[2] ));
-        stringProteinProteinInteraction.addEvidenceCodeScoreToMap(StringProteinInteractionEvidenceCodeEnum.GENEFUSION, Integer.valueOf( fields[3] ));
-        stringProteinProteinInteraction.addEvidenceCodeScoreToMap(StringProteinInteractionEvidenceCodeEnum.COOCCURENCE, Integer.valueOf( fields[4] ));
-        stringProteinProteinInteraction.addEvidenceCodeScoreToMap(StringProteinInteractionEvidenceCodeEnum.COEXPRESSION, Integer.valueOf( fields[5] ));
-        stringProteinProteinInteraction.addEvidenceCodeScoreToMap(StringProteinInteractionEvidenceCodeEnum.EXPERIMENTAL, Integer.valueOf( fields[6] ));
-        stringProteinProteinInteraction.addEvidenceCodeScoreToMap(StringProteinInteractionEvidenceCodeEnum.DATABASE, Integer.valueOf( fields[7] ));
-        stringProteinProteinInteraction.addEvidenceCodeScoreToMap(StringProteinInteractionEvidenceCodeEnum.TEXTMINING, Integer.valueOf( fields[8] ));
-                
+
+        stringProteinProteinInteraction.addEvidenceCodeScoreToMap(
+                StringProteinInteractionEvidenceCodeEnum.NEIGHBORHOOD, Integer.valueOf( fields[2] ) );
+        stringProteinProteinInteraction.addEvidenceCodeScoreToMap( StringProteinInteractionEvidenceCodeEnum.GENEFUSION,
+                Integer.valueOf( fields[3] ) );
+        stringProteinProteinInteraction.addEvidenceCodeScoreToMap(
+                StringProteinInteractionEvidenceCodeEnum.COOCCURENCE, Integer.valueOf( fields[4] ) );
+        stringProteinProteinInteraction.addEvidenceCodeScoreToMap(
+                StringProteinInteractionEvidenceCodeEnum.COEXPRESSION, Integer.valueOf( fields[5] ) );
+        stringProteinProteinInteraction.addEvidenceCodeScoreToMap(
+                StringProteinInteractionEvidenceCodeEnum.EXPERIMENTAL, Integer.valueOf( fields[6] ) );
+        stringProteinProteinInteraction.addEvidenceCodeScoreToMap( StringProteinInteractionEvidenceCodeEnum.DATABASE,
+                Integer.valueOf( fields[7] ) );
+        stringProteinProteinInteraction.addEvidenceCodeScoreToMap( StringProteinInteractionEvidenceCodeEnum.TEXTMINING,
+                Integer.valueOf( fields[8] ) );
+
         stringProteinProteinInteraction.setCombined_score( Double.valueOf( fields[9] ) );
         return stringProteinProteinInteraction;
     }

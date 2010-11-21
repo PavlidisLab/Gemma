@@ -49,8 +49,8 @@ import ubic.gemma.persistence.PersisterHelper;
  * objects. For biomart these value objects(BioMartEnsembleNcbi) are grouped into a map keyed on ensembl peptide id. For
  * string these value objects StringProteinProteinInteraction are grouped into arrays held in a map keyed on taxon. Then
  * one taxon at a time StringBiomartProteinConverter converts them into gemma objects using the BioMartEnsembleNcbi map
- * to find the perptide ids corresponding to the ncbi gene. The generated gemma objects Gene2GeneProteinAssociation are then
- * loaded. It is done taxon by taxon due to the risk of GC memory errors.
+ * to find the perptide ids corresponding to the ncbi gene. The generated gemma objects Gene2GeneProteinAssociation are
+ * then loaded. It is done taxon by taxon due to the risk of GC memory errors.
  * 
  * @author ldonnison
  * @version $Id$
@@ -104,23 +104,18 @@ public class StringBiomartGene2GeneProteinAssociationLoader {
             // very basic validation before any processing done
             validateLoadParameters( stringProteinFileNameLocal, stringProteinFileNameRemote, stringBiomartFile, taxa );
 
-            // retrieve a map of biomart objects keyed on ensembl peptide id to use as map between entrez gene ids and
-            // ensemble ids
-            BiomartEnsemblNcbiObjectGenerator biomartEnsemblNcbiObjectGenerator = new BiomartEnsemblNcbiObjectGenerator();
-            biomartEnsemblNcbiObjectGenerator.setBioMartFileName( stringBiomartFile );
-            Map<String, BioMartEnsembleNcbi> bioMartStringEntreGeneMapping = biomartEnsemblNcbiObjectGenerator
-                    .generate( taxa );
-
             // retrieve a map of string protein protein interactions keyed on taxon
             StringProteinProteinInteractionObjectGenerator stringProteinProteinInteractionObjectGenerator = new StringProteinProteinInteractionObjectGenerator(
                     stringProteinFileNameLocal, stringProteinFileNameRemote );
-            Map<String, Collection<StringProteinProteinInteraction>> map = stringProteinProteinInteractionObjectGenerator
+
+            Map<Taxon, Collection<StringProteinProteinInteraction>> map = stringProteinProteinInteractionObjectGenerator
                     .generate( taxa );
 
+            Map<String, BioMartEnsembleNcbi> bioMartStringEntreGeneMapping = getIdMappings( stringBiomartFile, taxa );
+
             // we do not do all taxons in one big go as there were gc errors as there were too many objects around this
-            // is a bit
-            // slower but no memory errors
-            for ( String key : map.keySet() ) {
+            // is a bit slower but no memory errors
+            for ( Taxon key : map.keySet() ) {
                 log.debug( "Loading for taxon " + key );
                 Collection<StringProteinProteinInteraction> proteinInteractions = map.get( key );
                 log.info( "Found in string file this number of protein interactions " + proteinInteractions.size()
@@ -132,6 +127,21 @@ public class StringBiomartGene2GeneProteinAssociationLoader {
             throw new RuntimeException( e );
         }
 
+    }
+
+    /**
+     * @param stringBiomartFile
+     * @param taxa
+     * @return map between Ensembl peptide IDs and NCBI gene ids understood by Gemma.
+     */
+    private Map<String, BioMartEnsembleNcbi> getIdMappings( File stringBiomartFile, Collection<Taxon> taxa ) {
+        // retrieve a map of biomart objects keyed on ensembl peptide id to use as map between entrez gene ids and
+        // ensemble ids
+        BiomartEnsemblNcbiObjectGenerator biomartEnsemblNcbiObjectGenerator = new BiomartEnsemblNcbiObjectGenerator();
+        biomartEnsemblNcbiObjectGenerator.setBioMartFileName( stringBiomartFile );
+        Map<String, BioMartEnsembleNcbi> bioMartStringEntreGeneMapping = biomartEnsemblNcbiObjectGenerator
+                .generate( taxa );
+        return bioMartStringEntreGeneMapping;
     }
 
     /**
@@ -175,24 +185,21 @@ public class StringBiomartGene2GeneProteinAssociationLoader {
      */
     private void validateLoadParameters( File stringProteinFileNameLocal, String stringProteinFileNameRemote,
             File stringBiomartFile, Collection<Taxon> taxa ) {
+
         if ( taxa == null || taxa.isEmpty() ) {
             throw new RuntimeException( "No taxon found to process please provide some" );
         }
-        if ( stringProteinFileNameLocal != null ) {
-            if ( !stringProteinFileNameLocal.canWrite() ) {
-                throw new RuntimeException( "Provided local string file is not readable: " + stringProteinFileNameLocal );
-            }
+
+        if ( stringProteinFileNameLocal != null && !stringProteinFileNameLocal.canWrite() ) {
+            throw new RuntimeException( "Provided local string file is not readable: " + stringProteinFileNameLocal );
         }
-        if ( stringBiomartFile != null ) {
-            if ( !stringBiomartFile.canWrite() ) {
-                throw new RuntimeException( "Provided biomart file is not readable: " + stringBiomartFile );
-            }
+
+        if ( stringBiomartFile != null && !stringBiomartFile.canWrite() ) {
+            throw new RuntimeException( "Provided biomart file is not readable: " + stringBiomartFile );
         }
-        if ( stringProteinFileNameRemote != null ) {
-            if ( stringProteinFileNameRemote.isEmpty() ) {
-                throw new RuntimeException( "Provided remote string file name contains no text "
-                        + stringProteinFileNameRemote );
-            }
+
+        if ( stringProteinFileNameRemote != null && stringProteinFileNameRemote.isEmpty() ) {
+            throw new RuntimeException( "Provided remote string file is invalid (blank) " );
         }
     }
 

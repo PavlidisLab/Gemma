@@ -128,7 +128,6 @@ public class StringBiomartProteinConverter implements Converter<Object, Object> 
      * @param sourceDomainObject the domain object to process
      * @return collection of Gene2GeneProteinAssociation representing this interaction
      */
-
     public Collection<Gene2GeneProteinAssociation> convert( StringProteinProteinInteraction sourceDomainObject ) {
 
         Collection<Gene2GeneProteinAssociation> gene2GeneProteinAssociations = new ArrayList<Gene2GeneProteinAssociation>();
@@ -141,9 +140,10 @@ public class StringBiomartProteinConverter implements Converter<Object, Object> 
         Collection<Gene> genesForProteinTwo = this.getNcbiGene( stringProteinProteinInteraction.getProtein2() );
 
         // empty if no mapping found
-        if ( genesForProteinOne.isEmpty() || genesForProteinTwo.isEmpty() ) {
-            log.debug( "No nbi gene mapping for proteuin 1 " + stringProteinProteinInteraction.getProtein1()
-                    + " protein 2 " + stringProteinProteinInteraction.getProtein2() );
+        if ( genesForProteinOne.isEmpty() ) {
+            log.warn( "No ncbi gene mapping for protein 1 " + stringProteinProteinInteraction.getProtein1() );
+        } else if ( genesForProteinTwo.isEmpty() ) {
+            log.warn( "No ncbi gene mapping for protein 2 " + stringProteinProteinInteraction.getProtein2() );
         } else {
             // create the one to many mapping from ensembl to ncbi/entrez
             for ( Gene geneProtein1 : genesForProteinOne ) {
@@ -152,7 +152,8 @@ public class StringBiomartProteinConverter implements Converter<Object, Object> 
                             .newInstance();
                     gene2GeneProteinAssociation.setDatabaseEntry( this
                             .getDataBaseEntry( stringProteinProteinInteraction ) );
-                    gene2GeneProteinAssociation.setConfidenceScore(stringProteinProteinInteraction.getCombined_score());
+                    gene2GeneProteinAssociation
+                            .setConfidenceScore( stringProteinProteinInteraction.getCombined_score() );
                     gene2GeneProteinAssociation.setEvidenceVector( stringProteinProteinInteraction.getEvidenceVector() );
                     gene2GeneProteinAssociation.setFirstGene( geneProtein1 );
                     gene2GeneProteinAssociation.setSecondGene( geneProtein2 );
@@ -161,8 +162,7 @@ public class StringBiomartProteinConverter implements Converter<Object, Object> 
             }
         }
         return gene2GeneProteinAssociations;
-    } 
-    
+    }
 
     /**
      * One ensemblProteinID can map to multiple ncbi genes. This method takes the ensembl gene and creates a collection
@@ -178,7 +178,7 @@ public class StringBiomartProteinConverter implements Converter<Object, Object> 
 
         // split out species e.g 7955.ENSDARP00000088673
         String[] split = ensemblProteinId.split( "\\." );
-        // e.g. worm has lots of puncuation in the name si just get rid of the first bit
+        // e.g. worm has lots of puncuation in the name so just get rid of the first bit
         if ( split.length >= 2 ) {
             ensemblProteinId = ensemblProteinId.replaceFirst( split[0] + "\\.", "" );
         }
@@ -191,7 +191,7 @@ public class StringBiomartProteinConverter implements Converter<Object, Object> 
                     Gene gene = Gene.Factory.newInstance();
                     gene.setNcbiId( entrezGeneid );
                     genes.add( gene );
-                    log.debug( "Entry found for entrezGeneid " + entrezGeneid );
+                    if ( log.isDebugEnabled() ) log.debug( "Entry found for entrezGeneid " + entrezGeneid );
                 }
             }
         }
