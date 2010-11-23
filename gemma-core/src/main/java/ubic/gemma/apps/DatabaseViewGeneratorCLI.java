@@ -90,7 +90,8 @@ public class DatabaseViewGeneratorCLI extends AbstractSpringAwareCLI {
 
     @Override
     protected Exception doWork( String[] args ) {
-        super.processCommandLine( "DatabaseViewGeneratorCLI", args );
+        Exception err = super.processCommandLine( "DatabaseViewGeneratorCLI", args );
+        if ( err != null ) return err;
 
         DatabaseViewGenerator v = ( DatabaseViewGenerator ) getBean( "databaseViewGenerator" );
 
