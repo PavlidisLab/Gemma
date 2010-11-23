@@ -23,7 +23,8 @@ import org.springframework.stereotype.Service;
 
 import ubic.gemma.analysis.expression.coexpression.links.LinkAnalysisService;
 import ubic.gemma.job.TaskMethod;
-import ubic.gemma.job.TaskResult; 
+import ubic.gemma.job.TaskResult;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 
 /**
@@ -31,7 +32,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
  * @version $Id$
  */
 @Service
-public class LinkAnalysisTaskImpl  implements LinkAnalysisTask {
+public class LinkAnalysisTaskImpl implements LinkAnalysisTask {
 
     @Autowired
     private LinkAnalysisService linkAnalysisService = null;
@@ -41,11 +42,10 @@ public class LinkAnalysisTaskImpl  implements LinkAnalysisTask {
 
     @TaskMethod
     public TaskResult execute( LinkAnalysisTaskCommand command ) {
-        
-        expressionExperimentService.thawLite( command.getExpressionExperiment() );
-        linkAnalysisService.process( command.getExpressionExperiment(), command.getFilterConfig(), command
-                .getLinkAnalysisConfig() );
-        TaskResult result = new TaskResult( command, null ); 
+
+        ExpressionExperiment ee = expressionExperimentService.thawLite( command.getExpressionExperiment() );
+        linkAnalysisService.process( ee, command.getFilterConfig(), command.getLinkAnalysisConfig() );
+        TaskResult result = new TaskResult( command, null );
         return result;
 
     }

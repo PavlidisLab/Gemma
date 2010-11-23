@@ -32,7 +32,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import ubic.gemma.model.common.auditAndSecurity.Contact; 
+import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -53,7 +53,7 @@ public class ExpressionExperimentServiceTest extends BaseSpringContextTest {
     @Autowired
     ExpressionExperimentService expressionExperimentService;
 
-    private static final String EE_NAME = RandomStringUtils.randomAlphanumeric( 20 ); 
+    private static final String EE_NAME = RandomStringUtils.randomAlphanumeric( 20 );
     ExpressionExperiment ee = null;
     ExternalDatabase ed;
     String accession;
@@ -75,11 +75,11 @@ public class ExpressionExperimentServiceTest extends BaseSpringContextTest {
             ed = accessionEntry.getExternalDatabase();
             ee.setAccession( accessionEntry );
 
-            Contact c = this.getTestPersistentContact(); 
+            Contact c = this.getTestPersistentContact();
             ee.setOwner( c );
 
             expressionExperimentService.update( ee );
-            expressionExperimentService.thawLite( ee );
+            ee = expressionExperimentService.thaw( ee );
 
             persisted = true;
         } else {

@@ -122,7 +122,7 @@ public class ExpressionExperimentFormController extends BaseFormController {
             throw new IllegalArgumentException( "Could not load experiment" );
         }
 
-        expressionExperimentService.thawLite( expressionExperiment );
+        expressionExperiment = expressionExperimentService.thawLite( expressionExperiment );
 
         /**
          * Much more complicated
@@ -255,7 +255,7 @@ public class ExpressionExperimentFormController extends BaseFormController {
         ExpressionExperimentEditCommand obj;
         if ( id != null ) {
             ee = expressionExperimentService.load( id );
-            expressionExperimentService.thawLite( ee );
+            ee = expressionExperimentService.thawLite( ee );
             qts.addAll( expressionExperimentService.getQuantitationTypes( ee ) );
             obj = new ExpressionExperimentEditCommand( ee, qts );
         } else {

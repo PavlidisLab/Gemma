@@ -91,7 +91,7 @@ public class TwoChannelMissingValueController extends AbstractTaskService {
         if ( ee == null ) {
             throw new IllegalArgumentException( "Cannot access experiment with id=" + id );
         }
-        expressionExperimentService.thawLite( ee );
+        ee = expressionExperimentService.thawLite( ee );
 
         TwoChannelMissingValueTaskCommand cmd = new TwoChannelMissingValueTaskCommand( ee );
 

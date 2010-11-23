@@ -142,7 +142,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
         public TaskResult processJob() {
             ExpressionExperiment ee = expressionExperimentService.load( command.getEntityId() );
 
-            expressionExperimentService.thawLite( ee );
+            ee = expressionExperimentService.thawLite( ee );
 
             if ( ee.getPrimaryPublication() == null ) {
                 return new TaskResult( command, false );
@@ -368,7 +368,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
     public Collection<AnnotationValueObject> getAnnotation( EntityDelegator e ) {
         if ( e == null || e.getId() == null ) return null;
         ExpressionExperiment expressionExperiment = expressionExperimentService.load( e.getId() );
-        expressionExperimentService.thawLite( expressionExperiment );
+        expressionExperiment = expressionExperimentService.thawLite( expressionExperiment );
         Collection<AnnotationValueObject> annotations = new ArrayList<AnnotationValueObject>();
         for ( Characteristic c : expressionExperiment.getCharacteristics() ) {
             AnnotationValueObject annotationValue = new AnnotationValueObject();
@@ -406,7 +406,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
         ExpressionExperiment ee = expressionExperimentService.load( id );
         if ( ee == null ) return null;
 
-        expressionExperimentService.thawLite( ee );
+        ee = expressionExperimentService.thawLite( ee );
 
         Collection<ExperimentalFactor> efs = ee.getExperimentalDesign().getExperimentalFactors();
 
@@ -462,7 +462,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
         ExpressionExperiment ee = this.expressionExperimentService.load( e.getId() );
         if ( ee == null ) return null;
 
-        expressionExperimentService.thawLite( ee );
+        ee = expressionExperimentService.thawLite( ee );
         return DesignMatrixRowValueObject.Factory.getDesignMatrix( ee );
     }
 
@@ -526,7 +526,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
             throw new IllegalArgumentException( "No experiment with id=" + id + " could be loaded" );
         }
 
-        expressionExperimentService.thawLite( ee );
+        ee = expressionExperimentService.thawLite( ee );
 
         Collection<Long> ids = new HashSet<Long>();
         ids.add( ee.getId() );
@@ -789,7 +789,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
 
         ExpressionExperiment expressionExperiment = expressionExperimentService.load( id );
 
-        expressionExperimentService.thawLite( expressionExperiment );
+        expressionExperiment = expressionExperimentService.thawLite( expressionExperiment );
 
         if ( expressionExperiment == null ) {
             throw new EntityNotFoundException( id + " not found" );
@@ -820,7 +820,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
         Long id = Long.parseLong( idStr );
 
         ExpressionExperiment expressionExperiment = expressionExperimentService.load( id );
-        expressionExperimentService.thawLite( expressionExperiment );
+        expressionExperiment = expressionExperiment = expressionExperimentService.thawLite( expressionExperiment );
 
         if ( expressionExperiment == null ) {
             throw new EntityNotFoundException( id + " not found" );
@@ -966,7 +966,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
         if ( ee == null ) {
             throw new IllegalArgumentException( "Could not load experiment with id=" + eeId );
         }
-        this.expressionExperimentService.thawLite( ee );
+        ee = this.expressionExperimentService.thawLite( ee );
 
         Collection<BioMaterial> needToProcess = new HashSet<BioMaterial>();
 

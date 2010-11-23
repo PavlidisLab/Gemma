@@ -82,7 +82,7 @@ public class ArrayDesignUsedEndpoint extends AbstractGemmaEndpoint {
             return buildBadResponse( document, msg );
         }
 
-        expressionExperimentService.thawLite( ee );
+        ee = expressionExperimentService.thawLite( ee );
         Collection<ArrayDesign> ads = expressionExperimentService.getArrayDesignsUsed( ee );
 
         // build collection to pass to wrapper

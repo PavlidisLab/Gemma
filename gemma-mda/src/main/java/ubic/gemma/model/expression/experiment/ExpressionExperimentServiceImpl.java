@@ -585,7 +585,7 @@ public class ExpressionExperimentServiceImpl extends
 
         Collection<QuantitationType> quantitationTypes = this.getQuantitationTypes( ee );
 
-        handleThawLite( ee );
+        ee = handleThawLite( ee ); // why?
         for ( QuantitationType qt : quantitationTypes ) {
             if ( qt.getIsPreferred() ) {
                 preferredQuantitationTypes.add( qt );
@@ -735,13 +735,13 @@ public class ExpressionExperimentServiceImpl extends
     }
 
     @Override
-    protected void handleThaw( ExpressionExperiment expressionExperiment ) throws Exception {
-        this.getExpressionExperimentDao().thaw( expressionExperiment );
+    protected ExpressionExperiment handleThaw( ExpressionExperiment expressionExperiment ) throws Exception {
+        return this.getExpressionExperimentDao().thaw( expressionExperiment );
     }
 
     @Override
-    protected void handleThawLite( ExpressionExperiment expressionExperiment ) throws Exception {
-        this.getExpressionExperimentDao().thawBioAssays( expressionExperiment );
+    protected ExpressionExperiment handleThawLite( ExpressionExperiment expressionExperiment ) throws Exception {
+        return this.getExpressionExperimentDao().thawBioAssays( expressionExperiment );
     }
 
     /*

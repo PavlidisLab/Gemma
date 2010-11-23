@@ -139,7 +139,7 @@ public class DatabaseViewGenerator {
          */
         int i = 0;
         for ( ExpressionExperiment vo : vos ) {
-            expressionExperimentService.thawLite( vo );
+            vo = expressionExperimentService.thawLite( vo );
             log.info( "Processing: " + vo.getShortName() );
 
             String acc = "";
@@ -203,7 +203,7 @@ public class DatabaseViewGenerator {
         writer.write( "GemmaDsId\tTerm\tTermURI\n" );
         int i = 0;
         for ( ExpressionExperiment vo : vos ) {
-            expressionExperimentService.thawLite( vo );
+            vo = expressionExperimentService.thawLite( vo );
 
             log.info( "Processing: " + vo.getShortName() );
 
@@ -261,7 +261,7 @@ public class DatabaseViewGenerator {
         writer.write( "GemmaDsId\tEEShortName\tGeneNCBIId\tGemmaGeneId\tFactor\tFactorURI\n" );
         int i = 0;
         for ( ExpressionExperiment vo : vos ) {
-            expressionExperimentService.thawLite( vo );
+            vo = expressionExperimentService.thawLite( vo );
 
             log.info( "Processing: " + vo.getShortName() );
 

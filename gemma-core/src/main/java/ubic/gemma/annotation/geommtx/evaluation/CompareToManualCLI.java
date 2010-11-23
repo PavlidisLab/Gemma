@@ -642,7 +642,7 @@ public class CompareToManualCLI extends AbstractSpringAwareCLI {
             // if (c == 30) break;
             log.info( "Experiment number:" + c + " of " + experiments.size() + " ID:" + experiment.getId() );
 
-            ees.thawLite( experiment );
+            experiment = ees.thawLite( experiment );
 
             // if its mouse then keep it
             // Taxon taxon = ees.getTaxon( experiment.getId() );
@@ -957,7 +957,7 @@ public class CompareToManualCLI extends AbstractSpringAwareCLI {
 
             log.info( "Experiment number:" + c + " of " + experiments.size() + " ID:" + experiment.getId() );
 
-            ees.thawLite( experiment );
+            experiment = ees.thawLite( experiment );
 
             String GEOObjectURI = ExpressionExperimentAnnotator.gemmaNamespace + "experiment/" + ID;
             Resource expNode = model.createResource( GEOObjectURI );

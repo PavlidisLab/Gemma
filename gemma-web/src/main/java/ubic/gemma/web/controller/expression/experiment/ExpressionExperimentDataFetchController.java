@@ -156,7 +156,7 @@ public class ExpressionExperimentDataFetchController extends AbstractTaskService
                         "No data available (either due to lack of authorization, or use of an invalid entity identifier)" );
             }
 
-            expressionExperimentService.thawLite( ee );
+            ee = expressionExperimentService.thawLite( ee );
 
             File f = null;
 

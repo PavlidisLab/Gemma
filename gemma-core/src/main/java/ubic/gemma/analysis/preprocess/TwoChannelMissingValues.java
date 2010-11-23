@@ -124,7 +124,7 @@ public class TwoChannelMissingValues {
     public Collection<RawExpressionDataVector> computeMissingValues( ExpressionExperiment expExp,
             double signalToNoiseThreshold, Collection<Double> extraMissingValueIndicators ) {
 
-        expressionExperimentService.thawLite( expExp );
+        expExp = expressionExperimentService.thawLite( expExp );
         Collection<QuantitationType> usefulQuantitationTypes = ExpressionDataMatrixBuilder
                 .getUsefulQuantitationTypes( expExp );
         StopWatch timer = new StopWatch();

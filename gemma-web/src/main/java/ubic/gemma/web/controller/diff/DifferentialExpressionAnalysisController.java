@@ -114,7 +114,7 @@ public class DifferentialExpressionAnalysisController extends AbstractTaskServic
             throw new IllegalArgumentException( "Cannot access experiment with id=" + id );
         }
 
-        expressionExperimentService.thawLite( ee );
+        ee = expressionExperimentService.thawLite( ee );
 
         AbstractDifferentialExpressionAnalyzer analyzer = this.differentialExpressionAnalyzer.determineAnalysis( ee,
                 null, null );
@@ -165,10 +165,10 @@ public class DifferentialExpressionAnalysisController extends AbstractTaskServic
         if ( ee == null ) {
             throw new IllegalArgumentException( "Cannot access experiment with id=" + id );
         }
-        expressionExperimentService.thawLite( ee );
+        ee = expressionExperimentService.thawLite( ee );
 
         DifferentialExpressionAnalysisTaskCommand cmd = new DifferentialExpressionAnalysisTaskCommand( ee );
-        cmd.setFactors( ee.getExperimentalDesign().getExperimentalFactors());
+        cmd.setFactors( ee.getExperimentalDesign().getExperimentalFactors() );
 
         return super.run( cmd );
     }
@@ -195,7 +195,7 @@ public class DifferentialExpressionAnalysisController extends AbstractTaskServic
             throw new IllegalArgumentException( "Cannot access experiment with id=" + id );
         }
 
-        expressionExperimentService.thawLite( ee );
+        ee = expressionExperimentService.thawLite( ee );
 
         /*
          * Get the factors matching the factorids

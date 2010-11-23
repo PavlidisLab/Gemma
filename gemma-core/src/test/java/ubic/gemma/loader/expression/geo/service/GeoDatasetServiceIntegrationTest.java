@@ -68,7 +68,6 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
     /**
      * Has multiple species (mouse and human, one and two platforms respectively), also test publication entry.
      */
-    @SuppressWarnings("unchecked")
     @Test
     public void testFetchAndLoadGSE1133() throws Exception {
 
@@ -77,7 +76,7 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
                 + "gse1133Short" ) );
         Collection<?> results = geoService.fetchAndLoad( "GSE1133", false, true, false, false );
         ee = ( ExpressionExperiment ) results.iterator().next(); // fixme, need to delete both.
-        eeService.thawLite( ee );
+        ee = eeService.thawLite( ee );
 
         /*
          * Sometimes pubmed barfs on us..but this should be populated.
@@ -111,7 +110,7 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
             log.info( "Test skipped because GSE13657 was already loaded - clean the DB before running the test" );
             return;
         }
-        eeService.thawLite( ee );
+        ee = eeService.thawLite( ee );
         Collection qts = eeService.getQuantitationTypes( ee );
         assertEquals( 17, qts.size() );
 
@@ -134,7 +133,7 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
             log.info( "Test skipped because GSE5949 was already loaded - clean the DB before running the test" );
             return;
         }
-        eeService.thawLite( ee );
+        ee = eeService.thawLite( ee );
         Collection qts = eeService.getQuantitationTypes( ee );
         assertEquals( 3, qts.size() );
 
@@ -165,7 +164,7 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
             return;
         }
         assertNotNull( newee );
-        eeService.thaw( newee );
+        newee = eeService.thaw( newee );
 
         /*
          * Test for bug 468 (merging of subsets across GDS's)

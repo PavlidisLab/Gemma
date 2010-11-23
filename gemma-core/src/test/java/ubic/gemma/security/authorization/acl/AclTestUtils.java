@@ -102,7 +102,7 @@ public class AclTestUtils {
      * @param ee
      */
     public void checkEEAcls( ExpressionExperiment ee ) {
-        this.expressionExperimentService.thawLite( ee );
+        ee = this.expressionExperimentService.thawLite( ee );
         checkHasAcl( ee );
         checkHasAces( ee );
 

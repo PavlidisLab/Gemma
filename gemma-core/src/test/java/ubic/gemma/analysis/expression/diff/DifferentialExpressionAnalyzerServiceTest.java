@@ -98,7 +98,7 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
         }
 
         ee = expressionExperimentService.findByShortName( "GSE1611" );
-        expressionExperimentService.thawLite( ee );
+        ee = expressionExperimentService.thawLite( ee );
         differentialExpressionAnalyzerService.deleteOldAnalyses( ee );
 
         assertEquals( 2, ee.getExperimentalDesign().getExperimentalFactors().size() );

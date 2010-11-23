@@ -77,7 +77,7 @@ public class GetAnnotationMatrixCLI extends AbstractSpringAwareCLI {
             log.info( "Experiment number:" + c + " of " + experiments.size() + " ID:" + experiment.getId()
                     + " Shortname:" + experiment.getShortName() );
 
-            ees.thawLite( experiment );
+            experiment = ees.thawLite( experiment );
 
             Collection<Characteristic> characters = experiment.getCharacteristics();
 

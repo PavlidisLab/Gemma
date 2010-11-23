@@ -139,14 +139,19 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
     @Before
     public void setup() throws Exception {
 
-        rc = RConnectionFactory.getRConnection( ConfigUtils.getString( "gemma.rserve.hostname", "localhost" ) );
-        if ( rc != null && rc.isConnected() ) {
-            connected = true;
-            /*
-             * We have to disconnect right away for test to work under Windows, where only one connection is allowed at
-             * a time. The classes under test will get their own connections.
-             */
-            if ( rc != null && rc.isConnected() && rc instanceof RServeClient ) ( ( RServeClient ) rc ).disconnect();
+        try {
+            rc = RConnectionFactory.getRConnection( ConfigUtils.getString( "gemma.rserve.hostname", "localhost" ) );
+            if ( rc != null && rc.isConnected() ) {
+                connected = true;
+                /*
+                 * We have to disconnect right away for test to work under Windows, where only one connection is allowed
+                 * at a time. The classes under test will get their own connections.
+                 */
+                if ( rc != null && rc.isConnected() && rc instanceof RServeClient )
+                    ( ( RServeClient ) rc ).disconnect();
+            }
+        } catch ( Exception e ) {
+            log.warn( e.getMessage() );
         }
 
         /* array designs */

@@ -147,7 +147,7 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
         Long id = eevc.getExpressionExperimentId();
 
         ExpressionExperiment expressionExperiment = this.expressionExperimentService.load( id );
-        expressionExperimentService.thawLite( expressionExperiment );
+        expressionExperiment = expressionExperimentService.thawLite( expressionExperiment );
 
         if ( expressionExperiment == null ) {
             return processErrors( request, response, command, errors, "No expression experiment with id " + id

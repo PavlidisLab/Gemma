@@ -108,8 +108,8 @@ public class ExperimentalDesignController extends BaseController {
      */
     public void createDesignFromFile( Long eeid, String filePath ) {
         ExpressionExperiment ee = expressionExperimentService.load( eeid );
-        expressionExperimentService.thaw(ee);
-        
+        ee = expressionExperimentService.thaw( ee );
+
         if ( ee == null ) {
             throw new IllegalArgumentException( "Could not access experiment with id=" + eeid );
         }
@@ -258,7 +258,7 @@ public class ExperimentalDesignController extends BaseController {
             }
         }
 
-        expressionExperimentService.thawLite( ee );
+        ee = expressionExperimentService.thawLite( ee );
 
         for ( BioAssay ba : ee.getBioAssays() ) {
             for ( BioMaterial bm : ba.getSamplesUsed() ) {
@@ -325,7 +325,8 @@ public class ExperimentalDesignController extends BaseController {
              */
             if ( !bioMaterialService.findByFactorValue( fv ).isEmpty() ) {
                 /*
-                 * If so, check to see if there are any diff results that use this factor. FIXME This might have to run in a background thread
+                 * If so, check to see if there are any diff results that use this factor. FIXME This might have to run
+                 * in a background thread
                  */
                 ExperimentalFactor ef = experimentalFactorService.load( fv.getExperimentalFactor().getId() );
                 Collection<DifferentialExpressionAnalysis> analyses = differentialExpressionAnalysisService
@@ -349,7 +350,7 @@ public class ExperimentalDesignController extends BaseController {
     public Collection<BioMaterialValueObject> getBioMaterials( EntityDelegator e ) {
         if ( e == null || e.getId() == null ) return null;
         ExpressionExperiment ee = expressionExperimentService.load( e.getId() );
-        expressionExperimentService.thawLite( ee );
+        ee = expressionExperimentService.thawLite( ee );
         Collection<BioMaterialValueObject> result = new HashSet<BioMaterialValueObject>();
         for ( BioAssay assay : ee.getBioAssays() ) {
             for ( BioMaterial sample : assay.getSamplesUsed() ) {
@@ -539,7 +540,7 @@ public class ExperimentalDesignController extends BaseController {
 
         request.setAttribute( "id", designId );
 
-        expressionExperimentService.thawLite( ee );
+        ee = expressionExperimentService.thawLite( ee );
 
         ModelAndView mnv = new ModelAndView( "experimentalDesign.detail" );
         mnv.addObject( "hasPopulatedDesign", experimentalDesign.getExperimentalFactors().size() > 0 );

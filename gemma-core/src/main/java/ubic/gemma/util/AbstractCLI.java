@@ -381,6 +381,9 @@ public abstract class AbstractCLI {
         addOption( dateOption );
     }
 
+    /**
+     * You must implement the handling for this option.
+     */
     @SuppressWarnings("static-access")
     protected void addAutoOption() {
         Option autoSeekOption = OptionBuilder.withArgName( AUTO_OPTION_NAME ).withDescription(

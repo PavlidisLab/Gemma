@@ -680,7 +680,7 @@ public class GeoDatasetService extends AbstractGeoService {
 
                 this.expressionExperimentReportService.generateSummaryObject( expressionExperiment.getId() );
 
-                this.expressionExperimentService.thawLite( expressionExperiment );
+                expressionExperiment = this.expressionExperimentService.thawLite( expressionExperiment );
 
                 for ( BioAssay ba : expressionExperiment.getBioAssays() ) {
                     adsToUpdate.add( ba.getArrayDesignUsed() );

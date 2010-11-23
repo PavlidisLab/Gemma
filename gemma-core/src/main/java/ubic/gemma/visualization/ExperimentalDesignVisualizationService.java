@@ -358,7 +358,7 @@ public class ExperimentalDesignVisualizationService {
             bioAssayDimensionService.thaw( bioAssayDimension );
 
             if ( !layouts.containsKey( ee ) ) {
-                expressionExperimentService.thawLite( ee );
+                ee = expressionExperimentService.thawLite( ee );
                 // plotExperimentalDesign( ee );
                 getExperimentalDesignLayout( ee, bioAssayDimension );
             }

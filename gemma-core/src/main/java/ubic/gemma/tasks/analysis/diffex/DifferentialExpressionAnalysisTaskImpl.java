@@ -94,7 +94,7 @@ public class DifferentialExpressionAnalysisTaskImpl implements DifferentialExpre
     private Collection<DifferentialExpressionAnalysis> doAnalysis( DifferentialExpressionAnalysisTaskCommand command ) {
         ExpressionExperiment ee = command.getExpressionExperiment();
 
-        expressionExperimentService.thawLite( ee );
+        ee = expressionExperimentService.thawLite( ee );
 
         Collection<DifferentialExpressionAnalysis> diffAnalyses = differentialExpressionAnalysisService
                 .getAnalyses( ee );

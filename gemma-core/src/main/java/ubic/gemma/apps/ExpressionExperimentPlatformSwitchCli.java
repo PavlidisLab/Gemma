@@ -127,7 +127,7 @@ public class ExpressionExperimentPlatformSwitchCli extends ExpressionExperimentM
     private void processExperiment( ExpressionExperiment ee ) {
 
         try {
-            this.eeService.thawLite( ee );
+            ee = this.eeService.thawLite( ee );
 
             AuditTrailService auditEventService = ( AuditTrailService ) this.getBean( "auditTrailService" );
             AuditEventType type = ExpressionExperimentPlatformSwitchEvent.Factory.newInstance();

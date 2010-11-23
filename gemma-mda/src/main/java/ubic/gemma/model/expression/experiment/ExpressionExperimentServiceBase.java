@@ -768,9 +768,9 @@ public abstract class ExpressionExperimentServiceBase implements ExpressionExper
     /**
      * @see ExpressionExperimentService#thaw(ExpressionExperiment)
      */
-    public void thaw( final ExpressionExperiment expressionExperiment ) {
+    public ExpressionExperiment thaw( final ExpressionExperiment expressionExperiment ) {
         try {
-            this.handleThaw( expressionExperiment );
+            return this.handleThaw( expressionExperiment );
         } catch ( Throwable th ) {
             throw new ExpressionExperimentServiceException(
                     "Error performing 'ExpressionExperimentService.thaw(ExpressionExperiment expressionExperiment)' --> "
@@ -781,9 +781,9 @@ public abstract class ExpressionExperimentServiceBase implements ExpressionExper
     /**
      * @see ExpressionExperimentService#thawLite(ExpressionExperiment)
      */
-    public void thawLite( final ExpressionExperiment expressionExperiment ) {
+    public ExpressionExperiment thawLite( final ExpressionExperiment expressionExperiment ) {
         try {
-            this.handleThawLite( expressionExperiment );
+            return this.handleThawLite( expressionExperiment );
         } catch ( Throwable th ) {
             throw new ExpressionExperimentServiceException(
                     "Error performing 'ExpressionExperimentService.thawLite(ExpressionExperiment expressionExperiment)' --> "
@@ -1114,12 +1114,14 @@ public abstract class ExpressionExperimentServiceBase implements ExpressionExper
     /**
      * Performs the core logic for {@link #thaw(ExpressionExperiment)}
      */
-    protected abstract void handleThaw( ExpressionExperiment expressionExperiment ) throws java.lang.Exception;
+    protected abstract ExpressionExperiment handleThaw( ExpressionExperiment expressionExperiment )
+            throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #thawLite(ExpressionExperiment)}
      */
-    protected abstract void handleThawLite( ExpressionExperiment expressionExperiment ) throws java.lang.Exception;
+    protected abstract ExpressionExperiment handleThawLite( ExpressionExperiment expressionExperiment )
+            throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #update(ExpressionExperiment)}

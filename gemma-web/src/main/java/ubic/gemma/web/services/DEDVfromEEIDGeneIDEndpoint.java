@@ -125,7 +125,7 @@ public class DEDVfromEEIDGeneIDEndpoint extends AbstractGemmaEndpoint {
         // Need to get and thaw the experiments.
         Collection<ExpressionExperiment> eeObjs = expressionExperimentService.loadMultiple( eeIDLong );
         for ( ExpressionExperiment ee : eeObjs ) {
-            expressionExperimentService.thawLite( ee );
+            ee = expressionExperimentService.thawLite( ee );
         }
 
         // get gene id's from request

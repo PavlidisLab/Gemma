@@ -309,7 +309,7 @@ public class ExpressionDataDoubleMatrixTest extends BaseSpringContextTest {
             newee = ( ExpressionExperiment ) e.getData();
         }
 
-        expressionExperimentService.thaw( newee );
+        newee = expressionExperimentService.thaw( newee );
         // make sure we really thaw them, so we can get the design element sequences.
 
         Collection<RawExpressionDataVector> designElementDataVectors = newee.getRawExpressionDataVectors();

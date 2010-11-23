@@ -1,5 +1,5 @@
 /*
- * The baseCode project
+ * The Gemma project
  * 
  * Copyright (c) 2010 University of British Columbia
  * 
@@ -35,57 +35,55 @@ import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.util.AbstractSpringAwareCLI;
 
 /**
- *  
- * Cli to load protein protein interaction data from STRING using biomart as an ensembl gene entrez gene mapper.
- * String data files uses ensembl identifiers whereas Gemma uses ncbi/entrez gene identifers biomart file translates 
- * between the two.
- * Up to 4 optional input parameters can be supplied to run the cli. If no input parameters are supplied then
- * all files are fetched from remote sites based on default file names and all valid taxon in gemma are processed. Login details should be supplied
- * for authentication on the command line.
+ * Cli to load protein protein interaction data from STRING using biomart as an ensembl gene entrez gene mapper. String
+ * data files uses ensembl identifiers whereas Gemma uses ncbi/entrez gene identifers biomart file translates between
+ * the two. Up to 4 optional input parameters can be supplied to run the cli. If no input parameters are supplied then
+ * all files are fetched from remote sites based on default file names and all valid taxon in gemma are processed. Login
+ * details should be supplied for authentication on the command line.
  * <p>
  * These 4 parameters are optional:
  * <ul>
- * <li> Taxon: If a taxon is given only protein data is retrieved for that taxon, if not supplied then all protein data 
- *  for all eligibale taxon held in system are run.This has to be supplied if biomart file is given.
- * <li> isStringFileRemote: Gives the option to indicate if the stringProteinProteinFileName provided is to be fetched from a remote site
- * <li> stringProteinProteinFileName: Name of string protein file to download
- * <li> biomartFileName: name of Local biomart file 
+ * <li>Taxon: If a taxon is given only protein data is retrieved for that taxon, if not supplied then all protein data
+ * for all eligibale taxon held in system are run.This has to be supplied if biomart file is given.
+ * <li>isStringFileRemote: Gives the option to indicate if the stringProteinProteinFileName provided is to be fetched
+ * from a remote site
+ * <li>stringProteinProteinFileName: Name of string protein file to download
+ * <li>biomartFileName: name of Local biomart file
  * </ul>
- * Example usage:
- * Import all protein protein interactions for zebrafish using a local copy of the string file and local copy of the biomart file
- * -u username -p password -t zebrafish -b biomartFile.txt -s /gemmaData/string.embl.de/newstring_download_protein.links.detailed.v8.2.txt.gz  
+ * Example usage: Import all protein protein interactions for zebrafish using a local copy of the string file and local
+ * copy of the biomart file -u username -p password -t zebrafish -b biomartFile.txt -s
+ * /gemmaData/string.embl.de/newstring_download_protein.links.detailed.v8.2.txt.gz Import all protein protein
+ * interactions for all taxon using a remote named copy of the string file and downloading the biomart file -u username
+ * -p password -r remote -s /gemmaData/string.embl.de/newstring_download_protein.links.detailed.v8.2.txt.gz Import all
+ * protein protein interactions for all taxon using a remote string and biomart file -u username -p password
  * 
- * Import all protein protein interactions for all taxon using a remote named copy of the string file and downloading the biomart file
- * -u username -p password -r remote -s /gemmaData/string.embl.de/newstring_download_protein.links.detailed.v8.2.txt.gz  
- *
- * Import all protein protein interactions for all taxon using a remote string and biomart file
- * -u username -p password   
- *
- *
  * @author ldonnison
  * @version $Id$
  */
 public class StringProteinLoadCli extends AbstractSpringAwareCLI {
-    
+
     TaxonService taxonService = null;
-    GeneService geneService= null;
+    GeneService geneService = null;
     ExternalDatabaseService externalDatabaseService = null;
-      
-    /**Taxon name of which to process protein protein interactions for*/
-    private String taxonName  = null;
-    
-    /**Name of remote stringProteinProteinFileName to fetch if not supplied then fetch file as specified in properties file*/
+
+    /** Taxon name of which to process protein protein interactions for */
+    private String taxonName = null;
+
+    /**
+     * Name of remote stringProteinProteinFileName to fetch if not supplied then fetch file as specified in properties
+     * file
+     */
     private String stringProteinProteinFileNameRemote = null;
-    
-    /**Name of local stringProteinProteinFileName to process which avoids fetching file from string site*/
+
+    /** Name of local stringProteinProteinFileName to process which avoids fetching file from string site */
     private File stringProteinProteinFileNameLocal = null;
-    
-    /**Name of local biomart file to process if null then biomart files are retrieved from biomart service*/
+
+    /** Name of local biomart file to process if null then biomart files are retrieved from biomart service */
     private File biomartFileName = null;
-    
-    
+
     /**
      * Main method
+     * 
      * @param args optional
      */
     public static void main( String[] args ) {
@@ -95,134 +93,129 @@ public class StringProteinLoadCli extends AbstractSpringAwareCLI {
             log.error( exception, exception );
         }
     }
-          
-  
+
     /**
      * Main doWork method validates input and calls the loader
      */
     @Override
     protected Exception doWork( String[] args ) {
-        //should at least have login info
+        // should at least have login info
         Exception err = processCommandLine( "Import of proteins from STRING", args );
         if ( err != null ) return err;
-        //call the loader
+        // call the loader
         this.loadProteinProteinInteractions();
-        
-        return null;       
+
+        return null;
 
     }
-    
+
     @Override
     public String getShortDesc() {
         return "Loads protein protein interaction data into gemma";
     }
-    
+
     /**
-     * Method to wrap call to loader. Ensures that all spring beans are configured. 
+     * Method to wrap call to loader. Ensures that all spring beans are configured.
      */
-    public void loadProteinProteinInteractions(){
+    public void loadProteinProteinInteractions() {
         StringBiomartGene2GeneProteinAssociationLoader loader = new StringBiomartGene2GeneProteinAssociationLoader();
-        
-        geneService = ( GeneService ) getBean( "geneService" );        
-        externalDatabaseService = ((ExternalDatabaseService)getBean("externalDatabaseService")); 
-        //set all the loaders  
-        if(this.getPersisterHelper()== null || geneService== null || externalDatabaseService==null ){
-            throw new RuntimeException("Spring configuration problem");
-        }else{
-            loader.setPersisterHelper( this.getPersisterHelper() );
-            loader.setGeneService( geneService );
-            loader.setExternalDatabaseService( externalDatabaseService );           
+
+        geneService = ( GeneService ) getBean( "geneService" );
+        externalDatabaseService = ( ( ExternalDatabaseService ) getBean( "externalDatabaseService" ) );
+        // set all the loaders
+        if ( this.getPersisterHelper() == null || geneService == null || externalDatabaseService == null ) {
+            throw new RuntimeException( "Spring configuration problem" );
         }
-        Collection<Taxon> taxa = getValidTaxon();  
-        //some of these parameters can be null
+        loader.setPersisterHelper( this.getPersisterHelper() );
+        loader.setGeneService( geneService );
+        loader.setExternalDatabaseService( externalDatabaseService );
+
+        Collection<Taxon> taxa = getValidTaxon();
+        // some of these parameters can be null
         loader.load( stringProteinProteinFileNameLocal, stringProteinProteinFileNameRemote, biomartFileName, taxa );
     }
-    
-        
+
     @Override
     @SuppressWarnings("static-access")
     protected void buildOptions() {
-        //taxon
+        // taxon
         Option taxonNameOption = OptionBuilder.hasArg().withDescription(
                 "Taxon short name e.g. 'mouse' (use with --genefile, or alone to process all "
                         + "known genes for the taxon, or with --all-arrays to process all arrays for the taxon." )
                 .withLongOpt( "taxon" ).create( 't' );
         addOption( taxonNameOption );
         //
-        Option isStringFileRemote =OptionBuilder.hasArg().withDescription(
-                "Flag to indicate whether given string protein interaction file is remote or local (use with --stringProteinProteinFileName  " 
-                +"this is given as the remote file may change name and it is faster to use a local copy of the file"
-                ).withLongOpt( "isStringFileRemote" )
-        .create( 'r' );
+        Option isStringFileRemote = OptionBuilder
+                .hasArg()
+                .withDescription(
+                        "Flag to indicate whether given string protein interaction file is remote or local (use with --stringProteinProteinFileName  "
+                                + "this is given as the remote file may change name and it is faster to use a local copy of the file" )
+                .withLongOpt( "isStringFileRemote" ).create( 'r' );
         addOption( isStringFileRemote );
-        
-        Option stringProteinProteinFileName =OptionBuilder.hasArg().withDescription(
+
+        Option stringProteinProteinFileName = OptionBuilder.hasArg().withDescription(
                 "Input File Path for string protein interaction file  "
-                + "Optional path to the protein.links.detailed file" ).withLongOpt( "stringProteinProteinFileName" )
-        .create( 's' );
+                        + "Optional path to the protein.links.detailed file" ).withLongOpt(
+                "stringProteinProteinFileName" ).create( 's' );
         addOption( stringProteinProteinFileName );
-        
-        Option biomartFileNameLocal =OptionBuilder.hasArg().withDescription(
+
+        Option biomartFileNameLocal = OptionBuilder.hasArg().withDescription(
                 "Input File Path for biomart file should only be supplied when taxon supplied "
-                + "Optional can only be " ).withLongOpt( "biomartFileName" )
-        .create( 'b' );
-        addOption( biomartFileNameLocal );        
-        
+                        + "Optional can only be " ).withLongOpt( "biomartFileName" ).create( 'b' );
+        addOption( biomartFileNameLocal );
+
     }
-    
-    
+
     /**
-     * Validate input parameters. 
-     * If a biomart file is provided then a taxon should be provided.
-     * If a stringProteinProteinFileName is provided then the isStringFileRemote
-     * should be set to indicate whether the named file is remote or local
-     * (The file is big so to save time good to use a current up to date copy).
-     * If local files are to be processed check that they are readable.
-     * 
+     * Validate input parameters. If a biomart file is provided then a taxon should be provided. If a
+     * stringProteinProteinFileName is provided then the isStringFileRemote should be set to indicate whether the named
+     * file is remote or local (The file is big so to save time good to use a current up to date copy). If local files
+     * are to be processed check that they are readable.
      */
     @Override
-    protected void processOptions()  {
-              
+    protected void processOptions() {
+
         super.processOptions();
-        
-        //if a biomart file name is given then the taxon should be specified
+
+        // if a biomart file name is given then the taxon should be specified
         if ( hasOption( "biomartFileName" ) ) {
-            if ( this.getOptionValue( 't' ) ==null ) {
+            if ( this.getOptionValue( 't' ) == null ) {
                 throw new IllegalArgumentException( "Please specify the taxon when specifying the biomart file name" );
-            }           
+            }
         }
-                    
-        if(this.getOptionValue( 't' ) !=null){
+
+        if ( this.getOptionValue( 't' ) != null ) {
             taxonName = this.getOptionValue( 't' );
             log.info( "Getting file for taxon " + taxonName );
         }
-       
-        
-        if(this.getOptionValue( 's' ) !=null){
-            String stringProteinProteinFileName = this.getOptionValue('s');
-            if(this.getOptionValue( 'r')!=null){
-                this.stringProteinProteinFileNameRemote =stringProteinProteinFileName;
-                log.info( "Processing string file from remote site" );                
-            }else{
-                //validate the file
-                this.stringProteinProteinFileNameLocal = new File(stringProteinProteinFileName);
-                log.info( "Processing string file from local site" );  
-                if(!stringProteinProteinFileNameLocal.canRead()){
-                    throw new IllegalArgumentException( "The specified local stringProteinProteinFileName can not be read " + stringProteinProteinFileNameLocal);
+
+        if ( this.getOptionValue( 's' ) != null ) {
+            String stringProteinProteinFileName = this.getOptionValue( 's' );
+            if ( this.getOptionValue( 'r' ) != null ) {
+                this.stringProteinProteinFileNameRemote = stringProteinProteinFileName;
+                log.info( "Processing string file from remote site" );
+            } else {
+                // validate the file
+                this.stringProteinProteinFileNameLocal = new File( stringProteinProteinFileName );
+                log.info( "Processing string file from local site" );
+                if ( !stringProteinProteinFileNameLocal.canRead() ) {
+                    throw new IllegalArgumentException(
+                            "The specified local stringProteinProteinFileName can not be read "
+                                    + stringProteinProteinFileNameLocal );
                 }
             }
         }
-        if(this.getOptionValue( 'b' ) !=null){
+        if ( this.getOptionValue( 'b' ) != null ) {
             log.info( "Processing biomart file from local site" );
-            biomartFileName = new File(this.getOptionValue('b')); 
-            if(!biomartFileName.canRead()){
-                throw new IllegalArgumentException( "The specified biomart file can not be read " + biomartFileName);
-            }            
-        }     
-        //only authenticated users run this code
+            biomartFileName = new File( this.getOptionValue( 'b' ) );
+            if ( !biomartFileName.canRead() ) {
+                throw new IllegalArgumentException( "The specified biomart file can not be read " + biomartFileName );
+            }
+        }
+        // only authenticated users run this code
         requireLogin();
     }
-        
+
     /**
      * If a taxon is supplied on the command line then process protein interactions for that taxon. If no taxon is
      * supplied then create a list of valid taxon to process from those stored in gemma: Criteria are does this taxon
@@ -238,26 +231,27 @@ public class StringProteinLoadCli extends AbstractSpringAwareCLI {
         if ( taxonName != null || StringUtils.isNotBlank( taxonName ) ) {
             taxon = taxonService.findByCommonName( taxonName );
 
-            if ( taxon == null || !(taxon.getIsSpecies()) || !(taxon.getIsGenesUsable()) ) {
-                throw new IllegalArgumentException( "The taxon common name supplied: "+ taxonName + " Either does not match anything in GEMMA, or is not a species or does have usable genes" );
+            if ( taxon == null || !( taxon.getIsSpecies() ) || !( taxon.getIsGenesUsable() ) ) {
+                throw new IllegalArgumentException( "The taxon common name supplied: " + taxonName
+                        + " Either does not match anything in GEMMA, or is not a species or does have usable genes" );
             }
             taxa.add( taxon );
         } else {
             for ( Taxon taxonGemma : this.taxonService.loadAll() ) {
                 // only those taxon that are species and have usable genes should be processed
-                if (taxonGemma !=null &&  taxonGemma.getIsSpecies() && taxonGemma.getIsGenesUsable() && (taxonGemma.getCommonName() !=null) && !(taxonGemma.getCommonName().isEmpty()) ) {
+                if ( taxonGemma != null && taxonGemma.getIsSpecies() && taxonGemma.getIsGenesUsable()
+                        && ( taxonGemma.getCommonName() != null ) && !( taxonGemma.getCommonName().isEmpty() ) ) {
                     taxa.add( taxonGemma );
                 }
             }
 
-            if ( taxa == null || taxa.isEmpty() ) {
+            if ( taxa.isEmpty() ) {
                 throw new RuntimeException(
                         "There are no valid taxa in GEMMA to process. Valid taxon are those that are species and have usable genes." );
             }
             log.info( "Processing " + taxa.size() + "taxa " );
         }
         return taxa;
-    }    
-    
+    }
 
 }

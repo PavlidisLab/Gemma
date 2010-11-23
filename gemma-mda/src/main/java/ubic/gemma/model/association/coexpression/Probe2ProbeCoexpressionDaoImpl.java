@@ -311,16 +311,13 @@ public class Probe2ProbeCoexpressionDaoImpl extends
             StopWatch timer = new StopWatch();
             timer.start();
             totalDone = q.executeUpdate();
-            if ( timer.getTime() > 1000 ) {
-                log.info( "Done in " + timer.getTime() + "ms" );
-            }
 
             if ( totalDone > 0 ) {
-                log.info( totalDone + " coexpression results removed for " + ee );
+                log.info( totalDone + " coexpression results removed for " + ee + ": " + timer.getTime() + "ms" );
                 break;
             }
-
         }
+
         if ( totalDone == 0 ) {
             log.info( "No coexpression results to remove for " + ee );
         }

@@ -44,7 +44,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueService;
-import ubic.gemma.model.expression.experiment.FactorValueValueObject; 
+import ubic.gemma.model.expression.experiment.FactorValueValueObject;
 import ubic.gemma.ontology.OntologyService;
 import ubic.gemma.web.remote.EntityDelegator;
 import ubic.gemma.web.util.EntityNotFoundException;
@@ -70,7 +70,7 @@ public class BioMaterialController {
 
     @Autowired
     private FactorValueService factorValueService;
- 
+
     private boolean AJAX = true;
 
     /**
@@ -194,7 +194,7 @@ public class BioMaterialController {
             throw new EntityNotFoundException( "Expression experiment with id=" + id + " not found" );
         }
 
-        expressionExperimentService.thawLite( expressionExperiment );
+        expressionExperiment = expressionExperimentService.thawLite( expressionExperiment );
         Collection<BioAssay> bioAssays = expressionExperiment.getBioAssays();
         Collection<BioMaterial> bioMaterials = new ArrayList<BioMaterial>();
         for ( BioAssay assay : bioAssays ) {

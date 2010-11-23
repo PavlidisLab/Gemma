@@ -24,8 +24,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 
 import org.apache.commons.lang.RandomStringUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -156,6 +158,8 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
 
         boolean hasQValue = rc.loadLibrary( "qvalue" );
         if ( !hasQValue ) {
+            List<String> stringListEval = rc.stringListEval( "Sys.getenv()" );
+            log.info( StringUtils.join( stringListEval, "\n" ) );
             throw new IllegalStateException( "qvalue does not seem to be available" );
         }
 

@@ -247,13 +247,16 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractSpring
 
         if ( expressionExperiments != null && expressionExperiments.size() > 0 && !force ) {
 
+            if ( expressionExperiments.size() > 1 ) log.info( "Thawing experiments ..." );
             for ( BioAssaySet ee : expressionExperiments ) {
                 if ( ee instanceof ExpressionExperiment ) {
-                    eeService.thawLite( ( ExpressionExperiment ) ee );
+                    ee = eeService.thawLite( ( ExpressionExperiment ) ee );
                 } else {
                     throw new UnsupportedOperationException( "Can't handle non-EE BioAssaySets yet" );
                 }
             }
+
+            if ( expressionExperiments.size() > 1 ) log.info( "Done thawing" );
 
             removeTroubledEes( expressionExperiments );
         }

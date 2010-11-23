@@ -91,6 +91,7 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.util.AbstractCLI#buildOptions()
      */
     @SuppressWarnings("static-access")
@@ -117,6 +118,7 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.util.AbstractCLI#doWork(java.lang.String[])
      */
     @Override
@@ -190,7 +192,7 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
 
         Collection<QuantitationType> types = eeService.getQuantitationTypes( ee );
 
-        eeService.thawLite( ee );
+        ee = eeService.thawLite( ee );
 
         if ( !needToRun( ee, MissingValueAnalysisEvent.class ) ) return false;
 

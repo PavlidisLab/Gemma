@@ -64,7 +64,7 @@ public class ExpressionDataFileServiceTest extends BaseSpringContextTest {
             log.error( "Could not find experiment " + shortName + ".  Skipping test ..." );
             return;
         }
-        expressionExperimentService.thawLite( ee );
+        ee = expressionExperimentService.thawLite( ee );
 
         String filename = ExpressionDataFileService.DATA_DIR + ee.getId() + "_" + shortName + "_expmat.data.txt.gz";
         Writer writer = new OutputStreamWriter( new GZIPOutputStream( new FileOutputStream( filename ) ) );
@@ -94,7 +94,7 @@ public class ExpressionDataFileServiceTest extends BaseSpringContextTest {
             log.error( "Could not find experiment " + shortName + ".  Skipping test ..." );
             return;
         }
-        expressionExperimentService.thawLite( ee );
+        ee = expressionExperimentService.thawLite( ee );
 
         String filename = ExpressionDataFileService.DATA_DIR + ee.getId() + "_" + shortName
                 + "_expmat.unfilt.data.txt.gz";

@@ -174,7 +174,7 @@ public class LinkAnalysisService {
             la.clear();
 
             log.info( "Fetching expression data ... " + ee );
-            eeService.thawLite( ee );
+            ee = eeService.thawLite( ee );
             Collection<ProcessedExpressionDataVector> dataVectors = expressionDataMatrixService
                     .getProcessedExpressionDataVectors( ee );
 

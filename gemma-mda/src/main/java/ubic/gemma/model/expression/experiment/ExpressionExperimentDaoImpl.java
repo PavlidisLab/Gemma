@@ -36,7 +36,6 @@ import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Hibernate;
-import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.Query;
 import org.hibernate.ScrollableResults;
@@ -61,7 +60,6 @@ import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.model.expression.biomaterial.BioMaterialImpl;
 import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
@@ -1574,33 +1572,44 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
      * .ExpressionExperiment, boolean)
      */
     @Override
-    protected void handleThaw( ExpressionExperiment ee, boolean vectorsAlso ) {
+    protected ExpressionExperiment handleThaw( ExpressionExperiment ee, boolean vectorsAlso ) {
         if ( ee == null ) {
-            return;
+            return null;
         }
 
         if ( ee.getId() == null ) throw new IllegalArgumentException( "Id cannot be null, cannot be thawed: " + ee );
 
-        Session session = this.getSessionFactory().getCurrentSession();
-        EntityUtils.attach( session, ee, ExpressionExperimentImpl.class, ee.getId() );
+        /*
+         * Big query to eagerly fetch as much as we can. Trying to do everything fails miserably, so we still need a
+         * hybrid approach. But returning the thawed object, as opposed to thawing the one passed in, solves problems.
+         */
+        String thawQuery = "select distinct e from ExpressionExperimentImpl e "
+                + " left join fetch e.quantitationTypes left join fetch e.characteristics "
+                + " left join fetch e.investigators" + " left join fetch e.auditTrail at left join fetch at.events "
+                + " left join fetch e.accession acc left join fetch acc.externalDatabase " + "where e.id=:eeid";
 
-        Hibernate.initialize( ee );
-        Hibernate.initialize( ee.getQuantitationTypes() );
-        Hibernate.initialize( ee.getCharacteristics() );
-        Hibernate.initialize( ee.getInvestigators() );
+        List<?> res = this.getHibernateTemplate().findByNamedParam( thawQuery, "eeid", ee.getId() );
 
-        for ( QuantitationType type : ee.getQuantitationTypes() ) {
-            type = ( QuantitationType ) session.get( type.getClass(), type.getId(), LockMode.NONE );
-            Hibernate.initialize( type );
-            session.evict( type );
+        if ( res.size() == 0 ) {
+            throw new IllegalArgumentException( "No experiment with id=" + ee.getId() + " could be loaded." );
+        }
+        ExpressionExperiment result = ( ExpressionExperiment ) res.iterator().next();
+
+        Hibernate.initialize( result.getRawDataFile() );
+        Hibernate.initialize( result.getPrimaryPublication() );
+        Hibernate.initialize( result.getBioAssays() );
+        for ( BioAssay ba : result.getBioAssays() ) {
+            Hibernate.initialize( ba.getArrayDesignUsed() );
+            Hibernate.initialize( ba.getDerivedDataFiles() );
+            Hibernate.initialize( ba.getSamplesUsed() );
+            for ( BioMaterial bm : ba.getSamplesUsed() ) {
+                Hibernate.initialize( bm.getFactorValues() );
+                Hibernate.initialize( bm.getTreatments() );
+            }
         }
 
-        if ( ee.getAuditTrail() != null ) Hibernate.initialize( ee.getAuditTrail().getEvents() );
-        thawReferences( ee, session );
-
-        ExperimentalDesign experimentalDesign = ee.getExperimentalDesign();
+        ExperimentalDesign experimentalDesign = result.getExperimentalDesign();
         if ( experimentalDesign != null ) {
-            session.lock( experimentalDesign, LockMode.NONE );
             Hibernate.initialize( experimentalDesign );
             Hibernate.initialize( experimentalDesign.getExperimentalFactors() );
             experimentalDesign.getTypes().size();
@@ -1615,56 +1624,27 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
                         }
                     }
                 }
-                session.evict( factor );
             }
         }
 
-        if ( ee.getAccession() != null ) ee.getAccession().getExternalDatabase();
-        for ( BioAssay ba : ee.getBioAssays() ) {
-            Hibernate.initialize( ba );
-            Hibernate.initialize( ba.getSamplesUsed() );
-            for ( BioMaterial bm : ba.getSamplesUsed() ) {
-                // session.lock( bm, LockMode.NONE );
-                Hibernate.initialize( bm );
-                // FIXME this often causes a "collection is not associated with any session" error ... but if we don't
-                // thaw it we get lazy exceptions later.
-                try {
-                    EntityUtils.attach( session, bm, BioMaterialImpl.class, bm.getId() );
-
-                    Hibernate.initialize( bm.getBioAssaysUsedIn() );
-                    Hibernate.initialize( bm.getFactorValues() );
-                    Hibernate.initialize( bm.getTreatments() );
-                } catch ( HibernateException e ) {
-                    /*
-                     * We do his this see bug 1965.
-                     */
-                    log.warn( "Could not initialize a biomaterial association: " + e.getMessage() );
-                }
-                session.evict( bm );
-            }
-            Hibernate.initialize( ba.getDerivedDataFiles() );
-            Hibernate.initialize( ba.getArrayDesignUsed() );
-            session.evict( ba );
-        }
+        thawReferences( result );
 
         if ( vectorsAlso ) {
             /*
              * Optional because this could be slow.
              */
-            Hibernate.initialize( ee.getRawExpressionDataVectors() );
-            Hibernate.initialize( ee.getProcessedExpressionDataVectors() );
+            Hibernate.initialize( result.getRawExpressionDataVectors() );
+            Hibernate.initialize( result.getProcessedExpressionDataVectors() );
 
         }
 
-        session.evict( ee );
-
+        return result;
     }
 
     /**
      * @param expressionExperiment
-     * @param session
      */
-    void thawReferences( final ExpressionExperiment expressionExperiment, org.hibernate.Session session ) {
+    private void thawReferences( final ExpressionExperiment expressionExperiment ) {
         if ( expressionExperiment.getPrimaryPublication() != null ) {
             Hibernate.initialize( expressionExperiment.getPrimaryPublication() );
             Hibernate.initialize( expressionExperiment.getPrimaryPublication().getPubAccession() );
@@ -1676,7 +1656,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
             for ( BibliographicReference bf : expressionExperiment.getOtherRelevantPublications() ) {
                 Hibernate.initialize( bf.getPubAccession() );
                 Hibernate.initialize( bf.getPubAccession().getExternalDatabase() );
-                bf.getAuthors().size();
+                Hibernate.initialize( bf.getAuthors() );
             }
         }
     }

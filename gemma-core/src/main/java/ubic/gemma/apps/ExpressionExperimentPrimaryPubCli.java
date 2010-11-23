@@ -63,7 +63,7 @@ public class ExpressionExperimentPrimaryPubCli extends AbstractSpringAwareCLI {
         ExpressionExperimentBibRefFinder finder = new ExpressionExperimentBibRefFinder();
         for ( ExpressionExperiment experiment : experiments ) {
             if ( experiment.getPrimaryPublication() != null ) continue;
-            ees.thawLite( experiment );
+            experiment = ees.thawLite( experiment );
             BibliographicReference ref = finder.locatePrimaryReference( experiment );
             if ( ref == null ) {
                 System.err.println( "No ref for " + experiment );

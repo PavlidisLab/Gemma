@@ -100,7 +100,7 @@ public class GeoLoaderCli extends AbstractSpringAwareCLI {
         for ( String gse : ges ) {
             log.info( "***** Loading: " + gse + " ******" );
             try {
-                
+
                 // Reset.
                 loader.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
 
@@ -143,7 +143,7 @@ public class GeoLoaderCli extends AbstractSpringAwareCLI {
         TechnologyType tt = design.getTechnologyType();
         if ( tt == TechnologyType.TWOCOLOR || tt == TechnologyType.DUALMODE ) {
             log.info( ee + " uses a two-color array design, processing for missing values ..." );
-            eeService.thawLite( ee );
+            ee = eeService.thawLite( ee );
             tcmv.computeMissingValues( ee );
             wasProcessed = true;
         }

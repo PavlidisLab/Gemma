@@ -343,7 +343,7 @@ public class ExpressionExperimentLoadController extends AbstractTaskService {
             TechnologyType tt = design.getTechnologyType();
             if ( tt == TechnologyType.TWOCOLOR || tt == TechnologyType.DUALMODE ) {
                 log.info( ee + " uses a two-color array design, processing for missing values ..." );
-                eeService.thawLite( ee );
+                ee = eeService.thawLite( ee );
                 twoChannelMissingValueService.computeMissingValues( ee );
                 wasProcessed = true;
             }

@@ -102,7 +102,7 @@ public class ProcessedExpressionDataVectorCreateController extends AbstractTaskS
     public String run( Long id ) throws Exception {
 
         ExpressionExperiment ee = expressionExperimentService.load( id );
-        expressionExperimentService.thawLite( ee );
+        ee = expressionExperimentService.thawLite( ee );
         ProcessedExpressionDataVectorCreateTaskCommand cmd = new ProcessedExpressionDataVectorCreateTaskCommand( ee );
 
         return super.run( cmd );
@@ -110,6 +110,7 @@ public class ProcessedExpressionDataVectorCreateController extends AbstractTaskS
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.web.controller.grid.AbstractSpacesController#getRunner(java.lang.String, java.lang.Object)
      */
     @Override
@@ -119,6 +120,7 @@ public class ProcessedExpressionDataVectorCreateController extends AbstractTaskS
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.web.controller.grid.AbstractSpacesController#getSpaceRunner(java.lang.String, java.lang.Object)
      */
     @Override

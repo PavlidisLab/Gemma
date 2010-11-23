@@ -316,7 +316,7 @@ public class VectorMergingService extends ExpressionExperimentVectorManipulating
 
         this.processedExpressionDataVectorService.removeProcessedDataVectors( expExp );
 
-        expressionExperimentService.thawLite( expExp );
+        expExp = expressionExperimentService.thawLite( expExp );
         Collection<QuantitationType> qts = expressionExperimentService.getQuantitationTypes( expExp );
 
         Collection<ArrayDesign> arrayDesigns = expressionExperimentService.getArrayDesignsUsed( expExp );
@@ -509,7 +509,7 @@ public class VectorMergingService extends ExpressionExperimentVectorManipulating
         TechnologyType tt = design.getTechnologyType();
         if ( tt == TechnologyType.TWOCOLOR || tt == TechnologyType.DUALMODE ) {
             log.info( ee + " uses a two-color array design, processing for missing values ..." );
-            expressionExperimentService.thawLite( ee );
+            ee = expressionExperimentService.thawLite( ee );
             twoChannelMissingValueService.computeMissingValues( ee );
             wasProcessed = true;
         }

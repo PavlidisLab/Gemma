@@ -100,9 +100,9 @@ public class ExperimentalDesignImporterTestB extends BaseSpringContextTest {
 
     @Before
     public void setup() throws Exception {
-      
-        super.executeSqlScript( "/script/sql/add-fish-taxa.sql", false );        
-                       
+
+        super.executeSqlScript( "/script/sql/add-fish-taxa.sql", false );
+
         InputStream data = this.getClass().getResourceAsStream(
                 "/data/loader/expression/head.Gill2007gemmaExpressionData.txt" );
 
@@ -113,11 +113,11 @@ public class ExperimentalDesignImporterTestB extends BaseSpringContextTest {
             Thread.sleep( 1000 );
             log.info( "Waiting for mgedontology to load" );
         }
-//        Taxon salmon = Taxon.Factory.newInstance();
-//        salmon.setCommonName( "salmonid" );
-//        salmon.setIsSpecies( true );
-//        salmon.setIsGenesUsable( true );
-        
+        // Taxon salmon = Taxon.Factory.newInstance();
+        // salmon.setCommonName( "salmonid" );
+        // salmon.setIsSpecies( true );
+        // salmon.setIsGenesUsable( true );
+
         Taxon salmon = taxonService.findByCommonName( "salmonid" );
 
         // doesn't matter what it is for this test, but the test data are from salmon.
@@ -144,8 +144,8 @@ public class ExperimentalDesignImporterTestB extends BaseSpringContextTest {
     }
 
     /**
-     * Test method for {@link ubic.gemma.loader.expression.simple.ExperimentalDesignImporterImpl#parse(java.io.InputStream)}
-     * .
+     * Test method for
+     * {@link ubic.gemma.loader.expression.simple.ExperimentalDesignImporterImpl#parse(java.io.InputStream)} .
      */
     @Test
     public final void testParseLoadDelete() throws Exception {
@@ -167,7 +167,7 @@ public class ExperimentalDesignImporterTestB extends BaseSpringContextTest {
         this.aclTestUtils.checkEEAcls( ee );
 
         ee = this.expressionExperimentService.load( ee.getId() );
-        this.expressionExperimentService.thawLite( ee );
+        ee = this.expressionExperimentService.thawLite( ee );
         int s = ee.getExperimentalDesign().getExperimentalFactors().size();
         ExperimentalFactor toDelete = ee.getExperimentalDesign().getExperimentalFactors().iterator().next();
 
@@ -175,7 +175,7 @@ public class ExperimentalDesignImporterTestB extends BaseSpringContextTest {
          * FIXME: this should be a single service call, However, it's not that easy to do. If you run this in a single
          * transaction, you invariably get session errors. See {@link ExperimentalDesignController}
          */
-        
+
         for ( BioAssay ba : ee.getBioAssays() ) {
             for ( BioMaterial bm : ba.getSamplesUsed() ) {
                 boolean removed = false;

@@ -493,7 +493,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
      * @param ee
      */
     private void processExperiment( ExpressionExperiment ee ) {
-        eeService.thawLite( ee );
+        ee = eeService.thawLite( ee );
 
         /*
          * If we're not using the database, always run it.

@@ -118,7 +118,7 @@ public class ExperimentalDesignImporterTest extends BaseSpringContextTest {
 
         ee = simpleExpressionDataLoaderService.load( metaData, data );
 
-        eeService.thawLite( ee );
+        ee = eeService.thawLite( ee );
     }
 
     /**

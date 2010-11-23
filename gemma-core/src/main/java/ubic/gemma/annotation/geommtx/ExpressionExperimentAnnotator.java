@@ -155,7 +155,7 @@ public class ExpressionExperimentAnnotator implements InitializingBean {
 
         log.info( "Annotating: " + e );
 
-        expressionExperimentService.thawLite( e );
+        e = expressionExperimentService.thawLite( e );
 
         long time = System.currentTimeMillis();
 

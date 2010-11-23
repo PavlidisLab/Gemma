@@ -261,7 +261,7 @@ public class ExpressionDataFileService {
      */
     public File writeOrLocateDesignFile( ExpressionExperiment ee, boolean forceWrite ) {
 
-        expressionExperimentService.thawLite( ee );
+        ee = expressionExperimentService.thawLite( ee );
 
         String filename = ee.getId() + "_" + ee.getShortName().replaceAll( "\\s+", "_" ) + "_expdesign"
                 + DATA_FILE_SUFFIX;
@@ -348,7 +348,7 @@ public class ExpressionDataFileService {
      */
     public File writeOrLocateDiffExpressionDataFile( ExpressionExperiment ee, boolean forceWrite ) {
 
-        expressionExperimentService.thawLite( ee );
+        ee = expressionExperimentService.thawLite( ee );
 
         String filename = getDiffExFileName( ee );
         try {
@@ -396,7 +396,7 @@ public class ExpressionDataFileService {
      */
     public File writeOrLocateCoexpressionDataFile( ExpressionExperiment ee, boolean forceWrite ) {
 
-        expressionExperimentService.thawLite( ee );
+        ee = expressionExperimentService.thawLite( ee );
 
         String filename = ee.getId() + "_" + ee.getShortName().replaceAll( "\\s+", "_" ) + "_coExp" + DATA_FILE_SUFFIX;
         try {
@@ -626,7 +626,7 @@ public class ExpressionDataFileService {
         FilterConfig filterConfig = new FilterConfig();
         filterConfig.setIgnoreMinimumSampleThreshold( true );
         filterConfig.setIgnoreMinimumRowsThreshold( true );
-        expressionExperimentService.thawLite( ee );
+        ee = expressionExperimentService.thawLite( ee );
         ExpressionDataDoubleMatrix matrix;
         if ( filtered ) {
             matrix = expressionDataMatrixService.getFilteredMatrix( ee, filterConfig );

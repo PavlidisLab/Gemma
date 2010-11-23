@@ -332,7 +332,7 @@ public class LoadSimpleExpressionDataCli extends AbstractSpringAwareCLI {
 
         ExpressionExperiment ee = eeLoaderService.load( metaData, data );
 
-        eeService.thawLite( ee );
+        ee = eeService.thawLite( ee );
 
     }
 

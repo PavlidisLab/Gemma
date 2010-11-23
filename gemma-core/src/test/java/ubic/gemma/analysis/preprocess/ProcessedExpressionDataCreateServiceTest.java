@@ -92,13 +92,14 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
         try {
             geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
                     + "GSE5949short" ) );
-            Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad( "GSE5949", false, true, false, false );
+            Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad(
+                    "GSE5949", false, true, false, false );
             this.ee = results.iterator().next();
         } catch ( AlreadyExistsInSystemException e ) {
             this.ee = ( ExpressionExperiment ) e.getData();
         }
 
-        eeService.thawLite( ee );
+        ee = eeService.thawLite( ee );
 
         Collection<ProcessedExpressionDataVector> preferredVectors = processedExpressionDataVectorCreateService
                 .computeProcessedExpressionData( ee );
@@ -132,7 +133,7 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
             this.ee = ( ExpressionExperiment ) e.getData();
         }
 
-        eeService.thawLite( ee );
+        ee = eeService.thawLite( ee );
         processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
 
         ExperimentalFactor factor = ExperimentalFactor.Factory.newInstance();
@@ -160,7 +161,7 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
 
         experimentalFactorService.update( factor );
 
-        eeService.thaw( ee );
+        ee = eeService.thaw( ee );
 
         List<BioAssay> basInOrder = new ArrayList<BioAssay>( ee.getBioAssays() );
 

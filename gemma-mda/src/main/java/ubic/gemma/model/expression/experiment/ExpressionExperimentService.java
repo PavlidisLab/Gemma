@@ -425,13 +425,13 @@ public interface ExpressionExperimentService {
      * @param expressionExperiment
      */
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    public void thaw( ExpressionExperiment expressionExperiment );
+    public ExpressionExperiment thaw( ExpressionExperiment expressionExperiment );
 
     /**
      * Partially thaw the expression experiment given - do not thaw the raw data.
      */
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    public void thawLite( ExpressionExperiment expressionExperiment );
+    public ExpressionExperiment thawLite( ExpressionExperiment expressionExperiment );
 
     /**
      * @param expressionExperiment

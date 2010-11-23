@@ -996,9 +996,9 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     /**
      * @see ExpressionExperimentDao#thaw(ExpressionExperiment)
      */
-    public void thaw( final ExpressionExperiment expressionExperiment ) {
+    public ExpressionExperiment thaw( final ExpressionExperiment expressionExperiment ) {
         try {
-            this.handleThaw( expressionExperiment, true );
+            return this.handleThaw( expressionExperiment, true );
         } catch ( Throwable th ) {
             throw new RuntimeException(
                     "Error performing 'ExpressionExperimentDao.thaw(ExpressionExperiment expressionExperiment)' --> "
@@ -1009,9 +1009,9 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     /**
      * @see ExpressionExperimentDao#thawBioAssays(ExpressionExperiment)
      */
-    public void thawBioAssays( final ExpressionExperiment expressionExperiment ) {
+    public ExpressionExperiment thawBioAssays( final ExpressionExperiment expressionExperiment ) {
         try {
-            this.handleThaw( expressionExperiment, false );
+            return this.handleThaw( expressionExperiment, false );
         } catch ( Throwable th ) {
             throw new RuntimeException(
                     "Error performing 'ExpressionExperimentDao.thawBioAssays(ExpressionExperiment expressionExperiment)' --> "
@@ -1282,7 +1282,7 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     /**
      * Performs the core logic for {@link #thaw(ExpressionExperiment)}
      */
-    protected abstract void handleThaw( ExpressionExperiment expressionExperiment, boolean thawVectors )
+    protected abstract ExpressionExperiment handleThaw( ExpressionExperiment expressionExperiment, boolean thawVectors )
             throws Exception;
 
     /**

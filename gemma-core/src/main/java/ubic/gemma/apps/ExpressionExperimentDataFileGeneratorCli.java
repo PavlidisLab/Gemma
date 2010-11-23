@@ -172,7 +172,7 @@ public class ExpressionExperimentDataFileGeneratorCli extends ExpressionExperime
     private void processExperiment( ExpressionExperiment ee ) {
 
         try {
-            this.eeService.thawLite( ee );
+            ee = this.eeService.thawLite( ee );
 
             AuditTrailService auditEventService = ( AuditTrailService ) this.getBean( "auditTrailService" );
             AuditEventType type = CommentedEvent.Factory.newInstance();

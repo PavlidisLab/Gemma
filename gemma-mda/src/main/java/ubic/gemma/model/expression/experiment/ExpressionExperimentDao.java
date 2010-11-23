@@ -315,7 +315,7 @@ public interface ExpressionExperimentDao extends BioAssaySetDao<ExpressionExperi
     /**
      * 
      */
-    public void thaw( ExpressionExperiment expressionExperiment );
+    public ExpressionExperiment thaw( ExpressionExperiment expressionExperiment );
 
     /**
      * <p>
@@ -323,7 +323,7 @@ public interface ExpressionExperimentDao extends BioAssaySetDao<ExpressionExperi
      * DesignElementDataVectors.
      * </p>
      */
-    public void thawBioAssays( ExpressionExperiment expressionExperiment );
+    public ExpressionExperiment thawBioAssays( ExpressionExperiment expressionExperiment );
 
     /**
      * Converts this DAO's entity to an object of type {@link ExpressionExperimentValueObject}.

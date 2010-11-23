@@ -126,7 +126,7 @@ public class SampleRemoveService extends ExpressionExperimentVectorManipulatingS
         if ( assaysToRemove == null || assaysToRemove.size() == 0 ) return;
 
         // thaw vectors for each QT
-        expressionExperimentService.thawLite( expExp );
+        expExp = expressionExperimentService.thawLite( expExp );
 
         Collection<ProcessedExpressionDataVector> oldVectors = processedExpressionDataVectorService
                 .getProcessedDataVectors( expExp );

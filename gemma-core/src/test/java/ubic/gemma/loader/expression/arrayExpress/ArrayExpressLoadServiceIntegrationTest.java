@@ -177,7 +177,7 @@ public class ArrayExpressLoadServiceIntegrationTest extends BaseSpringContextTes
          * Make sure we start with the persistent instance. This is just paranoia.
          */
         expressionExperiment = ees.load( expressionExperiment.getId() );
-        ees.thawLite( expressionExperiment );
+        expressionExperiment = ees.thawLite( expressionExperiment );
 
         Set<String> probeNames = new HashSet<String>();
         assertEquals( 20, expressionExperiment.getBioAssays().size() );

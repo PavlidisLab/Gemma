@@ -32,13 +32,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheException;
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Element;
 import net.sf.ehcache.store.MemoryStoreEvictionPolicy;
-
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
@@ -79,9 +77,6 @@ import org.compass.core.engine.SearchEngineException;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import edu.emory.mathcs.backport.java.util.Arrays;
-
 import ubic.basecode.ontology.model.OntologyIndividual;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
@@ -315,7 +310,7 @@ public class SearchService implements InitializingBean {
         } catch ( Exception e ) {
             log.error( "Search error on settings: " + settings + "; message=" + e.getMessage(), e );
         }
-        
+
         return searchResults;
     }
 
@@ -666,10 +661,8 @@ public class SearchService implements InitializingBean {
      *        for the genes are added to the final results.
      * @return
      */
-    private Collection<SearchResult> bioSequenceSearch(
-    										SearchSettings settings,
-    										Collection<SearchResult> previousGeneSearchResults )
-    {
+    private Collection<SearchResult> bioSequenceSearch( SearchSettings settings,
+            Collection<SearchResult> previousGeneSearchResults ) {
         StopWatch watch = startTiming();
 
         Collection<SearchResult> searchResults = new HashSet<SearchResult>();
@@ -678,9 +671,9 @@ public class SearchService implements InitializingBean {
 
         watch.stop();
         if ( watch.getTime() > 1000 )
-            log.info( "Biosequence search for '" + settings + "' took " + watch.getTime() + " ms " + searchResults.size()
-                    + " results." );
-                
+            log.info( "Biosequence search for '" + settings + "' took " + watch.getTime() + " ms "
+                    + searchResults.size() + " results." );
+
         return searchResults;
     }
 
@@ -942,12 +935,12 @@ public class SearchService implements InitializingBean {
             Collection<SearchResult> previousGeneSearchResults ) {
 
         Collection<SearchResult> results = compassSearch( compassBiosequence, settings );
-//        for (SearchResult result : results) {
-//        	// Thaw biosequences found by compass search.
-//        	BioSequence bs = (BioSequence) result.getResultObject();        	
-//        	bioSequenceService.thaw(Arrays.asList(new BioSequence[] {bs}));
-//        }
-        
+        // for (SearchResult result : results) {
+        // // Thaw biosequences found by compass search.
+        // BioSequence bs = (BioSequence) result.getResultObject();
+        // bioSequenceService.thaw(Arrays.asList(new BioSequence[] {bs}));
+        // }
+
         Collection<SearchResult> geneResults = null;
         if ( previousGeneSearchResults == null ) {
             log.info( "Biosequence Search:  running gene search with " + settings.getQuery() );
@@ -971,33 +964,30 @@ public class SearchService implements InitializingBean {
         Map<Gene, Collection<BioSequence>> seqsFromDb = bioSequenceService.findByGenes( genes.keySet() );
         for ( Gene gene : seqsFromDb.keySet() ) {
             List<BioSequence> bs = new ArrayList<BioSequence>( seqsFromDb.get( gene ) );
-//            bioSequenceService.thaw( bs );
-            results.addAll ( dbHitsToSearchResult( bs, genes.get( gene ) ) );
+            // bioSequenceService.thaw( bs );
+            results.addAll( dbHitsToSearchResult( bs, genes.get( gene ) ) );
         }
 
         return results;
     }
-    
-    private List<SearchResult> convertEntitySearchResutsToValueObjectsSearchResults (
-    													  Collection<SearchResult> searchResults )
-    {
-    	List<SearchResult> convertedSearchResults = new ArrayList<SearchResult>();
-    	for (SearchResult searchResult : searchResults) {
-    		if (BioSequence.class.isAssignableFrom( searchResult.getResultClass())) {
-    			SearchResult convertedSearchResult = new SearchResult (
-    					BioSequenceValueObject.fromEntity(bioSequenceService.thaw ((BioSequence)searchResult.getResultObject())),
-    					searchResult.getScore(),
-    					searchResult.getHighlightedText()
-				);
-    			convertedSearchResults.add(convertedSearchResult);
-    		} // else if ... 
-    		else {    			
-    			convertedSearchResults.add(searchResult);    			
-    		}    		
-    	}
-    	return convertedSearchResults;
+
+    private List<SearchResult> convertEntitySearchResutsToValueObjectsSearchResults(
+            Collection<SearchResult> searchResults ) {
+        List<SearchResult> convertedSearchResults = new ArrayList<SearchResult>();
+        for ( SearchResult searchResult : searchResults ) {
+            if ( BioSequence.class.isAssignableFrom( searchResult.getResultClass() ) ) {
+                SearchResult convertedSearchResult = new SearchResult( BioSequenceValueObject
+                        .fromEntity( bioSequenceService.thaw( ( BioSequence ) searchResult.getResultObject() ) ),
+                        searchResult.getScore(), searchResult.getHighlightedText() );
+                convertedSearchResults.add( convertedSearchResult );
+            } // else if ...
+            else {
+                convertedSearchResults.add( searchResult );
+            }
+        }
+        return convertedSearchResults;
     }
-     
+
     /**
      * @param settings
      * @return
@@ -1151,7 +1141,7 @@ public class SearchService implements InitializingBean {
         inexactString = match.replaceAll( "%" );
 
         Collection<BioSequence> bs = bioSequenceService.findByName( inexactString );
-        //bioSequenceService.thaw( bs );
+        // bioSequenceService.thaw( bs );
         Collection<SearchResult> bioSequenceList = new HashSet<SearchResult>( dbHitsToSearchResult( bs ) );
 
         watch.stop();
@@ -1362,16 +1352,12 @@ public class SearchService implements InitializingBean {
             // case 3: string is long enough, and user did not ask for wildcard.
             geneSet.addAll( geneService.findByOfficialSymbol( exactString ) );
         }
-/*  This search is slow as it does full table scan. The same search is done by compass.     
- *  To speed things up this is commented out.
-        if ( searchString.length() > 2 && geneSet.isEmpty() ) {
-            if ( !inexactString.endsWith( "%" ) ) {
-                 // Now, always use a wildcard.
-                inexactString = inexactString + "%";
-            }
-            geneSet.addAll( geneService.findByOfficialNameInexact( inexactString ) );
-        }
-*/
+        /*
+         * This search is slow as it does full table scan. The same search is done by compass. To speed things up this
+         * is commented out. if ( searchString.length() > 2 && geneSet.isEmpty() ) { if ( !inexactString.endsWith( "%" )
+         * ) { // Now, always use a wildcard. inexactString = inexactString + "%"; } geneSet.addAll(
+         * geneService.findByOfficialNameInexact( inexactString ) ); }
+         */
         /*
          * TODO The rest we are doing by exact matches only. For aliases it would probably be good to do it like
          * official symbols. For the other searches I think exact matches are the only thing that makes sense.
@@ -1871,7 +1857,7 @@ public class SearchService implements InitializingBean {
 
         Map<Class<?>, List<SearchResult>> results = new HashMap<Class<?>, List<SearchResult>>();
         Collections.sort( rawResults );
-        
+
         results.put( ArrayDesign.class, new ArrayList<SearchResult>() );
         results.put( BioSequence.class, new ArrayList<SearchResult>() );
         results.put( BibliographicReference.class, new ArrayList<SearchResult>() );
@@ -1896,8 +1882,8 @@ public class SearchService implements InitializingBean {
                     .getClass();
 
             resultClass = ReflectionUtil.getBaseForImpl( resultClass );
-            
-//            Class<? extends Object> resultClass = sr.getResultClass();
+
+            // Class<? extends Object> resultClass = sr.getResultClass();
             assert results.containsKey( resultClass ) : "Unknown class " + resultClass;
             results.get( resultClass ).add( sr );
         }
@@ -1934,11 +1920,12 @@ public class SearchService implements InitializingBean {
                 sr.setResultObject( null );
             }
         }
-        
-        List<SearchResult> convertedResults = convertEntitySearchResutsToValueObjectsSearchResults(results.get( BioSequence.class ));        
+
+        List<SearchResult> convertedResults = convertEntitySearchResutsToValueObjectsSearchResults( results
+                .get( BioSequence.class ) );
         results.put( BioSequenceValueObject.class, convertedResults );
         results.remove( BioSequence.class );
-        
+
         return results;
     }
 
@@ -2065,8 +2052,7 @@ public class SearchService implements InitializingBean {
         } else if ( Gene.class.isAssignableFrom( entityClass ) ) {
             return geneService.loadMultiple( ids );
         } else if ( BioSequence.class.isAssignableFrom( entityClass ) ) {
-        	Collection<BioSequence> bs = bioSequenceService.loadMultiple( ids );
-        	//bioSequenceService.thaw(bs);
+            Collection<BioSequence> bs = bioSequenceService.loadMultiple( ids );
             return bs;
         } else if ( GeneSet.class.isAssignableFrom( entityClass ) ) {
             return geneSetService.load( ids );
@@ -2082,5 +2068,5 @@ public class SearchService implements InitializingBean {
         watch.start();
         return watch;
     }
-    
+
 }

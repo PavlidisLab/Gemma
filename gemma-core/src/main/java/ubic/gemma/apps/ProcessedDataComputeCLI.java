@@ -119,7 +119,7 @@ public class ProcessedDataComputeCLI extends ExpressionExperimentManipulatingCLI
             return;
         }
         try {
-            eeService.thawLite( ee );
+            ee = eeService.thawLite( ee );
             boolean needToRun = needToRun( ee, ProcessedVectorComputationEvent.class );
 
             if ( !needToRun && !force ) return;

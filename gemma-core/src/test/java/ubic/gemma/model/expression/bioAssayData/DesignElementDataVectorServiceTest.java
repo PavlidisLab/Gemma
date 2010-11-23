@@ -97,7 +97,7 @@ public class DesignElementDataVectorServiceTest extends BaseSpringContextTest {
         newee.setShortName( RandomStringUtils.randomAlphabetic( 12 ) );
         expressionExperimentService.update( newee );
 
-        this.expressionExperimentService.thawLite( newee );
+        newee = this.expressionExperimentService.thawLite( newee );
 
         DesignElementDataVectorService dedvs = ( DesignElementDataVectorService ) this
                 .getBean( "designElementDataVectorService" );
