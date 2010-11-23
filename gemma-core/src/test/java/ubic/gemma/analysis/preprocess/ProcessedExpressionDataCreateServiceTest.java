@@ -175,7 +175,7 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
 
         int i = 0;
         for ( BioAssay ba : basInOrder ) {
-            bioAssayService.thaw( ba );
+            // bioAssayService.thaw( ba );
             for ( BioMaterial bm : ba.getSamplesUsed() ) {
                 assert fv1.getId() != null;
                 if ( !bm.getFactorValues().isEmpty() ) {
