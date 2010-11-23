@@ -158,7 +158,10 @@ public class BioAssayController extends AbstractTaskService {
     public ModelAndView showAllBioAssays( HttpServletRequest request, HttpServletResponse response ) {
         String sId = request.getParameter( "id" );
         Collection<BioAssay> bioAssays = new ArrayList<BioAssay>();
-        if ( sId == null ) {
+        if ( StringUtils.isBlank( sId ) ) {
+            /*
+             * Probably not desirable ... there are >70,000 of them
+             */
             bioAssays = bioAssayService.loadAll();
         } else {
             String[] idList = StringUtils.split( sId, ',' );
