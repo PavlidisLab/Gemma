@@ -65,17 +65,15 @@ public class DatabaseViewGeneratorCLI extends AbstractSpringAwareCLI {
     protected void buildOptions() {
         super.buildStandardOptions();
 
-        Option datasetSummary = OptionBuilder.hasArg().withArgName( "Dataset Summary" ).withDescription(
+        Option datasetSummary = OptionBuilder.withDescription(
                 "Will generate a zip file containing a summary of all accessible datasets in gemma" ).withLongOpt(
                 "dataset" ).create( 'd' );
 
-        Option datasetTissueSummary = OptionBuilder.hasArg().withArgName( "Dataset Tissue Summary" ).withDescription(
+        Option datasetTissueSummary = OptionBuilder.withDescription(
                 "Will generate a zip file containing a summary of all the tissues in accesable datasets" ).withLongOpt(
                 "tissue" ).create( 't' );
 
         Option diffExpSummary = OptionBuilder
-                .hasArg()
-                .withArgName( "Differential Expression Summary" )
                 .withDescription(
                         "Will generate a zip file containing a summary of all the differential expressed genes in accesable datasets" )
                 .withLongOpt( "diffexpression" ).create( 'x' );
