@@ -105,11 +105,10 @@ public class ArrayDesignController extends AbstractTaskService {
                 arrayDesignReportService.generateArrayDesignReport();
                 return new TaskResult( command, new ModelAndView( new RedirectView(
                         "/Gemma/arrays/showAllArrayDesignStatistics.html" ) ) );
-            } else {
-                ArrayDesignValueObject report = arrayDesignReportService.generateArrayDesignReport( this.command
-                        .getEntityId() );
-                return new TaskResult( command, report );
             }
+            ArrayDesignValueObject report = arrayDesignReportService.generateArrayDesignReport( this.command
+                    .getEntityId() );
+            return new TaskResult( command, report );
 
         }
     }
@@ -355,16 +354,23 @@ public class ArrayDesignController extends AbstractTaskService {
 
         // if no IDs are specified, then load all expressionExperiments and show the summary (if available)
         GenerateSummary job;
-        if ( sId == null ) {
+        if ( StringUtils.isBlank( sId ) ) {
             job = new GenerateSummary( new TaskCommand() );
-        } else {
+            startTask( job );
+            return new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html" ) ).addObject(
+                    "taskId", job.getTaskId() );
+        }
+
+        try {
             Long id = Long.parseLong( sId );
             job = new GenerateSummary( new TaskCommand( id ) );
+            startTask( job );
+            return new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html?id=" + sId ) )
+                    .addObject( "taskId", job.getTaskId() );
+        } catch ( NumberFormatException e ) {
+            throw new RuntimeException( "Invalid ID: " + sId );
         }
-        startTask( job );
 
-        return new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html?id=" + sId ) ).addObject(
-                "taskId", job.getTaskId() );
     }
 
     /**
@@ -589,13 +595,13 @@ public class ArrayDesignController extends AbstractTaskService {
 
         AuditEvent troubleEvent = auditTrailService.getLastTroubleEvent( arrayDesign );
         if ( troubleEvent != null ) {
-            //auditEventService.thaw( troubleEvent );
+            // auditEventService.thaw( troubleEvent );
             mav.addObject( "troubleEvent", troubleEvent );
             mav.addObject( "troubleEventDescription", StringEscapeUtils.escapeHtml( troubleEvent.toString() ) );
         }
         AuditEvent validatedEvent = auditTrailService.getLastValidationEvent( arrayDesign );
         if ( validatedEvent != null ) {
-            //auditEventService.thaw( validatedEvent );
+            // auditEventService.thaw( validatedEvent );
             mav.addObject( "validatedEvent", validatedEvent );
             mav.addObject( "validatedEventDescription", StringEscapeUtils.escapeHtml( validatedEvent.toString() ) );
         }
