@@ -393,10 +393,10 @@ public class ExpressionExperimentSetController extends BaseFormController {
          */
         for ( BioAssaySet ee : toUpdate.getExperiments() ) {
             Taxon taxon = expressionExperimentService.getTaxon( ee.getId() );
-            taxonService.thaw( taxon );
+            taxon = taxonService.load( taxon.getId() );
 
             Taxon parentTaxon = taxon.getParentTaxon();
-            taxonService.thaw( parentTaxon );
+            parentTaxon = taxonService.load( parentTaxon.getId() );
             
             if (taxon.equals( toUpdate.getTaxon() )) continue;
             
