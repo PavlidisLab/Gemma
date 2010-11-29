@@ -92,6 +92,8 @@ public class TaxonDaoImpl extends ubic.gemma.model.genome.TaxonDaoBase {
                 session.lock( taxon, LockMode.NONE );
                 Hibernate.initialize( taxon.getParentTaxon() );
                 Hibernate.initialize( taxon.getExternalDatabase() );
+                Hibernate.initialize( taxon.getNcbiId() );
+                Hibernate.initialize( taxon.getScientificName() );
                 session.evict( taxon );
                 return null;
             }
