@@ -387,14 +387,23 @@ public class ExpressionExperimentSetController extends BaseFormController {
         toUpdate.getExperiments().retainAll( datasetsAnalyzed );
         toUpdate.getExperiments().addAll( datasetsAnalyzed );
         /*
-         * Check that all the datasets match the given taxon.
+         * See bug 2038.
+         * Check that all the datasets have the matching taxons or have the same parent taxon.
+         * Currently we go only one level up.
          */
         for ( BioAssaySet ee : toUpdate.getExperiments() ) {
-            Taxon t = expressionExperimentService.getTaxon( ee.getId() );
-            if ( !t.equals( toUpdate.getTaxon() ) ) {
-                throw new IllegalArgumentException( "You cannot add a " + t.getCommonName() + " dataset to a "
-                        + toUpdate.getTaxon().getCommonName() + " set" );
-            }
+            Taxon taxon = expressionExperimentService.getTaxon( ee.getId() );
+            taxonService.thaw( taxon );
+
+            Taxon parentTaxon = taxon.getParentTaxon();
+            taxonService.thaw( parentTaxon );
+            
+            if (taxon.equals( toUpdate.getTaxon() )) continue;
+            
+            if (parentTaxon != null && parentTaxon.equals( toUpdate.getTaxon() )) continue;
+                        
+            throw new IllegalArgumentException( "You cannot add a " + taxon.getCommonName() + " dataset to a "
+                + toUpdate.getTaxon().getCommonName() + " set. All datasets should have the same taxon or share parent taxon." );                
         }
         return true;
     }
