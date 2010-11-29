@@ -391,6 +391,8 @@ public class ExpressionExperimentSetController extends BaseFormController {
          * Check that all the datasets have the matching taxons or have the same parent taxon.
          * Currently we go only one level up.
          */
+        taxonService.thaw( toUpdate.getTaxon() );
+        
         for ( BioAssaySet ee : toUpdate.getExperiments() ) {
             Taxon taxon = expressionExperimentService.getTaxon( ee.getId() );
             taxonService.thaw( taxon );
