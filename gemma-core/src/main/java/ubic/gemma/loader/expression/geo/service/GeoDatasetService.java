@@ -111,6 +111,8 @@ public class GeoDatasetService extends AbstractGeoService {
 
         if ( this.geoDomainObjectGenerator == null ) {
             this.geoDomainObjectGenerator = new GeoDomainObjectGenerator();
+        } else {
+            this.geoDomainObjectGenerator.intialize();
         }
 
         geoDomainObjectGenerator.setProcessPlatformsOnly( loadPlatformOnly );
