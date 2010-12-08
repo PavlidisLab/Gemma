@@ -55,14 +55,30 @@ public class LocalSeriesFetcher extends SeriesFetcher {
         File seekFile = new File( seekFileName );
 
         if ( seekFile.canRead() ) {
-            LocalFile file = fetchedFile( seekFileName );
-            log.info( "Found " + seekFileName + " for experiment(set) " + accession + "." );
-            Collection<LocalFile> result = new HashSet<LocalFile>();
-            result.add( file );
-            return result;
+            return getFile( accession, seekFileName );
+        }
+        // try alternative naming scheme.
+        seekFileName = localPath + File.separatorChar + accession + ".soft.gz";
+        seekFile = new File( seekFileName );
+
+        if ( seekFile.canRead() ) {
+            return getFile( accession, seekFileName );
         }
 
         throw new RuntimeException( "Failed to find " + seekFileName );
+    }
+
+    /**
+     * @param accession
+     * @param seekFileName
+     * @return
+     */
+    private Collection<LocalFile> getFile( String accession, String seekFileName ) {
+        LocalFile file = fetchedFile( seekFileName );
+        log.info( "Found " + seekFileName + " for experiment(set) " + accession + "." );
+        Collection<LocalFile> result = new HashSet<LocalFile>();
+        result.add( file );
+        return result;
     }
 
 }
