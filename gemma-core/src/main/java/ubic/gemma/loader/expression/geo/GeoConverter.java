@@ -1249,7 +1249,7 @@ public class GeoConverter implements Converter<Object, Object> {
      * the map as they were set there by the convertPlatform method. If the abbreviation is not found in the database
      * then stop processing as the organism name is likely to be an unknown abbreviation.
      * 
-     * @param probeOrganism scientific name or abbreviation of organism associated to a biosequence.
+     * @param probeOrganism scientific name, common name or abbreviation of organism associated to a biosequence.
      * @return Taxon of biosequence.
      * @throws IllegalArgumentException taxon supplied has not been processed before, it does not match the scientific
      *         names used in platform definition and does not match a known abbreviation in the database.
@@ -1281,12 +1281,18 @@ public class GeoConverter implements Converter<Object, Object> {
                 taxon = t;
                 taxonAbbreviationMap.put( taxon.getAbbreviation(), t );
             } else {
-                // if probe organism can not be found i.e it is not a known abbreviation or scientific name
-                // and it was not already created during platform organism processing then warn user
-                throw new IllegalArgumentException(
-                        "Taxon:  "
-                                + probeOrganism
-                                + " is not a known scientific name or abbreviation in GEMMA please contact systems administrator." );
+
+                t = taxonService.findByCommonName( probeOrganism.toLowerCase() );
+
+                if ( t != null ) {
+                    taxon = t;
+                    taxonAbbreviationMap.put( taxon.getAbbreviation(), t );
+                } else {
+
+                    // if probe organism can not be found i.e it is not a known abbreviation or scientific name
+                    // and it was not already created during platform organism processing then warn user
+                    throw new IllegalArgumentException( probeOrganism + " is not recognized as a taxon in Gemma" );
+                }
             }
         }
         return taxon;
@@ -1337,7 +1343,7 @@ public class GeoConverter implements Converter<Object, Object> {
         ExperimentalFactor result = ExperimentalFactor.Factory.newInstance();
         result.setName( replication.getType().toString() );
         result.setDescription( replication.getDescription() );
-        result.setType(FactorType.CATEGORICAL);
+        result.setType( FactorType.CATEGORICAL );
         VocabCharacteristic term = convertReplicatationType( replication.getType() );
 
         result.setCategory( term );
@@ -2071,7 +2077,7 @@ public class GeoConverter implements Converter<Object, Object> {
         term.setValueUri( term.getCategoryUri() );
 
         experimentalFactor.setCategory( term );
-        experimentalFactor.setType(FactorType.CATEGORICAL);
+        experimentalFactor.setType( FactorType.CATEGORICAL );
         experimentalFactor.setDescription( "Converted from GEO subset " + geoSubSet.getGeoAccession() );
 
         boolean duplicateExists = false;
@@ -2793,36 +2799,36 @@ public class GeoConverter implements Converter<Object, Object> {
                 log.info( "Parent taxon found " + parentTaxa );
                 return parentTaxa.iterator().next();
             }
-            // No common parent then calculate based on probe taxons:
-            else {
-                log.info( "Looking at probe taxa to determine 'primary' taxon" );
-                // create a hashmap keyed on taxon with a counter to count the number of probes for that taxon.
-                Map<String, Integer> taxonProbeNumberList = new HashMap<String, Integer>();
+            // No common parent then calculate based on probe taxa:
 
-                for ( String probeTaxon : probeTaxa ) {
-                    // reset each iteration so if no probes already processed set to 1
-                    Integer counter = 1;
-                    if ( taxonProbeNumberList.containsKey( probeTaxon ) ) {
-                        counter = taxonProbeNumberList.get( probeTaxon ) + 1;
-                        taxonProbeNumberList.put( probeTaxon, counter );
-                    }
+            log.info( "Looking at probe taxa to determine 'primary' taxon" );
+            // create a hashmap keyed on taxon with a counter to count the number of probes for that taxon.
+            Map<String, Integer> taxonProbeNumberList = new HashMap<String, Integer>();
+
+            for ( String probeTaxon : probeTaxa ) {
+                // reset each iteration so if no probes already processed set to 1
+                Integer counter = 1;
+                if ( taxonProbeNumberList.containsKey( probeTaxon ) ) {
+                    counter = taxonProbeNumberList.get( probeTaxon ) + 1;
                     taxonProbeNumberList.put( probeTaxon, counter );
                 }
-                String primaryTaxonName = "";
-                Integer highestScore = 0;
-                for ( String taxon : taxonProbeNumberList.keySet() ) {
-                    // filter out those probes that have no taxon set control spots. Here's that 'n/a' again, kind of
-                    // ugly but we see it in some arrays
-                    if ( !taxon.equals( "n/a" ) && StringUtils.isNotBlank( taxon )
-                            && taxonProbeNumberList.get( taxon ) > highestScore ) {
-                        primaryTaxonName = taxon;
-                        highestScore = taxonProbeNumberList.get( taxon );
-                    }
-                }
-                if ( StringUtils.isNotBlank( primaryTaxonName ) ) {
-                    return this.convertProbeOrganism( primaryTaxonName );
+                taxonProbeNumberList.put( probeTaxon, counter );
+            }
+            String primaryTaxonName = "";
+            Integer highestScore = 0;
+            for ( String taxon : taxonProbeNumberList.keySet() ) {
+                // filter out those probes that have no taxon set control spots. Here's that 'n/a' again, kind of
+                // ugly but we see it in some arrays
+                if ( !taxon.equals( "n/a" ) && StringUtils.isNotBlank( taxon )
+                        && taxonProbeNumberList.get( taxon ) > highestScore ) {
+                    primaryTaxonName = taxon;
+                    highestScore = taxonProbeNumberList.get( taxon );
                 }
             }
+            if ( StringUtils.isNotBlank( primaryTaxonName ) ) {
+                return this.convertProbeOrganism( primaryTaxonName );
+            }
+
         }
         // error no taxon on array submission
 
