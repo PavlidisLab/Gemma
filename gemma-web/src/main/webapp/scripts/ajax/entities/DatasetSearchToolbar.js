@@ -110,18 +110,18 @@ Gemma.DataSetSearchAndGrabToolbar = Ext.extend(Gemma.DatasetSearchToolBar, {
 					 * This doesn't handle the case where the currently selected EESet taxon doesn't match this one -
 					 * we're just matching on what is already in the targetGrid.
 					 */
-					if (this.targetGrid.getStore().getCount() > 0) {
-						var taxonId = this.targetGrid.getStore().getAt(0).get('taxonId');
-
-						for (var i = 0; i < sels.length; i++) {
-							if (taxonId != sels[i].get('taxonId')) {
-								Ext.Msg
-										.alert("Invalid",
-												"You cannot mix data sets from different species in one group");
-								return;
-							}
-						}
-					}
+//					if (this.targetGrid.getStore().getCount() > 0) {
+//						var taxonId = this.targetGrid.getStore().getAt(0).get('taxonId');
+//
+//						for (var i = 0; i < sels.length; i++) {
+//							if (taxonId != sels[i].get('taxonId')) {
+//								Ext.Msg
+//										.alert("Invalid",
+//												"You cannot mix data sets from different species in one group");
+//								return;
+//							}
+//						}
+//					}
 
 					this.targetGrid.getStore().insert(0, sels);
 					this.grid.getStore().remove(sels);
