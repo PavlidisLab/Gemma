@@ -203,7 +203,7 @@ public class MatrixRowPairPearsonAnalysis extends AbstractMatrixRowPairAnalysis 
                         + " " + ( keepers.size() > 0 ? keepers.size() + " scores retained" : "" ) );
             }
         }
-        log.info( skipped + " rows skipped, due to no BLAT association" );
+        log.info( skipped + " rows skipped, where probe lacks a gene annotation" );
         finishMetrics();
     }
 
