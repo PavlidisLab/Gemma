@@ -294,6 +294,8 @@ public class Probe2ProbeCoexpressionDaoImpl extends
          */
         int totalDone = 0;
         ProbeCoexpressionAnalysis analysis = null;
+        final int DELETE_CHUNK_SIZE = 10000;
+
         for ( String p2pClassName : p2pClassNames ) {
 
             final String findLinkAnalysisObject = "select p from ProbeCoexpressionAnalysisImpl p inner join"
@@ -304,13 +306,19 @@ public class Probe2ProbeCoexpressionDaoImpl extends
             }
 
             final String nativeDeleteQuery = "DELETE FROM " + getTableName( p2pClassName, false )
-                    + " where EXPRESSION_EXPERIMENT_FK = :eeid";
+                    + " where EXPRESSION_EXPERIMENT_FK = :eeid limit " + DELETE_CHUNK_SIZE;
 
             SQLQuery q = super.getSession().createSQLQuery( nativeDeleteQuery );
             q.setParameter( "eeid", ee.getId() );
+
             StopWatch timer = new StopWatch();
             timer.start();
-            totalDone = q.executeUpdate();
+
+            while ( true ) {
+                int deleted = q.executeUpdate();
+                if ( deleted < DELETE_CHUNK_SIZE ) break;
+                totalDone += deleted;
+            }
 
             if ( totalDone > 0 ) {
                 log.info( totalDone + " coexpression results removed for " + ee + ": " + timer.getTime() + "ms" );
