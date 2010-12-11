@@ -86,6 +86,10 @@ public class TaxonDaoImpl extends ubic.gemma.model.genome.TaxonDaoBase {
 
     @Override
     public void handleThaw( final Taxon taxon ) throws Exception {
+        if ( taxon == null ) {
+            log.warn( "Attempt to thaw null" );
+            return;
+        }
         HibernateTemplate templ = this.getHibernateTemplate();
         templ.executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {

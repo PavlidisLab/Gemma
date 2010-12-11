@@ -124,7 +124,7 @@ Ext.extend(Gemma.DatasetGroupStore, Ext.data.Store, {
 					} else {
 						Ext.Msg.show({
 									title : 'Error',
-									msg : arg,
+									msg : arg.message ? arg.message : arg,
 									icon : Ext.MessageBox.ERROR
 								});
 					}

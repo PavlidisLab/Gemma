@@ -31,7 +31,7 @@ import org.apache.commons.lang.StringUtils;
 
 import ubic.gemma.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
-import ubic.gemma.model.analysis.expression.ExpressionExperimentSetService; 
+import ubic.gemma.model.analysis.expression.ExpressionExperimentSetService;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
@@ -387,25 +387,28 @@ public class ExpressionExperimentSetController extends BaseFormController {
         toUpdate.getExperiments().retainAll( datasetsAnalyzed );
         toUpdate.getExperiments().addAll( datasetsAnalyzed );
         /*
-         * See bug 2038.
-         * Check that all the datasets have the matching taxons or have the same parent taxon.
-         * Currently we go only one level up.
+         * See bug 2038. Check that all the datasets have the matching taxons or have the same parent taxon. Currently
+         * we go only one level up.
          */
         taxonService.thaw( toUpdate.getTaxon() );
-        
+
         for ( BioAssaySet ee : toUpdate.getExperiments() ) {
             Taxon taxon = expressionExperimentService.getTaxon( ee.getId() );
+            assert taxon != null;
+
             taxonService.thaw( taxon );
 
+            if ( taxon.equals( toUpdate.getTaxon() ) ) continue;
+
             Taxon parentTaxon = taxon.getParentTaxon();
+            if ( parentTaxon == null ) continue;
+
             taxonService.thaw( parentTaxon );
-            
-            if (taxon.equals( toUpdate.getTaxon() )) continue;
-            
-            if (parentTaxon != null && parentTaxon.equals( toUpdate.getTaxon() )) continue;
-                        
+            if ( parentTaxon.equals( toUpdate.getTaxon() ) ) continue;
+
             throw new IllegalArgumentException( "You cannot add a " + taxon.getCommonName() + " dataset to a "
-                + toUpdate.getTaxon().getCommonName() + " set. All datasets should have the same taxon or share parent taxon." );                
+                    + toUpdate.getTaxon().getCommonName()
+                    + " set. All datasets should have the same taxon or share parent taxon." );
         }
         return true;
     }
