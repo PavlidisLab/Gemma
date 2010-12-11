@@ -255,7 +255,7 @@ Gemma.DatasetGroupEditToolbar = Ext.extend(Ext.Toolbar, {
 											this.ownerCt.loadMask.hide();
 										}
 									}.createDelegate(this);
-									ExpressionExperimentSetController.remove(rec.data, callback);
+									ExpressionExperimentSetController.remove([rec.data], callback);
 								}
 								this.fireEvent("delete-set", rec);
 							}, this);
