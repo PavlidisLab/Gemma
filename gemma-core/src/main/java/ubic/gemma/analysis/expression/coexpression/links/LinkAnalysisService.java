@@ -488,18 +488,19 @@ public class LinkAnalysisService {
     }
 
     /**
+     * Process a new link, adding it to the p2plinks collection and persisting if the p2plinks collection is big enough
+     * ({@link LINK_BATCH_SIZE})
+     * 
      * @param numColumns
      * @param p2plinks
-     * @param i
      * @param w
      * @param v1
      * @param v2
      * @param metric type of score (pearson correlation for example)
      * @param analysisObj
      * @param c class that can create instances of the correct type of probe2probecoexpression.
-     * @return
      */
-    private void persist( int numColumns, List<Probe2ProbeCoexpression> p2plinks, int i, double w,
+    private void persist( int numColumns, List<Probe2ProbeCoexpression> p2plinks, double w,
             ProcessedExpressionDataVector v1, ProcessedExpressionDataVector v2, QuantitationType metric,
             ProbeCoexpressionAnalysis analysisObj, Creator c ) {
 
@@ -510,7 +511,7 @@ public class LinkAnalysisService {
 
         p2plinks.add( ppCoexpression );
 
-        if ( i % LINK_BATCH_SIZE == 0 ) {
+        if ( p2plinks.size() >= LINK_BATCH_SIZE ) {
             this.ppService.create( p2plinks );
             p2plinks.clear();
         }
@@ -740,18 +741,20 @@ public class LinkAnalysisService {
             ProcessedExpressionDataVector v2 = p2v.get( p2 );
 
             if ( flip ) {
-                persist( numColumns, p2plinkBatch, i, w, v2, v1, metric, la.getAnalysisObj(), c );
+                persist( numColumns, p2plinkBatch, w, v2, v1, metric, la.getAnalysisObj(), c );
             } else {
-                persist( numColumns, p2plinkBatch, i, w, v1, v2, metric, la.getAnalysisObj(), c );
+                persist( numColumns, p2plinkBatch, w, v1, v2, metric, la.getAnalysisObj(), c );
             }
 
             if ( i > 0 && i % 50000 == 0 ) {
-                log.info( i + " links loaded into the database" );
+                log.info( i - skippedDueToDegree + " links persisted (" + skippedDueToDegree + " skipped so far)" );
             }
 
         }
 
-        log.info( skippedDueToDegree + " links skipped due to high probe node degree" );
+        log.info( skippedDueToDegree + " of " + links.size() + " links "
+                + String.format( "%.1f%", skippedDueToDegree / links.size() )
+                + " skipped due to high probe node degree" );
 
         // last batch.
         if ( p2plinkBatch.size() > 0 ) {
