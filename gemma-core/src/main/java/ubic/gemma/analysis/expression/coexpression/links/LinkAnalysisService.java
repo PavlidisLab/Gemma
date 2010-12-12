@@ -752,9 +752,9 @@ public class LinkAnalysisService {
 
         }
 
-        log.info( skippedDueToDegree + " of " + links.size() + " links "
-                + String.format( "%.1f%", skippedDueToDegree / links.size() )
-                + " skipped due to high probe node degree" );
+        log.info( skippedDueToDegree + " of " + links.size() + " links ("
+                + String.format( "%.1f", 100 * skippedDueToDegree / ( double ) links.size() )
+                + "%) skipped due to high probe node degree" );
 
         // last batch.
         if ( p2plinkBatch.size() > 0 ) {
