@@ -19,11 +19,14 @@
 package ubic.gemma.model.analysis.expression.diff;
 
 import java.util.Collection;
+import java.util.List;
 
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 
+import ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.ProbeAnalysisResult;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
+import ubic.gemma.model.genome.Gene;
 
 /**
  * <p>
@@ -36,6 +39,7 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 public abstract class DifferentialExpressionResultDaoBase extends HibernateDaoSupport implements
         ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultDao {
 
+        
     /**
      * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultDao#create(int, java.util.Collection)
      */

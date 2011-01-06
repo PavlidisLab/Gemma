@@ -28,6 +28,7 @@ import ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.ProbeAnalysisResult;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.BaseDao;
 
 /**
@@ -91,6 +92,8 @@ public interface DifferentialExpressionResultDao extends BaseDao<ProbeAnalysisRe
      */
     public Map<ExpressionAnalysisResultSet, List<ProbeAnalysisResult>> findInResultSets(
             java.util.Collection<ExpressionAnalysisResultSet> resultsAnalyzed, double threshold, Integer limit );
+    
+    public List<Long> findGeneInResultSets(Gene gene, ExpressionAnalysisResultSet resultSet, double threshold, Integer limit );
 
     /**
      * 

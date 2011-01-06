@@ -29,6 +29,7 @@ import ubic.gemma.model.analysis.expression.ProbeAnalysisResult;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.genome.Gene;
 
 /**
  * @author kelsey
@@ -94,6 +95,10 @@ public interface DifferentialExpressionResultService {
     public Map<BioAssaySet, List<ProbeAnalysisResult>> find( ubic.gemma.model.genome.Gene gene, double threshold,
             Integer limit );
 
+    
+    public List<Long> findGeneInResultSets(Gene gene, ExpressionAnalysisResultSet resultSet, double threshold, Integer limit );
+
+    
     /**
      * Given a list of result sets finds the diff expression results that met the given threshold
      * 

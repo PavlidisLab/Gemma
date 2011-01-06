@@ -72,6 +72,10 @@ public class DifferentialExpressionResultServiceImpl extends
         return this.getDifferentialExpressionResultDao().find( gene, threshold, limit );
     }
 
+    public List<Long> findGeneInResultSets(Gene gene, ExpressionAnalysisResultSet resultSet, double threshold, Integer limit ) {
+        return this.getDifferentialExpressionResultDao().findGeneInResultSets( gene, resultSet, threshold, limit );        
+    }
+
     public java.util.Map<ExpressionAnalysisResultSet, List<ProbeAnalysisResult>> findInResultSets(
             java.util.Collection<ExpressionAnalysisResultSet> resultsAnalyzed, double threshold ) {
         return this.getDifferentialExpressionResultDao().findInResultSets( resultsAnalyzed, threshold, null );
