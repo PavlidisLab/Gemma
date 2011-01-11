@@ -126,6 +126,9 @@ public class LinkAnalysisController extends AbstractTaskService {
      */
     @Override
     protected BackgroundJob<LinkAnalysisTaskCommand> getInProcessRunner( TaskCommand command ) {
+        if ( ConfigUtils.getBoolean( "gemma.grid.gridonly.coexp" ) ) {
+            return null;
+        }
         return new LinkAnalysisJob( ( LinkAnalysisTaskCommand ) command );
     }
 
@@ -136,9 +139,6 @@ public class LinkAnalysisController extends AbstractTaskService {
      */
     @Override
     protected BackgroundJob<LinkAnalysisTaskCommand> getSpaceRunner( TaskCommand command ) {
-        if ( ConfigUtils.getBoolean( "gemma.grid.gridonly.coexp" ) ) {
-            return null;
-        }
         return new LinkAnalysisSpaceJob( ( LinkAnalysisTaskCommand ) command );
     }
 
