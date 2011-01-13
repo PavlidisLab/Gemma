@@ -123,8 +123,15 @@ public abstract class FtpFetcher extends AbstractFetcher {
              */
 
             if ( force || !allowUseExisting || existingFile == null ) {
+            	/*Printing to log here because runtime error does not deliver message when passed through
+            	 * java.util.concurrent.FutureTask (only throws InterruptedException and ExecutionException)*/
+            	log.error( "Runtime exception thrown: "+ e.getMessage() +
+                		". \n Stack trace follows:", e );
                 throw new RuntimeException( "Cancelled, or couldn't fetch " + seekFile
-                        + ", make sure the file exists on the remote server.", e );
+                        + ", make sure the file exists on the remote server and permissions are granted.", e );
+            
+
+            
             }
 
             if ( Thread.currentThread().isInterrupted() ) {
