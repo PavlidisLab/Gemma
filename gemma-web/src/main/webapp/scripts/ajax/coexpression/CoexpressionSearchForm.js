@@ -288,7 +288,7 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 		} else if (csc.eeIds && csc.eeIds.length < 1) {
 			return "There are no datasets that match your search terms";
 		} else if (!csc.eeIds && !csc.eeSetId) {
-			return "Please select an analysis";
+			return "Please select an analysis. Taxon, gene(s), and scope must be specified.";
 		} else {
 			return "";
 		}
