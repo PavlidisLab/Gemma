@@ -42,7 +42,7 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 
 	getState : function() {
 		var currentState = this.getDiffSearchCommand();
-		delete currentState.selectedFactors;
+		//delete currentState.selectedFactors;
 		delete currentState.eeIds;
 
 		return currentState;
@@ -235,7 +235,7 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 	 */
 	chooseFactors : function() {
 		if (!this.currentSet) {
-			Ext.Msg.alert("Warning", "You must select an expression experiment set before choosing factors");
+			Ext.Msg.alert("Warning", "You must select an expression experiment set before choosing factors. Scope must be specified.");
 		} else if (this.currentSet.get("expressionExperimentIds").length == 0) {
 			Ext.Msg.alert("Warning", "You should select at least one experiment to analyze");
 		} else {
@@ -344,7 +344,7 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 		} else if (dsc.eeIds && dsc.eeIds.length < 1) {
 			return "There are no datasets that match your search terms";
 		} else if (!dsc.eeIds && !dsc.eeSetId) {
-			return "Please select an analysis";
+			return "Please select an analysis. Taxon, gene(s), and scope must be specified.";
 		} else {
 			return "";
 		}
@@ -472,7 +472,7 @@ Gemma.DiffExpressionSearchForm = Ext.extend(Ext.Panel, {
 							}, this.eeSetChooserPanel, {
 								xtype : 'button',
 								id : 'showFactorChooserButton',
-								text : "Factor chooser",
+								text : "Factor chooser", 
 								tooltip : "Show experimental factor chooser",
 								handler : this.chooseFactors,
 								scope : this
