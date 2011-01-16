@@ -28,8 +28,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.web.util.HtmlUtils;
 
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrixFactory;
@@ -149,11 +151,24 @@ public class ExpressionDataSampleCorrelation {
 
     /**
      * @param ee
-     * @return
+     * @return cleaned name, with appropriate suffix added.
      */
     public static String getMatrixFileBaseName( ExpressionExperiment ee ) {
-        String fileBaseName = ee.getShortName() + FILE_SUFFIX;
+        /*
+         * Remove non-word or numbers (replace with '.') and remove any trailing "." left afterwards.
+         */
+        String fileBaseName = cleanStringForPath( ee.getShortName() ) + FILE_SUFFIX;
         return fileBaseName;
+    }
+
+    /**
+     * FIXME put this somewhere more central.
+     * 
+     * @param ee
+     * @return
+     */
+    public static String cleanStringForPath( String string ) {
+        return StringUtils.strip( string.replaceAll( "[^\\d\\w]+", "." ), "." );
     }
 
     /**
