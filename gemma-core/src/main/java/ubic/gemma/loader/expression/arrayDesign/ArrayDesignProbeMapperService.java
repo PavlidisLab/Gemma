@@ -281,6 +281,11 @@ public class ArrayDesignProbeMapperService {
             String seqName = fields[1];
             String geneSymbol = fields[2];
 
+            if ( StringUtils.isBlank( geneSymbol ) ) {
+                numSkipped++;
+                continue;
+            }
+
             CompositeSequence c = compositeSequenceService.findByName( arrayDesign, probeId );
 
             if ( c == null ) {
@@ -310,7 +315,8 @@ public class ArrayDesignProbeMapperService {
                 numSkipped++;
                 continue;
             } else if ( geneListProbe.size() > 1 ) {
-                log.warn( "More than one gene found for '" + geneSymbol + "' in " + taxon );
+                // this is a common situation, when the geneSymbol actually has |-separated genes, so no need to make a lot of fuss.
+                log.debug( "More than one gene found for '" + geneSymbol + "' in " + taxon );
             }
 
             BioSequence bs = c.getBiologicalCharacteristic();
