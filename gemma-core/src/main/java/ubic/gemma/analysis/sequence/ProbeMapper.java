@@ -116,7 +116,7 @@ public class ProbeMapper {
             if ( blatResultsForSequence.size() == 0 ) continue;
 
             /*
-             * Filter based on quality of hit.
+             * Screen out likely repeats, where cross-hybridization is a problem.
              */
             Double fractionRepeats = sequence.getFractionRepeats();
             if ( fractionRepeats != null && fractionRepeats > config.getMaximumRepeatFraction()
@@ -126,7 +126,12 @@ public class ProbeMapper {
                 continue;
             }
 
-            if ( blatResultsForSequence.size() >= config.getNonSpecificSiteCountThreshold() ) {
+            /*
+             * Filter out sequences that have many high-quality alignments to the genome, even if it isn't a repeat. It
+             * just seems like a good idea to reject probes that have too many alignment sites, even if only one of them
+             * is to the site of a known gene.
+             */
+            if ( blatResultsForSequence.size() >= config.getNonRepeatNonSpecificSiteCountThreshold() ) {
                 skippedDueToNonSpecific++;
                 skipped++;
                 continue;

@@ -35,7 +35,9 @@ public class ProbeMapperConfig {
     /**
      * Sequences which hybridize to this many or more sites in the genome are candidates to be considered non-specific.
      * This is used in combination with the REPEAT_FRACTION_MAXIMUM. Note that many sequences which contain repeats
-     * nonetheless only align to very few sites in the genome.
+     * nonetheless only align to very few sites in the genome. Similarly, there are sequences that map to multiple sites
+     * which are _not_ repeats. This value is also not designed to care about whether the alignments are in known genes
+     * or not. Thus setting this too low could result in over-stringent filtering.
      */
     public static final int NON_SPECIFIC_SITE_THRESHOLD = 3;
 
@@ -47,6 +49,7 @@ public class ProbeMapperConfig {
 
     /*
      * (non-Javadoc)
+     * 
      * @see java.lang.Object#toString()
      */
     @Override
@@ -89,8 +92,9 @@ public class ProbeMapperConfig {
     public static final double DEFAULT_MINIMUM_EXON_OVERLAP_FRACTION = 0.0;
 
     /**
-     * Sequences that contain more than the maximumRepeatFraction of repeat sequences AND which align to more than this
-     * number of sites will be left unmapped. FIXME we might modify this behavior.
+     * Second level of filtering.
+     * 
+     * @see NON_SPECIFIC_SITE_THRESHOLD
      */
     private double nonSpecificSiteCountThreshold = NON_SPECIFIC_SITE_THRESHOLD;
 
