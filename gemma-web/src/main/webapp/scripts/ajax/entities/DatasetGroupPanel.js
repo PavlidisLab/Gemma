@@ -356,6 +356,7 @@ Gemma.DatasetGroupGridPanel = Ext.extend(Ext.grid.EditorGridPanel, {
 					tooltip : 'The unique name of this group',
 					sortable : true,
 					editable : true,
+					width: 0.17,
 					editor : new Ext.form.TextField({
 								allowBlank : false
 							})
@@ -364,6 +365,7 @@ Gemma.DatasetGroupGridPanel = Ext.extend(Ext.grid.EditorGridPanel, {
 					dataIndex : "description",
 					sortable : true,
 					editable : true,
+					width: 0.3,
 					editor : new Ext.form.TextField({
 								allowBlank : true
 							})
@@ -373,14 +375,16 @@ Gemma.DatasetGroupGridPanel = Ext.extend(Ext.grid.EditorGridPanel, {
 					dataIndex : "numExperiments",
 					sortable : true,
 					editable : false,
-					width : 60,
-					fixed : true
+					//width : 60,
+					width: 0.09,
+					//fixed : true
 				}, {
 					header : "Taxon",
 					dataIndex : "taxonName",
 					sortable : true,
 					editable : false,
-					width : 100
+					//width : 100
+					width: 0.125,
 				}, {
 					header : "Locked",
 					dataIndex : "modifiable",
@@ -388,6 +392,7 @@ Gemma.DatasetGroupGridPanel = Ext.extend(Ext.grid.EditorGridPanel, {
 					editable : false,
 					tooltip : 'A locked group cannot have its members changed by anybody',
 					width : 60,
+					width: 0.12,
 					renderer : function(value, metaData, record, rowIndex, colIndex, store) {
 						if (!value) {
 							return "<img src='/Gemma/images/icons/lock.png' height='16' width='16' ext:qtip='Cannot have members changed, usually applies to automatically generated groups.' />";
@@ -395,7 +400,7 @@ Gemma.DatasetGroupGridPanel = Ext.extend(Ext.grid.EditorGridPanel, {
 							return " ";
 						}
 					},
-					fixed : true,
+					//fixed : true,
 					scope : this
 				}, {
 					header : "Editable",
@@ -403,7 +408,8 @@ Gemma.DatasetGroupGridPanel = Ext.extend(Ext.grid.EditorGridPanel, {
 					sortable : true,
 					editable : false,
 					tooltip : 'Do you have permission to edit this group?',
-					width : 60,
+					//width : 60,
+					width: 0.12,
 					renderer : function(value, metaData, record, rowIndex, colIndex, store) {
 						if (value) {
 							return "<img src='/Gemma/images/icons/ok.png' height='16' width='16' ext:qtip='You can edit this group' />";
@@ -411,7 +417,7 @@ Gemma.DatasetGroupGridPanel = Ext.extend(Ext.grid.EditorGridPanel, {
 							return " ";
 						}
 					},
-					fixed : true,
+					//fixed : true,
 					scope : this
 				}]
 	}),

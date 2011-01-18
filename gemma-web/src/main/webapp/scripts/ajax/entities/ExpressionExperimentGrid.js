@@ -131,7 +131,7 @@ Gemma.ExpressionExperimentGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				dataIndex : "name",
 				tooltip : "The descriptive name of the dataset, usually supplied by the submitter",
 				// width : 120,
-				width:0.4,
+				width:0.45,
 				sortable : true
 			}, {
 				id : 'arrays',
@@ -149,7 +149,7 @@ Gemma.ExpressionExperimentGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				renderer : this.formatAssayCount,
 				tooltip : "The number of arrays (~samples) present in the study",
 				// width : 50,
-				width:0.15,
+				width:0.1,
 				sortable : true
 			}]
 		});
