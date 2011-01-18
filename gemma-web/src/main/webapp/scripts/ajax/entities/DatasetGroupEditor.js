@@ -13,16 +13,26 @@
  * @class Gemma.DatasetGroupEditor
  * @extends Ext.Window
  */
+
+/* 
+ * get width and height of viewport to use for sizing the parent and children panels 
+ */
+var windowWidth = Ext.getBody().getViewSize().width * 0.9;
+var westWidth = windowWidth* 0.33;
+var eastWidth = windowWidth* 0.33;
+var centreWidth = windowWidth-westWidth-eastWidth;
+
+
 Gemma.DatasetGroupEditor = Ext.extend(Ext.Window, {
 
 			id : 'dataset-chooser',
 			name : 'datasetchooser',
 			layout : 'border',
-			width : 800,
+			width : windowWidth,
 			height : 500,
 			closeAction : 'hide',
 			constrainHeader : false,
-			title : "Dataset Group Editor",
+			title : "Dataset Group Editor ",
 			isLoggedIn : false,
 			maximizable : false,
 
@@ -67,7 +77,7 @@ Gemma.DatasetGroupEditor = Ext.extend(Ext.Window, {
 									}],
 							split : true,
 							height : 200,
-							width : 300,
+							width : eastWidth,
 							minWidth : 200
 						});
 
@@ -95,7 +105,7 @@ Gemma.DatasetGroupEditor = Ext.extend(Ext.Window, {
 							loadMask : {
 								msg : 'Searching ...'
 							},
-							minWidth : 200,
+							minWidth : centreWidth,
 							tbar : new Gemma.DataSetSearchAndGrabToolbar({
 										taxonSearch : true,
 										targetGrid : this.datasetGroupMembersGrid
@@ -115,7 +125,7 @@ Gemma.DatasetGroupEditor = Ext.extend(Ext.Window, {
 							collapsible : true,
 							collapseMode : 'mini',
 							height : 200,
-							width : 300,
+							width : westWidth,
 							title : "Available expression experiment sets",
 							displayGrid : this.datasetGroupMembersGrid,
 							tbar : new Gemma.DatasetGroupEditToolbar()
