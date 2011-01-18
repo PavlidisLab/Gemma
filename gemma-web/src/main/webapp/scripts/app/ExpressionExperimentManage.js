@@ -476,10 +476,13 @@ Ext.onReady(function() {
 				autoScroll : true
 			});
 
+	// if window is wider than 1100, give wider panel
+	var availablePanelWidth = Ext.getBody().getViewSize().width * 0.9;
+	var minPanelWidth = 1100;
 	var pan = new Ext.Panel({
 				layout : 'border',
 				renderTo : 'eemanage',
-				width : 1100,
+				width : (availablePanelWidth > minPanelWidth)? availablePanelWidth : minPanelWidth,
 				height : 700,
 				items : [reportGrid, dataSetDetailsPanel]
 			});
