@@ -123,6 +123,7 @@ Gemma.ExpressionExperimentGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				tooltip : "The unique short name for the dataset, often the accession number from the originating source database. Click on the name to view the details page.",
 				renderer : this.formatEE,
 				// width : 80,
+				width:0.15,
 				sortable : true
 			}, {
 				id : 'name',
@@ -130,6 +131,7 @@ Gemma.ExpressionExperimentGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				dataIndex : "name",
 				tooltip : "The descriptive name of the dataset, usually supplied by the submitter",
 				// width : 120,
+				width:0.4,
 				sortable : true
 			}, {
 				id : 'arrays',
@@ -138,6 +140,7 @@ Gemma.ExpressionExperimentGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				hidden : true,
 				tooltip : "The number of different types of array platforms used",
 				// width : 50,
+				width:0.15,
 				sortable : true
 			}, {
 				id : 'assays',
@@ -146,6 +149,7 @@ Gemma.ExpressionExperimentGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				renderer : this.formatAssayCount,
 				tooltip : "The number of arrays (~samples) present in the study",
 				// width : 50,
+				width:0.15,
 				sortable : true
 			}]
 		});
@@ -157,7 +161,8 @@ Gemma.ExpressionExperimentGrid = Ext.extend(Gemma.GemmaGridPanel, {
 						dataIndex : "differentialExpressionAnalysisId",
 						tooltip : "Indicates whether differential expression data is available for the study",
 						renderer : this.formatAnalysisInfo,
-						sortable : true
+						sortable : true,
+						width:0.15
 					});
 		}
 
@@ -274,7 +279,7 @@ Gemma.ExpressionExperimentListView = Ext.extend(Ext.list.ListView, {
 		header : "Name",
 		dataIndex : "name",
 		tooltip : "The descriptive name of the dataset, usually supplied by the submitter",
-		width : 0.2,
+		width : 0.4,
 		sortable : true
 	}, {
 		id : 'arrays',
@@ -282,14 +287,14 @@ Gemma.ExpressionExperimentListView = Ext.extend(Ext.list.ListView, {
 		dataIndex : "arrayDesignCount",
 		hidden : true,
 		tooltip : "The number of different types of array platforms used",
-		width : 0.2,
+		width : 0.1,
 		sortable : true
 	}, {
 		id : 'assays',
 		header : "Assays",
 		dataIndex : "bioAssayCount",
 		tooltip : "The number of arrays (~samples) present in the study",
-		width : 0.2,
+		width : 0.1,
 		sortable : true
 	}],
 	store : new Ext.data.Store({
