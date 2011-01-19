@@ -612,7 +612,6 @@ Gemma.GeneGroupPanel = Ext.extend(Ext.grid.EditorGridPanel, {
 						dataIndex : 'name',
 						editable : true,
 						sortable : true,
-						width: 0.4,
 						editor : new Ext.form.TextField({
 									allowBlank : false
 								})
@@ -621,7 +620,6 @@ Gemma.GeneGroupPanel = Ext.extend(Ext.grid.EditorGridPanel, {
 						dataIndex : 'description',
 						editable : true,
 						sortable : true,
-						width: 0.4,
 						editor : new Ext.form.TextField({
 									allowBlank : false
 								})
@@ -630,7 +628,7 @@ Gemma.GeneGroupPanel = Ext.extend(Ext.grid.EditorGridPanel, {
 						sortable : true,
 						dataIndex : 'size',
 						editable : false,
-						width : 0.1,
+						width : 80,
 						tooltip : 'number of genes in group'
 					}, {
 						header : 'Flags',
@@ -641,7 +639,6 @@ Gemma.GeneGroupPanel = Ext.extend(Ext.grid.EditorGridPanel, {
 									record.get('shared'), record.get('currentUserHasWritePermission'));
 							return result;
 						},
-						width:0.1,
 						tooltip : 'Click to edit permissions'
 					}
 
