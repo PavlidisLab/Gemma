@@ -456,6 +456,14 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 		Gemma.CoexpressionSearchForm.superclass.initComponent.call(this);
 		this.addEvents('beforesearch', 'aftersearch');
 
+		this.geneChooserPanel.on("afterrender", function(){					
+					if (this.geneChooserPanel.getGeneIds().length > 1) {						
+						var cmp = Ext.getCmp("querygenesonly");
+						cmp.enable();
+					}
+			
+				}, this);
+		
 		this.geneChooserPanel.on("addgenes", function(geneids) {
 					if (this.geneChooserPanel.getGeneIds().length > 1) {
 						var cmp = Ext.getCmp("querygenesonly");
