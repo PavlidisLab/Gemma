@@ -286,7 +286,10 @@ Ext.onReady(function() {
 			collapsed : false,
 			frame : false,
 			border : true,
-			html : '<ul class="plainList" ><li>Complete all sections of the form, upload your data file (compress it first to speed things up)'
+			html : '<ul class="plainList" >' 
+					+ '<li>Is your data available on GEO? If so, it is probably already loaded for you. '
+					+ 'Check <a href="/Gemma/expressionExperiment/showAllExpressionExperiments.html">here</a>.</li>'
+					+ '<li>Complete all sections of the form, upload your data file (compress it first to speed things up)'
 					+ ', and click "Validate data"; once validation is complete you will be able to click "Submit data".</li>'
 					+ '<li>Most of the descriptive text you enter can be modified later. '
 					+ 'The taxon, array design and the data themselves cannot easily be altered after submission.</li>'
@@ -315,6 +318,16 @@ Ext.onReady(function() {
 									allowBlank : false,
 									maxLength : 100,
 									minLength : 4,
+									listeners:{
+										blur: function(value){
+											if(value.getValue().match(/^GSE\d{3,6}$/i)){
+												Ext.Msg.alert('GEO Dataset Check',
+												'It looks like you\'re trying to load a GEO dataset. ' +
+												'Please check that it is not already loaded in Gemma. ' +
+												'\nTry looking <a href="/Gemma/expressionExperiment/showAllExpressionExperiments.html">here</a>.')
+											}
+										}
+									},
 									validator : function(value) {
 										if (value.match(/\s/)) {
 											return "Short name must not contain blanks.";
@@ -329,7 +342,16 @@ Ext.onReady(function() {
 									emptyText : 'Enter a longer descriptive name here',
 									width : 400,
 									maxLength : 255,
-									allowBlank : false
+									allowBlank : false,
+									listeners:{
+										blur: function(value){
+											if(value.getValue().match(/^GSE\d{3,6}$/i)){
+												Ext.Msg.alert('GEO Dataset Check',
+												'It looks like you\'re trying to load a GEO dataset. ' +
+												'Please check that it is not already loaded in Gemma. ' +
+												'\nTry looking <a href="/Gemma/expressionExperiment/showAllExpressionExperiments.html">here</a>.')											}
+										}
+									}
 								}, {
 									xtype : 'textarea',
 									id : 'description',
