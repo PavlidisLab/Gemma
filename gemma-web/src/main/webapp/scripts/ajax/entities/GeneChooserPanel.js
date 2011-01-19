@@ -150,6 +150,7 @@ Gemma.GeneGrid = Ext.extend(Ext.grid.GridPanel, {
 				for (var i = 0; i < selected.length; ++i) {
 					this.getStore().remove(selected[i]);
 				}
+				this.getSelectionModel().selectLastRow();
 			},
 
 			record : Ext.data.Record.create([{
@@ -430,7 +431,7 @@ Gemma.GeneChooserToolBar = Ext.extend(Ext.Toolbar, {
 							disabled : true,
 							handler : function() {
 								this.geneGrid.removeGene();
-								this.removeButton.disable();
+								//this.removeButton.disable();
 							}.createDelegate(this)
 						});
 
