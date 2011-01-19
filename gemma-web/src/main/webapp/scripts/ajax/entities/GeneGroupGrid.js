@@ -24,12 +24,17 @@ Ext.namespace('Gemma');
  * @class Gemma.GeneGroupManager
  * @extends Ext.Panel
  */
+	// if window is wider than 1000, give wider panel
+	var availablePanelWidth = Ext.getBody().getViewSize().width * 0.9;
+	var panelWidth = (availablePanelWidth > 1000)? availablePanelWidth : 1000;
+	var westWidth = panelWidth*.5;
+	var eastWidth = panelWidth*.5;
 Gemma.GeneGroupManager = Ext.extend(Ext.Panel, {
 
 			id : "gene-manager-panel",
 			layout : 'border',
 			height : 400,
-			width : 1000,
+			width : panelWidth,
 			title : "Gene Group Manager",
 
 			initComponent : function() {
@@ -37,14 +42,14 @@ Gemma.GeneGroupManager = Ext.extend(Ext.Panel, {
 				this.geneChooserPanel = new Gemma.GeneGroupMemberPanel({
 							region : 'east',
 							split : true,
-							width : 520,
+							width : eastWidth,
 							id : 'gene-chooser-panel'
 						});
 
 				this.geneGroupPanel = new Gemma.GeneGroupPanel({
 							id : 'gene-group-panel',
 							region : 'center',
-							width : 480,
+							width : westWidth,
 							tbar : new Gemma.GeneGroupEditToolbar()
 						});
 
@@ -607,6 +612,7 @@ Gemma.GeneGroupPanel = Ext.extend(Ext.grid.EditorGridPanel, {
 						dataIndex : 'name',
 						editable : true,
 						sortable : true,
+						width: 0.4,
 						editor : new Ext.form.TextField({
 									allowBlank : false
 								})
@@ -615,6 +621,7 @@ Gemma.GeneGroupPanel = Ext.extend(Ext.grid.EditorGridPanel, {
 						dataIndex : 'description',
 						editable : true,
 						sortable : true,
+						width: 0.4,
 						editor : new Ext.form.TextField({
 									allowBlank : false
 								})
@@ -623,7 +630,7 @@ Gemma.GeneGroupPanel = Ext.extend(Ext.grid.EditorGridPanel, {
 						sortable : true,
 						dataIndex : 'size',
 						editable : false,
-						width : 80,
+						width : 0.1,
 						tooltip : 'number of genes in group'
 					}, {
 						header : 'Flags',
@@ -634,6 +641,7 @@ Gemma.GeneGroupPanel = Ext.extend(Ext.grid.EditorGridPanel, {
 									record.get('shared'), record.get('currentUserHasWritePermission'));
 							return result;
 						},
+						width:0.1,
 						tooltip : 'Click to edit permissions'
 					}
 
