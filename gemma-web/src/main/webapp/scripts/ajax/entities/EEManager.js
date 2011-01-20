@@ -502,7 +502,7 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 				 * set up the subsets.
 				 */
 				subsetRadios.push(new Ext.form.Radio({
-							boxLabel : f.name,
+							boxLabel : "<b>"+f.name + "</b> ("+f.description+")",
 							name : 'diff-ex-analyze-subset', // same name -> grouped.
 							id : f.id + '-factor-subset-radio',
 							checked : false
@@ -519,9 +519,11 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 				stateful : false,
 				resizable : false,
 				autoHeight : true,
-				width : 300,
+				width : 460,
 				plain : true,
+				border:false,
 				title : "Differential analysis settings",
+				padding:10,
 				items : [{
 							xtype : 'form',
 							bodyBorder : false,
@@ -530,7 +532,7 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 										xtype : 'fieldset',
 										title : "Select factor(s) to use",
 										autoHeight : true,
-										labelWidth : 200,
+										labelWidth : 375,
 										id : 'diff-ex-analysis-customize-factors'
 									}, {
 										xtype : 'fieldset',
@@ -542,6 +544,7 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 													autoHeight : true,
 													id : 'diff-ex-analysis-subset-factors',
 													items : subsetRadios,
+													hideLabel:true,
 													listeners : {
 														change : validateFactorsChosen.createDelegate(this, [factors])
 													}
@@ -550,7 +553,7 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 
 									{
 										xtype : 'fieldset',
-										labelWidth : 200,
+										labelWidth : 375,
 										autoHeight : true,
 										hidden : false,
 
@@ -661,9 +664,10 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 					/*
 					 * Checkbox for one factor.
 					 */
+
 					Ext.getCmp('diff-ex-analysis-customize-factors').add(new Ext.form.Checkbox({
-								fieldLabel : f.name,
-								labelWidth : 180,
+								fieldLabel : "<b>"+f.name + "</b> ("+f.description+")",
+								//labelWidth : 375,
 								id : f.id + '-factor-checkbox',
 								tooltip : f.name,
 								checked : false,
