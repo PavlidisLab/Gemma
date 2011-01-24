@@ -214,6 +214,7 @@ Ext.onReady(function() {
 						colspan : 2,
 						// user : false,
 						lite : true,
+						noSmallGemma:true,
 						renderTo : "coexpression-grid"
 					});
 

@@ -36,6 +36,8 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 	stateful : false,
 
 	lite : false,
+	
+	noSmallGemma:false,
 
 	viewConfig : {
 		forceFit : true
@@ -535,7 +537,11 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 			g.taxonId = -1;
 			g.taxonName = "?";
 		}
-
+		
+		if (this.noSmallGemma){
+			return this.foundGeneTemplateNoGemma.apply(g);
+		}
+		
 		return this.foundGeneTemplate.apply(g);
 	},
 
@@ -545,6 +551,8 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 	foundGeneTemplate : new Ext.Template(
 			"<a href='/Gemma/searchCoexpression.html?g={id}&s=3&t={taxonId}&an=All {taxonName}'> <img src='/Gemma/images/logo/gemmaTiny.gif' ext:qtip='Make {officialSymbol} the query gene' /> </a>",
 			" &nbsp; ", "<a href='/Gemma/gene/showGene.html?id={id}'>{officialSymbol}</a> {officialName}"),
+	
+	foundGeneTemplateNoGemma : new Ext.Template("<a href='/Gemma/gene/showGene.html?id={id}'>{officialSymbol}</a> {officialName}"),
 
 	queryGeneStyler : function(value, metadata, record, row, col, ds) {
 
@@ -554,8 +562,8 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 			g.officialName = "";
 		}
 
-		g.abaGeneUrl = record.data.abaQueryGeneUrl;
-
+		g.abaGeneUrl = record.data.abaQueryGeneUrl;		
+		
 		return this.foundGeneTemplate.apply(g);
 	},
 	bitImageStyler : function(value, metadata, record, row, col, ds) {
