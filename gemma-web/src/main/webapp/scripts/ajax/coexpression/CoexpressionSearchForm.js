@@ -184,6 +184,11 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 		if (csc.stringency) {
 			Ext.getCmp('stringencyfield').setValue(csc.stringency);
 		}
+		
+		if (csc.geneIds.length>1) {
+			Ext.getCmp("querygenesonly").enable();
+		}
+		
 		if (csc.queryGenesOnly) {
 			Ext.getCmp("querygenesonly").setValue(true);
 		}
@@ -454,15 +459,7 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 				}]
 		});
 		Gemma.CoexpressionSearchForm.superclass.initComponent.call(this);
-		this.addEvents('beforesearch', 'aftersearch');
-
-		this.geneChooserPanel.on("afterrender", function(){					
-					if (this.geneChooserPanel.getGeneIds().length > 1) {						
-						var cmp = Ext.getCmp("querygenesonly");
-						cmp.enable();
-					}
-			
-				}, this);
+		this.addEvents('beforesearch', 'aftersearch');		
 		
 		this.geneChooserPanel.on("addgenes", function(geneids) {
 					if (this.geneChooserPanel.getGeneIds().length > 1) {
