@@ -459,15 +459,15 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 		if (d.gene2GeneProteinAssociationStringUrl) {
 			result = String
 					.format(
-							'<span> <a href="{0}"  target="_blank" class="external"><img "src="/Gemma/images/logo/string_logo.gif" ext:qtip="Click to view the protein protein interaction obtained from {1} evidence with a combined association score of {2} from STRING" /></a> </span>',
+							'<span> <a href="{0}"  target="_blank" class="external"><img src="/Gemma/images/logo/string_logo.gif" ext:qtip="Click to view the protein protein interaction obtained from {1} evidence with a combined association score of {2} from STRING" /></a> </span>',
 							d.gene2GeneProteinAssociationStringUrl, d.gene2GeneProteinInteractionEvidence,
 							d.gene2GeneProteinInteractionConfidenceScore);
 		}
 
 		if (d.queryRegulatesFound) {
-			result = result + " " + '<span> <img height="16" width = "16" "src="/Gemma/images/logo/pazar-icon.png" ext:qtip="Query may regulate the coexpressed gene, according to Pazar" />  </span>';
+			result = result + " " + '<span> <img height="16" width = "16" src="/Gemma/images/logo/pazar-icon.png" ext:qtip="Query may regulate the coexpressed gene, according to Pazar" />  </span>';
 		} else if (d.foundRegulatesQuery) {
-			result = result + " " + '<span> <img height="16" width = "16" "src="/Gemma/images/logo/pazar-icon.png" ext:qtip="The query may be regulated by the coexpressed gene, according to Pazar" />  </span>';
+			result = result + " " + '<span> <img height="16" width = "16" src="/Gemma/images/logo/pazar-icon.png" ext:qtip="The query may be regulated by the coexpressed gene, according to Pazar" />  </span>';
 		}
 
 		return result;
