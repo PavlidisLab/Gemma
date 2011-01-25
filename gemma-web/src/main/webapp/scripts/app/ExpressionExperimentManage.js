@@ -469,6 +469,7 @@ Ext.onReady(function() {
 		});
 
 	var dataSetDetailsPanel = new Ext.Panel({
+				id: 'dataSetDetailsPanel',
 				region : 'south',
 				split : true,
 				bodyStyle : 'padding:8px',

@@ -341,6 +341,9 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 										}.createDelegate(this)
 									});
 							ExpressionExperimentController.deleteById.apply(this, callParams);
+							/*after deletion, clear bottom details pane*/
+							Ext.get('dataSetDetailsPanel').first().last().dom.innerHTML = '<span></span>'
+							
 						}
 					},
 					scope : this,
