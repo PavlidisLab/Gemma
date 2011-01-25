@@ -42,14 +42,12 @@ Gemma.GeneGroupManager = Ext.extend(Ext.Panel, {
 				this.geneChooserPanel = new Gemma.GeneGroupMemberPanel({
 							region : 'east',
 							split : true,
-							width : eastWidth,
 							id : 'gene-chooser-panel'
 						});
 
 				this.geneGroupPanel = new Gemma.GeneGroupPanel({
 							id : 'gene-group-panel',
 							region : 'center',
-							width : westWidth,
 							tbar : new Gemma.GeneGroupEditToolbar()
 						});
 
@@ -79,7 +77,7 @@ Gemma.GeneGroupManager = Ext.extend(Ext.Panel, {
 				 */
 				this.geneChooserPanel.getStore().on('add', function(store, records, index) {
 							this.dirtySet(store);
-							this.geneChooserPanel.reset();
+							this.geneChooserPanel.resetKeepTaxon();
 						}, this);
 
 				/*
@@ -154,6 +152,16 @@ Gemma.GeneGroupMemberPanel = Ext.extend(Gemma.GeneGrid, {
 				this.getTopToolbar().geneCombo.reset();
 				this.getTopToolbar().taxonCombo.setDisabled(false);
 				this.fireEvent("taxonchanged", null);
+				this.loadGenes([]);
+				this.currentGroupSize = 0;
+			},
+			/**
+			 * functions the same as reset(), except the taxon combo box doesn't lose its value 
+			 * and an event announcing that the taxon has been changed isn't fired
+			 */
+			resetKeepTaxon : function() {
+				this.getTopToolbar().geneCombo.reset();
+				this.getTopToolbar().taxonCombo.setDisabled(false);
 				this.loadGenes([]);
 				this.currentGroupSize = 0;
 			},
