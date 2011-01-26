@@ -71,14 +71,19 @@ Ext.onReady(function() {
 				});
 	}
 
+
 	/*
 	 * The GUI
 	 */
-
+	
+	// if window is wider than 1000, give wider panel
+	var availablePanelWidth = Ext.getBody().getViewSize().width * 0.9;
+	var panelWidth = (availablePanelWidth > 1000)? availablePanelWidth : 1000;
+	
 	var groupviewer = new Ext.Panel({
 		height : 600,
 		id : 'manager-panel',
-		width : 1000,
+		width : panelWidth,
 		renderTo : 'manageGroups-div',
 
 		layout : 'border',
@@ -98,7 +103,7 @@ Ext.onReady(function() {
 			margins : '5 0 0 0',
 			cmargins : '5 5 0 0',
 			collapsible : true,
-			width : 225,
+			width : panelWidth*.25,
 
 			tbar : {
 				items : [{
@@ -122,17 +127,20 @@ Ext.onReady(function() {
 														 * Refresh
 														 */
 														Ext.getCmp("manager-groups-listview").getStore().load({
-																	params : []
-																});
-
+															// select the new group
+															callback: function (){
+																Ext.getCmp('manager-groups-listview').getSelectionModel().selectRow(Ext.getCmp("manager-groups-listview").getStore().findExact('groupName',text));
+															}
+														});
+														
 													},
 													errorHandler : function(e) {
 														Ext.Msg.alert('Sorry', e);
 													}
 												})
 									}
+															
 								});
-
 					}
 				}, {
 					icon : "/Gemma/images/icons/group_delete.png",
@@ -157,6 +165,10 @@ Ext.onReady(function() {
 												Ext.getCmp('manager-groups-listview').getStore().load({
 															params : []
 														});
+												/*reset the group-members grid*/
+												Ext.getCmp('group-members-grid').getStore().loadData({});
+												/*reset the data grid*/
+												Ext.getCmp('group-data-grid').getStore().loadData({});
 											},
 											errorHandler : function(e) {
 												Ext.Msg.alert('Sorry', e);
@@ -200,6 +212,10 @@ Ext.onReady(function() {
 								}),
 						store : new Ext.data.Store({
 									autoLoad : true,
+									sortInfo: {
+ 									   field: 'groupName',
+									   direction: 'ASC' 
+									},
 									proxy : new Ext.data.DWRProxy(SecurityController.getAvailableGroups),
 									reader : new Ext.data.ListRangeReader({
 												id : "groupName"
@@ -257,7 +273,7 @@ Ext.onReady(function() {
 			title : 'Group members',
 			id : 'manager-group-members-panel',
 			region : 'center',
-			width : 225,
+			width : panelWidth*.25,
 			margins : '5 0 0 0',
 			cmargins : '5 5 0 0',
 			tbar : {
@@ -382,7 +398,7 @@ Ext.onReady(function() {
 			title : 'Data',
 			id : 'manager-group-data-panel',
 			region : 'east',
-			width : 600,
+			width : panelWidth*.5,
 			margins : '5 0 0 0',
 			cmargins : '5 5 0 0',
 			tbar : {
