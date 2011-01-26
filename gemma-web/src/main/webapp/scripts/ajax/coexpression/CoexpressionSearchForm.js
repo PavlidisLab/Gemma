@@ -18,7 +18,7 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 
 	layout : 'border',
 	width : 390,
-	height : 430,
+	height : 480,
 	frame : true,
 	stateful : true,
 	stateEvents : ["beforesearch"],
