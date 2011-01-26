@@ -404,7 +404,7 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 				margins : '5 0 0 0 ',
 				// plugins : new Ext.ux.CollapsedPanelTitlePlugin(),
 				width : 250,
-				height : 180,
+				height : 230,
 				items : [{
 					xtype : 'fieldset',
 					autoHeight : true,
