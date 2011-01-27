@@ -638,6 +638,7 @@ Gemma.EEReportPanel = Ext.extend(Ext.grid.GridPanel, {
 				this.taxonCombo = new Gemma.TaxonCombo({
 							isDisplayTaxonWithDatasets : true,
 							stateId: null, //don't remember taxon value if user navigates away then comes back
+							allTaxa:true, // want an 'All taxa' option
 							listeners : {
 								scope : this,
 								'select' : this.filterByTaxon

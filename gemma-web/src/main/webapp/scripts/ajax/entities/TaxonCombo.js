@@ -39,7 +39,12 @@ Gemma.TaxonCombo = Ext.extend(Gemma.StatefulRemoteCombo, {
 	listWidth : 250,
 	width : 120,
 	stateId : "Gemma.TaxonCombo",
-
+	/* 
+	 * this controls whether or not the entry 'All taxa' is added at the top of the list; 
+	 * this option must be handled in the function that responds to the combo box's selection event
+	 * for example, adding "if(record.get('commonName') == "All taxa"){...}"
+	 */ 
+	allTaxa: false, 
 	emptyText : 'Select a taxon',
 
 	isDisplayTaxonSpecies : false,
@@ -97,20 +102,29 @@ Gemma.TaxonCombo = Ext.extend(Gemma.StatefulRemoteCombo, {
 
 		Gemma.TaxonCombo.superclass.initComponent.call(this);
 
-		this.store.load({
-					params : [],
-					add : false,
-					callback: function (){	
-						// add an option so user can see data belonging to all taxa
-						var allTaxaRecord = new TaxonRecord({
-							'id':'-1',
-							'commonName':'All taxa',
-							'scientificName':'All Taxa',
-							'parentTaxon':'-1'
+		if(this.allTaxa){
+			this.store.load({
+							params : [],
+							add : false,
+							callback: function (allTaxa){	
+									console.log("allTaxa: "+allTaxa.toString());
+									// add an option so user can see data belonging to all taxa
+									var allTaxaRecord = new TaxonRecord({
+										'id': '-1',
+										'commonName': 'All taxa',
+										'scientificName': 'All Taxa',
+										'parentTaxon': '-1'
+									});
+									this.insert(0, [allTaxaRecord]);
+							}
 						});
-						this.insert(0,[allTaxaRecord]);		
-					}
-				});
+		}else{
+			this.store.load({
+							params : [],
+							add : false,
+						});	
+		}
+		
 	},
 
 	getTaxon : function() {
@@ -159,5 +173,4 @@ Gemma.TaxonCombo = Ext.extend(Gemma.StatefulRemoteCombo, {
 		return -1;
 
 	}
-
 });
