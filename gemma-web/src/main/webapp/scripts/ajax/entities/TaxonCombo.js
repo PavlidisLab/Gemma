@@ -107,7 +107,6 @@ Gemma.TaxonCombo = Ext.extend(Gemma.StatefulRemoteCombo, {
 							params : [],
 							add : false,
 							callback: function (allTaxa){	
-									console.log("allTaxa: "+allTaxa.toString());
 									// add an option so user can see data belonging to all taxa
 									var allTaxaRecord = new TaxonRecord({
 										'id': '-1',
