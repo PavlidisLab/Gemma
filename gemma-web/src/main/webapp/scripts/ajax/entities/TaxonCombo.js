@@ -8,6 +8,26 @@ Ext.namespace('Gemma');
  * @extends Ext.form.ComboBox
  * @version $Id$
  */
+						
+TaxonRecord = Ext.data.Record.create([{
+		name : "id",
+		type : "int"
+	}, {
+		name : "commonName",
+		type : "string",
+		convert : function(v, rec) {
+			if (rec.commonName) {
+				return rec.commonName;
+			}
+			return rec.scientificName;
+		}
+	}, {
+		name : "scientificName",
+		type : "string"
+	}, {
+		name : "parentTaxon"
+	}]);
+	
 Gemma.TaxonCombo = Ext.extend(Gemma.StatefulRemoteCombo, {
 
 	name : "taxcomb",
@@ -26,24 +46,7 @@ Gemma.TaxonCombo = Ext.extend(Gemma.StatefulRemoteCombo, {
 	isDisplayTaxonWithGenes : false,
 	isDisplayTaxonWithDatasets : false,
 
-	record : Ext.data.Record.create([{
-				name : "id",
-				type : "int"
-			}, {
-				name : "commonName",
-				type : "string",
-				convert : function(v, rec) {
-					if (rec.commonName) {
-						return rec.commonName;
-					}
-					return rec.scientificName;
-				}
-			}, {
-				name : "scientificName",
-				type : "string"
-			}, {
-				name : "parentTaxon"
-			}]),
+	record : TaxonRecord,
 
 	filter : function(taxon) {
 		this.store.clearFilter();
@@ -96,7 +99,17 @@ Gemma.TaxonCombo = Ext.extend(Gemma.StatefulRemoteCombo, {
 
 		this.store.load({
 					params : [],
-					add : false
+					add : false,
+					callback: function (){	
+						// add an option so user can see data belonging to all taxa
+						var allTaxaRecord = new TaxonRecord({
+							'id':'-1',
+							'commonName':'All taxa',
+							'scientificName':'All Taxa',
+							'parentTaxon':'-1'
+						});
+						this.insert(0,[allTaxaRecord]);		
+					}
 				});
 	},
 

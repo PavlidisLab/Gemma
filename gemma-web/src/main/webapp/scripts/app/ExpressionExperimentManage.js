@@ -556,10 +556,18 @@ Gemma.EEReportPanel = Ext.extend(Ext.grid.GridPanel, {
 			},
 
 			filterByTaxon : function(box, record, index) {
-				this.taxonid = record.get('id')
+				
+				// if user selected 'All taxa', load all datasets
+				if(record.get('commonName') == "All taxa"){
+					this.taxonid= null;
+				}else{
+					this.taxonid = record.get('id')
+				}
+				
 				this.store.load({
-							params : [this.taxonid, this.ids, this.limit, this.filterType]
-						});
+					params : [this.taxonid, this.ids, this.limit, this.filterType]
+				});
+				
 			},
 
 			filterByLimit : function(box, record, index) {
