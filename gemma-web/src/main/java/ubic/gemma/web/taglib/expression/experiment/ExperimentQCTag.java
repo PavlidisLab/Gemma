@@ -134,20 +134,28 @@ public class ExperimentQCTag extends TagSupport {
             buf
                     .append( "<td style=\"margin:3px;padding:2px;background-color:#EEEEEE\" valign='top'><a target=\"_blank\" title=\"Click for larger version (new page)\" href=\"visualizeCorrMat.html?id="
                             + this.eeid
+                            + "&nocache="
+                            + (int)Math.rint(Math.random()*1000)
                             + "&size=large\"><img src=\"visualizeCorrMat.html?id="
                             + this.eeid
                             + "&size="
-                            + this.size + "\" alt='Image unavailable'/></a>" );
+                            + this.size
+                            + "&nocache="
+                            + (int)Math.rint(Math.random()*1000)
+                            + "\" alt='Image unavailable'/></a>" );
 
             // link to lower contrast version
             buf
                     .append( "<ul><li><a class=\"newpage\" target=\"_blank\" title=\"Click for larger lower contrast version\" href=\"visualizeCorrMat.html?id="
                             + this.eeid
+                            + "&nocache="
+                            + (int)Math.rint(Math.random()*1000)
                             + "&size=large&contr=lo\">View low contrast version (black &le;"
                             + ExpressionDataSampleCorrelation.LO_CONTRAST_COR_THRESH + ")</a></li>" );
             buf
                     .append( "<li><a title=\"Download a file containing the raw correlation matrix data\" class=\"newpage\"  target=\"_blank\"  href=\"visualizeCorrMat.html?id="
-                            + this.eeid + "&text=1\">Get data</a></li>" );
+                            + this.eeid                            
+                            + "&text=1\">Get data</a></li>" );
 
             /* Need to have a security check before showing this. */
             // buf
