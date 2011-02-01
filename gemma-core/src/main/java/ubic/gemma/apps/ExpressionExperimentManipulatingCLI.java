@@ -330,7 +330,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractSpring
                 log.warn( shortName + " not found" );
                 continue;
             }
-            expressionExperiments.add( expressionExperiment );
+            expressionExperiments.add( eeService.thawLite( expressionExperiment ) );
         }
         if ( expressionExperiments.size() == 0 ) {
             log.error( "There were no valid experimnents specified" );
