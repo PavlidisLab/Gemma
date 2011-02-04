@@ -228,94 +228,6 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 
 	/**
 	 * 
-	 * @param {}
-	 *            ee
-	 * @return {String}
-	 */
-	renderDiffExpressionDetails : function(ee) {
-
-		var analyses = ee.differentialExpressionAnalyses;
-
-		if (!analyses || analyses.size() == 0) {
-			return "No analyses";
-		}
-
-		var finalResult = "";
-
-		for (var j = 0; j < analyses.size(); j++) {
-
-			var diffExpressionSummary = "";
-
-			var analysis = analyses[j];
-
-			if (analysis.subsetFactorValue) {
-				diffExpressionSummary = '<span ext:qtip="Subset analysis, id=' + analysis.id + '">Subset:&nbsp;'
-						/* + analysis.subsetFactorValue.category + " " */+ analysis.subsetFactorValue.value
-						+ ':<span>';
-			}
-
-			for (var i = 0; i < analysis.resultSets.size(); i++) {
-
-				var resultSet = analysis.resultSets[i];
-
-				var factors;
-				if (resultSet.experimentalFactors == null || resultSet.experimentalFactors.size() == 0) {
-					factors = "n/a";
-				} else {
-					factors = "" + resultSet.experimentalFactors[0].name + "";
-					for (var k = 1; k < resultSet.experimentalFactors.size(); k++) {
-						factors = factors + " x " + resultSet.experimentalFactors[k].name + " ";
-					}
-				}
-				if (resultSet.numberOfDiffExpressedProbes == 0) {
-					diffExpressionSummary = diffExpressionSummary + "&nbsp;&nbsp;0";
-				} else {
-					/*
-					 * Show how many probes are differentially expressed; provide link for visualization.
-					 */
-					diffExpressionSummary = diffExpressionSummary
-							+ '&nbsp; ['
-							+ factors
-							+ ':<span class="link" onClick="Ext.getCmp(\'ee-details-panel\').visualizeDiffExpressionHandler(\''
-							+ ee.id + '\',\'' + resultSet.resultSetId + '\',\'' + factors
-							+ '\')" ext:qtip="Click to visualize differentially expressed probes for: ' + factors
-							+ ' (FDR threshold=' + resultSet.threshold + ')">&nbsp;'
-							+ resultSet.numberOfDiffExpressedProbes + ' probes</span>';
-
-					if (resultSet.baselineGroup) {
-						diffExpressionSummary = diffExpressionSummary + '&nbsp;Baseline&nbsp;=&nbsp;'
-								+ resultSet.baselineGroup.value
-					}
-
-					if (resultSet.upregulatedCount != 0) {
-						diffExpressionSummary = diffExpressionSummary + ';&nbsp;' + resultSet.upregulatedCount
-								+ "&nbsp;Up";
-					}
-
-					if (resultSet.downregulatedCount != 0) {
-						diffExpressionSummary = diffExpressionSummary + ';&nbsp;' + resultSet.downregulatedCount
-								+ "&nbsp;Down";
-					}
-
-					diffExpressionSummary = diffExpressionSummary + "]";
-				}
-			}
-
-			var downloadDiffDataLink = String
-					.format(
-							"<span style='cursor:pointer' ext:qtip='Download all differential expression data in a tab delimited  format' onClick='fetchDiffExpressionData({0})' > &nbsp; <img src='/Gemma/images/download.gif'/> &nbsp;  </span>",
-							ee.id); // FIXME
-
-			finalResult = finalResult + diffExpressionSummary + "&nbsp;&nbsp;" + downloadDiffDataLink + "<br/>"
-
-		}
-
-		return finalResult;
-
-	},
-
-	/**
-	 * 
 	 */
 	visualizeDiffExpressionHandler : function(eeid, diffResultId, factorDetails) {
 
@@ -828,10 +740,10 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 					}, {
 						html : 'Diff. expr. Probes'
 					}, {
-						id : 'DiffExpressedProbes-region',
-						html : this.renderDiffExpressionDetails(e),
-						width : 700
-					}, {
+						id: 'DiffExpressedProbes-region',
+						items: new Gemma.DifferentialExpressionAnalysesSummaryTree(e)
+					}
+					, {
 						html : 'Publication:'
 					}, {
 						xtype : 'panel',
@@ -859,6 +771,7 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 			 */
 			]
 		});
+		
 
 		if (this.editable) {
 			Ext.DomHelper.append('admin-links', {
@@ -893,6 +806,7 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 		}
 
 		this.fireEvent("ready");
+		
 	}
 
 });
@@ -911,6 +825,9 @@ Ext.onReady(function() {
 												remove : true
 											});
 								}, 250);
+								//new Gemma.DifferentialExpressionAnalysesSummaryTree(Ext.get("eeId").getValue());
 					});
+			
+			
 
 		});
