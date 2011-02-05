@@ -61,20 +61,14 @@ public class ArrayDesignHtmlUtil {
                 + object.getNumProbesToKnownGenes()
                 + "</td></tr>"
                 +
-
-                "<tr><td title=\"Number of probes mapping to predicted genes\">"
-                + "&nbsp;&nbsp;Pred."
-                + "</td><td align=\"right\" >"
-                + object.getNumProbesToPredictedGenes()
-                + "</td></tr>"
-                +
-
-                "<tr><td  title=\"Number of probes mapping to non-gene locations in the genome\">"
-                + "&nbsp;&nbsp;Unknown"
-                + "</td><td align=\"right\" >"
-                + object.getNumProbesToProbeAlignedRegions()
-                + "</td></tr>"
-                +
+                /*
+                 * "<tr><td title=\"Number of probes mapping to predicted genes\">" + "&nbsp;&nbsp;Pred." +
+                 * "</td><td align=\"right\" >" + object.getNumProbesToPredictedGenes() + "</td></tr>" +
+                 * 
+                 * "<tr><td  title=\"Number of probes mapping to non-gene locations in the genome\">" +
+                 * "&nbsp;&nbsp;Unknown" + "</td><td align=\"right\" >" + object.getNumProbesToProbeAlignedRegions() +
+                 * "</td></tr>" +
+                 */
 
                 "<tr><td title=\"Number of unique genes represented on the array\" >"
                 + "Unique genes"
