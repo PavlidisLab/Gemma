@@ -159,7 +159,7 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext.extend(Ext.tree.TreePanel,
 					}
 					
 					var analysisDesc = '';
-					if(resultSet.experimentalFactors.size()>1){
+					if(analysis.resultSets.size()>1){
 						analysisDesc = 'Two-way ANOVA' + ((interaction>0) ? ' with interactions on: ' : 'on: ');
 					}else{
 						analysisDesc = 'One-way ANOVA on ';
