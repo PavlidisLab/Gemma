@@ -100,8 +100,8 @@ public class ProbeMapper {
          * Temporary code!!
          */
         if ( goldenPathDb.getDatabaseName().equals( "hg19" ) ) {
-            log.warn( "Disabling miRNA and acembly as hg19 doesn't have them" );
-            config.setUseMiRNA( false );
+            log.warn( "Disabling  acembly as hg19 doesn't have them" );
+            // config.setUseMiRNA( false ); // okay now
             config.setUseAcembly( false );
         }
 
@@ -175,12 +175,16 @@ public class ProbeMapper {
 
                     blatAssociationsForSequence.addAll( resultsForOneBlatResult );
                 } else {
-                    // here we have to provide a 'provisional' mapping to a ProbeAlignedRegion.
-                    ProbeAlignedRegion par = makePar( blatResult );
-                    BlatAssociation parAssociation = makeBlatAssociationWithPar( blatResult, par );
-                    blatAssociationsForSequence.add( parAssociation );
-                    if ( log.isDebugEnabled() )
-                        log.debug( "Adding PAR for " + sequence + " with alignment " + blatResult );
+
+                    if ( config.isAllowMakeProbeAlignedRegion() ) {
+
+                        // here we have to provide a 'provisional' mapping to a ProbeAlignedRegion.
+                        ProbeAlignedRegion par = makePar( blatResult );
+                        BlatAssociation parAssociation = makeBlatAssociationWithPar( blatResult, par );
+                        blatAssociationsForSequence.add( parAssociation );
+                        if ( log.isDebugEnabled() )
+                            log.debug( "Adding PAR for " + sequence + " with alignment " + blatResult );
+                    }
                 }
 
                 // there are rarely this many, but it does happen.
@@ -473,8 +477,10 @@ public class ProbeMapper {
         }
 
         // no genes, have to look for pre-existing probealignedregions that overlap.
+        if ( config.isAllowProbeAlignedRegions() )
+            return findProbeAlignedRegionAssociations( blatResult, ignoreStrand );
 
-        return findProbeAlignedRegionAssociations( blatResult, ignoreStrand );
+        return new HashSet<BlatAssociation>();
     }
 
     /**

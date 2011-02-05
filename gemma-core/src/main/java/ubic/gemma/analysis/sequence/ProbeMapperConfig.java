@@ -22,7 +22,9 @@ public class ProbeMapperConfig {
     /**
      * Sequence identity below which we throw hits away.
      */
-    public static final double DEFAULT_IDENTITY_THRESHOLD = 0.80;
+    public static final double DEFAULT_IDENTITY_THRESHOLD = 80;
+
+    public static final double DEFAULT_MINIMUM_EXON_OVERLAP_FRACTION = 0.0;
 
     /**
      * BLAT score threshold below which we do not consider hits. This reflects the fraction of aligned bases.
@@ -34,6 +36,12 @@ public class ProbeMapperConfig {
 
     /**
      * Sequences which hybridize to this many or more sites in the genome are candidates to be considered non-specific.
+     * This is used even if the sequence does not contain a repeat.
+     */
+    public static final int NON_REPEAT_NON_SPECIFIC_SITE_THRESHOLD = 10;
+
+    /**
+     * Sequences which hybridize to this many or more sites in the genome are candidates to be considered non-specific.
      * This is used in combination with the REPEAT_FRACTION_MAXIMUM. Note that many sequences which contain repeats
      * nonetheless only align to very few sites in the genome. Similarly, there are sequences that map to multiple sites
      * which are _not_ repeats. This value is also not designed to care about whether the alignments are in known genes
@@ -42,42 +50,30 @@ public class ProbeMapperConfig {
     public static final int NON_SPECIFIC_SITE_THRESHOLD = 3;
 
     /**
-     * Sequences which hybridize to this many or more sites in the genome are candidates to be considered non-specific.
-     * This is used even if the sequence does not contain a repeat.
-     */
-    public static final int NON_REPEAT_NON_SPECIFIC_SITE_THRESHOLD = 10;
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see java.lang.Object#toString()
-     */
-    @Override
-    public String toString() {
-        return "# Configuration:\n# blatScoreThreshold=" + this.blatScoreThreshold + "\n# identityThreshold="
-                + this.identityThreshold + "\n# maximumRepeatFraction=" + this.maximumRepeatFraction
-                + "\n# nonSpecificSiteCountThreshold=" + this.nonSpecificSiteCountThreshold
-                + "\n# nonRepeatNonSpecificSiteCountThreshold=" + this.nonRepeatNonSpecificSiteCountThreshold
-                + "\n# minimumExonOverlapFraction=" + this.minimumExonOverlapFraction + "\n# useRefGene="
-                + this.useRefGene + "\n# useAcembly=" + this.useAcembly + "\n# useNscan=" + this.useNscan
-                + "\n# useEnsembl=" + this.useEnsembl + "\n# useMrnas=" + this.useMrnas + "\n# useMiRNA="
-                + this.useMiRNA + "\n# useEsts=" + this.useEsts + "\n# useKnownGene=" + this.useKnownGene + "\n";
-
-    }
-
-    public double getNonRepeatNonSpecificSiteCountThreshold() {
-        return nonRepeatNonSpecificSiteCountThreshold;
-    }
-
-    public void setNonRepeatNonSpecificSiteCountThreshold( double nonRepeatNonSpecificSiteCountThreshold ) {
-        this.nonRepeatNonSpecificSiteCountThreshold = nonRepeatNonSpecificSiteCountThreshold;
-    }
-
-    /**
      * Sequences which have more than this fraction accounted for by repeats (via repeatmasker) will not be examined if
      * they produce multiple alignments to the genome, regardless of the alignment quality.
      */
     public static final double REPEAT_FRACTION_MAXIMUM = 0.3;
+
+    public static final boolean DEFAULT_ALLOW_PREDICTED = false;
+
+    public static final boolean DEFAULT_ALLOW_PARS = false;
+
+    /**
+     * Should we allow new PARs to be created. This used to be of interest but we have decided they are no longer
+     * workable, so this is now false by default.
+     */
+    private boolean allowMakeProbeAlignedRegion = false;
+
+    /**
+     * Allow predicted genes; setting this to false overrides the effect of useAcembly, useNscan and useEnsembl.
+     */
+    private boolean allowPredictedGenes = DEFAULT_ALLOW_PREDICTED;
+
+    /**
+     * Allow existing PARs to be mapped to probes.
+     */
+    private boolean allowProbeAlignedRegions = DEFAULT_ALLOW_PARS;
 
     /**
      * Limit below which BLAT results are ignored. If BLAT was run with a threshold higher than this, it won't have any
@@ -89,7 +85,12 @@ public class ProbeMapperConfig {
 
     private double maximumRepeatFraction = REPEAT_FRACTION_MAXIMUM;
 
-    public static final double DEFAULT_MINIMUM_EXON_OVERLAP_FRACTION = 0.0;
+    private double minimumExonOverlapFraction = DEFAULT_MINIMUM_EXON_OVERLAP_FRACTION;
+
+    /**
+     * @see NON_REPEAT_NON_SPECIFIC_SITE_THRESHOLD
+     */
+    private double nonRepeatNonSpecificSiteCountThreshold = NON_REPEAT_NON_SPECIFIC_SITE_THRESHOLD;
 
     /**
      * Second level of filtering.
@@ -98,14 +99,9 @@ public class ProbeMapperConfig {
      */
     private double nonSpecificSiteCountThreshold = NON_SPECIFIC_SITE_THRESHOLD;
 
-    /**
-     * @see NON_REPEAT_NON_SPECIFIC_SITE_THRESHOLD
-     */
-    private double nonRepeatNonSpecificSiteCountThreshold = NON_REPEAT_NON_SPECIFIC_SITE_THRESHOLD;
+    private boolean useAcembly = false;
 
-    private boolean useAcembly = true;
-
-    private boolean useEnsembl = true;
+    private boolean useEnsembl = false;
 
     /**
      * This is the only track off by default.
@@ -118,19 +114,9 @@ public class ProbeMapperConfig {
 
     private boolean useMrnas = true;
 
-    private boolean useNscan = true;
+    private boolean useNscan = false;
 
     private boolean useRefGene = true;
-
-    private double minimumExonOverlapFraction = DEFAULT_MINIMUM_EXON_OVERLAP_FRACTION;
-
-    public double getMinimumExonOverlapFraction() {
-        return minimumExonOverlapFraction;
-    }
-
-    public void setMinimumExonOverlapFraction( double minimumExonOverlapFraction ) {
-        this.minimumExonOverlapFraction = minimumExonOverlapFraction;
-    }
 
     /**
      * @return the blatScoreThreshold
@@ -153,11 +139,31 @@ public class ProbeMapperConfig {
         return maximumRepeatFraction;
     }
 
+    public double getMinimumExonOverlapFraction() {
+        return minimumExonOverlapFraction;
+    }
+
+    public double getNonRepeatNonSpecificSiteCountThreshold() {
+        return nonRepeatNonSpecificSiteCountThreshold;
+    }
+
     /**
      * @return the nonSpecificSiteCountThreshold
      */
     public double getNonSpecificSiteCountThreshold() {
         return nonSpecificSiteCountThreshold;
+    }
+
+    public boolean isAllowMakeProbeAlignedRegion() {
+        return allowMakeProbeAlignedRegion;
+    }
+
+    public boolean isAllowPredictedGenes() {
+        return allowPredictedGenes;
+    }
+
+    public boolean isAllowProbeAlignedRegions() {
+        return allowProbeAlignedRegions;
     }
 
     /**
@@ -216,6 +222,18 @@ public class ProbeMapperConfig {
         return useRefGene;
     }
 
+    public void setAllowMakeProbeAlignedRegion( boolean allowMakeProbeAlignedRegion ) {
+        this.allowMakeProbeAlignedRegion = allowMakeProbeAlignedRegion;
+    }
+
+    public void setAllowPredictedGenes( boolean allowPredictedGenes ) {
+        this.allowPredictedGenes = allowPredictedGenes;
+    }
+
+    public void setAllowProbeAlignedRegions( boolean allowProbeAlignedRegions ) {
+        this.allowProbeAlignedRegions = allowProbeAlignedRegions;
+    }
+
     /**
      * Set to use no tracks. Obviously then nothing will be found, so it is wise to then switch some tracks on.
      */
@@ -263,6 +281,14 @@ public class ProbeMapperConfig {
      */
     public void setMaximumRepeatFraction( double maximumRepeatFraction ) {
         this.maximumRepeatFraction = maximumRepeatFraction;
+    }
+
+    public void setMinimumExonOverlapFraction( double minimumExonOverlapFraction ) {
+        this.minimumExonOverlapFraction = minimumExonOverlapFraction;
+    }
+
+    public void setNonRepeatNonSpecificSiteCountThreshold( double nonRepeatNonSpecificSiteCountThreshold ) {
+        this.nonRepeatNonSpecificSiteCountThreshold = nonRepeatNonSpecificSiteCountThreshold;
     }
 
     /**
@@ -326,6 +352,25 @@ public class ProbeMapperConfig {
      */
     public void setUseRefGene( boolean useRefGene ) {
         this.useRefGene = useRefGene;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see java.lang.Object#toString()
+     */
+    @Override
+    public String toString() {
+        return "# Configuration:\n# blatScoreThreshold=" + this.blatScoreThreshold + "\n# identityThreshold="
+                + this.identityThreshold + "\n# maximumRepeatFraction=" + this.maximumRepeatFraction
+                + "\n# nonSpecificSiteCountThreshold=" + this.nonSpecificSiteCountThreshold
+                + "\n# nonRepeatNonSpecificSiteCountThreshold=" + this.nonRepeatNonSpecificSiteCountThreshold
+                + "\n# minimumExonOverlapFraction=" + this.minimumExonOverlapFraction + "\n# useRefGene="
+                + this.useRefGene + "\n# useAcembly=" + this.useAcembly + "\n# useNscan=" + this.useNscan
+                + "\n# useEnsembl=" + this.useEnsembl + "\n# useMrnas=" + this.useMrnas + "\n# useMiRNA="
+                + this.useMiRNA + "\n# useEsts=" + this.useEsts + "\n# useKnownGene=" + this.useKnownGene
+                + "\n# allowMakeProbeAlignedRegions=" + this.allowMakeProbeAlignedRegion + "\n";
+
     }
 
 }

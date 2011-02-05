@@ -93,13 +93,25 @@ public class ArrayDesignProbeMapperService {
     private GeneService geneService;
 
     @Autowired
-    ArrayDesignReportService arrayDesignReportService;
-
-    @Autowired
     private PersisterHelper persisterHelper;
 
     @Autowired
     private ProbeMapper probeMapper;
+
+    @Autowired
+    ArrayDesignReportService arrayDesignReportService;
+
+    /**
+     * Print results to STDOUT
+     * 
+     * @param compositeSequence
+     * @param col
+     */
+    public void printResult( CompositeSequence compositeSequence, Collection<BlatAssociation> col ) {
+        for ( BlatAssociation blatAssociation : col ) {
+            printResult( compositeSequence, blatAssociation );
+        }
+    }
 
     /**
      * Do probe mapping, writing the results to the database and using default settings.
@@ -142,27 +154,11 @@ public class ArrayDesignProbeMapperService {
         int hits = 0;
         log.info( "Start processing " + arrayDesign.getCompositeSequences().size() + " probes ..." );
         for ( CompositeSequence compositeSequence : arrayDesign.getCompositeSequences() ) {
-            BioSequence bs = compositeSequence.getBiologicalCharacteristic();
 
-            if ( bs == null ) continue;
+            Map<String, Collection<BlatAssociation>> results = processCompositeSequence( config, taxon, goldenPathDb,
+                    compositeSequence );
 
-            /*
-             * It isn't 100% clear what the right thing to do is. But this seems at least _reasonable_.
-             */
-            if ( !bs.getTaxon().equals( taxon ) ) {
-                continue;
-            }
-
-            final Collection<BlatResult> blatResults = blatResultService.findByBioSequence( bs );
-
-            if ( blatResults == null || blatResults.isEmpty() ) continue;
-
-            Map<String, Collection<BlatAssociation>> results = probeMapper.processBlatResults( goldenPathDb,
-                    blatResults, config );
-
-            if ( log.isDebugEnabled() )
-                log.debug( "Found " + results.size() + " mappings for " + compositeSequence + " (" + blatResults.size()
-                        + " BLAT results)" );
+            if ( results == null ) continue;
 
             for ( Collection<BlatAssociation> col : results.values() ) {
                 for ( BlatAssociation association : col ) {
@@ -199,32 +195,6 @@ public class ArrayDesignProbeMapperService {
 
         arrayDesignReportService.generateArrayDesignReport( arrayDesign.getId() );
 
-    }
-
-    /**
-     * Print results to STDOUT
-     * 
-     * @param compositeSequence
-     * @param col
-     */
-    private void printResult( CompositeSequence compositeSequence, Collection<BlatAssociation> col ) {
-        for ( BlatAssociation blatAssociation : col ) {
-            printResult( compositeSequence, blatAssociation );
-        }
-    }
-
-    /**
-     * Print line of result to STDOUT.
-     * 
-     * @param cs
-     * @param blatAssociation
-     */
-    private void printResult( CompositeSequence cs, BlatAssociation blatAssociation ) {
-
-        GeneProduct geneProduct = blatAssociation.getGeneProduct();
-        Gene gene = geneProduct.getGene();
-        System.out.println( cs.getName() + '\t' + blatAssociation.getBioSequence().getName() + '\t'
-                + geneProduct.getName() + '\t' + gene.getOfficialSymbol() + "\t" + gene.getClass().getSimpleName() );
     }
 
     /**
@@ -315,7 +285,8 @@ public class ArrayDesignProbeMapperService {
                 numSkipped++;
                 continue;
             } else if ( geneListProbe.size() > 1 ) {
-                // this is a common situation, when the geneSymbol actually has |-separated genes, so no need to make a lot of fuss.
+                // this is a common situation, when the geneSymbol actually has |-separated genes, so no need to make a
+                // lot of fuss.
                 log.debug( "More than one gene found for '" + geneSymbol + "' in " + taxon );
             }
 
@@ -378,6 +349,82 @@ public class ArrayDesignProbeMapperService {
     }
 
     /**
+     * @param config
+     * @param taxon
+     * @param goldenPathDb
+     * @param compositeSequence
+     * @param bs
+     * @return
+     */
+    public Map<String, Collection<BlatAssociation>> processCompositeSequence( ProbeMapperConfig config, Taxon taxon,
+            GoldenPathSequenceAnalysis goldenPathDb, CompositeSequence compositeSequence ) {
+        BioSequence bs = compositeSequence.getBiologicalCharacteristic();
+        if ( bs == null ) return null;
+
+        /*
+         * It isn't 100% clear what the right thing to do is. But this seems at least _reasonable_ when there is a
+         * mismatch
+         */
+        if ( taxon != null && !bs.getTaxon().equals( taxon ) ) {
+            return null;
+        }
+
+        GoldenPathSequenceAnalysis db;
+        if ( goldenPathDb == null ) {
+            db = new GoldenPathSequenceAnalysis( bs.getTaxon() );
+        } else {
+            db = goldenPathDb;
+        }
+
+        final Collection<BlatResult> blatResults = blatResultService.findByBioSequence( bs );
+
+        if ( blatResults == null || blatResults.isEmpty() ) return null;
+
+        Map<String, Collection<BlatAssociation>> results = probeMapper.processBlatResults( db, blatResults, config );
+
+        if ( log.isDebugEnabled() )
+            log.debug( "Found " + results.size() + " mappings for " + compositeSequence + " (" + blatResults.size()
+                    + " BLAT results)" );
+        return results;
+    }
+
+    /**
+     * @param queue
+     * @param generatorDone
+     * @param loaderDone
+     */
+    private void load( final BlockingQueue<BlatAssociation> queue, final AtomicBoolean generatorDone,
+            final AtomicBoolean loaderDone ) {
+        final SecurityContext context = SecurityContextHolder.getContext();
+        assert context != null;
+
+        Thread loadThread = new Thread( new Runnable() {
+            public void run() {
+                SecurityContextHolder.setContext( context );
+                doLoad( queue, generatorDone, loaderDone );
+            }
+
+        }, "PersistBlatAssociations" );
+
+        loadThread.start();
+
+    }
+
+    /**
+     * Print line of result to STDOUT.
+     * 
+     * @param cs
+     * @param blatAssociation
+     */
+    private void printResult( CompositeSequence cs, BlatAssociation blatAssociation ) {
+
+        GeneProduct geneProduct = blatAssociation.getGeneProduct();
+        Gene gene = geneProduct.getGene();
+        System.out.println( cs.getName() + '\t' + blatAssociation.getBioSequence().getName() + '\t'
+                + geneProduct.getName() + '\t' + gene.getOfficialSymbol() + "\t" + gene.getClass().getSimpleName() );
+    }
+
+    /**
      * @param queue
      * @param generatorDone
      * @param loaderDone
@@ -407,28 +454,6 @@ public class ArrayDesignProbeMapperService {
         }
         log.info( "Load thread done: loaded " + loadedAssociationCount + " blat associations. " );
         loaderDone.set( true );
-    }
-
-    /**
-     * @param queue
-     * @param generatorDone
-     * @param loaderDone
-     */
-    private void load( final BlockingQueue<BlatAssociation> queue, final AtomicBoolean generatorDone,
-            final AtomicBoolean loaderDone ) {
-        final SecurityContext context = SecurityContextHolder.getContext();
-        assert context != null;
-
-        Thread loadThread = new Thread( new Runnable() {
-            public void run() {
-                SecurityContextHolder.setContext( context );
-                doLoad( queue, generatorDone, loaderDone );
-            }
-
-        }, "PersistBlatAssociations" );
-
-        loadThread.start();
-
     }
 
 }

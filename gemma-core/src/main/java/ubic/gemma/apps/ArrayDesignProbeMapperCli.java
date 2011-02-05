@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
@@ -14,6 +15,7 @@ import org.apache.commons.cli.OptionBuilder;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 
+import ubic.gemma.analysis.sequence.ProbeMapper;
 import ubic.gemma.analysis.sequence.ProbeMapperConfig;
 import ubic.gemma.loader.expression.arrayDesign.ArrayDesignProbeMapperService;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
@@ -28,8 +30,11 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.ExternalDatabaseService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
+import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.util.ConfigUtils;
 
 /**
@@ -54,22 +59,15 @@ import ubic.gemma.util.ConfigUtils;
 public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCli {
     private static final String CONFIG_OPTION = "config";
     private static final String MIRNA_ONLY_MODE_OPTION = "mirna";
-    private ArrayDesignProbeMapperService arrayDesignProbeMapperService;
-    private TaxonService taxonService;
-    private String taxonName;
-    private Taxon taxon = null;
-    private String directAnnotationInputFileName = null;
-    private ExternalDatabase sourceDatabase = null;
-    private boolean useDB = true;
-
-    private final static String OPTION_EST = "e"; // usually off
-    private final static String OPTION_ENSEMBL = "n";
-    private final static String OPTION_REFSEQ = "r";
-    private final static String OPTION_KNOWNGENE = "k";
-    private final static String OPTION_MRNA = "m";
-    private final static String OPTION_MICRORNA = "i";
     private final static String OPTION_ACEMBLY = "a";
+    private final static String OPTION_ENSEMBL = "n";
+    private final static String OPTION_EST = "e"; // usually off
+    private final static String OPTION_KNOWNGENE = "k";
+    private final static String OPTION_MICRORNA = "i";
+    private final static String OPTION_MRNA = "m";
     private final static String OPTION_NSCAN = "s";
+
+    private final static String OPTION_REFSEQ = "r";
 
     public static void main( String[] args ) {
         ArrayDesignProbeMapperCli p = new ArrayDesignProbeMapperCli();
@@ -83,9 +81,233 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         }
     }
 
+    private ArrayDesignProbeMapperService arrayDesignProbeMapperService;
+    private String directAnnotationInputFileName = null;
+    protected String[] probeNames = null;
+    private ExternalDatabase sourceDatabase = null;
+    private Taxon taxon = null;
+    private String taxonName;
+
+    private TaxonService taxonService;
+
+    private boolean useDB = true;
+
     @Override
     public String getShortDesc() {
         return "Process the BLAT results for an array design to map them onto genes";
+    }
+
+    /**
+     * @param arrayDesign
+     */
+    private void audit( ArrayDesign arrayDesign, String note, ArrayDesignGeneMappingEvent eventType ) {
+        arrayDesignReportService.generateArrayDesignReport( arrayDesign.getId() );
+        auditTrailService.addUpdateEvent( arrayDesign, eventType, note );
+    }
+
+    /**
+     * @param skipIfLastRunLaterThan
+     */
+    private void batchRun( final Date skipIfLastRunLaterThan ) {
+        Collection<ArrayDesign> allArrayDesigns;
+        if ( this.taxon != null ) {
+            allArrayDesigns = arrayDesignService.findByTaxon( this.taxon );
+        } else {
+            allArrayDesigns = arrayDesignService.loadAll();
+        }
+
+        final SecurityContext context = SecurityContextHolder.getContext();
+
+        // split over multiple threads so we can multiplex. Put the array designs in a queue.
+
+        /*
+         * Here is our task runner.
+         */
+        class Consumer implements Runnable {
+            private final BlockingQueue<ArrayDesign> queue;
+
+            public Consumer( BlockingQueue<ArrayDesign> q ) {
+                queue = q;
+            }
+
+            public void run() {
+                SecurityContextHolder.setContext( context );
+                while ( true ) {
+                    ArrayDesign ad = queue.poll();
+                    if ( ad == null ) {
+                        break;
+                    }
+                    consume( ad );
+                }
+            }
+
+            void consume( ArrayDesign x ) {
+
+                /*
+                 * Note that if the array design has multiple taxa, analysis will be run on all of the sequences, not
+                 * just the ones from the taxon specified.
+                 */
+                processArrayDesign( skipIfLastRunLaterThan, x );
+
+            }
+        }
+
+        BlockingQueue<ArrayDesign> arrayDesigns = new ArrayBlockingQueue<ArrayDesign>( allArrayDesigns.size() );
+        for ( ArrayDesign ad : allArrayDesigns ) {
+            arrayDesigns.add( ad );
+        }
+
+        /*
+         * Start the threads
+         */
+        log.info( this.numThreads + " threads" );
+        Collection<Thread> threads = new ArrayList<Thread>();
+        for ( int i = 0; i < this.numThreads; i++ ) {
+            Consumer c1 = new Consumer( arrayDesigns );
+            Thread k = new Thread( c1 );
+            threads.add( k );
+            k.start();
+        }
+
+        waitForThreadPoolCompletion( threads );
+
+        /*
+         * All done
+         */
+        summarizeProcessing();
+    }
+
+    ProbeMapperConfig config;
+
+    /**
+     * @return
+     */
+    private void configure() {
+        this.config = new ProbeMapperConfig();
+
+        /*
+         * Hackery to work around hg19 problems.; no longer an issue for miRNA
+         */
+        boolean isMissingTracks = taxon != null && taxon.getCommonName().equals( "human" )
+                && ConfigUtils.getString( "gemma.goldenpath.db.human" ).equals( "hg19" );
+
+        if ( this.hasOption( MIRNA_ONLY_MODE_OPTION ) ) {
+            // if ( isMissingTracks ) {
+            // throw new IllegalArgumentException( "There is no miRNA track for this taxon." );
+            // }
+            log.info( "Micro RNA only mode" );
+            config.setAllTracksOff();
+            config.setUseMiRNA( true );
+        } else if ( this.hasOption( CONFIG_OPTION ) ) {
+
+            String configString = this.getOptionValue( CONFIG_OPTION );
+
+            if ( !configString.matches( "[" + OPTION_REFSEQ + OPTION_KNOWNGENE + OPTION_MICRORNA + OPTION_EST
+                    + OPTION_MRNA + OPTION_ACEMBLY + OPTION_ENSEMBL + OPTION_NSCAN + "]+" ) ) {
+                throw new IllegalArgumentException( "Configuration string must only contain values [" + OPTION_REFSEQ
+                        + OPTION_KNOWNGENE + OPTION_MICRORNA + OPTION_EST + OPTION_MRNA + OPTION_ACEMBLY
+                        + OPTION_ENSEMBL + OPTION_NSCAN + "]" );
+            }
+
+            config.setAllTracksOff();
+
+            config.setUseEsts( configString.contains( OPTION_EST ) );
+            config.setUseMrnas( configString.contains( OPTION_MRNA ) );
+            config.setUseMiRNA( configString.contains( OPTION_MICRORNA ) );
+            config.setUseEnsembl( configString.contains( OPTION_ENSEMBL ) );
+            config.setUseNscan( configString.contains( OPTION_NSCAN ) );
+            config.setUseRefGene( configString.contains( OPTION_REFSEQ ) );
+            config.setUseKnownGene( configString.contains( OPTION_KNOWNGENE ) );
+            config.setUseAcembly( configString.contains( OPTION_ACEMBLY ) );
+        }
+
+        if ( hasOption( 's' ) ) {
+            double blatscorethresh = getDoubleOptionValue( 's' );
+            if ( blatscorethresh < 0 || blatscorethresh > 1 ) {
+                throw new IllegalArgumentException( "BLAT score threshold must be between 0 and 1" );
+            }
+            config.setBlatScoreThreshold( blatscorethresh );
+        }
+
+        if ( hasOption( "usePars" ) ) {
+            config.setAllowMakeProbeAlignedRegion( true );
+            config.setAllowProbeAlignedRegions( true );
+        }
+
+        if ( hasOption( "usePred" ) ) {
+            config.setAllowPredictedGenes( true );
+        }
+
+        if ( hasOption( 'i' ) ) {
+            double option = getDoubleOptionValue( 'i' );
+            if ( option < 0 || option > 1 ) {
+                throw new IllegalArgumentException( "Identity threshold must be between 0 and 1" );
+            }
+            config.setIdentityThreshold( option );
+        }
+
+        if ( hasOption( 'o' ) ) {
+            double option = getDoubleOptionValue( 'o' );
+            if ( option < 0 || option > 1 ) {
+                throw new IllegalArgumentException( "Overlap threshold must be between 0 and 1" );
+            }
+            config.setMinimumExonOverlapFraction( option );
+        }
+
+        // if ( isMissingTracks && config.isUseMiRNA() ) {
+        // log.warn( "At last check hg19 did not have miRNA tracks, turning option off" );
+        // config.setUseMiRNA( false );
+        // }
+        if ( isMissingTracks && config.isUseAcembly() ) {
+            log.warn( "At last check hg19 did not have acembly tracks, turning option off" );
+            config.setUseAcembly( false );
+        }
+
+        log.info( config );
+
+    }
+
+    /**
+     * @param skipIfLastRunLaterThan
+     * @param design
+     */
+    private void processArrayDesign( Date skipIfLastRunLaterThan, ArrayDesign design ) {
+        if ( taxon != null && !arrayDesignService.getTaxa( design.getId() ).contains( taxon ) ) {
+            return;
+        }
+
+        if ( isSubsumedOrMerged( design ) ) {
+            log.warn( design + " is subsumed or merged into another design, it will not be run." );
+            // not really an error, but nice to get notification.
+            errorObjects.add( design + ": " + "Skipped because it is subsumed by or merged into another design." );
+            return;
+        }
+
+        if ( !needToRun( skipIfLastRunLaterThan, design, ArrayDesignGeneMappingEvent.class ) ) {
+            if ( skipIfLastRunLaterThan != null ) {
+                log.warn( design + " was last run more recently than " + skipIfLastRunLaterThan );
+                errorObjects.add( design + ": " + "Skipped because it was last run after " + skipIfLastRunLaterThan );
+            } else {
+                log.warn( design + " seems to be up to date or is not ready to run" );
+                errorObjects.add( design + " seems to be up to date or is not ready to run" );
+            }
+            return;
+        }
+
+        log.info( "============== Start processing: " + design + " ==================" );
+        try {
+            design = arrayDesignService.thaw( design );
+
+            arrayDesignProbeMapperService.processArrayDesign( design, this.config, this.useDB );
+            successObjects.add( design.getName() );
+            ArrayDesignGeneMappingEvent eventType = AlignmentBasedGeneMappingEvent.Factory.newInstance();
+            audit( design, "Part of a batch job", eventType );
+
+        } catch ( Exception e ) {
+            errorObjects.add( design + ": " + e.getMessage() );
+            log.error( "**** Exception while processing " + design + ": " + e.getMessage() + " ****" );
+            log.error( e, e );
+        }
     }
 
     /*
@@ -113,15 +335,20 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
                         + ProbeMapperConfig.DEFAULT_MINIMUM_EXON_OVERLAP_FRACTION ).withLongOpt( "overlapThreshold" )
                 .create( 'o' ) );
 
-        /*
-         * TODO: options for which tracks to search.
-         */
+        addOption( OptionBuilder.withDescription(
+                "Assign non-gene mappings to a ProbeAlignedRegion including creation of new ones (default="
+                        + ProbeMapperConfig.DEFAULT_ALLOW_PARS + ")" ).create( "usePars" ) );
+
+        addOption( OptionBuilder.withDescription(
+                "Allow mapping to predicted genes (overrides Acembly, Ensembl and Nscan; default="
+                        + ProbeMapperConfig.DEFAULT_ALLOW_PREDICTED + ")" ).create( "usePred" ) );
 
         addOption( OptionBuilder
                 .hasArg()
                 .withArgName( "configstring" )
                 .withDescription(
-                        "String describing which tracks to search, for example 'rkenmias' for all, 'rm' to limit search to Refseq with mRNA evidence. If this option is not set, all will be used except as listed below:\n "
+                        "String describing which tracks to search, for example 'rkenmias' for all, 'rm' to limit search to Refseq with mRNA evidence. If this option is not set,"
+                                + " all will be used except as listed below and in combination with the 'usePred' option:\n "
 
                                 + OPTION_REFSEQ + " - search refseq track for genes (best to leave on)\n"
 
@@ -135,7 +362,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
 
                                 + OPTION_ACEMBLY + " - search Acembly track for predicted genes\n"
 
-                                + OPTION_ENSEMBL + " - search Ensembl track for predicted genes\n"
+                                + OPTION_ENSEMBL + " - search Ensembl track for predicted genes \n"
 
                                 + OPTION_NSCAN + " - search NScan track for predicted genes\n" ).create( CONFIG_OPTION ) );
 
@@ -172,6 +399,12 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
 
         addOption( noDatabaseOption );
 
+        Option probesToDoOption = OptionBuilder.withDescription(
+                "Comma-delimited list of probe names to process (for testing); implies -nodb" ).hasArg().withArgName(
+                "probes" ).create( "probes" );
+
+        addOption( probesToDoOption );
+
         super.addThreadsOption();
     }
 
@@ -186,7 +419,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
 
         if ( err != null ) return err;
 
-        ProbeMapperConfig config = configure();
+        configure();
 
         final Date skipIfLastRunLaterThan = getLimitingDate();
 
@@ -196,6 +429,11 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
 
         if ( !this.arrayDesignsToProcess.isEmpty() ) {
             for ( ArrayDesign arrayDesign : this.arrayDesignsToProcess ) {
+
+                if ( this.probeNames != null ) {
+                    processProbes( arrayDesign );
+                    break;
+                }
 
                 if ( !needToRun( skipIfLastRunLaterThan, arrayDesign, ArrayDesignGeneMappingEvent.class ) ) {
                     log.warn( arrayDesign + " not ready to run" );
@@ -251,6 +489,32 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         }
 
         return null;
+    }
+
+    private void processProbes( ArrayDesign arrayDesign ) {
+        assert this.probeNames != null && this.probeNames.length > 0;
+        arrayDesign = arrayDesignService.thawLite( arrayDesign );
+        CompositeSequenceService compositeSequenceService = ( CompositeSequenceService ) this
+                .getBean( "compositeSequenceService" );
+
+        for ( String probeName : this.probeNames ) {
+            CompositeSequence probe = compositeSequenceService.findByName( arrayDesign, probeName );
+
+            probe = compositeSequenceService.thaw( probe );
+
+            Map<String, Collection<BlatAssociation>> results = this.arrayDesignProbeMapperService
+                    .processCompositeSequence( this.config, taxon, null, probe );
+
+            for ( Collection<BlatAssociation> col : results.values() ) {
+                for ( BlatAssociation association : col ) {
+                    if ( log.isDebugEnabled() ) log.debug( association );
+                }
+
+                arrayDesignProbeMapperService.printResult( probe, col );
+
+            }
+
+        }
     }
 
     /*
@@ -405,209 +669,20 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
             this.useDB = false;
         }
 
-    }
+        if ( this.hasOption( "probes" ) ) {
 
-    /**
-     * @param arrayDesign
-     */
-    private void audit( ArrayDesign arrayDesign, String note, ArrayDesignGeneMappingEvent eventType ) {
-        arrayDesignReportService.generateArrayDesignReport( arrayDesign.getId() );
-        auditTrailService.addUpdateEvent( arrayDesign, eventType, note );
-    }
-
-    /**
-     * @param skipIfLastRunLaterThan
-     */
-    private void batchRun( final Date skipIfLastRunLaterThan ) {
-        Collection<ArrayDesign> allArrayDesigns;
-        if ( this.taxon != null ) {
-            allArrayDesigns = arrayDesignService.findByTaxon( this.taxon );
-        } else {
-            allArrayDesigns = arrayDesignService.loadAll();
-        }
-
-        final SecurityContext context = SecurityContextHolder.getContext();
-
-        // split over multiple threads so we can multiplex. Put the array designs in a queue.
-
-        /*
-         * Here is our task runner.
-         */
-        class Consumer implements Runnable {
-            private final BlockingQueue<ArrayDesign> queue;
-
-            public Consumer( BlockingQueue<ArrayDesign> q ) {
-                queue = q;
+            if ( this.arrayDesignsToProcess == null || this.arrayDesignsToProcess.size() > 1 ) {
+                throw new IllegalArgumentException( "With -probes you must provide exactly one array design" );
             }
 
-            public void run() {
-                SecurityContextHolder.setContext( context );
-                while ( true ) {
-                    ArrayDesign ad = queue.poll();
-                    if ( ad == null ) {
-                        break;
-                    }
-                    consume( ad );
-                }
-            }
+            this.useDB = false;
+            probeNames = this.getOptionValue( "probes" ).split( "," );
 
-            void consume( ArrayDesign x ) {
-                /*
-                 * Note that if the array design has multiple taxa, analysis will be run on all of the sequences, not
-                 * just the ones from the taxon specified.
-                 */
-                processArrayDesign( skipIfLastRunLaterThan, x );
-
+            if ( probeNames.length == 0 ) {
+                throw new IllegalArgumentException( "You must provide at least one probe name when using -probe" );
             }
         }
 
-        BlockingQueue<ArrayDesign> arrayDesigns = new ArrayBlockingQueue<ArrayDesign>( allArrayDesigns.size() );
-        for ( ArrayDesign ad : allArrayDesigns ) {
-            arrayDesigns.add( ad );
-        }
-
-        /*
-         * Start the threads
-         */
-        log.info( this.numThreads + " threads" );
-        Collection<Thread> threads = new ArrayList<Thread>();
-        for ( int i = 0; i < this.numThreads; i++ ) {
-            Consumer c1 = new Consumer( arrayDesigns );
-            Thread k = new Thread( c1 );
-            threads.add( k );
-            k.start();
-        }
-
-        waitForThreadPoolCompletion( threads );
-
-        /*
-         * All done
-         */
-        summarizeProcessing();
-    }
-
-    /**
-     * @return
-     */
-    private ProbeMapperConfig configure() {
-        ProbeMapperConfig config = new ProbeMapperConfig();
-
-        /*
-         * Hackery to work around hg19 problems.
-         */
-        boolean isMissingTracks = taxon != null && taxon.getCommonName().equals( "human" )
-                && ConfigUtils.getString( "gemma.goldenpath.db.human" ).equals( "hg19" );
-
-        if ( this.hasOption( MIRNA_ONLY_MODE_OPTION ) ) {
-            if ( isMissingTracks ) {
-                throw new IllegalArgumentException( "There is no miRNA track for this taxon." );
-            }
-            log.info( "Micro RNA only mode" );
-            config.setAllTracksOff();
-            config.setUseMiRNA( true );
-        } else if ( this.hasOption( CONFIG_OPTION ) ) {
-
-            String configString = this.getOptionValue( CONFIG_OPTION );
-
-            if ( !configString.matches( "[" + OPTION_REFSEQ + OPTION_KNOWNGENE + OPTION_MICRORNA + OPTION_EST
-                    + OPTION_MRNA + OPTION_ACEMBLY + OPTION_ENSEMBL + OPTION_NSCAN + "]+" ) ) {
-                throw new IllegalArgumentException( "Configuration string must only contain values [" + OPTION_REFSEQ
-                        + OPTION_KNOWNGENE + OPTION_MICRORNA + OPTION_EST + OPTION_MRNA + OPTION_ACEMBLY
-                        + OPTION_ENSEMBL + OPTION_NSCAN + "]" );
-            }
-
-            config.setAllTracksOff();
-
-            config.setUseEsts( configString.contains( OPTION_EST ) );
-            config.setUseMrnas( configString.contains( OPTION_MRNA ) );
-            config.setUseMiRNA( configString.contains( OPTION_MICRORNA ) );
-            config.setUseEnsembl( configString.contains( OPTION_ENSEMBL ) );
-            config.setUseNscan( configString.contains( OPTION_NSCAN ) );
-            config.setUseRefGene( configString.contains( OPTION_REFSEQ ) );
-            config.setUseKnownGene( configString.contains( OPTION_KNOWNGENE ) );
-            config.setUseAcembly( configString.contains( OPTION_ACEMBLY ) );
-        }
-
-        if ( hasOption( 's' ) ) {
-            double blatscorethresh = getDoubleOptionValue( 's' );
-            if ( blatscorethresh < 0 || blatscorethresh > 1 ) {
-                throw new IllegalArgumentException( "BLAT score threshold must be between 0 and 1" );
-            }
-            config.setBlatScoreThreshold( blatscorethresh );
-        }
-
-        if ( hasOption( 'i' ) ) {
-            double option = getDoubleOptionValue( 'i' );
-            if ( option < 0 || option > 1 ) {
-                throw new IllegalArgumentException( "Identity threshold must be between 0 and 1" );
-            }
-            config.setIdentityThreshold( option );
-        }
-
-        if ( hasOption( 'o' ) ) {
-            double option = getDoubleOptionValue( 'o' );
-            if ( option < 0 || option > 1 ) {
-                throw new IllegalArgumentException( "Overlap threshold must be between 0 and 1" );
-            }
-            config.setMinimumExonOverlapFraction( option );
-        }
-
-        if ( isMissingTracks && config.isUseMiRNA() ) {
-            log.warn( "At last check hg19 did not have miRNA tracks, turning option off" );
-            config.setUseMiRNA( false );
-        }
-        if ( isMissingTracks && config.isUseAcembly() ) {
-            log.warn( "At last check hg19 did not have acembly tracks, turning option off" );
-            config.setUseAcembly( false );
-        }
-
-        log.info( config );
-
-        return config;
-
-    }
-
-    /**
-     * @param skipIfLastRunLaterThan
-     * @param design
-     */
-    private void processArrayDesign( Date skipIfLastRunLaterThan, ArrayDesign design ) {
-        if ( taxon != null && !arrayDesignService.getTaxa( design.getId() ).contains( taxon ) ) {
-            return;
-        }
-
-        if ( isSubsumedOrMerged( design ) ) {
-            log.warn( design + " is subsumed or merged into another design, it will not be run." );
-            // not really an error, but nice to get notification.
-            errorObjects.add( design + ": " + "Skipped because it is subsumed by or merged into another design." );
-            return;
-        }
-
-        if ( !needToRun( skipIfLastRunLaterThan, design, ArrayDesignGeneMappingEvent.class ) ) {
-            if ( skipIfLastRunLaterThan != null ) {
-                log.warn( design + " was last run more recently than " + skipIfLastRunLaterThan );
-                errorObjects.add( design + ": " + "Skipped because it was last run after " + skipIfLastRunLaterThan );
-            } else {
-                log.warn( design + " seems to be up to date or is not ready to run" );
-                errorObjects.add( design + " seems to be up to date or is not ready to run" );
-            }
-            return;
-        }
-
-        log.info( "============== Start processing: " + design + " ==================" );
-        try {
-            design = arrayDesignService.thaw( design );
-
-            arrayDesignProbeMapperService.processArrayDesign( design, this.configure(), this.useDB );
-            successObjects.add( design.getName() );
-            ArrayDesignGeneMappingEvent eventType = AlignmentBasedGeneMappingEvent.Factory.newInstance();
-            audit( design, "Part of a batch job", eventType );
-
-        } catch ( Exception e ) {
-            errorObjects.add( design + ": " + e.getMessage() );
-            log.error( "**** Exception while processing " + design + ": " + e.getMessage() + " ****" );
-            log.error( e, e );
-        }
     }
 
 }
