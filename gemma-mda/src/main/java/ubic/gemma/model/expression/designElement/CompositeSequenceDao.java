@@ -138,4 +138,6 @@ public interface CompositeSequenceDao extends BaseDao<CompositeSequence> {
      */
     public void thaw( java.util.Collection<CompositeSequence> compositeSequences );
 
+    public CompositeSequence thaw( CompositeSequence compositeSequence );
+
 }

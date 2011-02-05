@@ -295,4 +295,9 @@ public class CompositeSequenceServiceImpl extends
         this.getCompositeSequenceDao().update( compositeSequence );
     }
 
+    @Override
+    public CompositeSequence thaw( CompositeSequence compositeSequence ) {
+        return this.getCompositeSequenceDao().thaw( compositeSequence );
+    }
+
 }

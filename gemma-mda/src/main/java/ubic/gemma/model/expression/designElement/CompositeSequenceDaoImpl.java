@@ -106,6 +106,7 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.designElement.CompositeSequenceDaoBase#find(ubic.gemma.model.expression.designElement
      * .CompositeSequence)
@@ -148,6 +149,7 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.designElement.CompositeSequenceDaoBase#findByGene(ubic.gemma.model.genome.Gene)
      */
     @SuppressWarnings("unchecked")
@@ -160,6 +162,7 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.designElement.CompositeSequenceDaoBase#findByGene(ubic.gemma.model.genome.Gene,
      * ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
@@ -174,6 +177,7 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.designElement.CompositeSequenceDaoBase#findByName(java.lang.String)
      */
     @SuppressWarnings("unchecked")
@@ -185,6 +189,7 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
 
     /*
      * (non-Javadoc)
+     * 
      * @seeubic.gemma.model.expression.designElement.CompositeSequenceDaoBase#findOrCreate(ubic.gemma.model.expression.
      * designElement.CompositeSequence)
      */
@@ -217,6 +222,7 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.designElement.CompositeSequenceDaoBase#handleFindByBioSequence(ubic.gemma.model.genome
      * .biosequence.BioSequence)
@@ -240,6 +246,7 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.designElement.CompositeSequenceDaoBase#handleFindByBioSequenceName(java.lang.String)
      */
@@ -386,6 +393,7 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.designElement.CompositeSequenceDaoBase#handleGetGenes(ubic.gemma.model.expression
      * .designElement.CompositeSequence)
@@ -401,6 +409,7 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.designElement.CompositeSequenceDaoBase#handleGetGenesWithSpecificity(java.util.Collection
      * )
@@ -444,6 +453,7 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.designElement.CompositeSequenceDaoBase#handleGetRawSummary(ubic.gemma.model.expression
      * .arrayDesign.ArrayDesign)
@@ -480,7 +490,9 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.designElement.CompositeSequenceDaoBase#handleGetRawSummary(java.util.Collection)
+     * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase
      */
     @SuppressWarnings("unchecked")
@@ -532,9 +544,11 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.designElement.CompositeSequenceDaoBase#handleGetRawSummary(ubic.gemma.model.expression
      * .designElement.CompositeSequence)
+     * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase
      */
     @SuppressWarnings("unchecked")
@@ -566,6 +580,7 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.expression.designElement.CompositeSequenceDaoBase#handleLoad(java.util.Collection)
      */
     @SuppressWarnings("unchecked")
@@ -604,21 +619,21 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
         HibernateTemplate templ = this.getHibernateTemplate();
         templ.executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-            	int i = 0;
+                int i = 0;
                 int numToDo = compositeSequences.size();
                 for ( CompositeSequence cs : compositeSequences ) {
-                	
-                	session.lock( cs, LockMode.NONE );
-                	Hibernate.initialize(cs.getArrayDesign());
-                	cs.getArrayDesign().getName();
-                	
-                	BioSequence bs = cs.getBiologicalCharacteristic();
+
+                    session.lock( cs, LockMode.NONE );
+                    Hibernate.initialize( cs.getArrayDesign() );
+                    cs.getArrayDesign().getName();
+
+                    BioSequence bs = cs.getBiologicalCharacteristic();
                     if ( bs == null ) {
                         continue;
                     }
-                    
+
                     session.lock( bs, LockMode.NONE );
-                    Hibernate.initialize(bs);
+                    Hibernate.initialize( bs );
                     bs.getTaxon();
 
                     DatabaseEntry dbEntry = bs.getSequenceDatabaseEntry();
@@ -628,7 +643,7 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
                         session.evict( dbEntry );
                         session.evict( dbEntry.getExternalDatabase() );
                     }
-                    
+
                     if ( bs.getBioSequence2GeneProduct() == null ) {
                         continue;
                     }
@@ -655,7 +670,7 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
                             //
                         }
                     }
-                    
+
                     session.evict( bs );
                 }
                 session.clear();
@@ -663,6 +678,37 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
             }
         } );
 
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.model.expression.designElement.CompositeSequenceDao#thaw(ubic.gemma.model.expression.designElement
+     * .CompositeSequence)
+     */
+    @Override
+    public CompositeSequence thaw( CompositeSequence compositeSequence ) {
+
+        /*
+         * TODO: clean this up and perhaps adapt it to the batch method. This thaw might be too deep.
+         */
+        if ( compositeSequence == null ) return null;
+        List<?> list = this
+                .getHibernateTemplate()
+                .findByNamedParam(
+                        "select c from CompositeSequenceImpl c left join fetch c.biologicalCharacteristic b "
+                                + " left join fetch b.taxon tax left join fetch tax.externalDatabase left join fetch tax.parentTaxon pt "
+                                + " left join fetch pt.externalDatabase " + " left join fetch c.arrayDesign "
+                                + " left join fetch b.sequenceDatabaseEntry s left join fetch s.externalDatabase"
+                                + " left join fetch b.bioSequence2GeneProduct bs2gp "
+                                + " left join fetch bs2gp.geneProduct gp left join fetch gp.gene g"
+                                + " left join fetch g.aliases left join fetch g.accessions  where c.id=:cid", "cid",
+                        compositeSequence.getId() );
+        if ( list.isEmpty() ) {
+            return null;
+        }
+        return ( CompositeSequence ) list.iterator().next();
     }
 
     /**
@@ -713,4 +759,5 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
             results.get( csa ).add( ba );
         }
     }
+
 }

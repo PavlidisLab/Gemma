@@ -182,6 +182,12 @@ public interface CompositeSequenceService {
     public void thaw( java.util.Collection<CompositeSequence> compositeSequences );
 
     /**
+     * @param compositeSequence
+     * @return
+     */
+    public CompositeSequence thaw( CompositeSequence compositeSequence );
+
+    /**
      * 
      */
     @Secured( { "GROUP_USER" })
