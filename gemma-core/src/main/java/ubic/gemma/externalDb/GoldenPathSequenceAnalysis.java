@@ -386,7 +386,12 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
 
                         product.setName( name );
 
-                        product.setDescription( "Imported from Golden Path: " + rs.getString( 8 ) );
+                        String descriptionFromGP = rs.getString( 8 );
+                        if ( StringUtils.isBlank( descriptionFromGP ) ) {
+                            product.setDescription( "Imported from GoldenPath" );
+                        } else {
+                            product.setDescription( "Imported from Golden Path: " + descriptionFromGP );
+                        }
                         product.setPhysicalLocation( pl );
                         product.setGene( gene );
 
@@ -665,10 +670,10 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
     public Collection<GeneProduct> findRefGenesByLocation( String chromosome, Long start, Long end, String strand ) {
         String searchChrom = SequenceManipulation.blatFormatChromosomeName( chromosome );
         /*
-         * Use kgXRef only to get the description
+         * Use kgXRef only to get the description - sometimes missing thus the outer join.
          */
         String query = "SELECT r.name, r.geneName, r.txStart, r.txEnd, r.strand, r.exonStarts, r.exonEnds, CONCAT('Refseq gene: ',kgXref.description) "
-                + "FROM refFlat as r inner join kgXref on r.geneName = kgXref.geneSymbol "
+                + "FROM refFlat as r left outer join kgXref on r.geneName = kgXref.geneSymbol "
                 + "WHERE "
                 + "((r.txStart >= ? AND r.txEnd <= ?) OR (r.txStart <= ? AND r.txEnd >= ?) OR "
                 + "(r.txStart >= ?  AND r.txStart <= ?) OR  (r.txEnd >= ? AND  r.txEnd <= ? )) and r.chrom = ? ";
@@ -726,7 +731,8 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
      */
     public Collection<GeneProduct> findAcemblyGenesByLocation( String chromosome, Long start, Long end, String strand ) {
 
-        // only human has acembly genes. FIXME, if the situation changes this code will be invalid. hg19 doesn't have it either.
+        // only human has acembly genes. FIXME, if the situation changes this code will be invalid. hg19 doesn't have it
+        // either.
         if ( !TaxonUtility.isHuman( this.getTaxon() ) ) {
             return null;
         }
@@ -1104,19 +1110,19 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
         }
 
         // predicted genes if there is nothing else at this location: Ensembl genes
-        if ( geneProducts.size() == 0 && config.isUseEnsembl() ) {
+        if ( geneProducts.size() == 0 && config.isUseEnsembl() && config.isAllowPredictedGenes() ) {
             Collection<GeneProduct> acembly = findEnsemblGenesByLocation( chromosome, queryStart, queryEnd, strand );
             if ( acembly != null ) geneProducts.addAll( acembly );
         }
 
         // predicted genes if there is nothing else at this location: AceView genes
-        if ( geneProducts.size() == 0 && config.isUseAcembly() ) {
+        if ( geneProducts.size() == 0 && config.isUseAcembly() && config.isAllowPredictedGenes() ) {
             Collection<GeneProduct> acembly = findAcemblyGenesByLocation( chromosome, queryStart, queryEnd, strand );
             if ( acembly != null ) geneProducts.addAll( acembly );
         }
 
         // Last ditch: NSCAN
-        if ( geneProducts.size() == 0 && config.isUseNscan() ) {
+        if ( geneProducts.size() == 0 && config.isUseNscan() && config.isAllowPredictedGenes() ) {
             Collection<GeneProduct> nscan = findNscanGenesByLocation( chromosome, queryStart, queryEnd, strand );
             if ( nscan != null ) geneProducts.addAll( nscan );
         }
