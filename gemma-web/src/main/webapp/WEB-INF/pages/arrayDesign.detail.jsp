@@ -112,7 +112,7 @@
 								${summary.numProbesToKnownGenes }
 							</td>
 						</tr>
-						<tr>
+						<%-- <tr>
 							<td>
 								&nbsp;&nbsp;Predicted
 							</td>
@@ -127,7 +127,7 @@
 							<td align="right">
 								${summary.numProbesToProbeAlignedRegions}
 							</td>
-						</tr>
+						</tr>--%>
 						<tr>
 							<td>
 								Unique genes
