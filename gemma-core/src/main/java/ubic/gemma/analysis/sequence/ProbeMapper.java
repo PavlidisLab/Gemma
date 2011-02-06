@@ -100,7 +100,7 @@ public class ProbeMapper {
          * Temporary code!!
          */
         if ( goldenPathDb.getDatabaseName().equals( "hg19" ) ) {
-            log.warn( "Disabling  acembly as hg19 doesn't have them" );
+            log.debug( "Disabling  acembly as hg19 doesn't have them" );
             // config.setUseMiRNA( false ); // okay now
             config.setUseAcembly( false );
         }
