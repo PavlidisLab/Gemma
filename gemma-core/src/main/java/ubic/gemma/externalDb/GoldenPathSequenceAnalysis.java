@@ -362,7 +362,10 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
                         Gene gene = Gene.Factory.newInstance();
                         gene.setOfficialSymbol( rs.getString( 2 ) );
                         gene.setName( gene.getOfficialSymbol() );
-                        gene.setTaxon( getTaxon() );
+                        Taxon taxon = getTaxon();
+                        
+                        assert taxon != null;                        
+                        gene.setTaxon( taxon );
 
                         PhysicalLocation pl = PhysicalLocation.Factory.newInstance();
                         pl.setNucleotide( rs.getLong( 3 ) );
@@ -374,7 +377,7 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
 
                         Chromosome c = Chromosome.Factory.newInstance();
                         c.setName( SequenceManipulation.deBlatFormatChromosomeName( chromosome ) );
-                        c.setTaxon( getTaxon() );
+                        c.setTaxon( taxon );
                         pl.setChromosome( c );
                         genePl.setChromosome( c );
 
@@ -469,7 +472,11 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
                         PredictedGene gene = PredictedGene.Factory.newInstance();
                         gene.setOfficialSymbol( rs.getString( 2 ) );
                         gene.setName( gene.getOfficialSymbol() );
-                        gene.setTaxon( getTaxon() );
+                        Taxon taxon = getTaxon();
+                        
+                        assert taxon != null;
+                        
+                        gene.setTaxon( taxon );
                         gene.getAccessions().add( accession );
                         gene.setMethod( source );
 
@@ -489,7 +496,7 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
 
                         Chromosome c = Chromosome.Factory.newInstance();
                         c.setName( SequenceManipulation.deBlatFormatChromosomeName( chromosome ) );
-                        c.setTaxon( getTaxon() );
+                        c.setTaxon( taxon );
                         pl.setChromosome( c );
                         genePl.setChromosome( c );
 
@@ -617,7 +624,11 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
 
                         Chromosome c = Chromosome.Factory.newInstance();
                         c.setName( SequenceManipulation.deBlatFormatChromosomeName( rs.getString( 1 ) ) );
-                        c.setTaxon( getTaxon() );
+                        Taxon taxon = getTaxon();
+                        
+                        assert taxon != null;
+                        
+                        c.setTaxon( taxon );
                         blatResult.setTargetChromosome( c );
 
                         Blob blockSizes = rs.getBlob( 2 );
@@ -831,7 +842,11 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
 
                         Chromosome c = Chromosome.Factory.newInstance();
                         c.setName( SequenceManipulation.deBlatFormatChromosomeName( chromosome ) );
-                        c.setTaxon( getTaxon() );
+                        Taxon taxon = getTaxon();
+                        
+                        assert taxon != null;
+                        
+                        c.setTaxon( taxon );
                         pl.setChromosome( c );
 
                         // note that we aren't setting the chromosome here; we already know that.

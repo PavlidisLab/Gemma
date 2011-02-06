@@ -128,6 +128,8 @@ public class Blat {
      * @return
      */
     private static BlattableGenome inferBlatDatabase( Taxon taxon ) {
+        assert taxon != null;
+
         BlattableGenome bg = BlattableGenome.MOUSE;
 
         if ( taxon.getNcbiId() == 10090 || taxon.getCommonName().equals( "mouse" ) ) {

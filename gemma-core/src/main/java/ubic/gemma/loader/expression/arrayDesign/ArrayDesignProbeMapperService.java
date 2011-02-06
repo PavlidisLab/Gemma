@@ -249,7 +249,11 @@ public class ArrayDesignProbeMapperService {
 
             String probeId = fields[0];
             String seqName = fields[1];
-            String geneSymbol = fields[2];
+            
+            /*
+             * FIXME. We have to allow NCBI gene ids here.
+             */
+            String geneSymbol = fields[2]; 
 
             if ( StringUtils.isBlank( geneSymbol ) ) {
                 numSkipped++;

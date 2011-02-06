@@ -159,8 +159,11 @@ public class ProbeMapper {
                     continue;
                 }
 
-                if ( blatResult.getQuerySequence().getTaxon() == null )
-                    blatResult.getQuerySequence().setTaxon( goldenPathDb.getTaxon() );
+                if ( blatResult.getQuerySequence().getTaxon() == null ) {
+                    Taxon taxon = goldenPathDb.getTaxon();
+                    assert taxon != null;
+                    blatResult.getQuerySequence().setTaxon( taxon );
+                }
 
                 // here's the key line! Find gene products that map to the given blat result.
                 Collection<BlatAssociation> resultsForOneBlatResult = processBlatResult( goldenPathDb, blatResult,
