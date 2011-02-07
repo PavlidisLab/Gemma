@@ -31,13 +31,14 @@ import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.externalDb.GoldenPathSequenceAnalysis;
 import ubic.gemma.loader.genome.BlatResultParser;
+import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.util.ConfigUtils;
 
 /**
- * Note that some of the tests here are dependent on the content of the hg18 database.
+ * Note that some of the tests here are dependent on the content of the mm9 and hg19 database.
  * 
  * @author pavlidis
  * @version $Id$
@@ -79,29 +80,29 @@ public class ProbeMapperTest extends TestCase {
         assertEquals( expected, actual, 0.0001 );
     }
 
-    public void testLocateAcembly() throws Exception {
-        if ( !hasHumangp ) {
-            log.warn( "Skipping test because hg18 could not be configured" );
-            return;
-        }
-
-        Collection<GeneProduct> products = humangp.findAcemblyGenesByLocation( "7", new Long( 80145000 ), new Long(
-                80146000 ), "+" );
-        assertTrue( products.size() > 0 ); // This is 2 as of Jan 2008.
-    }
+    // public void testLocateAcembly() throws Exception {
+    // if ( !hasHumangp ) {
+    // log.warn( "Skipping test because hg18 could not be configured" );
+    // return;
+    // }
+    //
+    // Collection<GeneProduct> products = humangp.findAcemblyGenesByLocation( "7", new Long( 80145000 ), new Long(
+    // 80146000 ), "+" );
+    // assertTrue( products.size() > 0 ); // This is 2 as of Jan 2008.
+    // }
 
     /**
-     * Test based on U83843, should bring up CCT7 (NM_006429 and NM_001009570). Valid locations as of 1/2008.
-     * {@link http://genome.ucsc.edu/cgi-bin/hgTracks?hgsid=79741184&hgt.out1=1.5x&position=chr2%3A73320308-73331929}
+     * Test based on U83843, should bring up CCT7 (NM_006429 and NM_001009570). Valid locations as of 2/2011 for hg19.
+     * {@link http://genome.ucsc.edu/cgi-bin/hgTracks?hgsid=79741184&hgt.out1=1.5x&position=chr2%3A73320308-73331929}73,461,405-73,480,144)
      */
     public void testLocateGene() throws Exception {
         if ( !hasHumangp ) {
-            log.warn( "Skipping test because hg18 could not be configured" );
+            log.warn( "Skipping test because  human db could not be configured" );
             return;
         }
-        Collection<GeneProduct> products = humangp.findRefGenesByLocation( "2", new Long( 73320308 ), new Long(
-                73331929 ), "+" );
-        assertEquals( 2, products.size() );
+        Collection<GeneProduct> products = humangp.findRefGenesByLocation( "2", new Long( 73461505 ), new Long(
+                73462405 ), "+" );
+        assertEquals( 6, products.size() );
         GeneProduct gprod = products.iterator().next();
         assertEquals( "CCT7", gprod.getGene().getOfficialSymbol() ); // okay as of 1/2008.
     }
@@ -112,14 +113,14 @@ public class ProbeMapperTest extends TestCase {
      */
     public void testLocateGeneOnWrongStrand() throws Exception {
         if ( !hasHumangp ) {
-            log.warn( "Skipping test because hg18 could not be configured" );
+            log.warn( "Skipping test because  human db could not be configured" );
             return;
         }
         Collection<GeneProduct> products = humangp.findRefGenesByLocation( "6", new Long( 32916471 ), new Long(
                 32918445 ), null );
-        assertEquals( 2, products.size() );
+        assertEquals( 1, products.size() );
         GeneProduct gprod = products.iterator().next();
-        assertEquals( "PSMB8", gprod.getGene().getOfficialSymbol() );
+        assertEquals( "HLA-DMA", gprod.getGene().getOfficialSymbol() ); // oka 2/2011
     }
 
     /**
@@ -127,27 +128,27 @@ public class ProbeMapperTest extends TestCase {
      */
     public void testLocateMiRNA() throws Exception {
         if ( !hasHumangp ) {
-            log.warn( "Skipping test because hg18 could not be configured" );
+            log.warn( "Skipping test because  human db could not be configured" );
             return;
         }
 
-        Collection<GeneProduct> products = humangp.findMicroRNAGenesByLocation( "X", new Long( 133131074 ), new Long(
-                133131148 ), "-" );
+        Collection<GeneProduct> products = humangp.findMicroRNAGenesByLocation( "X", new Long( 133303415 ), new Long(
+                133303418 ), "-" );
         assertEquals( 1, products.size() );
         GeneProduct gprod = products.iterator().next();
-        assertEquals( "hsa-mir-363", gprod.getGene().getOfficialSymbol() ); // okay as of 1/2008.
+        assertEquals( "hsa-mir-363", gprod.getGene().getOfficialSymbol() ); // okay as of 2/2011, hg19.
     }
 
     public void testLocateNscan() throws Exception {
         if ( !hasHumangp ) {
-            log.warn( "Skipping test because hg18 could not be configured" );
+            log.warn( "Skipping test because human db could not be configured" );
             return;
         }
-        Collection<GeneProduct> products = humangp.findNscanGenesByLocation( "3", new Long( 181237455 ), new Long(
-                181318731 ), "+" );
-        assertEquals( 1, products.size() );
+        Collection<GeneProduct> products = humangp.findNscanGenesByLocation( "3", new Long( 16295104 ), new Long(
+                16550770 ), "+" );
+        assertEquals( 2, products.size() );
         GeneProduct gprod = products.iterator().next();
-        assertEquals( "chr3.182.002.a", gprod.getGene().getOfficialSymbol() ); // okay as of 1/2008.
+        assertEquals( "chr3.1.114.a", gprod.getGene().getOfficialSymbol() ); // okay as of 2/2011.
     }
 
     public void testProcessBlatResults() throws Exception {
@@ -161,7 +162,7 @@ public class ProbeMapperTest extends TestCase {
         // This test will fail if the database changes :)
         assertTrue( "No results", res.values().size() > 0 );
         assertTrue( "No results", res.values().iterator().next().size() > 0 );
-        assertEquals( "2610528E23Rik", res.values().iterator().next().iterator().next().getGeneProduct().getGene()
+        assertEquals( "Filip1l", res.values().iterator().next().iterator().next().getGeneProduct().getGene()
                 .getOfficialSymbol() );
 
     }
@@ -178,6 +179,9 @@ public class ProbeMapperTest extends TestCase {
 
         InputStream is = this.getClass().getResourceAsStream( "/data/loader/genome/col8a1.blatresults.txt" );
         BlatResultParser brp = new BlatResultParser();
+        Taxon m = Taxon.Factory.newInstance();
+        m.setCommonName( "mouse" );
+        brp.setTaxon( m );
         brp.parse( is );
         blatres = brp.getResults();
 
