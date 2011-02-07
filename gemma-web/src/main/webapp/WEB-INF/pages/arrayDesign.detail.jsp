@@ -98,13 +98,13 @@
 						</tr>
 						<tr>
 							<td>
-								Mapped
+								Mapped to known genes
 							</td>
 							<td align="right">
-								${summary.numProbesToGenes}
+								${summary.numProbesToKnownGenes}
 							</td>
 						</tr>
-						<tr>
+						<%-- <<tr>
 							<td>
 								&nbsp;&nbsp;Known
 							</td>
@@ -112,7 +112,7 @@
 								${summary.numProbesToKnownGenes }
 							</td>
 						</tr>
-						<%-- <tr>
+						tr>
 							<td>
 								&nbsp;&nbsp;Predicted
 							</td>

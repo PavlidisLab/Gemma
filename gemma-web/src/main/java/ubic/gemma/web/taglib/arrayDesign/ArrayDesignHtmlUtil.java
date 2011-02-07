@@ -49,19 +49,19 @@ public class ArrayDesignHtmlUtil {
                 + object.getNumProbeAlignments()
                 + "</td></tr>"
                 + "<tr><td title=\"Number of probes mapped to genes (including predicted and anonymous locations)\">"
-                + "Mapped"
+                + "Mapped to known genes"
                 + "</td><td align=\"right\" >"
-                + object.getNumProbesToGenes()
+                + object.getNumProbesToKnownGenes()
                 + "</td></tr>"
                 +
-
+                /*
                 "<tr><td  title=\"Number of probes mapping to known genes\">"
                 + "&nbsp;&nbsp;Known"
                 + "</td><td align=\"right\" >"
                 + object.getNumProbesToKnownGenes()
                 + "</td></tr>"
                 +
-                /*
+               
                  * "<tr><td title=\"Number of probes mapping to predicted genes\">" + "&nbsp;&nbsp;Pred." +
                  * "</td><td align=\"right\" >" + object.getNumProbesToPredictedGenes() + "</td></tr>" +
                  * 
