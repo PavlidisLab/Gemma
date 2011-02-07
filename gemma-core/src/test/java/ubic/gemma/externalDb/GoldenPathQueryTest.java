@@ -27,6 +27,7 @@ import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
+import ubic.gemma.util.ConfigUtils;
 
 /**
  * These tests require a populated Human database. Valid as of 11/2009.
@@ -38,20 +39,20 @@ public class GoldenPathQueryTest extends TestCase {
 
     private static Log log = LogFactory.getLog( GoldenPathQueryTest.class.getName() );
     GoldenPathQuery queryer;
-    private boolean hasDb = true;;
+    private boolean hasDb = false;
 
     public final void testQueryEst() throws Exception {
         if ( !hasDb ) {
-            log.warn( "Skipping test because hg18 could not be configured" );
+            log.warn( "Skipping test because hg could not be configured" );
             return;
         }
         Collection<BlatResult> actualValue = queryer.findAlignments( "AA411542" );
-        assertEquals( 5, actualValue.size() );
+        assertEquals( 6, actualValue.size() ); // updated for hg19 2/2011
     }
 
     public final void testQueryMrna() throws Exception {
         if ( !hasDb ) {
-            log.warn( "Skipping test because hg18 could not be configured" );
+            log.warn( "Skipping test because hg could not be configured" );
             return;
         }
         Collection<BlatResult> actualValue = queryer.findAlignments( "AK095183" );
@@ -63,7 +64,7 @@ public class GoldenPathQueryTest extends TestCase {
 
     public final void testQueryNoResult() throws Exception {
         if ( !hasDb ) {
-            log.warn( "Skipping test because hg18 could not be configured" );
+            log.warn( "Skipping test because hg could not be configured" );
             return;
         }
         Collection<BlatResult> actualValue = queryer.findAlignments( "YYYYYUUYUYUYUY" );
@@ -77,7 +78,16 @@ public class GoldenPathQueryTest extends TestCase {
         t.setIsGenesUsable( true );
         t.setIsSpecies( true );
 
-        queryer = new GoldenPathQuery( t );
+        try {
+            String databaseHost = ConfigUtils.getString( "gemma.testdb.host" );
+            String databaseUser = ConfigUtils.getString( "gemma.testdb.user" );
+            String databasePassword = ConfigUtils.getString( "gemma.testdb.password" );
+            queryer = new GoldenPathQuery( 3306, ConfigUtils.getString( "gemma.goldenpath.db.human" ), databaseHost,
+                    databaseUser, databasePassword );
+            this.hasDb = true;
+        } catch ( Exception e ) {
+            this.hasDb = false;
+        }
 
     }
 
