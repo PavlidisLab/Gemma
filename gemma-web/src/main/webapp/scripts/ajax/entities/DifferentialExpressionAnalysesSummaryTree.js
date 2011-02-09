@@ -43,6 +43,7 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext.extend(Ext.tree.TreePanel,
 		},
 		build:function(){
 				var analyses = this.ee.differentialExpressionAnalyses;
+
 				//console.log("in build" + this.ee.differentialExpressionAnalyses);
 				// set the root node
 				var root = new Ext.tree.TreeNode({
@@ -51,6 +52,16 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext.extend(Ext.tree.TreePanel,
 					text: 'root'
 				});
 				this.setRootNode(root);
+				// just show "Not Avalailable" root if no analyses
+				if(analyses.size() == 0){
+					root.appendChild(new Ext.tree.TreeNode({
+											id: 'nodeNA',
+											expanded: false,
+											leaf:true,
+											text: 'Not Available'
+					}));
+					return
+				}
 				var subsetTracker = {}; //used to keep subset nodes adjacent
 				var nodeId = 0; // used to keep track of nodes and give each a specific div in which to draw a pie chart
 				for (var j = 0; j < analyses.size(); j++) {
@@ -157,13 +168,32 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext.extend(Ext.tree.TreePanel,
 						
 						}
 					}
+					// figure out type of a ANOVA
+					var numberOfFactors = 0;
+					for (var i = 0; i < analysis.resultSets.size(); i++) {
+						var resultSet = analysis.resultSets[i];
+						// ignore the result sets where interactions are being looked at
+						if(resultSet.experimentalFactors.size()==1){
+							numberOfFactors++;} 
+					}
 					
 					var analysisDesc = '';
-					if(analysis.resultSets.size()>1){
-						analysisDesc = 'Two-way ANOVA' + ((interaction>0) ? ' with interactions on: ' : 'on: ');
-					}else{
+					if(numberOfFactors==1){
 						analysisDesc = 'One-way ANOVA on ';
-					}
+					}else if(numberOfFactors==2){
+						analysisDesc = 'Two-way ANOVA' + ((interaction>0) ? ' with interactions on ' : ' on ');
+					}else if(numberOfFactors==3){
+						analysisDesc = 'Three-way ANOVA' + ((interaction>0) ? ' with interactions on ' : ' on ');
+					}else if(numberOfFactors==4){
+						analysisDesc = 'Four-way ANOVA' + ((interaction>0) ? ' with interactions on ' : ' on ');
+					}else if(numberOfFactors==5){
+						analysisDesc = 'Five-way ANOVA' + ((interaction>0) ? ' with interactions on ' : ' on ');
+					}else if(numberOfFactors==6){
+						analysisDesc = 'Six-way ANOVA' + ((interaction>0) ? ' with interactions on ' : ' on ');
+					}else{
+						analysisDesc = 'n-way ANOVA' + ((interaction>0) ? ' with interactions on ' : ' on ');
+					}//just being overly safe here
+					
 					parentNode.setText(analysisDesc + parentText + " " + parentNode.text);
 				}
 	},
@@ -189,7 +219,12 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext.extend(Ext.tree.TreePanel,
 		numbers += (resultSet.qValue)?(', qvalue = '+resultSet.qValue):'';
 		
 		// save number of up regulated probes for drawing as chart after tree has been rendered
-		this.percentUpProbes[nodeId]=resultSet.upregulatedCount/resultSet.numberOfDiffExpressedProbes;
+		// if there are no up or down regulated probes, draw an empty circle
+		if(resultSet.downregulatedCount== 0 && resultSet.upregulatedCount == 0){
+			this.percentUpProbes[nodeId]=null;	
+		}else{
+			this.percentUpProbes[nodeId]=resultSet.upregulatedCount/resultSet.numberOfDiffExpressedProbes;
+		}
 		return numbers;	 
 	},
 	getBaseline: function(resultSet){
@@ -232,7 +267,7 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext.extend(Ext.tree.TreePanel,
 			factor = resultSet.experimentalFactors[0].name /*+ " (" + resultSet.experimentalFactors[0].category + ")"*/;
 			
 			for (var k = 1; k < resultSet.experimentalFactors.size(); k++) {
-				//console.log("expFac " + k + ": " + resultSet.experimentalFactors[k].name);
+				//console.log("!expFac " + k + ": " + resultSet.experimentalFactors[k].name);
 				factor = factor + " x " + resultSet.experimentalFactors[k].name /*+ " (" + resultSet.experimentalFactors[k].category + ")"*/;
 				interaction = 1;
 			}
@@ -245,7 +280,12 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext.extend(Ext.tree.TreePanel,
 			if (Ext.get('chartDiv' + i)) {
 				up = this.percentUpProbes[i];
 				ctx = Ext.get('chartDiv' + i).dom.getContext("2d");
-				drawTwoColourMiniPie(ctx, 12, 12, 14, 'lightgrey', 'SteelBlue', up * 360, 'black');
+				if(up == null){
+					drawTwoColourMiniPie(ctx, 12, 12, 14, 'white', 'white', up * 360, 'black');
+				}else{
+					drawTwoColourMiniPie(ctx, 12, 12, 14, 'lightgrey', 'SteelBlue', up * 360, 'black');
+				}
+				
 			}
 		}
 	}
