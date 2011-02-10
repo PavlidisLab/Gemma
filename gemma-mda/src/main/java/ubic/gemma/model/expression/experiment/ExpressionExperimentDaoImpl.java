@@ -1600,6 +1600,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
         Hibernate.initialize( result.getBioAssays() );
         for ( BioAssay ba : result.getBioAssays() ) {
             Hibernate.initialize( ba.getArrayDesignUsed() );
+            Hibernate.initialize( ba.getArrayDesignUsed().getDesignProvider() );
             Hibernate.initialize( ba.getDerivedDataFiles() );
             Hibernate.initialize( ba.getSamplesUsed() );
             for ( BioMaterial bm : ba.getSamplesUsed() ) {
