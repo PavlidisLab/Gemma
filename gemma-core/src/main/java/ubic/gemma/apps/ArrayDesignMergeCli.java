@@ -54,6 +54,8 @@ public class ArrayDesignMergeCli extends ArrayDesignSequenceManipulatingCli {
     private String newName;
     private ArrayDesignMergeService arrayDesignMergeService;
 
+    private ArrayDesign arrayDesign;
+
     @Override
     public String getShortDesc() {
         return "Make a new array design that combines the reporters from others.";
@@ -68,17 +70,26 @@ public class ArrayDesignMergeCli extends ArrayDesignSequenceManipulatingCli {
                 .hasArg()
                 .withArgName( "Other array designs" )
                 .withDescription(
-                        "Short name(s) of arrays to merge with the one given to the -a option, preferably subsumed by it, comma-delimited" )
+                        "Short name(s) of arrays to merge with the one given to the -a option, preferably subsumed by it, comma-delimited. "
+                                + "If the array given with -a is already a merged design, these will be added to it if the -add option is given"
+                                + "The designs cannot be ones already merged into another design, but they can be mergees." )
                 .withLongOpt( "other" ).create( 'o' );
 
         addOption( otherArrayDesignOption );
 
-        Option newAdName = OptionBuilder.isRequired().hasArg().withArgName( "name" ).withDescription(
-                "Name for new array design" ).withLongOpt( "name" ).create( 'n' );
+        Option newAdName = OptionBuilder.hasArg().withArgName( "name" ).withDescription(
+                "Name for new array design, if the given array is not already a merged design" ).withLongOpt( "name" )
+                .create( 'n' );
         addOption( newAdName );
-        Option newAdShortName = OptionBuilder.isRequired().hasArg().withArgName( "name" ).withDescription(
-                "Short name for new array design" ).withLongOpt( "shortname" ).create( 's' );
+        Option newAdShortName = OptionBuilder.hasArg().withArgName( "name" ).withDescription(
+                "Short name for new array design, if the given array is not already a merged design" ).withLongOpt(
+                "shortname" ).create( 's' );
         addOption( newAdShortName );
+
+        Option addOption = OptionBuilder.withDescription(
+                "If the given array is already a merged design, add the -o designs to it. "
+                        + "Recommended unless there is a specific reason to create a new design." ).create( "add" );
+        addOption( addOption );
     }
 
     @Override
@@ -90,16 +101,7 @@ public class ArrayDesignMergeCli extends ArrayDesignSequenceManipulatingCli {
             return err;
         }
 
-        if ( this.arrayDesignsToProcess.size() > 1 ) {
-            throw new IllegalArgumentException(
-                    "Cannot be applied to more than one array design given to the '-a' option" );
-        }
-
-        ArrayDesign arrayDesign = this.arrayDesignsToProcess.iterator().next();
-
-        arrayDesign = unlazifyArrayDesign( arrayDesign );
-
-        arrayDesignMergeService.merge( arrayDesign, otherArrayDesigns, newName, newShortName );
+        arrayDesignMergeService.merge( arrayDesign, otherArrayDesigns, newName, newShortName, this.hasOption( "add" ) );
 
         return null;
     }
@@ -107,7 +109,7 @@ public class ArrayDesignMergeCli extends ArrayDesignSequenceManipulatingCli {
     @Override
     protected void processOptions() {
         super.processOptions();
-        if ( this.hasOption( 'o' ) ) {
+        if ( this.hasOption( 'o' ) ) {// required
             String otherArrayDesigName = getOptionValue( 'o' );
             String[] names = StringUtils.split( otherArrayDesigName, ',' );
             this.otherArrayDesigns = new HashSet<ArrayDesign>();
@@ -120,9 +122,35 @@ public class ArrayDesignMergeCli extends ArrayDesignSequenceManipulatingCli {
                 this.otherArrayDesigns.add( o );
             }
         }
+
+        if ( this.arrayDesignsToProcess.size() > 1 ) {
+            throw new IllegalArgumentException(
+                    "Cannot be applied to more than one array design given to the '-a' option" );
+        }
+
+        arrayDesign = this.arrayDesignsToProcess.iterator().next();
+
+        arrayDesign = unlazifyArrayDesign( arrayDesign );
+
+        if ( this.hasOption( "add" ) ) {
+            if ( arrayDesign.getMergees().isEmpty() ) {
+                throw new IllegalArgumentException( "The array given must be a merged design when using -add" );
+            }
+        } else {
+
+            if ( this.hasOption( "n" ) ) {
+                this.newName = getOptionValue( 'n' );
+            } else {
+                throw new IllegalArgumentException( "You must provide a name for the new design unless using -add" );
+            }
+            if ( this.hasOption( "s" ) ) {
+                this.newShortName = getOptionValue( 's' );
+            } else {
+                throw new IllegalArgumentException(
+                        "You must provide a short name for the new design unless using -add" );
+            }
+        }
         arrayDesignMergeService = ( ArrayDesignMergeService ) this.getBean( "arrayDesignMergeService" );
-        this.newName = getOptionValue( 'n' );
-        this.newShortName = getOptionValue( 's' );
 
     }
 

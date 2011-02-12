@@ -78,9 +78,12 @@ public class ArrayDesignMergeService {
      * @param otherArrayDesigns
      * @param nameOfNewDesign
      * @param shortNameOfNewDesign
+     * @param add if arrayDesign is already merged, add the otherArrayDesigns to it. Otherwise force the creation of a
+     *        new design.
+     * @return the merged design
      */
-    public void merge( ArrayDesign arrayDesign, Collection<ArrayDesign> otherArrayDesigns, String nameOfNewDesign,
-            String shortNameOfNewDesign ) {
+    public ArrayDesign merge( ArrayDesign arrayDesign, Collection<ArrayDesign> otherArrayDesigns,
+            String nameOfNewDesign, String shortNameOfNewDesign, boolean add ) {
 
         if ( otherArrayDesigns.isEmpty() )
             throw new IllegalArgumentException( "Must merge at least one array design" );
@@ -88,44 +91,44 @@ public class ArrayDesignMergeService {
         // make map of biosequence -> design elements for all the array designs. But watch out for biosequences that
         // appear more than once per array design.
         Map<BioSequence, Collection<CompositeSequence>> globalBsMap = new HashMap<BioSequence, Collection<CompositeSequence>>();
-        arrayDesign = arrayDesignService.thawLite( arrayDesign );
 
         /*
-         * TODO: gracefully handle this situation. Bug 1681
+         * Bug 1681; we allow merging of, or into, an already merged design, but array designs can't be merged into more
+         * than one.
          */
-
-        if ( arrayDesign.getMergedInto() != null || arrayDesign.getMergees().size() > 0 ) {
-            throw new IllegalArgumentException(
-                    "Sorry, can't merge an array design that is already merged or is itself a merged design ("
-                            + arrayDesign + ")" );
+        if ( arrayDesign.getMergedInto() != null ) {
+            throw new IllegalArgumentException( "Sorry, can't merge an array design that is already a mergee ("
+                    + arrayDesign + ")" );
         }
 
-        makeBioSeqMap( globalBsMap, arrayDesign );
+        if ( add && arrayDesign.getMergees().isEmpty() ) {
+            throw new IllegalArgumentException( "Can't use 'add' when arrayDesign isn't already a mergee ("
+                    + arrayDesign + ")" );
+        }
 
-        log.info( globalBsMap.keySet().size() + " sequences encountered in first array design to be merged." );
+        makeBioSeqMap( globalBsMap, arrayDesignService.thaw( arrayDesign ) );
+
+        log.info( globalBsMap.keySet().size() + " sequences in first array design." );
 
         for ( ArrayDesign otherArrayDesign : otherArrayDesigns ) {
-            log.info( "Processing " + otherArrayDesign );
 
-            if ( otherArrayDesign.getMergedInto() != null || otherArrayDesign.getMergees().size() > 0 ) {
-                throw new IllegalArgumentException(
-                        "Sorry, can't merge an array design that is already merged or is itself a merged design ("
-                                + arrayDesign + ")" );
+            if ( otherArrayDesign.getMergedInto() != null ) {
+                throw new IllegalArgumentException( "Sorry, can't merge an array design that is already a mergee   ("
+                        + otherArrayDesign + ")" );
             }
 
             if ( arrayDesign.equals( otherArrayDesign ) ) {
                 continue;
             }
+            log.info( "Processing " + otherArrayDesign );
 
-            arrayDesignService.thawLite( otherArrayDesign );
+            makeBioSeqMap( globalBsMap, arrayDesignService.thaw( otherArrayDesign ) );
 
-            makeBioSeqMap( globalBsMap, otherArrayDesign );
-
-            log.info( globalBsMap.keySet().size() + " sequences encountered in total" );
+            log.info( globalBsMap.keySet().size() + " sequences encountered in total so far" );
 
         }
 
-        createMerged( arrayDesign, otherArrayDesigns, globalBsMap, nameOfNewDesign, shortNameOfNewDesign );
+        return createMerged( arrayDesign, otherArrayDesigns, globalBsMap, nameOfNewDesign, shortNameOfNewDesign, add );
     }
 
     public void setArrayDesignReportService( ArrayDesignReportService arrayDesignReportService ) {
@@ -155,12 +158,11 @@ public class ArrayDesignMergeService {
     /**
      * @param arrayDesign
      * @param globalBsMap
+     * @param add
      */
-    private void createMerged( ArrayDesign arrayDesign, Collection<ArrayDesign> otherArrayDesigns,
-            Map<BioSequence, Collection<CompositeSequence>> globalBsMap, String newName, String newShortName ) {
-
-        Collection<ArrayDesign> existingMergees = arrayDesign.getMergees();
-        boolean mergeWithExisting = existingMergees.size() > 0;
+    private ArrayDesign createMerged( ArrayDesign arrayDesign, Collection<ArrayDesign> otherArrayDesigns,
+            Map<BioSequence, Collection<CompositeSequence>> globalBsMap, String newName, String newShortName,
+            boolean mergeWithExisting ) {
 
         StringBuilder mergeeList = new StringBuilder();
         for ( ArrayDesign ad : otherArrayDesigns ) {
@@ -168,10 +170,15 @@ public class ArrayDesignMergeService {
         }
         ArrayDesign mergedAd;
         if ( mergeWithExisting ) {
-            mergeWithExisting = true;
+            if ( arrayDesign.getMergees().isEmpty() ) {
+                throw new IllegalArgumentException(
+                        "Cannot use 'add' unless the array design is already a merged design: " + arrayDesign );
+            }
+            assert arrayDesign.getId() != null;
             log.info( arrayDesign + " is already a merged design, others will be added in" );
             mergedAd = arrayDesign;
-            mergedAd.setDescription( "Additional designs merged in: " + StringUtils.chop( mergeeList.toString() ) );
+            mergedAd.setDescription( mergedAd.getDescription() + "; Additional designs merged in: "
+                    + StringUtils.chop( mergeeList.toString() ) );
         } else {
             mergedAd = ArrayDesign.Factory.newInstance();
             mergedAd.setName( newName );
@@ -192,6 +199,15 @@ public class ArrayDesignMergeService {
 
         for ( BioSequence bs : globalBsMap.keySet() ) {
             for ( CompositeSequence cs : globalBsMap.get( bs ) ) {
+
+                if ( mergeWithExisting && cs.getArrayDesign().equals( mergedAd ) ) {
+                    assert mergedAd.getId() != null;
+                    /*
+                     * Only add probes from the _other_ array designs.
+                     */
+                    continue;
+                }
+
                 CompositeSequence newCs = CompositeSequence.Factory.newInstance();
                 newCs.setBiologicalCharacteristic( bs );
 
@@ -209,13 +225,23 @@ public class ArrayDesignMergeService {
         }
 
         if ( mergeWithExisting ) {
-            // TODO add new probes as needed.
+            // add new probes as needed.
+            assert mergedAd.getId() != null;
+            assert !mergedAd.getCompositeSequences().isEmpty();
+            mergedAd.getCompositeSequences().addAll( newProbes );
+            mergedAd.getMergees().addAll( otherArrayDesigns );
             arrayDesignService.update( mergedAd );
-            audit( arrayDesign, "More array design(s) added to merge" );
+            audit( mergedAd, "More array design(s) added to merge" );
         } else {
+            assert mergedAd.getId() == null;
+            assert mergedAd.getCompositeSequences().isEmpty();
             mergedAd.setCompositeSequences( newProbes );
             mergedAd = ( ArrayDesign ) persisterHelper.persist( mergedAd );
+            mergedAd.getMergees().addAll( otherArrayDesigns );
             arrayDesign.setMergedInto( mergedAd );
+            arrayDesignService.update( mergedAd );
+            arrayDesignService.update( arrayDesign );
+
             audit( arrayDesign, "Merged into " + mergedAd );
         }
 
@@ -225,6 +251,7 @@ public class ArrayDesignMergeService {
             audit( otherArrayDesign, "Merged into " + mergedAd );
         }
         arrayDesignReportService.generateArrayDesignReport( mergedAd.getId() );
+        return mergedAd;
     }
 
     /**
@@ -256,13 +283,12 @@ public class ArrayDesignMergeService {
 
     /**
      * @param globalBsMap
-     * @param otherArrayDesign
+     * @param arrayDesign
      */
-    private void makeBioSeqMap( Map<BioSequence, Collection<CompositeSequence>> globalBsMap,
-            ArrayDesign otherArrayDesign ) {
+    private void makeBioSeqMap( Map<BioSequence, Collection<CompositeSequence>> globalBsMap, ArrayDesign arrayDesign ) {
         Map<BioSequence, Collection<CompositeSequence>> bsMap = new HashMap<BioSequence, Collection<CompositeSequence>>();
         int count = 0;
-        for ( CompositeSequence cs : otherArrayDesign.getCompositeSequences() ) {
+        for ( CompositeSequence cs : arrayDesign.getCompositeSequences() ) {
             BioSequence bs = cs.getBiologicalCharacteristic();
 
             if ( !globalBsMap.containsKey( bs ) ) {
