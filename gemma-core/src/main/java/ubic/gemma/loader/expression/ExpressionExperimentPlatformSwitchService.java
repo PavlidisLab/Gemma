@@ -23,7 +23,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,6 +37,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayService;
+import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
@@ -144,7 +144,7 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
         designElementMap.put( NULL_BIOSEQUENCE, elsWithNoSeq );
 
         Collection<ArrayDesign> oldArrayDesigns = expressionExperimentService.getArrayDesignsUsed( expExp );
-        Map<DesignElement, DesignElement> usedDesignElements = new HashMap<DesignElement, DesignElement>();
+        Map<DesignElement, Collection<BioAssayDimension>> usedDesignElements = new HashMap<DesignElement, Collection<BioAssayDimension>>();
         for ( ArrayDesign oldAd : oldArrayDesigns ) {
             if ( oldAd.equals( arrayDesign ) ) continue; // no need to switch
 
@@ -158,7 +158,7 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
             log.info( "Processing " + qts.size() + " quantitation types for vectors on " + oldAd );
             for ( QuantitationType type : qts ) {
 
-                // use each design element only once per quantitation type per array design.
+                // use each design element only once per quantitation type + bioassaydimension per array design
                 usedDesignElements.clear();
 
                 Collection<? extends DesignElementDataVector> vectorsForQt = getVectorsForOneQuantitationType( oldAd,
@@ -271,7 +271,7 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
      * @throw IllegalStateException if there is no (unused) design element matching the vector's biosequence
      */
     private boolean processVector( Map<BioSequence, Collection<DesignElement>> designElementMap,
-            Map<DesignElement, DesignElement> usedDesignElements, DesignElementDataVector vector ) {
+            Map<DesignElement, Collection<BioAssayDimension>> usedDesignElements, DesignElementDataVector vector ) {
         CompositeSequence oldDe = ( CompositeSequence ) vector.getDesignElement();
 
         Collection<DesignElement> newElCandidates = null;
@@ -288,17 +288,46 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
             for ( DesignElement newEl : newElCandidates ) {
                 if ( !usedDesignElements.containsKey( newEl ) ) {
                     vector.setDesignElement( newEl );
-                    usedDesignElements.put( newEl, oldDe );
+                    usedDesignElements.put( newEl, new HashSet<BioAssayDimension>() );
+                    usedDesignElements.get( newEl ).add( vector.getBioAssayDimension() );
+                    found = true;
+                    break;
+                }
+
+                if ( !usedDesignElements.get( newEl ).contains( vector.getBioAssayDimension() ) ) {
+                    /*
+                     * Then it's okay to use it.
+                     */
+                    vector.setDesignElement( newEl );
+                    usedDesignElements.get( newEl ).add( vector.getBioAssayDimension() );
                     found = true;
                     break;
                 }
             }
 
-            if ( !found ) {
-                throw new IllegalStateException( "Matching candidate probes for " + oldDe + " (seq=" + seq + "; array="
-                        + oldDe.getArrayDesign() + ") were already used: " + StringUtils.join( newElCandidates, "," )
-                        + ", mapped by [first one shown] " + usedDesignElements.get( newElCandidates.iterator().next() ) );
-            }
+            // if ( !found ) {
+            //
+            // // This means that the quantitation type + bioassaydimension has two vectors for the same probe, which
+            // // should not happen.
+            //
+            // /*
+            // * The bioassaydimension will not be the same I hope?
+            // */
+            //
+            // throw new IllegalStateException(
+            // "Experiment has more than one vector for the same quantitation type - bioassaydimension - design element combination: "
+            // + oldDe + " (seq=" + seq + "; array=" + oldDe.getArrayDesign() + " and "
+            // + usedDesignElements.get( newElCandidates.iterator().next() ) );
+            //
+            // // /*
+            // // * This is also a case that should not happen if merging etc. is correct.
+            // // */
+            // // throw new IllegalStateException( "Matching candidate probes for " + oldDe + " (seq=" + seq +
+            // // "; array="
+            // // + oldDe.getArrayDesign() + ") were already used: " + StringUtils.join( newElCandidates, "," )
+            // // + ", mapped by [first one shown] " + usedDesignElements.get( newElCandidates.iterator().next() ) );
+            //
+            // }
         }
 
         if ( !found ) {
