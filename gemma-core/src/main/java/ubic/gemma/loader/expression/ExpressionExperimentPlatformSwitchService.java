@@ -144,7 +144,7 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
         designElementMap.put( NULL_BIOSEQUENCE, elsWithNoSeq );
 
         Collection<ArrayDesign> oldArrayDesigns = expressionExperimentService.getArrayDesignsUsed( expExp );
-        Collection<DesignElement> usedDesignElements = new HashSet<DesignElement>();
+        Map<DesignElement, DesignElement> usedDesignElements = new HashMap<DesignElement, DesignElement>();
         for ( ArrayDesign oldAd : oldArrayDesigns ) {
             if ( oldAd.equals( arrayDesign ) ) continue; // no need to switch
 
@@ -158,8 +158,6 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
             log.info( "Processing " + qts.size() + " quantitation types for vectors on " + oldAd );
             for ( QuantitationType type : qts ) {
 
-                log.info( "Processing " + type + " for vectors run on " + oldAd );
-
                 // use each design element only once per quantitation type per array design.
                 usedDesignElements.clear();
 
@@ -170,9 +168,11 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
                     /*
                      * This can happen when the quantitation types vary for the array designs.
                      */
-                    log.info( "No vectors for " + type + " on " + oldAd );
+                    log.debug( "No vectors for " + type + " on " + oldAd );
                     continue;
                 }
+
+                log.info( "Processing " + vectorsForQt.size() + " vectors for " + type + " on " + oldAd );
 
                 int count = 0;
                 Class<? extends DesignElementDataVector> vectorClass = null;
@@ -194,7 +194,7 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
                     processVector( designElementMap, usedDesignElements, vector );
 
                     if ( ++count % 20000 == 0 ) {
-                        log.info( "Switched " + count + " vectors for " + type );
+                        log.info( "Found matches for " + count + " vectors for " + type );
                     }
                 }
 
@@ -264,12 +264,14 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
 
     /**
      * @param designElementMap
-     * @param usedDesignElements
+     * @param usedDesignElements probes from the new design that have already been assigned to probes from the old
+     *        design. If things are done correctly (the old design was merged into the new) then there should be enough.
+     *        Map is of the new design probe to the old design probe it was used for (this is debugging information)
      * @param vector
-     * @throw IllegalStateException if there is no design element matching the vector's biosequence
+     * @throw IllegalStateException if there is no (unused) design element matching the vector's biosequence
      */
     private boolean processVector( Map<BioSequence, Collection<DesignElement>> designElementMap,
-            Collection<DesignElement> usedDesignElements, DesignElementDataVector vector ) {
+            Map<DesignElement, DesignElement> usedDesignElements, DesignElementDataVector vector ) {
         CompositeSequence oldDe = ( CompositeSequence ) vector.getDesignElement();
 
         Collection<DesignElement> newElCandidates = null;
@@ -284,9 +286,9 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
 
         if ( newElCandidates != null && !newElCandidates.isEmpty() ) {
             for ( DesignElement newEl : newElCandidates ) {
-                if ( !usedDesignElements.contains( newEl ) ) {
+                if ( !usedDesignElements.containsKey( newEl ) ) {
                     vector.setDesignElement( newEl );
-                    usedDesignElements.add( newEl );
+                    usedDesignElements.put( newEl, oldDe );
                     found = true;
                     break;
                 }
@@ -294,8 +296,8 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
 
             if ( !found ) {
                 throw new IllegalStateException( "Matching candidate probes for " + oldDe + " (seq=" + seq + "; array="
-                        + oldDe.getArrayDesign() + ") were already used: " + StringUtils.join( newElCandidates, "," ) );
-
+                        + oldDe.getArrayDesign() + ") were already used: " + StringUtils.join( newElCandidates, "," )
+                        + ", mapped by [first one shown] " + usedDesignElements.get( newElCandidates.iterator().next() ) );
             }
         }
 
