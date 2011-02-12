@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -242,6 +243,11 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
                         + " is not merged into another design" );
             }
 
+            // TODO: go up the merge tree to find the root. This is too slow.
+            // while ( mergedInto.getMergedInto() != null ) {
+            // mergedInto = arrayDesignService.thaw( mergedInto.getMergedInto() );
+            // }
+
             if ( arrayDesign == null ) {
                 arrayDesign = mergedInto;
                 arrayDesignService.thaw( arrayDesign );
@@ -276,7 +282,7 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
 
         boolean found = false;
 
-        if ( newElCandidates != null ) {
+        if ( newElCandidates != null && !newElCandidates.isEmpty() ) {
             for ( DesignElement newEl : newElCandidates ) {
                 if ( !usedDesignElements.contains( newEl ) ) {
                     vector.setDesignElement( newEl );
@@ -285,10 +291,17 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
                     break;
                 }
             }
+
+            if ( !found ) {
+                throw new IllegalStateException( "Matching candidate probes for " + oldDe + " (seq=" + seq + "; array="
+                        + oldDe.getArrayDesign() + ") were already used: " + StringUtils.join( newElCandidates, "," ) );
+
+            }
         }
 
         if ( !found ) {
-            throw new IllegalStateException( "No new design element available to match " + oldDe + " (" + seq + ")" );
+            throw new IllegalStateException( "No new design element available to match " + oldDe + " (seq=" + seq
+                    + "; array=" + oldDe.getArrayDesign() + ")" );
         }
 
         return true;
