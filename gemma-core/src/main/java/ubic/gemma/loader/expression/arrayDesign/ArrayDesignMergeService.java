@@ -74,10 +74,11 @@ public class ArrayDesignMergeService {
     ArrayDesignReportService arrayDesignReportService;
 
     /**
-     * @param arrayDesign
-     * @param otherArrayDesigns
-     * @param nameOfNewDesign
-     * @param shortNameOfNewDesign
+     * @param arrayDesign, used as a "top level" design when 'add' is true; otherwise just treated as one of the designs
+     *        to be merged into a new design.
+     * @param otherArrayDesigns array designs to merge with the arrayDesign
+     * @param nameOfNewDesign can be null if add is true (ignored)
+     * @param shortNameOfNewDesign can be null if add is true (ignored)
      * @param add if arrayDesign is already merged, add the otherArrayDesigns to it. Otherwise force the creation of a
      *        new design.
      * @return the merged design
@@ -93,8 +94,7 @@ public class ArrayDesignMergeService {
         Map<BioSequence, Collection<CompositeSequence>> globalBsMap = new HashMap<BioSequence, Collection<CompositeSequence>>();
 
         /*
-         * Bug 1681; we allow merging of, or into, an already merged design, but array designs can't be merged into more
-         * than one.
+         * We allow merging of, or into, an already merged design, but array designs can't be merged into more than one.
          */
         if ( arrayDesign.getMergedInto() != null ) {
             throw new IllegalArgumentException( "Sorry, can't merge an array design that is already a mergee ("
