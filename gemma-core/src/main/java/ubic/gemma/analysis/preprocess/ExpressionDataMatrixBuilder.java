@@ -28,6 +28,7 @@ import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.datastructure.matrix.ExpressionDataBooleanMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrixUtil;
@@ -209,7 +210,7 @@ public class ExpressionDataMatrixBuilder {
         return neededQtTypes;
     }
 
-    Collection<DesignElementDataVector> vectors;
+    private Collection<DesignElementDataVector> vectors;
 
     private Map<ArrayDesign, BioAssayDimension> dimMap = new HashMap<ArrayDesign, BioAssayDimension>();
 
@@ -664,6 +665,8 @@ public class ExpressionDataMatrixBuilder {
     }
 
     /**
+     * If there are multiple valid choices, we choose the first one seen, unless a later one has fewer missing value.
+     * 
      * @return
      */
     private QuantitationTypeData getQuantitationTypesNeeded() {
@@ -672,7 +675,26 @@ public class ExpressionDataMatrixBuilder {
 
         QuantitationTypeData result = new QuantitationTypeData();
 
+        Map<QuantitationType, Integer> numMissingValues = new HashMap<QuantitationType, Integer>();
+        ByteArrayConverter bac = new ByteArrayConverter();
+        boolean anyMissing = false;
+        for ( DesignElementDataVector vector : vectors ) {
+            QuantitationType qt = vector.getQuantitationType();
+            if ( !numMissingValues.containsKey( qt ) ) {
+                numMissingValues.put( qt, 0 );
+            }
+
+            for ( Double d : bac.byteArrayToDoubles( vector.getData() ) ) {
+                if ( d.isNaN() ) {
+                    anyMissing = true;
+                    numMissingValues.put( qt, numMissingValues.get( qt ) + 1 );
+                }
+            }
+        }
+
         for ( BioAssayDimension targetdimension : dimensions ) {
+
+            Collection<QuantitationType> checkedQts = new HashSet<QuantitationType>();
 
             for ( DesignElementDataVector vector : vectors ) {
 
@@ -681,27 +703,70 @@ public class ExpressionDataMatrixBuilder {
                 if ( !dim.equals( targetdimension ) ) continue;
 
                 QuantitationType qType = vector.getQuantitationType();
+
+                if ( checkedQts.contains( qType ) ) continue;
+
+                checkedQts.add( qType );
+
                 String name = qType.getName();
                 if ( qType.getIsPreferred() && result.getPreferred( dim ) == null ) {
                     result.addPreferred( dim, qType );
                     log.info( "Preferred=" + qType );
-                } else if ( result.getBackgroundChannelA( dim ) == null && ChannelUtils.isBackgroundChannelA( name ) ) {
-                    result.addBackgroundChannelA( dim, qType );
-                    log.info( "Background A=" + qType );
-                } else if ( result.getBackgroundChannelB( dim ) == null && ChannelUtils.isBackgroundChannelB( name ) ) {
-                    result.addBackgroundChannelB( dim, qType );
-                    log.info( "Background B=" + qType );
-                } else if ( result.getSignalChannelA( dim ) == null && ChannelUtils.isSignalChannelA( name ) ) {
-                    result.addSignalChannelA( dim, qType );
-                    log.info( "Signal A=" + qType );
-                } else if ( result.getSignalChannelB( dim ) == null && ChannelUtils.isSignalChannelB( name ) ) {
-                    result.addSignalChannelB( dim, qType );
-                    log.info( "Signal B=" + qType );
-                } else if ( result.getBkgSubChannelA( dim ) == null && name.matches( "CH1D_MEAN" ) ) {
+                } else if ( ChannelUtils.isBackgroundChannelA( name ) ) {
+
+                    if ( result.getBackgroundChannelA( dim ) != null ) {
+                        int i = numMissingValues.get( qType );
+                        int j = numMissingValues.get( result.getBackgroundChannelA( dim ) );
+                        if ( i < j ) {
+                            log.info( "Found better background A=" + qType );
+                            result.addBackgroundChannelA( dim, qType );
+                        }
+                    } else {
+                        result.addBackgroundChannelA( dim, qType );
+                        log.info( "Background A=" + qType );
+                    }
+
+                } else if ( ChannelUtils.isBackgroundChannelB( name ) ) {
+                    if ( result.getBackgroundChannelB( dim ) != null ) {
+                        int i = numMissingValues.get( qType );
+                        int j = numMissingValues.get( result.getBackgroundChannelB( dim ) );
+                        if ( i < j ) {
+                            log.info( "Found better background B=" + qType );
+                            result.addBackgroundChannelB( dim, qType );
+                        }
+                    } else {
+                        result.addBackgroundChannelB( dim, qType );
+                        log.info( "Background B=" + qType );
+                    }
+                } else if ( ChannelUtils.isSignalChannelA( name ) ) {
+                    if ( result.getSignalChannelA( dim ) != null ) {
+                        int i = numMissingValues.get( qType );
+                        int j = numMissingValues.get( result.getSignalChannelA( dim ) );
+                        if ( i < j ) {
+                            log.info( "Found better Signal A=" + qType );
+                            result.addSignalChannelA( dim, qType );
+                        }
+                    } else {
+                        result.addSignalChannelA( dim, qType );
+                        log.info( "Signal A=" + qType );
+                    }
+                } else if ( ChannelUtils.isSignalChannelB( name ) ) {
+                    if ( result.getSignalChannelB( dim ) != null ) {
+                        int i = numMissingValues.get( qType );
+                        int j = numMissingValues.get( result.getSignalChannelB( dim ) );
+                        if ( i < j ) {
+                            log.info( "Found better Signal B=" + qType );
+                            result.addSignalChannelB( dim, qType );
+                        }
+                    } else {
+                        result.addSignalChannelB( dim, qType );
+                        log.info( "Signal B=" + qType );
+                    }
+                } else if ( name.matches( "CH1D_MEAN" ) ) {
                     result.addBkgSubChannelA( dim, qType ); // specific for SGD data bug
                 }
 
-                if ( result.getSignalChannelA( dim ) != null && result.getSignalChannelB( dim ) != null
+                if ( !anyMissing && result.getSignalChannelA( dim ) != null && result.getSignalChannelB( dim ) != null
                         && result.getBackgroundChannelA( dim ) != null && result.getBackgroundChannelB( dim ) != null
                         && result.getPreferred( dim ) != null ) {
                     break; // no need to go through them all.
@@ -788,8 +853,8 @@ public class ExpressionDataMatrixBuilder {
 
 // ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-/*
- * Helper class
+/**
+ * Helper class that keeps track of which QTs are background, signal and preferred.
  */
 class QuantitationTypeData {
 

@@ -238,34 +238,6 @@ public class VectorMergingService extends ExpressionExperimentVectorManipulating
         postProcess( expExp );
     }
 
-    public void setAuditTrailService( AuditTrailService auditTrailService ) {
-        this.auditTrailService = auditTrailService;
-    }
-
-    public void setBioAssayDimensionService( BioAssayDimensionService bioAssayDimensionService ) {
-        this.bioAssayDimensionService = bioAssayDimensionService;
-    }
-
-    /**
-     * @param bioAssayService the bioAssayService to set
-     */
-    public void setBioAssayService( BioAssayService bioAssayService ) {
-        this.bioAssayService = bioAssayService;
-    }
-
-    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
-        this.expressionExperimentService = expressionExperimentService;
-    }
-
-    public void setProcessedExpressionDataVectorCreateService(
-            ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService ) {
-        this.processedExpressionDataVectorCreateService = processedExpressionDataVectorCreateService;
-    }
-
-    public void setTwoChannelMissingValueService( TwoChannelMissingValues twoChannelMissingValueService ) {
-        this.twoChannelMissingValueService = twoChannelMissingValueService;
-    }
-
     /**
      * @param arrayDesign
      */
@@ -418,6 +390,7 @@ public class VectorMergingService extends ExpressionExperimentVectorManipulating
         Map<QuantitationType, Collection<DesignElementDataVector>> qt2Vec = new HashMap<QuantitationType, Collection<DesignElementDataVector>>();
         Collection<QuantitationType> qtsToAdd = new HashSet<QuantitationType>();
         for ( DesignElementDataVector v : oldVectors ) {
+
             QuantitationType qt = v.getQuantitationType();
             if ( !qts.contains( qt ) ) {
                 /*
@@ -438,6 +411,7 @@ public class VectorMergingService extends ExpressionExperimentVectorManipulating
             log.info( "Adding " + qtsToAdd.size() + " missing quantitation types to experiment" );
             expressionExperimentService.update( expExp );
         }
+
         return qt2Vec;
     }
 
