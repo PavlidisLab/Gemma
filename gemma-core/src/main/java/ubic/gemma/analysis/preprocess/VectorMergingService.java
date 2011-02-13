@@ -97,8 +97,174 @@ public class VectorMergingService extends ExpressionExperimentVectorManipulating
 
     @Autowired
     private ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService;
+
     @Autowired
     private TwoChannelMissingValues twoChannelMissingValueService;
+
+    /**
+     * A main entry point for this class.
+     * 
+     * @param expExp
+     */
+    public void mergeVectors( ExpressionExperiment expExp ) {
+
+        Collection<ArrayDesign> arrayDesigns = expressionExperimentService.getArrayDesignsUsed( expExp );
+
+        if ( arrayDesigns.size() > 1 ) {
+            throw new IllegalArgumentException( "Cannot cope with more than one platform" );
+        }
+
+        this.processedExpressionDataVectorService.removeProcessedDataVectors( expExp );
+
+        expExp = expressionExperimentService.thawLite( expExp );
+        Collection<QuantitationType> qts = expressionExperimentService.getQuantitationTypes( expExp );
+
+        log.info( qts.size() + " quantitation types" );
+
+        /*
+         * Load all the bioassay dimensions, which will be merged.
+         */
+        Collection<BioAssayDimension> allOldBioAssayDims = new HashSet<BioAssayDimension>();
+        for ( BioAssay ba : expExp.getBioAssays() ) {
+            Collection<BioAssayDimension> oldBioAssayDims = bioAssayService.findBioAssayDimensions( ba );
+            for ( BioAssayDimension bioAssayDim : oldBioAssayDims ) {
+                if ( bioAssayDim.getDescription().startsWith( MERGED_DIM_DESC_PREFIX ) ) {
+                    // not foolproof, but avoids some artifacts - e.g. if there were previous failed attempts at this.
+                    continue;
+                }
+                allOldBioAssayDims.add( bioAssayDim );
+            }
+        }
+
+        if ( allOldBioAssayDims.size() == 0 ) {
+            throw new IllegalStateException(
+                    "No bioassaydimensions found to merge (previously merged ones are filtered, data may be corrupt?" );
+        }
+
+        if ( allOldBioAssayDims.size() == 1 ) {
+            log.warn( "Experiment already has only a single bioassaydimension, nothing seems to need merging. Bailing" );
+            return;
+        }
+
+        log.info( allOldBioAssayDims.size() + " bioassaydimensions to merge" );
+        List<BioAssayDimension> sortedOldDims = sortedBioAssayDimensions( allOldBioAssayDims );
+
+        BioAssayDimension newBioAd = getNewBioAssayDimension( sortedOldDims );
+        int totalBioAssays = newBioAd.getBioAssays().size();
+        assert totalBioAssays == expExp.getBioAssays().size() : "experiment has " + expExp.getBioAssays().size()
+                + " but new bioassaydimension has " + totalBioAssays;
+
+        Map<QuantitationType, Collection<DesignElementDataVector>> qt2Vec = getVectors( expExp, qts, allOldBioAssayDims );
+
+        for ( QuantitationType type : qt2Vec.keySet() ) {
+
+            Collection<DesignElementDataVector> vecs = qt2Vec.get( type );
+
+            if ( vecs.isEmpty() ) {
+                log.warn( "No vectors for " + type + ", directly loading vectors." );
+            }
+
+            log.info( "Processing " + vecs.size() + " vectors  for " + type );
+
+            Map<DesignElement, Collection<DesignElementDataVector>> deVMap = getDevMap( vecs );
+
+            Collection<DesignElementDataVector> newVectors = new HashSet<DesignElementDataVector>();
+            int numAllMissing = 0;
+            int missingValuesForQt = 0;
+            for ( DesignElement de : deVMap.keySet() ) {
+
+                DesignElementDataVector vector = initializeNewVector( expExp, newBioAd, type, de );
+                Collection<DesignElementDataVector> dedvs = deVMap.get( de );
+
+                /*
+                 * these ugly nested loops are to ENSURE that we get the vector reconstructed properly. For each of the
+                 * old bioassayDimensions, find the designelementdatavector that uses it. If there isn't one, fill in
+                 * the values for that dimension with missing data. We go through the dimensions in the same order that
+                 * we joined them up.
+                 */
+
+                List<Object> data = new ArrayList<Object>();
+                int totalMissingInVector = makeMergedData( sortedOldDims, newBioAd, type, de, dedvs, data );
+                missingValuesForQt += totalMissingInVector;
+                if ( totalMissingInVector == totalBioAssays ) {
+                    numAllMissing++;
+                    continue; // we don't save data that is all missing.
+                }
+
+                if ( data.size() != totalBioAssays ) {
+                    throw new IllegalStateException( "Wrong number of values for " + de + " / " + type + ", expected "
+                            + totalBioAssays + ", got " + data.size() );
+                }
+
+                byte[] newDataAr = converter.toBytes( data.toArray() );
+
+                vector.setData( newDataAr );
+
+                newVectors.add( vector );
+            }
+
+            // print( newVectors ); // debugging
+
+            if ( newVectors.size() > 0 ) {
+                log.info( "Creating " + newVectors.size() + " new vectors for " + type );
+                designElementDataVectorService.create( newVectors );
+            } else {
+                throw new IllegalStateException( "Unexpectedly, no new vectors for " + type );
+            }
+
+            if ( numAllMissing > 0 ) {
+                log.info( numAllMissing + " vectors had all missing values and were junked for " + type );
+            }
+
+            if ( missingValuesForQt > 0 ) {
+                log.info( missingValuesForQt + " total missing values: " + type );
+            }
+
+            log.info( "Removing " + vecs.size() + " old vectors for " + type );
+            designElementDataVectorService.remove( vecs );
+
+        } // for each quantitation type
+
+        // remove the old BioAssayDimensions
+        for ( BioAssayDimension oldDim : allOldBioAssayDims ) {
+            // careful, the 'new' bioassaydimension might be one of the old ones that we're reusing.
+            if ( oldDim.equals( newBioAd ) ) continue;
+            bioAssayDimensionService.remove( oldDim );
+        }
+
+        audit( expExp, "Vector merging peformed, merged " + allOldBioAssayDims + " old bioassay dimensions for "
+                + qts.size() + " quantitation types." );
+
+        postProcess( expExp );
+    }
+
+    public void setAuditTrailService( AuditTrailService auditTrailService ) {
+        this.auditTrailService = auditTrailService;
+    }
+
+    public void setBioAssayDimensionService( BioAssayDimensionService bioAssayDimensionService ) {
+        this.bioAssayDimensionService = bioAssayDimensionService;
+    }
+
+    /**
+     * @param bioAssayService the bioAssayService to set
+     */
+    public void setBioAssayService( BioAssayService bioAssayService ) {
+        this.bioAssayService = bioAssayService;
+    }
+
+    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
+        this.expressionExperimentService = expressionExperimentService;
+    }
+
+    public void setProcessedExpressionDataVectorCreateService(
+            ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService ) {
+        this.processedExpressionDataVectorCreateService = processedExpressionDataVectorCreateService;
+    }
+
+    public void setTwoChannelMissingValueService( TwoChannelMissingValues twoChannelMissingValueService ) {
+        this.twoChannelMissingValueService = twoChannelMissingValueService;
+    }
 
     /**
      * @param arrayDesign
@@ -201,11 +367,21 @@ public class VectorMergingService extends ExpressionExperimentVectorManipulating
     private Map<DesignElement, Collection<DesignElementDataVector>> getDevMap(
             Collection<? extends DesignElementDataVector> oldVectors ) {
         Map<DesignElement, Collection<DesignElementDataVector>> deVMap = new HashMap<DesignElement, Collection<DesignElementDataVector>>();
+        boolean atLeastOneMatch = false;
         for ( DesignElementDataVector vector : oldVectors ) {
             if ( !deVMap.containsKey( vector.getDesignElement() ) ) {
                 deVMap.put( vector.getDesignElement(), new HashSet<DesignElementDataVector>() );
             }
             deVMap.get( vector.getDesignElement() ).add( vector );
+
+            if ( deVMap.get( vector.getDesignElement() ).size() > 1 ) {
+                atLeastOneMatch = true;
+            }
+        }
+
+        if ( !atLeastOneMatch ) {
+            throw new IllegalStateException(
+                    "Vector merging doesn't make much sense: there is already only one vector per design element." );
         }
         return deVMap;
     }
@@ -265,6 +441,15 @@ public class VectorMergingService extends ExpressionExperimentVectorManipulating
         return qt2Vec;
     }
 
+    /**
+     * Make a (non-persistent) vector that has the right bioassaydimension, designelement and quantitationtype.
+     * 
+     * @param expExp
+     * @param newBioAd
+     * @param type
+     * @param de
+     * @return
+     */
     private DesignElementDataVector initializeNewVector( ExpressionExperiment expExp, BioAssayDimension newBioAd,
             QuantitationType type, DesignElement de ) {
         DesignElementDataVector vector = RawExpressionDataVector.Factory.newInstance();
@@ -282,159 +467,35 @@ public class VectorMergingService extends ExpressionExperimentVectorManipulating
      * @param de
      * @param dedvs
      * @param data
+     * @param mergedData
      * @return
      */
     private int makeMergedData( List<BioAssayDimension> sortedOldDims, BioAssayDimension newBioAd,
-            QuantitationType type, DesignElement de, Collection<DesignElementDataVector> dedvs, List<Object> data ) {
+            QuantitationType type, DesignElement de, Collection<DesignElementDataVector> dedvs, List<Object> mergedData ) {
         int totalMissingInVector = 0;
+        PrimitiveType representation = type.getRepresentation();
+
         for ( BioAssayDimension oldDim : sortedOldDims ) {
             // careful, the 'new' bioassaydimension might be one of the old ones that we're reusing.
             if ( oldDim.equals( newBioAd ) ) continue;
             boolean found = false;
-            PrimitiveType representation = type.getRepresentation();
+
             for ( DesignElementDataVector oldV : dedvs ) {
+                assert oldV.getDesignElement().equals( de );
+                assert oldV.getQuantitationType().equals( type );
+
                 if ( oldV.getBioAssayDimension().equals( oldDim ) ) {
                     found = true;
-                    convertFromBytes( data, representation, oldV );
+                    convertFromBytes( mergedData, representation, oldV );
                     break;
                 }
             }
             if ( !found ) {
-                int missing = fillMissingValues( de, data, oldDim, representation );
+                int missing = fillMissingValues( de, mergedData, oldDim, representation );
                 totalMissingInVector += missing;
             }
         }
         return totalMissingInVector;
-    }
-
-    /**
-     * A main entry point for this class.
-     * 
-     * @param expExp
-     */
-    public void mergeVectors( ExpressionExperiment expExp ) {
-
-        this.processedExpressionDataVectorService.removeProcessedDataVectors( expExp );
-
-        expExp = expressionExperimentService.thawLite( expExp );
-        Collection<QuantitationType> qts = expressionExperimentService.getQuantitationTypes( expExp );
-
-        Collection<ArrayDesign> arrayDesigns = expressionExperimentService.getArrayDesignsUsed( expExp );
-
-        if ( arrayDesigns.size() > 1 ) {
-            throw new IllegalArgumentException( "Cannot cope with more than one platform" );
-        }
-
-        log.info( qts.size() + " quantitation types" );
-
-        /*
-         * Load all the bioassay dimensions, which will be merged.
-         */
-        Collection<BioAssayDimension> allOldBioAssayDims = new HashSet<BioAssayDimension>();
-        for ( BioAssay ba : expExp.getBioAssays() ) {
-            Collection<BioAssayDimension> oldBioAssayDims = bioAssayService.findBioAssayDimensions( ba );
-            for ( BioAssayDimension bioAssayDim : oldBioAssayDims ) {
-                if ( bioAssayDim.getDescription().startsWith( MERGED_DIM_DESC_PREFIX ) ) {
-                    // not foolproof, but avoids some artifacts - e.g. if there were previous failed attempts at this.
-                    continue;
-                }
-                allOldBioAssayDims.add( bioAssayDim );
-            }
-        }
-
-        if ( allOldBioAssayDims.size() == 0 ) {
-            throw new IllegalStateException(
-                    "NO bioassaydimensions found to merge (previously merged ones are filtered, data may be corrupt?" );
-        }
-
-        if ( allOldBioAssayDims.size() == 1 ) {
-            log.warn( "Experiment already has only a single bioassaydimension, nothing seems to need merging. Bailing" );
-            return;
-        }
-
-        log.info( allOldBioAssayDims.size() + " bioassaydimensions to merge" );
-        List<BioAssayDimension> sortedOldDims = sortedBioAssayDimensions( allOldBioAssayDims );
-
-        BioAssayDimension newBioAd = getNewBioAssayDimension( sortedOldDims );
-        int totalBioAssays = newBioAd.getBioAssays().size();
-        assert totalBioAssays == expExp.getBioAssays().size() : "experiment has " + expExp.getBioAssays().size()
-                + " but new bioassaydimension has " + totalBioAssays;
-
-        Map<QuantitationType, Collection<DesignElementDataVector>> qt2Vec = getVectors( expExp, qts, allOldBioAssayDims );
-
-        for ( QuantitationType type : qt2Vec.keySet() ) {
-
-            Collection<DesignElementDataVector> vecs = qt2Vec.get( type );
-
-            if ( vecs.isEmpty() ) {
-                log.warn( "No vectors for " + type + ", directly loading vectors." );
-            }
-
-            log.info( "Processing " + vecs.size() + " vectors  for " + type );
-
-            Map<DesignElement, Collection<DesignElementDataVector>> deVMap = getDevMap( vecs );
-
-            Collection<DesignElementDataVector> newVectors = new HashSet<DesignElementDataVector>();
-            int numAllMissing = 0;
-            for ( DesignElement de : deVMap.keySet() ) {
-
-                DesignElementDataVector vector = initializeNewVector( expExp, newBioAd, type, de );
-                Collection<DesignElementDataVector> dedvs = deVMap.get( de );
-
-                /*
-                 * these ugly nested loops are to ENSURE that we get the vector reconstructed properly. For each of the
-                 * old bioassayDimensions, find the designelementdatavector that uses it. If there isn't one, fill in
-                 * the values for that dimension with missing data. We go through the dimensions in the same order that
-                 * we joined them up.
-                 */
-
-                List<Object> data = new ArrayList<Object>();
-                int totalMissingInVector = makeMergedData( sortedOldDims, newBioAd, type, de, dedvs, data );
-                if ( totalMissingInVector == totalBioAssays ) {
-                    numAllMissing++;
-                    continue; // we don't save data that is all missing.
-                }
-
-                if ( data.size() != totalBioAssays ) {
-                    throw new IllegalStateException( "Wrong number of values for " + de + " / " + type + ", expected "
-                            + totalBioAssays + ", got " + data.size() );
-                }
-
-                byte[] newDataAr = converter.toBytes( data.toArray() );
-
-                vector.setData( newDataAr );
-
-                newVectors.add( vector );
-            }
-
-            // print( newVectors ); // debugging
-
-            if ( newVectors.size() > 0 ) {
-                log.info( "Creating " + newVectors.size() + " new vectors for " + type );
-                designElementDataVectorService.create( newVectors );
-            } else {
-                throw new IllegalStateException( "Unexpectedly, no new vectors for " + type );
-            }
-
-            if ( numAllMissing > 0 ) {
-                log.info( numAllMissing + " vectors had all missing values and were junked" );
-            }
-
-            log.info( "Removing " + vecs.size() + " old vectors for " + type );
-            designElementDataVectorService.remove( vecs );
-
-        }
-        // remove the old BioAssayDimensions
-        for ( BioAssayDimension oldDim : allOldBioAssayDims ) {
-            // careful, the 'new' bioassaydimension might be one of the old ones that we're reusing.
-            if ( oldDim.equals( newBioAd ) ) continue;
-            bioAssayDimensionService.remove( oldDim );
-        }
-
-        audit( expExp, "Vector merging peformed, merged " + allOldBioAssayDims + " old bioassay dimensions for "
-                + qts.size() + " quantitation types." );
-
-        postProcess( expExp );
     }
 
     /**
@@ -515,34 +576,6 @@ public class VectorMergingService extends ExpressionExperimentVectorManipulating
         }
 
         return wasProcessed;
-    }
-
-    public void setAuditTrailService( AuditTrailService auditTrailService ) {
-        this.auditTrailService = auditTrailService;
-    }
-
-    public void setBioAssayDimensionService( BioAssayDimensionService bioAssayDimensionService ) {
-        this.bioAssayDimensionService = bioAssayDimensionService;
-    }
-
-    /**
-     * @param bioAssayService the bioAssayService to set
-     */
-    public void setBioAssayService( BioAssayService bioAssayService ) {
-        this.bioAssayService = bioAssayService;
-    }
-
-    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
-        this.expressionExperimentService = expressionExperimentService;
-    }
-
-    public void setProcessedExpressionDataVectorCreateService(
-            ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService ) {
-        this.processedExpressionDataVectorCreateService = processedExpressionDataVectorCreateService;
-    }
-
-    public void setTwoChannelMissingValueService( TwoChannelMissingValues twoChannelMissingValueService ) {
-        this.twoChannelMissingValueService = twoChannelMissingValueService;
     }
 
     /**
