@@ -176,7 +176,7 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
         boolean wasProcessed = processForMissingValues( ee );
 
         if ( !wasProcessed ) {
-            errorObjects.add( ee.getShortName() + " does not use a two-color array design." );
+            errorObjects.add( ee.getShortName() );
         } else {
             // Aduit iting is done separately.
             successObjects.add( ee.toString() );
@@ -194,7 +194,7 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
 
         ee = eeService.thawLite( ee );
 
-        if ( !needToRun( ee, MissingValueAnalysisEvent.class ) ) return false;
+        if ( !force && !needToRun( ee, MissingValueAnalysisEvent.class ) ) return false;
 
         QuantitationType previousMissingValueQt = null;
         for ( QuantitationType qType : types ) {
