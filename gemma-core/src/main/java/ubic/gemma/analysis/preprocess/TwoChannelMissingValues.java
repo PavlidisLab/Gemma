@@ -23,6 +23,7 @@ import java.text.NumberFormat;
 import java.util.Collection;
 import java.util.HashSet;
 
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -272,7 +273,7 @@ public class TwoChannelMissingValues {
 
             int numCols = preferred.columns( designElement );
 
-            boolean[] detectionCalls = new boolean[numCols];
+            Boolean[] detectionCalls = new Boolean[numCols];
             Double[] prefRow = preferred.getRow( designElement );
 
             Double[] signalA = null;
@@ -292,7 +293,7 @@ public class TwoChannelMissingValues {
             if ( bkgChannelB != null ) bkgB = bkgChannelB.getRow( designElement );
 
             // columsn only for this designelement!
-
+            boolean gaps = false; // we use this to track
             for ( int col = 0; col < numCols; col++ ) {
 
                 // If the "preferred" value is already missing, we retain that, or if it is a special value
@@ -303,21 +304,30 @@ public class TwoChannelMissingValues {
                     continue;
                 }
 
-                Double bkgAV = 0.0;
-                Double bkgBV = 0.0;
+                Double bkgAV = Double.NaN;
+                Double bkgBV = Double.NaN;
 
                 if ( bkgA != null ) bkgAV = bkgA[col];
-
                 if ( bkgB != null ) bkgBV = bkgB[col];
 
-                Double sigAV = ( signalA == null || signalA[col] == null ) ? 0.0 : signalA[col];
-                Double sigBV = ( signalB == null || signalB[col] == null ) ? 0.0 : signalB[col];
+                Double sigAV = ( signalA == null || signalA[col] == null ) ? Double.NaN : signalA[col];
+                Double sigBV = ( signalB == null || signalB[col] == null ) ? Double.NaN : signalB[col];
 
-                boolean call = computeCall( signalToNoiseThreshold, sigAV, sigBV, bkgAV, bkgBV );
+                /*
+                 * Missing values here wreak havoc. Sometimes in multiarray studies data are missing.
+                 */
+                Boolean call = computeCall( signalToNoiseThreshold, sigAV, sigBV, bkgAV, bkgBV );
+
+                if ( call == null ) gaps = true;
+
                 detectionCalls[col] = call;
             }
 
-            vect.setData( converter.booleanArrayToBytes( detectionCalls ) );
+            if ( gaps ) {
+                fillGapsInCalls( detectionCalls );
+            }
+
+            vect.setData( converter.booleanArrayToBytes( ArrayUtils.toPrimitive( detectionCalls ) ) );
             results.add( vect );
 
             if ( ++count % 4000 == 0 ) {
@@ -336,24 +346,52 @@ public class TwoChannelMissingValues {
     }
 
     /**
-     * Decide if the data point is 'prsent'. Note that we try to compute this even if we lack both channels, it's better
-     * than nothing.
+     * Deal with cases when the data we are using to make calls are themselves missing. Note that in other cases where
+     * we can't compute missingness at all, we assume everything is present.
+     * 
+     * @param detectionCalls
+     */
+    private void fillGapsInCalls( Boolean[] detectionCalls ) {
+        /*
+         * Make a decision on those.
+         */
+        // double fractionThreshold = 0.5; // if half of calls we made are present, we call gaps pesent
+        double fractionThreshold = 0.0; // call all gaps present, unless everything in the row is absent (or missing)
+        int numPresentCall = 0;
+        int numCalls = 0;
+        for ( Boolean b : detectionCalls ) {
+            if ( b != null ) {
+                if ( b ) numPresentCall++;
+                numCalls++;
+            }
+        }
+        boolean decide = numCalls > 0 && numPresentCall / ( double ) numCalls > fractionThreshold;
+
+        for ( int i = 0; i < detectionCalls.length; i++ ) {
+            if ( detectionCalls[i] == null ) detectionCalls[i] = decide;
+        }
+    }
+
+    /**
+     * Decide if the data point is 'present': it has to be above the threshold in one of the channels.
      * 
      * @param signalToNoiseThreshold
      * @param sigAV
      * @param sigBV
      * @param bkgAV
      * @param bkgBV
-     * @return
+     * @return null if no decision could be made due to NaN in the values given.
      */
-    private boolean computeCall( double signalToNoiseThreshold, Double sigAV, Double sigBV, Double bkgAV, Double bkgBV ) {
-        if ( sigAV == null && sigBV == null ) return false;
+    private Boolean computeCall( double signalToNoiseThreshold, Double sigAV, Double sigBV, Double bkgAV, Double bkgBV ) {
 
-        if ( ( sigAV == null || sigAV.isNaN() ) && ( sigBV == null || sigBV.isNaN() ) ) return false;
+        if ( !sigAV.isNaN() && !bkgAV.isNaN() && sigAV > bkgAV * signalToNoiseThreshold ) return true;
 
-        if ( sigAV != null && sigAV > bkgAV * signalToNoiseThreshold ) return true;
+        if ( !sigBV.isNaN() && !bkgBV.isNaN() && sigBV > bkgBV * signalToNoiseThreshold ) return true;
 
-        if ( sigBV != null && sigBV > bkgBV * signalToNoiseThreshold ) return true;
+        /*
+         * We couldn't decide because neither of the above calculations could be done.
+         */
+        if ( ( sigAV.isNaN() || bkgAV.isNaN() ) && ( sigBV.isNaN() || bkgBV.isNaN() ) ) return null;
 
         return false;
     }
