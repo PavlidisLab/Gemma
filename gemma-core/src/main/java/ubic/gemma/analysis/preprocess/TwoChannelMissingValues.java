@@ -163,6 +163,33 @@ public class TwoChannelMissingValues {
         ExpressionDataDoubleMatrix signalDataA = builder.getSignalChannelA();
         ExpressionDataDoubleMatrix signalDataB = builder.getSignalChannelB();
 
+        if ( builder.isAnyMissing() ) {
+            for ( QuantitationType qt : bkgDataA.getQuantitationTypes() ) {
+                if ( builder.getNumMissingValues( qt ) > 0 ) {
+                    log.warn( "Missing values in bkgDataA" );
+                    break;
+                }
+            }
+            for ( QuantitationType qt : bkgDataB.getQuantitationTypes() ) {
+                if ( builder.getNumMissingValues( qt ) > 0 ) {
+                    log.warn( "Missing values in bkgDataB" );
+                    break;
+                }
+            }
+            for ( QuantitationType qt : signalDataA.getQuantitationTypes() ) {
+                if ( builder.getNumMissingValues( qt ) > 0 ) {
+                    log.warn( "Missing values in signalDataA" );
+                    break;
+                }
+            }
+            for ( QuantitationType qt : signalDataB.getQuantitationTypes() ) {
+                if ( builder.getNumMissingValues( qt ) > 0 ) {
+                    log.warn( "Missing values in signalDataB" );
+                    break;
+                }
+            }
+        }
+
         Collection<RawExpressionDataVector> dimRes = computeMissingValues( expExp, preferredData, signalDataA,
                 signalDataB, bkgDataA, bkgDataB, signalToNoiseThreshold, extraMissingValueIndicators );
 

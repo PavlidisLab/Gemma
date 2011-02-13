@@ -218,6 +218,12 @@ public class ExpressionDataMatrixBuilder {
 
     private Collection<ProcessedExpressionDataVector> processedDataVectors = null;
 
+    private QuantitationTypeData dat = null;
+
+    private Map<QuantitationType, Integer> numMissingValues = new HashMap<QuantitationType, Integer>();
+
+    private boolean anyMissing = false;
+
     /**
      * @param collection of vectors. They should be thawed first.
      */
@@ -243,7 +249,7 @@ public class ExpressionDataMatrixBuilder {
      * @return
      */
     public ExpressionDataDoubleMatrix getBackgroundChannelA() {
-        QuantitationTypeData dat = getQuantitationTypesNeeded();
+        if ( dat == null ) dat = getQuantitationTypesNeeded();
 
         List<BioAssayDimension> dimensions = getBioAssayDimensions();
 
@@ -264,7 +270,7 @@ public class ExpressionDataMatrixBuilder {
      * @return
      */
     public ExpressionDataDoubleMatrix getBackgroundChannelB() {
-        QuantitationTypeData dat = getQuantitationTypesNeeded();
+        if ( dat == null ) dat = getQuantitationTypesNeeded();
 
         List<BioAssayDimension> dimensions = getBioAssayDimensions();
 
@@ -321,7 +327,7 @@ public class ExpressionDataMatrixBuilder {
      * @return
      */
     public ExpressionDataDoubleMatrix getBkgSubChannelA() {
-        QuantitationTypeData dat = getQuantitationTypesNeeded();
+        if ( dat == null ) dat = getQuantitationTypesNeeded();
         List<BioAssayDimension> dimensions = this.getBioAssayDimensions();
         List<QuantitationType> qTypes = new ArrayList<QuantitationType>();
 
@@ -401,6 +407,11 @@ public class ExpressionDataMatrixBuilder {
         List<QuantitationType> qtypes = this.getMissingValueQTypes();
         if ( qtypes == null || qtypes.size() == 0 ) return null;
         return new ExpressionDataBooleanMatrix( vectors, qtypes );
+    }
+
+    public Integer getNumMissingValues( QuantitationType qt ) {
+        if ( dat == null ) dat = getQuantitationTypesNeeded();
+        return numMissingValues.get( qt );
     }
 
     /**
@@ -487,7 +498,7 @@ public class ExpressionDataMatrixBuilder {
      * @return
      */
     public ExpressionDataDoubleMatrix getSignalChannelA() {
-        QuantitationTypeData dat = getQuantitationTypesNeeded();
+        if ( dat == null ) dat = getQuantitationTypesNeeded();
         List<BioAssayDimension> dimensions = this.getBioAssayDimensions();
         List<QuantitationType> qTypes = new ArrayList<QuantitationType>();
 
@@ -517,7 +528,7 @@ public class ExpressionDataMatrixBuilder {
      * @return
      */
     public ExpressionDataDoubleMatrix getSignalChannelB() {
-        QuantitationTypeData dat = getQuantitationTypesNeeded();
+        if ( dat == null ) dat = getQuantitationTypesNeeded();
         List<BioAssayDimension> dimensions = this.getBioAssayDimensions();
         List<QuantitationType> qTypes = new ArrayList<QuantitationType>();
 
@@ -530,6 +541,11 @@ public class ExpressionDataMatrixBuilder {
             return makeMatrix( qTypes );
         }
         return null;
+    }
+
+    public boolean isAnyMissing() {
+        if ( dat == null ) dat = getQuantitationTypesNeeded();
+        return anyMissing;
     }
 
     /**
@@ -675,22 +691,7 @@ public class ExpressionDataMatrixBuilder {
 
         QuantitationTypeData result = new QuantitationTypeData();
 
-        Map<QuantitationType, Integer> numMissingValues = new HashMap<QuantitationType, Integer>();
-        ByteArrayConverter bac = new ByteArrayConverter();
-        boolean anyMissing = false;
-        for ( DesignElementDataVector vector : vectors ) {
-            QuantitationType qt = vector.getQuantitationType();
-            if ( !numMissingValues.containsKey( qt ) ) {
-                numMissingValues.put( qt, 0 );
-            }
-
-            for ( Double d : bac.byteArrayToDoubles( vector.getData() ) ) {
-                if ( d.isNaN() ) {
-                    anyMissing = true;
-                    numMissingValues.put( qt, numMissingValues.get( qt ) + 1 );
-                }
-            }
-        }
+        populateMissingValueInfo();
 
         for ( BioAssayDimension targetdimension : dimensions ) {
 
@@ -787,7 +788,7 @@ public class ExpressionDataMatrixBuilder {
          * This is made messy by data sets where the non-background-subtracted data has been omitted, but the background
          * values are available.
          */
-        QuantitationTypeData dat = getQuantitationTypesNeeded();
+        if ( dat == null ) dat = getQuantitationTypesNeeded();
 
         QuantitationType signalChannelA = dat.getSignalChannelA( dimension );
         QuantitationType signalChannelB = dat.getSignalChannelB( dimension );
@@ -849,6 +850,24 @@ public class ExpressionDataMatrixBuilder {
         return null;
     }
 
+    private void populateMissingValueInfo() {
+        ByteArrayConverter bac = new ByteArrayConverter();
+
+        for ( DesignElementDataVector vector : vectors ) {
+            QuantitationType qt = vector.getQuantitationType();
+            if ( !numMissingValues.containsKey( qt ) ) {
+                numMissingValues.put( qt, 0 );
+            }
+
+            for ( Double d : bac.byteArrayToDoubles( vector.getData() ) ) {
+                if ( d.isNaN() ) {
+                    anyMissing = true;
+                    numMissingValues.put( qt, numMissingValues.get( qt ) + 1 );
+                }
+            }
+        }
+    }
+
 }
 
 // ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -865,28 +884,28 @@ class QuantitationTypeData {
     Map<BioAssayDimension, QuantitationType> signalChannelA = new HashMap<BioAssayDimension, QuantitationType>();
     Map<BioAssayDimension, QuantitationType> signalChannelB = new HashMap<BioAssayDimension, QuantitationType>();
 
-    public void addBackgroundChannelA( BioAssayDimension dim, QuantitationType backgroundChannelA ) {
-        this.backgroundChannelA.put( dim, backgroundChannelA );
+    public void addBackgroundChannelA( BioAssayDimension dim, QuantitationType qt ) {
+        this.backgroundChannelA.put( dim, qt );
     }
 
-    public void addBackgroundChannelB( BioAssayDimension dim, QuantitationType backgroundChannelB ) {
-        this.backgroundChannelB.put( dim, backgroundChannelB );
+    public void addBackgroundChannelB( BioAssayDimension dim, QuantitationType qt ) {
+        this.backgroundChannelB.put( dim, qt );
     }
 
-    public void addBkgSubChannelA( BioAssayDimension dim, QuantitationType bkgSubChannelA ) {
-        this.bkgSubChannelA.put( dim, bkgSubChannelA );
+    public void addBkgSubChannelA( BioAssayDimension dim, QuantitationType qt ) {
+        this.bkgSubChannelA.put( dim, qt );
     }
 
-    public void addPreferred( BioAssayDimension dim, QuantitationType preferred ) {
-        this.preferred.put( dim, preferred );
+    public void addPreferred( BioAssayDimension dim, QuantitationType qt ) {
+        this.preferred.put( dim, qt );
     }
 
-    public void addSignalChannelA( BioAssayDimension dim, QuantitationType signalChannelA ) {
-        this.signalChannelA.put( dim, signalChannelA );
+    public void addSignalChannelA( BioAssayDimension dim, QuantitationType qt ) {
+        this.signalChannelA.put( dim, qt );
     }
 
-    public void addSignalChannelB( BioAssayDimension dim, QuantitationType signalChannelB ) {
-        this.signalChannelB.put( dim, signalChannelB );
+    public void addSignalChannelB( BioAssayDimension dim, QuantitationType qt ) {
+        this.signalChannelB.put( dim, qt );
     }
 
     public QuantitationType getBackgroundChannelA( BioAssayDimension dim ) {
