@@ -48,10 +48,10 @@ public class BatchInfoPopulationServiceTest {
         dates.add( DateUtils.addHours( d, 1 ) );
         dates.add( DateUtils.addHours( d, 2 ) );
         dates.add( DateUtils.addHours( d, 3 ) );
-        dates.add( DateUtils.addHours( d, 24 ) );
         dates.add( DateUtils.addHours( d, 25 ) );
         dates.add( DateUtils.addHours( d, 26 ) );
         dates.add( DateUtils.addHours( d, 27 ) );
+        dates.add( DateUtils.addHours( d, 28 ) );
 
         Map<String, Collection<Date>> actual = ser.convertDatesToBatches( dates );
         /*
