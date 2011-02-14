@@ -86,7 +86,7 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext.extend(Ext.tree.TreePanel,
 						" = " +
 						analysis.subsetFactorValue.value +
 						' </span>';
-						subsetIdent = subsetFactor;
+						subsetIdent = subsetFactor+analysis.resultSets.size();
 						//console.log("susbetIdent: " + subsetIdent);
 						//if a similar subset node has already been created, insert this node adjacent to it
 						neighbourNode = root.findChild('subsetIdent', subsetIdent);
@@ -122,10 +122,16 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext.extend(Ext.tree.TreePanel,
 								nodeText = "&nbsp;&nbsp;No expressed probes.";
 							}
 							else {
-								nodeText += subsetText;
-								nodeText += this.getBaseline(resultSet);
-								nodeText += this.getActionLinks(resultSet,analysisName[0],this.ee.id, nodeId);
-								//nodeText += this.getExpressionNumbers(resultSet);
+								//if there's subset text, add baseline and links to it to maintain order
+								if(subsetText!=''){
+									subsetText += this.getBaseline(resultSet);
+									subsetText += this.getActionLinks(resultSet,analysisName[0],this.ee.id, nodeId);
+								}else{
+									nodeText += this.getBaseline(resultSet);
+									nodeText += this.getActionLinks(resultSet,analysisName[0],this.ee.id, nodeId);
+									//nodeText += this.getExpressionNumbers(resultSet);
+								}
+								
 							}
 						parentText = '<b>' +analysisName[0]+'</b> '+nodeText;
 					}
@@ -149,7 +155,6 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext.extend(Ext.tree.TreePanel,
 								nodeText = "&nbsp;&nbsp;No expressed probes.";
 							}
 							else {
-								nodeText += subsetText;
 								nodeText += this.getBaseline(resultSet);
 								nodeText += this.getActionLinks(resultSet,factor,this.ee.id,(nodeId+1));
 								//nodeText += this.getExpressionNumbers(resultSet);
@@ -194,7 +199,7 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext.extend(Ext.tree.TreePanel,
 						analysisDesc = 'n-way ANOVA' + ((interaction>0) ? ' with interactions on ' : ' on ');
 					}//just being overly safe here
 					
-					parentNode.setText(analysisDesc + parentText + " " + parentNode.text);
+					parentNode.setText(analysisDesc + parentText + subsetText + " " + parentNode.text);
 				}
 	},
 	/**
