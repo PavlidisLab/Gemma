@@ -126,8 +126,6 @@ abstract public class ArrayDesignPersister extends GenomePersister {
     }
 
     /**
-     * Note: Update is not called on the array design.
-     * 
      * @param designElement
      * @return
      */
@@ -149,6 +147,9 @@ abstract public class ArrayDesignPersister extends GenomePersister {
 
         arrayDesign.getCompositeSequences().add( persistedDE );
 
+        /*
+         * FIXME This is VERY slow if we have to add a lot of designelements to the array.
+         */
         this.arrayDesignService.update( arrayDesign );
 
         return persistedDE;

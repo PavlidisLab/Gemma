@@ -30,7 +30,6 @@ import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.basecode.util.CancellationException;
-import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.Characteristic;
@@ -357,6 +356,10 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
                 designElement = getDesignElementSequenceCache().get( seqName );
                 if ( log.isDebugEnabled() ) log.debug( "Found " + designElement + " with sequence key=" + seqName );
             } else {
+                /*
+                 * No sequence, or the sequence name isn't provided. Of course, if there is no sequence it isn't going
+                 * to be very useful.
+                 */
                 log.warn( "Adding new probe to existing array design " + ad.getShortName() + ": " + designElement
                         + " bioseq=" + designElement.getBiologicalCharacteristic() );
 
