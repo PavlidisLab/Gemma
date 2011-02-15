@@ -272,7 +272,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
         Collection<DifferentialExpressionAnalysis> results;
         try {
 
-            // this.eeService.thawLite( ee ); already done.
+            ee = this.eeService.thawLite( ee );
 
             if ( ee.getExperimentalDesign().getExperimentalFactors().size() == 0 ) {
                 if ( this.expressionExperiments.size() == 1 ) {
