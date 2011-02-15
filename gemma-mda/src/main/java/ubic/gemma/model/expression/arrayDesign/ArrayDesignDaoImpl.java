@@ -192,6 +192,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         return result;
     }
 
+    @SuppressWarnings("unchecked")
     public Collection<ArrayDesign> thawLite( Collection<ArrayDesign> arrayDesigns ) {
         if ( arrayDesigns.isEmpty() ) return arrayDesigns;
         return this
