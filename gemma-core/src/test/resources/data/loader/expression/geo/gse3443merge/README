@@ -1,0 +1,2 @@
+# uses many array designs.
+~/dev/eclipseworkspace/Gemma/gemma-core/src/test/script/chopSoft.pl -n 5 -s GSE3443.soft.gz

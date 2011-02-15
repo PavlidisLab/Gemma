@@ -100,7 +100,7 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
     protected ExpressionDataMatrixService expressionDataMatrixService;
     private TwoChannelMissingValues tcmv;
 
-    private boolean splitIncompatiblePlatforms = false;
+    private boolean splitByPlatform = false;
     private boolean allowSuperSeriesLoad = true;
     private boolean allowSubSeriesLoad = true;
     private boolean suppressPostProcessing = false;
@@ -136,10 +136,10 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
 
         addOption( noBioAssayMatching );
 
-        Option splitByPlatform = OptionBuilder.withDescription(
+        Option splitByPlatformOption = OptionBuilder.withDescription(
                 "Force data from each platform into a separate experiment. This implies '-nomatch'" ).create(
                 "splitByPlatform" );
-        addOption( splitByPlatform );
+        addOption( splitByPlatformOption );
 
         Option forceOption = OptionBuilder.withDescription( "Reload data set if it already exists in system" )
                 .withLongOpt( "force" ).create( "force" );
@@ -277,7 +277,7 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
             }
 
             Collection<ExpressionExperiment> ees = geoService.fetchAndLoad( accession, false, doMatching,
-                    this.aggressive, this.splitIncompatiblePlatforms, this.allowSuperSeriesLoad,
+                    this.aggressive, this.splitByPlatform, this.allowSuperSeriesLoad,
                     this.allowSubSeriesLoad );
 
             if ( !suppressPostProcessing ) {
@@ -351,8 +351,8 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
         }
 
         if ( hasOption( "splitByPlatform" ) ) {
-            this.splitIncompatiblePlatforms = true;
-            this.doMatching = false;
+            this.splitByPlatform = true;
+            this.doMatching = false; //  defensive
         }
 
         if ( hasOption( "nopost" ) ) {

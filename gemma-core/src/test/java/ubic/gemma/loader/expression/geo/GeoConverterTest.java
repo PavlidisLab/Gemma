@@ -732,7 +732,7 @@ public class GeoConverterTest extends BaseSpringContextTest {
         DatasetCombiner datasetCombiner = new DatasetCombiner();
         GeoSampleCorrespondence correspondence = datasetCombiner.findGSECorrespondence( series );
         series.setSampleCorrespondence( correspondence );
-        this.gc.setSplitIncompatiblePlatforms( true );
+        this.gc.setSplitByPlatform( true );
         Object result = this.gc.convert( series );
         assertNotNull( result );
 

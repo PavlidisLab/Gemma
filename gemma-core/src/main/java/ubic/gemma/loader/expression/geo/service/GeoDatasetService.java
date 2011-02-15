@@ -82,9 +82,9 @@ public class GeoDatasetService extends AbstractGeoService {
      */
     @Override
     public Collection<?> fetchAndLoad( String geoAccession, boolean loadPlatformOnly, boolean doSampleMatching,
-            boolean aggressiveQuantitationTypeRemoval, boolean splitIncompatiblePlatforms ) {
+            boolean aggressiveQuantitationTypeRemoval, boolean splitByPlatform ) {
         return this.fetchAndLoad( geoAccession, loadPlatformOnly, doSampleMatching, aggressiveQuantitationTypeRemoval,
-                splitIncompatiblePlatforms, true, true );
+                splitByPlatform, true, true );
     }
 
     /**
@@ -101,7 +101,7 @@ public class GeoDatasetService extends AbstractGeoService {
     @SuppressWarnings("unchecked")
     @Override
     public Collection fetchAndLoad( String geoAccession, boolean loadPlatformOnly, boolean doSampleMatching,
-            boolean aggressiveQuantitationTypeRemoval, boolean splitIncompatiblePlatforms,
+            boolean aggressiveQuantitationTypeRemoval, boolean splitByPlatform,
             boolean allowSuperSeriesImport, boolean allowSubSeriesImport ) {
 
         /*
@@ -112,11 +112,11 @@ public class GeoDatasetService extends AbstractGeoService {
         if ( this.geoDomainObjectGenerator == null ) {
             this.geoDomainObjectGenerator = new GeoDomainObjectGenerator();
         } else {
-            this.geoDomainObjectGenerator.intialize();
+            this.geoDomainObjectGenerator.initialize();
         }
 
         geoDomainObjectGenerator.setProcessPlatformsOnly( loadPlatformOnly );
-        geoDomainObjectGenerator.setDoSampleMatching( doSampleMatching && !splitIncompatiblePlatforms );
+        geoDomainObjectGenerator.setDoSampleMatching( doSampleMatching && !splitByPlatform );
         geoDomainObjectGenerator.setAggressiveQtRemoval( aggressiveQuantitationTypeRemoval );
 
         Collection<DatabaseEntry> projectedAccessions = geoDomainObjectGenerator.getProjectedAccessions( geoAccession );
@@ -150,7 +150,7 @@ public class GeoDatasetService extends AbstractGeoService {
 
         if ( series.isSuperSeries() ) {
             if ( allowSuperSeriesImport ) {
-                log.info( " ==================== SuperSeries Detected! ==================" );
+                log.info( " ========= SuperSeries Detected! =========" );
                 log.info( "Please make sure you want to import this as a superseries and not the individual subseries" );
             } else {
                 throw new IllegalStateException(
@@ -160,7 +160,7 @@ public class GeoDatasetService extends AbstractGeoService {
 
         if ( series.isSubSeries() ) {
             if ( allowSubSeriesImport ) {
-                log.info( " ==================== Sub Detected! ==================" );
+                log.info( " ========= Subseries Detected! =========" );
                 log.info( "Please make sure you want to import this as a subseries and not the superseries" );
             } else {
                 throw new IllegalStateException(
@@ -168,7 +168,7 @@ public class GeoDatasetService extends AbstractGeoService {
             }
         }
 
-        confirmPlatformUniqueness( series, doSampleMatching && !splitIncompatiblePlatforms );
+        confirmPlatformUniqueness( series, doSampleMatching && !splitByPlatform );
 
         matchToExistingPlatforms( geoConverter, series );
 
@@ -177,7 +177,7 @@ public class GeoDatasetService extends AbstractGeoService {
         getSubSeriesInformation( series );
 
         geoConverter.clear();
-        geoConverter.setSplitIncompatiblePlatforms( splitIncompatiblePlatforms );
+        geoConverter.setSplitByPlatform( splitByPlatform );
 
         Collection<ExpressionExperiment> result = ( Collection<ExpressionExperiment> ) geoConverter.convert( series );
 
@@ -268,29 +268,39 @@ public class GeoDatasetService extends AbstractGeoService {
      * @param series
      */
     private void checkSamplesAreNew( GeoSeries series ) {
-        Collection<BioAssay> bioAssays = null;
+        Collection<BioAssay> existingBioAssays = null;
         Collection<GeoSample> toSkip = new HashSet<GeoSample>();
         for ( GeoSample sample : series.getSamples() ) {
-            if ( sample.appearsInMultipleSeries() ) {
+            if ( !sample.appearsInMultipleSeries() ) {
+                // nothing to worry about: if this series is not loaded, then we're guaranteed to be new.
+                continue;
+            }
+
+            /*
+             * Note: this is a bit slow (30 seconds), now that we have >70k samples, but we only do this once.
+             */
+            if ( existingBioAssays == null ) {
+                log.debug( "Loading all bioassays to check for duplication..." );
+                existingBioAssays = bioAssayService.loadAll();
+            }
+
+            for ( BioAssay ba : existingBioAssays ) {
+                DatabaseEntry acc = ba.getAccession();
+                if ( acc == null ) continue;
+
                 String sampleId = sample.getGeoAccession();
-
-                if ( bioAssays == null ) {
-                    log.info( "Loading all bioassays to check for duplication..." );
-                    bioAssays = bioAssayService.loadAll();
-                }
-
-                for ( BioAssay ba : bioAssays ) {
-                    DatabaseEntry acc = ba.getAccession();
-                    if ( acc == null ) continue;
-
-                    String existingAcc = acc.getAccession();
-                    if ( existingAcc.equals( sampleId )
-                            && ba.getAccession().getExternalDatabase().getName().equals( GEO_DB_NAME ) ) {
-                        log.info( sampleId + " appears in an expression experiment already in the system, skipping" );
-                        toSkip.add( sample );
-                    }
+                String existingAcc = acc.getAccession();
+                if ( existingAcc.equals( sampleId )
+                        && ba.getAccession().getExternalDatabase().getName().equals( GEO_DB_NAME ) ) {
+                    log.info( sampleId + " appears in an expression experiment already in the system, skipping" );
+                    toSkip.add( sample );
                 }
             }
+
+        }
+
+        if ( !toSkip.isEmpty() ) {
+            log.info( "Total of " + toSkip.size() + " samples that are already in the system." );
         }
 
         StringBuilder buf = new StringBuilder();
@@ -534,7 +544,7 @@ public class GeoDatasetService extends AbstractGeoService {
     private void getSubSeriesInformation( GeoSeries superSeries ) {
         for ( String subSeriesAccession : superSeries.getSubSeries() ) {
             log.info( "Processing subseries " + subSeriesAccession );
-            geoDomainObjectGenerator.intialize();
+            geoDomainObjectGenerator.initialize();
             Collection<? extends GeoData> parseResult = geoDomainObjectGenerator.generate( subSeriesAccession );
             if ( parseResult.size() == 0 ) {
                 log.warn( "Got no results for " + subSeriesAccession );

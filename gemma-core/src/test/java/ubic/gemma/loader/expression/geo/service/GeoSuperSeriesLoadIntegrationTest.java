@@ -19,17 +19,27 @@
 package ubic.gemma.loader.expression.geo.service;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Collection;
+import java.util.HashSet;
 
+import org.apache.commons.lang.RandomStringUtils;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.context.transaction.AfterTransaction;
 
+import ubic.basecode.io.ByteArrayConverter;
+import ubic.gemma.analysis.preprocess.VectorMergingService;
+import ubic.gemma.loader.expression.ExpressionExperimentPlatformSwitchService;
+import ubic.gemma.loader.expression.arrayDesign.ArrayDesignMergeService;
 import ubic.gemma.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.loader.util.AlreadyExistsInSystemException;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 
 /**
  * @author paul
@@ -40,9 +50,22 @@ public class GeoSuperSeriesLoadIntegrationTest extends AbstractGeoServiceTest {
     @Autowired
     protected GeoDatasetService geoService;
 
+    @Autowired
+    ArrayDesignMergeService adms;
+
+    @Autowired
+    VectorMergingService vms;
+
+    @Autowired
+    ExpressionExperimentPlatformSwitchService eepss;
+
+    @Autowired
+    ExpressionExperimentService ees;
+
+    ExpressionExperiment ee;
+
     @SuppressWarnings("unchecked")
     @Test
-    @AfterTransaction
     public void testFetchAndLoadSuperSeries() throws Exception {
         String path = getTestFileBasePath();
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
@@ -52,10 +75,85 @@ public class GeoSuperSeriesLoadIntegrationTest extends AbstractGeoServiceTest {
                     true, false );
             assertEquals( 1, results.size() );
         } catch ( AlreadyExistsInSystemException e ) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
 
     }
 
+    /**
+     * See bug 2064. GSE14618 is a superseries of GSE14613 and GSE14615
+     * 
+     * @throws Exception
+     */
+    @Test
+    @SuppressWarnings("unchecked")
+    public void testFetchAndLoadSuperSeriesB() throws Exception {
+
+        String path = getTestFileBasePath();
+        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
+                + "gse14618superser" ) );
+
+        Collection<ExpressionExperiment> results = geoService.fetchAndLoad( "GSE14618", false, true, false, false,
+                true, false );
+        assertEquals( 1, results.size() );
+
+        ee = results.iterator().next();
+
+        ee = ees.findByShortName( "GSE14618" );
+        ee = ees.thawLite( ee );
+        Collection<QuantitationType> qts = ee.getQuantitationTypes();
+
+        assertEquals( 1, qts.size() );
+
+        Collection<ArrayDesign> arrayDesignsUsed = ees.getArrayDesignsUsed( ee );
+
+        Collection<ArrayDesign> others = new HashSet<ArrayDesign>();
+        others.add( ( ArrayDesign ) arrayDesignsUsed.toArray()[1] );
+
+        ArrayDesign merged = adms.merge( ( ArrayDesign ) arrayDesignsUsed.toArray()[0], others, RandomStringUtils
+                .randomAlphabetic( 5 ), RandomStringUtils.randomAlphabetic( 5 ), false );
+
+        eepss.switchExperimentToArrayDesign( ee, merged );
+
+        vms.mergeVectors( ee );
+
+        ee = ees.load( ee.getId() );
+
+        ee = ees.findByShortName( "GSE14618" );
+        ee = ees.thaw( ee );
+
+        assertEquals( 40, ee.getProcessedExpressionDataVectors().size() );
+        // System.err.println( ee.getProcessedExpressionDataVectors().size() );
+        boolean found1 = false;
+        boolean found2 = false;
+
+        ByteArrayConverter bac = new ByteArrayConverter();
+        for ( DesignElementDataVector v : ee.getProcessedExpressionDataVectors() ) {
+            double[] dat = bac.byteArrayToDoubles( v.getData() );
+            int count = 0;
+
+            assertEquals( 92, dat.length );
+            if ( v.getDesignElement().getName().equals( "117_at" ) ) {
+                found1 = true;
+                for ( double d : dat ) {
+                    if ( Double.isNaN( d ) ) {
+                        count++;
+                    }
+                }
+                assertEquals( "Should have been no missing values", 0, count );
+            } else if ( v.getDesignElement().getName().equals( "1552279_a_at" ) ) {
+                found2 = true;
+                for ( double d : dat ) {
+                    if ( Double.isNaN( d ) ) {
+                        count++;
+                    }
+                }
+                assertEquals( "Wrong number of missing values", 42, count );
+            }
+        }
+
+        assertTrue( "Didn't find first test probe expected.", found1 );
+        assertTrue( "Didn't find second test probe expected.", found2 );
+
+    }
 }

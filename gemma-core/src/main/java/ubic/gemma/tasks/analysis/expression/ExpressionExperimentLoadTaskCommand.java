@@ -26,9 +26,6 @@ import ubic.gemma.job.TaskCommand;
  */
 public class ExpressionExperimentLoadTaskCommand extends TaskCommand {
 
-    /**
-     * 
-     */
     private static final long serialVersionUID = 1L;
 
     private String accession;
@@ -42,6 +39,8 @@ public class ExpressionExperimentLoadTaskCommand extends TaskCommand {
 
     private boolean allowSuperSeriesLoad = true;
 
+    private boolean allowSubSeriesLoad = true;
+
     private String arrayDesignName = null;
 
     private boolean isArrayExpress = false;
@@ -49,8 +48,6 @@ public class ExpressionExperimentLoadTaskCommand extends TaskCommand {
     private boolean isSplitByPlatform = false;
 
     private boolean loadPlatformOnly;
-
-    private boolean splitIncompatiblePlatforms = false;
 
     /**
      * Used to turn off 'bioassay to biomaterial' matching.
@@ -111,13 +108,6 @@ public class ExpressionExperimentLoadTaskCommand extends TaskCommand {
         return isSplitByPlatform;
     }
 
-    /**
-     * @return the splitIncompatiblePlatforms
-     */
-    public boolean isSplitIncompatiblePlatforms() {
-        return splitIncompatiblePlatforms;
-    }
-
     public boolean isSuppressMatching() {
         return suppressMatching;
     }
@@ -160,15 +150,16 @@ public class ExpressionExperimentLoadTaskCommand extends TaskCommand {
         this.isSplitByPlatform = isSplitByPlatform;
     }
 
-    /**
-     * @param splitIncompatiblePlatforms the splitIncompatiblePlatforms to set
-     */
-    public void setSplitIncompatiblePlatforms( boolean splitIncompatiblePlatforms ) {
-        this.splitIncompatiblePlatforms = splitIncompatiblePlatforms;
-    }
-
     public void setSuppressMatching( boolean suppressMatching ) {
         this.suppressMatching = suppressMatching;
+    }
+
+    protected boolean isAllowSubSeriesLoad() {
+        return allowSubSeriesLoad;
+    }
+
+    protected void setAllowSubSeriesLoad( boolean allowSubSeriesLoad ) {
+        this.allowSubSeriesLoad = allowSubSeriesLoad;
     }
 
 }

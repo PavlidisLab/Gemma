@@ -158,7 +158,10 @@ public class GeoConverter implements Converter<Object, Object> {
 
     private ExternalDatabase genbank;
 
-    private boolean splitIncompatiblePlatforms = false;
+    /**
+     *`
+     */
+    private boolean splitByPlatform = false;
 
     /**
      * The scientific name used for rat species. FIXME this should be updated elsewhere; avoid this hardcoding.
@@ -1567,7 +1570,7 @@ public class GeoConverter implements Converter<Object, Object> {
                 convertSpeciesSpecific( series, converted, organismDatasetMap, i, organism );
                 i++;
             }
-        } else if ( platformDatasetMap.size() > 1 && this.splitIncompatiblePlatforms ) {
+        } else if ( platformDatasetMap.size() > 1 && this.splitByPlatform ) {
             int i = 1;
             for ( GeoPlatform platform : platformDatasetMap.keySet() ) {
                 convertByPlatform( series, converted, platformDatasetMap, i, platform );
@@ -2750,10 +2753,13 @@ public class GeoConverter implements Converter<Object, Object> {
     }
 
     /**
-     * @param splitIncompatiblePlatforms the splitIncompatiblePlatforms to set
+     * If true, and the series uses more than one platform, split it up. This often isn't necessary/desirable. This is
+     * overridden if the series uses more than one species, in which case it is always split up.
+     * 
+     * @param splitByPlatform
      */
-    public void setSplitIncompatiblePlatforms( boolean splitIncompatiblePlatforms ) {
-        this.splitIncompatiblePlatforms = splitIncompatiblePlatforms;
+    public void setSplitByPlatform( boolean splitByPlatform ) {
+        this.splitByPlatform = splitByPlatform;
     }
 
     /**
@@ -2778,13 +2784,13 @@ public class GeoConverter implements Converter<Object, Object> {
 
         // if there is only 1 taxon on the platform submission then this is the primary taxon
         if ( platformTaxa.size() == 1 ) {
-            log.info( "Only 1 taxon given on GEO platform: " + platformTaxa.iterator().next() );
+            log.debug( "Only 1 taxon given on GEO platform: " + platformTaxa.iterator().next() );
             return platformTaxa.iterator().next();
         }
 
         // If there are multiple taxa on array
         else if ( platformTaxa.size() > 1 ) {
-            log.info( platformTaxa.size() + " taxa in GEO platform" );
+            log.debug( platformTaxa.size() + " taxa in GEO platform" );
             // check if they share a common parent taxon to use as primary taxa.
             Collection<Taxon> parentTaxa = new HashSet<Taxon>();
             for ( Taxon platformTaxon : platformTaxa ) {
@@ -2796,12 +2802,12 @@ public class GeoConverter implements Converter<Object, Object> {
             // check now if we only have one parent taxon adn check if no null, if a null then there was a taxon with no
             // parent
             if ( !( parentTaxa.contains( null ) ) && parentTaxa.size() == 1 ) {
-                log.info( "Parent taxon found " + parentTaxa );
+                log.debug( "Parent taxon found " + parentTaxa );
                 return parentTaxa.iterator().next();
             }
             // No common parent then calculate based on probe taxa:
 
-            log.info( "Looking at probe taxa to determine 'primary' taxon" );
+            log.debug( "Looking at probe taxa to determine 'primary' taxon" );
             // create a hashmap keyed on taxon with a counter to count the number of probes for that taxon.
             Map<String, Integer> taxonProbeNumberList = new HashMap<String, Integer>();
 

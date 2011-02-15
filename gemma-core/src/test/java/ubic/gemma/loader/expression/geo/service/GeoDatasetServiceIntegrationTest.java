@@ -206,6 +206,11 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
         geoService.fetchAndLoad( accession, false, false, false, false );
     }
 
+    // @Test
+    // public void test() throws Exception {
+    // fetchASeries( "GSE3443" );
+    // }
+
     /**
      * @param matrix
      */

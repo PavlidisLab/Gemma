@@ -38,6 +38,8 @@ import ubic.gemma.loader.expression.geo.util.GeoConstants;
  */
 public class GeoPlatform extends GeoData {
 
+    private static final long serialVersionUID = 1L;
+
     private static Log log = LogFactory.getLog( GeoPlatform.class.getName() );
 
     /**
@@ -126,7 +128,9 @@ public class GeoPlatform extends GeoData {
     }
 
     /**
-     * @param designElement
+     * Add a value to a column. A special case is when the column is of the probe ids (design element name).
+     * 
+     * @param columnName
      * @param value
      */
     public void addToColumnData( String columnName, String value ) {
@@ -135,7 +139,7 @@ public class GeoPlatform extends GeoData {
             platformInformation.put( columnName, new ArrayList<String>() );
         }
 
-        // don't add values twice. Occurs in corrupt files.
+        // don't add design elements twice. Occurs in corrupt files, but see bug 2054
         if ( GeoConstants.likelyId( columnName ) ) {
             if ( designElements.contains( value ) ) {
 
@@ -145,8 +149,8 @@ public class GeoPlatform extends GeoData {
 
                 // log.warn( "Column " + columnName + " contains the value " + value
                 // + " twice; check the GEO file for validity!" );
-                throw new IllegalStateException( "Column " + columnName + " contains the value " + value
-                        + " twice; check the GEO file for validity!" );
+                throw new IllegalStateException( "In platform " + geoAccession + ": Column " + columnName
+                        + " contains the value " + value + " twice; check the GEO file for validity!" );
                 // return;
             }
             designElements.add( value );
