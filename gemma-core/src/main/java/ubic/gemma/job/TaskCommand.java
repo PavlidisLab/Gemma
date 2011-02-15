@@ -127,8 +127,9 @@ public class TaskCommand implements Serializable {
         assert context != null;
         this.securityContext = context;
         Authentication authentication = context.getAuthentication();
-        assert authentication != null;
-        this.submitter = authentication.getName();
+
+        // can happen in test situations.
+        if ( authentication != null ) this.submitter = authentication.getName();
 
     }
 
