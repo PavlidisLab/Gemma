@@ -68,12 +68,14 @@ public class BatchInfoPopulationService {
 
     /**
      * How many hours do we allow to pass between samples, before we consider them to be a separate batch (if they are
-     * not run on the same day)
+     * not run on the same day). This 'slack' is necessary to allow for the possibility that all the hybridizations were
+     * run together, but the scanning took a while to complete. Of course we are still always recording the actual
+     * dates, this is only used for the creation of ExperimentalFactors.
      */
     private static final int MAX_GAP_BETWEEN_SAMPLES_TO_BE_SAME_BATCH = 2;
 
     /**
-     * Delete unpacked raw data files when done?
+     * Delete unpacked raw data files when done? The zipped/tarred archived will be left alone anyway.
      */
     private static final boolean CLEAN_UP = true;
 
@@ -251,7 +253,9 @@ public class BatchInfoPopulationService {
     }
 
     /**
-     * Apply some heuristics to condense the dates down to batches.
+     * Apply some heuristics to condense the dates down to batches. For example, we might assume dates very close
+     * together (same day or within MAX_GAP_BETWEEN_SAMPLES_TO_BE_SAME_BATCH) are to be treated as the same batch (see
+     * implementation for details).
      * 
      * @param allDates
      * @return
@@ -311,11 +315,6 @@ public class BatchInfoPopulationService {
         ef.setName( "batch" );
         ef
                 .setDescription( "Scan date or similar proxy for 'sample processing batch' extracted from the raw data files." );
-        /*
-         * Category should be consistent. There is no term for this! Closest is in mass spec
-         * http://bioportal.bioontology.org/visualize/45093/?conceptid=MS%3A1000053
-         */
-        // ef.setCategory( createCategoryCharacteristic( efvo.getCategory(), efvo.getCategoryUri() ) );
 
         ef = persistFactor( ee, ef );
         return ef;
@@ -332,12 +331,14 @@ public class BatchInfoPopulationService {
     }
 
     /**
+     * Currently only supports GEO
+     * 
      * @param ee
      * @return
      */
     private Collection<LocalFile> fetchRawDataFiles( ExpressionExperiment ee ) {
-        RawDataFetcher fetcher = new RawDataFetcher(); // FIXME GEO only
-        return fetcher.fetch( ee.getAccession().getAccession() ); // FIXME won't always work, need actual identifier.
+        RawDataFetcher fetcher = new RawDataFetcher();
+        return fetcher.fetch( ee.getAccession().getAccession() );
     }
 
     /**
@@ -353,8 +354,6 @@ public class BatchInfoPopulationService {
     }
 
     /**
-     * FIXME this might need to be folded into the other method.
-     * 
      * @param ee
      * @param factor
      * @return
@@ -366,6 +365,7 @@ public class BatchInfoPopulationService {
          * Note: this call should not be needed because of cascade behaviour.
          */
         // experimentalFactorService.create( ef );
+
         if ( ed.getExperimentalFactors() == null ) ed.setExperimentalFactors( new HashSet<ExperimentalFactor>() );
         ed.getExperimentalFactors().add( factor );
 
