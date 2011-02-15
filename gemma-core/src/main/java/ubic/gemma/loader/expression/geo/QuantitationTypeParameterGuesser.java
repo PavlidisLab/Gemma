@@ -144,6 +144,7 @@ public class QuantitationTypeParameterGuesser {
         scaleDescPatterns.get( ScaleType.LOG2 ).add( ".*log( )?2.*" );
         scaleDescPatterns.get( ScaleType.LOG10 ).add( ".*log( )?10.*" );
         scaleDescPatterns.get( ScaleType.LOGBASEUNKNOWN ).add( ".*log( )?(?!(10|2)).*" );
+        scaleDescPatterns.get( ScaleType.LOG2 ).add( "log (base 2)" );
 
         scaleNamePatterns.get( ScaleType.PERCENT ).add( "^%.*" );
         scaleNamePatterns.get( ScaleType.PERCENT ).add( "pergtbch[12].*" );
