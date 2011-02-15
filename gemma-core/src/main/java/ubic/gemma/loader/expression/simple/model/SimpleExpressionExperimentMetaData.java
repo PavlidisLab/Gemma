@@ -78,6 +78,7 @@ public class SimpleExpressionExperimentMetaData extends TaskCommand {
     private TechnologyType technologyType;
 
     public SimpleExpressionExperimentMetaData() {
+        super();
         this.arrayDesigns = new HashSet<ArrayDesign>();
         this.arrayDesignIds = new HashSet<Long>();
     }
