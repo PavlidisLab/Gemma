@@ -165,28 +165,36 @@ public class TwoChannelMissingValues {
         ExpressionDataDoubleMatrix signalDataB = builder.getSignalChannelB();
 
         if ( builder.isAnyMissing() ) {
-            for ( QuantitationType qt : bkgDataA.getQuantitationTypes() ) {
-                if ( builder.getNumMissingValues( qt ) > 0 ) {
-                    log.warn( "Missing values in bkgDataA" );
-                    break;
+            if ( bkgDataA != null ) {
+                for ( QuantitationType qt : bkgDataA.getQuantitationTypes() ) {
+                    if ( builder.getNumMissingValues( qt ) > 0 ) {
+                        log.warn( "Missing values in bkgDataA" );
+                        break;
+                    }
                 }
             }
-            for ( QuantitationType qt : bkgDataB.getQuantitationTypes() ) {
-                if ( builder.getNumMissingValues( qt ) > 0 ) {
-                    log.warn( "Missing values in bkgDataB" );
-                    break;
+            if ( bkgDataB != null ) {
+                for ( QuantitationType qt : bkgDataB.getQuantitationTypes() ) {
+                    if ( builder.getNumMissingValues( qt ) > 0 ) {
+                        log.warn( "Missing values in bkgDataB" );
+                        break;
+                    }
                 }
             }
-            for ( QuantitationType qt : signalDataA.getQuantitationTypes() ) {
-                if ( builder.getNumMissingValues( qt ) > 0 ) {
-                    log.warn( "Missing values in signalDataA" );
-                    break;
+            if ( signalDataA != null ) {
+                for ( QuantitationType qt : signalDataA.getQuantitationTypes() ) {
+                    if ( builder.getNumMissingValues( qt ) > 0 ) {
+                        log.warn( "Missing values in signalDataA" );
+                        break;
+                    }
                 }
             }
-            for ( QuantitationType qt : signalDataB.getQuantitationTypes() ) {
-                if ( builder.getNumMissingValues( qt ) > 0 ) {
-                    log.warn( "Missing values in signalDataB" );
-                    break;
+            if ( signalDataB != null ) {
+                for ( QuantitationType qt : signalDataB.getQuantitationTypes() ) {
+                    if ( builder.getNumMissingValues( qt ) > 0 ) {
+                        log.warn( "Missing values in signalDataB" );
+                        break;
+                    }
                 }
             }
         }
@@ -269,6 +277,7 @@ public class TwoChannelMissingValues {
             vect.setQuantitationType( present );
             vect.setExpressionExperiment( source );
             vect.setDesignElement( designElement );
+            assert baseChannel != null;
             vect.setBioAssayDimension( baseChannel.getBioAssayDimension( designElement ) );
 
             int numCols = preferred.columns( designElement );
