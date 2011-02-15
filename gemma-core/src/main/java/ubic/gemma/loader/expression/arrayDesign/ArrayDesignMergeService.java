@@ -65,8 +65,10 @@ public class ArrayDesignMergeService {
             + "(\\d )+$";
     @Autowired
     AuditTrailService auditTrailService;
+    
     @Autowired
     ArrayDesignService arrayDesignService;
+    
     @Autowired
     PersisterHelper persisterHelper;
 
@@ -106,7 +108,8 @@ public class ArrayDesignMergeService {
                     + arrayDesign + ")" );
         }
 
-        makeBioSeqMap( globalBsMap, arrayDesignService.thaw( arrayDesign ) );
+        ArrayDesign adThawed = arrayDesignService.thaw( arrayDesign );
+        makeBioSeqMap( globalBsMap, adThawed );
 
         log.info( globalBsMap.keySet().size() + " sequences in first array design." );
 
@@ -117,7 +120,7 @@ public class ArrayDesignMergeService {
                         + otherArrayDesign + ")" );
             }
 
-            if ( arrayDesign.equals( otherArrayDesign ) ) {
+            if ( adThawed.equals( otherArrayDesign ) ) {
                 continue;
             }
             log.info( "Processing " + otherArrayDesign );
@@ -128,7 +131,7 @@ public class ArrayDesignMergeService {
 
         }
 
-        return createMerged( arrayDesign, otherArrayDesigns, globalBsMap, nameOfNewDesign, shortNameOfNewDesign, add );
+        return createMerged( adThawed, otherArrayDesigns, globalBsMap, nameOfNewDesign, shortNameOfNewDesign, add );
     }
 
     public void setArrayDesignReportService( ArrayDesignReportService arrayDesignReportService ) {
