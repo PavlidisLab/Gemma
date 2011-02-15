@@ -26,7 +26,8 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext.extend(Ext.tree.TreePanel,
 		layout: 'fit',
 		root:{text:'root'},
 		// for drawing charts
-		percentUpProbes:[],
+		contrastPercents:[],
+		
 		listeners:{
 			afterrender: function(){this.drawPieCharts();},
 			expandnode: function(){this.drawPieCharts();}
@@ -40,6 +41,8 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext.extend(Ext.tree.TreePanel,
 		initComponent : function(){
 			Gemma.DifferentialExpressionAnalysesSummaryTree.superclass.initComponent.call(this);
 			this.build();
+			var sorter = new Ext.tree.TreeSorter(this,{});
+			sorter.doSort(this.getRootNode());
 		},
 		build:function(){
 				var analyses = this.ee.differentialExpressionAnalyses;
@@ -200,8 +203,10 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext.extend(Ext.tree.TreePanel,
 					}//just being overly safe here
 					
 					parentNode.setText(analysisDesc + parentText + subsetText + " " + parentNode.text);
+					
 				}
 	},
+	
 	/**
 	 * get the number of probes that are differentially expressed and the number of 'up' and 'down' probes
 	 * @return String text with numbers
@@ -225,10 +230,12 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext.extend(Ext.tree.TreePanel,
 		
 		// save number of up regulated probes for drawing as chart after tree has been rendered
 		// if there are no up or down regulated probes, draw an empty circle
-		if(resultSet.downregulatedCount== 0 && resultSet.upregulatedCount == 0){
-			this.percentUpProbes[nodeId]=null;	
+		if((resultSet.downregulatedCount== 0 && resultSet.upregulatedCount == 0)
+				|| resultSet.numberOfDiffExpressedProbes==0){
+			this.contrastPercents[nodeId]=null;	
 		}else{
-			this.percentUpProbes[nodeId]=resultSet.upregulatedCount/resultSet.numberOfDiffExpressedProbes;
+			this.contrastPercents[nodeId]={'up':resultSet.upregulatedCount/resultSet.numberOfDiffExpressedProbes,
+										'down':resultSet.downregulatedCount/resultSet.numberOfDiffExpressedProbes};
 		}
 		return numbers;	 
 	},
@@ -281,14 +288,18 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext.extend(Ext.tree.TreePanel,
 	},
 	drawPieCharts: function(){
 		var ctx, up;
-		for (i = 0; i < this.percentUpProbes.size(); i++) {
+		for (i = 0; i < this.contrastPercents.size(); i++) {
 			if (Ext.get('chartDiv' + i)) {
-				up = this.percentUpProbes[i];
+				up = this.contrastPercents[i].up;
+				down = this.contrastPercents[i].down;
 				ctx = Ext.get('chartDiv' + i).dom.getContext("2d");
 				if(up == null){
-					drawTwoColourMiniPie(ctx, 12, 12, 14, 'white', 'white', up * 360, 'black');
+					drawTwoColourMiniPie(ctx, 12, 12, 14, 'white', 0, 'white', 360);
 				}else{
-					drawTwoColourMiniPie(ctx, 12, 12, 14, 'lightgrey', 'SteelBlue', up * 360, 'black');
+					//if percentage is less than 5%, round up to 5% so it's visible
+					if(up<0.05){up=0.05};
+					if(down<0.05){down=0.05};
+					drawTwoColourMiniPie(ctx, 12, 12, 14, 'green', up*360, 'red', down*360);
 				}
 				
 			}
