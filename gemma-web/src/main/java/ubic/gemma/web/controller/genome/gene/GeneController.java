@@ -234,16 +234,14 @@ public class GeneController extends BaseController {
     }
 
     /**
+     * Used to display the probe browser, when starting by gene.
+     * 
      * @param request
      * @param response
      * @return ModelAndView
      */
     @RequestMapping("/showCompositeSequences.html")
     public ModelAndView showCompositeSequences( HttpServletRequest request, HttpServletResponse response ) {
-
-        /*
-         * FIXME is this used?
-         */
 
         // gene id.
         Long id = Long.parseLong( request.getParameter( "id" ) );
