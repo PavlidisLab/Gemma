@@ -32,6 +32,7 @@ import org.junit.Test;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.util.RegressionTesting;
+import ubic.gemma.analysis.preprocess.svd.ExpressionDataSVD;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.datastructure.matrix.ExpressioDataTestMatrix;
 import ubic.gemma.loader.expression.geo.DatasetCombiner;
@@ -64,7 +65,7 @@ public class ExpressionDataSVDTest {
     }
 
     /**
-     * Test method for {@link ubic.gemma.analysis.preprocess.ExpressionDataSVD#getS()}.
+     * Test method for {@link ubic.gemma.analysis.preprocess.svd.ExpressionDataSVD#getS()}.
      */
     @Test
     public void testGetS() {
@@ -77,7 +78,7 @@ public class ExpressionDataSVDTest {
     }
 
     /**
-     * Test method for {@link ubic.gemma.analysis.preprocess.ExpressionDataSVD#getU()}.
+     * Test method for {@link ubic.gemma.analysis.preprocess.svd.ExpressionDataSVD#getU()}.
      */
     @Test
     public void testGetU() {
@@ -86,7 +87,7 @@ public class ExpressionDataSVDTest {
     }
 
     /**
-     * Test method for {@link ubic.gemma.analysis.preprocess.ExpressionDataSVD#svdNormalize()}.
+     * Test method for {@link ubic.gemma.analysis.preprocess.svd.ExpressionDataSVD#svdNormalize()}.
      */
     @Test
     public void testMatrixReconstruct() {

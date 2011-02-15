@@ -101,6 +101,9 @@
 				<value>
 					ubic.gemma.tasks.analysis.expression.BioAssayOutlierProcessingTask
 				</value>
+				<value>
+					ubic.gemma.tasks.analysis.SVDTask
+				</value>
 			</list>
 		</property>
 	</bean>
@@ -140,6 +143,18 @@
 		<property name="businessInterface">
 			<value>
 				ubic.gemma.tasks.maintenance.ExpressionExperimentReportTask
+			</value>
+		</property>
+	</bean>
+
+	<bean id="svdWorker" class="ubic.gemma.job.grid.worker.CustomDelegatingWorker" scope="prototype">
+		<property name="javaSpaceTemplate" ref="gigaspacesTemplate" />
+		<property name="delegate">
+			<ref bean="svdTask" />
+		</property>
+		<property name="businessInterface">
+			<value>
+				ubic.gemma.tasks.maintenance.SVDTask
 			</value>
 		</property>
 	</bean>
