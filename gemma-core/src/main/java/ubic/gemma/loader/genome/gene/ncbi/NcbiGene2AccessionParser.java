@@ -91,8 +91,6 @@ public class NcbiGene2AccessionParser extends BasicLineParser<NCBIGene2Accession
             return null;
         }
 
-        assert currentAccession != null;
-
         addResult( currentAccession ); // really doesn't serve much of a purpose
 
         /*
