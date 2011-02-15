@@ -1596,14 +1596,16 @@ public class SearchService implements InitializingBean {
         /*
          * Find data sets that match the platform -- TODO make this do something intelligent with GPL570 + brain.
          */
-        Collection<SearchResult> matchingPlatforms = arrayDesignSearch( settings, null );
-        for ( SearchResult adRes : matchingPlatforms ) {
-            if ( adRes.getResultObject() instanceof ArrayDesign ) {
-                ArrayDesign ad = ( ArrayDesign ) adRes.getResultObject();
-                Collection<ExpressionExperiment> expressionExperiments = this.arrayDesignService
-                        .getExpressionExperiments( ad );
-                if ( expressionExperiments.size() > 0 )
-                    results.addAll( dbHitsToSearchResult( expressionExperiments ) );
+        if ( results.size() == 0 ) {
+            Collection<SearchResult> matchingPlatforms = arrayDesignSearch( settings, null );
+            for ( SearchResult adRes : matchingPlatforms ) {
+                if ( adRes.getResultObject() instanceof ArrayDesign ) {
+                    ArrayDesign ad = ( ArrayDesign ) adRes.getResultObject();
+                    Collection<ExpressionExperiment> expressionExperiments = this.arrayDesignService
+                            .getExpressionExperiments( ad );
+                    if ( expressionExperiments.size() > 0 )
+                        results.addAll( dbHitsToSearchResult( expressionExperiments ) );
+                }
             }
         }
 
