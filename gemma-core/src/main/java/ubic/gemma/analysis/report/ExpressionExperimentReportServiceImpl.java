@@ -484,54 +484,6 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
         return vos;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.analysis.report.ExpressionExperimentReportService#retrieveSummaryObjects(java.util.Collection)
-     */
-    public Collection<ExpressionExperimentValueObject> retrieveSummaryObjects( Collection<Long> ids ) {
-        return retrieveValueObjects( ids );
-    }
-
-    public void setAuditEventService( AuditEventService auditEventService ) {
-        this.auditEventService = auditEventService;
-    }
-
-    /**
-     * @param auditTrailService the auditTrailService to set
-     */
-    public void setAuditTrailService( AuditTrailService auditTrailService ) {
-        this.auditTrailService = auditTrailService;
-    }
-
-    public void setDifferentialExpressionAnalysisService(
-            DifferentialExpressionAnalysisService differentialExpressionAnalysisService ) {
-        this.differentialExpressionAnalysisService = differentialExpressionAnalysisService;
-    }
-
-    public void setDifferentialExpressionResultService(
-            DifferentialExpressionResultService differentialExpressionResultService ) {
-        this.differentialExpressionResultService = differentialExpressionResultService;
-    }
-
-    /**
-     * @param expressionExperimentService the expressionExperimentService to set
-     */
-    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
-        this.expressionExperimentService = expressionExperimentService;
-    }
-
-    /**
-     * @param probe2ProbeCoexpressionService the probe2ProbeCoexpressionService to set
-     */
-    public void setProbe2ProbeCoexpressionService( Probe2ProbeCoexpressionService probe2ProbeCoexpressionService ) {
-        this.probe2ProbeCoexpressionService = probe2ProbeCoexpressionService;
-    }
-
-    public void setSecurityService( SecurityService securityService ) {
-        this.securityService = securityService;
-    }
-
     /**
      * @param eeid
      * @param threshold
@@ -588,11 +540,52 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
         return summaries;
     }
 
-    private Map<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>> getEvents(
-            Collection<ExpressionExperiment> ees, Collection<Class<? extends AuditEventType>> types ) {
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.analysis.report.ExpressionExperimentReportService#retrieveSummaryObjects(java.util.Collection)
+     */
+    public Collection<ExpressionExperimentValueObject> retrieveSummaryObjects( Collection<Long> ids ) {
+        return retrieveValueObjects( ids );
+    }
 
-        return auditEventService.getLastEvents( ees, types );
+    public void setAuditEventService( AuditEventService auditEventService ) {
+        this.auditEventService = auditEventService;
+    }
 
+    /**
+     * @param auditTrailService the auditTrailService to set
+     */
+    public void setAuditTrailService( AuditTrailService auditTrailService ) {
+        this.auditTrailService = auditTrailService;
+    }
+
+    public void setDifferentialExpressionAnalysisService(
+            DifferentialExpressionAnalysisService differentialExpressionAnalysisService ) {
+        this.differentialExpressionAnalysisService = differentialExpressionAnalysisService;
+    }
+
+    public void setDifferentialExpressionResultService(
+            DifferentialExpressionResultService differentialExpressionResultService ) {
+        this.differentialExpressionResultService = differentialExpressionResultService;
+    }
+
+    /**
+     * @param expressionExperimentService the expressionExperimentService to set
+     */
+    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
+        this.expressionExperimentService = expressionExperimentService;
+    }
+
+    /**
+     * @param probe2ProbeCoexpressionService the probe2ProbeCoexpressionService to set
+     */
+    public void setProbe2ProbeCoexpressionService( Probe2ProbeCoexpressionService probe2ProbeCoexpressionService ) {
+        this.probe2ProbeCoexpressionService = probe2ProbeCoexpressionService;
+    }
+
+    public void setSecurityService( SecurityService securityService ) {
+        this.securityService = securityService;
     }
 
     /**
@@ -635,6 +628,13 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
         return result;
     }
 
+    private Map<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>> getEvents(
+            Collection<ExpressionExperiment> ees, Collection<Class<? extends AuditEventType>> types ) {
+
+        return auditEventService.getLastEvents( ees, types );
+
+    }
+
     /**
      * @param id
      * @return
@@ -670,13 +670,14 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
         FileTools.createDir( HOME_DIR );
         FileTools.createDir( HOME_DIR + File.separatorChar + EE_REPORT_DIR );
         File f = new File( HOME_DIR + File.separatorChar + EE_REPORT_DIR );
-        Collection<File> files = new ArrayList<File>();
-        File[] fileArray = f.listFiles();
-        for ( File file : fileArray ) {
-            files.add( file );
-        }
+
         // clear out all files
         if ( deleteFiles ) {
+            Collection<File> files = new ArrayList<File>();
+            File[] fileArray = f.listFiles();
+            for ( File file : fileArray ) {
+                files.add( file );
+            }
             FileTools.deleteFiles( files );
         }
     }
