@@ -18,7 +18,6 @@
  */
 package ubic.gemma.web.controller.expression.experiment;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -31,24 +30,18 @@ import java.util.Map.Entry;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.commons.lang.StringEscapeUtils;
-import org.apache.commons.lang.StringUtils;
 import org.apache.tools.ant.filters.StringInputStream;
 import org.springframework.validation.BindException;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
-import org.xml.sax.SAXException;
 
-import ubic.gemma.loader.entrez.pubmed.PubMedSearch;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.auditAndSecurity.ContactService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.auditAndSecurity.eventType.BioMaterialMappingUpdate;
-import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.BibliographicReferenceService;
-import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.DatabaseType;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.ExternalDatabaseService;
@@ -357,6 +350,7 @@ public class ExpressionExperimentFormController extends BaseFormController {
             newBioMaterialCount = newBioMaterials.size();
 
             BioAssay bioAssay = bioAssayService.load( bioAssayId );
+            bioAssayService.thaw( bioAssay );
             Collection<BioMaterial> bMats = bioAssay.getSamplesUsed();
             Collection<Long> oldBioMaterials = new ArrayList<Long>();
             for ( BioMaterial material : bMats ) {
