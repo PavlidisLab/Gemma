@@ -16,6 +16,7 @@ DiseaseStaging
 ChromosomalAberrationClassification
 ClinicalHistory
 ClinicalTreatment
+ComplexAction
 Compound
 Cultivar
 Ecotype 

@@ -14,7 +14,7 @@ BioMaterialCharacteristicCategory - Out of scope
 BioSample - Out of scope
 BioSourceProvider
 BioSourceType
-ComplexAction
+#ComplexAction
 DataTransferProtocol
 FactorValue - Out of scope
 FactorValueDependency

@@ -17,6 +17,7 @@ ChromosomalAberrationClass
 ClinicalHistory
 ClinicalTreatment
 Compound
+ComplexAction
 Cultivar
 Ecotype 
 EnvironmentalHistory
