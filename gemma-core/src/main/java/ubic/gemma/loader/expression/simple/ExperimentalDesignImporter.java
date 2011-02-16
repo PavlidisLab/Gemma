@@ -43,7 +43,6 @@ public interface ExperimentalDesignImporter {
      * @param experiment
      * @param is
      * @param dryRun
-     * @throws IOException
      */
     @Transactional
     public void importDesign( ExpressionExperiment experiment, InputStream is, boolean dryRun ) throws IOException;

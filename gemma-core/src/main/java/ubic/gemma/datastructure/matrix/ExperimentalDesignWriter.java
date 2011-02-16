@@ -106,8 +106,8 @@ public class ExperimentalDesignWriter {
                 for ( FactorValue candidateFactorValue : candidateFactorValues ) {
                     if ( candidateFactorValue.getExperimentalFactor().equals( ef ) ) {
                         log.debug( candidateFactorValue.getExperimentalFactor() + " matched." );
-                        String matchedFactorValue = ExpressionDataWriterUtils.constructFactorValueName( ef,
-                                candidateFactorValue );
+                        String matchedFactorValue = ExpressionDataWriterUtils
+                                .constructFactorValueName( candidateFactorValue );
                         buf.append( matchedFactorValue );
                         break;
                     }

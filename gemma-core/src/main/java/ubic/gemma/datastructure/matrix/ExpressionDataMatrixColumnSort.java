@@ -73,6 +73,9 @@ public class ExpressionDataMatrixColumnSort {
     }
 
     /**
+     * For each factor, try to figure out which one should be treated as baseline using some heuristics. If more than
+     * one is viable, only the first one encountered will be marked as baseline.
+     * 
      * @param factors
      * @return
      */
@@ -83,6 +86,10 @@ public class ExpressionDataMatrixColumnSort {
         for ( ExperimentalFactor factor : factors ) {
             for ( FactorValue fv : factor.getFactorValues() ) {
                 if ( isBaselineCondition( fv ) ) {
+                    if ( result.containsKey( factor ) ) {
+                        log.warn( "A second potential baseline was found for " + factor + ": " + fv );
+                        continue;
+                    }
                     result.put( factor, fv );
                     continue;
                 }
@@ -286,20 +293,6 @@ public class ExpressionDataMatrixColumnSort {
     }
 
     /**
-     * Organize by id, because the order we got the samples in the first place is a reasonable fallback.
-     * 
-     * @param biomaterials
-     */
-    private static void sortBioMaterials( List<BioMaterial> biomaterials ) {
-        Collections.sort( biomaterials, new Comparator<BioMaterial>() {
-            @Override
-            public int compare( BioMaterial o1, BioMaterial o2 ) {
-                return o1.getId().compareTo( o2.getId() );
-            }
-        } );
-    }
-
-    /**
      * Choose the factor with the smallest number of categories
      * 
      * @param bms
@@ -450,39 +443,6 @@ public class ExpressionDataMatrixColumnSort {
     }
 
     /**
-     * @param factorValue
-     * @return
-     */
-    private static boolean isBaselineCondition( FactorValue factorValue ) {
-
-        if ( factorValue.getIsBaseline() != null ) return factorValue.getIsBaseline();
-
-        // for backwards compatibility we check anyway
-
-        if ( factorValue.getMeasurement() != null ) {
-            return false;
-        } else if ( factorValue.getCharacteristics().isEmpty() ) {
-            if ( StringUtils.isNotBlank( factorValue.getValue() )
-                    && controlGroupTerms.contains( factorValue.getValue().toLowerCase() ) ) {
-                return true;
-            }
-        } else {
-            for ( Characteristic c : factorValue.getCharacteristics() ) {
-                if ( c instanceof VocabCharacteristic ) {
-                    String valueUri = ( ( VocabCharacteristic ) c ).getValueUri();
-                    if ( StringUtils.isNotBlank( valueUri ) && controlGroupTerms.contains( valueUri.toLowerCase() ) ) {
-                        return true;
-                    }
-                } else if ( StringUtils.isNotBlank( c.getValue() )
-                        && controlGroupTerms.contains( c.getValue().toLowerCase() ) ) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    /**
      * @param ef
      * @param fv2bms map of factorValues to lists of biomaterials that have that factorValue.
      * @param bms Chunk of biomaterials to organize.
@@ -605,6 +565,20 @@ public class ExpressionDataMatrixColumnSort {
     }
 
     /**
+     * Organize by id, because the order we got the samples in the first place is a reasonable fallback.
+     * 
+     * @param biomaterials
+     */
+    private static void sortBioMaterials( List<BioMaterial> biomaterials ) {
+        Collections.sort( biomaterials, new Comparator<BioMaterial>() {
+            @Override
+            public int compare( BioMaterial o1, BioMaterial o2 ) {
+                return o1.getId().compareTo( o2.getId() );
+            }
+        } );
+    }
+
+    /**
      * Put control factorvalues first.
      * 
      * @param factorValues
@@ -658,5 +632,45 @@ public class ExpressionDataMatrixColumnSort {
                 }
             }
         } );
+    }
+
+    /**
+     * @param factorValue
+     * @return
+     */
+    protected static boolean isBaselineCondition( FactorValue factorValue ) {
+
+        if ( factorValue.getIsBaseline() != null ) return factorValue.getIsBaseline();
+
+        // for backwards compatibility we check anyway
+
+        if ( factorValue.getMeasurement() != null ) {
+            return false;
+        } else if ( factorValue.getCharacteristics().isEmpty() ) {
+            /*
+             * Just use the value.
+             */
+            if ( StringUtils.isNotBlank( factorValue.getValue() )
+                    && controlGroupTerms.contains( factorValue.getValue().toLowerCase() ) ) {
+                return true;
+            }
+        } else {
+            for ( Characteristic c : factorValue.getCharacteristics() ) {
+                if ( c instanceof VocabCharacteristic ) {
+                    String valueUri = ( ( VocabCharacteristic ) c ).getValueUri();
+                    if ( StringUtils.isNotBlank( valueUri ) && controlGroupTerms.contains( valueUri.toLowerCase() ) ) {
+                        return true;
+                    }
+                    if ( StringUtils.isNotBlank( c.getValue() )
+                            && controlGroupTerms.contains( c.getValue().toLowerCase() ) ) {
+                        return true;
+                    }
+                } else if ( StringUtils.isNotBlank( c.getValue() )
+                        && controlGroupTerms.contains( c.getValue().toLowerCase() ) ) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 }

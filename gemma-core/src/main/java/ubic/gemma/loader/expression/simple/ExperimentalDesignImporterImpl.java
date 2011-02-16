@@ -140,6 +140,7 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
      * @param is File to process
      * @param Expression experiment the one to add the experimental design
      * @param boolean a bit redundant dry run
+     * @param boolean if validation should be strict. This is useful for testing.
      * @see ubic.gemma.loader.expression.simple.ExperimentalDesignImporter#importDesign(ubic.gemma.model.expression.experiment
      *      .ExpressionExperiment, java.io.InputStream, boolean)
      */
@@ -486,6 +487,10 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
             String[] factorValueFields = StringUtils.splitPreserveAllTokens( factorValueLine, "\t" );
             BioMaterial currentBioMaterial = getBioMaterialFromExpressionExperiment( experiment, factorValueFields[0] );
 
+            if ( currentBioMaterial == null ) {
+                throw new IllegalStateException( "No biomaterial for " + factorValueFields[0] );
+            }
+
             for ( int i = 1; i < factorValueFields.length; i++ ) {
                 ExperimentalFactor currentExperimentalFactor = null;
                 String currentExperimentalFactorName = StringUtils.strip( headerFields[i] );
@@ -645,8 +650,22 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
 
         Map<String, BioMaterial> biomaterialsInExpressionExperiment = new HashMap<String, BioMaterial>();
         for ( BioAssay ba : expressionExperiment.getBioAssays() ) {
-            BioMaterial bm = ba.getSamplesUsed().iterator().next();// FIXME handle the case of a collection;
-            biomaterialsInExpressionExperiment.put( bm.getName(), bm );
+            for ( BioMaterial bm : ba.getSamplesUsed() ) {
+                biomaterialsInExpressionExperiment.put( bm.getName(), bm );
+
+                /*
+                 * Allow matches to the accession of the bioassay; trying to be flexible! This _could_ cause problems if
+                 * there are multiple bioassays per biomaterial
+                 */
+                if ( ba.getAccession() != null && ba.getAccession().getAccession() != null ) {
+                    String accession = ba.getAccession().getAccession();
+                    /*
+                     * We get at most one bioassay per biomaterial.
+                     */
+                    biomaterialsInExpressionExperiment.put( accession, bm );
+                }
+            }
+
         }
 
         String[] factorValueFields = StringUtils.splitPreserveAllTokens( factorValueLine, "\t" );
@@ -657,7 +676,7 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
         // connected to fix to allow duplicate bioassay names across datasets
         BioMaterial bioMaterial = biomaterialsInExpressionExperiment.get( bioMaterialNameFormatedWithShortName );
         if ( bioMaterial == null ) {
-            log.debug( "Name is without short name of experiment appeneded " + biomaterialNameFromFile );
+            log.debug( "Name is without short name of experiment appended " + biomaterialNameFromFile );
             bioMaterial = biomaterialsInExpressionExperiment.get( biomaterialNameFromFile );
         }
         return bioMaterial;

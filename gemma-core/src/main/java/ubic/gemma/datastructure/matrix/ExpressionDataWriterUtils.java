@@ -24,6 +24,7 @@ import java.util.Iterator;
 
 import org.apache.commons.lang.StringUtils;
 
+import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
@@ -120,15 +121,29 @@ public class ExpressionDataWriterUtils {
     }
 
     /**
-     * Replaces spaces and hyphens with underscores and removes the factor preamble ("factor name:").
+     * Replaces spaces and hyphens with underscores.
      * 
      * @param factor
      * @param factorValue
      * @return
      */
-    public static String constructFactorValueName( ExperimentalFactor factor, FactorValue factorValue ) {
-        String matchedFactorValue = factorValue.toString();
-        matchedFactorValue = StringUtils.removeStart( matchedFactorValue, factor.getName() + ":" );
+    public static String constructFactorValueName( FactorValue factorValue ) {
+
+        StringBuilder buf = new StringBuilder();
+
+        if ( factorValue.getCharacteristics().size() > 0 ) {
+            for ( Characteristic c : factorValue.getCharacteristics() ) {
+                buf.append( StringUtils.strip( c.getValue() ) );
+                if ( factorValue.getCharacteristics().size() > 1 ) buf.append( " | " );
+            }
+        } else if ( factorValue.getMeasurement() != null ) {
+            buf.append( factorValue.getMeasurement().getValue() );
+        } else if ( StringUtils.isNotBlank( factorValue.getValue() ) ) {
+            buf.append( StringUtils.strip( factorValue.getValue() ) );
+        }
+
+        String matchedFactorValue = buf.toString();
+
         matchedFactorValue = matchedFactorValue.trim();
         matchedFactorValue = matchedFactorValue.replaceAll( "-", "_" );
         matchedFactorValue = matchedFactorValue.replaceAll( "\\s", "_" );
