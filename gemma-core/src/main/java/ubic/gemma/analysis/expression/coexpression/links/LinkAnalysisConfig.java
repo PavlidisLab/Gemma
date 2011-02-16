@@ -72,7 +72,7 @@ public class LinkAnalysisConfig implements Serializable {
      */
     public enum SingularThreshold {
         none, fwe, cdfcut
-    };
+    }
 
     private SingularThreshold singularThreshold = SingularThreshold.none; // fwe|cdfCut
     private boolean subset = false;

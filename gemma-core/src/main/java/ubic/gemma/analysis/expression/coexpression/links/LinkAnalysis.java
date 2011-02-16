@@ -97,8 +97,7 @@ public class LinkAnalysis {
         log.debug( "Taxon: " + this.taxon.getCommonName() );
 
         if ( this.probeToGeneMap.size() == 0 ) {
-            throw new IllegalStateException(
-                    "No genes found for this dataset. Do the associated array designs need processing?" );
+            log.warn( "No genes found for this dataset. Do the associated array designs need processing?" );
         }
 
         log.info( "Current Options: \n" + this.config );
@@ -107,6 +106,11 @@ public class LinkAnalysis {
         if ( Thread.currentThread().isInterrupted() ) {
             log.info( "Cancelled." );
             return;
+        }
+
+        if ( metricMatrix.getNumUniqueGenes() == 0 ) {
+            throw new UnsupportedOperationException(
+                    "Link analysis not supported when there are no genes mapped to the data set." );
         }
 
         this.getLinks();
@@ -345,10 +349,13 @@ public class LinkAnalysis {
         double maxP = 1.0;
         double scoreAtP = 0.0;
         if ( config.getFwe() != 0.0 ) {
-            maxP = config.getFwe() / metricMatrix.getNumUniqueGenes(); // bonferroni.
+            double numUniqueGenes = metricMatrix.getNumUniqueGenes();
+
+            maxP = config.getFwe() / numUniqueGenes; // bonferroni.
+
             scoreAtP = CorrelationStats.correlationForPvalue( maxP, this.dataMatrix.columns() );
             log.info( "Minimum correlation to get " + form.format( maxP ) + " is about " + form.format( scoreAtP )
-                    + " for " + metricMatrix.getNumUniqueGenes() + " unique items (if all " + this.dataMatrix.columns()
+                    + " for " + numUniqueGenes + " unique items (if all " + this.dataMatrix.columns()
                     + " items are present)" );
             if ( scoreAtP > 0.9 ) {
                 log.warn( "This data set has a very high threshold for statistical significance!" );

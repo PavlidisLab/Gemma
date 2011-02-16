@@ -202,6 +202,7 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.analysis.expression.coexpression.links.MatrixRowPairAnalysis#size()
      */
     public int size() {
@@ -292,7 +293,7 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
      */
     protected int fillUsed() {
 
-        int numMissing = 0;
+        int missingCount = 0;
         int numrows = this.dataMatrix.rows();
         int numcols = this.dataMatrix.columns();
         hasMissing = new boolean[numrows];
@@ -305,7 +306,7 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
             int rowmissing = 0;
             for ( int j = 0; j < numcols; j++ ) {
                 if ( Double.isNaN( this.dataMatrix.get( i, j ) ) ) {
-                    numMissing++;
+                    missingCount++;
                     rowmissing++;
                     used.put( i, j, false );
                 } else {
@@ -315,12 +316,12 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
             hasMissing[i] = ( rowmissing > 0 );
         }
 
-        if ( numMissing == 0 ) {
+        if ( missingCount == 0 ) {
             log.info( "No missing values" );
         } else {
-            log.info( numMissing + " missing values" );
+            log.info( missingCount + " missing values" );
         }
-        return numMissing;
+        return missingCount;
     }
 
     /**
@@ -536,7 +537,7 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
     }
 
     /**
-     * populate geneToProbeMap and gather stats.
+     * populate geneToProbeMap and gather stats. Probes that do not map to any genes are still counted.
      */
     private void initGeneToProbeMap() {
         int[] stats = new int[20]; // how many genes per probe
@@ -550,7 +551,14 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
             }
 
             Collection<Collection<Gene>> genes = probeToGeneMap.get( cs );
+
+            /*
+             * Genes will be empty if the probe does not map to any genes.
+             */
+            if ( genes == null ) continue; // defensive.
+
             for ( Collection<Gene> cluster : genes ) {
+                if ( cluster.isEmpty() ) continue;
                 numUniqueGenes++;
                 for ( Gene g : cluster ) {
                     if ( !geneToProbeMap.containsKey( g ) ) {
@@ -567,6 +575,12 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
                 }
             }
         }
-        log.info( "Mapping Stats: " + numUniqueGenes + " unique genes; genes per probe distribution: " + ArrayUtils.toString( stats ) );
+
+        if ( numUniqueGenes == 0 ) {
+            log.warn( "There are no genes for this data set, " + this.flatProbe2GeneMap.size() + " probes." );
+        }
+
+        log.info( "Mapping Stats: " + numUniqueGenes + " unique genes; genes per probe distribution summary: "
+                + ArrayUtils.toString( stats ) );
     }
 }

@@ -44,6 +44,7 @@ import cern.colt.list.ObjectArrayList;
  * This class is used in reality by one pass over the data to fill in the histogram. This is used to help select a
  * threshold. A second pass over the data is used to select correlations that meet the criteria.
  * <p>
+ * Probes that do not map to genes are not used.
  * 
  * @author Paul Pavlidis
  * @version $Id$
@@ -209,6 +210,7 @@ public class MatrixRowPairPearsonAnalysis extends AbstractMatrixRowPairAnalysis 
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.analysis.linkAnalysis.MatrixRowPairAnalysis#getMetricType()
      */
     public QuantitationType getMetricType() {
@@ -230,7 +232,7 @@ public class MatrixRowPairPearsonAnalysis extends AbstractMatrixRowPairAnalysis 
 
     /**
      * Calculate a linear correlation matrix for a matrix. Use this if you know there are no missing values, or don't
-     * care about NaNs.
+     * care about NaNs. Rows that are not mapped to genes are skipped.
      * 
      * @param duplicates The map containing information about what items are the 'same' as other items; such are
      *        skipped.
@@ -291,13 +293,14 @@ public class MatrixRowPairPearsonAnalysis extends AbstractMatrixRowPairAnalysis 
                         + " " + ( keepers.size() > 0 ? keepers.size() + " scores retained" : "" ) );
             }
         }
-        log.info( skipped + " rows skipped, due to no BLAT association" );
+        log.info( skipped + " rows skipped, due to no gene association" );
         finishMetrics();
 
     }
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.analysis.linkAnalysis.MatrixRowPairAnalysis#correctedPvalue(int, int, double, int)
      */
     public double correctedPvalue( int i, int j, double correl, int numused ) {

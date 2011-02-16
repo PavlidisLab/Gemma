@@ -379,7 +379,6 @@ public class LinkAnalysisService {
      * @param eeDoubleMatrix
      * @return map of probes to vectors.
      */
-    @SuppressWarnings("unchecked")
     private void getProbe2GeneMap( LinkAnalysis la, Collection<ProcessedExpressionDataVector> dataVectors,
             ExpressionDataDoubleMatrix eeDoubleMatrix ) {
         log.info( "Getting probe-to-gene map for retained probes." );
@@ -400,7 +399,7 @@ public class LinkAnalysisService {
         Map<CompositeSequence, Collection<Collection<Gene>>> probeToGeneMap = new HashMap<CompositeSequence, Collection<Collection<Gene>>>();
         for ( CompositeSequence cs : specificityData.keySet() ) {
             if ( !probeToGeneMap.containsKey( cs ) ) {
-                probeToGeneMap.put( cs, new HashSet() );
+                probeToGeneMap.put( cs, new HashSet<Collection<Gene>>() );
             }
             Collection<BioSequence2GeneProduct> bioSequenceToGeneProducts = specificityData.get( cs );
             Collection<Gene> cluster = new HashSet<Gene>();
@@ -408,7 +407,11 @@ public class LinkAnalysisService {
                 Gene gene = bioSequence2GeneProduct.getGeneProduct().getGene();
                 cluster.add( gene );
             }
-            probeToGeneMap.get( cs ).add( cluster );
+
+            /*
+             * This is important. We leave the collection empty unless there are actually genes mapped.
+             */
+            if ( !cluster.isEmpty() ) probeToGeneMap.get( cs ).add( cluster );
         }
 
         la.setProbeToGeneMap( probeToGeneMap );
