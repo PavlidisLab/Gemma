@@ -40,8 +40,9 @@ MiniPieLib.drawMiniPie = function(ctx, x, y, size, color, value)
 	 * @param {int} valueOne size of slice one in degrees
 	 * @param {String} colourTwo colour for slice two of the pie
 	 * @param {int} valueTwo size of slice two in degrees
+	 * @param {String} outlineColour colour for the pie outline
 	 */
-function drawTwoColourMiniPie(ctx, x, y, size, colourOne, valueOne, colourTwo, valueTwo){
+function drawTwoColourMiniPie(ctx, x, y, size, colourOne, valueOne, colourTwo, valueTwo, outlineColour){
 	    ctx.save();
 	    ctx.fillStyle = '#E0E0E0';
 	    ctx.moveTo(x, y);
@@ -67,7 +68,8 @@ function drawTwoColourMiniPie(ctx, x, y, size, colourOne, valueOne, colourTwo, v
 		// draw circle outline
 	    ctx.beginPath();
 	    ctx.arc(x,y,size/2, Math.PI*3/2 , Math.PI*3/2+(Math.PI*2),false);
-	    ctx.strokeStyle = 'black';
+	    ctx.lineWidth = 0.75;
+	    ctx.strokeStyle = outlineColour;
 	    ctx.stroke();
 	    
 	    ctx.restore();			

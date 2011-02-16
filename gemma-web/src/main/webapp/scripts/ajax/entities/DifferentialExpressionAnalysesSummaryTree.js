@@ -41,11 +41,23 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext.extend(Ext.tree.TreePanel,
 		initComponent : function(){
 			Gemma.DifferentialExpressionAnalysesSummaryTree.superclass.initComponent.call(this);
 			this.build();
-			var sorter = new Ext.tree.TreeSorter(this,{});
-			sorter.doSort(this.getRootNode());
+			//var sorter = new Ext.tree.TreeSorter(this,{folderSort:false});
+			//if this parent node has an interaction child, that child should go last among its siblings
+			var sorter = new Ext.tree.TreeSorter(this,{
+				dir:'ASC',
+				sortType: function(node){
+					if(node.attributes.numberOfFactors){
+						return parseInt(node.attributes.numberOfFactors,10)+node.attributes.text;
+					}
+					return node.attributes.text
+				}
+			});
+			//sorter.doSort(this.getRootNode());
 		},
 		build:function(){
 				var analyses = this.ee.differentialExpressionAnalyses;
+				Ext.apply(this,{totalProbes:this.ee.processedExpressionVectorCount});
+				
 
 				//console.log("in build" + this.ee.differentialExpressionAnalyses);
 				// set the root node
@@ -104,7 +116,8 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext.extend(Ext.tree.TreePanel,
 						expanded: false,
 						singleClickExpand: true,
 						text: downloadDiffDataLink,
-						subsetIdent: subsetIdent
+						subsetIdent: subsetIdent,
+						leaf:false
 					});
 					
 					// add node to tree
@@ -143,14 +156,16 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext.extend(Ext.tree.TreePanel,
 						for (var i = 0; i < analysis.resultSets.size(); i++) {
 							//console.log("RESULT SET " + (i + 1) + " of " + analysis.resultSets.size());
 							var resultSet = analysis.resultSets[i];
-																					
+							
 							// get experimental factor string and build analysis parent node text
 							var analysisName = this.getFactorNameText(resultSet);
 							var factor = '<b>'+analysisName[0]+'</b>';
 							interaction += analysisName[1];
 							
+							// only grab factor name when 1 factor, otherwise will grab doubles from interaction
 							if (resultSet.experimentalFactors.size() == 1) {
-								parentText = (!parentText) ? factor : (parentText + " & " + factor);
+								// keep factors in alpha order
+								parentText = (!parentText) ? factor : (factor<parentText)?( factor + " & " + parentText):( parentText + " & " + factor);
 							}
 
 							var nodeText= '';
@@ -160,6 +175,8 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext.extend(Ext.tree.TreePanel,
 							else {
 								nodeText += this.getBaseline(resultSet);
 								nodeText += this.getActionLinks(resultSet,factor,this.ee.id,(nodeId+1));
+								
+								
 								//nodeText += this.getExpressionNumbers(resultSet);
 							}
 							
@@ -168,8 +185,12 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext.extend(Ext.tree.TreePanel,
 								id: 'node'+ (nodeId++),
 								expanded: true,
 								singleClickExpand: true,
-								text: factor + nodeText
+								text: factor + nodeText,
+								numberOfFactors:resultSet.experimentalFactors.size(),
+								leaf:true
 							});
+							
+							// if this node is the interaction result set, it goes last 
 							
 							parentNode.appendChild(analysisNode);
 							
@@ -204,6 +225,15 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext.extend(Ext.tree.TreePanel,
 					
 					parentNode.setText(analysisDesc + parentText + subsetText + " " + parentNode.text);
 					
+					//if this parent node has an interaction child, that child should go last among its siblings
+					var sorter = new Ext.tree.TreeSorter(this,{
+						dir:'ASC',
+						sortType: function(node){
+							return parseInt(node.attributes.numberOfFactors,10);
+						}
+					});
+					sorter.doSort(parentNode);
+					
 				}
 	},
 	
@@ -211,7 +241,7 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext.extend(Ext.tree.TreePanel,
 	 * get the number of probes that are differentially expressed and the number of 'up' and 'down' probes
 	 * @return String text with numbers
 	 */
-	getExpressionNumbers:function(resultSet, nodeId){
+	getExpressionNumbers:function(resultSet, nodeId, showThreshold){
 		/* Show how many probes are differentially expressed; */
 				
 		 var numbers = resultSet.numberOfDiffExpressedProbes +  ' probes' ;
@@ -225,8 +255,11 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext.extend(Ext.tree.TreePanel,
 			 numbers += ';&nbsp;' + resultSet.downregulatedCount
 			 + "&nbsp;Down";
 		// }
-		numbers += '. <br>Threshold value = '+resultSet.threshold;
-		numbers += (resultSet.qValue)?(', qvalue = '+resultSet.qValue):'';
+		if(showThreshold){
+			numbers += '. <br>Threshold value = '+resultSet.threshold;
+			numbers += (resultSet.qValue)?(', qvalue = '+resultSet.qValue):'';
+		}
+		
 		
 		// save number of up regulated probes for drawing as chart after tree has been rendered
 		// if there are no up or down regulated probes, draw an empty circle
@@ -234,8 +267,9 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext.extend(Ext.tree.TreePanel,
 				|| resultSet.numberOfDiffExpressedProbes==0){
 			this.contrastPercents[nodeId]=null;	
 		}else{
-			this.contrastPercents[nodeId]={'up':resultSet.upregulatedCount/resultSet.numberOfDiffExpressedProbes,
-										'down':resultSet.downregulatedCount/resultSet.numberOfDiffExpressedProbes};
+			this.contrastPercents[nodeId]={'up':resultSet.upregulatedCount/this.totalProbes,
+										'down':resultSet.downregulatedCount/this.totalProbes,
+										'diffExpressed':resultSet.numberOfDiffExpressedProbes/this.totalProbes};
 		}
 		return numbers;	 
 	},
@@ -248,12 +282,22 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext.extend(Ext.tree.TreePanel,
 	},
 	getActionLinks:function(resultSet, factor, eeID, nodeId){
 		/*link for details*/
-		var numbers = this.getExpressionNumbers(resultSet, nodeId);
+		var numbers = this.getExpressionNumbers(resultSet, nodeId,true);
 		var linkText = '&nbsp;' +
 		'<span class="link" onClick="Ext.Msg.alert(\'Probe Contrast Details\', \''+numbers+'\')" ext:qtip=\"'+numbers+'\">' +
-		'&nbsp;<canvas height=20 width=20 id="chartDiv'+nodeId+'"></canvas></span>';
-		/*+ '&nbsp;<img src="/Gemma/images/magnifier.png">&nbsp;</span>';*/
+		'&nbsp;<canvas height=20 width=20 id="chartDiv'+nodeId+'"></canvas>';
 		
+		// if the number of up or downregulated probes is 
+		// less than 5% of the total number of differentially expressed probes (but not 0),
+		// then insert text to highlight this
+		
+			var percentDifferentiallyExpressed = (resultSet.upregulatedCount+resultSet.downregulatedCount)/this.totalProbes;
+					
+		if((percentDifferentiallyExpressed< 0.05 && percentDifferentiallyExpressed > 0)){
+			linkText += " ["+((Math.round(percentDifferentiallyExpressed*100)==0)?"<1":Math.round(percentDifferentiallyExpressed*100))+"% diff. expr.]";
+		}
+		
+		linkText += '</span>';
 		/* provide link for visualization.*/
 		linkText += 
 		'<span class="link" onClick="Ext.getCmp(\'ee-details-panel\').visualizeDiffExpressionHandler(\'' +
@@ -287,19 +331,25 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext.extend(Ext.tree.TreePanel,
 		return [ factor, interaction];
 	},
 	drawPieCharts: function(){
-		var ctx, up;
+		var ctx, up, down, interesting;
 		for (i = 0; i < this.contrastPercents.size(); i++) {
 			if (Ext.get('chartDiv' + i)) {
 				up = this.contrastPercents[i].up;
 				down = this.contrastPercents[i].down;
 				ctx = Ext.get('chartDiv' + i).dom.getContext("2d");
-				if(up == null){
-					drawTwoColourMiniPie(ctx, 12, 12, 14, 'white', 0, 'white', 360);
+				interesting=false;
+				if(this.totalProbes==null || this.totalProbes==0 || this.contrastPercents[i]==null){
+					drawTwoColourMiniPie(ctx, 12, 12, 14, 'white', 0, 'white', 360,'black');
 				}else{
 					//if percentage is less than 5%, round up to 5% so it's visible
-					if(up<0.05){up=0.05};
-					if(down<0.05){down=0.05};
-					drawTwoColourMiniPie(ctx, 12, 12, 14, 'green', up*360, 'red', down*360);
+					if(up<0.05){up=0.05; interesting = true};
+					if(down<0.05){down=0.05; interesting = true};
+					if(interesting){
+						drawTwoColourMiniPie(ctx, 12, 12, 14, 'green', up*360, 'red', down*360,'black');
+					}else{
+						drawTwoColourMiniPie(ctx, 12, 12, 14, '#70C670', up*360, '#E78383', down*360,'grey');
+					}
+					
 				}
 				
 			}
