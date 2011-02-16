@@ -245,7 +245,7 @@ public class SVDServiceImpl implements SVDService {
                 /*
                  * Store in the SVDO.
                  */
-                // svo.setPCDateCorrelation( componentNumber, dateCorrelation );
+                svo.setPCDateCorrelation( componentNumber, dateCorrelation );
             }
 
             /*
@@ -263,7 +263,7 @@ public class SVDServiceImpl implements SVDService {
                 if ( isContinuous.get( ef ) ) {
                     double factorCorrelation = Distance.spearmanRankCorrelation( eigenGene, new DoubleArrayList( fvs ) );
 
-                    // svo.setPCFactorCorrelation(componentNumber, ef, factorCorrelation);
+                    svo.setPCFactorCorrelation( componentNumber, ef, factorCorrelation );
 
                     /*
                      * Store in the SVDO .
@@ -288,10 +288,10 @@ public class SVDServiceImpl implements SVDService {
                     if ( groups.size() == 2 ) {
                         double factorCorrelation = Distance.spearmanRankCorrelation( eigenGene, new DoubleArrayList(
                                 fvs ) );
-                        // svo.setPCFactorCorrelation( componentNumber, ef, factorCorrelation );
+                        svo.setPCFactorCorrelation( componentNumber, ef, factorCorrelation );
                     } else {
                         double kwpval = KruskalWallis.test( eigenGene, groupings );
-                        // svo.setPCFactorPvalue( componentNumber, ef, kwpval );
+                        svo.setPCFactorPvalue( componentNumber, ef, kwpval );
                     }
 
                     /*

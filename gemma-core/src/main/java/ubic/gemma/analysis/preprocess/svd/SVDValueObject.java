@@ -20,9 +20,12 @@
 package ubic.gemma.analysis.preprocess.svd;
 
 import java.io.Serializable;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 
 /**
  * Store information about SVD of expression data and comparisons to factors/batch information.
@@ -45,13 +48,20 @@ public class SVDValueObject implements Serializable {
 
     /*
      * Need to store the correlations of eigengenes with dates of assays, and also with factors. Statistics are
-     * rank-based correlations EXCEPT for categorical factors with more than two groups in which case we are using the KW test.
+     * rank-based correlations EXCEPT for categorical factors with more than two groups in which case we are using the
+     * KW test.
      */
 
     /**
      * In order like the rows of the v matrix.
      */
     private Long[] bioMaterialIds;
+
+    Map<Integer, Double> dateCorrelations = new HashMap<Integer, Double>();
+
+    private Map<Integer, Map<Long, Double>> factorCorrelations = new HashMap<Integer, Map<Long, Double>>();
+
+    private Map<Integer, Map<Long, Double>> factorPvalues = new HashMap<Integer, Map<Long, Double>>();
 
     /**
      * @param id
@@ -69,36 +79,94 @@ public class SVDValueObject implements Serializable {
         bioMaterialIds.toArray( this.bioMaterialIds );
     }
 
+    public Long[] getBioMaterialIds() {
+        return bioMaterialIds;
+    }
+
+    /**
+     * @return Map of component to correlation that component with "batch/scan date" (the dates associated with
+     *         BioAssays)
+     */
+    public Map<Integer, Double> getDateCorrelations() {
+        return dateCorrelations;
+    }
+
+    /**
+     * @return map of component to a map of ExperimentalFactors to correlations of that factor with the component. Only
+     *         used for factors which are continuous or which have only two categorical levels.
+     */
+    public Map<Integer, Map<Long, Double>> getFactorCorrelations() {
+        return factorCorrelations;
+    }
+
+    /**
+     * @return map of component to a map of ExperimentalFactors to pvalues for association of that factor with the
+     *         component. This is only used if the ExperimentalFactor has more than two levels so we used the
+     *         Kruskal-Wallis test.
+     */
+    public Map<Integer, Map<Long, Double>> getFactorPvalues() {
+        return factorPvalues;
+    }
+
     public Long getId() {
         return id;
+    }
+
+    public Double[] getVariances() {
+        return variances;
     }
 
     public DoubleMatrix<Integer, Integer> getvMatrix() {
         return vMatrix;
     }
 
+    public void setBioMaterialIds( Long[] bioMaterialIds ) {
+        this.bioMaterialIds = bioMaterialIds;
+    }
+
+    public void setDateCorrelations( Map<Integer, Double> dateCorrelations ) {
+        this.dateCorrelations = dateCorrelations;
+    }
+
+    public void setFactorCorrelations( Map<Integer, Map<Long, Double>> factorCorrelations ) {
+        this.factorCorrelations = factorCorrelations;
+    }
+
+    public void setFactorPvalues( Map<Integer, Map<Long, Double>> factorPvalues ) {
+        this.factorPvalues = factorPvalues;
+    }
+
     public void setId( Long id ) {
         this.id = id;
     }
 
+    public void setPCDateCorrelation( int componentNumber, double dateCorrelation ) {
+        this.dateCorrelations.put( componentNumber, dateCorrelation );
+    }
+
+    public void setPCFactorCorrelation( int componentNumber, ExperimentalFactor ef, double factorCorrelation ) {
+        if ( !this.factorCorrelations.containsKey( componentNumber ) ) {
+            this.factorCorrelations.put( componentNumber, new HashMap<Long, Double>() );
+        }
+        this.factorCorrelations.get( componentNumber ).put( ef.getId(), factorCorrelation );
+    }
+
+    /*
+     * 
+     */
+    public void setPCFactorPvalue( int componentNumber, ExperimentalFactor ef, double pval ) {
+        if ( !this.factorPvalues.containsKey( componentNumber ) ) {
+            this.factorPvalues.put( componentNumber, new HashMap<Long, Double>() );
+        }
+        this.factorPvalues.get( componentNumber ).put( ef.getId(), pval );
+    }
+
+    public void setVariances( Double[] variances ) {
+        this.variances = variances;
+    }
+
     public void setvMatrix( DoubleMatrix<Integer, Integer> vMatrix ) {
         this.vMatrix = vMatrix;
-    }
-
-    protected Long[] getBioMaterialIds() {
-        return bioMaterialIds;
-    }
-
-    protected Double[] getVariances() {
-        return variances;
-    }
-
-    protected void setBioMaterialIds( Long[] bioMaterialIds ) {
-        this.bioMaterialIds = bioMaterialIds;
-    }
-
-    protected void setVariances( Double[] variances ) {
-        this.variances = variances;
     }
 
 }
