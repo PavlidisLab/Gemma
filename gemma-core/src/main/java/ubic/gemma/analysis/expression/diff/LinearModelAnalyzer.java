@@ -553,6 +553,9 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
         Map<ExperimentalFactor, FactorValue> baselineConditions = ExpressionDataMatrixColumnSort
                 .getBaselineLevels( factors );
 
+        /*
+         * For factors that don't have an obvious baseline, use the first factorvalue.
+         */
         Collection<FactorValue> factorValuesOfFirstSample = samplesUsed.iterator().next().getFactorValues();
         for ( ExperimentalFactor factor : factors ) {
             if ( !baselineConditions.containsKey( factor ) ) {

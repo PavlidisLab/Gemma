@@ -197,7 +197,7 @@ public class BatchInfoPopulationService {
         } else {
             for ( String batchId : datesToBatch.keySet() ) {
                 FactorValue fv = FactorValue.Factory.newInstance();
-                fv.setIsBaseline( false );
+                fv.setIsBaseline( false ); /* we could set true for the first batch, but nobody cares. */
                 fv.setValue( batchId );
                 Collection<Characteristic> chars = new HashSet<Characteristic>();
                 VocabCharacteristic c = VocabCharacteristic.Factory.newInstance();
