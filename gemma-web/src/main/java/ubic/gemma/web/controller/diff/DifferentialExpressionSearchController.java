@@ -22,8 +22,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -31,8 +29,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang.StringUtils;
-import org.biomage.Experiment.Experiment;
-import org.biomage.QuantitationType.PValue;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.servlet.ModelAndView;
 
@@ -70,7 +66,6 @@ import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.model.genome.gene.GeneSetMember;
 import ubic.gemma.model.genome.gene.GeneSetService;
 import ubic.gemma.web.controller.BaseFormController;
-import ubic.gemma.web.controller.expression.experiment.ExpressionExperimentController;
 import ubic.gemma.web.controller.expression.experiment.ExpressionExperimentExperimentalFactorValueObject;
 import ubic.gemma.web.view.TextView;
 

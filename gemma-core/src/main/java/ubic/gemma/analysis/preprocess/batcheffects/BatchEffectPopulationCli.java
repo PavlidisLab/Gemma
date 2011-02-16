@@ -16,7 +16,6 @@ package ubic.gemma.analysis.preprocess.batcheffects;
 
 import ubic.gemma.apps.ExpressionExperimentManipulatingCLI;
 import ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchingEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.LinkAnalysisEvent;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;

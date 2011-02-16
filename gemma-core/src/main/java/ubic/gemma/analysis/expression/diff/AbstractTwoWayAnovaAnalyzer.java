@@ -121,9 +121,7 @@ public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractDifferentialEx
 
         int pvaluesPerExample = 2;
 
-        boolean withInteractions = interactionEffectPvalues != null;
-
-        if ( withInteractions ) {
+        if ( interactionEffectPvalues != null ) {
             assert interactionEffectPvalues.length == mainEffectAPvalues.length;
             pvaluesPerExample = 3;
         }
@@ -145,7 +143,7 @@ public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractDifferentialEx
         double[] mainEffectAQvalues = super.getQValues( mainEffectAPvalues );
         double[] mainEffectBQvalues = super.getQValues( mainEffectBPvalues );
         double[] interactionEffectQvalues = new double[mainEffectAPvalues.length]; // temporary.
-        if ( withInteractions ) {
+        if ( interactionEffectPvalues != null ) {
             interactionEffectQvalues = super.getQValues( interactionEffectPvalues );
             assert interactionEffectQvalues.length == interactionEffectPvalues.length;
         }
@@ -154,7 +152,7 @@ public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractDifferentialEx
         double[] ranksA = computeRanks( ArrayUtils.toPrimitive( mainEffectAPvalues ) );
         double[] ranksB = computeRanks( ArrayUtils.toPrimitive( mainEffectBPvalues ) );
         double[] ranksI = new double[mainEffectAPvalues.length]; // temporary.
-        if ( withInteractions ) {
+        if ( interactionEffectPvalues != null ) {
             ranksI = computeRanks( ArrayUtils.toPrimitive( interactionEffectPvalues ) );
         }
 
@@ -165,7 +163,7 @@ public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractDifferentialEx
 
             CompositeSequence cs = ( CompositeSequence ) dmatrix.getDesignElementForRow( i );
 
-            TwoWayAnovaResult twoWayAnovaResult = anovaResults.get( cs.getId() + "" );
+            // TwoWayAnovaResult twoWayAnovaResult = anovaResults.get( cs.getId() + "" );
 
             for ( int j = 0; j < pvaluesPerExample; j++ ) {
 
@@ -173,21 +171,21 @@ public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractDifferentialEx
                 probeAnalysisResult.setProbe( cs );
                 probeAnalysisResult.setQuantitationType( quantitationType );
 
-                Double fstat = null;
-                switch ( j ) {
-                    case 0: {
-                        fstat = twoWayAnovaResult.getMainEffectAfVal();
-                        break;
-                    }
-                    case 1: {
-                        fstat = twoWayAnovaResult.getMainEffectBfVal();
-                        break;
-                    }
-                    case 2: {
-                        fstat = twoWayAnovaResult.getInteractionfVal();
-                        break;
-                    }
-                }
+                // Double fstat = null;
+                // switch ( j ) {
+                // case 0: {
+                // fstat = twoWayAnovaResult.getMainEffectAfVal();
+                // break;
+                // }
+                // case 1: {
+                // fstat = twoWayAnovaResult.getMainEffectBfVal();
+                // break;
+                // }
+                // case 2: {
+                // fstat = twoWayAnovaResult.getInteractionfVal();
+                // break;
+                // }
+                // }
 
                 if ( j % pvaluesPerExample == mainEffectAIndex ) {
                     probeAnalysisResult.setPvalue( nan2Null( mainEffectAPvalues[i] ) );
@@ -201,7 +199,7 @@ public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractDifferentialEx
                     probeAnalysisResult.setRank( nan2Null( ranksB[i] ) );
                     analysisResultsMainEffectB.add( probeAnalysisResult );
 
-                } else if ( withInteractions && j % pvaluesPerExample == mainEffectInteractionIndex ) {
+                } else if ( interactionEffectPvalues != null && j % pvaluesPerExample == mainEffectInteractionIndex ) {
                     probeAnalysisResult.setPvalue( nan2Null( interactionEffectPvalues[i] ) );
                     probeAnalysisResult.setRank( nan2Null( ranksI[i] ) );
                     probeAnalysisResult.setCorrectedPvalue( nan2Null( interactionEffectQvalues[i] ) );
@@ -226,7 +224,7 @@ public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractDifferentialEx
         resultSets.add( mainEffectResultSetB );
 
         /* interaction effect */
-        if ( withInteractions ) {
+        if ( interactionEffectPvalues != null ) {
             Collection<ExperimentalFactor> interAB = new HashSet<ExperimentalFactor>();
             interAB.add( experimentalFactorA );
             interAB.add( experimentalFactorB );
@@ -240,7 +238,7 @@ public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractDifferentialEx
         expressionAnalysis.setName( this.getClass().getSimpleName() );
 
         expressionAnalysis.setDescription( "Two-way ANOVA for " + experimentalFactorA + " and " + experimentalFactorB
-                + ( withInteractions ? " with " : " without " ) + "interactions" );
+                + ( interactionEffectPvalues != null ? " with " : " without " ) + "interactions" );
 
         return expressionAnalysis;
     }
