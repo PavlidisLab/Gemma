@@ -345,9 +345,9 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext.extend(Ext.tree.TreePanel,
 					if(diffExpressed<0.07){diffExpressed=0.07,interesting = true};
 					if(diffExpressed<0.20){interesting = true};
 					if(interesting){
-						drawOneColourMiniPie(ctx, 12, 12, 14, 'blue', diffExpressed*360, 'black');
+						drawOneColourMiniPie(ctx, 12, 12, 14, '#1f6568', diffExpressed*360, 'black');
 					}else{
-						drawOneColourMiniPie(ctx, 12, 12, 14, '#7272b5', diffExpressed*360, 'grey');
+						drawOneColourMiniPie(ctx, 12, 12, 14, 'rgb(95,158,160)', diffExpressed*360, 'grey');
 					}
 					/* this code is for up:down pies
 					//if percentage is less than 5%, round up to 5% so it's visible
