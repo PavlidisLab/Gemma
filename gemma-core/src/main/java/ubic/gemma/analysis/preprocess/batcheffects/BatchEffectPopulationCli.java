@@ -15,6 +15,8 @@
 package ubic.gemma.analysis.preprocess.batcheffects;
 
 import ubic.gemma.apps.ExpressionExperimentManipulatingCLI;
+import ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchingEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.LinkAnalysisEvent;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -36,6 +38,15 @@ public class BatchEffectPopulationCli extends ExpressionExperimentManipulatingCL
 
         for ( BioAssaySet bas : this.expressionExperiments ) {
             if ( bas instanceof ExpressionExperiment ) {
+                bas = eeService.thawLite( ( ExpressionExperiment ) bas );
+
+                /*
+                 * If we're not using the database, always run it.
+                 */
+                if ( !force && !needToRun( bas, BatchInformationFetchingEvent.class ) ) {
+                    log.info( "Can't or Don't need to run " + bas );
+                    continue;
+                }
                 ExperimentalFactor ef = ser.fillBatchInformation( ( ExpressionExperiment ) bas );
 
                 if ( ef == null ) {
