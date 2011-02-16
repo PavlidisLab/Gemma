@@ -399,15 +399,15 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     /**
      * @see ExpressionExperimentDao#findByName(int, String)
      */
-    public ExpressionExperiment findByName( final int transform, final String name ) {
-        return this.findByName( transform, "from ExpressionExperimentImpl a where a.name=:name", name );
+    public ExpressionExperiment findByName( final String name ) {
+        return this.findByName( "from ExpressionExperimentImpl a where a.name=:name", name );
     }
 
     /**
      * @see ExpressionExperimentDao#findByName(int, String, String)
      */
 
-    public ExpressionExperiment findByName( final int transform, final String queryString, final String name ) {
+    public ExpressionExperiment findByName( final String queryString, final String name ) {
         List<String> argNames = new ArrayList<String>();
         List<Object> args = new ArrayList<Object>();
         args.add( name );
@@ -424,22 +424,7 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
             result = ( ExpressionExperiment ) results.iterator().next();
         }
 
-        result = ( ExpressionExperiment ) transformEntity( transform, result );
         return result;
-    }
-
-    /**
-     * @see ExpressionExperimentDao#findByName(String)
-     */
-    public ExpressionExperiment findByName( String name ) {
-        return this.findByName( TRANSFORM_NONE, name );
-    }
-
-    /**
-     * @see ExpressionExperimentDao#findByName(String, String)
-     */
-    public ExpressionExperiment findByName( final String queryString, final String name ) {
-        return this.findByName( TRANSFORM_NONE, queryString, name );
     }
 
     /**
