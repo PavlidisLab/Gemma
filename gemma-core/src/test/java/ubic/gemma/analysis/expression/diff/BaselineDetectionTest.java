@@ -15,13 +15,14 @@
 package ubic.gemma.analysis.expression.diff;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 
+import java.io.File;
 import java.io.InputStream;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Map;
 
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -31,8 +32,6 @@ import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.loader.expression.geo.service.GeoDatasetService;
 import ubic.gemma.loader.expression.simple.ExperimentalDesignImporter;
 import ubic.gemma.loader.util.AlreadyExistsInSystemException;
-import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalDesignService;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorService;
@@ -68,8 +67,8 @@ public class BaselineDetectionTest extends AbstractGeoServiceTest {
 
     ExpressionExperiment ee;
 
-    @Test
-    public void testFetchAndLoadGSE18162() throws Exception {
+    @Before
+    public void setUp() throws Exception {
         // setup
         os.getMgedOntologyService().startInitializationThread( true );
         while ( !os.getMgedOntologyService().isOntologyLoaded() ) {
@@ -80,7 +79,7 @@ public class BaselineDetectionTest extends AbstractGeoServiceTest {
         String path = ConfigUtils.getString( "gemma.home" );
         try {
             geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path
-                    + AbstractGeoServiceTest.GEO_TEST_DATA_ROOT ) );
+                    + AbstractGeoServiceTest.GEO_TEST_DATA_ROOT + File.separator + "gse18162Short" ) );
             Collection<?> results = geoService.fetchAndLoad( "GSE18162", false, true, false, false );
             ee = ( ExpressionExperiment ) results.iterator().next();
         } catch ( AlreadyExistsInSystemException e ) {
@@ -100,19 +99,31 @@ public class BaselineDetectionTest extends AbstractGeoServiceTest {
             ee = eeService.thawLite( ee );
         }
         // end setup
+    }
+
+    @After
+    public void tearDown() {
+        if ( ee != null ) {
+            try {
+                eeService.delete( ee );
+            } catch ( Exception e ) {
+
+            }
+        }
+    }
+
+    @Test
+    public void testFetchAndLoadGSE18162() throws Exception {
 
         Map<ExperimentalFactor, FactorValue> baselineLevels = ExpressionDataMatrixColumnSort.getBaselineLevels( ee
                 .getExperimentalDesign().getExperimentalFactors() );
 
-        assertEquals( 1, baselineLevels.size() ); // the batch does not get a baseline.
+        assertEquals( 1, baselineLevels.size() ); // the batch does not get a baseline. IF we change that then we change
+                                                  // this test.
         for ( ExperimentalFactor ef : baselineLevels.keySet() ) {
             FactorValue fv = baselineLevels.get( ef );
             assertEquals( "Control_group", fv.getValue() );
         }
-
-        // eeService.delete( ee );
-
-        // assertNull( eeService.load( ee.getId() ) );
 
     }
 }
