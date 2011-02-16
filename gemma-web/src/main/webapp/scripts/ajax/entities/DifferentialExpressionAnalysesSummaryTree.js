@@ -244,10 +244,10 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext.extend(Ext.tree.TreePanel,
 	getExpressionNumbers:function(resultSet, nodeId, showThreshold){
 		/* Show how many probes are differentially expressed; */
 				
-		 var numbers = resultSet.numberOfDiffExpressedProbes +  ' probes' ;
+		 var numbers = resultSet.numberOfDiffExpressedProbes +  ' differentially expressed probes<br>' ;
 		
 		 //if (resultSet.upregulatedCount != 0) {
-			 numbers += ':&nbsp;' + resultSet.upregulatedCount
+			 numbers += resultSet.upregulatedCount
 			 + "&nbsp;Up";
 		 //}
 		
@@ -331,24 +331,33 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext.extend(Ext.tree.TreePanel,
 		return [ factor, interaction];
 	},
 	drawPieCharts: function(){
-		var ctx, up, down, interesting;
+		var ctx, up, down, diffExpressed, interesting;
 		for (i = 0; i < this.contrastPercents.size(); i++) {
 			if (Ext.get('chartDiv' + i)) {
 				up = this.contrastPercents[i].up;
 				down = this.contrastPercents[i].down;
+				diffExpressed = this.contrastPercents[i].diffExpressed;
 				ctx = Ext.get('chartDiv' + i).dom.getContext("2d");
 				interesting=false;
 				if(this.totalProbes==null || this.totalProbes==0 || this.contrastPercents[i]==null){
-					drawTwoColourMiniPie(ctx, 12, 12, 14, 'white', 0, 'white', 360,'black');
+					drawOneColourMiniPie(ctx, 12, 12, 14, 'white', 0, 'grey');
 				}else{
-					//if percentage is less than 5%, round up to 5% so it's visible
-					if(up<0.05){up=0.05; interesting = true};
-					if(down<0.05){down=0.05; interesting = true};
+					if(diffExpressed<0.07){diffExpressed=0.07,interesting = true};
+					if(diffExpressed<0.20){interesting = true};
 					if(interesting){
-						drawTwoColourMiniPie(ctx, 12, 12, 14, 'green', up*360, 'red', down*360,'black');
+						drawOneColourMiniPie(ctx, 12, 12, 14, 'blue', diffExpressed*360, 'black');
 					}else{
-						drawTwoColourMiniPie(ctx, 12, 12, 14, '#70C670', up*360, '#E78383', down*360,'grey');
+						drawOneColourMiniPie(ctx, 12, 12, 14, '#7272b5', diffExpressed*360, 'grey');
 					}
+					/* this code is for up:down pies
+					//if percentage is less than 5%, round up to 5% so it's visible
+					if(up<0.10){up=0.10; interesting = true};
+					if(down<0.10){down=0.10; interesting = true};
+					if(interesting){
+						drawTwoColourMiniPie(ctx, 12, 12, 14, 'darkgrey', up*360, 'blue', down*360,'black');
+					}else{
+						drawTwoColourMiniPie(ctx, 12, 12, 14, 'lightgrey', up*360, '#7272b5', down*360,'grey');
+					}*/
 					
 				}
 				

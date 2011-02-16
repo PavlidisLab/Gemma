@@ -31,6 +31,41 @@ MiniPieLib.drawMiniPie = function(ctx, x, y, size, color, value)
 }
 
 	/**
+	 * Method to draw one-piece pie chart in a canvas, with extra colour options
+	 * @param {Object} ctx the canvas component to draw in (here, the canvas tag)
+	 * @param {int} x centre of pie on x axis relative to top right of ctx
+	 * @param {int} y centre of pie on y axis relative to top right of ctx
+	 * @param {int} size size of the pie chart
+	 * @param {String} colour colour for slice one of the pie
+	 * @param {int} value size of slice one in degrees
+	 * @param {String} outlineColour colour for the pie outline
+	 */
+function drawOneColourMiniPie(ctx, x, y, size, colourOne, valueOne, outlineColour){
+	    ctx.save();
+	    ctx.fillStyle = 'white'; //good grey: '#E0E0E0';
+	    ctx.moveTo(x, y);
+	    // draw circle
+	    ctx.beginPath();
+	    ctx.arc(x,y,size/2, Math.PI*3/2 , Math.PI*3/2+(Math.PI*2),false);
+	    ctx.fill();
+	    // draw slice one
+	    ctx.fillStyle = colourOne;
+	    ctx.beginPath();
+	    ctx.moveTo(x, y);        
+	    ctx.arc(x,y,size/2, Math.PI*3/2 , Math.PI*3/2+(Math.PI/180)*valueOne,false);
+	    ctx.lineTo(x,y);
+	    ctx.fill();
+		// draw circle outline
+	    ctx.beginPath();
+	    ctx.arc(x,y,size/2, Math.PI*3/2 , Math.PI*3/2+(Math.PI*2),false);
+	    ctx.lineWidth = 0.75;
+	    ctx.strokeStyle = outlineColour;
+	    ctx.stroke();
+	    
+	    ctx.restore();			
+	}
+
+	/**
 	 * Method to draw a two-colour, two-piece pie chart in a canvas (where sum of pieces can be < total)
 	 * @param {Object} ctx the canvas component to draw in (here, the canvas tag)
 	 * @param {int} x centre of pie on x axis relative to top right of ctx
@@ -44,7 +79,7 @@ MiniPieLib.drawMiniPie = function(ctx, x, y, size, color, value)
 	 */
 function drawTwoColourMiniPie(ctx, x, y, size, colourOne, valueOne, colourTwo, valueTwo, outlineColour){
 	    ctx.save();
-	    ctx.fillStyle = '#E0E0E0';
+	    ctx.fillStyle = 'white'; //good grey: '#E0E0E0';
 	    ctx.moveTo(x, y);
 	    // draw circle
 	    ctx.beginPath();
