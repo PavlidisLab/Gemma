@@ -143,7 +143,6 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
 
     }
 
-    @SuppressWarnings("unchecked")
     @Test
     public void testFetchAndLoadMultiChipPerSeriesShort() throws Exception {
         String path = getTestFileBasePath();
@@ -208,7 +207,7 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
 
     // @Test
     // public void test() throws Exception {
-    // fetchASeries( "GSE3443" );
+    // fetchASeries( "GSE18162" );
     // }
 
     /**

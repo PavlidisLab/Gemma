@@ -25,6 +25,7 @@ import java.util.Collection;
 import java.util.HashSet;
 
 import org.apache.commons.lang.RandomStringUtils;
+import org.junit.After;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -64,6 +65,17 @@ public class GeoSuperSeriesLoadIntegrationTest extends AbstractGeoServiceTest {
 
     ExpressionExperiment ee;
 
+    @After
+    public void tearDown() throws Exception {
+        if ( ee != null ) {
+            try {
+                ees.delete( ee );
+            } catch ( Exception e ) {
+
+            }
+        }
+    }
+
     @SuppressWarnings("unchecked")
     @Test
     public void testFetchAndLoadSuperSeries() throws Exception {
@@ -74,8 +86,9 @@ public class GeoSuperSeriesLoadIntegrationTest extends AbstractGeoServiceTest {
             Collection<ExpressionExperiment> results = geoService.fetchAndLoad( "GSE11897", false, true, false, false,
                     true, false );
             assertEquals( 1, results.size() );
+            ee = results.iterator().next();
         } catch ( AlreadyExistsInSystemException e ) {
-            e.printStackTrace();
+            ee = ( ExpressionExperiment ) e.getData();
         }
 
     }
