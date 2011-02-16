@@ -99,7 +99,14 @@ public class ExperimentalDesignWriter {
                     .get( bioMaterial ) );
             buf.append( rowName );
 
-            /* columns 1 ... n where n is the number of factors */
+            buf.append( "\t" );
+
+            /* column 1 */
+            String externalId = ExpressionDataWriterUtils.getExternalId( bioMaterial, bioMaterials.get( bioMaterial ) );
+
+            buf.append( externalId );
+
+            /* columns 2 ... n where n+1 is the number of factors */
             Collection<FactorValue> candidateFactorValues = bioMaterial.getFactorValues();
             for ( ExperimentalFactor ef : orderedFactors ) {
                 buf.append( "\t" );
@@ -153,7 +160,7 @@ public class ExperimentalDesignWriter {
             buf.append( "\n" );
         }
 
-        buf.append( "Bioassay" );
+        buf.append( "Bioassay\tExternalID" );
 
         for ( ExperimentalFactor ef : factors ) {
             String efName = ef.getName();

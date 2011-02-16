@@ -18,16 +18,17 @@
  */
 package ubic.gemma.datastructure.matrix;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
+import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
 
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.util.DateUtil;
@@ -148,6 +149,37 @@ public class ExpressionDataWriterUtils {
         matchedFactorValue = matchedFactorValue.replaceAll( "-", "_" );
         matchedFactorValue = matchedFactorValue.replaceAll( "\\s", "_" );
         return matchedFactorValue;
+    }
+
+    /**
+     * String representing the external identifier of the biomaterial. This will usually be a GEO or ArrayExpression
+     * accession id, or else blank.
+     * 
+     * @param bioMaterial
+     * @param bioAssays
+     * @return
+     */
+    public static String getExternalId( BioMaterial bioMaterial, Collection<BioAssay> bioAssays ) {
+        String name = "";
+
+        if ( bioMaterial.getExternalAccession() != null ) {
+            name = bioMaterial.getExternalAccession().getAccession();
+        }
+
+        List<String> ids = new ArrayList<String>();
+        if ( StringUtils.isBlank( name ) && !bioAssays.isEmpty() ) {
+            for ( BioAssay ba : bioAssays ) {
+                if ( ba.getAccession() != null ) {
+                    ids.add( ba.getAccession().getAccession() );
+                }
+            }
+
+            name = StringUtils.join( ids, "/" );
+        }
+
+        name = StringUtils.isBlank( name ) ? "" : name;
+
+        return constructRCompatibleBioAssayName( name );
     }
 
 }
