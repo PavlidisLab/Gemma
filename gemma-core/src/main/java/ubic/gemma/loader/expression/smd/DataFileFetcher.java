@@ -48,6 +48,7 @@ import ubic.gemma.util.ConfigUtils;
  * @author pavlidis
  * @version $Id$
  */
+@Deprecated
 public class DataFileFetcher extends SmdFetcher {
 
     private Map<Integer, String> cuts;
@@ -158,7 +159,7 @@ public class DataFileFetcher extends SmdFetcher {
      * 
      * @see ubic.gemma.loader.loaderutils.Fetcher#fetch(java.lang.String)
      */
-    @Override 
+    @Override
     public Collection<LocalFile> fetch( String identifier ) {
         throw new UnsupportedOperationException();
     }

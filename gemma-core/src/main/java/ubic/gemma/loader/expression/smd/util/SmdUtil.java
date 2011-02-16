@@ -25,6 +25,7 @@ import ubic.gemma.util.NetDatasourceUtil;
  * @author pavlidis
  * @version $Id$
  */
+@Deprecated
 public class SmdUtil extends NetDatasourceUtil {
 
     public static final String SMD_DELIM = "\n";

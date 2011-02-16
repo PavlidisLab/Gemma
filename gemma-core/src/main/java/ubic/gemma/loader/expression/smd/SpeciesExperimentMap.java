@@ -33,6 +33,7 @@ import java.util.Set;
  * @author pavlidis
  * @version $Id$
  */
+@Deprecated
 public class SpeciesExperimentMap {
 
     Map<String, String> speciesExperimentMap;

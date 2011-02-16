@@ -33,10 +33,11 @@ import ubic.gemma.util.ConfigUtils;
 
 /**
  * The list of all BioAssays (SMD "experiments") for a given species.
- 
+ * 
  * @author pavlidis
  * @version $Id$
  */
+@Deprecated
 public class SpeciesBioAssayList {
 
     protected static final Log log = LogFactory.getLog( SpeciesBioAssayList.class );

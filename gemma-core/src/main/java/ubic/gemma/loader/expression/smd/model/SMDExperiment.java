@@ -59,6 +59,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentImpl;
  * @author pavlidis
  * @version $Id$
  */
+@Deprecated
 public class SMDExperiment {
 
     private String name;

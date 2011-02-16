@@ -26,10 +26,10 @@ import ubic.gemma.model.common.description.LocalFileImpl;
  * <hr>
  * <p>
  * 
- * 
  * @author pavlidis
  * @version $Id$
  */
+@Deprecated
 public class SMDFile {
 
     private String downloadDate;
@@ -40,7 +40,7 @@ public class SMDFile {
     public LocalFile toFile( FileFormat form ) {
         LocalFile f = new LocalFileImpl();
 
-        f.setSize(new Long( this.size ));
+        f.setSize( new Long( this.size ) );
         f.setFormat( form );
         return f;
     }

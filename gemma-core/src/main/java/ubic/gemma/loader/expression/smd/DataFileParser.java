@@ -55,12 +55,12 @@ import ubic.gemma.loader.expression.smd.util.SmdUtil;
  * 
  * <pre>
  * 
- *  
- *   
- *    
- *     
- *      
- *                       
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
  *                          !Exptid=3823
  *                          !Experiment Name=COLO205_CL4010_COLON
  *                          !Organism=Homo sapiens
@@ -84,13 +84,13 @@ import ubic.gemma.loader.expression.smd.util.SmdUtil;
  *                          !Scanning Software=ScanAlyze
  *                          !Software version=2.44
  *                          !Scanning parameters=
- *        
- *       
- *      
- *     
- *    
- *   
- *  
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
  * </pre>
  * 
  * <h2>Column Header</h2>
@@ -99,21 +99,21 @@ import ubic.gemma.loader.expression.smd.util.SmdUtil;
  * <p>
  * According to {@link http://genome-www5.stanford.edu/help/FAQ.shtml#Column%20Names}. (the software used is listed in
  * the file). Here are the headings from a test file (and their interpretations). We should not assume these are always
- * the same...but for now we will. 'blank' means it is blank in files we looked at. See also
- * {@link http://genome-www5.stanford.edu/cgi-bin/tools/viewSchema.pl?table=RESULT}, but the columns in these data
- * files DO NOT NECESSARILY match those. Therefore we really can only use the columns here that we make sense of. Note
- * that data entered before January 2001 does not contain these median result data.
+ * the same...but for now we will. 'blank' means it is blank in files we looked at. See also {@link http
+ * ://genome-www5.stanford.edu/cgi-bin/tools/viewSchema.pl?table=RESULT}, but the columns in these data files DO NOT
+ * NECESSARILY match those. Therefore we really can only use the columns here that we make sense of. Note that data
+ * entered before January 2001 does not contain these median result data.
  * <p>
  * Here is a scanalyze example.
  * 
  * <pre>
  * 
- *  
- *   
- *    
- *     
- *      
- *                    
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
  *                           SPOT -- an integer, which goes up as rows go up.
  *                           NAME -- For things other than controls, this seems to be an integer.
  *                           Clone ID -- often IMAGE:XXXX
@@ -186,15 +186,14 @@ import ubic.gemma.loader.expression.smd.util.SmdUtil;
  *                           IS_VERIFIED
  *                           IS_CONTAMINATED
  *                           LUID
- *        
- *       
- *      
- *     
- *    
- *   
- *  
- * </pre>
  * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ * </pre>
  * <p>
  * The smd code reveals the following that shows that most columns are not of interest to SMD - note that log ratios are
  * not stored. So they are presumbaly recomputing all of that later.
@@ -202,13 +201,13 @@ import ubic.gemma.loader.expression.smd.util.SmdUtil;
  * 
  * <pre>
  * 
- *  
- *   
- *    
- *     
- *      
- *         
- *             
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
  *              my %kScanalyze2SMDMapping = (&quot;SPOT&quot;           =&gt; &quot;SPOT&quot;,
  *              &quot;CH1I&quot;           =&gt; &quot;CH1I_MEAN&quot;, 
  *              &quot;CH1BA&quot;          =&gt; &quot;CH1B_MEAN&quot;, 
@@ -230,27 +229,26 @@ import ubic.gemma.loader.expression.smd.util.SmdUtil;
  *              &quot;BOT&quot;            =&gt; &quot;BOT&quot;, 
  *              &quot;LEFT&quot;           =&gt; &quot;LEFT&quot;, 
  *              &quot;RIGHT&quot;          =&gt; &quot;RIGHT&quot;,
- *        
- *       
- *      
- *     
- *    
- *   
- *  
- * </pre>
  * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ * </pre>
  * <p>
  * For Genepix we have:
  * </p>
  * 
  * <pre>
  * 
- *  
- *   
- *    
- *     
- *      
- *           
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
  *              Spot
  *              Clone ID
  *              Gene Symbol
@@ -338,14 +336,14 @@ import ubic.gemma.loader.expression.smd.util.SmdUtil;
  *              Box Left
  *              Box Right
  *              Channel 1 Mean Intensity / Median Background Intensity
- *              Channel 2 Normalized (Mean Intensity / Median Background Intensity)  
- *        
- *       
- *      
- *     
- *    
- *   
- *  
+ *              Channel 2 Normalized (Mean Intensity / Median Background Intensity)
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
  * </pre>
  * 
  * <h2>Data vector rows</h2>
@@ -354,10 +352,10 @@ import ubic.gemma.loader.expression.smd.util.SmdUtil;
  * <hr>
  * <p>
  * 
- * 
  * @author pavlidis
  * @version $Id$
  */
+@Deprecated
 public class DataFileParser {
     private SMDPerson contact;
     private SMDBioAssay bioAssay;

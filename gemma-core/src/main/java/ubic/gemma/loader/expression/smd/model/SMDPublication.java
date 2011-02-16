@@ -45,7 +45,7 @@ import ubic.gemma.model.common.description.DatabaseEntryImpl;
  * Example of the file format:
  * 
  * <pre>
- *    
+ * 
  *      &lt;publication&gt;
  *      !Citation=Garber ME, et al. (2001) Proc Natl Acad Sci USA 98(24):13784-13789
  *      !Title=Diversity of gene expression in adenocarcinoma of the lung.
@@ -62,9 +62,9 @@ import ubic.gemma.model.common.description.DatabaseEntryImpl;
  *            as well as patient survival. Gene expression analysis thus promises to extend and refine
  *             standard pathologic analysis.
  *        &lt;/experiment_set&gt;
- *      &lt;/publication&gt; 
- *    
- *     
+ *      &lt;/publication&gt;
+ * 
+ * 
  * </pre>
  * 
  * <hr>
@@ -73,6 +73,7 @@ import ubic.gemma.model.common.description.DatabaseEntryImpl;
  * @author pavlidis
  * @version $Id$
  */
+@Deprecated
 public class SMDPublication {
 
     String citation;
@@ -160,7 +161,7 @@ public class SMDPublication {
         private StringBuilder expSetBuf;
         private StringBuilder pubBuf;
 
-        @Override 
+        @Override
         public void startElement( String uri, String name, String qName, Attributes atts ) {
 
             if ( name.equals( "experiment_set" ) ) {
@@ -174,7 +175,7 @@ public class SMDPublication {
             }
         }
 
-        @Override 
+        @Override
         public void endElement( String uri, String tagName, String qName ) {
             if ( tagName.equals( "publication" ) && !inSet ) {
                 inPub = false;

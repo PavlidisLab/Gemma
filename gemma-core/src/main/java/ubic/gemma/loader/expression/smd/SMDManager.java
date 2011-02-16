@@ -30,10 +30,10 @@ import ubic.gemma.model.genome.Taxon;
  * <hr>
  * <p>
  * 
- * 
  * @author pavlidis
  * @version $Id$
  */
+@Deprecated
 public interface SMDManager {
 
     /**
@@ -180,8 +180,8 @@ public interface SMDManager {
     public BioAssay fetchBioAssay( BioAssay unfinishedBioAssay );
 
     /**
-     * Get the data files for one experiment from the SMD site. The ubic.description.File objects corresponding
-     * to it are persisted.
+     * Get the data files for one experiment from the SMD site. The ubic.description.File objects corresponding to it
+     * are persisted.
      * 
      * @param experientAccessionNumber
      * @return a Set of ubic.description.File objects representing the

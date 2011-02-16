@@ -22,10 +22,10 @@ package ubic.gemma.loader.expression.smd.model;
  * <hr>
  * <p>
  * 
- * 
  * @author pavlidis
  * @version $Id$
  */
+@Deprecated
 public class SMDFileFormat {
 
     private String name;

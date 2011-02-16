@@ -30,6 +30,7 @@ import java.util.Map;
  * @author pavlidis
  * @version $Id$
  */
+@Deprecated
 public class SMDSpeciesMapper {
 
     // private final String[] speciesCodes = {"AL" , "AT" , "BS" , "CE" , "CJ" , "CR" , "DM" , "EC" , "HP" , "HS" , "MM"

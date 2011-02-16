@@ -32,9 +32,9 @@ import ubic.gemma.model.expression.bioAssay.BioAssayImpl;
  * 
  * <pre>
  * 
- *  
- *                     
- *                      
+ * 
+ * 
+ * 
  *                       !SlideName=dtp2780
  *                       !Printname=10k_Print3
  *                       !Tip Configuration=Standard 4-tip
@@ -46,19 +46,18 @@ import ubic.gemma.model.expression.bioAssay.BioAssayImpl;
  *                       !Channel 2 Description=ADR-RES_CL5002_UNKNOWN                                                                                                                                                                                                                  
  *                       !Scanning Software=ScanAlyze                                                                                                                                                                                                                 
  *                       !Software version=2.44                                                                                                                                                                                                                 
- *                       !Scanning parameters=   
- *                       
+ *                       !Scanning parameters=
  * 
- *  
+ * 
+ * 
  * </pre>
- * 
  * <hr>
  * <p>
- * 
  * 
  * @author pavlidis
  * @version $Id$
  */
+@Deprecated
 public class SMDBioAssay {
 
     private int id = -1;

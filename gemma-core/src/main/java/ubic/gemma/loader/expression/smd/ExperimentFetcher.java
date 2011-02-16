@@ -42,6 +42,7 @@ import ubic.gemma.loader.util.fetcher.SmdFetcher;
  * @author pavlidis
  * @version $Id$
  */
+@Deprecated
 public class ExperimentFetcher extends SmdFetcher {
 
     private PublicationFetcher pubs;
